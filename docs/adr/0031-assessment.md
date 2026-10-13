@@ -17,25 +17,40 @@ Nakafa today runs try-outs on one engine, and it has no school exams. Measured
 on Aksara commit `edadc28a9d` on 13 October 2026, these are the facts
 that the model must change:
 
-- The question bank holds 1,850 items: 1,790 single choice, 30 multiple choice,
-  30 true or false by category, 0 short answer, and 0 rubric (a program
-  measurement, not repeated in this change).
-- Figures are JSX components inside MDX. `MathVisual` appears in 109 files and
-  `LineEquation` in 127. Both counts were checked with `git grep -l -F` on
-  `packages/corpus/question-bank` in this change. `NumberLine` appears in 15
-  files, `Mermaid` in 12, and `UnitCircle` in 3 (program measurement). No asset
-  schema describes an image.
+- The question bank holds 1,850 items, the question folders that hold a locale
+  question file in `packages/corpus/question-bank`. This change counted them on
+  Aksara commit `edadc28a9d`. The program measured their kinds as 1,790 single
+  choice, 30 multiple choice, 30 true or false by category, 0 short answer, and
+  0 rubric, and this change did not recount the kinds.
+- Figures are JSX components inside MDX. In `packages/corpus/question-bank`,
+  `MathVisual` appears in 109 files, `LineEquation` in 127, `NumberLine` in 15,
+  `Mermaid` in 12, and `UnitCircle` in 3. This change checked those counts with
+  `git grep -l -F` on the tags. The per-set components, `Set<N>Question<M>` and
+  their kinds, appear in 87 files with 93 uses, counted with `git grep`. Their
+  definitions are in `apps/www/lib/content/renderer/client/snbt/general`.
+  `packages/contracts/src` of the Aksara repository holds no image or media type
+  schema.
 - A reading passage is not an entity. Each item copies it into its body, and
-  `stimulusKey` only groups the items.
+  `stimulusKey` only groups the items (`packages/contracts/src/question/item.ts`,
+  line 251). Sibling items with the same `stimulusKey` must present the same
+  stimulus (`.agents/skills/nakafa-content/references/questions.md` in the Aksara
+  repository).
 - The item body is compiled MDX, which is code. A school cannot render it with
-  its own tools, cannot export it as QTI, and Nina reads the rendered text.
+  its own tools and cannot export it as QTI. Nina reads the raw MDX of each
+  question (`packages/backend/confect/nina/focus.ts`, the `questionMdx` field),
+  and projects it to Markdown for the prompt
+  (`packages/backend/confect/nina/prompt/focus.ts`).
 - The scoring strategies are `irt`, `penalized`, and `raw`. The IRT strategy
   uses a 2PL model with provisional parameters. Main has no calibration job
   (`packages/backend/confect/tryouts/runtime/estimate.ts`).
 - Multiple choice and category answers are all or nothing in code
   (`packages/backend/confect/response/evaluation.ts`).
-- The player has no calculator, formula sheet, option elimination, highlighter,
-  notes, line reader, or accommodations. Navigation is by time only.
+- The player (`apps/www/components/tryout`) has no calculator, formula sheet,
+  option elimination, highlighter, notes, line reader, or accommodations. It
+  shows every item of a section in one list
+  (`apps/www/components/tryout/runtime/client.tsx`), and a learner can end a
+  section before its time runs out, from a confirmation dialog
+  (`apps/www/components/tryout/runtime/controls.client.tsx`).
 - `packages/backend/confect/response` rewrites the option, category, statement,
   and rubric shapes that the Aksara contract already holds. One shape then has
   two sources of truth.
@@ -59,7 +74,13 @@ that the model must change:
 - The assessment document is a structured tree of paragraphs, headings, lists,
   tables, math written in LaTeX with MathML, and figures.
 - A figure is one of the published components (`MathVisual`, `NumberLine`,
-  `LineEquation`, `Mermaid`) or an image with alternative text.
+  `LineEquation`, `UnitCircle`, `Mermaid`) or an image with alternative text. The
+  image form has no schema yet, and wave A adds one with the document contract.
+  The per-set figure components of the SNBT question bank (`Set<N>Question<M>`,
+  with kinds such as `Graph` and `SalesChart`) are not in this list. Each kind
+  takes one of these forms, or it is removed, in the release that migrates the
+  corpus, and its form is recorded here before that release. No release may
+  contain a figure outside this list.
 - Aksara still writes MDX. Its compiler produces the document, and Tiptap edits
   the same document.
 - The formula node is Nakafa's own Tiptap node, with KaTeX 0.19 and MathLive
@@ -86,9 +107,10 @@ are equal. `isIdenticallyEqual` samples random values, so `true` is strong
 evidence and not a formal proof. The engine version is pinned, because issue
 #326 appeared in 0.98.0.
 
-A sampled verdict from `isIdenticallyEqual` is accepted only in practice and in
-consumer try-outs, and it is recorded as sampled. In a school exam, sampled
-verdicts and unproven answers go to the teacher.
+A sampled verdict from `isIdenticallyEqual` is not a proof. It is accepted only
+where the exam profile allows it, which means practice and consumer try-outs,
+and it is recorded as sampled. In a school exam, sampled verdicts and unproven
+answers go to the teacher.
 
 ### 4. Scoring rules are data
 
@@ -149,7 +171,8 @@ Decided, not live:
   highlighter, mark for review, notes, a line reader, zoom, hide time, and text
   to speech.
 - The profile and the accommodations switch tools on.
-- Three accommodation levels are frozen when an attempt starts (ADR 0013).
+- Level 3 accommodations are frozen when an attempt starts (ADR 0013). Level 1
+  can be set at any time.
 - The player shows the items as a list, one item at a time, on a phone, or as a
   mirror of the manuscript.
 - Adaptive sections move between modules by the rule in the profile.
@@ -163,8 +186,8 @@ Decided, not live:
   and versioned.
 - The offline queue is encrypted per sitting (ADR 0013).
 - Deadlines move by scheduled transitions. Submit is idempotent.
-- Presence for a proctored sitting uses `@convex-dev/presence`, the same component
-  as the editor (ADR 0013).
+- Presence for a proctored sitting uses `@convex-dev/presence`, the one presence
+  mechanism that ADR 0013 decides.
 - Scores are computed in the workpool.
 - The latency figures are the targets in ADR 0013.
 
@@ -176,11 +199,11 @@ has exactly one owner.
 | Module | Owns | Status | Replaces |
 | --- | --- | --- | --- |
 | `catalog` | Profiles, frozen manuscripts, and signed bundles | Planned | The catalog and the runtime bundle of `confect/tryouts`, wave B |
-| `gate` | The attempt cycle, sittings, tokens, devices, deadlines, and answer writes | Local branch `nabil/attempt-gate` | `confect/tryouts/start` and `confect/tryouts/mutations`, wave B |
+| `gate` | The attempt cycle, sittings, tokens, devices, deadlines, and answer writes | Planned, wave B | `confect/tryouts/start` and `confect/tryouts/mutations`, wave B |
 | `response` | Answer evaluation as pure functions, shared by the client and the server | Live as `confect/response` (#792) | `confect/response` and `confect/tryouts/response`, across waves A and B |
 | `scoring` | Raw, penalized, IRT, composite, and report scores | The estimator is live in `confect/tryouts/runtime`. The module is planned. | `confect/tryouts/score` and the estimator, wave B |
 | `grading` | The teacher's queue, Nina's suggestions (K6 and K7), and grade release | Planned, new | Nothing |
-| `calibration` | Offline IRT, DIF, and scale versions | Local branch, nothing stored yet | Keeps and extends the `irtScaleVersions`, `irtScaleItems`, and `irtCalibrationRuns` tables, wave C |
+| `calibration` | Offline IRT, DIF, and scale versions | Planned, wave C. Nothing is stored yet | Keeps and extends the `irtScaleVersions`, `irtScaleItems`, and `irtCalibrationRuns` tables, wave C |
 | `analysis` | Item difficulty and discrimination | Planned, new | Nothing |
 
 ### 10. Migration without compatibility code
@@ -193,8 +216,8 @@ has exactly one owner.
   closed and scored first.
 - The nine `tryout*` tables are dropped after a dev dry run and the 12-hour skew
   window.
-- One flag table, `assessmentFlags`, holds every assessment flag. The
-  branch-only `tryoutFlags` never ships.
+- One flag table, `assessmentFlags`, holds every assessment flag. No
+  `tryoutFlags` table ships.
 - Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
   That reader moves to the assessment document in the same release.
 - No Aksara release may contain short-answer or rubric content until the renderer
@@ -237,7 +260,7 @@ has exactly one owner.
 | The three `irt*` tables in `packages/backend/confect/tables` | Live, extended in wave C |
 | `@cortex-js/compute-engine` and `mathlive` | Not installed |
 | `@convex-dev/presence` | Not installed. Planned for wave B. |
-| `confect/assessment` modules | Planned, except the gate on the local branch `nabil/attempt-gate` and calibration work on a local branch |
+| `confect/assessment` modules | Planned |
 | Assessment document and its compiler | Planned, program wave A |
 | Shared player and tool registry | Planned, program wave B |
 | Grading queue and Nina suggestions | Planned, program wave B, after K6 passes |

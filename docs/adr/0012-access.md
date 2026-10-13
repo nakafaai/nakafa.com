@@ -136,6 +136,7 @@ The school roles also hold these actions:
   nothing.
 - The Guardian reaches a child only through a verified parent relation (see
   Relations).
+
 Assigning or ending an Owner or Admin role needs `owner.manage`, which only
 Owners hold, so an Admin cannot mint Admins. The last Owner held by a claimed,
 active Person cannot be revoked. Integration grants belong to integration apps,

@@ -61,7 +61,7 @@ returns only those fields.
 
 ### Subdomains
 
-Planned. The host rewrite is on a local branch, and ADR 0026 lists what is live.
+Planned. ADR 0026 lists what is live.
 
 `slug.nakafa.com` serves the School routes through a host rewrite in the proxy,
 which never reads the database and routes only labels that are a valid
@@ -133,14 +133,30 @@ that never ran.
 
 ### Retirement of the first School
 
-New tables and functions live beside the `school*` tables (expand). School
-routes then switch to the new functions; the old ones are observed until no
-deployed client calls them. A Convex backup of production is taken right before
-deletion, then an internal batched mutation deletes every `school*` row, the
-forum aggregates, and their files, on dev and then production, until the counts
-are zero. Last, the old functions, tables, the forum viewport engine and its
-tests, and the old account deletion steps are removed, and a new ADR supersedes
-ADR 0005. The classroom lane owns the retirement.
+Program wave 0 deletes the first School before the new School is built (K11).
+The deletion is one reviewed change: every old School row, table, function,
+component, redirect, image, test, and dictionary key goes, and so do the forum
+viewport engine and its tests and the School branch of account deletion. It
+takes no backup and no production export, because nobody uses the old School,
+and its data is deleted, not kept (K11). A new ADR supersedes ADR 0005.
+
+The removal follows the rule for public functions in
+`packages/backend/AGENTS.md`: expand, switch, observe, contract.
+
+1. Expand: the tenancy functions in `packages/backend/confect/tenancy` already
+   exist on main beside the old School.
+2. Switch: an earlier release removes every School route and component that
+   calls an old function, so no new web build calls one.
+3. Observe: 12 hours pass after the switch release. A browser can keep an older
+   web deployment for at most that long (Vercel skew protection on `www` is
+   43,200 seconds, read from the project API on 12 October 2026). The window is a
+   fixed time. No log is read to decide whether an old function still has
+   callers.
+4. Dry run: the batched deletion runs on the dev deployment until every old count
+   is zero, and the old tables drop there.
+5. Contract: one reviewed release deletes the old functions and the code listed
+   above. The batched deletion then runs on production until every old count is
+   zero, and the table drop that follows is the proof that the rows are gone.
 
 ## Implementation Contract
 

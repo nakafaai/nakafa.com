@@ -57,7 +57,7 @@ yet.
 
 | Setting | Standard | Indonesia | Germany (Berlin) | Saudi Arabia |
 | --- | --- | --- | --- | --- |
-| Interface language | BCP 47 | `id-ID` | `de-DE` | `ar`, not active yet |
+| Interface language | BCP 47 tag, the app's locale code | `id` | `de` | `ar`, not active yet |
 | Content language | The languages that Aksara publishes | `id` | `de` | None yet, because Aksara has no Arabic content |
 | Country | ISO 3166-1, with an optional ISO 3166-2 | `ID` | `DE`, Berlin (`DE-BE`) | `SA` |
 | School time zone | IANA | `Asia/Jakarta` | `Europe/Berlin` | `Asia/Riyadh` |
@@ -65,6 +65,13 @@ yet.
 
 The Saudi Arabia column is an example of the design only. No Saudi profile exists,
 and Arabic is not an active interface language.
+
+The interface language is stored as the app's locale code, which is also the
+value of the `NEXT_LOCALE` cookie. The app's codes are `en`, `id`, and `de`
+(`AppLocaleCodeSchema` in `packages/contracts/src/locale.ts` of the Aksara
+repository), and `packages/internationalization/src/routing.ts` routes the active
+ones. So the interface language is `id` or `de`, never `id-ID` or `de-DE`, which
+the app does not route.
 
 The organisation holds the country profile and the billing currency of its
 contract. Each school holds its time zone and its content language. A person's
@@ -133,5 +140,5 @@ These are targets. They are not live.
 | `UnitLevel`, the ten level choices in `packages/backend/confect/tenancy/schema.ts` | Live. The country profile replaces this list (K17). |
 | `confect/jurisdiction` | Planned, program wave A |
 | Signed Aksara profile for Indonesia | Planned, program wave A |
-| The five locale settings as stored fields | Planned |
+| The four locale settings stored on the organisation and the school | Planned. The interface language stays in the `NEXT_LOCALE` cookie |
 | Text direction through one helper | Target |

@@ -169,7 +169,7 @@ component seals on write and opens on read.
 
 | | Plain text at rest | Component fit | Verdict |
 | --- | --- | --- | --- |
-| 1. Replace rows | The rows of a running turn, and of a failed turn until the sweep seals it. A turn may run for `TURN_DEADLINE`, 8 minutes (`sweep.ts:23-26`), and the sweep runs every 5 minutes (`crons.ts:14`). The deltas until settlement. | Uses what the docs describe, saving and deleting messages, which are the component's `addMessages` and `deleteByIds`. ADR 0001 and the official hooks stay as they are. | Chosen |
+| 1. Replace rows | The rows of a running turn, and of a failed turn until the sweep seals it. A turn may run for `TURN_DEADLINE`, 8 minutes (`sweep.ts:23-26`), and the sweep runs every 5 minutes (`crons.ts:38-45`, `nina/deadline.ts:24`). The deltas until settlement. | Uses what the docs describe, saving and deleting messages, which are the component's `addMessages` and `deleteByIds`. ADR 0001 and the official hooks stay as they are. | Chosen |
 | 2. Own table | None except the deltas. | Replaces what the Agent gives: see below. | Rejected |
 | 3. Seal at write | The deltas, and rows that `finalizeMessage` rebuilds from deltas inside the component. | Depends on the Agent client's internal calls. | Not now |
 | 4. Change nothing | All of it. | None. | Rejected |
@@ -229,7 +229,7 @@ changes.
    `reasoning`, `sources` or other field to scrub.
 2. **The Agent's rows are replaced after the turn settles.** Settlement stays as
    it is, except that it also schedules a `seal` mutation at zero delay, as it
-   already schedules `present` (`settlement.ts:157-164`), so a failure of the
+   already schedules `present` (`settlement.ts:88-95`), so a failure of the
    seal never blocks a refund or leaves a chat busy. The mutation reads the
    turn's rows, deletes the assistant and tool rows and adds them sealed with an
    explicit `order`, then deletes the turn's stream deltas with
@@ -238,13 +238,19 @@ changes.
    failed turn go the same way, and a chat that has been deleted since is left
    alone. A settled turn records `sealedAt` when its rows are sealed, and the
    sweep that already settles stuck turns also seals any settled turn without
-   it, so a missed seal is found and not forgotten.
+   it, so a missed seal is found and not forgotten. The sweep finds those turns
+   through an index on the turn's phase and `sealedAt`, which order-of-work step 3
+   adds. The seal skips a turn that already carries `sealedAt`, so a retry is
+   safe, and a seal that fails leaves the turn plain and readable until the next
+   sweep run.
 3. **One module owns the form, and every reader opens through it.** A reader
    gets rows from the module and never from the component.
 4. **Chat attachments.** The file name of a chat attachment, the `files.filename`
    field that the component keeps, is sealed with the learner's key in program
-   wave A. The stored file is removed two days after its chat is deleted, as the
-   live policy already says. This plan does not seal the bytes of an upload.
+   wave A. The stored file is removed within two days of its chat's deletion, as
+   the live policy already says (ADR 0001). The cleanup runs once a day, and it
+   removes a file once no chat refers to it and 24 hours have passed since its
+   last reference changed. This plan does not seal the bytes of an upload.
 
 The stages, and the key that seals each one (owner decisions K2, K3, and K10):
 
@@ -290,10 +296,13 @@ skeleton of `message` that is valid for the component:
 
 `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and `error` are
 not passed to `addMessages`, so the row has none. A row that has no sealed
-bytes is a running turn's row and the module passes it through. That form never
-leaves, so the reader keeps both forms for good, and the guard against a row
-that stays plain is the marker, the sweep and a test that plants strings in a
-whole turn and looks in every table.
+bytes is read as plain. It is a running turn's row, or a row of a settled turn
+that the seal has not reached yet, and the module passes it through, so a read
+does not fail before its turn is sealed. The seal writes `sealedAt` in the same
+transaction as the sealed rows, so a turn that carries it has no plain row unless
+a write came from outside the seal. Such a row fails the read, because the read
+must not hide it. The guard against a row that stays plain is the marker, the
+sweep, and a test that plants strings in a whole turn and looks in every table.
 
 ### What Breaks In The Component
 
@@ -398,11 +407,11 @@ migrates them, with a dry pass, as the migrations before it did:
    so production can be counted before anything is rewritten, and the assumed
    sizes above can be replaced with real ones.
 
-It runs on dev and on production until a whole pass finds no plain row of a
-settled turn, and it is deleted afterwards with its tests. In the same release
-the reader stops reading plain rows of settled turns. It passes through only the
-plain rows of a running turn, and a plain row of a settled turn fails the read
-instead of being returned.
+It runs on dev and on production until a whole pass finds no settled turn that
+still has a plain row, and it is deleted afterwards with its tests. The reader
+rule of the Sealed Row section holds through the migration: a plain row of a turn
+that carries `sealedAt` fails the read, and the plain rows of a running turn and
+of a settled turn without the marker pass through.
 
 ## Order Of Work
 
@@ -422,9 +431,10 @@ runs a whole turn and searches every component table.
    turn they appear only in the plain rows and the deltas.
 4. **Old messages.** The migration, run dry, then run for real on dev and on
    production, then run again until it reports nothing.
-5. **Contract.** Delete the migration and its tests, and in the same release stop
-   reading plain rows of settled turns, as the Old Messages section says. A
-   running turn's plain rows stay readable until it settles.
+5. **Contract.** Delete the migration and its tests. The reader rule of the Sealed
+   Row section stays: a plain row of a turn that carries `sealedAt` fails the
+   read, and a running turn or a settled turn without the marker keeps its plain
+   rows readable.
 
 In parallel, a proposal to Convex for a codec hook in the component. If it ships,
 the hook replaces wave 3, and wave 2 too if the hook covers `saveMessage`. The

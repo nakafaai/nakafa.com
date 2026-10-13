@@ -3,8 +3,8 @@
 ## Status
 
 Accepted on 13 October 2026 with owner decisions K5, K11, and K15. The owner
-approved decisions K1 to K20 on that day. The host rewrite for school subdomains is on a local branch and is not committed. The URL
-tree is planned. The eu data cell is planned, and it is created when the first
+approved decisions K1 to K20 on that day. The host rewrite for school subdomains
+and the URL tree are planned. The eu data cell is planned, and it is created when the first
 school in the European Union signs (K5). The old School routes are retired with
 K11 and get no redirect.
 
@@ -41,7 +41,7 @@ finds the right data.
 
 ### URL tree of the school workspace
 
-Every address below is planned. The home address is on a local branch.
+Every address below is planned.
 
 | Address | Purpose |
 | --- | --- |
@@ -75,7 +75,7 @@ Every address below is planned. The home address is on a local branch.
 | `nakafa.com/id` | Back to Nakafa learning | Live |
 | `api.nakafa.com/v1` | Public REST. No key, public data only. It never accepts a school path. | Live |
 | `mcp.nakafa.com/mcp` | Public MCP. No key, Nakafa content only. The name repeats in the host and the path, and it stays so that agents keep working. | Live |
-| `nakafa.com/id/school/{slug}/...` | The old School. Retired with K11, with no redirect. | Retired |
+| `nakafa.com/id/school/{slug}/...` | The old School. Retired with K11, with no redirect. | Live, retired with K11 |
 
 The school REST and MCP addresses are separate from the public ones. The public
 addresses stay keyless. The change to ADR 0006 that makes this split is made in
@@ -83,10 +83,11 @@ its own change, before any school code that depends on it lands.
 
 ### Data cells
 
-- The `us` cell is live. It runs on Convex `aws-us-east-1` and Vercel `iad1`.
-  Indonesian schools stay in this cell, because neither Convex nor Vercel has an
-  Indonesian region (K5). The owner asked on 30 September 2026 that these regions
-  stay as they are.
+- The `us` cell is live. Vercel runs `www` in `iad1` (`apps/www/vercel.ts`).
+  The Convex region, `aws-us-east-1`, appears in no repository file, so this
+  record cannot check it. Indonesian schools stay in this cell, because neither
+  Convex nor Vercel has an Indonesian region (K5). The owner asked on 30 September
+  2026 that these regions stay as they are.
 - The `eu` cell is planned. It runs on Convex `aws-eu-west-1` in Dublin, and on
   Vercel `dub1` only if measured latency calls for it. It is created when the
   first school in the European Union signs, with its own budget (K5).
@@ -130,7 +131,7 @@ its own change, before any school code that depends on it lands.
 | Part | Status |
 | --- | --- |
 | `apps/www/app/[locale]/(app)/school` and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Live today, retired with K11 |
-| Host rewrite for school subdomains | Local branch, not committed |
+| Host rewrite for school subdomains | Planned |
 | School URL tree | Planned |
 | `us` data cell | Live |
 | `eu` data cell | Planned, created by K5 |
