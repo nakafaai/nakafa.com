@@ -29,8 +29,12 @@ const PromptInputFilesLimitsSchema = Schema.Struct({
   maxFiles: Schema.optional(Schema.Finite),
 });
 type PromptInputFilesLimits = typeof PromptInputFilesLimitsSchema.Type;
-/** Reports every reason one pick was not attached in full, each naming its files. */
-type OnPromptInputFileError = (
+/**
+ * Reports every pick, once it is made: the reasons the pick did not attach its
+ * files in full, each naming its files, and an empty list when it attached all
+ * of them.
+ */
+type OnPromptInputPick = (
   rejections: readonly PromptInputFileConstraintError[]
 ) => void;
 
@@ -40,10 +44,10 @@ export function usePromptInputFiles({
   inputRef,
   maxFiles,
   maxFileSize,
-  onError,
+  onPick,
 }: PromptInputFilesLimits & {
   inputRef: RefObject<HTMLInputElement | null>;
-  onError?: OnPromptInputFileError | undefined;
+  onPick?: OnPromptInputPick | undefined;
 }) {
   const [items, setItems] = useState<PromptInputFile[]>([]);
   const localItemsRef = useRef<PromptInputFile[]>([]);
@@ -118,16 +122,14 @@ export function usePromptInputFiles({
           maxFiles,
         })
       );
-      if (Arr.isReadonlyArrayNonEmpty(selection.rejections)) {
-        onError?.(selection.rejections);
-      }
+      onPick?.(selection.rejections);
       if (selection.files.length === 0) {
         return;
       }
       addLocal(selection.files);
       fileCountRef.current += selection.files.length;
     },
-    [accept, addLocal, maxFileSize, maxFiles, onError]
+    [accept, addLocal, maxFileSize, maxFiles, onPick]
   );
   const remove = useCallback(
     (id: string) => {

@@ -113,11 +113,15 @@ export function NinaInput({
    * the one in front would hide the other, so the notice has one id, and a new
    * pick replaces it. A learner needs time to read a list of names, and a list
    * that scrolls cannot be used in a notice that is about to leave, so it stays
-   * until the learner closes it, picks again, or sends the message.
+   * until the learner closes it, picks again, or sends the message. A pick that
+   * attached every file takes the notice away, since its names are no longer a
+   * problem.
    */
-  function handleFileErrors(
-    rejections: readonly PromptInputFileConstraintError[]
-  ) {
+  function handlePick(rejections: readonly PromptInputFileConstraintError[]) {
+    if (!Arr.isReadonlyArrayNonEmpty(rejections)) {
+      toast.dismiss(FILES_NOTICE);
+      return;
+    }
     const notice = rejectionNotice(rejections, t);
     toast.error(notice.title, {
       // A new pick is a new list. With a key of its own it starts at its top,
@@ -145,7 +149,7 @@ export function NinaInput({
       maxFileSize={NINA_FILE_SIZE}
       maxFiles={NINA_FILE_COUNT}
       multiple
-      onError={handleFileErrors}
+      onPick={handlePick}
       onSubmit={handleSubmit}
     >
       {children}

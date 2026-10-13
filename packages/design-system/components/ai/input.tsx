@@ -27,19 +27,16 @@ import {
 } from "react";
 
 /**
- * Props for a prompt form with locally owned attachments. `onError` reports
- * the files that one pick did not attach, a reason at a time, not the form's
- * own error event.
+ * Props for a prompt form with locally owned attachments. `onPick` reports
+ * every pick, once it is made: the reasons the pick did not attach its files in
+ * full, and an empty list when it attached all of them.
  */
-type PromptInputProps = Omit<
-  HTMLAttributes<HTMLFormElement>,
-  "onError" | "onSubmit"
-> & {
+type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit"> & {
   accept?: string;
   maxFiles?: number;
   maxFileSize?: number;
   multiple?: boolean;
-  onError?: (rejections: readonly PromptInputFileConstraintError[]) => void;
+  onPick?: (rejections: readonly PromptInputFileConstraintError[]) => void;
   onSubmit: (
     message: PromptInputMessage,
     event: FormEvent<HTMLFormElement>
@@ -58,7 +55,7 @@ export function PromptInput({
   multiple,
   maxFiles,
   maxFileSize,
-  onError,
+  onPick,
   onSubmit,
   children,
   ...props
@@ -70,7 +67,7 @@ export function PromptInput({
     inputRef,
     maxFiles,
     ...(maxFileSize === undefined ? {} : { maxFileSize }),
-    onError,
+    onPick,
   });
   const addFiles = attachments.add;
 
