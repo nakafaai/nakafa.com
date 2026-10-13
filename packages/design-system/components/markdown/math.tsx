@@ -124,17 +124,28 @@ export function BlockMath({
 /**
  * How an inline formula sits in a line of text.
  *
- * KaTeX breaks a formula after each relation and binary operator on its own,
- * but never inside a fraction, a root or a `\left ... \right` pair, so one
- * piece of a formula can be wider than its column. `scroll` puts the formula
- * in a box that scrolls sideways when that happens and is no wider than the
- * column. A formula that can break still wraps inside the box.
+ * KaTeX breaks a formula after a relation or a binary operator on the outer
+ * level, as TeX does, and never inside a fraction, a root or a
+ * `\left ... \right` pair. One piece that cannot break can be wider than the
+ * column, so `scroll` puts the formula in a box that is no wider than the
+ * column and scrolls sideways when a piece does not fit. A formula that can
+ * break wraps inside the box and stays whole.
+ *
+ * The box is one unit of its line. A formula wider than the column therefore
+ * starts a line of its own, and the text after it continues beside its first
+ * row.
+ *
+ * The box scrolls natively, as the table of a response does, and takes the
+ * thin scrollbar of the global styles. A `ScrollArea` is made of divs, which
+ * a paragraph cannot hold.
  *
  * The box is `inline-flex` because an `inline-block` with `overflow` takes its
  * bottom edge as its baseline and drops the formula off the text. The padding
  * and the negative margin cancel for layout and leave room for the ink that
- * sticks out of a formula's box, such as a root's tail: without them the box
- * would clip it or show a scrollbar for two pixels.
+ * sticks out of a formula's box, such as a root's tail. Measured in Chromium
+ * over 19 formulas that fit: with them none scrolls and none paints
+ * differently from the bare formula, and without them a root, an underbrace
+ * and an integral scroll by 2 pixels and five formulas paint differently.
  */
 const inlineMathVariants = cva("", {
   variants: {

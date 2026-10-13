@@ -14,12 +14,11 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
  * the text takes the direction of its own content.
  *
  * A message taller than twelve lines shows its first twelve, and the learner
- * opens the rest. Twelve lines are 292.5 pixels at the chat text size: 330
- * characters of exercises pasted one to a line on a phone 320 pixels wide, and
- * 660 at the width of the chat page. A pasted exercise fits, and a pasted
- * chapter no longer pushes the answer thousands of pixels away. The whole text
- * stays in the page whether it is folded or not, so find and copy reach all
- * of it.
+ * opens the rest. Twelve lines are 292.5 pixels at the chat text size, which
+ * is 15 pixels with a line height of 1.625. A few pasted exercises fit, and a
+ * pasted chapter no longer pushes the answer away by its whole height. The
+ * whole text stays in the page whether it is folded or not, so find and copy
+ * reach all of it.
  */
 export function NinaWords({ children }: { children: string }) {
   const t = useTranslations("Ai");
