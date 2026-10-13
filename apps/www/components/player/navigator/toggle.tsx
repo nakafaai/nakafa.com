@@ -11,7 +11,7 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import { Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
-import { useRef, useTransition } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { decodePlayerMode } from "@/components/player/mode";
 import { usePlayer } from "@/components/player/provider";
@@ -20,14 +20,13 @@ import { rememberPlayerMode } from "@/components/player/remember.client";
 /**
  * Switches between the list and one question at a time. The view changes at
  * once, and the choice is saved in a transition. When it cannot be saved the
- * previous view comes back, unless the learner chose again since.
+ * last saved view comes back, unless the learner chose again since.
  */
 export function PlayerModeToggle() {
   const t = useTranslations("Player");
   const mode = usePlayer((state) => state.mode);
-  const setMode = usePlayer((state) => state.setMode);
+  const choose = usePlayer((state) => state.choose);
   const [, startTransition] = useTransition();
-  const requests = useRef(0);
 
   /** Applies a pressed item; pressing the shown item again changes nothing. */
   function onValueChange(value: string) {
@@ -35,16 +34,13 @@ export function PlayerModeToggle() {
     if (Option.isNone(next)) {
       return;
     }
-    const request = requests.current + 1;
-    requests.current = request;
-    setMode(next.value);
     startTransition(async () => {
-      const saved = await Effect.runPromise(rememberPlayerMode(next.value));
-      if (saved || request !== requests.current) {
-        return;
+      const choice = await Effect.runPromise(
+        choose(next.value, rememberPlayerMode(next.value))
+      );
+      if (choice === "reverted") {
+        toast.error(t("mode-error"), { position: "bottom-center" });
       }
-      setMode(mode);
-      toast.error(t("mode-error"), { position: "bottom-center" });
     });
   }
 

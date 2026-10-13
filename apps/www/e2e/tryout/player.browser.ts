@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Option } from "effect";
+import { Deferred, Effect, Option } from "effect";
 import { activate } from "@/e2e/support/input";
 import { expectUncovered } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -31,6 +31,9 @@ const SHORT_WINDOW_HEIGHT = 400;
 
 /** An address whose `view` parameter names one question at a time. */
 const SINGLE_VIEW_ADDRESS = /[?&]view=single(&|$)/;
+
+/** What the learner is told when the server cannot save the view. */
+const VIEW_ERROR = "We couldn't save your view. Please try again.";
 
 /** The address of the running section with a `view` parameter, or without one. */
 function withView(address: string, view?: string) {
@@ -140,6 +143,50 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
 });
 
 /**
+ * Shows a chosen view at once, and takes it back with a message when the
+ * server cannot save it. The save waits until the view is on screen, so the
+ * check never races the failure.
+ */
+const verifyRollback = Effect.fn("NakafaE2E.verifyPlayerRollback")(function* (
+  page: Page,
+  hasTouch: boolean,
+  baseURL: string
+) {
+  yield* runFirstSection(page, hasTouch, baseURL);
+  yield* expectView(page, "List");
+
+  const sectionPath = new URL(page.url()).pathname;
+  const failSave = yield* Deferred.make<void>();
+  const services = yield* Effect.context<never>();
+  yield* Effect.promise(() =>
+    page.route(
+      (url) => url.pathname === sectionPath,
+      (route) =>
+        route.request().headers()["next-action"] === undefined
+          ? route.continue()
+          : Effect.runPromiseWith(services)(
+              Deferred.await(failSave).pipe(
+                Effect.andThen(() => Effect.promise(() => route.abort()))
+              )
+            )
+    )
+  );
+
+  yield* chooseView(page, hasTouch, "One question");
+  yield* expectView(page, "One question");
+
+  yield* Deferred.succeed(failSave, undefined);
+  yield* expectView(page, "List");
+  yield* Effect.promise(() =>
+    expect(page.getByText(VIEW_ERROR)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  const unsaved = yield* Effect.promise(() => readRememberedView(page));
+  yield* Effect.sync(() => expect(Option.isNone(unsaved)).toBe(true));
+});
+
+/**
  * Moves between questions with the keys and the navigator, answers from the
  * keyboard, and goes back to a question that is still open from the finish
  * confirmation.
@@ -150,6 +197,8 @@ const verifyKeys = Effect.fn("NakafaE2E.verifyPlayerKeys")(function* (
   baseURL: string
 ) {
   yield* runFirstSection(page, hasTouch, baseURL);
+  // The questions stream in after the header, so wait for them before keys.
+  yield* expectView(page, "List");
   const current = currentNumberOf(page, hasTouch);
   yield* Effect.promise(() => expect(current).toHaveText("1"));
 
@@ -261,6 +310,8 @@ const verifyShortSidebar = Effect.fn("NakafaE2E.verifyShortSidebar")(function* (
   baseURL: string
 ) {
   yield* runFirstSection(page, false, baseURL);
+  // The questions stream in after the header, so wait for them to measure.
+  yield* expectView(page, "List");
   // The window shrinks once the section runs, so the setup keeps its room.
   yield* Effect.promise(() =>
     page.setViewportSize({
@@ -313,6 +364,22 @@ for (const viewport of tryoutViewports) {
           Effect.fromNullishOr(baseURL).pipe(
             Effect.flatMap((origin) =>
               verifyView(page, viewport.hasTouch, origin)
+            )
+          )
+        )
+      );
+    });
+
+    test("takes a view back when the server cannot save it", async ({
+      baseURL,
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(
+          page,
+          Effect.fromNullishOr(baseURL).pipe(
+            Effect.flatMap((origin) =>
+              verifyRollback(page, viewport.hasTouch, origin)
             )
           )
         )

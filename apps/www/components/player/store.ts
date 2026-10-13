@@ -1,4 +1,4 @@
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createStore } from "zustand";
 import { type PlayerMode, PlayerModeSchema } from "@/components/player/mode";
 import { readNeighbor } from "@/components/player/order";
@@ -8,6 +8,11 @@ const PlayerOverlaySchema = Schema.Literals(["finish", "navigator", "none"]);
 
 /** Schema-derived overlay the player shows. */
 export type PlayerOverlay = typeof PlayerOverlaySchema.Type;
+
+/** How the save of a chosen view ended. */
+const PlayerChoiceSchema = Schema.Literals(["reverted", "saved", "superseded"]);
+
+type PlayerChoice = typeof PlayerChoiceSchema.Type;
 
 /**
  * A request for the mounted questions to reveal one question. `seq` counts the
@@ -22,6 +27,8 @@ type PlayerJump = typeof PlayerJumpSchema.Type;
 
 /** What the learner is doing in the player, written only by its own actions and observers. */
 const PlayerStateSchema = Schema.Struct({
+  /** Counts the views the learner chose, so a failed save knows whether a newer choice replaced it. */
+  choice: Schema.Int,
   /** The question that the footer and the keys act on. */
   current: Schema.NullOr(Schema.String),
   jump: Schema.NullOr(PlayerJumpSchema),
@@ -35,11 +42,21 @@ const PlayerStateSchema = Schema.Struct({
   pending: Schema.NullOr(Schema.String),
   /** Whether a jump or a focus holds `current` until the learner scrolls. */
   pinned: Schema.Boolean,
+  /** The view the server knows: the one it resolved, or the last one it saved. */
+  saved: PlayerModeSchema,
 });
 
 type PlayerState = typeof PlayerStateSchema.Type;
 
 interface PlayerActions {
+  /**
+   * Shows a view at once and saves it. When the save fails, the last saved view
+   * comes back, unless the learner chose another view since.
+   */
+  choose: (
+    mode: PlayerMode,
+    save: Effect.Effect<boolean>
+  ) => Effect.Effect<PlayerChoice>;
   /** Closes the open overlay. */
   close: () => void;
   /** Holds `current` on the question that has the learner's focus. */
@@ -52,8 +69,6 @@ interface PlayerActions {
   open: (overlay: Exclude<PlayerOverlay, "none">) => void;
   /** Lets the reading line decide `current` again after the learner scrolls. */
   release: () => void;
-  /** Shows the other view and reveals the current question in it. */
-  setMode: (mode: PlayerMode) => void;
   /** Reveals the question that waited for an overlay to finish closing. */
   settle: () => void;
   /** Goes to the question before or after the current one. */
@@ -90,7 +105,31 @@ export function createPlayerStore(input: {
       set({ jump: jumpTo(jump, key) });
     }
 
+    /** Shows a view and reveals the current question in it. */
+    function show(mode: PlayerMode) {
+      const { current } = get();
+      set({ mode, observed: null, pinned: true });
+      if (current !== null) {
+        reveal(current);
+      }
+    }
+
     return {
+      choice: 0,
+      choose: Effect.fn("player.mode.choose")(function* (mode, save) {
+        const choice = get().choice + 1;
+        set({ choice });
+        show(mode);
+        if (yield* save) {
+          set({ saved: mode });
+          return "saved";
+        }
+        if (get().choice !== choice) {
+          return "superseded";
+        }
+        show(get().saved);
+        return "reverted";
+      }),
       close: () => set({ overlay: "none" }),
       current: Option.getOrNull(Arr.head(input.keys)),
       focus: (key) => set({ current: key, observed: null, pinned: true }),
@@ -118,13 +157,7 @@ export function createPlayerStore(input: {
               }
             : state
         ),
-      setMode: (mode) => {
-        const { current } = get();
-        set({ mode, observed: null, pinned: true });
-        if (current !== null) {
-          reveal(current);
-        }
-      },
+      saved: input.mode,
       settle: () => {
         const { jump, pending } = get();
         if (pending !== null) {
