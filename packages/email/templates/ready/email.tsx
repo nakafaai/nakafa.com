@@ -119,7 +119,7 @@ function AccountReadyEmail(
                   target="_blank"
                 >
                   {copy.privacyPolicy}
-                </Link>
+                </Link>{" "}
                 <Link
                   className="text-muted-foreground underline"
                   href={termsOfServiceUrl}
