@@ -72,6 +72,10 @@ for School accounts, it must hold this value and never a second one.
   underscores, and starts with a letter. A dot is not allowed, because the site
   answers addresses that end in `.md`, `.png`, or `.og` for the Markdown and
   image versions of a page. Capitals are accepted and stored as lowercase.
+- A bio is one line of at most 160 characters: every run of white space becomes
+  one space and the ends are trimmed. A character is a Unicode code point, so an
+  emoji counts once, and whatever shows a count beside the field counts the
+  same way.
 - A name is refused when it is a route (every root in
   `@repo/contents/route/root`, every namespace of a public route surface, and
   the few roots that answer outside the route tree) or could pass for Nakafa,
@@ -120,7 +124,9 @@ nothing. So no profile is public yet.
   someone else. The id address is retired for good. The answer is permanent
   even though the username it names can change, so a browser that kept it after
   a rename lands on the old name, which is not found (or is the page of the
-  account that holds the name now).
+  account that holds the name now). A profile has no Markdown version, so a
+  request for the retired address with `.md` or `.mdx` is not redirected and
+  ends as not found, as it does for anyone else.
 - When an age is stored, the rule becomes: the account is of age and holds no
   claimed person in `tenantPeople` (read through
   `by_account_userId_and_kind_and_status`). The profile then becomes a public
