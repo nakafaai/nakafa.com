@@ -14,9 +14,17 @@ export const touchViewport = {
   width: 390,
 } as const;
 
+/** The narrowest viewport the responsive suites walk: a compact phone. */
+export const compactViewport = {
+  hasTouch: false,
+  height: 800,
+  name: "compact",
+  width: 320,
+} as const;
+
 /** The viewports the responsive suites walk, from a compact phone to desktop. */
 export const targetViewports = [
-  { hasTouch: false, height: 800, name: "compact", width: 320 },
+  compactViewport,
   touchViewport,
   { hasTouch: false, height: 1024, name: "tablet-portrait", width: 768 },
   { hasTouch: false, height: 768, name: "tablet-landscape", width: 1024 },

@@ -92,9 +92,3 @@ export const LEANS = {
   center: { turn: 0, size: 0.9, x: 0, y: 6 },
   peek: { turn: 0, size: 1, x: 0, y: 30 },
 } satisfies Record<typeof LeanSchema.Type, unknown>;
-
-/** The window on her whole figure: room for raised arms and for what she holds. */
-export const WHOLE_BOX = [-48, -20, 300, 310] as const;
-
-/** The window on her half figure. */
-export const HALF_BOX = [0, 0, 200, 200] as const;
