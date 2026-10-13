@@ -18,7 +18,7 @@ import {
  */
 type Send = Pick<
   ReturnType<typeof useMemoryActions>,
-  "add" | "drop" | "edit" | "remove"
+  "add" | "edit" | "remove"
 > & {
   adopt: (memory: Memory) => void;
   cleared: () => number;
@@ -36,14 +36,20 @@ type Send = Pick<
  * and closing the editor never waits for an answer. Only the first save of a
  * new memory is alone on its way, because every later write names the memory
  * it stored. Nothing is written for a draft that says nothing, for one the
- * server was already handed, or after the learner deleted the memory. A write
- * that failed is sent again with the next one. When it was the newest, the
- * words the editor holds now come back in the editor if the learner closed it,
- * though they may be newer than the words that failed, because the server may
- * never have been handed them. After an older write fails, the server still
- * holds a newer draft. A memory the server no longer has closes the editor and
- * stops the saving: the server answered a write with a memory that is gone, or
- * the learner deleted every memory while the first save was on its way.
+ * server was already handed, or after the learner deleted the memory. When the
+ * editor closes on a memory the learner emptied, the memory is deleted as the
+ * Delete button deletes it, because the server would otherwise keep the last
+ * words the learner no longer sees. The row of a new memory shows from the
+ * moment its first save goes out, so a memory the learner deleted or emptied
+ * while that save was on its way is deleted when the server has stored it, with
+ * the same Undo. A write that failed is sent again with the next one. When it
+ * was the newest, the words the editor holds now come back in the editor if
+ * the learner closed it, though they may be newer than the words that failed,
+ * because the server may never have been handed them. After an older write
+ * fails, the server still holds a newer draft. A memory the server no longer
+ * has closes the editor and stops the saving: the server answered a write with
+ * a memory that is gone, or the learner deleted every memory while the first
+ * save was on its way.
  */
 export function createAutosave(
   memory: Memory | null,
@@ -53,8 +59,8 @@ export function createAutosave(
   const state = MutableRef.make({
     /** The first save of a new memory is on its way. */
     adding: false,
-    /** The stored memory, once there is one. */
-    id: memory?.id ?? null,
+    /** The memory the editor opened with, or the memory its first save stored. */
+    memory,
     /**
      * What the server was last handed, or nothing after a write that failed.
      * The server holds the words of the memory, but not the restored words of a
@@ -106,7 +112,13 @@ export function createAutosave(
 
   /** Sends what the server was not handed yet. */
   function write(send: Send) {
-    const { adding, id, sent, stopped, wanted } = MutableRef.get(state);
+    const {
+      adding,
+      memory: stored,
+      sent,
+      stopped,
+      wanted,
+    } = MutableRef.get(state);
     const handed = Option.exists(sent, (draft) => sameDraft(wanted, draft));
 
     if (adding || stopped || isBlank(wanted) || handed) {
@@ -115,12 +127,12 @@ export function createAutosave(
 
     MutableRef.update(state, (current) => ({
       ...current,
-      adding: id === null,
+      adding: stored === null,
       sent: Option.some(wanted),
     }));
 
-    if (id !== null) {
-      send.edit(id, wanted, {
+    if (stored !== null) {
+      send.edit(stored.id, wanted, {
         failed: (again) => failed(send, wanted, again),
       });
       return;
@@ -129,18 +141,12 @@ export function createAutosave(
     const cleared = send.cleared();
 
     send.add(wanted, {
-      done: (stored) => {
+      done: (added) => {
         MutableRef.update(state, (current) => ({
           ...current,
           adding: false,
-          id: stored.id,
+          memory: added,
         }));
-
-        // The learner deleted the memory while the server was storing it.
-        if (MutableRef.get(state).stopped) {
-          send.drop(stored.id);
-          return;
-        }
 
         // The learner deleted every memory while the server was storing it,
         // and the server deleted this one with the others.
@@ -149,12 +155,39 @@ export function createAutosave(
           return;
         }
 
-        send.adopt(stored);
+        // The learner deleted the memory while the server was storing it. Its
+        // row showed from the moment the save went out, so it goes as any
+        // memory the learner sees goes, with an Undo.
+        if (MutableRef.get(state).stopped) {
+          discard(send, added);
+          return;
+        }
+
+        send.adopt(added);
         // What the learner wrote while the server was storing the memory.
         write(send);
       },
       failed: (again) => failed(send, wanted, again),
     });
+  }
+
+  /**
+   * Stops the saving and deletes the memory. `shown` is the memory the editor
+   * shows, or none while the first save of a new memory is on its way. The
+   * learner sees the memory in its row, so its deletion offers an Undo, which
+   * brings back the words the editor held, or the words of the memory when the
+   * editor held none. A new memory that no save has sent has no row, and
+   * nothing is deleted for it.
+   */
+  function discard(send: Send, shown: Memory | null) {
+    const { memory: stored, wanted } = MutableRef.get(state);
+    const target = shown ?? stored;
+
+    MutableRef.update(state, (current) => ({ ...current, stopped: true }));
+
+    if (target) {
+      send.remove(target, isBlank(wanted) ? draftOf(target) : wanted);
+    }
   }
 
   return {
@@ -163,26 +196,24 @@ export function createAutosave(
       MutableRef.update(state, (current) => ({ ...current, wanted: draft }));
     },
     /**
-     * Stops the saving and deletes the memory. `shown` is the memory the
-     * editor shows: the learner saw it stored, so its deletion offers an Undo,
-     * which brings back the words the editor held, or the words of the memory
-     * when the editor held none. A memory stored a moment ago, which they never
-     * saw, goes without a word.
+     * The editor closes. What the server was not handed goes out as `write`
+     * sends it. A memory the learner emptied, title and words, is deleted as
+     * the Delete button deletes it, with the same Undo: nothing written for it
+     * would leave its last words on the server and in the list, though the
+     * editor showed none. A new memory that was never given a word, and is not
+     * on its way, creates nothing.
      */
-    discard(send: Send, shown: Memory | null) {
-      const { id, wanted } = MutableRef.get(state);
+    close(send: Send, shown: Memory | null) {
+      const { adding, memory: stored, stopped, wanted } = MutableRef.get(state);
 
-      MutableRef.update(state, (current) => ({ ...current, stopped: true }));
-
-      if (shown) {
-        send.remove(shown, isBlank(wanted) ? draftOf(shown) : wanted);
+      if (isBlank(wanted) && !stopped && (adding || stored !== null)) {
+        discard(send, shown);
         return;
       }
 
-      if (id !== null) {
-        send.drop(id);
-      }
+      write(send);
     },
+    discard,
     /** The words the editor starts with. */
     starting,
     write,

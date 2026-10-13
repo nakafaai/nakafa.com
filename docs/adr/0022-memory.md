@@ -684,6 +684,55 @@ nobody tries them again without a new reason.
   window shows only the rows it started with until the learner scrolls and
   would start again, with every row, each time the count changed: its rows are
   all in the page and stay in place while memories come and go.
+- A memory is named by its title, or by its words as the editor shows them. The
+  page reads the stored Markdown in
+  `@repo/design-system/components/editor/plain`, and no pattern decides what a
+  learner wrote: `C++`, `a == b` and `Q&A` are the words, not marks or entities.
+  The reader lexes with the `marked` that `@tiptap/markdown` depends on,
+  declared as `marked-tiptap` and held with it in the dependency policy,
+  because the `marked` of the chat renderer is a later major that reads some
+  text differently. Importing the extensions that hold the editor's tokenizers
+  would put about 93 kB gzipped (esbuild, minified) into the first JavaScript
+  of the page, so the reader and the editor share their grammar instead, and
+  the editor is the one that gives way where Tiptap's own grammar is wider than
+  Markdown. The reader adds 13,465 bytes gzipped (43,066 raw) to the 68 scripts
+  that the Memory route loads, which went from 952,979 to 966,444 bytes
+  gzipped in the production build (the browser's resource timing, the same on
+  three runs, for a signed-in learner with an empty list). That is under the
+  15 kB gzipped that the reader was allowed, and `marked` alone is 12.7 kB
+  gzipped of it.
+
+  Tiptap's tokenizer for a numbered list takes one or two letters, or a roman
+  numeral, for a number, so `Dr. Budi sakit` opened as a list item `Budi sakit`
+  and the next save wrote `1. Budi sakit` (ueberdosis/tiptap issues 8376 and
+  8395; the fix merged for 8376 stops mixed-case titles only and is not in
+  3.31.4, the latest release). The editor lexes a numbered list with `marked`,
+  as it does a bullet list, and the reader does too. Both lex the underline and
+  the highlight with the one rule of `marks.ts`: a mark is a pair of delimiters
+  around words, so `C++ and C++20` and `a == b == c` are text. A pair with no
+  space inside it, `a==b and c==d`, is still a mark, as `**b**` is, and the
+  stored text never changes either way.
+
+  The test `plain.test.ts` sets the reader against the editor, with a document
+  to parse HTML in as a browser has: for every block and every mark the editor
+  writes around the worst-case words, for the ways a line of Markdown can
+  start, and for Markdown that Nina may write. That is all it proves. The two
+  still read some Markdown another way, and the test names each: raw HTML,
+  which the editor parses with the document of the page; a text in which
+  Tiptap finds no block, such as a table alone, which it shows as the Markdown
+  itself; and a few shapes that Tiptap bends to fit its schema or reads with
+  the rule of its own task list, namely a task item with no words between
+  other items (the row keeps its check box as `[ ]`), a divider inside a task
+  item, an item that starts with a heading or a code block, a code fence
+  indented by one to three spaces, and a code span that starts with a task
+  marker. Reading never changes the stored text. Words that show nothing, such
+  as a divider or a table, are called Untitled. The server and the browser give
+  the same name, and the search reads the same words. A situation that had
+  ended when the server read the page is not listed, by the rule that search
+  and the recall of a turn apply (`hasEnded`), judged at that moment, so no
+  clock reaches a query and nothing changes while the learner looks. Each name
+  takes the direction of its own words, and a name too long for its row keeps
+  its whole text in its title.
 - The Memory page searches in the browser alone, in any part of a word of the
   title and the words of the memories it holds. While the search box holds text,
   the reader loads the pages that are not loaded yet, 50 at a time (the most a
@@ -707,7 +756,46 @@ nobody tries them again without a new reason.
   one editor in the panel beside the page and in the sheet, so a window that
   crosses the width where the two swap loses nothing the learner wrote. After a
   save that failed the editor opens again with the words the server never took,
-  and the next close writes them, whatever the memory on the page shows.
+  and the next close writes them, whatever the memory on the page shows. When
+  the learner removes the title and every word of a stored memory and closes
+  the editor, the memory is deleted as the Delete button deletes it, with the
+  same Undo, because nothing written would leave the last words on the server
+  and in the list. A new memory that was never given a word creates nothing. A
+  new memory that the learner deletes or empties while its first save is on its
+  way has a row from the moment that save goes out, so it is deleted when the
+  server has stored it, with the same Undo. The Undo writes the title and the
+  words back as the learner's own memory with `add`, which takes no kind and no
+  end date, so a situation that is undone no longer ends. To give it back its
+  end date, `add` would have to take one; that is left for a decision. A paste
+  that would take the Markdown past 2,000 characters is refused as a whole, and
+  the page says so. The panel beside the page never takes the room
+  the list needs: the list keeps a card of 20rem between its padding, whatever
+  width the learner dragged the panel to and whatever the window is, and its
+  resizer says the width the panel has and the widths it can have. A drag of
+  its edge measures from where the page ends and not from the window, so a
+  scrollbar never leaves the edge beside the pointer. Nina's sheet, which is
+  fixed to the same edge and drags with the same hook, lands its edge the same
+  way. Below 65rem the editor is
+  the sheet it is on a phone: the sidebar, the smallest panel and the room of
+  the list need 63rem, and where scrollbars take room the stable gutter of the
+  page on both edges takes a scrollbar's width from each side of the window,
+  which the media query does not count, so the 2rem up to 65rem are for them.
+  The head of the list shows the word on its add button and the icon of its
+  search by its own width, because the card beside the panel is as narrow as
+  the card on a phone. Under 24rem the page keeps its scrollbar gutter on one
+  edge and not on both (`globals.css`), on every route: the gutter belongs to
+  the page, and a gutter that changed with the route would move the page when
+  the learner navigates. Where a browser's scrollbars take room, which includes
+  the headless Chromium of CI (it paints no scrollbar and still reserves the
+  gutter), two gutters left a 320px page cards too narrow for the German
+  placeholder of the search and for the end date of a situation in a row, and
+  the 320px browser tests failed in CI until the page kept one gutter. A phone
+  has no gutter and was never short. A search field also keeps a slot for its
+  clear button while it is empty, and the placeholder cannot use it, so the
+  field hides the button while the placeholder shows and gives it back with the
+  first letter. The width of the field less its padding does not show the slot,
+  so the browser test reads the placeholder's own box from the shadow tree that
+  the browser draws the field from (`e2e/support/placeholder.ts`).
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
   because the browser has no page of its own to change until then.

@@ -2,6 +2,13 @@ import type { Page } from "@playwright/test";
 
 /** A content card, which a lesson or a Quran page shows. */
 export const CARD = '[data-slot="card"]';
+/** A message bubble, which holds the words of a prompt or of an answer. */
+export const BUBBLE = '[data-slot="bubble"]';
+/**
+ * The list that holds the toasts. They stack over the page and move on their
+ * own, so a toast moving is not the page moving.
+ */
+export const TOASTER = "[data-sonner-toaster]";
 /** The popup of a drawer, which a phone opens for the consent and contributor surfaces. */
 export const DRAWER_POPUP = '[data-slot="drawer-popup"]';
 /** The bar at the top of a drawer, which a swipe drags. */
@@ -30,6 +37,8 @@ export const MARKETING_PAGE = 'main[data-marketing-page="true"]';
 export const NINA_SHOWCASE = '[data-slot="nina-showcase"]';
 /** A visual card, which wraps a lesson's lab, chart, or 3D scene. */
 export const VISUAL_CARD = '[data-slot="visual-card"]';
+/** The place of Nina on a full-page state, which holds her and the things beside her. */
+export const STATE_FIGURE = '[data-slot="empty-icon"]';
 /** A link to a subject lesson, such as the neighbors that lesson pagination shows. */
 export const SUBJECT_LINK = 'a[href^="/en/subjects/"]';
 

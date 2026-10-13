@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
-import { SHEET_POPUP } from "@/e2e/support/selector";
+import { BUBBLE, SHEET_POPUP } from "@/e2e/support/selector";
 
 /** What the pages tell the learner when a prompt could not be confirmed. */
 export const UNCONFIRMED =
@@ -14,9 +14,16 @@ export const UNAVAILABLE =
 export const composerOf = (scope: Locator) =>
   scope.getByRole("textbox", { name: "Ask Nina anything..." });
 
-/** The prompt with these words, which a surface shows as a message. */
+/**
+ * The prompt with these words, which a surface shows as a message. Only a
+ * bubble a reader can see counts. Next.js keeps the surface a learner left in
+ * the same document, hidden, and it holds the prompt it showed until React
+ * renders it again, so a locator that counted hidden bubbles would find the
+ * prompt twice for a moment after a chat opens. One match per prompt is also
+ * what a reader sees: a second visible copy makes the assertion fail.
+ */
 export const promptWith = (scope: Locator, text: string) =>
-  scope.locator('[data-slot="bubble"]').filter({ hasText: text });
+  scope.locator(BUBBLE).filter({ hasText: text, visible: true });
 
 /** Nina's sheet on a lesson, where an admitted prompt opens its chat inside the sheet. */
 export const inTheSheet = (page: Page) => page.locator(SHEET_POPUP);

@@ -350,7 +350,6 @@
     "complete-part-success": "Section finished. You can choose another section or go back to the set.",
     "complete-part-error": "We could not finish this section yet. Please try again.",
     "back-to-set-cta": "Back",
-    "question-unit": "questions",
     "set-column-duration": "Duration",
     "set-duration-minutes": "{minutes, number} min",
     "set-sort-duration-ascending": "Shortest duration",
@@ -406,18 +405,6 @@
   "Videos": {
     "discover": "Discover videos"
   },
-  "NotFound": {
-    "title": "Page Not Found",
-    "description": "Oops! That page doesn't exist or isn't ready yet.",
-    "home-button": "Home",
-    "contribute-button": "Contribute"
-  },
-  "Error": {
-    "title": "Oops, something went wrong!",
-    "description": "Please help us by reporting this on GitHub.",
-    "retry": "Retry",
-    "report": "Report"
-  },
   "Contributor": {
     "title": "Contributor",
     "description": "Meet the people who made Nakafa possible."
@@ -431,9 +418,6 @@
     "continue-with-google": "Continue with Google",
     "opening-google": "Opening Google...",
     "provider-error": "We couldn't continue with Google. Please try again.",
-    "entry-error-title": "We couldn't prepare this page",
-    "entry-error-description": "Try again to continue securely.",
-    "retry": "Retry",
     "logout": "Logout",
     "login": "Login",
     "login-cta-title": "Continue learning",
@@ -532,12 +516,13 @@
     "delete": "Delete memory",
     "deleted": "Memory deleted",
     "undo": "Undo",
-    "written-by-you": "Written by you",
-    "saved-by-nina": "Saved by Nina",
+    "written-by-you": "Written by you {time}",
+    "saved-by-nina": "Saved by Nina {time}",
     "ends": "Ends {date}",
     "text": "Memory text",
     "placeholder": "Write what Nina should remember",
     "missing": "This memory no longer exists",
+    "too-long": "That text is too long for one memory",
     "title": "Title",
     "untitled": "Untitled",
     "count": "{count, number} / {limit, number}"
@@ -948,6 +933,11 @@
       "classes": "Classes",
       "nakafa-materials": "Nakafa Materials",
       "yours": "For you"
+    },
+    "Missing": {
+      "title": "We can't find this school or class",
+      "description": "Maybe the link is wrong, or you haven't joined yet",
+      "back-button": "Go to Nakafa School"
     },
     "Classes": {
       "classes": "Classes",

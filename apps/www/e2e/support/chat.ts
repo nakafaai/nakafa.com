@@ -1,19 +1,19 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
 import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-import { ANSWER_MILLISECONDS, trackChanges } from "@/e2e/support/changes";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { activate } from "@/e2e/support/input";
+import { trackChanges } from "@/e2e/support/changes";
+import {
+  type DeclineLocale,
+  declineUsageData,
+  seedAnalyticsConsent,
+} from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The new chat page of the English site. */
 export const CHAT_PATH = "/en/chat";
-/** What the consent prompt calls its decline button, in each language of the site. */
-const DECLINE_LABELS = { de: "Ablehnen", en: "Decline", id: "Tolak" } as const;
 /** A lesson, where Nina's sheet opens beside the page. */
 export const LESSON_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -215,41 +215,16 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
 export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   page: Page,
   baseURL: string,
-  locale: keyof typeof DECLINE_LABELS = "en"
+  locale: DeclineLocale = "en"
 ) {
   const changes = yield* trackChanges(page, [LIST_QUERY]);
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(() => page.goto(`/${locale}/chat`));
 
-  // A signed-in learner decides analytics once for the account.
-  const decline = page.getByRole("button", {
-    exact: true,
-    name: DECLINE_LABELS[locale],
-  });
-  yield* Effect.promise(() =>
-    expect(decline).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-  );
-  yield* activate(decline, false);
-  yield* Effect.promise(async () => {
-    await expect(decline).toBeHidden({ timeout: readinessTimeoutMilliseconds });
-    await expect
-      .poll(() => changes.signedIn && changes.origin !== "", {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(true);
-    // The page hides its card at once, before the server has stored the
-    // decision. A page that goes elsewhere while the change is on its way drops
-    // it, so the card comes back and the tracker never sees its answer. A
-    // decision that fails to save is tried again after 10 seconds
-    // (`lib/analytics/consent/signal.ts`), so only a stored one counts, and the
-    // wait covers that retry.
-    await expect
-      .poll(() => changes.stored > 0n && changes.told >= changes.stored, {
-        timeout: ANSWER_MILLISECONDS * 2,
-      })
-      .toBe(true);
-  });
+  // The server took the learner's choice, so the page was signed in and its
+  // connection to the backend is open.
+  yield* declineUsageData(page, changes, locale);
   const learner = yield* learnerOf(page, baseURL, changes.origin);
   return { changes, learner };
 });

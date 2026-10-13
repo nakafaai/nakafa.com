@@ -300,6 +300,16 @@
     scrollbar-gutter: stable both-edges;
   }
 
+  /* A gutter on both edges keeps the page centred, and where a browser's
+   * scrollbars take room it costs the page two scrollbar widths. Under 24rem
+   * the page keeps one gutter, so a page that narrow keeps the room that its
+   * content needs. */
+  @media (width < 24rem) {
+    html {
+      scrollbar-gutter: stable;
+    }
+  }
+
   body {
     @apply bg-background text-foreground selection:bg-primary selection:text-primary-foreground overscroll-y-none;
   }

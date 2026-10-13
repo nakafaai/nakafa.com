@@ -24,18 +24,6 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
-      name: "getChats",
-      args: () => ({
-        userId: IdSchema("users"),
-        q: Schema.optionalKey(Schema.String),
-        visibility: Schema.optionalKey(chatVisibilityValidator),
-        type: Schema.optionalKey(chatTypeValidator),
-      }),
-      item: () => chatViewValidator,
-    })
-  )
-  .addFunction(
-    FunctionSpec.publicPaginatedQuery({
       name: "getOwnChats",
       args: () => ({
         q: Schema.optionalKey(Schema.String),

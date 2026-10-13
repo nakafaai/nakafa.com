@@ -3,10 +3,13 @@
 import { Delete02Icon, Edit02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Equal } from "effect";
+import { Equal, String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import { memo, useLayoutEffect, useRef } from "react";
-import { MemoryFacts } from "@/components/user/settings/memory/facts";
+import {
+  MemoryEnds,
+  MemoryOrigin,
+} from "@/components/user/settings/memory/facts";
 import {
   isPending,
   type Memory,
@@ -49,6 +52,9 @@ export const MemoryRow = memo(
     const row = useRef<HTMLDivElement>(null);
     // A memory the server has not stored yet has no id to change.
     const waiting = isPending(memory);
+    const named = memoryName(memory);
+    // Words that show nothing, such as a divider alone, have no name to show.
+    const name = Str.isEmpty(named) ? t("untitled") : named;
 
     // The cleanup runs before the row leaves the page, while the focus is in it.
     useLayoutEffect(
@@ -72,9 +78,19 @@ export const MemoryRow = memo(
           onClick={() => openEdit(memory)}
           type="button"
         >
-          <span className="truncate text-sm">{memoryName(memory)}</span>
+          {/* The name follows the direction of its own words, and a name too
+              long for the row keeps its start and its whole text in the title. */}
+          <span className="truncate text-sm" dir="auto" title={name}>
+            {name}
+          </span>
+          {/* A row says one fact: when a situation ends, the one fact a learner
+              must not lose, and otherwise who wrote the memory. */}
           <span className="truncate text-muted-foreground text-xs">
-            <MemoryFacts memory={memory} />
+            {memory.validUntil === undefined ? (
+              <MemoryOrigin memory={memory} />
+            ) : (
+              <MemoryEnds validUntil={memory.validUntil} />
+            )}
           </span>
         </button>
         <div className="flex shrink-0 items-center opacity-0 pointer-coarse:opacity-100 transition-opacity ease-out group-focus-within/row:opacity-100 group-hover/row:opacity-100">

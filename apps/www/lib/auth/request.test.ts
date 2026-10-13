@@ -5,10 +5,12 @@ import {
   AuthRequestDeadline,
   AuthRequestFailed,
   authFetch,
+  readSession,
   requestWithDeadline,
 } from "@/lib/auth/request";
 
 const AUTH_URL = "https://nakafa.com/api/auth/get-session";
+const TOKEN_URL = "https://nakafa.com/api/auth/convex/token";
 
 /** One fetch double for the whole file, stubbed globally for the Promise seam. */
 const fetcher = vi.fn<typeof fetch>();
@@ -170,6 +172,107 @@ describe("requestWithDeadline", () => {
   );
 });
 
+describe("readSession", () => {
+  it.effect("returns the answer of a read that succeeds", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValueOnce(new Response("session"));
+
+      const response = yield* readSession(fetcher, AUTH_URL);
+
+      expect(response.status).toBe(200);
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("reads again after the server answers with an error status", () =>
+    Effect.gen(function* () {
+      fetcher
+        .mockResolvedValueOnce(new Response("refused", { status: 500 }))
+        .mockResolvedValueOnce(new Response("session"));
+      const fiber = yield* Effect.forkChild(readSession(fetcher, AUTH_URL));
+
+      // The first wait of the shared schedule: 500 milliseconds.
+      yield* TestClock.adjust("499 millis");
+      expect(fetcher).toHaveBeenCalledOnce();
+      yield* TestClock.adjust("1 millis");
+      const response = yield* Fiber.join(fiber);
+
+      expect(response.status).toBe(200);
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect(
+    "gives the caller the last refused answer once the shared schedule ends",
+    () =>
+      Effect.gen(function* () {
+        fetcher
+          .mockResolvedValueOnce(new Response("first", { status: 500 }))
+          .mockResolvedValueOnce(new Response("second", { status: 502 }))
+          .mockResolvedValueOnce(new Response("third", { status: 503 }));
+        const fiber = yield* Effect.forkChild(readSession(fetcher, AUTH_URL));
+
+        // The waits of the shared schedule: 500 milliseconds, then 1 second.
+        yield* TestClock.adjust("500 millis");
+        yield* TestClock.adjust("1 second");
+        const response = yield* Fiber.join(fiber);
+
+        expect(response.status).toBe(503);
+        expect(yield* Effect.promise(() => response.text())).toBe("third");
+        expect(fetcher).toHaveBeenCalledTimes(3);
+      })
+  );
+
+  it.effect("reads again when an attempt misses its deadline", () =>
+    Effect.gen(function* () {
+      fetcher
+        .mockImplementationOnce(waitsForAbort())
+        .mockResolvedValueOnce(new Response("session"));
+      const fiber = yield* Effect.forkChild(readSession(fetcher, AUTH_URL));
+
+      yield* TestClock.adjust("10 seconds");
+      const firstSignal = fetcher.mock.calls[0]?.[1]?.signal;
+      expect(firstSignal?.aborted).toBe(true);
+      yield* TestClock.adjust("500 millis");
+      const response = yield* Fiber.join(fiber);
+
+      expect(response.status).toBe(200);
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect("keeps a client error as the answer without reading again", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValueOnce(
+        new Response("signed out", { status: 401 })
+      );
+
+      const response = yield* readSession(fetcher, AUTH_URL);
+
+      expect(response.status).toBe(401);
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("stops at once when the caller aborts while it waits", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValueOnce(new Response("refused", { status: 500 }));
+      const caller = createCallerController();
+      const fiber = yield* Effect.forkChild(
+        readSession(fetcher, AUTH_URL, { signal: caller.signal }).pipe(
+          Effect.flip
+        )
+      );
+      yield* TestClock.adjust("1 millis");
+
+      caller.abort();
+
+      expect(yield* Fiber.join(fiber)).toBeInstanceOf(AuthRequestFailed);
+      expect(fetcher).toHaveBeenCalledOnce();
+    })
+  );
+});
+
 describe("authFetch", () => {
   it("answers the browser client's request with the global fetch", async () => {
     fetcher.mockResolvedValueOnce(new Response("session"));
@@ -184,5 +287,45 @@ describe("authFetch", () => {
         signal: expect.any(AbortSignal),
       })
     );
+  });
+
+  it("reads the session again after the server refuses it", async () => {
+    fetcher
+      .mockResolvedValueOnce(new Response("refused", { status: 500 }))
+      .mockResolvedValueOnce(new Response("session"));
+
+    const response = await authFetch(AUTH_URL, { method: "GET" });
+
+    expect(response.status).toBe(200);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("reads the session again when its address has a query", async () => {
+    fetcher
+      .mockResolvedValueOnce(new Response("refused", { status: 500 }))
+      .mockResolvedValueOnce(new Response("session"));
+
+    const response = await authFetch(
+      new URL(`${AUTH_URL}?disableCookieCache=true`),
+      {
+        method: "GET",
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ["a write to the session route", AUTH_URL, { method: "POST" }],
+    ["a read of another route", TOKEN_URL, { method: "GET" }],
+    ["a request that names no method", AUTH_URL, undefined],
+  ])("answers %s once, whatever its status", async (_name, input, init) => {
+    fetcher.mockResolvedValueOnce(new Response("refused", { status: 500 }));
+
+    const response = await authFetch(input, init);
+
+    expect(response.status).toBe(500);
+    expect(fetcher).toHaveBeenCalledOnce();
   });
 });

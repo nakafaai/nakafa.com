@@ -12,6 +12,7 @@ import {
   String as Str,
 } from "effect";
 import {
+  CONVEX_SOCKET,
   decodeGiven,
   decodeSent,
   encodeRefusal,
@@ -23,9 +24,6 @@ import {
   momentOf,
   type SentSchema,
 } from "@/e2e/support/frames";
-
-/** The realtime connection of the page to the backend. */
-const CONVEX_SOCKET = /\/api\/[^/]+\/sync/;
 
 /** How long a step waits for the server to answer a change. */
 export const ANSWER_MILLISECONDS = 15_000;
