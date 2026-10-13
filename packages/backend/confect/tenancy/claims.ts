@@ -4,8 +4,8 @@ import {
   DatabaseReader,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { Email } from "@repo/backend/confect/tenancy/schema";
-import { Duration, Effect, Option, Schema } from "effect";
+import type { Email } from "@repo/backend/confect/tenancy/schema";
+import { Duration, Effect, Option } from "effect";
 
 /**
  * Invites one run claims at most. A page of them reads a few documents each,
@@ -33,20 +33,16 @@ const scheduleRun = Effect.fn("tenancy.claims.schedule")(function* (
 /**
  * After an account signs up or Better Auth verifies its address: schedules the
  * claim run only when an invite waits for that address, so a sign-up with no
- * invite costs one indexed read. An address that is not in the form that
- * invites store can match no invite.
+ * invite costs one indexed read. Invites store the form that `Email` accepts,
+ * trimmed and lowercase, so an address in any other form matches none.
  */
 export const claimAfterVerification = Effect.fn(
   "tenancy.claims.afterVerification"
 )(function* (userId: GenericId.GenericId<"users">, address: string) {
-  const email = Schema.decodeOption(Email)(address);
-  if (Option.isNone(email)) {
-    return;
-  }
   const waiting = yield* (yield* DatabaseReader)
     .table("tenantInvites")
     .index("by_channel_email_and_state_status", (query) =>
-      query.eq("channel.email", email.value).eq("state.status", "pending")
+      query.eq("channel.email", address).eq("state.status", "pending")
     )
     .first()
     .pipe(Effect.orDie);

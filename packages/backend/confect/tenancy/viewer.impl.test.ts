@@ -29,9 +29,7 @@ describe("tenancy/viewer", () => {
           kind: "member",
           name: "Owner",
         });
-        expect(
-          Arr.sortWith(view.units, (unit) => unit.name, Order.String)
-        ).toEqual([
+        expect(view.units).toEqual([
           {
             contentLanguage: "id",
             id: fixture.units.sma,
@@ -42,18 +40,18 @@ describe("tenancy/viewer", () => {
           },
           {
             contentLanguage: "id",
-            id: fixture.units.smk,
-            level: "smk",
-            name: "SMK Nakafa",
-            status: "archived",
-            timeZone: "Asia/Jakarta",
-          },
-          {
-            contentLanguage: "id",
             id: fixture.units.smp,
             level: "smp",
             name: "SMP Nakafa",
             status: "active",
+            timeZone: "Asia/Jakarta",
+          },
+          {
+            contentLanguage: "id",
+            id: fixture.units.smk,
+            level: "smk",
+            name: "SMK Nakafa",
+            status: "archived",
             timeZone: "Asia/Jakarta",
           },
         ]);

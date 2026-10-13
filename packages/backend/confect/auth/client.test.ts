@@ -14,6 +14,10 @@ import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
 const claimRun = Ref.getFunctionReference(refs.internal.tenancy.claims.run);
+const claimName = getFunctionName(claimRun);
+const syncName = getFunctionName(
+  internal.customers.actions.internal.syncCustomer
+);
 
 /** A pending invite for this address, in a tenant with one Person nobody has claimed. */
 async function seedInvite(ctx: MutationCtx, email: string) {
@@ -40,6 +44,36 @@ async function seedInvite(ctx: MutationCtx, email: string) {
     tenantId,
   });
   return { personId };
+}
+
+/** The jobs of one function that the Better Auth user triggers have scheduled so far. */
+function scheduled(
+  test: ReturnType<typeof createConvexTestWithBetterAuth>,
+  functionName: string
+) {
+  return test.query(async (ctx) =>
+    Arr.filter(
+      await ctx.db.system.query("_scheduled_functions").collect(),
+      ({ name }) => name === functionName
+    )
+  );
+}
+
+/** Changes the name or the address of one Better Auth user, which fires its user triggers. */
+function changeAuthUser(
+  test: ReturnType<typeof createConvexTestWithBetterAuth>,
+  authId: string,
+  field: "email" | "name",
+  value: string
+) {
+  return test.mutation(async (ctx) => {
+    const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
+    await adapter.update({
+      model: "user",
+      update: { [field]: value },
+      where: [{ field: "_id", operator: "eq", value: authId }],
+    });
+  });
 }
 const finalizeDeletedUserCleanupReference = makeFunctionReference<
   "mutation",
@@ -342,13 +376,7 @@ describe("auth/client", () => {
         "Expected the Better Auth lifecycle to create an app user."
       );
     }
-    const jobs = await test.query(async (ctx) =>
-      Arr.filter(
-        await ctx.db.system.query("_scheduled_functions").collect(),
-        ({ name }) => name === getFunctionName(claimRun)
-      )
-    );
-    expect(jobs).toEqual([
+    expect(await scheduled(test, claimName)).toEqual([
       expect.objectContaining({
         args: [{ cursor: null, userId: user._id }],
         scheduledTime: NOW,
@@ -365,24 +393,11 @@ describe("auth/client", () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation((ctx) => seedInvite(ctx, "someone-else@example.com"));
     await signInWithGoogle(test, "uninvited", NOW);
-    const jobs = await test.query(async (ctx) =>
-      Arr.filter(
-        await ctx.db.system.query("_scheduled_functions").collect(),
-        ({ name }) => name === getFunctionName(claimRun)
-      )
-    );
-    expect(jobs).toEqual([]);
+    expect(await scheduled(test, claimName)).toEqual([]);
   });
   it("asks for the claim only once Better Auth verifies the address", async () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation((ctx) => seedInvite(ctx, "later@example.com"));
-    const claimJobs = () =>
-      test.query(async (ctx) =>
-        Arr.filter(
-          await ctx.db.system.query("_scheduled_functions").collect(),
-          ({ name }) => name === getFunctionName(claimRun)
-        )
-      );
     await test.mutation(async (ctx) => {
       const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
       await adapter.create({
@@ -402,7 +417,8 @@ describe("auth/client", () => {
         "Expected the Better Auth lifecycle to create an app user."
       );
     }
-    expect(await claimJobs()).toEqual([]);
+    expect(await scheduled(test, claimName)).toEqual([]);
+    expect(await scheduled(test, syncName)).toHaveLength(1);
     await test.mutation(async (ctx) => {
       const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
       await adapter.update({
@@ -411,7 +427,36 @@ describe("auth/client", () => {
         where: [{ field: "_id", operator: "eq", value: user.authId }],
       });
     });
-    expect(await claimJobs()).toEqual([
+    expect(await scheduled(test, claimName)).toEqual([
+      expect.objectContaining({ args: [{ cursor: null, userId: user._id }] }),
+    ]);
+    expect(await scheduled(test, syncName)).toHaveLength(1);
+  });
+  it("asks for no claim when a verified account only changes its name", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await signInWithGoogle(test, "steady", NOW);
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    if (!user) {
+      throw new Error(
+        "Expected the Better Auth lifecycle to create an app user."
+      );
+    }
+    await test.mutation((ctx) => seedInvite(ctx, "steady@example.com"));
+    await changeAuthUser(test, user.authId, "name", "Renamed learner");
+    expect(await scheduled(test, claimName)).toEqual([]);
+  });
+  it("asks for the claim when a verified account moves to an address that an invite waits for", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await signInWithGoogle(test, "mover", NOW);
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    if (!user) {
+      throw new Error(
+        "Expected the Better Auth lifecycle to create an app user."
+      );
+    }
+    await test.mutation((ctx) => seedInvite(ctx, "moved@example.com"));
+    await changeAuthUser(test, user.authId, "email", "moved@example.com");
+    expect(await scheduled(test, claimName)).toEqual([
       expect.objectContaining({ args: [{ cursor: null, userId: user._id }] }),
     ]);
   });

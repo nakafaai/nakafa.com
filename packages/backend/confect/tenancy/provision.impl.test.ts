@@ -368,6 +368,35 @@ describe("tenancy/provision open", () => {
     })
   );
 
+  it.effect(
+    "refuses a contract that enables no module, one module twice, or a version that is not a label, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const before = yield* fixture.run(counts);
+        const noModule: typeof Contract.Type = { ...contract, modules: [] };
+        const twice: typeof Contract.Type = {
+          ...contract,
+          modules: ["exams", "exams"],
+        };
+        const unreadable: typeof Contract.Type = {
+          ...contract,
+          dpaVersion: "2026 10",
+        };
+        const refusals = yield* Effect.forEach(
+          [noModule, twice, unreadable],
+          (bad) =>
+            fixture.internal
+              .mutation(open, { ...request("harapan", [sma]), contract: bad })
+              .pipe(Effect.flip)
+        );
+        expect(refusals).toMatchObject(
+          Arr.replicate({ _tag: "SchemaError" }, 3)
+        );
+        expect(yield* fixture.run(counts)).toEqual(before);
+      })
+  );
+
   it.effect("holds as many schools as the limit and refuses one more", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

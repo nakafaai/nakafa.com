@@ -18,19 +18,18 @@ import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import spec from "@repo/backend/confect/tenancy/claims.spec";
-import {
-  type Account,
-  Email,
-  type InviteState,
+import type {
+  Account,
+  InviteState,
 } from "@repo/backend/confect/tenancy/schema";
-import { Clock, Duration, Effect, Layer, Option, Schema, Struct } from "effect";
+import { Clock, Duration, Effect, Layer, Option, Struct } from "effect";
 
 /** A claim runs as scheduled work, not as the Person it binds. */
 const system: typeof TenantActor.Type = { kind: "system" };
 
 /**
- * The address Better Auth has verified for an account, in the form invites
- * store. Better Auth lowercases every address it saves, and the account row
+ * The address Better Auth has verified for an account. Better Auth lowercases
+ * every address it saves, which is the form invites store, and the account row
  * here only mirrors it, so the answer comes from Better Auth itself.
  */
 const verifiedEmail = Effect.fn("tenancy.claims.email")(function* (
@@ -41,7 +40,7 @@ const verifiedEmail = Effect.fn("tenancy.claims.email")(function* (
     authReader.getAnyUserById(ctx, user.authId)
   );
   return authUser?.emailVerified === true
-    ? Schema.decodeOption(Email)(authUser.email)
+    ? Option.some(authUser.email)
     : Option.none();
 });
 
