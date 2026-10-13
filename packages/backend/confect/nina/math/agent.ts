@@ -89,6 +89,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           abortSignal: signal,
           messages: [{ role: "user", content: task }],
           model,
+          // The repair is one more model call inside this run, so it ends with
+          // the run: a stop ends the run, and with it a repair in flight.
           repairToolCall: (options) =>
             runPromise(
               repairMathToolCall({
@@ -96,7 +98,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                 task,
                 userId,
                 usageHandler,
-              })
+              }),
+              { signal }
             ),
           instructions: mathPrompt({ locale, context }),
           prepareStep: prepareMathStep,

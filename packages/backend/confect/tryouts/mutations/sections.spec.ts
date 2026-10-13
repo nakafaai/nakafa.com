@@ -17,14 +17,18 @@ import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/er
 import { Schema } from "effect";
 export const SECTION_COMPLETED_RESULT = "completed";
 const SECTION_STARTED_RESULT = "started";
+
+/** The one section of one attempt that a start or a finish targets. */
+const sectionTargetValidator = Schema.Struct({
+  attemptId: IdSchema("tryoutAttempts"),
+  sectionKey: tryoutRouteKeyValidator,
+});
+export type SectionTarget = typeof sectionTargetValidator.Type;
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "start",
-      args: () => ({
-        attemptId: IdSchema("tryoutAttempts"),
-        sectionKey: tryoutRouteKeyValidator,
-      }),
+      args: () => sectionTargetValidator.fields,
       returns: () =>
         Schema.Struct({
           kind: Schema.Literal(SECTION_STARTED_RESULT),
@@ -46,10 +50,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({
       name: "complete",
-      args: () => ({
-        attemptId: IdSchema("tryoutAttempts"),
-        sectionKey: tryoutRouteKeyValidator,
-      }),
+      args: () => sectionTargetValidator.fields,
       returns: () =>
         Schema.Struct({
           kind: Schema.Literal(SECTION_COMPLETED_RESULT),
