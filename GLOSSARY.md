@@ -84,6 +84,31 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Section index**: The derived rows of every Section of the active release, with its text for search by words and a vector for search by meaning. A build makes it from the active release, and Nina's Nakafa search trusts it only while its record names the active release and the embedding model; otherwise Nina searches by words.
 - **Section version**: What a document's Sections were made from: the section format, the embedding model, and the signed facts of the source. A build passes over a document whose version the index holds, a Section whose text its document holds is never embedded again, wherever it stands now, and an unchanged Section is not written again either.
 
+## Classroom
+
+- **Channel**: A named place in a class forum. A class has a general channel for all its members, and a teacher adds topic channels.
+- **Discussion**: A thread that starts with a titled message in a channel. Its number counts per class, like the number of an issue, and its title is the same wherever it shows.
+- **Mention**: A reference to a person inside a message. It writes one inbox row in the transaction of the message, and the journal does not record it.
+- **Class library index**: The derived rows that let Nina search the files a teacher published in a class library. It holds no text that a learner wrote.
+
+## Notifications
+
+- **Inbox**: The one list of an account's notifications across Nakafa. It is the source of truth, and push and email only point to it.
+- **Notification**: One inbox row: a recipient, a kind, the object it points to, and a time. It holds no text, and its title is read from the object when it is opened.
+- **Reminder**: A notification that the scheduler sends at a time that follows from a task or a sitting, such as the day before a deadline.
+- **Quiet hours**: The hours, 21:00 to 06:00 in the school's time zone, in which push is skipped. The inbox still holds the notification.
+
+## Collaborative Documents
+
+- **Document step**: One ProseMirror step that a client sends with the version it is based on. The server accepts it only at the current version.
+- **Document version**: The number of steps a collaborative document has accepted.
+
+## School Keys
+
+- **Key owner**: Whom a vault key belongs to: the root, a learner, a school, or a connection.
+- **School key**: The 32-byte key of a tenant that seals the free text of the school. A root key wraps it, as it wraps a learner key.
+- **Blind word**: The keyed hash of one word of a text, made with the key of its owner. The database matches the same word again without reading it.
+
 ## Evaluation
 
 - **EvalCase**: A schema-derived test input with deterministic expected evidence, routing, or trace assertions.
