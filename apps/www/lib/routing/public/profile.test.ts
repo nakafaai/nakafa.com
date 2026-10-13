@@ -4,7 +4,10 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import { Effect, Layer } from "effect";
 import { clientEnv } from "@/env.client";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
-import { readProfileRedirect } from "@/lib/routing/public/profile";
+import {
+  readProfileRedirect,
+  readProfileRefusal,
+} from "@/lib/routing/public/profile";
 
 const mocks = vi.hoisted(() => ({
   layerOptions: vi.fn(),
@@ -196,5 +199,61 @@ describe("retired profile address redirects", () => {
         expect(mocks.token).not.toHaveBeenCalled();
         expect(mocks.query).not.toHaveBeenCalled();
       })
+  );
+});
+
+describe("profile address refusals", () => {
+  beforeEach(() => {
+    mocks.layerOptions.mockReset();
+    mocks.query.mockReset();
+    mocks.token.mockReset();
+  });
+
+  it.effect.each(["/en/@nabilfatih", "/de/@NabilFatih/chat"])(
+    "lets the account that holds the username open %s",
+    (pathname) =>
+      Effect.gen(function* () {
+        signedIn();
+        mocks.query.mockReturnValue(
+          accountOf({ _id: ID, username: "nabilfatih" })
+        );
+
+        expect(yield* readProfileRefusal(pathname, headers)).toBeNull();
+        expect(mocks.layerOptions).toHaveBeenCalledWith({ auth: TOKEN });
+      })
+  );
+
+  it.effect("refuses a visitor in the language of the address", () =>
+    Effect.gen(function* () {
+      mocks.token.mockReturnValue(Effect.void);
+
+      expect(yield* readProfileRefusal("/id/@nabilfatih", headers)).toBe("id");
+      expect(mocks.query).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refuses another account and a session that names none", () =>
+    Effect.gen(function* () {
+      signedIn();
+      mocks.query.mockReturnValue(
+        accountOf({ _id: OTHER_ID, username: "someoneelse" })
+      );
+      expect(yield* readProfileRefusal("/en/@nabilfatih", headers)).toBe("en");
+      mocks.query.mockReturnValue(Effect.succeed(null));
+      expect(yield* readProfileRefusal("/en/@nabilfatih", headers)).toBe("en");
+    })
+  );
+
+  it.effect.each([
+    "/en/subjects",
+    "/fr/@nabilfatih",
+    "/en/@ab",
+    "/en/@nabilfatih/fabricated",
+    "/en",
+  ])("leaves %s, which is no profile address, to the other rules", (pathname) =>
+    Effect.gen(function* () {
+      expect(yield* readProfileRefusal(pathname, headers)).toBeNull();
+      expect(mocks.token).not.toHaveBeenCalled();
+    })
   );
 });

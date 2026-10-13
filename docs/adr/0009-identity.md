@@ -161,9 +161,12 @@ nothing. So no profile is public yet.
   because a person who picks a name must be told that it is taken, so both
   answer only a signed-in account: a visitor's check is refused with
   `SessionRequired`.)
-  `readProfile` in `apps/www/lib/profile/server.ts` is the one place that
-  decides, and it reads the signed-in account, so the backend holds no public
-  lookup of a profile by username.
+  The proxy decides before the page renders (`readProfileRefusal` in
+  `apps/www/lib/routing/public/profile.ts`): it reads the signed-in account and
+  answers any other request with the app's not-found page and a 404 status, so
+  no stream starts that would have to end as not found. `readProfile` in
+  `apps/www/lib/profile/server.ts` reads the same account for the page and
+  repeats the rule. The backend holds no public lookup of a profile by username.
 - A comment shows no link to the profile of its author.
 - The retired address `/{locale}/user/{id}` and its `chat` tab answer 308 to the
   username address, and only to the account that holds the id: the proxy reads

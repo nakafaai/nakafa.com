@@ -114,8 +114,10 @@ test("a visitor finds neither the profile of a learner nor the retired id addres
 
       yield* withReader(browser, origin, (visitor) =>
         Effect.promise(async () => {
-          // Nothing tells the visitor whether the username exists.
-          await visitor.goto(`/en/@${learner.username}`);
+          // Nothing tells the visitor whether the username exists, and the
+          // answer is a real 404, decided before the page renders.
+          const answer = await visitor.goto(`/en/@${learner.username}`);
+          expect(answer?.status()).toBe(404);
           await notFoundOn(visitor);
           await expect(
             visitor.getByText(LEARNER_NAME, { exact: true })

@@ -80,6 +80,7 @@ const runtimeMocks = vi.hoisted(() => ({
   readActive: vi.fn(),
   hasArticleCategory: vi.fn(),
   readProgramPath: vi.fn(),
+  readProfileRefusal: vi.fn(),
   readRedirect: vi.fn(),
   readTryout: vi.fn(),
 }));
@@ -155,6 +156,9 @@ vi.mock("@/lib/content/program/path", () => ({
 vi.mock("@/lib/routing/public/migration", () => ({
   readPublicUrlMigrationRedirect: runtimeMocks.readRedirect,
 }));
+vi.mock("@/lib/routing/public/profile", () => ({
+  readProfileRefusal: runtimeMocks.readProfileRefusal,
+}));
 describe("proxy", () => {
   beforeEach(() => {
     resetTestRuntimeCache();
@@ -174,6 +178,9 @@ describe("proxy", () => {
     previewMocks.pathname.mockReset().mockReturnValue(Effect.succeed(false));
     previewMocks.route.mockReset().mockReturnValue(Effect.succeed(false));
     runtimeMocks.readRedirect.mockReset().mockReturnValue(Effect.succeed(null));
+    runtimeMocks.readProfileRefusal
+      .mockReset()
+      .mockReturnValue(Effect.succeed(null));
     mockLocaleRouting.activeMiddleware.mockClear();
     mockLocaleRouting.previewMiddleware.mockClear();
   });
@@ -403,6 +410,14 @@ describe("proxy", () => {
       expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     }
   );
+  it("answers a profile its owner did not ask for as not found, with 404", async () => {
+    runtimeMocks.readProfileRefusal.mockReturnValue(Effect.succeed("de"));
+    const response = await requestProxy("/de/@nabilfatih");
+    expectHardNotFound(response, "de");
+    expect(runtimeMocks.readProfileRefusal.mock.calls[0]?.[0]).toBe(
+      "/de/@nabilfatih"
+    );
+  });
   it("returns a hard 404 before rejecting a missing route representation", async () => {
     const response = await requestProxy("/id/quran/999", {
       headers: { accept: "application/json" },

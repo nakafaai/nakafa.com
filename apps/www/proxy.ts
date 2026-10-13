@@ -32,6 +32,7 @@ import {
   isUnsupportedSystemPath,
 } from "@/lib/routing/bypass";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
+import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 
 const handleLocalizedRequest = createMiddleware(routing);
@@ -145,6 +146,13 @@ export async function proxy(request: NextRequest) {
     );
     mergeRepresentationVary(response);
     return response;
+  }
+
+  const profileRefusal = await Effect.runPromise(
+    readProfileRefusal(pathname, request.headers)
+  );
+  if (profileRefusal !== null) {
+    return rewriteToContentNotFound(request, profileRefusal);
   }
 
   const routeDecision = await Effect.runPromise(
