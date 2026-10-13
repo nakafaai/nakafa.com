@@ -3,7 +3,7 @@ import type { IconSvgElement } from "@hugeicons/react";
 import type { ArticleCategory } from "@nakafa/aksara-contracts/projection/article";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { getTileIcon, getTileLooks } from "@repo/design-system/lib/look";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec, Tuple } from "effect";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 /** The article categories that the app knows, each with an icon of its own. */
@@ -36,9 +36,8 @@ export function getArticleCategoryIcons(
 ) {
   return Arr.map(
     getTileLooks(
-      Arr.map(
-        items,
-        ({ category }) => [readCategoryIcons(category), category] as const
+      Arr.map(items, ({ category }) =>
+        Tuple.make(readCategoryIcons(category), category)
       )
     ),
     ({ icon }) => icon

@@ -1,7 +1,7 @@
 "use client";
 
 import { getTileLooks } from "@repo/design-system/lib/look";
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, HashSet, Tuple } from "effect";
 import { useTranslations } from "next-intl";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
@@ -45,10 +45,8 @@ export function TryoutSectionRows({
     section.publicPath ? [{ publicPath: section.publicPath, section }] : []
   );
   const looks = getTileLooks(
-    Arr.map(
-      shown,
-      ({ section }) =>
-        [getTryoutSubjectIcons(section.sectionKey), section.sectionKey] as const
+    Arr.map(shown, ({ section }) =>
+      Tuple.make(getTryoutSubjectIcons(section.sectionKey), section.sectionKey)
     )
   );
   return (

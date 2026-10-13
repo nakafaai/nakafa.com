@@ -22,6 +22,7 @@ import {
   isPresentedMaterialDomain,
   type PresentedMaterialDomain,
 } from "@repo/contents/taxonomy";
+import { Array as Arr } from "effect";
 
 /** One Hugeicons drawing, as every icon of the product is stored. */
 export type MaterialIcon = typeof PiIcon;
@@ -61,6 +62,6 @@ const materialIconByKey = {
  */
 export function getMaterialIcons(material: string) {
   return isPresentedMaterialDomain(material)
-    ? ([materialIconByKey[material]] as const)
+    ? Arr.of(materialIconByKey[material])
     : SPARE_ICONS;
 }

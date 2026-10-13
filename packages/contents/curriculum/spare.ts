@@ -12,6 +12,7 @@ import {
   PandaIcon,
   UmbrellaIcon,
 } from "@hugeicons/core-free-icons";
+import type { Array as Arr } from "effect";
 
 /**
  * The icons that no known key uses, and that read as no subject in particular.
@@ -21,7 +22,7 @@ import {
  * unknown keys show two icons and never one shared fallback. Nothing else in
  * the product draws these twelve, and a test keeps it so.
  */
-export const SPARE_ICONS = [
+export const SPARE_ICONS: Arr.NonEmptyReadonlyArray<typeof KiteIcon> = [
   KiteIcon,
   BalloonIcon,
   GiftIcon,
@@ -34,4 +35,4 @@ export const SPARE_ICONS = [
   OrigamiIcon,
   BinocularsIcon,
   PandaIcon,
-] as const;
+];

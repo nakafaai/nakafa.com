@@ -2,7 +2,7 @@ import "server-only";
 import type { TrendingSubject } from "@repo/backend/confect/lib/validators/trending";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getTileLooks, type TileLook } from "@repo/design-system/lib/look";
-import { Array as Arr } from "effect";
+import { Array as Arr, Tuple } from "effect";
 
 /**
  * The icon and the turn of the tile of each lesson row of one home list, so
@@ -28,10 +28,8 @@ export function getMaterialLooks(
   shown: readonly TileLook[] = []
 ) {
   return getTileLooks(
-    Arr.map(
-      materials,
-      (material) =>
-        [getLessonIcons(material.materialDomain), material.content_id] as const
+    Arr.map(materials, (material) =>
+      Tuple.make(getLessonIcons(material.materialDomain), material.content_id)
     ),
     shown
   );

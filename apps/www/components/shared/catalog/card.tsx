@@ -7,7 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Tile } from "@repo/design-system/components/ui/tile";
+import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
+import type { TileLook } from "@repo/design-system/lib/look";
+import { Predicate } from "effect";
 import Image from "next/image";
 import type { ReactElement, ReactNode } from "react";
 
@@ -93,5 +95,29 @@ export function CatalogCardTile({
     <Tile className="aspect-40/21" seed={seed} shift={shift} variant="card">
       {children}
     </Tile>
+  );
+}
+
+/**
+ * Renders what one card of a catalog grid draws: its reviewed artwork when
+ * `visual` is the source of that artwork, or the tile that the grid gave it.
+ * `getTileLooks` hands a grid the one or the other for each card, and a card
+ * with artwork takes no icon and no hue from the tiles around it.
+ */
+export function CatalogCardVisual({
+  preload,
+  visual,
+}: {
+  preload: boolean;
+  visual: TileLook | string;
+}) {
+  if (Predicate.isString(visual)) {
+    return <CatalogCardImage preload={preload} src={visual} />;
+  }
+
+  return (
+    <CatalogCardTile seed={visual.seed} shift={visual.shift}>
+      <TileIcon icon={visual.icon} />
+    </CatalogCardTile>
   );
 }

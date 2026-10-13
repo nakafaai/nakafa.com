@@ -1,6 +1,6 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { readSeed, TURN, wrap } from "@repo/design-system/lib/tile";
-import { Array as Arr, Equal, Order } from "effect";
+import { Array as Arr, Equal, Order, Predicate, Tuple } from "effect";
 
 /**
  * The least distance, in degrees, between the middles of the blends of two
@@ -77,6 +77,11 @@ function middleOf({ seed, shift }: Pick<TileLook, "seed" | "shift">) {
   return wrap(readSeed(seed).middle + shift);
 }
 
+/** How far a tile turns, from the middle its seed gives to the middle its list placed it at. */
+function turnOf(seed: string, middle: number) {
+  return wrap(middle - readSeed(seed).middle);
+}
+
 /**
  * How far to turn each tile of one list so that no two blends look alike.
  *
@@ -106,13 +111,13 @@ export function getTileShifts(
   shown: readonly Pick<TileLook, "seed" | "shift">[] = []
 ) {
   const onPage = Arr.map(shown, middleOf);
-  const middles = Arr.reduce(seeds, Arr.empty<number>(), (taken, seed) =>
-    Arr.append(taken, placeMiddle(readSeed(seed).middle, taken, onPage))
-  );
+  const [, shifts] = Arr.mapAccum(seeds, Arr.empty<number>(), (taken, seed) => {
+    const middle = placeMiddle(readSeed(seed).middle, taken, onPage);
 
-  return Arr.zipWith(seeds, middles, (seed, middle) =>
-    wrap(middle - readSeed(seed).middle)
-  );
+    return Tuple.make(Arr.append(taken, middle), turnOf(seed, middle));
+  });
+
+  return shifts;
 }
 
 /**
@@ -151,7 +156,7 @@ export function getTileIcon(
  * What `getTileLooks` reads of one tile: the pool of icons its key may show,
  * best known first, and its seed.
  */
-type TileRow = readonly [
+export type TileRow = readonly [
   pool: Arr.NonEmptyReadonlyArray<IconSvgElement>,
   seed: string,
 ];
@@ -166,29 +171,50 @@ type TileRow = readonly [
  * tile or an earlier tile holds is skipped while the pool has a free one, and
  * a list longer than what its pool has left repeats the least held icon first.
  *
- * @param rows - Each tile's pool and seed, in list order
+ * A row that is a string draws no tile, such as a catalog card that draws
+ * reviewed artwork and passes its source. It comes back unchanged in its place
+ * and takes no icon and no hue, so the tiles around it are placed as if it were
+ * not in the list.
+ *
+ * @param rows - Each tile's pool and seed, in list order, or the string of a card that draws no tile
  * @param shown - The looks of the tiles that the page already shows before this list
- * @returns Each tile's icon, seed, and `shift`, in the same order
+ * @returns Each tile's icon, seed, and `shift`, and each string as it came, in the same order
  */
 export function getTileLooks(
   rows: readonly TileRow[],
+  shown?: readonly TileLook[]
+): readonly TileLook[];
+export function getTileLooks<Passed extends string>(
+  rows: readonly (TileRow | Passed)[],
+  shown?: readonly TileLook[]
+): readonly (TileLook | Passed)[];
+export function getTileLooks(
+  rows: readonly (TileRow | string)[],
   shown: readonly TileLook[] = []
-) {
-  const [, picked] = Arr.mapAccum(
-    rows,
+): readonly (TileLook | string)[] {
+  const onPage = Arr.map(shown, middleOf);
+  const start = Tuple.make(
     Arr.map(shown, ({ icon }) => icon),
-    (taken, [pool, seed]) => {
-      const icon = pickIcon(pool, seed, taken);
+    Arr.empty<number>()
+  );
+  const [, looks] = Arr.mapAccum(
+    rows,
+    start,
+    (placed, row): readonly [typeof start, TileLook | string] => {
+      if (Predicate.isString(row)) {
+        return Tuple.make(placed, row);
+      }
+      const [icons, middles] = placed;
+      const [pool, seed] = row;
+      const middle = placeMiddle(readSeed(seed).middle, middles, onPage);
+      const icon = pickIcon(pool, seed, icons);
 
-      return [Arr.append(taken, icon), { icon, seed }] as const;
+      return Tuple.make(
+        Tuple.make(Arr.append(icons, icon), Arr.append(middles, middle)),
+        look(icon, seed, turnOf(seed, middle))
+      );
     }
   );
-  const shifts = getTileShifts(
-    Arr.map(picked, ({ seed }) => seed),
-    shown
-  );
 
-  return Arr.zipWith(picked, shifts, ({ icon, seed }, shift) =>
-    look(icon, seed, shift)
-  );
+  return looks;
 }

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { getTileLooks } from "@repo/design-system/lib/look";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Tuple } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -149,9 +149,8 @@ export function TryoutExamSelector({
     value: option.value,
   }));
   const looks = getTileLooks(
-    Arr.map(
-      options,
-      (option) => [getTryoutExamIcons(option.examKey), option.examKey] as const
+    Arr.map(options, (option) =>
+      Tuple.make(getTryoutExamIcons(option.examKey), option.examKey)
     )
   );
   const entries = Arr.zipWith(options, looks, (option, look) => ({

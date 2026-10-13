@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
-import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
+import {
+  CurriculumNodeKeySchema,
+  CurriculumRouteSchema,
+} from "@nakafa/aksara-contracts/program/curriculum";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
@@ -30,6 +33,14 @@ function subjectWith(
 /** The icon that each route of one list gets. */
 function iconsOf(routes: Parameters<typeof getCurriculumLooks>[0]) {
   return Arr.map(getCurriculumLooks(routes), ({ icon }) => icon);
+}
+
+/** A class route of the fixtures under another node key. */
+function classWith(nodeKey: string) {
+  return CurriculumRouteSchema.make({
+    ...testProgramClass,
+    nodeKey: CurriculumNodeKeySchema.make(nodeKey),
+  });
 }
 
 describe("getCurriculumLooks", () => {
@@ -91,5 +102,44 @@ describe("getCurriculumLooks", () => {
       testProgramRoot.nodeKey,
       testProgramClass.nodeKey,
     ]);
+  });
+
+  it("names the artwork of a route in its place", () => {
+    const [art, tile] = getCurriculumLooks(
+      [testProgramRoot, testProgramClass],
+      (route) => (route === testProgramRoot ? "root.png" : undefined)
+    );
+
+    expect(art).toBe("root.png");
+    expect(tile).toMatchObject({ seed: testProgramClass.nodeKey });
+  });
+
+  it("takes no hue for a route with artwork from the tiles around it", () => {
+    // The own hues of these two classes are one degree apart, so the second
+    // would be turned away from the first if the first drew a tile.
+    const first = classWith("class-6");
+    const second = classWith("class-7");
+    const withArtwork = getCurriculumLooks([first, second], (route) =>
+      route === first ? "class-6.png" : undefined
+    );
+    const alone = getCurriculumLooks([first, second]);
+
+    expect(withArtwork[1]).toMatchObject({ shift: 0 });
+    expect(alone[1]).not.toMatchObject({ shift: 0 });
+  });
+
+  it("does not count a route with artwork as the first route of its subject", () => {
+    const [art, tile] = getCurriculumLooks(
+      [
+        subjectWith("mathematics", "mathematics", "class-10-mathematics"),
+        testProgramSubject,
+      ],
+      (route) => (route === testProgramSubject ? undefined : "class-10.png")
+    );
+
+    expect(art).toBe("class-10.png");
+    expect(tile).toMatchObject({
+      icon: Arr.headNonEmpty(getMaterialIcons("mathematics")),
+    });
   });
 });

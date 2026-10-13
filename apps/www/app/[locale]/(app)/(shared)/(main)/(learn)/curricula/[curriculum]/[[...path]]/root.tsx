@@ -1,11 +1,10 @@
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { TileIcon } from "@repo/design-system/components/ui/tile";
+import type { TileLook } from "@repo/design-system/lib/look";
 import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
 import {
   CatalogCard,
-  CatalogCardImage,
-  CatalogCardTile,
+  CatalogCardVisual,
 } from "@/components/shared/catalog/card";
 import { resolveCurriculumCatalogArtwork } from "@/lib/curriculum/artwork";
 import { getCurriculumLooks } from "@/lib/curriculum/look";
@@ -24,33 +23,26 @@ export function CurriculumCatalogCards({
   entries: readonly CurriculumCatalogEntry[];
   locale: Locale;
 }) {
-  const looks = getCurriculumLooks(Arr.map(entries, ({ route }) => route));
+  const routes = Arr.map(entries, ({ route }) => route);
+  const visuals = getCurriculumLooks(routes, (route) =>
+    resolveCurriculumCatalogArtwork(locale, {
+      kind: "program",
+      programKey: route.programKey,
+    })
+  );
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(Arr.zip(entries, looks), ([{ program, route }, look], index) => {
-        const imageSrc = resolveCurriculumCatalogArtwork(locale, {
-          kind: "program",
-          programKey: program.key,
-        });
-
-        return (
-          <CatalogCard
-            action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
-            actionLabel={actionLabel}
-            key={route.publicPath}
-            title={route.title}
-          >
-            {imageSrc ? (
-              <CatalogCardImage preload={index === 0} src={imageSrc} />
-            ) : (
-              <CatalogCardTile seed={look.seed} shift={look.shift}>
-                <TileIcon icon={look.icon} />
-              </CatalogCardTile>
-            )}
-          </CatalogCard>
-        );
-      })}
+      {Arr.map(Arr.zip(routes, visuals), ([route, visual], index) => (
+        <CurriculumCard
+          actionLabel={actionLabel}
+          key={route.publicPath}
+          locale={locale}
+          preload={index === 0}
+          route={route}
+          visual={visual}
+        />
+      ))}
     </div>
   );
 }
@@ -65,34 +57,54 @@ export function CurriculumChildCards({
   locale: Locale;
   routes: readonly CurriculumViewRoute[];
 }) {
-  const looks = getCurriculumLooks(routes);
+  const visuals = getCurriculumLooks(routes, (route) =>
+    resolveCurriculumCatalogArtwork(locale, {
+      kind: "route",
+      nodeKey: route.nodeKey,
+      programKey: route.programKey,
+    })
+  );
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(Arr.zip(routes, looks), ([route, look], index) => {
-        const imageSrc = resolveCurriculumCatalogArtwork(locale, {
-          nodeKey: route.nodeKey,
-          programKey: route.programKey,
-          kind: "route",
-        });
-
-        return (
-          <CatalogCard
-            action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
-            actionLabel={actionLabel}
-            key={route.publicPath}
-            title={route.title}
-          >
-            {imageSrc ? (
-              <CatalogCardImage preload={index === 0} src={imageSrc} />
-            ) : (
-              <CatalogCardTile seed={look.seed} shift={look.shift}>
-                <TileIcon icon={look.icon} />
-              </CatalogCardTile>
-            )}
-          </CatalogCard>
-        );
-      })}
+      {Arr.map(Arr.zip(routes, visuals), ([route, visual], index) => (
+        <CurriculumCard
+          actionLabel={actionLabel}
+          key={route.publicPath}
+          locale={locale}
+          preload={index === 0}
+          route={route}
+          visual={visual}
+        />
+      ))}
     </div>
+  );
+}
+
+/**
+ * Renders one curriculum card. Its `visual` is the source of its reviewed
+ * artwork, or the look that its grid gave to its tile when it has no artwork.
+ */
+function CurriculumCard({
+  actionLabel,
+  locale,
+  preload,
+  route,
+  visual,
+}: {
+  actionLabel: string;
+  locale: Locale;
+  preload: boolean;
+  route: CurriculumViewRoute;
+  visual: TileLook | string;
+}) {
+  return (
+    <CatalogCard
+      action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
+      actionLabel={actionLabel}
+      title={route.title}
+    >
+      <CatalogCardVisual preload={preload} visual={visual} />
+    </CatalogCard>
   );
 }

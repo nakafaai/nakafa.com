@@ -1,17 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { IconSvgElement } from "@hugeicons/react";
 import {
   getTileIcon,
   getTileLooks,
   getTileShifts,
   TILE_HUE_GAP,
 } from "@repo/design-system/lib/look";
-import { getTileGradient } from "@repo/design-system/lib/tile";
-import { Array as Arr, HashSet } from "effect";
+import { getTileGradient, wrap } from "@repo/design-system/lib/tile";
+import { Array as Arr, HashMap, HashSet, Predicate, Tuple } from "effect";
 
 /** The two hues of one gradient, as `getTileGradient` paints them. */
 const HUES =
   /^linear-gradient\(\d+deg,oklch\(0\.56 0\.12 (\d+)\),oklch\(0\.66 0\.125 (\d+)\)\)$/u;
-/** These seeds reach every hue. */
+/** These seeds reach every middle hue. */
 const SEEDS = Arr.makeBy(10_000, (index) => `seed-${index}`);
 /** A list of this many tiles always finds room: five tiles before it hide at most 355 of 360 hues. */
 const LONGEST_SURE_LIST = 6;
@@ -57,6 +58,48 @@ function at(middle: number) {
   return { seed: "aljabar", shift: (middle - ALJABAR + 360) % 360 };
 }
 
+/** One seed for each middle hue, so that a list can start a tile from any hue of the wheel. */
+const SEED_AT = HashMap.fromIterable(
+  Arr.map(SEEDS, (seed) => Tuple.make(middleAt(seed, 0), seed))
+);
+
+/** The seed of a tile that starts from this middle hue. */
+function startingAt(middle: number) {
+  return HashMap.getUnsafe(SEED_AT, middle);
+}
+
+/**
+ * The middles of the five tiles that hide the most hues from a sixth. A tile
+ * hides the 71 hues within 35 degrees of its middle, so five hide at most 355
+ * of the 360, and they hide that many when they sit 72 degrees apart: one hue
+ * stays free between each two of them, exactly 36 degrees from both. A sixth
+ * tile can meet nothing narrower, and a shorter list meets more room.
+ */
+const HIDING_MOST = Arr.makeBy(LONGEST_SURE_LIST - 1, (step) => step * 72);
+/** The five tiles that hide the most hues, as seeds. */
+const PACKED = Arr.map(HIDING_MOST, startingAt);
+/** The hues that stay free between them, which are the only ones a sixth tile can take. */
+const FREE = Arr.map(HIDING_MOST, (middle) => middle + TILE_HUE_GAP);
+/**
+ * Where a sixth tile can start and meet something different. A start inside
+ * the hues that one tile hides walks on to the free hue after it, so only the
+ * edges of that stretch differ: its first hue (the longest walk, past the end
+ * of the wheel for the tile at 0), the hue of the tile itself, its last hue
+ * (the shortest walk), and the free hue after it, where a tile stays.
+ */
+const STARTS = Arr.flatMap(HIDING_MOST, (middle) =>
+  Arr.map([1 - TILE_HUE_GAP, 0, TILE_HUE_GAP - 1, TILE_HUE_GAP], (step) =>
+    wrap(middle + step)
+  )
+);
+
+/** The middles of each list that ends with a sixth tile, started from each of `STARTS`, after the five that hide the most hues. */
+function sixthTiles(shown?: Parameters<typeof getTileShifts>[1]) {
+  return Arr.map(STARTS, (hue) =>
+    middlesOf(Arr.append(PACKED, startingAt(hue)), shown)
+  );
+}
+
 describe("getTileShifts", () => {
   it("keeps the look of tiles that have room", () => {
     expect(getTileShifts(["gerak", "curriculum/merdeka"])).toEqual([0, 0]);
@@ -81,11 +124,11 @@ describe("getTileShifts", () => {
     }
   });
 
-  it(`keeps the middles of any ${LONGEST_SURE_LIST} tiles at least ${TILE_HUE_GAP} degrees apart`, () => {
-    for (const seeds of Arr.chunksOf(SEEDS, LONGEST_SURE_LIST)) {
-      expect(leastDistance(middlesOf(seeds))).toBeGreaterThanOrEqual(
-        TILE_HUE_GAP
-      );
+  it(`keeps ${LONGEST_SURE_LIST} tiles at least ${TILE_HUE_GAP} degrees apart where the first five hide the most hues, from whichever hue the last starts`, () => {
+    expect(middlesOf(PACKED)).toEqual(HIDING_MOST);
+
+    for (const middles of sixthTiles()) {
+      expect(leastDistance(middles)).toBeGreaterThanOrEqual(TILE_HUE_GAP);
     }
   });
 
@@ -123,16 +166,22 @@ describe("getTileShifts", () => {
     expect(middlesOf(["gerak"], wheel)).toEqual([234]);
   });
 
-  it("keeps the gap inside the list whatever the page shows", () => {
+  it("takes a hue with room in the list over the hues that suit the page best", () => {
     const own = ALJABAR;
     const wall = Arr.map([71, 141, 211, 281, 323], (step) => at(own + step));
 
     expect(middlesOf(["aljabar", "aljabar"], wall)).toEqual([own, 7]);
+  });
 
-    for (const seeds of Arr.chunksOf(SEEDS, LONGEST_SURE_LIST)) {
-      expect(leastDistance(middlesOf(seeds, wall))).toBeGreaterThanOrEqual(
-        TILE_HUE_GAP
-      );
+  it("keeps the gap inside the list whatever the page shows", () => {
+    // A tile of the page on each hue that the five tiles leave free: the hues
+    // that suit the page best are then the ones that the list hides.
+    const crowded = Arr.map(FREE, at);
+
+    expect(middlesOf(PACKED, crowded)).toEqual(HIDING_MOST);
+
+    for (const middles of sixthTiles(crowded)) {
+      expect(leastDistance(middles)).toBeGreaterThanOrEqual(TILE_HUE_GAP);
     }
   });
 
@@ -148,21 +197,20 @@ describe("getTileShifts", () => {
   });
 });
 
+/** One drawing that differs from the others, as an icon of a pool. */
+function drawing(path: string): IconSvgElement {
+  return [["path", { d: path }]];
+}
+
 /** Five drawings that differ from each other, as a pool of icons. */
-const POOL = Arr.makeBy(
-  5,
-  (index) => [["path", { d: `M${index} 0` }]] as const
-);
+const POOL = Arr.makeBy(5, (index) => drawing(`M${index} 0`));
 /** Three more drawings, as the pool of another subject. */
-const OTHER = Arr.makeBy(
-  3,
-  (index) => [["path", { d: `M0 ${index}` }]] as const
-);
+const OTHER = Arr.makeBy(3, (index) => drawing(`M0 ${index}`));
 /** The pool of one icon that a key with its own icon offers. */
-const ALONE = [[["path", { d: "M9 9" }]] as const] as const;
+const ALONE = Arr.of(drawing("M9 9"));
 
 /** A tile of the page that holds this icon. */
-function holding(icon: (typeof POOL)[number]) {
+function holding(icon: IconSvgElement) {
   return { icon, seed: "gerak", shift: 0 };
 }
 
@@ -173,7 +221,7 @@ function iconsFor(
 ) {
   return Arr.map(
     getTileLooks(
-      Arr.map(seeds, (seed) => [POOL, seed] as const),
+      Arr.map(seeds, (seed) => Tuple.make(POOL, seed)),
       shown
     ),
     ({ icon }) => icon
@@ -263,7 +311,7 @@ describe("getTileLooks", () => {
 
   it("turns each tile as getTileShifts does, the page shown or not", () => {
     const seeds = ["aljabar", "tryout/indonesia/snbt"];
-    const rows = Arr.map(seeds, (seed) => [POOL, seed] as const);
+    const rows = Arr.map(seeds, (seed) => Tuple.make(POOL, seed));
     const shown = [{ ...holding(POOL[0]), ...at(ALJABAR) }];
 
     for (const page of [[], shown]) {
@@ -275,13 +323,46 @@ describe("getTileLooks", () => {
 
   it("gives each tile back the seed that its list placed it by", () => {
     const seeds = ["aljabar", "gerak", "curriculum/merdeka"];
-    const looks = getTileLooks(Arr.map(seeds, (seed) => [POOL, seed] as const));
+    const looks = getTileLooks(
+      Arr.map(seeds, (seed) => Tuple.make(POOL, seed))
+    );
 
     expect(Arr.map(looks, ({ seed }) => seed)).toEqual(seeds);
   });
 
   it("gives nothing for a list of nothing", () => {
     expect(getTileLooks([])).toEqual([]);
+  });
+
+  it("passes a row that is a string through where it stands", () => {
+    const looks = getTileLooks([
+      "first.png",
+      Tuple.make(POOL, "gerak"),
+      "second.png",
+    ]);
+
+    expect(looks[0]).toBe("first.png");
+    expect(looks[2]).toBe("second.png");
+    expect(looks).toHaveLength(3);
+  });
+
+  it("places the tiles around a string as if it were not in the list", () => {
+    // Each string is also the seed of a tile of the list: if a string took the
+    // hue or the icon its seed points at, that tile would have to move.
+    const tiles = Arr.map(
+      ["aljabar", "tryout/indonesia/snbt", "aljabar"],
+      (seed) => Tuple.make(POOL, seed)
+    );
+    const among = getTileLooks([
+      "aljabar",
+      ...Arr.take(tiles, 2),
+      "tryout/indonesia/snbt",
+      ...Arr.drop(tiles, 2),
+    ]);
+
+    expect(Arr.filter(among, (row) => !Predicate.isString(row))).toEqual(
+      getTileLooks(tiles)
+    );
   });
 });
 

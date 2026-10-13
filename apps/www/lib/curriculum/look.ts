@@ -2,8 +2,12 @@ import "server-only";
 import { ProgramNavigationIconKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";
-import { getTileLooks } from "@repo/design-system/lib/look";
-import { Array as Arr, Schema } from "effect";
+import {
+  getTileLooks,
+  type TileLook,
+  type TileRow,
+} from "@repo/design-system/lib/look";
+import { Array as Arr, Schema, Tuple } from "effect";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 
@@ -53,34 +57,62 @@ function readCurriculumVisualSource(
  * first route of a subject in the list draws the own icon of that subject, so
  * the subject looks the same on every grid, and a later route of the same
  * subject takes another icon of the family of that subject, so two mathematics
- * routes of one grid never look alike. A route with artwork keeps its place in
- * the list, so the other tiles look the same with or without it.
+ * routes of one grid never look alike.
+ *
+ * A grid whose cards may draw reviewed artwork names that artwork with
+ * `readArtwork`. A route that has some comes back as its artwork source, in its
+ * place, and takes no icon, no hue, and no turn of its subject from the other
+ * routes, so the tiles of the grid look as they would without it.
  *
  * The families hold many icons that a card never needs, so this stays on the
  * server and hands each card only the icon it took.
  *
  * @param routes - The routes of one list, in the order they show
- * @returns One look per route, in the same order
+ * @param readArtwork - The source of the reviewed artwork of a route, or nothing when it draws a tile
+ * @returns One look per route, or its artwork source, in the same order
  */
-export function getCurriculumLooks(routes: readonly CurriculumViewRoute[]) {
+export function getCurriculumLooks(
+  routes: readonly CurriculumViewRoute[]
+): readonly TileLook[];
+export function getCurriculumLooks<Artwork extends string>(
+  routes: readonly CurriculumViewRoute[],
+  readArtwork: (route: CurriculumViewRoute) => Artwork | undefined
+): readonly (TileLook | Artwork)[];
+export function getCurriculumLooks(
+  routes: readonly CurriculumViewRoute[],
+  readArtwork: (route: CurriculumViewRoute) => string | undefined = () =>
+    undefined
+): readonly (TileLook | string)[] {
   const [, rows] = Arr.mapAccum(
     routes,
     Arr.empty<string>(),
-    (subjects, route) => {
+    (subjects, route): readonly [readonly string[], TileRow | string] => {
+      const artwork = readArtwork(route);
+
+      if (artwork !== undefined) {
+        return Tuple.make(subjects, artwork);
+      }
+
       const source = readCurriculumVisualSource(route);
 
       if (source.kind === "navigation") {
-        return [
+        return Tuple.make(
           subjects,
-          [Arr.of(CURRICULUM_NAVIGATION_ICONS[source.key]), route.nodeKey],
-        ] as const;
+          Tuple.make(
+            Arr.of(CURRICULUM_NAVIGATION_ICONS[source.key]),
+            route.nodeKey
+          )
+        );
       }
 
       const pool = Arr.contains(subjects, source.key)
         ? getLessonIcons(source.key)
         : getMaterialIcons(source.key);
 
-      return [Arr.append(subjects, source.key), [pool, route.nodeKey]] as const;
+      return Tuple.make(
+        Arr.append(subjects, source.key),
+        Tuple.make(pool, route.nodeKey)
+      );
     }
   );
 
