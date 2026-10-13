@@ -6,14 +6,15 @@ Accepted on 13 October 2026 with owner decisions K3, K10, and K11. The owner
 approved decisions K1 to K20 on that day. This ADR replaces ADR 0005. The
 classroom module, `confect/classroom`, is planned for program wave B (ADR 0013
 describes the waves). The first School's forum is live until the wave 0 change
-that retires the first School (K11) deletes it, and that change deletes ADR 0005
-with it. The design-system parts that the forum uses are live, except the ones
-its table marks as planned.
+that retires the first School (K11) deletes it. The design-system parts that the
+forum uses are live, except the ones its table marks as planned.
 
 ## Context
 
 ADR 0005 recorded an Effect-owned viewport for one conversation of the first
-School's forum. The first School's forum works like this today:
+School's forum. The wave 0 change that retires the first School deletes that ADR
+with the forum, and this ADR takes its place. The first School's forum works like
+this today:
 
 - Its threads are in `schoolClassForums` and its posts in `schoolClassForumPosts`
   (`packages/backend/confect/tables`). The body of a post is plain text
@@ -165,10 +166,10 @@ field keeps focus while the list is open, and the arrow keys, Enter, and Escape
 work. It runs in the two engines that `apps/www/playwright.config.ts` runs,
 Chromium and WebKit (WebKit for `visual/cards.browser.ts` alone today). The
 caret rectangle comes from the field of the composer. A textarea, such as the one
-of Nina's composer (`PromptInputTextarea` in `apps/www/components/ai/input.tsx`),
-offers no caret rectangle, and a Tiptap editor offers one through ProseMirror.
-The spike therefore also decides which field the forum composer is. Status of
-the spike: planned, in program wave B.
+of Nina's composer (`PromptInputTextarea`, used in
+`apps/www/components/ai/input.tsx`), offers no caret rectangle, and a Tiptap
+editor offers one through ProseMirror. The spike therefore also decides which
+field the forum composer is. Status of the spike: planned, in program wave B.
 
 ### Nina in a class
 
@@ -215,9 +216,8 @@ A task has a title that gives its address (`.../tasks/latihan-gerak-lurus`, ADR
 that can be part of the class. The policy of a task is chosen for each task. The
 school sets the starting value and its limit. The text of a submission and the
 names of its files are sealed (ADR 0030). The teacher releases the grades of the
-tasks they own.
-Publishing a task, changing its deadline, and a missed deadline are published
-changes (ADR 0027).
+tasks they own. Publishing a task, changing its deadline, and a missed deadline
+are published changes (ADR 0027).
 
 ### MessageScroller
 
