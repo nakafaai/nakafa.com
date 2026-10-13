@@ -247,25 +247,26 @@ describe("memory capture", () => {
     );
   });
 
-  it("cuts the list of known memories at its token budget, says that others are left out, and lets no number name one the model could not read", async () => {
+  it("lists all twelve known memories when they fit the budget, since the estimator counts each rare character at three quarters of a token, and lets the model restate the twelfth", async () => {
     const f = await createCapturingTest();
-    // Twelve memories of 236 rare characters each are more than the model reads.
+    // Twelve memories of 230 rare characters each fit `captureKnown`.
     const rare = Arr.join(
       Arr.makeBy(230, (index) => String.fromCodePoint(0x4e_00 + index * 7)),
       ""
     );
     await f.fill(12, { author: "learner", text: `kelas ${rare}` });
-    // The model names the twelfth place, which the cut list does not reach.
+    // The model restates the twelfth place, which the list holds in full.
     const model = answers({ ...level, known: 12 });
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    expect(prompt).toContain("Other memories are not listed.");
-    expect(Arr.length(knownLines(prompt))).toBeLessThan(12);
-    // It names nothing, so the candidate is a new memory and no memory is confirmed.
-    expect(await f.stored()).toHaveLength(13);
+    expect(prompt).not.toContain("Other memories are not listed.");
+    expect(Arr.length(knownLines(prompt))).toBe(12);
+    // The list is newest first, so the twelfth place is the oldest memory. The
+    // restatement confirms it, and no memory is added.
+    expect(await f.stored()).toHaveLength(12);
     expect(Arr.map(await f.stored(), (row) => row.confirmedAt)).toEqual([
-      ...Arr.makeBy(12, (index) => index + 1),
       NOW,
+      ...Arr.makeBy(11, (index) => index + 2),
     ]);
   });
 

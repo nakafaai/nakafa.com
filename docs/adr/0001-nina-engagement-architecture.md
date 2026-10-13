@@ -284,13 +284,13 @@ against the evidence budget.
 
 One call carries at most `NINA_CALL_LIMIT` tokens by design, the sum of the
 budgets in `confect/nina/budget.ts` that a call holds at once. The budgets are
-counted with OpenAI's tokenizer, and the model is Gemini, so the number is close
-to what the provider bills and not the same. Measured on 12 October 2026 through
-the gateway on five stored sections, the provider counted between 8.2% fewer
-tokens (Arabic verses with their translation) and 13.6% more (a lesson full of
-formulas) than the budget's count, and within 6% for German, English and
-Indonesian prose. A message adds no tokens around its content, and a tool call
-with its result costs what the budget counts for them. The model accepts
+counted with an estimator fitted to the provider's own count (`countTextTokens`),
+not with a tokenizer, so the number is close to what the provider bills and not
+the same. Measured on 13 October 2026 through the gateway on 120 texts, the
+estimate was 0.4% above the provider's count in total and 9.1% off for one text
+on average, and its doc comment names the kinds with the largest errors. A
+message adds no tokens around its content, and a tool call with its result costs
+what the budget counts for them. The model accepts
 far more, 1,048,576 input tokens. Nina stays below because every call bills
 every token it carries, a larger call takes longer to start, and the provider
 keeps a cached prefix for only about five minutes. Three things lie outside the

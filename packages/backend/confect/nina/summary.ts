@@ -29,10 +29,9 @@ import {
 const MESSAGE_PAGE = 100;
 
 /**
- * What the summary writer is told. By the shared tokenizer on the app's own
- * copy, 800 words are about 1,100 tokens in English and 1,400 in Indonesian and
- * German. That leaves room under `NINA_BUDGET.summary` for a writer that runs
- * long, and `boundText` stays the hard bound.
+ * What the summary writer is told. A summary longer than `NINA_BUDGET.summary`
+ * is cut by `boundText`, never refused. An answer that the output cap cut off is
+ * not stored, and `refreshSummary` keeps the previous summary.
  */
 const INSTRUCTIONS = Arr.join(
   [

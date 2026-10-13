@@ -83,6 +83,53 @@ describe("Nina token budgets", () => {
     expect(countTextTokens(bounded)).toBeLessThanOrEqual(150);
     expect(bounded).toContain("Narrow the request.");
   });
+
+  it("cuts after the last whole word that fits, never inside a word", () => {
+    const text = "word ".repeat(600);
+    const bounded = boundText(text, 150, "Narrow the request.");
+    const kept = bounded.slice(0, bounded.indexOf("\n\n["));
+    // Each word costs one token. The note reserves 80 of the 150 tokens, so 70
+    // are left for the text, and a 71st word would not fit.
+    expect(kept).toBe(`${"word ".repeat(69)}word`);
+  });
+
+  it("states the estimator's total of the whole text in the note", () => {
+    const text = "word ".repeat(600);
+    const bounded = boundText(text, 150, "Narrow the request.");
+    expect(bounded).toContain("[Shortened to about 150 of 600 tokens.");
+  });
+});
+
+describe("Nina token estimate", () => {
+  it.each([
+    { name: "a short word", text: "word", expected: 1 },
+    { name: "an 8-letter word, one token", text: "abcdefgh", expected: 1 },
+    { name: "a 9-letter word, two tokens", text: "abcdefghi", expected: 2 },
+    { name: "two digits, one token each", text: "12", expected: 2 },
+    { name: "one space, none", text: "a b", expected: 2 },
+    { name: "two spaces, one token", text: "a  b", expected: 3 },
+    { name: "a newline, none", text: "a\nb", expected: 2 },
+    { name: "one punctuation mark, one token", text: "!", expected: 1 },
+    { name: "one emoji, one token", text: "\u{1F600}", expected: 1 },
+    {
+      name: "an Arabic word with vowel signs, a token for each letter and sign",
+      text: "\u{643}\u{64E}\u{62A}\u{64E}\u{628}\u{64E}",
+      expected: 6,
+    },
+    {
+      name: "five Chinese characters, three quarters of a token each, rounded up",
+      text: "\u{4E2D}\u{6587}\u{5B57}\u{5B66}\u{4EBA}",
+      expected: 4,
+    },
+    { name: "an underscore, none", text: "_", expected: 0 },
+    {
+      name: "an underscore between two words, which splits them",
+      text: "a_b",
+      expected: 2,
+    },
+  ])("counts $name as the estimator does", ({ text, expected }) => {
+    expect(countTextTokens(text)).toBe(expected);
+  });
 });
 
 describe("Nina output caps", () => {
@@ -146,7 +193,7 @@ describe("Nina call limit", () => {
     ]);
     const measured = instructions + tools + runtime;
     expect(measured).toBeLessThanOrEqual(NINA_BUDGET.instructions);
-    // The stated part is the measure rounded up to the next 1,000 tokens.
+    // The stated part stays less than 1,000 tokens above the measure.
     expect(NINA_BUDGET.instructions - measured).toBeLessThan(1000);
   }, 30_000);
 

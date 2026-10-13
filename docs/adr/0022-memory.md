@@ -193,10 +193,12 @@ of the first calls a model, in the background:
 | Recall | A list in the text part in front of the learner's message | 700, and 757 with its block | 110 to 144 | 435 at most | None |
 | Memory capability | The answer to a tool call Nina makes, only when she makes it | 1,500, and 1,555 with its block | 89 to 142 a call | 405 at most for one call | None |
 
-The tokens are counted with the tokenizer behind every Nina budget
-(`gpt-tokenizer`). A bound cuts the memories' text, and the block around it,
-which is a heading, one sentence that names it as data and its tags, adds 48,
-57 and 55 tokens. A typical learner is a portrait of 500 characters and three
+The tokens are counted with the estimator behind every Nina budget
+(`countTextTokens`, fitted on 13 October 2026). The figures of this section were
+counted with the tokenizer that the estimator replaced, on 12 October 2026, and
+they have not been counted again. A bound cuts the memories' text, and the block
+around it, which is a heading, one sentence that names it as data and its tags,
+adds 48, 57 and 55 tokens. A typical learner is a portrait of 500 characters and three
 to five one-sentence memories, measured on 12 October 2026 in Indonesian and
 English. A portrait of 1,200 characters, the most the build may write, measures
 249 to 292 tokens, so the character limit and the token bound agree for
