@@ -57,7 +57,7 @@ describe("users/queries", () => {
     expect(missingByAuthId).toBeNull();
   });
 
-  it("checks a username for a visitor and for the account that holds it", async () => {
+  it("refuses a visitor and checks a username for an account and for the account that holds it", async () => {
     const t = createConvexTestWithBetterAuth();
     const holder = await t.mutation(async (ctx) => {
       const seeded = await seedAuthenticatedUser(ctx, {
@@ -78,13 +78,17 @@ describe("users/queries", () => {
     const check = (caller: Pick<typeof t, "query">, username: string) =>
       caller.query(api.users.queries.checkUsername, { username });
 
-    expect(await check(t, "Teman_Baru")).toBe("available");
-    expect(await check(t, "NabilFatih")).toBe("taken");
-    expect(await check(signedIn(stranger), "nabilfatih")).toBe("taken");
+    // A visitor learns nothing, not even whether a name is taken.
+    await expect(check(t, "nabilfatih")).rejects.toMatchObject({
+      data: { _tag: "SessionRequired", code: "UNAUTHENTICATED" },
+    });
+    const other = signedIn(stranger);
+    expect(await check(other, "Teman_Baru")).toBe("available");
+    expect(await check(other, "NabilFatih")).toBe("taken");
     expect(await check(signedIn(holder), "nabilfatih")).toBe("available");
-    expect(await check(t, "ab")).toBe("tooShort");
-    expect(await check(t, "9lives")).toBe("letterFirst");
-    expect(await check(t, "a b")).toBe("characters");
-    expect(await check(t, "admin")).toBe("notAllowed");
+    expect(await check(other, "ab")).toBe("tooShort");
+    expect(await check(other, "9lives")).toBe("letterFirst");
+    expect(await check(other, "a b")).toBe("characters");
+    expect(await check(other, "admin")).toBe("notAllowed");
   });
 });

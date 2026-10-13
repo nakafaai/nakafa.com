@@ -158,7 +158,9 @@ nothing. So no profile is public yet.
   and comments. Every other request, signed in or not, ends as not found, the
   same as for a username nobody holds, so the profile address never tells
   whether a username exists. (The availability check and a refused rename do,
-  because a person who picks a name must be told that it is taken.)
+  because a person who picks a name must be told that it is taken, so both
+  answer only a signed-in account: a visitor's check is refused with
+  `SessionRequired`.)
   `readProfile` in `apps/www/lib/profile/server.ts` is the one place that
   decides, and it reads the signed-in account, so the backend holds no public
   lookup of a profile by username.
