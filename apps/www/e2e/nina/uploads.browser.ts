@@ -444,6 +444,17 @@ test.describe("Uploads of a composer in the sheet at 1440px", () => {
         // The same words go again with the same picture, which is not uploaded
         // again. The message shows the picture at the address its composer has now.
         yield* write(inTheSheet(page), PICTURE_PROMPT);
+        // The composer hides a chip while its send is pending, so the address
+        // of the picture is read before the send.
+        const shown = yield* Effect.promise(async () => {
+          const chip = chipsOfComposer(inTheSheet(page)).getByRole("img", {
+            name: "nina.png",
+          });
+          await expect(chip).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          return chip.getAttribute("src");
+        });
         changes.hold();
         changes.failNext(START);
         yield* Effect.promise(() =>
@@ -453,12 +464,17 @@ test.describe("Uploads of a composer in the sheet at 1440px", () => {
           .locator('[data-slot="message"]')
           .getByRole("img", { name: "nina.png" });
         yield* Effect.promise(async () => {
+          await expect
+            .poll(() => changes.argumentsOf(START).length, {
+              timeout: readinessTimeoutMilliseconds,
+            })
+            .toBe(2);
+          await expect(
+            promptWith(inTheSheet(page), PICTURE_PROMPT)
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
           await expect(sentPicture).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
-          const shown = await chipsOfComposer(inTheSheet(page))
-            .getByRole("img", { name: "nina.png" })
-            .getAttribute("src");
           await expect(sentPicture).toHaveAttribute("src", shown ?? "");
           await expect
             .poll(
