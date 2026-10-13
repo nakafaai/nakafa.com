@@ -343,6 +343,9 @@ repeat it.
   `run` command (`runFunctionAndLog`, line 121210 of `dist/cli.bundle.cjs`): the
   admin key may call internal queries, mutations and actions, and `run` sends it
   with the component path of `--component`.
+- https://docs.convex.dev/components/authoring: a component exposes only its
+  public functions to the app, and `npx convex run` and the dashboard run public
+  and internal functions alike.
 - `@better-auth/core` 1.6.33, `dist/social-providers/google` (lines 45 to 73)
   and `dist/oauth2/create-authorization-url` (lines 15 and 17): `prompt` and
   `access_type` reach Google only when set. `getUserInfo` (line 105) reads the
