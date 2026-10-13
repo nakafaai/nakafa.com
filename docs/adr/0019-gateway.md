@@ -189,16 +189,24 @@ thresholds in the catalog were set from what that command printed on 12 October
   alone 0.5 to 2.3 seconds, one page read 0.9 to 5.7 seconds, and the provider
   plan refuses more than about ten page reads a minute. A page that is not read
   keeps the description the search returned, so it is evidence, not a failure.
-- **Search provider.** Research sends these to Firecrawl. A search
-  (`research/search/provider.ts`) sends the query that the research model writes
-  from the learner's request and, when the task names sites, their hostnames as
-  `includeDomains` ([ADR 0001](./0001-nina-engagement-architecture.md) says what
-  the provider documents for that field). A page read
-  (`research/tools/scrape.ts`) sends the address of a page, which is a link the
-  learner gave or a result of a search. Neither call sets a retention option,
-  although the installed SDK (4.46.0) types offer `enterprise: ["zdr"]` for a
-  search and `zeroDataRetention` for a scrape. Three Firecrawl pages were read
-  on 12 October 2026. The Enterprise page lists zero data retention among the
+- **Search provider.** Research sends these to Firecrawl, over its HTTP API
+  through Effect's HTTP client, from one module (`research/provider.ts`) that
+  owns the requests, the answers it reads, and the failures it reports. The
+  provider's SDK is not used. A search (`research/search/provider.ts`) sends the
+  query that the research model writes from the learner's request and, when the
+  task names sites, their hostnames as `includeDomains`
+  ([ADR 0001](./0001-nina-engagement-architecture.md) says what the provider
+  documents for that field). A page read (`research/tools/scrape.ts`) sends the
+  address of a page, which is a link the learner gave or a result of a search.
+  A search body holds `query`, `sources`, `limit`, `timeout` and
+  `includeDomains`, a page read body holds `url`, `formats` and `timeout`, and
+  the key travels as a bearer token. No other field is sent: the SDK also added
+  an `origin` field naming its own version, which the reference does not define
+  for either endpoint. Neither call sets a retention option, although the
+  provider's API reference lists `enterprise: ["zdr"]` for a search and
+  `zeroDataRetention` for a scrape (both read on 13 October 2026). Three
+  Firecrawl pages were read on 12 October 2026. The Enterprise page lists zero
+  data retention among the
   controls its team provisions, and says that page content and extracted data
   are then processed in memory and not kept beyond the request. The search page
   says that `["zdr"]` makes Firecrawl and its upstream search provider keep no
