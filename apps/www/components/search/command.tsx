@@ -333,12 +333,12 @@ function useDefaultSearchGroups(
       items: Arr.zipWith(
         articleNavigation,
         getArticleCategoryIcons(articleNavigation),
-        (item, icon) => ({
+        (item, icon): SearchCommandItem => ({
           href: item.href,
           icon,
           key: item.href,
           label: item.title,
-          type: "navigation" as const,
+          type: "navigation",
           value: `${tArticles("articles")} ${item.title} ${item.href}`,
         })
       ),

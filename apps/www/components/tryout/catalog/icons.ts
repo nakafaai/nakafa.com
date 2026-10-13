@@ -3,23 +3,21 @@ import {
   BookOpenTextIcon,
   BookSearchIcon,
   Brain02Icon,
-  Building02Icon,
-  Building04Icon,
-  Building05Icon,
   Building06Icon,
   Calendar01Icon,
-  Calendar03Icon,
-  CalendarClockIcon,
-  CalendarFavorite01Icon,
   CalendarsIcon,
-  Castle02Icon,
   DigitalClockIcon,
-  GlassesIcon,
+  Factory01Icon,
+  FileTextIcon,
+  FireworksIcon,
+  Hospital01Icon,
   Knowledge01Icon,
   LandmarkIcon,
   LanguagesIcon,
   LibraryBigIcon,
+  LighthouseIcon,
   Mortarboard02Icon,
+  PartyPopperIcon,
   PuzzleIcon,
   QuillWriteIcon,
   Quiz04Icon,
@@ -27,6 +25,10 @@ import {
   SquareRootSquareIcon,
   StopWatchIcon,
   SunMoonIcon,
+  SunriseIcon,
+  TheaterIcon,
+  TimeZoneIcon,
+  UniversityIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { TryoutTrackKindSchema } from "@nakafa/aksara-contracts/tryout/spec";
@@ -45,8 +47,9 @@ export const TRYOUT_EXAM_ICONS: Readonly<Record<string, IconSvgElement>> = {
  * an icon of its own. A subject or a section keeps its icon whether a track or
  * a row of a set shows it. The four language keys read as language: the two
  * language subjects as many languages and as writing, the two literacy
- * sections as reading a text. The interface language switcher draws
- * `TranslateIcon`, so no subject takes it.
+ * sections as reading a text, one in a book that is searched and one in a page
+ * of text. The interface language switcher draws `TranslateIcon`, so no
+ * subject takes it.
  */
 export const TRYOUT_SUBJECT_ICONS: Readonly<Record<string, IconSvgElement>> = {
   "compulsory-mathematics": BoardMathIcon,
@@ -54,7 +57,7 @@ export const TRYOUT_SUBJECT_ICONS: Readonly<Record<string, IconSvgElement>> = {
   "general-knowledge-and-understanding": Knowledge01Icon,
   "general-reasoning": Brain02Icon,
   "indonesian-language": QuillWriteIcon,
-  "literacy-in-english": GlassesIcon,
+  "literacy-in-english": FileTextIcon,
   "literacy-in-indonesian": BookSearchIcon,
   "mathematical-reasoning": PuzzleIcon,
   "quantitative-knowledge": SquareRootSquareIcon,
@@ -62,34 +65,43 @@ export const TRYOUT_SUBJECT_ICONS: Readonly<Record<string, IconSvgElement>> = {
 };
 
 /**
- * The drawings of time that the year tracks of one exam take apart, one each:
- * five calendars that differ by what they hold (dots, a date, a stack, a star,
- * a clock), a digital clock, a stopwatch, and the sun and the moon. Calendars
- * that differ only by a mark inside the frame read alike at 40px, so no more of
- * them are here.
+ * The drawings that the year tracks of one exam take apart, one each: a
+ * calendar and a stack of calendars, a digital clock, a stopwatch, the sun and
+ * the moon, a sunrise, a globe with a clock, fireworks, and a party popper.
+ * Each is a different object at 40px: calendars that differ only by a mark
+ * inside the frame, and clocks that differ only by their hands, read alike, so
+ * no more of them are here.
  */
 export const TRYOUT_YEAR_ICONS: Arr.NonEmptyReadonlyArray<IconSvgElement> = [
-  Calendar03Icon,
   Calendar01Icon,
   CalendarsIcon,
-  CalendarFavorite01Icon,
-  CalendarClockIcon,
   DigitalClockIcon,
   StopWatchIcon,
   SunMoonIcon,
+  SunriseIcon,
+  TimeZoneIcon,
+  FireworksIcon,
+  PartyPopperIcon,
 ];
 
-/** The icons that the institution tracks of one exam take apart, one each. */
+/**
+ * The icons that the institution tracks of one exam take apart, one each: a
+ * mortarboard, a building with columns, a campus, a library, an office, a
+ * factory, a hospital, a theatre, and a lighthouse. Buildings that differ only
+ * by their windows or by a spire read alike at 40px, so each is a different
+ * kind of place.
+ */
 export const TRYOUT_INSTITUTION_ICONS: Arr.NonEmptyReadonlyArray<IconSvgElement> =
   [
     Mortarboard02Icon,
     LandmarkIcon,
-    Castle02Icon,
-    Building04Icon,
+    UniversityIcon,
     LibraryBigIcon,
     Building06Icon,
-    Building05Icon,
-    Building02Icon,
+    Factory01Icon,
+    Hospital01Icon,
+    TheaterIcon,
+    LighthouseIcon,
   ];
 
 /**

@@ -5,24 +5,12 @@ import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { PRESENTED_MATERIAL_DOMAINS } from "@repo/contents/taxonomy";
 import { Array as Arr } from "effect";
 
-/**
- * The seven sections of a UTBK-SNBT set are the longest list of tiles that the
- * product shows at once. The home trending list shows six lessons.
- */
-const LONGEST_LIST = 7;
-
 describe("getLessonIcons", () => {
   it("starts the family of each subject with the icon of the subject", () => {
     for (const material of PRESENTED_MATERIAL_DOMAINS) {
       expect(Arr.headNonEmpty(getLessonIcons(material))).toEqual(
         Arr.headNonEmpty(getMaterialIcons(material))
       );
-    }
-  });
-
-  it("gives every family more icons than the longest list of lessons", () => {
-    for (const material of PRESENTED_MATERIAL_DOMAINS) {
-      expect(getLessonIcons(material).length).toBeGreaterThan(LONGEST_LIST);
     }
   });
 

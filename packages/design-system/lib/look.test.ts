@@ -132,6 +132,25 @@ describe("getTileShifts", () => {
     }
   });
 
+  it("keeps the tiles of the two longest real lists the full gap apart", () => {
+    // The classes 1 to 8 of the Merdeka curriculum, the longest list of tiles
+    // of the corpus, and the seven sections of a UTBK-SNBT set.
+    const classes = Arr.makeBy(8, (index) => `class-${index + 1}`);
+    const sections = [
+      "general-reasoning",
+      "general-knowledge-and-understanding",
+      "reading-comprehension-and-writing",
+      "quantitative-knowledge",
+      "literacy-in-indonesian",
+      "literacy-in-english",
+      "mathematical-reasoning",
+    ];
+
+    for (const seeds of [classes, sections]) {
+      expect(leastDistance(middlesOf(seeds))).toBe(TILE_HUE_GAP);
+    }
+  });
+
   it("spreads ten tiles that start together evenly around the wheel", () => {
     const seeds = Arr.replicate("aljabar", 10);
 

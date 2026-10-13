@@ -1,6 +1,6 @@
 import {
-  AiProgrammingIcon,
   BankIcon,
+  BinaryCodeIcon,
   CourtLawIcon,
   DnaIcon,
   ElectricWireIcon,
@@ -36,7 +36,7 @@ const materialIconByKey = {
   "ai-ds": NeuralNetworkIcon,
   biology: DnaIcon,
   chemistry: TestTubeIcon,
-  "computer-science": AiProgrammingIcon,
+  "computer-science": BinaryCodeIcon,
   economy: BankIcon,
   "game-engineering": GameIcon,
   geography: GlobeIcon,

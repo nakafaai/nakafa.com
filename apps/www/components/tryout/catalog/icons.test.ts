@@ -5,7 +5,7 @@ import { getMaterialIcons } from "@repo/contents/curriculum/material";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
 import { PRESENTED_MATERIAL_DOMAINS } from "@repo/contents/taxonomy";
 import { getTileLooks } from "@repo/design-system/lib/look";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Record as Rec, Tuple } from "effect";
 import { ARTICLE_CATEGORY_ICONS } from "@/components/articles/category";
 import {
   getTryoutExamIcons,
@@ -36,14 +36,34 @@ const TKA_SUBJECTS = [
   "indonesian-language",
   "english-language",
 ];
-/** A UTBK-SNBT set holds seven sections, the longest list of tiles that the product shows at once. */
-const LONGEST_LIST = SNBT_SECTIONS.length;
+/**
+ * The longest list of tiles that the corpus holds, counted from the source
+ * trees of the Aksara corpus (`packages/corpus/curriculum`) and not from
+ * memory: the classes 1 to 8 of the Merdeka curriculum. Classes 9 to 12 draw
+ * reviewed artwork, which takes no tile (`CURRICULUM_ARTWORK_BY_IDENTITY`), so
+ * the root of that curriculum lists twelve cards and eight tiles once every
+ * class is published; today the corpus publishes only the three classes that
+ * hold lessons. The other lists are shorter: seven sections in a UTBK-SNBT set,
+ * six lessons in the trending list of the home page, and no more than five
+ * cards, four of them tiles, in any other list of the corpus.
+ */
+const LONGEST_LIST = 8;
+
+/** Every pool of icons that a list draws its tiles from, with the name of its owner. */
+const POOLS = [
+  Tuple.make("the spare icons", SPARE_ICONS),
+  Tuple.make("the year tracks", TRYOUT_YEAR_ICONS),
+  Tuple.make("the institution tracks", TRYOUT_INSTITUTION_ICONS),
+  ...Arr.map(PRESENTED_MATERIAL_DOMAINS, (material) =>
+    Tuple.make(`the lessons of ${material}`, getLessonIcons(material))
+  ),
+];
 
 /** The icon that each pool gives to its tile in one list, the tiles having different seeds. */
 function iconsOf(pools: readonly Arr.NonEmptyReadonlyArray<IconSvgElement>[]) {
   return Arr.map(
     getTileLooks(
-      Arr.map(pools, (pool, index) => [pool, `key-${index}`] as const)
+      Arr.map(pools, (pool, index) => Tuple.make(pool, `key-${index}`))
     ),
     ({ icon }) => icon
   );
@@ -57,12 +77,15 @@ function ownIcon(pool: Arr.NonEmptyReadonlyArray<IconSvgElement>) {
 }
 
 /**
- * This file owns the property that no icon is the icon of two keys, because it
- * is the one place that reads every map of the product that names an icon for a
- * key: the subjects and their lessons, the spare icons, the try-out exams,
- * subjects, years, and institutions, the curriculum navigation keys, which also
- * name the stages of the sidebar and the search palette, and the article
- * categories. Another test that restates it would only repeat this one.
+ * This file owns the property that no icon is the icon of two keys, and that no
+ * pool is shorter than the longest list, because it is the one place that
+ * reads every map of the product that names an icon for a key: the subjects
+ * and their lessons and the spare icons (`@repo/contents`), the try-out exams,
+ * subjects, years, and institutions, the curriculum navigation keys, which
+ * also name the stages of the sidebar and the search palette, and the article
+ * categories. Only `apps/www` imports all of them, and of its owners the
+ * try-out catalog holds the most icons, so the rule sits with its lookups.
+ * Another test that restates it would only repeat this one.
  */
 describe("icons of the product", () => {
   it("draws every icon of the product for one key only", () => {
@@ -82,11 +105,12 @@ describe("icons of the product", () => {
     expect(Arr.dedupe(icons)).toHaveLength(icons.length);
   });
 
-  it("holds more drawings of time, buildings, and spare icons than the longest list", () => {
-    expect(TRYOUT_YEAR_ICONS.length).toBeGreaterThan(LONGEST_LIST);
-    expect(TRYOUT_INSTITUTION_ICONS.length).toBeGreaterThan(LONGEST_LIST);
-    expect(SPARE_ICONS.length).toBeGreaterThan(LONGEST_LIST);
-  });
+  it.each(POOLS)(
+    "gives %s more icons than the longest list of tiles",
+    (_owner, pool) => {
+      expect(pool.length).toBeGreaterThan(LONGEST_LIST);
+    }
+  );
 });
 
 describe("try-out icons", () => {
@@ -138,15 +162,18 @@ describe("try-out icons", () => {
   });
 
   it("gives a set of sections that it does not know one icon each", () => {
-    const unknown = Arr.makeBy(LONGEST_LIST, (index) => `section-${index}`);
+    const unknown = Arr.makeBy(
+      SNBT_SECTIONS.length,
+      (index) => `section-${index}`
+    );
     const icons = iconsOf(
       Arr.map(unknown, (key) => getTryoutSubjectIcons(key))
     );
 
-    expect(Arr.dedupe(icons)).toHaveLength(LONGEST_LIST);
+    expect(Arr.dedupe(icons)).toHaveLength(SNBT_SECTIONS.length);
   });
 
-  it("gives year tracks one drawing of time each", () => {
+  it("gives year tracks one drawing of time each, as many as the longest list", () => {
     const years = Arr.makeBy(LONGEST_LIST, () =>
       getTryoutTrackIcons("year", "2027")
     );

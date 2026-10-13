@@ -12,14 +12,34 @@ import { Array as Arr, Equal, Order, Predicate, Tuple } from "effect";
  * distance between two middles in OKLab, where 0.02 is the least that an eye
  * tells apart. At 36 degrees two middles differ by at least 0.067, and the two
  * blends, each 34 degrees wide, no longer overlap in hue. A wider gap keeps
- * fewer lists of seven tiles, the longest list of the product: in 3,000 random
- * lists, 96 in 100 kept 40 degrees and 63 in 100 kept 45.
+ * fewer lists: of 3,000 random lists of seven tiles, 96 in 100 kept 40 degrees
+ * and 63 in 100 kept 45.
  *
  * Every tile has the same lightness and chroma, so no gap separates every pair
  * for a viewer who confuses red with green or blue with yellow: in
  * deuteranopia and tritanopia 17 and 18 of 100 neighbouring pairs fall under
  * 0.02, while protanopia keeps all of them above it (0.026 at the least). A
  * list never repeats an icon either, so those pairs still differ.
+ *
+ * What a list keeps depends on its length, since ten gaps of 36 degrees fill
+ * the wheel. A list of up to six tiles always keeps the gap: five tiles hide at
+ * most 355 of the 360 hues, so a sixth always finds one. Of 200,000 random
+ * lists of seven, 172 fell under it (about 1 in 1,160) and the least distance
+ * seen was 32 degrees, which is a measurement and no bound: the bound is 30,
+ * since six tiles leave a gap of at least 60 degrees between two neighbours and
+ * its middle is 30 degrees from both.
+ *
+ * The longest list of tiles that the corpus holds is eight: the classes 1 to 8
+ * of the Merdeka curriculum once they are published, counted from the source
+ * trees of the Aksara corpus. Its classes 9 to 12 draw reviewed artwork and
+ * take no tile, so the root of that curriculum lists twelve cards and eight
+ * tiles. Those eight tiles keep the full 36 degrees, as do the seven sections
+ * of a UTBK-SNBT set. Of 200,000 random lists of eight, 14,322 fell under the
+ * gap (7.2 percent) and the least distance seen was 28 degrees. A card with
+ * artwork stays out of the list on purpose: the same twelve classes, all drawn
+ * as tiles, would keep only 18 degrees. Past the last free hue a tile takes the
+ * hue farthest from the rest, so the least distance shrinks but no two tiles
+ * share a hue.
  */
 export const TILE_HUE_GAP = 36;
 
@@ -92,15 +112,8 @@ function turnOf(seed: string, middle: number) {
  * this one as `shown`: a tile then also prefers a hue that has room from them,
  * but the gap inside its own list comes first and never gives way.
  *
- * A list of up to six tiles always finds room: five tiles hide at most 355 of
- * 360 hues. Seven tiles keep the gap too in nearly every list: of 200,000
- * random lists of seven, 172 fell under it (about 1 in 1,160), and the least
- * distance seen was 32 degrees. That is a measurement, not a bound. The bound
- * is 30 degrees: six tiles leave a gap of at least 60 degrees between two
- * neighbours, and the middle of that gap is 30 degrees from both. Eight tiles
- * fell under the gap in 7.2 percent of 200,000 random lists, the least
- * distance seen being 28. Past the last free hue a tile takes the hue farthest
- * from the rest, so the least distance shrinks but no two tiles share a hue.
+ * `TILE_HUE_GAP` says what a list keeps by its length, up to the longest list
+ * of the corpus.
  *
  * @param seeds - The seed of each tile, in list order
  * @param shown - The tiles that the page already shows before this list
