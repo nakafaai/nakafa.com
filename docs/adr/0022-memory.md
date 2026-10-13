@@ -850,8 +850,10 @@ nobody tries them again without a new reason.
   "Delete all", the daily expiry and account deletion keep no record, and
   account deletion deletes the learner's records with their memories, before
   the key goes. A deleted memory's words therefore stay on the server, sealed
-  for the learner, for at most the window and only for a memory the learner
-  deleted one at a time. They stay because `add` cannot give a memory back:
+  for the learner, for the window and until the job that deletes the record at
+  its end has run, and only for a memory the learner deleted one at a time.
+  `restore` refuses the record from the end of the window, whether or not that
+  job has run. They stay because `add` cannot give a memory back:
   it takes no kind, no end day and no author, so a situation that was undone
   no longer ended and a memory Nina saved came back as one the learner wrote.
 - `read` gives a turn the account profile, the portrait when the learner has
