@@ -826,7 +826,11 @@ nobody tries them again without a new reason.
   there. The window is `MEMORY_UNDO`, 5 seconds, in `memory.spec`, which the
   Memory page reads for its toast too, so one number owns both. A toast waits
   while the pointer rests on it or the tab is hidden, so the page closes it
-  when the window ends and never offers an Undo that the server would refuse.
+  when the window ends and offers no Undo after the server stopped keeping the
+  memory. The page's window starts when the toast shows and the server's when
+  it has deleted the memory, so the page's ends first, but an Undo that
+  travels slower than the delete did can still arrive late: the server then
+  answers `missing` and the page tells the learner as for any failed change.
   `restore({ id })` takes the id the memory had. It fails with
   `NinaMemoryRejected` and `missing` when the learner has no record under it:
   the id is another learner's, the window ended, the memory was put back
