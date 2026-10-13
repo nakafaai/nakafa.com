@@ -194,7 +194,7 @@ thresholds in the catalog were set from what that command printed on 12 October
   owns the requests, the answers it reads, and the failures it reports. The
   provider's SDK is not used. A search (`research/search/provider.ts`) sends the
   query that the research model writes from the learner's request and, when the
-  task names sites, their hostnames as `includeDomains`
+  learner's own words name sites, their hostnames as `includeDomains`
   ([ADR 0001](./0001-nina-engagement-architecture.md) says what the provider
   documents for that field). A page read (`research/tools/scrape.ts`) sends the
   address of a page, which is a link the learner gave or a result of a search.
@@ -222,6 +222,28 @@ thresholds in the catalog were set from what that command printed on 12 October
   learner's words. The repository sets up no tracer layer and no exporter, so no
   span leaves the process today, and an attribute kept on it would carry the
   learner's words out through a tracer added later.
+  - Sites. The research model puts a site in a search only when the learner's
+    own words name that site or its address. A request for an official, recent,
+    or primary source names no site, so the search stays open and its queries
+    carry the name of the source. A site that the model writes from memory can
+    be wrong or no longer in use, and a search limited to it finds nothing.
+    That happened on production: a learner asked for the latest official source
+    of the UTBK SNBT 2027 schedule, and the research model limited both of its
+    queries to `snpmb.bppp.kemdikbud.go.id`. The card said only that no source
+    was found, and Nina answered that nothing could be verified. Measured on
+    the production plan on 13 October 2026, a query limited to that domain
+    returned no web and no news result, the same query limited to `snpmb.id`
+    returned five of each, and the same query open returned five web results.
+  - A limit that finds nothing. A card shows the sites under each query in
+    every state, so a list of sources from one site, or none, reads as what it
+    is. A search that was limited to sites and returned no source also tells
+    Nina in words (`research/search/format.ts`, handed to her by
+    `research/agent.ts`): which sites it was limited to, that none of them
+    returned a page, that a site named from memory may be wrong or no longer in
+    use, and that she should research again without the limit unless the
+    learner named those sites. A search without sites adds nothing to what Nina
+    reads. No code searches again or drops a site, because the learner may have
+    named them on purpose, so whether to search again is Nina's step.
 - **Attachments.** The documents of one turn, every attachment whose media type
   does not start with `image/`, may total at most 10 MiB (`NINA_DOCUMENT_SIZE`).
   Documents travel inside the request body, which the gateway accepts up to
@@ -385,6 +407,11 @@ Not yet established:
   has not been run against a deployment. If the gateway refuses it, every
   decision fails, Nina stores no memory, and `judgment:measure` says so for
   every message; no decision is made without asking for zero retention.
+- Whether the research search step, given the rule that a site goes in a search
+  only when the learner names it, leaves the field out for a request for an
+  official source, and whether Nina researches again after she reads that a
+  limit found nothing. Both are instructions to a model, and no model call was
+  made to test them.
 
 ## Implementation Contract
 

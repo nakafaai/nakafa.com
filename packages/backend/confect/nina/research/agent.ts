@@ -50,7 +50,14 @@ import {
   Output,
   wrapLanguageModel,
 } from "ai";
-import { Array as Arr, Effect, MutableHashSet, Option, Result } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableHashSet,
+  Option,
+  pipe,
+  Result,
+} from "effect";
 
 /** A reference written as a full web address, not as a bare site name. */
 const FULL_ADDRESS = /^https?:\/\//iu;
@@ -64,7 +71,8 @@ const exactSourceContentMaxLength = 8000;
  * failure still hands that source to Nina, so the answer never contradicts the
  * cards. Every model and provider call is cut to the time the capability has
  * left, so a call that runs out ends here, with what was gathered, before the
- * run itself is cut. The usage handler records each provider call.
+ * run itself is cut. A search limited to sites that finds nothing tells Nina
+ * which sites it was limited to. The usage handler records each provider call.
  */
 export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   function* ({
@@ -196,9 +204,20 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
     if (MutableHashSet.size(eligibleCitationUrls) === 0) {
       if (searched) {
+        // A search limited to sites says so to Nina: the limit may be why it
+        // found nothing, and she is the one who can research again without it.
+        const limit = pipe(
+          search,
+          Option.filter(({ result }) => result.sites !== undefined),
+          Option.map(({ text }) => text),
+          Option.toArray
+        );
         return {
           outcome: "empty" as const,
-          text: formatResearchOutput({ findings: [], limitations: [] }),
+          text: Arr.join(
+            [formatResearchOutput({ findings: [], limitations: [] }), ...limit],
+            "\n\n"
+          ),
         };
       }
       return yield* Result.isFailure(planned)

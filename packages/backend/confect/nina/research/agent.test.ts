@@ -2,6 +2,7 @@ import { Agent } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
+import { formatResearchOutput } from "@repo/backend/confect/nina/research/output";
 import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
@@ -110,6 +111,11 @@ const found = Effect.succeed({
 const nothing = Effect.succeed({
   text: "No web result.",
   result: { sources: [], error: undefined },
+});
+/** A search limited to a site, which found no page in it. */
+const limitedNothing = Effect.succeed({
+  text: "The search was limited to ai-sdk.dev.",
+  result: { sites: Arr.make("ai-sdk.dev"), sources: [], error: undefined },
 });
 const unavailable = Effect.succeed({
   text: "Search failed.",
@@ -255,17 +261,25 @@ describe("research Agent evidence boundary", () => {
     expect(searchWeb).not.toHaveBeenCalled();
   });
 
-  it("ends as empty without a synthesis call when the search finds no source", async () => {
-    vi.mocked(searchWeb).mockReturnValue(nothing);
-    const { calls, result } = await runResearch({ doGenerate: [searchCall] });
-    expect(result).toEqual({
-      outcome: "empty",
-      text: expect.stringContaining(
-        "Research returned no source-backed finding."
-      ),
-    });
-    expect(calls).toHaveLength(1);
-  });
+  it.each([
+    ["an open search finds no source and adds nothing for Nina", nothing, ""],
+    [
+      "a search limited to sites finds no source and hands Nina what the limit means",
+      limitedNothing,
+      "\n\nThe search was limited to ai-sdk.dev.",
+    ],
+  ])(
+    "ends as empty without a synthesis call when %s",
+    async (_case, searched, limit) => {
+      vi.mocked(searchWeb).mockReturnValue(searched);
+      const { calls, result } = await runResearch({ doGenerate: [searchCall] });
+      expect(result).toEqual({
+        outcome: "empty",
+        text: `${formatResearchOutput({ findings: [], limitations: [] })}${limit}`,
+      });
+      expect(calls).toHaveLength(1);
+    }
+  );
 
   it("hands Nina the closest thing the sources state, with its citation and the limitation, and is not empty", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);

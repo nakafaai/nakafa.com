@@ -370,6 +370,8 @@ describe("research web search tool", () => {
         expect(
           Arr.map(getWebSearchParts(parts()), (part) => part.sites)
         ).toEqual(Arr.makeBy(4, () => sites));
+        // So does the output that the reader of the search gets.
+        expect(output.result.sites).toEqual(sites);
       })
   );
 
@@ -433,7 +435,8 @@ describe("research web search tool", () => {
           toolCallId: "web-search-empty",
         });
 
-        expect(output.result.sources).toEqual([]);
+        // An open search names no site, so its output carries no `sites` key.
+        expect(output.result).toStrictEqual({ error: undefined, sources: [] });
         expect(output.text).toContain("# Web Search Results");
         expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
           expect.objectContaining({

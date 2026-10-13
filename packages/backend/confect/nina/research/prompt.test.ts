@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { nakafaWebSearch } from "@repo/backend/confect/nina/research/descriptions";
+import {
+  nakafaWebSearch,
+  webSearchSitesRule,
+} from "@repo/backend/confect/nina/research/descriptions";
 import {
   researchPrompt,
   researchSearchPrompt,
@@ -62,15 +65,23 @@ describe("research prompt", () => {
     );
   });
 
-  it("restricts a search to given sites through the sites field, in the search step and in the tool description, also for a site the task writes as a URL", () => {
+  it("puts a site in the sites field only when the learner's own words name it, in the same words in the search step and in the tool description", () => {
     const search = researchSearchPrompt({ context, locale: "id" });
 
-    expect(search).toContain(
-      "When the task asks for results of given sites only, put the hostname of each site in the sites field of webSearch, also when the task writes the site as a URL, and not in the queries."
+    expect(webSearchSitesRule).toContain(
+      "Put a site in the sites field only when the learner's own words name that site or its address."
     );
-    expect(nakafaWebSearch).toContain(
-      "When the task asks for results of given sites only, put the hostname of each site in the sites field, also when the task writes the site as a URL, and not in the queries."
+    expect(webSearchSitesRule).toContain(
+      "Put its hostname there, also when the learner wrote a URL, and not in the queries."
     );
+    expect(webSearchSitesRule).toContain(
+      "A request for an official, recent, or primary source names no site: leave the sites field out."
+    );
+    for (const guidance of [search, nakafaWebSearch]) {
+      expect(guidance).toContain(webSearchSitesRule);
+      // The line it replaces let any request for given sites decide.
+      expect(guidance).not.toContain("results of given sites");
+    }
   });
 
   it("keeps a URL in a query only for a page the query is about, so no line asks for a site's URL in the queries and its hostname in the sites field at once", () => {
