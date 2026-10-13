@@ -78,14 +78,16 @@ export function useMemoryActions() {
 
   /**
    * Sends one change from an event. `done` gets what the server answered. When
-   * the change fails, the learner is told and `failed` runs with whether they
-   * can try the change again.
+   * the change fails, the learner is told, in the words of the page unless the
+   * change brings its own `told`, and `failed` runs with whether they can try
+   * the change again.
    */
   function settle<A, E>(
     send: () => Promise<Result.Result<A, E>>,
     after: {
       done?: (answer: A) => void;
       failed?: (again: boolean) => void;
+      told?: typeof messages;
     } = {}
   ) {
     Effect.runFork(
@@ -93,8 +95,9 @@ export function useMemoryActions() {
         Effect.flatMap(Effect.fromResult),
         Effect.matchEffect({
           onFailure: (error) =>
-            Effect.flatMap(reportMemoryFailure(error, messages), (again) =>
-              Effect.sync(() => after.failed?.(again))
+            Effect.flatMap(
+              reportMemoryFailure(error, after.told ?? messages),
+              (again) => Effect.sync(() => after.failed?.(again))
             ),
           onSuccess: (answer) => Effect.sync(() => after.done?.(answer)),
         })
@@ -162,12 +165,14 @@ export function useMemoryActions() {
    * at once, the memory as the learner saw it, under an id the server has not
    * stored yet until it answers with the memory it stored: the one it deleted,
    * with every field it had. When the server cannot, the row goes again and
-   * the learner is told. If they can try again, the memory's words open in the
-   * editor as a new memory, so nothing they wrote is lost.
+   * the learner is told that the Undo failed, whether the server refused it or
+   * broke. If they can try again, the memory's words open in the editor as a
+   * new memory, so nothing they wrote is lost.
    */
   function restore(memory: Memory) {
     const { session } = latest();
     const shown = { ...memory, id: pendingId(Effect.runSync(randomUuid)) };
+    const undoFailed = t("undo-failed");
 
     settle(
       () =>
@@ -180,6 +185,7 @@ export function useMemoryActions() {
             reopen(session, draftOf(memory), null);
           }
         },
+        told: { missing: undoFailed, other: undoFailed },
       }
     );
   }

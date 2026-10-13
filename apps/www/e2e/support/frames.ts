@@ -25,8 +25,13 @@ const ActionSchema = Schema.Struct({
   type: Schema.Literal("Action"),
 });
 
-/** The answer of a server that could not take a change, as the protocol words it. */
+/**
+ * The answer of a server that could not take a change, as the protocol words
+ * it. `errorData` is the typed failure a function throws on purpose, which the
+ * page decodes; a server that broke sends none.
+ */
 const RefusalSchema = Schema.Struct({
+  errorData: Schema.optionalKey(Schema.Unknown),
   logLines: Schema.Array(Schema.String),
   requestId: Schema.Finite,
   result: Schema.String,

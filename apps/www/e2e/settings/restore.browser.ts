@@ -7,6 +7,8 @@ import {
   LIST_QUERY,
   memoryRow,
   openMemoryPage,
+  RESTORE_MUTATION,
+  UNDO_FAILED,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -19,9 +21,8 @@ const EXAM = "Exam on Friday";
 const OLDEST = "Prefers worked examples";
 /** The one fact a situation's row says: when it ends. */
 const ENDS = /^Ends \S.*\S$/;
-/** The functions the page calls to add a memory and to put one back. */
+/** The function the page calls to add a memory, which the Undo must not call. */
 const ADD = "nina/memory:add";
-const RESTORE = "nina/memory:restore";
 
 /** The facts line of a row. */
 const factsOf = (page: Page, words: string) =>
@@ -104,11 +105,9 @@ const verifySituationUndo = Effect.fn("NakafaE2E.verifySituationUndo")(
       changes.release();
       await saved(changes, undone);
 
-      expect(changes.argumentsOf(RESTORE)).toHaveLength(1);
+      expect(changes.argumentsOf(RESTORE_MUTATION)).toHaveLength(1);
       expect(changes.argumentsOf(ADD)).toHaveLength(added);
-      await expect(page.getByText("This memory no longer exists")).toHaveCount(
-        0
-      );
+      await expect(page.getByText(UNDO_FAILED)).toHaveCount(0);
       await expect(rowsOf(page).nth(1)).toContainText(EXAM);
       await expect(factsOf(page, EXAM)).toHaveText(ENDS);
       // The server stored the memory again, in the place it had.
@@ -167,7 +166,7 @@ const verifyUndoEnds = Effect.fn("NakafaE2E.verifyUndoEnds")(function* (
     await toast.hover();
     await expect(toast.getByRole("button", { name: "Undo" })).toBeVisible();
     await expect(toast).toBeHidden({ timeout: 10_000 });
-    expect(changes.argumentsOf(RESTORE)).toHaveLength(0);
+    expect(changes.argumentsOf(RESTORE_MUTATION)).toHaveLength(0);
   });
 });
 

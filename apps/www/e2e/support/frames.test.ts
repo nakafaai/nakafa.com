@@ -273,4 +273,27 @@ describe("the frames of the realtime connection", () => {
 
     expect(encodeRefusal(refusal)).toBe(encodeJsonText(refusal));
   });
+
+  it("carries the typed failure a function threw in a refusal, and writes none for a server that broke", () => {
+    const failure = { _tag: "NinaMemoryRejected", reason: "missing" };
+    const broke: Parameters<typeof encodeRefusal>[0] = {
+      logLines: [],
+      requestId: 7,
+      result: "Refused by the test",
+      success: false,
+      type: "MutationResponse",
+    };
+    const read = Schema.decodeSync(JsonTextSchema);
+
+    expect(read(encodeRefusal({ ...broke, errorData: failure }))).toEqual({
+      ...broke,
+      errorData: failure,
+    });
+    expect(read(encodeRefusal({ ...broke, errorData: undefined }))).toEqual(
+      broke
+    );
+    expect(encodeRefusal({ ...broke, errorData: undefined })).not.toContain(
+      "errorData"
+    );
+  });
 });

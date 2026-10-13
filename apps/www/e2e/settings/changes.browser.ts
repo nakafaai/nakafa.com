@@ -5,9 +5,11 @@ import { writeMemory } from "@/e2e/support/list";
 import {
   EMPTY,
   editorOf,
+  MISSING,
   memoryRow,
   opened,
   openMemoryPage,
+  RESTORE_MUTATION,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -15,7 +17,6 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const ADDED = "Prefers short answers";
 const REWRITTEN = "Prefers a long walk through each step";
 const KEPT = "Studies after dinner";
-const MISSING = "This memory no longer exists";
 
 /**
  * Runs `act` while the server's answers are held back, checks what the page
@@ -193,7 +194,7 @@ const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
         .click();
       await expect(row).toBeVisible();
       await saved(changes, undone);
-      expect(changes.argumentsOf("nina/memory:restore")).toHaveLength(1);
+      expect(changes.argumentsOf(RESTORE_MUTATION)).toHaveLength(1);
       await expect(memoryRow(page, "!")).toHaveCount(0);
     });
   }

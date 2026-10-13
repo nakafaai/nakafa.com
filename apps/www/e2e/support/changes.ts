@@ -74,6 +74,8 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     failingPath: "",
     /** The query whose answers fail, and what the page is told of why. */
     failingQuery: Option.none<{ data: unknown; path: string }>(),
+    /** The typed failure the next failure carries; none for a server that broke. */
+    failingRefusal: Option.none<unknown>(),
     held: false,
     listed: false,
     /** The HTTP origin of the backend the page talks to; empty until its connection opened. */
@@ -209,11 +211,15 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
           (changes.failingPath === "" ||
             changes.failingPath === mutation.value.udfPath)
         ) {
+          const refusal = changes.failingRefusal;
+
           changes.failing = false;
+          changes.failingRefusal = Option.none();
           // The server never sees the change, and the page is told it failed.
           deliver(() => {
             socket.send(
               encodeRefusal({
+                errorData: Option.getOrUndefined(refusal),
                 logLines: [],
                 requestId: mutation.value.requestId,
                 result: "Refused by the test",
@@ -288,11 +294,14 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     /**
      * Fails the next mutation the page sends, or the next one to the function
      * `udfPath`: the server never gets it, and the page is told the server
-     * could not take it.
+     * could not take it. With `refusal`, the page is told the function threw
+     * that typed failure on purpose, which it decodes as the function's own
+     * error, and not that the server broke.
      */
-    failNext(udfPath = "") {
+    failNext(udfPath = "", refusal?: unknown) {
       changes.failing = true;
       changes.failingPath = udfPath;
+      changes.failingRefusal = Option.fromNullishOr(refusal);
     },
     /**
      * Fails every answer of a query of the function `udfPath` until

@@ -11,9 +11,12 @@ import { writeMemory } from "@/e2e/support/list";
 import {
   EMPTY,
   editorOf,
+  MISSING,
   memoryRow,
   opened,
   openMemoryPage,
+  RESTORE_MUTATION,
+  UNDO_FAILED,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -24,7 +27,11 @@ const AGAIN = "Studies before breakfast";
 const ADDED = "Prefers short answers";
 /** What the page tells the learner when a change fails. */
 const FAILED = "We could not complete this action. Please try again.";
-const MISSING = "This memory no longer exists";
+/**
+ * What the server answers when it has nothing to put back: the typed failure
+ * of `restore`, as the page receives and decodes it.
+ */
+const NOTHING_TO_PUT_BACK = { _tag: "NinaMemoryRejected", reason: "missing" };
 
 /** Waits until the page shows an empty list and is signed in with its list live. */
 const startsEmpty = (page: Page, changes: Changes) =>
@@ -94,9 +101,9 @@ test.describe("Memory save that fails at 1440px", () => {
 });
 
 /**
- * The learner deletes a memory and presses Undo, and the server cannot take the
- * memory back. The page tells them and opens the editor with the words of the
- * memory, as a new memory. Closing it stores them.
+ * The learner deletes a memory and presses Undo, and the server breaks as it
+ * puts the memory back. The page says that the Undo failed and opens the editor
+ * with the words of the memory, as a new memory. Closing it stores them.
  */
 const verifyFailedUndo = Effect.fn("NakafaE2E.verifyFailedUndo")(function* (
   page: Page,
@@ -117,9 +124,9 @@ const verifyFailedUndo = Effect.fn("NakafaE2E.verifyFailedUndo")(function* (
     await saved(changes, before);
 
     // The server cannot put the memory back, so its words open in the editor.
-    changes.failNext("nina/memory:restore");
+    changes.failNext(RESTORE_MUTATION);
     await page.getByRole("button", { name: "Undo" }).click();
-    await expect(page.getByText(FAILED).first()).toBeVisible();
+    await expect(page.getByText(UNDO_FAILED).first()).toBeVisible();
     await opened(page, KEPT);
 
     await editorOf(page).press("Escape");
@@ -142,6 +149,63 @@ test.describe("Memory that cannot be brought back at 1440px", () => {
         page,
         Effect.fromNullishOr(baseURL).pipe(
           Effect.flatMap((origin) => verifyFailedUndo(page, origin))
+        )
+      )
+    );
+  });
+});
+
+/**
+ * The learner deletes a memory and presses Undo, and the server refuses
+ * because it has nothing to put back, as when the window ended or Delete all
+ * took the memory. The page says that the Undo failed and the row that came
+ * back at once goes again. No editor opens, because trying again would only be
+ * refused, and nothing more is sent.
+ */
+const verifyRefusedUndo = Effect.fn("NakafaE2E.verifyRefusedUndo")(function* (
+  page: Page,
+  baseURL: string
+) {
+  const changes = yield* openMemoryPage(page, baseURL);
+
+  yield* startsEmpty(page, changes);
+  yield* writeMemory(page, KEPT);
+  yield* Effect.promise(async () => {
+    const row = memoryRow(page, KEPT);
+
+    await saved(changes, 0);
+    const before = changes.sent;
+    await row.hover();
+    await row.getByRole("button", { name: "Delete memory" }).click();
+    await expect(row).toHaveCount(0);
+    await saved(changes, before);
+
+    changes.failNext(RESTORE_MUTATION, NOTHING_TO_PUT_BACK);
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(page.getByText(UNDO_FAILED).first()).toBeVisible();
+    await expect(page.getByText(EMPTY)).toBeVisible();
+    await page.waitForTimeout(1500);
+    await expect(editorOf(page)).toHaveCount(0);
+    await expect(page.getByText(MISSING)).toHaveCount(0);
+    expect(changes.sent - before).toBe(2);
+    await reloadUntil(page, () =>
+      expect(page.getByText(EMPTY)).toBeVisible({ timeout: 3000 })
+    );
+  });
+});
+
+test.describe("Memory that the server refuses to bring back at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("says the Undo failed, and opens no editor", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.fromNullishOr(baseURL).pipe(
+          Effect.flatMap((origin) => verifyRefusedUndo(page, origin))
         )
       )
     );
