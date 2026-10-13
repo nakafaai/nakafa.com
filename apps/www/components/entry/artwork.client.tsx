@@ -30,7 +30,10 @@ export function EntryShellArtwork() {
   const isLargeScreen = useMediaQuery(TAILWIND_MEDIA_QUERIES.lgAndUp);
 
   return (
-    <div className="relative col-span-4 hidden bg-muted lg:block">
+    <div
+      className="relative col-span-4 hidden bg-muted lg:block"
+      data-slot="entry-artwork"
+    >
       {isLargeScreen ? (
         <ErrorBoundary fallback={null}>
           <DeferredPool />

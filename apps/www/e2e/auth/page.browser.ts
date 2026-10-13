@@ -8,6 +8,8 @@ const SIGN_IN = "/en/auth";
 /** The pool, and each of its members as the frame loop places them. */
 const POOL = '[data-slot="pool"]';
 const MEMBERS = `${POOL} > div`;
+/** The column that holds the pool on wide screens, and is not displayed on a phone. */
+const ARTWORK = '[data-slot="entry-artwork"]';
 /** The sign-in page's title, sentence, button and consent, in English. */
 const TITLE = "Sign in to Nakafa";
 const SENTENCE = "So your progress stays saved.";
@@ -119,15 +121,23 @@ const openSignIn = Effect.fn("NakafaE2E.openSignIn")(function* (page: Page) {
   yield* Effect.promise(() => page.goto(SIGN_IN));
 });
 
-/** Starts recording the text of every script that the page loads. */
+/**
+ * Starts recording the text of each script that the app itself loads. The pool's
+ * code is one of those chunks, so a chunk that cannot be read fails the check
+ * instead of passing it as an empty script.
+ */
 function watchScripts(page: Page) {
   const texts = MutableList.make<Promise<string>>();
   page.on("response", (response) => {
-    if (response.request().resourceType() === "script") {
-      MutableList.append(
-        texts,
-        response.text().catch(() => "")
-      );
+    const { pathname } = new URL(response.url());
+    if (
+      response.request().resourceType() === "script" &&
+      pathname.startsWith("/_next/static/")
+    ) {
+      const text = response.text();
+      // The failure stays on the promise, and reaches the check that awaits it.
+      text.catch(() => undefined);
+      MutableList.append(texts, text);
     }
   });
   return texts;
@@ -220,6 +230,7 @@ const verifyWithoutScrolling = Effect.fn("NakafaE2E.verifySignInFits")(
 const verifyStill = Effect.fn("NakafaE2E.verifyPoolStillWithReducedMotion")(
   function* (page: Page) {
     yield* openSignIn(page);
+    yield* Effect.promise(() => expect(page.locator(MEMBERS)).toHaveCount(30));
     yield* Effect.promise(() =>
       expect(async () => {
         const placed = await transformsOf(page);
@@ -238,7 +249,8 @@ const verifyPhone = Effect.fn("NakafaE2E.verifySignInOnAPhone")(function* (
   const texts = watchScripts(page);
   yield* openSignIn(page);
   yield* Effect.promise(() => page.waitForLoadState("networkidle"));
-  yield* Effect.promise(() => expect(page.locator(POOL)).toBeHidden());
+  yield* Effect.promise(() => expect(page.locator(ARTWORK)).toHaveCount(1));
+  yield* Effect.promise(() => expect(page.locator(ARTWORK)).toBeHidden());
   expect(yield* holdsPool(texts)).toBe(false);
 });
 
