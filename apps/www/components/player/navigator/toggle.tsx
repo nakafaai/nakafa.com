@@ -1,11 +1,6 @@
 "use client";
 
 import {
-  LeftToRightListDashIcon,
-  SquareIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
@@ -52,14 +47,8 @@ export function PlayerModeToggle() {
       value={mode}
       variant="outline"
     >
-      <ToggleGroupItem value="list">
-        <HugeIcons icon={LeftToRightListDashIcon} />
-        {t("mode-list")}
-      </ToggleGroupItem>
-      <ToggleGroupItem value="single">
-        <HugeIcons icon={SquareIcon} />
-        {t("mode-single")}
-      </ToggleGroupItem>
+      <ToggleGroupItem value="list">{t("mode-list")}</ToggleGroupItem>
+      <ToggleGroupItem value="single">{t("mode-single")}</ToggleGroupItem>
     </ToggleGroup>
   );
 }
