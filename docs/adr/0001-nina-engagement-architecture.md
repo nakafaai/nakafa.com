@@ -542,9 +542,7 @@ at each and what it leaves to the author.
    tool policy (`entry`, `field` when its input has a field of its own,
    `section`), the `continuation` that tells the model how to ask for what a
    truncation omitted, `offered`, and `run`. Add `note` when its answer must
-   stay out of the conversation, and `textOnly` when it publishes no card: its
-   answer is the text, so a run that ends without a card is not read as empty,
-   and keeps the outcome it states, or none. Enforced: `offered` and `run` have
+   stay out of the conversation. Enforced: `offered` and `run` have
    no default, so nothing is allowed by omission; the Schema types the input of
    `run`; the typed errors of `run` end as `CapabilityDenied` or `failed`, so
    none stays unhandled. Left to the author: a defect of `run` is not caught,
@@ -555,7 +553,11 @@ at each and what it leaves to the author.
    ends as `MemoryReadError`, and a defect anywhere else in its run ends the
    same way.
 4. Add its name to `LearningCapabilityNameSchema` in `capability/spec.ts`, and
-   its definition to the end of the record in `capability/registry.ts`. The
+   to `TEXT_ONLY_CAPABILITIES` beside it when it publishes no card: its answer
+   is the text, so a run that ends without a card is not read as empty, in the
+   result it stores or on the page that shows it (`client/nina/outcome.ts`),
+   and keeps the outcome it states, or none. Add its definition to the end of
+   the record in `capability/registry.ts`. The
    order is the order of the tool list and of the tool policy, so it is part of
    the prompt prefix that the provider caches. Enforced: the record is
    `satisfies Record<LearningCapabilityName, Capability>`, so a name without a

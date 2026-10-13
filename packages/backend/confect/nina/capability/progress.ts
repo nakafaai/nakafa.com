@@ -2,12 +2,12 @@ import type {
   CapabilityArtifactSchema,
   CapabilityOutputSchema,
 } from "@repo/backend/client/nina/capability";
+import { settleOutcome } from "@repo/backend/client/nina/outcome";
 import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import {
   boundCapability,
   type ChatStep,
 } from "@repo/backend/confect/nina/capability/deadline";
-import { settleOutcome } from "@repo/backend/confect/nina/capability/outcome";
 import type { FinishReason } from "ai";
 import {
   Array as Arr,
@@ -70,10 +70,11 @@ export function specialistResult(text: string, finishReason: FinishReason) {
  * interrupts the scoped capability, including its provider and tool requests.
  * Final model-facing text never exceeds the evidence budget; `continuation`
  * tells the model how to ask for what a truncation omitted. The stored outcome
- * is decided here, from what `run` reports and the cards it gathered. A run
- * that ends with no card and states no outcome found nothing, so it is `empty`,
- * unless the capability is `textOnly`: its answer is the text, and no card is
- * the normal way for it to end.
+ * is decided here, from what `run` reports and the cards it gathered, by the
+ * rule in `client/nina/outcome.ts` that the page reads a stored result with. A
+ * run that ends with no card and states no outcome found nothing, so it is
+ * `empty`, unless `capability` publishes no card (`TEXT_ONLY_CAPABILITIES`):
+ * its answer is the text, and no card is the normal way for it to end.
  *
  * A run has the time its chat step can spare, counted from the start of that
  * step, and its calls see the time left through `CapabilityDeadline`. A run
@@ -90,12 +91,10 @@ export function streamCapability<E, R>(
     capability,
     continuation,
     signal,
-    textOnly,
   }: {
     readonly capability: string;
     readonly continuation: string;
     readonly signal?: AbortSignal | undefined;
-    readonly textOnly?: boolean | undefined;
   }
 ): Stream.Stream<CapabilityOutput, E, R | ChatStep> {
   return Stream.callback<CapabilityOutput, E, R | ChatStep>(
@@ -124,7 +123,7 @@ export function streamCapability<E, R>(
         yield* boundCapability(run(publish), timedOut).pipe(
           Effect.tap(({ text, outcome }) => {
             const cards = Arr.fromIterable(MutableHashMap.values(artifacts));
-            const settled = settleOutcome(outcome, cards, textOnly === true);
+            const settled = settleOutcome(outcome, cards, capability);
             return Queue.offer(queue, {
               artifacts: cards,
               ...(settled ? { outcome: settled } : {}),

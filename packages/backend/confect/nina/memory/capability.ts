@@ -38,7 +38,9 @@ const UNREADABLE =
  * transcript of a public chat, is read again by every later turn, and outlives
  * the memory it came from. So the turn holds them for the model's next step and
  * the conversation keeps only this note. A memory it returns is not thereby
- * confirmed. It publishes no card.
+ * confirmed. It publishes no card, which `TEXT_ONLY_CAPABILITIES` in
+ * `capability/spec.ts` says, so a search that found memories ends with no
+ * outcome and reads as done.
  *
  * Whatever goes wrong in the run ends as a failed read, and keeps nothing of
  * the failure but its phase. The call was given the learner's query, so what
@@ -70,5 +72,4 @@ export const memoryCapability = defineCapability({
       ),
       Effect.catchDefect(() => failed({ phase: "run" }, UNREADABLE))
     ),
-  textOnly: true,
 });
