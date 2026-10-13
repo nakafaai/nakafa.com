@@ -74,8 +74,10 @@ describe("research prompt", () => {
     expect(webSearchSitesRule).toContain(
       "Put its hostname there, also when the learner wrote a URL, and not in the queries."
     );
+    // The kind of source asked for names no site, but a site the learner names
+    // next to it still goes in.
     expect(webSearchSitesRule).toContain(
-      "A request for an official, recent, or primary source names no site: leave the sites field out."
+      "A request for an official, recent, or primary source names no site by itself: leave the sites field out unless the learner names one."
     );
     for (const guidance of [search, nakafaWebSearch]) {
       expect(guidance).toContain(webSearchSitesRule);

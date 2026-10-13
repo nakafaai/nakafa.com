@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { formatWebSearchOutput } from "@repo/backend/confect/nina/research/search/format";
+import {
+  formatSearchLimit,
+  formatWebSearchOutput,
+} from "@repo/backend/confect/nina/research/search/format";
 import { Array as Arr } from "effect";
 
 /** The sites a call limited its search to. */
@@ -78,5 +81,29 @@ describe("web search output text", () => {
       "- Page text: not read. Only the description above is known."
     );
     expect(text).not.toContain("limited");
+  });
+});
+
+describe("limit of a search", () => {
+  it("is the words a search limited to sites writes when it returned no source", () => {
+    const limited = { error: undefined, sites, sources: [] };
+
+    expect(formatSearchLimit(limited)).toEqual([
+      formatWebSearchOutput(limited),
+    ]);
+  });
+
+  it.each([
+    ["an open search", { error: undefined, sources: [] }],
+    [
+      "a limited search that failed",
+      { error: "Failed to search the web.", sites, sources: [] },
+    ],
+    [
+      "a limited search that returned a source",
+      { error: undefined, sites, sources: [page] },
+    ],
+  ])("is nothing for %s", (_case, output) => {
+    expect(formatSearchLimit(output)).toEqual([]);
   });
 });

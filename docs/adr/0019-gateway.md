@@ -224,9 +224,10 @@ thresholds in the catalog were set from what that command printed on 12 October
   learner's words out through a tracer added later.
   - Sites. The research model puts a site in a search only when the learner's
     own words name that site or its address. A request for an official, recent,
-    or primary source names no site, so the search stays open and its queries
-    carry the name of the source. A site that the model writes from memory can
-    be wrong or no longer in use, and a search limited to it finds nothing.
+    or primary source names no site by itself, so unless the learner names one
+    the search stays open and its queries carry the name of the source. A site
+    that the model writes from memory can be wrong or no longer in use, and a
+    search limited to it finds nothing.
     That happened on production: a learner asked for the latest official source
     of the UTBK SNBT 2027 schedule, and the research model limited both of its
     queries to `snpmb.bppp.kemdikbud.go.id`. The card said only that no source
@@ -234,16 +235,19 @@ thresholds in the catalog were set from what that command printed on 12 October
     the production plan on 13 October 2026, a query limited to that domain
     returned no web and no news result, the same query limited to `snpmb.id`
     returned five of each, and the same query open returned five web results.
-  - A limit that finds nothing. A card shows the sites under each query in
-    every state, so a list of sources from one site, or none, reads as what it
-    is. A search that was limited to sites and returned no source also tells
-    Nina in words (`research/search/format.ts`, handed to her by
-    `research/agent.ts`): which sites it was limited to, that none of them
+  - A limit that finds nothing. Every card of a search limited to sites carries
+    them in every state (`research/tools/search.ts`), so a card can show them
+    with its query. A search that was limited to sites and returned no source
+    also tells Nina in words (`research/search/format.ts`), after whatever else
+    the run answers from, such as a link of the learner's
+    (`research/agent.ts`): which sites it was limited to, that none of them
     returned a page, that a site named from memory may be wrong or no longer in
     use, and that she should research again without the limit unless the
-    learner named those sites. A search without sites adds nothing to what Nina
-    reads. No code searches again or drops a site, because the learner may have
-    named them on purpose, so whether to search again is Nina's step.
+    learner named those sites. A search that returned a source, also one that
+    cannot be cited, says nothing of its limit, and an open search that finds
+    nothing adds nothing to what Nina reads. No code searches again or drops a
+    site, because the learner may have named them on purpose, so whether to
+    search again is Nina's step.
 - **Attachments.** The documents of one turn, every attachment whose media type
   does not start with `image/`, may total at most 10 MiB (`NINA_DOCUMENT_SIZE`).
   Documents travel inside the request body, which the gateway accepts up to

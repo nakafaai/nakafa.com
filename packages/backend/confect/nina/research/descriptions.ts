@@ -10,7 +10,7 @@ import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
  * provider").
  */
 export const webSearchSitesRule =
-  "Put a site in the sites field only when the learner's own words name that site or its address. Put its hostname there, also when the learner wrote a URL, and not in the queries. A request for an official, recent, or primary source names no site: leave the sites field out.";
+  "Put a site in the sites field only when the learner's own words name that site or its address. Put its hostname there, also when the learner wrote a URL, and not in the queries. A request for an official, recent, or primary source names no site by itself: leave the sites field out unless the learner names one.";
 
 export const nakafaWebSearch = createPrompt({
   taskContext: `

@@ -4,6 +4,7 @@ import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import { formatResearchOutput } from "@repo/backend/confect/nina/research/output";
 import type { ResearchOutput } from "@repo/backend/confect/nina/research/schema";
+import { formatWebSearchOutput } from "@repo/backend/confect/nina/research/search/format";
 import { scrapeUrl } from "@repo/backend/confect/nina/research/tools/scrape";
 import { searchWeb } from "@repo/backend/confect/nina/research/tools/search";
 import { provider } from "@repo/backend/test/gateway";
@@ -74,6 +75,8 @@ const searchCall = searchCallWith({
 const synthesis = (answer: ResearchOutput) =>
   providerStep([{ type: "text", text: encodeJsonText(answer) }]);
 const final = synthesis(output);
+/** The one finding of `output` that cites a retrieved source, as Nina reads it. */
+const verified = `- Verified finding. [Official source](${url})`;
 const noDate = "The official page did not state a date.";
 /** How the instruction Nina reads when research returns no source-backed finding begins. */
 const noFindingStart =
@@ -113,9 +116,30 @@ const nothing = Effect.succeed({
   result: { sources: [], error: undefined },
 });
 /** A search limited to a site, which found no page in it. */
-const limitedNothing = Effect.succeed({
-  text: "The search was limited to ai-sdk.dev.",
-  result: { sites: Arr.make("ai-sdk.dev"), sources: [], error: undefined },
+const limited = { sites: Arr.make("ai-sdk.dev"), sources: [] };
+/** What Nina is told when a search limited to a site found no page in it. */
+const limitNote = formatWebSearchOutput(limited);
+const limitedNothing = Effect.succeed({ text: limitNote, result: limited });
+/**
+ * A search limited to a site, whose only result is an address that carries
+ * credentials, so no citation may name it. It found a page in the site, so the
+ * limit is not why nothing can be cited.
+ */
+const uncitable = {
+  sites: limited.sites,
+  sources: [
+    {
+      url: "https://reader:secret@ai-sdk.dev/docs/agents",
+      title: "Private mirror",
+      citation: "[ai-sdk.dev](https://reader:secret@ai-sdk.dev/docs/agents)",
+      content: "Mirror text.",
+      description: "A mirror that asks for a login.",
+    },
+  ],
+};
+const limitedUncitable = Effect.succeed({
+  text: formatWebSearchOutput(uncitable),
+  result: uncitable,
 });
 const unavailable = Effect.succeed({
   text: "Search failed.",
@@ -156,9 +180,7 @@ describe("research Agent evidence boundary", () => {
         usageHandler,
       })
     );
-    expect(result).toEqual({
-      text: `- Verified finding. [Official source](${url})`,
-    });
+    expect(result).toEqual({ text: verified });
     expect(scrapeUrl).toHaveBeenCalledTimes(researchMaxSources);
     // The words choose the paragraphs of a page, in the search and in a link.
     expect(scrapeUrl).toHaveBeenCalledWith(
@@ -266,7 +288,12 @@ describe("research Agent evidence boundary", () => {
     [
       "a search limited to sites finds no source and hands Nina what the limit means",
       limitedNothing,
-      "\n\nThe search was limited to ai-sdk.dev.",
+      `\n\n${limitNote}`,
+    ],
+    [
+      "a search limited to sites finds only a source that no citation may name, which Nina is neither told of nor handed",
+      limitedUncitable,
+      "",
     ],
   ])(
     "ends as empty without a synthesis call when %s",
@@ -280,6 +307,32 @@ describe("research Agent evidence boundary", () => {
       expect(calls).toHaveLength(1);
     }
   );
+
+  it("hands Nina what a limit found after the findings drawn from a link of the learner's", async () => {
+    vi.mocked(searchWeb).mockReturnValue(limitedNothing);
+    vi.mocked(scrapeUrl).mockReturnValue(read);
+    const { result } = await runResearch({ doGenerate: [searchCall, final] }, [
+      source,
+    ]);
+    expect(result).toEqual({ text: `${verified}\n\n${limitNote}` });
+  });
+
+  it("hands Nina what a limit found after the evidence of a link of the learner's when synthesis is unusable", async () => {
+    vi.mocked(searchWeb).mockReturnValue(limitedNothing);
+    vi.mocked(scrapeUrl).mockReturnValue(read);
+    const { result } = await runResearch(
+      { doGenerate: [searchCall, unusable] },
+      [source]
+    );
+    expect(result).toEqual({
+      outcome: "partial",
+      text: expect.stringContaining("Exact source text."),
+    });
+    expect(result).toEqual({
+      outcome: "partial",
+      text: expect.stringContaining(`\n\n${limitNote}`),
+    });
+  });
 
   it("hands Nina the closest thing the sources state, with its citation and the limitation, and is not empty", async () => {
     vi.mocked(searchWeb).mockReturnValue(found);
@@ -407,10 +460,7 @@ describe("research Agent evidence boundary", () => {
         },
         [source]
       );
-      expect(result).toEqual({
-        outcome: "partial",
-        text: `- Verified finding. [Official source](${url})`,
-      });
+      expect(result).toEqual({ outcome: "partial", text: verified });
       expect(searchWeb).not.toHaveBeenCalled();
       expect(calls).toHaveLength(2);
       expect(logged).toEqual([
@@ -427,9 +477,7 @@ describe("research Agent evidence boundary", () => {
       { doGenerate: [searchCall, final] },
       [source]
     );
-    expect(result).toEqual({
-      text: `- Verified finding. [Official source](${url})`,
-    });
+    expect(result).toEqual({ text: verified });
     expect(encodeJsonText(calls[0]?.prompt)).not.toContain(
       "https://example.org/unread"
     );
