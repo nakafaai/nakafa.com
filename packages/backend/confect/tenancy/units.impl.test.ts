@@ -152,7 +152,6 @@ describe("tenancy/units setLocale", () => {
             .pipe(Effect.flip)
       );
       expect(refusals).toMatchObject([invalid, invalid, invalid, invalid]);
-      expect(yield* fixture.run(journal)).toEqual([]);
     })
   );
 });

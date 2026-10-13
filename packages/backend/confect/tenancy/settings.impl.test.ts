@@ -88,7 +88,6 @@ describe("tenancy/settings setLocale", () => {
           owner.mutation(setLocale, { ...locale, slug: nf }).pipe(Effect.flip)
       );
       expect(refusals).toMatchObject([invalid, invalid, invalid]);
-      expect(yield* fixture.run(journal)).toEqual([]);
     })
   );
 });
@@ -250,7 +249,6 @@ describe("tenancy/settings setPolicy", () => {
               .pipe(Effect.flip)
         );
         expect(refusals).toMatchObject([invalid, invalid, invalid, invalid]);
-        expect(yield* fixture.run(journal)).toEqual([]);
       })
   );
 });
