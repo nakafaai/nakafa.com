@@ -35,7 +35,7 @@ const classRouteJoinClassValidator = Schema.Struct({
 /**
  * The class route snapshot returned when the viewer can enter the class shell.
  */
-export const classRouteAccessibleValidator = Schema.Struct({
+const classRouteAccessibleValidator = Schema.Struct({
   kind: Schema.Literal("accessible"),
   class: schoolClassesTable.Doc,
   classMembership: Schema.NullOr(schoolClassMembersTable.Doc),

@@ -177,7 +177,9 @@ describe("model comparison", () => {
         { contentKey: lesson, ordinal: 1, question: "Matriks" },
       ],
     });
-    expect(provider.embeddingModel).toHaveBeenCalledWith(CANDIDATE);
+    expect(provider.embeddingModel).toHaveBeenCalledWith(CANDIDATE, {
+      zdr: true,
+    });
     expect(Arr.map(model.doEmbedCalls, ({ values }) => values.length)).toEqual([
       9, 1, 1,
     ]);

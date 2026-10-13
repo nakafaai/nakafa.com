@@ -54,6 +54,20 @@ function expectHardNotFound(response: Response, locale: string) {
   );
   expectNoLocaleProxy();
 }
+/**
+ * The proxy asks the migration resolver about the path without its Markdown
+ * suffix, and says whether it had one.
+ */
+function expectMigrationAsked(source: string, hasAttemptCapability = false) {
+  const pathname = source.replace(MARKDOWN_SUFFIX_PATTERN, "");
+  expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
+    hasAttemptCapability,
+    headers: expect.any(Headers),
+    markdown: pathname !== source,
+    method: "GET",
+    pathname,
+  });
+}
 const mockLocaleRouting = vi.hoisted(() => ({
   activeMiddleware: vi.fn(
     () => new Response(null, { headers: { "x-locale-proxy": "1" } })
@@ -66,6 +80,7 @@ const runtimeMocks = vi.hoisted(() => ({
   readActive: vi.fn(),
   hasArticleCategory: vi.fn(),
   readProgramPath: vi.fn(),
+  readProfileRefusal: vi.fn(),
   readRedirect: vi.fn(),
   readTryout: vi.fn(),
 }));
@@ -141,6 +156,9 @@ vi.mock("@/lib/content/program/path", () => ({
 vi.mock("@/lib/routing/public/migration", () => ({
   readPublicUrlMigrationRedirect: runtimeMocks.readRedirect,
 }));
+vi.mock("@/lib/routing/public/profile", () => ({
+  readProfileRefusal: runtimeMocks.readProfileRefusal,
+}));
 describe("proxy", () => {
   beforeEach(() => {
     resetTestRuntimeCache();
@@ -160,6 +178,9 @@ describe("proxy", () => {
     previewMocks.pathname.mockReset().mockReturnValue(Effect.succeed(false));
     previewMocks.route.mockReset().mockReturnValue(Effect.succeed(false));
     runtimeMocks.readRedirect.mockReset().mockReturnValue(Effect.succeed(null));
+    runtimeMocks.readProfileRefusal
+      .mockReset()
+      .mockReturnValue(Effect.succeed(null));
     mockLocaleRouting.activeMiddleware.mockClear();
     mockLocaleRouting.previewMiddleware.mockClear();
   });
@@ -189,11 +210,7 @@ describe("proxy", () => {
     const response = await requestProxy(source, init);
     expect(response.status).toBe(308);
     expect(response.headers.get("location")).toBe(targetUrl.toString());
-    expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
-      hasAttemptCapability: false,
-      method: "GET",
-      pathname: sourceUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""),
-    });
+    expectMigrationAsked(sourceUrl.pathname);
   });
   it("answers a temporary redirect with the status of its rule", async () => {
     const destination = "/en/try-out/indonesia/snbt/2027/set-1";
@@ -209,11 +226,7 @@ describe("proxy", () => {
   it("tells the migration resolver when a URL carries a try-out attempt", async () => {
     const pathname = "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris";
     await requestProxy(`${pathname}?attemptId=attempt-1`);
-    expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
-      hasAttemptCapability: true,
-      method: "GET",
-      pathname,
-    });
+    expectMigrationAsked(pathname, true);
   });
   it("matches localized PNG aliases without intercepting static assets", () => {
     expect(Arr.every([...matched, "/MISSING.XML"], matchesProxy)).toBe(true);
@@ -278,7 +291,7 @@ describe("proxy", () => {
   });
   it.each([
     "/fr/search",
-    "/fr/school/onboarding/create",
+    "/fr/user/settings/memory",
     "/fr/example.og",
     "/fr/example.png",
   ])("hard-rejects the unselected candidate route %s", async (path) => {
@@ -293,33 +306,6 @@ describe("proxy", () => {
       const response = await requestProxy(path);
       expectHardNotFound(response, "en");
       expect(previewMocks.pathname).not.toHaveBeenCalled();
-    }
-  );
-  it.each([
-    [
-      "/en/school/select",
-      "http://localhost:3000/en/auth?redirect=%2Fen%2Fschool%2Fselect",
-    ],
-    [
-      "/school/onboarding",
-      "http://localhost:3000/en/auth?redirect=%2Fen%2Fschool%2Fonboarding",
-    ],
-  ])(
-    "optimistically redirects the protected School route %s",
-    async (path, expected) => {
-      const response = await requestProxy(path);
-      expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toBe(expected);
-      expectNoLocaleProxy();
-    }
-  );
-  it.each(["/en/school", "/en/school/select"])(
-    "delegates the available School route %s",
-    async (path) => {
-      const response = await requestProxy(path, {
-        headers: { cookie: "better-auth.session_token=fixture-session" },
-      });
-      expectLocaleProxy(response);
     }
   );
   it.each(localeHints)(
@@ -378,11 +364,7 @@ describe("proxy", () => {
     async (path) => {
       const response = await requestProxy(path);
       expect(response.status).not.toBe(410);
-      expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
-        hasAttemptCapability: false,
-        method: "GET",
-        pathname: path,
-      });
+      expectMigrationAsked(path);
     }
   );
   it("keeps a retired SNBT product URL on the try-out rules for an attempt", async () => {
@@ -428,6 +410,14 @@ describe("proxy", () => {
       expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     }
   );
+  it("answers a profile its owner did not ask for as not found, with 404", async () => {
+    runtimeMocks.readProfileRefusal.mockReturnValue(Effect.succeed("de"));
+    const response = await requestProxy("/de/@nabilfatih");
+    expectHardNotFound(response, "de");
+    expect(runtimeMocks.readProfileRefusal.mock.calls[0]?.[0]).toBe(
+      "/de/@nabilfatih"
+    );
+  });
   it("returns a hard 404 before rejecting a missing route representation", async () => {
     const response = await requestProxy("/id/quran/999", {
       headers: { accept: "application/json" },

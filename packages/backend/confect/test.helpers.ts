@@ -94,6 +94,7 @@ export async function seedAuthenticatedUser(
     credits = DEFAULT_USER_CREDITS,
     creditsResetAt = now,
     email = `${suffix}@example.com`,
+    emailVerified = true,
     name = `User ${suffix}`,
     plan = DEFAULT_USER_PLAN,
     role,
@@ -103,6 +104,7 @@ export async function seedAuthenticatedUser(
     credits?: Doc<"users">["credits"];
     creditsResetAt?: Doc<"users">["creditsResetAt"];
     email?: Doc<"users">["email"];
+    emailVerified?: boolean;
     name?: Doc<"users">["name"];
     now: number;
     plan?: Doc<"users">["plan"];
@@ -118,7 +120,7 @@ export async function seedAuthenticatedUser(
       data: {
         createdAt: now,
         email,
-        emailVerified: true,
+        emailVerified,
         name,
         updatedAt: now,
       },
