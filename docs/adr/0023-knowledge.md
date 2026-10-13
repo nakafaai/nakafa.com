@@ -19,8 +19,8 @@ specialist writes from a question, which it compares with the sections and keeps
 nowhere.
 That request carries no zero retention request today, unlike every language
 model call (ADR 0019), so it relies on the statement of the gateway. The class
-libraries of a school are indexed apart from the section index, under the rules
-of Class Libraries below.
+libraries of a school will be indexed apart from the section index, as planned
+under Class Libraries below.
 
 ## Decision
 
@@ -163,8 +163,8 @@ of the build.
   stored and leaves the old sections in place until their documents change.
 - Changing `embeddingModelId` changes every version, so the next build embeds all
   12,822 sections again, and search uses words until it finishes. The class
-  libraries use the same model, so the same change embeds their published files
-  again.
+  libraries, which are planned, will use the same model, so the same change will
+  embed their published files again.
 - A document may have 128 sections at the most. The longest lesson has 19 and the
   longest surah 48. A longer one fails the build and names itself, and so does a
   clean up that finds a stored document with more rows than that, because it

@@ -92,8 +92,10 @@ the same.
 - `scripts/check/react.ts`, run by `pnpm check:tests`, rejects
   `use-context-selector`, React's `useContext`, and Zustand's module-level
   `create`. Biome's `noRestrictedImports` rejects the context-backed auth APIs
-  of `convex/react` and `@convex-dev/better-auth`. A module-level store, which
-  two players or two working sets would share, cannot be written.
+  of `convex/react` and `@convex-dev/better-auth`. Neither looks at
+  `createStore`, so a store that `createStore` makes at module level passes both.
+  Two players or two working sets would share such a store, so review rejects
+  it.
 - `apps/www/e2e/content/hydration.browser.ts` proves cold lessons and
   articles keep their streamed content, signed out and signed in.
 - `apps/www/e2e/account/session.browser.ts` holds Better Auth's answer back
