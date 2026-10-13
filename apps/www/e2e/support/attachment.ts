@@ -12,6 +12,9 @@ const UploadSchema = Schema.Struct({
 });
 type Upload = typeof UploadSchema.Type;
 
+/** The title of the notice that names the files a pick did not attach. */
+export const NOT_ATTACHED = "Files not attached";
+
 /** The media type of a Word file, which Nina does not read. */
 export const WORD_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";

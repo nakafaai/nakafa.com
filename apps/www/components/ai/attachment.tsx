@@ -20,6 +20,7 @@ import {
 } from "@repo/design-system/components/ui/attachment";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
 import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
@@ -144,11 +145,20 @@ export function NinaAttachment({
 
 /**
  * The files one pick did not attach, grouped by the reason that dropped them.
- * Each reason leads its group in the quiet color of a description, so it stays
- * in view above however many names follow, and every dropped file is named on
- * a line of its own with its end in view. The list scrolls inside itself past
- * a height, so a pick of many files never makes the notice taller than the
- * page.
+ * Each reason heads its group in the quiet color of a description, and every
+ * dropped file is named on a line of its own with its end in view.
+ *
+ * The list scrolls inside itself past ten lines, or seven on a screen at most
+ * 34rem tall, so a pick of many files never makes the notice taller than the
+ * page. While it scrolls, the reason of the group in view stays at the top of
+ * the list, on the error background the toaster gives the notice, so that no
+ * name shows through it. Every line is as tall as the height counts it, and the
+ * list snaps to them, so it comes to rest with whole names under the reason,
+ * never half of one.
+ *
+ * The end of the list fades while more follows, which tells the learner that
+ * the list goes on without a count. Its start does not fade, because the
+ * reason that stays there would fade with it.
  */
 export function RejectedFiles({
   reasons,
@@ -156,23 +166,31 @@ export function RejectedFiles({
   reasons: ReturnType<typeof rejectionNotice>["reasons"];
 }) {
   return (
-    <dl className="flex max-h-[min(12rem,35dvh)] flex-col gap-2 overflow-y-auto overscroll-contain">
-      {Arr.map(reasons, (entry) => (
-        <div key={entry.reason}>
-          <dt>{entry.reason}</dt>
-          {Arr.map(entry.names, (name) => (
-            <dd
-              className="flex text-popover-foreground"
-              dir="auto"
-              key={name}
-              title={name}
-            >
-              <FileNameParts name={name} />
-            </dd>
-          ))}
-        </div>
-      ))}
-    </dl>
+    <ScrollArea
+      scrollFade="end"
+      viewportClassName="max-h-[10lh] snap-y snap-mandatory leading-4.5 [@media(max-height:34rem)]:max-h-[7lh]"
+    >
+      {/* Names are the only other places to rest, and the first of them rests
+          under the first reason, so this empty line lets the list return to its top. */}
+      <div aria-hidden="true" className="snap-start" />
+      <dl>
+        {Arr.map(reasons, (entry) => (
+          <div key={entry.reason}>
+            <dt className="sticky top-0 bg-(--error-bg)">{entry.reason}</dt>
+            {Arr.map(entry.names, (name) => (
+              <dd
+                className="flex snap-start text-popover-foreground"
+                dir="auto"
+                key={name}
+                title={name}
+              >
+                <FileNameParts name={name} />
+              </dd>
+            ))}
+          </div>
+        ))}
+      </dl>
+    </ScrollArea>
   );
 }
 

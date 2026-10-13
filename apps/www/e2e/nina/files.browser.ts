@@ -9,6 +9,7 @@ import { Array as Arr, Effect } from "effect";
 import {
   chipsIn,
   fileOf,
+  NOT_ATTACHED,
   noticeWith,
   openComposer,
   pickFiles,
@@ -17,8 +18,6 @@ import {
 } from "@/e2e/support/attachment";
 import { waitForSlide } from "@/e2e/support/layout";
 
-/** The title of the notice, which names no count. */
-const TITLE = "Files not attached";
 /** The reason of a file that Nina does not read. */
 const TYPES = "Only PNG, JPEG, WebP, GIF, PDF, and text files";
 
@@ -47,16 +46,90 @@ const readNotice = (notice: HTMLElement) => {
 };
 
 /**
- * Whether a notice with a long list lies inside the page, keeps the reason of
- * the list in view, and lets the list show its last name once it is scrolled
- * to its end, read in the page. The read scrolls the list, so it comes last.
+ * The box a long list scrolls in: the viewport of its scroll area. The reasons
+ * and the names are inside it.
+ */
+const SCROLLER = '[data-slot="scroll-area-viewport"]';
+
+/**
+ * The names that the reason at the top of the list covers in part, read in the
+ * page. A reason hides a name whole when the name lies within its box, which is
+ * the way a name goes under it. A name that sticks out of its box is cut in
+ * half, and a learner sees half a name under the reason.
+ */
+const readCutNames = (notice: HTMLElement) => {
+  const list = notice.querySelector(SCROLLER);
+  if (!list) {
+    return null;
+  }
+  const top = list.getBoundingClientRect().top;
+  // The reason that stays is the one whose box starts at the top of the list.
+  const reason = Array.from(notice.querySelectorAll("dt")).find(
+    (candidate) => Math.abs(candidate.getBoundingClientRect().top - top) < 0.5
+  );
+  if (!reason) {
+    return [];
+  }
+  const covered = reason.getBoundingClientRect();
+  return Array.from(notice.querySelectorAll("dd"))
+    .filter((name) => {
+      const box = name.getBoundingClientRect();
+      const overlap =
+        Math.min(box.bottom, covered.bottom) - Math.max(box.top, covered.top);
+      const within =
+        box.top >= covered.top - 0.5 && box.bottom <= covered.bottom + 0.5;
+      return overlap > 0.5 && !within;
+    })
+    .map((name) => name.textContent);
+};
+
+/**
+ * Scrolls the list to the middle of a line, a place that a scroll of the wheel
+ * leaves a plain list at, and returns the height of a line.
+ */
+const scrollBetweenLines = (notice: HTMLElement) => {
+  const list = notice.querySelector(SCROLLER);
+  const name = notice.querySelector("dd");
+  if (!(list && name)) {
+    return null;
+  }
+  const line = Number.parseFloat(getComputedStyle(name).lineHeight);
+  list.scrollTop = line * 5.5;
+  return line;
+};
+
+/**
+ * Which edges of the list fade, read in the page from the mask of its scroll
+ * area. The end fades by a length while more follows, and the length is gone at
+ * the end of the list. The start never fades, because the reason that stays
+ * there would fade with it. A browser lists the stops of a fade by their
+ * position: `calc(100% - 24px)` is a fade of 24 pixels.
+ */
+const readFade = (notice: HTMLElement) => {
+  const list = notice.querySelector(SCROLLER);
+  if (!list) {
+    return null;
+  }
+  const mask = getComputedStyle(list).maskImage;
+  return {
+    endFades: mask.includes("calc(100% - "),
+    startFades: mask.includes("to top, rgb(0, 0, 0) calc("),
+  };
+};
+
+/**
+ * Whether a notice with a long list lies inside the page, shows the reason of
+ * the first group at rest, and shows the reason of the last group, with every
+ * name below it whole, once the list is scrolled to its end, read in the page.
+ * The read scrolls the list, so it comes last.
  */
 const readList = (notice: HTMLElement) => {
-  const list = notice.querySelector("dl");
-  const reason = list?.querySelector("dt");
-  const names = Array.from(notice.querySelectorAll("dd"));
-  const last = names.at(-1);
-  if (!(list && reason && last)) {
+  const list = notice.querySelector(SCROLLER);
+  const reasons = Array.from(notice.querySelectorAll("dt"));
+  const [first] = reasons;
+  const last = reasons.at(-1);
+  const lastName = Array.from(notice.querySelectorAll("dd")).at(-1);
+  if (!(list && first && last && lastName)) {
     return null;
   }
   const box = notice.getBoundingClientRect();
@@ -65,18 +138,33 @@ const readList = (notice: HTMLElement) => {
     const rect = element.getBoundingClientRect();
     return rect.top >= bounds.top - 0.5 && rect.bottom <= bounds.bottom + 0.5;
   };
-  const reasonShown = inList(reason);
+  // Back at the top, where the list rests before anyone scrolls it.
+  list.scrollTop = 0;
+  const atRest = {
+    firstReasonShown: inList(first),
+    scrolls: list.scrollHeight > list.clientHeight,
+  };
   list.scrollTop = list.scrollHeight;
+  const stuck = last.getBoundingClientRect();
   return {
+    ...atRest,
+    firstReasonGone: !inList(first),
     inside:
       box.top >= 0 &&
       box.bottom <= innerHeight &&
       box.left >= 0 &&
       box.right <= innerWidth,
-    lastReachable: inList(last),
-    names: names.length,
-    reasonShown,
-    scrolls: list.scrollHeight > list.clientHeight,
+    lastNameReachable: inList(lastName),
+    lastReasonShown: inList(last),
+    // The reason is a box a name goes under, so the reader sees it on top of
+    // the names and on the background of the notice, and nothing shows through.
+    reasonOnTop: last.contains(
+      document.elementFromPoint(
+        stuck.left + stuck.width / 2,
+        stuck.top + stuck.height / 2
+      )
+    ),
+    reasonOpaque: getComputedStyle(last).backgroundColor !== "rgba(0, 0, 0, 0)",
   };
 };
 
@@ -104,10 +192,12 @@ for (const width of [320, 1440]) {
           // three, each with the reason it was not attached.
           yield* Effect.promise(async () => {
             await expect(chipsIn(composer)).toHaveCount(1);
-            const notice = noticeWith(page, TITLE);
+            const notice = noticeWith(page, NOT_ATTACHED);
             await expect(notice).toHaveCount(1);
             // The title says nothing of how many files: the names show it.
-            await expect(notice.locator("[data-title]")).toHaveText(TITLE);
+            await expect(notice.locator("[data-title]")).toHaveText(
+              NOT_ATTACHED
+            );
             await expect(reasonIn(notice, TYPES)).toContainText("essay.docx");
             await expect(
               reasonIn(notice, `Larger than ${NINA_FILE_MEBIBYTES} MiB`)
@@ -139,7 +229,7 @@ for (const width of [320, 1440]) {
           yield* Effect.promise(async () => {
             await expect(chipsIn(composer)).toHaveCount(NINA_FILE_COUNT);
             const reason = reasonIn(
-              noticeWith(page, TITLE),
+              noticeWith(page, NOT_ATTACHED),
               `At most ${NINA_FILE_COUNT} files per message`
             );
             await expect(reason).toContainText("last-1.png");
@@ -149,38 +239,68 @@ for (const width of [320, 1440]) {
       );
     });
 
-    test("names every file of a long pick, scrolls the list, and stays inside the page", async ({
+    test("names every file of a long pick, keeps the reason of the group in view as the list scrolls, and stays inside the page", async ({
       page,
     }) => {
       await runPage(
         page,
         Effect.gen(function* () {
           const composer = yield* openComposer(page);
-          // Far more files than a notice shows without scrolling.
+          // A file of a type Nina does not read, then far more files than a
+          // notice shows without scrolling: two reasons, and the last is long.
           const surplus = Arr.makeBy(25, (index) => `extra-${index + 1}.png`);
           yield* pickFiles(composer, [
+            fileOf("essay.docx", WORD_TYPE, 20),
             ...Arr.makeBy(NINA_FILE_COUNT, (index) =>
               photo(`photo-${index + 1}.png`)
             ),
             ...Arr.map(surplus, photo),
           ]);
-          const notice = noticeWith(page, TITLE);
+          const notice = noticeWith(page, NOT_ATTACHED);
           // The notice slides into place; its place is read once it stopped.
           yield* Effect.promise(async () => {
             await expect(chipsIn(composer)).toHaveCount(NINA_FILE_COUNT);
             await expect(notice).toHaveAttribute("data-mounted", "true");
           });
           yield* waitForSlide(notice);
-          const read = yield* Effect.promise(() => notice.evaluate(readList));
 
-          // Every file that was dropped has a line, no line counts them, the
-          // reason stays above the names, and the last name can be reached.
+          // Every file that was dropped has a line, and none counts them. At
+          // rest the end of the list fades, which tells the learner that the
+          // list goes on, and the start does not.
+          yield* Effect.promise(async () => {
+            await expect(notice.locator("dd")).toHaveCount(surplus.length + 1);
+            await expect
+              .poll(() => notice.evaluate(readFade))
+              .toEqual({ endFades: true, startFades: false });
+          });
+
+          // Wherever a scroll leaves the list, a whole name is under the reason.
+          yield* Effect.promise(async () => {
+            await notice.evaluate(scrollBetweenLines);
+            await expect.poll(() => notice.evaluate(readCutNames)).toEqual([]);
+          });
+
+          // At the end the reason of the last group stays at the top, and the
+          // reason of the first has gone with its group. No name is cut under
+          // it, and the last name can be reached.
+          const read = yield* Effect.promise(() => notice.evaluate(readList));
+          yield* Effect.promise(async () => {
+            await expect.poll(() => notice.evaluate(readCutNames)).toEqual([]);
+            // Nothing follows now, so the end does not fade, and the start
+            // still does not, though the list is scrolled.
+            await expect
+              .poll(() => notice.evaluate(readFade))
+              .toEqual({ endFades: false, startFades: false });
+          });
           yield* Effect.sync(() => {
             expect(read).toEqual({
+              firstReasonGone: true,
+              firstReasonShown: true,
               inside: true,
-              lastReachable: true,
-              names: surplus.length,
-              reasonShown: true,
+              lastNameReachable: true,
+              lastReasonShown: true,
+              reasonOnTop: true,
+              reasonOpaque: true,
               scrolls: true,
             });
           });
@@ -197,7 +317,7 @@ for (const width of [320, 1440]) {
           const composer = yield* openComposer(page);
           const name = `${"a".repeat(NINA_FILENAME_LENGTH - ".docx".length)}.docx`;
           yield* pickFiles(composer, [fileOf(name, WORD_TYPE, 20)]);
-          const notice = noticeWith(page, TITLE);
+          const notice = noticeWith(page, NOT_ATTACHED);
           // The notice slides into place; its place is read once it stopped.
           yield* Effect.promise(() =>
             expect(notice).toHaveAttribute("data-mounted", "true")
@@ -227,7 +347,7 @@ for (const width of [320, 1440]) {
           yield* pickFiles(composer, [fileOf("empty.txt", "text/plain", 0)]);
 
           yield* Effect.promise(async () => {
-            const notice = noticeWith(page, TITLE);
+            const notice = noticeWith(page, NOT_ATTACHED);
             await expect(reasonIn(notice, "Empty file")).toContainText(
               "empty.txt"
             );
