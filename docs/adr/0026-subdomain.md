@@ -94,7 +94,11 @@ its own change, before any school code that depends on it lands.
 - A school is placed in one cell when it is created. Moving it to another cell is
   an export and an import, never an automatic move. The cell is shown only in the
   settings.
-- An account has one home cell. Accounts are not linked across cells at launch.
+- An account has one home cell, and it signs in and writes only there: every
+  mutation checks its session against the Better Auth rows of its own deployment
+  (ADR 0009). A school in another cell is joined with an account of that cell,
+  so no session crosses a cell. Cross-cell sign-in is decided in the change that
+  creates the `eu` cell, before its first school is placed.
 - Signed Aksara content is copied to every cell. A teacher's questions stay in the
   school's own cell.
 - Email is sent from the cell's own domain and carries only links. Push carries

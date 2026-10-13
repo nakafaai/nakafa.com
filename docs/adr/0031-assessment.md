@@ -75,9 +75,16 @@ that the model must change:
 
 - The assessment document is a structured tree of paragraphs, headings, lists,
   tables, math, and figures, encoded as ProseMirror-compatible JSON so the editor
-  works on the same document. Its depth is at most 16 and its encoding at most
-  1 MiB, the Convex document limit. Math is stored once as LaTeX; MathML is
-  rendered from it (KaTeX 0.19 with `output: "htmlAndMathml"`), never stored.
+  works on the same document. Math is stored once as LaTeX; MathML is rendered
+  from it (KaTeX 0.19 with `output: "htmlAndMathml"`), never stored.
+- A stored document is encoded JSON text in a string field, not a nested Convex
+  value, because every node adds two levels of nesting (the node object and its
+  `content` array) and Convex allows 16 levels in a whole document
+  (https://docs.convex.dev/database/types#limits). The schema bounds the node
+  depth of a document at 16. The size limit applies to the complete row: every
+  write of an item version (a publication or a teacher's save) checks the encoded
+  size of the whole record, its documents, interactions, rules and hash included,
+  against Convex's 1 MiB per document, and refuses it before the write.
 - A figure is one of the published components (`MathVisual`, `NumberLine`,
   `LineEquation`, `UnitCircle`, `Mermaid`) or an image with alternative text. The
   image form has no schema yet, and wave A adds one with the document contract.
@@ -103,9 +110,16 @@ that the model must change:
 - Every interaction works with a keyboard and a screen reader (WCAG 2.2 AA).
 
 Math entry is accepted automatically only when a deterministic check proves the
-answer. The check simplifies the expression canonically and then calls
-`isSame`, or `isEqual` returns true, from Cortex Compute Engine
+answer: the canonical forms of both expressions are the same under `isSame`, or,
+for expressions without free variables, `isEqual` returns true (exact numbers
+compare exactly; a float compares within the interaction's stated tolerance).
+Any other `true` about expressions with free variables comes from sampling and is
+treated as a sample. The engine is Cortex Compute Engine
 (`@cortex-js/compute-engine`, planned: it is not in the backend manifest today).
+In the pinned version (0.152.0, read in `src/compute-engine/boxed-expression/compare.ts`)
+`isEqual` runs with the prover off and never samples; a contract test pins that
+(`(x+1)^2` against `x^2+2x+1` stays undefined under `isEqual`), so an upgrade
+that adds a sampling path to `isEqual` fails the test before it can grade.
 Three facts about that engine shape the rule. `isSame` checks structure only.
 `isEqual` checks value, and it can return `undefined` for two expressions that
 are equal. `isIdenticallyEqual` samples random values, so `true` is strong
