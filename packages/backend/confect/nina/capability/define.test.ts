@@ -6,6 +6,7 @@ import {
   failed,
 } from "@repo/backend/confect/nina/capability/define";
 import type { Held } from "@repo/backend/confect/nina/capability/held";
+import { MEMORY_CAPABILITY } from "@repo/backend/confect/nina/capability/spec";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   ALLOWED,
@@ -54,21 +55,27 @@ const probe = {
   offered: () => ALLOWED,
 } as const;
 
-/** Plays a model that calls the probe once, in a turn that has Nina's context pack unless `pack` is false. */
+/**
+ * Plays a model that calls the probe once, in a turn that has Nina's context
+ * pack unless `pack` is false. The probe is listed under `name`, which decides
+ * whether it is text-only, as it does for every capability.
+ */
 function askProbe(
   capability: Capability,
   {
     chatStep,
     held,
+    name = "probe",
     pack = true,
   }: {
     readonly chatStep?: Parameters<typeof playTurn>[0]["chatStep"];
     readonly held?: Held;
+    readonly name?: string;
     readonly pack?: boolean;
   } = {}
 ) {
   const model = new MockLanguageModelV4({
-    doGenerate: [toolCall("probe", topic), finalAnswer],
+    doGenerate: [toolCall(name, topic), finalAnswer],
   });
   return runSpecialist((userId) =>
     Effect.gen(function* () {
@@ -82,7 +89,7 @@ function askProbe(
         ...(held === undefined ? {} : { held }),
         model,
         prompt: "Use the probe.",
-        registry: { probe: capability },
+        registry: { [name]: capability },
         userId,
       });
     })
@@ -207,13 +214,13 @@ describe("a capability that exists only in a test", () => {
       expect(result).toEqual([{ artifacts: [done], text: "Verified." }]);
     });
 
-    it("reads a text-only run as done, because its answer is the text", async () => {
+    it("reads a run of a text-only capability as done, because its answer is the text", async () => {
       const { result } = await askProbe(
         defineCapability({
           ...probe,
           run: () => Effect.succeed({ text: "Told in words." }),
-          textOnly: true,
-        })
+        }),
+        { name: MEMORY_CAPABILITY }
       );
 
       expect(result).toEqual([{ artifacts: [], text: "Told in words." }]);
@@ -294,9 +301,8 @@ describe("a capability that exists only in a test", () => {
           ...probe,
           note: "The words are not kept.",
           run: () => Effect.succeed({ text: "Private words." }),
-          textOnly: true,
         }),
-        { held }
+        { held, name: MEMORY_CAPABILITY }
       );
 
       expect(result).toEqual([
@@ -305,7 +311,7 @@ describe("a capability that exists only in a test", () => {
       expect(
         MutableHashMap.get(held, {
           toolCallId: "capability",
-          toolName: "probe",
+          toolName: MEMORY_CAPABILITY,
         })
       ).toEqual(Option.some("Private words."));
     });
@@ -318,9 +324,8 @@ describe("a capability that exists only in a test", () => {
           note: "The words are not kept.",
           run: () =>
             Effect.succeed({ outcome: "empty", text: "Nothing saved." }),
-          textOnly: true,
         }),
-        { held }
+        { held, name: MEMORY_CAPABILITY }
       );
 
       expect(result).toEqual([

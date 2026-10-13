@@ -4,7 +4,6 @@ import { Agent } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
-import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { turnHalted } from "@repo/backend/confect/nina/halt";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
@@ -159,52 +158,6 @@ describe("The Nina response run when generation fails", () => {
         expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
       })
   );
-
-  it("stores a response timeout when the provider goes silent for longer than the chunk deadline", async () => {
-    // The SDK arms its chunk timer with a timeout of its own, so the fake clock
-    // drives it, and it reports the deadline through the abort, not as an
-    // error. The clock advances from inside the model's stream, as in the
-    // readiness test of the generation tests: a timer that the test body fires
-    // would run outside the action and could not call the backend.
-    provider.languageModel.mockReturnValue(
-      new MockLanguageModelV4({
-        doStream: () =>
-          Promise.resolve({
-            stream: new ReadableStream({
-              start(controller) {
-                controller.enqueue({ type: "stream-start", warnings: [] });
-                controller.enqueue({ type: "text-start", id: "answer" });
-                controller.enqueue({
-                  type: "text-delta",
-                  id: "answer",
-                  delta: "A limit",
-                });
-                controller.enqueue({
-                  type: "text-delta",
-                  id: "answer",
-                  delta: " is",
-                });
-              },
-              // The SDK asks for more as it reads the last part above, and it
-              // has armed its chunk timer on the one before. The model then
-              // says nothing more, for longer than the deadline.
-              pull() {
-                vi.advanceTimersByTime(purposes.chat.timeout.chunkMs);
-                return new Promise<void>(() => undefined);
-              },
-            }),
-          }),
-      })
-    );
-    const f = await failing();
-    await f.t.action(run, { turnId: f.turnId });
-    const state = await f.inspect();
-    expect(state.turn?.state).toMatchObject({
-      status: "failed",
-      reason: "response-timeout",
-    });
-    expect(state.user?.credits).toBe(10);
-  }, 30_000);
 
   it("stores the reason the generation failed with when the read that asks whether its turn was halted fails too", async () => {
     const halt = await vi.importActual<

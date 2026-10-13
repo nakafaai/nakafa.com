@@ -36,27 +36,59 @@ const loadingArtifact = {
   id: "loading",
   type: "data-math",
 } satisfies CapabilityArtifact;
+const loadedArtifact = {
+  data: { queries: ["limit"], sources: [], status: "done" },
+  id: "loaded",
+  type: "data-web-search",
+} satisfies CapabilityArtifact;
 
-const settled = (output: unknown): ToolUIPart => ({
+const settled = (
+  output: unknown,
+  type: ToolUIPart["type"] = "tool-math"
+): ToolUIPart => ({
   input: { task: input.expression },
   output,
   state: "output-available",
   toolCallId: "call-1",
-  type: "tool-math",
+  type,
 });
 
 describe("readInvocation", () => {
   it("reads a settled capability result with its evidence", () => {
     const invocation = readInvocation(
-      settled({ artifacts: [failedArtifact, loadingArtifact], text: "∞" }),
+      settled(
+        { artifacts: [loadedArtifact, loadingArtifact], text: "Two sources." },
+        "tool-deepResearch"
+      ),
       true
     );
 
     expect(invocation).toEqual({
-      artifacts: [failedArtifact, loadingArtifact],
-      capability: "math",
+      artifacts: [loadedArtifact, loadingArtifact],
+      capability: "deepResearch",
       state: "done",
     });
+  });
+
+  it.each([
+    ["with prose", "I could not find a lesson about it."],
+    ["without prose", ""],
+  ])(
+    "reads a stored result with no card and no outcome as empty, %s, as the runner stores a fresh one",
+    (_name, text) => {
+      expect(
+        readInvocation(settled({ artifacts: [], text }), true)
+      ).toMatchObject({ artifacts: [], capability: "math", state: "empty" });
+    }
+  );
+
+  it("reads a stored result that lost its only card and states no outcome as failed, as the runner settles a fresh one", () => {
+    expect(
+      readInvocation(
+        settled({ artifacts: [failedArtifact, loadingArtifact], text: "∞" }),
+        true
+      )
+    ).toMatchObject({ state: "failed" });
   });
 
   it("keeps unfinished work running until its turn settles", () => {
