@@ -28,7 +28,8 @@ test.describe("Nina web search sites on a phone", () => {
       const edge = page.viewportSize()?.width ?? 0;
 
       // Each card that was limited names its sites, in the order they were
-      // given and as the contract holds them: a punycode name stays punycode.
+      // given and as the contract holds them: a punycode name stays punycode,
+      // and a site that the failed card holds twice shows once.
       await expect(boxes).toHaveCount(2);
       await expect(done.locator(HOSTS)).toHaveText(LIMIT_SITES);
       await expect(failed.locator(HOSTS)).toHaveText([

@@ -227,7 +227,8 @@ export const SITE_LONG_LABEL =
 
 /**
  * The hostnames a search is limited to. One call names five at most
- * (`webSearchMaxSites`), and these are as long as real ones get.
+ * (`webSearchMaxSites`), and these are long: each is more than 60 characters,
+ * and the third has the longest label a name allows.
  */
 export const LIMIT_SITES = [
   SITE_DATA,
@@ -240,7 +241,10 @@ export const LIMIT_SITES = [
 /** A name that is not ASCII, as `URL` gives it and the contract holds it: in punycode. */
 export const PUNYCODE_SITE = "xn--mnchen-3ya.example.test";
 
-/** A search limited to five long sites, and one that the provider failed, limited to a long site and a punycode one. */
+/**
+ * A search limited to five long sites, and one that the provider failed, limited
+ * to a long site that the model named twice and a punycode one.
+ */
 export const limited = replyOf(
   "web-limited",
   [
@@ -261,7 +265,7 @@ export const limited = replyOf(
       data: {
         error: "Failed to search the web. Please try again.",
         queries: ["asesmen nasional"],
-        sites: [SITE_LONG_LABEL, PUNYCODE_SITE],
+        sites: [SITE_LONG_LABEL, PUNYCODE_SITE, SITE_LONG_LABEL],
         sources: [],
         status: "error",
       },
