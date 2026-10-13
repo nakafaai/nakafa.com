@@ -45,14 +45,12 @@ function fieldsOf(row: Awaited<ReturnType<typeof rowOf>>) {
 
 /** The key rows of one memory, as the keys and the time they hold, in key order. */
 async function keysOf(f: Fixture, id: Parameters<Fixture["rowOf"]>[0]) {
-  return Arr.sortWith(
-    Arr.map(
-      Arr.filter(await f.keys(), ({ memoryId }) => memoryId === id),
-      ({ confirmedAt, key, userId }) => ({ confirmedAt, key, userId })
-    ),
-    ({ key }) => key,
-    Order.String
+  const rows = Arr.map(
+    Arr.filter(await f.keys(), ({ memoryId }) => memoryId === id),
+    ({ confirmedAt, key, userId }) => ({ confirmedAt, key, userId })
   );
+
+  return Arr.sortWith(rows, (row) => row.key, Order.String);
 }
 
 /** The page of the learner's memories that the Memory page reads first. */
