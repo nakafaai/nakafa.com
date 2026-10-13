@@ -392,7 +392,9 @@ describe("a portrait build that fails", () => {
     expect(encodeJsonText(MutableRef.get(f.logged))).not.toContain("Private");
     expect(encodeJsonText(MutableRef.get(f.logged))).not.toContain("peluang");
     expect(await f.portrait()).toBe("Siap SNBT 2027.");
-    expect(await f.rows()).toEqual([expect.objectContaining({ through: 1 })]);
+    // A call that failed before it answered has no tokens to count.
+    expect((await f.rows())[0]).toMatchObject({ through: 1 });
+    expect((await f.rows())[0]).not.toHaveProperty("usage");
   });
 
   it("rejects a portrait of more than 1200 characters, and keeps 1200", async () => {
@@ -407,10 +409,40 @@ describe("a portrait build that fails", () => {
       unavailable({ operation: "generate", rejected: true })
     );
     expect(await f.portrait()).toBe("Siap SNBT 2027.");
+    // The call spent 12 input and 4 output tokens though its answer was
+    // rejected, and the row counts them without reading past the memories.
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({
+        through: 1,
+        usage: { calls: 1, input: 12, output: 4 },
+      }),
+    ]);
     writes("x".repeat(1200));
     f.quiet();
     await f.build();
     expect(await f.portrait()).toBe("x".repeat(1200));
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({
+        through: 2,
+        usage: { calls: 2, input: 24, output: 8 },
+      }),
+    ]);
+  });
+
+  it("counts a rejected answer as no tokens when the provider reports none, and still counts the call", async () => {
+    const f = await createRequestedTest({
+      text: "Siap SNBT 2027.",
+      through: 1,
+    });
+    await f.seed({ confirmedAt: 2, text: "Sulit di peluang." });
+    writesUncounted("x".repeat(1201));
+    await f.build();
+    expect(await f.rows()).toEqual([
+      expect.objectContaining({
+        through: 1,
+        usage: { calls: 1, input: 0, output: 0 },
+      }),
+    ]);
   });
 
   it("logs a build that dies and saves nothing", async () => {
