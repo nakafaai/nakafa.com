@@ -13,7 +13,10 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  cookieHeader,
+  createGoogleIdToken,
   expectNoProviderTokens,
+  GOOGLE_KEY,
   signInWithGoogle,
   storedAccounts,
 } from "@repo/backend/test/auth";
@@ -193,6 +196,35 @@ describe("auth/tokens", () => {
       expect(names).toContain(cookies.session);
       expect(names).not.toContain(cookies.account);
     }
+  });
+
+  it("refuses a Google ID token on the link route, so no token that comes with it is stored", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const signedIn = await signInWithGoogle(test, "linking", NOW);
+    const before = await storedAccounts(test);
+    const keyLookup = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", keyLookup);
+    const response = await test.fetch("/api/auth/link-social", {
+      body: encodeJsonText({
+        idToken: {
+          accessToken: "ya29.arrives-plain",
+          refreshToken: "1//arrives-plain",
+          token: createGoogleIdToken("linking", NOW, GOOGLE_KEY),
+        },
+        provider: "google",
+      }),
+      headers: {
+        "content-type": "application/json",
+        cookie: cookieHeader(signedIn),
+        origin: SITE_URL,
+      },
+      method: "POST",
+    });
+    expect(response.status).toBe(401);
+    expect(await response.json()).toMatchObject({ code: "INVALID_TOKEN" });
+    // Checking a token starts with a request for Google's signing keys.
+    expect(keyLookup).not.toHaveBeenCalled();
+    expect(await storedAccounts(test)).toEqual(before);
   });
 
   it.each([

@@ -196,8 +196,8 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         enabled: true,
         allowDifferentEmails: false,
       },
-      // The hooks below keep every provider token out of the table. This seals
-      // a token that a later plugin might write there.
+      // The hooks below keep every provider token out of the table, so this
+      // seals only a token that a later plugin might write there.
       encryptOAuthTokens: true,
     },
     databaseHooks: accountTokenHooks,

@@ -78,11 +78,11 @@ vault, sealed under that learner's key, never on the account.
 The hooks never touch a row they do not write, so every account written before
 them still holds the tokens, sealed except for the ID token. The temporary
 mutation `tokens:clearPage` of the Better Auth component removes the five
-columns from them, 100 accounts a call, and leaves every other row and column
-alone. With `dry` set it only counts. It runs on dev and then on production with
-`convex run --component betterAuth tokens:clearPage`, on production only after
-the release with the hooks is live. Clearing removes Nakafa's copy. A refresh
-token that Google issued earlier is not revoked by it.
+columns from them, one page of accounts a call, and leaves every other row and
+column alone. With `dry` set it only counts. It runs on dev and then on
+production with `convex run --component betterAuth tokens:clearPage`, on
+production only after the release with the hooks is live. Clearing removes
+Nakafa's copy. A refresh token that Google issued earlier is not revoked by it.
 
 Owner: this ADR. Exit: a dry pass over every account on dev and on production
 finds no row that holds a token. Cleanup: the change that records the
@@ -150,7 +150,8 @@ component call for each row.
   `dist/api/index` (lines 166 to 168) answers a disabled path with 404.
 - `@better-auth/core` 1.6.33, `dist/social-providers/google` (lines 45 to 73)
   and `dist/oauth2/create-authorization-url` (lines 15 and 17): `prompt` and
-  `access_type` reach Google only when set.
+  `access_type` reach Google only when set. `getUserInfo` (line 105) reads the
+  profile from the ID token of the code exchange.
 - https://developers.google.com/identity/protocols/oauth2/web-server: the
   default `access_type` is `online`, and without `prompt` Google asks the
   learner only the first time.
