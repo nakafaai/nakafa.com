@@ -7,6 +7,7 @@ import {
   MutableHashSet,
   Option,
   Result,
+  Struct,
 } from "effect";
 
 import type { TryoutResponseFieldsProps } from "@/components/tryout/runtime/response/fields.client";
@@ -28,14 +29,36 @@ type TryoutResponseState = Pick<
 
 /**
  * Returns the version of the next write of one question: the first for a
- * question without a stored answer, otherwise the one after the version it
- * shows, which is the server's stored version or the optimistic one of the
- * latest write that is still on its way. Convex keeps both in the same cached
- * query, so the number survives a re-render, and a reload starts from the
- * stored version.
+ * question without a versioned write, otherwise the one after the version it
+ * shows, which is the server's version of the latest write (a cleared answer
+ * keeps it) or the optimistic one of the latest write that is still on its way.
+ * Convex keeps both in the same cached query, so the number survives a
+ * re-render, and a reload starts from the server's version.
  */
 export function nextTryoutResponseVersion(question: TryoutRuntimeQuestion) {
-  return (question.response?.version ?? 0) + 1;
+  return (question.version ?? 0) + 1;
+}
+
+/**
+ * Tells what a failed save means for the page. A stale refusal needs nothing:
+ * a newer write took its place, Convex dropped the optimistic answer with the
+ * failed mutation, and the screen shows the server's answer again. An attempt
+ * or section that ended gets a notice, and anything else is a fault to report.
+ */
+export function tryoutSubmitFailureOf(
+  code: Ref.Error<typeof tryouts.mutations.responses.save>["code"] | undefined
+) {
+  if (code === "TRYOUT_RESPONSE_STALE") {
+    return "stale";
+  }
+  if (
+    code === "TRYOUT_EXPIRED" ||
+    code === "TRYOUT_ATTEMPT_NOT_ACTIVE" ||
+    code === "TRYOUT_SECTION_NOT_ACTIVE"
+  ) {
+    return "ended";
+  }
+  return "error";
 }
 
 /** Applies one local response while Convex remains authoritative for time. */
@@ -55,7 +78,7 @@ export function applyOptimisticTryoutResponse(
     const wasComplete = question.response?.isComplete ?? false;
     if (args.selection === null) {
       answeredDelta = -Number(wasComplete);
-      return { ...question, response: null };
+      return { ...question, ...Struct.pick(args, ["version"]), response: null };
     }
     const selected = select(question.responseSpec, args.selection);
     if (Result.isFailure(selected)) {
@@ -66,12 +89,12 @@ export function applyOptimisticTryoutResponse(
     answeredDelta = Number(isComplete) - Number(wasComplete);
     return {
       ...question,
+      ...Struct.pick(args, ["version"]),
       response: {
         answeredAt: question.response?.answeredAt ?? selectedAt,
         isComplete,
         selection,
         updatedAt: selectedAt,
-        version: args.version,
       },
     };
   });

@@ -76,7 +76,7 @@ export const tryoutRefusals = {
   Record<AttemptRefused["reason"]["_tag"], Failure>
 >;
 
-/** The error the answer function declares for a version that is not newer than the stored one. */
+/** The error the answer function declares for a version that is not newer than the question's latest write. */
 export const tryoutStale = Failure.make({
   _tag: "TryoutResponseError",
   code: "TRYOUT_RESPONSE_STALE",
@@ -307,13 +307,17 @@ export const seedTryoutGate = Effect.gen(function* () {
     observe: Effect.promise(() =>
       t.query(async (ctx) => {
         const section = await ctx.db.get(seeded.sectionAttemptId);
+        const placement = await ctx.db.get(seeded.placementId);
         const response = await ctx.db
           .query("tryoutResponses")
           .withIndex("by_placementId", (query) =>
             query.eq("placementId", seeded.placementId)
           )
           .first();
-        assert.ok(section, "Expected the running section.");
+        assert.ok(
+          section && placement,
+          "Expected the running section and its question."
+        );
         return Observed.make({
           answered: section.answeredCount,
           correct: section.correctAnswers,
@@ -325,7 +329,9 @@ export const seedTryoutGate = Effect.gen(function* () {
             section.status === "in-progress"
               ? "running"
               : Option.getOrThrow(Option.fromNullOr(section.endReason)),
-          version: Option.fromNullishOr(response?.version),
+          version: Option.fromNullishOr(
+            response?.version ?? placement.clearedVersion
+          ),
         });
       })
     ),

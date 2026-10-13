@@ -22,7 +22,7 @@ import { Array as Arr, Effect, Option } from "effect";
 const saveAnswer = Effect.fn("test.tryout.response.saveAnswer")(
   (
     fixture: ResponseFixture,
-    selection: Doc<"tryoutResponses">["selection"],
+    selection: Doc<"tryoutResponses">["selection"] | null,
     version: number
   ) =>
     Effect.promise(() =>
@@ -303,7 +303,7 @@ describe("tryouts/mutations/responses outcomes", () => {
       })
   );
   it.effect(
-    "returns the stored version with its question, which the next write must exceed",
+    "returns the version of the question's latest write, which a clear keeps and the next write must exceed",
     () =>
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
@@ -323,14 +323,50 @@ describe("tryouts/mutations/responses outcomes", () => {
               Option.getOrUndefined(Arr.head(state?.runtime?.questions ?? []))
             )
           );
-        expect((yield* read())?.response).toBeNull();
+        expect(yield* read()).toMatchObject({ response: null });
+        expect((yield* read())?.version).toBeUndefined();
         yield* setResponseClock(5000);
         yield* saveAnswer(
           seeded,
           { kind: "single-choice", optionKey: "option-1" },
           4
         );
-        expect((yield* read())?.response?.version).toBe(4);
+        expect((yield* read())?.version).toBe(4);
+        yield* saveAnswer(seeded, null, 5);
+        const cleared = yield* read();
+        expect(cleared?.response).toBeNull();
+        expect(cleared?.version).toBe(5);
+      })
+  );
+  it.effect(
+    "writes an answer without a version as the next one, for a tab opened before versions",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        const seeded = yield* seedResponseFixture(t, "version-absent");
+        yield* setResponseClock(5000);
+        const saveUnversioned = (optionKey: string) =>
+          Effect.promise(() =>
+            seeded.client.mutation(api.tryouts.mutations.responses.save, {
+              placementId: seeded.placementId,
+              selection: { kind: "single-choice", optionKey },
+            })
+          );
+        const versionStored = () =>
+          readResponseState(t, seeded).pipe(
+            Effect.map(({ responses }) =>
+              Option.map(Arr.head(responses), ({ version }) => version)
+            )
+          );
+        yield* saveUnversioned("option-1");
+        expect(yield* versionStored()).toEqual(Option.some(1));
+        yield* saveAnswer(
+          seeded,
+          { kind: "single-choice", optionKey: "option-2" },
+          5
+        );
+        yield* saveUnversioned("option-1");
+        expect(yield* versionStored()).toEqual(Option.some(6));
       })
   );
 });

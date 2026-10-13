@@ -10,6 +10,7 @@ import {
   applyOptimisticTryoutResponse,
   nextTryoutResponseVersion,
   type TryoutResponseSelection,
+  tryoutSubmitFailureOf,
 } from "@/components/tryout/runtime/response/state";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 import { reportClientException } from "@/lib/analytics/client";
@@ -109,14 +110,11 @@ function handleSubmitError(
   tTryouts: ReturnType<typeof useTranslations>,
   errorCode?: Ref.Error<typeof tryouts.mutations.responses.save>["code"]
 ) {
-  if (errorCode === "TRYOUT_RESPONSE_STALE") {
+  const failure = tryoutSubmitFailureOf(errorCode);
+  if (failure === "stale") {
     return Effect.void;
   }
-  if (
-    errorCode === "TRYOUT_EXPIRED" ||
-    errorCode === "TRYOUT_ATTEMPT_NOT_ACTIVE" ||
-    errorCode === "TRYOUT_SECTION_NOT_ACTIVE"
-  ) {
+  if (failure === "ended") {
     return Effect.sync(() => {
       toast.info(tTryouts("attempt-not-in-progress"), {
         position: "bottom-center",

@@ -32,8 +32,9 @@ function timeSpentOf(section: Docs["tryoutSectionAttempts"], now: number) {
  * transaction. The stored response, read and checked when the answer was
  * admitted, is replaced (keeping its first answer time) or deleted for none,
  * and the section and attempt rows are replaced as loaded, so no row is read
- * again. A clear with nothing stored writes nothing. Deleting a response also
- * deletes its version, so the version only orders the writes of a stored answer.
+ * again. Deleting a response deletes the version it carried, so a clear
+ * replaces the placement with the clear's version, which orders the writes
+ * that follow it. A clear with nothing stored changes nothing else.
  * @see https://docs.convex.dev/functions/mutation-functions#transactions
  */
 export const writeAnswer = Effect.fn("tryouts.response.writeAnswer")(
@@ -50,6 +51,15 @@ export const writeAnswer = Effect.fn("tryouts.response.writeAnswer")(
     const writer = yield* DatabaseWriter;
     const responses = writer.table("tryoutResponses");
     if (Option.isNone(answer)) {
+      yield* writer
+        .table("tryoutAttemptPlacements")
+        .replace(
+          placement._id,
+          Struct.assign(Struct.omit(placement, ["_creationTime", "_id"]), {
+            clearedVersion: version,
+          })
+        )
+        .pipe(Effect.orDie);
       if (Option.isNone(stored)) {
         return;
       }

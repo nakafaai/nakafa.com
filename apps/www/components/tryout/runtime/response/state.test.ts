@@ -6,6 +6,7 @@ import {
   assignCategorySelection,
   nextTryoutResponseVersion,
   toggleMultipleChoiceSelection,
+  tryoutSubmitFailureOf,
 } from "@/components/tryout/runtime/response/state";
 import type {
   TryoutRuntimeQuestion,
@@ -178,23 +179,49 @@ describe("try-out response state", () => {
         }),
       })
     ).toBe(1);
-    expect(
-      nextTryoutResponseVersion({
-        ...question,
-        response: makeResponse(
-          { kind: "multiple-choice", optionKeys: ["option-1"] },
-          4
-        ),
-      })
-    ).toBe(5);
+    expect(nextTryoutResponseVersion({ ...question, version: 4 })).toBe(5);
   });
 
   it("shows the version of the latest write, so the next one follows it", () => {
     const first = writeNext(makeRuntime(makeMultipleQuestion()), ["option-1"]);
-    expect(first.questions[0].response?.version).toBe(1);
+    expect(first.questions[0].version).toBe(1);
     const second = writeNext(first, ["option-1", "option-2"]);
-    expect(second.questions[0].response?.version).toBe(2);
+    expect(second.questions[0].version).toBe(2);
     expect(nextTryoutResponseVersion(second.questions[0])).toBe(3);
+  });
+
+  it("keeps the version when an answer is cleared, so the next write follows the clear", () => {
+    const answered = writeNext(makeRuntime(makeMultipleQuestion()), [
+      "option-1",
+    ]);
+    const cleared = applyOptimisticTryoutResponse(
+      answered,
+      {
+        placementId: answered.questions[0].placementId,
+        selection: null,
+        version: nextTryoutResponseVersion(answered.questions[0]),
+      },
+      NOW
+    );
+    if (!cleared) {
+      throw new Error("Expected an optimistic clear.");
+    }
+    expect(cleared.questions[0]).toMatchObject({ response: null, version: 2 });
+    expect(nextTryoutResponseVersion(cleared.questions[0])).toBe(3);
+  });
+
+  it("leaves a stale refusal silent, tells an ended attempt, and reports any other failure", () => {
+    const endedCodes: readonly Parameters<typeof tryoutSubmitFailureOf>[0][] = [
+      "TRYOUT_EXPIRED",
+      "TRYOUT_ATTEMPT_NOT_ACTIVE",
+      "TRYOUT_SECTION_NOT_ACTIVE",
+    ];
+    expect(tryoutSubmitFailureOf("TRYOUT_RESPONSE_STALE")).toBe("stale");
+    for (const code of endedCodes) {
+      expect(tryoutSubmitFailureOf(code)).toBe("ended");
+    }
+    expect(tryoutSubmitFailureOf("TRYOUT_RESPONSE_FAILED")).toBe("error");
+    expect(tryoutSubmitFailureOf(undefined)).toBe("error");
   });
 
   it("rejects missing placements and invalid optimistic selections", () => {
@@ -343,15 +370,13 @@ function responseState(question: TryoutRuntimeQuestion) {
 }
 
 function makeResponse(
-  selection: NonNullable<TryoutRuntimeQuestion["response"]>["selection"],
-  version?: number
+  selection: NonNullable<TryoutRuntimeQuestion["response"]>["selection"]
 ) {
   return {
     answeredAt: NOW,
     isComplete: false,
     selection,
     updatedAt: NOW,
-    ...(version === undefined ? {} : { version }),
   };
 }
 

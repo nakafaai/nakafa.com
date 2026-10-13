@@ -26,7 +26,8 @@ export type Attempt = typeof Attempt.Type;
 /**
  * What an answer's checked live context carries besides the store's rows: the
  * frozen response a selection is evaluated against, and the version of the
- * stored answer, none while the question has no stored answer.
+ * question's latest admitted write, none before its first versioned write.
+ * Clearing the answer keeps that version, so an older write cannot come back.
  */
 export const Answerable = Schema.Struct({
   response: ResponseSpec,
@@ -36,12 +37,14 @@ export type Answerable = typeof Answerable.Type;
 
 /**
  * One open section as its store loaded it: its deadline, the store's integrity
- * checks of the loaded rows, and those rows, which become the checked live
- * context.
+ * checks of the rows that identify it, and the rest of the rows the write
+ * needs. The rest loads and is checked only after the deadline rule passed, so
+ * a write that arrives too late reads and fails on nothing beyond the section,
+ * and its checked rows become the live context.
  */
-export interface Stage<Live, E> {
+export interface Stage<Live, E, R> {
   readonly deadline: number;
-  readonly live: Live;
+  readonly live: Effect.Effect<Live, E, R>;
   readonly verify: Effect.Effect<void, E>;
 }
 
@@ -54,7 +57,7 @@ export interface Stage<Live, E> {
 export interface Candidate<Live, E, R> {
   readonly attempt: Attempt;
   readonly owner: string;
-  readonly section: Effect.Effect<Option.Option<Stage<Live, E>>, E, R>;
+  readonly section: Effect.Effect<Option.Option<Stage<Live, E, R>>, E, R>;
 }
 
 /**

@@ -1,4 +1,3 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import tryoutAttemptPlacements from "@repo/backend/confect/_generated/tables/tryoutAttemptPlacements";
 import tryoutAttempts from "@repo/backend/confect/_generated/tables/tryoutAttempts";
@@ -25,6 +24,7 @@ import {
   toTryoutResponseError,
   toTryoutSelectionError,
 } from "@repo/backend/confect/tryouts/response/spec";
+import { readVersion } from "@repo/backend/confect/tryouts/response/version";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";
 import { loadSectionAttempt } from "@repo/backend/confect/tryouts/runtime/sectionAttempt";
@@ -40,7 +40,7 @@ type Live = typeof Live.Type;
 
 /**
  * The rows an admitted try-out answer works on, beside what the gate checks:
- * its frozen response, and the version of the question's stored answer.
+ * its frozen response, and the version of the question's latest write.
  */
 const Answering = Schema.Struct({
   ...Live.fields,
@@ -102,56 +102,52 @@ const loadResponses = Effect.fn("tryouts.gate.loadResponses")(function* (
 });
 
 /**
- * Checks a running section against its attempt's frozen snapshot, the
- * placement against both, and the stored responses against their links and
- * frozen evaluation.
+ * Checks a running section against its attempt's frozen snapshot, and the
+ * placement against both. It reads nothing, so it runs before the deadline.
  */
-const verifyAnswering = Effect.fn("tryouts.gate.verifyAnswering")(function* (
-  live: Answering,
-  responses: readonly Docs["tryoutResponses"][]
+const verifySection = Effect.fn("tryouts.gate.verifySection")(function* (
+  attempt: Live["attempt"],
+  section: Live["section"],
+  placement: Answering["placement"]
 ) {
-  const { attempt, placement, section } = live;
   const snapshot = yield* requireTryoutResponseSectionSnapshot(
     attempt,
     section
   );
   yield* validateTryoutResponsePlacements(attempt._id, snapshot, [placement]);
+});
+
+/**
+ * Reads the question's stored answer and checks it against its links and
+ * frozen evaluation. It runs only after the deadline passed unrefused, as the
+ * answer write of the try-out runtime always did, so an answer that arrives
+ * too late is refused for its time before the stored rows are read.
+ */
+const loadAnswering = Effect.fn("tryouts.gate.loadAnswering")(function* (
+  attempt: Live["attempt"],
+  section: Live["section"],
+  placement: Answering["placement"]
+) {
+  const responses = yield* loadResponses(placement._id);
   yield* indexTryoutResponses({
     attemptId: attempt._id,
     links: [{ placement, sectionAttemptId: section._id }],
     responses,
   });
-});
-
-/** The running section of one answer's placement with the question's stored answer, none unless the section runs. */
-const loadAnswering = Effect.fn("tryouts.gate.loadAnswering")(function* (
-  attempt: Live["attempt"],
-  placement: Answering["placement"]
-) {
-  const section = yield* loadRunning(attempt._id, placement.sectionKey);
-  if (Option.isNone(section)) {
-    return Option.none();
-  }
-  const responses = yield* loadResponses(placement._id);
   const stored = Arr.head(responses);
-  const live = {
+  return {
     attempt,
     placement,
     response: placement.responseSpec,
-    section: section.value,
+    section,
     stored,
-    version: Option.flatMapNullishOr(stored, ({ version }) => version),
+    version: readVersion(placement, stored),
   };
-  return Option.some({
-    deadline: section.value.expiresAt,
-    live,
-    verify: verifyAnswering(live, responses),
-  });
 });
 
 /**
  * The target of one answer: its placement and attempt, then, only for the
- * attempt's owner, its running section and stored answer.
+ * attempt's owner, its running section, whose stored answer loads last.
  */
 const loadPlacement = Effect.fn("tryouts.gate.loadPlacement")(function* (
   placementId: Id<"tryoutAttemptPlacements">
@@ -173,7 +169,15 @@ const loadPlacement = Effect.fn("tryouts.gate.loadPlacement")(function* (
   return Option.map(attempt, (loaded) => ({
     attempt: attemptOf(loaded),
     owner: loaded.userId,
-    section: loadAnswering(loaded, placed),
+    section: loadRunning(loaded._id, placed.sectionKey).pipe(
+      Effect.map(
+        Option.map((section) => ({
+          deadline: section.expiresAt,
+          live: loadAnswering(loaded, section, placed),
+          verify: verifySection(loaded, section, placed),
+        }))
+      )
+    ),
   }));
 });
 
@@ -189,7 +193,7 @@ const loadSection = Effect.fn("tryouts.gate.loadSection")(function* (
       Effect.map(
         Option.map((section) => ({
           deadline: section.expiresAt,
-          live: { attempt: loaded, section },
+          live: Effect.succeed({ attempt: loaded, section }),
           verify: Effect.void,
         }))
       )
@@ -251,7 +255,7 @@ export const tryoutGate = {
         owner,
         placement: args.placementId,
         selection: Option.fromNullOr(args.selection),
-        version: args.version,
+        version: Option.fromNullishOr(args.version),
       });
     },
     Effect.catchTags({

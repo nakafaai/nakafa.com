@@ -45,8 +45,8 @@ export class AttemptRefused extends Schema.TaggedError<AttemptRefused>()(
 ) {}
 
 /**
- * The answer's version is not newer than the stored one, so a newer write
- * already took its place. It is the last refusal, after every admission rule,
- * and only an answer carries a version.
+ * The answer's version is not newer than the question's latest admitted write,
+ * so a newer write already took its place. It is the last refusal, after every
+ * admission rule, and only an answer carries a version.
  */
 export class Stale extends Schema.TaggedError<Stale>()("Stale", {}) {}

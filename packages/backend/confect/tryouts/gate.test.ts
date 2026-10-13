@@ -210,6 +210,47 @@ describe("tryouts/gate", () => {
       })
   );
   it.effect(
+    "refuses an answer past its deadline before it checks the question's stored answers",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* seedTryoutGate;
+        yield* change(world, (ctx) =>
+          insertAnswer(
+            ctx,
+            world,
+            world.sectionAttemptId,
+            world.choices.correct,
+            false
+          )
+        );
+        yield* world.arrange("expire-section");
+        const before = yield* world.rows;
+        expect(yield* world.answer("learner", "running", "correct", 1)).toEqual(
+          Option.some(tryoutRefusals.answer.Expired)
+        );
+        expect(yield* world.rows).toEqual(before);
+      })
+  );
+  it.effect(
+    "records a clear on the question without changing anything else it froze",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* seedTryoutGate;
+        yield* change(world, (ctx) =>
+          ctx.db.patch(world.placementId, { points: 3 })
+        );
+        const placement = () =>
+          Effect.promise(() =>
+            world.t.query((ctx) => ctx.db.get(world.placementId))
+          );
+        const before = yield* placement();
+        yield* world.answer("learner", "running", "correct", 1);
+        expect(yield* placement()).toEqual(before);
+        yield* world.answer("learner", "running", "clear", 2);
+        expect(yield* placement()).toEqual({ ...before, clearedVersion: 2 });
+      })
+  );
+  it.effect(
     "reads an answer stored before outcomes and versions from its correctness flag",
     () =>
       Effect.gen(function* () {
@@ -281,18 +322,20 @@ describe("tryouts/gate", () => {
         const runtimeServices = yield* Effect.context<never>();
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* seedResponseFixture(t, "gate-metrics");
-        /** Saves the question's first choice at `version` and gives the reads and writes of its transaction. */
-        const measure = (version: number) =>
+        /** Saves the question's first choice, or clears it for `null`, at `version` and gives the reads and writes of its transaction. */
+        const measure = (version: number, answered: boolean) =>
           Effect.promise(() =>
             t.mutation(async (ctx) => {
               await Effect.runPromiseWith(runtimeServices)(
                 tryoutGate
                   .answer(seeded.identity.userId, {
                     placementId: seeded.placementId,
-                    selection: {
-                      kind: "single-choice",
-                      optionKey: seeded.selectedChoice.optionKey,
-                    },
+                    selection: answered
+                      ? {
+                          kind: "single-choice",
+                          optionKey: seeded.selectedChoice.optionKey,
+                        }
+                      : null,
                     version,
                   })
                   .pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
@@ -301,20 +344,24 @@ describe("tryouts/gate", () => {
             })
           );
         yield* setResponseClock(5000);
-        const inserted = yield* measure(1);
+        const inserted = yield* measure(1, true);
         yield* setResponseClock(9000);
-        const replaced = yield* measure(2);
+        const replaced = yield* measure(2, true);
+        expect((yield* readResponseState(t, seeded)).responses).toMatchObject([
+          { version: 2 },
+        ]);
+        const cleared = yield* measure(3, false);
         // A write reads the question, its attempt, and its section, and the
         // stored answer once there is one. It replaces the section and attempt
         // rows it loaded, and the answer too once there is one. Convex reads a
-        // replaced document once more.
+        // replaced document once more. A clear deletes the answer and replaces
+        // the question, which keeps the version, instead of the answer.
         expect(inserted.documentsRead.used).toBe(5);
         expect(inserted.documentsWritten.used).toBe(3);
         expect(replaced.documentsRead.used).toBe(7);
         expect(replaced.documentsWritten.used).toBe(3);
-        expect((yield* readResponseState(t, seeded)).responses).toMatchObject([
-          { version: 2 },
-        ]);
+        expect(cleared.documentsRead.used).toBe(8);
+        expect(cleared.documentsWritten.used).toBe(4);
       })
   );
   it.effect("refuses callers without a session before the gate", () =>

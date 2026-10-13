@@ -57,7 +57,7 @@ export function describeGate<
     readonly seed: Effect.Effect<W>;
     readonly refusal: (write: Write, reason: Reason) => Failure;
     readonly rejection: (reason: ResponseRejected["reason"]) => Failure;
-    /** The failure an answer whose version is not newer than the stored one declares. */
+    /** The failure an answer whose version is not newer than the question's latest write declares. */
     readonly stale: Failure;
     /** The failure a store failure masks to, cause kept, for each write. */
     readonly masked: (write: Write) => Failure;
@@ -110,7 +110,7 @@ export function describeGate<
             Option.none()
           );
           expect(yield* world.observe).toEqual(
-            running(0, 0, Option.none(), Option.none())
+            running(0, 0, Option.none(), Option.some(3))
           );
         })
     );
@@ -123,11 +123,56 @@ export function describeGate<
           running(1, 1, Option.some("correct"), Option.some(2))
         );
         yield* world.answer("learner", "running", "clear", 3);
-        const cleared = yield* world.rows;
         expect(yield* world.answer("learner", "running", "clear", 4)).toEqual(
           Option.none()
         );
-        expect(yield* world.rows).toEqual(cleared);
+        expect(yield* world.observe).toEqual(
+          running(0, 0, Option.none(), Option.some(4))
+        );
+      })
+    );
+    it.effect(
+      "keeps the version of a cleared answer, so no write that an older one overtook comes back",
+      () =>
+        Effect.gen(function* () {
+          const world = yield* fixture.seed;
+          yield* world.answer("learner", "running", "correct", 1);
+          yield* world.answer("learner", "running", "incorrect", 2);
+          yield* world.answer("learner", "running", "clear", 3);
+          for (const version of [2, 3]) {
+            yield* refused(
+              world,
+              world.answer("learner", "running", "correct", version),
+              fixture.stale
+            );
+          }
+          expect(
+            yield* world.answer("learner", "running", "incorrect", 4)
+          ).toEqual(Option.none());
+          expect(yield* world.observe).toEqual(
+            running(1, 0, Option.some("incorrect"), Option.some(4))
+          );
+          yield* refused(
+            world,
+            world.answer("learner", "running", "correct", 3),
+            fixture.stale
+          );
+        })
+    );
+    it.effect("numbers a clear of nothing like any other write", () =>
+      Effect.gen(function* () {
+        const world = yield* fixture.seed;
+        expect(yield* world.answer("learner", "running", "clear", 2)).toEqual(
+          Option.none()
+        );
+        expect(yield* world.observe).toEqual(
+          running(0, 0, Option.none(), Option.some(2))
+        );
+        yield* refused(
+          world,
+          world.answer("learner", "running", "correct", 2),
+          fixture.stale
+        );
       })
     );
     it.effect(
@@ -205,7 +250,7 @@ export function describeGate<
         })
     );
     it.effect(
-      "refuses an answer whose version is not newer than the stored one, and changes nothing",
+      "refuses an answer whose version is not newer than the latest write, and changes nothing",
       () =>
         Effect.gen(function* () {
           const world = yield* fixture.seed;

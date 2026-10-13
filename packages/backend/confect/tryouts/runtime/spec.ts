@@ -43,8 +43,6 @@ const runtimeResponseValidator = Schema.Struct({
   outcome: Schema.optionalKey(Outcome),
   selection: Selection,
   updatedAt: Schema.Finite,
-  /** The version of the stored write, which the next write of this question must exceed. */
-  version: Schema.optionalKey(Version),
 });
 const runtimeQuestionValidator = Schema.Struct({
   contentHash: Schema.String,
@@ -54,6 +52,12 @@ const runtimeQuestionValidator = Schema.Struct({
   responseSpec: RenderableSpec,
   sourcePath: Schema.String,
   sourceRevision: Schema.String,
+  /**
+   * The version of the latest write of this question, which the next one must
+   * exceed. It stays when the answer is cleared, and is absent before the first
+   * versioned write.
+   */
+  version: Schema.optionalKey(Version),
 });
 const tryoutSectionRuntimeValidator = Schema.Struct({
   attemptId: IdSchema("tryoutAttempts"),

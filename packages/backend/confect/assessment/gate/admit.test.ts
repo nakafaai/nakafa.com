@@ -24,11 +24,14 @@ const response: ResponseSpec = {
 /**
  * The in-memory store's one attempt: its attempt stage, its running
  * section's deadline (none once it ended or before it started), whether the
- * section's rows fail the store's checks, and the stored answer's version.
+ * section's rows fail the store's checks before the deadline and whether the
+ * question's stored rows fail them after it, and the version of the question's
+ * latest write.
  */
 const Memory = Schema.Struct({
   attempt: Attempt,
   corrupt: Schema.Boolean,
+  corruptRows: Schema.Boolean,
   section: Schema.Option(Schema.Finite),
   version: Schema.Option(Schema.Int),
 });
@@ -43,6 +46,7 @@ const live = Memory.make({
     open: true,
   },
   corrupt: false,
+  corruptRows: false,
   section: Option.some(NOW + HOUR),
   version: Option.none(),
 });
@@ -57,8 +61,8 @@ const changed = (fields: Partial<Memory>) =>
 
 /**
  * Builds the gate over one in-memory attempt that the learner owns: the
- * question `q` and the section `s` exist. Every section read and write is
- * appended to the returned log.
+ * question `q` and the section `s` exist. Every section read, every read of
+ * the question's stored rows, and every write is appended to the returned log.
  */
 const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
   const log = yield* Ref.make<readonly string[]>([]);
@@ -66,7 +70,14 @@ const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
   const verify: Effect.Effect<void, Corrupt> = state.corrupt
     ? Effect.fail(new Corrupt())
     : Effect.void;
-  const target = (exists: boolean) =>
+  const rows = record("rows").pipe(
+    Effect.andThen(
+      state.corruptRows
+        ? Effect.fail(new Corrupt())
+        : Effect.succeed({ response, version: state.version })
+    )
+  );
+  const target = (exists: boolean, loads: typeof rows) =>
     Effect.succeed(
       exists
         ? Option.some({
@@ -76,7 +87,7 @@ const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
               Effect.as(
                 Option.map(state.section, (deadline) => ({
                   deadline,
-                  live: { response, version: state.version },
+                  live: loads,
                   verify,
                 }))
               )
@@ -93,17 +104,18 @@ const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
         })} v${version}`
       ),
     finish: (_live, reason) => record(`finish ${reason}`),
-    placement: (id: string) => target(id === "q"),
-    section: (id: string) => target(id === "s"),
+    placement: (id: string) => target(id === "q", rows),
+    section: (id: string) =>
+      target(id === "s", Effect.succeed({ response, version: state.version })),
   });
   return { gate, log: Ref.get(log) };
 });
 
-/** Answers the question `q` with `optionKey` as the learner on no device. */
+/** Answers the question `q` with `optionKey` as the learner on no device; no version is a page older than versions. */
 const answer = (
   gate: Effect.Success<ReturnType<typeof memory>>["gate"],
   optionKey: Option.Option<string>,
-  version: number
+  version: number | null
 ) =>
   gate.answer({
     device: Option.none(),
@@ -113,10 +125,10 @@ const answer = (
       kind: "single-choice",
       optionKey: key,
     })),
-    version,
+    version: Option.fromNullOr(version),
   });
 
-/** One refused write: the first rule it fails, and the section reads that happened before it. */
+/** One refused write: the first rule it fails, and the reads that happened before it. */
 const Refused = Schema.Struct({
   expected: Schema.String,
   reads: Schema.Array(Schema.String),
@@ -196,7 +208,14 @@ const refusals: readonly (typeof Refused.Type)[] = [
     expected: "Expired",
     reads: ["section"],
     rule: "answer",
-    state: changed({ section: Option.some(NOW) }),
+    state: changed({ corruptRows: true, section: Option.some(NOW) }),
+    target: "q",
+  },
+  {
+    expected: "Corrupt",
+    reads: ["section", "rows"],
+    rule: "answer",
+    state: changed({ corruptRows: true }),
     target: "q",
   },
 ];
@@ -236,6 +255,18 @@ const endings: readonly (typeof Ending.Type)[] = [
   { deadline: NOW, reason: "time-expired" },
 ];
 
+/** The version of the question's latest write, and the version an answer without one is written with. */
+const Numbering = Schema.Struct({
+  case: Schema.String,
+  latest: Schema.Option(Schema.Int),
+  numbered: Schema.Int,
+});
+
+const numberings: readonly (typeof Numbering.Type)[] = [
+  { case: "a question without a version", latest: Option.none(), numbered: 1 },
+  { case: "a latest write numbered 7", latest: Option.some(7), numbered: 8 },
+];
+
 const setNow = TestClock.setTime(NOW);
 
 describe("assessment/gate/admit", () => {
@@ -248,10 +279,13 @@ describe("assessment/gate/admit", () => {
       yield* answer(gate, Option.none(), 3);
       expect(yield* log).toEqual([
         "section",
+        "rows",
         "answer correct v1",
         "section",
+        "rows",
         "answer incorrect v2",
         "section",
+        "rows",
         "answer clear v3",
       ]);
     })
@@ -269,7 +303,7 @@ describe("assessment/gate/admit", () => {
           _tag: "ResponseRejected",
           reason: "selection",
         });
-        expect(yield* log).toEqual(["section"]);
+        expect(yield* log).toEqual(["section", "rows"]);
       })
   );
   it.effect.each(refusals)(
@@ -285,7 +319,7 @@ describe("assessment/gate/admit", () => {
                 owner: "learner",
                 placement: target,
                 selection: Option.none(),
-                version: 1,
+                version: Option.some(1),
               })
             : gate.finish({
                 device: Option.none(),
@@ -326,7 +360,7 @@ describe("assessment/gate/admit", () => {
           owner: "learner",
           section: Effect.succeedSome({
             deadline: NOW + 1,
-            live: "row",
+            live: Effect.succeed("row"),
             verify: Effect.void,
           }),
         })
@@ -367,7 +401,7 @@ describe("assessment/gate/admit", () => {
     })
   );
   it.effect(
-    "refuses an answer whose version is not newer than the stored one without writing it",
+    "refuses an answer whose version is not newer than the latest write without writing it",
     () =>
       Effect.gen(function* () {
         yield* setNow;
@@ -383,9 +417,26 @@ describe("assessment/gate/admit", () => {
         yield* answer(gate, Option.some("b"), 3);
         expect(yield* log).toEqual([
           "section",
+          "rows",
           "section",
+          "rows",
           "section",
+          "rows",
           "answer incorrect v3",
+        ]);
+      })
+  );
+  it.effect.each(numberings)(
+    "writes an answer without a version as the next one for $case, never as stale",
+    ({ latest, numbered }) =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const { gate, log } = yield* memory(changed({ version: latest }));
+        yield* answer(gate, Option.some("a"), null);
+        expect(yield* log).toEqual([
+          "section",
+          "rows",
+          `answer correct v${numbered}`,
         ]);
       })
   );
@@ -411,7 +462,7 @@ describe("assessment/gate/admit", () => {
         Effect.flip
       );
       expect(refused).toMatchObject({ _tag: "Stale" });
-      expect(yield* log).toEqual(["section"]);
+      expect(yield* log).toEqual(["section", "rows"]);
     })
   );
   it.effect.each(endings)(

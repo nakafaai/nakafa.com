@@ -6,6 +6,7 @@ import {
 } from "@repo/backend/confect/response/projection";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/confect/tryouts/response/integrity";
 import { readOutcome } from "@repo/backend/confect/tryouts/response/outcome";
+import { readVersion } from "@repo/backend/confect/tryouts/response/version";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { loadSectionPlacements } from "@repo/backend/confect/tryouts/runtime/placement";
 import {
@@ -15,7 +16,7 @@ import {
 import { projectTryoutSignedContent } from "@repo/backend/confect/tryouts/runtime/selectors";
 import { noTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/spec";
 import { getSectionScoreResult } from "@repo/backend/confect/tryouts/score/result";
-import { Array as Arr, Effect, MutableHashMap, Option, Struct } from "effect";
+import { Array as Arr, Effect, MutableHashMap, Option } from "effect";
 
 type TryoutPlacement = Docs["tryoutAttemptPlacements"];
 type TryoutResponse = Docs["tryoutResponses"];
@@ -135,9 +136,9 @@ function projectRuntimeQuestion(
         ...(access.answers ? { outcome: readOutcome(response) } : {}),
         selection: projectSelection(response.selection, access.answers),
         updatedAt: response.updatedAt,
-        ...Struct.pick(response, ["version"]),
       }
     : null;
+  const version = readVersion(placement, Option.fromNullOr(response));
   return {
     contentHash: placement.contentHash,
     placementId: placement._id,
@@ -146,5 +147,6 @@ function projectRuntimeQuestion(
     responseSpec: project(placement.responseSpec, access.answers),
     sourcePath: placement.sourcePath,
     sourceRevision: placement.sourceRevision,
+    ...(Option.isSome(version) ? { version: version.value } : {}),
   };
 }

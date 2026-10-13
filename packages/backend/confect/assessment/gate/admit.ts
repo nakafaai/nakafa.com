@@ -29,9 +29,32 @@ function refuse(reason: AttemptRefused["reason"]) {
   return Effect.fail(new AttemptRefused({ reason }));
 }
 
-/** Whether a write's version is not newer than the stored answer's, which a newer write already replaced. */
-function isStale(incoming: Version, stored: Option.Option<Version>) {
-  return Option.exists(stored, (current) => incoming <= current);
+/** Whether a write's version is not newer than the question's latest admitted write, which a newer write already took the place of. */
+function isStale(incoming: Version, latest: Option.Option<Version>) {
+  return Option.exists(latest, (current) => incoming <= current);
+}
+
+/**
+ * Numbers one answer: the version it carries unless the question's latest
+ * admitted write is not older, which refuses it as stale. An answer without a
+ * version comes from a page older than versions (see
+ * `saveTryoutResponseArgsValidator`) and takes the next number, so it is never
+ * refused.
+ */
+function numbered(
+  sent: Option.Option<Version>,
+  latest: Option.Option<Version>
+) {
+  return Option.match(sent, {
+    onNone: () =>
+      Effect.succeed(
+        Option.match(latest, { onNone: () => 1, onSome: Num.increment })
+      ),
+    onSome: (version) =>
+      isStale(version, latest)
+        ? Effect.fail(new Stale())
+        : Effect.succeed(version),
+  });
 }
 
 /**
@@ -53,9 +76,11 @@ export function make<
    * The engine: loads the target, then checks every rule in order and returns
    * the checked live context with the server time it was checked at. The
    * order is owner, attempt open, lock, device, the attempt deadline for an
-   * `attempt` rule, then the section stage (open, the store's checks), and
-   * the live deadline for a `live` rule. The first failing rule is the
-   * refusal, and nothing is written after one.
+   * `attempt` rule, then the section stage (open, the store's checks of the
+   * rows that identify it), the live deadline for a `live` rule, and last the
+   * rest of the rows the write needs, which the store loads and checks only
+   * now. The first failing rule is the refusal, and nothing is written after
+   * one.
    */
   const admit = Effect.fn("assessment.gate.admit")(function* <L>(
     rule: Rule,
@@ -97,22 +122,23 @@ export function make<
     }
     return {
       deadline: { attempt: attempt.deadline, section: open.value.deadline },
-      live: open.value.live,
+      live: yield* open.value.live,
       now,
     };
   });
 
   /**
-   * Saves one answer: admitted by `rules.answer`, refused as stale unless its
-   * version is newer than the stored one, the selection evaluated against the
-   * frozen response (none clears the answer), and written with its version.
+   * Saves one answer: admitted by `rules.answer`, numbered and refused as
+   * stale unless its version is newer than the question's latest admitted
+   * write, the selection evaluated against the frozen response (none clears
+   * the answer), and written with its version.
    */
   const answer = Effect.fn("assessment.gate.answer")(function* (input: {
     readonly owner: string;
     readonly device: Option.Option<DeviceId>;
     readonly placement: Placement;
     readonly selection: Option.Option<Selection>;
-    readonly version: Version;
+    readonly version: Option.Option<Version>;
   }) {
     const { live, now } = yield* admit(
       rules.answer,
@@ -120,15 +146,13 @@ export function make<
       input.device,
       store.placement(input.placement)
     );
-    if (isStale(input.version, live.version)) {
-      return yield* new Stale();
-    }
+    const version = yield* numbered(input.version, live.version);
     const evaluated = yield* Effect.transposeOption(
       Option.map(input.selection, (selection) =>
         Effect.fromResult(evaluate(live.response, selection))
       )
     );
-    yield* store.answer(live, evaluated, now, input.version);
+    yield* store.answer(live, evaluated, now, version);
   });
 
   /**

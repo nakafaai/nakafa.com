@@ -52,8 +52,9 @@ export type Failure = typeof Failure.Type;
 
 /**
  * What the fixture observes after a write: the running section's counters,
- * the stored outcome and version of its question, and whether the section
- * still runs or ended, and how.
+ * the stored outcome of its question and the version of the question's latest
+ * write, which a cleared answer keeps, and whether the section still runs or
+ * ended, and how.
  */
 export const Observed = Schema.Struct({
   answered: Schema.Finite,
