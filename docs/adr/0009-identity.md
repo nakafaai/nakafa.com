@@ -114,11 +114,11 @@ only, each at its own address (ADR 0026).
   reads the row. Better Auth's `emailOTP` plugin keeps codes in plain text by
   default, so Nakafa stores its own keyed hash. `confect/emails` sends the code.
   The parent enters it on the code entry page of the school host
-  (`/orang-tua`, ADR 0026), the only page that accepts it. It is the one
-  exception to the rule that email carries only links (ADR 0026): it lives five
-  minutes, rests as a keyed hash, and is useless without that page. Signing in is
-  not consent for a child (K2). Consent is recorded with a second check, and ADR
-  0012 defines the verified parent relation.
+  (`/orang-tua`, ADR 0026), the only page that accepts it. It is the one code
+  that an email carries (ADR 0027): it lives five minutes, rests as a keyed hash,
+  and is useless without that page. Signing in is not consent for a child (K2).
+  Consent is recorded with a second check, and ADR 0012 defines the verified
+  parent relation.
 - **Microsoft Entra ID and SAML.** These come after Google, for the schools that
   ask for them.
 
