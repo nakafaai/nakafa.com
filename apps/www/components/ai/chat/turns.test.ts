@@ -1,6 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
-import { turnOf, turnsByOrder } from "@/components/ai/chat/turns";
+import type { PaginationStatus } from "convex/react";
+import {
+  canLoadOlderMessages,
+  turnOf,
+  turnsByOrder,
+} from "@/components/ai/chat/turns";
 
 /** A turn that answers the prompt at `order`, as the conversation tells it. */
 function turn(
@@ -34,4 +39,30 @@ describe("chat/turns", () => {
     expect(turnOf(turn(1), ended, 2)).toBeUndefined();
     expect(turnOf(null, turnsByOrder([]), 0)).toBeUndefined();
   });
+
+  // Every pair of the statuses of the messages and of the turns, and whether
+  // the transcript may ask for an older page of messages for it.
+  it.each<[PaginationStatus, PaginationStatus, boolean]>([
+    ["CanLoadMore", "CanLoadMore", true],
+    ["CanLoadMore", "Exhausted", true],
+    ["CanLoadMore", "LoadingFirstPage", false],
+    ["CanLoadMore", "LoadingMore", false],
+    ["LoadingFirstPage", "CanLoadMore", false],
+    ["LoadingFirstPage", "Exhausted", false],
+    ["LoadingFirstPage", "LoadingFirstPage", false],
+    ["LoadingFirstPage", "LoadingMore", false],
+    ["LoadingMore", "CanLoadMore", false],
+    ["LoadingMore", "Exhausted", false],
+    ["LoadingMore", "LoadingFirstPage", false],
+    ["LoadingMore", "LoadingMore", false],
+    ["Exhausted", "CanLoadMore", false],
+    ["Exhausted", "Exhausted", false],
+    ["Exhausted", "LoadingFirstPage", false],
+    ["Exhausted", "LoadingMore", false],
+  ])(
+    "asks for an older page of messages when messages are %s and turns are %s: %s",
+    (messages, turns, canLoad) => {
+      expect(canLoadOlderMessages(messages, turns)).toBe(canLoad);
+    }
+  );
 });

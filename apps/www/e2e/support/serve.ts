@@ -6,6 +6,7 @@ import {
   MutableList,
   Option,
   Result,
+  Struct,
 } from "effect";
 import { openChatPage } from "@/e2e/support/chat";
 import {
@@ -17,8 +18,10 @@ import {
 import {
   type Asked,
   type AskedQueries,
+  cutPage,
   noticeQueries,
   pageOf,
+  type ServedMessage,
   type StoredMessage,
 } from "@/e2e/support/query";
 import { BUBBLE_CONTENT } from "@/e2e/support/selector";
@@ -48,11 +51,18 @@ type Transition = Option.Option.Value<ReturnType<typeof decodeTransition>>;
  */
 const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
   page: Page,
-  messages: readonly StoredMessage[]
+  messages: readonly ServedMessage[]
 ) {
+  /** The messages as the page reads them, which tell nothing of a turn, and the facts of the turns that ended. */
+  const pages = Arr.map(messages, Struct.omit(["metadata"]));
+  const turns = Arr.flatMap(messages, (message) =>
+    message.metadata === undefined ? [] : [message.metadata]
+  );
   /** The chunks of the answer being written, and the turn it answers. */
   const chunks = MutableList.make<unknown>();
   let order: number | null = null;
+  /** Whether the turns that ended are held back, as `hold` asks. */
+  let held = false;
   /** Each connection of the page: what it asked, how to reach it, and the view it last held. */
   const connections = MutableList.make<{
     readonly asked: AskedQueries;
@@ -63,7 +73,10 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
   /** The value one query is given, from the messages and the answer being written. */
   const answerTo = (asked: typeof Asked.Type) => {
     if (asked.kind === "page") {
-      return pageOf(messages, asked.cursor, asked.numItems);
+      return pageOf(pages, asked.cursor, asked.numItems);
+    }
+    if (asked.kind === "turns") {
+      return cutPage(turns, asked.cursor, asked.numItems);
     }
     const base = { continueCursor: "", isDone: true, page: [] };
     if (asked.kind === "list") {
@@ -169,19 +182,33 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
         }
         connection.view = transition;
         // The answers to our queries are ours, and everything else is the server's.
+        // A turns answer that `hold` keeps back is left out, and `release` sends it.
         socket.send(
           encodeTransition({
             ...transition.value,
-            modifications: Arr.map(transition.value.modifications, (change) => {
-              const query =
-                change.type === "QueryUpdated" || change.type === "QueryFailed"
-                  ? MutableHashMap.get(connection.asked, change.queryId)
-                  : Option.none();
+            modifications: Arr.filterMap(
+              transition.value.modifications,
+              (change) => {
+                const query =
+                  change.type === "QueryUpdated" ||
+                  change.type === "QueryFailed"
+                    ? MutableHashMap.get(connection.asked, change.queryId)
+                    : Option.none();
 
-              return Option.isNone(query)
-                ? change
-                : updateOf(change.queryId, query.value);
-            }),
+                if (
+                  Option.isSome(query) &&
+                  held &&
+                  query.value.kind === "turns"
+                ) {
+                  return Result.failVoid;
+                }
+                return Result.succeed(
+                  Option.isNone(query)
+                    ? change
+                    : updateOf(change.queryId, query.value)
+                );
+              }
+            ),
           })
         );
       });
@@ -201,6 +228,15 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
       }
       refresh((asked) => asked.kind === "deltas");
     },
+    /** Keeps the turns that ended back from the page, so it holds none of them until `release`. */
+    hold() {
+      held = true;
+    },
+    /** Gives the page the turns that `hold` kept back, and every turns answer after it. */
+    release() {
+      held = false;
+      refresh((asked) => asked.kind === "turns");
+    },
   };
 });
 
@@ -213,7 +249,7 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
 export const openServedChat = Effect.fn("NakafaE2E.openServedChat")(function* (
   page: Page,
   baseURL: string,
-  messages: readonly StoredMessage[],
+  messages: readonly ServedMessage[],
   locale = "en"
 ) {
   const { learner } = yield* openChatPage(page, baseURL);

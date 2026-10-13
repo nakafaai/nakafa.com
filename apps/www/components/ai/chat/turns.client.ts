@@ -39,5 +39,6 @@ export function useChatTurns(
       ? () => pagination.loadMore(NINA_MESSAGES_PAGE_SIZE)
       : undefined,
     loading: PaginatedQueryResult.isLoadingFirstPage(pagination),
+    status: pagination._tag,
   };
 }

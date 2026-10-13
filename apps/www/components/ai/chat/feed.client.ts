@@ -14,12 +14,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { readChatArgs } from "@/components/ai/chat/access";
 import { useChat } from "@/components/ai/chat/context";
 import { mergeMessages } from "@/components/ai/chat/messages";
+import { canLoadOlderMessages } from "@/components/ai/chat/turns";
 import { useAi } from "@/components/ai/context";
 
 // Agent owns delta decoding, reconnection and pagination. Confect registers
 // and authorizes the query; the streaming hook uses the SDK reference boundary.
 type MessageFeed = UIMessagesQuery<
-  Pick<Ref.Args<typeof nina.messages.list>, "chatId" | "shareToken">,
+  Pick<Ref.Args<typeof nina.messages.page>, "chatId" | "shareToken">,
   NinaMessage
 >;
 type MessagesQuery = FunctionReference<
@@ -30,7 +31,7 @@ type MessagesQuery = FunctionReference<
     Required<Pick<FunctionReturnType<MessageFeed>, "streams">>
 >;
 const messagesQuery: MessagesQuery = Ref.getFunctionReference(
-  nina.messages.list
+  nina.messages.page
 );
 
 /**
@@ -51,6 +52,7 @@ export function useChatFeed() {
   const draft = useChat((state) => state.draft);
   const loadMoreTurns = useChat((state) => state.loadMoreTurns);
   const turnsLoading = useChat((state) => state.turnsLoading);
+  const turnsStatus = useChat((state) => state.turnsStatus);
   const openingChat = useAi((state) => state.openingChat);
   const setOpeningChat = useAi((state) => state.setOpeningChat);
   const feed = useUIMessages(
@@ -72,6 +74,8 @@ export function useChatFeed() {
 
   // Older messages load through one function that reads the latest feed, so
   // the row that holds it renders when a page is there to load, not per batch.
+  // `loadMoreTurns` exists only while the turns have more, so a page of turns
+  // loads only then.
   const latest = useRef({ feed, loadMoreTurns });
   useLayoutEffect(() => {
     latest.current = { feed, loadMoreTurns };
@@ -82,7 +86,7 @@ export function useChatFeed() {
   });
 
   return {
-    canLoadMore: feed.status === "CanLoadMore",
+    canLoadMore: canLoadOlderMessages(feed.status, turnsStatus),
     loadMore,
     messages: mergeMessages({
       draft,

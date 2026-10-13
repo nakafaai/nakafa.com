@@ -16,7 +16,7 @@ import type { Changes } from "@/e2e/support/changes";
  */
 const CONVERSATION = "nina/conversation:get";
 const TURNS = "nina/conversation:turns";
-const MESSAGES = "nina/messages:list";
+const MESSAGES = "nina/messages:page";
 /** The facts a reader's page is told of a turn: where it stands, and which prompt it answers. */
 const READER_FACTS = [
   "order",
@@ -170,7 +170,7 @@ export const learnsWhatTurnsCost = (page: Answered) => {
  * the call cost. The local runtime has no model, so no part of a chat of a
  * browser test was written by a call: the last check shows only what the
  * production build answers with, and the tests of this module show that it
- * fails for a page that was told such a part. `nina/messages.impl.test.ts` runs
+ * fails for a page that was told such a part. `nina/messages/page.test.ts` runs
  * a real turn and reads it as a reader.
  */
 export const learnsOnlyWhereTurnsStand = (page: Answered) => {

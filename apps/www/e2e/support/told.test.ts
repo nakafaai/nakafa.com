@@ -13,7 +13,7 @@ import {
 
 const CONVERSATION = "nina/conversation:get";
 const TURNS = "nina/conversation:turns";
-const MESSAGES = "nina/messages:list";
+const MESSAGES = "nina/messages:page";
 const OWNER = "user-of-the-owner";
 /** What the check of a reader's page says when it was told an account. */
 const ACCOUNTS = "the accounts that the reader's page was told";

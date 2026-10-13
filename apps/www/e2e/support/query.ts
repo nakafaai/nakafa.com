@@ -1,12 +1,39 @@
-import type { MessagePage } from "@repo/backend/confect/nina/contract/message";
+import {
+  AgentMessage,
+  type MessagePage,
+} from "@repo/backend/confect/nina/contract/message";
+import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Array as Arr, MutableHashMap, Option, Schema } from "effect";
 import type { SentSchema } from "@/e2e/support/frames";
 
-/** The Convex name of `nina.messages.list`, the query that reads the messages of a chat. */
-const MESSAGES = "nina/messages:list";
+/** The Convex name of `nina.messages.page`, the query that reads the messages of a chat. */
+const MESSAGES = "nina/messages:page";
+/** The Convex name of `nina.conversation.turns`, the query that reads the turns that ended. */
+const TURNS = "nina/conversation:turns";
 
 /** One message as the query that reads a chat's messages returns it. */
 export type StoredMessage = (typeof MessagePage.Type)["page"][number];
+
+/**
+ * A message of a served chat with the facts of its turn. A message that answers
+ * a turn carries them here, and the served page strips them: the query that
+ * reads messages tells none of a turn, and the turns query tells them.
+ */
+const ServedMessage = Schema.Struct({
+  ...AgentMessage.fields,
+  metadata: Schema.optional(NinaTurnSummary),
+});
+export type ServedMessage = typeof ServedMessage.Type;
+
+const TurnsArguments = Schema.Tuple([
+  Schema.Struct({
+    paginationOpts: Schema.Struct({
+      cursor: Schema.NullOr(Schema.String),
+      numItems: Schema.Finite,
+    }),
+  }),
+]);
+const decodeTurnsArguments = Schema.decodeUnknownOption(TurnsArguments);
 
 /** What a messages query asks for: a page, or the streams of the chat. */
 const MessagesArguments = Schema.Tuple([
@@ -38,6 +65,11 @@ export const Asked = Schema.Union([
   }),
   Schema.Struct({ kind: Schema.Literal("list") }),
   Schema.Struct({ cursor: Schema.Finite, kind: Schema.Literal("deltas") }),
+  Schema.Struct({
+    cursor: Schema.NullOr(Schema.String),
+    kind: Schema.Literal("turns"),
+    numItems: Schema.Finite,
+  }),
 ]);
 
 /** What a query of a connection asks for, by its id. */
@@ -48,8 +80,19 @@ export type AskedQueries = MutableHashMap.MutableHashMap<
 
 const decodeArguments = Schema.decodeUnknownOption(MessagesArguments);
 
-/** What a messages query with these arguments asks for, if it is one of ours. */
-const askedBy = (args: readonly unknown[]) => {
+/** What a query with these arguments asks for, if it is one of ours. */
+const askedBy = (udfPath: string, args: readonly unknown[]) => {
+  if (udfPath === TURNS) {
+    return Option.map(
+      decodeTurnsArguments(args),
+      ([{ paginationOpts }]) =>
+        ({
+          cursor: paginationOpts.cursor,
+          kind: "turns",
+          numItems: paginationOpts.numItems,
+        }) satisfies typeof Asked.Type
+    );
+  }
   const decoded = decodeArguments(args);
 
   if (Option.isNone(decoded)) {
@@ -88,10 +131,16 @@ export const noticeQueries = (
     if (change.type === "Remove") {
       MutableHashMap.remove(asked, change.queryId);
     }
-    if (change.type !== "Add" || change.udfPath !== MESSAGES) {
+    if (
+      change.type !== "Add" ||
+      (change.udfPath !== MESSAGES && change.udfPath !== TURNS)
+    ) {
       continue;
     }
-    const query = Option.flatMap(Option.fromNullishOr(change.args), askedBy);
+    const { udfPath } = change;
+    const query = Option.flatMap(Option.fromNullishOr(change.args), (args) =>
+      askedBy(udfPath, args)
+    );
 
     if (Option.isSome(query)) {
       MutableHashMap.set(asked, change.queryId, query.value);
@@ -100,15 +149,15 @@ export const noticeQueries = (
 };
 
 /**
- * Pages the messages the way Agent's list does: the newest first, `numItems` at
- * a time, and a cursor that names where the next page starts.
+ * Pages items the way Agent's list does: the newest first, `numItems` at a time,
+ * and a cursor that names where the next page starts.
  */
-export const pageOf = (
-  messages: readonly StoredMessage[],
+export const cutPage = <Item>(
+  items: readonly Item[],
   cursor: string | null,
   numItems: number
 ) => {
-  const newestFirst = Arr.reverse(messages);
+  const newestFirst = Arr.reverse(items);
   const start = cursor === null ? 0 : Number.parseInt(cursor, 10);
   const page = Arr.take(Arr.drop(newestFirst, start), numItems);
   const end = start + page.length;
@@ -116,6 +165,15 @@ export const pageOf = (
     continueCursor: `${end}`,
     isDone: end >= newestFirst.length,
     page,
-    streams: { kind: "list", messages: [] },
   };
 };
+
+/** Pages the messages of a chat, as the query that reads them does. */
+export const pageOf = (
+  messages: readonly StoredMessage[],
+  cursor: string | null,
+  numItems: number
+) => ({
+  ...cutPage(messages, cursor, numItems),
+  streams: { kind: "list", messages: [] },
+});

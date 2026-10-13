@@ -1,7 +1,27 @@
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
+import type { PaginationStatus } from "convex/react";
 import { Array as Arr, HashMap, Option } from "effect";
 
 type Turn = typeof NinaTurnSummary.Type;
+
+/**
+ * Whether the transcript may ask for an older page of messages. The messages and
+ * their turns load as one step: a page of messages asked while a page of turns is
+ * still loading would come with no turns for it, and the page of turns that goes
+ * with it would be skipped, so its messages would show without their state. The
+ * turns may run out before the messages do, since one turn holds many messages,
+ * so the messages still load then.
+ */
+export function canLoadOlderMessages(
+  messages: PaginationStatus,
+  turns: PaginationStatus
+) {
+  return (
+    messages === "CanLoadMore" &&
+    turns !== "LoadingFirstPage" &&
+    turns !== "LoadingMore"
+  );
+}
 
 /** The turns that ended, by the order of the prompt each one answers. */
 export function turnsByOrder(turns: readonly Turn[]) {

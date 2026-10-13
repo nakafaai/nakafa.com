@@ -39,5 +39,6 @@ export function useConversation(
     turn,
     turnAt: (order: number) => turnOf(turn, ended.ended, order),
     turnsLoading: ended.loading,
+    turnsStatus: ended.status,
   };
 }

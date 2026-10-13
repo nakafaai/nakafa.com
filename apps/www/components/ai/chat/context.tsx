@@ -45,11 +45,8 @@ function useChatState(
   store: ChatStoreApi
 ) {
   const leaving = useStore(store, (state) => state.leaving);
-  const { chat, loadMoreTurns, turn, turnAt, turnsLoading } = useConversation(
-    chatId,
-    shareToken,
-    leaving
-  );
+  const { chat, loadMoreTurns, turn, turnAt, turnsLoading, turnsStatus } =
+    useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
@@ -210,6 +207,7 @@ function useChatState(
     turn,
     turnAt,
     turnsLoading,
+    turnsStatus,
   };
 }
 
