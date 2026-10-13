@@ -96,7 +96,7 @@ const readSendRow = () => {
 const SHORT_SCREENS = [
   { height: 375, name: "a phone on its side", width: 667 },
   { height: 400, name: "a window at 200 percent zoom", width: 640 },
-] as const;
+];
 
 for (const screen of SHORT_SCREENS) {
   test.describe(`The sheet on ${screen.name} (${screen.width} by ${screen.height})`, () => {
@@ -155,7 +155,7 @@ const GERMAN_SUGGESTIONS = [
   "Das erklären",
   "Beispielaufgabe zeigen",
   "Kernaussagen zusammenfassen",
-] as const;
+];
 
 /**
  * How tall each suggestion is, whether its button is as tall as its label
@@ -210,7 +210,7 @@ const readSuggestions = async (
 };
 
 /** The text size of the page as a learner sets it in the browser: 100 percent, and a larger one. */
-const TEXT_SIZES = [100, 130] as const;
+const TEXT_SIZES = [100, 130];
 
 for (const size of TEXT_SIZES) {
   test.describe(`The suggestions of the sheet in German at 320px and ${size} percent text`, () => {

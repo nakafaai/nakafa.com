@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import {
   chipsIn,
   openComposer,
@@ -7,6 +7,9 @@ import {
   pictureOf,
   runPage,
 } from "@/e2e/support/attachment";
+
+/** The themes a chip is read in. */
+const ThemeSchema = Schema.Literals(["light", "dark"]);
 
 /**
  * How much of its box a preview picture covers, in the page: the box is the
@@ -117,7 +120,7 @@ const luminance = ({
   red: number;
 }) => 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue);
 
-for (const scheme of ["light", "dark"] as const) {
+for (const scheme of ThemeSchema.literals) {
   test.describe(`A transparent image with dark ink in the ${scheme} theme`, () => {
     test.use({ colorScheme: scheme, viewport: { height: 900, width: 390 } });
 

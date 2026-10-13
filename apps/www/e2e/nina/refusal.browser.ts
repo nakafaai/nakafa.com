@@ -164,7 +164,7 @@ const GERMAN_REFUSALS = [
     // German writes 100,000 as 100.000.
     sentence: `Kürze die Nachricht auf höchstens ${new Intl.NumberFormat("de").format(NINA_PROMPT_LENGTH)} Zeichen`,
   },
-] as const;
+];
 
 for (const { failure, reason, sentence } of GERMAN_REFUSALS) {
   test.describe(`A prompt refused for ${reason} in German at 320px`, () => {

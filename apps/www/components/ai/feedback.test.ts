@@ -133,11 +133,7 @@ describe("chat runtime feedback", () => {
 });
 
 describe("the sentences of the failure table", () => {
-  for (const [locale, messages] of [
-    ["en", en],
-    ["de", de],
-    ["id", id],
-  ] as const) {
+  for (const [locale, messages] of Rec.toEntries({ de, en, id })) {
     it(`say the limits the code checks, in ${locale}`, () => {
       const onError = vi.fn();
       const t = createTranslator({

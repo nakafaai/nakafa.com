@@ -144,7 +144,7 @@ export const ninaFailureFeedback = {
 export const ninaFailureLimits = {
   count: NINA_PROMPT_LENGTH,
   size: NINA_DOCUMENT_MEBIBYTES,
-} as const;
+};
 
 /** Persisted failures retain their own recovery policy when history is reopened. */
 export const ninaResponseFeedback = {

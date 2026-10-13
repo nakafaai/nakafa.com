@@ -155,12 +155,12 @@ describe("ai/store/draft", () => {
 
 describe("ai/store/draft owner change", () => {
   it("changes nothing for the first answer of a page, or for the same learner", () => {
-    for (const [previous, next] of [
-      [undefined, null],
-      [undefined, "learner-a"],
-      [null, null],
-      ["learner-a", "learner-a"],
-    ] as const) {
+    for (const { next, previous } of [
+      { next: null, previous: undefined },
+      { next: "learner-a", previous: undefined },
+      { next: null, previous: null },
+      { next: "learner-a", previous: "learner-a" },
+    ]) {
       expect(resolveAiOwnerChange(previous, next)).toEqual({
         mustResetDraft: false,
         ownerChanged: false,
@@ -176,7 +176,7 @@ describe("ai/store/draft owner change", () => {
   });
 
   it("ends the session and the draft of a learner whose session ends or who another learner replaces", () => {
-    for (const next of [null, "learner-b"] as const) {
+    for (const next of [null, "learner-b"]) {
       expect(resolveAiOwnerChange("learner-a", next)).toEqual({
         mustResetDraft: true,
         ownerChanged: true,

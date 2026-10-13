@@ -79,7 +79,7 @@ const REJECTION_MESSAGES = {
   empty: "Some files are empty.",
   max_file_size: "Some files exceed the maximum size.",
   max_files: "Too many files. Some were not added.",
-} as const satisfies Record<typeof PromptInputFileConstraintCode.Type, string>;
+} satisfies Record<typeof PromptInputFileConstraintCode.Type, string>;
 /** Matches HTML accept syntax for extensions, exact MIME types, and MIME wildcards. */
 function matchesAccept(file: File, accept?: string) {
   if (!accept || accept.trim() === "") {

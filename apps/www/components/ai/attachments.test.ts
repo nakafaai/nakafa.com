@@ -7,7 +7,7 @@ import { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-i
 import de from "@repo/internationalization/dictionaries/de.json";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
-import { Array as Arr } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 import { createTranslator } from "next-intl";
 import {
   exceedsDocumentLimit,
@@ -92,11 +92,7 @@ const rejected = (
 ) => new PromptInputFileConstraintError({ code, files, message: code });
 
 describe("notice of the files that were not attached", () => {
-  for (const [locale, messages] of [
-    ["en", en],
-    ["de", de],
-    ["id", id],
-  ] as const) {
+  for (const [locale, messages] of Rec.toEntries({ de, en, id })) {
     describe(`in ${locale}`, () => {
       const onError = vi.fn();
       const t = createTranslator({

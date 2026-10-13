@@ -28,12 +28,12 @@ const LONG_NAMES = [
     label: "the longest name the backend stores",
     name: `${"a".repeat(NINA_FILENAME_LENGTH - ".pdf".length)}.pdf`,
   },
-] as const;
+];
 /** Names that end in characters wider than letters. */
 const WIDE_NAMES = [
   { label: "emoji", name: `Party photos ${"🎉".repeat(14)}.pdf` },
   { label: "Chinese", name: "期末考试复习资料大全最终修订版第三稿.pdf" },
-] as const;
+];
 /** A name that fits whole, as most names do. */
 const ORDINARY_NAME = "notes.pdf";
 
