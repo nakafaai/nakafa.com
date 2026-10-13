@@ -119,7 +119,9 @@ and schemas of the school API. Everything else comes from it.
   Integration role. The tenant of a call comes from the client or the person
   behind the token and never from a parameter the caller chooses (ADR 0012).
 - An Owner or an Admin creates and revokes clients and webhooks. Revoking a
-  client ends its tokens and its webhooks.
+  client ends its tokens and its webhooks. A client secret hash and a webhook
+  secret are kept only while the client or the webhook is active, so revoking one
+  deletes its secret.
 - A person approves a device at `harapan.nakafa.com/perangkat` after signing in
   (ADR 0026). The CLI token is scoped to the school API. It is not a session.
 - A token issued for the school API is never accepted as a Convex session, and a
@@ -193,7 +195,7 @@ the device and is never printed.
 
 | Part | Rule |
 | --- | --- |
-| Source | The journal. Each webhook has its own cursor over the published changes (ADR 0016). |
+| Source | The journal. Each webhook has its own cursor over the published changes (ADR 0016), kept the way the notify consumer keeps its cursor (`journalCursors`, ADR 0027), so there is no second cursor table. |
 | Payload | The published change and its subject reference: IDs, enums, and reason codes. It holds no names, emails, or text, because the journal holds none. A receiver that needs more reads it through the REST API with its own token. |
 | Client | A webhook is made for one integration client. A change is delivered only when that client could read its subject, and the check runs at delivery (ADR 0016). |
 | Signature | HMAC-SHA256 over the timestamp, a dot, and the body |
@@ -404,7 +406,8 @@ The 19 files that import `convex-helpers`:
   deployment.
 - The school OpenAPI document is generated, so it cannot drift from the routes.
   The public document is still built by hand.
-- A webhook carries no personal data by construction.
+- A webhook carries no names, emails, or text by construction. Its IDs mean
+  something only to a receiver that reads them through the REST API with a token.
 - `hono` leaves the lock, and `zod` stays. The importing code does not change.
 - Client secrets are hashes, so a leaked database does not leak a credential.
   The cost is that a lost secret is replaced and not recovered.
@@ -457,4 +460,5 @@ The 19 files that import `convex-helpers`:
 - 1EdTech pages for OneRoster, LTI, and QTI (1edtech.org/standards).
 - `pnpm-lock.yaml` and `scripts/dependencies` on main at `f8a5610808`, and the
   npm registry on 13 October 2026.
-- ADR 0006, 0009, 0011, 0012, 0015, 0016, 0020, 0026, 0028, 0030, and 0031.
+- ADR 0006, 0009, 0011, 0012, 0015, 0016, 0020, 0026, 0027, 0028, 0030, and
+  0031.
