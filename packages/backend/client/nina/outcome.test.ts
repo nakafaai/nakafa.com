@@ -1,4 +1,8 @@
 import { expect, it } from "@effect/vitest";
+import type {
+  CapabilityArtifactSchema,
+  CapabilityOutcomeSchema,
+} from "@repo/backend/client/nina/capability";
 import { readOutcome, settleOutcome } from "@repo/backend/client/nina/outcome";
 import {
   MEMORY_CAPABILITY,
@@ -11,7 +15,25 @@ import {
   verified,
 } from "@repo/backend/test/nina/artifact";
 
-const settledWithCards = [
+type Outcome = typeof CapabilityOutcomeSchema.Type | undefined;
+
+/** A case of a run that gathered cards: the outcome it stated, and the one stored. */
+type WithCards = [
+  name: string,
+  cards: (typeof CapabilityArtifactSchema.Type)[],
+  reported: Outcome,
+  stored: Outcome,
+];
+
+/** A case of a run that gathered no card, of the capability it ran. */
+type WithoutCards = [
+  name: string,
+  reported: Outcome,
+  capability: string,
+  stored: Outcome,
+];
+
+const settledWithCards: WithCards[] = [
   [
     "a failed run that loaded nothing stays failed",
     [loading],
@@ -68,7 +90,7 @@ const settledWithCards = [
     "denied",
   ],
   ["a stated outcome survives lost evidence", [lost], "empty", "empty"],
-] as const;
+];
 
 it.each(settledWithCards)(
   "settles the stored outcome: %s",
@@ -89,7 +111,7 @@ it.each(settledWithCards)(
   }
 );
 
-it.each([
+it.each<WithoutCards>([
   [
     "a run with no card and no stated outcome found nothing",
     undefined,
@@ -114,12 +136,9 @@ it.each([
     MEMORY_CAPABILITY,
     "limit",
   ],
-] as const)(
-  "settles a run with no card: %s",
-  (_name, reported, capability, stored) => {
-    expect(settleOutcome(reported, [], capability)).toBe(stored);
-  }
-);
+])("settles a run with no card: %s", (_name, reported, capability, stored) => {
+  expect(settleOutcome(reported, [], capability)).toBe(stored);
+});
 
 it("keeps a card that is still loading from making a run empty", () => {
   expect(

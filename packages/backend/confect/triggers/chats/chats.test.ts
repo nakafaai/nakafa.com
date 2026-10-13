@@ -328,11 +328,11 @@ describe("native Nina deletion lifecycle", () => {
   });
 
   it.each([
-    ["read", vi.mocked(listMessages)],
-    ["cut off", vi.mocked(abortStream)],
-  ] as const)(
-    "deletes a chat whose open turn cannot be settled because its journal cannot be %s, and ends the turn once",
-    async (_failure, journal) => {
+    { failure: "read", journal: vi.mocked(listMessages) },
+    { failure: "cut off", journal: vi.mocked(abortStream) },
+  ])(
+    "deletes a chat whose open turn cannot be settled because its journal cannot be $failure, and ends the turn once",
+    async ({ journal }) => {
       const { t, owner, identity, receipt } = await fixture();
       await t.mutation(claim, { turnId: receipt.turnId });
       journal.mockRejectedValue(new Error("Private component failure"));
