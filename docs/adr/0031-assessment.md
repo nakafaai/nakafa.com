@@ -294,9 +294,9 @@ has exactly one owner.
   ADR 0003 and the rule must not lapse with it. A content reset deletes only
   rebuildable Nakafa read models. It preserves signed snapshot state, attempts,
   results, progress, placements, responses, scores, access state, entitlements,
-  calibration runs, and IRT scales, and attempts and scales keep the exact signed
-  snapshot that their historical review and scoring need. No table is reset
-  while it holds data. A retired table goes only when no schema or code refers to
+  calibration runs, and IRT scales, and each attempt, result, and scale keeps the
+  exact signed snapshot that its historical review and scoring need. No table is
+  reset while it holds data. A retired table goes only when no schema or code refers to
   it and the replacement runtime has passed acceptance, and its rows are none, or
   verified in the replacement store by the counts above, or approved for disposal
   by the owner. No export is taken from production, by the working rule of
