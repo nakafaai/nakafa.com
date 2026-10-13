@@ -104,11 +104,13 @@ describe("section embedding", () => {
           Effect.provide(GatewayTest)
         );
         expect(provider.embeddingModel).toHaveBeenLastCalledWith(
-          "qwen/qwen3-embedding-8b"
+          "qwen/qwen3-embedding-8b",
+          { zdr: true }
         );
         yield* embed([draft("abc")]);
         expect(provider.embeddingModel).toHaveBeenLastCalledWith(
-          "google/gemini-embedding-2"
+          "google/gemini-embedding-2",
+          { zdr: true }
         );
       })
   );

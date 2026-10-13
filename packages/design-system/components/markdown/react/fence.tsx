@@ -31,9 +31,11 @@ export function CodeFence({
         data-code-block-header
         data-language={language}
       >
-        <div className="flex items-center gap-2 px-4 py-1.5">
+        <div className="flex min-w-0 items-center gap-2 px-4 py-1.5">
           {icon ?? <HugeIcons className="size-4" icon={TerminalIcon} />}
-          <span className="font-mono lowercase">{language || "txt"}</span>
+          <span className="truncate font-mono lowercase" title={language}>
+            {language || "txt"}
+          </span>
         </div>
         {/* Reserves the two icon buttons' space before the actions load, so
             the header keeps its size when they arrive. */}
