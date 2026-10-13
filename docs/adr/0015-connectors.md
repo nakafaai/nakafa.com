@@ -74,9 +74,9 @@ a connector. ADR 0029 owns it.
 | Dapodik XLSX | A file the school uploads. Only the listed columns are read. | A school in Indonesia | Planned |
 | OneRoster CSV | Academic sessions, orgs, users, courses, classes, and enrollments from a file | A school in any country | Planned |
 
-- Dapodik has no official data API. K13 has the owner send two written requests
-  to the Ministry, one to become a partner for sign-in and one for the official
-  data API. Until the Ministry signs and opens the API, the uploaded XLSX is the
+- Dapodik has no official data API (K13). K13 has the owner send two written
+  requests to the Ministry, one to become a partner for sign-in and one for the
+  official data API. Until the Ministry signs and opens the API, the uploaded XLSX is the
   only path. When the API runs, the XLSX path is replaced in the same release.
   `confect/connectors` owns both directions of the format, so it also writes the
   XLSX export of report data for Dapodik and e-Ijazah.
@@ -222,9 +222,10 @@ needs. Google names the error that follows a refusal `admin_policy_enforced`.
   client Trusted, or Specific Google data with that connector's scopes. The
   guide is checked against the console before each release, because Google
   renames its labels.
-- For belajar.id the administrator may sit at the Ministry and not at the
-  school, so the guide asks the school owner to confirm who runs the domain
-  first. The file imports (Dapodik XLSX, OneRoster CSV) do not depend on Google.
+- For belajar.id the blueprint expects the administrator to sit at the Ministry
+  and not at the school. No Ministry source was checked. So the guide asks the
+  school owner to confirm who runs the domain first. The file imports (Dapodik
+  XLSX, OneRoster CSV) do not depend on Google.
 - When Google ends a connect with `admin_policy_enforced`, Nakafa makes no
   connection, tells the user that the school's administrator has not allowed
   Nakafa for this account, and shows the guide to an Admin. A learner whose
