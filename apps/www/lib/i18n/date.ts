@@ -42,9 +42,11 @@ const PUBLISHED_MONTH = new Intl.DateTimeFormat("en-US", {
  * What one language needs to write an age and a moment beyond what `Intl`
  * knows. `about`, `over`, and `almost` go before a number that is not exact,
  * `lessThanMinute` is the whole phrase for an age under half a minute, and
- * `separator` goes between the day and the time of a moment. The relative-time
- * formatter is built once, because building one costs far more than using it
- * and a list writes one age per row.
+ * `separator` goes between the day and the time of a moment. The formatters
+ * are built once, because building one costs far more than using it and a list
+ * writes one age or moment per row. The day and the time come from `Intl`
+ * apart, because the languages differ in what stands between them. The two of
+ * a moment read the time zone of the viewer when they are built.
  */
 function language(
   code: ActiveAppLocaleCode,
@@ -53,7 +55,16 @@ function language(
     string
   >
 ) {
-  return { ...words, relative: new Intl.RelativeTimeFormat(code) };
+  return {
+    ...words,
+    day: new Intl.DateTimeFormat(code, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }),
+    relative: new Intl.RelativeTimeFormat(code),
+    time: new Intl.DateTimeFormat(code, { timeStyle: "short" }),
+  };
 }
 
 /**
@@ -203,19 +214,12 @@ export function formatAge(
 
 /**
  * Says when a moment was, in the order and words of the locale and in the time
- * zone of the viewer, such as "Oct 6, 2026, 3:30 PM". The day and the time come
- * from `Intl` apart, because the languages differ in what stands between them.
+ * zone of the viewer, such as "Oct 6, 2026, 3:30 PM".
  */
 export function formatMoment(timestamp: number, locale?: string | null) {
-  const code = dateLocale(locale);
-  const day = new Intl.DateTimeFormat(code, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  const time = new Intl.DateTimeFormat(code, { timeStyle: "short" });
+  const { day, separator, time } = LANGUAGES[dateLocale(locale)];
 
-  return `${day.format(timestamp)}${LANGUAGES[code].separator}${time.format(timestamp)}`;
+  return `${day.format(timestamp)}${separator}${time.format(timestamp)}`;
 }
 
 /**

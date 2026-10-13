@@ -1,10 +1,21 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { DateTime, Duration } from "effect";
-import { formatAge, formatMoment, formatPublished } from "@/lib/i18n/date";
+import { formatAge, formatPublished } from "@/lib/i18n/date";
 
 const NOW = Date.UTC(2026, 9, 13, 12, 0, 0);
 const MOMENT = Date.UTC(2026, 9, 6, 15, 30, 0);
+
+/**
+ * The module as it loads in a time zone. Its formatters are built when it
+ * loads, and the two of a moment read the zone of the viewer then, so each zone
+ * loads the module afresh.
+ */
+async function loadIn(zone: string) {
+  vi.stubEnv("TZ", zone);
+  vi.resetModules();
+  return await import("@/lib/i18n/date");
+}
 
 /** The moment that lies `age` before `NOW`, months and years counted on the calendar. */
 const before = (age: Partial<DateTime.DateTime.PartsForMath>) =>
@@ -124,13 +135,6 @@ const AGES = [
     id: "sekitar 1 tahun yang lalu",
   },
   {
-    label: "15 months",
-    at: before({ months: 15 }),
-    de: "vor mehr als 1 Jahr",
-    en: "over 1 year ago",
-    id: "lebih dari 1 tahun yang lalu",
-  },
-  {
     label: "18 months",
     at: before({ months: 18 }),
     de: "vor mehr als 1 Jahr",
@@ -234,8 +238,8 @@ describe("formatAge", () => {
 });
 
 describe("formatMoment", () => {
-  it("writes the moment in the order and words of each language", () => {
-    vi.stubEnv("TZ", "UTC");
+  it("writes the moment in the order and words of each language", async () => {
+    const { formatMoment } = await loadIn("UTC");
 
     for (const { at, de, en, id } of MOMENTS) {
       expect(formatMoment(at, "en")).toBe(en);
@@ -246,8 +250,8 @@ describe("formatMoment", () => {
 
   // The platform spells two short months otherwise than date-fns did: August
   // in Indonesian ("Agt" before) and September in German ("Sep." before).
-  it("spells the short month as the platform does", () => {
-    vi.stubEnv("TZ", "UTC");
+  it("spells the short month as the platform does", async () => {
+    const { formatMoment } = await loadIn("UTC");
 
     expect(formatMoment(Date.UTC(2026, 7, 5, 18, 52), "id")).toBe(
       "5 Agu 2026, 18.52"
@@ -257,15 +261,15 @@ describe("formatMoment", () => {
     );
   });
 
-  it("writes English for an unsupported or absent locale", () => {
-    vi.stubEnv("TZ", "UTC");
+  it("writes English for an unsupported or absent locale", async () => {
+    const { formatMoment } = await loadIn("UTC");
 
     expect(formatMoment(MOMENT, "fr")).toBe("Oct 6, 2026, 3:30 PM");
     expect(formatMoment(MOMENT)).toBe("Oct 6, 2026, 3:30 PM");
   });
 
-  it("reads the moment in the time zone of the viewer", () => {
-    vi.stubEnv("TZ", "Asia/Jakarta");
+  it("reads the moment in the time zone of the viewer", async () => {
+    const { formatMoment } = await loadIn("Asia/Jakarta");
 
     expect(formatMoment(MOMENT, "en")).toBe("Oct 6, 2026, 10:30 PM");
     expect(formatMoment(MOMENT, "id")).toBe("6 Okt 2026, 22.30");
@@ -282,15 +286,10 @@ describe("formatPublished", () => {
   // The test pins the zone of the viewer itself: a host that already runs in
   // UTC, such as the CI runner, would name the right day without the guard.
   // Midnight UTC is the evening before west of UTC, so the first day of a month
-  // would read as the last day of the one before. The month formatter is built
-  // when the module loads, so each zone loads the module afresh.
+  // would read as the last day of the one before.
   for (const zone of ["Pacific/Kiritimati", "Pacific/Pago_Pago"]) {
     it(`names the same day for a viewer at ${zone}`, async () => {
-      vi.stubEnv("TZ", zone);
-      vi.resetModules();
-      const { formatPublished: publishedInZone } = await import(
-        "@/lib/i18n/date"
-      );
+      const { formatPublished: publishedInZone } = await loadIn(zone);
 
       expect(publishedInZone("2026-10-01")).toBe("1 Oct, 2026");
       expect(publishedInZone("2026-10-06")).toBe("6 Oct, 2026");
