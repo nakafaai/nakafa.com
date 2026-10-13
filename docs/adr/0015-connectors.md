@@ -76,10 +76,10 @@ a connector. ADR 0029 owns it.
 
 - Dapodik has no official data API (K13). K13 has the owner send two written
   requests to the Ministry, one to become a partner for sign-in and one for the
-  official data API. Until the Ministry signs and opens the API, the uploaded XLSX is the
-  only path. When the API runs, the XLSX path is replaced in the same release.
-  `confect/connectors` owns both directions of the format, so it also writes the
-  XLSX export of report data for Dapodik and e-Ijazah.
+  official data API. Until the Ministry signs and opens the API, the uploaded
+  XLSX is the only path. When the API runs, the XLSX path is replaced in the same
+  release. `confect/connectors` owns both directions of the format, so it also
+  writes the XLSX export of report data for Dapodik and e-Ijazah.
 - A file import reads in an action, shows a preview before it applies anything,
   and deletes the file once the import is applied or cancelled. `confect/files`
   keeps the file (ADR 0028). The blueprint proposes 10 MB and 5,000 rows as
