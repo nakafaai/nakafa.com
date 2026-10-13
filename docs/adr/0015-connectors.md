@@ -6,7 +6,7 @@ Accepted on 13 October 2026 with owner decisions K2, K3, and K13. The owner
 approved decisions K1 to K20 on that day. Planned for program wave B, after the
 Google verification (risk R3 of the plan) for the scopes that need it.
 
-No connector exists in the code today: `git grep` on main at `ac134a0819` finds
+No connector exists in the code today: `git grep` on main at `f8a5610808` finds
 no connector module, table, route, or scope request. The rule that matches
 Classroom members stands only after its gate passes (see Gates). Implementation
 Status lists each part.
@@ -88,7 +88,7 @@ a connector. ADR 0029 owns it.
   blueprint lists `xlsx` and `exceljs`. The `xlsx` package on npm ends at 0.18.5,
   and SheetJS's documentation names its own CDN as the source of newer
   releases, so the choice is made with the install, after `pnpm security:audit`
-  and a licence check.
+  and a license check.
 - The blueprint's table of standards lists grades going out to Google Classroom.
   No scope in the approved list can write them: Google describes
   `classroom.coursework.students` as managing student coursework and grades.
@@ -133,8 +133,8 @@ Google's class is the class on Google's page where the page gives one.
 | Connector | Scopes | Google's class | For |
 | --- | --- | --- | --- |
 | Drive | `drive.file` | Non-sensitive | Files the user chooses in the Picker |
-| Forms | `forms.body.readonly` and `forms.responses.readonly`, candidates | Not on Google's public page. The Data Access panel shows it. | Questions and responses of the chosen forms |
-| Classroom, teachers and admins | `classroom.courses.readonly`, `classroom.rosters.readonly`, `classroom.coursework.students.readonly`, `classroom.courseworkmaterials.readonly`, `classroom.announcements.readonly`, `classroom.topics.readonly`, `classroom.student-submissions.students.readonly` | Not on Google's public page. The Data Access panel shows it. | Import and sync, grades included |
+| Forms | `forms.body.readonly` and `forms.responses.readonly`, candidates | No class on the pages read. The Data Access panel shows it. | Questions and responses of the chosen forms |
+| Classroom, teachers and admins | `classroom.courses.readonly`, `classroom.rosters.readonly`, `classroom.coursework.students.readonly`, `classroom.courseworkmaterials.readonly`, `classroom.announcements.readonly`, `classroom.topics.readonly`, `classroom.student-submissions.students.readonly` | No class on the pages read. The Data Access panel shows it. | Import and sync, grades included |
 | Classroom, students | `classroom.coursework.me.readonly` and `classroom.student-submissions.me.readonly` | Same | The student's own tasks and grades |
 | Classroom, invitations | `classroom.profile.emails` | Same | The email of members who do not match yet, only to invite them |
 | Calendar | `calendar.events.readonly`, candidate | Sensitive: Google names reading Calendar events as an example | Upcoming events for Nina and the home page |

@@ -38,7 +38,7 @@ the version this repository pins, documents in `src/HttpRouter.ts` that the laye
 may be built from `effect/http-api`: `HttpApiBuilder.layer(api)` registers the
 endpoints of an `HttpApi`, and its handlers may require the Confect services.
 No Nakafa code uses `effect/http-api` today (`git grep` on main at
-`ac134a0819`).
+`f8a5610808`).
 
 ## Decision
 
@@ -198,7 +198,7 @@ the device and is never printed.
 | Retries | Up to 8 attempts in 24 hours, with growing delays (target) |
 | Delivery log | One row for each attempt, in `integrationDeliveries` |
 | Idempotency | Every attempt of a change carries the same event ID |
-| Receiver address | HTTPS only. A public address only. No redirect is followed. The judgement of addresses is the one of the research scrape guard (`packages/backend/confect/nina/research/tools/safety.ts` and `url.ts`), shared and not copied. |
+| Receiver address | HTTPS only. A public address only. No redirect is followed. The judgment of addresses is the one of the research scrape guard (`packages/backend/confect/nina/research/tools/safety.ts` and `url.ts`), shared and not copied. |
 | Deadline | Each attempt has a deadline that covers the body, and the response is read up to a size cap (ADR 0020). |
 
 The receiver address rule keeps a hook from being used to reach Nakafa's own
@@ -216,7 +216,7 @@ network.
 
 The statuses for `Idempotency-Key` follow the IETF draft
 `draft-ietf-httpapi-idempotency-key-header-07`. That draft has expired and is not
-a standard (read 13 October 2026), so this ADR owns the behaviour. The public API
+a standard (read 13 October 2026), so this ADR owns the behavior. The public API
 today allows 120 requests a minute with a burst of 30 for each client address
 (`packages/backend/confect/routes/agent/quota.impl.ts`). Embed needs a list of the
 school's domains, which the tenant record does not hold
@@ -244,7 +244,7 @@ out carries grades. No standard reaches around `decide`.
 
 Nakafa follows these specifications and claims no 1EdTech certification.
 1EdTech lists products that passed its certification, and a claim waits until a
-product passes. The licence terms for implementers are read before any code is
+product passes. The license terms for implementers are read before any code is
 written. 1EdTech's QTI page states none (read 13 October 2026).
 
 **LTI.** A launch is a login that the platform starts and a signed `id_token`,
@@ -290,7 +290,7 @@ that model and nothing else.
   in the side-by-side review of ADR 0028. Alternative text of figures is kept.
 - Effect has no XML module (`repos/effect/packages/effect/src/encoding` holds
   Base64, Base64Url, Hex, Ini, Ndjson, SchemaBinary, Sse, Toml, and Yaml). The
-  codec uses an XML library chosen with its install, after the licence, release
+  codec uses an XML library chosen with its install, after the license, release
   age, and advisory checks, and wrapped once. The research found no QTI package
   published by 1EdTech on npm. Third-party QTI packages exist, one under GPL-3.0
   and one under MIT that says it is not certified, and neither is chosen here.
@@ -299,7 +299,7 @@ that model and nothing else.
 
 The HTTP layer is the Confect router with Effect `HttpApi`. Hono is not part of
 it. No tracked source file or manifest outside `repos/` imports or declares
-`hono` or `zod` (`git grep` on main at `ac134a0819`).
+`hono` or `zod` (`git grep` on main at `f8a5610808`).
 
 What `pnpm-lock.yaml` holds:
 
@@ -431,6 +431,6 @@ The 19 files that import `convex-helpers`:
   (better-auth.com/docs/plugins).
 - IETF `draft-ietf-httpapi-idempotency-key-header-07`.
 - 1EdTech pages for OneRoster, LTI, and QTI (1edtech.org/standards).
-- `pnpm-lock.yaml` and `scripts/dependencies` on main at `ac134a0819`, and the
+- `pnpm-lock.yaml` and `scripts/dependencies` on main at `f8a5610808`, and the
   npm registry on 13 October 2026.
 - ADR 0006, 0009, 0011, 0012, 0015, 0016, 0020, 0026, 0028, 0030, and 0031.
