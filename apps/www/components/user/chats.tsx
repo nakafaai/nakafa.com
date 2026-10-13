@@ -9,7 +9,6 @@ import {
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
 import chats from "@repo/backend/confect/_generated/refs/chats";
-import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -35,36 +34,34 @@ import { reportClientException } from "@/lib/analytics/client";
 import { getLocale } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
 
-/** Render the correct owned or public chat list for a profile viewer. */
+/**
+ * Render the chats of a profile. A learner sees their own chats, private and
+ * shared. A shared chat is reached by its link alone, so a profile lists no
+ * chat of anyone else.
+ */
 export function UserChats({ userId }: { userId: Id<"users"> }) {
   const user = useViewer((state) => state.account);
+  const isPending = useViewer((state) => state.isPending);
 
-  // Determine if viewing own profile or someone else's
-  const isOwnProfile = user?.appUser._id === userId;
-  return (
-    <UserChatsList
-      canDelete={isOwnProfile}
-      userId={userId}
-      // If viewing own profile, show all chats; otherwise only public ones
-      visibility={isOwnProfile ? undefined : "public"}
-    />
-  );
-}
-
-/** Select the owned or public query contract for a profile chat list. */
-function UserChatsList({
-  canDelete,
-  userId,
-  visibility,
-}: {
-  canDelete: boolean;
-  userId: Id<"users">;
-  visibility?: ChatVisibility | undefined;
-}) {
-  if (canDelete) {
+  if (user?.appUser._id === userId) {
     return <OwnChatsList />;
   }
-  return <PublicChatsList userId={userId} visibility={visibility} />;
+  if (isPending) {
+    return (
+      <ChatList canDelete={false} isLoading loadMore={undefined} results={[]} />
+    );
+  }
+  return <ChatsByLink />;
+}
+
+/** What another learner's profile says in place of a list: a chat opens by its link. */
+function ChatsByLink() {
+  const t = useTranslations("Common");
+  return (
+    <p className="text-center text-muted-foreground text-sm">
+      {t("chats-by-link")}
+    </p>
+  );
 }
 
 /** Subscribe to all study chats owned by the current viewer. */
@@ -85,39 +82,6 @@ function OwnChatsList() {
   return (
     <ChatList
       canDelete={true}
-      isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
-      loadMore={loadMore}
-      results={results}
-    />
-  );
-}
-
-/** Subscribe to public study chats for the selected profile. */
-function PublicChatsList({
-  userId,
-  visibility,
-}: {
-  userId: Id<"users">;
-  visibility?: ChatVisibility | undefined;
-}) {
-  const type = "study" as const;
-  const queryArgs = visibility
-    ? {
-        type,
-        userId,
-        visibility,
-      }
-    : {
-        type,
-        userId,
-      };
-  const pagination = usePaginatedQuery(chats.queries.getChats, queryArgs, {
-    initialNumItems: CHAT_LIST_PAGE_SIZE,
-  });
-  const { loadMore, results } = useChatList(pagination);
-  return (
-    <ChatList
-      canDelete={false}
       isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
       loadMore={loadMore}
       results={results}

@@ -13,13 +13,13 @@ import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
 
 type SetSection = Pick<
   SetPage["sections"][number],
-  "publicPath" | "questionCount" | "sectionKey" | "timeLimitSeconds" | "title"
+  "publicPath" | "sectionKey" | "timeLimitSeconds" | "title"
 >;
 type SectionStatus = CurrentAttempt["status"];
 
 /**
- * Renders the divided list of a set's visible sections with their size and
- * time, or nothing for a set without them. Rows open the sections of the
+ * Renders the divided list of a set's visible sections with their time, or
+ * nothing for a set without them. Rows open the sections of the
  * learner's attempt once it is known, and mark progress only while that attempt
  * runs, so a list painted from the catalog keeps every row in place when the
  * attempt arrives.
@@ -62,10 +62,9 @@ export function TryoutSectionRows({
         });
         return {
           current: section.sectionKey === currentSectionKey,
-          description: `${section.questionCount} ${tTryouts("question-unit")} · ${tTryouts(
-            "set-duration-minutes",
-            { minutes: section.timeLimitSeconds / 60 }
-          )}`,
+          description: tTryouts("set-duration-minutes", {
+            minutes: section.timeLimitSeconds / 60,
+          }),
           href: attempt
             ? getTryoutAttemptHref(publicPath, attempt.attemptId)
             : getTryoutPublicPathHref(publicPath),

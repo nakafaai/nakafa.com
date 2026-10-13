@@ -1,11 +1,12 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import { listChats } from "@repo/backend/confect/chats/list";
 import spec from "@repo/backend/confect/chats/queries.spec";
+import { findShare, openShareToken } from "@repo/backend/confect/chats/share";
 import { openChat } from "@repo/backend/confect/chats/title";
+import { readerChat } from "@repo/backend/confect/chats/view";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Effect, Layer } from "effect";
 
@@ -15,23 +16,11 @@ const getChat = FunctionImpl.make(
   "getChat",
   Effect.fn("chats.queries.getChat")(function* (args) {
     const viewer = yield* getOptionalAppUserForRead();
-    const viewerUserId = viewer?.appUser._id ?? null;
-    return yield* openChat(yield* readChat(args.chatId, viewerUserId));
-  })
-);
-const getChats = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "getChats",
-  Effect.fn("chats.queries.getChats")(function* (args) {
-    if (args.visibility === "private") {
-      return {
-        continueCursor: "",
-        isDone: true,
-        page: [],
-      };
-    }
-    return yield* listChats({ ...args, visibility: "public" });
+    const viewerId = viewer?.appUser._id ?? null;
+    const chat = yield* readChat(args.chatId, viewerId, args.shareToken);
+    const view = yield* openChat(chat);
+    // Only the owner is told which account owns the chat and which turn runs.
+    return chat.userId === viewerId ? view : readerChat(view);
   })
 );
 const getOwnChats = FunctionImpl.make(
@@ -50,36 +39,45 @@ const getOwnChats = FunctionImpl.make(
     return yield* listChats({ ...args, userId: viewer.appUser._id });
   })
 );
+/** The title of a chat for its owner; a chat id alone gives no title. */
 const getChatTitle = FunctionImpl.make(
   databaseSchema,
   spec,
   "getChatTitle",
   Effect.fn("chats.queries.getChatTitle")(function* (args) {
-    const database = yield* DatabaseReader;
-    const chat = yield* database
-      .table("chats")
-      .get(args.chatId)
-      .pipe(
-        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
-        Effect.orDie
-      );
-    if (!chat) {
+    const viewer = yield* getOptionalAppUserForRead();
+    return yield* readChat(args.chatId, viewer?.appUser._id ?? null).pipe(
+      Effect.flatMap(openChat),
+      Effect.map((chat) => chat.title ?? null),
+      Effect.catchTag("ChatAccessError", () => Effect.succeed(null))
+    );
+  })
+);
+/**
+ * The token of a chat's share, for the owner who copies the link. Anyone else
+ * gets none, and so does the owner of a chat that is not shared.
+ */
+const getShareToken = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "getShareToken",
+  Effect.fn("chats.queries.getShareToken")(function* (args) {
+    const viewer = yield* getOptionalAppUserForRead();
+    if (!viewer) {
       return null;
     }
-    if (chat.visibility === "private") {
-      const viewer = yield* getOptionalAppUserForRead();
-      if ((viewer?.appUser._id ?? null) !== chat.userId) {
-        return null;
-      }
+    const share = yield* findShare(args.chatId);
+    if (share?.userId !== viewer.appUser._id) {
+      return null;
     }
-    return (yield* openChat(chat)).title ?? null;
+    return yield* openShareToken(share);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getChat),
-  Layer.provide(getChats),
   Layer.provide(getOwnChats),
   Layer.provide(getChatTitle),
+  Layer.provide(getShareToken),
   Layer.provide(sessionMiddleware),
   GroupImpl.finalize
 );

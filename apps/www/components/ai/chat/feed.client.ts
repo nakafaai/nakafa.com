@@ -11,6 +11,7 @@ import type {
   FunctionReturnType,
 } from "convex/server";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { readChatArgs } from "@/components/ai/chat/access";
 import { useChat } from "@/components/ai/chat/context";
 import { mergeMessages } from "@/components/ai/chat/messages";
 import { useAi } from "@/components/ai/context";
@@ -18,7 +19,7 @@ import { useAi } from "@/components/ai/context";
 // Agent owns delta decoding, reconnection and pagination. Confect registers
 // and authorizes the query; the streaming hook uses the SDK reference boundary.
 type MessageFeed = UIMessagesQuery<
-  Pick<Ref.Args<typeof nina.messages.list>, "chatId">,
+  Pick<Ref.Args<typeof nina.messages.list>, "chatId" | "shareToken">,
   NinaMessage
 >;
 type MessagesQuery = FunctionReference<
@@ -37,17 +38,21 @@ const messagesQuery: MessagesQuery = Ref.getFunctionReference(
  * every streamed batch renders the component that does, and no control that
  * reads the chat's state. A chat the learner just started shows its first
  * prompt from the receipt, and a prompt they just sent shows at once, until
- * the feed carries the saved ones.
+ * the feed carries the saved ones. A reader who came by a share link proves
+ * access with its token, as the conversation does.
  */
 export function useChatFeed() {
   const chatId = useChat((state) => state.chatId);
+  const shareToken = useChat((state) => state.shareToken);
   const chat = useChat((state) => state.chat);
   const draft = useChat((state) => state.draft);
   const openingChat = useAi((state) => state.openingChat);
   const setOpeningChat = useAi((state) => state.setOpeningChat);
   const feed = useUIMessages(
     messagesQuery,
-    chat?.threadId ? { chatId, threadId: chat.threadId } : "skip",
+    chat?.threadId
+      ? { ...readChatArgs(chatId, shareToken), threadId: chat.threadId }
+      : "skip",
     { initialNumItems: NINA_MESSAGES_PAGE_SIZE, stream: true }
   );
   const loading = !chat || feed.status === "LoadingFirstPage";

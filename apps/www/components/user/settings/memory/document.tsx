@@ -11,8 +11,12 @@ import { String as Str } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
-import { MemoryFacts } from "@/components/user/settings/memory/facts";
+import {
+  MemoryEnds,
+  MemoryOrigin,
+} from "@/components/user/settings/memory/facts";
 import {
   isBlank,
   type Memory,
@@ -64,6 +68,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
           <input
             aria-label={t("title")}
             className="-mx-1.5 min-w-0 truncate rounded-sm bg-transparent px-1.5 py-0.5 font-semibold outline-none transition-colors ease-out placeholder:text-muted-foreground hover:bg-muted focus-visible:bg-muted"
+            dir="auto"
             maxLength={MEMORY_TITLE_LIMIT}
             onChange={(event) => write({ ...draft, title: event.target.value })}
             onKeyDown={(event) => {
@@ -79,9 +84,14 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
             placeholder={t("untitled")}
             value={draft.title}
           />
+          {memory?.validUntil === undefined ? null : (
+            <p className="text-muted-foreground text-sm">
+              <MemoryEnds validUntil={memory.validUntil} />
+            </p>
+          )}
           {memory ? (
-            <p className="truncate text-muted-foreground text-sm">
-              <MemoryFacts memory={memory} />
+            <p className="text-muted-foreground text-sm">
+              <MemoryOrigin memory={memory} />
             </p>
           ) : null}
         </div>
@@ -125,6 +135,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
           limit={MEMORY_TEXT_LIMIT}
           onChange={(text) => write({ ...draft, text })}
           onClose={close}
+          onRefuse={() => toast.error(t("too-long"))}
           placeholder={t("placeholder")}
         />
       </div>

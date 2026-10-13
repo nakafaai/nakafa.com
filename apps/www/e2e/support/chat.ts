@@ -1,14 +1,12 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
 import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { trackChanges } from "@/e2e/support/changes";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { activate } from "@/e2e/support/input";
+import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The new chat page of the English site. */
 export const CHAT_PATH = "/en/chat";
@@ -26,7 +24,9 @@ const LIST_QUERY = "chats/queries:getOwnChats";
 export const START = "nina/turns:start";
 export const RENAME = "chats/mutations:updateChatTitle";
 export const DELETE = "chats/mutations:deleteChat";
-const VISIBILITY = "chats/mutations:updateChatVisibility";
+/** The mutation the share dialog calls to turn sharing on, and the query it reads the token with. */
+const SHARE = "chats/mutations:updateChatVisibility";
+export const SHARE_TOKEN_QUERY = "chats/queries:getShareToken";
 /** What the pages say when a change fails. */
 export const FAILED = "We could not complete this action. Please try again.";
 
@@ -125,6 +125,10 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
   ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(CurrentUser)));
 
   return {
+    /** Deletes a chat of the learner, as the menu of the chat does. */
+    deleteChat: Effect.fn("NakafaE2E.deleteChat")(function* (chatId: string) {
+      yield* call("mutation", DELETE, { chatId });
+    }),
     /**
      * Adds `count` chats to the list, after the chats it has. They share the
      * thread of a chat that was started, so each can be opened and deleted,
@@ -153,9 +157,17 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
       Effect.scoped,
       Effect.provide(nodeServicesLayer)
     ),
-    /** Makes a chat of the learner readable by anyone who has its link. */
+    /**
+     * Shares a chat of the learner the way the share dialog does: the same
+     * mutation turns sharing on, and the same query gives the owner the token
+     * the server drew, which the chat's link holds. The chat is readable by
+     * that link and by nothing else.
+     */
     share: Effect.fn("NakafaE2E.share")(function* (chatId: string) {
-      yield* call("mutation", VISIBILITY, { chatId, visibility: "public" });
+      yield* call("mutation", SHARE, { chatId, visibility: "public" });
+      return yield* call("query", SHARE_TOKEN_QUERY, { chatId }).pipe(
+        Effect.flatMap(Schema.decodeUnknownEffect(Schema.String))
+      );
     }),
     /** Starts a chat the way the new chat page does, and returns where it lives. */
     startChat: Effect.fn("NakafaE2E.startChat")(function* (text: string) {
@@ -204,20 +216,9 @@ export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(() => page.goto(CHAT_PATH));
 
-  // A signed-in learner decides analytics once for the account.
-  const decline = page.getByRole("button", { exact: true, name: "Decline" });
-  yield* Effect.promise(() =>
-    expect(decline).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-  );
-  yield* activate(decline, false);
-  yield* Effect.promise(async () => {
-    await expect(decline).toBeHidden({ timeout: readinessTimeoutMilliseconds });
-    await expect
-      .poll(() => changes.signedIn && changes.origin !== "", {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(true);
-  });
+  // The server took the learner's choice, so the page was signed in and its
+  // connection to the backend is open.
+  yield* declineUsageData(page, changes);
   const learner = yield* learnerOf(page, baseURL, changes.origin);
   return { changes, learner };
 });

@@ -113,14 +113,13 @@ function AccountReadyEmail(
               </Text>
               <Text className="m-0 mt-3 text-muted-foreground text-xs leading-5">
                 <Link
-                  className="text-muted-foreground underline"
+                  className="mr-4 text-muted-foreground underline"
                   href={privacyPolicyUrl}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
                   {copy.privacyPolicy}
-                </Link>
-                {" · "}
+                </Link>{" "}
                 <Link
                   className="text-muted-foreground underline"
                   href={termsOfServiceUrl}

@@ -43,3 +43,42 @@ export const shownTexts = async (page: Page) =>
   Schema.decodeUnknownSync(Schema.Array(Schema.String))(
     await page.evaluate((key) => Reflect.get(window, key), SHOWN)
   );
+
+/** The page global that holds the most copies of a text that one frame showed. */
+const COPIES = "nakafaMostCopies";
+
+/**
+ * Starts counting, in every animation frame from now on, the elements that
+ * match `selector`, hold `text` and that a reader can see. The page keeps the
+ * most that any one frame showed. Only a frame counts, because the document
+ * can hold a second copy that a reader never sees: the page Next.js hides when
+ * a learner leaves it keeps its elements until React renders them again. A page
+ * that moves on by client navigation keeps the count, and a page that loads
+ * again starts without it.
+ */
+export const watchCopies = (page: Page, selector: string, text: string) =>
+  page.evaluate(
+    ({ key, needle, query }) => {
+      const record = { most: 0 };
+      Reflect.set(window, key, record);
+      const look = () => {
+        const shown = [...document.querySelectorAll(query)].filter(
+          (element) =>
+            element.checkVisibility({
+              checkOpacity: true,
+              checkVisibilityCSS: true,
+            }) && (element.textContent ?? "").includes(needle)
+        );
+        record.most = Math.max(record.most, shown.length);
+        requestAnimationFrame(look);
+      };
+      requestAnimationFrame(look);
+    },
+    { key: COPIES, needle: text, query: selector }
+  );
+
+/** The most copies of the text that `watchCopies` saw in one frame. */
+export const mostCopies = async (page: Page) =>
+  Schema.decodeUnknownSync(Schema.Struct({ most: Schema.Finite }))(
+    await page.evaluate((key) => Reflect.get(window, key), COPIES)
+  ).most;

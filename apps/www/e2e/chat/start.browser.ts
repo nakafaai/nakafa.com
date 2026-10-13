@@ -7,6 +7,7 @@ import {
   runOnPage,
   START,
 } from "@/e2e/support/chat";
+import { BUBBLE } from "@/e2e/support/selector";
 import {
   composerOf,
   inTheSheet,
@@ -15,6 +16,7 @@ import {
   UNAVAILABLE,
   UNCONFIRMED,
 } from "@/e2e/support/sheet";
+import { mostCopies, watchCopies } from "@/e2e/support/shown";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const PROMPT = "Why is the derivative of sine the cosine?";
@@ -36,14 +38,22 @@ const write = async (scope: Locator) => {
   );
 };
 
-/** The prompt shows at once, Nina types after it and the composer is empty. Then the chat opens. */
+/**
+ * The prompt shows at once, Nina types after it and the composer is empty. Then
+ * the chat opens, and in no frame from the press until then does a reader see
+ * the prompt twice: the surface the prompt leaves and the chat it opens never
+ * show it together.
+ */
 const showsAtOnce = (
   scope: Locator,
   changes: Changes,
   opensChat: () => Promise<void>
 ) =>
   Effect.promise(async () => {
+    const page = scope.page();
+
     await write(scope);
+    await watchCopies(page, BUBBLE, PROMPT);
     changes.hold();
     await composerOf(scope).press("Enter");
     await expect(promptIn(scope)).toBeVisible();
@@ -51,6 +61,7 @@ const showsAtOnce = (
     await expect(composerOf(scope)).toHaveValue("");
     changes.release();
     await opensChat();
+    expect(await mostCopies(page)).toBe(1);
   });
 
 /**
@@ -73,12 +84,13 @@ const givesBackWhenRefused = (page: Page, scope: Locator, changes: Changes) =>
   });
 
 /**
- * The new chat page, where an admitted prompt moves to its own chat. The page
- * the learner left stays in the document, hidden, for a moment after the chat
- * opens, so only the page a learner can see counts.
+ * The part of a chat page that holds the conversation, beside the sidebar. The
+ * new chat page and the page of the chat it opens share it, and the page the
+ * learner left stays in it, hidden, until React renders that page again.
+ * `promptWith` counts only the bubbles a reader can see, so the left page
+ * never counts.
  */
-const onThePage = (page: Page) =>
-  page.locator("main main").filter({ visible: true });
+const onThePage = (page: Page) => page.locator("main main");
 
 /** Waits until the page of the chat that the new chat page moved to holds the prompt. */
 const pageOpensChat = (page: Page) => async () => {

@@ -5,6 +5,7 @@ import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
+  shareTokenValidator,
 } from "@repo/backend/confect/chats/schema";
 import { chatViewValidator } from "@repo/backend/confect/chats/view";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -15,22 +16,11 @@ export default GroupSpec.make()
       name: "getChat",
       args: () => ({
         chatId: IdSchema("chats"),
+        shareToken: Schema.optionalKey(shareTokenValidator),
       }),
       returns: () => chatViewValidator,
       error: () => Schema.Union([AuthFailure, ChatAccessError]),
     }).middleware(Session)
-  )
-  .addFunction(
-    FunctionSpec.publicPaginatedQuery({
-      name: "getChats",
-      args: () => ({
-        userId: IdSchema("users"),
-        q: Schema.optionalKey(Schema.String),
-        visibility: Schema.optionalKey(chatVisibilityValidator),
-        type: Schema.optionalKey(chatTypeValidator),
-      }),
-      item: () => chatViewValidator,
-    })
   )
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
@@ -51,6 +41,16 @@ export default GroupSpec.make()
         chatId: IdSchema("chats"),
       }),
       returns: () => Schema.NullOr(Schema.String),
+      error: () => AuthFailure,
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "getShareToken",
+      args: () => ({
+        chatId: IdSchema("chats"),
+      }),
+      returns: () => Schema.NullOr(shareTokenValidator),
       error: () => AuthFailure,
     }).middleware(Session)
   );

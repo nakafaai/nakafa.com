@@ -45,7 +45,7 @@ describe("ai/store/draft", () => {
       })
   );
 
-  it.effect("discards a legacy tab draft without atomic ownership", () =>
+  it.effect("discards a stored draft that is not a draft record", () =>
     Effect.gen(function* () {
       window.sessionStorage.setItem("nakafa-ai-draft", "Legacy question");
 

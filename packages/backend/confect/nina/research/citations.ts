@@ -6,7 +6,7 @@ import { isPublicHttpUrlSyntax } from "@repo/backend/confect/nina/research/url";
 import { Array as Arr, MutableHashSet } from "effect";
 
 /** Normalizes public research URLs before citation eligibility checks. */
-export function normalizeResearchCitationUrl(url: string) {
+function normalizeResearchCitationUrl(url: string) {
   if (!(URL.canParse(url) && isPublicHttpUrlSyntax(url))) {
     return;
   }
@@ -18,7 +18,7 @@ export function normalizeResearchCitationUrl(url: string) {
 }
 
 /** Adds one eligible URL to the shared citation whitelist. */
-export function addEligibleCitationUrl(
+function addEligibleCitationUrl(
   urls: MutableHashSet.MutableHashSet<string>,
   url: string
 ) {

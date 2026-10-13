@@ -169,7 +169,7 @@ export declare const api: {
       getChat: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
+        { chatId: Id<"chats">; shareToken?: string },
         {
           _creationTime: number;
           _id: Id<"chats">;
@@ -178,43 +178,8 @@ export declare const api: {
           title?: string;
           type: "study";
           updatedAt: number;
-          userId: Id<"users">;
+          userId?: Id<"users">;
           visibility: "private" | "public";
-        }
-      >;
-      getChats: FunctionReference<
-        "query",
-        "public",
-        {
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          q?: string;
-          type?: "study";
-          userId: Id<"users">;
-          visibility?: "private" | "public";
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _creationTime: number;
-            _id: Id<"chats">;
-            activeTurnId?: Id<"ninaTurns">;
-            threadId: string;
-            title?: string;
-            type: "study";
-            updatedAt: number;
-            userId: Id<"users">;
-            visibility: "private" | "public";
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
         }
       >;
       getChatTitle: FunctionReference<
@@ -250,12 +215,18 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
+      >;
+      getShareToken: FunctionReference<
+        "query",
+        "public",
+        { chatId: Id<"chats"> },
+        string | null
       >;
     };
   };
@@ -3322,7 +3293,7 @@ export declare const api: {
       get: FunctionReference<
         "query",
         "public",
-        { chatId: Id<"chats"> },
+        { chatId: Id<"chats">; shareToken?: string },
         {
           chat: {
             _creationTime: number;
@@ -3332,7 +3303,7 @@ export declare const api: {
             title?: string;
             type: "study";
             updatedAt: number;
-            userId: Id<"users">;
+            userId?: Id<"users">;
             visibility: "private" | "public";
           };
           turn: {
@@ -3466,6 +3437,7 @@ export declare const api: {
             maximumRowsRead?: number;
             numItems: number;
           };
+          shareToken?: string;
           streamArgs?:
             | { kind: "list"; startOrder?: number }
             | {
@@ -9504,13 +9476,21 @@ export declare const internal: {
         "mutation",
         "internal",
         {
-          candidates: Array<{
-            kind: "level" | "goal" | "style" | "struggle" | "situation";
-            known?: number;
-            quote: string;
-            text: string;
-            until?: string;
-          }>;
+          candidates: Array<
+            | {
+                kind: "situation";
+                known?: number;
+                quote: string;
+                text: string;
+                until: string;
+              }
+            | {
+                kind: "level" | "goal" | "style" | "struggle";
+                known?: number;
+                quote: string;
+                text: string;
+              }
+          >;
           seen: Array<{ confirmedAt: number; id: Id<"ninaMemories"> }>;
           topics: Array<string>;
           turnId: Id<"ninaTurns">;
@@ -9721,7 +9701,7 @@ export declare const internal: {
         "internal",
         {
           chatId: Id<"chats">;
-          text: string;
+          text?: string;
           throughOrder: number;
           usage: { input: number; output: number };
         },

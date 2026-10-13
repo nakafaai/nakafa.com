@@ -1,8 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { activate } from "@/e2e/support/input";
+import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -15,7 +14,7 @@ const MEMORY_TITLE = /Memory/;
  * cannot be imported here, because it pulls in packages that Node does not
  * resolve outside the bundler.
  */
-const LIST_QUERY = "nina/memory:list";
+export const LIST_QUERY = "nina/memory:list";
 
 /** What the Memory page says when the learner has no memory. */
 export const EMPTY = "No memories yet";
@@ -56,12 +55,6 @@ export const openMemoryPage = Effect.fn("NakafaE2E.openMemoryPage")(function* (
   yield* signInLearner(page.context(), baseURL);
   yield* Effect.promise(() => page.goto(MEMORY_PATH));
   yield* Effect.promise(() => expect(page).toHaveTitle(MEMORY_TITLE));
-
-  // A signed-in learner decides analytics once for the account.
-  const decline = page.getByRole("button", { exact: true, name: "Decline" });
-  yield* activate(decline, false);
-  yield* Effect.promise(() =>
-    expect(decline).toBeHidden({ timeout: readinessTimeoutMilliseconds })
-  );
+  yield* declineUsageData(page, changes);
   return changes;
 });

@@ -72,6 +72,38 @@ describe("Nina summary storage", () => {
     ]);
   });
 
+  it("counts the usage of a refresh that sends no text, and changes nothing else", async () => {
+    const { t, chatId } = await createNinaTest();
+    await t.mutation(save, {
+      chatId,
+      text: "- Kept.",
+      throughOrder: 7,
+      usage: call,
+    });
+    await t.mutation(save, { chatId, throughOrder: 11, usage: call });
+    expect(await t.query(read, { chatId })).toEqual({
+      text: "- Kept.",
+      throughOrder: 7,
+    });
+    expect(
+      await t.query((ctx) => ctx.db.query("ninaSummaries").collect())
+    ).toEqual([
+      expect.objectContaining({
+        throughOrder: 7,
+        usage: { calls: 2, input: 1800, output: 240 },
+      }),
+    ]);
+  });
+
+  it("creates no summary for a refresh that sends no text, because a summary holds text", async () => {
+    const { t, chatId } = await createNinaTest();
+    await t.mutation(save, { chatId, throughOrder: 3, usage: call });
+    expect(await t.query(read, { chatId })).toBeNull();
+    expect(
+      await t.query((ctx) => ctx.db.query("ninaSummaries").collect())
+    ).toEqual([]);
+  });
+
   it("stores the text sealed, so a table export shows no text, and reads it back as text", async () => {
     const { t, chatId } = await createNinaTest();
     await t.mutation(save, {
