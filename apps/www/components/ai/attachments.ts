@@ -27,6 +27,9 @@ export function exceedsDocumentLimit(
   return bytes > NINA_DOCUMENT_SIZE;
 }
 
+/** The id of the one notice that names the files a pick did not attach. */
+export const REJECTION_NOTICE = "nina-files";
+
 /**
  * The words that say why one pick was not attached in full: a title, and for
  * each reason the reason in a few words and every file it dropped, however

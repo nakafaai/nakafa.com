@@ -39,7 +39,7 @@ import {
   NinaAttachments,
   RejectedFiles,
 } from "@/components/ai/attachment";
-import { rejectionNotice } from "@/components/ai/attachments";
+import { REJECTION_NOTICE, rejectionNotice } from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";
 import {
   NINA_NOTICE_POSITION,
@@ -47,9 +47,6 @@ import {
   promptRefusal,
   reportNinaFailure,
 } from "@/components/ai/feedback";
-
-/** The one notice that names the files a pick did not attach. */
-const FILES_NOTICE = "nina-files";
 
 interface Props {
   autoFocus?: boolean;
@@ -101,7 +98,7 @@ export function NinaInput({
       // Once the message is sent, the notice about the files an earlier pick
       // did not attach has done its work.
       if (await admission) {
-        toast.dismiss(FILES_NOTICE);
+        toast.dismiss(REJECTION_NOTICE);
       }
     });
     return admission;
@@ -119,7 +116,7 @@ export function NinaInput({
    */
   function handlePick(rejections: readonly PromptInputFileConstraintError[]) {
     if (!Arr.isReadonlyArrayNonEmpty(rejections)) {
-      toast.dismiss(FILES_NOTICE);
+      toast.dismiss(REJECTION_NOTICE);
       return;
     }
     const notice = rejectionNotice(rejections, t);
@@ -133,7 +130,7 @@ export function NinaInput({
         />
       ),
       duration: Number.POSITIVE_INFINITY,
-      id: FILES_NOTICE,
+      id: REJECTION_NOTICE,
       position: NINA_NOTICE_POSITION,
     });
   }

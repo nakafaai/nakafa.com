@@ -9,8 +9,10 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
+import { REJECTION_NOTICE } from "@/components/ai/attachments";
 import { type AiStoreApi, createAiStore } from "@/components/ai/store/create";
 import {
   resolveAiDraftText,
@@ -83,7 +85,10 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
         store.setState({ text: "" });
       }
       // The files of the draft go with its text, so every composer starts over.
+      // The notice about an earlier pick names the previous learner's files, so
+      // it goes with them.
       store.getState().resetComposers();
+      toast.dismiss(REJECTION_NOTICE);
     }
 
     const pendingDraft = pendingDraftRef.current;
