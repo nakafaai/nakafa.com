@@ -12,7 +12,9 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
-import { Array as Arr, DateTime } from "effect";
+import { oldPage } from "@repo/backend/test/nina/legacy";
+import { homePage } from "@repo/backend/test/nina/page";
+import { Array as Arr } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -128,7 +130,6 @@ describe("a retried Nina prompt", () => {
     expect(vi.mocked(resolveNinaContext)).toHaveBeenLastCalledWith(
       page,
       expect.objectContaining({ _id: f.identity.userId }),
-      DateTime.formatIso(DateTime.makeUnsafe(NOW)),
       first.chatId
     );
     const [original, retry] = await f.t.query((ctx) =>
@@ -137,8 +138,10 @@ describe("a retried Nina prompt", () => {
         ctx.db.get("ninaTurns", retried.turnId),
       ])
     );
-    expect(original?.page?.url).toBe("https://nakafa.com/en/home");
-    expect(retry?.page?.url).toBe("https://nakafa.com/en/chat");
+    expect(original?.page?.nina.learning.url).toBe(
+      "https://nakafa.com/en/home"
+    );
+    expect(retry?.page?.nina.learning.url).toBe("https://nakafa.com/en/chat");
   });
 
   it.each([
@@ -212,8 +215,40 @@ describe("a retried Nina prompt", () => {
     expect(vi.mocked(resolveNinaContext)).toHaveBeenLastCalledWith(
       args.input.page,
       expect.objectContaining({ _id: f.identity.userId }),
-      DateTime.formatIso(DateTime.makeUnsafe(NOW)),
       first.chatId
     );
+  });
+
+  it("gives a retry of a turn stored in the old shape a page without the fields only old turns hold", async () => {
+    const f = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, args)
+    );
+    await f.owner.mutation(cancel, { chatId: first.chatId });
+    // The turn was stored before turns stored only what their readers use.
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", first.turnId, { page: oldPage(homePage) })
+    );
+    const retried = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, {
+        ...args,
+        chatId: first.chatId,
+        requestId: "retry-old",
+        input: { kind: "retry", order: first.order },
+      })
+    );
+    const [original, retry] = await f.t.query((ctx) =>
+      Promise.all([
+        ctx.db.get("ninaTurns", first.turnId),
+        ctx.db.get("ninaTurns", retried.turnId),
+      ])
+    );
+    // The retry is a new turn, so it holds the page as a turn holds it now. The
+    // turn it asks again stays as it was stored.
+    expect(retry?.page).toEqual(homePage);
+    expect(original?.page).toEqual(oldPage(homePage));
+    expect(retry?.user).toEqual(original?.user);
   });
 });

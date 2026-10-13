@@ -8,7 +8,6 @@ import { Effect, Exit, Schema } from "effect";
 
 const learning = {
   assetId: "asset:id:material:mathematics:vector:addition",
-  contentId: "asset:id:material:mathematics:vector:addition",
   locale: "en",
   materialKey: "mathematics",
   section: "subject-lesson",
@@ -18,41 +17,32 @@ const learning = {
   url: "https://nakafa.com/en/subjects/mathematics/vector/addition",
   verified: true,
 };
-const placementProgramKey = LearningProgramKeySchema.make(
-  "cambridge-lower-secondary"
-);
+const placement = {
+  mode: "placement",
+  nodeKey: "curriculum:vector:addition",
+  parentHref: "/en/curriculum/mathematics/vector",
+  parentTitle: "Vector",
+  programKey: LearningProgramKeySchema.make("cambridge-lower-secondary"),
+};
 
 describe("nina/contract/pack", () => {
   it.effect(
-    "opens a verified page session with a durable snapshot and page-fetch policy",
+    "opens a verified page session that holds the page, its placement and the page-fetch policy, and no other copy of them",
     () =>
       Effect.gen(function* () {
         const session = yield* openNinaLearningSession({
-          capturedAt: "2026-05-09T00:00:00.000Z",
           learning,
-          placement: {
-            mode: "placement",
-            nodeKey: "curriculum:vector:addition",
-            parentHref: "/en/curriculum/mathematics/vector",
-            parentTitle: "Vector",
-            programKey: placementProgramKey,
-          },
-          source: "current-page",
+          placement,
         });
 
-        expect(session.context.snapshot).toMatchObject({
-          capturedAt: "2026-05-09T00:00:00.000Z",
-          learning,
-          source: "current-page",
-          tools: {
-            allowPageFetch: true,
-            evidenceScope: "verified-page",
+        // The whole pack is compared, so a copy of the context, a marker of a
+        // switch, or a permission flag beside these fields would fail it.
+        expect(session).toEqual({
+          context: {
+            learning,
+            placement,
+            tools: { allowPageFetch: true, evidenceScope: "verified-page" },
           },
-        });
-        expect(session.context.transition).toEqual({
-          reason: "page-context",
-          toContextKey:
-            "placement:cambridge-lower-secondary:curriculum:vector:addition:subjects/mathematics/vector/addition",
         });
       })
   );
@@ -61,12 +51,10 @@ describe("nina/contract/pack", () => {
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
         openNinaLearningSession({
-          capturedAt: "2026-05-09T00:00:00.000Z",
           learning: {
             ...learning,
             locale: "fr",
           },
-          source: "current-page",
         })
       );
 
@@ -79,12 +67,10 @@ describe("nina/contract/pack", () => {
     () =>
       Effect.gen(function* () {
         const session = yield* openNinaLearningSession({
-          capturedAt: "2026-05-09T00:00:00.000Z",
           learning: {
             ...learning,
             verified: false,
           },
-          source: "pinned-chat",
         });
 
         expect(session.context).not.toHaveProperty("placement");
@@ -92,13 +78,9 @@ describe("nina/contract/pack", () => {
         expect(
           yield* Schema.decodeEffect(NinaContextPackSchema)(session.context)
         ).toEqual(session.context);
-        expect(session.context.snapshot.tools).toMatchObject({
+        expect(session.context.tools).toEqual({
           allowPageFetch: false,
           evidenceScope: "general-learning",
-        });
-        expect(session.context.transition).toEqual({
-          reason: "same-context",
-          toContextKey: "canonical:subjects/mathematics/vector/addition",
         });
       })
   );

@@ -5,24 +5,78 @@ import {
 } from "@repo/backend/confect/nina/contract/agent";
 import {
   NinaContextPackSchema,
-  NinaContextSnapshotSchema,
-  NinaContextTransitionSchema,
+  NinaLearningContextSchema,
+  NinaToolContextSchema,
 } from "@repo/backend/confect/nina/contract/pack";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/slug";
-import { Schema, Struct } from "effect";
-/** Verified learning page state consumed by one Nina turn. */
-export const NinaPageSchema = Schema.Struct({
+import { Effect, Schema, Struct } from "effect";
+
+/**
+ * Verified learning page state consumed by one Nina turn. Its address and signed
+ * state are `nina.learning.url` and `nina.learning.verified`, and nowhere else.
+ */
+const NinaPageSchema = Schema.Struct({
   locale: LocaleSchema,
   needsFetch: Schema.Boolean,
   nina: NinaContextPackSchema,
   slug: Schema.String,
-  url: Schema.String,
-  verified: Schema.Boolean,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+/**
+ * Step one of two of the change that stores only what a turn's readers use.
+ * Turns stored before it hold fields that nothing reads, and the table keeps
+ * admitting them until `nina/reshape:rewrite` has removed them from every turn
+ * on dev and on production. Step two deletes the stored schemas below,
+ * `NinaLegacyField` with the two fields of `NinaTurnFacts` that use it, and
+ * `dropLegacyPage`, and the table takes `NinaPageSchema` again.
+ *
+ * `NinaLegacyField` stands for the copy of their context (`snapshot`) and the
+ * marker of a switch of context (`transition`) that those turns hold. No turn
+ * is written with one, and the table admits any value there. A copy typed in
+ * full would have the shape of a pack, so Confect's check for recursive schemas
+ * would read the pack, and the turn with it, as recursive and type their
+ * validators as `any`.
+ */
+const NinaLegacyField = Schema.optionalKey(Schema.Any);
+/**
+ * The pack as the table admits it: the pack of a turn written now, and what
+ * turns stored before the change hold beside it. Their asset id is also in
+ * `contentId`, and their three permission flags, `true` on every turn, sit in
+ * `tools`.
+ */
+const NinaStoredPackSchema = NinaContextPackSchema.mapFields((fields) => ({
+  ...fields,
+  learning: Schema.mutableKey(
+    NinaLearningContextSchema.mapFields((learning) => ({
+      ...learning,
+      contentId: Schema.optionalKey(Schema.String),
+    }))
+  ),
+  snapshot: NinaLegacyField,
+  tools: Schema.mutableKey(
+    NinaToolContextSchema.mapFields((tools) => ({
+      ...tools,
+      allowDeepResearch: Schema.optionalKey(Schema.Boolean),
+      allowMath: Schema.optionalKey(Schema.Boolean),
+      allowNakafa: Schema.optionalKey(Schema.Boolean),
+    }))
+  ),
+  transition: NinaLegacyField,
+}));
+/**
+ * The page as the table admits it: the page of a turn written now, and beside
+ * it the address and the signed state of the page that older turns hold in
+ * `url` and `verified`.
+ */
+export const NinaStoredPageSchema = NinaPageSchema.mapFields((fields) => ({
+  ...fields,
+  nina: Schema.mutableKey(NinaStoredPackSchema),
+  url: Schema.optionalKey(Schema.String),
+  verified: Schema.optionalKey(Schema.Boolean),
+}));
 /** Runtime facts that are stable for one Nina turn. */
 const NinaRuntimeSchema = Schema.Struct({
   currentDate: Schema.String,
@@ -136,10 +190,14 @@ export const NinaTurnFacts = Schema.Struct({
   requestId: Schema.optionalKey(NinaRequestId),
   fingerprint: Schema.optionalKey(Schema.String),
   transactionId: Schema.optionalKey(Id("creditTransactions")),
-  page: Schema.optionalKey(NinaPageSchema),
+  page: Schema.optionalKey(NinaStoredPageSchema),
   user: Schema.optionalKey(NinaUserSchema),
-  snapshot: Schema.optionalKey(NinaContextSnapshotSchema),
-  transition: Schema.optionalKey(NinaContextTransitionSchema),
+  /**
+   * The oldest turns hold a copy of their context and a marker beside their
+   * page, from before a turn kept its context in `page`. See `NinaLegacyField`.
+   */
+  snapshot: NinaLegacyField,
+  transition: NinaLegacyField,
   tokens: Schema.optionalKey(
     Schema.Struct({
       input: Schema.optionalKey(Schema.Finite),
@@ -188,6 +246,17 @@ export function readerTurn(
 export type NinaPage = typeof NinaPageSchema.Type;
 export type NinaRuntime = typeof NinaRuntimeSchema.Type;
 export type NinaUser = typeof NinaUserSchema.Type;
+/**
+ * The page of a stored turn as a turn is written now: decoding leaves out the
+ * keys the page schema does not declare. A retry copies the page of the turn it
+ * asks again through this, so a new turn never holds what only older turns do,
+ * and the rewrite takes every stored page through it. Step two deletes it.
+ */
+export const dropLegacyPage = Effect.fn("nina.turn.dropLegacyPage")(function* (
+  page: typeof NinaStoredPageSchema.Type
+) {
+  return yield* Schema.decodeEffect(NinaPageSchema)(page).pipe(Effect.orDie);
+});
 /** Returns the immutable learning page that should drive one Nina turn. */
 export function readNinaLearningPage(page: NinaPage) {
   const learning = page.nina.learning;
@@ -202,7 +271,8 @@ export function readNinaLearningPage(page: NinaPage) {
  * Builds the shared specialist context from validated Nina turn inputs.
  * `memory` is whether the learner's memory is on for the turn. The turn reads
  * the pause once, and the capability policy decides from it whether the memory
- * capability is offered and whether a call may run.
+ * capability is offered and whether a call may run. Every other capability is
+ * offered on every page.
  */
 export function createNinaAgentContext({
   memory,
@@ -219,7 +289,6 @@ export function createNinaAgentContext({
   return {
     currentDate: runtime.currentDate,
     memory,
-    nina: page.nina,
     slug: learningPage.slug,
     url: learningPage.url,
     verified: learningPage.verified,

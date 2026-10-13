@@ -19,7 +19,6 @@ import {
   toolCall,
 } from "@repo/backend/test/nina/capability";
 import {
-  openHomeSession,
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
@@ -56,15 +55,9 @@ const toolInputs = {
  * Runs one capability through a scripted turn in one state and returns what
  * the model's tool call produced and what the turn logged.
  */
-async function runCapability(
+function runCapability(
   capability: keyof typeof toolInputs,
-  state:
-    | "allowed"
-    | "cardless"
-    | "denied"
-    | "failed"
-    | "missing"
-    | "sourceLimit",
+  state: "allowed" | "cardless" | "failed" | "sourceLimit",
   prompt = "Use the requested capability."
 ) {
   // A run that is allowed gathers a card and ends with its text, so it reads as
@@ -124,29 +117,12 @@ async function runCapability(
     doGenerate: [toolCall(capability, toolInputs[capability]), finalAnswer],
   });
   return runSpecialist((userId) =>
-    Effect.gen(function* () {
-      const session = yield* openHomeSession;
-      return yield* playTurn({
-        context: {
-          ...specialistRequest.context,
-          nina:
-            state === "missing"
-              ? undefined
-              : {
-                  ...session.context,
-                  tools: {
-                    ...session.context.tools,
-                    allowNakafa: state !== "denied",
-                    allowMath: state !== "denied",
-                    allowDeepResearch: state !== "denied",
-                  },
-                },
-        },
-        model,
-        prompt,
-        registry,
-        userId,
-      });
+    playTurn({
+      context: specialistRequest.context,
+      model,
+      prompt,
+      registry,
+      userId,
     })
   );
 }
@@ -166,8 +142,8 @@ describe("Nina capability execution policy", () => {
   for (const capability of ["nakafa", "math", "deepResearch"] as const) {
     const states =
       capability === "deepResearch"
-        ? (["allowed", "denied", "failed", "missing", "sourceLimit"] as const)
-        : (["allowed", "denied", "failed", "missing"] as const);
+        ? (["allowed", "failed", "sourceLimit"] as const)
+        : (["allowed", "failed"] as const);
     it.each(states)(
       `${capability} keeps %s execution within the authenticated turn`,
       async (state) => {
@@ -188,41 +164,31 @@ describe("Nina capability execution policy", () => {
         );
         expect(result).toHaveLength(1);
         expect(encodeJsonText(result)).not.toContain("Private provider detail");
-        if (state === "denied" || state === "missing") {
-          expect(result[0]).toMatchObject({
-            outcome: "denied",
-            text: expect.stringContaining("Status: denied"),
-          });
-          expect(runNakafaAgent).not.toHaveBeenCalled();
-          expect(runMathAgent).not.toHaveBeenCalled();
-          expect(runResearchAgent).not.toHaveBeenCalled();
+        const called = {
+          nakafa: runNakafaAgent,
+          math: runMathAgent,
+          deepResearch: runResearchAgent,
+        }[capability];
+        expect(called).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId: expect.any(String),
+            locale: "en",
+          })
+        );
+        const expectedText = {
+          allowed: "Verified",
+          failed: "failed",
+          sourceLimit: `at most ${researchMaxSources}`,
+        }[state];
+        expect(result[0]).toMatchObject({
+          text: expect.stringContaining(expectedText),
+        });
+        if (state === "sourceLimit") {
+          expect(result[0]).toHaveProperty("outcome", "limit");
+        } else if (state === "failed") {
+          expect(result[0]).toHaveProperty("outcome", "failed");
         } else {
-          const called = {
-            nakafa: runNakafaAgent,
-            math: runMathAgent,
-            deepResearch: runResearchAgent,
-          }[capability];
-          expect(called).toHaveBeenCalledWith(
-            expect.objectContaining({
-              userId: expect.any(String),
-              locale: "en",
-            })
-          );
-          const expectedText = {
-            allowed: "Verified",
-            failed: "failed",
-            sourceLimit: `at most ${researchMaxSources}`,
-          }[state];
-          expect(result[0]).toMatchObject({
-            text: expect.stringContaining(expectedText),
-          });
-          if (state === "sourceLimit") {
-            expect(result[0]).toHaveProperty("outcome", "limit");
-          } else if (state === "failed") {
-            expect(result[0]).toHaveProperty("outcome", "failed");
-          } else {
-            expect(result[0]).not.toHaveProperty("outcome");
-          }
+          expect(result[0]).not.toHaveProperty("outcome");
         }
       }
     );

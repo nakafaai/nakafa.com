@@ -3,19 +3,9 @@ import { NinaFocusSchema } from "@repo/backend/confect/nina/contract/focus";
 import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Schema, Struct } from "effect";
 
-const NINA_CONTEXT_TRANSITION_REASONS = [
-  "same-context",
-  "page-context",
-] as const;
-const NINA_CONTEXT_SOURCES = [
-  "current-page",
-  "pinned-chat",
-  "message",
-] as const;
 /** Page identity Nina can trust because the app validated it before the turn. */
-const NinaLearningContextSchema = Schema.Struct({
+export const NinaLearningContextSchema = Schema.Struct({
   assetId: Schema.optionalKey(Schema.String),
-  contentId: Schema.optionalKey(Schema.String),
   locale: LocaleSchema,
   materialKey: Schema.optionalKey(Schema.String),
   section: Schema.optionalKey(Schema.String),
@@ -33,49 +23,29 @@ const LearningPlacementContextSchema = Schema.Struct({
   parentTitle: Schema.String,
   programKey: LearningProgramKeySchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-/** Tool permissions for a Nina turn, separated from tool implementation code. */
-const NinaToolContextSchema = Schema.Struct({
-  allowDeepResearch: Schema.Boolean,
-  allowMath: Schema.Boolean,
-  allowNakafa: Schema.Boolean,
+/**
+ * What the model is told about the evidence of a turn: whether the signed
+ * content of the page is given to it, and the scope that evidence has. Both
+ * follow from whether the page is verified.
+ */
+export const NinaToolContextSchema = Schema.Struct({
   allowPageFetch: Schema.Boolean,
   evidenceScope: Schema.Literals(["verified-page", "general-learning"]),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-/** Compact context copy that can be stored on messages and replayed later. */
-export const NinaContextSnapshotSchema = Schema.Struct({
-  learning: NinaLearningContextSchema,
-  placement: Schema.optionalKey(LearningPlacementContextSchema),
-  capturedAt: Schema.String,
-  source: Schema.Literals(NINA_CONTEXT_SOURCES),
-  tools: NinaToolContextSchema,
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-/** Explicit marker for messages that intentionally switch Nina context. */
-export const NinaContextTransitionSchema = Schema.Struct({
-  fromContextKey: Schema.optionalKey(Schema.String),
-  reason: Schema.Literals(NINA_CONTEXT_TRANSITION_REASONS),
-  toContextKey: Schema.String,
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-/** Validated learning context captured before one Nina turn. */
+/** Validated learning context of the page a learner is on before one Nina turn. */
 const NinaLearningSessionInputSchema = Schema.Struct({
-  capturedAt: Schema.String,
   focus: Schema.optionalKey(NinaFocusSchema),
   learning: NinaLearningContextSchema,
   placement: Schema.optionalKey(LearningPlacementContextSchema),
-  source: Schema.Literals(NINA_CONTEXT_SOURCES),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 type NinaLearningContext = typeof NinaLearningContextSchema.Type;
-type LearningPlacementContext = typeof LearningPlacementContextSchema.Type;
 type NinaToolContext = typeof NinaToolContextSchema.Type;
-type NinaContextSnapshot = typeof NinaContextSnapshotSchema.Type;
-type NinaContextTransition = typeof NinaContextTransitionSchema.Type;
-/** Nina context pack consumed by prompts, specialists, and message metadata. */
+/** What a turn knows about its page: stored with the turn and printed in its prompt. */
 export const NinaContextPackSchema = Schema.Struct({
   focus: Schema.optionalKey(NinaFocusSchema),
   learning: NinaLearningContextSchema,
   placement: Schema.optionalKey(LearningPlacementContextSchema),
-  snapshot: NinaContextSnapshotSchema,
   tools: NinaToolContextSchema,
-  transition: NinaContextTransitionSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type NinaContextPack = typeof NinaContextPackSchema.Type;
 /** Learning context persisted with one Nina turn. */
@@ -90,64 +60,14 @@ class NinaContextError extends Schema.TaggedError<NinaContextError>()(
     message: Schema.String,
   }
 ) {}
-/** Creates the stable key used for context snapshots and transition markers. */
-function createNinaContextKey({
-  learning,
-  placement,
-}: {
-  readonly learning: NinaLearningContext;
-  readonly placement?: LearningPlacementContext;
-}) {
-  if (placement) {
-    return `placement:${placement.programKey}:${placement.nodeKey}:${learning.slug}`;
-  }
-  return `canonical:${learning.slug}`;
-}
-/** Resolves per-turn specialist evidence permissions from validated context. */
+/** Resolves the evidence the model is told about from validated context. */
 function resolveNinaToolContext(
   learning: NinaLearningContext
 ): NinaToolContext {
   const allowPageFetch = learning.verified;
   return {
-    allowDeepResearch: true,
-    allowMath: true,
-    allowNakafa: true,
     allowPageFetch,
     evidenceScope: allowPageFetch ? "verified-page" : "general-learning",
-  };
-}
-/** Builds the durable snapshot that survives chat reload and retries. */
-function createNinaContextSnapshot({
-  capturedAt,
-  learning,
-  placement,
-  source,
-  tools,
-}: NinaContextSnapshot): NinaContextSnapshot {
-  return {
-    capturedAt,
-    learning,
-    ...(placement === undefined ? {} : { placement }),
-    source,
-    tools,
-  };
-}
-/** Builds an explicit transition marker for the current Nina turn. */
-function createNinaContextTransition({
-  learning,
-  placement,
-  reason,
-}: {
-  readonly learning: NinaLearningContext;
-  readonly placement?: LearningPlacementContext;
-  readonly reason: NinaContextTransition["reason"];
-}): NinaContextTransition {
-  return {
-    reason,
-    toContextKey: createNinaContextKey({
-      learning,
-      ...(placement === undefined ? {} : { placement }),
-    }),
   };
 }
 /** Opens one validated Nina learning session as an Effect-native program. */
@@ -164,31 +84,11 @@ export const openNinaLearningSession = Effect.fn(
         })
     )
   );
-  const tools = resolveNinaToolContext(sessionInput.learning);
-  const snapshot = createNinaContextSnapshot({
-    capturedAt: sessionInput.capturedAt,
-    learning: sessionInput.learning,
-    ...(sessionInput.placement === undefined
-      ? {}
-      : { placement: sessionInput.placement }),
-    source: sessionInput.source,
-    tools,
-  });
-  const transition = createNinaContextTransition({
-    learning: sessionInput.learning,
-    ...(sessionInput.placement === undefined
-      ? {}
-      : { placement: sessionInput.placement }),
-    reason:
-      sessionInput.source === "pinned-chat" ? "same-context" : "page-context",
-  });
   return {
     context: {
       learning: sessionInput.learning,
       ...Struct.pick(sessionInput, ["focus", "placement"]),
-      snapshot,
-      tools,
-      transition,
+      tools: resolveNinaToolContext(sessionInput.learning),
     },
   } satisfies NinaLearningSession;
 });

@@ -24,7 +24,7 @@ import {
 } from "@repo/backend/test/nina/admission";
 import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, DateTime, Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -83,9 +83,6 @@ describe("native Nina admission", () => {
     const first = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
-    );
-    expect(vi.mocked(resolveNinaContext).mock.lastCall?.[2]).toBe(
-      DateTime.formatIso(DateTime.makeUnsafe(NOW))
     );
     expect(
       Ref.decodeReturnsSync(
