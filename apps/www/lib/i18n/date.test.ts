@@ -1,119 +1,175 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { Duration } from "effect";
+import { DateTime, Duration } from "effect";
 import { formatAge, formatMoment, formatPublished } from "@/lib/i18n/date";
 
 const NOW = Date.UTC(2026, 9, 13, 12, 0, 0);
 const MOMENT = Date.UTC(2026, 9, 6, 15, 30, 0);
 
-/** The moment that lies `age` before `NOW`. */
-const before = (age: Duration.Duration) => NOW - Duration.toMillis(age);
+/** The moment that lies `age` before `NOW`, months and years counted on the calendar. */
+const before = (age: Partial<DateTime.DateTime.PartsForMath>) =>
+  DateTime.toEpochMillis(DateTime.subtract(DateTime.makeUnsafe(NOW), age));
 
 /**
- * Each age with its words in English, Indonesian, and German. The ages that
- * date-fns wrote as `3 days ago`, `3 hari yang lalu`, and `vor 3 Tagen` keep
- * those words. For the other ages date-fns added "about", "over", "almost", or
- * "less than", which `Intl.RelativeTimeFormat` does not have, and wrote "less
- * than a minute ago" where the platform says "now".
+ * Each age with the words that date-fns 4.4.0 wrote for it in German, English,
+ * and Indonesian, taken once with `addSuffix` on before the package left. They
+ * are the words the interface showed, so `formatAge` must write the same ones:
+ * the hedges ("about", "over", "almost"), the phrase for under a minute, and
+ * the line between one unit and the next.
  */
 const AGES = [
-  { age: Duration.zero, de: "jetzt", en: "now", id: "sekarang" },
-  { age: Duration.seconds(29), de: "jetzt", en: "now", id: "sekarang" },
   {
-    age: Duration.seconds(30),
+    label: "29 seconds",
+    at: before({ seconds: 29 }),
+    de: "vor weniger als 1 Minute",
+    en: "less than a minute ago",
+    id: "kurang dari 1 menit yang lalu",
+  },
+  {
+    label: "30 seconds",
+    at: before({ seconds: 30 }),
     de: "vor 1 Minute",
     en: "1 minute ago",
     id: "1 menit yang lalu",
   },
   {
-    age: Duration.seconds(89),
-    de: "vor 1 Minute",
-    en: "1 minute ago",
-    id: "1 menit yang lalu",
-  },
-  {
-    age: Duration.seconds(90),
-    de: "vor 2 Minuten",
-    en: "2 minutes ago",
-    id: "2 menit yang lalu",
-  },
-  {
-    age: Duration.minutes(44),
+    label: "44 minutes",
+    at: before({ minutes: 44 }),
     de: "vor 44 Minuten",
     en: "44 minutes ago",
     id: "44 menit yang lalu",
   },
   {
-    age: Duration.minutes(45),
-    de: "vor 1 Stunde",
-    en: "1 hour ago",
-    id: "1 jam yang lalu",
+    label: "44 minutes 30 seconds",
+    at: before({ minutes: 44, seconds: 30 }),
+    de: "vor etwa 1 Stunde",
+    en: "about 1 hour ago",
+    id: "sekitar 1 jam yang lalu",
   },
   {
-    age: Duration.hours(5),
-    de: "vor 5 Stunden",
-    en: "5 hours ago",
-    id: "5 jam yang lalu",
+    label: "89 minutes 30 seconds",
+    at: before({ minutes: 89, seconds: 30 }),
+    de: "vor etwa 2 Stunden",
+    en: "about 2 hours ago",
+    id: "sekitar 2 jam yang lalu",
   },
   {
-    age: Duration.hours(23),
-    de: "vor 23 Stunden",
-    en: "23 hours ago",
-    id: "23 jam yang lalu",
+    label: "23 hours 59 minutes 29 seconds",
+    at: before({ hours: 23, minutes: 59, seconds: 29 }),
+    de: "vor etwa 24 Stunden",
+    en: "about 24 hours ago",
+    id: "sekitar 24 jam yang lalu",
   },
   {
-    age: Duration.hours(24),
+    label: "23 hours 59 minutes 30 seconds",
+    at: before({ hours: 23, minutes: 59, seconds: 30 }),
     de: "vor 1 Tag",
     en: "1 day ago",
     id: "1 hari yang lalu",
   },
   {
-    age: Duration.hours(36),
+    label: "36 hours",
+    at: before({ hours: 36 }),
+    de: "vor 1 Tag",
+    en: "1 day ago",
+    id: "1 hari yang lalu",
+  },
+  {
+    label: "42 hours",
+    at: before({ hours: 42 }),
     de: "vor 2 Tagen",
     en: "2 days ago",
     id: "2 hari yang lalu",
   },
   {
-    age: Duration.days(3),
-    de: "vor 3 Tagen",
-    en: "3 days ago",
-    id: "3 hari yang lalu",
+    label: "29 days 23 hours 59 minutes",
+    at: before({ days: 29, hours: 23, minutes: 59 }),
+    de: "vor 30 Tagen",
+    en: "30 days ago",
+    id: "30 hari yang lalu",
   },
   {
-    age: Duration.days(29),
-    de: "vor 29 Tagen",
-    en: "29 days ago",
-    id: "29 hari yang lalu",
+    label: "30 days",
+    at: before({ days: 30 }),
+    de: "vor etwa 1 Monat",
+    en: "about 1 month ago",
+    id: "sekitar 1 bulan yang lalu",
   },
   {
-    age: Duration.days(30),
-    de: "vor 1 Monat",
-    en: "1 month ago",
-    id: "1 bulan yang lalu",
+    label: "45 days",
+    at: before({ days: 45 }),
+    de: "vor etwa 2 Monaten",
+    en: "about 2 months ago",
+    id: "sekitar 2 bulan yang lalu",
   },
   {
-    age: Duration.days(200),
-    de: "vor 7 Monaten",
-    en: "7 months ago",
-    id: "7 bulan yang lalu",
+    label: "60 days",
+    at: before({ days: 60 }),
+    de: "vor 2 Monaten",
+    en: "2 months ago",
+    id: "2 bulan yang lalu",
   },
   {
-    age: Duration.days(364),
+    label: "364 days",
+    at: before({ days: 364 }),
     de: "vor 12 Monaten",
     en: "12 months ago",
     id: "12 bulan yang lalu",
   },
   {
-    age: Duration.days(365),
-    de: "vor 1 Jahr",
-    en: "1 year ago",
-    id: "1 tahun yang lalu",
+    label: "365 days, a year",
+    at: before({ days: 365 }),
+    de: "vor etwa 1 Jahr",
+    en: "about 1 year ago",
+    id: "sekitar 1 tahun yang lalu",
   },
   {
-    age: Duration.days(800),
-    de: "vor 2 Jahren",
-    en: "2 years ago",
-    id: "2 tahun yang lalu",
+    label: "15 months",
+    at: before({ months: 15 }),
+    de: "vor mehr als 1 Jahr",
+    en: "over 1 year ago",
+    id: "lebih dari 1 tahun yang lalu",
+  },
+  {
+    label: "18 months",
+    at: before({ months: 18 }),
+    de: "vor mehr als 1 Jahr",
+    en: "over 1 year ago",
+    id: "lebih dari 1 tahun yang lalu",
+  },
+  {
+    label: "21 months",
+    at: before({ months: 21 }),
+    de: "vor fast 2 Jahren",
+    en: "almost 2 years ago",
+    id: "hampir 2 tahun yang lalu",
+  },
+];
+
+/**
+ * Each moment of an attempt, in UTC, with the words that date-fns wrote for its
+ * `PPp` format in German, English, and Indonesian. The hour has two digits in
+ * the 24-hour languages, German puts no comma before the time, and English
+ * writes the 12-hour clock without a leading zero.
+ */
+const MOMENTS = [
+  {
+    at: MOMENT,
+    de: "6. Okt. 2026 15:30",
+    en: "Oct 6, 2026, 3:30 PM",
+    id: "6 Okt 2026, 15.30",
+  },
+  {
+    at: Date.UTC(2026, 9, 6, 0, 5),
+    de: "6. Okt. 2026 00:05",
+    en: "Oct 6, 2026, 12:05 AM",
+    id: "6 Okt 2026, 00.05",
+  },
+  {
+    at: Date.UTC(2026, 9, 6, 9, 5),
+    de: "6. Okt. 2026 09:05",
+    en: "Oct 6, 2026, 9:05 AM",
+    id: "6 Okt 2026, 09.05",
   },
 ];
 
@@ -123,27 +179,46 @@ afterEach(() => {
 });
 
 describe("formatAge", () => {
-  for (const { age, de, en, id } of AGES) {
-    it(`says an age of ${Duration.format(age)} in each language`, () => {
-      const timestamp = before(age);
-
-      expect(formatAge(timestamp, "en", NOW)).toBe(en);
-      expect(formatAge(timestamp, "id", NOW)).toBe(id);
-      expect(formatAge(timestamp, "de", NOW)).toBe(de);
+  for (const { at, de, en, id, label } of AGES) {
+    it(`says an age of ${label} in each language`, () => {
+      expect(formatAge(at, "en", NOW)).toBe(en);
+      expect(formatAge(at, "id", NOW)).toBe(id);
+      expect(formatAge(at, "de", NOW)).toBe(de);
     });
   }
 
-  it("reads a moment after now as now", () => {
+  it("reads a moment after now as an age under a minute", () => {
     expect(
       formatAge(NOW + Duration.toMillis(Duration.minutes(5)), "en", NOW)
-    ).toBe("now");
+    ).toBe("less than a minute ago");
     expect(
       formatAge(NOW + Duration.toMillis(Duration.days(2)), "de", NOW)
-    ).toBe("jetzt");
+    ).toBe("vor weniger als 1 Minute");
+  });
+
+  it("counts a month as whole once the later moment is as far into its month as the earlier one", () => {
+    // 31 March 2021 to 30 June 2024 is 38 whole months, because June has no 31st.
+    const now = Date.UTC(2024, 5, 30, 9, 0, 0);
+    const timestamp = Date.UTC(2021, 2, 31, 8, 0, 0);
+
+    expect(formatAge(timestamp, "en", now)).toBe("about 3 years ago");
+    expect(formatAge(timestamp, "id", now)).toBe("sekitar 3 tahun yang lalu");
+    expect(formatAge(timestamp, "de", now)).toBe("vor etwa 3 Jahren");
+  });
+
+  it("counts the time that passed, whatever the clocks did", () => {
+    vi.stubEnv("TZ", "Europe/Berlin");
+    // The clocks of Berlin jump from 02:00 to 03:00 at 01:00 UTC on 29 March
+    // 2026, so over 40 minutes their hands move by 100.
+    const now = Date.UTC(2026, 2, 29, 1, 10);
+
+    expect(formatAge(Date.UTC(2026, 2, 29, 0, 30), "en", now)).toBe(
+      "40 minutes ago"
+    );
   });
 
   it("writes English for an unsupported or absent locale", () => {
-    const timestamp = before(Duration.days(3));
+    const timestamp = before({ days: 3 });
 
     expect(formatAge(timestamp, "fr", NOW)).toBe("3 days ago");
     expect(formatAge(timestamp, null, NOW)).toBe("3 days ago");
@@ -154,7 +229,7 @@ describe("formatAge", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(NOW);
 
-    expect(formatAge(before(Duration.hours(5)), "en")).toBe("5 hours ago");
+    expect(formatAge(before({ hours: 5 }), "en")).toBe("about 5 hours ago");
   });
 });
 
@@ -162,9 +237,24 @@ describe("formatMoment", () => {
   it("writes the moment in the order and words of each language", () => {
     vi.stubEnv("TZ", "UTC");
 
-    expect(formatMoment(MOMENT, "en")).toBe("Oct 6, 2026, 3:30 PM");
-    expect(formatMoment(MOMENT, "id")).toBe("6 Okt 2026, 15.30");
-    expect(formatMoment(MOMENT, "de")).toBe("6. Okt. 2026, 15:30");
+    for (const { at, de, en, id } of MOMENTS) {
+      expect(formatMoment(at, "en")).toBe(en);
+      expect(formatMoment(at, "id")).toBe(id);
+      expect(formatMoment(at, "de")).toBe(de);
+    }
+  });
+
+  // The platform spells two short months otherwise than date-fns did: August
+  // in Indonesian ("Agt" before) and September in German ("Sep." before).
+  it("spells the short month as the platform does", () => {
+    vi.stubEnv("TZ", "UTC");
+
+    expect(formatMoment(Date.UTC(2026, 7, 5, 18, 52), "id")).toBe(
+      "5 Agu 2026, 18.52"
+    );
+    expect(formatMoment(Date.UTC(2026, 8, 21, 18, 52), "de")).toBe(
+      "21. Sept. 2026 18:52"
+    );
   });
 
   it("writes English for an unsupported or absent locale", () => {
