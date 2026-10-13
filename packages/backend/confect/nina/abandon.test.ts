@@ -88,17 +88,13 @@ describe("A Nina turn that cannot be settled", () => {
   it("ends after the grace without its journal, so the chat is free again and the hold comes back once", async () => {
     const f = await stranded();
 
-    // The settlement fails each time it is tried. Until then the chat is busy
-    // and cannot be deleted, as before the grace existed.
+    // The settlement fails each time it is tried. Until then the chat is busy.
     await expect(
       f.t.mutation(recover, { turnId: f.turnId })
     ).rejects.toMatchObject({ data: { code: "NINA_WRITE_FAILED" } });
     await expect(
       f.owner.mutation(start, { ...args, chatId: f.chatId })
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
-    await expect(
-      f.owner.mutation(remove, { chatId: f.chatId })
-    ).rejects.toThrow();
     expect((await f.inspect()).chats).toHaveLength(1);
 
     vi.setSystemTime(f.found + GRACE);

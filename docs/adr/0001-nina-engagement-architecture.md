@@ -464,10 +464,14 @@ the chat is free:
   later. A settlement that failed in every try, as when the Agent journal cannot
   be read or cut off, ends then without the journal it could not use: the turn
   fails, or is cancelled when the learner had stopped it, an answer the journal
-  does hold still completes it, and the chat can be deleted. A hold that cannot
-  be paid back is the one thing that ending never drops. When the credit state
-  cannot be read, the ending fails as a whole and changes nothing, and the next
-  sweep tries again.
+  does hold still completes it, and the chat is free. Deleting a chat does not
+  wait for it: when the journal fails the settlement of the chat's open turn,
+  the delete ends the turn the same way, in its own transaction, and goes on, so
+  a learner can always delete their chat. A hold that cannot be paid back is the
+  one thing that ending never drops. When the credit state cannot be read, the
+  ending fails as a whole and changes nothing, and the next sweep tries again.
+  A delete of that chat fails the same way, because the learner's credits are
+  not dropped to free it.
 - The failed turn stores `unknown`, which the learner reads as a response Nina
   could not finish, with a way to try again and to ask for help. A reason of its
   own would be a new value of the stored failure reason. Every web build reads
