@@ -13,7 +13,7 @@ import {
   orbitCanvas,
   patchWebGL,
   readCanvasSize,
-  waitForStableCanvas,
+  waitForCanvasRest,
 } from "@/e2e/support/canvas";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -203,6 +203,14 @@ const presentChart = Effect.fn("NakafaE2E.presentVisualChart")(function* (
 const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
   page: Page
 ) {
+  // Each control below leaves the scene moving for a while, and a scene is at
+  // rest once it draws no frame. A slow renderer, such as WebKit's software one,
+  // needs seconds to run the camera's damping out and a second for each
+  // screenshot, so the test waits on the frames and never on equal screenshots
+  // within a fixed time.
+  yield* Effect.promise(() =>
+    page.addInitScript(patchWebGL, countCanvasFrames)
+  );
   yield* openVisualLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
   const { canvas, card } = yield* revealScene(page);
   const controls = card.locator(COORDINATE_CONTROLS);
@@ -246,7 +254,7 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
       .poll(() => countLabelsInView(card))
       .toBeGreaterThanOrEqual(labels);
   });
-  yield* waitForStableCanvas(canvas);
+  yield* waitForCanvasRest(canvas);
 
   const beforeGrid = yield* Effect.promise(() => canvas.screenshot());
   yield* Effect.promise(async () => {
@@ -258,7 +266,7 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
     await grid.click();
     await expect(grid).toHaveAttribute("aria-pressed", "true");
   });
-  yield* waitForStableCanvas(canvas);
+  yield* waitForCanvasRest(canvas);
 
   const beforeRotation = yield* Effect.promise(() => canvas.screenshot());
   yield* Effect.promise(async () => {
@@ -270,10 +278,10 @@ const presentScene = Effect.fn("NakafaE2E.presentVisualScene")(function* (
     await rotation.click();
     await expect(rotation).toHaveAttribute("aria-pressed", "false");
   });
-  yield* waitForStableCanvas(canvas);
+  yield* waitForCanvasRest(canvas);
 
-  // A drag rotates the scene last: its damping can outlast a stability
-  // window on a large software-rendered canvas, and nothing after it waits.
+  // A drag rotates the scene last: its damping runs out frame by frame like the
+  // rotation's, and nothing after it needs the scene to be still.
   const beforeOrbit = yield* Effect.promise(() => canvas.screenshot());
   yield* orbitCanvas(page, canvas);
   yield* expectCanvasToMove(canvas, beforeOrbit);

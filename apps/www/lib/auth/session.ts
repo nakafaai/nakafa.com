@@ -1,5 +1,8 @@
 import { Option, Predicate, Schema } from "effect";
 
+/** The Better Auth route that reports the session of the cookie a request sends. */
+export const SESSION_PATH = "/api/auth/get-session";
+
 /**
  * The Better Auth session as Nakafa reads it.
  *

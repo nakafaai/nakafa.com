@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Deferred, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { waitForSlide } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
@@ -219,6 +220,13 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() =>
       expect(menu.getByRole("menuitem")).toHaveCount(3)
     );
+    // The menu slides in. Playwright tries a hover again while the row it aims
+    // at still moves, and each new try scrolls the page to put the row in
+    // another place, the fourth at the top. The menu stays beside its button,
+    // so it moves back down under a pointer that has already left the row, and
+    // the submenu that the pointer opened closes again. A menu that has stopped
+    // moving takes one try and scrolls nothing.
+    yield* waitForSlide(menu);
     const openIn = page.getByRole("menuitem", { name: "Open in", exact: true });
     if (width < 1280) {
       yield* Effect.promise(() => openIn.click());
@@ -235,6 +243,12 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
         expect(link).toHaveAttribute("target", "_blank")
       );
     }
+    // A link that is visible does not prove its submenu is open: a submenu that
+    // has closed keeps its links visible while it fades out, and then the first
+    // Escape below closes the whole menu.
+    yield* Effect.promise(() =>
+      expect(openIn).toHaveAttribute("aria-expanded", "true")
+    );
     yield* Effect.promise(() => page.keyboard.press("Escape"));
     yield* Effect.promise(() => expect(openIn).toBeFocused());
     yield* Effect.promise(() => page.keyboard.press("Escape"));

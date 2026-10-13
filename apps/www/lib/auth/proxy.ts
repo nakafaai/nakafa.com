@@ -15,6 +15,7 @@ import {
   Schema,
 } from "effect";
 import { bufferResponse } from "@/lib/auth/body";
+import { SESSION_PATH } from "@/lib/auth/session";
 
 /** One method of the Better Auth route handler that the proxy forwards to. */
 type AuthHandlerMethod = (request: Request) => Promise<Response>;
@@ -152,9 +153,6 @@ export const answerAuthDeadline = (
       )
     )
   );
-
-/** The Better Auth route that reports the session of the cookie it receives. */
-const SESSION_PATH = "/api/auth/get-session";
 
 /**
  * Whether a request asks Better Auth for the session of a visitor who sent

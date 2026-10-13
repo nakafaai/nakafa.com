@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/confect/gateway/model";
 import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
+import { generateText } from "ai";
 import { Array as Arr, Effect, Option, Result, Schema, Stream } from "effect";
 
 const serviceToken = vi.hoisted(() => vi.fn<() => Promise<string>>());
@@ -144,6 +145,70 @@ describe("The production gateway", () => {
           max_tokens: purposes[purpose].maxOutputTokens,
           model: "google/gemini-3.8-flash",
           reasoning_effort: effort,
+        });
+      }).pipe(deployed);
+    }
+  );
+
+  it.effect(
+    "encodes the bytes of a document and an image without the global Buffer, which the default Convex runtime does not have",
+    () => {
+      serviceToken.mockResolvedValue("service-token");
+      fetch.mockResolvedValue(Response.json(completion));
+      return Effect.gen(function* () {
+        // The Vercel gateway client reads the global Buffer to encode file
+        // bytes, and the Convex gateway adapter does not. With the global gone,
+        // the bytes still reach the request as base64.
+        vi.stubGlobal("Buffer", undefined);
+        const handle = (yield* Gateway).language("chat");
+        yield* Effect.promise(() =>
+          generateText({
+            model: handle.model,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "Read these." },
+                  {
+                    type: "file",
+                    mediaType: "application/pdf",
+                    // The start of a PDF, "%PDF-1.4".
+                    data: Uint8Array.from([37, 80, 68, 70, 45, 49, 46, 52]),
+                  },
+                  {
+                    type: "file",
+                    mediaType: "image/png",
+                    // The signature that starts every PNG.
+                    data: Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]),
+                  },
+                ],
+              },
+            ],
+          })
+        );
+        const [, init] = fetch.mock.calls[0] ?? [];
+        const body = yield* Schema.decodeUnknownEffect(JsonTextSchema)(
+          init?.body
+        );
+        expect(body).toMatchObject({
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "Read these." },
+                {
+                  type: "file",
+                  file: {
+                    file_data: "data:application/pdf;base64,JVBERi0xLjQ=",
+                  },
+                },
+                {
+                  type: "image_url",
+                  image_url: { url: "data:image/png;base64,iVBORw0KGgo=" },
+                },
+              ],
+            },
+          ],
         });
       }).pipe(deployed);
     }
