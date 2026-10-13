@@ -418,6 +418,8 @@
     "continue-with-google": "Continue with Google",
     "opening-google": "Opening Google...",
     "provider-error": "We couldn't continue with Google. Please try again.",
+    "sign-in-title": "Sign in to Nakafa",
+    "sign-in-description": "So your progress stays saved.",
     "logout": "Logout",
     "login": "Login",
     "login-cta-title": "Continue learning",
@@ -900,7 +902,7 @@
     "terms-and-policies": "Terms and Policies",
     "terms-of-service": "Terms of Service",
     "privacy-policy": "Privacy Policy",
-    "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
+    "legal-description": "By signing in, you agree to the <terms-of-service>Terms of Service</terms-of-service> and the <privacy-policy>Privacy Policy</privacy-policy>."
   },
   "AnalyticsConsent": {
     "title": "Usage data",

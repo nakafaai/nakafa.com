@@ -1,4 +1,5 @@
 import { Button } from "@repo/design-system/components/ui/button";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { Auth } from "@/components/auth";
@@ -24,6 +25,15 @@ export default async function Page(props: PageProps<"/[locale]/auth">) {
         <Theme variant="ghost" />
       </EntryShellHeader>
       <EntryShellBody>
+        <Nina
+          act="relaxed"
+          fidget={["waving"]}
+          label=""
+          mood="hello"
+          size={190}
+          whole
+        />
+
         <AuthTitle />
 
         <Auth />
