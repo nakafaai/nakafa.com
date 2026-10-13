@@ -94,9 +94,7 @@
       "includes": [
         "**/*.test.{ts,tsx,mts,cts}",
         "**/test/**/*.{ts,tsx,mts,cts}",
-        "**/vitest.setup.{ts,mts,cts}",
-        "apps/www/components/school/classes/forum/conversation/fixtures/data.ts",
-        "apps/www/components/school/classes/forum/conversation/viewport/fixture.ts"
+        "**/vitest.setup.{ts,mts,cts}"
       ],
       "javascript": {
         "globals": ["vi"]

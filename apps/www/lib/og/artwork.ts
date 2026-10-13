@@ -13,7 +13,6 @@ const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;
 const artworkSources = {
   "app/ask-nakafa": ALL_ARTWORK_LOCALES,
   "app/pricing": ALL_ARTWORK_LOCALES,
-  "app/school": ENGLISH_ARTWORK,
   "curriculum/cambridge-international": ENGLISH_ARTWORK,
   "curriculum/merdeka": ALL_ARTWORK_LOCALES,
   "curriculum/singapore-moe": ENGLISH_ARTWORK,

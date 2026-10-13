@@ -242,12 +242,12 @@ test.describe("Memory editor with a paste that does not fit", () => {
 const FUTURE = "Studies after dinner";
 const ENDED = "Exam on Friday";
 const KEPT = "Prefers worked examples";
-/** What the facts line of a situation starts with: when it ends. */
-const ENDS_FIRST = /^Ends .+ · Saved by Nina · .+$/;
-/** What the facts line of a memory the learner wrote starts with. */
-const WRITTEN_FIRST = /^Written by you · .+$/;
-/** The words of a facts line that say when a situation ends. */
-const ENDS_WORDS = /Ends [^·]*[^·\s]/;
+/** The one fact a situation's row says: when it ends. */
+const ENDS = /^Ends \S.*\S$/;
+/** The fact that says Nina saved a memory and when. */
+const SAVED = /^Saved by Nina \S.* ago$/;
+/** The one fact the row of a memory the learner wrote says. */
+const WRITTEN = /^Written by you \S.* ago$/;
 
 /** The facts line of a row. */
 const factsOf = (page: Page, words: string) =>
@@ -256,9 +256,9 @@ const factsOf = (page: Page, words: string) =>
 /**
  * The backend holds a situation that ends in a week and one that ended two
  * days ago, which the daily job has not deleted. The page lists the first with
- * the end said first in its facts line, and leaves the second out, as search and
- * the recall of a turn do. Opened, the first says all its facts on lines that
- * wrap.
+ * its end as the one fact of its row, and leaves the second out, as search and
+ * the recall of a turn do. Opened, the first says its end and who saved it,
+ * each on its own line that wraps.
  */
 const verifySituations = Effect.fn("NakafaE2E.verifySituations")(function* (
   page: Page,
@@ -292,13 +292,13 @@ const verifySituations = Effect.fn("NakafaE2E.verifySituations")(function* (
     await expect(memoryRow(page, ENDED)).toHaveCount(0);
     await expect(memoryRow(page, KEPT)).toBeVisible();
     await expect(memoryRow(page, FUTURE)).toBeVisible();
-    await expect(factsOf(page, FUTURE)).toHaveText(ENDS_FIRST);
-    await expect(factsOf(page, KEPT)).toHaveText(WRITTEN_FIRST);
+    await expect(factsOf(page, FUTURE)).toHaveText(ENDS);
+    await expect(factsOf(page, KEPT)).toHaveText(WRITTEN);
     // The line is one line cut at its end, and what is cut is not the end date.
     const line = factsOf(page, FUTURE);
 
     expect(
-      await wordsShown(line, ENDS_WORDS),
+      await wordsShown(line, ENDS),
       `the line is ${await widthOf(line)}px wide`
     ).toBe(true);
 
@@ -309,10 +309,12 @@ const verifySituations = Effect.fn("NakafaE2E.verifySituations")(function* (
       .filter({ has: titleOf(page) })
       .locator("p");
 
-    await expect(facts).toHaveText(ENDS_FIRST);
+    await expect(facts).toHaveText([ENDS, SAVED]);
     // The facts of the open memory wrap and are not cut.
     expect(
-      await facts.evaluate((line) => line.scrollWidth <= line.clientWidth)
+      await facts.evaluateAll((lines) =>
+        lines.every((line) => line.scrollWidth <= line.clientWidth)
+      )
     ).toBe(true);
   });
 });
@@ -321,7 +323,7 @@ for (const width of [320, 1440]) {
   test.describe(`Memory situations at ${width}px`, () => {
     test.use({ viewport: { height: 900, width } });
 
-    test("lists the one that goes on with its end first, and not the one that ended", async ({
+    test("lists the one that goes on by its end, and not the one that ended", async ({
       baseURL,
       page,
     }) => {

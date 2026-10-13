@@ -23,30 +23,6 @@ const getChat = FunctionImpl.make(
     return chat.userId === viewerId ? view : readerChat(view);
   })
 );
-/**
- * Lists nothing. A shared chat is reached by its link alone, so no list of
- * another learner's chats exists, and the lists a learner sees of their own
- * chats come from `getOwnChats`.
- *
- * Temporary compatibility, the expand step of packages/backend/AGENTS.md: a
- * browser tab that was opened before share tokens still asks for the chats of a
- * profile and would fail on a missing function. Owner: ADR 0001. Exit: the
- * release has been on production for 12 hours, the time the project's skew
- * protection keeps a browser on the web deployment it loaded. Cleanup: delete
- * this function, its entry in `queries.spec.ts` and its test.
- */
-const getChats = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "getChats",
-  Effect.fn("chats.queries.getChats")(() =>
-    Effect.succeed({
-      continueCursor: "",
-      isDone: true,
-      page: [],
-    })
-  )
-);
 const getOwnChats = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -99,7 +75,6 @@ const getShareToken = FunctionImpl.make(
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(getChat),
-  Layer.provide(getChats),
   Layer.provide(getOwnChats),
   Layer.provide(getChatTitle),
   Layer.provide(getShareToken),

@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted.
+Accepted. Amended on 13 October 2026: forum posts are not journaled per message,
+and journal retention is set per organisation.
 
 ## Context
 
@@ -38,7 +39,9 @@ another kind does not compile.
 Privileged and record-of-truth changes: access, membership, claims, grades,
 releases, documents, deletions, connector work, and every operator action.
 High-frequency learner writes (answers, reactions, read state, presence,
-drafts) are their own record and are not journaled per write. Change details
+drafts) are their own record and are not journaled per write. Forum posts are not
+journaled per message either. A policy change, such as whether students may open
+forum threads, is journaled as `tenant.policy.set`. Change details
 hold IDs, enums, and reason codes only, never names, emails, or free text, so
 an entry never outlives the personal data it mentions.
 
@@ -62,7 +65,9 @@ Convex before relying on a creation-time cursor.
 
 ### Retention
 
-Tenant entries are kept for the tenant's retention period. The retention and
+Tenant entries are kept for the journal retention of their organisation. The
+retention is one period for each data type (owner decision K10), and an entry is
+not deleted before the audit period of its organisation ends. The retention and
 offboarding policy removes expired entries with a bounded scheduled sweep over
 the owner index in creation order that never passes the oldest live consumer
 cursor, and offboarding exports them with proof. Personal entries leave with

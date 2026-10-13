@@ -2,7 +2,11 @@
 
 ## Status
 
-Accepted for the Nakafa School foundation.
+Accepted for the Nakafa School foundation. Amended on 13 October 2026 for the
+organisation tier, the neutral concepts, the country profile above units, and
+the account's home cell.
+The school subdomains and their URL tree are in ADR 0026, and the country
+profile is in ADR 0032.
 
 ## Context
 
@@ -21,13 +25,21 @@ without migration (see Retirement).
 
 ### Tenants, units, and the route slug
 
-A tenant is one organisation, a school or a foundation, served by the same web
-and Convex deployments as every other tenant. It holds one or more units (SD,
-SMP, SMA, and so on), each with its level, an optional NPSN, and a status; an
+An organisation is a tenant. It is a school or a foundation (yayasan), served by
+the same web and Convex deployments as every other tenant. The tenant's `kind` is
+`school` or `foundation`. A foundation runs several schools, each held as a unit
+(SD, SMP, SMA, and so on) with its level, an optional NPSN, and a status. An
 archived unit stays readable and refuses writes.
 
-The tenant slug is the tenant's public address: the `slug.nakafa.com` label and
-the `/[locale]/school/[slug]` route segment. It is the context every tenant
+The concepts are neutral and the same in every country: an organisation holds
+units (schools), a unit runs periods and cohorts, a person belongs to the
+organisation, and a section or an enrolment links people to classes. The words of
+a country, such as `SD`, `Halbjahr`, or `KKTP`, are labels from that country's
+signed profile (ADR 0032). They never appear in code names. The first profile is
+Indonesia.
+
+The tenant slug is the tenant's public address: the `slug.nakafa.com` label, under the domain of the tenant's data cell (ADR 0026). School addresses have no locale prefix, because the
+language comes from the `NEXT_LOCALE` cookie (ADR 0026). It is the context every tenant
 function receives, never an authorization claim. The member middleware resolves
 the tenant and the caller's Person from it; objects named by ID derive their
 tenant from data (ADR 0012). Every tenant-owned table carries `tenantId`.
@@ -38,7 +50,8 @@ single inner hyphens, so never `xn--`. It holds only rules that never change,
 because Confect decodes stored documents and a stricter brand would make
 existing tenants unreadable. `reservedSlugs`, an Effect `HashSet`, lists
 labels that never name a tenant: every live `*.nakafa.com` host, product and account words, the
-application locales, and static segments under `/[locale]/school`.
+application locales, and static segments under `/[locale]/school`, which the old School retires (K11,
+ADR 0026).
 `NewTenantSlug` is a `TenantSlug` outside that set: what operators may give a
 new tenant and what the proxy routes. A new host or School route segment is
 added to `reservedSlugs` first.
@@ -49,12 +62,16 @@ returns only those fields.
 
 ### Subdomains
 
+Planned. ADR 0026 lists what is live.
+
 `slug.nakafa.com` serves the School routes through a host rewrite in the proxy,
 which never reads the database and routes only labels that are a valid
 `TenantSlug` outside `reservedSlugs`. Unknown tenants render the School
 not-found page from `tenancy/profile:get`. One sign-in covers nakafa.com and
-every tenant host through Better Auth cross-subdomain cookies, sign-in from a
-tenant host returns through nakafa.com, and tenant pages are private and
+every tenant host of its cell through Better Auth cross-subdomain cookies, sign-in from a
+tenant host returns through the apex domain of the tenant's cell (`nakafa.com`
+for `us`, ADR 0026), so the session cookie is set where that cell's hosts read
+it, and tenant pages are private and
 noindex. Schools' own domains come later through a domain map and a one-time
 token handoff. The subdomain change records its configuration facts here.
 
@@ -100,7 +117,8 @@ Operators provision tenants (the tenant, its units, and the first Owner invite
 in one mutation), replace a tenant's unclaimed Owners as an audited break-glass,
 and suspend or reactivate a tenant. A suspended tenant stays readable and
 refuses every write. Operators enter a tenant only through an audited visit: a
-temporary admin or auditor grant that a scheduled mutation ends (ADR 0012). The
+temporary admin or auditor grant of at most 24 hours. The school's Owner or Admin
+approves each visit, and a scheduled mutation ends the grant (ADR 0012). The
 operator directory, tenant metadata with no personal data, is the one public
 read across tenants; everything inside a tenant needs a visit.
 
@@ -118,14 +136,38 @@ that never ran.
 
 ### Retirement of the first School
 
-New tables and functions live beside the `school*` tables (expand). School
-routes then switch to the new functions; the old ones are observed until no
-deployed client calls them. A Convex backup of production is taken right before
-deletion, then an internal batched mutation deletes every `school*` row, the
-forum aggregates, and their files, on dev and then production, until the counts
-are zero. Last, the old functions, tables, the forum viewport engine and its
-tests, and the old account deletion steps are removed, and a new ADR supersedes
-ADR 0005. The classroom lane owns the retirement.
+Program wave 0 deletes the first School before the new School is built (K11).
+The deletion is one reviewed change: every old School row, table, function,
+component, redirect, image, test, and dictionary key goes, and so do the forum
+viewport engine and its tests and the School branch of account deletion. It
+takes no backup and no production export, because nobody uses the old School,
+and its data is deleted, not kept (K11). A new ADR supersedes ADR 0005.
+
+The removal follows the rule for public functions in
+`packages/backend/AGENTS.md`: expand, switch, observe, contract.
+
+1. Expand: the tenancy functions in `packages/backend/confect/tenancy` already
+   exist on main beside the old School.
+2. Switch: an earlier release removes every School route and component that
+   calls an old function, so no new web build calls one.
+3. Observe: after the switch release is live, production function logs show
+   no call to an old School function for at least 12 hours (the Vercel skew
+   window, `skewProtectionMaxAge` 43,200 seconds, read from the project API on
+   12 October 2026) and across at least one later production deploy, because a
+   loaded or suspended tab calls Convex directly and every deploy re-runs every
+   live subscription. Measured before the switch on 13 October 2026: 2,790
+   production executions between 12:57 and 14:42 UTC, spanning the deploy at
+   14:36, held no call to `schools/*`, `classes/*` or the School triggers. The
+   switch release deletes the web routes and components only; the old functions
+   stay until this window has passed.
+4. Dry run: the batched deletion's dry mode counts the old rows on dev before
+   the contract release.
+5. Contract: one reviewed release deletes the old functions, every writer of the
+   old tables, and the rest of the code listed above, and adds the batched
+   deletion. The deletion then runs on dev and production until every old count
+   is zero, and a last release drops the tables and the deletion; Convex accepts
+   that schema only when no row is left, which is the proof that the rows are
+   gone.
 
 ## Implementation Contract
 
@@ -145,8 +187,9 @@ ADR 0005. The classroom lane owns the retirement.
 
 ## Consequences
 
-- One account reaches every school it belongs to and the consumer product with
-  one sign-in.
+- One account reaches every school of its home cell that it belongs to with one
+  sign-in, and the consumer product lives in the `us` cell. A school in another
+  cell is joined with an account of that cell (ADR 0026, Data cells).
 - An invite address works like a credential: whoever holds a verified account
   with that address claims the Person, an Owner invite included. Schools invite
   only addresses they or the invitee control, and a tenant's allowed email
