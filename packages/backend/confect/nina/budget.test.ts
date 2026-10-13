@@ -88,9 +88,12 @@ describe("Nina token budgets", () => {
 describe("Nina output caps", () => {
   it("keeps the output cap of a specialist just above the evidence that Nina reads of its answer", () => {
     const cap = purposes.specialist.maxOutputTokens;
-    // Nina reads at most the evidence budget of a specialist's answer. The cap
-    // is shared with the model's reasoning, so it stands above that budget, and
-    // within one unit of it, so that a call does not pay for words that Nina cuts.
+    // Nina reads at most the evidence budget of a specialist's answer. A cap at
+    // or below it would end an answer before Nina had read all it may, so the
+    // cap stands above it. It stays within one unit of it, so that it follows
+    // the budget and does not drift to a number of its own. The reasoning of the
+    // call counts against the cap too, so the room above the budget is all it
+    // has when an answer fills the budget.
     expect(cap).toBeGreaterThan(NINA_BUDGET.evidence);
     expect(cap - NINA_BUDGET.evidence).toBeLessThan(CAP_UNIT);
   });
