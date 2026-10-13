@@ -1,3 +1,8 @@
+/**
+ * Shapes of the retired School class rows. The retired tables still validate
+ * their stored rows with them until the change that drops the tables also
+ * deletes this module.
+ */
 import { GenericId } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
@@ -6,35 +11,26 @@ import {
   schoolClassTeacherRoleValidator,
 } from "@repo/backend/confect/classes/role";
 import { Schema } from "effect";
-/**
- * School class member role validator
- */
 
 /**
  * School class visibility validator
  */
-export const schoolClassVisibilityValidator = Schema.Literals([
-  "private",
-  "public",
-]);
-export type SchoolClassVisibility = typeof schoolClassVisibilityValidator.Type;
+const schoolClassVisibilityValidator = Schema.Literals(["private", "public"]);
 
 /**
  * Class material status validator
  */
-export const schoolClassMaterialStatusValidator = Schema.Literals([
+const schoolClassMaterialStatusValidator = Schema.Literals([
   "draft",
   "published",
   "scheduled",
   "archived",
 ]);
-export type SchoolClassMaterialStatus =
-  typeof schoolClassMaterialStatusValidator.Type;
 
 /**
  * Class images validator
  */
-export const schoolClassImageValidator = Schema.Literals([
+const schoolClassImageValidator = Schema.Literals([
   "retro",
   "time",
   "stars",
@@ -63,19 +59,17 @@ export const schoolClassImageValidator = Schema.Literals([
   "stamp",
   "vintage",
 ]);
-export type SchoolClassImage = typeof schoolClassImageValidator.Type;
 
 /**
  * Forum tag validator
  */
-export const schoolClassForumTagValidator = Schema.Literals([
+const schoolClassForumTagValidator = Schema.Literals([
   "general",
   "question",
   "announcement",
   "assignment",
   "resource",
 ]);
-export type SchoolClassForumTag = typeof schoolClassForumTagValidator.Type;
 
 /**
  * Forum status validator
@@ -89,7 +83,7 @@ const schoolClassForumStatusValidator = Schema.Literals([
 /**
  * Reaction count validator
  */
-export const schoolClassReactionCountValidator = Schema.Struct({
+const schoolClassReactionCountValidator = Schema.Struct({
   emoji: Schema.String,
   count: Schema.Int.check(Schema.isGreaterThan(0)),
 });
@@ -115,15 +109,6 @@ export const schoolClassValidator = Schema.Struct({
 });
 
 /**
- * School class document validator (with system fields)
- * Used internally for paginatedClassesValidator
- */
-
-/**
- * Paginated classes validator
- */
-
-/**
  * School class member base validator (without system fields)
  */
 export const schoolClassMemberValidator = Schema.Struct({
@@ -139,11 +124,6 @@ export const schoolClassMemberValidator = Schema.Struct({
   removedBy: Schema.optionalKey(IdSchema("users")),
   removedAt: Schema.optionalKey(Schema.Finite),
 });
-
-/**
- * School class member document validator (with system fields)
- * Used internally for classMemberWithUserValidator
- */
 
 /**
  * School class invite code base validator (without system fields)

@@ -9,11 +9,10 @@ import { ACCOUNT_DELETION_RECONCILIATION_DELAY_MS } from "@repo/backend/confect/
 import { recordAccountDeletionReceipt } from "@repo/backend/confect/auth/deletion/receipt";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { finalizeSchoolTransfers } from "@repo/backend/confect/auth/deletion/transfers";
 import { Clock, Duration, Effect, flow } from "effect";
 /**
- * Applies reserved school transfers only after Better Auth confirms that its
- * user row is gone, then journals durable personal-data cleanup.
+ * Finalizes the preparation only after Better Auth confirms that its user row
+ * is gone, then journals durable personal-data cleanup.
  */
 export const finalizeAccountDeletion = Effect.fn(
   "auth.deletion.finalizeAccountDeletion"
@@ -74,24 +73,6 @@ export const finalizeAccountDeletion = Effect.fn(
     }
     const finalizedAt = yield* Clock.currentTimeMillis;
     if (preparation && preparation.finalizedAt === undefined) {
-      const needsContinuation = yield* finalizeSchoolTransfers(
-        user,
-        preparation._id,
-        finalizedAt
-      );
-      if (needsContinuation) {
-        yield* scheduler.runAfter(
-          Duration.zero,
-          refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
-          {
-            authId,
-            ...(expectedPreparation === undefined
-              ? {}
-              : { expectedPreparation }),
-          }
-        );
-        return;
-      }
       yield* writer
         .table("accountDeletionPreparations")
         .patch(preparation._id, {
