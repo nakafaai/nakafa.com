@@ -424,4 +424,4 @@ finds them, and it must not show one owner's connection to another owner.
   `include_granted_scopes` parameter, and the user ID.
 - npm registry on 13 October 2026: `xlsx` 0.18.5 (Apache-2.0) and `exceljs`
   4.4.0 (MIT) are the latest releases.
-- ADR 0009, 0011, 0012, 0016, 0019, 0020, 0023, 0026, 0028, and 0030.
+- ADR 0009, 0011, 0012, 0016, 0019, 0020, 0023, 0026, 0028, 0030, and 0032.
