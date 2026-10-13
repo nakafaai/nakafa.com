@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 /** The call that gives back one upload, as the page makes it. */
 type ReleaseCall = (
@@ -11,11 +11,14 @@ type ReleaseCall = (
 
 /**
  * Gives back the places the server holds for uploads the learner will not
- * send. A release that fails is logged as a warning and left to the server's
- * expiry of the upload, so it never blocks the learner, and one failure does
- * not stop the others. A call fails when it is rejected, and when the server
- * refuses it and says why. One refusal is no failure: the server calls the
- * upload gone or not the learner's, so nothing is held for it.
+ * send, and returns the uploads that are no longer held: each one the server
+ * gave back, and each one it refuses as gone or not the learner's, since
+ * nothing is held for that one. A release that fails for any other reason is
+ * logged as a warning, its upload is not returned, and the server's expiry
+ * frees its place. One failure never blocks the learner or stops the others.
+ *
+ * The caller forgets a hold only once the server gave its place back, so the
+ * hold of a failed release stays in the store and a later send gives it back.
  *
  * A composer that is left with files in it gives nothing back at once. A
  * hidden sheet keeps its files and sends the same uploads again, and the page
@@ -27,7 +30,7 @@ export const releaseUploads = Effect.fn("nina.uploads.release")(function* (
   uploadIds: readonly Id<"ninaUploads">[],
   release: ReleaseCall
 ) {
-  yield* Effect.forEach(
+  const given = yield* Effect.forEach(
     uploadIds,
     (uploadId) =>
       Effect.tryPromise(() => release({ uploadId })).pipe(
@@ -37,13 +40,17 @@ export const releaseUploads = Effect.fn("nina.uploads.release")(function* (
             ? Effect.void
             : Effect.fail(refusal)
         ),
-        Effect.ignore({
-          log: "Warn",
-          message:
+        Effect.as(uploadId),
+        Effect.tapError((failure) =>
+          Effect.logWarning(
             "An upload was not given back, so its place returns when it expires.",
-        }),
+            failure
+          )
+        ),
+        Effect.option,
         Effect.annotateLogs({ uploadId })
       ),
-    { concurrency: "unbounded", discard: true }
+    { concurrency: "unbounded" }
   );
+  return Arr.getSomes(given);
 });

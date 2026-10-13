@@ -107,22 +107,25 @@ export function createAiStore() {
             text: typeof text === "function" ? text(state.text) : text,
           })),
         strayFiles: (fileIds, now) => strayFiles(get().held, fileIds, now),
-        // A file that holds no upload changes nothing, so nobody re-renders.
-        takeUploads: (fileIds) => {
+        // A hold is removed by its upload, so a file that got a new hold keeps
+        // it. Nothing changes when no listed upload is held, so nobody re-renders.
+        forgetUploads: (uploadIds) => {
           const { held } = get();
-          const taken = Arr.getSomes(
+          const kept = Rec.filter(
+            held,
+            (hold) => !Arr.contains(uploadIds, hold.uploadId)
+          );
+          if (Rec.size(kept) < Rec.size(held)) {
+            set({ held: kept });
+          }
+        },
+        readUploads: (fileIds) => {
+          const { held } = get();
+          return Arr.getSomes(
             Arr.map(fileIds, (fileId) =>
               Option.map(Rec.get(held, fileId), (hold) => hold.uploadId)
             )
           );
-          if (Arr.isReadonlyArrayNonEmpty(taken)) {
-            set({
-              held: Arr.reduce(fileIds, held, (rest, fileId) =>
-                Rec.remove(rest, fileId)
-              ),
-            });
-          }
-          return taken;
         },
         uploadOf: (fileId, now) => keptUpload(get().held, fileId, now),
         // The reader showed intent: the sheet's body renders hidden from now

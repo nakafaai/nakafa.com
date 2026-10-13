@@ -86,6 +86,12 @@ interface AiActions {
    */
   endSession: () => void;
   /**
+   * Forgets the holds of these uploads, wherever they are held. A hold is found
+   * by its upload, not by its file, so a file that got a new hold meanwhile
+   * keeps it. Nothing changes when none of the uploads is held.
+   */
+  forgetUploads: (uploadIds: readonly (typeof AiUploadIdSchema.Type)[]) => void;
+  /**
    * Remembers the upload that now holds this file on the server, with the
    * moment the upload began. The server drops it a lifetime after that if no
    * message has taken it.
@@ -98,6 +104,14 @@ interface AiActions {
   /** Shows this file as uploading, or as an upload that failed. */
   markUpload: (fileId: string, status: typeof AiUploadSchema.Type) => void;
   openAsk: (ask: AiAsk) => boolean;
+  /**
+   * The uploads that hold these files on the server, in the order of the files.
+   * A file that holds none adds nothing. Nothing changes: the caller gives the
+   * uploads back, then forgets the ones the server gave back.
+   */
+  readUploads: (
+    fileIds: readonly string[]
+  ) => readonly (typeof AiUploadIdSchema.Type)[];
   removeChatDraft: (key: string) => void;
   /** Starts every composer over, without the files it holds. */
   resetComposers: () => void;
@@ -117,16 +131,10 @@ interface AiActions {
    * counts every upload it has not dropped, whichever composer holds its file.
    * A composer that is gone takes its files with it, and the places held for
    * them stay counted until the server drops them. Nothing is changed: the
-   * caller gives the places back, then forgets them with `takeUploads`.
+   * caller reads their uploads with `readUploads`, gives them back, and forgets
+   * the ones given back with `forgetUploads`.
    */
   strayFiles: (fileIds: readonly string[], now: number) => readonly string[];
-  /**
-   * Forgets the uploads that hold these files and returns them, so the caller
-   * can give them back to the server. A file that holds none returns nothing.
-   */
-  takeUploads: (
-    fileIds: readonly string[]
-  ) => readonly (typeof AiUploadIdSchema.Type)[];
   /**
    * The upload that holds this file on the server, once it has uploaded and
    * while the server still keeps it at `now`.

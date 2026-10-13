@@ -29,15 +29,19 @@ const refused = (code: NinaUploadError["code"]) =>
     Result.fail(new NinaUploadError({ code, message: "Refused by the test." }))
   );
 
-/** Runs a program and returns the warnings it logged, each with the annotations of its log. */
-const warningsOf = Effect.fn("test.warningsOf")(function* (
-  program: Effect.Effect<void>
+/**
+ * Gives back some uploads, and returns the uploads the release names as given
+ * back, with the warnings it logged, each with the annotations of its log.
+ */
+const releasing = Effect.fn("test.releasing")(function* (
+  uploadIds: Parameters<typeof releaseUploads>[0],
+  release: Release
 ) {
   const warnings = MutableList.make<{
     annotations: Readonly<Record<string, unknown>>;
     level: string;
   }>();
-  yield* program.pipe(
+  const given = yield* releaseUploads(uploadIds, release).pipe(
     Effect.provide(
       Logger.layer([
         Logger.make(({ fiber, logLevel }) => {
@@ -49,51 +53,54 @@ const warningsOf = Effect.fn("test.warningsOf")(function* (
       ])
     )
   );
-  return MutableList.toArray(warnings);
+  return { given, warnings: MutableList.toArray(warnings) };
 });
 
 describe("uploads the learner will not send", () => {
-  it.effect("gives back each upload once, and logs nothing", () =>
-    Effect.gen(function* () {
-      const release = vi.fn<Release>(released);
+  it.effect(
+    "gives back each upload once, names each as given back, and logs nothing",
+    () =>
+      Effect.gen(function* () {
+        const release = vi.fn<Release>(released);
 
-      const warnings = yield* warningsOf(
-        releaseUploads([first, second], release)
-      );
+        const { given, warnings } = yield* releasing([first, second], release);
 
-      expect(release).toHaveBeenCalledTimes(2);
-      expect(release).toHaveBeenCalledWith({ uploadId: first });
-      expect(release).toHaveBeenCalledWith({ uploadId: second });
-      expect(warnings).toEqual([]);
-    })
-  );
-
-  it.effect("asks for nothing when no file held an upload", () =>
-    Effect.gen(function* () {
-      const release = vi.fn<Release>(released);
-
-      yield* releaseUploads([], release);
-
-      expect(release).not.toHaveBeenCalled();
-    })
+        expect(release).toHaveBeenCalledTimes(2);
+        expect(release).toHaveBeenCalledWith({ uploadId: first });
+        expect(release).toHaveBeenCalledWith({ uploadId: second });
+        expect(given).toEqual([first, second]);
+        expect(warnings).toEqual([]);
+      })
   );
 
   it.effect(
-    "lets a call that is rejected go with a warning, so it neither blocks the learner nor stops the others",
+    "asks for nothing and gives nothing back when no file held an upload",
+    () =>
+      Effect.gen(function* () {
+        const release = vi.fn<Release>(released);
+
+        const { given } = yield* releasing([], release);
+
+        expect(release).not.toHaveBeenCalled();
+        expect(given).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "lets a call that is rejected go with a warning, so it neither blocks the learner nor stops the others, and does not name its upload as given back",
     () =>
       Effect.gen(function* () {
         const release = vi
           .fn<Release>(released)
           .mockRejectedValueOnce(new Error("offline"));
 
-        const warnings = yield* warningsOf(
-          releaseUploads([first, second], release)
-        );
+        const { given, warnings } = yield* releasing([first, second], release);
 
         expect(release).toHaveBeenCalledTimes(2);
         expect(release).toHaveBeenLastCalledWith({ uploadId: second });
         // The release that failed leaves one warning that names its upload,
         // and the one that worked leaves none.
+        expect(given).toEqual([second]);
         expect(warnings).toEqual([
           { annotations: { uploadId: first }, level: "Warn" },
         ]);
@@ -101,19 +108,18 @@ describe("uploads the learner will not send", () => {
   );
 
   it.effect(
-    "logs a refusal that leaves the upload held, and still gives back the others",
+    "logs a refusal that leaves the upload held, does not name it as given back, and still gives back the others",
     () =>
       Effect.gen(function* () {
         const release = vi
           .fn<Release>(released)
           .mockImplementationOnce(() => refused("NINA_UPLOAD_FAILED"));
 
-        const warnings = yield* warningsOf(
-          releaseUploads([first, second], release)
-        );
+        const { given, warnings } = yield* releasing([first, second], release);
 
         expect(release).toHaveBeenCalledTimes(2);
         expect(release).toHaveBeenLastCalledWith({ uploadId: second });
+        expect(given).toEqual([second]);
         expect(warnings).toEqual([
           { annotations: { uploadId: first }, level: "Warn" },
         ]);
@@ -121,16 +127,15 @@ describe("uploads the learner will not send", () => {
   );
 
   it.effect(
-    "does not log a refusal that says the upload is gone, since nothing is held for it",
+    "does not log a refusal that says the upload is gone, and names it as given back since nothing is held for it",
     () =>
       Effect.gen(function* () {
         const release = vi.fn<Release>(() => refused("NINA_UPLOAD_INVALID"));
 
-        const warnings = yield* warningsOf(
-          releaseUploads([first, second], release)
-        );
+        const { given, warnings } = yield* releasing([first, second], release);
 
         expect(release).toHaveBeenCalledTimes(2);
+        expect(given).toEqual([first, second]);
         expect(warnings).toEqual([]);
       })
   );

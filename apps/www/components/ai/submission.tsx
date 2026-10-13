@@ -73,10 +73,11 @@ function requireNinaConnection(convex: ConvexReactClient) {
 type UploadStore = Pick<
   AiStore,
   | "clearUpload"
+  | "forgetUploads"
   | "keepUpload"
   | "markUpload"
+  | "readUploads"
   | "strayFiles"
-  | "takeUploads"
   | "uploadOf"
 >;
 
@@ -177,7 +178,8 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
   if (Arr.isReadonlyArrayNonEmpty(strays)) {
     // A call made offline waits for the connection, and the send with it.
     yield* requireNinaConnection(convex);
-    yield* releaseUploads(status.takeUploads(strays), release);
+    const given = yield* releaseUploads(status.readUploads(strays), release);
+    status.forgetUploads(given);
   }
   return yield* Effect.forEach(files, (attachment) =>
     uploadAttachment(attachment, upload, previews, convex, status)
@@ -201,12 +203,13 @@ export function useNinaSubmission(
   const convex = useConvex();
   const addChatDraft = useAi((state) => state.addChatDraft);
   const clearUpload = useAi((state) => state.clearUpload);
+  const forgetUploads = useAi((state) => state.forgetUploads);
   const keepUpload = useAi((state) => state.keepUpload);
   const markUpload = useAi((state) => state.markUpload);
+  const readUploads = useAi((state) => state.readUploads);
   const removeChatDraft = useAi((state) => state.removeChatDraft);
   const resolveChatDraft = useAi((state) => state.resolveChatDraft);
   const strayFiles = useAi((state) => state.strayFiles);
-  const takeUploads = useAi((state) => state.takeUploads);
   const uploadOf = useAi((state) => state.uploadOf);
   const inFlight = useRef(false);
   const uncertain = useRef<Ref.Args<Start> | null>(null);
@@ -301,7 +304,7 @@ export function useNinaSubmission(
             if (Result.isSuccess(result)) {
               uncertain.current = null;
               // The send took its uploads, so no file holds one any more.
-              takeUploads(fileIds);
+              forgetUploads(readUploads(fileIds));
               MutableHashMap.clear(previews);
               return Effect.succeed(result.success);
             }
@@ -323,8 +326,10 @@ export function useNinaSubmission(
               MutableHashMap.clear(previews);
               // Every file uploads again on the next send, so the places its
               // earlier uploads hold go back now instead of when they expire.
-              // The release runs on its own, so the report never waits for it.
-              return releaseUploads(takeUploads(fileIds), release).pipe(
+              // The release runs on its own, so the report never waits for it,
+              // and each hold is forgotten only once the server gave its place back.
+              return releaseUploads(readUploads(fileIds), release).pipe(
+                Effect.tap((given) => Effect.sync(() => forgetUploads(given))),
                 Effect.forkDetach,
                 Effect.andThen(report)
               );
@@ -341,10 +346,11 @@ export function useNinaSubmission(
     return perform(
       uploadAttachments(files, upload, release, previews, convex, {
         clearUpload,
+        forgetUploads,
         keepUpload,
         markUpload,
+        readUploads,
         strayFiles,
-        takeUploads,
         uploadOf,
       }).pipe(
         Effect.map((uploadIds) =>

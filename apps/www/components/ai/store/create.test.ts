@@ -313,23 +313,55 @@ describe("ai/store/create", () => {
     );
   });
 
-  it("gives up the uploads of the files it is asked for, once, and nothing else", () => {
+  it("reads the uploads that hold the files it is asked for, and changes nothing", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().keepUpload("file-2", secondUpload, NOW);
+    const before = store.getState();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.getState().readUploads(["file-1", "file-3"])).toEqual([
+      firstUpload,
+    ]);
+    expect(store.getState()).toBe(before);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("forgets the holds of the uploads it is given, and nothing else", () => {
     const store = createAiStore();
     store.getState().keepUpload("file-1", firstUpload, NOW);
     store.getState().keepUpload("file-2", secondUpload, NOW);
 
-    expect(store.getState().takeUploads(["file-1", "file-3"])).toEqual([
-      firstUpload,
-    ]);
+    store.getState().forgetUploads([firstUpload]);
+
     expect(store.getState().held).toEqual({
       "file-2": { expiresAt: NOW + LIFETIME, uploadId: secondUpload },
     });
+  });
 
-    // A file that holds no upload changes nothing, so no reader runs again.
+  it("keeps the hold that a file got after its upload was read, because holds are forgotten by upload", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    const read = store.getState().readUploads(["file-1"]);
+    store.getState().keepUpload("file-1", secondUpload, NOW);
+
+    store.getState().forgetUploads(read);
+
+    expect(store.getState().held).toEqual({
+      "file-1": { expiresAt: NOW + LIFETIME, uploadId: secondUpload },
+    });
+  });
+
+  it("changes nothing when none of the uploads it is given is held", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
     const before = store.getState();
     const listener = vi.fn();
     store.subscribe(listener);
-    expect(store.getState().takeUploads(["file-1", "file-3"])).toEqual([]);
+
+    store.getState().forgetUploads([secondUpload]);
+
     expect(store.getState()).toBe(before);
     expect(listener).not.toHaveBeenCalled();
   });

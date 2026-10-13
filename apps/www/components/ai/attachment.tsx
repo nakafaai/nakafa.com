@@ -215,7 +215,8 @@ export function NinaAttachments({
     (attachments) => attachments.remove
   );
   const clearUpload = useAi((state) => state.clearUpload);
-  const takeUploads = useAi((state) => state.takeUploads);
+  const forgetUploads = useAi((state) => state.forgetUploads);
+  const readUploads = useAi((state) => state.readUploads);
   const release = useMutation(nina.uploads.release);
   const t = useTranslations("Ai");
   const submitted = HashSet.fromIterable(submittedFiles);
@@ -236,8 +237,15 @@ export function NinaAttachments({
               onClick={() => {
                 removeAttachment(file.id);
                 clearUpload(file.id);
-                // The upload the file holds goes back at once, not at expiry.
-                Effect.runFork(releaseUploads(takeUploads([file.id]), release));
+                // The upload the file holds goes back at once, not at expiry,
+                // and its hold is forgotten once the server gave its place back.
+                Effect.runFork(
+                  releaseUploads(readUploads([file.id]), release).pipe(
+                    Effect.tap((given) =>
+                      Effect.sync(() => forgetUploads(given))
+                    )
+                  )
+                );
               }}
               type="button"
               variant="secondary"
