@@ -225,9 +225,10 @@ The statuses for `Idempotency-Key` follow the IETF draft
 a standard (read 13 October 2026), so this ADR owns the behavior. The public API
 today allows 120 requests a minute with a burst of 30 for each client address
 (`packages/backend/confect/routes/agent/quota.impl.ts`). Embed needs the list of
-web domains that may frame a school page. The tenant record holds none
-(`packages/backend/confect/tenancy/schema.ts`), and ADR 0011 plans the school's
-own domains for later, so embed waits for them.
+web domains that may frame a school page. The tenant record holds none: its one
+list of domains is the email domains that a claim admits
+(`packages/backend/confect/tenancy/schema.ts` and `policy.ts`). ADR 0011 plans
+the school's own domains for later, so embed waits for them.
 
 ### Standards are adapters at one seam
 
@@ -324,11 +325,13 @@ What `pnpm-lock.yaml` holds:
   dependency of the Agent component, so `zod` stays while `ai` stays, and no
   check names it.
 - `convex-helpers` is a peer of `@convex-dev/agent`, `@convex-dev/resend`,
-  `@convex-dev/workflow`, and `@convex-dev/workpool`, and a dependency of
-  `@convex-dev/aggregate` and `@convex-dev/better-auth`. 0.1.128 is its latest
-  release (npm registry, 13 October 2026). It stays in the lock, so replacing it
-  in the files that import it would not remove `hono`, and no newer release
-  exists to upgrade to.
+  `@convex-dev/workflow`, and `@convex-dev/workpool`. It is a dependency of
+  `@convex-dev/aggregate`, of `@convex-dev/better-auth`, and of
+  `@convex-dev/batch-worker` 0.3.3 and 0.3.5, which `aggregate` and
+  `@convex-dev/rate-limiter` 0.4.1 each install as a component inside their own
+  (`src/component/convex.config.ts`). `packages/backend/package.json` declares
+  it too, and an override in `pnpm-workspace.yaml` pins 0.1.128 for every one of
+  them. 0.1.128 is its latest release (npm registry, 13 October 2026).
 
 A probe on 13 October 2026 used a scratch copy of the workspace manifests and
 pnpm 11.28.5, the pinned version, in lock-only mode, and it ran three ways.
@@ -357,9 +360,10 @@ The decision:
   `hono`. The dependency validator (`scripts/dependencies/validate.ts`) reads
   manifests and `pnpm-workspace.yaml` today and not the lock, so the check is new
   there and has its own test. It names `hono` only.
-- The plan said to upgrade or replace `convex-helpers` in the 19 files that import
-  it. The probe shows `hono` leaves without that, and the package stays anyway,
-  so the files stay as they are.
+- `convex-helpers` and the files that import it stay as they are. The plan said
+  to upgrade or replace the package in those files. The probe shows that `hono`
+  leaves without that, and the Convex components above keep the package in the
+  lock anyway.
 
 The 19 files that import `convex-helpers`:
 
@@ -372,8 +376,8 @@ The 19 files that import `convex-helpers`:
   `forums/posts.ts`, `forums/reactions.ts`, `materials/groups.ts`,
   `schools/classMembers.ts`, `schools/classes.ts`, `schools/members.ts`,
   `schools/schools.ts`, `subscriptions/subscriptions.ts`, and `tryouts/scores.ts`.
-  Seven of them (`forums` and `schools`) trigger on tables of the old School,
-  which the retirement in ADR 0011 removes.
+  Those in `forums`, `materials`, and `schools` trigger on tables of the old
+  School, which the retirement in ADR 0011 removes.
 - Three test files: `packages/backend/confect/contents/metrics/apply.test.ts`
   (`getOrThrow`), `packages/backend/confect/privacy/completion.test.ts` and
   `packages/backend/test/content/verify.ts` (`parse`).
@@ -408,7 +412,7 @@ The 19 files that import `convex-helpers`:
   The public document is still built by hand.
 - A webhook carries no names, emails, or text by construction. Its IDs mean
   something only to a receiver that reads them through the REST API with a token.
-- `hono` leaves the lock, and `zod` stays. The importing code does not change.
+- `hono` leaves the lock, and `zod` stays.
 - Client secrets are hashes, so a leaked database does not leak a credential.
   The cost is that a lost secret is replaced and not recovered.
 
@@ -425,8 +429,8 @@ The 19 files that import `convex-helpers`:
 - Hashing the webhook secret. The server must sign with it, so it is sealed.
 - A hand-written OpenAPI document for the school API. The public one drifts
   from its routes by hand, and the school one comes from the definition.
-- Replacing `convex-helpers` to remove `hono`. The package stays in the lock for
-  six Convex components, and `hono` is not needed for it.
+- Replacing `convex-helpers` to remove `hono`. The decision on `convex-helpers`
+  above gives the reason.
 
 ## Implementation Status
 
@@ -440,6 +444,7 @@ The 19 files that import `convex-helpers`:
 | School REST, school MCP, and the CLI login | Planned, program wave C |
 | Webhooks and exports | Planned, program wave C |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
+| The OneRoster CSV import, which uses the file import checks of ADR 0015 | Planned, program wave C |
 | `hono@4.13.13` in `pnpm-lock.yaml` | Present. Removal and its check are planned, program wave A. |
 
 ## References
