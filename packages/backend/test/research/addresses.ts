@@ -235,7 +235,8 @@ export const ADDRESS_VERDICTS: readonly GoldenVerdict[] = [
   ["8.8", "allowed", "none"],
   ["0x0a.1", "refused", "none"],
   ["08.0.0.1", "refused", "none"],
-  ["127.0.0.1.", "refused", "none"],
+  ["127.0.0.1.", "refused", "refused"],
+  ["127.0.0.1...", "refused", "refused"],
   ["127.0.0.1:80", "refused", "none"],
   ["256.0.0.1", "refused", "none"],
   ["1.2.3.4.5", "refused", "none"],
@@ -247,6 +248,8 @@ export const ADDRESS_VERDICTS: readonly GoldenVerdict[] = [
   ["LOCALHOST", "refused", "none"],
   ["admin.localhost", "refused", "none"],
   ["localhost.", "refused", "none"],
+  ["localhost..", "refused", "none"],
+  [".", "refused", "none"],
   ["127.0.0.1.nip.io", "allowed", "none"],
   // The global unicast space 2000::/3 and the reserved space around it
   ["[1fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]", "refused", "refused"],

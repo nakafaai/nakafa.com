@@ -24,15 +24,19 @@ describe("research URL policy", () => {
     expect(isPublicHttpUrlSyntax("http://10.0.0.1")).toBe(false);
   });
 
-  it("refuses a localhost name with its root dot, since it is the same name", () => {
+  it("refuses a name with root dots when the name without them is refused", () => {
     expect(isPublicHttpUrlSyntax("http://localhost./docs")).toBe(false);
     expect(isPublicHttpUrlSyntax("http://localhost../docs")).toBe(false);
     expect(isPublicHttpUrlSyntax("http://admin.localhost./")).toBe(false);
+    expect(isPublicHttpUrlSyntax("http://127.0.0.1.../docs")).toBe(false);
+    expect(isPublicHttpUrlSyntax("http://./docs")).toBe(false);
   });
 
   it("normalizes hostnames before range checks", () => {
     expect(normalizeHostname(" [::1] ")).toBe("::1");
     expect(normalizeHostname("EXAMPLE.COM")).toBe("example.com");
+    expect(normalizeHostname("example.com.")).toBe("example.com");
+    expect(normalizeHostname("[::1].")).toBe("::1");
   });
 
   it("judges IP literals and leaves host names unjudged", () => {
