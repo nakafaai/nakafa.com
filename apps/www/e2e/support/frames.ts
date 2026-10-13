@@ -137,18 +137,20 @@ export const encodeTransition = Schema.encodeSync(
   Schema.fromJsonString(WholeTransitionSchema)
 );
 
+/** One update of a whole transition. */
+type Update = (typeof WholeTransitionSchema.Type)["modifications"][number];
+
 /**
- * The transition `text` with the answers to the queries `queryIds` turned into
- * the failure a server sends when the function throws: `data` is what the page
- * decodes as the typed failure of the function. None when the transition
- * updates none of those queries.
+ * The transition `text` with each answer to the queries `queryIds` replaced by
+ * what `replace` makes of it, and every other update and field as the server
+ * wrote it. None when the transition updates none of those queries.
  */
-export const failQueriesIn = (
+const replaceAnswersIn = (
   text: string,
   queryIds: readonly number[],
-  data: unknown
+  replace: (update: Update) => Update
 ) => {
-  const answersQuery = (update: { queryId: number; type: string }) =>
+  const answersQuery = (update: Update) =>
     update.type === "QueryUpdated" && Arr.contains(queryIds, update.queryId);
 
   return decodeTransition(text).pipe(
@@ -159,18 +161,45 @@ export const failQueriesIn = (
       encodeTransition({
         ...transition,
         modifications: Arr.map(transition.modifications, (update) =>
-          answersQuery(update)
-            ? {
-                errorData: data,
-                errorMessage: "Refused by the test",
-                journal: update.journal,
-                logLines: [],
-                queryId: update.queryId,
-                type: "QueryFailed",
-              }
-            : update
+          answersQuery(update) ? replace(update) : update
         ),
       })
     )
   );
 };
+
+/**
+ * The transition `text` with the answers to the queries `queryIds` turned into
+ * the failure a server sends when the function throws: `data` is what the page
+ * decodes as the typed failure of the function. None when the transition
+ * updates none of those queries.
+ */
+export const failQueriesIn = (
+  text: string,
+  queryIds: readonly number[],
+  data: unknown
+) =>
+  replaceAnswersIn(text, queryIds, ({ journal, queryId }) => ({
+    errorData: data,
+    errorMessage: "Refused by the test",
+    journal,
+    logLines: [],
+    queryId,
+    type: "QueryFailed",
+  }));
+
+/**
+ * The transition `text` with the value that each of the queries `queryIds`
+ * answers changed by `change`, the way a backend that held other data would
+ * answer, and the rest of each update as the server wrote it. None when the
+ * transition updates none of those queries.
+ */
+export const changeAnswersIn = (
+  text: string,
+  queryIds: readonly number[],
+  change: (value: unknown) => unknown
+) =>
+  replaceAnswersIn(text, queryIds, (update) => ({
+    ...update,
+    value: change(update.value),
+  }));

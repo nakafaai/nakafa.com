@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { createUndo } from "@/components/user/settings/memory/undo";
 
 describe("the Undo of a deletion", () => {
-  it("writes the memory back at once when the server already deleted it", () => {
+  it("puts the memory back at once when the server already deleted it", () => {
     const restore = vi.fn();
     const undo = createUndo(restore, vi.fn());
 
@@ -12,7 +12,7 @@ describe("the Undo of a deletion", () => {
     expect(restore).toHaveBeenCalledTimes(1);
   });
 
-  it("waits for the server when it is pressed while the deletion is on its way, and writes the memory back once", () => {
+  it("waits for the server when it is pressed while the deletion is on its way, and puts the memory back once", () => {
     const restore = vi.fn();
     const undo = createUndo(restore, vi.fn());
 
@@ -23,7 +23,7 @@ describe("the Undo of a deletion", () => {
     expect(restore).toHaveBeenCalledTimes(1);
   });
 
-  it("writes nothing when the server kept the memory, whether the press came before the answer or after", () => {
+  it("puts nothing back when the server kept the memory, whether the press came before the answer or after", () => {
     const early = vi.fn();
     const pressedFirst = createUndo(early, vi.fn());
     pressedFirst.press();
@@ -37,23 +37,12 @@ describe("the Undo of a deletion", () => {
     expect(late).not.toHaveBeenCalled();
   });
 
-  it("keeps the words while the server has not answered, though the offer ended, and lets them go once the server deleted the memory", () => {
+  it("keeps the words until the server has answered, and lets them go once it deleted the memory, pressed or not", () => {
     const release = vi.fn();
     const undo = createUndo(vi.fn(), release);
 
-    undo.closed();
     expect(release).not.toHaveBeenCalled();
     undo.deleted();
-    expect(release).toHaveBeenCalledTimes(1);
-  });
-
-  it("keeps the words after the server deleted the memory for as long as the Undo is offered", () => {
-    const release = vi.fn();
-    const undo = createUndo(vi.fn(), release);
-
-    undo.deleted();
-    expect(release).not.toHaveBeenCalled();
-    undo.closed();
     expect(release).toHaveBeenCalledTimes(1);
   });
 
@@ -61,7 +50,6 @@ describe("the Undo of a deletion", () => {
     const release = vi.fn();
     const undo = createUndo(vi.fn(), release);
 
-    undo.closed();
     undo.kept();
     expect(release).not.toHaveBeenCalled();
   });

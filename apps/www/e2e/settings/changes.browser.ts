@@ -149,7 +149,8 @@ test.describe("Memory changes at 1440px", () => {
  * With the editor open beside the list, the learner writes a letter and
  * deletes the memory from its row before the editor has saved it. The editor
  * closes, the deletion is the only change sent, and nothing says the memory no
- * longer exists. An Undo then writes back what the editor showed.
+ * longer exists. An Undo then puts the memory back as the server stored it,
+ * which never held the letter.
  */
 const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
   function* (page: Page, baseURL: string) {
@@ -182,16 +183,18 @@ const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
       await expect(page.getByText(MISSING)).toHaveCount(0);
       await expect(page.getByText(EMPTY)).toBeVisible();
 
-      // Undo writes back what the editor showed, the letter included, and not
-      // the words the server had stored. The count starts again here, so the
-      // wait is for the Undo's own write and not for the deletion before it.
+      // Undo puts back the words the server had stored, and not the letter the
+      // editor had not saved. The count starts again here, so the wait is for
+      // the Undo's own change and not for the deletion before it.
       const undone = changes.sent;
       await page
         .locator("[data-sonner-toast]")
         .getByRole("button", { name: "Undo" })
         .click();
-      await expect(memoryRow(page, "!")).toBeVisible();
+      await expect(row).toBeVisible();
       await saved(changes, undone);
+      expect(changes.argumentsOf("nina/memory:restore")).toHaveLength(1);
+      await expect(memoryRow(page, "!")).toHaveCount(0);
     });
   }
 );

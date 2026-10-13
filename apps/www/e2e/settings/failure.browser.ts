@@ -116,8 +116,8 @@ const verifyFailedUndo = Effect.fn("NakafaE2E.verifyFailedUndo")(function* (
     await expect(row).toHaveCount(0);
     await saved(changes, before);
 
-    // The server cannot take the memory back, so its words open in the editor.
-    changes.failNext();
+    // The server cannot put the memory back, so its words open in the editor.
+    changes.failNext("nina/memory:restore");
     await page.getByRole("button", { name: "Undo" }).click();
     await expect(page.getByText(FAILED).first()).toBeVisible();
     await opened(page, KEPT);

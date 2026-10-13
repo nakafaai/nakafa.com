@@ -3,6 +3,7 @@ import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Option, Schema } from "effect";
 import { Base64 } from "effect/encoding";
 import {
+  changeAnswersIn,
   decodeGiven,
   decodeSent,
   encodeRefusal,
@@ -163,6 +164,80 @@ describe("the frames of the realtime connection", () => {
     ] as const;
     for (const [frame, queryIds] of left) {
       expect(Option.isNone(failQueriesIn(frame, queryIds, failure))).toBe(true);
+    }
+  });
+
+  it("changes what a query answers and keeps the rest of the transition as it was", () => {
+    const versions = {
+      endVersion: { identity: 2, querySet: 4, ts: "AgAAAAAAAAA=" },
+      startVersion: { identity: 2, querySet: 3, ts: "AQAAAAAAAAA=" },
+    };
+    const answered = encodeJsonText({
+      ...versions,
+      modifications: [
+        {
+          journal: "j",
+          logLines: [],
+          queryId: 3,
+          type: "QueryUpdated",
+          value: { page: [1, 2], isDone: true },
+        },
+        {
+          journal: null,
+          logLines: [],
+          queryId: 4,
+          type: "QueryUpdated",
+          value: { page: [3] },
+        },
+        { queryId: 5, type: "QueryRemoved" },
+      ],
+      type: "Transition",
+    });
+    const double = (value: unknown) => ({ answered: value, doubled: true });
+
+    const changed = changeAnswersIn(answered, [3], double).pipe(
+      Option.map(Schema.decodeSync(JsonTextSchema)),
+      Option.getOrUndefined
+    );
+
+    expect(changed).toEqual({
+      ...versions,
+      modifications: [
+        {
+          journal: "j",
+          logLines: [],
+          queryId: 3,
+          type: "QueryUpdated",
+          value: { answered: { page: [1, 2], isDone: true }, doubled: true },
+        },
+        {
+          journal: null,
+          logLines: [],
+          queryId: 4,
+          type: "QueryUpdated",
+          value: { page: [3] },
+        },
+        { queryId: 5, type: "QueryRemoved" },
+      ],
+      type: "Transition",
+    });
+    // A transition that updates none of the queries, a query that was removed
+    // and a frame that is no transition are left alone.
+    const left = [
+      [answered, [9]],
+      [
+        encodeJsonText({
+          modifications: [{ queryId: 3, type: "QueryRemoved" }],
+          type: "Transition",
+        }),
+        [3],
+      ],
+      [encodeJsonText({ type: "Ping" }), [3]],
+    ] as const;
+    for (const [frame, queryIds] of left) {
+      expect(Option.isNone(changeAnswersIn(frame, queryIds, double))).toBe(
+        true
+      );
     }
   });
 
