@@ -12,14 +12,28 @@ import type {
   NinaTurnTiming,
 } from "@repo/backend/confect/nina/contract/turn";
 import { refundCredits } from "@repo/backend/confect/nina/credits/ledger";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
+import { reportLostRun } from "@repo/backend/confect/nina/diagnostics";
 import { answered, cutOff } from "@repo/backend/confect/nina/journal";
+import { sinceAdmission } from "@repo/backend/confect/nina/timing";
 import { NinaSettledTurn } from "@repo/backend/confect/nina/turns.spec";
-import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Result, Schema } from "effect";
 
 /**
  * Writes the end of an active turn in the transaction that decided it: an
  * unanswered turn gets its hold back, its chat is freed, and the turn is
  * replaced by its settled form. `failure` is the reason a failed turn stores.
+ *
+ * A turn that ends without an answer after its deadline lost its run, because
+ * no live run is open that long (`TURN_DEADLINE`), unless the learner stopped
+ * it or its own run came back to end it. The sweep, the end of the settlement
+ * grace (`abandonTurn`) and the delete of a chat end such a turn, and this
+ * reports the loss, whichever status the ending stores. Only an active turn is
+ * closed, so it is reported once, however many sweeps and late results reach
+ * the turn. A turn the learner stopped has `cancelRequestedAt`, and one that
+ * holds an answer ends as complete: neither is a loss. Only the exit of the
+ * run itself passes `timing`, which only it knows, and a run reports its own
+ * failure (`reportFailure`), however late it fails.
  */
 export const closeTurn = Effect.fn("nina.settlement.close")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>,
@@ -56,6 +70,7 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
       .pipe(Effect.orDie);
   }
   const settledAt = yield* Clock.currentTimeMillis;
+  const reason = failure ?? "interrupted";
   // A turn the learner stopped finished when they stopped it, however late it
   // settles, so the time the page already shows does not move.
   const finishedAt =
@@ -78,7 +93,7 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
     ...(timing ? { timing: { ...turn.timing, ...timing } } : {}),
     state:
       status === "failed"
-        ? { status, finishedAt, reason: failure ?? "interrupted" }
+        ? { status, finishedAt, reason }
         : { status, finishedAt },
   }).pipe(Effect.orDie);
   yield* writer
@@ -112,28 +127,35 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
               name: "chat response failed",
               properties: {
                 chat_type: chat.type,
-                error_code: failure ?? "interrupted",
+                error_code: reason,
               },
             },
       timestamp: finishedAt,
     });
   }
+  const openMs = sinceAdmission(turn, settledAt);
+  if (
+    status !== "complete" &&
+    turn.cancelRequestedAt === undefined &&
+    timing === undefined &&
+    openMs > Duration.toMillis(TURN_DEADLINE)
+  ) {
+    yield* reportLostRun(turn, reason, openMs);
+  }
 });
 
 /**
  * Inspect the Agent journal and settle its existing hold in the same
- * transaction. Only an active turn settles, so a second settlement of the same
- * turn changes nothing and never refunds twice.
+ * transaction. Only an active turn is passed in. Every caller reads the turn in
+ * the transaction that settles it and leaves a settled one alone, so a turn
+ * settles once and its hold is never paid back twice.
  */
 export const settleTurn = Effect.fn("nina.settlement")(function* (
-  turn: NinaTurnsDoc,
+  turn: Extract<NinaTurnsDoc, { phase: "active" }>,
   interrupted: "failed" | "cancelled",
   failure?: typeof NinaFailureReason.Type,
   timing?: typeof NinaTurnTiming.Type
 ) {
-  if (turn.phase !== "active") {
-    return;
-  }
   const completed = yield* answered(turn);
   if (!completed) {
     yield* cutOff(turn, interrupted);
@@ -206,9 +228,10 @@ export const stopTurn = Effect.fn("nina.settlement.stop")(function* (
 export const settleStopped = Effect.fn("nina.settlement.stopped")(function* (
   learner: Docs["users"]
 ) {
-  const stopped = Arr.filter(
-    yield* activeTurns(learner._id),
-    (turn) => turn.phase === "active" && turn.cancelRequestedAt !== undefined
+  const stopped = Arr.filterMap(yield* activeTurns(learner._id), (turn) =>
+    turn.phase === "active" && turn.cancelRequestedAt !== undefined
+      ? Result.succeed(turn)
+      : Result.failVoid
   );
   if (!Arr.isReadonlyArrayNonEmpty(stopped)) {
     return learner;

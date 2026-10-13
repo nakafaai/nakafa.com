@@ -62,7 +62,7 @@ export const bypassed = [
   "/sitemap/base.xml",
   "/llms/en/articles/page/0/llms.txt",
   "/_next/static/chunks/app.js",
-  "/classes/bacteria.png",
+  "/logos/itb.png",
   "/models/physics/kinematics/kenney-car-kit/Textures/colormap.png",
   "/open-graph/curriculum/en-merdeka.png",
   "/missing.png",
