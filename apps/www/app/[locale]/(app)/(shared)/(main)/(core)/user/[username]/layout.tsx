@@ -1,13 +1,8 @@
-import { HttpClient } from "@confect/js";
-import auth from "@repo/backend/confect/_generated/refs/auth";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { Effect } from "effect";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
-import { getToken } from "@/lib/auth/server";
-import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { readProfile } from "@/lib/profile/server";
 
@@ -44,37 +39,20 @@ async function UserLayoutContent(
   props: LayoutProps<"/[locale]/user/[username]">
 ) {
   const { children, params } = props;
-  const [{ username, locale }, token] = await Promise.all([params, getToken()]);
+  const { username: address, locale } = await params;
   getLocaleOrThrow(locale);
-
-  const [profile, account] = await Promise.all([
-    readProfile(username),
-    token
-      ? Effect.runPromise(
-          HttpClient.HttpClient.pipe(
-            Effect.flatMap((client) =>
-              client.query(auth.queries.getCurrentUser, {})
-            ),
-            Effect.provide(httpLayer({ auth: token }))
-          )
-        )
-      : null,
-  ]);
+  const { account, username } = await readProfile(address);
 
   return (
     <ErrorBoundary fallback={null}>
       <main className="relative mx-auto min-h-[calc(100svh-4rem)] max-w-3xl px-6 py-10 sm:py-20 lg:min-h-svh">
         <div className="flex flex-col gap-6">
           <UserHeader
-            initialOwnerEmail={
-              account?.appUser._id === profile._id
-                ? account.authUser.email
-                : null
-            }
-            initialProfile={profile}
-            userId={profile._id}
+            initialOwnerEmail={account.authUser.email}
+            initialProfile={account.appUser}
+            userId={account.appUser._id}
           />
-          <UserTabs username={profile.username} />
+          <UserTabs username={username} />
           {children}
         </div>
       </main>

@@ -1,3 +1,4 @@
+import { String as Str } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense, use } from "react";
@@ -13,16 +14,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale: rawLocale, username } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const [t, profile] = await Promise.all([
-    getTranslations({ locale, namespace: "Auth" }),
-    readProfile(username),
-  ]);
+  const t = await getTranslations({ locale, namespace: "Auth" });
 
   return {
     title: t("chat"),
     description: t("chat-description"),
     alternates: {
-      canonical: `/${locale}${profileHref(profile.username)}/chat`,
+      canonical: `/${locale}${profileHref(Str.toLowerCase(username))}/chat`,
     },
   };
 }
@@ -42,6 +40,6 @@ function UserChatsRoute({
   params,
 }: Pick<PageProps<"/[locale]/user/[username]/chat">, "params">) {
   const { username } = use(params);
-  const { _id } = use(readProfile(username));
-  return <UserChats userId={_id} />;
+  const { account } = use(readProfile(username));
+  return <UserChats userId={account.appUser._id} />;
 }

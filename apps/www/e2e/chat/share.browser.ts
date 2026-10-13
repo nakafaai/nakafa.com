@@ -1,4 +1,7 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/standalone/en.json" with {
+  type: "json",
+};
 import { Array as Arr, Effect } from "effect";
 import { ANSWER_MILLISECONDS, type Changes } from "@/e2e/support/changes";
 import { runOnPage } from "@/e2e/support/chat";
@@ -28,8 +31,6 @@ import {
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";
-/** What another learner's profile says in place of a list of chats. */
-const BY_LINK = "A shared chat opens with its link";
 
 /** The link the dialog copies: the chat id alone in the path, and a token of 43 characters in the fragment. */
 const copiesALink = Effect.fn("NakafaE2E.copiesALink")(function* (
@@ -95,15 +96,22 @@ const losesTheChat = (reader: Page) =>
     expect(await reader.evaluate(() => Reflect.get(window, "kept"))).toBe(true);
   });
 
-/** The learners' chats pages: another learner's lists nothing, and the owner's lists the shared chat. */
-const profilesShowOnlyTheOwn = (owner: Page, member: Page, ownerId: string) =>
+/**
+ * The learners' chats pages: no profile is public, so another learner finds
+ * the page not there, and the owner's lists the shared chat.
+ */
+const profilesShowOnlyTheOwn = (
+  owner: Page,
+  member: Page,
+  ownerUsername: string
+) =>
   Effect.promise(async () => {
-    await member.goto(`/en/user/${ownerId}/chat`);
-    await expect(member.getByText(BY_LINK)).toBeVisible({
-      timeout: readinessTimeoutMilliseconds,
-    });
+    await member.goto(`/en/@${ownerUsername}/chat`);
+    await expect(
+      member.getByRole("heading", { level: 1, name: en.NotFound.title })
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await expect(pageRows(member)).toHaveCount(0);
-    await owner.goto(`/en/user/${ownerId}/chat`);
+    await owner.goto(`/en/@${ownerUsername}/chat`);
     // A row is the link that covers it and its words beside it, so the test reads their parent.
     const rows = pageRows(owner).locator("xpath=..");
     await expect(rows).toHaveCount(1, {
@@ -212,7 +220,7 @@ const sharesAndStops = Effect.fn("NakafaE2E.sharesAndStops")(function* (
           ).toBe(false);
         });
 
-        yield* profilesShowOnlyTheOwn(page, member, owner.learner.userId);
+        yield* profilesShowOnlyTheOwn(page, member, owner.learner.username);
       })
     )
   );

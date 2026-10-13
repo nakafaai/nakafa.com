@@ -151,18 +151,22 @@ function readArticleMigrationRedirect(migration: ArticleMigration) {
 
 /**
  * Resolves one retired public URL to its exact current successor, with the
- * status that answers it: a try-out rule answers 307 or 308, the profile rule
- * answers 307, and every other rule answers 308. A try-out URL that carries an
- * attempt stays on the route its attempt was frozen to.
+ * status that answers it: a try-out rule answers 307 or 308, and every other
+ * rule answers 308. A try-out URL that carries an attempt stays on the route
+ * its attempt was frozen to. The request headers carry the session that the
+ * retired address of a profile needs, and a request that gives none is a
+ * visitor.
  */
 export const readPublicUrlMigrationRedirect = Effect.fn(
   "www.routing.publicHtml.urlMigrationRedirect"
 )(function* ({
   hasAttemptCapability,
+  headers = new Headers(),
   method,
   pathname,
 }: {
   hasAttemptCapability: boolean;
+  headers?: Headers;
   method: string;
   pathname: string;
 }) {
@@ -179,7 +183,7 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   if (tryoutRedirect) {
     return tryoutRedirect;
   }
-  const profileRedirect = yield* readProfileRedirect(pathname);
+  const profileRedirect = yield* readProfileRedirect(pathname, headers);
   if (profileRedirect) {
     return profileRedirect;
   }

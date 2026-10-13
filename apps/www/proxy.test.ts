@@ -191,6 +191,7 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe(targetUrl.toString());
     expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
       hasAttemptCapability: false,
+      headers: expect.any(Headers),
       method: "GET",
       pathname: sourceUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""),
     });
@@ -211,6 +212,7 @@ describe("proxy", () => {
     await requestProxy(`${pathname}?attemptId=attempt-1`);
     expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
       hasAttemptCapability: true,
+      headers: expect.any(Headers),
       method: "GET",
       pathname,
     });
@@ -380,6 +382,7 @@ describe("proxy", () => {
       expect(response.status).not.toBe(410);
       expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
         hasAttemptCapability: false,
+        headers: expect.any(Headers),
         method: "GET",
         pathname: path,
       });

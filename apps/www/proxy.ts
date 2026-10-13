@@ -136,6 +136,7 @@ export async function proxy(request: NextRequest) {
       hasAttemptCapability: hasTryoutAttemptCapability(
         request.nextUrl.searchParams
       ),
+      headers: request.headers,
       method: request.method,
       pathname: migrationPathname,
     })
