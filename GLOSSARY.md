@@ -103,6 +103,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 - **Checkout admission**: The account-lifecycle revalidation performed after a checkout is created and before its link is released. Its result is Admitted or Unavailable; integration failures remain distinct.
 
+## Connectors And Integrations
+
+- **Connector**: An adapter in `confect/connectors` that reads one external source into Nakafa, such as Google Drive, Forms, Classroom, Calendar, or Gmail, or a file such as Dapodik XLSX. It only reads; what leaves Nakafa is an Integration surface.
+- **Connection**: One Connector authorized by one owner, a learner for a personal connection or a school for a school connection. Its tokens are sealed in the vault under the owner's key, and it enters the reconnect state when Google refuses its token.
+- **Integration client**: An app that calls a school's REST API or MCP server with OAuth 2.0 client credentials. It holds the Integration role over its tenant or one unit, limited to the actions on its list.
+- **Hook**: A signed webhook of one Integration client, fed from the Journal. It delivers only published changes that the client could read, and one row per attempt records the delivery.
+
 ## Forum Conversation
 
 - **Forum Conversation**: The opened discussion surface for one class forum, usually shown as the right-side panel beside the forum list.
