@@ -24,13 +24,16 @@ import { Array as Arr, Clock, Duration, Effect, Result, Schema } from "effect";
  * unanswered turn gets its hold back, its chat is freed, and the turn is
  * replaced by its settled form. `failure` is the reason a failed turn stores.
  *
- * A turn that fails after its deadline lost its run, because no live run is
- * open that long (`TURN_DEADLINE`). The sweep and the end of the settlement
- * grace (`abandonTurn`) end such a turn, and this reports the loss. Only an
- * active turn is closed, so it is reported once, however many sweeps and late
- * results reach the turn. A turn the learner stopped ends as cancelled and one
- * that holds an answer as complete, and neither is a loss. A run that fails
- * within its deadline reports itself (`reportFailure`).
+ * A turn that ends without an answer after its deadline lost its run, because
+ * no live run is open that long (`TURN_DEADLINE`), unless the learner stopped
+ * it or its own run came back to end it. The sweep, the end of the settlement
+ * grace (`abandonTurn`) and the delete of a chat end such a turn, and this
+ * reports the loss, whichever status the ending stores. Only an active turn is
+ * closed, so it is reported once, however many sweeps and late results reach
+ * the turn. A turn the learner stopped has `cancelRequestedAt`, and one that
+ * holds an answer ends as complete: neither is a loss. Only the exit of the
+ * run itself passes `timing`, which only it knows, and a run reports its own
+ * failure (`reportFailure`), however late it fails.
  */
 export const closeTurn = Effect.fn("nina.settlement.close")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>,
@@ -131,7 +134,12 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
     });
   }
   const openMs = sinceAdmission(turn, settledAt);
-  if (status === "failed" && openMs > Duration.toMillis(TURN_DEADLINE)) {
+  if (
+    status !== "complete" &&
+    turn.cancelRequestedAt === undefined &&
+    timing === undefined &&
+    openMs > Duration.toMillis(TURN_DEADLINE)
+  ) {
     yield* reportLostRun(turn, reason, openMs);
   }
 });

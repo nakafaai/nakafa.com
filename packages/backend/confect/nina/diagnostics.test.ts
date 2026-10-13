@@ -20,6 +20,7 @@ const NOW = Date.UTC(2026, 8, 27, 12);
 const DEADLINE = Duration.toMillis(TURN_DEADLINE);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
+const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -74,11 +75,7 @@ it.effect.each([
       const f = yield* Effect.promise(() =>
         createNinaTest({ prompt: "private user prompt" })
       );
-      yield* Effect.promise(() =>
-        f.t.action(Ref.getFunctionReference(refs.internal.nina.response.run), {
-          turnId: f.turnId,
-        })
-      );
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
       expect(capture).toHaveBeenCalledTimes(1);
       const report = capture.mock.calls[0]?.[1];
       expect(report?.additionalProperties).toMatchObject({
@@ -106,11 +103,7 @@ it.effect(
         throw new Error("private defect");
       });
       const f = yield* Effect.promise(() => createNinaTest());
-      yield* Effect.promise(() =>
-        f.t.action(Ref.getFunctionReference(refs.internal.nina.response.run), {
-          turnId: f.turnId,
-        })
-      );
+      yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
       const saved = yield* Effect.promise(() =>
         f.t.query(async (ctx) => ({
           turn: await ctx.db.get("ninaTurns", f.turnId),
@@ -213,26 +206,19 @@ describe("The report of a turn whose run was lost", () => {
   });
 
   it.each([
-    [
-      "not as a lost run when the turn is within its deadline, because its run reports itself",
-      DEADLINE,
-      0,
-    ],
-    [
-      "once as a lost run when the turn stayed open past its deadline",
-      DEADLINE + 1,
-      1,
-    ],
+    ["within its deadline", DEADLINE],
+    ["after its deadline", DEADLINE + 1],
   ])(
-    "reports a failure that ends a turn: %s",
-    async (_name, openFor, reports) => {
+    "leaves the failure of a run that ends its own turn %s to the run",
+    async (_name, openFor) => {
       const capture = stubReport();
       const f = await createNinaTest({ now: NOW });
       await f.t.mutation(claim, { turnId: f.turnId });
       vi.setSystemTime(NOW + openFor);
 
       // The run's own exit passes the reason it failed with and the stages it
-      // reached, as `generation` does.
+      // reached, as `generation` does. Only a run that came back can do that,
+      // so its turn is not lost, and the run reports its failure itself.
       await f.t.mutation(recover, {
         turnId: f.turnId,
         failure: "provider-busy",
@@ -243,7 +229,40 @@ describe("The report of a turn whose run was lost", () => {
         status: "failed",
         reason: "provider-busy",
       });
-      expect(capture).toHaveBeenCalledTimes(reports);
+      expect(capture).not.toHaveBeenCalled();
     }
   );
+
+  it("reports a run that fails after its deadline once, as the run, and not again as a lost run", async () => {
+    const capture = stubReport();
+    provider.languageModel.mockReturnValue(
+      new MockLanguageModelV4({
+        // The provider fails late: the deadline of the turn passes while the
+        // call is open, and the run is still the one that ends its own turn.
+        doStream: () => {
+          vi.setSystemTime(NOW + DEADLINE + 1);
+          return Promise.resolve(
+            ninaStream([{ type: "error", error: failures["rate-limit"] }])
+          );
+        },
+      })
+    );
+    const f = await createNinaTest({ now: NOW });
+    await f.t.action(run, { turnId: f.turnId });
+
+    expect((await f.inspect()).turn?.state).toMatchObject({
+      status: "failed",
+      reason: "provider-busy",
+    });
+    expect(capture).toHaveBeenCalledOnce();
+    // The report is the run's own, with the facts of the gateway, and not the
+    // one that a lost run gets.
+    expect(capture.mock.calls[0]?.[1].additionalProperties).toEqual({
+      source: "nina-response",
+      operation: "provider-busy",
+      gateway_model_id: "google/gemini-3.8-flash",
+      gateway_status_code: 429,
+      gateway_retryable: true,
+    });
+  });
 });

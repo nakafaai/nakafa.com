@@ -13,12 +13,14 @@ import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import { resolveEffectiveCreditState } from "@repo/backend/confect/credits/state";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
+import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { stubReport } from "@repo/backend/test/nina/report";
 import { sealedSummary } from "@repo/backend/test/seal";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { Array as Arr, DateTime, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -40,6 +42,7 @@ vi.mock("@convex-dev/agent", async (load) => {
   };
 });
 const NOW = Date.UTC(2026, 8, 27, 12);
+const DEADLINE = Duration.toMillis(TURN_DEADLINE);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const save = Ref.getFunctionReference(refs.public.nina.uploads.save);
 const add = Ref.getFunctionReference(refs.public.nina.memory.add);
@@ -49,6 +52,7 @@ const share = Ref.getFunctionReference(
   refs.public.chats.mutations.updateChatVisibility
 );
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
 const cleanup = Ref.getFunctionReference(
   refs.internal.auth.cleanup.cleanupDeletedUser
@@ -365,6 +369,83 @@ describe("native Nina deletion lifecycle", () => {
       ).toHaveLength(1);
     }
   );
+
+  describe("when its run was lost", () => {
+    let report: ReturnType<typeof stubReport>;
+
+    beforeEach(() => {
+      report = stubReport();
+    });
+    afterEach(() => {
+      report.mockRestore();
+    });
+
+    it.each([
+      {
+        name: "nothing for a turn within its deadline",
+        openFor: DEADLINE,
+        unreadable: false,
+        reported: undefined,
+      },
+      {
+        name: "one loss for a turn past its deadline",
+        openFor: DEADLINE + 1,
+        unreadable: false,
+        reported: "interrupted",
+      },
+      {
+        name: "nothing for a turn within its deadline when the journal cannot be read",
+        openFor: DEADLINE,
+        unreadable: true,
+        reported: undefined,
+      },
+      {
+        name: "one loss for a turn past its deadline when the journal cannot be read",
+        openFor: DEADLINE + 1,
+        unreadable: true,
+        reported: "unknown",
+      },
+    ])(
+      "reports $name when the chat is deleted",
+      async ({ openFor, unreadable, reported }) => {
+        const { owner, receipt, t } = await fixture();
+        await t.mutation(claim, { turnId: receipt.turnId });
+        if (unreadable) {
+          vi.mocked(listMessages).mockRejectedValue(
+            new Error("Private component failure")
+          );
+        }
+        vi.setSystemTime(NOW + openFor);
+
+        await owner.mutation(remove, { chatId: receipt.chatId });
+
+        // However the delete ended the turn, a run that no one stopped and that
+        // was still not done after its deadline was lost, and it is reported
+        // once, so the report does not depend on the journal.
+        if (reported === undefined) {
+          expect(report).not.toHaveBeenCalled();
+          return;
+        }
+        expect(report).toHaveBeenCalledOnce();
+        expect(report.mock.calls[0]?.[1].additionalProperties).toEqual({
+          source: "nina-response",
+          operation: reported,
+          error_location: "settlement",
+        });
+      }
+    );
+
+    it("reports nothing for a turn that the learner had stopped", async () => {
+      const { owner, receipt, t } = await fixture();
+      await t.mutation(claim, { turnId: receipt.turnId });
+      await owner.mutation(cancel, { chatId: receipt.chatId });
+      vi.setSystemTime(NOW + DEADLINE + 1);
+
+      await owner.mutation(remove, { chatId: receipt.chatId });
+
+      expect(report).not.toHaveBeenCalled();
+    });
+  });
 
   it("keeps the chat when the hold of its open turn cannot be paid back, so no credit is dropped to free it", async () => {
     const { t, owner, identity, receipt } = await fixture();
