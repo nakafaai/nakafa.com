@@ -4,15 +4,16 @@ import schoolClassForumsTable from "@repo/backend/confect/_generated/tables/scho
 import { schoolClassReactionCountValidator } from "@repo/backend/confect/classes/schema";
 import { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import { Schema } from "effect";
+
 /** Shared public-safe forum reaction preview payload. */
-export const forumReactionUsersValidator = Schema.Struct({
+const forumReactionUsersValidator = Schema.Struct({
   count: schoolClassReactionCountValidator.fields.count,
   emoji: schoolClassReactionCountValidator.fields.emoji,
   reactors: Schema.mutable(Schema.Array(Schema.String)),
 });
 
 /** Shared public-safe forum attachment payload. */
-export const forumPostAttachmentValidator = Schema.Struct({
+const forumPostAttachmentValidator = Schema.Struct({
   _id: IdSchema("schoolClassForumPostAttachments"),
   mimeType: Schema.String,
   name: Schema.String,
@@ -24,7 +25,7 @@ export const forumPostAttachmentValidator = Schema.Struct({
 const forumUserValidator = userDataValidator;
 
 /** Shared enriched forum post payload returned by detached history queries. */
-export const forumPostWithMetadataValidator = Schema.Struct({
+const forumPostWithMetadataValidator = Schema.Struct({
   ...schoolClassForumPostsTable.Doc.fields,
   attachments: Schema.mutable(Schema.Array(forumPostAttachmentValidator)),
   myReactions: Schema.mutable(Schema.Array(Schema.String)),

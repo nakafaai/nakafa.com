@@ -1,4 +1,5 @@
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
+import { readOutcome } from "@repo/backend/client/nina/outcome";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { type DynamicToolUIPart, getToolName, type ToolUIPart } from "ai";
 import { Result, Schema } from "effect";
@@ -20,25 +21,28 @@ export function readInvocation(
   const output =
     result && Result.isSuccess(result) ? result.success : undefined;
   const artifacts = output?.artifacts ?? [];
+  const capability: typeof LearningCapabilityNameSchema.Type | "unknown" =
+    Schema.is(LearningCapabilityNameSchema)(name) ? name : "unknown";
   return {
     artifacts,
-    capability: Schema.is(LearningCapabilityNameSchema)(name)
-      ? name
-      : ("unknown" as const),
-    state: readState(part, settled, output),
+    capability,
+    state: readState(part, settled, output, capability),
   };
 }
 
 export type Invocation = ReturnType<typeof readInvocation>;
 
 /**
- * The one fact the activity header reads. A finished run takes the outcome the
- * capability stored, so the label cannot disagree with the evidence under it.
+ * The one fact the activity header reads. A finished run reads by the rule that
+ * settles the outcome of a run (`readOutcome`), so a result stored before that
+ * rule reads as a new one does, and the label cannot disagree with the
+ * evidence under it.
  */
 function readState(
   part: ToolUIPart | DynamicToolUIPart,
   settled: boolean,
-  output: typeof CapabilityOutputSchema.Type | undefined
+  output: typeof CapabilityOutputSchema.Type | undefined,
+  capability: string
 ) {
   if (part.state === "output-denied") {
     return "denied" as const;
@@ -52,5 +56,5 @@ function readState(
   if (!output) {
     return "failed" as const;
   }
-  return output.outcome ?? ("done" as const);
+  return readOutcome(output, capability);
 }

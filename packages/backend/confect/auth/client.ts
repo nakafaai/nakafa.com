@@ -30,6 +30,8 @@ import {
 } from "@repo/backend/confect/credits/constants";
 import { getCurrentCreditResetTimestamp } from "@repo/backend/confect/credits/state";
 import { declareWelcomeIntent } from "@repo/backend/confect/emails/welcome/impl";
+import { claimAfterVerification } from "@repo/backend/confect/tenancy/claims";
+import { allocateUsername } from "@repo/backend/confect/users/allocation";
 import { getAppUserByAuthId } from "@repo/backend/confect/users/directory";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
@@ -37,7 +39,11 @@ import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 type UserTriggers = NonNullable<Triggers<DataModel, typeof authSchema>["user"]>;
 type AuthUser = Parameters<NonNullable<UserTriggers["onCreate"]>>[1];
 
-/** Create the app identity and durable welcome intent in the auth transaction. */
+/**
+ * Create the app identity and durable welcome intent in the auth transaction,
+ * and, when the address is already verified, ask for the claim of any invite
+ * that waits for it. The claim itself runs after this transaction.
+ */
 const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
   authUser: AuthUser
 ) {
@@ -45,12 +51,14 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;
   const now = yield* Clock.currentTimeMillis;
+  const username = yield* allocateUsername(authUser.name);
   const userId = yield* writer
     .table("users")
     .insert({
       email: authUser.email,
       authId: authUser._id,
       name: authUser.name,
+      username,
       ...(Predicate.isNullish(authUser.image)
         ? {}
         : {
@@ -76,40 +84,55 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
       userId,
     }
   );
+  if (authUser.emailVerified) {
+    yield* claimAfterVerification(userId, authUser.email);
+  }
 });
 
-/** Project changed profile fields while preventing deleted-account resurrection. */
+/**
+ * Project changed profile fields while preventing deleted-account
+ * resurrection, and, when Better Auth has just verified the address, ask for
+ * the claim of any invite that waits for it.
+ */
 const updateUser = Effect.fn("auth.lifecycle.updateUser")(function* (
   newDoc: AuthUser,
   oldDoc: AuthUser
 ) {
-  if (
-    newDoc.name === oldDoc.name &&
-    newDoc.image === oldDoc.image &&
-    newDoc.email === oldDoc.email
-  ) {
+  const profileChanged =
+    newDoc.name !== oldDoc.name ||
+    newDoc.image !== oldDoc.image ||
+    newDoc.email !== oldDoc.email;
+  const justVerified =
+    newDoc.emailVerified &&
+    (!oldDoc.emailVerified || newDoc.email !== oldDoc.email);
+  if (!(profileChanged || justVerified)) {
     return;
   }
   const appUser = yield* getAppUserByAuthId(newDoc._id);
   if (!appUser || isAccountDeletionPending(appUser)) {
     return;
   }
-  yield* (yield* DatabaseWriter)
-    .table("users")
-    .patch(appUser._id, {
-      email: newDoc.email,
-      name: newDoc.name,
-      image: newDoc.image ?? undefined,
-    })
-    .pipe(Effect.orDie);
-  const scheduler = yield* Scheduler;
-  yield* scheduler.runAfter(
-    Duration.zero,
-    refs.internal.customers.actions.internal.syncCustomer,
-    {
-      userId: appUser._id,
-    }
-  );
+  if (profileChanged) {
+    yield* (yield* DatabaseWriter)
+      .table("users")
+      .patch(appUser._id, {
+        email: newDoc.email,
+        name: newDoc.name,
+        image: newDoc.image ?? undefined,
+      })
+      .pipe(Effect.orDie);
+    const scheduler = yield* Scheduler;
+    yield* scheduler.runAfter(
+      Duration.zero,
+      refs.internal.customers.actions.internal.syncCustomer,
+      {
+        userId: appUser._id,
+      }
+    );
+  }
+  if (justVerified) {
+    yield* claimAfterVerification(appUser._id, newDoc.email);
+  }
 });
 
 /** Schedule immediate deletion completion and its durable recovery attempt. */

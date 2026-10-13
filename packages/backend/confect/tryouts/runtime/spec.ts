@@ -1,6 +1,7 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { EndReason } from "@repo/backend/confect/assessment/gate/end";
+import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import { attemptEndReasonValidator } from "@repo/backend/confect/lib/attempts";
 import {
   Outcome,
   RenderableSpec,
@@ -14,7 +15,7 @@ import { Schema } from "effect";
 const tryoutCurrentSectionValidator = Schema.Struct({
   answeredCount: Schema.Finite,
   completedAt: Schema.Union([Schema.Finite, Schema.Null]),
-  endReason: Schema.Union([attemptEndReasonValidator, Schema.Null]),
+  endReason: Schema.Union([EndReason, Schema.Null]),
   expiresAt: Schema.Finite,
   score: Schema.Union([tryoutScoreResultValidator, Schema.Null]),
   sectionKey: tryoutRouteKeyValidator,
@@ -51,6 +52,12 @@ const runtimeQuestionValidator = Schema.Struct({
   responseSpec: RenderableSpec,
   sourcePath: Schema.String,
   sourceRevision: Schema.String,
+  /**
+   * The version of the latest write of this question, which the next one must
+   * exceed. It stays when the answer is cleared, and is absent before the first
+   * versioned write.
+   */
+  version: Schema.optionalKey(Version),
 });
 const tryoutSectionRuntimeValidator = Schema.Struct({
   attemptId: IdSchema("tryoutAttempts"),

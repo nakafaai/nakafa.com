@@ -3,7 +3,7 @@ import {
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
 } from "@repo/backend/confect/auth/deletion/constants";
 import { Schema } from "effect";
-export const WELCOME_EMAIL_FROM = "Nakafa <nakafa@notifications.nakafa.com>";
+
 const retryBase = 2;
 const retryInitialBackoffMs = 30_000;
 /**

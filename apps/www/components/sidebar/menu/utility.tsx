@@ -15,7 +15,7 @@ import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "next-intl";
 import { SidebarPreferenceSubmenus } from "@/components/sidebar/menu/preference";
 
-/** Renders shared utilities inside the regular and school account menus. */
+/** Renders the shared utilities inside the account menu. */
 export function SidebarUtilityMenuItems() {
   const router = useRouter();
   const t = useTranslations("Common");
