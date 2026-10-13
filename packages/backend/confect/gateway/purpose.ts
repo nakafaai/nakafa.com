@@ -50,7 +50,9 @@ const Budget = Schema.Struct({
  * reasoning, and a proof reasoned for 4,366. A summary wrote 1,042 when it
  * could hold 1,200. It may now hold 2,000, and the reasoning of its call counts
  * against the same cap, so the background cap is twice that. A specialist's
- * answer is read up to 6,000 tokens, so its cap sits just above that.
+ * answer is read up to `NINA_BUDGET.evidence` tokens, so its cap sits just
+ * above that. `nina/budget.test.ts` says how far, and fails when either number
+ * moves without the other.
  */
 export const purposes = {
   chat: {
