@@ -1,12 +1,16 @@
 import { assert, expect } from "@effect/vitest";
+import { components } from "@repo/backend/confect/_generated/components";
 import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/deletion/constants";
+import { noProviderTokens } from "@repo/backend/confect/auth/tokens";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { User } from "better-auth";
-import { Array as Arr, DateTime, Effect, pipe } from "effect";
+import { Array as Arr, DateTime, Effect, pipe, Record as Rec } from "effect";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const BASE64_PADDING_PATTERN = /[=]+$/;
+/** The most account rows a test reads at once. */
+const STORED_ACCOUNT_LIMIT = 200;
 
 /**
  * The one stand-in for Google's token endpoint in a test file. Each sign-in
@@ -168,4 +172,24 @@ export async function signInWithGoogle(
   );
   expect(tokenExchange).toHaveBeenCalledOnce();
   return response;
+}
+
+/** The `account` rows that the Better Auth component holds, oldest first. */
+export async function storedAccounts(
+  test: ReturnType<typeof createConvexTestWithBetterAuth>
+) {
+  const { page } = await test.query((ctx) =>
+    ctx.runQuery(components.betterAuth.adapter.findMany, {
+      model: "account",
+      paginationOpts: { cursor: null, numItems: STORED_ACCOUNT_LIMIT },
+    })
+  );
+  return page;
+}
+
+/** Expects that a stored `account` row holds none of the provider token columns. */
+export function expectNoProviderTokens(row: object) {
+  for (const field of Rec.keys(noProviderTokens)) {
+    expect(row).not.toHaveProperty(field);
+  }
 }
