@@ -201,7 +201,7 @@ thresholds in the catalog were set from what that command printed on 12 October
   owns the requests, the answers it reads, and the failures it reports. The
   provider's SDK is not used. A search (`research/search/provider.ts`) sends the
   query that the research model writes from the learner's request and, when the
-  learner's own words name sites, their hostnames as `includeDomains`
+  learner names sites, their hostnames as `includeDomains`
   ([ADR 0001](./0001-nina-engagement-architecture.md) says what the provider
   documents for that field). A page read (`research/tools/scrape.ts`) sends the
   address of a page, which is a link the learner gave or a result of a search.
@@ -229,10 +229,14 @@ thresholds in the catalog were set from what that command printed on 12 October
   learner's words. The repository sets up no tracer layer and no exporter, so no
   span leaves the process today, and an attribute kept on it would carry the
   learner's words out through a tracer added later.
-  - Sites. The research model puts a site in a search only when the learner's
-    own words name that site or its address. A request for an official, recent,
-    or primary source names no site by itself, so unless the learner names one
-    the search stays open and its queries carry the name of the source. A site
+  - Sites. The research model reads only the task that Nina writes, not the
+    learner's message, so the rule has two halves. Nina writes a domain or an
+    address into the task only when the learner wrote it, never one from memory
+    (`research/capability.ts`), and the research model puts a site in a search
+    only when the task names that site or its address
+    (`research/descriptions.ts`). A request for an official, recent, or primary
+    source names no site by itself, so unless the learner names one the search
+    stays open and its queries carry the name of the source. A site
     that the model writes from memory can be wrong or no longer in use, and a
     search limited to it finds nothing.
     That happened on production: a learner asked for the latest official source

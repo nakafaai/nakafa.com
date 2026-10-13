@@ -5,12 +5,14 @@ import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
  * instructions, the tool's description and the `sites` field all read these
  * words, so none of them can say another thing. A site the model names from
  * memory can be wrong or no longer in use, and a search limited to it then
- * finds nothing. So the learner's own words, not the model's memory, decide
+ * finds nothing. The search step reads only the task that Nina writes, and
+ * Nina writes a site into it only when the learner wrote it
+ * (`research/capability.ts`), so the task, not the model's memory, decides
  * which site a search is limited to (docs/adr/0019-gateway.md, "Search
  * provider").
  */
 export const webSearchSitesRule =
-  "Put a site in the sites field only when the learner's own words name that site or its address. Put its hostname there, also when the learner wrote a URL, and not in the queries. A request for an official, recent, or primary source names no site by itself: leave the sites field out unless the learner names one.";
+  "Put a site in the sites field only when the task names that site or its address. Put its hostname there, also when the task writes a URL, and not in the queries. A request for an official, recent, or primary source names no site by itself: leave the sites field out unless the task names one.";
 
 export const nakafaWebSearch = createPrompt({
   taskContext: `

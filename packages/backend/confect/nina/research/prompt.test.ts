@@ -65,19 +65,19 @@ describe("research prompt", () => {
     );
   });
 
-  it("puts a site in the sites field only when the learner's own words name it, in the same words in the search step and in the tool description", () => {
+  it("puts a site in the sites field only when the task names it, in the same words in the search step and in the tool description", () => {
     const search = researchSearchPrompt({ context, locale: "id" });
 
     expect(webSearchSitesRule).toContain(
-      "Put a site in the sites field only when the learner's own words name that site or its address."
+      "Put a site in the sites field only when the task names that site or its address."
     );
     expect(webSearchSitesRule).toContain(
-      "Put its hostname there, also when the learner wrote a URL, and not in the queries."
+      "Put its hostname there, also when the task writes a URL, and not in the queries."
     );
-    // The kind of source asked for names no site, but a site the learner names
+    // The kind of source asked for names no site, but a site the task names
     // next to it still goes in.
     expect(webSearchSitesRule).toContain(
-      "A request for an official, recent, or primary source names no site by itself: leave the sites field out unless the learner names one."
+      "A request for an official, recent, or primary source names no site by itself: leave the sites field out unless the task names one."
     );
     for (const guidance of [search, nakafaWebSearch]) {
       expect(guidance).toContain(webSearchSitesRule);
