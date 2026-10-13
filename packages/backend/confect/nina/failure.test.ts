@@ -5,7 +5,7 @@ import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr } from "effect";
+import { Array as Arr, MutableList } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -131,14 +131,14 @@ describe("The Nina response run when the AI SDK ends a call at one of its deadli
     // test takes its place: the SDK arms its total deadline with it as it arms
     // the real one, and the test fires it, with the reason Node gives, once the
     // provider has gone silent.
-    const armed: (() => void)[] = [];
+    const armed = MutableList.make<() => void>();
     const nativeTimeout = AbortSignal.timeout.bind(AbortSignal);
     vi.spyOn(AbortSignal, "timeout").mockImplementation((ms) => {
       if (ms !== purposes.chat.timeout.totalMs) {
         return nativeTimeout(ms);
       }
       const deadline = new AbortController();
-      armed.push(() =>
+      MutableList.append(armed, () =>
         deadline.abort(
           new DOMException(
             "The operation was aborted due to timeout",
@@ -163,10 +163,10 @@ describe("The Nina response run when the AI SDK ends a call at one of its deadli
                 });
               },
               pull(controller) {
-                if (Arr.isReadonlyArrayEmpty(armed)) {
+                if (armed.length === 0) {
                   controller.error(new Error("No total deadline was armed."));
                 } else {
-                  Arr.forEach(armed, (fire) => fire());
+                  Arr.forEach(MutableList.toArray(armed), (fire) => fire());
                 }
                 return new Promise<void>(() => undefined);
               },
