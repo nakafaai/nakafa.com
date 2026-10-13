@@ -24,6 +24,12 @@ describe("research URL policy", () => {
     expect(isPublicHttpUrlSyntax("http://10.0.0.1")).toBe(false);
   });
 
+  it("refuses a localhost name with its root dot, since it is the same name", () => {
+    expect(isPublicHttpUrlSyntax("http://localhost./docs")).toBe(false);
+    expect(isPublicHttpUrlSyntax("http://localhost../docs")).toBe(false);
+    expect(isPublicHttpUrlSyntax("http://admin.localhost./")).toBe(false);
+  });
+
   it("normalizes hostnames before range checks", () => {
     expect(normalizeHostname(" [::1] ")).toBe("::1");
     expect(normalizeHostname("EXAMPLE.COM")).toBe("example.com");

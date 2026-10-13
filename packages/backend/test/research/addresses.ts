@@ -17,9 +17,9 @@
  *
  * The first recording came from the ipaddr.js 2.5.0 implementation, and every
  * later change followed the rule above. One gap is still recorded as found:
- * the URL check allows the trailing-dot name `localhost.` and the name
- * `127.0.0.1.nip.io`. The DNS check in tools/safety.ts is the only guard for
- * both.
+ * the URL check allows the name `127.0.0.1.nip.io`, which resolves to loopback.
+ * No Nakafa check looks up a host name, because Firecrawl's servers fetch every
+ * name that the URL check allows.
  */
 export type GoldenAddress = "none" | "public" | "refused";
 
@@ -246,7 +246,7 @@ export const ADDRESS_VERDICTS: readonly GoldenVerdict[] = [
   ["localhost", "refused", "none"],
   ["LOCALHOST", "refused", "none"],
   ["admin.localhost", "refused", "none"],
-  ["localhost.", "allowed", "none"],
+  ["localhost.", "refused", "none"],
   ["127.0.0.1.nip.io", "allowed", "none"],
   // The global unicast space 2000::/3 and the reserved space around it
   ["[1fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]", "refused", "refused"],

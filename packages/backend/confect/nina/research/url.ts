@@ -135,7 +135,15 @@ function isRefusedIpv6(address: NetAddress.Ipv6Address): boolean {
   );
 }
 
-/** Localhost names are refused before DNS can resolve them to loopback. */
+/** The root dots at the end of a name, which mark it as fully qualified. */
+const ROOT_DOTS = /\.+$/u;
+
+/**
+ * Localhost names are refused by name, with or without the root dot that marks
+ * a name as fully qualified, since `localhost.` is the same name. The check
+ * reads the name only: no lookup is made, because Firecrawl fetches a host name.
+ */
 function isLocalHostname(hostname: string) {
-  return hostname === "localhost" || hostname.endsWith(".localhost");
+  const name = hostname.replace(ROOT_DOTS, "");
+  return name === "localhost" || name.endsWith(".localhost");
 }
