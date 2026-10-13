@@ -9,11 +9,11 @@ export type ResponseFixture = Effect.Success<
   ReturnType<typeof seedResponseFixture>
 >;
 /** The public failure a Convex call is expected to reject with. */
-export const ExpectedConvexFailure = Schema.Struct({
+const ExpectedConvexFailure = Schema.Struct({
   code: Schema.String,
   message: Schema.optionalKey(Schema.String),
 });
-export type ExpectedConvexFailure = typeof ExpectedConvexFailure.Type;
+type ExpectedConvexFailure = typeof ExpectedConvexFailure.Type;
 export const setResponseClock = Effect.fn("test.tryout.response.setClock")(
   (offset: number) =>
     Effect.sync(() => vi.setSystemTime(TRYOUT_TEST_NOW + offset))

@@ -42,33 +42,6 @@ export const requireInternalEntrySection = Effect.fn(
   }
 });
 
-/** Resolves the timer row that authorizes answers for one placement. */
-export const loadPlacementSectionAttempt = Effect.fn(
-  "tryouts.runtime.loadPlacementSectionAttempt"
-)(function* (placement: Docs["tryoutAttemptPlacements"]) {
-  return yield* loadSectionAttempt({
-    attemptId: placement.tryoutAttemptId,
-    sectionKey: placement.sectionKey,
-  });
-});
-
-/** Loads one active section attempt by its stable attempt-owned key. */
-export const requireActiveSectionAttempt = Effect.fn(
-  "tryouts.runtime.requireActiveSectionAttempt"
-)(function* (args: { attempt: TryoutAttempt; sectionKey: string }) {
-  const section = yield* loadSectionAttempt({
-    attemptId: args.attempt._id,
-    sectionKey: args.sectionKey,
-  });
-  if (section?.status !== "in-progress") {
-    return yield* new TryoutAttemptStateError({
-      code: "TRYOUT_SECTION_NOT_ACTIVE",
-      message: "Try-out section is not active.",
-    });
-  }
-  return section;
-});
-
 /** Starts one section attempt and its timer inside an active try-out attempt. */
 export const startSectionAttempt = Effect.fn(
   "tryouts.runtime.startSectionAttempt"
@@ -163,19 +136,19 @@ export const startSectionAttempt = Effect.fn(
 });
 
 /** Loads one existing section attempt by its stable section key. */
-const loadSectionAttempt = Effect.fn("tryouts.runtime.loadSectionAttempt")(
-  function* (args: { attemptId: Id<"tryoutAttempts">; sectionKey: string }) {
-    const database = yield* DatabaseReader;
-    return yield* database
-      .table("tryoutSectionAttempts")
-      .get("by_tryoutAttemptId_and_sectionKey", args.attemptId, args.sectionKey)
-      .pipe(
-        Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-        Effect.mapError(toTryoutRuntimeError),
-        Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
-      );
-  }
-);
+export const loadSectionAttempt = Effect.fn(
+  "tryouts.runtime.loadSectionAttempt"
+)(function* (args: { attemptId: Id<"tryoutAttempts">; sectionKey: string }) {
+  const database = yield* DatabaseReader;
+  return yield* database
+    .table("tryoutSectionAttempts")
+    .get("by_tryoutAttemptId_and_sectionKey", args.attemptId, args.sectionKey)
+    .pipe(
+      Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+      Effect.mapError(toTryoutRuntimeError),
+      Effect.catchDefect((cause) => Effect.fail(toTryoutRuntimeError(cause)))
+    );
+});
 
 /** Rejects or expires any other in-progress section timer. */
 const requireNoParallelSectionTimer = Effect.fn(
