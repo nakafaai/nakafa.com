@@ -116,7 +116,8 @@ from it.
 
 Acceptance: in `convex-test`, a submit at a stale version is refused, and a
 document nested 20 levels deep is stored and read back. In Playwright, three
-editors work on one question and no step is lost.
+editors work on one question and no step is lost, and the one renderer of ADR
+0018 draws a Nakafa question and a school question.
 
 ### The formula node
 

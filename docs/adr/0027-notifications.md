@@ -51,8 +51,8 @@ message (ADR 0016).
   column, and a filter with no result shows a caption under the list. The
   browser tests of the inbox use worst-case data at 390 and 1440 px, in light and
   dark.
-- A row is kept for 90 days (K10 default). Deleting an account deletes the rows
-  of the account and of the Persons it held.
+- A row is kept for 90 days, the period that K10 proposes. Deleting an account
+  deletes the rows of the account and of the Persons it held.
 - There is one inbox, at `nakafa.com/id/notifications` (ADR 0026), served by
   the cell that holds the account. Inside a school it opens as a panel on the
   right with a filter, "This school" or "All schools", and it has no second
@@ -220,15 +220,16 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   RFC 8292 written in Effect. AGENTS.md prefers the Effect module that covers the
   job, and the protocol needs Web Crypto and an HTTP client. The push change
   decides, and it records the proof.
-- The final times of the proposals in the tables.
+- The final times of the proposals in the tables, and the final period of an
+  inbox row. The owner sets them (K10).
 
 ## Consequences
 
 - A person who never puts the web app on the Home Screen gets no push on iPhone.
   The inbox and the email are what reaches everyone.
-- The inbox holds one row for each recipient and each notification, for 90 days.
-  A page of the inbox reads the sources of its rows, so the page size is bounded
-  when the inbox is built.
+- The inbox holds one row for each recipient and each notification, for the
+  period above. A page of the inbox reads the sources of its rows, so the page
+  size is bounded when the inbox is built.
 - A guardian reads no grade in an email. The link opens the inbox, where
   permission decides what the guardian sees.
 - The mention and the reply path writes the inbox row in the transaction of the
