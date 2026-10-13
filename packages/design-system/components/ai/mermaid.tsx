@@ -127,18 +127,18 @@ export function Mermaid({
   if (hasCurrentRender && renderState.failed && !renderState.svg) {
     return (
       <div className={cn("flex overflow-auto", className)}>
-        <div className="m-auto w-full border border-destructive bg-card p-4 text-destructive">
+        <div className="m-auto w-full p-4 text-destructive">
           <p className="text-sm">{t("diagram-error")}</p>
           <details className="mt-2">
             <summary className="cursor-pointer text-xs">
               {t("show-code")}
             </summary>
             {renderState.detail ? (
-              <pre className="mt-2 overflow-x-auto rounded border bg-background p-2 text-destructive text-xs">
+              <pre className="mt-2 overflow-x-auto rounded bg-muted p-2 text-destructive text-xs">
                 {renderState.detail}
               </pre>
             ) : null}
-            <pre className="mt-2 overflow-x-auto rounded border bg-background p-2 text-foreground text-xs">
+            <pre className="mt-2 overflow-x-auto rounded bg-muted p-2 text-foreground text-xs">
               {chart}
             </pre>
           </details>
