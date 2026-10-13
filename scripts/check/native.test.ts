@@ -24,9 +24,20 @@ const SERVICE =
 const LAYER =
   'export const ChildLive = Layer.succeed(Child, { pid: Number(spawn("node", [], { detached: true }).pid) });\n';
 
+/** The import of a platform HTTP server, and a module that serves with it. */
+const NODE_HTTP = 'import { createServer } from "node:http";\n';
+const PLATFORM = 'import { NodeHttpServer } from "@effect/platform-node";\n';
+const SERVE =
+  "export const server = NodeHttpServer.make(createServer, { port: 0 });\n";
+
+/** The import of Node's synchronous signing, and the module's calls of it. */
+const NODE_SIGN = 'import { generateKeyPairSync, sign } from "node:crypto";\n';
+const SIGNING =
+  'export const keys = generateKeyPairSync("ed25519");\nexport const signature = sign(null, bytes, keys.privateKey);\n';
+
 describe("native syntax", () => {
   it.effect(
-    "reports runtime imports of Node file, path, and process modules",
+    "reports runtime imports of the Node modules that Effect and the platform replace",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -37,8 +48,19 @@ import type { Stats } from "node:fs";
 import { type Dirent } from "fs";
 import { join, type ParsedPath } from "node:path";
 import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
+import { parseEnv } from "node:util";
+import { availableParallelism } from "node:os";
+import { createServer } from "node:net";
+import { request } from "http";
+import { readFile as read } from "node:fs/promises";
+import { isDeepStrictEqual } from "util/types";
+import { Buffer as Polyfill } from "buffer/";
+import { fileURLToPath } from "node:url";
+import { lookup } from "node:dns/promises";
+import { createRequire } from "node:module";
 export const spawn = import("child_process");
-export const crypto = import("node:crypto");
+export const hash = import("node:crypto");
 export const dynamic = import(name);
 `),
           [
@@ -46,8 +68,37 @@ export const dynamic = import(name);
             "2 node-module",
             "3 node-module",
             "6 node-module",
+            "7 node-module",
             "8 node-module",
+            "9 node-module",
+            "10 node-module",
+            "11 node-module",
+            "12 node-module",
+            "13 node-module",
+            "14 node-module",
+            "15 node-module",
+            "19 node-module",
+            "20 node-module",
           ]
+        );
+      })
+  );
+
+  it.effect(
+    "names a Node module by its name, so look-alike packages and paths stay",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* findings(`import { copy } from "fs-extra";
+import { posix } from "pathe";
+import CryptoJs from "crypto-js";
+import { createHash } from "@scope/crypto";
+import { get } from "./fs";
+import { util } from "../util/index";
+import { net } from "@repo/net";
+import { os } from "os-name";
+`),
+          []
         );
       })
   );
@@ -128,6 +179,7 @@ export const other = process.getBuiltinModule("node:crypto");
             "9 node-module",
             "10 node-module",
             "11 node-module",
+            "12 node-module",
           ]
         );
       })
@@ -176,6 +228,7 @@ export const named = makeRequire()("node:fs");
             "6 node-module",
             "7 node-module",
             "8 node-module",
+            "11 node-module",
           ]
         );
       })
@@ -227,5 +280,106 @@ export const flipped = ("object") === typeof value;
         ["2 try-catch", "5 typeof-object", "12 typeof-object"]
       );
     })
+  );
+
+  it.effect("keeps the createServer import of a platform HTTP server", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        `${NODE_HTTP}${PLATFORM}${SERVE}`,
+        // Each function that takes the constructor, the bare specifier, and a
+        // renamed platform server.
+        `${NODE_HTTP}${PLATFORM}${SERVE.replace("make", "layer")}`,
+        `${NODE_HTTP}${PLATFORM}${SERVE.replace("make", "layerConfig")}`,
+        `${NODE_HTTP}${PLATFORM}${SERVE.replace("make", "layerServer")}`,
+        `${NODE_HTTP.replace("node:http", "http")}${PLATFORM}${SERVE}`,
+        `${NODE_HTTP}import { NodeHttpServer as Serve } from "@effect/platform-node";\nexport const server = Serve.make(createServer, { port: 0 });\n`,
+        // A type next to the constructor, a member of the same name that is no
+        // read of the import, and several servers.
+        `import { createServer, type Server } from "node:http";\n${PLATFORM}${SERVE}`,
+        `${NODE_HTTP}${PLATFORM}${SERVE}export const other = factory.createServer;\n`,
+        `${NODE_HTTP}${PLATFORM}${SERVE}${SERVE.replace("server", "second")}`,
+      ]) {
+        assert.deepStrictEqual(yield* findings(source), []);
+      }
+    })
+  );
+
+  it.effect(
+    "reports the http module unless a platform server takes every createServer",
+    () =>
+      Effect.gen(function* () {
+        const reported = [
+          // No platform server import, or one from another package.
+          `${NODE_HTTP}${SERVE}`,
+          `${NODE_HTTP}import { NodeHttpServer } from "./server";\n${SERVE}`,
+          `${NODE_HTTP}import NodeHttpServer from "@effect/platform-node";\n${SERVE}`,
+          // No read, a read that is no first argument, a read in a call of
+          // another function, and one good read next to a bad one.
+          `${NODE_HTTP}${PLATFORM}`,
+          `${NODE_HTTP}${PLATFORM}export const raw = createServer();\n`,
+          `${NODE_HTTP}${PLATFORM}${SERVE.replace("createServer, { port: 0 }", "{ port: 0 }, createServer")}`,
+          `${NODE_HTTP}${PLATFORM}${SERVE.replace("make", "layerTest")}`,
+          `${NODE_HTTP}${PLATFORM}${SERVE.replace("NodeHttpServer", "Other")}`,
+          `${NODE_HTTP}${PLATFORM}${SERVE}export const raw = createServer();\n`,
+          `${NODE_HTTP}${PLATFORM}${SERVE}export const alias = createServer;\n`,
+          // An import that binds more than createServer, or binds it another way.
+          `import { createServer, request } from "node:http";\n${PLATFORM}${SERVE}`,
+          `import { createServer as make } from "node:http";\n${PLATFORM}export const server = NodeHttpServer.make(make, { port: 0 });\n`,
+          `import http from "node:http";\n${PLATFORM}${SERVE}`,
+          `import * as http from "node:http";\n${PLATFORM}${SERVE}`,
+          `import "node:http";\n${PLATFORM}${SERVE}`,
+        ];
+        assert.deepStrictEqual(
+          yield* Effect.forEach(reported, (source) => findings(source)),
+          Arr.map(reported, () => ["1 node-module"])
+        );
+      })
+  );
+
+  it.effect(
+    "keeps the signing imports of a fixture that signs with Ed25519",
+    () =>
+      Effect.gen(function* () {
+        for (const source of [
+          `${NODE_SIGN}${SIGNING}`,
+          // The bare specifier, renamed bindings, a type next to them, and one of
+          // the two bound with calls of it only.
+          `${NODE_SIGN.replace("node:crypto", "crypto")}${SIGNING}`,
+          `import { generateKeyPairSync as generate, sign as signBytes } from "node:crypto";\nexport const keys = generate("ed25519");\nexport const signature = signBytes(null, bytes, keys.privateKey);\n`,
+          `import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";\n${SIGNING}`,
+          `import { sign } from "node:crypto";\nexport const signature = sign(null, bytes, key);\n`,
+          `${NODE_SIGN}${SIGNING}${SIGNING.replaceAll("keys", "more").replace("signature", "again")}`,
+        ]) {
+          assert.deepStrictEqual(yield* findings(source), []);
+        }
+      })
+  );
+
+  it.effect(
+    "reports the crypto module unless a fixture only signs with Ed25519",
+    () =>
+      Effect.gen(function* () {
+        const reported = [
+          // Other key types and a digest, which Web Crypto does asynchronously.
+          `${NODE_SIGN}${SIGNING.replace("ed25519", "rsa")}`,
+          `${NODE_SIGN}${SIGNING.replace("null", '"sha256"')}`,
+          `${NODE_SIGN}${SIGNING.replace('"ed25519"', "type")}`,
+          `${NODE_SIGN}${SIGNING.replace("null, ", "")}`,
+          // No call, or one bad call among good ones.
+          `${NODE_SIGN}export const keys = {};\n`,
+          `${NODE_SIGN}${SIGNING}export const more = generateKeyPairSync("rsa");\n`,
+          `${NODE_SIGN}${SIGNING}export const more = sign("sha256", bytes, key);\n`,
+          // An import that binds more than the two, or binds them another way.
+          `import { createHash, generateKeyPairSync, sign } from "node:crypto";\n${SIGNING}`,
+          `import { generateKeyPairSync, sign, verify } from "node:crypto";\n${SIGNING}`,
+          `import crypto from "node:crypto";\nexport const keys = crypto.generateKeyPairSync("ed25519");\n`,
+          `import * as crypto from "node:crypto";\nexport const keys = crypto.generateKeyPairSync("ed25519");\n`,
+          `import "node:crypto";\n${SIGNING}`,
+        ];
+        assert.deepStrictEqual(
+          yield* Effect.forEach(reported, (source) => findings(source)),
+          Arr.map(reported, () => ["1 node-module"])
+        );
+      })
   );
 });

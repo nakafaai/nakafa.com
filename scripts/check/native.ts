@@ -1,4 +1,4 @@
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, HashSet, String as Str } from "effect";
 import {
   isBinaryExpression,
   isCallExpression,
@@ -17,23 +17,33 @@ import {
 } from "typescript/unstable/ast";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";
 import { candidate } from "#scripts/check/rules";
+import { platformServerImports } from "#scripts/check/server";
 import { detachedSpawnImports } from "#scripts/check/service";
+import { ed25519SigningImports } from "#scripts/check/signing";
 import { unwrapped } from "#scripts/check/wrapper";
 
+/**
+ * The Node modules whose job Effect or the platform does: files, paths, and
+ * processes through Effect's services; digests and random bytes through
+ * Effect's `Crypto`; keys, signatures, and HMACs through Web Crypto; bytes
+ * through `Uint8Array` and `effect/encoding`; `.env` text through
+ * `ConfigProvider`; ports and servers through `NodeSocketServer` and
+ * `NodeHttpServer`; and the core count through `navigator.hardwareConcurrency`.
+ * A module counts by its name alone, with or without the `node:` prefix and
+ * with any subpath, such as `fs/promises`.
+ */
 const NODE_MODULES = HashSet.make(
+  "buffer",
   "child_process",
+  "crypto",
   "fs",
-  "fs/promises",
-  "node:child_process",
-  "node:fs",
-  "node:fs/promises",
-  "node:path",
-  "node:path/posix",
-  "node:path/win32",
+  "http",
+  "net",
+  "os",
   "path",
-  "path/posix",
-  "path/win32"
+  "util"
 );
+const NODE_PREFIX_PATTERN = /^node:/u;
 const EQUALITY_OPERATORS = HashSet.make(
   SyntaxKind.EqualsEqualsEqualsToken,
   SyntaxKind.EqualsEqualsToken,
@@ -41,12 +51,17 @@ const EQUALITY_OPERATORS = HashSet.make(
   SyntaxKind.ExclamationEqualsToken
 );
 
-/** Whether a module specifier names a Node file system, path, or process module. */
+/** Whether a module specifier names a Node module that Effect or the platform replaces. */
 function namesNodeModule(specifier: Node | undefined) {
   return (
     specifier !== undefined &&
     isStringLiteralLikeNode(specifier) &&
-    HashSet.has(NODE_MODULES, specifier.text)
+    HashSet.has(
+      NODE_MODULES,
+      Arr.headNonEmpty(
+        Str.split(specifier.text.replace(NODE_PREFIX_PATTERN, ""), "/")
+      )
+    )
   );
 }
 
@@ -67,8 +82,8 @@ function isRequireFactory(callee: Node) {
 }
 
 /**
- * Whether a node loads a Node file system, path, or process module at runtime:
- * an import, an import assignment, a re-export, a dynamic import, or a call of
+ * Whether a node loads a Node module that Effect or the platform replaces at
+ * runtime: an import, an import assignment, a re-export, a dynamic import, or a call of
  * `require`, of a `createRequire` function, or of `getBuiltinModule`, each
  * with a literal module name. The callee of a call is unwrapped first, so
  * `(require)` and `(require as NodeRequire)` are the `require` function.
@@ -146,14 +161,20 @@ function syntaxCandidates(sourceFile: SourceFile, node: Node) {
  * Effect replaces: Node module imports, raw failure handling, and hand-rolled
  * narrowing. Promise syntax is judged by `promise.ts`, and array methods by the
  * typed pass in `arrays.ts`.
- * A detached process service keeps its import of `spawn`, as `service.ts`
- * sets out.
+ * Three imports stay, each in a module of the shape its file sets out: a
+ * detached process service keeps `spawn` (`service.ts`), a platform HTTP
+ * server keeps `createServer` (`server.ts`), and a fixture that signs with
+ * Ed25519 keeps `generateKeyPairSync` and `sign` (`signing.ts`).
  */
 export function nativeCandidates(
   sourceFile: SourceFile,
   nodes: readonly Node[]
 ) {
-  const kept = detachedSpawnImports(sourceFile, nodes);
+  const kept = Arr.flatten([
+    detachedSpawnImports(sourceFile, nodes),
+    platformServerImports(sourceFile, nodes),
+    ed25519SigningImports(sourceFile, nodes),
+  ]);
   return Arr.flatMap(nodes, (node) =>
     Arr.some(kept, (statement) => statement === node)
       ? []

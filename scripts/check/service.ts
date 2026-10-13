@@ -1,19 +1,19 @@
-import { Array as Arr, HashSet, Tuple } from "effect";
+import { Array as Arr, HashSet } from "effect";
 import {
   isCallExpression,
   isClassDeclaration,
   isIdentifier,
-  isImportDeclaration,
-  isNamedImports,
   isObjectLiteralExpression,
-  isPropertyAccessExpression,
   isPropertyAssignment,
-  isStringLiteral,
   type Node,
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
-import { loadsImport } from "#scripts/check/kinds";
+import {
+  importedNames,
+  namedImports,
+  readsMember,
+} from "#scripts/check/imports";
 
 const EFFECT = "effect";
 /** The Node process modules, by both of their specifiers. */
@@ -24,70 +24,12 @@ const SPAWN = "spawn";
 const LAYER_CONSTRUCTORS = HashSet.make("effect", "succeed", "sync");
 
 /**
- * Returns each import declaration of a module that loads `matches` at run time
- * and binds named imports only, paired with those imports.
- */
-function namedImports(
-  sourceFile: SourceFile,
-  matches: (specifier: string) => boolean
-) {
-  return Arr.flatMap(sourceFile.statements, (statement) => {
-    if (
-      !(
-        isImportDeclaration(statement) &&
-        loadsImport(statement) &&
-        isStringLiteral(statement.moduleSpecifier) &&
-        matches(statement.moduleSpecifier.text)
-      )
-    ) {
-      return [];
-    }
-    const bindings = statement.importClause?.namedBindings;
-    return statement.importClause?.name === undefined &&
-      bindings !== undefined &&
-      isNamedImports(bindings)
-      ? [Tuple.make(statement, bindings.elements)]
-      : [];
-  });
-}
-
-/**
- * Returns the local names a module gives to the export `imported` of `effect`,
- * so `import { Layer as L } from "effect"` yields `L` for `Layer`.
- */
-function effectNames(sourceFile: SourceFile, imported: string) {
-  return Arr.flatMap(
-    namedImports(sourceFile, (specifier) => specifier === EFFECT),
-    ([, elements]) =>
-      Arr.flatMap(elements, (element) =>
-        (element.propertyName ?? element.name).text === imported
-          ? [element.name.text]
-          : []
-      )
-  );
-}
-
-/** Whether a node reads `member` of one of the namespaces `owners`, such as `Context.Service`. */
-function readsMember(
-  node: Node,
-  owners: readonly string[],
-  member: (name: string) => boolean
-) {
-  return (
-    isPropertyAccessExpression(node) &&
-    isIdentifier(node.expression) &&
-    Arr.contains(owners, node.expression.text) &&
-    member(node.name.text)
-  );
-}
-
-/**
  * Returns the names of the classes a module declares as Effect services: a
  * top-level class that extends `Context.Service<Self, Shape>()("Id")`, which is
  * a call of the call of `Context.Service`.
  */
 function serviceClasses(sourceFile: SourceFile) {
-  const contexts = effectNames(sourceFile, "Context");
+  const contexts = importedNames(sourceFile, EFFECT, "Context");
   return Arr.flatMap(sourceFile.statements, (statement) => {
     if (!(isClassDeclaration(statement) && statement.name !== undefined)) {
       return [];
@@ -117,7 +59,7 @@ function serviceClasses(sourceFile: SourceFile) {
  * and `Layer` imported from `effect`.
  */
 function providesOwnService(sourceFile: SourceFile, nodes: readonly Node[]) {
-  const layers = effectNames(sourceFile, "Layer");
+  const layers = importedNames(sourceFile, EFFECT, "Layer");
   const services = serviceClasses(sourceFile);
   return Arr.some(
     nodes,
