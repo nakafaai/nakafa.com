@@ -68,6 +68,12 @@ const AGES = [
     id: "1 hari yang lalu",
   },
   {
+    age: Duration.hours(36),
+    de: "vor 2 Tagen",
+    en: "2 days ago",
+    id: "2 hari yang lalu",
+  },
+  {
     age: Duration.days(3),
     de: "vor 3 Tagen",
     en: "3 days ago",

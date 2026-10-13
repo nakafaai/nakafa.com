@@ -83,10 +83,11 @@ function isRequireFactory(callee: Node) {
 
 /**
  * Whether a node loads a Node module that Effect or the platform replaces at
- * runtime: an import, an import assignment, a re-export, a dynamic import, or a call of
- * `require`, of a `createRequire` function, or of `getBuiltinModule`, each
- * with a literal module name. The callee of a call is unwrapped first, so
- * `(require)` and `(require as NodeRequire)` are the `require` function.
+ * runtime: an import, an import assignment, a re-export, a dynamic import, or
+ * a call of `require`, of a `createRequire` function, or of
+ * `getBuiltinModule`, each with a literal module name. The callee of a call is
+ * unwrapped first, so `(require)` and `(require as NodeRequire)` are the
+ * `require` function.
  */
 function isNodeModuleLoad(node: Node) {
   if (isImportDeclaration(node)) {
