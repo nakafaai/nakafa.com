@@ -117,6 +117,44 @@ test.describe("A prompt over the limit at 390px", () => {
   });
 });
 
+test.describe("A prompt in a conversation at 390px", () => {
+  test.use({ viewport: { height: 900, width: 390 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("is sent without the spaces around it, as a new chat sends it", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        const chat = yield* learner.startChat("A question that starts a chat");
+        yield* Effect.promise(() => page.goto(`/en/chat/${chat.chatId}`));
+        const composer = onThePage(page);
+
+        yield* write(composer, "  Two words  ");
+        changes.failNext(START);
+        yield* Effect.promise(() => composerOf(composer).press("Enter"));
+        yield* Effect.promise(() =>
+          expect
+            .poll(() => changes.argumentsOf(START).length)
+            .toBeGreaterThan(0)
+        );
+        const heard = yield* Effect.forEach(
+          changes.argumentsOf(START),
+          (args) =>
+            Schema.decodeUnknownEffect(StartArguments)(args).pipe(
+              Effect.map(([argument]) => argument.input.prompt.text)
+            )
+        );
+        yield* Effect.sync(() => {
+          expect(heard).toEqual(["Two words"]);
+        });
+      })
+    );
+  });
+});
+
 /**
  * How much of the composer a notice covers, in the page: the area where the
  * notice overlaps the text box and the send button, in square pixels.

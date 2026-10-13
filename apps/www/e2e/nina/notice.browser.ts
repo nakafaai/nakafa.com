@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { NINA_FILE_COUNT } from "@repo/backend/client/nina/uploads";
 import { Array as Arr, Effect } from "effect";
 import {
+  chipsIn,
   composerOf,
   fileOf,
   NOT_ATTACHED,
@@ -131,6 +132,28 @@ test.describe("The notice of the files not attached at 390px", () => {
           await expect(notice).toHaveCount(0, {
             timeout: readinessTimeoutMilliseconds,
           });
+        });
+      })
+    );
+  });
+
+  test("goes when a later pick attaches every file in full", async ({
+    page,
+  }) => {
+    await runPage(
+      page,
+      Effect.gen(function* () {
+        const composer = yield* openComposer(page);
+        yield* pickFiles(composer, [fileOf("essay.docx", WORD_TYPE, 20)]);
+        const notice = noticeWith(page, NOT_ATTACHED);
+        yield* Effect.promise(() => expect(notice).toBeVisible());
+
+        // The picture is attached in full, so the notice about the earlier pick
+        // has nothing left to say and leaves with the pick.
+        yield* pickFiles(composer, [photo("ok.png")]);
+        yield* Effect.promise(async () => {
+          await expect(notice).toHaveCount(0);
+          await expect(chipsIn(composer)).toHaveCount(1);
         });
       })
     );

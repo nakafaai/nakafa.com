@@ -16,7 +16,14 @@ import {
 } from "@/e2e/support/attachment";
 import { saved } from "@/e2e/support/changes";
 import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
-import { inTheSheet, openSheet, UNCONFIRMED } from "@/e2e/support/sheet";
+import {
+  inTheSheet,
+  openFromHistory,
+  openSheet,
+  promptWith,
+  UNAVAILABLE,
+  UNCONFIRMED,
+} from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   RELEASE,
@@ -285,6 +292,13 @@ test.describe("Uploads of a composer at 390px", () => {
 /** The popup of Nina's sheet, which stays in the page while the sheet is closed. */
 const sheetPopup = (page: Page) => page.locator('[data-slot="sheet-popup"]');
 
+/** A chat the sheet opens from its history, and the words the learner sends to it with a picture. */
+const CONVERSATION = {
+  prompt: "What is in this picture?",
+  title: "About pictures",
+};
+const PICTURE_PROMPT = "Describe the picture";
+
 test.describe("Uploads of a composer in the sheet at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
   test.describe.configure({ timeout: 180_000 });
@@ -375,6 +389,88 @@ test.describe("Uploads of a composer in the sheet at 1440px", () => {
             "done"
           );
         });
+      })
+    );
+  });
+
+  test("a message sent again from a chat the sheet shows after it closed shows its picture at the address the composer gives it now", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        yield* learner.startChat(CONVERSATION.prompt);
+        yield* learner.titleNewest([CONVERSATION.title]);
+        const picture = yield* pictureOf(page, "nina.png", {
+          height: 64,
+          width: 64,
+        });
+
+        yield* openSheet(page);
+        yield* openFromHistory(page, CONVERSATION.title);
+        yield* Effect.promise(async () => {
+          await expect(
+            promptWith(inTheSheet(page), CONVERSATION.prompt)
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+          await expect(inTheSheet(page).getByText(UNAVAILABLE)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+        });
+        yield* pickFiles(inTheSheet(page), [picture]);
+        yield* write(inTheSheet(page), PICTURE_PROMPT);
+
+        // The server refuses the message once the picture has uploaded, so the
+        // picture stays in the composer and keeps its upload. The learner closes
+        // the sheet, which hides the composer, and opens it again.
+        changes.failNext(START);
+        yield* Effect.promise(async () => {
+          await composerOf(inTheSheet(page)).press("Enter");
+          await expect(page.getByText(UNCONFIRMED).first()).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(chipsOfComposer(inTheSheet(page))).toHaveCount(1);
+          await inTheSheet(page).getByRole("button", { name: "Close" }).click();
+          await expect(composerOf(sheetPopup(page))).toBeHidden();
+          // The notice covers the entry to the sheet for a moment, so the press waits for it to go.
+          await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, {
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await page
+            .getByRole("button", { exact: true, name: "Ask Nina" })
+            .click();
+        });
+
+        // The same words go again with the same picture, which is not uploaded
+        // again. The message shows the picture at the address its composer has now.
+        yield* write(inTheSheet(page), PICTURE_PROMPT);
+        changes.hold();
+        changes.failNext(START);
+        yield* Effect.promise(() =>
+          composerOf(inTheSheet(page)).press("Enter")
+        );
+        const sentPicture = inTheSheet(page)
+          .locator('[data-slot="message"]')
+          .getByRole("img", { name: "nina.png" });
+        yield* Effect.promise(async () => {
+          await expect(sentPicture).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          const shown = await chipsOfComposer(inTheSheet(page))
+            .getByRole("img", { name: "nina.png" })
+            .getAttribute("src");
+          await expect(sentPicture).toHaveAttribute("src", shown ?? "");
+          await expect
+            .poll(
+              () =>
+                sentPicture.evaluate(
+                  (image: HTMLImageElement) => image.naturalWidth
+                ),
+              { timeout: readinessTimeoutMilliseconds }
+            )
+            .toBeGreaterThan(0);
+        });
+        changes.release();
       })
     );
   });
