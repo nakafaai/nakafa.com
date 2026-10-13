@@ -54,6 +54,20 @@ function expectHardNotFound(response: Response, locale: string) {
   );
   expectNoLocaleProxy();
 }
+/**
+ * The proxy asks the migration resolver about the path without its Markdown
+ * suffix, and says whether it had one.
+ */
+function expectMigrationAsked(source: string, hasAttemptCapability = false) {
+  const pathname = source.replace(MARKDOWN_SUFFIX_PATTERN, "");
+  expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
+    hasAttemptCapability,
+    headers: expect.any(Headers),
+    markdown: pathname !== source,
+    method: "GET",
+    pathname,
+  });
+}
 const mockLocaleRouting = vi.hoisted(() => ({
   activeMiddleware: vi.fn(
     () => new Response(null, { headers: { "x-locale-proxy": "1" } })
@@ -189,12 +203,7 @@ describe("proxy", () => {
     const response = await requestProxy(source, init);
     expect(response.status).toBe(308);
     expect(response.headers.get("location")).toBe(targetUrl.toString());
-    expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
-      hasAttemptCapability: false,
-      headers: expect.any(Headers),
-      method: "GET",
-      pathname: sourceUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""),
-    });
+    expectMigrationAsked(sourceUrl.pathname);
   });
   it("answers a temporary redirect with the status of its rule", async () => {
     const destination = "/en/try-out/indonesia/snbt/2027/set-1";
@@ -210,12 +219,7 @@ describe("proxy", () => {
   it("tells the migration resolver when a URL carries a try-out attempt", async () => {
     const pathname = "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris";
     await requestProxy(`${pathname}?attemptId=attempt-1`);
-    expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
-      hasAttemptCapability: true,
-      headers: expect.any(Headers),
-      method: "GET",
-      pathname,
-    });
+    expectMigrationAsked(pathname, true);
   });
   it("matches localized PNG aliases without intercepting static assets", () => {
     expect(Arr.every([...matched, "/MISSING.XML"], matchesProxy)).toBe(true);
@@ -380,12 +384,7 @@ describe("proxy", () => {
     async (path) => {
       const response = await requestProxy(path);
       expect(response.status).not.toBe(410);
-      expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
-        hasAttemptCapability: false,
-        headers: expect.any(Headers),
-        method: "GET",
-        pathname: path,
-      });
+      expectMigrationAsked(path);
     }
   );
   it("keeps a retired SNBT product URL on the try-out rules for an attempt", async () => {

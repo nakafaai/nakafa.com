@@ -1,4 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import app from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import en from "@repo/internationalization/dictionaries/standalone/en.json" with {
   type: "json",
 };
@@ -36,7 +39,7 @@ test("a learner opens their own profile at the username address, which keeps the
           .locator('[data-sidebar="footer"]')
           .getByRole("button", { name: LEARNER_NAME })
           .click();
-        await page.getByRole("menuitem", { name: "Profile" }).click();
+        await page.getByRole("menuitem", { name: app.Auth.profile }).click();
         await expect(page).toHaveURL(profile, {
           timeout: readinessTimeoutMilliseconds,
         });
@@ -55,11 +58,11 @@ test("a learner opens their own profile at the username address, which keeps the
         );
 
         // The tabs keep the username address.
-        await page.getByRole("tab", { name: "Chat" }).click();
+        await page.getByRole("tab", { name: app.Common.chat }).click();
         await expect(page).toHaveURL(chat, {
           timeout: readinessTimeoutMilliseconds,
         });
-        await page.getByRole("tab", { name: "Comments" }).click();
+        await page.getByRole("tab", { name: app.Common.comments }).click();
         await expect(page).toHaveURL(profile, {
           timeout: readinessTimeoutMilliseconds,
         });
@@ -68,7 +71,7 @@ test("a learner opens their own profile at the username address, which keeps the
   );
 });
 
-test("the retired id address leads its own learner to the username address for good", async ({
+test("the retired id address leads its own learner to the username address for good, but not to a Markdown version that does not exist", async ({
   baseURL,
   page,
 }) => {
@@ -88,6 +91,12 @@ test("the retired id address leads its own learner to the username address for g
             new RegExp(`/en/@${learner.username}${tab}$`)
           );
         }
+        // A profile has no Markdown version, so the request is not sent on.
+        const markdown = await request.get(
+          `${origin}/en/user/${learner.userId}.md`,
+          { maxRedirects: 0 }
+        );
+        expect(markdown.status()).toBe(404);
       });
     })
   );

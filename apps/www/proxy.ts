@@ -137,6 +137,7 @@ export async function proxy(request: NextRequest) {
         request.nextUrl.searchParams
       ),
       headers: request.headers,
+      markdown: migrationSuffix !== "",
       method: request.method,
       pathname: migrationPathname,
     })

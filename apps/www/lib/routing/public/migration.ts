@@ -155,18 +155,21 @@ function readArticleMigrationRedirect(migration: ArticleMigration) {
  * rule answers 308. A try-out URL that carries an attempt stays on the route
  * its attempt was frozen to. The request headers carry the session that the
  * retired address of a profile needs, and a request that gives none is a
- * visitor.
+ * visitor. `markdown` says that the request names the Markdown version of a
+ * page, which a profile does not have, so its retired address is not redirected.
  */
 export const readPublicUrlMigrationRedirect = Effect.fn(
   "www.routing.publicHtml.urlMigrationRedirect"
 )(function* ({
   hasAttemptCapability,
   headers = new Headers(),
+  markdown = false,
   method,
   pathname,
 }: {
   hasAttemptCapability: boolean;
   headers?: Headers;
+  markdown?: boolean;
   method: string;
   pathname: string;
 }) {
@@ -183,7 +186,9 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
   if (tryoutRedirect) {
     return tryoutRedirect;
   }
-  const profileRedirect = yield* readProfileRedirect(pathname, headers);
+  const profileRedirect = markdown
+    ? null
+    : yield* readProfileRedirect(pathname, headers);
   if (profileRedirect) {
     return profileRedirect;
   }

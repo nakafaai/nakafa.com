@@ -174,4 +174,27 @@ describe("retired profile address redirects", () => {
       expect(mocks.query).toHaveBeenCalledOnce();
     })
   );
+
+  it.effect(
+    "does not redirect a request for the Markdown version of a profile, which has none",
+    () =>
+      Effect.gen(function* () {
+        signedIn();
+        mocks.query.mockReturnValue(
+          accountOf({ _id: ID, username: "nabilfatih" })
+        );
+
+        expect(
+          yield* readPublicUrlMigrationRedirect({
+            hasAttemptCapability: false,
+            headers,
+            markdown: true,
+            method: "GET",
+            pathname: `/id/user/${ID}`,
+          })
+        ).toBeNull();
+        expect(mocks.token).not.toHaveBeenCalled();
+        expect(mocks.query).not.toHaveBeenCalled();
+      })
+  );
 });
