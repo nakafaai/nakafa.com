@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { scrollToElement } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { openRoute } from "@/e2e/support/route";
+import { NEXT_CHUNK_PATH, openRoute } from "@/e2e/support/route";
 import { NINA_SHOWCASE } from "@/e2e/support/selector";
 import {
   readinessTimeoutMilliseconds,
@@ -20,9 +20,6 @@ const NON_WHITESPACE_PATTERN = /\S/;
 const ANSWER_STATUS_PATTERN = /^(Correct|Incorrect)$/;
 const CORRECT_CHOICE_PATTERN = / Correct$/;
 const INCORRECT_CHOICE_PATTERN = / Incorrect$/;
-// Match local Next and Vercel-promoted production chunk paths.
-const NEXT_CHUNK_PATH =
-  /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
 
 // Wide layouts reduce continuous WebGL pressure; three widths keep normal motion.
 const reducedMotionByViewport = {

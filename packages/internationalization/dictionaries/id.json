@@ -406,18 +406,6 @@
   "Videos": {
     "discover": "Temukan video"
   },
-  "NotFound": {
-    "title": "Halaman Nggak Ketemu",
-    "description": "Waduh! Halaman yang kamu cari nggak ada atau belum tersedia.",
-    "home-button": "Beranda",
-    "contribute-button": "Kontribusi"
-  },
-  "Error": {
-    "title": "Waduh, ada kesalahan!",
-    "description": "Bantu kami dengan melaporkan masalah ini di GitHub ya.",
-    "retry": "Coba Lagi",
-    "report": "Lapor"
-  },
   "Contributor": {
     "title": "Kontributor",
     "description": "Temui orang-orang yang membuat Nakafa menjadi mungkin."
@@ -431,9 +419,6 @@
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
     "provider-error": "Kami tidak dapat melanjutkan dengan Google. Coba lagi.",
-    "entry-error-title": "Kami tidak dapat menyiapkan halaman ini",
-    "entry-error-description": "Coba lagi untuk melanjutkan dengan aman.",
-    "retry": "Coba lagi",
     "logout": "Keluar",
     "login": "Masuk",
     "login-cta-title": "Lanjutkan belajarmu",
@@ -941,6 +926,11 @@
       "classes": "Kelas",
       "nakafa-materials": "Materi Nakafa",
       "yours": "Untukmu"
+    },
+    "Missing": {
+      "title": "Sekolah atau kelas ini nggak ketemu",
+      "description": "Mungkin tautannya salah, atau kamu belum bergabung",
+      "back-button": "Kembali ke Nakafa School"
     },
     "Classes": {
       "classes": "Kelas",
