@@ -65,7 +65,6 @@ import {
   Prism01Icon,
   PyramidIcon,
   PyramidStructure01Icon,
-  PythonIcon,
   Radar03Icon,
   RadiationIcon,
   RainbowIcon,
@@ -87,6 +86,7 @@ import {
   TreesIcon,
   TurtleIcon,
   Wallet02Icon,
+  WebDesign01Icon,
   WeddingIcon,
 } from "@hugeicons/core-free-icons";
 import type { MaterialIcon } from "@repo/contents/curriculum/material";
@@ -166,7 +166,7 @@ export const SCHOOL_LESSON_ICONS = {
     TerminalIcon,
     BugIcon,
     GitBranchIcon,
-    PythonIcon,
+    WebDesign01Icon,
     ApiIcon,
     Cursor01Icon,
     FirewallIcon,
