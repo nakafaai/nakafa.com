@@ -22,10 +22,10 @@ yet. `journalEntries` has one index, `by_owner_tenantId`
 change of the tenancy kind that its published list does not hold yet
 (`packages/backend/confect/tenancy/kinds.ts`).
 
-ADR 0026 fixes what may leave the system: email carries only links (the parent's
-sign-in code of ADR 0009 is the one exception), push carries only a notification
-id and a general title, and the inbox of an account is served by the cell that
-holds the account.
+ADR 0026 fixes three limits: push carries only a notification id and a general
+title, email is sent from the cell's own domain, and the inbox of an account is
+served by the cell that holds the account. What an email may hold is decided
+under Email below.
 
 A mention is a different source. The message of ADR 0025 and the inbox row that
 it causes are written in one transaction, and the journal does not record each
@@ -91,25 +91,35 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
 - The fan-out is never one transaction. A workpool (`@convex-dev/workpool`, a
   dependency of `packages/backend` today) works in batches of 100 recipients.
   An `@all` of a teacher follows the same rule (ADR 0025).
-- Push and email keep to the limits of ADR 0020: an attempt has a deadline of ten
-  seconds, and a failure is repeated at most twice, after 500 milliseconds and
-  one second (`NETWORK_ATTEMPT_DEADLINE`, `NETWORK_RETRY_SCHEDULE`, and
-  `retryNetworkAttempt` in `packages/backend/client/network.ts`). Convex runs a
-  scheduled action at most once and does not retry it
+- Convex runs a scheduled action at most once and does not retry it
   (`docs.convex.dev/scheduling/scheduled-functions`, read on 13 October 2026), so
-  the retry lives in the code that sends.
-- A push action makes its own request, and `retryNetworkAttempt` repeats an
-  attempt only where ADR 0020 says that is safe.
+  a retry lives in the code that sends. Push and email are sent by different
+  code, so each is decided apart.
+- A push action makes its own request to the push service. The request is an
+  HTTP POST, and only a 201 answer says that the push service accepted the
+  message (RFC 8030 section 5). After a late answer the sender cannot know
+  whether the message was queued, and a second send could show a second
+  notification. A push is therefore a write that must not repeat, and its action
+  sets its own limit beside its call, as ADR 0020 asks. An attempt has the
+  deadline of ten seconds (`NETWORK_ATTEMPT_DEADLINE` in
+  `packages/backend/client/network.ts`). It is repeated, at most twice, after 500
+  milliseconds and one second (`NETWORK_RETRY_SCHEDULE`), and only after a
+  failure that proves the request never reached the push service. A missed
+  deadline and any answer of the push service end the send, so the action does
+  not call `retryNetworkAttempt`, which repeats a missed deadline. A push that
+  ends costs one push and no notification, because the inbox holds it.
 - The Resend component makes the email request and retries a failed batch in its
   own workpool. Its defaults are 5 attempts and a first backoff of 30 seconds
   that doubles (`@convex-dev/resend` 0.2.8, `src/client/index.ts`), and
   `confect/emails/client.ts` sets only `testMode` today. Its request carries no
-  deadline (`callResendAPIWithBatch` in the package), which stays a known limit.
-  The change that sends the first notification email sets `retryAttempts` to 3
-  and `initialBackoffMs` to 500 for the one sender, the welcome email included:
-  two retries after about 500 milliseconds and one second, because a workpool
-  counts the first try as an attempt, and the nth retry waits the first backoff
-  times 2 to the power n minus 1 (`RetryBehavior` and the README of
+  deadline (`callResendAPIWithBatch` in the package), and the options of the
+  component hold no setting for one (`ResendOptions`), so the deadline of ADR
+  0020 does not reach the email request. That stays a known limit. The change
+  that sends the first notification email sets `retryAttempts` to 3 and
+  `initialBackoffMs` to 500 for the one sender, the welcome email included: two
+  retries after about 500 milliseconds and one second, because a workpool counts
+  the first try as an attempt, and the nth retry waits the first backoff times 2
+  to the power n minus 1 (`RetryBehavior` and the README of
   `@convex-dev/workpool` 0.4.13, the version in `pnpm-lock.yaml`). A repeated
   request does not send an email twice, because the component dedupes on the
   idempotency key of the send and sends the id of the first email of a batch as
@@ -168,26 +178,26 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 
 ### Push
 
-- Web Push is best effort. Its payload is the notification id and a general
-  title, nothing else. Quiet hours skip it, and the inbox still holds the
-  notification.
+- Web Push is best effort, and its payload is what ADR 0026 allows. Quiet hours
+  skip it, and the inbox still holds the notification.
 - On iPhone and iPad, push needs three things (WebKit, "Web Push for Web Apps on
   iOS and iPadOS", `webkit.org/blog/13878`, read on 13 October 2026). The site is
   a web app on the Home Screen, opened from its icon, whose manifest sets
   `display` to `standalone` or `fullscreen`. The system is iOS or iPadOS 16.4 or
-  later. The person grants the permission in response to a tap. Without these steps, the inbox and the email
-  still arrive. Behavior on later iOS versions is not tested. Push is offered
-  only to a web app on the Home Screen, and a normal tab gets none. A browser
-  test covers iOS 16.4 with the app on the Home Screen and a normal tab without
-  push.
+  later. The person grants the permission in response to a tap. Without these
+  steps, the inbox and the email still arrive. Behavior on later iOS versions is
+  not tested. Push is offered only to a web app on the Home Screen, and a normal
+  tab gets none. A browser test covers iOS 16.4 with the app on the Home Screen
+  and a normal tab without push.
 - Students, teachers, and guardians on iPhone get a step in their onboarding
   that leads from Safari to the Home Screen. The step writes no journal entry,
   because the inbox stays the source of truth.
 - `apps/www/app/manifest.ts` already sets `display: "standalone"`. No service
   worker and no subscription code exist yet. The build adds both, with
   `pushSubscriptions` (planned). RFC 8030 section 7.3 makes a push service
-  answer a send to an expired subscription with 404, and the sender deletes that
-  subscription.
+  answer a send to an expired subscription with 404. Deleting the stored
+  subscription after that 404 is this project's choice, and the RFC does not
+  require it of the sender.
 - `apps/www/playwright.config.ts` blocks service workers for every project today
   (`serviceWorkers: "block"`), so the push change gives its browser test a
   project that allows them, and it records how the iOS check runs.
@@ -204,16 +214,17 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 
 ### Email
 
-- Every email is sent by `confect/emails`, the one sender. The notification
-  module hands its payload to it, and so will the guardian module and sign-in.
-- An email carries links and general sentences only. The one exception is the
-  parent's six-digit sign-in code (ADR 0009, ADR 0026), which `confect/emails`
-  sends as it sends the rest. A digest states counts for each kind and names no
-  one, and its plural forms follow the CLDR rules of each language. Grades, the
-  names of students, the text of messages, and exam tokens never enter an email.
-- Each cell has its own Resend domain (ADR 0026). Each send has an idempotency
-  key for the notification and the recipient, as the welcome email has one
-  (`idempotencyKey` in `emails/welcome/internal.ts`).
+- Every email is sent by `confect/emails`, the one sender, from the domain of the
+  cell (ADR 0026). The notification module hands its payload to it, and so will
+  the guardian module and sign-in.
+- An email carries links and general sentences only, and this ADR owns that
+  rule. The one exception is the parent's six-digit sign-in code, which ADR 0009
+  decides and `confect/emails` sends as it sends the rest. A digest states counts
+  for each kind and names no one, and its plural forms follow the CLDR rules of
+  each language. Grades, the names of students, the text of messages, and exam
+  tokens never enter an email.
+- Each send has an idempotency key for the notification and the recipient, as the
+  welcome email has one (`idempotencyKey` in `emails/welcome/internal.ts`).
 - WhatsApp is the next channel and follows the same rules. It is planned.
 
 ## What Stays Open
@@ -222,6 +233,14 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   RFC 8292 written in Effect. AGENTS.md prefers the Effect module that covers the
   job, and the protocol needs Web Crypto and an HTTP client. The push change
   decides, and it records the proof.
+- Which transport failures prove that a push request never reached the push
+  service. A refused connection (`ECONNREFUSED`), an unknown host (`ENOTFOUND`),
+  and a network or host that is down or unreachable do. `NetworkRetryCodeSchema`
+  also lists a reset (`ECONNRESET`), a broken pipe (`EPIPE`), and a socket
+  failure (`UND_ERR_SOCKET`). A read may repeat after those, and a push may not,
+  because the push service may have read the request before the connection
+  broke. The push change chooses the set and tests that a late answer is sent
+  once.
 - The final times of the proposals in the tables, and the final period of an
   inbox row. The owner sets them (K10).
 
@@ -245,7 +264,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 - Skipping the inbox in quiet hours. The inbox is the source of truth, and quiet
   hours stop only the push.
 - A name, a grade, or a message text in a push or an email. A lock screen and a
-  mailbox show them to people who are not the recipient (ADR 0026).
+  mailbox show them to people who are not the recipient.
 - An outbox copy of the journal for notifications. ADR 0016 rejects it.
 - One scheduler for each reminder kind. One cron serves all of them, and a unique
   code for each reminder stops a double send.
