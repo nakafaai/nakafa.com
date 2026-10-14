@@ -13,6 +13,7 @@ import { Effect } from "effect";
 const inviteEmailWorkflowArgs = {
   inviteId: v.id("tenantInvites"),
   locale: SchemaToValidator.compileSchema(ActiveAppLocaleCodeSchema),
+  requestedAt: v.number(),
 };
 type InviteEmailWorkflowArgs = ObjectType<typeof inviteEmailWorkflowArgs>;
 type InviteEmailWorkflowStep = Pick<
@@ -32,7 +33,7 @@ export async function runInviteEmailDelivery(
 ): Promise<null> {
   const input = await step.runQuery(
     Ref.getFunctionReference(refs.internal.emails.invite.internal.readInput),
-    args
+    { inviteId: args.inviteId, locale: args.locale }
   );
   if (input === null) {
     return null;
@@ -46,7 +47,7 @@ export async function runInviteEmailDelivery(
     Ref.getFunctionReference(
       refs.internal.emails.invite.internal.enqueueRendered
     ),
-    { inviteId: args.inviteId, ...message }
+    { inviteId: args.inviteId, requestedAt: args.requestedAt, ...message }
   );
   return null;
 }
@@ -61,12 +62,15 @@ export const deliverInviteEmail = workflow.define({
 /**
  * Starts the delivery of one invitation email in the caller's transaction, so
  * the invite and its email exist together or not at all. `locale` is the
- * language of the email, chosen by whoever made the invite. When the delivery
- * ends, `finishInviteEmail` releases its journal.
+ * language of the email, chosen by whoever made the invite. `requestedAt` is
+ * the moment of this send: each send of one invite has its own, so a resend
+ * is a new message. When the delivery ends, `finishInviteEmail` releases its
+ * journal.
  */
 export const startInviteEmail = Effect.fn("emails.invite.start")(function* (
   inviteId: InviteEmailWorkflowArgs["inviteId"],
-  locale: ActiveAppLocaleCode
+  locale: ActiveAppLocaleCode,
+  requestedAt: InviteEmailWorkflowArgs["requestedAt"]
 ) {
   const ctx = yield* MutationCtx;
   yield* Effect.promise(() =>
@@ -75,7 +79,7 @@ export const startInviteEmail = Effect.fn("emails.invite.start")(function* (
       Ref.getFunctionReference(
         refs.internal.emails.invite.workflow.deliverInviteEmail
       ),
-      { inviteId, locale },
+      { inviteId, locale, requestedAt },
       {
         context: { inviteId },
         onComplete: Ref.getFunctionReference(

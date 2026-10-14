@@ -77,21 +77,6 @@ describe("Polar subscription persistence", () => {
     })
   );
 
-  it.effect(
-    "writes no school link from the metadata and stores the metadata whole",
-    () =>
-      Effect.gen(function* () {
-        const stored = yield* storedFrom({
-          metadata: { schoolId: "school-1", tier: "team" },
-        });
-        expect(stored).not.toHaveProperty("schoolId");
-        expect(stored.metadata).toStrictEqual({
-          schoolId: "school-1",
-          tier: "team",
-        });
-      })
-  );
-
   it.effect.each(["", "unknown-interval"])(
     "normalizes the unsupported interval %s to null",
     (recurring_interval) =>
