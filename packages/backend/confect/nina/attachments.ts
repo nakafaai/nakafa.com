@@ -11,6 +11,12 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
+import {
+  countMessageTokens,
+  NINA_BUDGET,
+} from "@repo/backend/confect/nina/budget";
+import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
+import type { ModelMessage } from "ai";
 import { Array as Arr, Clock, Effect } from "effect";
 
 /** Reads one stored attachment: its model part and the storage entry that holds its bytes. */
@@ -65,6 +71,25 @@ const requireDocumentLimit = Effect.fn("nina.attachments.limit")(function* (
 });
 
 /**
+ * Refuses a learner message that costs more than one turn can carry. The cost is
+ * the one the history counts for the message: its text, its files and the
+ * provider overhead. So the call fits the context limit with its reserved parts
+ * and the turn's evidence.
+ */
+export const requirePromptLimit = Effect.fn("nina.attachments.prompt")(
+  function* (message: ModelMessage) {
+    if (countMessageTokens(message) <= NINA_BUDGET.prompt) {
+      return;
+    }
+    return yield* new NinaTurnError({
+      code: "NINA_MESSAGE_SIZE",
+      message:
+        "This message is too long for one turn. Shorten it, or send the rest in a new message.",
+    });
+  }
+);
+
+/**
  * Applies the document limit to the files of a stored message before a retry
  * sends them again. A message stored before the limit existed can exceed it.
  */
@@ -76,13 +101,14 @@ export const requireStoredDocumentLimit = Effect.fn("nina.attachments.stored")(
 
 /**
  * Resolves only this user's unexpired upload grants inside the send transaction.
- * The document size check runs before any grant is deleted, so a refused
- * message keeps every upload available.
+ * The size checks run before any grant is deleted, so a refused message keeps
+ * every upload available.
  */
 export const consumeAttachments = Effect.fn("nina.attachments.consume")(
   function* (
     userId: Docs["users"]["_id"],
-    uploadIds: readonly Docs["ninaUploads"]["_id"][]
+    uploadIds: readonly Docs["ninaUploads"]["_id"][],
+    text: string
   ) {
     if (Arr.dedupe(uploadIds).length !== uploadIds.length) {
       return yield* new NinaUploadError({
@@ -117,6 +143,10 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
         return { uploadId, ...(yield* readAttachment(upload.state.fileId)) };
       })
     );
+    yield* requirePromptLimit({
+      role: "user",
+      content: [{ type: "text", text }, ...Arr.map(files, (file) => file.part)],
+    });
     yield* requireDocumentLimit(files);
     yield* Effect.forEach(files, (file) =>
       writer.table("ninaUploads").delete(file.uploadId).pipe(Effect.orDie)

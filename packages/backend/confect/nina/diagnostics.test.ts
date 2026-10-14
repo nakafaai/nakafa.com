@@ -3,6 +3,7 @@ import { listMessages, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { languageModel } from "@repo/backend/confect/gateway/model";
 import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
@@ -87,7 +88,7 @@ it.effect.each([
       const report = capture.mock.calls[0]?.[1];
       expect(report?.additionalProperties).toMatchObject({
         source: "nina-response",
-        gateway_model_id: "google/gemini-3.8-flash",
+        gateway_model_id: languageModel.id,
         ...facts,
       });
       expect(report?.error).toMatchObject({
@@ -317,7 +318,7 @@ describe("The report of a turn whose run was lost", () => {
     expect(capture.mock.calls[0]?.[1].additionalProperties).toEqual({
       source: "nina-response",
       operation: "provider-busy",
-      gateway_model_id: "google/gemini-3.8-flash",
+      gateway_model_id: languageModel.id,
       gateway_status_code: 429,
       gateway_retryable: true,
     });

@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { languageModel } from "@repo/backend/confect/gateway/model";
 import {
   CAPABILITY_BUDGET,
   makeChatStep,
@@ -78,7 +79,7 @@ function stepInput({
     initialMessages: messages,
     instructions,
     messages,
-    model: "google/gemini-3.8-flash",
+    model: languageModel.id,
     responseMessages: [],
     runtimeContext: {},
     stepNumber,

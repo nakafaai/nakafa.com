@@ -108,8 +108,10 @@ describe("formatTurnContext", () => {
       },
     });
 
-    // This block weighs under 300 tokens by the shared estimator, and it travels with every learner message.
-    expect(countTextTokens(context)).toBeLessThan(300);
+    // This block weighs 489 tokens by the estimator of 14 October 2026 (265 by the
+    // old tokenizer), and it travels with every learner message: the bound is the
+    // next 500.
+    expect(countTextTokens(context)).toBeLessThanOrEqual(500);
   });
 
   it("follows the runtime facts with the memories the turn recalls, and adds nothing without them", () => {
