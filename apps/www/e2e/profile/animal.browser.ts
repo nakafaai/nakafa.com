@@ -32,6 +32,21 @@ function animalOf(avatar: Locator) {
 }
 
 /**
+ * The animal that an avatar draws, as the markup inside its picture, and the box
+ * the avatar takes on the page. The same animal has the same markup wherever it
+ * is drawn, so two avatars of one learner must give equal markup.
+ */
+async function drawnAnimal(avatar: Locator) {
+  await expect(animalOf(avatar)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  return {
+    box: await avatar.boundingBox(),
+    markup: await animalOf(avatar).innerHTML(),
+  };
+}
+
+/**
  * Writes the name and the photo address of the signed-in learner through Better
  * Auth's own update-user endpoint. The app's user trigger copies both to the
  * profile that the sidebar and the comments read. Provider accounts can hold a
@@ -61,9 +76,7 @@ test("a learner without a photo is drawn as an animal on the account button and 
 
       yield* Effect.promise(async () => {
         const avatar = sidebarAvatar(page);
-        await expect(animalOf(avatar)).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
-        });
+        const account = await drawnAnimal(avatar);
         await expect(avatar.locator('[data-slot="avatar-image"]')).toHaveCount(
           0
         );
@@ -72,9 +85,9 @@ test("a learner without a photo is drawn as an animal on the account button and 
         const header = page
           .locator("main header")
           .locator('[data-slot="avatar"]');
-        await expect(animalOf(header)).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
-        });
+        const profile = await drawnAnimal(header);
+        // The profile and the account button draw the animal of the same account.
+        expect(profile.markup).toBe(account.markup);
       });
     })
   );
@@ -89,12 +102,7 @@ test("a photo that loads replaces the animal, and a photo that fails keeps the a
       yield* openChatPage(page, origin);
       const avatar = sidebarAvatar(page);
 
-      const withAnimal = yield* Effect.promise(async () => {
-        await expect(animalOf(avatar)).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
-        });
-        return avatar.boundingBox();
-      });
+      const withAnimal = yield* Effect.promise(() => drawnAnimal(avatar));
 
       yield* setProfile(page, origin, { image: `${origin}${LOADING_PHOTO}` });
       yield* Effect.promise(async () => {
@@ -105,16 +113,12 @@ test("a photo that loads replaces the animal, and a photo that fails keeps the a
       });
 
       yield* setProfile(page, origin, { image: `${origin}${MISSING_PHOTO}` });
-      const withMissingPhoto = yield* Effect.promise(async () => {
-        await expect(animalOf(avatar)).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
-        });
-        return avatar.boundingBox();
-      });
+      const withMissingPhoto = yield* Effect.promise(() => drawnAnimal(avatar));
 
       yield* Effect.sync(() => {
-        expect(withMissingPhoto?.width).toBe(withAnimal?.width);
-        expect(withMissingPhoto?.height).toBe(withAnimal?.height);
+        expect(withMissingPhoto.box?.width).toBe(withAnimal.box?.width);
+        expect(withMissingPhoto.box?.height).toBe(withAnimal.box?.height);
+        expect(withMissingPhoto.markup).toBe(withAnimal.markup);
       });
     })
   );
@@ -129,6 +133,10 @@ test("a comment by a learner without a photo shows the animal of the learner", a
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
       yield* openChatPage(page, origin);
+      // The account button holds the animal of the learner before the lesson opens.
+      const account = yield* Effect.promise(() =>
+        drawnAnimal(sidebarAvatar(page))
+      );
 
       yield* Effect.promise(async () => {
         await page.goto(LESSON_PATH);
@@ -147,9 +155,8 @@ test("a comment by a learner without a photo shows the animal of the learner", a
           .locator("div[id]")
           .filter({ has: page.getByText(text, { exact: true }) })
           .last();
-        await expect(animalOf(comment)).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
-        });
+        const drawn = await drawnAnimal(comment);
+        expect(drawn.markup).toBe(account.markup);
       });
     })
   );
@@ -171,12 +178,7 @@ for (const { label, name } of NAME_CASES) {
         yield* openChatPage(page, origin);
         const avatar = sidebarAvatar(page);
 
-        const before = yield* Effect.promise(async () => {
-          await expect(animalOf(avatar)).toBeVisible({
-            timeout: readinessTimeoutMilliseconds,
-          });
-          return avatar.boundingBox();
-        });
+        const before = yield* Effect.promise(() => drawnAnimal(avatar));
 
         yield* setProfile(page, origin, { name });
         yield* Effect.promise(async () => {
@@ -185,8 +187,10 @@ for (const { label, name } of NAME_CASES) {
           });
           await expect(animalOf(avatar)).toBeVisible();
           const after = await avatar.boundingBox();
-          expect(after?.width).toBe(before?.width);
-          expect(after?.height).toBe(before?.height);
+          expect(after?.width).toBe(before.box?.width);
+          expect(after?.height).toBe(before.box?.height);
+          // The animal belongs to the account, so a new name keeps it.
+          expect(await animalOf(avatar).innerHTML()).toBe(before.markup);
         });
       })
     );

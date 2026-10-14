@@ -225,6 +225,30 @@ describe("triggers/subscriptions/impl", () => {
       creditsResetAt: NOW - 1000,
     });
   });
+  it("leaves the plan of an account whose deletion has begun as it is", async () => {
+    vi.setSystemTime(NOW);
+    const t = createWebhookTestConvex();
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx, "deleting", { plan: "free" });
+      await ctx.db.patch("users", userId, { deletionPreparedAt: NOW });
+      await insertCustomer(ctx, userId, "polar-deleting");
+      await insertSubscription(ctx, {
+        customerId: "polar-deleting",
+        productId: products.pro.id,
+        status: "active",
+        subscriptionId: "sub-deleting",
+      });
+      await Effect.runPromise(
+        runSyncCustomerPlanBySubscriptionId(ctx, "sub-deleting")
+      );
+      return {
+        creditTransactions: await ctx.db.query("creditTransactions").collect(),
+        user: await ctx.db.get("users", userId),
+      };
+    });
+    expect(result.creditTransactions).toHaveLength(0);
+    expect(result.user).toMatchObject({ plan: "free" });
+  });
   it("upgrades a free user to pro and records a purchase transaction", async () => {
     vi.setSystemTime(NOW);
     const t = createWebhookTestConvex();
