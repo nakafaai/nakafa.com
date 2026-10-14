@@ -1,8 +1,11 @@
+import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Effect, FileSystem } from "effect";
+import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -13,6 +16,13 @@ const MISSING_PHOTO = "/animal-photo-that-does-not-exist.png";
 const SIXTY_LETTERS = "Maria".repeat(12);
 const ONE_LETTER = "A";
 const OTHER_SCRIPT = "Наталья Петровна Иванова";
+/**
+ * The avatar of one comment's author, which sits in the identity block that is
+ * the first child of the comment's row. The reply composer is in the same row
+ * too, closed and still in the document, and it draws an avatar of its own, so
+ * a selector for any avatar in the row matches two.
+ */
+const AUTHOR_AVATAR = ':scope > div > [data-slot="avatar"]';
 
 /** The avatar of the account button in the sidebar footer, which holds the animal until a photo loads. */
 function sidebarAvatar(page: Page) {
@@ -47,24 +57,28 @@ async function drawnAnimal(avatar: Locator) {
 }
 
 /**
- * Writes the name and the photo address of the signed-in learner through Better
- * Auth's own update-user endpoint. The app's user trigger copies both to the
- * profile that the sidebar and the comments read. Provider accounts can hold a
- * name of any length, so the test writes the names the settings form refuses.
+ * Writes the name and the photo address of a learner through the acceptance
+ * command, which updates the account in Better Auth and runs the app's update
+ * trigger, which copies both to the profile that the sidebar and the comments
+ * read. Provider accounts can hold a name of any length, so the test writes the
+ * names the settings form refuses.
  */
-const setProfile = Effect.fn("NakafaE2E.setProfile")(function* (
-  page: Page,
-  origin: string,
-  profile: { readonly image?: string; readonly name?: string }
-) {
-  yield* Effect.promise(async () => {
-    const answer = await page.request.post(`${origin}/api/auth/update-user`, {
-      data: profile,
-      headers: { origin },
+const setProfile = Effect.fn("NakafaE2E.setProfile")(
+  function* (
+    authId: string,
+    profile: { readonly image?: string; readonly name?: string }
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "nakafa-profile-",
     });
-    expect(answer.status()).toBe(200);
-  });
-});
+    const file = `${directory}/profile.json`;
+    yield* fs.writeFileString(file, encodeJsonText(profile));
+    yield* runAcceptanceCommand("profile", authId, file);
+  },
+  Effect.scoped,
+  Effect.provide(nodeServicesLayer)
+);
 
 test("a learner without a photo is drawn as an animal on the account button and on the profile", async ({
   baseURL,
@@ -99,12 +113,14 @@ test("a photo that loads replaces the animal, and a photo that fails keeps the a
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      yield* openChatPage(page, origin);
+      const { learner } = yield* openChatPage(page, origin);
       const avatar = sidebarAvatar(page);
 
       const withAnimal = yield* Effect.promise(() => drawnAnimal(avatar));
 
-      yield* setProfile(page, origin, { image: `${origin}${LOADING_PHOTO}` });
+      yield* setProfile(learner.authId, {
+        image: `${origin}${LOADING_PHOTO}`,
+      });
       yield* Effect.promise(async () => {
         await expect(avatar.locator('[data-slot="avatar-image"]')).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
@@ -112,7 +128,9 @@ test("a photo that loads replaces the animal, and a photo that fails keeps the a
         await expect(animalOf(avatar)).toHaveCount(0);
       });
 
-      yield* setProfile(page, origin, { image: `${origin}${MISSING_PHOTO}` });
+      yield* setProfile(learner.authId, {
+        image: `${origin}${MISSING_PHOTO}`,
+      });
       const withMissingPhoto = yield* Effect.promise(() => drawnAnimal(avatar));
 
       yield* Effect.sync(() => {
@@ -155,7 +173,7 @@ test("a comment by a learner without a photo shows the animal of the learner", a
           .locator("div[id]")
           .filter({ has: page.getByText(text, { exact: true }) })
           .last();
-        const drawn = await drawnAnimal(comment);
+        const drawn = await drawnAnimal(comment.locator(AUTHOR_AVATAR));
         expect(drawn.markup).toBe(account.markup);
       });
     })
@@ -175,12 +193,12 @@ for (const { label, name } of NAME_CASES) {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       Effect.gen(function* () {
-        yield* openChatPage(page, origin);
+        const { learner } = yield* openChatPage(page, origin);
         const avatar = sidebarAvatar(page);
 
         const before = yield* Effect.promise(() => drawnAnimal(avatar));
 
-        yield* setProfile(page, origin, { name });
+        yield* setProfile(learner.authId, { name });
         yield* Effect.promise(async () => {
           await expect(sidebarName(page, name)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
