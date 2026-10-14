@@ -247,6 +247,30 @@ describe("memory capture", () => {
     );
   });
 
+  it("lists all twelve known memories, each cut to its first characters, and confirms none for a place the list does not show", async () => {
+    const f = await createCapturingTest();
+    // Twelve memories of 540 rare characters each. A line shows only the first
+    // 240 of them, so the list holds all twelve, and none in full.
+    const rare = Arr.join(
+      Arr.makeBy(540, (index) => String.fromCodePoint(0x4e_00 + index * 7)),
+      ""
+    );
+    await f.fill(12, { author: "learner", text: `kelas ${rare}` });
+    // The model names the thirteenth place, which the list does not show.
+    const model = answers({ ...level, known: 13 });
+    await f.capture();
+    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
+    expect(Arr.length(knownLines(prompt))).toBe(12);
+    expect(prompt).toContain(rare.slice(0, 200));
+    expect(prompt).not.toContain(rare);
+    // It names no listed place, so the candidate is a new memory and no memory is confirmed.
+    expect(await f.stored()).toHaveLength(13);
+    expect(Arr.map(await f.stored(), (row) => row.confirmedAt)).toEqual([
+      ...Arr.makeBy(12, (index) => index + 1),
+      NOW,
+    ]);
+  });
+
   it("saves nothing when the learner removes a memory while the model reads the message", async () => {
     const f = await createCapturingTest();
     const id = await f.seed({ kind: "level", text: "Kelas 11." });

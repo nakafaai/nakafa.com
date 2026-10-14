@@ -104,7 +104,6 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           instructions: mathPrompt({ locale, context }),
           prepareStep: prepareMathStep,
           stopWhen: isStepCount(MATH_STEPS),
-          temperature: 0,
           timeout: limit,
           tools: {
             algebra: createTool({

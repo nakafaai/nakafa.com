@@ -16,8 +16,7 @@ import {
   embeddingDimensions,
   embeddingModelId,
   embeddingTimeoutMs,
-  languageModelId,
-  reasoning,
+  languageModel,
 } from "@repo/backend/confect/gateway/model";
 import {
   type Deadline,
@@ -78,7 +77,7 @@ export class Gateway extends Context.Service<
 const retention = { data_collection: "deny", zdr: true };
 
 /** The language model every provider hands to the AI SDK. */
-type LanguageModel = Parameters<typeof wrapLanguageModel>[0]["model"];
+type ProviderLanguageModel = Parameters<typeof wrapLanguageModel>[0]["model"];
 
 /** The embedding model every provider hands to the AI SDK. */
 type EmbeddingModel = Parameters<typeof embedMany>[0]["model"];
@@ -94,7 +93,7 @@ export function make(provider: {
     modelId: string,
     options: { readonly zdr: boolean }
   ) => DecisionModel;
-  readonly languageModel: (modelId: string) => LanguageModel;
+  readonly languageModel: (modelId: string) => ProviderLanguageModel;
   readonly embeddingModel: (
     modelId: string,
     options: { readonly zdr: boolean }
@@ -108,18 +107,18 @@ export function make(provider: {
         questions
       ),
     language: (purpose) => {
-      const { effort, maxOutputTokens, timeout } = purposes[purpose];
+      const { effort, timeout } = purposes[purpose];
       return {
         model: wrapLanguageModel({
-          model: provider.languageModel(languageModelId),
+          model: provider.languageModel(languageModel.id),
           middleware: [
             defaultSettingsMiddleware({
               settings: {
-                maxOutputTokens,
+                maxOutputTokens: languageModel.output[purpose],
                 providerOptions: {
                   convexGateway: {
                     provider: retention,
-                    reasoningEffort: reasoning[effort],
+                    reasoningEffort: languageModel.reasoning[effort],
                   },
                 },
               },
