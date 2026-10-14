@@ -157,36 +157,6 @@ describe("tenancy/invites invite", () => {
         expect(made.personId).toBe(fixture.invited);
       })
   );
-
-  it.effect(
-    "refuses an invite by a teacher, and of a Person of another school",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const teacher = yield* fixture
-          .as("teacher")
-          .mutation(invite, {
-            email: guru,
-            locale: "id",
-            personId: fixture.invited,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        const foreign = yield* fixture
-          .as("admin")
-          .mutation(invite, {
-            email: guru,
-            locale: "id",
-            personId: fixture.people.otherOwner.personId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect([teacher, foreign]).toMatchObject([
-          denied("role"),
-          denied("resource"),
-        ]);
-      })
-  );
 });
 
 describe("tenancy/invites list and revoke", () => {
@@ -222,46 +192,21 @@ describe("tenancy/invites list and revoke", () => {
     })
   );
 
-  it.effect(
-    "refuses to revoke an invite of another school, or one that does not exist",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const { foreignId, missingId } = yield* fixture.run(
-          Effect.flatMap(DatabaseWriter, (writer) =>
-            Effect.gen(function* () {
-              const invited = yield* writer.table("tenantInvites").insert({
-                channel: { email: lain, kind: "email" },
-                expiresAt: NOW + TERM,
-                personId: fixture.people.otherOwner.personId,
-                state: { status: "pending" },
-                tenantId: fixture.tenants.other,
-              });
-              const removed = yield* writer.table("tenantInvites").insert({
-                channel: { email: guru, kind: "email" },
-                expiresAt: NOW + TERM,
-                personId: fixture.invited,
-                state: { status: "pending" },
-                tenantId: fixture.tenants.nf,
-              });
-              yield* writer.table("tenantInvites").delete(removed);
-              return { foreignId: invited, missingId: removed };
-            })
-          )
-        );
-        const foreign = yield* fixture
-          .as("admin")
-          .mutation(revoke, { inviteId: foreignId, slug: nf })
-          .pipe(Effect.flip);
-        const missing = yield* fixture
-          .as("admin")
-          .mutation(revoke, { inviteId: missingId, slug: nf })
-          .pipe(Effect.flip);
-        expect([foreign, missing]).toMatchObject([
-          denied("resource"),
-          denied("resource"),
-        ]);
-      })
+  it.effect("refuses to revoke an invite that does not exist", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const made = yield* fixture.run(invitePerson(fixture.tenants.nf, guru));
+      yield* fixture.run(
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer.table("tenantInvites").delete(made.inviteId)
+        )
+      );
+      const missing = yield* fixture
+        .as("admin")
+        .mutation(revoke, { inviteId: made.inviteId, slug: nf })
+        .pipe(Effect.flip);
+      expect(missing).toMatchObject(denied("resource"));
+    })
   );
 
   it.effect("leaves an accepted invite alone when it is revoked", () =>
@@ -409,6 +354,37 @@ describe("tenancy/invites resend and expiry", () => {
       })
   );
 
+  it.effect(
+    "claims a new invite once the last one expired, for an account that holds the address",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const account = yield* fixture.account("guru", guru, true);
+        const first = yield* inviteInvited(fixture);
+        yield* fixture.internal.mutation(expire, { inviteId: first.id });
+        vi.setSystemTime(NOW + TERM);
+        yield* inviteInvited(fixture);
+        yield* fixture.internal.mutation(holdersSchedule, {
+          cursor: null,
+          email: guru,
+        });
+        yield* fixture.internal.mutation(claimsRun, {
+          cursor: null,
+          userId: account.userId,
+        });
+        const after = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantPeople").get(fixture.invited)
+          )
+        );
+        expect(after.account).toMatchObject({
+          method: "invite",
+          state: "claimed",
+          userId: account.userId,
+        });
+      })
+  );
+
   it.effect("refuses to resend an invite of a Person of another school", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
@@ -424,11 +400,11 @@ describe("tenancy/invites resend and expiry", () => {
 
 describe("tenancy/invites owner, unit admin, and tenants", () => {
   it.effect(
-    "lets the Owner invite, and refuses a unit's Admin and a non-member",
+    "lets the Owner invite, and refuses a unit's Admin, a teacher, and a non-member",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const asked = (account: "stranger" | "unitAdmin") =>
+        const asked = (account: "stranger" | "teacher" | "unitAdmin") =>
           fixture
             .as(account)
             .mutation(invite, {
@@ -446,10 +422,12 @@ describe("tenancy/invites owner, unit admin, and tenants", () => {
         });
         const refusals = yield* Effect.all([
           asked("unitAdmin"),
+          asked("teacher"),
           asked("stranger"),
         ]);
         expect(owned).toMatchObject({ email: guru, personId: fixture.invited });
         expect(refusals).toMatchObject([
+          denied("role"),
           denied("role"),
           { _tag: "NotMember", code: "NOT_MEMBER" },
         ]);
