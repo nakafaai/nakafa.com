@@ -46,6 +46,7 @@ export type LearningPopularitySignalsDoc = Document.Document<typeof schemaDefini
 export type LearningPopularityViewerSignalsDoc = Document.Document<typeof schemaDefinition, "learningPopularityViewerSignals">;
 export type LearningPreferencesDoc = Document.Document<typeof schemaDefinition, "learningPreferences">;
 export type LearningViewsDoc = Document.Document<typeof schemaDefinition, "learningViews">;
+export type LoginCardsDoc = Document.Document<typeof schemaDefinition, "loginCards">;
 export type MaterialBucketsDoc = Document.Document<typeof schemaDefinition, "materialBuckets">;
 export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "materialCatalog">;
 export type NinaMemoriesDoc = Document.Document<typeof schemaDefinition, "ninaMemories">;
@@ -60,6 +61,7 @@ export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "prog
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
 export type QuranSearchDoc = Document.Document<typeof schemaDefinition, "quranSearch">;
+export type SchoolLoginsDoc = Document.Document<typeof schemaDefinition, "schoolLogins">;
 export type SnapshotBatchesDoc = Document.Document<typeof schemaDefinition, "snapshotBatches">;
 export type SubscriptionsDoc = Document.Document<typeof schemaDefinition, "subscriptions">;
 export type TenantCohortMembersDoc = Document.Document<typeof schemaDefinition, "tenantCohortMembers">;
@@ -130,6 +132,7 @@ export interface Docs {
   learningPopularityViewerSignals: LearningPopularityViewerSignalsDoc;
   learningPreferences: LearningPreferencesDoc;
   learningViews: LearningViewsDoc;
+  loginCards: LoginCardsDoc;
   materialBuckets: MaterialBucketsDoc;
   materialCatalog: MaterialCatalogDoc;
   ninaMemories: NinaMemoriesDoc;
@@ -144,6 +147,7 @@ export interface Docs {
   programCatalog: ProgramCatalogDoc;
   quranRows: QuranRowsDoc;
   quranSearch: QuranSearchDoc;
+  schoolLogins: SchoolLoginsDoc;
   snapshotBatches: SnapshotBatchesDoc;
   subscriptions: SubscriptionsDoc;
   tenantCohortMembers: TenantCohortMembersDoc;

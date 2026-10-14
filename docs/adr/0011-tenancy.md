@@ -106,12 +106,12 @@ allowed email domains do not admit, and a suspended tenant leave the invite
 pending for the school to resolve. The functions that create invites refuse an
 address outside the list too: `open` and `tenancy/invites:invite` both do, so a
 new tenant starts with an empty list and each invite is checked the same way.
-Later channels extend the invite channel and the claim method values: a
-belajar.id match, and a login card, which is an invite on the card channel with
-the claim method
-`card` (ADR 0009). A claim hands the claimant the Person's standing grants, so
-creating an invite, or printing a login card, for a Person that holds the Owner
-or Admin role needs the right to give that role, `owner.manage` (ADR 0012).
+A later channel extends the invite channel, a belajar.id match. A login card is
+not an invite row: it is its own record, `loginCards` (ADR 0009), and redeeming
+it binds the Person with the claim method `card`. A claim hands the claimant the
+Person's standing grants, so creating an invite, or printing a login card, for a
+Person that holds the Owner or Admin role needs the right to give that role,
+`owner.manage` (ADR 0012).
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,
@@ -309,8 +309,10 @@ beside the old School. Four steps followed, in this order, and all four are done
   `by_account_userId_and_kind_and_status`), `tenantInvites`
   (`by_channel_email_and_state_status`, `by_personId_and_state_status`,
   `by_state_status_and_expiresAt` for the expiry sweep,
-  `by_tenantId_and_state_status`), `tenantGrants` (ADR 0012), and
-  `journalEntries` (ADR 0016).
+  `by_tenantId_and_state_status`), `tenantGrants` (ADR 0012), `journalEntries`
+  (ADR 0016), and the school login and login card tables of ADR 0009,
+  `schoolLogins` (`by_personId`, `by_tenantId_and_name`) and `loginCards`
+  (`by_codeHash`, `by_personId`).
 - Public: `tenancy/profile:get`, `tenancy/viewer:get` (the School shell for one
   slug: the tenant with its settings, its units with theirs, archived units
   last, the caller's Person and grants, and the tenant capabilities `can`),

@@ -30,6 +30,7 @@ import {
 } from "@repo/backend/confect/credits/constants";
 import { getCurrentCreditResetTimestamp } from "@repo/backend/confect/credits/state";
 import { declareWelcomeIntent } from "@repo/backend/confect/emails/welcome/impl";
+import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { claimAfterVerification } from "@repo/backend/confect/tenancy/claims";
 import { allocateUsername } from "@repo/backend/confect/users/allocation";
 import { getAppUserByAuthId } from "@repo/backend/confect/users/directory";
@@ -43,6 +44,11 @@ type AuthUser = Parameters<NonNullable<UserTriggers["onCreate"]>>[1];
  * Create the app identity and durable welcome intent in the auth transaction,
  * and, when the address is already verified, ask for the claim of any invite
  * that waits for it. The claim itself runs after this transaction.
+ *
+ * A school account made from a login card already holds the global username
+ * that Better Auth stores, so the app user takes that same value. Its address is
+ * a placeholder that never receives mail, so it gets no welcome email and no
+ * payment customer.
  */
 const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
   authUser: AuthUser
@@ -51,7 +57,9 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;
   const now = yield* Clock.currentTimeMillis;
-  const username = yield* allocateUsername(authUser.name);
+  const hasMailbox = !isLoginAddress(authUser.email);
+  const username =
+    authUser.username ?? (yield* allocateUsername(authUser.name));
   const userId = yield* writer
     .table("users")
     .insert({
@@ -69,7 +77,9 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
       creditsResetAt: getCurrentCreditResetTimestamp(DEFAULT_USER_PLAN, now),
     })
     .pipe(Effect.orDie);
-  yield* declareWelcomeIntent(userId);
+  if (hasMailbox) {
+    yield* declareWelcomeIntent(userId);
+  }
   // Better Auth owns this component mutation and its plain Convex reference.
   yield* Effect.promise(() =>
     ctx.runMutation(components.betterAuth.mutations.setUserId, {
@@ -77,13 +87,15 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
       userId,
     })
   );
-  yield* scheduler.runAfter(
-    Duration.zero,
-    refs.internal.customers.actions.internal.syncCustomer,
-    {
-      userId,
-    }
-  );
+  if (hasMailbox) {
+    yield* scheduler.runAfter(
+      Duration.zero,
+      refs.internal.customers.actions.internal.syncCustomer,
+      {
+        userId,
+      }
+    );
+  }
   if (authUser.emailVerified) {
     yield* claimAfterVerification(userId, authUser.email);
   }

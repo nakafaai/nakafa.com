@@ -46,6 +46,7 @@ import learningPopularitySignals from "./tables/learningPopularitySignals";
 import learningPopularityViewerSignals from "./tables/learningPopularityViewerSignals";
 import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
+import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
@@ -60,6 +61,7 @@ import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
@@ -130,6 +132,7 @@ export default $defineSchema({
   learningPopularityViewerSignals: $Table.tableDefinition(learningPopularityViewerSignals),
   learningPreferences: $Table.tableDefinition(learningPreferences),
   learningViews: $Table.tableDefinition(learningViews),
+  loginCards: $Table.tableDefinition(loginCards),
   materialBuckets: $Table.tableDefinition(materialBuckets),
   materialCatalog: $Table.tableDefinition(materialCatalog),
   ninaMemories: $Table.tableDefinition(ninaMemories),
@@ -144,6 +147,7 @@ export default $defineSchema({
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
+  schoolLogins: $Table.tableDefinition(schoolLogins),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
   tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),

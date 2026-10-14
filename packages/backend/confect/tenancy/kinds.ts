@@ -3,6 +3,7 @@ import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
+import { IdentityBlockReason } from "@repo/backend/confect/identity/schema";
 import { Contract } from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
@@ -58,6 +59,10 @@ export const tenant = Kind.make("tenant", "tenants", {
       key: PolicyKey,
       type: Schema.Literal("tenant.policy.set"),
     }),
+    Schema.Struct({
+      reason: IdentityBlockReason,
+      type: Schema.Literal("identity.blocked"),
+    }),
   ],
   published: [],
   relations: ["member"],
@@ -96,6 +101,12 @@ export const unit = Kind.make("unit", "tenantUnits", {
 /** A Person: the school's record of someone, claimed by at most one account. */
 export const person = Kind.make("person", "tenantPeople", {
   actions: {
+    "card.issue": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
     "person.invite": {
       access: "write",
       grantedBy: "roles",
@@ -148,6 +159,18 @@ export const person = Kind.make("person", "tenantPeople", {
     Schema.Struct({
       invite: Id("tenantInvites"),
       type: Schema.Literal("invite.revoked"),
+    }),
+    Schema.Struct({
+      card: Id("loginCards"),
+      type: Schema.Literal("login.card.issued"),
+    }),
+    Schema.Struct({
+      card: Id("loginCards"),
+      type: Schema.Literal("login.card.reissued"),
+    }),
+    Schema.Struct({
+      card: Id("loginCards"),
+      type: Schema.Literal("login.card.redeemed"),
     }),
   ],
   published: [

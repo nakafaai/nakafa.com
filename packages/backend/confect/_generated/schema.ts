@@ -45,6 +45,7 @@ import learningPopularitySignals from "./tables/learningPopularitySignals";
 import learningPopularityViewerSignals from "./tables/learningPopularityViewerSignals";
 import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
+import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
@@ -59,6 +60,7 @@ import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
@@ -129,6 +131,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly learningPopularityViewerSignals: typeof learningPopularityViewerSignals;
   readonly learningPreferences: typeof learningPreferences;
   readonly learningViews: typeof learningViews;
+  readonly loginCards: typeof loginCards;
   readonly materialBuckets: typeof materialBuckets;
   readonly materialCatalog: typeof materialCatalog;
   readonly ninaMemories: typeof ninaMemories;
@@ -143,6 +146,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly programCatalog: typeof programCatalog;
   readonly quranRows: typeof quranRows;
   readonly quranSearch: typeof quranSearch;
+  readonly schoolLogins: typeof schoolLogins;
   readonly snapshotBatches: typeof snapshotBatches;
   readonly subscriptions: typeof subscriptions;
   readonly tenantCohortMembers: typeof tenantCohortMembers;
@@ -212,6 +216,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   learningPopularityViewerSignals,
   learningPreferences,
   learningViews,
+  loginCards,
   materialBuckets,
   materialCatalog,
   ninaMemories,
@@ -226,6 +231,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   programCatalog,
   quranRows,
   quranSearch,
+  schoolLogins,
   snapshotBatches,
   subscriptions,
   tenantCohortMembers,

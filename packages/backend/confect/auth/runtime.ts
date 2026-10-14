@@ -28,10 +28,15 @@ import {
   googleSignIn,
 } from "@repo/backend/confect/auth/tokens";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
+import {
+  readUsername,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from "@repo/backend/confect/users/username";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { APIError } from "better-auth/api";
 import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
-import { openAPI } from "better-auth/plugins";
+import { openAPI, username } from "better-auth/plugins";
 import {
   Array as Arr,
   Config,
@@ -40,6 +45,7 @@ import {
   Layer,
   Option,
   Redacted,
+  Result,
   Schema,
 } from "effect";
 
@@ -51,8 +57,15 @@ const deletionUnavailableError = () =>
 const providerErrorRoutePathnames = HashSet.fromIterable(
   Arr.map(ACTIVE_APP_LOCALE_CODES, (locale) => `/${locale}/auth/error`)
 );
+/**
+ * Better Auth's paths for password accounts. Each one stays closed on every
+ * host: sign-in with a school username opens later, on the school host alone
+ * (ADR 0009). `/is-username-available` is closed too, because it would tell any
+ * visitor which school usernames exist.
+ */
 const disabledCredentialPaths = [
   "/change-password",
+  "/is-username-available",
   "/request-password-reset",
   "/reset-password",
   "/set-password",
@@ -184,8 +197,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     },
     databaseHooks: accountTokenHooks,
     disabledPaths: [...disabledCredentialPaths, ...disabledTokenPaths],
+    // Passwords are a store for school accounts only: nobody signs up with one,
+    // and a password reset (a card redemption) ends every session it replaces.
     emailAndPassword: {
-      enabled: false,
+      disableSignUp: true,
+      enabled: true,
+      revokeSessionsOnPasswordReset: true,
     },
     user: {
       deleteUser: {
@@ -213,6 +230,14 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       credentialSurfaceDisabled,
       tokenRoutesDisabled,
       openAPI(),
+      // A school username is the global username of the account (ADR 0009), so
+      // the plugin holds the same value as `users.username`, under one rule.
+      username({
+        maxUsernameLength: USERNAME_MAX_LENGTH,
+        minUsernameLength: USERNAME_MIN_LENGTH,
+        usernameValidator: (value) => Result.isSuccess(readUsername(value)),
+        validationOrder: { username: "post-normalization" },
+      }),
       convex({
         authConfig,
         ...(Option.isNone(jwks) ? {} : { jwks: jwks.value }),
