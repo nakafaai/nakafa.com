@@ -1,7 +1,10 @@
 import { GenericId } from "@confect/core";
+import type { SystemTableNames } from "convex/server";
 
 export type TableNames = "accountConsentDecisions" | "accountConsents" | "accountDeletionAttemptCancellations" | "accountDeletionPreparations" | "accountDeletionReceipts" | "articleBuckets" | "articleCatalog" | "articleCategories" | "chatShares" | "chats" | "commentVotes" | "comments" | "contentAnalyticsPartitions" | "contentArtifactFacts" | "contentArtifacts" | "contentBindings" | "contentCompaction" | "contentHeads" | "contentIndex" | "contentItems" | "contentKeys" | "contentModelBuilds" | "contentPaths" | "contentReleases" | "contentSectionSources" | "contentSectionState" | "contentSections" | "contentSnapshots" | "contentState" | "creditResetPeriods" | "creditTransactions" | "curriculumRoutes" | "customerDeletionTombstones" | "customers" | "irtCalibrationRuns" | "irtScaleItems" | "irtScaleVersions" | "journalEntries" | "learningEngagementQueue" | "learningPopularityCounters" | "learningPopularityCycles" | "learningPopularitySignals" | "learningPopularityViewerSignals" | "learningPreferences" | "learningViews" | "materialBuckets" | "materialCatalog" | "ninaMemories" | "ninaMemoryKeys" | "ninaMemoryPortraits" | "ninaMemoryRestores" | "ninaSummaries" | "ninaTurns" | "ninaUploads" | "onboardingProfiles" | "programBuckets" | "programCatalog" | "quranRows" | "quranSearch" | "snapshotBatches" | "subscriptions" | "tenantCohortMembers" | "tenantCohorts" | "tenantGrants" | "tenantInvites" | "tenantPeople" | "tenantPeriods" | "tenantUnits" | "tenants" | "tryoutAttemptPlacements" | "tryoutAttempts" | "tryoutCatalog" | "tryoutPlacements" | "tryoutResponses" | "tryoutRuntimeBundles" | "tryoutScores" | "tryoutSectionAttempts" | "tryoutSetProgress" | "userLearningRecents" | "users" | "vaultKeys" | "welcomeEmailIntents";
 
-export const Id = <const TableName extends TableNames>(
+export type Id<TableName extends TableNames | SystemTableNames> = GenericId.GenericId<TableName>;
+
+export const Id = <const TableName extends TableNames | SystemTableNames>(
   tableName: TableName,
 ) => GenericId.GenericId(tableName);
