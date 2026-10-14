@@ -58,7 +58,7 @@ export const expireInvite = Effect.fn("tenancy.invite.expire")(function* (
 });
 
 /** The most invites one sweep run expires. A longer backlog drains over later runs. */
-export const INVITE_SWEEP_BATCH_SIZE = 50;
+const INVITE_SWEEP_BATCH_SIZE = 50;
 
 /**
  * Expires the pending invites whose term has passed, as the system. Each invite

@@ -355,7 +355,11 @@ describe("tenancy/placements move", () => {
         );
         const refused = yield* fixture
           .as("admin")
-          .mutation(move, { cohortId: seventhB.id, personId: teacher, slug: nf })
+          .mutation(move, {
+            cohortId: seventhB.id,
+            personId: teacher,
+            slug: nf,
+          })
           .pipe(Effect.flip);
         expect(refused).toMatchObject({
           _tag: "PersonNotStudent",
