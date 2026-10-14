@@ -16,6 +16,7 @@ const input = {
   termsOfServiceUrl: "https://nakafa.com/id/terms",
 };
 const message = { html: "<p>Masuk</p>", subject: "Diundang", text: "Masuk" };
+const requestedAt = Date.UTC(2026, 9, 13, 9, 0, 0);
 
 describe("emails/invite/workflow", () => {
   it.effect(
@@ -32,7 +33,7 @@ describe("emails/invite/workflow", () => {
         const done = yield* Effect.promise(() =>
           runInviteEmailDelivery(
             { runAction, runMutation, runQuery },
-            { inviteId, locale: "id" }
+            { inviteId, locale: "id", requestedAt }
           )
         );
         const order = Arr.flatMap(
@@ -53,7 +54,7 @@ describe("emails/invite/workflow", () => {
         );
         expect(runMutation).toHaveBeenCalledExactlyOnceWith(
           Ref.getFunctionReference(internal.enqueueRendered),
-          { inviteId, ...message }
+          { inviteId, requestedAt, ...message }
         );
       })
   );
@@ -70,7 +71,7 @@ describe("emails/invite/workflow", () => {
       yield* Effect.promise(() =>
         runInviteEmailDelivery(
           { runAction, runMutation, runQuery },
-          { inviteId, locale: "id" }
+          { inviteId, locale: "id", requestedAt }
         )
       );
       expect(runAction).not.toHaveBeenCalled();

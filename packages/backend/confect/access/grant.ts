@@ -7,6 +7,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { grantAuthority } from "@repo/backend/confect/access/authority";
 import { GrantRejected } from "@repo/backend/confect/access/errors";
 import { activeGrants, GRANT_LIMIT } from "@repo/backend/confect/access/policy";
 import {
@@ -14,9 +15,14 @@ import {
   type GrantEndReason,
   GrantScope,
   type GrantStatus,
+  OwnerRole,
 } from "@repo/backend/confect/access/schema";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
-import { personAuthority } from "@repo/backend/confect/tenancy/authority";
+import { Member } from "@repo/backend/confect/middleware/member.spec";
+import {
+  personAuthority,
+  tenantAuthority,
+} from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Effect, Match, Option, Schema, Struct } from "effect";
 
 /** One grant as the wire shows it (`GrantView`). */
@@ -209,3 +215,31 @@ export const ensureOwnerRemains = Effect.fn("access.grant.ownerRemains")(
     }
   }
 );
+
+/**
+ * Owner and Admin roles also need `owner.manage`, which only Owners hold, so an
+ * Admin can neither give nor end an Admin role.
+ */
+export const authorizeOwnerRole = Effect.fn("access.grant.ownerRole")(
+  function* (role: BuiltinRole) {
+    if (Schema.is(OwnerRole)(role)) {
+      yield* tenantAuthority.check("owner.manage", (yield* Member).tenant);
+    }
+  }
+);
+
+/**
+ * Ends one active grant the way the access lane's revoke path does: the grant's
+ * own `grant.revoke` decision, the Owner rule for Owner and Admin roles, and the
+ * last-Owner rule, all before the grant ends and is recorded under its holder.
+ */
+export const revokeGrant = Effect.fn("access.grant.revoke")(function* (
+  actor: typeof TenantActor.Type,
+  grant: TenantGrantsDoc,
+  holder: TenantPeopleDoc
+) {
+  yield* grantAuthority.check("grant.revoke", grant);
+  yield* authorizeOwnerRole(grant.role.key);
+  yield* ensureOwnerRemains(grant);
+  yield* endGrant(actor, grant, holder, "revoked");
+});

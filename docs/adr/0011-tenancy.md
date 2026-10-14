@@ -4,7 +4,8 @@
 
 Accepted for the Nakafa School foundation. Amended on 13 October 2026 for the
 organisation tier, the neutral concepts, the country profile above units, and
-the account's home cell.
+the account's home cell. Amended on 14 October 2026 for periods, cohorts,
+placements, people, and invites as they are built.
 The school subdomains and their URL tree are in ADR 0026, and the country
 profile is in ADR 0032.
 
@@ -103,10 +104,11 @@ the sign-in transaction. The claim writes `person.claimed` with the claim method
 (ADR 0016). An account that already holds a Person in the tenant, an address the
 allowed email domains do not admit, and a suspended tenant leave the invite
 pending for the school to resolve. The functions that create invites refuse an
-address outside the list too, once people management exists; today only `open`
-creates an invite, and a new tenant starts with an empty list. Later channels
-extend the invite channel and the claim method values: a belajar.id match, and
-a login card, which is an invite on the card channel with the claim method
+address outside the list too: `open` and `tenancy/invites:invite` both do, so a
+new tenant starts with an empty list and each invite is checked the same way.
+Later channels extend the invite channel and the claim method values: a
+belajar.id match, and a login card, which is an invite on the card channel with
+the claim method
 `card` (ADR 0009). A claim hands the claimant the Person's standing grants, so
 creating an invite, or printing a login card, for a Person that holds the Owner
 or Admin role needs the right to give that role, `owner.manage` (ADR 0012).
@@ -117,6 +119,77 @@ unclaimed. The release also revokes the Person's accepted invite, which then nam
 no account and can never be claimed again. A released Person is claimed again
 only through a new invite or a new login card. Deletion is never blocked by
 tenant ownership; an operator of the tenant's cell restores an Owner when needed.
+
+The Admin creates, renames, and removes the Persons of a school. Removing a
+Person runs in one transaction: each standing grant ends through the access
+lane's revoke path (ADR 0012), each cohort placement ends unless it is history
+(its period or its cohort is archived, and then it stays as the record of where
+the Person was placed), the pending invite is revoked and journaled, and the
+account is released as account deletion releases it, so the account can be
+invited again. The journal records `person.released` only when the Person held an
+account, then `person.removed`, and the status becomes `removed`. A removed
+Person refuses every write as `condition` (ADR 0012), and a claimed account
+loses the school at once, because membership needs an active Person.
+
+The Admin invites a Person to an address that the school's allowed email
+domains admit, and a Person has at most one pending invite. An invite waits 14
+days from the moment it is written (`INVITE_TERM`). Its expiry is stored on the
+invite and fixed when the invite is written, so a resend never moves it. A
+scheduled mutation marks a still-pending invite `expired` at that moment and
+journals `invite.expired`, and the claim path refuses an invite whose expiry has
+passed even before that mutation runs. An hourly sweep (`tenancy/expiry:sweep`)
+ends each due invite whose scheduled mutation never ran. An invite for a Person
+whose last term
+has ended expires that invite first and then writes a new one. An account that
+already holds the address is claimed as `open` claims it, through the same
+scheduled walk. A resend sends the same invite again to the same address, as a
+new message. Each Person's resends pass a token bucket of one token that refills
+three times an hour, through the existing rate limit component, so two resends
+are at least twenty minutes apart and no hour holds more than three. A resend of
+an invite that expired or is no longer pending is refused.
+
+Every journal entry of this section holds IDs and reason codes only, never a
+name, an address, or free text (ADR 0016).
+
+### Periods, cohorts, and placements
+
+A unit runs periods (a semester or a school year) and cohorts (its class groups,
+which one period may hold several of). Both follow the unit's clock, and an
+archived unit locks both, as it locks everything else in the unit.
+
+A period has a name of one line, 1 to 80 characters, a `start` and an `end`
+written as calendar dates `YYYY-MM-DD` on the unit's time zone, and a status:
+`planned`, `active`, or `archived`. A date is read as midnight in the unit's
+zone with `DateTime.makeZoned`, then formatted back with `DateTime.formatIsoDate`,
+so a date the calendar does not have, such as 30 February, does not format back
+to itself and is refused, and so is text that is not written that way. The
+start must be before the end. A period may not share a day with another period
+of its unit. The create check reads one index: among the periods of the unit,
+the one that starts last on or before the new end is the only one that can
+overlap, because no two periods of a unit overlap. At most one period of a unit
+is `active`. A planned period opens to `active` while no other period of its
+unit is active. Only an active period archives, and an archived period stays
+readable and refuses writes, as does every cohort of it.
+
+A cohort has a name of one line, 1 to 40 characters, unique within its period
+without regard to case (`nameKey`, the lowercase name, is what the index
+compares), a grade from 1 to 13, and a status of `active` or `archived`. A
+period holds at most 200 cohorts, archived ones included, and every list of
+cohorts reads at most that many. The cohort list carries no member count,
+because a count would read every placement of the period.
+
+A placement is one Person in one cohort of one period: the `cohortMember`
+relation of ADR 0012. The Person must be a student: an active Student grant over
+the cohort's unit or over the whole school. A Person holds at most one placement
+per period, and a move keeps them in the same period. A move checks the cohort it
+leaves as well as the one it enters, so an archived cohort at either end refuses
+it as `condition`, and the placement stays where it was. The placement opens
+`cohort.view` of its cohort to the Person, through the relation and nothing
+else; the relation is
+read from the placement table for each request and never copied onto the
+Person. A Person holds at most 64 placements in all, across every period, and
+`tenancy/placement.ts` derives that limit. Removal reads at most those
+placements, and each one's period and cohort, in one transaction.
 
 ### Tenant settings
 
@@ -223,15 +296,27 @@ beside the old School. Four steps follow, in this order, and the first is merged
 ## Implementation Contract
 
 - Tables: `tenants` (`by_slug`), `tenantUnits` (`by_tenantId_and_status`),
-  `tenantPeople` (`by_tenantId_and_account_userId`,
+  `tenantPeriods` (`by_unitId_and_start`, `by_unitId_and_status`),
+  `tenantCohorts` (`by_periodId_and_nameKey`,
+  `by_periodId_and_grade_and_nameKey`), `tenantCohortMembers`
+  (`by_periodId_and_personId`, `by_cohortId_and_personId`, `by_personId`),
+  `tenantPeople` (`by_tenantId_and_account_userId`, `by_tenantId_and_status`,
   `by_account_userId_and_kind_and_status`), `tenantInvites`
-  (`by_channel_email_and_state_status`, `by_personId_and_state_status`),
-  `tenantGrants` (ADR 0012), and `journalEntries` (ADR 0016).
+  (`by_channel_email_and_state_status`, `by_personId_and_state_status`,
+  `by_state_status_and_expiresAt` for the expiry sweep,
+  `by_tenantId_and_state_status`), `tenantGrants` (ADR 0012), and
+  `journalEntries` (ADR 0016).
 - Public: `tenancy/profile:get`, `tenancy/viewer:get` (the School shell for one
   slug: the tenant with its settings, its units with theirs, archived units
   last, the caller's Person and grants, and the tenant capabilities `can`),
   `tenancy/memberships:list` (the caller's own active member Persons, identity
-  scoped), `journal/audit:list`, and the grant functions of ADR 0012.
+  scoped), `journal/audit:list`, and the grant functions of ADR 0012. The
+  period, cohort, placement, people, and invite functions are the groups
+  `tenancy/periods` (`list`, `create`, `open`, `archive`), `tenancy/cohorts`
+  (`list`, `members`, `create`, `rename`, `archive`), `tenancy/placements`
+  (`place`, `move`), `tenancy/people` (`list`, `create`, `rename`, `remove`),
+  and `tenancy/invites` (`list`, `invite`, `revoke`, `resend`). Each decides
+  through the access lane, and each returns the row its list shows.
 - Settings, public mutations that answer with the value now stored and that
   write and record nothing for a value already stored: `tenancy/settings`
   (`setLocale` for the country and the contract currency, `setPolicy` for one
@@ -264,10 +349,16 @@ beside the old School. Four steps follow, in this order, and the first is merged
   tenant's name goes in the subject of its invitation email. `tenant.provisioned`
   records the contract (plan, modules, data processing agreement version, and
   content licence version); the entitlements it grants are built later.
-- Operators, invite expiry, visits, grant expiry, and the account deletion
-  release step follow as one change that extends this contract.
+- Scheduled: `tenancy/expiry:invite`, one run for the moment each invite stores
+  as its expiry. It is internal, and it marks a still-pending invite expired.
+  `tenancy/expiry:sweep` runs every hour as the backstop for a run that never
+  happened: it expires each pending invite whose expiry has passed.
+- Operators, visits, and grant expiry follow as one change that extends this
+  contract. Invite expiry is built in `tenancy/expiry`, and the account release
+  in `tenancy/release.ts`, which account deletion and removal both call.
 - A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
-  email domains.
+  email domains. A period holds at most 200 cohorts, a Person holds at most 64
+  placements, and a Person's invite is sent again at most 3 times in any hour.
 
 ## Consequences
 
