@@ -12,7 +12,6 @@ import {
 import { toast } from "sonner";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
-import { REJECTION_NOTICE } from "@/components/ai/attachments";
 import { type AiStoreApi, createAiStore } from "@/components/ai/store/create";
 import {
   resolveAiDraftText,
@@ -21,6 +20,13 @@ import {
 } from "@/components/ai/store/draft";
 import type { AiStore } from "@/components/ai/store/types";
 import { useAuthSession } from "@/components/auth/session";
+
+/**
+ * The id of the one notice that names the files a pick did not attach. It lives
+ * in this module, not beside the notice's content, so the shared routes that
+ * load this module do not load the attachment module as well.
+ */
+export const REJECTION_NOTICE = "nina-files";
 
 const AiContext = createContext<AiStoreApi | null>(null);
 

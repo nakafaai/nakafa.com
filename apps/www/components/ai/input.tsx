@@ -39,8 +39,8 @@ import {
   NinaAttachments,
   RejectedFiles,
 } from "@/components/ai/attachment";
-import { REJECTION_NOTICE, rejectionNotice } from "@/components/ai/attachments";
-import { useAi } from "@/components/ai/context";
+import { rejectionNotice } from "@/components/ai/attachments";
+import { REJECTION_NOTICE, useAi } from "@/components/ai/context";
 import {
   NINA_NOTICE_POSITION,
   ninaFailureLimits,
