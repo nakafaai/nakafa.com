@@ -267,8 +267,12 @@ query, so question text and answer keys never come from the client. The official
 explanation is the source of truth for the answer.
 
 Provider input keeps whole turns that the conversation summary does not
-cover, newest first, within 32,000 tokens, and the current turn's evidence
-within 16,000 tokens. The turns come from the chat's turn records, by turn
+cover, newest first, within the history budget of 32,610 tokens: what a call
+leaves for its history after the reserved parts at their budgets (30,000
+tokens) and the current turn's evidence (28,000 tokens). The budget of a call
+whose current turn costs more is smaller, so the call stays within its limit,
+and the history budget is the most a call takes (`assembleContext`). The turns
+come from the chat's turn records, by turn
 order, not from the last messages of the thread: a cancelled or failed turn
 leaves no messages in it, and a question the learner asked again appears once,
 in its newest asking, whichever of its askings the learner retried. A retry
@@ -279,41 +283,47 @@ tab that sends no page, keeps that turn's own context, with its placement and
 question focus. Older evidence shortens with a visible note before a turn is
 dropped, and no budget fails a turn. Earlier turns keep their images, while
 their PDF and text attachments, whose cost grows with size, leave provider
-history as a note naming the file. An image counts 1,120 tokens whatever its
-size, what Gemini 3 bills at its default media resolution, which Nina leaves
-unset, so a few images fill the history budget. A stored message keeps neither
-the size nor the page count of a file, so the rule reads the media type alone.
+history as a note naming the file. An image counts 1,600 tokens whatever its
+size, about what Claude bills for an image after the provider's resize
+(measured 14 October 2026), so a few images fill the history budget. A document
+counts 3,300 tokens a page. A stored message keeps neither the size nor the page
+count of a file, so the rule reads the media type alone and counts one page.
 The learner's own message and its attachments are not evidence and do not count
 against the evidence budget.
 
-One call carries at most `NINA_CALL_LIMIT` tokens by design, the sum of the
-budgets in `confect/nina/budget.ts` that a call holds at once. The budgets are
-counted with OpenAI's tokenizer, and the model is Gemini, so the number is close
-to what the provider bills and not the same. Measured on 12 October 2026 through
-the gateway on five stored sections, the provider counted between 8.2% fewer
-tokens (Arabic verses with their translation) and 13.6% more (a lesson full of
-formulas) than the budget's count, and within 6% for German, English and
-Indonesian prose. A message adds no tokens around its content, and a tool call
-with its result costs what the budget counts for them. The model accepts
-far more, 1,048,576 input tokens. Nina stays below because every call bills
-every token it carries, a larger call takes longer to start, and the provider
-keeps a cached prefix for only about five minutes. Three things lie outside the
-number: the learner's own message and files, which admission checks, a question
-focus, which has no budget, and the words of the newest earlier turn. That turn
-is kept whatever it costs and only its tool results are shortened, never the
-words of the learner or of Nina, so one very long message or answer in it takes
-the history above its part.
+One call carries at most `NINA_CALL_LIMIT` tokens by design: 90,610, which is
+the context limit of the language model profile, 100,000, less a margin of 9,390
+tokens for the estimator's error. The margin is the 95th percentile of the
+estimator's undercount on 120 texts measured through the gateway on 14 October
+2026, 9.39% (`tokens.undercount`). The budgets are counted by the estimator of
+`confect/nina/budget.ts`, whose costs live in the profile, and it is 13.1% off a
+text on average and 4% above the provider over those texts. Every message adds 8
+tokens around its content, the overhead measured on a user message, and a tool
+call with its result costs what the budget counts for them. A call holds its
+reserved parts at their budgets, 30,000 tokens (instructions 12,500, page
+10,500, account 1,000, portrait 1,000, recall 1,500, summary 3,500), then its
+current turn as it is sent: the newest learner message and its files, counted at
+the profile's costs, and the evidence, within 28,000. The history gets what is
+left, at most 32,610. Nina stays below the price step at 100,000 tokens, because
+the provider bills a call above it at five times the input price (measured on
+calls of 94,423 and 104,573 prompt tokens). Four things lie outside the number.
+The newest earlier turn is kept whatever it costs, and only its tool results are
+shortened, never the words of the learner or of Nina, so one very long answer in
+it can take a call past the limit. A question focus has no budget of its own.
+The learner's text is bounded only by the admission limit of 100,000 characters,
+and a document counts one page however long it is, since admission bounds the
+bytes of a message's documents (10 MiB) and not their pages.
 
 The size of the history starts a fold of the conversation summary. After a
 completed turn, the follow-up action counts the complete turns the summary does
 not cover in model tokens, as the history would send them. A chat whose turns
-fit in the 32,000 token history budget, and that holds at most 64 of them, is
+fit in the 32,610 token history budget, and that holds at most 64 of them, is
 never folded. The count is a second, much wider bound: a turn also costs
 documents to read before the call, which no token counts, so very short turns
 would otherwise let the history grow to thousands of messages. Past 64 turns one fold covers the oldest 16, and the
 next waits for 16 new ones. When the turns cost more than the budget, one fold
 summarizes the oldest of them with a fast
-model, as many as it takes for the rest to cost at most 16,000 tokens, half the
+model, as many as it takes for the rest to cost at most 16,305 tokens, half the
 budget, so the next fold waits for about half a budget of new turns and the
 cached prefix holds in between. The newest complete turn is never folded, a
 fold covers at most 16 turns, and a longer backlog advances one bounded batch
@@ -343,7 +353,7 @@ messages and at most 32 replaced askings. A stored total would avoid that read,
 at the price of a field on every turn that must stay right through retries,
 failures and folds, and Nina has none.
 
-The summary, at most 2,000 tokens, stays in the language of the conversation,
+The summary, at most 3,500 tokens, stays in the language of the conversation,
 adds no fact the turns did not state, sits in the system prompt context and is
 deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
