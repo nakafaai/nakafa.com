@@ -43,6 +43,34 @@ const provisioned = Effect.fn("test.audit.provisioned")(function* (
 
 describe("journal/audit list", () => {
   it.effect(
+    "shows an operator's change as Nakafa staff, without the operator's identity",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const operatorId = yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("operators").insert({
+              changedAt: 0,
+              grantedAt: 0,
+              status: "active",
+              userId: fixture.users.stranger.userId,
+            })
+          )
+        );
+        yield* fixture.run(
+          provisioned(fixture.tenants.nf, 1, {
+            id: operatorId,
+            kind: "operator",
+          })
+        );
+        const result = yield* fixture.as("auditor").query(audit, page(10));
+        expect(Arr.map(result.page, (entry) => entry.actor)).toEqual([
+          { kind: "operator" },
+        ]);
+      })
+  );
+
+  it.effect(
     "shows the member tenant's changes newest first with Person names",
     () =>
       Effect.gen(function* () {

@@ -55,6 +55,7 @@ import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
+import operators from "./tables/operators";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
@@ -69,6 +70,7 @@ import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
 import tenantPeriods from "./tables/tenantPeriods";
 import tenantUnits from "./tables/tenantUnits";
+import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
@@ -140,6 +142,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
   readonly onboardingProfiles: typeof onboardingProfiles;
+  readonly operators: typeof operators;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
   readonly quranRows: typeof quranRows;
@@ -154,6 +157,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly tenantPeople: typeof tenantPeople;
   readonly tenantPeriods: typeof tenantPeriods;
   readonly tenantUnits: typeof tenantUnits;
+  readonly tenantVisits: typeof tenantVisits;
   readonly tenants: typeof tenants;
   readonly tryoutAttemptPlacements: typeof tryoutAttemptPlacements;
   readonly tryoutAttempts: typeof tryoutAttempts;
@@ -224,6 +228,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   ninaTurns,
   ninaUploads,
   onboardingProfiles,
+  operators,
   programBuckets,
   programCatalog,
   quranRows,
@@ -238,6 +243,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   tenantPeople,
   tenantPeriods,
   tenantUnits,
+  tenantVisits,
   tenants,
   tryoutAttemptPlacements,
   tryoutAttempts,
