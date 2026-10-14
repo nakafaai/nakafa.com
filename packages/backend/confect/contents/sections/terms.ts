@@ -1,7 +1,7 @@
 import {
-  TEXT_QUERY_TERMS,
-  TEXT_TERM_BYTES,
-} from "@repo/backend/confect/contents/sections/limits";
+  CONVEX_SEARCH_TERM_BYTES,
+  CONVEX_SEARCH_TERMS,
+} from "@repo/contents/agent/search";
 import { Array as Arr } from "effect";
 
 const TERM = /[\p{L}\p{N}]+/gu;
@@ -18,9 +18,9 @@ export function textQuery(query: string) {
     Arr.take(
       Arr.filter(
         Arr.map(Arr.fromIterable(query.matchAll(TERM)), ([term]) => term),
-        (term) => encoder.encode(term).byteLength < TEXT_TERM_BYTES
+        (term) => encoder.encode(term).byteLength < CONVEX_SEARCH_TERM_BYTES
       ),
-      TEXT_QUERY_TERMS
+      CONVEX_SEARCH_TERMS
     ),
     " "
   );
