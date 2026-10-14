@@ -7,11 +7,8 @@ import type { Place } from "@repo/design-system/lib/toy/scatter";
 import type { ThingName } from "@repo/mascot/thing/name";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { homeHerd } from "@/components/marketing/about/toys/herd";
+import { TOY_HERD } from "@/components/marketing/about/toys/herd";
 import { within } from "@/components/marketing/about/toys/place";
-
-/** The animals the toys take, one slice of the page's cast each. */
-const herd = homeHerd(17, 0);
 
 /** One toy: its place beside a part of the page, and the picture it is drawn as. */
 interface ToyPlacement {
@@ -22,7 +19,7 @@ interface ToyPlacement {
 
 /** An animal of the cast, at its index in the slice the toys take. */
 function animal(index: number) {
-  return <Animal className="size-14" mascot={Arr.getUnsafe(herd, index)} />;
+  return <Animal className="size-14" mascot={Arr.getUnsafe(TOY_HERD, index)} />;
 }
 
 /** A thing of Nina's world, drawn at the size of a toy. */

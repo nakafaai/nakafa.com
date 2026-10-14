@@ -5,13 +5,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { homeHerd } from "@/components/marketing/about/toys/herd";
-
-/** How many animals sit in the class photo of the school part. */
-const CLASS_SIZE = 7;
-
-/** Where the class starts in the cast of the page: after the crowd. */
-const CLASS_SKIP = 35;
+import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
 
 /**
  * The school part: a dark band with rounded corners, the words for a whole
@@ -19,7 +13,6 @@ const CLASS_SKIP = 35;
  */
 export function Schools() {
   const t = useTranslations("Landing");
-  const classmates = homeHerd(CLASS_SIZE, CLASS_SKIP);
 
   return (
     <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="school">
@@ -54,7 +47,7 @@ export function Schools() {
             aria-label={t("school-class")}
             className="flex flex-wrap items-end justify-center gap-2"
           >
-            {Arr.map(classmates, (mascot) => (
+            {Arr.map(CLASS_HERD, (mascot) => (
               <li key={mascot.animal}>
                 <Animal className="size-16" mascot={mascot} />
               </li>

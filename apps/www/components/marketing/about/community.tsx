@@ -6,13 +6,7 @@ import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { homeHerd } from "@/components/marketing/about/toys/herd";
-
-/** How many friends stand in the crowd. */
-const CROWD_SIZE = 18;
-
-/** Where the crowd starts in the cast of the page: after the animals of the toys. */
-const CROWD_SKIP = 17;
+import { CROWD_HERD } from "@/components/marketing/about/toys/herd";
 
 /** Every this many friends, one of them is typing, so a bubble of dots rises above it. */
 const TYPING_EVERY = 4;
@@ -23,7 +17,6 @@ const TYPING_EVERY = 4;
  */
 export function Community() {
   const t = useTranslations("Landing");
-  const crowd = homeHerd(CROWD_SIZE, CROWD_SKIP);
 
   return (
     <section
@@ -56,7 +49,7 @@ export function Community() {
           aria-label={t("community-crowd")}
           className="grid grid-cols-6 justify-items-center gap-4 min-[760px]:grid-cols-9"
         >
-          {Arr.map(crowd, (mascot, index) => (
+          {Arr.map(CROWD_HERD, (mascot, index) => (
             <li className="relative" key={mascot.animal}>
               <Animal className="size-14 min-[760px]:size-16" mascot={mascot} />
               {index % TYPING_EVERY === 0 ? (
