@@ -144,6 +144,51 @@ for (const width of [320, 1440]) {
   });
 }
 
+/**
+ * How far a chip runs past the inner edge of its row, in pixels. The row's
+ * padding and border lie outside that edge, so a chip that fits gives zero or
+ * less.
+ */
+const readOverhang = (chip: HTMLElement) => {
+  const row = chip.closest('[data-slot="attachment-group"]');
+  if (!(row instanceof HTMLElement)) {
+    return null;
+  }
+  const style = getComputedStyle(row);
+  const inner =
+    row.getBoundingClientRect().right -
+    Number.parseFloat(style.paddingRight) -
+    Number.parseFloat(style.borderRightWidth);
+  return chip.getBoundingClientRect().right - inner;
+};
+
+// A chip keeps its 16rem cap, so on a narrow screen it can be wider than the
+// row it sits in. The row then cannot scroll to the end of the chip.
+test.describe("Document chips inside their row at 300px", () => {
+  test.use({ viewport: { height: 900, width: 300 } });
+
+  for (const { label, name } of LONG_NAMES) {
+    test(`keep ${label} inside the end of the row`, async ({ page }) => {
+      await runPage(
+        page,
+        Effect.gen(function* () {
+          const composer = yield* openComposer(page);
+          yield* pickFiles(composer, [fileOf(name, "text/plain", 8)]);
+          const chip = chipsIn(composer).first();
+          yield* Effect.promise(() => expect(chip).toBeVisible());
+          const overhang = yield* Effect.promise(() =>
+            chip.evaluate(readOverhang)
+          );
+
+          yield* Effect.sync(() => {
+            expect(overhang).toBeLessThanOrEqual(0.5);
+          });
+        })
+      );
+    });
+  }
+});
+
 test.describe("Names on the files of a sent message at 320px", () => {
   test.use({ viewport: { height: 900, width: 320 } });
   test.describe.configure({ timeout: 180_000 });

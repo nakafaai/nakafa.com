@@ -105,9 +105,12 @@ export function NinaAttachment({
       // A chip in the composer sits inside the border of the composer, so it
       // draws none of its own: a box with a border inside a box with a border
       // reads as a card in a card. A failed upload keeps the border that
-      // marks it. A transparent border keeps the size of the chip.
+      // marks it. A transparent border keeps the size of the chip. A document
+      // chip is at most 16rem wide and never wider than its row.
       className={cn(
-        isImage ? imageVariants({ variant }) : "max-w-64",
+        isImage
+          ? imageVariants({ variant })
+          : "max-w-[min(100%,--spacing(64))]",
         variant === "preview" && "border-transparent"
       )}
       orientation={isImage ? "vertical" : "horizontal"}
