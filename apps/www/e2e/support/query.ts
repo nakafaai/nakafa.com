@@ -1,8 +1,8 @@
-import {
+import type {
   AgentMessage,
-  type MessagePage,
+  MessagePage,
 } from "@repo/backend/confect/nina/contract/message";
-import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
+import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Array as Arr, MutableHashMap, Option, Schema } from "effect";
 import type { SentSchema } from "@/e2e/support/frames";
 
@@ -17,13 +17,12 @@ export type StoredMessage = (typeof MessagePage.Type)["page"][number];
 /**
  * A message of a served chat with the facts of its turn. A message that answers
  * a turn carries them here, and the served page strips them: the query that
- * reads messages tells none of a turn, and the turns query tells them.
+ * reads messages tells none of a turn, and the turns query tells them. Only
+ * types come from the contracts here: Playwright loads this file as CommonJS,
+ * and the contract of a turn reaches a package that loads only as ES modules.
  */
-const ServedMessage = Schema.Struct({
-  ...AgentMessage.fields,
-  metadata: Schema.optional(NinaTurnSummary),
-});
-export type ServedMessage = typeof ServedMessage.Type;
+export type ServedMessage = typeof AgentMessage.Type &
+  Partial<Record<"metadata", typeof NinaTurnSummary.Type>>;
 
 const TurnsArguments = Schema.Tuple([
   Schema.Struct({
