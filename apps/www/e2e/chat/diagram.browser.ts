@@ -1,7 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { ANSWER, answerTurn, chatOf } from "@/e2e/support/prose";
+import {
+  ANSWER,
+  answerTurn,
+  chatOf,
+  DIAGRAM_DESCRIPTION,
+  DIAGRAM_TITLE,
+} from "@/e2e/support/prose";
+import { settled } from "@/e2e/support/rows";
 import { drawnRow, openServedChat } from "@/e2e/support/serve";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -39,9 +46,6 @@ const LANGUAGES = [
     title: "Diagram",
   },
 ];
-
-/** The title of the 12-node flowchart, which its card and its dialog both label. */
-const TITLE = "Alur pendaftaran siswa baru";
 
 /**
  * How the card draws its diagram: whether the whole drawing fits its stage
@@ -109,12 +113,11 @@ test.describe("The dialog of a diagram", () => {
       await page.setViewportSize({ height: 900, width });
       await runOnPage(page, baseURL, (origin) =>
         Effect.gen(function* () {
-          const turn = answerTurn({ markdown: ANSWER.diagram, order: 1 });
-          yield* openServedChat(page, origin, chatOf([turn]));
+          yield* openServedChat(page, origin, chatOf([TITLED]));
           yield* Effect.promise(async () => {
-            const titled = await drawnRow(page, turn.answer);
+            const titled = await drawnRow(page, TITLED.answer);
             const card = titled.locator('[data-nakafa="mermaid-card"]');
-            const wrapper = card.getByRole("img", { name: TITLE });
+            const wrapper = card.getByRole("img", { name: DIAGRAM_TITLE });
 
             await expect(wrapper.locator("svg")).toBeVisible({
               timeout: revealTimeoutMilliseconds,
@@ -126,10 +129,12 @@ test.describe("The dialog of a diagram", () => {
 
             await card.getByRole("button").first().click();
             const dialog = page.getByRole("dialog");
-            const box = dialog.getByRole("img", { name: TITLE });
+            const box = dialog.getByRole("img", { name: DIAGRAM_TITLE });
             await expect(box.locator("svg")).toBeVisible({
               timeout: revealTimeoutMilliseconds,
             });
+            // The dialog zooms in when it opens, and a drawing measured during the zoom is scaled.
+            await settled(box);
             const facts = await box.evaluate(dialogFacts);
 
             // A label keeps its own font size, so the drawing is not scaled.
@@ -219,13 +224,11 @@ test.describe("The words of a diagram", () => {
             await expect(titledCard.locator('[role="img"] svg')).toBeVisible({
               timeout: revealTimeoutMilliseconds,
             });
-            await expect
-              .soft(titledCard)
-              .toContainText("Alur pendaftaran siswa baru");
+            await expect.soft(titledCard).toContainText(DIAGRAM_TITLE);
             await titledCard.getByRole("button").first().click();
             await expect
               .soft(page.locator('[data-slot="dialog-description"]'))
-              .toHaveText("Dari pengisian formulir sampai arsip");
+              .toHaveText(DIAGRAM_DESCRIPTION);
           });
         })
       );

@@ -88,7 +88,7 @@ export function MermaidMdx({
         <DialogPanel>
           <Mermaid
             chart={renderableChart}
-            className="h-[60dvh] rounded-lg border bg-muted/40 p-4 text-base"
+            className="h-[60dvh] rounded-lg bg-muted/40 p-4 text-base"
             config={config}
             fit="natural"
             label={title}
