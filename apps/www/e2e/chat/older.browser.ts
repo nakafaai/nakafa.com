@@ -17,12 +17,19 @@ const CHAT = Arr.makeBy(ANSWERS, (index) =>
   answerTurn({ markdown: `Jawaban ${index + 1}`, order: index + 1 })
 );
 
+/**
+ * The rows of the served messages, whose keys start with `prose-`. The transcript
+ * also shows a row of its own while the turn the chat started with waits for an
+ * answer, and the local backend cannot give one, so that row is no message.
+ */
+const MESSAGE_ROW = `${TRANSCRIPT_ROW}[data-message-id^="prose-"]`;
+
 /** The footer of each row of Nina's answers, whose keys end with `-1`. */
 const ANSWER_FOOTER = `${TRANSCRIPT_ROW}[data-message-id$="-1"] [data-slot="message-footer"]`;
 
 /** Scrolls the oldest loaded row into view, which asks Agent for the older page when there is one. */
 const reachOldest = (page: Page) =>
-  page.locator(TRANSCRIPT_ROW).first().scrollIntoViewIfNeeded();
+  page.locator(MESSAGE_ROW).first().scrollIntoViewIfNeeded();
 
 test.describe("An older page of a chat", () => {
   test.describe.configure({ timeout: 240_000 });
@@ -51,7 +58,7 @@ test.describe("An older page of a chat", () => {
             .poll(
               async () => {
                 await reachOldest(page);
-                return page.locator(TRANSCRIPT_ROW).count();
+                return page.locator(MESSAGE_ROW).count();
               },
               { timeout: readinessTimeoutMilliseconds }
             )
@@ -61,7 +68,7 @@ test.describe("An older page of a chat", () => {
           yield* Effect.sleep(Duration.millis(400));
           yield* Effect.promise(async () => {
             await reachOldest(page);
-            expect(await page.locator(TRANSCRIPT_ROW).count()).toBe(
+            expect(await page.locator(MESSAGE_ROW).count()).toBe(
               2 * NINA_MESSAGES_PAGE_SIZE
             );
           });
@@ -75,7 +82,7 @@ test.describe("An older page of a chat", () => {
             .poll(
               async () => {
                 await reachOldest(page);
-                return page.locator(TRANSCRIPT_ROW).count();
+                return page.locator(MESSAGE_ROW).count();
               },
               { timeout: readinessTimeoutMilliseconds }
             )
