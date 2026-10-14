@@ -77,26 +77,25 @@ const declineIfAsked = Effect.fn("NakafaE2E.declineIfAsked")(function* (
  * Serves the conversation that the returned reference holds, and signs a
  * learner in. Pages that open afterwards show whatever the reference holds then.
  */
-const startTranscript = Effect.fn("NakafaE2E.startTranscript")(function* (
-  page: Page,
-  baseURL: string
-) {
-  const shown = MutableRef.make<readonly NinaMessage[]>([]);
-  yield* seedAnalyticsConsent(page, "denied");
-  yield* serveIcons(page);
-  yield* serveConversation(page, shown);
-  const cookies = MutableRef.get(session);
-  if (Option.isSome(cookies)) {
-    yield* Effect.promise(() => page.context().addCookies(cookies.value));
+export const startTranscript = Effect.fn("NakafaE2E.startTranscript")(
+  function* (page: Page, baseURL: string) {
+    const shown = MutableRef.make<readonly NinaMessage[]>([]);
+    yield* seedAnalyticsConsent(page, "denied");
+    yield* serveIcons(page);
+    yield* serveConversation(page, shown);
+    const cookies = MutableRef.get(session);
+    if (Option.isSome(cookies)) {
+      yield* Effect.promise(() => page.context().addCookies(cookies.value));
+      return shown;
+    }
+    yield* signInLearner(page.context(), baseURL);
+    MutableRef.set(
+      session,
+      Option.some(yield* Effect.promise(() => page.context().cookies()))
+    );
     return shown;
   }
-  yield* signInLearner(page.context(), baseURL);
-  MutableRef.set(
-    session,
-    Option.some(yield* Effect.promise(() => page.context().cookies()))
-  );
-  return shown;
-});
+);
 
 /**
  * A phone draws its scrollbars over the page and gives them no room. The root
@@ -117,7 +116,7 @@ const OVERLAY_SCROLLBARS =
  * for usage data is fixed to the bottom of a narrow page, where it covers the
  * rows that a test presses, so the page is shown without it.
  */
-const showChat = Effect.fn("NakafaE2E.showChat")(function* (
+export const showChat = Effect.fn("NakafaE2E.showChat")(function* (
   page: Page,
   shown: MutableRef.MutableRef<readonly NinaMessage[]>,
   locale: string,
