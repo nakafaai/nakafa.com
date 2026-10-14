@@ -5,6 +5,7 @@ import {
   HashSet,
   Schema,
   String as Str,
+  Struct,
 } from "effect";
 
 /** Email domains one tenant may allow. The list sits on the tenant row, which every member function already reads. */
@@ -40,6 +41,9 @@ export const TenantPolicies = Schema.Struct({
   nina: Schema.Boolean,
   studentThreads: Schema.Boolean,
 });
+
+/** The name of one policy. A journal entry of a policy change holds only this, never the value, so no email domain reaches the journal (ADR 0011). */
+export const PolicyKey = Schema.Literals(Struct.keys(TenantPolicies.fields));
 
 /** What a new tenant starts with: Nina and student threads off, and no limit on email domains, until its Owner chooses. */
 export const NEW_TENANT_POLICIES: typeof TenantPolicies.Type = {

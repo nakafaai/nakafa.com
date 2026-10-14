@@ -74,7 +74,7 @@ const setPolicy = FunctionImpl.make(
       )
       .pipe(Effect.orDie);
     yield* tenantAuthority.record(personActor(person), tenant, {
-      policy,
+      key: policy.key,
       type: "tenant.policy.set",
     });
     return policies;

@@ -7,7 +7,7 @@ import {
   getSpecialistToolWords,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
-import { ALLOWED, denied } from "@repo/backend/confect/nina/policy/capability";
+import { ALLOWED } from "@repo/backend/confect/nina/policy/capability";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import { getSourceReferencesFromMessages } from "@repo/backend/confect/nina/research/source";
 import { Effect } from "effect";
@@ -50,10 +50,7 @@ export const researchCapability = defineCapability({
     section: SECTION,
   },
   input: researchToolInputSchema,
-  offered: ({ nina }) =>
-    nina.tools.allowDeepResearch
-      ? ALLOWED
-      : denied("External research is not allowed for this context."),
+  offered: () => ALLOWED,
   run: (
     input,
     { context, locale, messages, publish, toolCallId, usageHandler, userId }

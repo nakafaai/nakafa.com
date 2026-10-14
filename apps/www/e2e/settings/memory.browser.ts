@@ -168,8 +168,8 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     const row = memoryRow(page, NAMED);
     const editor = editorOf(page);
 
-    // The editor deletes the memory it shows, and Undo writes its title and
-    // its words back as the learner's own memory.
+    // The editor deletes the memory it shows, and Undo puts it back as the
+    // server stored it: its title and its words, written by the learner.
     await row.getByText(NAMED).click();
     await opened(page, REWRITTEN);
     await page.getByRole("button", { exact: true, name: "Delete" }).click();

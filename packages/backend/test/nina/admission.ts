@@ -1,11 +1,17 @@
 import { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
+import type { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { DateTime, Effect } from "effect";
+import { Effect } from "effect";
+
+/** The learner facts the resolver freezes with a page. */
+type ResolvedUser = Effect.Success<
+  ReturnType<typeof resolveNinaContext>
+>["user"];
 
 /** The moment every admission test runs at. */
 export const NOW = Date.UTC(2026, 8, 27, 12);
@@ -36,25 +42,28 @@ export async function fixture(credits = 10) {
   return { t, identity, owner };
 }
 
-/** What the mocked resolver freezes for the page `slug`, as admission stores it. */
-export function contextFor(slug: string) {
-  const url = `https://nakafa.com/en/${slug}`;
+/**
+ * What the mocked resolver freezes for the page `slug` and the learner `user`,
+ * as admission stores it.
+ */
+export function contextFor(slug: string, user: ResolvedUser = {}) {
   return openNinaLearningSession({
-    capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-    source: "current-page",
-    learning: { locale: "en", slug, url, verified: false },
+    learning: {
+      locale: "en",
+      slug,
+      url: `https://nakafa.com/en/${slug}`,
+      verified: false,
+    },
   }).pipe(
     Effect.orDie,
     Effect.map((session) => ({
       page: {
         locale: "en" as const,
         slug,
-        url,
-        verified: false,
         needsFetch: false,
         nina: session.context,
       },
-      user: {},
+      user,
     }))
   );
 }

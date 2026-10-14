@@ -503,6 +503,7 @@
     "delete": "Delete memory",
     "deleted": "Memory deleted",
     "undo": "Undo",
+    "undo-failed": "Undo failed",
     "written-by-you": "Written by you {time}",
     "saved-by-nina": "Saved by Nina {time}",
     "ends": "Ends {date}",
