@@ -28,17 +28,12 @@ export type AccountDeletionBrowserAttempt =
   typeof accountDeletionBrowserAttemptSchema.Type;
 export const accountDeletionCancellationOutcome = {
   complete: "complete",
-  continue: "continue",
 } as const;
 export const accountDeletionCancellationOutcomeValidator = Schema.Literals([
   ...Rec.values(accountDeletionCancellationOutcome),
 ]);
-export type AccountDeletionCancellationOutcome =
-  typeof accountDeletionCancellationOutcomeValidator.Type;
 export const accountDeletionPreparationOutcome = {
-  continue: "continue",
   ready: "ready",
-  schoolSuccessorRequired: "school-successor-required",
   temporarilyUnavailable: "temporarily-unavailable",
 } as const;
 export const accountDeletionPreparationOutcomeValidator = Schema.Literals([

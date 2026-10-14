@@ -59,7 +59,6 @@
     "convex-helpers": "0.1.128",
     "dedent": "^1.7.2",
     "effect": "catalog:",
-    "gpt-tokenizer": "^4.0.0",
     "parse-domain": "^8.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

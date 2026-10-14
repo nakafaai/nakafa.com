@@ -5,6 +5,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { authComponent } from "@repo/backend/confect/auth/client";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
 import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
+import { INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { accountMascot } from "@repo/backend/confect/users/mascot";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -12,9 +13,10 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { signInWithGoogle } from "@repo/backend/test/auth";
 import { encode } from "@repo/mascot/code";
 import { getFunctionName, makeFunctionReference } from "convex/server";
-import { Array as Arr } from "effect";
+import { Array as Arr, Duration } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
+const INVITE_TERM_MS = Duration.toMillis(INVITE_TERM);
 const claimRun = Ref.getFunctionReference(refs.internal.tenancy.claims.run);
 const claimName = getFunctionName(claimRun);
 const syncName = getFunctionName(
@@ -41,6 +43,7 @@ async function seedInvite(ctx: MutationCtx, email: string) {
   });
   await ctx.db.insert("tenantInvites", {
     channel: { email, kind: "email" },
+    expiresAt: NOW + INVITE_TERM_MS,
     personId,
     state: { status: "pending" },
     tenantId,

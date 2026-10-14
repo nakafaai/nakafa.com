@@ -87,7 +87,7 @@ export declare const api: {
         "mutation",
         "public",
         { attemptId: string },
-        "complete" | "continue"
+        "complete"
       >;
       getAccountDeletionAttemptStatus: FunctionReference<
         "query",
@@ -99,10 +99,7 @@ export declare const api: {
         "mutation",
         "public",
         { attemptId: string },
-        | "continue"
-        | "ready"
-        | "school-successor-required"
-        | "temporarily-unavailable"
+        "ready" | "temporarily-unavailable"
       >;
     };
     queries: {
@@ -124,6 +121,7 @@ export declare const api: {
             deletionPreparedAt?: number;
             email: string;
             image?: string;
+            mascot?: string;
             name: string;
             plan: "free" | "pro";
             planCreditGrantId?: Id<"creditTransactions">;
@@ -142,7 +140,7 @@ export declare const api: {
         "query",
         "public",
         { userId: Id<"users"> },
-        { image?: string; name: string } | null
+        { image?: string; mascot?: string; name: string } | null
       >;
     };
   };
@@ -232,733 +230,6 @@ export declare const api: {
       >;
     };
   };
-  classes: {
-    forums: {
-      mutations: {
-        forums: {
-          createForum: FunctionReference<
-            "mutation",
-            "public",
-            {
-              body: string;
-              classId: Id<"schoolClasses">;
-              tag:
-                | "general"
-                | "question"
-                | "announcement"
-                | "assignment"
-                | "resource";
-              title: string;
-            },
-            Id<"schoolClassForums">
-          >;
-        };
-        posts: {
-          createForumPost: FunctionReference<
-            "mutation",
-            "public",
-            {
-              attachmentUploadIds?: Array<Id<"schoolClassForumPendingUploads">>;
-              body: string;
-              forumId: Id<"schoolClassForums">;
-              mentions?: Array<Id<"users">>;
-              parentId?: Id<"schoolClassForumPosts">;
-            },
-            Id<"schoolClassForumPosts">
-          >;
-        };
-        reactions: {
-          toggleForumReaction: FunctionReference<
-            "mutation",
-            "public",
-            { emoji: string; forumId: Id<"schoolClassForums"> },
-            { added: boolean }
-          >;
-          togglePostReaction: FunctionReference<
-            "mutation",
-            "public",
-            { emoji: string; postId: Id<"schoolClassForumPosts"> },
-            { added: boolean }
-          >;
-        };
-        readState: {
-          markForumRead: FunctionReference<
-            "mutation",
-            "public",
-            {
-              forumId: Id<"schoolClassForums">;
-              lastReadPostId: Id<"schoolClassForumPosts">;
-            },
-            null
-          >;
-        };
-        uploads: {
-          discardForumUploads: FunctionReference<
-            "mutation",
-            "public",
-            { uploadIds: Array<Id<"schoolClassForumPendingUploads">> },
-            null
-          >;
-          generateUploadUrl: FunctionReference<
-            "mutation",
-            "public",
-            { forumId: Id<"schoolClassForums"> },
-            {
-              uploadId: Id<"schoolClassForumPendingUploads">;
-              uploadUrl: string;
-            }
-          >;
-          saveForumUpload: FunctionReference<
-            "mutation",
-            "public",
-            {
-              name: string;
-              size: number;
-              storageId: Id<"_storage">;
-              type: string;
-              uploadId: Id<"schoolClassForumPendingUploads">;
-            },
-            Id<"schoolClassForumPendingUploads">
-          >;
-        };
-      };
-      queries: {
-        forums: {
-          getForum: FunctionReference<
-            "query",
-            "public",
-            { forumId: Id<"schoolClassForums"> },
-            {
-              _creationTime: number;
-              _id: Id<"schoolClassForums">;
-              body: string;
-              classId: Id<"schoolClasses">;
-              createdBy: Id<"users">;
-              isPinned: boolean;
-              lastPostAt: number;
-              lastPostBy?: Id<"users">;
-              myReactions: Array<string>;
-              nextPostSequence: number;
-              postCount: number;
-              reactionCounts: Array<{ count: number; emoji: string }>;
-              reactionUsers: Array<{
-                count: number;
-                emoji: string;
-                reactors: Array<string>;
-              }>;
-              schoolId: Id<"schools">;
-              status: "open" | "locked" | "archived";
-              tag:
-                | "general"
-                | "question"
-                | "announcement"
-                | "assignment"
-                | "resource";
-              title: string;
-              updatedAt: number;
-              user: {
-                _id: Id<"users">;
-                email: string;
-                image?: string | null;
-                name: string;
-              } | null;
-            }
-          >;
-          getForums: FunctionReference<
-            "query",
-            "public",
-            {
-              classId: Id<"schoolClasses">;
-              paginationOpts: {
-                cursor: string | null;
-                endCursor?: string | null;
-                id?: number;
-                maximumBytesRead?: number;
-                maximumRowsRead?: number;
-                numItems: number;
-              };
-              q?: string;
-            },
-            {
-              continueCursor: string;
-              isDone: boolean;
-              page: Array<{
-                _creationTime: number;
-                _id: Id<"schoolClassForums">;
-                body: string;
-                classId: Id<"schoolClasses">;
-                createdBy: Id<"users">;
-                isPinned: boolean;
-                lastPostAt: number;
-                lastPostBy?: Id<"users">;
-                myReactions: Array<string>;
-                nextPostSequence: number;
-                postCount: number;
-                reactionCounts: Array<{ count: number; emoji: string }>;
-                schoolId: Id<"schools">;
-                status: "open" | "locked" | "archived";
-                tag:
-                  | "general"
-                  | "question"
-                  | "announcement"
-                  | "assignment"
-                  | "resource";
-                title: string;
-                unreadCount: number;
-                updatedAt: number;
-                user: {
-                  _id: Id<"users">;
-                  email: string;
-                  image?: string | null;
-                  name: string;
-                } | null;
-              }>;
-              pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-              splitCursor?: string | null;
-            }
-          >;
-        };
-        pages: {
-          getForumPosts: FunctionReference<
-            "query",
-            "public",
-            { forumId: Id<"schoolClassForums"> },
-            Array<{
-              _creationTime: number;
-              _id: Id<"schoolClassForumPosts">;
-              attachments: Array<{
-                _id: Id<"schoolClassForumPostAttachments">;
-                mimeType: string;
-                name: string;
-                size: number;
-                url: string | null;
-              }>;
-              body: string;
-              classId: Id<"schoolClasses">;
-              createdBy: Id<"users">;
-              editedAt?: number;
-              forumId: Id<"schoolClassForums">;
-              isUnread: boolean;
-              mentions: Array<Id<"users">>;
-              myReactions: Array<string>;
-              parentId?: Id<"schoolClassForumPosts">;
-              reactionCounts: Array<{ count: number; emoji: string }>;
-              reactionUsers: Array<{
-                count: number;
-                emoji: string;
-                reactors: Array<string>;
-              }>;
-              replyCount: number;
-              replyToBody?: string;
-              replyToUser: {
-                _id: Id<"users">;
-                email: string;
-                image?: string | null;
-                name: string;
-              } | null;
-              replyToUserId?: Id<"users">;
-              sequence: number;
-              updatedAt: number;
-              user: {
-                _id: Id<"users">;
-                email: string;
-                image?: string | null;
-                name: string;
-              } | null;
-            }>
-          >;
-        };
-      };
-    };
-    materials: {
-      mutations: {
-        createMaterialGroup: FunctionReference<
-          "mutation",
-          "public",
-          {
-            classId: Id<"schoolClasses">;
-            description: string;
-            name: string;
-            scheduledAt?: number;
-            status: "draft" | "published" | "scheduled" | "archived";
-          },
-          Id<"schoolClassMaterialGroups">
-        >;
-        deleteMaterialGroup: FunctionReference<
-          "mutation",
-          "public",
-          { groupId: Id<"schoolClassMaterialGroups"> },
-          null
-        >;
-        reorderMaterialGroup: FunctionReference<
-          "mutation",
-          "public",
-          {
-            direction: "up" | "down";
-            groupId: Id<"schoolClassMaterialGroups">;
-          },
-          null
-        >;
-        updateMaterialGroup: FunctionReference<
-          "mutation",
-          "public",
-          {
-            description?: string;
-            groupId: Id<"schoolClassMaterialGroups">;
-            name?: string;
-            scheduledAt?: number;
-            status?: "draft" | "published" | "scheduled" | "archived";
-          },
-          Id<"schoolClassMaterialGroups">
-        >;
-      };
-      queries: {
-        getMaterialGroups: FunctionReference<
-          "query",
-          "public",
-          {
-            classId: Id<"schoolClasses">;
-            paginationOpts: {
-              cursor: string | null;
-              endCursor?: string | null;
-              id?: number;
-              maximumBytesRead?: number;
-              maximumRowsRead?: number;
-              numItems: number;
-            };
-            parentId?: Id<"schoolClassMaterialGroups">;
-            q?: string;
-          },
-          {
-            continueCursor: string;
-            isDone: boolean;
-            page: Array<{
-              _creationTime: number;
-              _id: Id<"schoolClassMaterialGroups">;
-              childGroupCount: number;
-              classId: Id<"schoolClasses">;
-              createdBy: Id<"users">;
-              description: string;
-              materialCount: number;
-              name: string;
-              order: number;
-              parentId?: Id<"schoolClassMaterialGroups">;
-              publishedAt?: number;
-              publishedBy?: Id<"users">;
-              publishedByUser: {
-                _id: Id<"users">;
-                email: string;
-                image?: string | null;
-                name: string;
-              } | null;
-              scheduledAt?: number;
-              scheduledJobId?: Id<"_scheduled_functions">;
-              schoolId: Id<"schools">;
-              status: "draft" | "published" | "scheduled" | "archived";
-              updatedAt: number;
-              user: {
-                _id: Id<"users">;
-                email: string;
-                image?: string | null;
-                name: string;
-              } | null;
-            }>;
-            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-            splitCursor?: string | null;
-          }
-        >;
-      };
-    };
-    mutations: {
-      createClass: FunctionReference<
-        "mutation",
-        "public",
-        {
-          name: string;
-          schoolId: Id<"schools">;
-          subject: string;
-          visibility: "private" | "public";
-          year: string;
-        },
-        Id<"schoolClasses">
-      >;
-      joinClass: FunctionReference<
-        "mutation",
-        "public",
-        { code: string },
-        { classId: Id<"schoolClasses"> }
-      >;
-      joinPublicClass: FunctionReference<
-        "mutation",
-        "public",
-        { classId: Id<"schoolClasses"> },
-        { classId: Id<"schoolClasses"> }
-      >;
-      updateClassImage: FunctionReference<
-        "mutation",
-        "public",
-        {
-          classId: Id<"schoolClasses">;
-          image:
-            | "retro"
-            | "time"
-            | "stars"
-            | "chill"
-            | "puzzle"
-            | "line"
-            | "shoot"
-            | "virus"
-            | "bacteria"
-            | "cooking"
-            | "disco"
-            | "logic"
-            | "ball"
-            | "duck"
-            | "music"
-            | "nightly"
-            | "writer"
-            | "barbie"
-            | "fun"
-            | "lamp"
-            | "lemon"
-            | "nighty"
-            | "rocket"
-            | "sakura"
-            | "sky"
-            | "stamp"
-            | "vintage";
-        },
-        null
-      >;
-      updateClassVisibility: FunctionReference<
-        "mutation",
-        "public",
-        { classId: Id<"schoolClasses">; visibility: "private" | "public" },
-        null
-      >;
-    };
-    queries: {
-      getClasses: FunctionReference<
-        "query",
-        "public",
-        {
-          isArchived?: boolean;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          q?: string;
-          schoolId: Id<"schools">;
-          visibility?: "private" | "public";
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _creationTime: number;
-            _id: Id<"schoolClasses">;
-            archivedAt?: number;
-            archivedBy?: Id<"users">;
-            createdBy: Id<"users">;
-            image:
-              | "retro"
-              | "time"
-              | "stars"
-              | "chill"
-              | "puzzle"
-              | "line"
-              | "shoot"
-              | "virus"
-              | "bacteria"
-              | "cooking"
-              | "disco"
-              | "logic"
-              | "ball"
-              | "duck"
-              | "music"
-              | "nightly"
-              | "writer"
-              | "barbie"
-              | "fun"
-              | "lamp"
-              | "lemon"
-              | "nighty"
-              | "rocket"
-              | "sakura"
-              | "sky"
-              | "stamp"
-              | "vintage";
-            isArchived: boolean;
-            name: string;
-            schoolId: Id<"schools">;
-            studentCount: number;
-            subject: string;
-            teacherCount: number;
-            updatedAt: number;
-            updatedBy?: Id<"users">;
-            visibility: "private" | "public";
-            year: string;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-      getClassRoute: FunctionReference<
-        "query",
-        "public",
-        { classId: string },
-        | {
-            class: {
-              _creationTime: number;
-              _id: Id<"schoolClasses">;
-              archivedAt?: number;
-              archivedBy?: Id<"users">;
-              createdBy: Id<"users">;
-              image:
-                | "retro"
-                | "time"
-                | "stars"
-                | "chill"
-                | "puzzle"
-                | "line"
-                | "shoot"
-                | "virus"
-                | "bacteria"
-                | "cooking"
-                | "disco"
-                | "logic"
-                | "ball"
-                | "duck"
-                | "music"
-                | "nightly"
-                | "writer"
-                | "barbie"
-                | "fun"
-                | "lamp"
-                | "lemon"
-                | "nighty"
-                | "rocket"
-                | "sakura"
-                | "sky"
-                | "stamp"
-                | "vintage";
-              isArchived: boolean;
-              name: string;
-              schoolId: Id<"schools">;
-              studentCount: number;
-              subject: string;
-              teacherCount: number;
-              updatedAt: number;
-              updatedBy?: Id<"users">;
-              visibility: "private" | "public";
-              year: string;
-            };
-            classMembership: {
-              _creationTime: number;
-              _id: Id<"schoolClassMembers">;
-              addedBy?: Id<"users">;
-              classId: Id<"schoolClasses">;
-              enrollMethod?:
-                "by_code" | "teacher" | "admin" | "invite" | "public";
-              inviteCodeId?: Id<"schoolClassInviteCodes">;
-              removedAt?: number;
-              removedBy?: Id<"users">;
-              role: "teacher" | "student";
-              schoolId: Id<"schools">;
-              teacherRole?: "primary" | "co-teacher" | "assistant";
-              updatedAt: number;
-              userId: Id<"users">;
-            } | null;
-            kind: "accessible";
-            schoolMembership: {
-              _creationTime: number;
-              _id: Id<"schoolMembers">;
-              inviteCodeId?: Id<"schoolInviteCodes">;
-              inviteToken?: string;
-              invitedAt?: number;
-              invitedBy?: Id<"users">;
-              joinedAt: number;
-              removedAt?: number;
-              removedBy?: Id<"users">;
-              role: "admin" | "teacher" | "student" | "parent" | "demo";
-              schoolId: Id<"schools">;
-              status: "active" | "invited" | "removed";
-              updatedAt: number;
-              userId: Id<"users">;
-            };
-          }
-        | {
-            class: {
-              _id: Id<"schoolClasses">;
-              image:
-                | "retro"
-                | "time"
-                | "stars"
-                | "chill"
-                | "puzzle"
-                | "line"
-                | "shoot"
-                | "virus"
-                | "bacteria"
-                | "cooking"
-                | "disco"
-                | "logic"
-                | "ball"
-                | "duck"
-                | "music"
-                | "nightly"
-                | "writer"
-                | "barbie"
-                | "fun"
-                | "lamp"
-                | "lemon"
-                | "nighty"
-                | "rocket"
-                | "sakura"
-                | "sky"
-                | "stamp"
-                | "vintage";
-              name: string;
-              subject: string;
-              visibility: "private" | "public";
-              year: string;
-            };
-            kind: "joinRequired";
-            schoolMembership: {
-              _creationTime: number;
-              _id: Id<"schoolMembers">;
-              inviteCodeId?: Id<"schoolInviteCodes">;
-              inviteToken?: string;
-              invitedAt?: number;
-              invitedBy?: Id<"users">;
-              joinedAt: number;
-              removedAt?: number;
-              removedBy?: Id<"users">;
-              role: "admin" | "teacher" | "student" | "parent" | "demo";
-              schoolId: Id<"schools">;
-              status: "active" | "invited" | "removed";
-              updatedAt: number;
-              userId: Id<"users">;
-            };
-          }
-      >;
-      getInviteCodes: FunctionReference<
-        "query",
-        "public",
-        { classId: Id<"schoolClasses"> },
-        Array<{
-          _creationTime: number;
-          _id: Id<"schoolClassInviteCodes">;
-          classId: Id<"schoolClasses">;
-          code: string;
-          createdBy: Id<"users">;
-          currentUsage: number;
-          description?: string;
-          enabled: boolean;
-          expiresAt?: number;
-          maxUsage?: number;
-          role: "teacher" | "student";
-          schoolId: Id<"schools">;
-          updatedAt: number;
-          updatedBy?: Id<"users">;
-        }>
-      >;
-      getPeople: FunctionReference<
-        "query",
-        "public",
-        {
-          classId: Id<"schoolClasses">;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          q?: string;
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _creationTime: number;
-            _id: Id<"schoolClassMembers">;
-            addedBy?: Id<"users">;
-            classId: Id<"schoolClasses">;
-            enrollMethod?:
-              "by_code" | "teacher" | "admin" | "invite" | "public";
-            inviteCodeId?: Id<"schoolClassInviteCodes">;
-            removedAt?: number;
-            removedBy?: Id<"users">;
-            role: "teacher" | "student";
-            schoolId: Id<"schools">;
-            teacherRole?: "primary" | "co-teacher" | "assistant";
-            updatedAt: number;
-            user: {
-              _id: Id<"users">;
-              email: string;
-              image?: string | null;
-              name: string;
-            };
-            userId: Id<"users">;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-    };
-    roster: {
-      list: FunctionReference<
-        "query",
-        "public",
-        {
-          classId: Id<"schoolClasses">;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          q?: string;
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _creationTime: number;
-            _id: Id<"schoolClassMembers">;
-            addedBy?: Id<"users">;
-            classId: Id<"schoolClasses">;
-            enrollMethod?:
-              "by_code" | "teacher" | "admin" | "invite" | "public";
-            inviteCodeId?: Id<"schoolClassInviteCodes">;
-            removedAt?: number;
-            removedBy?: Id<"users">;
-            role: "teacher" | "student";
-            schoolId: Id<"schools">;
-            teacherRole?: "primary" | "co-teacher" | "assistant";
-            updatedAt: number;
-            user: {
-              _id: Id<"users">;
-              email: string;
-              image?: string | null;
-              name: string;
-            };
-            userId: Id<"users">;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-    };
-  };
   comments: {
     mutations: {
       addComment: FunctionReference<
@@ -1008,6 +279,7 @@ export declare const api: {
             replyToUser: {
               _id: Id<"users">;
               image?: string | null;
+              mascot?: string;
               name: string;
             } | null;
             replyToUserId?: Id<"users">;
@@ -1017,6 +289,7 @@ export declare const api: {
             user: {
               _id: Id<"users">;
               image?: string | null;
+              mascot?: string;
               name: string;
             } | null;
             userId: Id<"users">;
@@ -3192,6 +2465,22 @@ export declare const api: {
               | { method: "invite" | "operator"; type: "person.claimed" }
               | { type: "person.released" }
               | { type: "person.removed" }
+              | { type: "person.renamed" }
+              | { cohort: Id<"tenantCohorts">; type: "person.placed" }
+              | {
+                  from: Id<"tenantCohorts">;
+                  to: Id<"tenantCohorts">;
+                  type: "person.moved";
+                }
+              | { invite: Id<"tenantInvites">; type: "invite.expired" }
+              | { invite: Id<"tenantInvites">; type: "invite.resent" }
+              | { invite: Id<"tenantInvites">; type: "invite.revoked" }
+              | { type: "period.created" }
+              | { type: "period.opened" }
+              | { type: "period.archived" }
+              | { type: "cohort.created" }
+              | { type: "cohort.renamed" }
+              | { type: "cohort.archived" }
               | {
                   grant: Id<"tenantGrants">;
                   role: {
@@ -3229,6 +2518,8 @@ export declare const api: {
               | { id: Id<"tenants">; kind: "tenant" }
               | { id: Id<"tenantUnits">; kind: "unit" }
               | { id: Id<"tenantPeople">; kind: "person" }
+              | { id: Id<"tenantPeriods">; kind: "period" }
+              | { id: Id<"tenantCohorts">; kind: "cohort" }
               | { id: Id<"tenantGrants">; kind: "grant" }
               | { kind: string };
             subjectName: string | null;
@@ -3760,124 +3051,6 @@ export declare const api: {
       >;
     };
   };
-  schools: {
-    mutations: {
-      createSchool: FunctionReference<
-        "mutation",
-        "public",
-        {
-          address: string;
-          city: string;
-          email: string;
-          name: string;
-          phone: string;
-          province: string;
-          type:
-            | "elementary-school"
-            | "middle-school"
-            | "high-school"
-            | "vocational-school"
-            | "university"
-            | "other";
-        },
-        { schoolId: Id<"schools">; slug: string }
-      >;
-      joinSchool: FunctionReference<
-        "mutation",
-        "public",
-        { code: string },
-        { schoolId: Id<"schools">; slug: string }
-      >;
-    };
-    queries: {
-      getMySchoolLandingState: FunctionReference<
-        "query",
-        "public",
-        {},
-        | { kind: "none" }
-        | { kind: "single"; slug: string }
-        | { kind: "multiple" }
-      >;
-      getMySchoolsPage: FunctionReference<
-        "query",
-        "public",
-        {
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _id: Id<"schools">;
-            name: string;
-            slug: string;
-            type:
-              | "elementary-school"
-              | "middle-school"
-              | "high-school"
-              | "vocational-school"
-              | "university"
-              | "other";
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
-      getSchoolBySlug: FunctionReference<
-        "query",
-        "public",
-        { slug: string },
-        {
-          membership: {
-            _creationTime: number;
-            _id: Id<"schoolMembers">;
-            inviteCodeId?: Id<"schoolInviteCodes">;
-            inviteToken?: string;
-            invitedAt?: number;
-            invitedBy?: Id<"users">;
-            joinedAt: number;
-            removedAt?: number;
-            removedBy?: Id<"users">;
-            role: "admin" | "teacher" | "student" | "parent" | "demo";
-            schoolId: Id<"schools">;
-            status: "active" | "invited" | "removed";
-            updatedAt: number;
-            userId: Id<"users">;
-          };
-          school: {
-            _creationTime: number;
-            _id: Id<"schools">;
-            address?: string;
-            city: string;
-            createdBy: Id<"users">;
-            currentStudents: number;
-            currentTeachers: number;
-            email: string;
-            name: string;
-            phone?: string;
-            province: string;
-            slug: string;
-            type:
-              | "elementary-school"
-              | "middle-school"
-              | "high-school"
-              | "vocational-school"
-              | "university"
-              | "other";
-            updatedAt: number;
-            updatedBy?: Id<"users">;
-          };
-        }
-      >;
-    };
-  };
   subscriptions: {
     queries: {
       hasActiveSubscription: FunctionReference<
@@ -3889,6 +3062,149 @@ export declare const api: {
     };
   };
   tenancy: {
+    cohorts: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
+      create: FunctionReference<
+        "mutation",
+        "public",
+        {
+          grade: number;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+        },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        Array<{
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }>
+      >;
+      members: FunctionReference<
+        "query",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{ id: Id<"tenantPeople">; name: string }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; name: string; slug: string },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
+    };
+    invites: {
+      invite: FunctionReference<
+        "mutation",
+        "public",
+        {
+          email: string;
+          locale: "en" | "id" | "de";
+          personId: Id<"tenantPeople">;
+          slug: string;
+        },
+        {
+          email: string;
+          expiresAt: number;
+          id: Id<"tenantInvites">;
+          name: string;
+          personId: Id<"tenantPeople">;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            email: string;
+            expiresAt: number;
+            id: Id<"tenantInvites">;
+            name: string;
+            personId: Id<"tenantPeople">;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      resend: FunctionReference<
+        "mutation",
+        "public",
+        {
+          inviteId: Id<"tenantInvites">;
+          locale: "en" | "id" | "de";
+          slug: string;
+        },
+        {
+          email: string;
+          expiresAt: number;
+          id: Id<"tenantInvites">;
+          name: string;
+          personId: Id<"tenantPeople">;
+        }
+      >;
+      revoke: FunctionReference<
+        "mutation",
+        "public",
+        { inviteId: Id<"tenantInvites">; slug: string },
+        null
+      >;
+    };
     memberships: {
       list: FunctionReference<
         "query",
@@ -3917,6 +3233,176 @@ export declare const api: {
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
+        }
+      >;
+    };
+    people: {
+      create: FunctionReference<
+        "mutation",
+        "public",
+        { name: string; slug: string },
+        {
+          account: "claimed" | "unclaimed";
+          id: Id<"tenantPeople">;
+          kind: "member" | "operator";
+          name: string;
+          status: "active" | "suspended" | "removed";
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+          status: "active" | "suspended" | "removed";
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            account: "claimed" | "unclaimed";
+            id: Id<"tenantPeople">;
+            kind: "member" | "operator";
+            name: string;
+            status: "active" | "suspended" | "removed";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { personId: Id<"tenantPeople">; slug: string },
+        {
+          account: "claimed" | "unclaimed";
+          id: Id<"tenantPeople">;
+          kind: "member" | "operator";
+          name: string;
+          status: "active" | "suspended" | "removed";
+        }
+      >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { name: string; personId: Id<"tenantPeople">; slug: string },
+        {
+          account: "claimed" | "unclaimed";
+          id: Id<"tenantPeople">;
+          kind: "member" | "operator";
+          name: string;
+          status: "active" | "suspended" | "removed";
+        }
+      >;
+    };
+    periods: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        {
+          end: string;
+          id: Id<"tenantPeriods">;
+          name: string;
+          start: string;
+          status: "planned" | "active" | "archived";
+        }
+      >;
+      create: FunctionReference<
+        "mutation",
+        "public",
+        {
+          end: string;
+          name: string;
+          slug: string;
+          start: string;
+          unitId: Id<"tenantUnits">;
+        },
+        {
+          end: string;
+          id: Id<"tenantPeriods">;
+          name: string;
+          start: string;
+          status: "planned" | "active" | "archived";
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+          unitId: Id<"tenantUnits">;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            end: string;
+            id: Id<"tenantPeriods">;
+            name: string;
+            start: string;
+            status: "planned" | "active" | "archived";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      open: FunctionReference<
+        "mutation",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        {
+          end: string;
+          id: Id<"tenantPeriods">;
+          name: string;
+          start: string;
+          status: "planned" | "active" | "archived";
+        }
+      >;
+    };
+    placements: {
+      move: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          personId: Id<"tenantPeople">;
+          slug: string;
+        },
+        {
+          cohortId: Id<"tenantCohorts">;
+          periodId: Id<"tenantPeriods">;
+          personId: Id<"tenantPeople">;
+        }
+      >;
+      place: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          personId: Id<"tenantPeople">;
+          slug: string;
+        },
+        {
+          cohortId: Id<"tenantCohorts">;
+          periodId: Id<"tenantPeriods">;
+          personId: Id<"tenantPeople">;
         }
       >;
     };
@@ -6014,6 +5500,12 @@ export declare const api: {
   };
   users: {
     mutations: {
+      setMascot: FunctionReference<
+        "mutation",
+        "public",
+        { mascot: string },
+        { mascot: string }
+      >;
       syncUserInfoForChat: FunctionReference<
         "mutation",
         "public",
@@ -6167,16 +5659,13 @@ export declare const internal: {
             recoveryGeneration: number;
           };
         },
-        boolean
+        null
       >;
       claimAccountDeletion: FunctionReference<
         "mutation",
         "internal",
         { attemptId: string; authId: string },
-        | "continue"
-        | "ready"
-        | "school-successor-required"
-        | "temporarily-unavailable"
+        "ready" | "temporarily-unavailable"
       >;
       continueAccountDeletionCommit: FunctionReference<
         "mutation",
@@ -6258,66 +5747,6 @@ export declare const internal: {
         { model: string; newDoc: any; oldDoc: any },
         any
       >;
-    };
-  };
-  classes: {
-    forums: {
-      attachments: {
-        upload: {
-          claim: FunctionReference<
-            "mutation",
-            "internal",
-            { leaseId: string; uploadId: string; uploadToken: string },
-            boolean
-          >;
-          cleanup: FunctionReference<
-            "mutation",
-            "internal",
-            { storageId: Id<"_storage"> },
-            null
-          >;
-          release: FunctionReference<
-            "mutation",
-            "internal",
-            { leaseId: string; uploadId: string },
-            null
-          >;
-          settle: FunctionReference<
-            "mutation",
-            "internal",
-            {
-              contentType: string;
-              leaseId: string;
-              size: number;
-              storageId: Id<"_storage">;
-              uploadId: string;
-              uploadToken: string;
-            },
-            "accepted" | "discarded" | "rejected"
-          >;
-        };
-      };
-      internalMutations: {
-        deleteExpiredPendingUpload: FunctionReference<
-          "mutation",
-          "internal",
-          { uploadId: Id<"schoolClassForumPendingUploads"> },
-          null
-        >;
-      };
-    };
-    materials: {
-      mutations: {
-        publishMaterialGroup: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            groupId: Id<"schoolClassMaterialGroups">;
-            publishedBy: Id<"users">;
-          },
-          null
-        >;
-      };
     };
   };
   contentRelease: {
@@ -8627,6 +8056,7 @@ export declare const internal: {
           {
             html: string;
             inviteId: Id<"tenantInvites">;
+            requestedAt: number;
             subject: string;
             text: string;
           },
@@ -8653,6 +8083,7 @@ export declare const internal: {
             args?: {
               inviteId: Id<"tenantInvites">;
               locale: "en" | "id" | "de";
+              requestedAt: number;
             };
             context?: any;
             docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
@@ -9759,7 +9190,6 @@ export declare const internal: {
             priceId?: string;
             productId: string;
             recurringInterval: "day" | "week" | "month" | "year" | null;
-            schoolId?: string;
             startedAt: string | null;
             status: string;
           };
@@ -9788,7 +9218,6 @@ export declare const internal: {
             priceId?: string;
             productId: string;
             recurringInterval: "day" | "week" | "month" | "year" | null;
-            schoolId?: string;
             startedAt: string | null;
             status: string;
           };
@@ -9805,6 +9234,15 @@ export declare const internal: {
         { cursor: string | null; userId: Id<"users"> },
         null
       >;
+    };
+    expiry: {
+      invite: FunctionReference<
+        "mutation",
+        "internal",
+        { inviteId: Id<"tenantInvites"> },
+        null
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
     };
     holders: {
       schedule: FunctionReference<
@@ -9879,35 +9317,6 @@ export declare const internal: {
         >;
       };
     };
-    materials: {
-      cleanup: {
-        cleanupDeletedGroup: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            classId: Id<"schoolClasses">;
-            groupId: Id<"schoolClassMaterialGroups">;
-          },
-          null
-        >;
-      };
-    };
-    schools: {
-      cleanup: {
-        cleanupDeletedClass: FunctionReference<
-          "mutation",
-          "internal",
-          { classId: Id<"schoolClasses"> },
-          null
-        >;
-        cleanupDeletedForum: FunctionReference<
-          "mutation",
-          "internal",
-          { forumId: Id<"schoolClassForums"> },
-          null
-        >;
-      };
-    };
   };
   tryouts: {
     mutations: {
@@ -9957,6 +9366,14 @@ export declare const internal: {
     };
   };
   users: {
+    backfill: {
+      assignMascots: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; dry: boolean },
+        { assigned: number; next: string | null; waiting: number }
+      >;
+    };
     queries: {
       getUserByAuthId: FunctionReference<
         "query",
@@ -9975,6 +9392,7 @@ export declare const internal: {
           deletionPreparedAt?: number;
           email: string;
           image?: string;
+          mascot?: string;
           name: string;
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
@@ -9999,6 +9417,7 @@ export declare const internal: {
           deletionPreparedAt?: number;
           email: string;
           image?: string;
+          mascot?: string;
           name: string;
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
@@ -10023,7 +9442,5 @@ export declare const components: {
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
   globalLeaderboard: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"globalLeaderboard">;
-  forumPostsBySequence: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"forumPostsBySequence">;
-  forumPostsByAuthorSequence: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"forumPostsByAuthorSequence">;
   learningPopularityRankings: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"learningPopularityRankings">;
 };

@@ -1,12 +1,8 @@
 import type { InvokeReturn } from "@confect/react";
 import type auth from "@repo/backend/confect/_generated/refs/auth";
-import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/confect/auth/deletion/constants";
 import {
   type AccountDeletionBrowserAttempt,
-  type AccountDeletionCancellationOutcome,
-  type AccountDeletionPreparationOutcome,
   type AccountDeletionRequestPhase,
-  accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
 } from "@repo/backend/confect/auth/deletion/spec";
@@ -15,7 +11,6 @@ import type { AccountDeletionAttemptStorageFailed } from "@/lib/auth/deletion/at
 import {
   AccountDeletionFailed,
   AccountDeletionRequestUncertain,
-  AccountDeletionSchoolMemberRequired,
   accountDeletionErrorCode,
 } from "@/lib/auth/deletion/errors";
 
@@ -33,7 +28,7 @@ export type ClearAccountDeletionAttempt = Effect.Effect<
   void,
   AccountDeletionAttemptStorageFailed
 >;
-/** Cancels every bounded batch owned by one browser deletion attempt. */
+/** Cancels the preparation owned by one browser deletion attempt. */
 export const cancelPreparedAccountDeletion = Effect.fn(
   "www.auth.cancelPreparedAccountDeletion"
 )(function* (
@@ -41,21 +36,17 @@ export const cancelPreparedAccountDeletion = Effect.fn(
   uncertainPhase: AccountDeletionRequestPhase,
   cancelPreparation: CancelAccountDeletionRequest
 ) {
-  let outcome: AccountDeletionCancellationOutcome =
-    accountDeletionCancellationOutcome.continue;
-  while (outcome === accountDeletionCancellationOutcome.continue) {
-    outcome = yield* Effect.tryPromise(() => cancelPreparation(attemptId)).pipe(
-      Effect.flatMap(Effect.fromResult),
-      Effect.mapError(
-        () =>
-          new AccountDeletionRequestUncertain({
-            attemptId,
-            code: accountDeletionErrorCode.requestUncertain,
-            phase: uncertainPhase,
-          })
-      )
-    );
-  }
+  yield* Effect.tryPromise(() => cancelPreparation(attemptId)).pipe(
+    Effect.flatMap(Effect.fromResult),
+    Effect.mapError(
+      () =>
+        new AccountDeletionRequestUncertain({
+          attemptId,
+          code: accountDeletionErrorCode.requestUncertain,
+          phase: uncertainPhase,
+        })
+    )
+  );
 });
 /** Persists one durable browser phase without leaking storage failures. */
 const persistAccountDeletionPhase = Effect.fn(
@@ -87,7 +78,7 @@ export const clearCanceledAccountDeletionAttempt = Effect.fn(
     )
   );
 });
-/** Reserves all owned resources before the irreversible auth deletion. */
+/** Prepares the account for the irreversible auth deletion. */
 export const prepareAccountDeletion = Effect.fn(
   "www.auth.prepareAccountDeletion"
 )(function* ({
@@ -104,37 +95,19 @@ export const prepareAccountDeletion = Effect.fn(
   readonly prepare: PrepareAccountDeletionRequest;
 }) {
   const { attemptId } = attempt;
-  let preparationOutcome: AccountDeletionPreparationOutcome =
-    accountDeletionPreparationOutcome.continue;
-  while (preparationOutcome === accountDeletionPreparationOutcome.continue) {
-    preparationOutcome = yield* Effect.tryPromise(() =>
-      prepare(attemptId)
-    ).pipe(
-      Effect.flatMap(Effect.fromResult),
-      Effect.mapError(
-        () =>
-          new AccountDeletionRequestUncertain({
-            attemptId,
-            code: accountDeletionErrorCode.requestUncertain,
-            phase: accountDeletionRequestPhase.preparation,
-          })
-      )
-    );
-  }
-  if (
-    preparationOutcome ===
-    accountDeletionPreparationOutcome.schoolSuccessorRequired
-  ) {
-    yield* cancelPreparedAccountDeletion(
-      attemptId,
-      accountDeletionRequestPhase.preparation,
-      cancelPreparation
-    );
-    yield* clearCanceledAccountDeletionAttempt(clearAttempt);
-    return yield* new AccountDeletionSchoolMemberRequired({
-      code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
-    });
-  }
+  const preparationOutcome = yield* Effect.tryPromise(() =>
+    prepare(attemptId)
+  ).pipe(
+    Effect.flatMap(Effect.fromResult),
+    Effect.mapError(
+      () =>
+        new AccountDeletionRequestUncertain({
+          attemptId,
+          code: accountDeletionErrorCode.requestUncertain,
+          phase: accountDeletionRequestPhase.preparation,
+        })
+    )
+  );
   if (preparationOutcome !== accountDeletionPreparationOutcome.ready) {
     yield* cancelPreparedAccountDeletion(
       attemptId,

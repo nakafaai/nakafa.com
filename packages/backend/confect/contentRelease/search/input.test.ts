@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { validateSearchQuery } from "@repo/backend/confect/contentRelease/search/input";
+import {
+  requireWholeSearchQuery,
+  validateSearchQuery,
+} from "@repo/backend/confect/contentRelease/search/input";
 import { Array as Arr, Effect } from "effect";
 
 /** Runs one search validator and exposes its typed failure for assertions. */
@@ -70,5 +73,36 @@ describe("contentRelease/search/input", () => {
         failure: { code: "CONTENT_RELEASE_LIMIT" },
       });
     })
+  );
+  it.live(
+    "refuses a query that Convex would read in part and passes one it reads whole",
+    () =>
+      Effect.gen(function* () {
+        const sixteenTerms = Arr.join(
+          Array.from({ length: 16 }, (_, index) => `term${index}`),
+          " "
+        );
+
+        // The sixteenth term and a term of 31 bytes are the last that Convex
+        // reads, and a bare route has no term to lose.
+        expect(yield* requireWholeSearchQuery(sixteenTerms)).toBe(sixteenTerms);
+        expect(yield* requireWholeSearchQuery("x".repeat(31))).toBe(
+          "x".repeat(31)
+        );
+        expect(yield* requireWholeSearchQuery("/")).toBe("/");
+        // The seventeenth term and a term of 32 bytes are dropped without an error.
+        expect(
+          yield* Effect.result(requireWholeSearchQuery(`${sixteenTerms} extra`))
+        ).toMatchObject({
+          _tag: "Failure",
+          failure: { code: "CONTENT_RELEASE_LIMIT" },
+        });
+        expect(
+          yield* Effect.result(requireWholeSearchQuery("x".repeat(32)))
+        ).toMatchObject({
+          _tag: "Failure",
+          failure: { code: "CONTENT_RELEASE_LIMIT" },
+        });
+      })
   );
 });

@@ -18,14 +18,9 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Fiber, Option } from "effect";
 import { TestClock } from "effect/testing";
 
-const lookup = vi.hoisted(() => vi.fn());
 const selectRelevantContent = vi.hoisted(() =>
   vi.fn(({ content }: { content: string; query?: string }) => content)
 );
-
-vi.mock("node:dns/promises", () => ({
-  lookup,
-}));
 
 vi.mock("@repo/backend/confect/nina/research/selection", () => ({
   selectRelevantContent,
@@ -88,8 +83,6 @@ function readLink(
 
 describe("research scrape tool", () => {
   beforeEach(() => {
-    lookup.mockReset();
-    lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
     selectRelevantContent.mockClear();
     fetcher.mockReset();
     fetcher.mockImplementation(notFound);
@@ -247,16 +240,6 @@ describe("research scrape tool", () => {
           }),
         }),
       ]);
-    })
-  );
-
-  it.effect("rejects public hostnames that resolve to private addresses", () =>
-    Effect.gen(function* () {
-      lookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
-
-      yield* readLink("https://example.com/internal");
-
-      expect(fetcher).not.toHaveBeenCalled();
     })
   );
 

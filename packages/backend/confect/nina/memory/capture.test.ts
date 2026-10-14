@@ -247,28 +247,6 @@ describe("memory capture", () => {
     );
   });
 
-  it("cuts the list of known memories at its token budget, says that others are left out, and lets no number name one the model could not read", async () => {
-    const f = await createCapturingTest();
-    // Twelve memories of 236 rare characters each are more than the model reads.
-    const rare = Arr.join(
-      Arr.makeBy(230, (index) => String.fromCodePoint(0x4e_00 + index * 7)),
-      ""
-    );
-    await f.fill(12, { author: "learner", text: `kelas ${rare}` });
-    // The model names the twelfth place, which the cut list does not reach.
-    const model = answers({ ...level, known: 12 });
-    await f.capture();
-    const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    expect(prompt).toContain("Other memories are not listed.");
-    expect(Arr.length(knownLines(prompt))).toBeLessThan(12);
-    // It names nothing, so the candidate is a new memory and no memory is confirmed.
-    expect(await f.stored()).toHaveLength(13);
-    expect(Arr.map(await f.stored(), (row) => row.confirmedAt)).toEqual([
-      ...Arr.makeBy(12, (index) => index + 1),
-      NOW,
-    ]);
-  });
-
   it("saves nothing when the learner removes a memory while the model reads the message", async () => {
     const f = await createCapturingTest();
     const id = await f.seed({ kind: "level", text: "Kelas 11." });

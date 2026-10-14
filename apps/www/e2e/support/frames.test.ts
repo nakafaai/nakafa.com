@@ -3,6 +3,7 @@ import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Option, Schema } from "effect";
 import { Base64 } from "effect/encoding";
 import {
+  answerQueriesIn,
   changeAnswersIn,
   decodeGiven,
   decodeSent,
@@ -190,6 +191,107 @@ describe("the frames of the realtime connection", () => {
     }
   });
 
+  it("reads the function and the arguments of each query the page adds, and the id of each it drops", () => {
+    const change = decodeSent(
+      encodeJsonText({
+        modifications: [
+          {
+            args: [{ chatId: "c1", streamArgs: { kind: "list" } }],
+            queryId: 1,
+            type: "Add",
+            udfPath: "nina/messages:list",
+          },
+          { queryId: 2, type: "Remove" },
+        ],
+        type: "ModifyQuerySet",
+      })
+    );
+
+    expect(Option.getOrUndefined(change)).toEqual({
+      modifications: [
+        {
+          args: [{ chatId: "c1", streamArgs: { kind: "list" } }],
+          queryId: 1,
+          type: "Add",
+          udfPath: "nina/messages:list",
+        },
+        { queryId: 2, type: "Remove" },
+      ],
+      type: "ModifyQuerySet",
+    });
+  });
+
+  it("puts the value of a function in place of whatever the server said of its query, and keeps the rest of the transition as it was", () => {
+    const versions = {
+      endVersion: { identity: 2, querySet: 4, ts: "AgAAAAAAAAA=" },
+      startVersion: { identity: 2, querySet: 3, ts: "AQAAAAAAAAA=" },
+    };
+    const value = { turn: null };
+    const said = encodeJsonText({
+      ...versions,
+      modifications: [
+        {
+          errorData: {},
+          errorMessage: "Not stored",
+          journal: "j",
+          logLines: [],
+          queryId: 3,
+          type: "QueryFailed",
+        },
+        {
+          journal: null,
+          logLines: [],
+          queryId: 4,
+          type: "QueryUpdated",
+          value: 1,
+        },
+        { queryId: 5, type: "QueryRemoved" },
+      ],
+      type: "Transition",
+    });
+    const valueFor = (queryId: number) =>
+      queryId === 3 ? Option.some(value) : Option.none();
+
+    const answered = answerQueriesIn(said, valueFor).pipe(
+      Option.map(Schema.decodeSync(JsonTextSchema)),
+      Option.getOrUndefined
+    );
+
+    expect(answered).toEqual({
+      ...versions,
+      modifications: [
+        {
+          journal: null,
+          logLines: [],
+          queryId: 3,
+          type: "QueryUpdated",
+          value,
+        },
+        {
+          journal: null,
+          logLines: [],
+          queryId: 4,
+          type: "QueryUpdated",
+          value: 1,
+        },
+        { queryId: 5, type: "QueryRemoved" },
+      ],
+      type: "Transition",
+    });
+    // A transition that says nothing of the queries the function knows, and a
+    // frame that is no transition, are left alone.
+    expect(Option.isNone(answerQueriesIn(said, () => Option.none()))).toBe(
+      true
+    );
+    expect(
+      Option.isNone(
+        answerQueriesIn(encodeJsonText({ type: "Ping" }), () =>
+          Option.some(value)
+        )
+      )
+    ).toBe(true);
+  });
+
   it("changes what a query answers and keeps the rest of the transition as it was", () => {
     const versions = {
       endVersion: { identity: 2, querySet: 4, ts: "AgAAAAAAAAA=" },
@@ -273,7 +375,6 @@ describe("the frames of the realtime connection", () => {
 
     expect(encodeRefusal(refusal)).toBe(encodeJsonText(refusal));
   });
-
   it("carries the typed failure a function threw in a refusal, and writes none for a server that broke", () => {
     const failure = { _tag: "NinaMemoryRejected", reason: "missing" };
     const broke: Parameters<typeof encodeRefusal>[0] = {
