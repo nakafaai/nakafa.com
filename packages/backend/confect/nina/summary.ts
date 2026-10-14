@@ -30,8 +30,7 @@ const MESSAGE_PAGE = 100;
 
 /**
  * What the summary writer is told. A summary longer than `NINA_BUDGET.summary`
- * is cut by `boundText`, never refused. An answer that the output cap cut off is
- * not stored, and `refreshSummary` keeps the previous summary.
+ * is cut by `boundText`, never refused.
  */
 const INSTRUCTIONS = Arr.join(
   [
@@ -175,8 +174,11 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
 
 /**
  * Folds settled turns into the chat's rolling summary once the turns it does
- * not cover cost more than the history budget. A failure keeps the previous
- * summary; generation still bounds its history.
+ * not cover cost more than the history budget. Nothing is stored when a read or
+ * the call fails, when the answer is empty, or when it is cut at the output cap.
+ * In each case the previous summary and its coverage stay, so the next refresh
+ * folds the same turns again. An empty or cut answer still counts its usage;
+ * generation still bounds its history.
  */
 export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (

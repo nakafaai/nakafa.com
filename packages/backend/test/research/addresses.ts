@@ -16,10 +16,13 @@
  * Any other change is a stop, not an update.
  *
  * The first recording came from the ipaddr.js 2.5.0 implementation, and every
- * later change followed the rule above. One gap is still recorded as found:
- * the URL check allows the name `127.0.0.1.nip.io`, which resolves to loopback.
- * No Nakafa check looks up a host name, because Firecrawl's servers fetch every
- * name that the URL check allows.
+ * later change followed the rule above. A host name goes to Firecrawl alone when
+ * the URL check allows it, which is every name except the localhost names and
+ * the empty name. No Nakafa check looks a host name up, because Firecrawl's
+ * servers fetch it from their own network, and the only fetch Nakafa makes
+ * itself is for a public address literal. One gap is still recorded as found:
+ * the URL check allows the name `127.0.0.1.nip.io`, which a public DNS service
+ * resolves to loopback. Firecrawl fetches that name on its own network, not ours.
  */
 export type GoldenAddress = "none" | "public" | "refused";
 

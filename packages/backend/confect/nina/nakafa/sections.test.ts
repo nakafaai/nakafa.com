@@ -43,9 +43,11 @@ describe("Nakafa sectioned reads", () => {
   });
 
   it("reads long content in budgeted sections and lists the rest", () => {
-    // One lesson with its heading costs 2,992 estimated tokens, and the 427
-    // repetitions alone cost 2,989: one lesson fits a part of 3,000, and two
-    // lessons outgrow the body of a read.
+    // Each repetition costs 7 estimated tokens, so the 427 repetitions cost
+    // 2,989. The heading "## Definisi" costs 3 more, so one lesson with its
+    // heading costs 2,992. A part holds half the budget, 3,000, so one lesson is
+    // one part. Two lessons, 5,984 tokens together, do not fit a read's body
+    // beside its header and outline.
     const lesson = (heading: string) =>
       `## ${heading}\n\n${"Fungsi memetakan setiap anggota domain. ".repeat(427)}`;
     const content = {

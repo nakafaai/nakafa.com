@@ -263,10 +263,10 @@ describe("Nina provider context", () => {
   });
 
   it("counts an oversized turn at 6,574 estimated tokens once shortened, just over a fifth of the history budget, so an older one that fits shortened stays", () => {
-    // It costs more than the whole budget, but about a fifth of it once shortened:
-    // six excerpts of at most 600 tokens of text. Each excerpt holds 260 newlines,
-    // and its JSON escapes each one as a backslash and an n, which the estimator
-    // counts. One excerpt of 557 tokens of text costs 1,093 as JSON.
+    // Six excerpts of 557 tokens of text, 260 newlines each (258 in the text, 2 in
+    // the note). The transcript counts each as the JSON of its output, where every
+    // newline is a backslash and an n: 1,093 tokens per excerpt, and the turn adds
+    // 16 for the user's word, six empty tool inputs and the answer: 6,574 in all.
     expect(sentTurn(turn("Huge", HUGE, 6)).tokens).toBe(6574);
     const result = assembleContext({
       current: [{ role: "user", content: "Follow up" }],

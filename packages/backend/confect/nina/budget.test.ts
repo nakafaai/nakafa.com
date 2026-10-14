@@ -18,7 +18,7 @@ import { createNinaTest, filler, ninaModel } from "@repo/backend/test/nina";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { ModelMessage } from "ai";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, String as Str } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -88,8 +88,10 @@ describe("Nina token budgets", () => {
     const text = "word ".repeat(600);
     const bounded = boundText(text, 150, "Narrow the request.");
     const kept = bounded.slice(0, bounded.indexOf("\n\n["));
-    // Each word costs one token. The note reserves 80 of the 150 tokens, so 70
-    // are left for the text, and a 71st word would not fit.
+    // Each word costs one token and each space none. The note reserves 80 of the
+    // 150 tokens, so 70 are left for the text: exactly 70 words fit, and a 71st
+    // would not.
+    expect(Str.split(kept, " ")).toHaveLength(70);
     expect(kept).toBe(`${"word ".repeat(69)}word`);
   });
 
@@ -117,7 +119,7 @@ describe("Nina token estimate", () => {
       expected: 6,
     },
     {
-      name: "five Chinese characters, three quarters of a token each, rounded up",
+      name: "five Chinese characters, 3.75 tokens in all, rounded up to 4 (one token each would give 5)",
       text: "\u{4E2D}\u{6587}\u{5B57}\u{5B66}\u{4EBA}",
       expected: 4,
     },
@@ -192,8 +194,9 @@ describe("Nina call limit", () => {
       "memory",
     ]);
     const measured = instructions + tools + runtime;
+    // The budget is the measure rounded up to the next 1,000: it holds the
+    // measure and sits less than 1,000 tokens above it.
     expect(measured).toBeLessThanOrEqual(NINA_BUDGET.instructions);
-    // The stated part stays less than 1,000 tokens above the measure.
     expect(NINA_BUDGET.instructions - measured).toBeLessThan(1000);
   }, 30_000);
 
