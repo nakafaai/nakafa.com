@@ -10,6 +10,7 @@ import {
   MemoryEnds,
   MemoryOrigin,
 } from "@/components/user/settings/memory/facts";
+import { memoryRowId } from "@/components/user/settings/memory/focus";
 import {
   isPending,
   type Memory,
@@ -75,6 +76,7 @@ export const MemoryRow = memo(
         <button
           className="flex h-full min-w-0 flex-1 cursor-pointer flex-col justify-center gap-1 ps-(--card-spacing) text-start outline-none disabled:cursor-default"
           disabled={waiting}
+          id={memoryRowId(memory.id)}
           onClick={() => openEdit(memory)}
           type="button"
         >

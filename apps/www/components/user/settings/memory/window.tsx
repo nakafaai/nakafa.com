@@ -1,15 +1,20 @@
 "use client";
 
-import { useCallbackRef } from "@mantine/hooks";
+import { useCallbackRef, useMergedRef } from "@mantine/hooks";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import type { CSSProperties } from "react";
+import { type CSSProperties, useLayoutEffect, useRef } from "react";
 import {
   type CustomContainerComponentProps,
   type CustomItemComponentProps,
   WindowVirtualizer,
 } from "virtua";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
+import {
+  focusFirst,
+  MEMORY_LIST_ID,
+  MEMORY_SEARCH_ID,
+} from "@/components/user/settings/memory/focus";
 import {
   MEMORY_PAGE,
   type Memory,
@@ -79,15 +84,37 @@ type Placed<Props extends { style: CSSProperties }> = Omit<Props, "style"> &
 
 /**
  * The list the rows stand in. It can take the focus from a row that leaves the
- * page, but no press or Tab stops on it.
+ * page, but no press or Tab stops on it. When the list itself leaves the page
+ * with the focus in it, the focus goes to the search field, which stays: that
+ * happens when the last memory goes, and when the list crosses `MEMORY_PAGE`
+ * and the window replaces this element with its own.
  */
 function MemoryItems({
   children,
   ref,
   style,
 }: Placed<CustomContainerComponentProps>) {
+  const list = useRef<HTMLUListElement>(null);
+  const listRef = useMergedRef(ref, list);
+
+  // The cleanup runs before the list leaves the page, while the focus is in it.
+  useLayoutEffect(
+    () => () => {
+      if (list.current?.contains(document.activeElement)) {
+        focusFirst([document.getElementById(MEMORY_SEARCH_ID)]);
+      }
+    },
+    []
+  );
+
   return (
-    <ul className="outline-none" ref={ref} style={style} tabIndex={-1}>
+    <ul
+      className="outline-none"
+      id={MEMORY_LIST_ID}
+      ref={listRef}
+      style={style}
+      tabIndex={-1}
+    >
       {children}
     </ul>
   );

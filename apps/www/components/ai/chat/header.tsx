@@ -67,16 +67,41 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const [isEditing, setIsEditing] = useState(false);
   const [chatTitle, setChatTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const moreActions = useRef<HTMLButtonElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  // Set when the box closes, until the focus has gone back to a control.
+  const returnFocus = useRef(false);
   const isOwner = useChat((state) => state.owner);
   const updateChatTitle = useUpdateChatTitleMutation();
   const { change, isPending } = useChange();
 
   // The box takes the focus when it opens, and again when a refused rename
   // brings it back, as soon as it can take input: it stays disabled while the
-  // rename is pending.
+  // rename is pending. When the box closes, the focus goes back to the control
+  // that opened it, or to the title when that control is gone. The control
+  // is disabled while the rename is pending, so the focus waits for it, and
+  // it moves only while the focus is still lost, never over a control the
+  // learner has chosen meanwhile.
   useEffect(() => {
-    if (isEditing && !isPending) {
+    if (isPending) {
+      return;
+    }
+    if (isEditing) {
+      returnFocus.current = false;
       inputRef.current?.focus();
+      return;
+    }
+    if (!returnFocus.current) {
+      return;
+    }
+    returnFocus.current = false;
+    const active = document.activeElement;
+    const lost =
+      !active ||
+      active === document.body ||
+      !!inputRef.current?.contains(active);
+    if (lost) {
+      (moreActions.current ?? titleRef.current)?.focus();
     }
   }, [isEditing, isPending]);
 
@@ -86,13 +111,19 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
     setIsEditing(true);
   };
 
+  /** Closes the box and returns the focus to the control that opened it. */
+  const closeEditor = () => {
+    returnFocus.current = true;
+    setIsEditing(false);
+  };
+
   /** Persist a non-empty edited chat title. */
   const handleSave = () => {
     const nextTitle = chatTitle.trim();
     if (!nextTitle || isPending) {
       return;
     }
-    setIsEditing(false);
+    closeEditor();
     change(() =>
       Effect.runPromise(
         Effect.tryPromise(() =>
@@ -133,7 +164,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                 <Button
                   aria-label={tCommon("cancel")}
                   disabled={isPending}
-                  onClick={() => setIsEditing(false)}
+                  onClick={closeEditor}
                   size="icon"
                   variant="outline"
                 >
@@ -160,6 +191,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                     <Button
                       aria-label={tCommon("more-actions")}
                       disabled={isPending}
+                      ref={moreActions}
                       size="icon"
                       variant="outline"
                     >
@@ -213,7 +245,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                 handleSave();
               }
               if (e.key === "Escape") {
-                setIsEditing(false);
+                closeEditor();
               }
             }}
             ref={inputRef}
@@ -221,7 +253,11 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
           />
         </Activity>
         <Activity mode={isEditing ? "hidden" : "visible"}>
-          <h1 className="flex items-center gap-2 px-1.5">
+          <h1
+            className="flex items-center gap-2 px-1.5"
+            ref={titleRef}
+            tabIndex={-1}
+          >
             <HugeIcons
               className="size-4 shrink-0"
               icon={isPrivate ? SquareLock01Icon : Globe02Icon}

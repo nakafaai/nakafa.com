@@ -10,6 +10,10 @@ import {
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
 import { useTranslations } from "next-intl";
+import {
+  MEMORY_ADD_ID,
+  MEMORY_SEARCH_ID,
+} from "@/components/user/settings/memory/focus";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /**
@@ -38,6 +42,7 @@ export function MemoryToolbar() {
           <InputGroupInput
             aria-label={t("search")}
             className="[&:placeholder-shown::-webkit-search-cancel-button]:hidden"
+            id={MEMORY_SEARCH_ID}
             onChange={(event) => search(event.target.value)}
             placeholder={t("search")}
             type="search"
@@ -50,6 +55,7 @@ export function MemoryToolbar() {
         <Button
           aria-label={t("add")}
           className="@sm/card-header:w-auto w-9"
+          id={MEMORY_ADD_ID}
           onClick={openNew}
           title={t("add")}
         >

@@ -20,6 +20,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
+import {
+  focusFirst,
+  focusIsLost,
+  MEMORY_ADD_ID,
+  MEMORY_LIST_ID,
+  MEMORY_SEARCH_ID,
+  memoryRowId,
+} from "@/components/user/settings/memory/focus";
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
@@ -210,6 +218,40 @@ function useEditorHost() {
   return { host, place, remember, slot };
 }
 
+/**
+ * Gives the focus back when the learner closes the editor while the focus is in
+ * it. The editor leaves the page with the focus, so it would fall to the body.
+ * The focus goes to the row or the button that opened the editor, then to the
+ * list, and to the search field when the list has left the page too. A sheet
+ * may already have returned the focus itself, which this leaves alone.
+ */
+function useFocusAfterClose(
+  open: boolean,
+  memory: Memory | null,
+  host: HTMLElement | null
+) {
+  const wasOpen = useRef(false);
+
+  useLayoutEffect(() => {
+    if (open) {
+      wasOpen.current = true;
+      return;
+    }
+    if (!wasOpen.current || host === null) {
+      return;
+    }
+    wasOpen.current = false;
+    if (!focusIsLost(host)) {
+      return;
+    }
+    focusFirst([
+      document.getElementById(memory ? memoryRowId(memory.id) : MEMORY_ADD_ID),
+      document.getElementById(MEMORY_LIST_ID),
+      document.getElementById(MEMORY_SEARCH_ID),
+    ]);
+  }, [host, memory, open]);
+}
+
 /** The ref each layout puts on the element that holds the editor. */
 type Place = ReturnType<typeof useEditorHost>["place"];
 /** What each layout runs when it goes. */
@@ -227,6 +269,8 @@ export function MemoryEditor() {
   const wide = useMediaQuery(WIDE);
   const { memory, open, session } = useMemoryEditor();
   const { host, place, remember, slot } = useEditorHost();
+
+  useFocusAfterClose(open, memory, host);
 
   return (
     <>
