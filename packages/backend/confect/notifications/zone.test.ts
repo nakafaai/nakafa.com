@@ -3,13 +3,14 @@ import {
   UnitZone,
   zoneOfNotice,
 } from "@repo/backend/confect/notifications/zone";
+import type { UnitStatus } from "@repo/backend/confect/tenancy/schema";
 import { Effect, Option, Schema } from "effect";
 
 /** A unit row as the caller reads it from the tenant's units. */
 const unit = (fields: {
   readonly created: number;
   readonly id: string;
-  readonly status: "active" | "archived";
+  readonly status: typeof UnitStatus.Type;
   readonly timeZone: string;
 }) =>
   Schema.decodeUnknownSync(UnitZone)({
