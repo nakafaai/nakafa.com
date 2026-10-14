@@ -1,6 +1,6 @@
 "use client";
 
-import { useIntersection, useMediaQuery } from "@mantine/hooks";
+import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Array as Arr, Option, Schema } from "effect";
@@ -8,9 +8,6 @@ import { useEffect, useState } from "react";
 
 /** The time between two things that Nina writes down. */
 const WRITE_EVERY_MS = 2400;
-
-/** The query that asks for less motion. */
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
 /** The shape of one fact that the desk writes down. */
 const FactSchema = Schema.Struct({
@@ -32,7 +29,7 @@ interface MemoryDeskProps {
  */
 export function MemoryDesk({ facts }: MemoryDeskProps) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
-  const shouldReduceMotion = useMediaQuery(REDUCED_MOTION);
+  const shouldReduceMotion = useReducedMotion();
   const [written, setWritten] = useState(0);
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
   const shown = shouldReduceMotion ? facts.length : written;

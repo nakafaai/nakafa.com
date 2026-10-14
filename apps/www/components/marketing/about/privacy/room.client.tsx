@@ -1,14 +1,11 @@
 "use client";
 
-import { useIntersection, useMediaQuery } from "@mantine/hooks";
+import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Schema } from "effect";
 import { useEffect, useState } from "react";
-
-/** The query that asks for less motion. */
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
 /** The steps of one turn of the lock: the words, the dots falling, the lock closed. */
 const StepSchema = Schema.Literals(["falling", "locked", "words"]);
@@ -49,7 +46,7 @@ const wordsVariants = cva("min-h-8 text-lg", {
  */
 export function PrivacyRoom({ words }: { readonly words: string }) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
-  const shouldReduceMotion = useMediaQuery(REDUCED_MOTION);
+  const shouldReduceMotion = useReducedMotion();
   const [step, setStep] = useState<Step>("words");
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
   const current = shouldReduceMotion ? "locked" : step;

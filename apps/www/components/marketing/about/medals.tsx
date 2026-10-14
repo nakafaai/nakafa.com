@@ -1,3 +1,6 @@
+"use client";
+
+import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import Image from "next/image";
@@ -23,6 +26,16 @@ const ribbonFill = cva("", {
 
 /** The name of one ribbon fill. */
 type RibbonTone = NonNullable<VariantProps<typeof ribbonFill>["tone"]>;
+
+/** The swing of a medal. A medal hangs still unless the reader allows motion. */
+const medalSwing = cva("transform-fill grid origin-top justify-items-center", {
+  variants: {
+    swinging: {
+      false: "",
+      true: "animate-thing-sway",
+    },
+  },
+});
 
 /** The fill of each ribbon, in turn. */
 const RIBBON_TONES: readonly RibbonTone[] = [
@@ -55,20 +68,27 @@ function Ribbon({ tone }: { tone: RibbonTone }) {
 /** One school on its ribbon, with its logo when the wall has one, and its mark when not. */
 function Medal({
   index,
+  paused,
   school,
+  swinging,
   tone,
 }: {
   index: number;
+  paused: boolean;
   school: School;
+  swinging: boolean;
   tone: RibbonTone;
 }) {
   return (
     <li className="grid justify-items-center border-t">
       <span
         aria-label={school.name}
-        className="transform-fill grid origin-top justify-items-center motion-safe:animate-thing-sway"
+        className={medalSwing({ swinging })}
         role="img"
-        style={{ animationDelay: `${index * SWING_STEP}s` }}
+        style={{
+          animationDelay: `${index * SWING_STEP}s`,
+          animationPlayState: paused ? "paused" : "running",
+        }}
       >
         <Ribbon tone={tone} />
         <span className="-mt-3 grid size-16 place-items-center rounded-full border bg-background">
@@ -91,10 +111,14 @@ function Medal({
 
 /**
  * The wall of schools and campuses as medals on rails: seven to a rail, three on
- * a phone. The last hook is empty and asks about the learner's own school.
+ * a phone. The last hook is empty and asks about the learner's own school. The
+ * medals swing while the wall is on screen, and hang still with reduced motion.
  */
 export function Medals() {
   const t = useTranslations("Landing");
+  const { entry, ref } = useIntersection({ threshold: 0 });
+  const shouldReduceMotion = useReducedMotion();
+  const paused = !(entry?.isIntersecting ?? false);
 
   return (
     <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="medals">
@@ -105,12 +129,15 @@ export function Medals() {
         <ul
           aria-label={t("medals-label")}
           className="grid grid-cols-3 gap-y-10 sm:grid-cols-7"
+          ref={ref}
         >
           {Arr.map(schools, (school, index) => (
             <Medal
               index={index}
               key={school.name}
+              paused={paused}
               school={school}
+              swinging={!shouldReduceMotion}
               tone={Arr.getUnsafe(RIBBON_TONES, index % RIBBON_TONES.length)}
             />
           ))}
