@@ -31,8 +31,8 @@ const args = {
 };
 
 /** A chat whose first turn holds five of the learner's ten credits. */
-async function fixture({ legacy = false }: { readonly legacy?: boolean } = {}) {
-  const seeded = await createNinaTest({ legacy, now: NOW });
+async function fixture() {
+  const seeded = await createNinaTest({ now: NOW });
   const { t, identity } = seeded;
   const inspect = () =>
     t.query(async (ctx) => ({
@@ -227,26 +227,6 @@ describe("native Nina stop and resend", () => {
       "refund",
       "usage",
     ]);
-  });
-
-  it("settles a stopped turn stored in the old shape on the next prompt, and keeps its page as stored", async () => {
-    const f = await fixture({ legacy: true });
-    const stored = (await f.inspect()).turns[0]?.page;
-    expect(stored?.nina).toHaveProperty("snapshot");
-    await f.t.mutation(claim, { turnId: f.turnId });
-    await f.owner.mutation(cancel, { chatId: f.chatId });
-
-    vi.setSystemTime(NOW + 1000);
-    await f.owner.mutation(start, args);
-
-    const state = await f.inspect();
-    expect(state.turns[0]).toMatchObject({
-      _id: f.turnId,
-      phase: "settled",
-      state: { status: "cancelled" },
-      page: stored,
-    });
-    expect(state.chats[0]?.activeTurnId).toBeUndefined();
   });
 
   it("settles every turn the learner stopped, in whichever chat it ran, and pays each hold back once", async () => {

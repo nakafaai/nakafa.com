@@ -4,7 +4,7 @@ import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Schema, Struct } from "effect";
 
 /** Page identity Nina can trust because the app validated it before the turn. */
-export const NinaLearningContextSchema = Schema.Struct({
+const NinaLearningContextSchema = Schema.Struct({
   assetId: Schema.optionalKey(Schema.String),
   locale: LocaleSchema,
   materialKey: Schema.optionalKey(Schema.String),
@@ -28,7 +28,7 @@ const LearningPlacementContextSchema = Schema.Struct({
  * content of the page is given to it, and the scope that evidence has. Both
  * follow from whether the page is verified.
  */
-export const NinaToolContextSchema = Schema.Struct({
+const NinaToolContextSchema = Schema.Struct({
   allowPageFetch: Schema.Boolean,
   evidenceScope: Schema.Literals(["verified-page", "general-learning"]),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
