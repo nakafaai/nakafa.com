@@ -87,23 +87,20 @@ export async function insertSubscription(
 }
 
 /** Loads one subscription by Polar ID and runs the plan sync implementation. */
-export function runSyncCustomerPlanBySubscriptionId(
-  ctx: MutationCtx,
-  subscriptionId: string
-) {
-  return Effect.gen(function* () {
-    const subscription = yield* Effect.promise(() =>
-      ctx.db
-        .query("subscriptions")
-        .withIndex("by_subscriptionId", (q) => q.eq("id", subscriptionId))
-        .unique()
-    );
-    if (!subscription) {
-      return false;
-    }
-    yield* syncCustomerPlan(subscription).pipe(
-      Effect.provide(mutationLayer(confectSchema, ctx))
-    );
-    return true;
-  });
-}
+export const runSyncCustomerPlanBySubscriptionId = Effect.fn(
+  "test.subscriptions.runSyncCustomerPlanBySubscriptionId"
+)(function* (ctx: MutationCtx, subscriptionId: string) {
+  const subscription = yield* Effect.promise(() =>
+    ctx.db
+      .query("subscriptions")
+      .withIndex("by_subscriptionId", (q) => q.eq("id", subscriptionId))
+      .unique()
+  );
+  if (!subscription) {
+    return false;
+  }
+  yield* syncCustomerPlan(subscription).pipe(
+    Effect.provide(mutationLayer(confectSchema, ctx))
+  );
+  return true;
+});
