@@ -22,6 +22,7 @@ import spec, {
 } from "@repo/backend/confect/tenancy/provision.spec";
 import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import { NewTenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
 /** Adds one active school to the organisation and records it as `actor`. */
@@ -45,9 +46,11 @@ const createUnit = Effect.fn("tenancy.provision.unit")(function* (
 /**
  * Opens an organisation in one transaction: the tenant, its schools, its first
  * Owner as a Person nobody has claimed yet, the invite that names the Owner's
- * address, and the Owner role. Each write is in the journal under `actor`, which
- * is the system for Nakafa staff's command and the operator for the console. The
- * invitation email starts with the transaction, in the content language of the
+ * address, and the Owner role. Each of those writes is in the journal under
+ * `actor`, which is the system for Nakafa staff's command and the operator for
+ * the console. The school's key is written in the same transaction but is not
+ * journaled, because ADR 0016 lists what the journal records and a key is not
+ * among them. The invitation email starts with the transaction, in the content language of the
  * first school, and an account that already holds the address claims the Person
  * moments later.
  */
@@ -98,6 +101,9 @@ export const openTenant = Effect.fn("tenancy.provision.tenant")(function* (
       status: "active",
     })
     .pipe(Effect.orDie);
+  // The school's key is written in this transaction too, so no school exists
+  // without one (ADR 0030).
+  yield* createTenantKey(tenantId).pipe(Effect.orDie);
   yield* tenantAuthority.record(
     actor,
     yield* reader.table("tenants").get(tenantId).pipe(Effect.orDie),

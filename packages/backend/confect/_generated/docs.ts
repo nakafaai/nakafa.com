@@ -67,6 +67,7 @@ export type TenantCohortMembersDoc = Document.Document<typeof schemaDefinition, 
 export type TenantCohortsDoc = Document.Document<typeof schemaDefinition, "tenantCohorts">;
 export type TenantGrantsDoc = Document.Document<typeof schemaDefinition, "tenantGrants">;
 export type TenantInvitesDoc = Document.Document<typeof schemaDefinition, "tenantInvites">;
+export type TenantKeysDoc = Document.Document<typeof schemaDefinition, "tenantKeys">;
 export type TenantPeopleDoc = Document.Document<typeof schemaDefinition, "tenantPeople">;
 export type TenantPeriodsDoc = Document.Document<typeof schemaDefinition, "tenantPeriods">;
 export type TenantUnitsDoc = Document.Document<typeof schemaDefinition, "tenantUnits">;
@@ -153,6 +154,7 @@ export interface Docs {
   tenantCohorts: TenantCohortsDoc;
   tenantGrants: TenantGrantsDoc;
   tenantInvites: TenantInvitesDoc;
+  tenantKeys: TenantKeysDoc;
   tenantPeople: TenantPeopleDoc;
   tenantPeriods: TenantPeriodsDoc;
   tenantUnits: TenantUnitsDoc;
