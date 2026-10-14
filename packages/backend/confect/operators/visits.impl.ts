@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { assignTemporaryRole } from "@repo/backend/confect/access/grant";
+import { assignTemporaryRole } from "@repo/backend/confect/access/temporary";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -20,13 +20,15 @@ import {
 } from "@repo/backend/confect/operators/authority";
 import { loadTenant } from "@repo/backend/confect/operators/directory";
 import {
-  NotOperator,
   TenantSuspended,
   VisitNotApproved,
   VisitNotPending,
   VisitOpen,
 } from "@repo/backend/confect/operators/errors";
-import { callingOperator } from "@repo/backend/confect/operators/staff";
+import {
+  callingOperator,
+  liveOperator,
+} from "@repo/backend/confect/operators/staff";
 import {
   admitOperator,
   endVisit,
@@ -139,7 +141,8 @@ const list = FunctionImpl.make(
 /**
  * Approves a requested visit. The operator's Person is admitted, it holds a
  * temporary Auditor grant for the visit's length, and the end of the visit is
- * scheduled. A visit whose operator is no longer active is refused.
+ * scheduled. A visit whose operator is no longer active, or whose account is
+ * being deleted, is refused.
  */
 const approve = FunctionImpl.make(
   databaseSchema,
@@ -151,13 +154,7 @@ const approve = FunctionImpl.make(
     if (visit.state.status !== "pending") {
       return yield* new VisitNotPending();
     }
-    const operator = yield* (yield* DatabaseReader)
-      .table("operators")
-      .get(visit.operatorId)
-      .pipe(Effect.orDie);
-    if (operator.status !== "active") {
-      return yield* new NotOperator();
-    }
+    const operator = yield* liveOperator(visit.operatorId);
     const approvedAt = yield* Clock.currentTimeMillis;
     const expiresAt =
       approvedAt + Duration.toMillis(Duration.minutes(visit.minutes));
@@ -217,8 +214,10 @@ const decline = FunctionImpl.make(
 
 /**
  * Ends an approved visit. The operator leaves it, or the school's Owner or Admin
- * ends it; either works while the school is suspended. A visit that already
- * ended is returned as it is.
+ * ends it; either works while the school is suspended. An Owner or Admin who ends
+ * a visit that already ended gets it back as it is. The operator's Person is
+ * suspended when the visit ends, so the operator's next call is refused as
+ * `NotMember` by the member middleware, before this check runs (ADR 0012).
  */
 const end = FunctionImpl.make(
   databaseSchema,

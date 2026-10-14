@@ -110,6 +110,8 @@ const suspendPerson = Effect.fn("operators.visit.suspend")(function* (
  * Ends an approved visit as `actor`: its grant ends with the reason, the operator's
  * Person is suspended, and the visit records how it ended. Returns the visit as
  * stored. The grant and the Person are ended in the same transaction as the visit.
+ * A grant that already ended, or a Person that a removal already ended, is left as
+ * it is, so each end is journaled once.
  */
 export const endVisit = Effect.fn("operators.visit.end")(function* (
   actor: typeof TenantActor.Type,
@@ -126,8 +128,12 @@ export const endVisit = Effect.fn("operators.visit.end")(function* (
     .table("tenantPeople")
     .get(approved.personId)
     .pipe(Effect.orDie);
-  yield* endGrant(actor, grant, person, reason);
-  yield* suspendPerson(actor, person);
+  if (grant.status === "active") {
+    yield* endGrant(actor, grant, person, reason);
+  }
+  if (person.status === "active") {
+    yield* suspendPerson(actor, person);
+  }
   const at = yield* Clock.currentTimeMillis;
   const ended = yield* replaceVisitState(visit, {
     at,
@@ -153,6 +159,29 @@ export const expireVisit = Effect.fn("operators.visit.expire")(function* (
   }
   yield* endVisit(systemActor, visit, visit.state, "expired");
 });
+
+/**
+ * Ends the approved visit of an operator's Person whose account is released, as
+ * the system. The operator left by deleting its account, so the visit ends with
+ * `left`, and the Person is suspended. A suspended Person is locked, so no invite
+ * or claim can bind it to another account. A Person of another kind, or an
+ * operator with no approved visit in the school, is left as it is.
+ */
+export const endReleasedVisit = Effect.fn("operators.visit.released")(
+  function* (userId: GenericId.GenericId<"users">, person: TenantPeopleDoc) {
+    if (person.kind !== "operator") {
+      return;
+    }
+    const operator = yield* (yield* DatabaseReader)
+      .table("operators")
+      .get("by_userId", userId)
+      .pipe(Effect.orDie);
+    const open = yield* openVisitOf(person.tenantId, operator._id);
+    if (Option.isSome(open) && open.value.state.status === "approved") {
+      yield* endVisit(systemActor, open.value, open.value.state, "left");
+    }
+  }
+);
 
 /**
  * The Person an approved visit acts through in one school: the operator's Person

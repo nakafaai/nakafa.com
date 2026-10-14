@@ -73,7 +73,8 @@ const personOperators = Kind.extend(person, {
   published: [],
 });
 
+/** The operator lane's kinds and its extensions of the tenant and person kinds, for the catalog. */
 export const operators = {
   extensions: [tenantOperators, personOperators],
   kinds: [visit],
-} as const;
+};

@@ -48,3 +48,17 @@ export class GrantRejected extends Schema.TaggedError<GrantRejected>()(
     message: Schema.String,
   }
 ) {}
+
+/** A Person that is not active, refused the same way by a standing and a temporary grant. */
+export const inactivePerson = () =>
+  new GrantRejected({
+    code: "PERSON_INACTIVE",
+    message: "This person is not active.",
+  });
+
+/** An integration is not a person, so no Person holds the integration role. */
+export const integrationRole = () =>
+  new GrantRejected({
+    code: "GRANT_ROLE",
+    message: "Integrations are not people.",
+  });

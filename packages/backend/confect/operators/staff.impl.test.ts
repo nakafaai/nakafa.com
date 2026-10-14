@@ -36,6 +36,7 @@ describe("operators/staff grant", () => {
         const first = yield* fixture.internal.mutation(grant, {
           userId: account.userId,
         });
+        vi.setSystemTime(TENANCY_NOW + 1000);
         const again = yield* fixture.internal.mutation(grant, {
           userId: account.userId,
         });

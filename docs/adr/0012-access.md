@@ -208,15 +208,17 @@ An operator enters a tenant through a visit: a temporary Auditor grant on a
 Person of kind operator, active only while the grant is. A visit grant is always
 the Auditor role, so no visit mints an Admin and approving one never needs
 `owner.manage`. The school's Owner or Admin approves each visit, and the grant
-lasts at most 24 hours. `access/grant` gives a temporary grant with
+lasts at most 24 hours. `access/temporary` gives a temporary grant with
 `assignTemporaryRole`, and refuses an Owner or Admin role (`TEMPORARY_ROLE`), a
 Person that is not an operator (`PERSON_KIND`), and an inactive Person. The
-visit's end, by schedule, by the operator leaving, or by the school ending it,
-ends the grant and suspends that Person in the same transaction, so the member
-middleware refuses it at once. Each end is a `transition` (see Decisions), so a
-suspended tenant does not refuse it. The grant change records the reason
-(`left` when the operator leaves, `revoked` when the school ends it, `expired`
-at its term) and the visit records the same reason (ADR 0016).
+visit's end, by schedule, by the operator leaving, by the school ending it, or
+by the operator's account being deleted, ends the grant and suspends that Person
+in the same transaction, so the member middleware refuses it at once. Each end
+is a `transition` (see Decisions), so a suspended tenant does not refuse it. The
+grant change records the reason (`left` when the operator leaves or deletes its
+account, `revoked` when the school ends it, `expired` at its term) and the visit
+records the same reason (ADR 0016). An end writes a grant or a Person only while
+it is active, so a Person that a removal ended stays removed.
 
 An operator whose operator row is revoked is refused at once: the member
 middleware refuses its Person, so the grant stops working whatever its term.

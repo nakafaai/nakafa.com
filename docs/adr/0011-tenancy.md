@@ -233,9 +233,11 @@ as the internal `tenancy/provision:open` and journals each write under the
 operator actor (ADR 0016), which a school sees as Nakafa staff. The journal
 retention that the data processing agreement states is not stored yet. The
 operator also suspends and reactivates a tenant, both idempotently. A suspended
-tenant stays readable and refuses every member write (ADR 0012, Decisions).
-`operators/tenants:replaceOwner` is the audited break-glass: it refuses while a
-signed-in Owner holds the school, and otherwise removes each unclaimed Owner
+tenant stays readable and refuses every write except the transitions that ADR
+0012 exempts (Decisions), such as the operator's reactivation.
+`operators/tenants:replaceOwner` is the audited break-glass: it refuses a
+suspended school, refuses while a signed-in Owner holds the school, and otherwise
+removes each unclaimed Owner
 with its invite and its grant, then invites a new Owner. Its journal entries
 carry the reason `break-glass`, and the ended grant the reason `replaced`.
 
@@ -253,7 +255,11 @@ to each tenant, and a suspended tenant refuses a request. The operator or the
 school's Owner or Admin ends an approved visit at any time, and a suspended
 tenant does not refuse the end (ADR 0012). A scheduled mutation ends each
 approved visit at its term, and an hourly sweep ends any whose scheduled end
-never ran.
+never ran. An operator whose account is deleted ends its approved visit as
+`left`, and its Person is suspended, so no account can claim that Person again.
+A request or an approval for an operator whose account is being deleted is
+refused as `NotOperator`. When a school removes an operator's Person, the visit's
+later end leaves the removed Person and its ended grant as they are.
 
 The operator directory of a cell, `operators/tenants:list`, is the one public
 read across tenants. It lists each tenant's name, slug, kind, status, unit count,

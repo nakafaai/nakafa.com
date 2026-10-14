@@ -31,6 +31,7 @@ export const openArgs = {
   slug: TenantSlug,
   units: Schema.Array(UnitDraft),
 };
+/** The arguments of one opening, as the console and the command line send them. */
 export const OpenRequest = Schema.Struct(openArgs);
 
 /** What opening an organisation writes: its tenant, its schools, its first Owner, and the invite. */

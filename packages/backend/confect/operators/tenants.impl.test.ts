@@ -234,6 +234,41 @@ describe("operators/tenants reactivate", () => {
 
 describe("operators/tenants replaceOwner", () => {
   it.effect(
+    "refuses to replace the Owner of a suspended school, and changes no Person, invite or journal entry",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const staff = yield* operatorAccount(fixture, "suspender");
+        const opened = yield* fixture.internal.mutation(
+          internalOpen,
+          openRequest("beku", "lama@beku.example.test")
+        );
+        yield* staff.client.mutation(suspendTenant, {
+          tenantId: opened.tenant,
+        });
+        const before = yield* fixture.run(journal);
+        const denial = yield* staff.client
+          .mutation(replaceOwner, {
+            locale: "id",
+            owner: { email: replacement, name: "Kepala Baru" },
+            tenantId: opened.tenant,
+          })
+          .pipe(Effect.flip);
+        expect(denial).toMatchObject({ _tag: "TenantSuspended" });
+        expect(yield* fixture.run(journal)).toEqual(before);
+        const owner = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantPeople").get(opened.owner)
+          )
+        );
+        expect(owner).toMatchObject({
+          account: { state: "unclaimed" },
+          status: "active",
+        });
+      })
+  );
+
+  it.effect(
     "replaces the unclaimed Owner of a school, with its invite, and journals each step as a break-glass",
     () =>
       Effect.gen(function* () {

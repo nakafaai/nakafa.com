@@ -21,6 +21,7 @@ export const visitAuthority = Authority.make(visit, Authority.load(visit), {
   tenantOf: (row) => row.tenantId,
 });
 
+/** Checks a visit action on the visit whose ID the request names, and provides that visit. */
 export const visitAccess = MiddlewareImpl.make(
   databaseSchema,
   VisitAccess,

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   grantsOf,
   operatorAccount,
@@ -21,6 +22,7 @@ const decline = refs.public.operators.visits.decline;
 const endVisit = refs.public.operators.visits.end;
 const viewer = refs.public.tenancy.viewer.get;
 const createPerson = refs.public.tenancy.people.create;
+const removePerson = refs.public.tenancy.people.remove;
 
 /** Fake timers make every change time the test sets, so each state shows it. */
 beforeEach(() => {
@@ -113,6 +115,48 @@ describe("operators/visit end", () => {
         expect(Arr.takeRight(yield* fixture.run(journal), 1)).toMatchObject([
           {
             actor: { id: fixture.people.admin.personId, kind: "person" },
+            change: { reason: "revoked", type: "visit.ended" },
+            subject: { id: visit.id, kind: "visit" },
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "keeps a removed operator's Person removed when its visit ends later, and journals the end once",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const staff = yield* operatorAccount(fixture, "removed");
+        const visit = yield* staff.client.mutation(requestVisit, {
+          minutes: 60,
+          note: "Dikeluarkan",
+          reason: "support",
+          tenantId: fixture.tenants.nf,
+        });
+        yield* fixture.as("admin").mutation(approve, {
+          slug: nf,
+          visitId: visit.id,
+        });
+        const person = yield* personOf(fixture, staff.userId);
+        yield* fixture.as("admin").mutation(removePerson, {
+          personId: person._id,
+          slug: nf,
+        });
+        const ended = yield* fixture.as("admin").mutation(endVisit, {
+          slug: nf,
+          visitId: visit.id,
+        });
+        expect(ended.state).toMatchObject({ status: "ended" });
+        const stored = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantPeople").get(person._id)
+          )
+        );
+        expect(stored.status).toBe("removed");
+        expect(Arr.takeRight(yield* fixture.run(journal), 2)).toMatchObject([
+          { change: { type: "person.removed" } },
+          {
             change: { reason: "revoked", type: "visit.ended" },
             subject: { id: visit.id, kind: "visit" },
           },

@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { NotOperator } from "@repo/backend/confect/operators/errors";
 import { Effect, Option } from "effect";
@@ -13,6 +14,29 @@ export const operatorOf = Effect.fn("operators.staff.of")(function* (
     .index("by_userId", (query) => query.eq("userId", userId))
     .first()
     .pipe(Effect.orDie);
+});
+
+/**
+ * The row of an operator whose access is active and whose account is not being
+ * deleted, read by its row ID. Any other operator is `NotOperator`, so a request
+ * made before its account was deleted cannot be approved.
+ */
+export const liveOperator = Effect.fn("operators.staff.live")(function* (
+  operatorId: GenericId.GenericId<"operators">
+) {
+  const reader = yield* DatabaseReader;
+  const operator = yield* reader
+    .table("operators")
+    .get(operatorId)
+    .pipe(Effect.orDie);
+  const account = yield* reader
+    .table("users")
+    .get(operator.userId)
+    .pipe(Effect.orDie);
+  if (operator.status !== "active" || isAccountDeletionPending(account)) {
+    return yield* new NotOperator();
+  }
+  return operator;
 });
 
 /** The operator row of an account whose operator access is active now. Any other account is `NotOperator`. */

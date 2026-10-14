@@ -12,7 +12,10 @@ import {
 } from "@repo/backend/confect/access/grant";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { loadTenant, rowOf } from "@repo/backend/confect/operators/directory";
-import { OwnerClaimed } from "@repo/backend/confect/operators/errors";
+import {
+  OwnerClaimed,
+  TenantSuspended,
+} from "@repo/backend/confect/operators/errors";
 import { callingOperator } from "@repo/backend/confect/operators/staff";
 import spec from "@repo/backend/confect/operators/tenants.spec";
 import { operatorActor } from "@repo/backend/confect/tenancy/actor";
@@ -120,6 +123,9 @@ const replaceOwner = FunctionImpl.make(
   }) {
     const operator = yield* callingOperator();
     const tenant = yield* loadTenant(tenantId);
+    if (tenant.status === "suspended") {
+      return yield* new TenantSuspended();
+    }
     if (!admitsAddress(tenant.policies, owner.email)) {
       return yield* new InviteDomainRefused();
     }

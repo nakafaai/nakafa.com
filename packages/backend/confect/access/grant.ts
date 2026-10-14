@@ -8,7 +8,11 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { grantAuthority } from "@repo/backend/confect/access/authority";
-import { GrantRejected } from "@repo/backend/confect/access/errors";
+import {
+  GrantRejected,
+  inactivePerson,
+  integrationRole,
+} from "@repo/backend/confect/access/errors";
 import { activeGrants, GRANT_LIMIT } from "@repo/backend/confect/access/policy";
 import {
   type BuiltinRole,
@@ -73,22 +77,8 @@ const refusal = (
           message: "Operators hold only temporary visit grants.",
         })
     ),
-    Match.not(
-      { person: { status: "active" } },
-      () =>
-        new GrantRejected({
-          code: "PERSON_INACTIVE",
-          message: "This person is not active.",
-        })
-    ),
-    Match.when(
-      { role: "integration" },
-      () =>
-        new GrantRejected({
-          code: "GRANT_ROLE",
-          message: "Integrations are not people.",
-        })
-    ),
+    Match.not({ person: { status: "active" } }, inactivePerson),
+    Match.when({ role: "integration" }, integrationRole),
     Match.when(
       { role: "owner", scope: { kind: "unit" } },
       () =>
@@ -101,55 +91,11 @@ const refusal = (
   );
 
 /**
- * The first invariant a new temporary grant breaks. Temporary grants are the
- * visit grants of operators: only operator Persons hold them, only active ones,
- * and never the Owner or Admin role, whose grants stand until someone ends them.
- */
-const temporaryRefusal = (
-  person: TenantPeopleDoc,
-  role: BuiltinRole
-): Option.Option<GrantRejected> => {
-  if (person.kind !== "operator") {
-    return Option.some(
-      new GrantRejected({
-        code: "PERSON_KIND",
-        message: "Only operators hold temporary grants.",
-      })
-    );
-  }
-  if (person.status !== "active") {
-    return Option.some(
-      new GrantRejected({
-        code: "PERSON_INACTIVE",
-        message: "This person is not active.",
-      })
-    );
-  }
-  if (role === "integration") {
-    return Option.some(
-      new GrantRejected({
-        code: "GRANT_ROLE",
-        message: "Integrations are not people.",
-      })
-    );
-  }
-  if (Schema.is(OwnerRole)(role)) {
-    return Option.some(
-      new GrantRejected({
-        code: "TEMPORARY_ROLE",
-        message: "An Owner or Admin role is never temporary.",
-      })
-    );
-  }
-  return Option.none();
-};
-
-/**
  * Writes one active grant under the Person and records it under the Person. The
  * Person's grants are read by the caller; the limits of the Person and of the
  * tenant's Owners are checked here before the grant is written.
  */
-const writeGrant = Effect.fn("access.grant.write")(function* (
+export const writeGrant = Effect.fn("access.grant.write")(function* (
   actor: typeof TenantActor.Type,
   person: TenantPeopleDoc,
   grants: readonly TenantGrantsDoc[],
@@ -225,35 +171,6 @@ export const assignRole = Effect.fn("access.grant.assign")(function* (
     kind: "standing",
   });
 });
-
-/**
- * Gives an operator Person a temporary role that ends at `expiresAt`, under the
- * invariants of temporary grants, and records it under the Person. A visit is
- * its only use, and a visit grant is always the Auditor role, so approving one
- * never mints an Admin. The caller schedules the end of the grant.
- */
-export const assignTemporaryRole = Effect.fn("access.grant.assignTemporary")(
-  function* (
-    actor: typeof TenantActor.Type,
-    person: TenantPeopleDoc,
-    role: BuiltinRole,
-    scope: GrantScope,
-    expiresAt: number
-  ) {
-    yield* Option.match(temporaryRefusal(person, role), {
-      onNone: () => Effect.void,
-      onSome: Effect.fail,
-    });
-    return yield* writeGrant(
-      actor,
-      person,
-      yield* activeGrants(person._id),
-      role,
-      scope,
-      { expiresAt, kind: "temporary" }
-    );
-  }
-);
 
 /**
  * Ends an active grant and records it under the Person who held it. A grant

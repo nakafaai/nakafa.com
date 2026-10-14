@@ -317,6 +317,33 @@ describe("operators/visits approve", () => {
     })
   );
 
+  it.effect(
+    "refuses an approval once the operator's account is being deleted",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const staff = yield* operatorAccount(fixture, "deleting");
+        const visit = yield* staff.client.mutation(requestVisit, {
+          minutes: 60,
+          note: "Akun sedang dihapus",
+          reason: "support",
+          tenantId: fixture.tenants.nf,
+        });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("users").patch(staff.userId, {
+              deletionPreparedAt: TENANCY_NOW,
+            })
+          )
+        );
+        const denial = yield* fixture
+          .as("admin")
+          .mutation(approve, { slug: nf, visitId: visit.id })
+          .pipe(Effect.flip);
+        expect(denial).toMatchObject({ _tag: "NotOperator" });
+      })
+  );
+
   it.effect("refuses an approval once the operator's access was revoked", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

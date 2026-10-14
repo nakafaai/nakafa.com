@@ -7,12 +7,12 @@ export class NotOperator extends Schema.TaggedError<NotOperator>()(
   refusal("NOT_OPERATOR", "Only an active Nakafa operator may do this.")
 ) {}
 
-/** The school is suspended, so an operator may not ask it for a visit. */
+/** The school is suspended, so an operator may not change it or ask it for a visit. */
 export class TenantSuspended extends Schema.TaggedError<TenantSuspended>()(
   "TenantSuspended",
   refusal(
     "TENANT_SUSPENDED",
-    "This school is suspended, so it takes no visits until it is reactivated."
+    "This school is suspended, so it refuses changes until it is reactivated."
   )
 ) {}
 

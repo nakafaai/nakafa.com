@@ -38,6 +38,7 @@ export const VisitNote = Schema.String.check(Schema.isMaxLength(500));
 /** The shortest and the longest visit an operator may ask for, in minutes. */
 const VISIT_MIN_MINUTES = 15;
 const VISIT_MAX_MINUTES = 1440;
+/** The length of a visit an operator asks for, in whole minutes from the shortest to the longest. */
 export const VisitMinutes = Schema.Int.check(
   Schema.isGreaterThanOrEqualTo(VISIT_MIN_MINUTES),
   Schema.isLessThanOrEqualTo(VISIT_MAX_MINUTES)

@@ -9,6 +9,7 @@ import MiddlewareSession from "@repo/backend/confect/middleware/session.spec";
 import {
   NotOperator,
   OwnerClaimed,
+  TenantSuspended,
 } from "@repo/backend/confect/operators/errors";
 import { TenantRow } from "@repo/backend/confect/operators/schema";
 import {
@@ -89,6 +90,7 @@ export default GroupSpec.make()
           NotOperator,
           OwnerClaimed,
           TenantNotFound,
+          TenantSuspended,
         ]),
     })
   )
