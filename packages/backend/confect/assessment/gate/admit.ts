@@ -39,7 +39,8 @@ function isStale(incoming: Version, latest: Option.Option<Version>) {
  * admitted write is not older, which refuses it as stale. An answer without a
  * version comes from a page older than versions (see
  * `saveTryoutResponseArgsValidator`) and takes the next number, so it is never
- * refused.
+ * refused. It logs `assessment.gate.unversioned`, the line the production logs
+ * are read for before the version becomes required.
  */
 function numbered(
   sent: Option.Option<Version>,
@@ -47,8 +48,10 @@ function numbered(
 ) {
   return Option.match(sent, {
     onNone: () =>
-      Effect.succeed(
-        Option.match(latest, { onNone: () => 1, onSome: Num.increment })
+      Effect.logWarning("assessment.gate.unversioned").pipe(
+        Effect.as(
+          Option.match(latest, { onNone: () => 1, onSome: Num.increment })
+        )
       ),
     onSome: (version) =>
       isStale(version, latest)

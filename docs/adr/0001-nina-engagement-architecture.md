@@ -46,29 +46,6 @@ backend package.
 A stored turn holds only what something reads. Its page holds the locale, the
 slug, whether the page needs a signed read, and the context pack: the learning
 page, its placement, the question focus, and the evidence the model is told of.
-It holds no second copy of that context, no marker of a switch of context, no
-second copy of the address, the signed state or the asset id of the page, and no
-permission flag per capability, because each capability is offered by its own
-`offered`. Turns stored before that change hold those fields, so the change
-lands in two steps, and this ADR owns both. Until the second, the table admits
-the old fields (`NinaStoredPageSchema` and `NinaLegacyField` in
-`contract/turn.ts`), every reader takes a turn in either shape, a retry copies
-the page of the turn it asks again through `dropLegacyPage`, and
-`nina/reshape:rewrite` rewrites the old turns, in every state, a page of 100 at
-a time with a dry mode that counts and writes nothing. The exit is met when a
-dry pass over every turn finds none in the old shape on dev and on production.
-The cleanup is one change: narrow the table to the new shape, and delete
-`nina/reshape` with its tests, `dropLegacyPage`, and the old shape in
-`test/nina/legacy.ts`.
-
-The first step cannot be undone by deploying the build before it. That build
-still requires the old fields, Convex checks the stored documents against the
-schema of every push and refuses a push that one of them fails, and the
-production build deploys Convex before the web app. So from the first turn
-stored in the new shape, whether a learner's prompt writes it or the rewrite
-does, the build before the change can no longer be deployed to that deployment,
-and a defect found after that is fixed forward on a table that admits both
-shapes.
 
 A public chat is shared by link, and the link holds a share token, not only the
 chat id. Turning sharing on draws 32 random bytes and stores their SHA-256 hash,

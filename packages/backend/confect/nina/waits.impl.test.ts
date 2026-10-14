@@ -14,7 +14,6 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpe
 import { appendNinaTurn, createNinaTest } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { FunctionArgs } from "convex/server";
-import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 9, 12, 12);
 /** The most turns one report reads. `waits.spec.ts` bounds the count with it, and ADR 0008 states it. */
@@ -115,12 +114,8 @@ function firstTurn(fixture: Fixture): Queued {
  * - C is stopped by the learner. Claimed after 3 seconds, ready after 3.5, a
  *   first sign of work after 6.
  */
-async function threeRuns({
-  legacy = false,
-}: {
-  readonly legacy?: boolean;
-} = {}) {
-  const fixture = await createNinaTest({ legacy, now: NOW });
+async function threeRuns() {
+  const fixture = await createNinaTest({ now: NOW });
   const a = firstTurn(fixture);
   await claimAt(fixture, a, 1000);
   await answer(fixture, a);
@@ -200,30 +195,6 @@ describe("report of the waits of the newest turns", () => {
         p90: 3200,
         max: 3200,
       },
-    ]);
-  });
-
-  it("reads turns stored in the old shape as it reads turns written now", async () => {
-    // The first turn of the chat is stored in the old shape. The waits come
-    // from the run of each turn, so its other fields change none of them.
-    const { fixture } = await threeRuns({ legacy: true });
-
-    const result = await report(fixture, 3);
-
-    expect(result.read).toBe(3);
-    expect(result.statuses).toStrictEqual({
-      cancelled: 1,
-      complete: 1,
-      failed: 1,
-      open: 0,
-    });
-    expect(
-      Arr.map(result.waits, ({ stage, turns }) => ({ stage, turns }))
-    ).toStrictEqual([
-      { stage: "claimedMs", turns: 3 },
-      { stage: "readyMs", turns: 3 },
-      { stage: "progressMs", turns: 2 },
-      { stage: "tokenMs", turns: 1 },
     ]);
   });
 
