@@ -13,6 +13,7 @@ import {
 } from "effect";
 import {
   CONVEX_SOCKET,
+  changeAnswersIn,
   decodeGiven,
   decodeSent,
   encodeRefusal,
@@ -51,8 +52,9 @@ export const ANSWER_MILLISECONDS = 15_000;
  * never reaches the server, and the page is told the server could not take it.
  * It can fail the answers of a query too: after `failQuery` every answer of
  * that function reaches the page as the failure the server sends when the
- * function throws, until `recoverQuery`. What the tracker knows is what the
- * page was given, never what the server sent.
+ * function throws, until `recoverQuery`. It can change what a query answers,
+ * the way a backend that held other data would (`rewrite`). What the tracker
+ * knows is what the page was given, never what the server sent.
  *
  * It also keeps the frame of every change the server took, so a step can ask
  * whether the server holds given words (`took`). The count of changes cannot
@@ -72,10 +74,17 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     failingPath: "",
     /** The query whose answers fail, and what the page is told of why. */
     failingQuery: Option.none<{ data: unknown; path: string }>(),
+    /** The typed failure the next failure carries; none for a server that broke. */
+    failingRefusal: Option.none<unknown>(),
     held: false,
     listed: false,
     /** The HTTP origin of the backend the page talks to; empty until its connection opened. */
     origin: "",
+    /** The query whose answers are changed, and how. */
+    rewriting: Option.none<{
+      change: (value: unknown) => unknown;
+      path: string;
+    }>(),
     sent: 0,
     signedIn: false,
     stored: 0n,
@@ -202,11 +211,15 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
           (changes.failingPath === "" ||
             changes.failingPath === mutation.value.udfPath)
         ) {
+          const refusal = changes.failingRefusal;
+
           changes.failing = false;
+          changes.failingRefusal = Option.none();
           // The server never sees the change, and the page is told it failed.
           deliver(() => {
             socket.send(
               encodeRefusal({
+                errorData: Option.getOrUndefined(refusal),
                 logLines: [],
                 requestId: mutation.value.requestId,
                 result: "Refused by the test",
@@ -233,7 +246,14 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
         const refused = Option.flatMap(changes.failingQuery, ({ data, path }) =>
           failQueriesIn(message.toString(), queriesOf(path), data)
         );
-        const given = Option.getOrElse(refused, () => message);
+        // Otherwise the answers of a query that is armed to change are changed.
+        const changed = Option.flatMap(changes.rewriting, ({ change, path }) =>
+          changeAnswersIn(message.toString(), queriesOf(path), change)
+        );
+        const given = Option.getOrElse(
+          Option.orElse(refused, () => changed),
+          () => message
+        );
         const frame = decodeGiven(given.toString());
 
         deliver(() => {
@@ -274,11 +294,14 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     /**
      * Fails the next mutation the page sends, or the next one to the function
      * `udfPath`: the server never gets it, and the page is told the server
-     * could not take it.
+     * could not take it. With `refusal`, the page is told the function threw
+     * that typed failure on purpose, which it decodes as the function's own
+     * error, and not that the server broke.
      */
-    failNext(udfPath = "") {
+    failNext(udfPath = "", refusal?: unknown) {
       changes.failing = true;
       changes.failingPath = udfPath;
+      changes.failingRefusal = Option.fromNullishOr(refusal);
     },
     /**
      * Fails every answer of a query of the function `udfPath` until
@@ -292,6 +315,15 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     /** Gives the page the server's own answers to the queries again. */
     recoverQuery() {
       changes.failingQuery = Option.none();
+    },
+    /**
+     * Changes every answer of a query of the function `udfPath` from now on:
+     * `change` gets the value the server answered and returns the one the
+     * page is given. A page that was answered before only shows it once the
+     * query answers again, as it does after a reload.
+     */
+    rewrite(udfPath: string, change: (value: unknown) => unknown) {
+      changes.rewriting = Option.some({ change, path: udfPath });
     },
     /** Keeps what the server answers from the page until `release`. */
     hold() {

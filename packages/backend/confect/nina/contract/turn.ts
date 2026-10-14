@@ -3,25 +3,23 @@ import {
   type AgentContext,
   AgentCurriculumPreferenceSchema,
 } from "@repo/backend/confect/nina/contract/agent";
-import {
-  NinaContextPackSchema,
-  NinaContextSnapshotSchema,
-  NinaContextTransitionSchema,
-} from "@repo/backend/confect/nina/contract/pack";
+import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/slug";
 import { Schema, Struct } from "effect";
-/** Verified learning page state consumed by one Nina turn. */
+
+/**
+ * Verified learning page state consumed by one Nina turn. Its address and signed
+ * state are `nina.learning.url` and `nina.learning.verified`, and nowhere else.
+ */
 export const NinaPageSchema = Schema.Struct({
   locale: LocaleSchema,
   needsFetch: Schema.Boolean,
   nina: NinaContextPackSchema,
   slug: Schema.String,
-  url: Schema.String,
-  verified: Schema.Boolean,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Runtime facts that are stable for one Nina turn. */
 const NinaRuntimeSchema = Schema.Struct({
@@ -138,8 +136,6 @@ export const NinaTurnFacts = Schema.Struct({
   transactionId: Schema.optionalKey(Id("creditTransactions")),
   page: Schema.optionalKey(NinaPageSchema),
   user: Schema.optionalKey(NinaUserSchema),
-  snapshot: Schema.optionalKey(NinaContextSnapshotSchema),
-  transition: Schema.optionalKey(NinaContextTransitionSchema),
   tokens: Schema.optionalKey(
     Schema.Struct({
       input: Schema.optionalKey(Schema.Finite),
@@ -202,7 +198,8 @@ export function readNinaLearningPage(page: NinaPage) {
  * Builds the shared specialist context from validated Nina turn inputs.
  * `memory` is whether the learner's memory is on for the turn. The turn reads
  * the pause once, and the capability policy decides from it whether the memory
- * capability is offered and whether a call may run.
+ * capability is offered and whether a call may run. Every other capability is
+ * offered on every page.
  */
 export function createNinaAgentContext({
   memory,
@@ -219,7 +216,6 @@ export function createNinaAgentContext({
   return {
     currentDate: runtime.currentDate,
     memory,
-    nina: page.nina,
     slug: learningPage.slug,
     url: learningPage.url,
     verified: learningPage.verified,

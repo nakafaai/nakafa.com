@@ -53,6 +53,23 @@ async function activateArticleSearch(
   });
   return t;
 }
+/** Activates a signed Tryout catalog whose one entry is named "Technical country". */
+async function activateTryoutSearch() {
+  const t = createConvexTestWithBetterAuth();
+  await t.mutation((ctx) =>
+    activateTryoutSnapshot(ctx, {
+      catalog: [
+        makeTryoutCatalogRow("en").record.row,
+        makeTryoutCatalogRow("id").record.row,
+      ],
+      placements: [
+        makeTryoutPlacementRow("en").record.row,
+        makeTryoutPlacementRow("id").record.row,
+      ],
+    })
+  );
+  return t;
+}
 describe("contents/queries/search:search", () => {
   it.each([
     {
@@ -98,6 +115,32 @@ describe("contents/queries/search:search", () => {
         data: {
           code,
         },
+      });
+    }
+  );
+  it.each([
+    {
+      name: "17 terms",
+      query: Arr.join(
+        Array.from({ length: 17 }, (_, index) => `term${index}`),
+        " "
+      ),
+    },
+    { name: "a term of 32 bytes", query: "x".repeat(32) },
+  ])(
+    "refuses a query that Convex would read in part when it searches articles: $name",
+    async ({ query }) => {
+      const t = await activateArticleSearch(1, () => "term0 term1 term16");
+      const result = t.query(api.contents.queries.search.search, {
+        limit: 10,
+        locale: "en",
+        offset: 0,
+        queries: [query],
+        section: "articles",
+      });
+      await expect(result).rejects.toBeInstanceOf(ConvexError);
+      await expect(result).rejects.toMatchObject({
+        data: { code: "CONTENT_RELEASE_LIMIT" },
       });
     }
   );
@@ -222,20 +265,30 @@ describe("contents/queries/search:search", () => {
       },
     ]);
   });
+  it("reads every term of a query for a Tryout, which is matched in memory", async () => {
+    const t = await activateTryoutSearch();
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      queries: [
+        Arr.join(
+          Arr.makeBy(17, (index) =>
+            index % 2 === 0 ? "Technical" : "country"
+          ),
+          " "
+        ),
+      ],
+      section: "tryout",
+    });
+    expect(result.items).toEqual([
+      expect.objectContaining({
+        content_id: "asset:en:tryout:technical:country",
+      }),
+    ]);
+  });
   it("returns bodyless Tryout catalog refs without claiming markdown", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog: [
-          makeTryoutCatalogRow("en").record.row,
-          makeTryoutCatalogRow("id").record.row,
-        ],
-        placements: [
-          makeTryoutPlacementRow("en").record.row,
-          makeTryoutPlacementRow("id").record.row,
-        ],
-      })
-    );
+    const t = await activateTryoutSearch();
     const result = await t.query(api.contents.queries.search.search, {
       limit: 10,
       locale: "en",

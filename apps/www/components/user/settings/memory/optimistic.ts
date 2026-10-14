@@ -8,6 +8,8 @@ import {
   type MemoryDraft,
   type MemoryPage,
   pageCleared,
+  pageForRestored,
+  pageRestored,
   pageWith,
   pageWithout,
 } from "@/components/user/settings/memory/list";
@@ -40,11 +42,18 @@ function changePages(
   }
 }
 
+/** Every page of the list that the browser holds, with the arguments it was asked with. */
+function heldPages(store: Store) {
+  return Arr.flatMap(
+    store.getAllQueries(nina.memory.list),
+    ({ args, value }) =>
+      Option.isSome(value) ? [{ args, page: value.value }] : []
+  );
+}
+
 /** Every memory in the pages that the browser holds. */
 function heldMemories(store: Store) {
-  return Arr.flatMap(store.getAllQueries(nina.memory.list), ({ value }) =>
-    Option.isSome(value) ? value.value.page : []
-  );
+  return Arr.flatMap(heldPages(store), ({ page }) => page.page);
 }
 
 /** Shows a memory the learner just wrote first on the first page. */
@@ -77,6 +86,33 @@ export function editInList(
 /** Takes a memory out of every page that holds it. */
 export function removeFromList(store: Store, id: Memory["id"]) {
   changePages(store, (page) => pageWithout(page, id));
+}
+
+/**
+ * Shows a memory that comes back where it was, as the server will: in the one
+ * page that holds its place, between the memories confirmed before and after
+ * it. A memory whose place is beyond the pages the browser holds is left to
+ * the server. Only that page is written.
+ */
+export function restoreInList(store: Store, memory: Memory) {
+  const held = heldPages(store);
+  const target = Option.flatMap(
+    pageForRestored(
+      Arr.map(held, ({ page }) => page),
+      memory
+    ),
+    (index) => Arr.get(held, index)
+  );
+
+  if (Option.isNone(target)) {
+    return;
+  }
+
+  store.setQuery(
+    nina.memory.list,
+    target.value.args,
+    Option.some(pageRestored(target.value.page, memory))
+  );
 }
 
 /**

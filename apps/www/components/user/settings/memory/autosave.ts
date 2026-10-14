@@ -175,9 +175,10 @@ export function createAutosave(
    * Stops the saving and deletes the memory. `shown` is the memory the editor
    * shows, or none while the first save of a new memory is on its way. The
    * learner sees the memory in its row, so its deletion offers an Undo, which
-   * brings back the words the editor held, or the words of the memory when the
-   * editor held none. A new memory that no save has sent has no row, and
-   * nothing is deleted for it.
+   * puts the memory back as the server stored it. The words the editor held
+   * come back in the editor only when the server does not delete the memory,
+   * or the words of the memory when the editor held none. A new memory that no
+   * save has sent has no row, and nothing is deleted for it.
    */
   function discard(send: Send, shown: Memory | null) {
     const { memory: stored, wanted } = MutableRef.get(state);

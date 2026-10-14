@@ -4,7 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { Contract } from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
-import { Policy } from "@repo/backend/confect/tenancy/policy";
+import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
 import { ClaimMethod } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
@@ -45,7 +45,7 @@ export const tenant = Kind.make("tenant", "tenants", {
       type: Schema.Literal("tenant.locale.set"),
     }),
     Schema.Struct({
-      policy: Policy,
+      key: PolicyKey,
       type: Schema.Literal("tenant.policy.set"),
     }),
   ],
