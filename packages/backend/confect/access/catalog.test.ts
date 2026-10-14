@@ -4,6 +4,7 @@ import {
   entries,
   kinds,
   ObjectRef,
+  opensTo,
   TenantAction,
   TenantCapabilities,
 } from "@repo/backend/confect/access/catalog";
@@ -20,9 +21,21 @@ describe("access/catalog", () => {
       "period",
       "cohort",
       "grant",
+      "integration",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
+  });
+
+  it("opens only the roster reads of a school to the integration role", () => {
+    expect([
+      opensTo("person.view", "integration"),
+      opensTo("period.view", "integration"),
+      opensTo("cohort.view", "integration"),
+      opensTo("person.manage", "integration"),
+      opensTo("integration.manage", "integration"),
+      opensTo("grant.manage", "integration"),
+    ]).toEqual([true, true, true, false, false, false]);
   });
 
   it("derives every change of every kind and extension", () => {
@@ -53,6 +66,9 @@ describe("access/catalog", () => {
       "cohort.created",
       "cohort.renamed",
       "cohort.archived",
+      "integration.created",
+      "integration.rotated",
+      "integration.revoked",
       "grant.created",
       "grant.ended",
     ]);
@@ -115,6 +131,8 @@ describe("access/catalog", () => {
       "person.view",
       "grant.manage",
       "owner.manage",
+      "integration.manage",
+      "integration.view",
     ]);
   });
 
