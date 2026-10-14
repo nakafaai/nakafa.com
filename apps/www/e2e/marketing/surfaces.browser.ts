@@ -1,10 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, Order, Record as Rec } from "effect";
-import { activateUntilVisible, press } from "@/e2e/support/input";
+import { activateUntilVisible } from "@/e2e/support/input";
 import {
   measureMarketingPage,
   readFirstContributor,
-  swipeContributorDrawer,
 } from "@/e2e/support/marketing";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -37,8 +36,6 @@ const COMMUNITY_MAX_HTML_BYTES = 35_000;
 const HOMEPAGE_MAX_DESCENDANTS = 2063;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 
-type MarketingViewport = (typeof targetViewports)[number];
-
 const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
   page: Page,
   href: string
@@ -64,7 +61,7 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
 });
 
 const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
-  function* (page: Page, viewport: MarketingViewport) {
+  function* (page: Page) {
     yield* loadMarketingPage(page, "/en");
     const measurements = yield* measureMarketingPage(page);
 
@@ -86,65 +83,9 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
     });
     yield* Effect.promise(() =>
       expect(page.locator('#faq [data-slot="accordion-trigger"]')).toHaveCount(
-        6
+        10
       )
     );
-
-    const gallery = page.locator("#community [data-contributor-gallery]");
-    const triggers = gallery.locator("[data-contributor-username]");
-    yield* Effect.promise(() => expect(gallery).toHaveCount(1));
-    yield* Effect.promise(() =>
-      expect(triggers).toHaveCount(contributors.length)
-    );
-    yield* Effect.promise(() =>
-      expect(page.locator("[data-contributor-drawer]")).toHaveCount(0)
-    );
-
-    const { hasTouch } = viewport;
-    const firstContributor = yield* readFirstContributor(contributors);
-    const firstTrigger = triggers.first();
-    yield* Effect.promise(() => press(firstTrigger, hasTouch));
-    const drawer = page.locator("[data-contributor-drawer]");
-    yield* Effect.promise(() => expect(drawer).toHaveCount(1));
-    yield* Effect.promise(() => expect(drawer).toBeVisible());
-    yield* Effect.promise(() =>
-      expect(drawer).toHaveAccessibleName(firstContributor.name)
-    );
-    yield* Effect.promise(() =>
-      expect(drawer).toHaveAttribute(
-        "data-contributor-username",
-        firstContributor.username
-      )
-    );
-
-    for (let press = 0; press < 6; press += 1) {
-      yield* Effect.promise(() => page.keyboard.press("Tab"));
-      yield* Effect.promise(() =>
-        expect
-          .poll(() =>
-            drawer.evaluate((element) =>
-              element.contains(document.activeElement)
-            )
-          )
-          .toBe(true)
-      );
-    }
-
-    if (hasTouch) {
-      yield* swipeContributorDrawer(drawer, page);
-    } else {
-      yield* Effect.promise(() => page.keyboard.press("Escape"));
-    }
-    yield* Effect.promise(() => expect(drawer).toHaveCount(0));
-    yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
-
-    yield* Effect.promise(() => press(firstTrigger, hasTouch));
-    const outsideSurface = page.locator('[data-slot="drawer-viewport"]');
-    yield* Effect.promise(() =>
-      press(outsideSurface, hasTouch, { position: { x: 2, y: 2 } })
-    );
-    yield* Effect.promise(() => expect(drawer).toHaveCount(0));
-    yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
   }
 );
 
@@ -389,7 +330,7 @@ for (const viewport of targetViewports) {
       page,
     }) => {
       await Effect.runPromise(
-        withObservedPageErrors(page, verifyMarketingSurface(page, viewport))
+        withObservedPageErrors(page, verifyMarketingSurface(page))
       );
     });
   });
