@@ -6,7 +6,10 @@ import { Authority } from "@repo/backend/confect/access/policy";
 import { Class, ClassAccess } from "@repo/backend/confect/classroom/access";
 import { classKind } from "@repo/backend/confect/classroom/kinds";
 import { teacherAssignment } from "@repo/backend/confect/classroom/teacher";
-import { placementOf } from "@repo/backend/confect/tenancy/authority";
+import {
+  cohortLocked,
+  placementOf,
+} from "@repo/backend/confect/tenancy/authority";
 import { Effect, Option } from "effect";
 
 /** Reads the cohort a class names; a class always names one, so a missing one is a defect. */
@@ -56,10 +59,7 @@ export const classAuthority = Authority.make(
       }).pipe(
         Effect.map(({ cohort, period, unit }) => ({
           locked:
-            row.status === "archived" ||
-            cohort.status === "archived" ||
-            period.status === "archived" ||
-            unit.status === "archived",
+            row.status === "archived" || cohortLocked(cohort, period, unit),
           units: [row.unitId],
         }))
       ),
@@ -79,6 +79,7 @@ export const classAuthority = Authority.make(
   }
 );
 
+/** Checks a class action on the class its access spec names, and provides the loaded class to the function. */
 export const classAccess = MiddlewareImpl.make(
   databaseSchema,
   ClassAccess,

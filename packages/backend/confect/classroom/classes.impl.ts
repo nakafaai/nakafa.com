@@ -103,7 +103,10 @@ const get = FunctionImpl.make(
   })
 );
 
-/** One page of a period's classes in name order, which puts the subject before the cohort name. */
+/**
+ * One page of a period's classes in subject order, then name order, so the
+ * classes of one subject sit together.
+ */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -112,7 +115,7 @@ const list = FunctionImpl.make(
     const period = yield* Period;
     const page = yield* (yield* DatabaseReader)
       .table("classes")
-      .index("by_periodId_and_nameKey", (query) =>
+      .index("by_periodId_and_subjectKey_and_nameKey", (query) =>
         query.eq("periodId", period._id)
       )
       .paginate(paginationOpts)
@@ -121,6 +124,7 @@ const list = FunctionImpl.make(
   })
 );
 
+/** The classes of a school: create, rename, archive, read, list, and the classes a Person teaches or attends. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(create),
   Layer.provide(rename),

@@ -8,11 +8,12 @@ import {
   denied,
   nf,
   period,
+  sdUnit,
 } from "@repo/backend/test/classroom";
 import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { archive, create } = refs.public.classroom.classes;
+const { archive, create, rename } = refs.public.classroom.classes;
 const periods = refs.public.tenancy.periods;
 const cohorts = refs.public.tenancy.cohorts;
 
@@ -48,11 +49,11 @@ describe("classroom/classes create", () => {
   );
 
   it.effect(
-    "names a homeroom class without a subject for its cohort alone",
+    "names the homeroom class of an SD cohort for the cohort alone",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const term = yield* period(fixture, fixture.units.smp);
+        const term = yield* period(fixture, yield* sdUnit(fixture));
         const x1 = yield* cohort(fixture, term.id, "X-1");
         const homeroom = yield* classOf(fixture, x1.id);
         expect(homeroom).toEqual({
@@ -64,6 +65,36 @@ describe("classroom/classes create", () => {
           status: "active",
         });
         expect(homeroom).not.toHaveProperty("subject");
+      })
+  );
+
+  it.effect("refuses a class without a subject outside an SD cohort", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const term = yield* period(fixture, fixture.units.smp);
+      const x1 = yield* cohort(fixture, term.id, "X-1");
+      const refused = yield* classOf(fixture, x1.id).pipe(Effect.flip);
+      expect(refused).toMatchObject({
+        _tag: "ClassSubjectRequired",
+        code: "CLASS_SUBJECT_REQUIRED",
+      });
+    })
+  );
+
+  it.effect(
+    "refuses a subject in an SD cohort, which holds only its homeroom class",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, yield* sdUnit(fixture));
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        const refused = yield* classOf(fixture, x1.id, "Fisika").pipe(
+          Effect.flip
+        );
+        expect(refused).toMatchObject({
+          _tag: "ClassSubjectNotAllowed",
+          code: "CLASS_SUBJECT_NOT_ALLOWED",
+        });
       })
   );
 
@@ -104,6 +135,50 @@ describe("classroom/classes create", () => {
   );
 
   it.effect(
+    "refuses a second active class of one subject, even after a rename gave the first another name",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        const fisika = yield* classOf(fixture, x1.id, "Fisika");
+        yield* fixture.as("admin").mutation(rename, {
+          classId: fisika.id,
+          name: "Kimia X-1",
+          slug: nf,
+        });
+        const again = yield* classOf(fixture, x1.id, "Fisika").pipe(
+          Effect.flip
+        );
+        expect(again).toMatchObject({
+          _tag: "ClassSubjectTaken",
+          code: "CLASS_SUBJECT_TAKEN",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses a second active class of one subject after its cohort is renamed",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        yield* classOf(fixture, x1.id, "Fisika");
+        yield* fixture
+          .as("admin")
+          .mutation(cohorts.rename, { cohortId: x1.id, name: "X-2", slug: nf });
+        const again = yield* classOf(fixture, x1.id, "Fisika").pipe(
+          Effect.flip
+        );
+        expect(again).toMatchObject({
+          _tag: "ClassSubjectTaken",
+          code: "CLASS_SUBJECT_TAKEN",
+        });
+      })
+  );
+
+  it.effect(
     "lets a name come back once its class is archived, and keeps the archived address",
     () =>
       Effect.gen(function* () {
@@ -132,7 +207,11 @@ describe("classroom/classes create", () => {
         const bare = yield* classOf(fixture, symbols.id, "!!").pipe(
           Effect.flip
         );
-        const homeroom = yield* classOf(fixture, symbols.id).pipe(Effect.flip);
+        const sdTerm = yield* period(fixture, yield* sdUnit(fixture));
+        const sdSymbols = yield* cohort(fixture, sdTerm.id, "??");
+        const homeroom = yield* classOf(fixture, sdSymbols.id).pipe(
+          Effect.flip
+        );
         expect([bare, homeroom]).toMatchObject([
           { _tag: "ClassAddressEmpty", code: "CLASS_ADDRESS_EMPTY" },
           { _tag: "ClassAddressEmpty", code: "CLASS_ADDRESS_EMPTY" },
@@ -155,11 +234,13 @@ describe("classroom/classes create", () => {
                 writer.table("classes").insert({
                   cohortId: x1.id,
                   createdAt: 0,
-                  name: `Kelas ${index}`,
-                  nameKey: `kelas ${index}`,
+                  name: `Kelas ${index} X-1`,
+                  nameKey: `kelas ${index} x-1`,
                   periodId: term.id,
-                  slug: `kelas-${index}`,
+                  slug: `kelas-${index}-x-1`,
                   status: "archived",
+                  subject: `Kelas ${index}`,
+                  subjectKey: `kelas ${index}`,
                   tenantId: fixture.tenants.nf,
                   unitId: fixture.units.smp,
                   updatedAt: 0,
@@ -221,7 +302,7 @@ describe("classroom/classes create", () => {
     })
   );
 
-  it.effect("refuses a class in a cohort of an archived school", () =>
+  it.effect("refuses a class in a cohort of an archived unit", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const cohortId = yield* fixture.run(

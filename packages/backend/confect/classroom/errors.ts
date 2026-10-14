@@ -10,6 +10,33 @@ export class ClassNameTaken extends Schema.TaggedError<ClassNameTaken>()(
   )
 ) {}
 
+/** A subject that another active class of the cohort already teaches, when a rename gave that class another name. */
+export class ClassSubjectTaken extends Schema.TaggedError<ClassSubjectTaken>()(
+  "ClassSubjectTaken",
+  refusal(
+    "CLASS_SUBJECT_TAKEN",
+    "Another active class of this cohort already teaches this subject."
+  )
+) {}
+
+/** A class without a subject outside an SD cohort, where a class names the subject it teaches. */
+export class ClassSubjectRequired extends Schema.TaggedError<ClassSubjectRequired>()(
+  "ClassSubjectRequired",
+  refusal(
+    "CLASS_SUBJECT_REQUIRED",
+    "Only the homeroom class of an SD cohort may have no subject."
+  )
+) {}
+
+/** A subject in an SD cohort, which holds only its homeroom class and that class has no subject. */
+export class ClassSubjectNotAllowed extends Schema.TaggedError<ClassSubjectNotAllowed>()(
+  "ClassSubjectNotAllowed",
+  refusal(
+    "CLASS_SUBJECT_NOT_ALLOWED",
+    "An SD cohort holds only its homeroom class, which has no subject."
+  )
+) {}
+
 /** Creating a class in a cohort that already holds the most classes it can. */
 export class ClassLimit extends Schema.TaggedError<ClassLimit>()(
   "ClassLimit",

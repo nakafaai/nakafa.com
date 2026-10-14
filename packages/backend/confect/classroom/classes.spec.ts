@@ -11,6 +11,9 @@ import {
   ClassAddressEmpty,
   ClassLimit,
   ClassNameTaken,
+  ClassSubjectNotAllowed,
+  ClassSubjectRequired,
+  ClassSubjectTaken,
 } from "@repo/backend/confect/classroom/errors";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -58,6 +61,9 @@ export default GroupSpec.make()
           ClassAddressEmpty,
           ClassLimit,
           ClassNameTaken,
+          ClassSubjectNotAllowed,
+          ClassSubjectRequired,
+          ClassSubjectTaken,
         ]),
     }).middleware(CohortAccess, { action: "class.create", arg: "cohortId" })
   )

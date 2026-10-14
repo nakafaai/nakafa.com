@@ -385,6 +385,7 @@ describe("classroom/teachers read", () => {
               periodId,
               slug: "asing-1a",
               status: "active",
+              subjectKey: "",
               tenantId: fixture.tenants.other,
               unitId: fixture.units.sd,
               updatedAt: 0,

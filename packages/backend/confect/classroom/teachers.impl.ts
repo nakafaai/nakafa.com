@@ -130,6 +130,7 @@ const list = FunctionImpl.make(
   })
 );
 
+/** The subject teachers of a class: assign, remove, and list them. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(assign),
   Layer.provide(remove),

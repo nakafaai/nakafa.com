@@ -80,6 +80,28 @@ describe("classroom/classes read and roles", () => {
       ]);
     })
   );
+
+  it.effect(
+    "lists the classes of one subject together, by cohort name, before a subject that extends it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        const x2 = yield* cohort(fixture, term.id, "X-2");
+        yield* classOf(fixture, x1.id, "Fisika Lanjut");
+        yield* classOf(fixture, x2.id, "Fisika");
+        yield* classOf(fixture, x1.id, "Fisika");
+        const listed = yield* fixture
+          .as("admin")
+          .query(list, { ...firstPage, periodId: term.id, slug: nf });
+        expect(Arr.map(listed.page, (row) => row.name)).toEqual([
+          "Fisika X-1",
+          "Fisika X-2",
+          "Fisika Lanjut X-1",
+        ]);
+      })
+  );
 });
 
 describe("classroom/classes rename and archive", () => {
@@ -201,7 +223,7 @@ describe("classroom/classes rename and archive", () => {
   );
 });
 
-describe("classroom/classes of an archived period or school", () => {
+describe("classroom/classes of an archived period or unit", () => {
   it.effect(
     "locks an existing class once its period is archived, and keeps it readable",
     () =>
@@ -238,7 +260,7 @@ describe("classroom/classes of an archived period or school", () => {
   );
 
   it.effect(
-    "locks a class of an archived school, even when its own cohort and period are active",
+    "locks a class of an archived unit, even when its own cohort and period are active",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -270,6 +292,8 @@ describe("classroom/classes of an archived period or school", () => {
               periodId,
               slug: "fisika-10a",
               status: "active",
+              subject: "Fisika",
+              subjectKey: "fisika",
               tenantId: fixture.tenants.nf,
               unitId: fixture.units.smk,
               updatedAt: 0,
@@ -346,6 +370,7 @@ describe("classroom/classes members", () => {
               periodId,
               slug: "asing-1a",
               status: "active",
+              subjectKey: "",
               tenantId: fixture.tenants.other,
               unitId: fixture.units.sd,
               updatedAt: 0,

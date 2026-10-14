@@ -1,7 +1,8 @@
 import type { GenericId } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { slugOf, type tenancyFixture } from "@repo/backend/test/tenancy";
-import type { Effect } from "effect";
+import { Effect } from "effect";
 
 /** The school's address in every call of the classroom tests. */
 export const nf = slugOf("nf");
@@ -25,48 +26,76 @@ const classes = refs.public.classroom.classes;
 const teachers = refs.public.classroom.teachers;
 
 /** Creates a planned period of one unit as the school's Admin. */
-export const period = (
+export const period = Effect.fn("test.classroom.period")(function* (
   fixture: Fixture,
   unitId: GenericId.GenericId<"tenantUnits">
-) =>
-  fixture.as("admin").mutation(periods.create, {
+) {
+  return yield* fixture.as("admin").mutation(periods.create, {
     end: "2026-12-19",
     name: "Ganjil 2026/2027",
     slug: nf,
     start: "2026-07-13",
     unitId,
   });
+});
+
+/**
+ * Adds an SD unit to the school. The fixture seeds its SD unit in the other
+ * school only, so a test that makes a homeroom class adds this one.
+ */
+export const sdUnit = Effect.fn("test.classroom.sdUnit")(function* (
+  fixture: Fixture
+) {
+  return yield* fixture.run(
+    Effect.flatMap(DatabaseWriter, (writer) =>
+      writer.table("tenantUnits").insert({
+        contentLanguage: "id",
+        level: "sd",
+        name: "SD Nakafa",
+        status: "active",
+        tenantId: fixture.tenants.nf,
+        timeZone: "Asia/Jakarta",
+      })
+    )
+  );
+});
 
 /** Creates one cohort of a period as the school's Admin. */
-export const cohort = (
+export const cohort = Effect.fn("test.classroom.cohort")(function* (
   fixture: Fixture,
   periodId: GenericId.GenericId<"tenantPeriods">,
   name: string
-) =>
-  fixture
+) {
+  return yield* fixture
     .as("admin")
     .mutation(cohorts.create, { grade: 10, name, periodId, slug: nf });
+});
 
-/** Creates a class of a cohort as the Admin, named for its subject when it has one. */
-export const classOf = (
+/**
+ * Creates a class of a cohort as the Admin. A class of an SMP cohort names its
+ * subject, and the homeroom class of an SD cohort takes none.
+ */
+export const classOf = Effect.fn("test.classroom.classOf")(function* (
   fixture: Fixture,
   cohortId: GenericId.GenericId<"tenantCohorts">,
   subject?: string
-) =>
-  fixture.as("admin").mutation(classes.create, {
+) {
+  return yield* fixture.as("admin").mutation(classes.create, {
     cohortId,
     slug: nf,
     ...(subject === undefined ? {} : { subject }),
   });
+});
 
 /** Assigns one Person to teach a class as the Admin. */
-export const teach = (
+export const teach = Effect.fn("test.classroom.teach")(function* (
   fixture: Fixture,
   classId: GenericId.GenericId<"classes">,
   personId: GenericId.GenericId<"tenantPeople">
-) =>
-  fixture.as("admin").mutation(teachers.assign, {
+) {
+  return yield* fixture.as("admin").mutation(teachers.assign, {
     classId,
     personId,
     slug: nf,
   });
+});

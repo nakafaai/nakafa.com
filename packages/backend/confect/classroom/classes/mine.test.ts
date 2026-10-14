@@ -105,6 +105,45 @@ describe("classroom/classes mine", () => {
   );
 
   it.effect(
+    "lists a teacher's classes by name, whatever order they were made in",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        const subjects = [
+          "Matematika",
+          "Biologi",
+          "Kimia",
+          "Fisika",
+          "Sejarah",
+          "Ekonomi",
+        ];
+        yield* Effect.forEach(
+          subjects,
+          (subject) =>
+            classOf(fixture, x1.id, subject).pipe(
+              Effect.flatMap((made) =>
+                teach(fixture, made.id, fixture.people.teacher.personId)
+              )
+            ),
+          { discard: true }
+        );
+        const taught = yield* fixture
+          .as("teacher")
+          .query(mine, { periodId: term.id, slug: nf });
+        expect(Arr.map(taught, (row) => row.name)).toEqual([
+          "Biologi X-1",
+          "Ekonomi X-1",
+          "Fisika X-1",
+          "Kimia X-1",
+          "Matematika X-1",
+          "Sejarah X-1",
+        ]);
+      })
+  );
+
+  it.effect(
     "lists a class once when its teacher is also placed in its cohort",
     () =>
       Effect.gen(function* () {

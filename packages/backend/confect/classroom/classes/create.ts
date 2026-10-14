@@ -11,6 +11,7 @@ import {
   classNameKey,
   classNameOf,
   classSlugOf,
+  classSubjectKey,
   classView,
 } from "@repo/backend/confect/classroom/class";
 import spec from "@repo/backend/confect/classroom/classes.spec";
@@ -18,6 +19,9 @@ import {
   ClassAddressEmpty,
   ClassLimit,
   ClassNameTaken,
+  ClassSubjectNotAllowed,
+  ClassSubjectRequired,
+  ClassSubjectTaken,
 } from "@repo/backend/confect/classroom/errors";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Cohort } from "@repo/backend/confect/tenancy/access";
@@ -56,9 +60,11 @@ const freeAddress = (
 
 /**
  * Creates an active class of a cohort, named for its subject and its cohort. An
- * active class of the cohort may not have the same name, and a cohort holds at
- * most CLASS_LIMIT classes, archived ones included. The address is the name's
- * letters and digits, unique within the period.
+ * SD cohort holds only its homeroom class, which has no subject, and every other
+ * cohort holds classes that name a subject. An active class of the cohort may not
+ * have the same name or the same subject, and a cohort holds at most CLASS_LIMIT
+ * classes, archived ones included. The address is the name's letters and digits,
+ * unique within the period.
  */
 export const create = FunctionImpl.make(
   databaseSchema,
@@ -68,6 +74,17 @@ export const create = FunctionImpl.make(
     const { person } = yield* Member;
     const cohort = yield* Cohort;
     const reader = yield* DatabaseReader;
+    const unit = yield* reader
+      .table("tenantUnits")
+      .get(cohort.unitId)
+      .pipe(Effect.orDie);
+    const sd = unit.level === "sd";
+    if (sd && subject !== undefined) {
+      return yield* new ClassSubjectNotAllowed();
+    }
+    if (!sd && subject === undefined) {
+      return yield* new ClassSubjectRequired();
+    }
     const name = classNameOf(cohort.name, subject);
     const nameKey = classNameKey(name);
     const sameName = yield* reader
@@ -82,6 +99,20 @@ export const create = FunctionImpl.make(
       .pipe(Effect.orDie);
     if (Option.isSome(sameName)) {
       return yield* new ClassNameTaken();
+    }
+    const subjectKey = classSubjectKey(subject);
+    const sameSubject = yield* reader
+      .table("classes")
+      .index("by_cohortId_and_status_and_subjectKey", (query) =>
+        query
+          .eq("cohortId", cohort._id)
+          .eq("status", "active")
+          .eq("subjectKey", subjectKey)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isSome(sameSubject)) {
+      return yield* new ClassSubjectTaken();
     }
     const cohortClasses = yield* reader
       .table("classes")
@@ -109,6 +140,7 @@ export const create = FunctionImpl.make(
         periodId: cohort.periodId,
         slug,
         status: "active",
+        subjectKey,
         tenantId: cohort.tenantId,
         unitId: cohort.unitId,
         updatedAt: now,

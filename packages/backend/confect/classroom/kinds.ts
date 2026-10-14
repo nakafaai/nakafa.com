@@ -46,7 +46,7 @@ export const classKind = Kind.make("class", "classes", {
   relations: ["classMember", "subjectTeacher"],
 });
 
-/** A class is created in its cohort, so an archived cohort, period, or school refuses it. */
+/** A class is created in its cohort, so an archived cohort, period, or unit refuses it. */
 const cohortClasses = Kind.extend(cohort, {
   actions: {
     "class.create": {
@@ -74,6 +74,7 @@ const periodClasses = Kind.extend(period, {
   published: [],
 });
 
+/** The classroom module's kinds for the access catalog: the class, and its extensions on the cohort and the period. */
 export const classroom = {
   extensions: [cohortClasses, periodClasses],
   kinds: [classKind],

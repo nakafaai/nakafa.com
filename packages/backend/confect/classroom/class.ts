@@ -1,5 +1,6 @@
 import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { COHORT_NAME_MAX_LENGTH } from "@repo/backend/confect/tenancy/cohort";
 import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
 
@@ -10,24 +11,27 @@ import { Schema } from "effect";
  */
 export const CLASS_LIMIT = 64;
 
+/** The most characters a subject may have. */
+const SUBJECT_MAX_LENGTH = 80;
+
 /** The school's own name for a subject, one line, 1 to 80 characters. */
 export const ClassSubject = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
   Schema.isMinLength(1),
-  Schema.isMaxLength(80)
+  Schema.isMaxLength(SUBJECT_MAX_LENGTH)
 );
 
 /**
  * A class's name, one line, as lists show it: the subject and the cohort name,
- * such as `Fisika X-1`. It is at most 121 characters: 80 for the subject, a
- * space, and the 40 of a cohort name.
+ * such as `Fisika X-1`. It is at most the longest subject, a space, and the
+ * longest cohort name.
  */
 export const ClassName = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
   Schema.isMinLength(1),
-  Schema.isMaxLength(121)
+  Schema.isMaxLength(SUBJECT_MAX_LENGTH + 1 + COHORT_NAME_MAX_LENGTH)
 );
 
 /** A class is active until it is archived, and an archived class stays readable. */
@@ -35,6 +39,13 @@ export const ClassStatus = Schema.Literals(["active", "archived"]);
 
 /** The name in the form that uniqueness and order compare: the lowercase name. */
 export const classNameKey = (name: string) => name.toLowerCase();
+
+/**
+ * The subject in the form that uniqueness and order compare: its lowercase form.
+ * The homeroom class of a cohort has no subject, so its key is the empty string.
+ */
+export const classSubjectKey = (subject: string | undefined) =>
+  subject === undefined ? "" : subject.toLowerCase();
 
 /**
  * The name a class gets at creation: its subject and its cohort name, such as
@@ -59,8 +70,9 @@ export const classSlugOf = (name: string) =>
  * A class of one cohort: one subject taught to one cohort in one period. The
  * tenant, unit, period, and cohort are copied from the cohort at creation, for
  * indexing and for the locks of its containers. `nameKey` is the lowercase name,
- * which the uniqueness check compares. `createdAt` and `updatedAt` are epoch
- * milliseconds read from the clock.
+ * which the name check compares, and `subjectKey` is the lowercase subject, which
+ * the subject check compares and the list sorts by. `createdAt` and `updatedAt`
+ * are epoch milliseconds read from the clock.
  */
 export const classValidator = Schema.Struct({
   cohortId: Id("tenantCohorts"),
@@ -71,6 +83,7 @@ export const classValidator = Schema.Struct({
   slug: Schema.String,
   status: ClassStatus,
   subject: Schema.optionalKey(ClassSubject),
+  subjectKey: Schema.String,
   tenantId: Id("tenants"),
   unitId: Id("tenantUnits"),
   updatedAt: Schema.Finite,
