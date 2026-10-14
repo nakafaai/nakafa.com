@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -9,8 +10,14 @@ import { finalizeAccountDeletion } from "@repo/backend/confect/auth/deletion/fin
 import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
+  grantsOf,
+  operatorAccount,
+  personOf,
+} from "@repo/backend/test/operators";
+import {
   invitePerson,
   journal,
+  slugOf,
   suspend,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -19,6 +26,10 @@ import { Array as Arr, Effect, Schema } from "effect";
 const NOW = Date.UTC(2026, 9, 13, 9, 0, 0);
 const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
 const BATCH_PLUS_ONE = ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE + 1;
+const nf = slugOf("nf");
+const requestVisit = refs.public.operators.visits.request;
+const approve = refs.public.operators.visits.approve;
+const endVisit = refs.public.operators.visits.end;
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
@@ -107,6 +118,107 @@ describe("auth/deletion release", () => {
             actor: { kind: "system" },
             change: { type: "person.released" },
             subject: { id: personId, kind: "person" },
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "ends a deleted operator's approved visit with its account, and suspends the released Person",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const staff = yield* operatorAccount(fixture, "leaving");
+        const visit = yield* staff.client.mutation(requestVisit, {
+          minutes: 60,
+          note: "Akun dihapus",
+          reason: "support",
+          tenantId: fixture.tenants.nf,
+        });
+        yield* fixture.as("admin").mutation(approve, {
+          slug: nf,
+          visitId: visit.id,
+        });
+        const person = yield* personOf(fixture, staff.userId);
+        yield* fixture.run(finalizeAccountDeletion(staff.authUserId));
+        const released = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            Effect.all({
+              person: reader.table("tenantPeople").get(person._id),
+              visit: reader.table("tenantVisits").get(visit.id),
+            })
+          )
+        );
+        expect(released.person).toMatchObject({
+          account: { state: "unclaimed" },
+          status: "suspended",
+        });
+        expect(released.visit.state).toEqual({
+          at: NOW,
+          reason: "left",
+          status: "ended",
+        });
+        expect(yield* grantsOf(fixture, person._id)).toEqual([]);
+        expect(Arr.takeRight(yield* fixture.run(journal), 4)).toMatchObject([
+          {
+            actor: { kind: "system" },
+            change: { type: "person.released" },
+            subject: { id: person._id, kind: "person" },
+          },
+          {
+            actor: { kind: "system" },
+            change: { reason: "left", type: "grant.ended" },
+            subject: { id: person._id, kind: "person" },
+          },
+          {
+            actor: { kind: "system" },
+            change: { type: "person.suspended" },
+            subject: { id: person._id, kind: "person" },
+          },
+          {
+            actor: { kind: "system" },
+            change: { reason: "left", type: "visit.ended" },
+            subject: { id: visit.id, kind: "visit" },
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "releases a deleted operator whose visit already ended, and journals only the release",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const staff = yield* operatorAccount(fixture, "returned");
+        const visit = yield* staff.client.mutation(requestVisit, {
+          minutes: 60,
+          note: "Sudah pulang",
+          reason: "support",
+          tenantId: fixture.tenants.nf,
+        });
+        yield* fixture.as("admin").mutation(approve, {
+          slug: nf,
+          visitId: visit.id,
+        });
+        const person = yield* personOf(fixture, staff.userId);
+        yield* staff.client.mutation(endVisit, {
+          slug: nf,
+          visitId: visit.id,
+        });
+        yield* fixture.run(finalizeAccountDeletion(staff.authUserId));
+        const released = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantPeople").get(person._id)
+          )
+        );
+        expect(released).toMatchObject({
+          account: { state: "unclaimed" },
+          status: "suspended",
+        });
+        expect(Arr.takeRight(yield* fixture.run(journal), 1)).toMatchObject([
+          {
+            change: { type: "person.released" },
+            subject: { id: person._id, kind: "person" },
           },
         ]);
       })
