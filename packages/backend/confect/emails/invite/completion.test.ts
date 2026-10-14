@@ -10,6 +10,7 @@ import type { FunctionArgs } from "convex/server";
 import { Array as Arr, Effect, Exit, Option, Schema } from "effect";
 
 const address = Schema.decodeSync(Email)("kepala@harapan.example.test");
+const requestedAt = Date.UTC(2026, 9, 13, 9, 0, 0);
 
 /** Fake timers keep the workflow from running its steps; the tests end it by hand. */
 beforeEach(() => {
@@ -24,7 +25,7 @@ const started = Effect.gen(function* () {
   );
   const workflowId = yield* fixture.run(
     Effect.gen(function* () {
-      yield* startInviteEmail(inviteId, "id");
+      yield* startInviteEmail(inviteId, "id", requestedAt);
       const ctx = yield* MutationCtx;
       const { page } = yield* Effect.promise(() => workflow.list(ctx));
       return yield* Effect.fromOption(

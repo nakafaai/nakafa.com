@@ -27,9 +27,9 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program/snapshot";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Exit } from "effect";
 
-const capturedAt = "2026-09-27T12:00:00.000Z";
 const material = makeMaterialProjection("en", 1, 1);
 const seedUser = Effect.fn("test.nina.context.user")(function* () {
   const writer = yield* DatabaseWriter;
@@ -77,12 +77,10 @@ describe("Nina signed learning context", () => {
             for (const slug of ["", "/home/", "subjects/missing"]) {
               const value = yield* resolveNinaContext(
                 { locale: "en", slug },
-                user,
-                capturedAt
+                user
               );
-              expect(value.page.verified).toBe(false);
+              expect(value.page.nina.learning.verified).toBe(false);
               expect(value.page.needsFetch).toBe(false);
-              expect(value.page.nina.snapshot.source).toBe("current-page");
               expect(value.user).toEqual({});
             }
           })
@@ -109,19 +107,32 @@ describe("Nina signed learning context", () => {
                   slug: material.publicPath,
                   ...(materialContextHint ? { materialContextHint } : {}),
                 },
-                { ...user, role: "student" },
-                capturedAt
+                { ...user, role: "student" }
               );
-              expect(value.page).toMatchObject({
-                verified: true,
+              // The whole page is compared, so any field beside these would
+              // fail it.
+              expect(value.page).toEqual({
+                locale: "en",
                 needsFetch: true,
+                nina: {
+                  learning: {
+                    assetId: material.graph.assetId,
+                    locale: "en",
+                    materialKey: material.materialKey,
+                    section: expect.any(String),
+                    slug: material.publicPath,
+                    sourcePath: expect.any(String),
+                    title: material.metadata.title,
+                    url: `${SITE_ORIGIN}/en/${material.publicPath}`,
+                    verified: true,
+                  },
+                  tools: {
+                    allowPageFetch: true,
+                    evidenceScope: "verified-page",
+                  },
+                },
+                slug: material.publicPath,
               });
-              expect(value.page.nina.learning).toMatchObject({
-                assetId: material.graph.assetId,
-                title: material.metadata.title,
-                materialKey: material.materialKey,
-              });
-              expect(value.page.nina.placement).toBeUndefined();
               expect(value.user.role).toBe("student");
             }
           })
@@ -158,8 +169,7 @@ describe("Nina signed learning context", () => {
                   slug: material.publicPath,
                   materialContextHint: "technical-program-1~group-1",
                 },
-                user,
-                capturedAt
+                user
               );
               expect(value.page.nina.placement).toMatchObject({
                 programKey: "technical-program-1",
@@ -188,8 +198,7 @@ describe("Nina signed learning context", () => {
             yield* activateMaterialCatalog([material]);
             const original = yield* resolveNinaContext(
               { locale: "en", slug: material.publicPath },
-              user,
-              capturedAt
+              user
             );
             const writer = yield* DatabaseWriter;
             const chatId = yield* writer.table("chats").insert({
@@ -213,36 +222,37 @@ describe("Nina signed learning context", () => {
             const continued = yield* resolveNinaContext(
               { locale: "id", slug: "chat" },
               user,
-              capturedAt,
               chatId
             );
-            expect(continued.page).toMatchObject({
+            // The learning asset and its tool policy are the current page's.
+            expect(continued.page).toEqual({
               locale: "id",
-              slug: "chat",
-              verified: false,
               needsFetch: false,
-            });
-            // The learning asset, its tool policy and its source are the current page's.
-            expect(continued.page.nina.learning).toEqual({
-              locale: "id",
+              nina: {
+                learning: {
+                  locale: "id",
+                  slug: "chat",
+                  url: `${SITE_ORIGIN}/id/chat`,
+                  verified: false,
+                },
+                tools: {
+                  allowPageFetch: false,
+                  evidenceScope: "general-learning",
+                },
+              },
               slug: "chat",
-              url: continued.page.url,
-              verified: false,
             });
-            expect(continued.page.url).not.toBe(original.page.url);
-            expect(continued.page.nina.tools.allowPageFetch).toBe(false);
-            expect(continued.page.nina.snapshot.source).toBe("current-page");
-            expect(continued.page.nina.transition.reason).toBe("page-context");
+            expect(continued.page.nina.learning.url).not.toBe(
+              original.page.nina.learning.url
+            );
             const current = yield* resolveNinaContext(
               { locale: "en", slug: material.publicPath },
               user,
-              capturedAt,
               chatId
             );
             expect(current.page.nina.learning).toEqual(
               original.page.nina.learning
             );
-            expect(current.page.nina.snapshot.source).toBe("current-page");
           })
         );
       })
@@ -269,8 +279,7 @@ describe("Nina signed learning context", () => {
               .patch(row.value._id, { projectionJson: "{}" });
             const failure = yield* resolveNinaContext(
               { locale: "en", slug: material.publicPath },
-              user,
-              capturedAt
+              user
             ).pipe(Effect.flip);
             expect(failure.code).toBe("NINA_CONTEXT_FAILED");
           })
@@ -287,15 +296,14 @@ describe("Nina signed learning context", () => {
           const user = yield* seedUser();
           return yield* resolveNinaContext(
             { locale: "id", slug: set.publicPath },
-            user,
-            capturedAt
+            user
           );
         }).pipe(
           Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
         )
       );
       // Try-out pages have no signed Markdown, so a forced read could only fail.
-      expect(context.page.verified).toBe(false);
+      expect(context.page.nina.learning.verified).toBe(false);
       expect(context.page.needsFetch).toBe(false);
       expect(context.page.nina.tools.allowPageFetch).toBe(false);
     });
@@ -309,11 +317,7 @@ describe("Nina signed learning context", () => {
       ).pipe(Effect.orDie);
     await f.expectExit(
       Effect.flatMap(learner(), (user) =>
-        resolveNinaContext(
-          { locale: "en", slug: "", focus: f.focus },
-          user,
-          capturedAt
-        )
+        resolveNinaContext({ locale: "en", slug: "", focus: f.focus }, user)
       ),
       (exit) =>
         expect(exit).toMatchObject({
@@ -324,12 +328,7 @@ describe("Nina signed learning context", () => {
     await f.focusTurn();
     await f.expectExit(
       Effect.flatMap(learner(), (user) =>
-        resolveNinaContext(
-          { locale: "en", slug: "" },
-          user,
-          capturedAt,
-          f.chatId
-        )
+        resolveNinaContext({ locale: "en", slug: "" }, user, f.chatId)
       ),
       (exit) =>
         expect(exit).toMatchObject({
@@ -342,11 +341,7 @@ describe("Nina signed learning context", () => {
     );
     await f.expectExit(
       Effect.flatMap(learner(), (user) =>
-        resolveNinaContext(
-          { locale: "en", slug: "", focus: f.focus },
-          user,
-          capturedAt
-        )
+        resolveNinaContext({ locale: "en", slug: "", focus: f.focus }, user)
       ),
       (exit) => {
         expect(Exit.isFailure(exit)).toBe(true);
@@ -357,12 +352,7 @@ describe("Nina signed learning context", () => {
     );
     await f.expectExit(
       Effect.flatMap(learner(), (user) =>
-        resolveNinaContext(
-          { locale: "en", slug: "" },
-          user,
-          capturedAt,
-          f.chatId
-        )
+        resolveNinaContext({ locale: "en", slug: "" }, user, f.chatId)
       ),
       (exit) =>
         expect(Exit.isSuccess(exit) && exit.value.page.nina.focus).toBe(

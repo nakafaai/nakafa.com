@@ -1,21 +1,9 @@
+import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, HashSet, Option } from "effect";
+import { isProfileTab, readProfileRoot } from "@/lib/profile/route";
 import { userSettingsSections } from "@/lib/settings/routes";
-
-const APPLICATION_ROUTE_ROOTS = HashSet.make(
-  "articles",
-  "auth",
-  "chat",
-  "contributor",
-  "home",
-  "og",
-  "onboarding",
-  "pricing",
-  "quran",
-  "search",
-  "user"
-);
 
 type PublicLocale = (typeof routing.locales)[number];
 
@@ -46,26 +34,23 @@ function isOnboardingPath(segments: readonly string[]) {
 }
 
 function isUserPath(segments: readonly string[]) {
-  const [identity, child] = segments;
-
-  if (!identity) {
-    return false;
-  }
-
-  if (identity === "settings") {
-    // The settings table owns which pages exist below `user/settings`.
-    return Arr.some(
+  // The settings table owns which pages exist below `user`. A profile has no
+  // address here: it lives at `@username`, which the profile root serves.
+  return (
+    segments[0] === "settings" &&
+    Arr.some(
       userSettingsSections,
       ({ href }) => href === `/user/${Arr.join(segments, "/")}`
-    );
-  }
-
-  return segments.length === 1 || (segments.length === 2 && child === "chat");
+    )
+  );
 }
 
 /** Checks whether one root belongs to a concrete application route. */
 export function isApplicationRouteRoot(locale: PublicLocale, root: string) {
-  if (HashSet.has(APPLICATION_ROUTE_ROOTS, root)) {
+  if (
+    HashSet.has(APPLICATION_ROUTE_ROOTS, root) ||
+    Option.isSome(readProfileRoot(root))
+  ) {
     return true;
   }
 
@@ -92,6 +77,10 @@ export function isApplicationRoutePath(
   const publicSurface = readPublicSurface(locale, root);
   if (Option.isSome(publicSurface)) {
     return isPublicSurfacePath(publicSurface.value, segments);
+  }
+
+  if (Option.isSome(readProfileRoot(root))) {
+    return isProfileTab(segments);
   }
 
   if (Arr.contains(["contributor", "home", "pricing", "search"], root)) {

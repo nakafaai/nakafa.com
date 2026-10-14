@@ -93,6 +93,7 @@ export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
       "NINA_REQUEST_CONFLICT",
       "NINA_WRITE_FAILED",
       "NINA_CONTEXT_FAILED",
+      "NINA_MESSAGE_SIZE",
     ]),
     message: Schema.String,
   }

@@ -247,21 +247,23 @@ describe("memory capture", () => {
     );
   });
 
-  it("cuts the list of known memories at its token budget, says that others are left out, and lets no number name one the model could not read", async () => {
+  it("lists all twelve known memories, each cut to its first characters, and confirms none for a place the list does not show", async () => {
     const f = await createCapturingTest();
-    // Twelve memories of 236 rare characters each are more than the model reads.
+    // Twelve memories of 540 rare characters each. A line shows only the first
+    // 240 of them, so the list holds all twelve, and none in full.
     const rare = Arr.join(
-      Arr.makeBy(230, (index) => String.fromCodePoint(0x4e_00 + index * 7)),
+      Arr.makeBy(540, (index) => String.fromCodePoint(0x4e_00 + index * 7)),
       ""
     );
     await f.fill(12, { author: "learner", text: `kelas ${rare}` });
-    // The model names the twelfth place, which the cut list does not reach.
-    const model = answers({ ...level, known: 12 });
+    // The model names the thirteenth place, which the list does not show.
+    const model = answers({ ...level, known: 13 });
     await f.capture();
     const prompt = encodeJsonText(model.doGenerateCalls[0]?.prompt);
-    expect(prompt).toContain("Other memories are not listed.");
-    expect(Arr.length(knownLines(prompt))).toBeLessThan(12);
-    // It names nothing, so the candidate is a new memory and no memory is confirmed.
+    expect(Arr.length(knownLines(prompt))).toBe(12);
+    expect(prompt).toContain(rare.slice(0, 200));
+    expect(prompt).not.toContain(rare);
+    // It names no listed place, so the candidate is a new memory and no memory is confirmed.
     expect(await f.stored()).toHaveLength(13);
     expect(Arr.map(await f.stored(), (row) => row.confirmedAt)).toEqual([
       ...Arr.makeBy(12, (index) => index + 1),

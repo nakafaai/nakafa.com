@@ -177,6 +177,14 @@ export function memoryTools(f: NinaTest) {
   const keys = () =>
     f.t.query((ctx) => ctx.db.query("ninaMemoryKeys").collect());
 
+  /** Every stored restore record: a deleted memory kept for its Undo. */
+  const restores = () =>
+    f.t.query((ctx) => ctx.db.query("ninaMemoryRestores").collect());
+
+  /** One stored memory row as stored, or nothing when it is gone. */
+  const rowOf = (id: Docs["ninaMemories"]["_id"]) =>
+    f.t.query((ctx) => ctx.db.get("ninaMemories", id));
+
   /** The opened text of every stored memory of a learner, in storage order. */
   const texts = (userId: UserId = f.identity.userId) =>
     f.t.mutation(async (ctx) => {
@@ -271,6 +279,8 @@ export function memoryTools(f: NinaTest) {
     keys,
     markCleared,
     openLesson,
+    restores,
+    rowOf,
     seed,
     stored,
     stranger,

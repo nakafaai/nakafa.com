@@ -5,14 +5,16 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { authComponent } from "@repo/backend/confect/auth/client";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
 import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
+import { INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { signInWithGoogle } from "@repo/backend/test/auth";
 import { getFunctionName, makeFunctionReference } from "convex/server";
-import { Array as Arr } from "effect";
+import { Array as Arr, Duration } from "effect";
 
 const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
+const INVITE_TERM_MS = Duration.toMillis(INVITE_TERM);
 const claimRun = Ref.getFunctionReference(refs.internal.tenancy.claims.run);
 const claimName = getFunctionName(claimRun);
 const syncName = getFunctionName(
@@ -39,6 +41,7 @@ async function seedInvite(ctx: MutationCtx, email: string) {
   });
   await ctx.db.insert("tenantInvites", {
     channel: { email, kind: "email" },
+    expiresAt: NOW + INVITE_TERM_MS,
     personId,
     state: { status: "pending" },
     tenantId,
@@ -118,10 +121,33 @@ describe("auth/client", () => {
       email: "learner@example.com",
       image: "https://example.com/learner.png",
       name: "Synthetic learner",
+      username: "syntheticlearner",
     });
     const jobNames = Arr.map(stored.jobs, ({ name }) => name);
     expect(jobNames).toEqual([
       getFunctionName(internal.customers.actions.internal.syncCustomer),
+    ]);
+  });
+  it("gives a new account the username of its name, numbered when another account holds it", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation((ctx) =>
+      ctx.db.insert("users", {
+        authId: "auth-holder",
+        credits: 0,
+        creditsResetAt: 0,
+        email: "holder@example.com",
+        name: "Holder",
+        plan: "free",
+        username: "syntheticlearner",
+      })
+    );
+
+    await signInWithGoogle(test, "learner", NOW);
+
+    const users = await test.query((ctx) => ctx.db.query("users").collect());
+    expect(Arr.map(users, ({ username }) => username)).toEqual([
+      "syntheticlearner",
+      "syntheticlearner2",
     ]);
   });
   it("projects each Better Auth profile field without scheduling unchanged writes", async () => {

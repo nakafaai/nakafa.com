@@ -8,11 +8,7 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import {
-  boundText,
-  countTextTokens,
-  NINA_BUDGET,
-} from "@repo/backend/confect/nina/budget";
+import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import { checkCandidates } from "@repo/backend/confect/nina/memory/check";
@@ -80,38 +76,15 @@ const INSTRUCTIONS = Arr.join(
 type Known = (typeof NinaKnown.Type)["known"];
 
 /**
- * The memories the capture call lists: the best matches in their order, as many
- * as fit `NINA_BUDGET.captureKnown`. The model names a memory by its place on
- * the list, so a memory that the list loses cannot be named, and the write is
- * given exactly the memories that are listed.
+ * The known memories, one line each with its place, which is how the model
+ * names a memory. The query holds them to `MEMORY_KNOWN_LIMIT`, and a line shows
+ * the first `KNOWN_LENGTH` characters of its memory, so the whole list stays far
+ * within the budget of the call (about 3,800 tokens at most by the estimator).
  */
-function listedMemories(known: Known) {
-  const tokens = Arr.map(known, (note, index) =>
-    countTextTokens(knownLine(note, index + 1))
-  );
-  const totals = Arr.drop(
-    Arr.scan(tokens, 0, (total, line) => total + line),
-    1
-  );
-  return Arr.map(
-    Arr.takeWhile(
-      Arr.zip(known, totals),
-      ([, total]) => total <= NINA_BUDGET.captureKnown
-    ),
-    ([note]) => note
-  );
-}
-
-/** The listed memories, one line each with its place, and a note when the list lost some. */
-function formatKnown(known: Known, listed: Known) {
-  return Arr.isReadonlyArrayNonEmpty(listed)
+function formatKnown(known: Known) {
+  return Arr.isReadonlyArrayNonEmpty(known)
     ? Arr.join(
-        [
-          ...Arr.map(listed, (note, index) => knownLine(note, index + 1)),
-          ...(Arr.length(listed) < Arr.length(known)
-            ? ["Other memories are not listed."]
-            : []),
-        ],
+        Arr.map(known, (note, index) => knownLine(note, index + 1)),
         "\n"
       )
     : "None";
@@ -120,12 +93,10 @@ function formatKnown(known: Known, listed: Known) {
 /** What the model reads: today, the account, the memories it can name, and the learner's message. */
 function formatPrompt({
   learner,
-  listed,
   message,
   today,
 }: {
   readonly learner: typeof NinaKnown.Type;
-  readonly listed: Known;
   readonly message: string;
   readonly today: DateTime.DateTime;
 }) {
@@ -133,7 +104,7 @@ function formatPrompt({
     [
       `# Today\n\n${DateTime.formatIsoDateUtc(today)}`,
       `# Account\n\n${formatLearnerProfile(learner.profile) ?? "Account: none"}`,
-      `# Known Memories\n\n${formatKnown(learner.known, listed)}`,
+      `# Known Memories\n\n${formatKnown(learner.known)}`,
       `# Learner Message\n\n${boundText(message, NINA_BUDGET.captureMessage, "Message shortened.")}`,
     ],
     "\n\n"
@@ -171,7 +142,6 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
         userId: turn.userId,
       })
       .pipe(Effect.orDie);
-    const listed = listedMemories(learner.known);
     const today = yield* DateTime.now;
     const ctx = yield* ActionCtx;
     const handle = (yield* Gateway).language("background");
@@ -192,7 +162,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
               output: Output.object({
                 schema: createEffectSchema(NinaMemoryCapture),
               }),
-              prompt: formatPrompt({ learner, listed, message, today }),
+              prompt: formatPrompt({ learner, message, today }),
               timeout: handle.timeout,
             },
             { storageOptions: { saveMessages: "none" } }
@@ -215,7 +185,7 @@ export const captureMemory = Effect.fn("nina.memory.capture")(
     yield* (yield* MutationRunner)
       .runMutation(refs.internal.nina.memory.capture, {
         candidates,
-        seen: Arr.map(listed, Struct.pick(["confirmedAt", "id"])),
+        seen: Arr.map(learner.known, Struct.pick(["confirmedAt", "id"])),
         topics,
         turnId: turn._id,
         userId: turn.userId,

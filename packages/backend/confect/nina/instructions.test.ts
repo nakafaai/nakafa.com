@@ -5,7 +5,6 @@ import { getNakafaContent } from "@repo/backend/agent/content";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
-import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
 import { readNinaLearningPage } from "@repo/backend/confect/nina/contract/turn";
 import { readInstructions } from "@repo/backend/confect/nina/instructions";
 import { createNinaTest } from "@repo/backend/test/nina";
@@ -25,14 +24,9 @@ const NOW = Date.parse(runtime.currentDate);
 const LESSON = "material:lesson:mathematics:material-section:limits";
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 
-/**
- * Reads one fixture turn's instructions, or the typed failure's reason. `tools`
- * changes what the turn's page allows, as a page that stored other permissions
- * would.
- */
+/** Reads one fixture turn's instructions, or the typed failure's reason. */
 async function instructionsFor(
-  nina: Awaited<ReturnType<typeof createNinaTest>>,
-  tools: Partial<NinaContextPack["tools"]> = {}
+  nina: Awaited<ReturnType<typeof createNinaTest>>
 ) {
   const turn = Schema.decodeUnknownSync(ninaTurns.Doc)(
     await nina.t.query((ctx) => ctx.db.get("ninaTurns", nina.turnId))
@@ -41,16 +35,9 @@ async function instructionsFor(
     throw new Error("Expected one active Nina turn.");
   }
   const { url } = readNinaLearningPage(turn.page);
-  const page = {
-    ...turn.page,
-    nina: {
-      ...turn.page.nina,
-      tools: { ...turn.page.nina.tools, ...tools },
-    },
-  };
   return nina.t.action((ctx) =>
     Effect.runPromise(
-      readInstructions({ ...turn, page }, url).pipe(
+      readInstructions(turn, url).pipe(
         Effect.map(
           ({ capabilities, instructions, memories, paused, summary }) => ({
             capabilities,
@@ -246,27 +233,17 @@ describe("Nina instructions", () => {
     }
   });
 
-  it("leaves out a capability that the turn's page does not allow, with its rules, and keeps the others", async () => {
+  it("offers every capability on every page, with its rules, to a learner whose memory is on", async () => {
     const f = await createNinaTest();
-    const result = await instructionsFor(f, { allowMath: false });
-    // The prompt and the tools Nina is offered follow the page, as they follow the pause.
+    const result = await instructionsFor(f);
     expect(result).toMatchObject({
-      capabilities: ["nakafa", "deepResearch", "memory"],
+      capabilities: ["nakafa", "deepResearch", "math", "memory"],
     });
-    for (const absent of [
-      "- math: deterministic calculations",
-      "- math.given:",
-      "## math",
-    ]) {
-      expect(result).toHaveProperty(
-        "instructions",
-        expect.not.stringContaining(absent)
-      );
-    }
     for (const present of [
       "- Nakafa: Nakafa-owned lessons",
       "## Nakafa",
       "## deepResearch",
+      "## math",
       "## memory",
     ]) {
       expect(result).toHaveProperty(
