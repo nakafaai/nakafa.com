@@ -3,6 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
 import {
+  type PlayerModeParam,
+  readPlayerModeParam,
+} from "@/components/player/mode";
+import { readPlayerMode } from "@/components/player/server";
+import {
   createRetainedTryoutMetadata,
   generateTryoutRouteMetadata,
 } from "@/components/tryout/catalog/metadata";
@@ -85,8 +90,12 @@ export async function generateMetadata({
     set,
     track,
   } = await params;
-  const capability = readTryoutRouteAttemptCapability(await searchParams);
-  if (capability.kind === "invalid") {
+  const query = await searchParams;
+  const capability = readTryoutRouteAttemptCapability(query);
+  if (
+    capability.kind === "invalid" ||
+    readPlayerModeParam(query).kind === "invalid"
+  ) {
     notFound();
   }
   const locale = getLocaleOrThrow(localeParam);
@@ -152,8 +161,10 @@ export default async function Page({
     set,
     track,
   } = await params;
-  const capability = readTryoutRouteAttemptCapability(await searchParams);
-  if (capability.kind === "invalid") {
+  const query = await searchParams;
+  const capability = readTryoutRouteAttemptCapability(query);
+  const view = readPlayerModeParam(query);
+  if (capability.kind === "invalid" || view.kind === "invalid") {
     notFound();
   }
   const route = {
@@ -173,6 +184,7 @@ export default async function Page({
         route={route}
         sectionPath={sectionPath}
         setHref={setHref}
+        view={view}
       />
     );
   }
@@ -195,7 +207,12 @@ export default async function Page({
         />
       }
     >
-      <CurrentTryoutSection page={page} route={route} setHref={setHref} />
+      <CurrentTryoutSection
+        page={page}
+        route={route}
+        setHref={setHref}
+        view={view}
+      />
     </Suspense>
   );
 }
@@ -209,10 +226,12 @@ async function CurrentTryoutSection({
   page,
   route,
   setHref,
+  view,
 }: {
   page: TryoutSectionPage;
   route: TryoutSectionRoute;
   setHref: string;
+  view: PlayerModeParam;
 }) {
   const token = await getToken();
   const attemptPage = token
@@ -237,6 +256,7 @@ async function CurrentTryoutSection({
         attemptPage,
         publicHref: setHref,
       })}
+      view={view}
     />
   );
 }
@@ -247,11 +267,13 @@ async function RetainedTryoutSection({
   route,
   sectionPath,
   setHref,
+  view,
 }: {
   attemptId: string;
   route: TryoutSectionRoute;
   sectionPath: string;
   setHref: string;
+  view: PlayerModeParam;
 }) {
   const retained = await readRetainedSectionPage(
     route.locale,
@@ -275,6 +297,7 @@ async function RetainedTryoutSection({
         attemptPage,
         publicHref: setHref,
       })}
+      view={view}
     />
   );
 }
@@ -285,11 +308,13 @@ async function ResolvedTryoutSection({
   page,
   route,
   setHref,
+  view,
 }: {
   attemptPage: SectionAttemptPage;
   page: TryoutSectionPage;
   route: TryoutSectionRoute;
   setHref: string;
+  view: PlayerModeParam;
 }) {
   const initialNow = await Effect.runPromise(Clock.currentTimeMillis);
 
@@ -308,19 +333,19 @@ async function ResolvedTryoutSection({
   const startHref = attemptPage?.activeSectionPublicPath
     ? getTryoutPublicPathHref(attemptPage.activeSectionPublicPath)
     : null;
+  const binding = attemptPage
+    ? {
+        attemptId: attemptPage.attemptId,
+        initialState: attemptPage.initialState,
+        mode: await readPlayerMode(view),
+        startHref,
+      }
+    : null;
 
   return (
     <TryoutClockProvider initialNow={initialNow}>
       <TryoutSectionPageClient
-        binding={
-          attemptPage
-            ? {
-                attemptId: attemptPage.attemptId,
-                initialState: attemptPage.initialState,
-                startHref,
-              }
-            : null
-        }
+        binding={binding}
         content={reviewRuntime ? null : signedContent}
         page={page}
         route={route}

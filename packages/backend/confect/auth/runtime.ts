@@ -19,6 +19,14 @@ import {
   type AccountDeletionPreparationOutcome,
   accountDeletionPreparationOutcome,
 } from "@repo/backend/confect/auth/deletion/spec";
+import {
+  disabledTokenPaths,
+  tokenRoutesDisabled,
+} from "@repo/backend/confect/auth/routes";
+import {
+  accountTokenHooks,
+  googleSignIn,
+} from "@repo/backend/confect/auth/tokens";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { APIError } from "better-auth/api";
@@ -170,12 +178,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
         enabled: true,
         allowDifferentEmails: false,
       },
-      // Better Auth seals the provider access and refresh tokens with the auth
-      // secret before it stores them. It stores the ID token as issued, which
-      // is why Google sign-in below refuses an ID token as a credential.
+      // The hooks below keep every provider token out of the table, so this
+      // seals only a token that a later plugin might write there.
       encryptOAuthTokens: true,
     },
-    disabledPaths: [...disabledCredentialPaths],
+    databaseHooks: accountTokenHooks,
+    disabledPaths: [...disabledCredentialPaths, ...disabledTokenPaths],
     emailAndPassword: {
       enabled: false,
     },
@@ -203,6 +211,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     },
     plugins: [
       credentialSurfaceDisabled,
+      tokenRoutesDisabled,
       openAPI(),
       convex({
         authConfig,
@@ -227,14 +236,7 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
         google: {
           clientId: google.clientId,
           clientSecret: Redacted.value(google.clientSecret),
-          accessType: "offline",
-          // Only the redirect flow signs a learner in. With ID token sign-in
-          // on, Better Auth would accept any Google ID token that was issued
-          // to Nakafa in the last hour as a login credential, and its link
-          // route would store the access and refresh tokens that came with it
-          // unsealed.
-          disableIdTokenSignIn: true,
-          prompt: "select_account consent",
+          ...googleSignIn,
         },
       },
       plugins: [

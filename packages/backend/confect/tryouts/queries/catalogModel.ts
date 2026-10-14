@@ -42,7 +42,6 @@ export const publicTryoutTrackValidator = Schema.Struct({
   description: Schema.optionalKey(Schema.String),
   publicPath: Schema.String,
   readyQuestionCount: Schema.Finite,
-  readySetCount: Schema.Finite,
   readyVisibleSectionCount: Schema.Finite,
   title: Schema.String,
   trackKey: tryoutRouteKeyValidator,

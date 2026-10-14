@@ -6,7 +6,6 @@ import accountConsents from "./tables/accountConsents";
 import accountDeletionAttemptCancellations from "./tables/accountDeletionAttemptCancellations";
 import accountDeletionPreparations from "./tables/accountDeletionPreparations";
 import accountDeletionReceipts from "./tables/accountDeletionReceipts";
-import accountDeletionSchoolTransfers from "./tables/accountDeletionSchoolTransfers";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
@@ -61,21 +60,6 @@ import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
-import schoolActivityLogs from "./tables/schoolActivityLogs";
-import schoolClassForumPendingUploads from "./tables/schoolClassForumPendingUploads";
-import schoolClassForumPostAttachments from "./tables/schoolClassForumPostAttachments";
-import schoolClassForumPostReactions from "./tables/schoolClassForumPostReactions";
-import schoolClassForumPosts from "./tables/schoolClassForumPosts";
-import schoolClassForumReactions from "./tables/schoolClassForumReactions";
-import schoolClassForumReadStates from "./tables/schoolClassForumReadStates";
-import schoolClassForums from "./tables/schoolClassForums";
-import schoolClassInviteCodes from "./tables/schoolClassInviteCodes";
-import schoolClassMaterialGroups from "./tables/schoolClassMaterialGroups";
-import schoolClassMembers from "./tables/schoolClassMembers";
-import schoolClasses from "./tables/schoolClasses";
-import schoolInviteCodes from "./tables/schoolInviteCodes";
-import schoolMembers from "./tables/schoolMembers";
-import schools from "./tables/schools";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
@@ -106,7 +90,6 @@ export default $defineSchema({
   accountDeletionAttemptCancellations: $Table.tableDefinition(accountDeletionAttemptCancellations),
   accountDeletionPreparations: $Table.tableDefinition(accountDeletionPreparations),
   accountDeletionReceipts: $Table.tableDefinition(accountDeletionReceipts),
-  accountDeletionSchoolTransfers: $Table.tableDefinition(accountDeletionSchoolTransfers),
   articleBuckets: $Table.tableDefinition(articleBuckets),
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
@@ -161,21 +144,6 @@ export default $defineSchema({
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
-  schoolActivityLogs: $Table.tableDefinition(schoolActivityLogs),
-  schoolClassForumPendingUploads: $Table.tableDefinition(schoolClassForumPendingUploads),
-  schoolClassForumPostAttachments: $Table.tableDefinition(schoolClassForumPostAttachments),
-  schoolClassForumPostReactions: $Table.tableDefinition(schoolClassForumPostReactions),
-  schoolClassForumPosts: $Table.tableDefinition(schoolClassForumPosts),
-  schoolClassForumReactions: $Table.tableDefinition(schoolClassForumReactions),
-  schoolClassForumReadStates: $Table.tableDefinition(schoolClassForumReadStates),
-  schoolClassForums: $Table.tableDefinition(schoolClassForums),
-  schoolClassInviteCodes: $Table.tableDefinition(schoolClassInviteCodes),
-  schoolClassMaterialGroups: $Table.tableDefinition(schoolClassMaterialGroups),
-  schoolClassMembers: $Table.tableDefinition(schoolClassMembers),
-  schoolClasses: $Table.tableDefinition(schoolClasses),
-  schoolInviteCodes: $Table.tableDefinition(schoolInviteCodes),
-  schoolMembers: $Table.tableDefinition(schoolMembers),
-  schools: $Table.tableDefinition(schools),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
   tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),

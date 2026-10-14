@@ -259,7 +259,7 @@ not kept (K11). A new ADR supersedes ADR 0005.
 The removal follows the rule for public functions in
 `packages/backend/AGENTS.md`: expand, switch, observe, contract. Expand is done:
 the tenancy functions in `packages/backend/confect/tenancy` already exist on main
-beside the old School. Four steps follow, in this order, and the first is merged:
+beside the old School. Four steps followed, in this order, and all four are done:
 
 1. Switch (merged in #1051): a release makes the web stop calling the old
    functions. It removes every School route and component that calls an old
@@ -276,7 +276,7 @@ beside the old School. Four steps follow, in this order, and the first is merged
    October and 07:24 UTC on 14 October, spanning the deploys of #1058, #1026,
    #1049, #1042, #1054, #1046 and #1031, held none either. This step ships
    nothing.
-3. Contract: one release removes the old functions, every writer of the old
+3. Contract (merged in #1037): one release removes the old functions, every writer of the old
    tables, and the rest of the code listed above, and adds the batched erase
    migration in the same release. It keeps the definitions of the 16 old tables
    (the 15 `school*` tables and `accountDeletionSchoolTransfers`), because Convex
@@ -288,10 +288,15 @@ beside the old School. Four steps follow, in this order, and the first is merged
    which the Polar webhook no longer writes. The `metadata` of a subscription is
    Polar's copy and stays whole. The migration runs dry first, which counts the
    old rows, and then for real, on dev and on production, page by page, until a
-   dry pass reports zero.
-4. Drop: a last release deletes the tables, those fields, the two forum
+   dry pass reports zero. Run on 14 October 2026: on dev a dry pass counted
+   nothing; on production a dry pass counted 26 rows in 13 tables and no file
+   or scheduled job, the real pass removed the 26, and a dry pass after it
+   counted 0.
+4. Drop (the release after #1037): a last release deletes the tables, those fields, the two forum
    aggregates of `convex.config.ts`, and the migration. Convex accepts that schema
-   only when no row is left, which is the proof that the rows are gone.
+   only when no row is left, which is the proof that the rows are gone. The
+   emptied tables and the two unmounted aggregates stay on each deployment until
+   they are deleted in the Convex dashboard.
 
 ## Implementation Contract
 
