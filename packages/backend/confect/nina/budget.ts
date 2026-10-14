@@ -4,9 +4,9 @@ import { Array as Arr } from "effect";
  * Model-facing token budgets for one Nina turn. Gemini accepts far more, so
  * these bound cost and latency; every limit truncates with a visible note
  * instead of failing the turn. `NINA_CALL_LIMIT` adds up the ones a chat call
- * holds at once. `captureKnown`, `captureMessage` and `foldMessage` bound the
- * input of separate background calls, the memory capture and the summary
- * refresh, so they are not part of it.
+ * holds at once. `captureMessage` and `foldMessage` bound the input of separate
+ * background calls, the memory capture and the summary refresh, so they are not
+ * part of it.
  */
 export const NINA_BUDGET = {
   /**
@@ -15,13 +15,6 @@ export const NINA_BUDGET = {
    * rest of the learner section out.
    */
   account: 500,
-  /**
-   * The whole list of known memories one capture call reads. It holds at most
-   * `MEMORY_KNOWN_LIMIT` memories, and each shows only its first characters, so
-   * this is a second bound. The list is best match first, and one that does not
-   * fit loses its last memories, which the model cannot name.
-   */
-  captureKnown: 4000,
   /** The learner text one capture call reads. */
   captureMessage: 1000,
   /** One capability output returned to the main Agent. */
@@ -39,13 +32,15 @@ export const NINA_BUDGET = {
   /**
    * Nina's static instructions, her four tool definitions and the runtime
    * facts of a turn: what every call carries before any conversation. Nothing
-   * cuts to this number. The budget test measures the tool definitions and the
-   * runtime facts of a real turn, and the instructions of the longest role with
-   * a question focus, by `countTextTokens`: 6,087 tokens with the memory
-   * capability on 13 October 2026, which is above this number. The tokenizer
-   * that `countTextTokens` replaced measured 5,143 on 12 October 2026.
+   * cuts to this number. The budget test measures a real turn by
+   * `countTextTokens`: the instructions with a question focus for the role that
+   * makes them longest, the tool definitions of the call, and its newest message
+   * with the runtime facts. With the memory capability on, that measure was 6,118
+   * tokens on 14 October 2026: 3,894 instructions, 1,933 tool definitions and 291
+   * runtime facts. This number is the measure rounded up to the next 1,000. The
+   * tokenizer that `countTextTokens` replaced measured 5,143 on 12 October 2026.
    */
-  instructions: 6000,
+  instructions: 7000,
   /** The memories the memory capability returns to Nina in one call. */
   lookup: 1500,
   /** The signed current page placed in the stable prompt context. */
@@ -59,13 +54,14 @@ export const NINA_BUDGET = {
 } as const;
 
 /**
- * The most tokens one Nina model call is built to carry, 63,500: the parts of
+ * The most tokens one Nina model call is built to carry, 64,500: the parts of
  * `NINA_BUDGET` that a call holds at once, which are the instructions, the
  * page, what Nina reads about the learner (the account facts, the portrait and
  * the recalled memories, 1,500 together), the summary, the history and the
  * evidence of the current turn. One tool result (`evidence`, or `lookup` for
  * the memory capability) lies inside the turn's evidence, so it is not added
- * again.
+ * again. Its instructions part is the measure of `NINA_BUDGET.instructions`,
+ * rounded up to the next 1,000.
  *
  * The model accepts 1,048,576 input tokens
  * (https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash, the model in
