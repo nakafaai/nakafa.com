@@ -11,7 +11,8 @@ import { Effect } from "effect";
  * What an invitation says: the organisation that invited, where to sign in,
  * and the legal links of the email's language from the signed Pages. It names
  * no person. An invite that was revoked or has expired reads as nothing, so
- * nothing is sent.
+ * nothing is sent. The send step checks the term again, because the workflow
+ * runs after this read.
  */
 export const readInviteInput = Effect.fn("emails.invite.readInput")(function* (
   inviteId: GenericId.GenericId<"tenantInvites">,

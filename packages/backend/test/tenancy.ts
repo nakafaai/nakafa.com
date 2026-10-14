@@ -42,7 +42,7 @@ import {
   Struct,
 } from "effect";
 
-const TENANCY_NOW = DateTime.toEpochMillis(
+export const TENANCY_NOW = DateTime.toEpochMillis(
   DateTime.makeUnsafe("2026-10-01T08:00:00Z")
 );
 
