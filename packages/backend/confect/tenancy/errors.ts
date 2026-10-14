@@ -118,7 +118,10 @@ export class PersonPlacementLimit extends Schema.TaggedError<PersonPlacementLimi
   )
 ) {}
 
-/** Placing or moving a Person who holds no student grant over the cohort's unit. */
+/**
+ * Placing or moving a Person who holds no student grant over the cohort's unit
+ * or the whole school.
+ */
 export class PersonNotStudent extends Schema.TaggedError<PersonNotStudent>()(
   "PersonNotStudent",
   refusal(

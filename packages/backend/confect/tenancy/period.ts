@@ -15,10 +15,11 @@ export const PeriodStatus = Schema.Literals(["planned", "active", "archived"]);
 
 /**
  * Reads a calendar date written `YYYY-MM-DD` on the clock of the unit's time
- * zone. Effect's `DateTime` has no date-only parser, so the date is parsed as
- * midnight in that zone and formatted again: DateTime rolls an impossible date
- * such as 30 February forward, so only a date that formats back to the same
- * text is accepted. A calendar date the zone cannot place is refused too.
+ * zone. `DateTime.make` reads such a date as midnight UTC, so the date is read as
+ * midnight in the unit's zone instead, and formatted again: DateTime rolls an
+ * impossible date such as 30 February forward, so only a date that formats back
+ * to the same text is accepted. A calendar date the zone cannot place is
+ * refused too.
  */
 export const parseCivilDate = (value: string, timeZone: string) =>
   Option.filter(

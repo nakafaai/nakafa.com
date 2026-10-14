@@ -126,10 +126,10 @@ lane's revoke path (ADR 0012), each cohort placement ends unless it is history
 (its period or its cohort is archived, and then it stays as the record of where
 the Person was placed), the pending invite is revoked and journaled, and the
 account is released as account deletion releases it, so the account can be
-invited again. The journal records `person.released` and `person.removed`, and
-the status becomes `removed`. A removed Person refuses every write as
-`condition` (ADR 0012), and a claimed account loses the school at once, because
-membership needs an active Person.
+invited again. The journal records `person.released` only when the Person held an
+account, then `person.removed`, and the status becomes `removed`. A removed
+Person refuses every write as `condition` (ADR 0012), and a claimed account
+loses the school at once, because membership needs an active Person.
 
 The Admin invites a Person to an address that the school's allowed email
 domains admit, and a Person has at most one pending invite. An invite waits 14
@@ -181,8 +181,11 @@ because a count would read every placement of the period.
 A placement is one Person in one cohort of one period: the `cohortMember`
 relation of ADR 0012. The Person must be a student: an active Student grant over
 the cohort's unit or over the whole school. A Person holds at most one placement
-per period, and a move keeps them in the same period. The placement opens `cohort.view` of its
-cohort to the Person, through the relation and nothing else; the relation is
+per period, and a move keeps them in the same period. A move checks the cohort it
+leaves as well as the one it enters, so an archived cohort at either end refuses
+it as `condition`, and the placement stays where it was. The placement opens
+`cohort.view` of its cohort to the Person, through the relation and nothing
+else; the relation is
 read from the placement table for each request and never copied onto the
 Person. A Person holds at most 64 placements in all, across every period, and
 `tenancy/placement.ts` derives that limit. Removal reads at most those
