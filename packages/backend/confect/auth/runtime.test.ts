@@ -4,11 +4,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { GoogleAuthConfigError } from "@repo/backend/confect/auth/config";
-import {
-  ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
-  ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
-  ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-} from "@repo/backend/confect/auth/deletion/constants";
+import { ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE } from "@repo/backend/confect/auth/deletion/constants";
 import { accountDeletionPreparationOutcome } from "@repo/backend/confect/auth/deletion/spec";
 import {
   createAuth,
@@ -315,34 +311,20 @@ describe("auth/runtime", () => {
       expect(prepare).toHaveBeenCalledOnce();
     })
   );
-  it.effect.each([
-    {
-      code: ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
-      outcome: accountDeletionPreparationOutcome.continue,
-      status: "BAD_REQUEST",
-    },
-    {
-      code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
-      outcome: accountDeletionPreparationOutcome.schoolSuccessorRequired,
-      status: "BAD_REQUEST",
-    },
-    {
-      code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-      outcome: accountDeletionPreparationOutcome.temporarilyUnavailable,
-      status: "INTERNAL_SERVER_ERROR",
-    },
-  ])("maps $outcome without draining another step", (testCase) =>
+  it.effect("maps an unavailable preparation without retrying it", () =>
     Effect.gen(function* () {
-      const prepare = vi.fn(() => Effect.succeed(testCase.outcome));
+      const prepare = vi.fn(() =>
+        Effect.succeed(accountDeletionPreparationOutcome.temporarilyUnavailable)
+      );
       const failure = yield* verifyAccountDeletionPreparation(
         Effect.suspend(prepare)
       ).pipe(Effect.flip);
       expect(failure).toMatchObject({
         body: {
-          code: testCase.code,
+          code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
         },
         name: "APIError",
-        status: testCase.status,
+        status: "INTERNAL_SERVER_ERROR",
       });
       expect(prepare).toHaveBeenCalledOnce();
     })

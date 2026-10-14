@@ -9,14 +9,18 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
-import { type Account, Email } from "@repo/backend/confect/tenancy/schema";
+import {
+  type Account,
+  Email,
+  INVITE_TERM,
+} from "@repo/backend/confect/tenancy/schema";
 import {
   invitePerson,
   scheduledJobs,
   slugOf,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Duration, Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 9, 13, 9, 0, 0);
 const address = Schema.decodeSync(Email)("guru@harapan.example.test");
@@ -249,6 +253,7 @@ describe("tenancy/claims run", () => {
           Effect.flatMap(DatabaseWriter, (writer) =>
             writer.table("tenantInvites").insert({
               channel: { email: address, kind: "email" },
+              expiresAt: NOW + Duration.toMillis(INVITE_TERM),
               personId,
               state: { status: "pending" },
               tenantId: fixture.tenants.nf,

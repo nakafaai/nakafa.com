@@ -19,9 +19,10 @@ const NOW = Date.UTC(2026, 6, 28, 11, 0, 0);
 const currentUser = Ref.getFunctionReference(
   refs.public.auth.queries.getCurrentUser
 );
-const schoolLanding = Ref.getFunctionReference(
-  refs.public.schools.queries.getMySchoolLandingState
+const memberships = Ref.getFunctionReference(
+  refs.public.tenancy.memberships.list
 );
+const firstPage = { paginationOpts: { cursor: null, numItems: 1 } };
 const updateName = Ref.getFunctionReference(
   refs.public.users.mutations.updateUserName
 );
@@ -48,8 +49,9 @@ describe("token-verified reads and session-validated writes", () => {
     expect(await authenticated.query(currentUser, {})).toMatchObject({
       appUser: { _id: identity.userId },
     });
-    expect(await authenticated.query(schoolLanding, {})).toEqual({
-      kind: "none",
+    expect(await authenticated.query(memberships, firstPage)).toMatchObject({
+      isDone: true,
+      page: [],
     });
     await authenticated.mutation(updateName, { name: "Verified user" });
     expect(await authenticated.mutation(admitOnboarding, {})).toMatchObject({
@@ -78,7 +80,7 @@ describe("token-verified reads and session-validated writes", () => {
       code: "UNAUTHENTICATED",
       message: "Unauthenticated",
     });
-    await expect(t.query(schoolLanding, {})).rejects.toMatchObject({
+    await expect(t.query(memberships, firstPage)).rejects.toMatchObject({
       data: { _tag: "SessionRequired" },
     });
     await expect(t.action(customerPortal, {})).rejects.toMatchObject({
@@ -105,7 +107,10 @@ describe("token-verified reads and session-validated writes", () => {
       appUser: { _id: identity.userId },
       authUser: { _id: identity.authUserId, name: "User expired-auth" },
     });
-    expect(await expired.query(schoolLanding, {})).toEqual({ kind: "none" });
+    expect(await expired.query(memberships, firstPage)).toMatchObject({
+      isDone: true,
+      page: [],
+    });
     expect(await expired.mutation(admitOnboarding, {})).toMatchObject({
       isAuthenticated: false,
     });
@@ -191,7 +196,9 @@ describe("token-verified reads and session-validated writes", () => {
     ).rejects.toMatchObject({
       data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
-    await expect(authenticated.query(schoolLanding, {})).rejects.toMatchObject({
+    await expect(
+      authenticated.query(memberships, firstPage)
+    ).rejects.toMatchObject({
       data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
     await expect(
@@ -226,7 +233,9 @@ describe("token-verified reads and session-validated writes", () => {
     ).rejects.toMatchObject({
       data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
-    await expect(authenticated.query(schoolLanding, {})).rejects.toMatchObject({
+    await expect(
+      authenticated.query(memberships, firstPage)
+    ).rejects.toMatchObject({
       data: { _tag: "AccountUnavailable", code: "UNAUTHORIZED" },
     });
     await expect(

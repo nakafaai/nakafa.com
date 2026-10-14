@@ -6,15 +6,14 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { assignRole } from "@repo/backend/confect/access/grant";
-import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
-import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import {
   personAuthority,
   tenantAuthority,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { claimAfterInvite } from "@repo/backend/confect/tenancy/claims";
 import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
+import { writeInvite } from "@repo/backend/confect/tenancy/invite";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import spec, {
   type UnitDraft,
@@ -22,9 +21,6 @@ import spec, {
 import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import { NewTenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
-
-/** Nakafa staff open an organisation with the deployment's key, so no Person acts: the journal files it as scheduled work. */
-const system: typeof TenantActor.Type = { kind: "system" };
 
 /** Adds one active school to the organisation and records it. */
 const createUnit = Effect.fn("tenancy.provision.unit")(function* (
@@ -39,7 +35,7 @@ const createUnit = Effect.fn("tenancy.provision.unit")(function* (
     .table("tenantUnits")
     .get(unitId)
     .pipe(Effect.orDie);
-  yield* unitAuthority.record(system, unit, { type: "unit.created" });
+  yield* unitAuthority.record(systemActor, unit, { type: "unit.created" });
   return unitId;
 });
 
@@ -100,7 +96,7 @@ const open = FunctionImpl.make(
       })
       .pipe(Effect.orDie);
     yield* tenantAuthority.record(
-      system,
+      systemActor,
       yield* reader.table("tenants").get(tenantId).pipe(Effect.orDie),
       { contract: args.contract, type: "tenant.provisioned" }
     );
@@ -117,34 +113,24 @@ const open = FunctionImpl.make(
         tenantId,
       })
       .pipe(Effect.orDie);
-    const inviteId = yield* writer
-      .table("tenantInvites")
-      .insert({
-        channel: { email: args.owner.email, kind: "email" },
-        personId: ownerId,
-        state: { status: "pending" },
-        tenantId,
-      })
-      .pipe(Effect.orDie);
     const owner = yield* reader
       .table("tenantPeople")
       .get(ownerId)
       .pipe(Effect.orDie);
-    yield* personAuthority.record(system, owner, { type: "person.created" });
-    yield* personAuthority.record(system, owner, {
-      invite: inviteId,
-      type: "person.invited",
+    yield* personAuthority.record(systemActor, owner, {
+      type: "person.created",
     });
-    // A new active member Person in a new tenant meets every grant invariant.
-    yield* assignRole(system, owner, "owner", { kind: "tenant" }).pipe(
-      Effect.orDie
-    );
-    yield* startInviteEmail(
-      inviteId,
+    const invite = yield* writeInvite(
+      systemActor,
+      owner,
+      args.owner.email,
       Arr.headNonEmpty(args.units).contentLanguage
     );
-    yield* claimAfterInvite(args.owner.email);
-    return { invite: inviteId, owner: ownerId, tenant: tenantId, units };
+    // A new active member Person in a new tenant meets every grant invariant.
+    yield* assignRole(systemActor, owner, "owner", { kind: "tenant" }).pipe(
+      Effect.orDie
+    );
+    return { invite: invite._id, owner: ownerId, tenant: tenantId, units };
   })
 );
 

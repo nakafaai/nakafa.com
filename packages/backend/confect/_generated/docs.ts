@@ -52,6 +52,7 @@ export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "mat
 export type NinaMemoriesDoc = Document.Document<typeof schemaDefinition, "ninaMemories">;
 export type NinaMemoryKeysDoc = Document.Document<typeof schemaDefinition, "ninaMemoryKeys">;
 export type NinaMemoryPortraitsDoc = Document.Document<typeof schemaDefinition, "ninaMemoryPortraits">;
+export type NinaMemoryRestoresDoc = Document.Document<typeof schemaDefinition, "ninaMemoryRestores">;
 export type NinaSummariesDoc = Document.Document<typeof schemaDefinition, "ninaSummaries">;
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
@@ -77,9 +78,12 @@ export type SchoolMembersDoc = Document.Document<typeof schemaDefinition, "schoo
 export type SchoolsDoc = Document.Document<typeof schemaDefinition, "schools">;
 export type SnapshotBatchesDoc = Document.Document<typeof schemaDefinition, "snapshotBatches">;
 export type SubscriptionsDoc = Document.Document<typeof schemaDefinition, "subscriptions">;
+export type TenantCohortMembersDoc = Document.Document<typeof schemaDefinition, "tenantCohortMembers">;
+export type TenantCohortsDoc = Document.Document<typeof schemaDefinition, "tenantCohorts">;
 export type TenantGrantsDoc = Document.Document<typeof schemaDefinition, "tenantGrants">;
 export type TenantInvitesDoc = Document.Document<typeof schemaDefinition, "tenantInvites">;
 export type TenantPeopleDoc = Document.Document<typeof schemaDefinition, "tenantPeople">;
+export type TenantPeriodsDoc = Document.Document<typeof schemaDefinition, "tenantPeriods">;
 export type TenantUnitsDoc = Document.Document<typeof schemaDefinition, "tenantUnits">;
 export type TenantsDoc = Document.Document<typeof schemaDefinition, "tenants">;
 export type TryoutAttemptPlacementsDoc = Document.Document<typeof schemaDefinition, "tryoutAttemptPlacements">;
@@ -148,6 +152,7 @@ export interface Docs {
   ninaMemories: NinaMemoriesDoc;
   ninaMemoryKeys: NinaMemoryKeysDoc;
   ninaMemoryPortraits: NinaMemoryPortraitsDoc;
+  ninaMemoryRestores: NinaMemoryRestoresDoc;
   ninaSummaries: NinaSummariesDoc;
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;
@@ -173,9 +178,12 @@ export interface Docs {
   schools: SchoolsDoc;
   snapshotBatches: SnapshotBatchesDoc;
   subscriptions: SubscriptionsDoc;
+  tenantCohortMembers: TenantCohortMembersDoc;
+  tenantCohorts: TenantCohortsDoc;
   tenantGrants: TenantGrantsDoc;
   tenantInvites: TenantInvitesDoc;
   tenantPeople: TenantPeopleDoc;
+  tenantPeriods: TenantPeriodsDoc;
   tenantUnits: TenantUnitsDoc;
   tenants: TenantsDoc;
   tryoutAttemptPlacements: TryoutAttemptPlacementsDoc;

@@ -1,10 +1,12 @@
 import { FunctionImpl } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import {
   type Opened,
   openMemories,
+  openMemory,
 } from "@repo/backend/confect/nina/memory/seal";
 import {
   isCleared,
@@ -13,6 +15,7 @@ import {
 import spec, {
   MEMORY_PAGE_LIMIT,
 } from "@repo/backend/confect/nina/memory.spec";
+import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { Array as Arr, Effect } from "effect";
 
 /** One memory as the Memory page shows it: its title and words, never its kind. */
@@ -29,6 +32,18 @@ function toView(memory: Opened) {
       : { validUntil: memory.validUntil }),
   };
 }
+
+/**
+ * One stored memory as the Memory page shows it, opened for its learner. A
+ * memory has its learner's key, and a memory without it is a defect.
+ */
+export const viewOf = Effect.fn("nina.memory.view.of")(function* (
+  memory: Docs["ninaMemories"]
+) {
+  return toView(
+    yield* openMemory(yield* readLearnerKeys(memory.userId), memory)
+  );
+}, Effect.orDie);
 
 /**
  * One page of the Memory page: the learner's memories, the most recently

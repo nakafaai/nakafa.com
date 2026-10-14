@@ -2,22 +2,18 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Grant } from "@repo/backend/confect/access/access";
-import {
-  grantAccess,
-  grantAuthority,
-} from "@repo/backend/confect/access/authority";
+import { grantAccess } from "@repo/backend/confect/access/authority";
 import {
   assignRole,
-  endGrant,
-  ensureOwnerRemains,
+  authorizeOwnerRole,
   grantView,
+  revokeGrant,
 } from "@repo/backend/confect/access/grant";
 import spec from "@repo/backend/confect/access/grants.spec";
 import { activeGrants } from "@repo/backend/confect/access/policy";
 import {
   type BuiltinRole,
   GrantScope,
-  OwnerRole,
 } from "@repo/backend/confect/access/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -28,19 +24,7 @@ import {
   tenantAuthority,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { Array as Arr, Effect, Layer, Schema } from "effect";
-
-/**
- * Owner and Admin roles also need `owner.manage`, which only Owners hold, so
- * an Admin can neither give nor end an Admin role.
- */
-const authorizeOwnerRole = Effect.fn("access.grants.ownerRole")(function* (
-  role: BuiltinRole
-) {
-  if (Schema.is(OwnerRole)(role)) {
-    yield* tenantAuthority.check("owner.manage", (yield* Member).tenant);
-  }
-});
+import { Array as Arr, Effect, Layer } from "effect";
 
 /**
  * Giving a role needs `grant.manage` on the scope the new grant covers, so a
@@ -98,17 +82,13 @@ const revoke = FunctionImpl.make(
     if (grant.status !== "active") {
       return null;
     }
-    yield* grantAuthority.check("grant.revoke", grant);
-    yield* authorizeOwnerRole(grant.role.key);
-    yield* ensureOwnerRemains(grant);
-    yield* endGrant(
+    yield* revokeGrant(
       { id: (yield* Member).person._id, kind: "person" },
       grant,
       yield* (yield* DatabaseReader)
         .table("tenantPeople")
         .get(grant.personId)
-        .pipe(Effect.orDie),
-      "revoked"
+        .pipe(Effect.orDie)
     );
     return null;
   })

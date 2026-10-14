@@ -4,10 +4,12 @@ import {
   NakafaAgentSectionSchema,
 } from "@repo/contents/agent/schema/ref";
 import {
+  CONVEX_SEARCH_TERMS,
   NAKAFA_AGENT_DEFAULT_LIMIT,
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
   NAKAFA_AGENT_MAX_QUERIES,
+  NAKAFA_AGENT_MAX_QUERY_LENGTH,
 } from "@repo/contents/agent/search";
 import { LocaleSchema } from "@repo/contents/content";
 import { Effect, Schema, Struct } from "effect";
@@ -24,6 +26,16 @@ const NakafaAgentSearchItemSchema = NakafaAgentContentSummarySchema.mapFields(
 )
   .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
   .annotate({ description: "Searchable Nakafa content result item." });
+/**
+ * One search query. The length is checked on the text as it is written, before
+ * it is trimmed, so the JSON schema that the MCP tool, the public API and
+ * Nina's tool carry states the limit, and it counts characters by code point,
+ * as that schema's `maxLength` does. The query is then trimmed and must not be
+ * blank.
+ */
+const NakafaAgentSearchQuerySchema = Schema.String.check(
+  Schema.isMaxCodePoints(NAKAFA_AGENT_MAX_QUERY_LENGTH)
+).pipe(Schema.decodeTo(Schema.Trim), Schema.check(Schema.isMinLength(1)));
 /** Runtime schema for content search input. */
 export const NakafaAgentSearchOptionsSchema = Schema.Struct({
   limit: Schema.Finite.pipe(
@@ -63,14 +75,13 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
     description: "Zero-based result offset for pagination.",
   }),
   queries: Schema.optionalKey(
-    Schema.Array(Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))))
+    Schema.Array(NakafaAgentSearchQuerySchema)
       .pipe(
         Schema.mutable,
         Schema.check(Schema.isMaxLength(NAKAFA_AGENT_MAX_QUERIES))
       )
       .annotate({
-        description:
-          "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Preserve exact identifiers such as names, years, labels, canonical IDs, and URLs. Use limit for requested counts. Use separate parallel search tool calls when section filters differ.",
+        description: `Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Preserve exact identifiers such as names, years, labels, canonical IDs, and URLs. Keep each query within ${CONVEX_SEARCH_TERMS} terms, a term being a run of letters or digits. Use limit for requested counts. Use separate parallel search tool calls when section filters differ.`,
       })
   ),
   section: Schema.optionalKey(

@@ -7,13 +7,14 @@ import {
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { ACCOUNT_DELETION_RECONCILIATION_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
 import { recordAccountDeletionReceipt } from "@repo/backend/confect/auth/deletion/receipt";
+import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { finalizeSchoolTransfers } from "@repo/backend/confect/auth/deletion/transfers";
 import { Clock, Duration, Effect, flow } from "effect";
 /**
- * Applies reserved school transfers only after Better Auth confirms that its
- * user row is gone, then journals durable personal-data cleanup.
+ * Releases the account's Persons and finalizes the preparation only after
+ * Better Auth confirms that its user row is gone, then journals durable
+ * personal-data cleanup.
  */
 export const finalizeAccountDeletion = Effect.fn(
   "auth.deletion.finalizeAccountDeletion"
@@ -73,25 +74,19 @@ export const finalizeAccountDeletion = Effect.fn(
       return;
     }
     const finalizedAt = yield* Clock.currentTimeMillis;
-    if (preparation && preparation.finalizedAt === undefined) {
-      const needsContinuation = yield* finalizeSchoolTransfers(
-        user,
-        preparation._id,
-        finalizedAt
-      );
-      if (needsContinuation) {
-        yield* scheduler.runAfter(
-          Duration.zero,
-          refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
-          {
-            authId,
-            ...(expectedPreparation === undefined
-              ? {}
-              : { expectedPreparation }),
-          }
-        );
-        return;
+    const continueCleanup = scheduler.runAfter(
+      Duration.zero,
+      refs.internal.customers.deletion.workflow.finalizeDeletedUserCleanup,
+      {
+        authId,
+        ...(expectedPreparation === undefined ? {} : { expectedPreparation }),
       }
+    );
+    if (yield* releaseTenantPeople(user, finalizedAt)) {
+      yield* continueCleanup;
+      return;
+    }
+    if (preparation && preparation.finalizedAt === undefined) {
       yield* writer
         .table("accountDeletionPreparations")
         .patch(preparation._id, {

@@ -1,10 +1,12 @@
 "use client";
 
+import { Link01Icon } from "@hugeicons/core-free-icons";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { Array as Arr, Option, Schema } from "effect";
 import Image from "next/image";
@@ -74,32 +76,36 @@ export function Source({ href, children }: SourceProps) {
 interface SourceTriggerProps {
   className?: string;
   faviconUrl?: string | undefined;
-  label?: React.ReactNode;
-  showFavicon?: boolean;
+  title?: string | undefined;
 }
 
+/**
+ * One cited source as a row a learner can read without a pointer: its icon, its
+ * title and the host it came from. The whole row is the link, and a pointer
+ * also opens the card with the description of the page. A source with no title
+ * shows its host in the title's place. A title shows two lines at most and the
+ * host one, by decision: the rest is cut with an ellipsis, and all of it stays
+ * in the name and the address of the link. Two titles on one host that share
+ * their first two lines look the same. A title keeps the 20 px lines of every
+ * other text of the evidence, with 2 px above and below them: the clip at two
+ * lines would otherwise cut the tone marks of Thai, which stand about 16 px
+ * above the baseline at this size. The icon is as large as the icons of the
+ * rows above it and sits in the middle of the title's first line.
+ */
 export function SourceTrigger({
-  faviconUrl,
-  label,
-  showFavicon = false,
   className,
+  faviconUrl,
+  title,
 }: SourceTriggerProps) {
   const href = useSource((source) => source.href);
-  const domainLabel = useSource((source) => getDomainLabel(source.domain));
-  const [failedFaviconUrl, setFailedFaviconUrl] = useState("");
-  const labelToShow = label ?? domainLabel;
-  const sourceFaviconUrl =
-    getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href });
-  const visibleFaviconUrl =
-    showFavicon && sourceFaviconUrl !== failedFaviconUrl
-      ? sourceFaviconUrl
-      : null;
+  const host = useSource((source) => getDomainLabel(source.domain));
+  const cleanTitle = title?.trim() ?? "";
+  const named = cleanTitle !== "" && cleanTitle !== host;
 
   return (
     <HoverCardTrigger
       className={cn(
-        "inline-flex h-5 max-w-48 items-center gap-1 overflow-hidden rounded-full border border-transparent bg-muted py-0 align-middle text-muted-foreground text-xs leading-none no-underline transition-colors ease-out hover:border-primary hover:bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] hover:text-foreground",
-        visibleFaviconUrl ? "pr-2 pl-1" : "px-1",
+        "group/source flex min-w-0 items-start gap-2 rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
       closeDelay={0}
@@ -108,18 +114,25 @@ export function SourceTrigger({
       rel="noopener noreferrer"
       target="_blank"
     >
-      {visibleFaviconUrl ? (
-        <SourceFavicon
-          alt="favicon"
-          className="size-3.5 rounded-full"
-          height={14}
-          onUnavailable={() => setFailedFaviconUrl(visibleFaviconUrl)}
-          src={visibleFaviconUrl}
-          width={14}
-        />
-      ) : null}
-      <span className="min-w-0 truncate text-left font-normal [&_code]:whitespace-nowrap [&_code]:border-0 [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-inherit [&_code]:text-xs [&_code]:tracking-inherit">
-        {labelToShow}
+      <SourceIcon
+        src={getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href })}
+      />
+      <span className="flex min-w-0 flex-col">
+        <span
+          className="wrap-anywhere line-clamp-2 py-0.5 text-sm group-hover/source:underline group-focus-visible/source:underline"
+          data-slot="source-title"
+          dir="auto"
+        >
+          {named ? cleanTitle : host}
+        </span>
+        {named ? (
+          <span
+            className="truncate text-muted-foreground text-xs"
+            data-slot="source-host"
+          >
+            {host}
+          </span>
+        ) : null}
       </span>
     </HoverCardTrigger>
   );
@@ -128,52 +141,27 @@ export function SourceTrigger({
 interface SourceContentProps {
   className?: string;
   description?: string | undefined;
-  faviconUrl?: string | undefined;
-  title: string;
 }
 
-export function SourceContent({
-  title,
-  description,
-  faviconUrl,
-  className,
-}: SourceContentProps) {
-  const href = useSource((source) => source.href);
-  const domainLabel = useSource((source) => getDomainLabel(source.domain));
-  const sourceFaviconUrl =
-    getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href });
-  const cleanTitle = title.trim();
-  const shouldShowTitle = cleanTitle && cleanTitle !== domainLabel;
+/**
+ * The description of a source, which a pointer reads in a card. A source with
+ * no description has no card.
+ */
+export function SourceContent({ className, description }: SourceContentProps) {
+  const text = description?.trim();
+
+  if (!text) {
+    return null;
+  }
 
   return (
-    <HoverCardContent className={cn("w-80 p-0 shadow-xs", className)}>
-      <a
-        className="flex flex-col gap-2 p-3"
-        href={href}
-        rel="noopener noreferrer"
-        target="_blank"
+    <HoverCardContent className={cn("w-80 p-3 shadow-xs", className)}>
+      <p
+        className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-sm"
+        dir="auto"
       >
-        <div className="flex items-center gap-1.5">
-          {sourceFaviconUrl ? (
-            <SourceFavicon
-              alt="favicon"
-              className="size-4 rounded-full"
-              height={16}
-              src={sourceFaviconUrl}
-              width={16}
-            />
-          ) : null}
-          <div className="truncate text-primary text-sm">{domainLabel}</div>
-        </div>
-        {shouldShowTitle ? (
-          <div className="line-clamp-2 font-medium text-sm">{cleanTitle}</div>
-        ) : null}
-        {!!description && (
-          <div className="line-clamp-2 text-muted-foreground text-sm">
-            {description}
-          </div>
-        )}
-      </a>
+        {text}
+      </p>
     </HoverCardContent>
   );
 }
@@ -193,41 +181,38 @@ function getCustomFaviconUrl(faviconUrl?: string) {
   return null;
 }
 
-interface SourceFaviconProps {
-  alt: string;
-  className?: string;
-  height: number;
-  onUnavailable?: () => void;
-  src: string;
-  width: number;
-}
-
-function SourceFavicon({
-  alt,
-  className,
-  height,
-  onUnavailable,
-  src,
-  width,
-}: SourceFaviconProps) {
+/**
+ * The icon of a source, 16 px like every icon of the evidence. An icon is
+ * another site's artwork, drawn for a white page, so it sits on white in both
+ * themes: a black mark on a transparent ground stays visible in the dark theme.
+ * An icon that does not load leaves a link mark of the same size, so the rows
+ * keep their alignment; it is not the globe of the web activity above it.
+ */
+function SourceIcon({ src }: { src: string }) {
   const [failedSrc, setFailedSrc] = useState("");
-
-  if (failedSrc === src) {
-    return null;
-  }
+  const failed = failedSrc === src;
 
   return (
-    <Image
-      alt={alt}
-      className={className}
-      height={height}
-      onError={() => {
-        setFailedSrc(src);
-        onUnavailable?.();
-      }}
-      src={src}
-      unoptimized
-      width={width}
-    />
+    <span
+      className={cn(
+        "mt-1 flex size-4 shrink-0 overflow-hidden rounded-sm",
+        failed ? "text-muted-foreground" : "bg-white"
+      )}
+      data-slot="source-icon"
+    >
+      {failed ? (
+        <HugeIcons className="size-4" icon={Link01Icon} />
+      ) : (
+        <Image
+          alt=""
+          className="size-4"
+          height={16}
+          onError={() => setFailedSrc(src)}
+          src={src}
+          unoptimized
+          width={16}
+        />
+      )}
+    </span>
   );
 }

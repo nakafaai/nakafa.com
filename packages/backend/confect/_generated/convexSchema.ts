@@ -52,6 +52,7 @@ import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
+import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -77,9 +78,12 @@ import schoolMembers from "./tables/schoolMembers";
 import schools from "./tables/schools";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantCohortMembers from "./tables/tenantCohortMembers";
+import tenantCohorts from "./tables/tenantCohorts";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
 import tenantPeople from "./tables/tenantPeople";
+import tenantPeriods from "./tables/tenantPeriods";
 import tenantUnits from "./tables/tenantUnits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
@@ -148,6 +152,7 @@ export default $defineSchema({
   ninaMemories: $Table.tableDefinition(ninaMemories),
   ninaMemoryKeys: $Table.tableDefinition(ninaMemoryKeys),
   ninaMemoryPortraits: $Table.tableDefinition(ninaMemoryPortraits),
+  ninaMemoryRestores: $Table.tableDefinition(ninaMemoryRestores),
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
@@ -173,9 +178,12 @@ export default $defineSchema({
   schools: $Table.tableDefinition(schools),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
+  tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),
+  tenantCohorts: $Table.tableDefinition(tenantCohorts),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),
   tenantPeople: $Table.tableDefinition(tenantPeople),
+  tenantPeriods: $Table.tableDefinition(tenantPeriods),
   tenantUnits: $Table.tableDefinition(tenantUnits),
   tenants: $Table.tableDefinition(tenants),
   tryoutAttemptPlacements: $Table.tableDefinition(tryoutAttemptPlacements),

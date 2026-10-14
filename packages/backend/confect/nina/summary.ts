@@ -29,10 +29,8 @@ import {
 const MESSAGE_PAGE = 100;
 
 /**
- * What the summary writer is told. By the shared tokenizer on the app's own
- * copy, 800 words are about 1,100 tokens in English and 1,400 in Indonesian and
- * German. That leaves room under `NINA_BUDGET.summary` for a writer that runs
- * long, and `boundText` stays the hard bound.
+ * What the summary writer is told. A summary longer than `NINA_BUDGET.summary`
+ * is cut by `boundText`, never refused.
  */
 const INSTRUCTIONS = Arr.join(
   [
@@ -176,8 +174,13 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
 
 /**
  * Folds settled turns into the chat's rolling summary once the turns it does
- * not cover cost more than the history budget. A failure keeps the previous
- * summary; generation still bounds its history.
+ * not cover cost more than the history budget. Nothing is stored when a read or
+ * the call fails, when the answer is empty, or when it is cut at the output cap.
+ * In each case the previous summary and its coverage stay, so the next refresh
+ * folds the same turns again. An empty or cut answer still counts its usage on
+ * the chat's summary row. A chat with no summary yet has no row, because a row
+ * holds text, so an empty or cut first fold records no usage. Generation still
+ * bounds its history.
  */
 export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
@@ -239,7 +242,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
     const summary = text.trim();
     // An answer cut at the output cap lost its last points, and saving it would
     // drop them from every later summary too. Its text is not stored, but the
-    // call spent its tokens, and they count on the summary all the same.
+    // call spent its tokens, and they count on the summary if the chat has one.
     const stored = summary !== "" && finishReason !== "length";
     yield* (yield* MutationRunner)
       .runMutation(refs.internal.nina.summaries.save, {

@@ -81,7 +81,7 @@ describe("Convex transaction test boundaries", () => {
           "const setup = () => convexTest(schema); const t = setup(); t.run(ctx => Effect.runPromise(read(ctx)));",
           "type Test = ReturnType<typeof convexTest>; function readTest(t: Test) { return t.query(ctx => Effect.runPromise(read(ctx))); }",
           "function readTest(t: TestConvex<typeof schema>) { return t.query(ctx => Effect.runPromise(read(ctx))); }",
-          'import { createPendingUpload } from "@repo/backend/test/forum/upload"; Effect.gen(function* () { const { t } = yield* createPendingUpload(now); return yield* Effect.promise(() => t.action(ctx => Effect.runPromise(read(ctx)))); });',
+          'import { createNinaTest } from "@repo/backend/test/nina"; Effect.gen(function* () { const { t } = yield* Effect.promise(() => createNinaTest(now)); return yield* Effect.promise(() => t.action(ctx => Effect.runPromise(read(ctx)))); });',
         ];
         assert.deepStrictEqual(
           yield* effectTestViolations(

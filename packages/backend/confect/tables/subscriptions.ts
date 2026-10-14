@@ -8,6 +8,10 @@ export default Table.make(() =>
     id: Schema.String,
     /** Polar customer ID linked to the subscription. */
     customerId: Schema.String,
+    /**
+     * The link to a school of the first School. Nothing writes it now:
+     * `retire/school:erase` clears it, and the change after that drops it.
+     */
     schoolId: Schema.optionalKey(Schema.String),
     createdAt: Schema.String,
     modifiedAt: Schema.NullOr(Schema.String),

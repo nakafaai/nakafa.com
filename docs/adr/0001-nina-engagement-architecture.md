@@ -43,6 +43,10 @@ React uses Confect hooks for application functions and the official Agent
 optimistic update contract. There is no Next.js AI transport route or separate AI
 backend package.
 
+A stored turn holds only what something reads. Its page holds the locale, the
+slug, whether the page needs a signed read, and the context pack: the learning
+page, its placement, the question focus, and the evidence the model is told of.
+
 A public chat is shared by link, and the link holds a share token, not only the
 chat id. Turning sharing on draws 32 random bytes and stores their SHA-256 hash,
 which readers check without any key, and the token sealed for the owner, so the
@@ -284,13 +288,13 @@ against the evidence budget.
 
 One call carries at most `NINA_CALL_LIMIT` tokens by design, the sum of the
 budgets in `confect/nina/budget.ts` that a call holds at once. The budgets are
-counted with OpenAI's tokenizer, and the model is Gemini, so the number is close
-to what the provider bills and not the same. Measured on 12 October 2026 through
-the gateway on five stored sections, the provider counted between 8.2% fewer
-tokens (Arabic verses with their translation) and 13.6% more (a lesson full of
-formulas) than the budget's count, and within 6% for German, English and
-Indonesian prose. A message adds no tokens around its content, and a tool call
-with its result costs what the budget counts for them. The model accepts
+counted with an estimator fitted to the provider's own count (`countTextTokens`),
+not with a tokenizer, so the number is close to what the provider bills and not
+the same. Measured on 13 October 2026 through the gateway on 120 texts, the
+estimate was 0.4% above the provider's count in total and 9.1% off for one text
+on average, and its doc comment names the kinds with the largest errors. A
+message adds no tokens around its content, and a tool call with its result costs
+what the budget counts for them. The model accepts
 far more, 1,048,576 input tokens. Nina stays below because every call bills
 every token it carries, a larger call takes longer to start, and the provider
 keeps a cached prefix for only about five minutes. Three things lie outside the
@@ -521,13 +525,13 @@ deleted.
 
 A capability is one definition in its own folder and one entry in the registry.
 The tools Nina is offered, the policy of each call and the tool section of her
-prompt follow from them, and all three follow `offered`: a turn whose page does
-not allow a capability, or whose learner paused it, is offered neither its tool
-nor its entry and rules in the prompt, so that turn's prompt prefix differs from
-the others, as its tool list does. Every page allows every capability today, so
-only a pause changes it. A few other places still name a capability or its
-Agent, and they are the steps below, in order, with what the compiler enforces
-at each and what it leaves to the author.
+prompt follow from them, and all three follow `offered`: a turn for which a
+capability's `offered` says no, such as the memory capability of a learner who
+paused it, is offered neither its tool nor its entry and rules in the prompt, so
+that turn's prompt prefix differs from the others, as its tool list does. No
+page refuses a capability, so only a pause changes it today. A few other places
+still name a capability or its Agent, and they are the steps below, in order,
+with what the compiler enforces at each and what it leaves to the author.
 
 1. Write the run, an Effect program in the capability's own folder. It takes its
    input and the facts of the turn, publishes its cards through `publish`, and
@@ -585,8 +589,8 @@ Left to the author, because the compiler cannot judge them: the routing prose
 that combines capabilities in `policy/tool.ts`, `step.ts` when the capability
 should open a turn that names a source (the first step forces only a capability
 the turn offers, because the SDK lists no other tool in it), and the tests. No
-stored flag is added for a capability: `offered` reads the turn's context, and
-the allow flags of a turn page stay as they are.
+stored flag is added for a capability: `offered` reads the turn's context, which
+holds only whether the learner's memory is on.
 
 ## Verification
 

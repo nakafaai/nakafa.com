@@ -51,6 +51,7 @@ import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
+import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -76,9 +77,12 @@ import schoolMembers from "./tables/schoolMembers";
 import schools from "./tables/schools";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantCohortMembers from "./tables/tenantCohortMembers";
+import tenantCohorts from "./tables/tenantCohorts";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
 import tenantPeople from "./tables/tenantPeople";
+import tenantPeriods from "./tables/tenantPeriods";
 import tenantUnits from "./tables/tenantUnits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
@@ -147,6 +151,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly ninaMemories: typeof ninaMemories;
   readonly ninaMemoryKeys: typeof ninaMemoryKeys;
   readonly ninaMemoryPortraits: typeof ninaMemoryPortraits;
+  readonly ninaMemoryRestores: typeof ninaMemoryRestores;
   readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
@@ -172,9 +177,12 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly schools: typeof schools;
   readonly snapshotBatches: typeof snapshotBatches;
   readonly subscriptions: typeof subscriptions;
+  readonly tenantCohortMembers: typeof tenantCohortMembers;
+  readonly tenantCohorts: typeof tenantCohorts;
   readonly tenantGrants: typeof tenantGrants;
   readonly tenantInvites: typeof tenantInvites;
   readonly tenantPeople: typeof tenantPeople;
+  readonly tenantPeriods: typeof tenantPeriods;
   readonly tenantUnits: typeof tenantUnits;
   readonly tenants: typeof tenants;
   readonly tryoutAttemptPlacements: typeof tryoutAttemptPlacements;
@@ -242,6 +250,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   ninaMemories,
   ninaMemoryKeys,
   ninaMemoryPortraits,
+  ninaMemoryRestores,
   ninaSummaries,
   ninaTurns,
   ninaUploads,
@@ -267,9 +276,12 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   schools,
   snapshotBatches,
   subscriptions,
+  tenantCohortMembers,
+  tenantCohorts,
   tenantGrants,
   tenantInvites,
   tenantPeople,
+  tenantPeriods,
   tenantUnits,
   tenants,
   tryoutAttemptPlacements,
