@@ -1,6 +1,7 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { ModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
+import { requireWholeSearchQuery } from "@repo/backend/confect/contentRelease/search/input";
 import type { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
 import type { SearchFamily } from "@repo/backend/confect/contentRelease/search/spec";
 import { resolveSearchProjection } from "@repo/backend/confect/contentRelease/search/verify";
@@ -77,6 +78,9 @@ export const readPublishedSearchDocuments = Effect.fn(
       scanLimit
     );
   }
+  // Convex reads the first 16 terms of a query and says nothing of the rest, so
+  // a query it would read in part is refused, as the Quran search refuses it.
+  yield* Effect.forEach(queryTexts, requireWholeSearchQuery);
   const groups = yield* Effect.forEach(
     queryTexts,
     (queryText) =>

@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { MathCasRequestError } from "@repo/math/errors";
 import { MathService } from "@repo/math/service";
-import { ConfigProvider, Deferred, Effect, Exit, Fiber } from "effect";
+import {
+  Array as Arr,
+  ConfigProvider,
+  Deferred,
+  Effect,
+  Exit,
+  Fiber,
+} from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 
@@ -118,6 +125,61 @@ describe("MathService", () => {
         })
       );
     })
+  );
+  it.effect(
+    "admits a verified CAS result with more rows than a request holds",
+    () =>
+      Effect.gen(function* () {
+        // The CAS bounds a result by its size, not by its rows, so a list can run
+        // past the 128 values a request may carry: a factorization with a factor
+        // for each of 129 primes gives 129 items.
+        const rows = Arr.makeBy(129, (index) => index + 2);
+        fetcher.mockResolvedValue(
+          Response.json({
+            conditions: Arr.map(rows, (row) => ({
+              expression: `x != ${row}`,
+              latex: `x \\neq ${row}`,
+            })),
+            input: { expression: "2 + 2", kind: "math", operation: "evaluate" },
+            items: Arr.map(rows, (row) => ({
+              label: "factor",
+              latex: `${row}`,
+              value: `${row}`,
+            })),
+            kind: "evaluate",
+            operation: "evaluate",
+            primary: { expression: "2 + 2", latex: "2 + 2" },
+            reason: "Exact arithmetic was checked.",
+            stepStatus: "complete",
+            steps: Arr.map(rows, (row) => ({
+              action: "evaluate",
+              items: [],
+              primary: { expression: `${row}`, latex: `${row}` },
+            })),
+            status: "verified",
+          })
+        );
+        const exit = yield* Effect.exit(
+          MathService.use((service) =>
+            service.compute({
+              expression: "2 + 2",
+              kind: "math",
+              operation: "evaluate",
+            })
+          ).pipe(
+            Effect.provide(MathService.layer),
+            Effect.provideService(ConfigProvider.ConfigProvider, provider),
+            Effect.provideService(FetchHttpClient.Fetch, fetcher)
+          )
+        );
+        expect(Exit.isSuccess(exit)).toBe(true);
+        if (Exit.isFailure(exit)) {
+          return;
+        }
+        expect(exit.value.conditions).toHaveLength(rows.length);
+        expect(exit.value.items).toHaveLength(rows.length);
+        expect(exit.value.steps).toHaveLength(rows.length);
+      })
   );
   it.effect("keeps CAS HTTP failures typed", () =>
     Effect.gen(function* () {

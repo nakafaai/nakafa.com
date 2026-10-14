@@ -46,7 +46,7 @@ export function AiMessagePart({
     }
     return (
       <Source href={part.url}>
-        <SourceTrigger label={part.title} />
+        <SourceTrigger title={part.title} />
       </Source>
     );
   }
