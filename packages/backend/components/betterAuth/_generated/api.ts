@@ -1050,12 +1050,7 @@ export const internal: {
       "mutation",
       "internal",
       { cursor: null | string; dry: boolean },
-      {
-        cleared: number;
-        holding: number;
-        next: null | string;
-        scanned: number;
-      }
+      { cleared: number; holding: number; next: null | string; scanned: number }
     >;
   };
 } = anyApi as any;
