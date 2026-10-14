@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type comments from "@repo/backend/confect/_generated/refs/comments";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { Animal } from "@repo/design-system/components/ui/animal";
 import {
   Avatar,
   AvatarFallback,
@@ -34,7 +35,6 @@ import {
 import { CommentsAdd } from "@/components/comments/add";
 import { getLocale } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/identity/initials";
 
 export type CommentWithUser = Ref.Returns<
   typeof comments.queries.getCommentsBySlug
@@ -109,7 +109,9 @@ export function CommentContent({
     >
       <Avatar className="size-10">
         <AvatarImage alt={userName} src={userImage} />
-        <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
+        <AvatarFallback>
+          <Animal mascot={comment.user?.mascot} />
+        </AvatarFallback>
       </Avatar>
       <div className="grid min-w-0 flex-1 gap-2">
         <div className="grid gap-1">

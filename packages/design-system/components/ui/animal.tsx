@@ -1,12 +1,16 @@
 import { Picture } from "@repo/design-system/components/ui/picture";
+import type { Mascot } from "@repo/mascot/code";
 import { CANVAS, draw } from "@repo/mascot/draw";
-import { forSeed } from "@repo/mascot/seed";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 
 interface Props {
   className?: string;
-  name: string;
+  /**
+   * The animal of the person. An account read before the backfill has run holds
+   * none yet, and then nothing is drawn.
+   */
+  mascot: typeof Mascot.Type | undefined;
 }
 
 /** The whole canvas that an animal is drawn on. */
@@ -22,17 +26,20 @@ function marked() {
 }
 
 /**
- * The profile animal of one person, in a round frame. The animal follows the
- * seed in `name`, so the same name always shows the same animal.
+ * The profile animal of one person, drawn to fill its parent. The `Avatar` around
+ * it is the circle, so the animal has no border and no rounding of its own.
  */
-export function Character({ name, className }: Props) {
+export function Animal({ className, mascot }: Props) {
+  if (mascot === undefined) {
+    return null;
+  }
   return (
     <Picture
       box={BOX}
-      className={cn("shrink-0 rounded-full border", className)}
+      className={cn("size-full", className)}
       data-look=""
       marked={marked}
-      shapes={Arr.of(draw(forSeed(name)))}
+      shapes={Arr.of(draw(mascot))}
     />
   );
 }

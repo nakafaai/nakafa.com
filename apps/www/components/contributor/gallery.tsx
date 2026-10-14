@@ -7,9 +7,13 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useMounted } from "@mantine/hooks";
 import type { Contributor } from "@repo/contents/contributor";
+import { Animal } from "@repo/design-system/components/ui/animal";
+import {
+  Avatar,
+  AvatarFallback,
+} from "@repo/design-system/components/ui/avatar";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Character } from "@repo/design-system/components/ui/character";
 import {
   Drawer,
   DrawerCreateHandle,
@@ -26,6 +30,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { forSeed } from "@repo/mascot/seed";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
@@ -55,6 +60,11 @@ const avatarVariants = cva("shadow-sm", {
   },
 });
 
+/** The animal of a contributor, drawn from the name and the username that the gallery shows. */
+function contributorMascot(contributor: Contributor) {
+  return forSeed(`${contributor.name} - ${contributor.username}`);
+}
+
 type ContributorGalleryProps = VariantProps<typeof galleryVariants> & {
   contributors: readonly Contributor[];
 };
@@ -83,10 +93,11 @@ export function ContributorGallery({
                   payload={contributor}
                   title={contributor.name}
                 >
-                  <Character
-                    className={avatarVariants({ variant })}
-                    name={`${contributor.name} - ${contributor.username}`}
-                  />
+                  <Avatar className={avatarVariants({ variant })}>
+                    <AvatarFallback>
+                      <Animal mascot={contributorMascot(contributor)} />
+                    </AvatarFallback>
+                  </Avatar>
                 </DrawerTrigger>
               }
             />
@@ -121,10 +132,11 @@ function ContributorDrawer({ contributor }: { contributor: Contributor }) {
       showBar
     >
       <DrawerHeader className="items-center">
-        <Character
-          className="size-16 shadow-sm"
-          name={`${contributor.name} - ${contributor.username}`}
-        />
+        <Avatar className="size-16 shadow-sm">
+          <AvatarFallback>
+            <Animal mascot={contributorMascot(contributor)} />
+          </AvatarFallback>
+        </Avatar>
         <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
         <DrawerDescription className="text-center">
           <Badge>{t(contributor.type)}</Badge>

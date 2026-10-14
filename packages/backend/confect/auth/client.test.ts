@@ -6,9 +6,11 @@ import { authComponent } from "@repo/backend/confect/auth/client";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/confect/auth/deletion/constants";
 import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { accountMascot } from "@repo/backend/confect/users/mascot";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { signInWithGoogle } from "@repo/backend/test/auth";
+import { encode } from "@repo/mascot/code";
 import { getFunctionName, makeFunctionReference } from "convex/server";
 import { Array as Arr } from "effect";
 
@@ -146,6 +148,18 @@ describe("auth/client", () => {
       "syntheticlearner",
       "syntheticlearner2",
     ]);
+  });
+  it("gives a new account the animal of its auth id", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await signInWithGoogle(test, "animal", NOW);
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    if (!user) {
+      throw new Error(
+        "Expected the Better Auth lifecycle to create an app user."
+      );
+    }
+
+    expect(user.mascot).toBe(encode(accountMascot(user.authId)));
   });
   it("projects each Better Auth profile field without scheduling unchanged writes", async () => {
     const test = createConvexTestWithBetterAuth();

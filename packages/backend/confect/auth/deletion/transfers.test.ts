@@ -1,6 +1,7 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import usersTable from "@repo/backend/confect/_generated/tables/users";
 import {
   ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE,
   ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
@@ -13,10 +14,12 @@ import {
   seedPreparedDeletionSchool,
 } from "@repo/backend/test/deletion/seed";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 10);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
+/** Reads a raw account the way Confect reads it, so its animal is decoded. */
+const decodeUser = Schema.decodeUnknownSync(usersTable.Doc);
 describe("reserved deletion school transfers", () => {
   afterEach(() => vi.restoreAllMocks());
   it("continues fallback past a full page of unavailable successors", async () => {
@@ -71,7 +74,11 @@ describe("reserved deletion school transfers", () => {
         const owner = await ctx.db.get("users", seeded.ownerId);
         assert(owner);
         return Effect.runPromise(
-          finalizeSchoolTransfers(owner, seeded.preparationId, NOW).pipe(
+          finalizeSchoolTransfers(
+            decodeUser(owner),
+            seeded.preparationId,
+            NOW
+          ).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -123,7 +130,11 @@ describe("reserved deletion school transfers", () => {
         const owner = await ctx.db.get("users", seeded.ownerId);
         assert(owner);
         return Effect.runPromise(
-          finalizeSchoolTransfers(owner, seeded.preparationId, NOW).pipe(
+          finalizeSchoolTransfers(
+            decodeUser(owner),
+            seeded.preparationId,
+            NOW
+          ).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -164,7 +175,11 @@ describe("reserved deletion school transfers", () => {
           new Error("school unavailable")
         );
         return Effect.runPromise(
-          finalizeSchoolTransfers(owner, seeded.preparationId, NOW).pipe(
+          finalizeSchoolTransfers(
+            decodeUser(owner),
+            seeded.preparationId,
+            NOW
+          ).pipe(
             Effect.provide(
               RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
             )
@@ -209,7 +224,11 @@ describe("reserved deletion school transfers", () => {
           const owner = await ctx.db.get("users", seeded.ownerId);
           assert(owner);
           return Effect.runPromise(
-            finalizeSchoolTransfers(owner, seeded.preparationId, NOW).pipe(
+            finalizeSchoolTransfers(
+              decodeUser(owner),
+              seeded.preparationId,
+              NOW
+            ).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
               )

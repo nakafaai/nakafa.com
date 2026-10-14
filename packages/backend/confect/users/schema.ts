@@ -1,6 +1,7 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { userRoles } from "@repo/backend/confect/users/role";
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
+import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
 
 /**
@@ -40,6 +41,10 @@ export const userValidator = Schema.Struct({
   username: Schema.optionalKey(Schema.String),
   // One line about the person, shown on the public profile.
   bio: Schema.optionalKey(Schema.String),
+  // The animal that draws this account, stored as its code. Every account holds
+  // one once the backfill has run; the change that deletes the backfill makes it
+  // required.
+  mascot: Schema.optionalKey(MascotCode),
   role: Schema.optionalKey(userRoleOptionsValidator),
   plan: userPlanValidator,
   credits: Schema.Finite,
