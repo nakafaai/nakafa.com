@@ -94,15 +94,14 @@ checks the earlier of the attempt and section deadlines after the section's
 integrity, and reads the question's stored answer only after that, as each
 write did before the gate. Each answer carries a version that grows with every
 write of its question, a clear included: deleting an answer deletes its
-version, so the question's placement keeps the version of the clear. The gate
-refuses an answer that is not newer than the latest write of its question
-(`TRYOUT_RESPONSE_STALE`). A page opened before versions sends none, and the
-gate writes its answer as the next version until that temporary compatibility
-goes (owner, exit, and cleanup are in `confect/tryouts/response/spec.ts`). A
-question of another learner reports `TRYOUT_PLACEMENT_NOT_FOUND`, like a
-question that does not exist. The try-out store lives in
-`confect/tryouts/gate.ts` and goes with the rest of the try-out runtime at the
-engine cutover.
+version, so the question's placement keeps the version of the clear. The
+version is a required argument, so a page opened before versions, which sends
+none, has its answer refused by argument validation. The gate refuses an
+answer that is not newer than the latest write of its question
+(`TRYOUT_RESPONSE_STALE`). A question of another learner reports
+`TRYOUT_PLACEMENT_NOT_FOUND`, like a question that does not exist. The try-out
+store lives in `confect/tryouts/gate.ts` and goes with the rest of the try-out
+runtime at the engine cutover.
 
 The structured-response rollout completed on 2026-09-01 after production data
 contained only canonical rows. Placements persist one required `responseSpec`,
