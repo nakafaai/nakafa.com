@@ -88,22 +88,15 @@ connection.
 ### Clearing the tokens already stored
 
 The hooks never touch a row they do not write, so every account written before
-them still holds the tokens, sealed except for the ID token. The temporary
-internal mutation `tokens:clearPage` of the Better Auth component removes the
-five columns from them, one page of accounts a call, and leaves every other row
-and column alone. With `dry` set it only counts. It is internal, so the app
-cannot call it, and an operator runs it because `convex run` sends the admin
-key, which may call internal functions. It runs on dev and then on production
-with `convex run --component betterAuth tokens:clearPage`, on production only
-after the release with the hooks is live. Clearing removes Nakafa's copy. A
-refresh token that Google issued earlier is not revoked by it.
-
-Owner: this ADR. Exit: on dev and on production, after the release with the
-hooks is live there, a dry pass over every account finds no row that holds a
-token. Cleanup: the change that records the production result deletes the
-mutation and its test, and stops exporting the list of columns that only the
-mutation reads. The columns stay in the schema, because Better Auth generates
-the table, and stay unset.
+them held the tokens, sealed except for the ID token. A temporary internal
+mutation of the Better Auth component (#1052) removed the five columns from
+those rows, one page of accounts a call, and left every other row and column
+alone. On 14 October 2026, after the release with the hooks was live, it found
+1 account holding a token on dev and 734 of 734 on production, cleared them,
+and a dry pass after it found none on either. The cleanup change deleted the
+mutation and its test. Clearing removed Nakafa's copy; a refresh token that
+Google issued earlier is not revoked by it. The columns stay in the schema,
+because Better Auth generates the table, and stay unset.
 
 ### Signing keys and the session token
 
