@@ -18,7 +18,7 @@ const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
-/** Creates the SMA period of the fixture as its Admin, planned, and returns its ID. */
+/** Creates the SMA period of the fixture as its Admin, planned, and returns the period the mutation made. */
 const sma = (fixture: Fixture) =>
   fixture.as("admin").mutation(periods.create, {
     end: "2026-12-19",
@@ -68,11 +68,11 @@ describe("tenancy/cohorts create and list", () => {
         const period = yield* sma(fixture);
         yield* cohort(fixture, period.id, "B", 7);
         yield* cohort(fixture, period.id, "a", 7);
-        yield* cohort(fixture, period.id, "C", 8);
+        yield* cohort(fixture, period.id, "8A", 8);
         const listed = yield* fixture
           .as("principal")
           .query(list, { periodId: period.id, slug: nf });
-        expect(Arr.map(listed, (row) => row.name)).toEqual(["a", "B", "C"]);
+        expect(Arr.map(listed, (row) => row.name)).toEqual(["a", "B", "8A"]);
       })
   );
 
@@ -262,6 +262,46 @@ describe("tenancy/cohorts members", () => {
           .query(members, { ...firstPage, cohortId: made.id, slug: nf });
         expect(memberList.page).toEqual([]);
       })
+  );
+
+  it.effect(
+    "refuses a cohort's members to a reader who may list people but not view the cohort",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* sma(fixture);
+        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const refused = yield* fixture
+          .as("counselor")
+          .query(members, { ...firstPage, cohortId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("role"));
+      })
+  );
+
+  it.effect("refuses the members of a cohort of another school", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const other = slugOf("other");
+      const period = yield* fixture.as("otherOwner").mutation(periods.create, {
+        end: "2026-12-19",
+        name: "Ganjil",
+        slug: other,
+        start: "2026-07-13",
+        unitId: fixture.units.sd,
+      });
+      const foreign = yield* fixture.as("otherOwner").mutation(create, {
+        grade: 7,
+        name: "7A",
+        periodId: period.id,
+        slug: other,
+      });
+      const refused = yield* fixture
+        .as("admin")
+        .query(members, { ...firstPage, cohortId: foreign.id, slug: nf })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject(denied("resource"));
+    })
   );
 });
 

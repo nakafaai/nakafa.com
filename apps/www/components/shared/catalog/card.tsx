@@ -1,20 +1,19 @@
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
-  CardAction,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Tile } from "@repo/design-system/components/ui/tile";
+import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
+import type { TileLook } from "@repo/design-system/lib/look";
+import { Predicate } from "effect";
 import Image from "next/image";
 import type { ReactElement, ReactNode } from "react";
 
 interface CatalogCardProps {
   readonly action: ReactElement;
   readonly actionLabel: string;
-  readonly badge?: string;
   readonly children: ReactElement;
   readonly title: string;
 }
@@ -23,7 +22,6 @@ interface CatalogCardProps {
 export function CatalogCard({
   action,
   actionLabel,
-  badge,
   children,
   title,
 }: CatalogCardProps) {
@@ -34,11 +32,6 @@ export function CatalogCard({
         <CardTitle>
           <h2>{title}</h2>
         </CardTitle>
-        {badge ? (
-          <CardAction className="self-center">
-            <Badge variant="outline">{badge}</Badge>
-          </CardAction>
-        ) : null}
       </CardHeader>
       <CardFooter className="border-t bg-muted/50 p-(--card-spacing)">
         <Button
@@ -75,17 +68,47 @@ export function CatalogCardImage({
   );
 }
 
-/** Renders the tile of a catalog choice in the same 1200 by 630 visual frame. */
+/**
+ * Renders the tile of a catalog choice in the same 1200 by 630 visual frame.
+ * The choices of one grid take their `shift` from `getTileLooks` or
+ * `getTileShifts`, so that no two tiles of the grid share a blend.
+ */
 export function CatalogCardTile({
   children,
   seed,
+  shift,
 }: {
   children: ReactNode;
   seed: string;
+  shift: number;
 }) {
   return (
-    <Tile className="aspect-40/21" seed={seed} variant="card">
+    <Tile className="aspect-40/21" seed={seed} shift={shift} variant="card">
       {children}
     </Tile>
+  );
+}
+
+/**
+ * Renders what one card of a catalog grid draws: its reviewed artwork when
+ * `visual` is the source of that artwork, or the tile that the grid gave it.
+ * `getTileLooks` hands a grid the one or the other for each card, and a card
+ * with artwork takes no icon and no hue from the tiles around it.
+ */
+export function CatalogCardVisual({
+  preload,
+  visual,
+}: {
+  preload: boolean;
+  visual: TileLook | string;
+}) {
+  if (Predicate.isString(visual)) {
+    return <CatalogCardImage preload={preload} src={visual} />;
+  }
+
+  return (
+    <CatalogCardTile seed={visual.seed} shift={visual.shift}>
+      <TileIcon icon={visual.icon} />
+    </CatalogCardTile>
   );
 }

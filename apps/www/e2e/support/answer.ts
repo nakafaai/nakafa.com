@@ -19,12 +19,26 @@ type Row = (typeof ListAnswer.Type)["page"][number];
 const isListAnswer = Schema.is(ListAnswer);
 
 /**
+ * Changes each memory of a page of the list with `change`, which gets the
+ * memory and its place on the page, newest first, and returns the memory the
+ * page then shows. The fields of the answer that are not memories go on as
+ * they came, and so does any answer that is no page.
+ */
+export const changeRows =
+  (change: (memory: Row, index: number) => Row) => (value: unknown) =>
+    isListAnswer(value)
+      ? { ...value, page: Arr.map(value.page, change) }
+      : value;
+
+/**
  * Changes what the list answers, for the connections the page opens from now
  * on, the way a backend that holds other memories would. `change` gets each
  * memory of a page, newest first, with its place on the page, and returns the
  * memory the page then shows. Everything else passes through as it is: a
  * transition is read whole, so the fields that the rewrite does not read go on
- * as they came.
+ * as they came. A test that also follows the changes the page sends uses
+ * `rewrite` of the tracker with `changeRows` instead, because the page's
+ * connection goes through one route only.
  */
 export const rewriteList = Effect.fn("NakafaE2E.rewriteList")(function* (
   page: Page,
@@ -59,15 +73,8 @@ export const rewriteList = Effect.fn("NakafaE2E.rewriteList")(function* (
           encodeTransition({
             ...frame.value,
             modifications: Arr.map(frame.value.modifications, (update) =>
-              MutableHashSet.has(lists, update.queryId) &&
-              isListAnswer(update.value)
-                ? {
-                    ...update,
-                    value: {
-                      ...update.value,
-                      page: Arr.map(update.value.page, change),
-                    },
-                  }
+              MutableHashSet.has(lists, update.queryId)
+                ? { ...update, value: changeRows(change)(update.value) }
                 : update
             ),
           })

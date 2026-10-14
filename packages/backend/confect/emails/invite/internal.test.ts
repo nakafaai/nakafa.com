@@ -6,11 +6,13 @@ import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { EMAIL_FROM, resend } from "@repo/backend/confect/emails/client";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { invitePerson, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Duration, Effect, Schema } from "effect";
 
 const address = Schema.decodeSync(Email)("kepala@harapan.example.test");
 const enqueueRendered = refs.internal.emails.invite.internal.enqueueRendered;
 const message = { html: "<p>Sign in</p>", subject: "Invited", text: "Sign in" };
+const requestedAt = Date.UTC(2026, 9, 13, 9, 0, 0);
+const resentAt = requestedAt + Duration.toMillis(Duration.minutes(20));
 const testResend = new Resend(components.resend, {
   apiKey: "re_test_invite",
   testMode: true,
@@ -36,10 +38,12 @@ describe("emails/invite/internal", () => {
         const send = vi.spyOn(resend, "sendEmail");
         yield* fixture.internal.mutation(enqueueRendered, {
           inviteId,
+          requestedAt,
           ...message,
         });
         yield* fixture.internal.mutation(enqueueRendered, {
           inviteId,
+          requestedAt,
           ...message,
         });
         const [first, second] = yield* Effect.promise(() =>
@@ -62,6 +66,33 @@ describe("emails/invite/internal", () => {
       })
   );
 
+  it.effect(
+    "sends a resend as a new message, because each send has its own moment",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { inviteId } = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, address)
+        );
+        const send = vi.spyOn(resend, "sendEmail");
+        yield* fixture.internal.mutation(enqueueRendered, {
+          inviteId,
+          requestedAt,
+          ...message,
+        });
+        yield* fixture.internal.mutation(enqueueRendered, {
+          inviteId,
+          requestedAt: resentAt,
+          ...message,
+        });
+        const [first, resent] = yield* Effect.promise(() =>
+          Promise.all(Arr.map(send.mock.results, (result) => result.value))
+        );
+        expect(send).toHaveBeenCalledTimes(2);
+        expect(resent).not.toBe(first);
+      })
+  );
+
   it.effect("sends nothing for an invite that was revoked", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
@@ -73,6 +104,7 @@ describe("emails/invite/internal", () => {
       const send = vi.spyOn(resend, "sendEmail");
       yield* fixture.internal.mutation(enqueueRendered, {
         inviteId,
+        requestedAt,
         ...message,
       });
       expect(send).not.toHaveBeenCalled();

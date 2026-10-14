@@ -106,6 +106,24 @@ export const invitePerson = Effect.fn("test.tenancy.invitePerson")(function* (
   return { inviteId, personId };
 });
 
+/** Gives one Person a standing grant of one role over a scope, as the school's roster and Admin do. */
+export const grantRole = Effect.fn("test.tenancy.grantRole")(function* (
+  tenantId: GenericId.GenericId<"tenants">,
+  personId: GenericId.GenericId<"tenantPeople">,
+  role: BuiltinRole,
+  scope: GrantScope
+) {
+  yield* (yield* DatabaseWriter).table("tenantGrants").insert({
+    grantedBy: { kind: "system" },
+    personId,
+    role: { key: role, kind: "builtin" },
+    scope,
+    status: "active",
+    tenantId,
+    term: { kind: "standing" },
+  });
+});
+
 /** Every journal entry, oldest first. */
 export const journal = Effect.flatMap(DatabaseReader, (reader) =>
   reader.table("journalEntries").index("by_creation_time").take(50)

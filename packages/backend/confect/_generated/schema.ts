@@ -51,6 +51,7 @@ import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
+import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
@@ -150,6 +151,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly ninaMemories: typeof ninaMemories;
   readonly ninaMemoryKeys: typeof ninaMemoryKeys;
   readonly ninaMemoryPortraits: typeof ninaMemoryPortraits;
+  readonly ninaMemoryRestores: typeof ninaMemoryRestores;
   readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
@@ -248,6 +250,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   ninaMemories,
   ninaMemoryKeys,
   ninaMemoryPortraits,
+  ninaMemoryRestores,
   ninaSummaries,
   ninaTurns,
   ninaUploads,

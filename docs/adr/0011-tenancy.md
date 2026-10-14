@@ -106,8 +106,9 @@ allowed email domains do not admit, and a suspended tenant leave the invite
 pending for the school to resolve. The functions that create invites refuse an
 address outside the list too: `open` and `tenancy/invites:invite` both do, so a
 new tenant starts with an empty list and each invite is checked the same way.
-Later channels extend the invite channel and the claim method values: a belajar.id match, and
-a login card, which is an invite on the card channel with the claim method
+Later channels extend the invite channel and the claim method values: a
+belajar.id match, and a login card, which is an invite on the card channel with
+the claim method
 `card` (ADR 0009). A claim hands the claimant the Person's standing grants, so
 creating an invite, or printing a login card, for a Person that holds the Owner
 or Admin role needs the right to give that role, `owner.manage` (ADR 0012).
@@ -132,13 +133,16 @@ days from the moment it is written (`INVITE_TERM`). Its expiry is stored on the
 invite and fixed when the invite is written, so a resend never moves it. A
 scheduled mutation marks a still-pending invite `expired` at that moment and
 journals `invite.expired`, and the claim path refuses an invite whose expiry has
-passed even before that mutation runs. An invite for a Person whose last term
+passed even before that mutation runs. An hourly sweep (`tenancy/expiry:sweep`)
+ends each due invite whose scheduled mutation never ran. An invite for a Person
+whose last term
 has ended expires that invite first and then writes a new one. An account that
 already holds the address is claimed as `open` claims it, through the same
-scheduled walk. A resend sends the same invite again to the same address. Each
-Person's resends are limited to 3 an hour, through the existing rate limit
-component, and a resend of an invite that expired or is no longer pending is
-refused.
+scheduled walk. A resend sends the same invite again to the same address, as a
+new message. Each Person's resends pass a token bucket of one token that refills
+three times an hour, through the existing rate limit component, so two resends
+are at least twenty minutes apart and no hour holds more than three. A resend of
+an invite that expired or is no longer pending is refused.
 
 Every journal entry of this section holds IDs and reason codes only, never a
 name, an address, or free text (ADR 0016).
@@ -171,8 +175,9 @@ cohorts reads at most that many. The cohort list carries no member count,
 because a count would read every placement of the period.
 
 A placement is one Person in one cohort of one period: the `cohortMember`
-relation of ADR 0012. A Person holds at most one placement per period, and a
-move keeps them in the same period. The placement opens `cohort.view` of its
+relation of ADR 0012. The Person must be a student: an active Student grant over
+the cohort's unit or over the whole school. A Person holds at most one placement
+per period, and a move keeps them in the same period. The placement opens `cohort.view` of its
 cohort to the Person, through the relation and nothing else; the relation is
 read from the placement table for each request and never copied onto the
 Person. A Person holds at most 64 placements in all, across every period, so a
@@ -324,12 +329,14 @@ beside the old School. Four steps follow, in this order, and the first is merged
   content licence version); the entitlements it grants are built later.
 - Scheduled: `tenancy/expiry:invite`, one run for the moment each invite stores
   as its expiry. It is internal, and it marks a still-pending invite expired.
+  `tenancy/expiry:sweep` runs every hour as the backstop for a run that never
+  happened: it expires each pending invite whose expiry has passed.
 - Operators, visits, and grant expiry follow as one change that extends this
   contract. Invite expiry and the account deletion release are built, in
   `tenancy/expiry` and `auth/deletion/release.ts`.
 - A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
   email domains. A period holds at most 200 cohorts, a Person holds at most 64
-  placements, and a Person's invite is sent again at most 3 times an hour.
+  placements, and a Person's invite is sent again at most 3 times in any hour.
 
 ## Consequences
 

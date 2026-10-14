@@ -17,6 +17,8 @@ import { Array as Arr, Duration, Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 9, 13, 9, 0, 0);
 const HOUR = Duration.toMillis(Duration.hours(1));
+/** The gap between two resends when three are allowed in an hour. */
+const RESEND_GAP = HOUR / 3;
 const TERM = Duration.toMillis(INVITE_TERM);
 const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
 const lain = Schema.decodeSync(Email)("lain@lain.example.test");
@@ -233,33 +235,32 @@ describe("tenancy/invites list and revoke", () => {
 
 describe("tenancy/invites resend and expiry", () => {
   it.effect(
-    "sends a pending invite again, at most three times an hour per Person",
+    "sends a pending invite again, at most three times in any hour per Person",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const made = yield* inviteInvited(fixture);
-        const sent = yield* Effect.all(
-          Arr.makeBy(3, () =>
-            fixture
-              .as("admin")
-              .mutation(resend, { inviteId: made.id, locale: "en", slug: nf })
-          )
-        );
-        const limited = yield* fixture
-          .as("admin")
-          .mutation(resend, { inviteId: made.id, locale: "en", slug: nf })
-          .pipe(Effect.flip);
-        vi.setSystemTime(NOW + HOUR);
-        const nextHour = yield* fixture
-          .as("admin")
-          .mutation(resend, { inviteId: made.id, locale: "en", slug: nf });
-        expect(Arr.map(sent, (row) => row.id)).toEqual([
-          made.id,
-          made.id,
-          made.id,
+        const sendAt = (at: number) => {
+          vi.setSystemTime(at);
+          return fixture
+            .as("admin")
+            .mutation(resend, { inviteId: made.id, locale: "en", slug: nf });
+        };
+        const first = yield* sendAt(NOW);
+        const burst = yield* sendAt(NOW).pipe(Effect.flip);
+        const early = yield* sendAt(NOW + RESEND_GAP - 1).pipe(Effect.flip);
+        const second = yield* sendAt(NOW + RESEND_GAP);
+        const third = yield* sendAt(NOW + 2 * RESEND_GAP);
+        const fullHour = yield* sendAt(NOW + HOUR - 1).pipe(Effect.flip);
+        const nextHour = yield* sendAt(NOW + HOUR);
+        expect(
+          Arr.map([first, second, third, nextHour], (row) => row.id)
+        ).toEqual([made.id, made.id, made.id, made.id]);
+        expect([burst, early, fullHour]).toMatchObject([
+          { _tag: "InviteRateLimited" },
+          { _tag: "InviteRateLimited" },
+          { _tag: "InviteRateLimited" },
         ]);
-        expect(limited).toMatchObject({ _tag: "InviteRateLimited" });
-        expect(nextHour.id).toBe(made.id);
         expect(
           Arr.length(
             Arr.filter(
@@ -385,15 +386,15 @@ describe("tenancy/invites resend and expiry", () => {
       })
   );
 
-  it.effect("refuses to resend an invite of a Person of another school", () =>
+  it.effect("refuses a resend by a Teacher of the same school, by role", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const made = yield* inviteInvited(fixture);
-      const foreign = yield* fixture
+      const refused = yield* fixture
         .as("teacher")
         .mutation(resend, { inviteId: made.id, locale: "en", slug: nf })
         .pipe(Effect.flip);
-      expect(foreign).toMatchObject(denied("role"));
+      expect(refused).toMatchObject(denied("role"));
     })
   );
 });

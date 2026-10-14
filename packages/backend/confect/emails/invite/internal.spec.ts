@@ -25,6 +25,7 @@ export default GroupSpec.make()
       args: () => ({
         html: Schema.String,
         inviteId: Id("tenantInvites"),
+        requestedAt: Schema.Finite,
         subject: Schema.String,
         text: Schema.String,
       }),

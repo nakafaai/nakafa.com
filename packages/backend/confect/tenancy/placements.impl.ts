@@ -14,10 +14,12 @@ import {
   cohortAccess,
   personAuthority,
   placementOf,
+  studentOf,
 } from "@repo/backend/confect/tenancy/authority";
 import {
   PersonAlreadyPlaced,
   PersonNotPlaced,
+  PersonNotStudent,
   PersonPlacementLimit,
 } from "@repo/backend/confect/tenancy/errors";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
@@ -25,11 +27,12 @@ import spec from "@repo/backend/confect/tenancy/placements.spec";
 import { Effect, Layer, Option, Struct } from "effect";
 
 /** One placement as the wire shows it. */
-const view = (placement: TenantCohortMembersDoc) =>
-  Struct.pick(placement, ["cohortId", "periodId", "personId"]);
+const view = (
+  placement: Pick<TenantCohortMembersDoc, "cohortId" | "periodId" | "personId">
+) => Struct.pick(placement, ["cohortId", "periodId", "personId"]);
 
 /**
- * Places an active Person in a cohort. A Person holds one cohort per period and
+ * Places an active student in a cohort. A Person holds one cohort per period and
  * at most PERSON_PLACEMENT_LIMIT placements in all.
  */
 const place = FunctionImpl.make(
@@ -40,6 +43,9 @@ const place = FunctionImpl.make(
     const { person: actor } = yield* Member;
     const cohort = yield* Cohort;
     const person = yield* personAuthority.authorize("person.manage", personId);
+    if (!(yield* studentOf(person._id, cohort.unitId))) {
+      return yield* new PersonNotStudent();
+    }
     const reader = yield* DatabaseReader;
     if (Option.isSome(yield* placementOf(cohort.periodId, person._id))) {
       return yield* new PersonAlreadyPlaced();
@@ -52,24 +58,21 @@ const place = FunctionImpl.make(
     if (held.length >= PERSON_PLACEMENT_LIMIT) {
       return yield* new PersonPlacementLimit();
     }
+    const placement = {
+      cohortId: cohort._id,
+      periodId: cohort.periodId,
+      personId: person._id,
+      tenantId: cohort.tenantId,
+    };
     yield* (yield* DatabaseWriter)
       .table("tenantCohortMembers")
-      .insert({
-        cohortId: cohort._id,
-        periodId: cohort.periodId,
-        personId: person._id,
-        tenantId: cohort.tenantId,
-      })
+      .insert(placement)
       .pipe(Effect.orDie);
     yield* personAuthority.record(personActor(actor), person, {
       cohort: cohort._id,
       type: "person.placed",
     });
-    return {
-      cohortId: cohort._id,
-      periodId: cohort.periodId,
-      personId: person._id,
-    };
+    return view(placement);
   })
 );
 
@@ -88,6 +91,9 @@ const move = FunctionImpl.make(
     const placement = yield* placementOf(cohort.periodId, person._id);
     if (Option.isNone(placement)) {
       return yield* new PersonNotPlaced();
+    }
+    if (!(yield* studentOf(person._id, cohort.unitId))) {
+      return yield* new PersonNotStudent();
     }
     const from = placement.value.cohortId;
     if (from === cohort._id) {

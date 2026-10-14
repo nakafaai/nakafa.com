@@ -57,6 +57,40 @@ export const expireInvite = Effect.fn("tenancy.invite.expire")(function* (
   });
 });
 
+/** The most invites one sweep run expires. A longer backlog drains over later runs. */
+export const INVITE_SWEEP_BATCH_SIZE = 50;
+
+/**
+ * Expires the pending invites whose term has passed, as the system. Each invite
+ * normally ends at its own moment; this sweep is the backstop for a run that
+ * never happened. It reads one indexed batch of due invites per run.
+ */
+export const expireDueInvites = Effect.fn("tenancy.invite.expireDue")(
+  function* () {
+    const reader = yield* DatabaseReader;
+    const now = yield* Clock.currentTimeMillis;
+    const due = yield* reader
+      .table("tenantInvites")
+      .index("by_state_status_and_expiresAt", (query) =>
+        query.eq("state.status", "pending").lte("expiresAt", now)
+      )
+      .take(INVITE_SWEEP_BATCH_SIZE)
+      .pipe(Effect.orDie);
+    yield* Effect.forEach(
+      due,
+      (invite) =>
+        reader
+          .table("tenantPeople")
+          .get(invite.personId)
+          .pipe(
+            Effect.orDie,
+            Effect.flatMap((person) => expireInvite(invite, person))
+          ),
+      { discard: true }
+    );
+  }
+);
+
 /**
  * Writes the pending invite of one unclaimed Person, then starts what it implies
  * in the caller's transaction, so the invite and its email exist together or not
@@ -69,8 +103,8 @@ export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
   email: typeof Email.Type,
   locale: ActiveAppLocaleCode
 ) {
-  const expiresAt =
-    (yield* Clock.currentTimeMillis) + Duration.toMillis(INVITE_TERM);
+  const requestedAt = yield* Clock.currentTimeMillis;
+  const expiresAt = requestedAt + Duration.toMillis(INVITE_TERM);
   const inviteId = yield* (yield* DatabaseWriter)
     .table("tenantInvites")
     .insert({
@@ -94,7 +128,7 @@ export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
     invite: inviteId,
     type: "person.invited",
   });
-  yield* startInviteEmail(inviteId, locale);
+  yield* startInviteEmail(inviteId, locale, requestedAt);
   yield* claimAfterInvite(email);
   return invite;
 });

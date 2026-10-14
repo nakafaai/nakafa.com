@@ -44,7 +44,7 @@ const createAs = (
     unitId,
   });
 
-/** Creates one period as the school's Admin, and returns its ID. */
+/** Creates one period as the school's Admin, and returns the period the mutation made. */
 const admin = (
   fixture: Fixture,
   term: { end: string; name: string; start: string }

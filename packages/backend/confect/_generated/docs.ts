@@ -52,6 +52,7 @@ export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "mat
 export type NinaMemoriesDoc = Document.Document<typeof schemaDefinition, "ninaMemories">;
 export type NinaMemoryKeysDoc = Document.Document<typeof schemaDefinition, "ninaMemoryKeys">;
 export type NinaMemoryPortraitsDoc = Document.Document<typeof schemaDefinition, "ninaMemoryPortraits">;
+export type NinaMemoryRestoresDoc = Document.Document<typeof schemaDefinition, "ninaMemoryRestores">;
 export type NinaSummariesDoc = Document.Document<typeof schemaDefinition, "ninaSummaries">;
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
@@ -151,6 +152,7 @@ export interface Docs {
   ninaMemories: NinaMemoriesDoc;
   ninaMemoryKeys: NinaMemoryKeysDoc;
   ninaMemoryPortraits: NinaMemoryPortraitsDoc;
+  ninaMemoryRestores: NinaMemoryRestoresDoc;
   ninaSummaries: NinaSummariesDoc;
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;

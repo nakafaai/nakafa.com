@@ -11,6 +11,7 @@ import {
   editInList,
   pauseState,
   removeFromList,
+  restoreInList,
 } from "@/components/user/settings/memory/optimistic";
 
 const memoryId = Schema.decodeUnknownSync(Id("ninaMemories"));
@@ -33,8 +34,15 @@ function stored(name: string, change: Partial<Memory> = {}): Memory {
  */
 type Cached = readonly [name: string, args: unknown, value: unknown];
 
-/** A page of the list, held as Convex holds it: encoded by the function's own schema. */
-function listed(cursor: string | null, memories: Memory[]): Cached {
+/**
+ * A page of the list, held as Convex holds it: encoded by the function's own
+ * schema. It has more after it unless it is the end of the list.
+ */
+function listed(
+  cursor: string | null,
+  memories: Memory[],
+  isDone = false
+): Cached {
   return [
     Ref.getConvexFunctionName(nina.memory.list),
     Ref.encodeArgsSync(nina.memory.list, {
@@ -42,7 +50,7 @@ function listed(cursor: string | null, memories: Memory[]): Cached {
     }),
     Ref.encodeReturnsSync(nina.memory.list, {
       continueCursor: "next",
-      isDone: false,
+      isDone,
       page: memories,
     }),
   ];
@@ -249,6 +257,66 @@ describe("the optimistic changes of the memory page", () => {
       removeFromList(fake.store, older.id);
 
       expect(fake.writes()).toBe(0);
+    });
+  });
+
+  describe("putting a deleted memory back", () => {
+    const top = stored("top", { confirmedAt: 1000 });
+    const high = stored("high", { confirmedAt: 900 });
+    const low = stored("low", { confirmedAt: 100 });
+    const back = stored("back", {
+      author: "nina",
+      confirmedAt: 500,
+      validUntil: 9000,
+    });
+
+    it("shows it in the one page that holds its place, as the memory the learner saw, and writes no other page", () => {
+      const fake = fakeStore([
+        listed(null, [top, high]),
+        listed("next", [low], true),
+      ]);
+
+      restoreInList(fake.store, back);
+
+      expect(pagesOf(fake)).toEqual([
+        [top.id, high.id],
+        [back.id, low.id],
+      ]);
+      expect(fake.writes()).toBe(1);
+      // The end date and the author come back with it.
+      expect(
+        Arr.flatMap(fake.store.getAllQueries(nina.memory.list), ({ value }) =>
+          Option.isSome(value) ? value.value.page : []
+        )
+      ).toContainEqual(back);
+    });
+
+    it("shows the newest memory first on the page that starts the list, and the oldest last on the page that ends it", () => {
+      const fake = fakeStore([
+        listed(null, [top, high]),
+        listed("next", [low], true),
+      ]);
+
+      restoreInList(fake.store, stored("newest", { confirmedAt: 2000 }));
+      restoreInList(fake.store, stored("oldest", { confirmedAt: 1 }));
+
+      expect(pagesOf(fake)).toEqual([
+        [memoryId("newest"), top.id, high.id],
+        [low.id, memoryId("oldest")],
+      ]);
+    });
+
+    it("leaves a memory whose place is beyond the pages the browser holds to the server", () => {
+      const fake = fakeStore([listed(null, [top, high]), loading("next")]);
+      const loadingFirst = fakeStore([loading(null)]);
+
+      restoreInList(fake.store, back);
+      restoreInList(loadingFirst.store, back);
+
+      expect(pagesOf(fake)).toEqual([[top.id, high.id], null]);
+      expect(fake.writes()).toBe(0);
+      expect(pagesOf(loadingFirst)).toEqual([null]);
+      expect(loadingFirst.writes()).toBe(0);
     });
   });
 

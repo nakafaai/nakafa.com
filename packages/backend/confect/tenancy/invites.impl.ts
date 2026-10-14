@@ -37,12 +37,19 @@ import spec from "@repo/backend/confect/tenancy/invites.spec";
 import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
 import { Clock, Effect, Layer, Option, Struct } from "effect";
 
-/** Sends one Person's invite again at most this many times in an hour: the school's named rate. */
+/** Sends one Person's invite again at most this many times in any hour: the school's named rate. */
 const INVITE_RESENDS_PER_HOUR = 3;
 
+/**
+ * A bucket of one token that refills three times an hour, so two resends are
+ * at least twenty minutes apart and no hour holds more than three. A fixed
+ * window would let a burst of three at the end of one window and three at the
+ * start of the next pass.
+ */
 const inviteResends = new RateLimiter(components.agentRateLimiter, {
   inviteResend: {
-    kind: "fixed window",
+    capacity: 1,
+    kind: "token bucket",
     period: HOUR,
     rate: INVITE_RESENDS_PER_HOUR,
   },
@@ -208,7 +215,7 @@ const resend = FunctionImpl.make(
     if (!quota.ok) {
       return yield* new InviteRateLimited();
     }
-    yield* startInviteEmail(stored._id, locale);
+    yield* startInviteEmail(stored._id, locale, now);
     yield* personAuthority.record(personActor(actor), person, {
       invite: stored._id,
       type: "invite.resent",

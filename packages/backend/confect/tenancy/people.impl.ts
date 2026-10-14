@@ -14,12 +14,10 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
-  cohortAuthority,
   personAccess,
   personAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { replaceInviteState } from "@repo/backend/confect/tenancy/invite";
-import { cohortMembers } from "@repo/backend/confect/tenancy/members";
 import spec from "@repo/backend/confect/tenancy/people.spec";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
 import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";
@@ -35,28 +33,16 @@ const view = (person: TenantPeopleDoc) => ({
 });
 
 /**
- * The Persons of one status in the member's school, a page at a time. With a
- * cohort, only the Persons placed in it, which its `cohort.view` decides first.
+ * The Persons of one status in the member's school, a page at a time, read on
+ * the status index. A cohort's members are listed by `cohorts:members`: the
+ * placements of a cohort are not indexed by status, and a page filtered after
+ * it is read would come back short.
  */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("tenancy.people.list")(function* ({
-    cohortId,
-    paginationOpts,
-    status,
-  }) {
-    if (cohortId !== undefined) {
-      yield* cohortAuthority.authorize("cohort.view", cohortId);
-      const placed = yield* cohortMembers(cohortId, paginationOpts);
-      return Struct.assign(placed, {
-        page: Arr.map(
-          Arr.filter(placed.page, (person) => person.status === status),
-          view
-        ),
-      });
-    }
+  Effect.fn("tenancy.people.list")(function* ({ paginationOpts, status }) {
     const { tenant } = yield* Member;
     const page = yield* (yield* DatabaseReader)
       .table("tenantPeople")

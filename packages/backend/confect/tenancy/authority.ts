@@ -65,18 +65,40 @@ const readPeriod = Effect.fnUntraced(function* (
  * The placement of one Person in one period, if any. A Person holds at most one
  * per period, so the lookup is one indexed read.
  */
-export const placementOf = Effect.fnUntraced(function* (
-  periodId: GenericId.GenericId<"tenantPeriods">,
-  personId: GenericId.GenericId<"tenantPeople">
+export const placementOf = Effect.fn("tenancy.authority.placementOf")(
+  function* (
+    periodId: GenericId.GenericId<"tenantPeriods">,
+    personId: GenericId.GenericId<"tenantPeople">
+  ) {
+    return yield* (yield* DatabaseReader)
+      .table("tenantCohortMembers")
+      .get("by_periodId_and_personId", periodId, personId)
+      .pipe(
+        Effect.asSome,
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
+        Effect.orDie
+      );
+  }
+);
+
+/**
+ * Whether one Person holds an active student grant that covers a unit. A cohort
+ * holds only the students of its own unit, so a placement checks this first.
+ */
+export const studentOf = Effect.fn("tenancy.authority.studentOf")(function* (
+  personId: GenericId.GenericId<"tenantPeople">,
+  unitId: GenericId.GenericId<"tenantUnits">
 ) {
-  return yield* (yield* DatabaseReader)
-    .table("tenantCohortMembers")
-    .get("by_periodId_and_personId", periodId, personId)
-    .pipe(
-      Effect.asSome,
-      Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
-      Effect.orDie
-    );
+  const grants = yield* activeGrants(personId);
+  return Arr.some(
+    grants,
+    (grant) =>
+      grant.role.key === "student" &&
+      GrantScope.match(grant.scope, {
+        tenant: () => true,
+        unit: (scope) => scope.unitId === unitId,
+      })
+  );
 });
 
 /**

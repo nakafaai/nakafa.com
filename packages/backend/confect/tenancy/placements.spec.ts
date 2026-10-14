@@ -7,6 +7,7 @@ import { CohortAccess } from "@repo/backend/confect/tenancy/access";
 import {
   PersonAlreadyPlaced,
   PersonNotPlaced,
+  PersonNotStudent,
   PersonPlacementLimit,
 } from "@repo/backend/confect/tenancy/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -20,9 +21,9 @@ const PlacementView = Schema.Struct({
 });
 
 /**
- * Places a Person in a cohort, or moves them to another cohort of the same
+ * Places a student in a cohort, or moves them to another cohort of the same
  * period. Both need the Admin's `cohort.manage` on the target cohort, and the
- * Person must be active.
+ * Person must be an active student of the cohort's unit.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -37,7 +38,12 @@ export default GroupSpec.make()
       }),
       returns: () => PlacementView,
       error: () =>
-        Schema.Union([AccessDenied, PersonAlreadyPlaced, PersonPlacementLimit]),
+        Schema.Union([
+          AccessDenied,
+          PersonAlreadyPlaced,
+          PersonNotStudent,
+          PersonPlacementLimit,
+        ]),
     }).middleware(CohortAccess, { action: "cohort.manage", arg: "cohortId" })
   )
   .addFunction(
@@ -49,6 +55,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => PlacementView,
-      error: () => Schema.Union([AccessDenied, PersonNotPlaced]),
+      error: () =>
+        Schema.Union([AccessDenied, PersonNotPlaced, PersonNotStudent]),
     }).middleware(CohortAccess, { action: "cohort.manage", arg: "cohortId" })
   );

@@ -46,7 +46,7 @@ first school and every new country before its launch (K20).
 | Report and credentials | The report template, the signers, and the credential issuer | The report renderer, the import, and the export |
 | Identity | The name, format, purpose, legal basis, and sensitivity of identifiers such as NISN, NPSN, and UPN | Encrypted storage. An identifier is never a key. |
 | National exam catalogue | Dates, delivery mode, and scale | The assessment engine and IRT (ADR 0031) |
-| Exam profile | The official name per language, the sections and their durations, navigation, interactions, tools, accommodations, scoring, and the report form | The player, the scoring, and the scale (ADR 0031) |
+| Exam profile | The official name per language, the sections and their durations, the total time, navigation, interactions, tools, accommodations, scoring, the report form, the write allowance after a deadline, and the reconciliation grace period (ADR 0013) | The player, the scoring, and the scale (ADR 0031) |
 | Age and consent | The age limit, and the rule for consent by a parent or guardian (K2) | The consent flow, with its time, method, and policy version |
 | Attendance | The attendance codes of the country | The summaries and the exports |
 | Locale and direction | The text direction, the number system, and the calendar, Gregorian or Hijri | The formatting engine, and the direction rules of the design system |

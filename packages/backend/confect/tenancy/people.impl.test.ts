@@ -2,7 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Email } from "@repo/backend/confect/tenancy/schema";
-import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  grantRole,
+  journal,
+  slugOf,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const nf = slugOf("nf");
@@ -150,6 +155,11 @@ describe("tenancy/people rename and remove", () => {
           periodId: period.id,
           slug: nf,
         });
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, fixture.invited, "student", {
+            kind: "tenant",
+          })
+        );
         yield* admin.mutation(place, {
           cohortId: seventh.id,
           personId: fixture.invited,
@@ -261,113 +271,6 @@ describe("tenancy/people rename and remove", () => {
         denied("resource"),
         denied("resource"),
       ]);
-    })
-  );
-});
-
-describe("tenancy/people list of a cohort", () => {
-  it.effect(
-    "lists the people placed in a cohort whose status matches, to the cohort's readers",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const admin = fixture.as("admin");
-        const period = yield* admin.mutation(periods.create, {
-          end: "2026-12-19",
-          name: "Ganjil",
-          slug: nf,
-          start: "2026-07-13",
-          unitId: fixture.units.sma,
-        });
-        const seventh = yield* admin.mutation(createCohort, {
-          grade: 7,
-          name: "7A",
-          periodId: period.id,
-          slug: nf,
-        });
-        yield* admin.mutation(place, {
-          cohortId: seventh.id,
-          personId: fixture.people.student.personId,
-          slug: nf,
-        });
-        const active = yield* admin.query(list, {
-          ...firstPage,
-          cohortId: seventh.id,
-          slug: nf,
-          status: "active",
-        });
-        const suspended = yield* admin.query(list, {
-          ...firstPage,
-          cohortId: seventh.id,
-          slug: nf,
-          status: "suspended",
-        });
-        expect(Arr.map(active.page, (person) => person.id)).toEqual([
-          fixture.people.student.personId,
-        ]);
-        expect(suspended.page).toEqual([]);
-      })
-  );
-
-  it.effect(
-    "refuses a cohort's people to a reader who may list people but not the cohort",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const admin = fixture.as("admin");
-        const period = yield* admin.mutation(periods.create, {
-          end: "2026-12-19",
-          name: "Ganjil",
-          slug: nf,
-          start: "2026-07-13",
-          unitId: fixture.units.sma,
-        });
-        const seventh = yield* admin.mutation(createCohort, {
-          grade: 7,
-          name: "7A",
-          periodId: period.id,
-          slug: nf,
-        });
-        const refused = yield* fixture
-          .as("counselor")
-          .query(list, {
-            ...firstPage,
-            cohortId: seventh.id,
-            slug: nf,
-            status: "active",
-          })
-          .pipe(Effect.flip);
-        expect(refused).toMatchObject(denied("role"));
-      })
-  );
-
-  it.effect("refuses a cohort of another school", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const other = slugOf("other");
-      const period = yield* fixture.as("otherOwner").mutation(periods.create, {
-        end: "2026-12-19",
-        name: "Ganjil",
-        slug: other,
-        start: "2026-07-13",
-        unitId: fixture.units.sd,
-      });
-      const foreign = yield* fixture.as("otherOwner").mutation(createCohort, {
-        grade: 7,
-        name: "7A",
-        periodId: period.id,
-        slug: other,
-      });
-      const refused = yield* fixture
-        .as("admin")
-        .query(list, {
-          ...firstPage,
-          cohortId: foreign.id,
-          slug: nf,
-          status: "active",
-        })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject(denied("resource"));
     })
   );
 });

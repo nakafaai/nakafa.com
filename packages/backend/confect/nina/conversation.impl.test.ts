@@ -10,13 +10,14 @@ import {
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { contextFor } from "@repo/backend/test/nina/admission";
+import { oldPage } from "@repo/backend/test/nina/legacy";
+import { homePage } from "@repo/backend/test/nina/page";
 import { encodeJsonText } from "@repo/utilities/json";
-import { DateTime, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -62,29 +63,7 @@ describe("Nina conversation visibility", () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
     vi.mocked(resolveNinaContext).mockReturnValue(
-      openNinaLearningSession({
-        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-        source: "current-page",
-        learning: {
-          locale: "en",
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-        },
-      }).pipe(
-        Effect.orDie,
-        Effect.map((session) => ({
-          page: {
-            locale: "en" as const,
-            slug: "home",
-            url: "https://nakafa.com/en/home",
-            verified: false,
-            needsFetch: false,
-            nina: session.context,
-          },
-          user: { role: "teacher" },
-        }))
-      )
+      contextFor("home", { role: "teacher" })
     );
   });
   afterEach(() => {
@@ -226,6 +205,17 @@ describe("Nina conversation visibility", () => {
         expect(told).not.toContain(owned);
       }
     }
+  });
+
+  it("tells the owner the same of a turn stored in the old shape as of a turn written now", async () => {
+    const f = await fixture();
+    const written = await f.owner.query(get, { chatId: f.chatId });
+    // The turn was admitted from the home page, as the mocked resolver says.
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", f.turnId, { page: oldPage(homePage) })
+    );
+
+    expect(await f.owner.query(get, { chatId: f.chatId })).toEqual(written);
   });
 
   it("names the owner's account and the turn that runs to the owner, and to a reader who holds the share link neither", async () => {

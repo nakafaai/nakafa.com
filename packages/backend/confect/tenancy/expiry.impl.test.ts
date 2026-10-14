@@ -17,6 +17,7 @@ const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
 const nf = slugOf("nf");
 const expire = refs.internal.tenancy.expiry.invite;
 const claimsRun = refs.internal.tenancy.claims.run;
+const sweep = refs.internal.tenancy.expiry.sweep;
 const { revoke } = refs.public.tenancy.invites;
 
 /** Reads one stored invite of the fixture's school. */
@@ -116,5 +117,48 @@ describe("tenancy/expiry invite", () => {
         ]);
         expect(yield* fixture.run(journal)).toEqual([]);
       })
+  );
+});
+
+describe("tenancy/expiry sweep", () => {
+  it.effect(
+    "ends a pending invite whose term has passed, though its own run never happened",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { inviteId, personId } = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, guru)
+        );
+        const written = yield* readInvite(fixture, inviteId);
+        vi.setSystemTime(written.expiresAt);
+        yield* fixture.internal.mutation(sweep, {});
+        const after = yield* readInvite(fixture, inviteId);
+        expect(after.state).toEqual({
+          at: written.expiresAt,
+          status: "expired",
+        });
+        expect(yield* fixture.run(journal)).toMatchObject([
+          {
+            actor: { kind: "system" },
+            change: { invite: inviteId, type: "invite.expired" },
+            subject: { id: personId, kind: "person" },
+          },
+        ]);
+      })
+  );
+
+  it.effect("leaves a pending invite whose term has not passed", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const { inviteId } = yield* fixture.run(
+        invitePerson(fixture.tenants.nf, guru)
+      );
+      const written = yield* readInvite(fixture, inviteId);
+      vi.setSystemTime(written.expiresAt - 1);
+      yield* fixture.internal.mutation(sweep, {});
+      const after = yield* readInvite(fixture, inviteId);
+      expect(after.state).toEqual({ status: "pending" });
+      expect(yield* fixture.run(journal)).toEqual([]);
+    })
   );
 });

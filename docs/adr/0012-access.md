@@ -154,8 +154,9 @@ The school roles also hold these actions:
   people, invites them, and lists the pending invites (`person.manage`,
   `person.invite`, `invite.view`). The Principal, Deputy, Staff, and Auditor
   read the periods and cohorts of the school (`period.view`, `cohort.view`). A
-  Person placed in a cohort reads that cohort and its members through the
-  `cohortMember` relation and nothing else.
+  student placed in a cohort reads that cohort and its members through the
+  `cohortMember` relation and nothing else. Only a student with an active
+  student grant over the cohort's unit or the whole school may be placed.
 - The Staff (Staf TU) prepares report cards and school documents and views
   people's data. The Counselor (Guru BK) views people's data and insight. The
   Auditor reads the journal, the settings, and people's data, and changes
