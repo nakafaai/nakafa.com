@@ -14,6 +14,7 @@ import journal from "@repo/backend/confect/_generated/refs/journal";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
+import operators from "@repo/backend/confect/_generated/refs/operators";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
@@ -97,6 +98,7 @@ const domainModules = {
   learningPreferences,
   nina,
   onboarding,
+  operators,
   subscriptions,
   tenancy,
   tryouts,

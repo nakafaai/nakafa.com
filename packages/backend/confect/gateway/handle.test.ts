@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { make } from "@repo/backend/confect/gateway/handle";
+import { languageModel as profile } from "@repo/backend/confect/gateway/model";
 import { Purpose, purposes } from "@repo/backend/confect/gateway/purpose";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
@@ -23,22 +24,10 @@ const answer = {
   },
   warnings: [],
 };
-/** Chat reasons deeply; every supporting purpose reasons briefly. */
-const reasoning = {
-  chat: "high",
-  specialist: "low",
-  background: "low",
-  suggestion: "low",
-  presentation: "low",
-};
-/** Today's deadlines for every purpose. */
-const deadlines = {
-  chat: { chunkMs: 45_000, stepMs: 90_000, totalMs: 420_000 },
-  specialist: { stepMs: 30_000, totalMs: 120_000 },
-  background: { stepMs: 15_000, totalMs: 45_000 },
-  suggestion: { stepMs: 30_000, totalMs: 90_000 },
-  presentation: { stepMs: 15_000, totalMs: 45_000 },
-};
+/** The reasoning effort the profile gives the effort of a purpose. */
+function reasoningOf(purpose: Purpose) {
+  return profile.reasoning[purposes[purpose].effort];
+}
 /** The length every stored vector has. */
 const DIMENSIONS = 768;
 
@@ -98,17 +87,15 @@ describe("Gateway handles", () => {
         const { gateway, languageModel, model } = serve();
         const handle = gateway.language(purpose);
         yield* Effect.promise(() => handle.model.doGenerate({ prompt }));
-        expect(languageModel).toHaveBeenCalledExactlyOnceWith(
-          "google/gemini-3.8-flash"
-        );
-        expect(handle.timeout).toEqual(deadlines[purpose]);
+        expect(languageModel).toHaveBeenCalledExactlyOnceWith(profile.id);
+        expect(handle.timeout).toEqual(purposes[purpose].timeout);
         expect(model.doGenerateCalls[0]?.maxOutputTokens).toBe(
-          purposes[purpose].maxOutputTokens
+          profile.output[purpose]
         );
         expect(model.doGenerateCalls[0]?.providerOptions).toEqual({
           convexGateway: {
             provider: { data_collection: "deny", zdr: true },
-            reasoningEffort: reasoning[purpose],
+            reasoningEffort: reasoningOf(purpose),
           },
         });
       })
@@ -123,7 +110,7 @@ describe("Gateway handles", () => {
           gateway.language(purpose).model.doStream({ prompt })
         );
         expect(model.doStreamCalls[0]?.maxOutputTokens).toBe(
-          purposes[purpose].maxOutputTokens
+          profile.output[purpose]
         );
       })
   );

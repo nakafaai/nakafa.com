@@ -355,6 +355,25 @@
     "attempt-not-in-progress": "Starte eine neue Sitzung, um weiterzuüben.",
     "submit-answer-error": "Deine Antwort konnte nicht gespeichert werden. Versuche es erneut."
   },
+  "Player": {
+    "navigator": "Aufgaben",
+    "navigator-open": "Aufgabenübersicht öffnen, Aufgabe {number}",
+    "controls": "Aufgabensteuerung",
+    "previous-question": "Vorherige Aufgabe",
+    "next-question": "Nächste Aufgabe",
+    "mode": "Ansicht",
+    "mode-list": "Liste",
+    "mode-single": "Eine Aufgabe",
+    "mode-error": "Deine Ansicht konnte nicht gespeichert werden. Versuche es erneut.",
+    "cell": "{state, select, answered {Aufgabe {number}, beantwortet} other {Aufgabe {number}, offen}}",
+    "unanswered": "Noch offen",
+    "time-left": "Noch {hours, plural, =0 {} one {# Stunde } other {# Stunden }}{minutes, plural, one {# Minute} other {# Minuten}} {seconds, plural, one {# Sekunde} other {# Sekunden}}",
+    "time-five": "Noch 5 Minuten",
+    "time-one": "Noch 1 Minute",
+    "shortcut-step": "Vorherige oder nächste Aufgabe",
+    "shortcut-pick": "Option wählen",
+    "shortcut-navigator": "Aufgabenübersicht"
+  },
   "Utils": {
     "clear-search": "Suche löschen",
     "search-bar-placeholder": "Inhalte durchsuchen...",
@@ -721,6 +740,7 @@
       "attachment-invalid": "Ein Anhang ist ungültig oder nicht mehr verfügbar. Wähle die Datei erneut aus und prüfe ihren Typ und ihre Größe.",
       "attachment-limit": "Du hast das Limit für Anhänge erreicht. Sende die bereits hochgeladenen Dateien oder warte, bevor du weitere hochlädst.",
       "attachment-size": "Die Dokumente einer Nachricht dürfen zusammen höchstens 10 MB groß sein. Entferne ein Dokument oder sende sie in getrennten Nachrichten.",
+      "message-size": "Diese Nachricht ist zu lang, damit Nina sie in einem Durchgang lesen kann. Kürze sie oder sende den Rest in einer neuen Nachricht.",
       "attachment-failed": "Nina konnte den Anhang nicht lesen oder speichern. Lade ihn bitte erneut hoch.",
       "provider-busy": "Der KI-Dienst erhält gerade zu viele Anfragen. Warte kurz und versuche es dann erneut.",
       "provider-unavailable": "Der KI-Dienst ist vorübergehend nicht verfügbar. Versuche es in Kürze erneut.",

@@ -30,6 +30,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
+import { operatorRow } from "@repo/backend/test/operators";
 import type { FunctionReference } from "convex/server";
 import type { TestConvex } from "convex-test";
 import {
@@ -369,6 +370,7 @@ const seed = Effect.fn("test.tenancy.seed")(function* (ctx: MutationCtx) {
       "active"
     ),
   });
+  yield* operatorRow(users.visitor.userId, TENANCY_NOW);
   const visitor = yield* claimed(
     nf,
     users.visitor.userId,
@@ -441,6 +443,9 @@ export const tenancyFixture = Effect.gen(function* () {
         });
       }),
     anonymous: client(t),
+    /** Runs the scheduled functions whose time has come. */
+    finishScheduled: () =>
+      Effect.promise(() => t.finishAllScheduledFunctions(vi.runAllTimers)),
     as: (account: keyof typeof seeded.users) =>
       client(
         t.withIdentity({

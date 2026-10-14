@@ -13,7 +13,8 @@ to make attempts and scores free with Pro access to worked solutions. Amended on
 unused access-campaign storage. Amended on 2026-10-02 to give responses one
 module outside try-out, with short answers, rubrics, stored outcomes, question
 worth, and penalized scoring. Amended on 2026-10-13 to admit answers and
-section finishes through the live-attempt gate (ADR 0013).
+section finishes through the live-attempt gate (ADR 0013), and to run a section
+in one player with two views.
 
 ## Context
 
@@ -183,6 +184,43 @@ The web bootstraps that exact attempt page, then subscribes only to
 `getSetAttemptState` or `getSectionAttemptState` while the attempt can still
 change. Frozen display stays separate from the active signed restart and
 navigation destinations. Terminal pages stop their mutable subscriptions.
+
+### Player
+
+A running section renders in one player, `apps/www/components/player`, which
+try-out binds in `apps/www/components/tryout/player`. The player knows
+questions, answers, and time. It does not know try-out routes or Convex
+functions, so a School assessment can bind the same parts.
+
+The player has two views. The list shows every question of the section, and
+one at a time shows only the current one. The server resolves the view before
+it sends the page, so the first render already has it and nothing flickers. A
+`?view=` parameter wins and an unknown value is a 404, then the view the
+learner saved, then the list. A learner saves a view with a Server Action that
+sets the `player_view` cookie, because a cookie is written on the server and
+the codebase does not write `document.cookie`. The page shows the chosen view
+at once and takes it back, with a toast, when the save fails.
+
+A navigator of question numbers fills the answered ones and rings the current
+one, so no state relies on color alone. It is a sidebar from the large
+breakpoint and a sheet below it, and it always shows the current number. Left
+and Right move between questions and `1` to `5` pick an option of a
+single-choice question. `G` opens and closes the sheet, and from the large
+breakpoint, where the sidebar is always open, it moves focus into the sidebar
+and back to the question. Confirming a finish lists the questions still open.
+A flag key and a flag state ship with the engine's single flags table, not with
+the player.
+
+In the list, the current question follows the reader. It is the question under
+a reading line just below the header, or the last question once the reader has
+scrolled to the end of the list. Both follow the page and not a constant: the
+line is the scroll margin that reveals a question plus a few pixels, so it falls
+inside a revealed question at any text size, and the end counts once it clears
+the footer, which the list measures. A jump or a focus holds its question
+current until the page moves away from where the jump or the focus left it,
+whether the reader used the wheel, a touch, a key, or the scrollbar. A list that
+fits in the window keeps the question under the line, because the reader has no
+end to reach.
 
 ### Freemium Access
 

@@ -355,6 +355,25 @@
     "attempt-not-in-progress": "Please start a new session to continue practicing.",
     "submit-answer-error": "We couldn't save your answer. Please try again."
   },
+  "Player": {
+    "navigator": "Questions",
+    "navigator-open": "Open the question navigator, question {number}",
+    "controls": "Question controls",
+    "previous-question": "Previous question",
+    "next-question": "Next question",
+    "mode": "View",
+    "mode-list": "List",
+    "mode-single": "One question",
+    "mode-error": "We couldn't save your view. Please try again.",
+    "cell": "{state, select, answered {Question {number}, answered} other {Question {number}, unanswered}}",
+    "unanswered": "Unanswered",
+    "time-left": "{hours, plural, =0 {} one {# hour } other {# hours }}{minutes, plural, one {# minute} other {# minutes}} {seconds, plural, one {# second} other {# seconds}} left",
+    "time-five": "5 minutes left",
+    "time-one": "1 minute left",
+    "shortcut-step": "Previous or next question",
+    "shortcut-pick": "Choose an option",
+    "shortcut-navigator": "Question navigator"
+  },
   "Utils": {
     "clear-search": "Clear search",
     "search-bar-placeholder": "Search content...",
@@ -721,6 +740,7 @@
       "attachment-invalid": "An attachment is invalid or no longer available. Choose it again and check its file type and size.",
       "attachment-limit": "You have reached the attachment limit. Send the files already uploaded or wait before uploading more.",
       "attachment-size": "The documents in one message can be at most 10 MB together. Remove a document or send them in separate messages.",
+      "message-size": "This message is too long for Nina to read in one turn. Shorten it, or send the rest in a new message.",
       "attachment-failed": "Nina could not read or save the attachment. Please try uploading it again.",
       "provider-busy": "The AI service is handling too many requests right now. Wait a moment, then try again.",
       "provider-unavailable": "The AI service is temporarily unavailable. Please try again shortly.",

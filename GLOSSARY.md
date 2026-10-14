@@ -31,6 +31,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Outcome**: How one answer scores: correct, incorrect, partial with earned points, or pending until the grader decides. A pending answer never counts as zero and keeps its score provisional.
 - **Live-attempt gate**: The one admission check every learner write to a running try-out passes, and every School assessment write will pass. The checks run in one order: owner, open attempt, proctor lock, device session, the attempt deadline (a finish checks it before it reads the section), the running section and its integrity, the live deadline (an answer checks the earlier of the attempt and section deadlines), and then, for an answer, the question's stored answer and its version. A refused write writes nothing. `confect/assessment/gate` owns it, and each kind of attempt provides the store it loads from and writes to.
 - **Attempt refusal**: The first gate rule a write failed: missing (no such target for this learner, including another learner's), attempt closed, locked, other device, section closed, or expired; an answer whose version is not newer than the latest write of its question, a clear included, is refused last, as stale. Each product maps it onto its own error codes.
+- **Player**: The one surface a learner answers questions in while a section runs. It knows questions, answers, and time, and nothing of try-out routes or Convex functions, so a School assessment binds the same parts. `apps/www/components/player` owns it, and try-out binds it in `apps/www/components/tryout/player`.
+- **Player view**: How the player lays out a section: every question in a list, or one question at a time. The server resolves it before it sends the page: the `view` parameter first, an unknown value being a 404, then the view the learner saved in a cookie, then the list.
 - **Question worth**: The points one placed question is worth, read only through the contract's `questionPoints`: its authored points or one, and a rubric's derived total.
 - **Penalized scoring**: A set strategy that adds each section's signed marks for a correct, wrong, or blank answer, such as +4, -1, and 0, times each question's worth.
 - **Learning program**: A durable educational pathway such as a school curriculum, assessment preparation track, or institution program. Public curriculum pages present Learning programs through localized routes.
@@ -78,6 +80,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 ## AI Gateway
 
 - **Gateway handle**: A language model prepared for one purpose, with its reasoning default and deadlines. It is the only way Nakafa code reaches a model.
+- **Language model profile**: The one record of the model Nina calls and its facts; switching the model changes it alone.
 - **Purpose**: Why Nakafa calls a model, such as chat, specialist, background, suggestion, or presentation. It sets a handle's deadlines and reasoning effort.
 - **Gateway failure**: The one classification of a failed model call, carrying routing facts only and never the prompt, the answer, or a provider message.
 
@@ -170,5 +173,5 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Journal**: The one record of audited changes for every space, written in the same transaction as the change and read by the audit log and by consumers.
 - **Journal entry**: One immutable audited change: its owner space, actor, subject, and change, holding IDs and codes only.
 - **Published change type**: A change type its kind exposes to journal consumers such as notifications, webhooks, and exports.
-- **Operator**: Nakafa staff who provision tenants. Not the school's Admin, whom Indonesian schools also call operator sekolah.
-- **Operator visit**: An operator's temporary, audited Auditor grant inside one tenant, approved by the school's Owner or Admin and ended on schedule.
+- **Operator**: Nakafa staff who open and suspend schools, and enter a school only on an approved visit. Not the school's Admin, whom Indonesian schools also call operator sekolah.
+- **Operator visit**: An operator's temporary, audited Auditor grant inside one school, requested by the operator and approved by the school's Owner or Admin. It ends when the operator leaves or deletes its account, when the school ends it, or at its term of at most 24 hours.

@@ -355,6 +355,25 @@
     "attempt-not-in-progress": "Mulai sesi baru dulu ya untuk lanjut latihan.",
     "submit-answer-error": "Ada masalah saat menyimpan jawaban. Coba lagi ya."
   },
+  "Player": {
+    "navigator": "Soal",
+    "navigator-open": "Buka navigasi soal, soal {number}",
+    "controls": "Kontrol soal",
+    "previous-question": "Soal sebelumnya",
+    "next-question": "Soal berikutnya",
+    "mode": "Tampilan",
+    "mode-list": "Daftar",
+    "mode-single": "Satu soal",
+    "mode-error": "Tampilanmu belum bisa disimpan. Coba lagi ya.",
+    "cell": "{state, select, answered {Soal {number}, terjawab} other {Soal {number}, belum dijawab}}",
+    "unanswered": "Belum dijawab",
+    "time-left": "Sisa waktu {hours, plural, =0 {} other {# jam }}{minutes} menit {seconds} detik",
+    "time-five": "Sisa waktu 5 menit",
+    "time-one": "Sisa waktu 1 menit",
+    "shortcut-step": "Soal sebelumnya atau berikutnya",
+    "shortcut-pick": "Pilih opsi",
+    "shortcut-navigator": "Navigasi soal"
+  },
   "Utils": {
     "clear-search": "Hapus pencarian",
     "search-bar-placeholder": "Cari konten...",
@@ -721,6 +740,7 @@
       "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
       "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",
       "attachment-size": "Total ukuran dokumen dalam satu pesan paling banyak 10 MB. Hapus salah satu dokumen atau kirim dalam pesan terpisah.",
+      "message-size": "Pesan ini terlalu panjang untuk dibaca Nina dalam satu giliran. Persingkat, atau kirim sisanya dalam pesan baru.",
       "attachment-failed": "Nina belum bisa membaca atau menyimpan lampiran. Coba unggah lagi.",
       "provider-busy": "Layanan AI sedang menerima terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.",
       "provider-unavailable": "Layanan AI sedang mengalami gangguan sementara. Coba lagi sebentar lagi.",
