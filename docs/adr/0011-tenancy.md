@@ -20,7 +20,7 @@ account. Schools control their students' data; Nakafa processes it for them.
 The first School let any signed-in user create a school through a public
 mutation, mapped roles to permissions in one static table, and kept member
 counters on the school document that every member action rewrote. It is retired
-without migration (see Retirement).
+and nothing of it is migrated (see Retirement).
 
 ## Decision
 
@@ -271,14 +271,27 @@ beside the old School. Four steps follow, in this order, and the first is merged
    loaded or suspended tab calls Convex directly and every deploy re-runs every
    live subscription. Measured before the switch on 13 October 2026: 2,790
    production executions between 12:57 and 14:42 UTC, spanning the deploy at
-   14:36, held no call to `schools/*`, `classes/*` or the School triggers. This
-   step ships nothing.
+   14:36, held no call to `schools/*`, `classes/*` or the School triggers.
+   Measured after it: 23,655 production executions between 18:21 UTC on 13
+   October and 07:24 UTC on 14 October, spanning the deploys of #1058, #1026,
+   #1049, #1042, #1054, #1046 and #1031, held none either. This step ships
+   nothing.
 3. Contract: one release removes the old functions, every writer of the old
    tables, and the rest of the code listed above, and adds the batched erase
-   migration in the same release. The migration runs dry first, which counts the
-   old rows, and then for real, on dev and on production, until it reports zero.
-4. Drop: a last release deletes the tables and the migration. Convex accepts that
-   schema only when no row is left, which is the proof that the rows are gone.
+   migration in the same release. It keeps the definitions of the 16 old tables
+   (the 15 `school*` tables and `accountDeletionSchoolTransfers`), because Convex
+   refuses a schema that drops a table while a row still holds it. The internal
+   migration `retire/school:erase` deletes every row of those tables, every stored
+   file their rows name, every scheduled job that would publish a class material,
+   and every forum post from the two forum aggregates, and it clears the school
+   fields of `accountDeletionPreparations` and the `schoolId` of `subscriptions`,
+   which the Polar webhook no longer writes. The `metadata` of a subscription is
+   Polar's copy and stays whole. The migration runs dry first, which counts the
+   old rows, and then for real, on dev and on production, page by page, until a
+   dry pass reports zero.
+4. Drop: a last release deletes the tables, those fields, the two forum
+   aggregates of `convex.config.ts`, and the migration. Convex accepts that schema
+   only when no row is left, which is the proof that the rows are gone.
 
 ## Implementation Contract
 

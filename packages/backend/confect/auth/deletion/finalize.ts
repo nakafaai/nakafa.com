@@ -10,11 +10,10 @@ import { recordAccountDeletionReceipt } from "@repo/backend/confect/auth/deletio
 import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
 import type { AccountDeletionPreparationVersion } from "@repo/backend/confect/auth/deletion/spec";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
-import { finalizeSchoolTransfers } from "@repo/backend/confect/auth/deletion/transfers";
 import { Clock, Duration, Effect, flow } from "effect";
 /**
- * Releases the account's Persons and applies reserved school transfers only
- * after Better Auth confirms that its user row is gone, then journals durable
+ * Releases the account's Persons and finalizes the preparation only after
+ * Better Auth confirms that its user row is gone, then journals durable
  * personal-data cleanup.
  */
 export const finalizeAccountDeletion = Effect.fn(
@@ -88,15 +87,6 @@ export const finalizeAccountDeletion = Effect.fn(
       return;
     }
     if (preparation && preparation.finalizedAt === undefined) {
-      const needsContinuation = yield* finalizeSchoolTransfers(
-        user,
-        preparation._id,
-        finalizedAt
-      );
-      if (needsContinuation) {
-        yield* continueCleanup;
-        return;
-      }
       yield* writer
         .table("accountDeletionPreparations")
         .patch(preparation._id, {

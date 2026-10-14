@@ -1,4 +1,10 @@
+/**
+ * Role values of the retired School class rows. The retired tables still
+ * validate their stored rows with them until the change that drops the tables
+ * also deletes this module.
+ */
 import { Schema } from "effect";
+
 /**
  * School class member role validator
  */
@@ -6,7 +12,6 @@ export const schoolClassMemberRoleValidator = Schema.Literals([
   "teacher",
   "student",
 ]);
-export type SchoolClassMemberRole = typeof schoolClassMemberRoleValidator.Type;
 
 /**
  * School class teacher role validator (base type without optional wrapper)
@@ -16,8 +21,6 @@ export const schoolClassTeacherRoleBaseValidator = Schema.Literals([
   "co-teacher",
   "assistant",
 ]);
-export type SchoolClassTeacherRole =
-  typeof schoolClassTeacherRoleBaseValidator.Type;
 
 /**
  * School class teacher role validator (with optional wrapper for schema use)

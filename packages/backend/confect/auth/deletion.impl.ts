@@ -12,7 +12,7 @@ import {
 } from "@repo/backend/confect/auth/cleanup/spec";
 import { cancelAccountDeletionAttemptByToken } from "@repo/backend/confect/auth/deletion/attemptCancellation";
 import {
-  cancelAccountDeletionBatch,
+  cancelAccountDeletion as cancelAccountDeletionProgram,
   sweepAccountDeletionCancellationsProgram,
 } from "@repo/backend/confect/auth/deletion/cancel";
 import { claimAccountDeletion as claimAccountDeletionProgram } from "@repo/backend/confect/auth/deletion/claim";
@@ -63,10 +63,8 @@ const cancelAccountDeletion = FunctionImpl.make(
   spec,
   "cancelAccountDeletion",
   Effect.fn("auth.deletion.cancelAccountDeletion")(function* (args) {
-    return yield* cancelAccountDeletionBatch(
-      args.authId,
-      args.expectedPreparation
-    );
+    yield* cancelAccountDeletionProgram(args.authId, args.expectedPreparation);
+    return null;
   })
 );
 const cancelAccountDeletionAttempt = FunctionImpl.make(

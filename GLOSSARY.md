@@ -138,16 +138,6 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Integration client**: An app that calls a school's REST API or MCP server with OAuth 2.0 client credentials. It holds the Integration role over its tenant or one unit, limited to the actions on its list.
 - **Webhook**: A signed HTTP callback of one Integration client, fed from the Journal. It delivers only published changes that the client could read, and one row for each attempt records the delivery.
 
-## Forum Conversation
-
-- **Forum Conversation**: The opened discussion surface for one class forum, usually shown as the right-side panel beside the forum list.
-- **Transcript**: The ordered message log rendered inside a Forum Conversation.
-- **Viewport**: The visible scroll window over a Transcript.
-- **Placement**: The intended Viewport target, such as the latest message edge or a specific post.
-- **Snapshot**: A persisted restorable Viewport state for one Forum Conversation.
-- **Navigation History**: The ordered semantic Viewport positions a user can return to inside one Forum Conversation.
-- **Latest Affinity**: The user state where a Forum Conversation Viewport is attached to the newest Transcript edge.
-
 ## Nakafa School
 
 - **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the web project and the Convex deployment of its data cell. Its data is isolated by every School function, never by the client.
