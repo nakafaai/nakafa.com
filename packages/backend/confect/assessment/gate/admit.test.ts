@@ -111,11 +111,11 @@ const memory = Effect.fn("test.gate.memory")(function* (state: Memory) {
   return { gate, log: Ref.get(log) };
 });
 
-/** Answers the question `q` with `optionKey` as the learner on no device, written with `version`. */
+/** Answers the question `q` with `optionKey` as the learner on no device; no version is a page older than versions. */
 const answer = (
   gate: Effect.Success<ReturnType<typeof memory>>["gate"],
   optionKey: Option.Option<string>,
-  version: number
+  version: number | null
 ) =>
   gate.answer({
     device: Option.none(),
@@ -125,7 +125,7 @@ const answer = (
       kind: "single-choice",
       optionKey: key,
     })),
-    version,
+    version: Option.fromNullOr(version),
   });
 
 /** One refused write: the first rule it fails, and the reads that happened before it. */
@@ -255,6 +255,18 @@ const endings: readonly (typeof Ending.Type)[] = [
   { deadline: NOW, reason: "time-expired" },
 ];
 
+/** The version of the question's latest write, and the version an answer without one is written with. */
+const Numbering = Schema.Struct({
+  case: Schema.String,
+  latest: Schema.Option(Schema.Int),
+  numbered: Schema.Int,
+});
+
+const numberings: readonly (typeof Numbering.Type)[] = [
+  { case: "a question without a version", latest: Option.none(), numbered: 1 },
+  { case: "a latest write numbered 7", latest: Option.some(7), numbered: 8 },
+];
+
 const setNow = TestClock.setTime(NOW);
 
 describe("assessment/gate/admit", () => {
@@ -307,7 +319,7 @@ describe("assessment/gate/admit", () => {
                 owner: "learner",
                 placement: target,
                 selection: Option.none(),
-                version: 1,
+                version: Option.some(1),
               })
             : gate.finish({
                 device: Option.none(),
@@ -411,6 +423,20 @@ describe("assessment/gate/admit", () => {
           "section",
           "rows",
           "answer incorrect v3",
+        ]);
+      })
+  );
+  it.effect.each(numberings)(
+    "writes an answer without a version as the next one for $case, never as stale",
+    ({ latest, numbered }) =>
+      Effect.gen(function* () {
+        yield* setNow;
+        const { gate, log } = yield* memory(changed({ version: latest }));
+        yield* answer(gate, Option.some("a"), null);
+        expect(yield* log).toEqual([
+          "section",
+          "rows",
+          `answer correct v${numbered}`,
         ]);
       })
   );

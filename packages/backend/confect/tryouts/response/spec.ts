@@ -12,8 +12,19 @@ export const saveTryoutResponseArgsValidator = Schema.Struct({
   /**
    * Numbers the writes of one question, so a write another one overtook is
    * refused.
+   *
+   * Temporary compatibility, the expand step of packages/backend/AGENTS.md: a
+   * browser tab that was opened before versions still sends none, and a
+   * required argument would reject every answer of that tab until it reloads.
+   * An answer without a version is written as the next one and is never
+   * refused as stale. Owner: ADR 0003 and ADR 0013. Exit: the release has been
+   * on production for 12 hours, the time the project's skew protection keeps a
+   * browser on the web deployment it loaded. Cleanup: make this argument
+   * required, make the version of `gate.answer` required, and drop the branch
+   * of `numbered` in `assessment/gate/admit.ts` that numbers an answer without
+   * one, with its tests.
    */
-  version: Version,
+  version: Schema.optionalKey(Version),
 });
 export type SaveTryoutResponseArgs =
   typeof saveTryoutResponseArgsValidator.Type;

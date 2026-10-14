@@ -35,6 +35,29 @@ function isStale(incoming: Version, latest: Option.Option<Version>) {
 }
 
 /**
+ * Numbers one answer: the version it carries unless the question's latest
+ * admitted write is not older, which refuses it as stale. An answer without a
+ * version comes from a page older than versions (see
+ * `saveTryoutResponseArgsValidator`) and takes the next number, so it is never
+ * refused.
+ */
+function numbered(
+  sent: Option.Option<Version>,
+  latest: Option.Option<Version>
+) {
+  return Option.match(sent, {
+    onNone: () =>
+      Effect.succeed(
+        Option.match(latest, { onNone: () => 1, onSome: Num.increment })
+      ),
+    onSome: (version) =>
+      isStale(version, latest)
+        ? Effect.fail(new Stale())
+        : Effect.succeed(version),
+  });
+}
+
+/**
  * Builds the gate over the store of one kind of attempt. Every learner write to
  * a running attempt is a policy over `admit`: it loads its target through the
  * store, passes the rules in one order, and only then writes through the store.
@@ -105,17 +128,17 @@ export function make<
   });
 
   /**
-   * Saves one answer: admitted by `rules.answer`, refused as stale unless its
-   * version is newer than the question's latest admitted write, the selection
-   * evaluated against the frozen response (none clears the answer), and written
-   * with its version.
+   * Saves one answer: admitted by `rules.answer`, numbered and refused as
+   * stale unless its version is newer than the question's latest admitted
+   * write, the selection evaluated against the frozen response (none clears
+   * the answer), and written with its version.
    */
   const answer = Effect.fn("assessment.gate.answer")(function* (input: {
     readonly owner: string;
     readonly device: Option.Option<DeviceId>;
     readonly placement: Placement;
     readonly selection: Option.Option<Selection>;
-    readonly version: Version;
+    readonly version: Option.Option<Version>;
   }) {
     const { live, now } = yield* admit(
       rules.answer,
@@ -123,15 +146,13 @@ export function make<
       input.device,
       store.placement(input.placement)
     );
-    if (isStale(input.version, live.version)) {
-      return yield* new Stale();
-    }
+    const version = yield* numbered(input.version, live.version);
     const evaluated = yield* Effect.transposeOption(
       Option.map(input.selection, (selection) =>
         Effect.fromResult(evaluate(live.response, selection))
       )
     );
-    yield* store.answer(live, evaluated, now, input.version);
+    yield* store.answer(live, evaluated, now, version);
   });
 
   /**
