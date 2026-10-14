@@ -20,7 +20,8 @@ const GRADES = [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES] as const;
 export const GradeSchema = Schema.Literals(GRADES);
 export type Grade = typeof GradeSchema.Type;
 
-const HIGH_SCHOOL_MATERIALS = [
+/** The subjects that the high school curriculum teaches. */
+export const HIGH_SCHOOL_MATERIALS = [
   "mathematics",
   "physics",
   "chemistry",
@@ -32,7 +33,8 @@ const HIGH_SCHOOL_MATERIALS = [
   "geospatial",
   "sociology",
 ] as const;
-const BACHELOR_MATERIALS = [
+/** The subjects that the bachelor programs teach. */
+export const BACHELOR_MATERIALS = [
   "ai-ds",
   "game-engineering",
   "computer-science",
@@ -51,3 +53,6 @@ type Material = typeof MaterialSchema.Type;
 /** Material domains with Nakafa-owned presentation labels and icons. */
 export const PRESENTED_MATERIAL_DOMAINS = SUBJECT_MATERIALS;
 export type PresentedMaterialDomain = Material;
+
+/** Whether a key names one of the material domains that Nakafa presents. */
+export const isPresentedMaterialDomain = Schema.is(MaterialSchema);

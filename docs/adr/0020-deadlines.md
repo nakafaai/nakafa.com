@@ -1,5 +1,10 @@
 # ADR 0020: Outbound Requests Have A Deadline, And Convex Hook Calls Do Not
 
+## Status
+
+Accepted. Amended on 14 October 2026: the shared retry also repeats a missed
+deadline, so only a read may call it (Decision).
+
 ## Decision
 
 Every HTTP request that leaves a Nakafa process has a deadline that covers the
@@ -10,12 +15,15 @@ answer's body as well as its headers.
   milliseconds and 1 second (31.5 seconds in all), the transport failures that
   are safe to repeat, and `retryNetworkAttempt`, which runs one attempt under
   the deadline and repeats it while it fails retryably.
-- Only a failure that proves the request never reached the server is repeated,
-  plus what one caller knows to be safe for its own request, such as a 5xx
-  answer to the session token read and to the browser's read of the session
-  (`readSession` in `apps/www/lib/auth/request.ts`), which Better Auth does not
-  ask for again after a first read that failed until the learner returns to
-  the tab.
+- A failure that proves the request never reached the server is repeated, and so
+  is a missed deadline, which proves nothing about delivery
+  (`retryNetworkAttempt` and its test in `packages/backend/client`). That is safe
+  for a read, which has no effect to repeat. A write that must not repeat, such
+  as a push to a push service (ADR 0027), does not call the helper. A caller also
+  repeats what it knows to be safe for its own request, such as a 5xx answer to
+  the session token read and to the browser's read of the session (`readSession`
+  in `apps/www/lib/auth/request.ts`), which Better Auth does not ask for again
+  after a first read that failed until the learner returns to the tab.
 - A caller keeps its own status rules, its decoder, and its error type. The
   shared part is the deadline, the retry, and the unwrap.
 - A request that a person waits for can cut that budget: the content copy

@@ -9,12 +9,17 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import {
   tenantProfile,
+  tenantSettings,
   UNIT_LIMIT,
 } from "@repo/backend/confect/tenancy/schema";
 import spec from "@repo/backend/confect/tenancy/viewer.spec";
 import { Array as Arr, Effect, Layer, Struct } from "effect";
 
-/** The member's tenant, active units, grants, and tenant capabilities: one indexed read past the member check. */
+/**
+ * The member's tenant with its settings, its units with theirs, the caller's
+ * grants, and the tenant capabilities: one indexed read past the member check.
+ * Archived units come last, so a settings page can bring one back.
+ */
 const get = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -24,7 +29,7 @@ const get = FunctionImpl.make(
     const units = yield* (yield* DatabaseReader)
       .table("tenantUnits")
       .index("by_tenantId_and_status", (query) =>
-        query.eq("tenantId", tenant._id).eq("status", "active")
+        query.eq("tenantId", tenant._id)
       )
       .take(UNIT_LIMIT)
       .pipe(Effect.orDie);
@@ -32,11 +37,17 @@ const get = FunctionImpl.make(
       can: yield* tenantAuthority.allowed(tenant),
       grants: Arr.map(grants, grantView),
       person: { id: person._id, kind: person.kind, name: person.name },
-      tenant: Struct.assign(tenantProfile(tenant), { id: tenant._id }),
+      tenant: Struct.assign(
+        Struct.assign(tenantProfile(tenant), tenantSettings(tenant)),
+        { id: tenant._id }
+      ),
       units: Arr.map(units, (unit) => ({
+        contentLanguage: unit.contentLanguage,
         id: unit._id,
         level: unit.level,
         name: unit.name,
+        status: unit.status,
+        timeZone: unit.timeZone,
       })),
     };
   })

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { webSearchSitesRule } from "@repo/backend/confect/nina/research/descriptions";
 import {
   researchOutputSchema,
   webSearchInputSchema,
@@ -116,11 +117,12 @@ describe("research schema", () => {
       properties: { sites: { items: { type: "string" } } },
     });
   });
-  it("tells the model what the schema does: the bound, that a call over it or with a text that is no hostname is refused, and no open search for more sites", async () => {
+  it("tells the model what the schema does: when to name a site, the bound, that a call over it or with a text that is no hostname is refused, and no open search for more sites", async () => {
     const json = encodeJsonText(await webSearchInputSchema.jsonSchema);
-    expect(json).toContain(
-      "Use it when the task asks for results of given sites only."
-    );
+    // The same words as the search step and the tool description, which
+    // `prompt.test.ts` pins.
+    expect(json).toContain(webSearchSitesRule);
+    expect(json).not.toContain("results of given sites");
     expect(json).toContain(
       "Every query of this call is then searched in those sites only."
     );
