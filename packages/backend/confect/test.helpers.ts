@@ -60,6 +60,14 @@ export function createConvexTestWithBetterAuth() {
   return t;
 }
 
+/**
+ * Builds a Convex test instance rooted at the Better Auth component, so a test
+ * can run the component's internal functions, which the app cannot call.
+ */
+export function createBetterAuthComponentTest() {
+  return convexTest(authSchema, betterAuthModules);
+}
+
 /** Seeds one analytics decision with matching current and provenance state. */
 export async function seedAnalyticsConsent(
   ctx: MutationCtx,
