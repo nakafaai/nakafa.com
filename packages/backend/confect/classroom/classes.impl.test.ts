@@ -8,6 +8,7 @@ import {
   firstPage,
   nf,
   period,
+  teach,
 } from "@repo/backend/test/classroom";
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
@@ -16,6 +17,7 @@ const { archive, get, list, rename } = refs.public.classroom.classes;
 const cohorts = refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const placements = refs.public.tenancy.placements;
+const grants = refs.public.access.grants;
 
 describe("classroom/classes read and roles", () => {
   it.effect("lets a school leader read a class, and refuses a counselor", () =>
@@ -34,6 +36,29 @@ describe("classroom/classes read and roles", () => {
       expect(read).toEqual(made);
       expect(refused).toMatchObject(denied("role"));
     })
+  );
+
+  it.effect(
+    "lets a subject teacher read the class only while the teacher grant stands",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "VII-1");
+        const made = yield* classOf(fixture, x1.id, "Fisika");
+        const { grantId, personId } = fixture.people.teacher;
+        yield* teach(fixture, made.id, personId);
+        const read = yield* fixture
+          .as("teacher")
+          .query(get, { classId: made.id, slug: nf });
+        yield* fixture.as("owner").mutation(grants.revoke, { grantId, slug: nf });
+        const refused = yield* fixture
+          .as("teacher")
+          .query(get, { classId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(read).toEqual(made);
+        expect(refused).toMatchObject(denied("role"));
+      })
   );
 
   it.effect(

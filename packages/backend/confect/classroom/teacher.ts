@@ -1,4 +1,5 @@
 import type { GenericId } from "@confect/core";
+import type { TenantGrantsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { activeGrants } from "@repo/backend/confect/access/policy";
@@ -54,15 +55,11 @@ export const teachingIn = Effect.fn("classroom.teacher.teaching")(function* (
     .pipe(Effect.orDie);
 });
 
-/**
- * Whether one Person holds an active teacher grant over a unit, or over the
- * whole school. Only a teacher of the unit may teach one of its classes.
- */
-export const teacherOf = Effect.fn("classroom.teacher.grant")(function* (
-  personId: GenericId.GenericId<"tenantPeople">,
+/** Whether one of these grants is a teacher grant over a unit, or over the whole school. */
+export function teachesUnit(
+  grants: readonly TenantGrantsDoc[],
   unitId: GenericId.GenericId<"tenantUnits">
 ) {
-  const grants = yield* activeGrants(personId);
   return Arr.some(
     grants,
     (grant) =>
@@ -72,4 +69,15 @@ export const teacherOf = Effect.fn("classroom.teacher.grant")(function* (
         unit: (scope) => scope.unitId === unitId,
       })
   );
+}
+
+/**
+ * Whether one Person holds an active teacher grant over a unit, or over the
+ * whole school. Only a teacher of the unit may teach one of its classes.
+ */
+export const teacherOf = Effect.fn("classroom.teacher.grant")(function* (
+  personId: GenericId.GenericId<"tenantPeople">,
+  unitId: GenericId.GenericId<"tenantUnits">
+) {
+  return teachesUnit(yield* activeGrants(personId), unitId);
 });
