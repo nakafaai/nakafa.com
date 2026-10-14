@@ -52,7 +52,7 @@ export function QuranTranslation({
           <ol className="space-y-2">
             {Arr.map(translation.notes, (note) => (
               <li
-                className="grid scroll-mt-44 grid-cols-[auto_1fr] gap-2 text-pretty leading-relaxed"
+                className="quran-verse-anchor grid grid-cols-[auto_1fr] gap-2 text-pretty leading-relaxed"
                 data-quran-translation-note
                 id={`${id}-translation-note-${note.number}`}
                 key={note.number}

@@ -25,7 +25,6 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactElement, ReactNode } from "react";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
-import { useVirtual } from "@/lib/content/virtual";
 
 interface Props {
   data: ParsedHeading[];
@@ -45,7 +44,7 @@ function SidebarTreeLabel({ label }: Pick<ParsedHeading, "label">) {
 function SidebarTreeItem({ heading }: { heading: ParsedHeading }) {
   return (
     <SidebarMenuItem>
-      <SidebarTreeEntry heading={heading} />
+      <SidebarTreeLink heading={heading} />
       {!!heading.children && heading.children.length > 0 && (
         <SidebarMenuSub>
           {Arr.map(heading.children, (child) => (
@@ -117,53 +116,8 @@ function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
   );
 }
 
-/** Scrolls the page's virtualizer to a heading it has not rendered. */
-function SidebarTreeJump({
-  heading,
-  index,
-}: {
-  heading: ParsedHeading;
-  index: number;
-}) {
-  const isActive = useActiveHeading(heading);
-  const scrollToIndex = useVirtual((context) => context.scrollToIndex);
-  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
-
-  return (
-    <SidebarTreeTooltip label={heading.label}>
-      <SidebarMenuButton
-        isActive={isActive}
-        render={
-          <button
-            aria-label={heading.label}
-            onClick={() => {
-              scrollToIndex(index);
-              setOpenMobile(false);
-            }}
-            type="button"
-          >
-            <SidebarTreeLabel label={heading.label} />
-          </button>
-        }
-      />
-    </SidebarTreeTooltip>
-  );
-}
-
-/**
- * Links one heading: a fragment link for headings in the document, or a
- * button that scrolls the page's virtualizer to a heading it has not rendered.
- */
-export function SidebarTreeEntry({ heading }: { heading: ParsedHeading }) {
-  if (heading.index === undefined) {
-    return <SidebarTreeLink heading={heading} />;
-  }
-
-  return <SidebarTreeJump heading={heading} index={heading.index} />;
-}
-
 /** Frames an outline under its labeled group heading. */
-export function SidebarTreeGroup({
+function SidebarTreeGroup({
   children,
   title,
 }: {

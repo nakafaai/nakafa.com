@@ -32,10 +32,10 @@ const WATCH_SEPARATOR = "\n";
 
 /**
  * Tracks the headings in the reading band with one observer for the whole
- * outline and publishes them to the store only when they change. Headings a
- * virtualized list mounts later, such as the verses after a surah's leading
- * ones, join the observer when they mount and leave it when they unmount. At
- * the end of the page, the headings still in view stay active, or the last
+ * outline and publishes them to the store only when they change. Headings that
+ * mount after the outline, such as a lesson's content that its renderer loads
+ * on demand, join the observer when they mount and leave it when they unmount.
+ * At the end of the page, the headings still in view stay active, or the last
  * heading when none is.
  */
 function observeHeadings(store: TocStore, watch: readonly string[]) {
