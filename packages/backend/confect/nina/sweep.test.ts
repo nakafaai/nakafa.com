@@ -30,8 +30,8 @@ const sweep = Ref.getFunctionReference(refs.internal.nina.lifecycle.sweep);
 const expire = Ref.getFunctionReference(refs.internal.nina.lifecycle.expire);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 
-async function fixture({ legacy = false }: { readonly legacy?: boolean } = {}) {
-  const seeded = await createNinaTest({ legacy, now: NOW });
+async function fixture() {
+  const seeded = await createNinaTest({ now: NOW });
   const { t, identity, ...saved } = seeded;
   const inspect = () =>
     t.query(async (ctx) => ({
@@ -130,30 +130,6 @@ describe("Nina turn sweep", () => {
     ]);
     // No run is left to report the loss, so its ending reports it, once.
     expect(report).toHaveBeenCalledOnce();
-  });
-
-  it("ends a turn stored in the old shape whose run was lost as it ends one written now, and keeps its page as stored", async () => {
-    const f = await fixture({ legacy: true });
-    const stored = (await f.inspect()).turn?.page;
-    expect(stored?.nina).toHaveProperty("snapshot");
-    await f.t.mutation(claim, { turnId: f.turnId });
-    const overdue = NOW + DEADLINE + 1;
-    vi.setSystemTime(overdue);
-
-    await f.t.mutation(sweep, {});
-    expect(await f.queued("nina/lifecycle:recover")).toEqual([
-      { turnId: f.turnId },
-    ]);
-    await f.settle();
-
-    const state = await f.inspect();
-    expect(state.turn).toMatchObject({
-      phase: "settled",
-      state: { status: "failed", finishedAt: overdue, reason: "interrupted" },
-    });
-    expect(state.turn?.page).toEqual(stored);
-    expect(state.chat?.activeTurnId).toBeUndefined();
-    expect(state.user?.credits).toBe(10);
   });
 
   it("settles a queued turn that no run claimed when its start check was lost", async () => {

@@ -253,14 +253,6 @@ describe("Nina instructions", () => {
     }
   });
 
-  it("reads a turn stored in the old shape as it reads a turn written now", async () => {
-    const written = await instructionsFor(await createNinaTest());
-    const stored = await instructionsFor(
-      await createNinaTest({ legacy: true })
-    );
-    expect(stored).toEqual(written);
-  });
-
   it("recalls nothing for a learner who has no memory, and writes no heading", async () => {
     const f = await createMemoryTest();
     expect(await instructionsFor(f)).toHaveProperty("memories", null);

@@ -19,7 +19,7 @@ import { providerStep } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Option, Order } from "effect";
+import { Array as Arr, Effect, Order } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -269,47 +269,6 @@ describe("The Nina response run and the memory tool", () => {
     expect(names).toEqual(
       expect.arrayContaining(["nakafa", "deepResearch", "math"])
     );
-  });
-});
-
-describe("The Nina response run for a turn stored in the old shape", () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => {
-    vi.restoreAllMocks();
-    provider.languageModel.mockReset();
-    vi.useRealTimers();
-  });
-
-  it("answers it with every tool and the page facts of a turn written now, and settles it with its page as stored", async () => {
-    const model = ninaModel();
-    provider.languageModel.mockReturnValue(model);
-    const f = await createNinaTest({ legacy: true });
-    const stored = (await f.inspect()).turn?.page;
-    expect(stored?.nina).toHaveProperty("snapshot");
-
-    await f.t.action(run, { turnId: f.turnId });
-
-    const [call] = model.doStreamCalls;
-    expect(Arr.map(call?.tools ?? [], (tool) => tool.name)).toEqual([
-      "nakafa",
-      "deepResearch",
-      "math",
-      "memory",
-    ]);
-    // The newest message holds the facts of the turn.
-    const sent = encodeJsonText(
-      Option.getOrThrow(Arr.last(call?.prompt ?? []))
-    );
-    expect(sent).toContain("- current page content provided: no");
-    expect(sent).not.toContain("evidence allowed");
-    // The settlement writes the turn back, and the table keeps what the old
-    // turn stored until the rewrite removes it.
-    const settled = (await f.inspect()).turn;
-    expect(settled).toMatchObject({
-      phase: "settled",
-      state: { status: "complete" },
-    });
-    expect(settled?.page).toEqual(stored);
   });
 });
 

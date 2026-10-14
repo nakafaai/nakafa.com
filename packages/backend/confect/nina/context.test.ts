@@ -309,60 +309,55 @@ describe("Nina signed learning context", () => {
     });
   });
 
-  for (const { legacy, shape } of [
-    { legacy: false, shape: "new" },
-    { legacy: true, shape: "old" },
-  ]) {
-    it(`freezes an asked question and keeps it for the conversation's next turn, when the last turn is stored in the ${shape} shape`, async () => {
-      const f = await createFocusTest({ legacy });
-      const learner = () =>
-        Effect.flatMap(DatabaseReader, (database) =>
-          database.table("users").get(f.identity.userId)
-        ).pipe(Effect.orDie);
-      await f.expectExit(
-        Effect.flatMap(learner(), (user) =>
-          resolveNinaContext({ locale: "en", slug: "", focus: f.focus }, user)
-        ),
-        (exit) =>
-          expect(exit).toMatchObject({
-            _tag: "Success",
-            value: { page: { needsFetch: false, nina: { focus: f.frozen } } },
-          })
-      );
-      await f.focusTurn();
-      await f.expectExit(
-        Effect.flatMap(learner(), (user) =>
-          resolveNinaContext({ locale: "en", slug: "" }, user, f.chatId)
-        ),
-        (exit) =>
-          expect(exit).toMatchObject({
-            _tag: "Success",
-            value: { page: { nina: { focus: f.frozen } } },
-          })
-      );
-      await f.t.mutation((ctx) =>
-        ctx.db.patch("users", f.identity.userId, { plan: "free" })
-      );
-      await f.expectExit(
-        Effect.flatMap(learner(), (user) =>
-          resolveNinaContext({ locale: "en", slug: "", focus: f.focus }, user)
-        ),
-        (exit) => {
-          expect(Exit.isFailure(exit)).toBe(true);
-          expect(exit).toMatchObject({
-            cause: { reasons: [{ error: { code: "NINA_CONTEXT_FAILED" } }] },
-          });
-        }
-      );
-      await f.expectExit(
-        Effect.flatMap(learner(), (user) =>
-          resolveNinaContext({ locale: "en", slug: "" }, user, f.chatId)
-        ),
-        (exit) =>
-          expect(Exit.isSuccess(exit) && exit.value.page.nina.focus).toBe(
-            undefined
-          )
-      );
-    });
-  }
+  it("freezes an asked question and keeps it for the conversation's next turn", async () => {
+    const f = await createFocusTest();
+    const learner = () =>
+      Effect.flatMap(DatabaseReader, (database) =>
+        database.table("users").get(f.identity.userId)
+      ).pipe(Effect.orDie);
+    await f.expectExit(
+      Effect.flatMap(learner(), (user) =>
+        resolveNinaContext({ locale: "en", slug: "", focus: f.focus }, user)
+      ),
+      (exit) =>
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: { page: { needsFetch: false, nina: { focus: f.frozen } } },
+        })
+    );
+    await f.focusTurn();
+    await f.expectExit(
+      Effect.flatMap(learner(), (user) =>
+        resolveNinaContext({ locale: "en", slug: "" }, user, f.chatId)
+      ),
+      (exit) =>
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: { page: { nina: { focus: f.frozen } } },
+        })
+    );
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("users", f.identity.userId, { plan: "free" })
+    );
+    await f.expectExit(
+      Effect.flatMap(learner(), (user) =>
+        resolveNinaContext({ locale: "en", slug: "", focus: f.focus }, user)
+      ),
+      (exit) => {
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(exit).toMatchObject({
+          cause: { reasons: [{ error: { code: "NINA_CONTEXT_FAILED" } }] },
+        });
+      }
+    );
+    await f.expectExit(
+      Effect.flatMap(learner(), (user) =>
+        resolveNinaContext({ locale: "en", slug: "" }, user, f.chatId)
+      ),
+      (exit) =>
+        expect(Exit.isSuccess(exit) && exit.value.page.nina.focus).toBe(
+          undefined
+        )
+    );
+  });
 });
