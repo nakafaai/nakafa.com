@@ -14,6 +14,7 @@ import {
   press,
   release,
   resize,
+  STEP,
   settle,
   tick,
   type World,
@@ -29,13 +30,21 @@ const FIRST_FRAME = 0.016;
 /** The loop sleeps once the pile has rested for this many frames, with nobody holding or pointing. */
 const REST_FRAMES = 20;
 /**
- * Reduced motion settles the pile this many steps in a box, eight seconds at the
- * fixed step (see the step in physics.ts). Measured on the 30 members in 20 box
- * sizes, the loop would sleep at once after this many steps in 18 of them.
+ * Reduced motion settles the pile for this many seconds of the pool's time. Measured
+ * at 60 frames a second on the 30 members in 20 box sizes: after four seconds some
+ * piles still move quickly, and after eight seconds the next frame moves no ball
+ * faster than the rest speed in 18 of them.
  */
-const SETTLE_STEPS = 3840;
-/** Reduced motion settles a box again once it has been still this many milliseconds, so one drag costs one settle. */
-const RESIZE_QUIET = 150;
+const SETTLE_SECONDS = 8;
+/** The same settle in steps of the fixed step, so the seconds above stay the only count. */
+const SETTLE_STEPS = Math.round(SETTLE_SECONDS / STEP);
+/**
+ * Reduced motion settles a box again once it has been still this many
+ * milliseconds. The search and the chat sidebar wait 500 milliseconds before they
+ * act on a change too. A pause in the middle of a drag that is this long settles
+ * the pile again.
+ */
+const RESIZE_QUIET = 500;
 /** The first hop comes this many milliseconds after the pool starts. */
 const FIRST_HOP = 3600;
 /** Each hop waits this many milliseconds, plus up to the spread. */
@@ -133,7 +142,7 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
     });
   }
 
-  /** Gives each member its size, and places the pool, on the first real size of the box. */
+  /** Gives each member its size, and places the pool on the first real size of the box. With reduced motion, the resize observer calls it again after a resize, once the box has been still for a while. */
   function start(width: number, height: number) {
     const first = poolWorld(width, height);
     Arr.forEach(Arr.zip(members, first.balls), ([node, ball]) => {
