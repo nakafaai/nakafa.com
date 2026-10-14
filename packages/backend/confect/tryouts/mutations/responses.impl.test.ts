@@ -3,7 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   type ConvexTest,
   expectConvexFailure,
@@ -17,7 +17,22 @@ import {
   TRYOUT_SECTION_KEY,
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
+import { makeFunctionReference } from "convex/server";
 import { Array as Arr, Effect, Option } from "effect";
+
+/**
+ * A save as the wire sends it without its version, so the argument validator
+ * refuses it. It is declared here so the call can omit the argument that `api`
+ * requires.
+ */
+const saveWithoutVersion = makeFunctionReference<
+  "mutation",
+  {
+    placementId: Id<"tryoutAttemptPlacements">;
+    selection: Doc<"tryoutResponses">["selection"] | null;
+  },
+  null
+>("tryouts/mutations/responses:save");
 
 const saveAnswer = Effect.fn("test.tryout.response.saveAnswer")(
   (
@@ -339,34 +354,22 @@ describe("tryouts/mutations/responses outcomes", () => {
       })
   );
   it.effect(
-    "writes an answer without a version as the next one, for a tab opened before versions",
+    "refuses a save without a version by argument validation, and writes nothing",
     () =>
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
-        const seeded = yield* seedResponseFixture(t, "version-absent");
+        const seeded = yield* seedResponseFixture(t, "version-missing");
         yield* setResponseClock(5000);
-        const saveUnversioned = (optionKey: string) =>
-          Effect.promise(() =>
-            seeded.client.mutation(api.tryouts.mutations.responses.save, {
-              placementId: seeded.placementId,
-              selection: { kind: "single-choice", optionKey },
-            })
-          );
-        const versionStored = () =>
-          readResponseState(t, seeded).pipe(
-            Effect.map(({ responses }) =>
-              Option.map(Arr.head(responses), ({ version }) => version)
-            )
-          );
-        yield* saveUnversioned("option-1");
-        expect(yield* versionStored()).toEqual(Option.some(1));
-        yield* saveAnswer(
-          seeded,
-          { kind: "single-choice", optionKey: "option-2" },
-          5
+        const rejected = yield* Effect.tryPromise(() =>
+          seeded.client.mutation(saveWithoutVersion, {
+            placementId: seeded.placementId,
+            selection: { kind: "single-choice", optionKey: "option-1" },
+          })
+        ).pipe(Effect.flip);
+        expect(String(rejected.cause)).toContain(
+          "Missing required field `version`"
         );
-        yield* saveUnversioned("option-1");
-        expect(yield* versionStored()).toEqual(Option.some(6));
+        expect((yield* readResponseState(t, seeded)).responses).toEqual([]);
       })
   );
 });
