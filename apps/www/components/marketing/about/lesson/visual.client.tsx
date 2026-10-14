@@ -4,7 +4,8 @@ import { ATOM_SHELL_SAMPLES } from "@repo/design-system/components/contents/chem
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
+import type { Lesson } from "@/components/marketing/about/lesson/id";
 import {
   QUADRATIC_POINTS,
   QUADRATIC_SCENE,
@@ -28,7 +29,7 @@ const MathVisual = dynamic(() =>
 );
 
 /** The projectile lesson: a ball thrown at a chosen angle, in three dimensions. */
-export function ProjectileVisual() {
+function ProjectileVisual() {
   const t = useTranslations("Landing");
   const locale = getLocaleOrThrow(useLocale());
 
@@ -57,7 +58,7 @@ function pointMath(point: { readonly x: number; readonly y: number }) {
 }
 
 /** The quadratic lesson: the curve x squared minus four x plus three, with its roots and vertex. */
-export function QuadraticVisual() {
+function QuadraticVisual() {
   const t = useTranslations("Landing");
 
   return (
@@ -75,7 +76,7 @@ export function QuadraticVisual() {
 }
 
 /** The atom lesson: the shells of a neutral atom, one sample at a time. */
-export function AtomVisual() {
+function AtomVisual() {
   const t = useTranslations("Landing");
 
   return (
@@ -127,7 +128,7 @@ export function AtomVisual() {
 }
 
 /** The cell lesson: the shape, the inside and the wall of a bacterium. */
-export function BacteriaVisual() {
+function BacteriaVisual() {
   const t = useTranslations("Landing");
 
   return (
@@ -177,4 +178,21 @@ export function BacteriaVisual() {
       title={t("lab.bacteria.title")}
     />
   );
+}
+
+/** The product's own visual of each lesson, as a lesson page renders it. */
+const VISUALS: Record<Lesson, ComponentType> = {
+  cell: BacteriaVisual,
+  mole: AtomVisual,
+  projectile: ProjectileVisual,
+  quadratic: QuadraticVisual,
+};
+
+/**
+ * The visual of one lesson of the home page window. The window loads this module
+ * only when it comes into view, so the labs stay out of the first JavaScript.
+ */
+export function LessonVisual({ lesson }: { readonly lesson: Lesson }) {
+  const Visual = VISUALS[lesson];
+  return <Visual />;
 }

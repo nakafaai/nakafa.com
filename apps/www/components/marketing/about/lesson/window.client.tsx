@@ -16,24 +16,21 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { Array as Arr, Schema } from "effect";
-import { type ComponentType, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import {
-  AtomVisual,
-  BacteriaVisual,
-  ProjectileVisual,
-  QuadraticVisual,
-} from "@/components/marketing/about/lesson/visual.client";
+  type Lesson,
+  LessonSchema,
+} from "@/components/marketing/about/lesson/id";
 
-/** The four lessons of the window, in the order they open. */
-const LessonSchema = Schema.Literals([
-  "projectile",
-  "quadratic",
-  "mole",
-  "cell",
-]);
-
-/** One lesson of the window. */
-type Lesson = typeof LessonSchema.Type;
+/** The product's visual of the open lesson. Its code loads when the window comes into view. */
+const LessonVisual = dynamic(
+  () =>
+    import("@/components/marketing/about/lesson/visual.client").then(
+      ({ LessonVisual }) => LessonVisual
+    ),
+  { loading: ScenePlaceholder }
+);
 
 /** The lesson that opens after each one. The window goes round and starts again. */
 const NEXT: Record<Lesson, Lesson> = {
@@ -41,14 +38,6 @@ const NEXT: Record<Lesson, Lesson> = {
   mole: "cell",
   projectile: "quadratic",
   quadratic: "mole",
-};
-
-/** The product's own visual of each lesson, as a lesson page renders it. */
-const VISUALS: Record<Lesson, ComponentType> = {
-  cell: BacteriaVisual,
-  mole: AtomVisual,
-  projectile: ProjectileVisual,
-  quadratic: QuadraticVisual,
 };
 
 /** How long a lesson stays open before the next one opens by itself. */
@@ -117,17 +106,14 @@ export function LessonWindow({ label, lessons }: LessonWindowProps) {
             </TabsTab>
           ))}
         </TabsList>
-        {Arr.map(LessonSchema.literals, (id) => {
-          const Visual = VISUALS[id];
-          return (
-            <TabsPanel className="grid gap-6" key={id} value={id}>
-              <p className="min-h-36 text-pretty text-base lg:min-h-12">
-                {lessons[id].text}
-              </p>
-              {inViewport ? <Visual /> : <ScenePlaceholder />}
-            </TabsPanel>
-          );
-        })}
+        {Arr.map(LessonSchema.literals, (id) => (
+          <TabsPanel className="grid gap-6" key={id} value={id}>
+            <p className="min-h-36 text-pretty text-base lg:min-h-12">
+              {lessons[id].text}
+            </p>
+            {inViewport ? <LessonVisual lesson={id} /> : <ScenePlaceholder />}
+          </TabsPanel>
+        ))}
       </Tabs>
     </div>
   );
