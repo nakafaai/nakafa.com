@@ -16,18 +16,24 @@ import { Clock, Duration, Effect, Option, Struct } from "effect";
 /** How long a printed card works, counted from the moment it is issued. */
 export const CARD_TERM = Duration.days(14);
 
+/**
+ * Whether a card may be printed for a Person or redeemed by one: a Person with
+ * no account yet, or one whose account a card made, so a reissued card sets a
+ * new password on that account (ADR 0009). An account that an invite or an
+ * operator claimed never takes a password from a card.
+ */
+export const takesCard = (person: TenantPeopleDoc) =>
+  person.account.state === "unclaimed" || person.account.method === "card";
+
 /** The card of one Person, if one was ever issued: one indexed read. */
 export const cardOf = Effect.fn("identity.card.of")(function* (
   personId: TenantPeopleDoc["_id"]
 ) {
   return yield* (yield* DatabaseReader)
     .table("loginCards")
-    .get("by_personId", personId)
-    .pipe(
-      Effect.asSome,
-      Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
-      Effect.orDie
-    );
+    .index("by_personId", (query) => query.eq("personId", personId))
+    .first()
+    .pipe(Effect.orDie);
 });
 
 /**

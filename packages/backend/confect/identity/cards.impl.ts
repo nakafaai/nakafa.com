@@ -3,7 +3,11 @@ import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { authorizeOwnerRole } from "@repo/backend/confect/access/grant";
 import { activeGrants } from "@repo/backend/confect/access/policy";
-import { cardOf, writeCard } from "@repo/backend/confect/identity/card";
+import {
+  cardOf,
+  takesCard,
+  writeCard,
+} from "@repo/backend/confect/identity/card";
 import spec from "@repo/backend/confect/identity/cards.spec";
 import {
   LoginMissing,
@@ -24,6 +28,7 @@ import {
   personAccess,
   personAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { PersonClaimed } from "@repo/backend/confect/tenancy/errors";
 import { Effect, Layer, Option, Result } from "effect";
 
 /**
@@ -41,8 +46,10 @@ const authorizeHeldRoles = Effect.fn("identity.cards.heldRoles")(function* (
 });
 
 /**
- * Gives a Person their school login name and prints their first card. A card
- * that the Person already had is replaced, so its code stops working.
+ * Gives a Person their school login name and prints their first card. Only a
+ * Person with no account yet may take one, the same rule an invite follows, so
+ * a card never sets a password on an account that an invite claimed. A Person
+ * who already has a login gets a new card from `reissue`.
  */
 const issue = FunctionImpl.make(
   databaseSchema,
@@ -52,12 +59,15 @@ const issue = FunctionImpl.make(
     const { person: issuer } = yield* Member;
     const person = yield* Person;
     yield* authorizeHeldRoles(person._id);
+    if (!takesCard(person)) {
+      return yield* new PersonClaimed();
+    }
     const name = readLoginName(loginName);
     if (Result.isFailure(name)) {
       return yield* new LoginNameRefused({ reason: name.failure });
     }
     yield* claimLoginName(person, name.success);
-    const card = yield* writeCard(person, issuer, yield* cardOf(person._id));
+    const card = yield* writeCard(person, issuer, Option.none());
     yield* personAuthority.record(personActor(issuer), person, {
       card: card.cardId,
       type: "login.card.issued",
@@ -83,6 +93,9 @@ const reissue = FunctionImpl.make(
     const { person: issuer } = yield* Member;
     const person = yield* Person;
     yield* authorizeHeldRoles(person._id);
+    if (!takesCard(person)) {
+      return yield* new PersonClaimed();
+    }
     const login = yield* loginOf(person._id);
     if (Option.isNone(login)) {
       return yield* new LoginMissing();

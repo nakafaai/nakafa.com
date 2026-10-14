@@ -6,6 +6,7 @@ import {
   CARD_NOW,
   CODE_PATTERN,
   cardRowOf,
+  claimInviteeByInvite,
   issue,
   issueFirst,
   nf,
@@ -13,7 +14,7 @@ import {
   redeemOn,
   reissue,
 } from "@repo/backend/test/identity";
-import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
+import { grantRole, journal, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
 const TERM = Duration.toMillis(CARD_TERM);
@@ -23,6 +24,29 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(CARD_NOW);
 });
+
+/**
+ * An unclaimed Person of the fixture's school who holds the Owner role, so that
+ * only an Owner may print a card for it.
+ */
+const unclaimedOwner = (fixture: Effect.Success<typeof tenancyFixture>) =>
+  fixture.run(
+    Effect.gen(function* () {
+      const personId = yield* (yield* DatabaseWriter)
+        .table("tenantPeople")
+        .insert({
+          account: { state: "unclaimed" },
+          kind: "member",
+          name: "Pemilik Baru",
+          status: "active",
+          tenantId: fixture.tenants.nf,
+        });
+      yield* grantRole(fixture.tenants.nf, personId, "owner", {
+        kind: "tenant",
+      });
+      return personId;
+    })
+  );
 
 describe("identity/cards issue", () => {
   it.effect(
@@ -147,15 +171,33 @@ describe("identity/cards issue", () => {
   );
 
   it.effect(
+    "refuses a first card for a Person who already has an account",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(issue, {
+            loginName: "siswa.baru",
+            personId: fixture.people.student.personId,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "PersonClaimed" });
+      })
+  );
+
+  it.effect(
     "lets an Admin issue a card for an Owner only when the Admin holds owner.manage",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
+        const owner = yield* unclaimedOwner(fixture);
         const denied = yield* fixture
           .as("admin")
           .mutation(issue, {
             loginName: "pemilik.baru",
-            personId: fixture.people.owner.personId,
+            personId: owner,
             slug: nf,
           })
           .pipe(Effect.flip);
@@ -163,7 +205,7 @@ describe("identity/cards issue", () => {
         expect(
           yield* fixture.as("owner").mutation(issue, {
             loginName: "pemilik.baru",
-            personId: fixture.people.owner.personId,
+            personId: owner,
             slug: nf,
           })
         ).toMatchObject({ loginName: "pemilik.baru" });
@@ -206,6 +248,66 @@ describe("identity/cards reissue", () => {
         .pipe(Effect.flip);
       expect(missing).toMatchObject({ _tag: "LoginMissing" });
     })
+  );
+
+  it.effect(
+    "refuses a reissue from a caller without the card right, and from another school",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* issueFirst(fixture);
+        const student = yield* fixture
+          .as("student")
+          .mutation(reissue, { personId: fixture.invited, slug: nf })
+          .pipe(Effect.flip);
+        const otherSchool = yield* fixture
+          .as("otherOwner")
+          .mutation(reissue, { personId: fixture.invited, slug: other })
+          .pipe(Effect.flip);
+        expect([student, otherSchool]).toMatchObject([
+          { _tag: "AccessDenied", reason: "role" },
+          { _tag: "AccessDenied", reason: "resource" },
+        ]);
+      })
+  );
+
+  it.effect(
+    "lets an Admin reissue a card for an Owner only when the Admin holds owner.manage",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const owner = yield* unclaimedOwner(fixture);
+        yield* fixture.as("owner").mutation(issue, {
+          loginName: "pemilik.baru",
+          personId: owner,
+          slug: nf,
+        });
+        const denied = yield* fixture
+          .as("admin")
+          .mutation(reissue, { personId: owner, slug: nf })
+          .pipe(Effect.flip);
+        expect(denied).toMatchObject({ _tag: "AccessDenied" });
+        expect(
+          yield* fixture
+            .as("owner")
+            .mutation(reissue, { personId: owner, slug: nf })
+        ).toMatchObject({ loginName: "pemilik.baru" });
+      })
+  );
+
+  it.effect(
+    "refuses a reissue for a Person whom an invite claimed after the card was printed",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* issueFirst(fixture);
+        yield* claimInviteeByInvite(fixture);
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(reissue, { personId: fixture.invited, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "PersonClaimed" });
+      })
   );
 
   it.effect("journals the reissue as a change of the same card", () =>

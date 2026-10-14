@@ -1,5 +1,8 @@
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { slugOf, type tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
@@ -40,6 +43,24 @@ export const inviteePerson = (fixture: CardFixture) =>
   fixture.run(
     Effect.flatMap(DatabaseReader, (reader) =>
       reader.table("tenantPeople").get(fixture.invited).pipe(Effect.orDie)
+    )
+  );
+
+/**
+ * Binds the fixture's unclaimed invitee to a stranger's account by an invite,
+ * the way an accepted invite does after the card was printed.
+ */
+export const claimInviteeByInvite = (fixture: CardFixture) =>
+  fixture.run(
+    Effect.flatMap(DatabaseWriter, (writer) =>
+      writer.table("tenantPeople").patch(fixture.invited, {
+        account: {
+          claimedAt: CARD_NOW,
+          method: "invite",
+          state: "claimed",
+          userId: fixture.users.stranger.userId,
+        },
+      })
     )
   );
 

@@ -15,6 +15,7 @@ import {
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PersonAccess } from "@repo/backend/confect/tenancy/access";
+import { PersonClaimed } from "@repo/backend/confect/tenancy/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -39,6 +40,7 @@ export default GroupSpec.make()
           LoginExists,
           LoginNameRefused,
           LoginNameTaken,
+          PersonClaimed,
         ]),
     })
       .middleware(Session)
@@ -50,7 +52,7 @@ export default GroupSpec.make()
       name: "reissue",
       args: () => ({ personId: Id("tenantPeople"), slug: TenantSlug }),
       returns: () => IssuedCard,
-      error: () => Schema.Union([AccessDenied, LoginMissing]),
+      error: () => Schema.Union([AccessDenied, LoginMissing, PersonClaimed]),
     })
       .middleware(Session)
       .middleware(RequireMember)

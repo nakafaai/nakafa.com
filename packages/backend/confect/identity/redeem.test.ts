@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { setLoginPassword } from "@repo/backend/confect/identity/account";
 import { loginAddress } from "@repo/backend/confect/identity/address";
 import { CARD_TERM } from "@repo/backend/confect/identity/card";
-import { hashCardCode } from "@repo/backend/confect/identity/code";
 import {
   CARD_NOW,
   cardRowOf,
+  claimInviteeByInvite,
   DEVICE,
   inviteePerson,
   issueFirst,
@@ -17,7 +18,20 @@ import {
   userNamed,
 } from "@repo/backend/test/identity";
 import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Option } from "effect";
+import { Array as Arr, Duration, Effect, Exit, Option } from "effect";
+
+// The password step is the one Better Auth call in a redemption. A test makes it
+// fail once to prove that the card and the account roll back together.
+vi.mock("@repo/backend/confect/identity/account", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@repo/backend/confect/identity/account")
+    >();
+  return {
+    ...actual,
+    setLoginPassword: vi.fn(actual.setLoginPassword),
+  };
+});
 
 const TERM = Duration.toMillis(CARD_TERM);
 
@@ -266,26 +280,53 @@ describe("identity/cards redeem", () => {
       })
   );
 
-  it.effect("refuses a card whose Person has no login name, as invalid", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const codeHash = yield* hashCardCode("ABCDE23456");
-      yield* fixture.run(
-        Effect.flatMap(DatabaseWriter, (writer) =>
-          writer.table("loginCards").insert({
-            codeHash,
-            expiresAt: CARD_NOW + TERM,
-            issuedAt: CARD_NOW,
-            issuedBy: fixture.people.admin.personId,
-            personId: fixture.invited,
-            tenantId: fixture.tenants.nf,
-          })
-        )
-      );
-      expect(yield* redeemOn(fixture, "ABCDE-23456")).toEqual({
-        outcome: "refused",
-        reason: "invalid",
-      });
-    })
+  it.effect(
+    "refuses a card whose Person an invite claimed after the card was printed, and changes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        yield* claimInviteeByInvite(fixture);
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          outcome: "refused",
+          reason: "invalid",
+        });
+        expect((yield* inviteePerson(fixture)).account).toMatchObject({
+          method: "invite",
+          userId: fixture.users.stranger.userId,
+        });
+        expect(
+          Option.getOrUndefined(yield* cardRowOf(fixture, fixture.invited))
+            ?.redeemedAt
+        ).toBeUndefined();
+      })
+  );
+
+  it.effect(
+    "keeps the card unredeemed and leaves no half account when the password step fails",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        vi.mocked(setLoginPassword).mockImplementationOnce(() =>
+          Effect.die(new Error("Better Auth is unavailable"))
+        );
+        const failed = yield* redeemOn(fixture, issued.code).pipe(Effect.exit);
+        expect(Exit.isFailure(failed)).toBe(true);
+        expect(
+          Option.getOrUndefined(yield* cardRowOf(fixture, fixture.invited))
+            ?.redeemedAt
+        ).toBeUndefined();
+        expect((yield* inviteePerson(fixture)).account).toEqual({
+          state: "unclaimed",
+        });
+        expect(yield* userNamed(fixture, "invited")).toEqual(Option.none());
+        expect(yield* fixture.run(journal)).toHaveLength(1);
+        // The same card still redeems, which proves that no account was left behind.
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          loginName: "guru.baru",
+          outcome: "redeemed",
+        });
+      })
   );
 });

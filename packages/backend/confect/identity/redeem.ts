@@ -10,7 +10,7 @@ import {
   createLoginAccount,
   setLoginPassword,
 } from "@repo/backend/confect/identity/account";
-import { markRedeemed } from "@repo/backend/confect/identity/card";
+import { markRedeemed, takesCard } from "@repo/backend/confect/identity/card";
 import {
   hashCardCode,
   readCardCode,
@@ -126,7 +126,7 @@ const findRedeemable = Effect.fn("identity.redeem.find")(function* (
     .table("tenantPeople")
     .get(card.value.personId)
     .pipe(Effect.orDie);
-  if (person.status !== "active") {
+  if (person.status !== "active" || !takesCard(person)) {
     return reject("invalid");
   }
   return Result.succeed({ card: card.value, person });
@@ -135,7 +135,9 @@ const findRedeemable = Effect.fn("identity.redeem.find")(function* (
 /**
  * The Better Auth account of a Person, made first when the Person has none. A
  * new account is bound to the Person as a card claim in the same transaction,
- * so a password step that fails later rolls the claim back with it.
+ * so a password step that fails later rolls the claim back with it. A Person
+ * that already has an account holds one that a card made, because
+ * `findRedeemable` refuses any other, so a reissued card reuses that account.
  */
 const accountOf = Effect.fn("identity.redeem.account")(function* (
   auth: Auth,
@@ -168,8 +170,9 @@ const accountOf = Effect.fn("identity.redeem.account")(function* (
  * limits, reads the code, opens the card on the school's host, checks the
  * password length, creates the account if the Person has none and claims the
  * Person, stores the password through Better Auth, and marks the card used.
- * A refusal is a value, so the attempt still counts; every write comes after
- * the last refusal.
+ * The rate-limit counts are written first, on purpose: a refusal is a value, so
+ * the attempt it refuses still counts. The account, claim, password, and card
+ * writes come after the last refusal, so a refused card changes nothing else.
  */
 export const redeemCard = Effect.fn("identity.redeem.card")(function* (
   input: typeof RedeemRequest.Type
@@ -191,10 +194,11 @@ export const redeemCard = Effect.fn("identity.redeem.card")(function* (
     return refused(found.failure);
   }
   const { card, person } = found.success;
-  const login = yield* loginOf(person._id);
-  if (Option.isNone(login)) {
-    return refused("invalid");
-  }
+  // Issuing writes the login before the card, and nothing deletes a login, so a
+  // card without one is a broken row: the defect rolls the redemption back.
+  const login = yield* Effect.fromOption(yield* loginOf(person._id)).pipe(
+    Effect.orDie
+  );
   // A missing site or Google setting is a deployment defect, not a refusal.
   const auth = yield* createAuth(ctx).pipe(Effect.orDie);
   const context = yield* Effect.promise(() => auth.$context);
@@ -212,5 +216,5 @@ export const redeemCard = Effect.fn("identity.redeem.card")(function* (
     card: card._id,
     type: "login.card.redeemed",
   });
-  return redeemed(login.value.name);
+  return redeemed(login.name);
 });
