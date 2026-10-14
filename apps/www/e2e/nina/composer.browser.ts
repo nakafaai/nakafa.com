@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, HashSet } from "effect";
+import { composerOf, GERMAN, runPage } from "@/e2e/support/attachment";
 import { CHAT_PATH } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
@@ -131,3 +132,38 @@ for (const width of [390, 1440]) {
     });
   });
 }
+
+/** The chat page in German, where the composer's labels are German. */
+const CHAT_PATH_DE = "/de/chat";
+
+test.describe("The file picker of the composer in German", () => {
+  test("is named in German, and the attach button opens it", async ({
+    page,
+  }) => {
+    await runPage(
+      page,
+      Effect.gen(function* () {
+        yield* seedAnalyticsConsent(page, "denied");
+        yield* Effect.promise(() => page.goto(CHAT_PATH_DE));
+        const composer = page.locator("main");
+        yield* Effect.promise(() =>
+          expect(composerOf(composer, GERMAN)).toBeVisible()
+        );
+
+        yield* Effect.promise(async () => {
+          const chooser = page.waitForEvent("filechooser");
+          await composer.getByRole("button", { name: GERMAN.attach }).click();
+          await chooser;
+        });
+        // The picker is hidden, so its accessible name is the aria-label it
+        // carries, which Playwright's name matcher does not read while hidden.
+        yield* Effect.promise(() =>
+          expect(composer.locator('input[type="file"]')).toHaveAttribute(
+            "aria-label",
+            GERMAN.attach
+          )
+        );
+      })
+    );
+  });
+});

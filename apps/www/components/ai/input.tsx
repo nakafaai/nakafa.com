@@ -142,6 +142,7 @@ export function NinaInput({
   return (
     <PromptInput
       accept={Arr.join(NinaFileType.literals, ",")}
+      fileInputLabel={t("attach-files")}
       key={composerKey}
       maxFileSize={NINA_FILE_SIZE}
       maxFiles={NINA_FILE_COUNT}

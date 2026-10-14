@@ -33,6 +33,8 @@ import {
  */
 type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit"> & {
   accept?: string;
+  /** The name of the hidden file input, in the language of the caller. */
+  fileInputLabel: string;
   maxFiles?: number;
   maxFileSize?: number;
   multiple?: boolean;
@@ -52,6 +54,7 @@ function readPromptInputText(form: HTMLFormElement) {
 export function PromptInput({
   className,
   accept,
+  fileInputLabel,
   multiple,
   maxFiles,
   maxFileSize,
@@ -142,12 +145,12 @@ export function PromptInput({
     <LocalAttachmentsContext value={attachments}>
       <input
         accept={accept}
-        aria-label="Upload files"
+        aria-label={fileInputLabel}
         className="hidden"
         multiple={multiple}
         onChange={addSelectedFiles}
         ref={inputRef}
-        title="Upload files"
+        title={fileInputLabel}
         type="file"
       />
       {/* The form is the item of a grid in every composer: without a minimum width of

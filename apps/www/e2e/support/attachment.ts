@@ -96,10 +96,12 @@ export const pictureOf = Effect.fn("NakafaE2E.pictureOf")(function* (
 
 /** The names of the composer's controls in English and in German. */
 export const ENGLISH = {
+  attach: en.Ai["attach-files"],
   input: en.Ai["text-placeholder"],
   send: en.Ai["send-message"],
 };
 export const GERMAN = {
+  attach: de.Ai["attach-files"],
   input: de.Ai["text-placeholder"],
   send: de.Ai["send-message"],
 };
