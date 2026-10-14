@@ -3176,10 +3176,7 @@ export declare const api: {
                 }
               | { country: string; currency: string; type: "tenant.locale.set" }
               | {
-                  policy:
-                    | { key: "emailDomains"; value: Array<string> }
-                    | { key: "nina"; value: boolean }
-                    | { key: "studentThreads"; value: boolean };
+                  key: "emailDomains" | "nina" | "studentThreads";
                   type: "tenant.policy.set";
                 }
               | { type: "unit.created" }
