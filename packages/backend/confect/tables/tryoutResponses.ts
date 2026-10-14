@@ -1,5 +1,6 @@
 import { Table } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { Outcome, Selection } from "@repo/backend/confect/response/model";
 import { Schema } from "effect";
 export default Table.make(() =>
@@ -15,6 +16,8 @@ export default Table.make(() =>
     timeSpent: Schema.Finite,
     answeredAt: Schema.Finite,
     updatedAt: Schema.Finite,
+    /** The version of the write that stored it; rows written before versions carry none. */
+    version: Schema.optionalKey(Version),
   })
 )
   .index("by_tryoutSectionAttemptId_and_answeredAt", [

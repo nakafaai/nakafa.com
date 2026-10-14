@@ -12,7 +12,7 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -128,7 +128,6 @@ describe("a retried Nina prompt", () => {
     expect(vi.mocked(resolveNinaContext)).toHaveBeenLastCalledWith(
       page,
       expect.objectContaining({ _id: f.identity.userId }),
-      DateTime.formatIso(DateTime.makeUnsafe(NOW)),
       first.chatId
     );
     const [original, retry] = await f.t.query((ctx) =>
@@ -137,8 +136,10 @@ describe("a retried Nina prompt", () => {
         ctx.db.get("ninaTurns", retried.turnId),
       ])
     );
-    expect(original?.page?.url).toBe("https://nakafa.com/en/home");
-    expect(retry?.page?.url).toBe("https://nakafa.com/en/chat");
+    expect(original?.page?.nina.learning.url).toBe(
+      "https://nakafa.com/en/home"
+    );
+    expect(retry?.page?.nina.learning.url).toBe("https://nakafa.com/en/chat");
   });
 
   it.each([
@@ -212,7 +213,6 @@ describe("a retried Nina prompt", () => {
     expect(vi.mocked(resolveNinaContext)).toHaveBeenLastCalledWith(
       args.input.page,
       expect.objectContaining({ _id: f.identity.userId }),
-      DateTime.formatIso(DateTime.makeUnsafe(NOW)),
       first.chatId
     );
   });

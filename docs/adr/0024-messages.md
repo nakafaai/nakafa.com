@@ -3,7 +3,9 @@
 ## Status
 
 Accepted after the sealing spike of 12 October 2026. It decides the design and
-the order of work. No product code for it exists yet.
+the order of work. The title, the summary, and the memory are sealed and live.
+The other stages in Decision are planned for program wave A, the first delivery
+wave of the School program, and are not live yet.
 
 ## Context
 
@@ -72,6 +74,7 @@ The deltas stay for five minutes after a stream finishes (`streams.ts:69`,
 | Settlement | `settlement.ts:28-53` | The newest row, to see whether it holds a non-empty answer. It runs only for an active turn (`:95`). |
 | The page of messages | `messages.impl.ts:103-107`, `:108-144` | `listUIMessages`, which lists rows and runs `toUIMessages`, and the turn facts for each `order`. |
 | Streaming | `messages.impl.ts:28-69` | `listStreams` and `syncStreams`, which carry the deltas to the owner's browser. A reader of a shared chat is told no stream (ADR 0001). |
+| Attachments | `nina/attachments.ts:22-31` | `getFile`, whose file or image part carries the component's `files.filename`, for the model's file part and the admission receipt. |
 | Deletion | `triggers/chats/chats.ts:45` | `deleteAllForThreadIdAsync`, which deletes row by row (`threads.ts:184-247`, `messages.ts:59-71`) without reading content. |
 | Recovery inside the component | `messages.ts:484-551`, `streams.ts:662-741` | `finalizeMessage` rebuilds a row from the deltas when a pending row has no content, and writes it from inside the component. |
 
@@ -167,7 +170,7 @@ component seals on write and opens on read.
 
 | | Plain text at rest | Component fit | Verdict |
 | --- | --- | --- | --- |
-| 1. Replace rows | The rows of a running turn, and of a failed turn until the sweep seals it. A turn may run for `TURN_DEADLINE`, 8 minutes (`sweep.ts:23-26`), and the sweep runs every 5 minutes (`crons.ts:14`). The deltas until settlement. | Uses what the docs describe, saving and deleting messages, which are the component's `addMessages` and `deleteByIds`. ADR 0001 and the official hooks stay as they are. | Chosen |
+| 1. Replace rows | The rows of a running turn, and of a failed turn until the sweep seals it. A turn may run for `TURN_DEADLINE`, 8 minutes (`sweep.ts:23-26`), and the sweep runs every 5 minutes (`crons.ts:38-45`, `nina/deadline.ts:24`). The deltas until settlement. | Uses what the docs describe, saving and deleting messages, which are the component's `addMessages` and `deleteByIds`. ADR 0001 and the official hooks stay as they are. | Chosen |
 | 2. Own table | None except the deltas. | Replaces what the Agent gives: see below. | Rejected |
 | 3. Seal at write | The deltas, and rows that `finalizeMessage` rebuilds from deltas inside the component. | Depends on the Agent client's internal calls. | Not now |
 | 4. Change nothing | All of it. | None. | Rejected |
@@ -227,7 +230,7 @@ changes.
    `reasoning`, `sources` or other field to scrub.
 2. **The Agent's rows are replaced after the turn settles.** Settlement stays as
    it is, except that it also schedules a `seal` mutation at zero delay, as it
-   already schedules `present` (`settlement.ts:157-164`), so a failure of the
+   already schedules `present` (`settlement.ts:88-95`), so a failure of the
    seal never blocks a refund or leaves a chat busy. The mutation reads the
    turn's rows, deletes the assistant and tool rows and adds them sealed with an
    explicit `order`, then deletes the turn's stream deltas with
@@ -236,9 +239,46 @@ changes.
    failed turn go the same way, and a chat that has been deleted since is left
    alone. A settled turn records `sealedAt` when its rows are sealed, and the
    sweep that already settles stuck turns also seals any settled turn without
-   it, so a missed seal is found and not forgotten.
+   it, so a missed seal is found and not forgotten. The sweep finds those turns
+   through an index on the turn's phase and `sealedAt`, which order-of-work step 3
+   adds. The seal skips a turn that already carries `sealedAt`, so a retry is
+   safe, and a seal that fails leaves the turn plain and readable until the next
+   sweep run.
 3. **One module owns the form, and every reader opens through it.** A reader
    gets rows from the module and never from the component.
+4. **Chat attachments.** The file name of a chat attachment, the `files.filename`
+   field that the component keeps, is sealed with the learner's key in program
+   wave A. The component has no way to change a file's name, and the storage
+   sweep deletes a file's bytes with its row, so an attachment written before
+   wave A is copied: the old-message migration (order of work, step 4) stores a
+   copy of its bytes, registers the copy with the sealed name through `addFile`,
+   and writes the replaced message with the new file id. The old row loses its
+   last reference, and the sweep removes it and its bytes as for any unused
+   file. The module that owns the sealed form opens a file's name too: the
+   attachments reader takes the file through it and gets the part with its name
+   opened, so neither the model's file part, the admission receipt, nor the page
+   sees the sealed form. A file part inside a message row is sealed and opened
+   with its row. The dry run reports how many attachments and bytes it would copy. The
+   stored file is removed within two days of its chat's deletion, as
+   the live policy already says (ADR 0001). The cleanup runs once a day, and it
+   removes a file once no chat refers to it and 24 hours have passed since its
+   last reference changed. This plan does not seal the bytes of an upload. A new
+   upload seals its name at upload, before the component stores the file (order
+   of work, step 2).
+
+The stages, and the key that seals each one (owner decisions K2, K3, and K10):
+
+| Stage | Sealed with | Status |
+| --- | --- | --- |
+| Title, summary, and memory | The learner's key | Live |
+| The learner's message, at send | The learner's key | Planned, wave A |
+| The rows of a running turn | Not sealed while the turn runs | Plain, by design |
+| The private reply and tool rows, once the turn settles, in one transaction | The learner's key | Planned, wave A |
+| A failed or cancelled prompt, at turn end by the sweep | The learner's key | Planned, wave A |
+| Stream deltas | Not sealed; deleted after the turn | Planned, wave A |
+| Old messages, by migration | The learner's key | Planned, wave A |
+| Chat attachment file names | The learner's key | Planned, wave A |
+| School Nina thread, from the class's creation; no personal memory (K3) | The school's key | Planned |
 
 Cost, in documents: a turn of n rows costs n - 1 deletes and n - 1 inserts at
 settlement, 16 writes for the 9-row average turn above and at most 78 for the
@@ -270,10 +310,13 @@ skeleton of `message` that is valid for the component:
 
 `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and `error` are
 not passed to `addMessages`, so the row has none. A row that has no sealed
-bytes is a running turn's row and the module passes it through. That form never
-leaves, so the reader keeps both forms for good, and the guard against a row
-that stays plain is the marker, the sweep and a test that plants strings in a
-whole turn and looks in every table.
+bytes is read as plain. It is a running turn's row, or a row of a settled turn
+that the seal has not reached yet, and the module passes it through, so a read
+does not fail before its turn is sealed. The seal writes `sealedAt` in the same
+transaction as the sealed rows, so a turn that carries it has no plain row unless
+a write came from outside the seal. Such a row fails the read, because the read
+must not hide it. The guard against a row that stays plain is the marker, the
+sweep, and a test that plants strings in a whole turn and looks in every table.
 
 ### What Breaks In The Component
 
@@ -303,6 +346,7 @@ read for the whole function.
 | The next turn | 50 rows a page, back to the oldest uncovered turn | 1 | rows read |
 | The summary job | 100 rows a page, text rows | 1 | rows read |
 | Capture, retry, replay | 1 row | 1 | 1 |
+| Attachments | 1 file row for each attachment | 1 | 1 name for each |
 | Suggestions | up to 50 rows | 1 | up to 50 |
 | Title | 1 row: it runs for the first turn only (`presentation.ts:102`) | 1 | 1 |
 
@@ -322,8 +366,8 @@ and opens inside it, so it makes the same single trip from the action that
 `listMessages`, opening, and `toUIMessages`, which is what `listUIMessages`
 does, so the shape the browser receives does not change. A source rule in
 `scripts/check` should reject a call to `listMessagesByThreadId`,
-`getMessagesByIds`, `listMessages`, `listUIMessages` or `docsToModelMessages`
-outside the module, so a reader added later cannot skip the opening.
+`getMessagesByIds`, `listMessages`, `listUIMessages`, `docsToModelMessages` or
+`getFile` outside the module, so a reader added later cannot skip the opening.
 
 ## Time To First Token
 
@@ -378,9 +422,11 @@ migrates them, with a dry pass, as the migrations before it did:
    so production can be counted before anything is rewritten, and the assumed
    sizes above can be replaced with real ones.
 
-It runs on dev and on production until a whole pass finds no plain row of a
-settled turn, and it is deleted afterwards with its tests. The reader keeps both
-forms, because a running turn is plain.
+It runs on dev and on production until a whole pass finds no settled turn that
+still has a plain row, and it is deleted afterwards with its tests. The reader
+rule of the Sealed Row section holds through the migration: a plain row of a turn
+that carries `sealedAt` fails the read, and the plain rows of a running turn and
+of a settled turn without the marker pass through.
 
 ## Order Of Work
 
@@ -392,16 +438,25 @@ runs a whole turn and searches every component table.
    above, suggestions and title off the Agent's fetch, the source rule. No
    behavior changes. Gate: each reader gives the same result for plain rows and
    for sealed rows.
-2. **Seal the learner's message at write.** `turns.start`, replay, retry and
-   capture. Gate: after admission the message appears in no table.
+2. **Seal the learner's message and the file name at write.** `turns.start`,
+   replay, retry and capture seal the message. The upload seals the file name
+   before `storeFile`: `nina/uploads.impl.ts` passes the plain name to `storeFile`
+   today, and the Agent forwards it unchanged to the component. Gate: after
+   admission the message appears in no table, and a test that uploads a file with
+   a planted name finds the name in no table, `files` included.
 3. **Seal the settled turn.** The `seal` mutation, the `sealedAt` marker, the
    sweep and the early deletion of deltas. Gate: after settlement and the
    deletion of the deltas no planted string appears in any table; during the
    turn they appear only in the plain rows and the deltas.
 4. **Old messages.** The migration, run dry, then run for real on dev and on
-   production, then run again until it reports nothing.
-5. **Contract.** Delete the migration and its tests. The plain form stays, as
-   said above.
+   production, then run again until it reports nothing. It also copies each
+   attachment of an old message under its sealed name (Decision, item 4). The dry
+   run counts old attachments only, because every upload since step 2 is sealed at
+   upload. Gate: no file row that a message refers to holds a plain name.
+5. **Contract.** Delete the migration and its tests. The reader rule of the Sealed
+   Row section stays: a plain row of a turn that carries `sealedAt` fails the
+   read, and a running turn or a settled turn without the marker keeps its plain
+   rows readable.
 
 In parallel, a proposal to Convex for a codec hook in the component. If it ships,
 the hook replaces wave 3, and wave 2 too if the hook covers `saveMessage`. The
@@ -412,8 +467,8 @@ module then keeps only the opening.
 - The rows of a running turn, a failed turn until the sweep seals it, and the
   deltas are plain for as long as stated in the table of designs. A backup taken
   in that window holds them.
-- `files.filename` and the uploaded files are not sealed. ADR 0001 and the
-  blueprint leave files out of this plan.
+- The bytes of an uploaded file are not sealed by this plan. The file name of a
+  chat attachment is sealed in program wave A (Decision 4).
 - Searching earlier chats for text is not possible over sealed rows. The summary
   and the memories carry what Nina recalls. If a search is wanted later, it
   follows ADR 0022: blind keys for words, no embeddings, because an embedding

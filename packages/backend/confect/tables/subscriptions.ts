@@ -8,7 +8,6 @@ export default Table.make(() =>
     id: Schema.String,
     /** Polar customer ID linked to the subscription. */
     customerId: Schema.String,
-    schoolId: Schema.optionalKey(Schema.String),
     createdAt: Schema.String,
     modifiedAt: Schema.NullOr(Schema.String),
     amount: Schema.NullOr(Schema.Finite),

@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { purposes } from "@repo/backend/confect/gateway/purpose";
 import {
   boundText,
   countFileTokens,
@@ -17,7 +18,7 @@ import { createNinaTest, filler, ninaModel } from "@repo/backend/test/nina";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { ModelMessage } from "ai";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, String as Str } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -29,6 +30,8 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const SHORTENED_NOTE =
   /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/;
+/** The unit that the large output caps of `purposes` are whole multiples of. */
+const CAP_UNIT = 1024;
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -80,6 +83,69 @@ describe("Nina token budgets", () => {
     expect(countTextTokens(bounded)).toBeLessThanOrEqual(150);
     expect(bounded).toContain("Narrow the request.");
   });
+
+  it("cuts after the last whole word that fits, never inside a word", () => {
+    const text = "word ".repeat(600);
+    const bounded = boundText(text, 150, "Narrow the request.");
+    const kept = bounded.slice(0, bounded.indexOf("\n\n["));
+    // Each word costs one token and each space none. The note reserves 80 of the
+    // 150 tokens, so 70 are left for the text: exactly 70 words fit, and a 71st
+    // would not.
+    expect(Str.split(kept, " ")).toHaveLength(70);
+    expect(kept).toBe(`${"word ".repeat(69)}word`);
+  });
+
+  it("states the estimator's total of the whole text in the note", () => {
+    const text = "word ".repeat(600);
+    const bounded = boundText(text, 150, "Narrow the request.");
+    expect(bounded).toContain("[Shortened to about 150 of 600 tokens.");
+  });
+});
+
+describe("Nina token estimate", () => {
+  it.each([
+    { name: "a short word", text: "word", expected: 1 },
+    { name: "an 8-letter word, one token", text: "abcdefgh", expected: 1 },
+    { name: "a 9-letter word, two tokens", text: "abcdefghi", expected: 2 },
+    { name: "two digits, one token each", text: "12", expected: 2 },
+    { name: "one space, none", text: "a b", expected: 2 },
+    { name: "two spaces, one token", text: "a  b", expected: 3 },
+    { name: "a newline, none", text: "a\nb", expected: 2 },
+    { name: "one punctuation mark, one token", text: "!", expected: 1 },
+    { name: "one emoji, one token", text: "\u{1F600}", expected: 1 },
+    {
+      name: "an Arabic word with vowel signs, a token for each letter and sign",
+      text: "\u{643}\u{64E}\u{62A}\u{64E}\u{628}\u{64E}",
+      expected: 6,
+    },
+    {
+      name: "five Chinese characters, 3.75 tokens in all, rounded up to 4 (one token each would give 5)",
+      text: "\u{4E2D}\u{6587}\u{5B57}\u{5B66}\u{4EBA}",
+      expected: 4,
+    },
+    { name: "an underscore, none", text: "_", expected: 0 },
+    {
+      name: "an underscore between two words, which splits them",
+      text: "a_b",
+      expected: 2,
+    },
+  ])("counts $name as the estimator does", ({ text, expected }) => {
+    expect(countTextTokens(text)).toBe(expected);
+  });
+});
+
+describe("Nina output caps", () => {
+  it("keeps the output cap of a specialist just above the evidence that Nina reads of its answer", () => {
+    const cap = purposes.specialist.maxOutputTokens;
+    // Nina reads at most the evidence budget of a specialist's answer. A cap at
+    // or below it would end an answer before Nina had read all it may, so the
+    // cap stands above it. It stays within one unit of it, so that it follows
+    // the budget and does not drift to a number of its own. The reasoning of the
+    // call counts against the cap too, so the room above the budget is all it
+    // has when an answer fills the budget.
+    expect(cap).toBeGreaterThan(NINA_BUDGET.evidence);
+    expect(cap - NINA_BUDGET.evidence).toBeLessThan(CAP_UNIT);
+  });
 });
 
 describe("Nina call limit", () => {
@@ -128,8 +194,9 @@ describe("Nina call limit", () => {
       "memory",
     ]);
     const measured = instructions + tools + runtime;
+    // The budget is the measure rounded up to the next 1,000: it holds the
+    // measure and sits less than 1,000 tokens above it.
     expect(measured).toBeLessThanOrEqual(NINA_BUDGET.instructions);
-    // The stated part is the measure rounded up to the next 1,000 tokens.
     expect(NINA_BUDGET.instructions - measured).toBeLessThan(1000);
   }, 30_000);
 

@@ -58,7 +58,6 @@ function toPublicTrack(track: TryoutTrack) {
         }),
     publicPath: track.publicPath,
     readyQuestionCount: track.questionCount,
-    readySetCount: track.setCount,
     readyVisibleSectionCount: track.visibleSectionCount,
     title: track.title,
     trackKey: track.trackKey,

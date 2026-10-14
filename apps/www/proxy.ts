@@ -14,7 +14,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
-import { readSchoolAuthRedirect } from "@/lib/auth/school";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   matchesInternalPreviewRoute,
@@ -33,6 +32,7 @@ import {
   isUnsupportedSystemPath,
 } from "@/lib/routing/bypass";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
+import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 
 const handleLocalizedRequest = createMiddleware(routing);
@@ -123,12 +123,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const schoolAuthRedirect = readSchoolAuthRedirect(request);
-
-  if (schoolAuthRedirect) {
-    return NextResponse.redirect(schoolAuthRedirect);
-  }
-
   const { markdownExtension: migrationSuffix, pathname: migrationPathname } =
     readLlmsMarkdownPathname(pathname);
   const urlMigrationRedirect = await Effect.runPromise(
@@ -136,6 +130,8 @@ export async function proxy(request: NextRequest) {
       hasAttemptCapability: hasTryoutAttemptCapability(
         request.nextUrl.searchParams
       ),
+      headers: request.headers,
+      markdown: migrationSuffix !== "",
       method: request.method,
       pathname: migrationPathname,
     })
@@ -150,6 +146,13 @@ export async function proxy(request: NextRequest) {
     );
     mergeRepresentationVary(response);
     return response;
+  }
+
+  const profileRefusal = await Effect.runPromise(
+    readProfileRefusal(pathname, request.headers)
+  );
+  if (profileRefusal !== null) {
+    return rewriteToContentNotFound(request, profileRefusal);
   }
 
   const routeDecision = await Effect.runPromise(

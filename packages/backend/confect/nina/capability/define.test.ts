@@ -6,6 +6,7 @@ import {
   failed,
 } from "@repo/backend/confect/nina/capability/define";
 import type { Held } from "@repo/backend/confect/nina/capability/held";
+import { MEMORY_CAPABILITY } from "@repo/backend/confect/nina/capability/spec";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   ALLOWED,
@@ -21,7 +22,6 @@ import {
   toolCall,
 } from "@repo/backend/test/nina/capability";
 import {
-  openHomeSession,
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
@@ -54,37 +54,34 @@ const probe = {
   offered: () => ALLOWED,
 } as const;
 
-/** Plays a model that calls the probe once, in a turn that has Nina's context pack unless `pack` is false. */
+/**
+ * Plays a model that calls the probe once. The probe is listed under `name`,
+ * which decides whether it is text-only, as it does for every capability.
+ */
 function askProbe(
   capability: Capability,
   {
     chatStep,
     held,
-    pack = true,
+    name = "probe",
   }: {
     readonly chatStep?: Parameters<typeof playTurn>[0]["chatStep"];
     readonly held?: Held;
-    readonly pack?: boolean;
+    readonly name?: string;
   } = {}
 ) {
   const model = new MockLanguageModelV4({
-    doGenerate: [toolCall("probe", topic), finalAnswer],
+    doGenerate: [toolCall(name, topic), finalAnswer],
   });
   return runSpecialist((userId) =>
-    Effect.gen(function* () {
-      const session = yield* openHomeSession;
-      return yield* playTurn({
-        ...(chatStep === undefined ? {} : { chatStep }),
-        context: {
-          ...specialistRequest.context,
-          nina: pack ? session.context : undefined,
-        },
-        ...(held === undefined ? {} : { held }),
-        model,
-        prompt: "Use the probe.",
-        registry: { probe: capability },
-        userId,
-      });
+    playTurn({
+      ...(chatStep === undefined ? {} : { chatStep }),
+      context: specialistRequest.context,
+      ...(held === undefined ? {} : { held }),
+      model,
+      prompt: "Use the probe.",
+      registry: { [name]: capability },
+      userId,
     })
   );
 }
@@ -130,23 +127,6 @@ describe("a capability that exists only in a test", () => {
         {
           outcome: "denied",
           text: expect.stringContaining("- Reason: Conditions changed."),
-        },
-      ]);
-    });
-
-    it("allows nothing in a turn that has no context pack", async () => {
-      const run = vi.fn(() => Effect.succeed({ text: "Never read." }));
-      const { result } = await askProbe(defineCapability({ ...probe, run }), {
-        pack: false,
-      });
-
-      expect(run).not.toHaveBeenCalled();
-      expect(result).toMatchObject([
-        {
-          outcome: "denied",
-          text: expect.stringContaining(
-            "Nina context is unavailable for this turn."
-          ),
         },
       ]);
     });
@@ -207,13 +187,13 @@ describe("a capability that exists only in a test", () => {
       expect(result).toEqual([{ artifacts: [done], text: "Verified." }]);
     });
 
-    it("reads a text-only run as done, because its answer is the text", async () => {
+    it("reads a run of a text-only capability as done, because its answer is the text", async () => {
       const { result } = await askProbe(
         defineCapability({
           ...probe,
           run: () => Effect.succeed({ text: "Told in words." }),
-          textOnly: true,
-        })
+        }),
+        { name: MEMORY_CAPABILITY }
       );
 
       expect(result).toEqual([{ artifacts: [], text: "Told in words." }]);
@@ -237,15 +217,12 @@ describe("a capability that exists only in a test", () => {
           }),
       });
       const outputs = await runSpecialist((userId) =>
-        Effect.gen(function* () {
-          const session = yield* openHomeSession;
-          return yield* streamTurn({
-            context: { ...specialistRequest.context, nina: session.context },
-            model,
-            prompt: "Use the probe.",
-            registry: { probe: capability },
-            userId,
-          });
+        streamTurn({
+          context: specialistRequest.context,
+          model,
+          prompt: "Use the probe.",
+          registry: { probe: capability },
+          userId,
         })
       );
 
@@ -294,9 +271,8 @@ describe("a capability that exists only in a test", () => {
           ...probe,
           note: "The words are not kept.",
           run: () => Effect.succeed({ text: "Private words." }),
-          textOnly: true,
         }),
-        { held }
+        { held, name: MEMORY_CAPABILITY }
       );
 
       expect(result).toEqual([
@@ -305,7 +281,7 @@ describe("a capability that exists only in a test", () => {
       expect(
         MutableHashMap.get(held, {
           toolCallId: "capability",
-          toolName: "probe",
+          toolName: MEMORY_CAPABILITY,
         })
       ).toEqual(Option.some("Private words."));
     });
@@ -318,9 +294,8 @@ describe("a capability that exists only in a test", () => {
           note: "The words are not kept.",
           run: () =>
             Effect.succeed({ outcome: "empty", text: "Nothing saved." }),
-          textOnly: true,
         }),
-        { held }
+        { held, name: MEMORY_CAPABILITY }
       );
 
       expect(result).toEqual([

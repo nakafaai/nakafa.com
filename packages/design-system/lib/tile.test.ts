@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { getWcagContrast } from "@repo/design-system/lib/theme/contrast";
-import { getTileGradient } from "@repo/design-system/lib/tile";
+import { getTileGradient, wrap } from "@repo/design-system/lib/tile";
 import Color from "colorjs.io";
 import { Array as Arr, HashMap, HashSet, Order } from "effect";
 
@@ -46,8 +46,8 @@ const PINNED = [
 ] as const;
 
 /** Reads the angle, both tones, and both hues out of one seed's gradient. */
-function readTile(seed: string) {
-  const match = TILE_PATTERN.exec(getTileGradient(seed));
+function readTile(seed: string, shift?: number) {
+  const match = TILE_PATTERN.exec(getTileGradient(seed, shift));
 
   return {
     angle: Number(match?.[1]),
@@ -58,7 +58,7 @@ function readTile(seed: string) {
   };
 }
 
-const TILES = Arr.map(SEEDS, readTile);
+const TILES = Arr.map(SEEDS, (seed) => readTile(seed));
 
 /** Lists each number once, from the smallest. */
 function distinct(values: readonly number[]) {
@@ -85,8 +85,8 @@ describe("getTileGradient", () => {
   it("gives the same seed the same tile every time", () => {
     const sample = Arr.take(SEEDS, 500);
 
-    expect(Arr.map(sample, getTileGradient)).toEqual(
-      Arr.map(sample, getTileGradient)
+    expect(Arr.map(sample, (seed) => getTileGradient(seed))).toEqual(
+      Arr.map(sample, (seed) => getTileGradient(seed))
     );
   });
 
@@ -125,5 +125,31 @@ describe("getTileGradient", () => {
         expect(contrast).toBeGreaterThanOrEqual(MINIMUM_ICON_CONTRAST);
       }
     }
+  });
+
+  it("turns both tones by the shift and keeps the side and the direction", () => {
+    const plain = readTile("aljabar");
+    const turned = readTile("aljabar", 100);
+
+    expect(turned.hue).toBe((plain.hue + 100) % 360);
+    expect(turned.beside).toBe((plain.beside + 100) % 360);
+    expect(turned.angle).toBe(plain.angle);
+  });
+
+  it("takes a shift that passes the end of the wheel back to the start", () => {
+    expect(readTile("aljabar", 359).hue).toBe(313);
+    expect(readTile("aljabar", 359).beside).toBe(347);
+  });
+
+  it("gives a shift of 0 the tile of the seed alone", () => {
+    expect(getTileGradient("gerak", 0)).toBe(getTileGradient("gerak"));
+  });
+});
+
+describe("wrap", () => {
+  it("wraps any angle into the wheel, a negative one too", () => {
+    expect(Arr.map([-370, -10, 0, 359, 360, 370], wrap)).toEqual([
+      350, 350, 0, 359, 0, 10,
+    ]);
   });
 });

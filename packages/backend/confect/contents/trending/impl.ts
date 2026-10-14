@@ -140,7 +140,6 @@ function toTrendingSubject(
     href: `/${cleanSlug(route.route)}${toLearningContextQuery(row)}`,
     materialDomain: route.materialDomain,
     title: route.title,
-    viewCount: row.score,
   };
 }
 

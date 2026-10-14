@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer,
+Superseded by ADR 0031. Accepted and amended on 2026-07-08 to insert the canonical try-out track layer,
 on 2026-07-22 to define freemium attempt access, and on 2026-08-04 to make
 Aksara signed publication the only authored try-out source. Amended on
 2026-08-10 to define transactional response and scoring integrity. Amended on
@@ -12,7 +12,9 @@ to make attempts and scores free with Pro access to worked solutions. Amended on
 2026-09-27 to separate exam language from the application locale and retire the
 unused access-campaign storage. Amended on 2026-10-02 to give responses one
 module outside try-out, with short answers, rubrics, stored outcomes, question
-worth, and penalized scoring.
+worth, and penalized scoring. Amended on 2026-10-13 to admit answers and
+section finishes through the live-attempt gate (ADR 0013), and to run a section
+in one player with two views.
 
 ## Context
 
@@ -85,6 +87,23 @@ to the placement's frozen `responseSpec`. The server derives elapsed time from t
 evaluates correctness from that immutable specification. The transaction
 validates attempt, section, placement, response kind, and response ownership
 before it updates the response and parent activity counters.
+
+Answers and section finishes pass the live-attempt gate (ADR 0013), which
+checks the learner, the attempt, the section, and its deadlines in one order. A
+finish checks the attempt deadline before it reads the section, and an answer
+checks the earlier of the attempt and section deadlines after the section's
+integrity, and reads the question's stored answer only after that, as each
+write did before the gate. Each answer carries a version that grows with every
+write of its question, a clear included: deleting an answer deletes its
+version, so the question's placement keeps the version of the clear. The gate
+refuses an answer that is not newer than the latest write of its question
+(`TRYOUT_RESPONSE_STALE`). A page opened before versions sends none, and the
+gate writes its answer as the next version until that temporary compatibility
+goes (owner, exit, and cleanup are in `confect/tryouts/response/spec.ts`). A
+question of another learner reports `TRYOUT_PLACEMENT_NOT_FOUND`, like a
+question that does not exist. The try-out store lives in
+`confect/tryouts/gate.ts` and goes with the rest of the try-out runtime at the
+engine cutover.
 
 The structured-response rollout completed on 2026-09-01 after production data
 contained only canonical rows. Placements persist one required `responseSpec`,
@@ -165,6 +184,43 @@ The web bootstraps that exact attempt page, then subscribes only to
 `getSetAttemptState` or `getSectionAttemptState` while the attempt can still
 change. Frozen display stays separate from the active signed restart and
 navigation destinations. Terminal pages stop their mutable subscriptions.
+
+### Player
+
+A running section renders in one player, `apps/www/components/player`, which
+try-out binds in `apps/www/components/tryout/player`. The player knows
+questions, answers, and time. It does not know try-out routes or Convex
+functions, so a School assessment can bind the same parts.
+
+The player has two views. The list shows every question of the section, and
+one at a time shows only the current one. The server resolves the view before
+it sends the page, so the first render already has it and nothing flickers. A
+`?view=` parameter wins and an unknown value is a 404, then the view the
+learner saved, then the list. A learner saves a view with a Server Action that
+sets the `player_view` cookie, because a cookie is written on the server and
+the codebase does not write `document.cookie`. The page shows the chosen view
+at once and takes it back, with a toast, when the save fails.
+
+A navigator of question numbers fills the answered ones and rings the current
+one, so no state relies on color alone. It is a sidebar from the large
+breakpoint and a sheet below it, and it always shows the current number. Left
+and Right move between questions and `1` to `5` pick an option of a
+single-choice question. `G` opens and closes the sheet, and from the large
+breakpoint, where the sidebar is always open, it moves focus into the sidebar
+and back to the question. Confirming a finish lists the questions still open.
+A flag key and a flag state ship with the engine's single flags table, not with
+the player.
+
+In the list, the current question follows the reader. It is the question under
+a reading line just below the header, or the last question once the reader has
+scrolled to the end of the list. Both follow the page and not a constant: the
+line is the scroll margin that reveals a question plus a few pixels, so it falls
+inside a revealed question at any text size, and the end counts once it clears
+the footer, which the list measures. A jump or a focus holds its question
+current until the page moves away from where the jump or the focus left it,
+whether the reader used the wheel, a touch, a key, or the scrollbar. A list that
+fits in the window keeps the question under the line, because the reader has no
+end to reach.
 
 ### Freemium Access
 

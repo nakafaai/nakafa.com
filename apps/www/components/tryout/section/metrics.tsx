@@ -2,7 +2,7 @@ import {
   NumberFormat,
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
-import { TryoutTimer } from "@/components/tryout/runtime/countdown";
+import { PlayerDigits } from "@/components/player/timer";
 
 /** Renders the production try-out metric number style. */
 export function TryoutMetricNumber({ value }: { value: number }) {
@@ -36,5 +36,7 @@ export function TryoutMetricFraction({
 
 /** Uses the same timer format for the section's pre-start duration. */
 export function TryoutMetricTime({ totalSeconds }: { totalSeconds: number }) {
-  return <TryoutTimer className="font-light text-5xl" seconds={totalSeconds} />;
+  return (
+    <PlayerDigits className="font-light text-5xl" seconds={totalSeconds} />
+  );
 }

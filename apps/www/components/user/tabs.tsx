@@ -9,8 +9,9 @@ import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 
 import { SharedTabs } from "@/components/user/navigation";
+import { profileHref } from "@/lib/profile/href";
 
-export function UserTabs({ userId }: { userId: string }) {
+export function UserTabs({ username }: { username: string }) {
   const t = useTranslations("Common");
 
   const pathname = usePathname();
@@ -19,12 +20,12 @@ export function UserTabs({ userId }: { userId: string }) {
     {
       icon: MessageMultiple01Icon,
       label: t("comments"),
-      href: `/user/${userId}`,
+      href: profileHref(username),
     },
     {
       icon: MessageMultiple02Icon,
       label: t("chat"),
-      href: `/user/${userId}/chat`,
+      href: `${profileHref(username)}/chat`,
     },
   ];
 

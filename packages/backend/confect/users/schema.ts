@@ -35,6 +35,11 @@ export const userValidator = Schema.Struct({
   authId: Schema.String,
   name: Schema.String,
   image: Schema.optionalKey(Schema.String),
+  // The one name of the public profile address `@username`. Every live account
+  // holds one; a deleted account keeps none, which frees the name.
+  username: Schema.optionalKey(Schema.String),
+  // One line about the person, shown on the public profile.
+  bio: Schema.optionalKey(Schema.String),
   role: Schema.optionalKey(userRoleOptionsValidator),
   plan: userPlanValidator,
   credits: Schema.Finite,

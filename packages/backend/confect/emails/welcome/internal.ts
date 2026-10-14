@@ -4,13 +4,12 @@ import {
   DatabaseWriter,
   MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
-import { resend } from "@repo/backend/confect/emails/client";
+import { EMAIL_FROM, resend } from "@repo/backend/confect/emails/client";
 import {
   deferWelcomeIntent,
   toWelcomeIntentError,
   tryWelcomeIntent,
 } from "@repo/backend/confect/emails/welcome/impl";
-import { WELCOME_EMAIL_FROM } from "@repo/backend/confect/emails/welcome/spec";
 import { Effect, flow } from "effect";
 
 type WelcomeIntent = Docs["welcomeEmailIntents"];
@@ -55,7 +54,7 @@ export const enqueueRenderedWelcomeProgram = Effect.fn(
     const componentEmailId = yield* tryWelcomeIntent(() =>
       resend.sendEmail(ctx, {
         ...message,
-        from: WELCOME_EMAIL_FROM,
+        from: EMAIL_FROM,
         idempotencyKey: `welcome-email/${intent._id}`,
         to: user.email,
       })

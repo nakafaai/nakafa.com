@@ -42,16 +42,10 @@ function isAskedPage(page: NinaPage, input: typeof NinaPageInput.Type) {
 export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   user: Docs["users"],
   chat: Docs["chats"] | null,
-  input: typeof NinaInput.Type,
-  capturedAt: string
+  input: typeof NinaInput.Type
 ) {
   if (input.kind === "message") {
-    const context = yield* resolveNinaContext(
-      input.page,
-      user,
-      capturedAt,
-      chat?._id
-    );
+    const context = yield* resolveNinaContext(input.page, user, chat?._id);
     const attachments = yield* consumeAttachments(
       user._id,
       input.prompt.uploadIds ?? []
@@ -121,7 +115,7 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     return yield* retryUnavailable();
   }
   return {
-    ...(yield* resolveNinaContext(input.page, user, capturedAt, chat._id)),
+    ...(yield* resolveNinaContext(input.page, user, chat._id)),
     fileIds,
     message,
     retryOf,

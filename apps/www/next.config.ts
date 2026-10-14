@@ -21,6 +21,7 @@ import {
 } from "@/lib/content/profile";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/discovery";
 import { createOgRouteAliasRewrites } from "@/lib/og/route";
+import { profileHref } from "@/lib/profile/href";
 import { readRuntimeConfig } from "@/runtime";
 
 const runtime = readRuntimeConfig();
@@ -42,6 +43,12 @@ const postHogProxyEnv = isAksaraPreviewChild ? null : postHogProxyKeys();
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
+/**
+ * One two-letter locale segment, the shape every app locale has. A longer first
+ * segment such as `user` never matches, so a valid bare path keeps its meaning.
+ */
+const LOCALE_SEGMENT = ":locale([A-Za-z]{2})";
+
 /**
  * Build the rewrite rules for agent discovery, SEO assets, and the PostHog proxy.
  *
@@ -79,6 +86,21 @@ function createAppRewrites() {
     })),
     ...createOgRouteAliasRewrites(),
   ];
+  // A folder named `@username` would be a parallel route slot and not an
+  // address, so the public address of a profile is rewritten to the route file
+  // below `user`, whose parameter is the username. The proxy has already
+  // answered every path that is no profile, and `afterFiles` runs before the
+  // dynamic routes, so the catch-all of signed Pages never sees an `@` path.
+  const profileRewrites = [
+    {
+      source: `/${LOCALE_SEGMENT}${profileHref(":username")}`,
+      destination: "/:locale/user/:username",
+    },
+    {
+      source: `/${LOCALE_SEGMENT}${profileHref(":username")}/chat`,
+      destination: "/:locale/user/:username/chat",
+    },
+  ];
   return {
     // PostHog requires the specific static and array rewrites to come before the
     // catch-all analytics rewrite so asset cache headers are preserved.
@@ -91,15 +113,11 @@ function createAppRewrites() {
       // After a pass-through match, Next checks the localized dynamic route
       // before continuing through the remaining `afterFiles` entries.
       ...ogRouteRewrites,
+      ...profileRewrites,
       ...seoAssetRewrites,
     ],
   };
 }
-/**
- * One two-letter locale segment, the shape every app locale has. A longer first
- * segment such as `user` never matches, so a valid bare path keeps its meaning.
- */
-const LOCALE_SEGMENT = ":locale([A-Za-z]{2})";
 
 /**
  * Build the localized redirect list shared by all supported locales.
@@ -148,11 +166,6 @@ function createLocalizedRedirects() {
     {
       source: `/${LOCALE_SEGMENT}/onboarding/role`,
       destination: "/:locale/onboarding",
-      permanent: true,
-    },
-    {
-      source: `/${LOCALE_SEGMENT}/school/:slug/classes/:id/timeline`,
-      destination: "/:locale/school/:slug/classes/:id/forum",
       permanent: true,
     },
   ];

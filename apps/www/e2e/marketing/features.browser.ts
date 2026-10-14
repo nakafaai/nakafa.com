@@ -4,7 +4,7 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { scrollToElement } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { NEXT_CHUNK_PATH, openRoute } from "@/e2e/support/route";
-import { NINA_SHOWCASE } from "@/e2e/support/selector";
+import { BUBBLE, NINA_SHOWCASE } from "@/e2e/support/selector";
 import {
   readinessTimeoutMilliseconds,
   revealTimeoutMilliseconds,
@@ -14,6 +14,9 @@ import { targetViewports } from "@/e2e/support/viewport";
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
 const NINA_REASONING_TEXT = "Compare the two known equations";
+/** The learner's question of the example, which the page shows as a learner writes: plain words, no TeX. */
+const NINA_QUESTION_TEXT =
+  "For the operation △(a,b) = ka + b/m, we know △(2,4) = 8 and △(3,5) = 11. How do I find △(5,9)?";
 const FEATURED_TRYOUT_HEADING =
   "After learning, see what you really understood";
 const NON_WHITESPACE_PATTERN = /\S/;
@@ -60,6 +63,9 @@ const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
   });
 
   yield* Effect.promise(() => expect(conversation).toHaveCount(1));
+  yield* Effect.promise(() =>
+    expect(conversation.locator(BUBBLE)).toHaveText(NINA_QUESTION_TEXT)
+  );
   yield* Effect.promise(() =>
     expect(
       conversation.getByText(NINA_ANSWER_TEXT, { exact: false })

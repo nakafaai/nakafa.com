@@ -370,6 +370,8 @@ describe("research web search tool", () => {
         expect(
           Arr.map(getWebSearchParts(parts()), (part) => part.sites)
         ).toEqual(Arr.makeBy(4, () => sites));
+        // So does the output that the reader of the search gets.
+        expect(output.result.sites).toEqual(sites);
       })
   );
 
@@ -433,7 +435,8 @@ describe("research web search tool", () => {
           toolCallId: "web-search-empty",
         });
 
-        expect(output.result.sources).toEqual([]);
+        // An open search names no site, so its output carries no `sites` key.
+        expect(output.result).toStrictEqual({ error: undefined, sources: [] });
         expect(output.text).toContain("# Web Search Results");
         expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
           expect.objectContaining({
@@ -448,7 +451,7 @@ describe("research web search tool", () => {
   );
 
   it.effect(
-    "writes an error part when Firecrawl search fails, and logs its status without its message",
+    "writes an error part with the sites when a limited search fails, logs its status without its message, and names no site in its output",
     () =>
       Effect.gen(function* () {
         fetcher.mockImplementation(() =>
@@ -458,6 +461,7 @@ describe("research web search tool", () => {
         const { parts, publish } = createProgress();
         const output = yield* searchWeb({
           queries: ["latest solar energy research"],
+          sites,
           words: "latest solar energy research",
           toolCallId: "web-search-2",
           publish,
@@ -480,13 +484,12 @@ describe("research web search tool", () => {
 
         expect(output.result.sources).toEqual([]);
         expect(output.result.error).toContain("Failed to search");
+        expect(output.result).not.toHaveProperty("sites");
         expect(output.text).toContain("Failed to search");
         expect(Option.getOrThrow(Arr.last(parts()))).toEqual(
           expect.objectContaining({
             type: "data-web-search",
-            data: expect.objectContaining({
-              status: "error",
-            }),
+            data: expect.objectContaining({ sites, status: "error" }),
           })
         );
       })

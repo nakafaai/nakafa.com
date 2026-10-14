@@ -16,6 +16,7 @@ import type {
   BuiltinRole,
   GrantScope,
 } from "@repo/backend/confect/access/schema";
+import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
@@ -36,8 +37,11 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
   const writer = yield* DatabaseWriter;
   const reader = yield* DatabaseReader;
   const tenantId = yield* writer.table("tenants").insert({
+    country: "ID",
+    currency: "IDR",
     kind: "school",
     name: "Sekolah",
+    policies: NEW_TENANT_POLICIES,
     slug,
     status: "active",
   });
@@ -89,9 +93,14 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
     return yield* reader.table("tenantGrants").get(id);
   });
   const unit = Effect.fn(function* () {
-    const unitId = yield* writer
-      .table("tenantUnits")
-      .insert({ level: "sd", name: "SD", status: "active", tenantId });
+    const unitId = yield* writer.table("tenantUnits").insert({
+      contentLanguage: "id",
+      level: "sd",
+      name: "SD",
+      status: "active",
+      tenantId,
+      timeZone: "Asia/Jakarta",
+    });
     return { kind: "unit", unitId } as const;
   });
   return { grant, person, unit };
