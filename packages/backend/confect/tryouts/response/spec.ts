@@ -17,10 +17,11 @@ export const saveTryoutResponseArgsValidator = Schema.Struct({
    * browser tab that was opened before versions still sends none, and a
    * required argument would reject every answer of that tab until it reloads.
    * An answer without a version is written as the next one and is never
-   * refused as stale. Owner: ADR 0031 and ADR 0013. Exit: production function
-   * logs show no save without a version for at least 12 hours (the skew
-   * window) and across one later production deploy, because a tab left open on
-   * an older build calls Convex directly (ADR 0031, section 10). Cleanup: make
+   * refused as stale. Owner: ADR 0031 and ADR 0013. Exit: the production
+   * function logs hold no `assessment.gate.unversioned` warning for at least 12
+   * hours (the skew window) and across one later production deploy, because a
+   * tab left open on an older build calls Convex directly (ADR 0031, section
+   * 10). Cleanup: make
    * this argument required, make the version of `gate.answer` required, and
    * drop the branch of `numbered` in `assessment/gate/admit.ts` that numbers an
    * answer without one, with its tests.
