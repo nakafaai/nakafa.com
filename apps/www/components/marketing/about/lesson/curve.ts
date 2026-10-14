@@ -87,6 +87,18 @@ export function fitBox(
 }
 
 /**
+ * The window of a physical path, such as a flight, sized to `width` with the
+ * height that keeps one scale on both axes. A flight keeps its true shape this
+ * way, where `fitBox` would stretch it to the height of the picture.
+ */
+export function fitSameScale(points: readonly Point[], width: number): Box {
+  const extent = fitBox(points, 1, 1);
+  const height =
+    (width * (extent.maxY - extent.minY)) / (extent.maxX - extent.minX);
+  return fitBox(points, width, height);
+}
+
+/**
  * The two ends of the bonds of a bent molecule, counted from its centre at the
  * origin. Each bond is `length` long, and the two bonds open at `angle` degrees
  * with their ends above the centre, as the screen draws them (y grows down).

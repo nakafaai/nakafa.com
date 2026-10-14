@@ -53,8 +53,11 @@ export function PrivacyRoom({ words }: { readonly words: string }) {
   const [step, setStep] = useState<Step>("words");
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
   const current = shouldReduceMotion ? "locked" : step;
+  /** One dot for each letter, and the spaces kept, so the dots wrap at the words. */
   const dots = Arr.join(
-    Arr.makeBy(words.length, () => "•"),
+    Arr.map(Arr.fromIterable(words), (character) =>
+      character === " " ? " " : "•"
+    ),
     ""
   );
 

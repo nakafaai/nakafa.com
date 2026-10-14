@@ -3,7 +3,7 @@ import { Effect, HashSet } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { NINA_SHOWCASE, SHEET_POPUP } from "@/e2e/support/selector";
+import { NINA_SECTION, SHEET_POPUP } from "@/e2e/support/selector";
 
 const LESSON =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -103,7 +103,7 @@ const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
 ) {
   yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto("/en"));
-  yield* verifyComposer(page.locator(NINA_SHOWCASE));
+  yield* verifyComposer(page.locator(NINA_SECTION));
 
   yield* Effect.promise(() => page.goto("/en/chat"));
   yield* verifyComposer(page.locator("main"));

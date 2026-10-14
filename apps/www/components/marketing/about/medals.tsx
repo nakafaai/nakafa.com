@@ -1,3 +1,4 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -6,21 +7,39 @@ import {
   schools,
 } from "@/components/marketing/about/constants/schools";
 
-/** The colour of each ribbon, in turn. The fill is a token, so both themes keep it. */
-const RIBBONS = [
-  "fill-pop-orange",
-  "fill-pop-blue",
-  "fill-pop-green",
-  "fill-pop-red",
-  "fill-primary",
-  "fill-pop-yellow",
+/** The fill of a ribbon. Each fill is a token, so both themes keep it. */
+const ribbonFill = cva("", {
+  variants: {
+    tone: {
+      blue: "fill-pop-blue",
+      green: "fill-pop-green",
+      orange: "fill-pop-orange",
+      primary: "fill-primary",
+      red: "fill-pop-red",
+      yellow: "fill-pop-yellow",
+    },
+  },
+});
+
+/** The name of one ribbon fill. */
+type RibbonTone = NonNullable<VariantProps<typeof ribbonFill>["tone"]>;
+
+/** The fill of each ribbon, in turn. */
+const RIBBON_TONES: readonly RibbonTone[] = [
+  "orange",
+  "blue",
+  "green",
+  "red",
+  "primary",
+  "yellow",
 ];
 
 /** How far each medal's swing starts after the one before it, in seconds. */
 const SWING_STEP = 0.35;
 
 /** Two strips that cross over the medal, as a ribbon hangs. */
-function Ribbon({ className }: { className: string }) {
+function Ribbon({ tone }: { tone: RibbonTone }) {
+  const className = ribbonFill({ tone });
   return (
     <svg aria-hidden="true" className="h-10 w-9" viewBox="0 0 36 40">
       <path className={className} d="M3,0 H15 L24,40 H12 Z" />
@@ -36,12 +55,12 @@ function Ribbon({ className }: { className: string }) {
 /** One school on its ribbon, with its logo when the wall has one, and its mark when not. */
 function Medal({
   index,
-  ribbon,
   school,
+  tone,
 }: {
   index: number;
-  ribbon: string;
   school: School;
+  tone: RibbonTone;
 }) {
   return (
     <li className="grid justify-items-center border-t">
@@ -51,7 +70,7 @@ function Medal({
         role="img"
         style={{ animationDelay: `${index * SWING_STEP}s` }}
       >
-        <Ribbon className={ribbon} />
+        <Ribbon tone={tone} />
         <span className="-mt-3 grid size-16 place-items-center rounded-full border bg-background">
           {school.logo === undefined ? (
             <span className="font-medium text-xs">{school.mark}</span>
@@ -91,8 +110,8 @@ export function Medals() {
             <Medal
               index={index}
               key={school.name}
-              ribbon={Arr.getUnsafe(RIBBONS, index % RIBBONS.length)}
               school={school}
+              tone={Arr.getUnsafe(RIBBON_TONES, index % RIBBON_TONES.length)}
             />
           ))}
           <li className="grid justify-items-center border-t pt-10">

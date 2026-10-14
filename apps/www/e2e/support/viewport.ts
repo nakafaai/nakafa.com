@@ -31,5 +31,8 @@ export const targetViewports = [
   desktopViewport,
 ] as const;
 
+/** A tablet held upright, the width the home page is also checked at. */
+export const tabletPortraitViewport = targetViewports[2];
+
 /** The viewports every try-out suite walks. */
 export const tryoutViewports = [desktopViewport, touchViewport] as const;

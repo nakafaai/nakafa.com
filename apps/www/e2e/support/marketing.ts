@@ -2,10 +2,7 @@ import type { Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
 
-const MarketingSurfaceSchema = Schema.Literals([
-  "contributor-drawer",
-  "community",
-]);
+const MarketingSurfaceSchema = Schema.Literals(["community"]);
 
 /** The fixed contributor fixture does not contain its required first row. */
 class MarketingContributorMissing extends Schema.TaggedError<MarketingContributorMissing>()(

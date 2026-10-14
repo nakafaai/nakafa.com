@@ -1,27 +1,29 @@
 "use client";
 
 import { Globe02Icon } from "@hugeicons/core-free-icons";
-import { useIntersection } from "@mantine/hooks";
+import {
+  useFocusWithin,
+  useHover,
+  useIntersection,
+  useMergedRef,
+  useReducedMotion,
+} from "@mantine/hooks";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "cn";
-import { Array as Arr, Schema } from "effect";
-import { useReducedMotion } from "motion/react";
+import { Array as Arr } from "effect";
 import { useEffect, useState } from "react";
 import { CountryFlagIcon } from "@/components/shared/flag";
+import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
 
 /** How long one curriculum stays bright before the next one lights up. */
 const LIGHT_FOR_MS = 1800;
 
-const CurriculumLinkSchema = Schema.Struct({
-  countryCode: Schema.optionalKey(Schema.UndefinedOr(Schema.String)),
-  href: Schema.String,
-  programKey: Schema.String,
-  title: Schema.String,
-});
-
 /** One curriculum of the catalog, as the page links to it. */
-type CurriculumLink = typeof CurriculumLinkSchema.Type;
+type CurriculumLink = Pick<
+  ReturnType<typeof readRuntimeCurriculumOptions>[number],
+  "countryCode" | "href" | "programKey" | "title"
+>;
 
 interface CurriculumListProps {
   readonly curricula: readonly CurriculumLink[];
@@ -31,14 +33,20 @@ interface CurriculumListProps {
 /**
  * The curricula as a list of capitals. One name is bright at a time and the
  * others are dim; a pointer or a keyboard on a name makes it the bright one.
- * The lighting moves on by itself while the list is on screen, and holds on the
- * first name with reduced motion.
+ * The lighting moves on by itself while the list is on screen. It waits while
+ * a pointer or focus is on the list, and holds on the first name with reduced
+ * motion.
  */
 export function CurriculumList({ curricula, label }: CurriculumListProps) {
-  const { entry, ref } = useIntersection({ threshold: 0.5 });
-  const shouldReduceMotion = useReducedMotion() ?? false;
+  const { entry, ref: viewRef } = useIntersection({ threshold: 0.5 });
+  const { hovered, ref: hoverRef } = useHover();
+  const { focused, ref: focusRef } = useFocusWithin();
+  const ref = useMergedRef(viewRef, hoverRef, focusRef);
+  const shouldReduceMotion = useReducedMotion();
   const [bright, setBright] = useState(0);
-  const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
+  const reading = hovered || focused;
+  const playing =
+    (entry?.isIntersecting ?? false) && !shouldReduceMotion && !reading;
 
   useEffect(() => {
     if (!playing) {

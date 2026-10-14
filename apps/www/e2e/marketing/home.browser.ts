@@ -1,9 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, MutableList } from "effect";
+import { Effect, MutableList, Schema } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
+import {
+  desktopViewport,
+  tabletPortraitViewport,
+} from "@/e2e/support/viewport";
 
 /** The parts of the home page, in the order of the page. */
 const HOME_PARTS = [
@@ -22,17 +26,17 @@ const HOME_PARTS = [
   "faq",
   "community",
   "closing",
-] as const;
+];
 
 /** The widths the home page must hold at, from a phone to a desktop. */
 const HOME_VIEWPORTS = [
   { height: 844, name: "phone", width: 390 },
-  { height: 1024, name: "tablet", width: 768 },
-  { height: 900, name: "desktop", width: 1440 },
-] as const;
+  tabletPortraitViewport,
+  desktopViewport,
+];
 
 /** The two colour schemes the home page must hold in. */
-const COLOR_SCHEMES = ["light", "dark"] as const;
+const COLOR_SCHEMES = Schema.Literals(["light", "dark"]).literals;
 
 /**
  * Long enough for a lesson to stay open for its full turn after it reaches the

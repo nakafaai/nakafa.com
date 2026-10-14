@@ -5,6 +5,7 @@ import { Array as Arr } from "effect";
 import {
   bondEnds,
   fitBox,
+  fitSameScale,
   GRAVITY,
   pathData,
   projectilePath,
@@ -92,5 +93,17 @@ describe("lesson curves", () => {
         box
       )
     ).toBe("M0.00 50.00 L100.00 0.00");
+  });
+
+  it("draws a flight at one scale on both axes, so its arc keeps its formula shape", () => {
+    const flight = projectilePath(40, 60);
+    const extent = fitBox(flight, 1, 1);
+    const box = fitSameScale(flight, 300);
+
+    expect(box.width).toBe(300);
+    expect(box.height / box.width).toBeCloseTo(
+      (extent.maxY - extent.minY) / (extent.maxX - extent.minX),
+      9
+    );
   });
 });

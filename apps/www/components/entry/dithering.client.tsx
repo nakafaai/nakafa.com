@@ -1,8 +1,8 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import { Dithering } from "@paper-design/shaders-react";
 import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
-import { useReducedMotion } from "motion/react";
 import { useTheme } from "next-themes";
 
 /**
@@ -15,7 +15,9 @@ const DITHERING_PIXEL_BUDGET = 1_200_000;
 
 export function EntryDithering() {
   const { resolvedTheme } = useTheme();
-  const shouldReduceMotion = useReducedMotion() ?? false;
+  const shouldReduceMotion = useReducedMotion(undefined, {
+    getInitialValueInEffect: false,
+  });
 
   const colorFront = getThemeShaderColor(resolvedTheme);
 

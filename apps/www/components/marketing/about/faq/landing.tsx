@@ -16,7 +16,7 @@ export function Faq({ faqs }: { faqs: readonly MarketingFaqItem[] }) {
         <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
           {t("faq-title")}
         </h2>
-        <FaqAccordion faqs={faqs} />
+        <FaqAccordion faqs={faqs} openFirst />
       </div>
     </section>
   );

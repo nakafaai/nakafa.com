@@ -18,7 +18,7 @@ const containerVariants = cva("flex items-center space-x-1", {
 
 /** One animated dot of the loader. */
 const dotVariants = cva(
-  "animate-[typing_1s_infinite] rounded-full bg-primary",
+  "rounded-full bg-primary motion-safe:animate-[typing_1s_infinite]",
   {
     variants: {
       size: {

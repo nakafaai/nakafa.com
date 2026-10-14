@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { Changes } from "@/e2e/support/changes";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { LEARNER_TEXT, PASTED } from "@/e2e/support/prose";
-import { MARKDOWN_MARKUP, NINA_SHOWCASE } from "@/e2e/support/selector";
+import { MARKDOWN_MARKUP, NINA_SECTION } from "@/e2e/support/selector";
 import { composerOf, promptWith } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -62,7 +62,7 @@ test.describe("A learner's first message at 390px", () => {
     );
   });
 
-  test("shows its words as written under the composer of the homepage", async ({
+  test("shows its words as written in the Nina part of the homepage", async ({
     baseURL,
     page,
   }) => {
@@ -71,7 +71,7 @@ test.describe("A learner's first message at 390px", () => {
         const { changes } = yield* openChatPage(page, origin);
 
         yield* Effect.promise(() => page.goto("/en"));
-        yield* showsWordsAsWritten(page, page.locator(NINA_SHOWCASE), changes);
+        yield* showsWordsAsWritten(page, page.locator(NINA_SECTION), changes);
       })
     );
   });

@@ -9,9 +9,23 @@ import {
 import { Array as Arr } from "effect";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 
-export function FaqAccordion({ faqs }: { faqs: readonly MarketingFaqItem[] }) {
+/**
+ * A list of questions where each answer opens on its own. With `openFirst`,
+ * the first answer is open when the list first renders.
+ */
+export function FaqAccordion({
+  faqs,
+  openFirst = false,
+}: {
+  faqs: readonly MarketingFaqItem[];
+  openFirst?: boolean;
+}) {
+  const questions = Arr.map(faqs, (faq) => faq.question);
   return (
-    <Accordion className="w-full">
+    <Accordion
+      className="w-full"
+      defaultValue={openFirst ? Arr.take(questions, 1) : undefined}
+    >
       {Arr.map(faqs, (faq) => (
         <AccordionItem key={faq.question} value={faq.question}>
           <AccordionTrigger className="text-base transition-colors ease-out hover:text-primary hover:no-underline">

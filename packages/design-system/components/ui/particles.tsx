@@ -48,6 +48,8 @@ type Circle = typeof CircleSchema.Type;
 interface ParticlesProps {
   className?: string;
   ease?: number;
+  /** Stops the drawing loop while true, and the field holds still. */
+  paused?: boolean;
   quantity?: number;
   staticity?: number;
 }
@@ -122,6 +124,7 @@ function isOutsideCanvas(circle: Circle, width: number, height: number) {
  */
 export function Particles({
   className = "",
+  paused = false,
   quantity = 50,
   staticity = 100,
   ease = 100,
@@ -385,7 +388,7 @@ export function Particles({
       documentVisibility === "visible" &&
       document.visibilityState === "visible";
 
-    if (!isDocumentVisible || shouldReduceMotion) {
+    if (!isDocumentVisible || shouldReduceMotion || paused) {
       stopAnimation();
       return;
     }
@@ -393,7 +396,13 @@ export function Particles({
     startAnimation();
 
     return stopAnimation;
-  }, [documentVisibility, shouldReduceMotion, startAnimation, stopAnimation]);
+  }, [
+    documentVisibility,
+    paused,
+    shouldReduceMotion,
+    startAnimation,
+    stopAnimation,
+  ]);
 
   return (
     <div aria-hidden="true" className={cn(className)} ref={canvasContainerRef}>

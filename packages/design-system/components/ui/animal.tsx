@@ -1,11 +1,12 @@
 import { Picture } from "@repo/design-system/components/ui/picture";
+import type { Box } from "@repo/design-system/lib/picture";
 import type { Mascot } from "@repo/mascot/code";
 import { CANVAS, draw } from "@repo/mascot/draw";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 
 /** The whole canvas that an animal is drawn on. */
-const BOX = [0, 0, CANVAS, CANVAS] as const;
+const BOX: Box = [0, 0, CANVAS, CANVAS];
 
 /**
  * What an animal marks in its picture: its open eyes. They carry `look`, the

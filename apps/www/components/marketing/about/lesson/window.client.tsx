@@ -1,6 +1,12 @@
 "use client";
 
-import { useIntersection } from "@mantine/hooks";
+import {
+  useFocusWithin,
+  useHover,
+  useIntersection,
+  useMergedRef,
+  useReducedMotion,
+} from "@mantine/hooks";
 import {
   Tabs,
   TabsList,
@@ -8,11 +14,11 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { Array as Arr, Schema } from "effect";
-import { useReducedMotion } from "motion/react";
 import { type ReactElement, useEffect, useState } from "react";
 import {
   bondEnds,
   fitBox,
+  fitSameScale,
   pathData,
   projectilePath,
   quadraticPath,
@@ -44,9 +50,13 @@ const OPEN_FOR_MS = 6000;
 const WIDTH = 300;
 const HEIGHT = 150;
 
-/** The flight of a ball thrown at 40 m/s and 60 degrees, from its formula. */
+/**
+ * The flight of a ball thrown at 40 m/s and 60 degrees, from its formula, at
+ * one scale on both axes. Its ground line is the bottom of the flight.
+ */
 const FLIGHT = projectilePath(40, 60);
-const FLIGHT_PATH = pathData(FLIGHT, fitBox(FLIGHT, WIDTH, HEIGHT));
+const FLIGHT_BOX = fitSameScale(FLIGHT, WIDTH);
+const FLIGHT_PATH = pathData(FLIGHT, FLIGHT_BOX);
 
 /** The curve of x squared minus four x plus three, across its two roots. */
 const PARABOLA = quadraticPath(-0.5, 4.5);
@@ -68,8 +78,8 @@ function ProjectileFigure() {
         className="stroke-1 stroke-border"
         x1="0"
         x2={WIDTH}
-        y1={HEIGHT}
-        y2={HEIGHT}
+        y1={FLIGHT_BOX.height}
+        y2={FLIGHT_BOX.height}
       />
       <path className="fill-none stroke-2 stroke-primary" d={FLIGHT_PATH} />
     </svg>
@@ -177,23 +187,30 @@ interface LessonWindowProps {
 /**
  * The lesson window: four lessons on tabs, each with its text at the top and
  * its picture at the bottom. It opens the next lesson by itself while it is on
- * screen, stops when it leaves the screen, and holds still with reduced motion.
+ * screen. It waits while the reader points at it or has focus in it, starts
+ * the count again when the reader picks a lesson, stops when it leaves the
+ * screen, and holds still with reduced motion.
  */
 export function LessonWindow({ label, lessons }: LessonWindowProps) {
-  const { entry, ref } = useIntersection({ threshold: 0.5 });
-  const shouldReduceMotion = useReducedMotion() ?? false;
+  const { entry, ref: viewRef } = useIntersection({ threshold: 0.5 });
+  const { hovered, ref: hoverRef } = useHover();
+  const { focused, ref: focusRef } = useFocusWithin();
+  const ref = useMergedRef(viewRef, hoverRef, focusRef);
+  const shouldReduceMotion = useReducedMotion();
   const [lesson, setLesson] = useState<Lesson>("projectile");
-  const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
+  const reading = hovered || focused;
+  const playing =
+    (entry?.isIntersecting ?? false) && !shouldReduceMotion && !reading;
 
   useEffect(() => {
     if (!playing) {
       return;
     }
-    const timer = window.setInterval(() => {
-      setLesson((current) => NEXT[current]);
+    const timer = window.setTimeout(() => {
+      setLesson(NEXT[lesson]);
     }, OPEN_FOR_MS);
-    return () => window.clearInterval(timer);
-  }, [playing]);
+    return () => window.clearTimeout(timer);
+  }, [lesson, playing]);
 
   /** Opens the lesson that the tab names. Any other value leaves the window as it is. */
   function handleChange(value: unknown) {
