@@ -9137,21 +9137,6 @@ export declare const internal: {
       >;
     };
   };
-  retire: {
-    school: {
-      erase: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null; dry: boolean },
-        {
-          files: number;
-          jobs: number;
-          next: string | null;
-          rows: Record<string, number>;
-        }
-      >;
-    };
-  };
   routes: {
     agent: {
       quota: {
@@ -9196,7 +9181,6 @@ export declare const internal: {
             priceId?: string;
             productId: string;
             recurringInterval: "day" | "week" | "month" | "year" | null;
-            schoolId?: string;
             startedAt: string | null;
             status: string;
           };
@@ -9225,7 +9209,6 @@ export declare const internal: {
             priceId?: string;
             productId: string;
             recurringInterval: "day" | "week" | "month" | "year" | null;
-            schoolId?: string;
             startedAt: string | null;
             status: string;
           };
@@ -9440,7 +9423,5 @@ export declare const components: {
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
   globalLeaderboard: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"globalLeaderboard">;
-  forumPostsBySequence: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"forumPostsBySequence">;
-  forumPostsByAuthorSequence: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"forumPostsByAuthorSequence">;
   learningPopularityRankings: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"learningPopularityRankings">;
 };

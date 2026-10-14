@@ -49,8 +49,6 @@ app.use(posthog, {
 });
 
 app.use(aggregate, { name: "globalLeaderboard" });
-app.use(aggregate, { name: "forumPostsBySequence" });
-app.use(aggregate, { name: "forumPostsByAuthorSequence" });
 app.use(aggregate, { name: "learningPopularityRankings" });
 
 export default app;
