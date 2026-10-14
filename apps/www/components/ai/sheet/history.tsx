@@ -2,21 +2,17 @@
 
 import { usePaginatedQuery } from "@confect/react";
 import {
-  ChatSearch01Icon,
   Globe02Icon,
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import chats from "@repo/backend/confect/_generated/refs/chats";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuShortcut,
-  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
@@ -28,23 +24,16 @@ import { useChatList } from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { Authenticated } from "@/components/auth/gate";
 
-/** Opens the recent Nina chat list. The header renders it for a signed-in learner. */
+/**
+ * The recent Nina chats, rendered inside the header's history menu. The header
+ * owns the menu's root and button, and mounts this once the learner shows
+ * intent on the button, so the chat list is read only for a learner who asks.
+ */
 export function SheetHistory() {
-  const t = useTranslations("Ai");
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger
-        render={
-          <Button size="icon-sm" variant="ghost">
-            <HugeIcons icon={ChatSearch01Icon} />
-            <span className="sr-only">{t("chat-history")}</span>
-          </Button>
-        }
-      />
-      <Authenticated>
-        <SheetHistoryContent />
-      </Authenticated>
-    </DropdownMenu>
+    <Authenticated>
+      <SheetHistoryContent />
+    </Authenticated>
   );
 }
 
