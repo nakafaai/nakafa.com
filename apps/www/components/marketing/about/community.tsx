@@ -1,46 +1,72 @@
 import { DiscordIcon } from "@hugeicons/core-free-icons";
+import { Animal } from "@repo/design-system/components/ui/animal";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { ContributorGallery } from "@/components/contributor/gallery";
-import { contributors } from "@/lib/data/contributor";
+import { homeHerd } from "@/components/marketing/about/toys/herd";
 
+/** How many friends stand in the crowd. */
+const CROWD_SIZE = 18;
+
+/** Where the crowd starts in the cast of the page: after the animals of the toys. */
+const CROWD_SKIP = 17;
+
+/** Every this many friends, one of them is typing, so a bubble of dots rises above it. */
+const TYPING_EVERY = 4;
+
+/**
+ * The community part: a line about learning together, the Discord link, and a
+ * crowd of friends, some of them typing.
+ */
 export function Community() {
-  const t = useTranslations("About");
+  const t = useTranslations("Landing");
+  const crowd = homeHerd(CROWD_SIZE, CROWD_SKIP);
 
   return (
-    <section className="scroll-mt-28" id="community">
-      <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="grid gap-12 px-6 py-48 lg:px-10">
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-            <div className="grid content-start gap-6">
-              <h2 className="max-w-xl text-balance text-3xl tracking-tight sm:text-4xl">
-                {t("community-title")}
-              </h2>
-              <div className="flex items-center gap-4">
-                <Button
-                  nativeButton={false}
-                  render={
-                    <a
-                      href={COMPANY_SOCIAL_PROFILES.discord}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      <HugeIcons icon={DiscordIcon} />
-                      {t("join-community")}
-                    </a>
-                  }
-                />
-              </div>
-            </div>
-            <p className="max-w-xl text-pretty text-lg text-muted-foreground">
-              {t("community-description")}
-            </p>
-          </div>
-
-          <ContributorGallery contributors={contributors} variant="marketing" />
+    <section
+      className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32"
+      id="community"
+    >
+      <div className="mx-auto grid w-full max-w-7xl gap-12">
+        <div className="grid justify-items-start gap-6">
+          <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+            {t("community-title")}
+          </h2>
+          <p className="max-w-xl text-pretty text-base text-muted-foreground">
+            {t("community-lead")}
+          </p>
+          <Button
+            nativeButton={false}
+            render={
+              <a
+                href={COMPANY_SOCIAL_PROFILES.discord}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <HugeIcons icon={DiscordIcon} />
+                {t("community-cta")}
+              </a>
+            }
+          />
         </div>
+        <ul
+          aria-label={t("community-crowd")}
+          className="grid grid-cols-6 justify-items-center gap-4 min-[760px]:grid-cols-9"
+        >
+          {Arr.map(crowd, (mascot, index) => (
+            <li className="relative" key={mascot.animal}>
+              <Animal className="size-14 min-[760px]:size-16" mascot={mascot} />
+              {index % TYPING_EVERY === 0 ? (
+                <span className="absolute -end-2 -top-3 rounded-full bg-card px-2 py-1 ring-1 ring-foreground/10">
+                  <TypingLoader />
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

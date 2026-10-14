@@ -1,0 +1,70 @@
+"use client";
+
+import { useIntersection } from "@mantine/hooks";
+import { Array as Arr, Option } from "effect";
+import { useReducedMotion } from "motion/react";
+import { useEffect, useState } from "react";
+
+/** The time between two letters of the topic that is being typed. */
+const TYPE_EVERY_MS = 90;
+
+/** How long a finished topic stays on the page before the next one is typed. */
+const HOLD_MS = 2400;
+
+interface ClosingQuestionProps {
+  /** The question as the locale words it, with `{topic}` where the topic goes. */
+  readonly template: string;
+  /** The topics that take turns in the question. The first one is the one it rests on. */
+  readonly topics: readonly string[];
+}
+
+/**
+ * The closing question, with one of its topics typed in place of the placeholder.
+ * The space of the longest topic is kept, so typing never moves the words around
+ * it. The topics take turns while the question is on screen. With reduced motion
+ * the question rests on its first topic.
+ */
+export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
+  const { entry, ref } = useIntersection({ threshold: 0.5 });
+  const shouldReduceMotion = useReducedMotion() ?? false;
+  const [topic, setTopic] = useState(0);
+  const [typed, setTyped] = useState(0);
+  const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
+  const current = Option.getOrElse(Arr.get(topics, topic), () => "");
+  const shown = shouldReduceMotion
+    ? Option.getOrElse(Arr.get(topics, 0), () => "")
+    : current.slice(0, typed);
+  const rest = shouldReduceMotion ? "" : current.slice(typed);
+  const [before = "", after = ""] = template.split("{topic}");
+
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+    const topicText = Option.getOrElse(Arr.get(topics, topic), () => "");
+    const finished = typed >= topicText.length;
+    const timer = window.setTimeout(
+      () => {
+        if (finished) {
+          setTopic((index) => (index + 1) % topics.length);
+          setTyped(0);
+          return;
+        }
+        setTyped((count) => count + 1);
+      },
+      finished ? HOLD_MS : TYPE_EVERY_MS
+    );
+    return () => window.clearTimeout(timer);
+  }, [playing, topic, topics, typed]);
+
+  return (
+    <h2 className="text-balance text-3xl tracking-tight sm:text-4xl" ref={ref}>
+      {before}
+      {shown}
+      <span aria-hidden="true" className="invisible">
+        {rest}
+      </span>
+      {after}
+    </h2>
+  );
+}

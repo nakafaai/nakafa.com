@@ -8,6 +8,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
@@ -53,7 +54,13 @@ export function Footer({
   const locale = useLocale();
 
   return (
-    <footer className="w-full border-t" id="footer">
+    <footer className="relative w-full border-t" id="footer">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute end-6 -top-14 hidden lg:end-10 lg:block"
+      >
+        <Nina act="greeting" label="" lean="peek" size={56} />
+      </div>
       <div className="mx-auto w-full max-w-7xl px-6">
         <div className="grid scroll-mt-28 pt-24">
           <section className="flex flex-col justify-between gap-8 md:flex-row">

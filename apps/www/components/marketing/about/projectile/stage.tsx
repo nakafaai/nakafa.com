@@ -13,9 +13,15 @@ import {
   PROJECTILE_INSTANT_TIME,
   PROJECTILE_SCENARIOS,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import {
+  Message,
+  MessageContent,
+} from "@repo/design-system/components/ui/message";
 import { Array as Arr, Option } from "effect";
 import { getLocale, getTranslations } from "next-intl/server";
+import { NinaPrompt } from "@/components/ai/message/prompt";
 import { ProjectileClient } from "@/components/marketing/about/projectile/client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -25,10 +31,17 @@ const decimalSeparators = {
   id: "comma",
 } as const satisfies Record<ActiveAppLocaleCode, DecimalSeparator>;
 
-/** Renders deterministic projectile formulas on the server for every scenario. */
-export async function FeaturesProjectile() {
+/**
+ * The full-width lesson scene. The server works out every formula the scene
+ * shows, so the numbers on the water are the lesson's own, and the client only
+ * moves the scene and the trajectories.
+ */
+export async function ProjectileStage() {
   const locale = getLocaleOrThrow(await getLocale());
-  const t = await getTranslations({ locale, namespace: "Features" });
+  const [t, tHome] = await Promise.all([
+    getTranslations({ locale, namespace: "Features" }),
+    getTranslations({ locale, namespace: "Landing" }),
+  ]);
   const decimalSeparator = decimalSeparators[locale];
   const scenarios = Arr.map(PROJECTILE_SCENARIOS, (scenario) => {
     const motion = getProjectileMotionState(scenario.id);
@@ -120,13 +133,25 @@ export async function FeaturesProjectile() {
 
   return (
     <ProjectileClient
-      controlsLabel={t("projectile-controls")}
       initialScenario={initialScenario.value}
+      lead={tHome("scene-lead")}
       scenarios={scenarios}
-      title={t.rich("projectile-title", {
-        mark: (chunks) => <mark>{chunks}</mark>,
-      })}
-      viewLabel={t("projectile-view-label")}
+      talk={
+        <>
+          <Message align="end">
+            <NinaPrompt text={tHome("scene-ask")} />
+          </Message>
+          <Message>
+            <MessageContent>
+              <MarkdownContent id="home-scene-answer" variant="chat">
+                {tHome("scene-answer")}
+              </MarkdownContent>
+            </MessageContent>
+          </Message>
+        </>
+      }
+      title={tHome("scene-title")}
+      viewLabel={tHome("scene-label")}
     />
   );
 }

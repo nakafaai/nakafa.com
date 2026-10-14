@@ -1,25 +1,23 @@
 import { useTranslations } from "next-intl";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion.client";
-import { FaqSection } from "@/components/marketing/about/faq/section";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 
-/** Renders the landing FAQ frame around the route-owned question list. */
+/**
+ * The questions of the home page as a plain list. Each question is one line
+ * with a rule under it, and the first one is open. The questions are the ones
+ * that no other part of the page answers.
+ */
 export function Faq({ faqs }: { faqs: readonly MarketingFaqItem[] }) {
-  const t = useTranslations("Faq");
+  const t = useTranslations("Landing");
 
   return (
-    <section className="border-b">
-      <FaqSection
-        badge={t("badge")}
-        className="py-48"
-        contactLabel={t("cta-contact")}
-        description={t("description")}
-        headline={t.rich("headline", {
-          mark: (chunks) => <mark>{chunks}</mark>,
-        })}
-      >
+    <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="faq">
+      <div className="mx-auto grid w-full max-w-3xl gap-10">
+        <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+          {t("faq-title")}
+        </h2>
         <FaqAccordion faqs={faqs} />
-      </FaqSection>
+      </div>
     </section>
   );
 }
