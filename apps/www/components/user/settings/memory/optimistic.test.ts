@@ -360,14 +360,21 @@ describe("the optimistic changes of the memory page", () => {
       );
     });
 
-    it("sets nothing where the page has no state or the server gave none", () => {
-      const missing = fakeStore([]);
+    it("sets it where the page has not read the state yet, so the switch moves before the server answers", () => {
+      const unread = fakeStore([]);
+
+      pauseState(unread.store, true);
+
+      expect(unread.store.getQuery(nina.memory.state, {})).toEqual(
+        Option.some({ paused: true })
+      );
+    });
+
+    it("sets nothing where the server gave no state", () => {
       const visitor = fakeStore([stateOf(null)]);
 
-      pauseState(missing.store, true);
       pauseState(visitor.store, true);
 
-      expect(missing.writes()).toBe(0);
       expect(visitor.writes()).toBe(0);
     });
   });

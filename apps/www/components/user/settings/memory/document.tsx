@@ -7,10 +7,10 @@ import {
 } from "@repo/backend/confect/nina/memory.spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { String as Str } from "effect";
-import dynamic from "next/dynamic";
+import { cn } from "cn";
+import { Array as Arr, String as Str } from "effect";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
 import {
@@ -25,13 +25,49 @@ import {
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /** The editor loads when a learner opens it, never with the page. */
-const Editor = dynamic(
-  () =>
-    import("@repo/design-system/components/editor/rich").then(
-      (module) => module.RichEditor
-    ),
-  { loading: () => null, ssr: false }
+const Editor = lazy(() =>
+  import("@repo/design-system/components/editor/rich").then((module) => ({
+    default: module.RichEditor,
+  }))
 );
+
+/**
+ * The saved words as plain text, in the place the editor takes while its code
+ * loads. The toolbar's height is kept, and each blank-line part is a paragraph
+ * with the editor's own spacing, so the editor takes the words' place without
+ * moving them. A memory with no words shows the editor's hint, in its colour.
+ */
+function SavedWords({
+  placeholder,
+  text,
+}: {
+  placeholder: string;
+  text: string;
+}) {
+  const empty = Str.isEmpty(text);
+  const paragraphs = empty ? [placeholder] : Str.split(text, "\n\n");
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div aria-hidden className="border-b px-2 py-1.5">
+        <div className="h-8" />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto text-sm/relaxed">
+        <div className="px-4 py-3">
+          {Arr.map(paragraphs, (paragraph) => (
+            <p
+              className={cn("[&+p]:mt-2", empty && "text-muted-foreground")}
+              dir="auto"
+              key={paragraph}
+            >
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * One opening of the editor, from top to bottom: the title, which the learner
@@ -105,39 +141,45 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
         </Button>
       </header>
       <div className="flex min-h-0 flex-1 flex-col" ref={body}>
-        <Editor
-          defaultValue={starting.text}
-          label={t("text")}
-          labels={{
-            bold: labels("bold"),
-            bullets: labels("bullets"),
-            code: labels("code"),
-            codeBlock: labels("code-block"),
-            divider: labels("divider"),
-            heading1: labels("heading-1"),
-            heading2: labels("heading-2"),
-            heading3: labels("heading-3"),
-            highlight: labels("highlight"),
-            italic: labels("italic"),
-            link: labels("link"),
-            linkPlaceholder: labels("link-placeholder"),
-            more: labels("more"),
-            numbers: labels("numbers"),
-            quote: labels("quote"),
-            redo: labels("redo"),
-            strike: labels("strike"),
-            style: labels("style"),
-            tasks: labels("tasks"),
-            text: labels("text"),
-            underline: labels("underline"),
-            undo: labels("undo"),
-          }}
-          limit={MEMORY_TEXT_LIMIT}
-          onChange={(text) => write({ ...draft, text })}
-          onClose={close}
-          onRefuse={() => toast.error(t("too-long"))}
-          placeholder={t("placeholder")}
-        />
+        <Suspense
+          fallback={
+            <SavedWords placeholder={t("placeholder")} text={starting.text} />
+          }
+        >
+          <Editor
+            defaultValue={starting.text}
+            label={t("text")}
+            labels={{
+              bold: labels("bold"),
+              bullets: labels("bullets"),
+              code: labels("code"),
+              codeBlock: labels("code-block"),
+              divider: labels("divider"),
+              heading1: labels("heading-1"),
+              heading2: labels("heading-2"),
+              heading3: labels("heading-3"),
+              highlight: labels("highlight"),
+              italic: labels("italic"),
+              link: labels("link"),
+              linkPlaceholder: labels("link-placeholder"),
+              more: labels("more"),
+              numbers: labels("numbers"),
+              quote: labels("quote"),
+              redo: labels("redo"),
+              strike: labels("strike"),
+              style: labels("style"),
+              tasks: labels("tasks"),
+              text: labels("text"),
+              underline: labels("underline"),
+              undo: labels("undo"),
+            }}
+            limit={MEMORY_TEXT_LIMIT}
+            onChange={(text) => write({ ...draft, text })}
+            onClose={close}
+            onRefuse={() => toast.error(t("too-long"))}
+            placeholder={t("placeholder")}
+          />
+        </Suspense>
       </div>
       <footer className="flex items-center justify-between gap-2 border-t p-4">
         <p
