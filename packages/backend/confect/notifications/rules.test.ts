@@ -1,12 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   canSwitchOff,
-  deliveryInstant,
+  deliveriesOf,
+  NOTICE_RULES,
+  type NoticeKind,
+  NoticeRules,
   Relation,
   recipientsOf,
-  type Timing,
+  Timing,
 } from "@repo/backend/confect/notifications/rules";
-import { Array as Arr, DateTime, Schema } from "effect";
+import { Array as Arr, DateTime, Exit, Schema } from "effect";
 
 const jakarta = Schema.decodeSync(Schema.TimeZoneNamedFromString)(
   "Asia/Jakarta"
@@ -25,26 +28,21 @@ const anchorAt = (text: string, zone: DateTime.TimeZone.Named) =>
 const show = (instant: DateTime.Utc, zone: DateTime.TimeZone.Named) =>
   DateTime.formatIsoZoned(DateTime.setZone(instant, zone));
 
-const NOW: typeof Timing.Type = { _tag: "Now" };
-const CHOSEN: typeof Timing.Type = { _tag: "Chosen" };
-const DIGEST: typeof Timing.Type = { _tag: "Digest" };
-const ONE_HOUR_BEFORE: typeof Timing.Type = { _tag: "Before", minutes: 60 };
-const FIFTEEN_MINUTES_BEFORE: typeof Timing.Type = {
-  _tag: "Before",
-  minutes: 15,
-};
-const DAY_BEFORE_AT_16: typeof Timing.Type = {
-  _tag: "Clock",
-  dayOffset: -1,
-  hour: 16,
-  minute: 0,
-};
-const EXAM_DAY_AT_0630: typeof Timing.Type = {
-  _tag: "Clock",
-  dayOffset: 0,
-  hour: 6,
-  minute: 30,
-};
+/**
+ * The sends of one notice to one relation, each written as its channel and the
+ * instant it is due on the clock of `zone`, in the order of the channel table.
+ */
+const sendsOf = (
+  kind: typeof NoticeKind.Type,
+  relation: typeof Relation.Type,
+  anchor: DateTime.Utc,
+  zone: DateTime.TimeZone.Named,
+  emailChosen = false
+) =>
+  Arr.map(
+    deliveriesOf(kind, relation, anchor, zone, emailChosen),
+    (send) => `${send.channel} ${show(send.instant, zone)}`
+  );
 
 const Member = Schema.Struct({ name: Schema.String, relation: Relation });
 
@@ -52,10 +50,30 @@ const members: readonly (typeof Member.Type)[] = [
   { name: "Ayu", relation: "student" },
   { name: "Budi", relation: "guardian" },
   { name: "Citra", relation: "teacher" },
+  { name: "Dewi", relation: "invitee" },
 ];
 
 const namesOf = (people: readonly (typeof Member.Type)[]) =>
   Arr.map(people, (person) => person.name);
+
+describe("notifications/rules channel table", () => {
+  it("keeps every row of the table valid under its Schema", () => {
+    const decoded = Schema.decodeExit(NoticeRules)(NOTICE_RULES);
+    expect(Exit.isSuccess(decoded)).toBe(true);
+  });
+});
+
+describe("notifications/rules Timing", () => {
+  it("rejects a reminder sent a negative number of minutes before its anchor", () => {
+    const decoded = Schema.decodeExit(Timing)({ _tag: "Before", minutes: -15 });
+    expect(Exit.isFailure(decoded)).toBe(true);
+  });
+
+  it("accepts a reminder sent at its anchor, zero minutes before", () => {
+    const decoded = Schema.decodeExit(Timing)({ _tag: "Before", minutes: 0 });
+    expect(Exit.isSuccess(decoded)).toBe(true);
+  });
+});
 
 describe("notifications/rules recipientsOf", () => {
   it("sends a forum mention to the student or teacher it names, never to a guardian", () => {
@@ -65,23 +83,31 @@ describe("notifications/rules recipientsOf", () => {
     ]);
   });
 
-  it("sends a late task only to the guardian of the student", () => {
+  it("sends an announcement, a new task, a deadline and an exam start to the student alone", () => {
+    expect(namesOf(recipientsOf("classAnnouncement", members))).toEqual([
+      "Ayu",
+    ]);
+    expect(namesOf(recipientsOf("taskPublished", members))).toEqual(["Ayu"]);
+    expect(namesOf(recipientsOf("taskDeadline", members))).toEqual(["Ayu"]);
+    expect(namesOf(recipientsOf("examStart", members))).toEqual(["Ayu"]);
+  });
+
+  it("sends a released grade to the student and the guardian, and a late task to the guardian alone", () => {
+    expect(namesOf(recipientsOf("gradeReleased", members))).toEqual([
+      "Ayu",
+      "Budi",
+    ]);
     expect(namesOf(recipientsOf("taskMissed", members))).toEqual(["Budi"]);
   });
 
-  it("sends a released grade to the student and the guardian, not to the teacher", () => {
-    expect(namesOf(recipientsOf("gradeReleased", members))).toEqual([
-      "Ayu",
+  it("sends a guardian's exam reminder to the guardian alone", () => {
+    expect(namesOf(recipientsOf("examGuardianReminder", members))).toEqual([
       "Budi",
     ]);
   });
 
   it("sends an invitation to the Person it names and to no one else", () => {
-    const invitee: readonly (typeof Member.Type)[] = [
-      { name: "Dewi", relation: "invitee" },
-      { name: "Eka", relation: "student" },
-    ];
-    expect(namesOf(recipientsOf("invitation", invitee))).toEqual(["Dewi"]);
+    expect(namesOf(recipientsOf("invitation", members))).toEqual(["Dewi"]);
   });
 });
 
@@ -100,74 +126,144 @@ describe("notifications/rules canSwitchOff", () => {
   });
 });
 
-describe("notifications/rules deliveryInstant", () => {
-  it("sends a deadline reminder at 16:00 the day before, when the deadline is just after midnight", () => {
-    const deadline = anchorAt("2026-10-15T00:30:00.000", jakarta);
-    expect(
-      show(deliveryInstant(DAY_BEFORE_AT_16, deadline, jakarta), jakarta)
-    ).toBe("2026-10-14T16:00:00.000+07:00[Asia/Jakarta]");
+describe("notifications/rules deliveriesOf", () => {
+  it("sends a mention at once in the inbox and push, and by email in the digest of the same day", () => {
+    const mention = anchorAt("2026-10-14T09:15:00.000", jakarta);
+    expect(sendsOf("forumMention", "student", mention, jakarta)).toEqual([
+      "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "email 2026-10-14T17:00:00.000+07:00[Asia/Jakarta]",
+    ]);
   });
 
-  it("sends the hour-before reminder one hour of elapsed time before the deadline", () => {
-    const deadline = anchorAt("2026-10-15T00:30:00.000", jakarta);
-    expect(
-      show(deliveryInstant(ONE_HOUR_BEFORE, deadline, jakarta), jakarta)
-    ).toBe("2026-10-14T23:30:00.000+07:00[Asia/Jakarta]");
+  it("sends a mention after 17:00 by email in the digest of the next day, on the Berlin clock", () => {
+    const mention = anchorAt("2026-10-25T18:00:00.000", berlin);
+    expect(sendsOf("forumMention", "teacher", mention, berlin)).toEqual([
+      "inbox 2026-10-25T18:00:00.000+01:00[Europe/Berlin]",
+      "push 2026-10-25T18:00:00.000+01:00[Europe/Berlin]",
+      "email 2026-10-26T17:00:00.000+01:00[Europe/Berlin]",
+    ]);
   });
 
-  it("reads the day before on the calendar of Berlin, a 23-hour day after the spring change", () => {
+  it("sends an announcement by email only when the poster chose email for it", () => {
+    const announcement = anchorAt("2026-10-14T09:15:00.000", jakarta);
+    expect(
+      sendsOf("classAnnouncement", "student", announcement, jakarta)
+    ).toEqual([
+      "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+    ]);
+    expect(
+      sendsOf("classAnnouncement", "student", announcement, jakarta, true)
+    ).toEqual([
+      "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "email 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+    ]);
+  });
+
+  it("sends a new task at once in the inbox and push, and by email in the daily digest", () => {
+    const published = anchorAt("2026-10-14T09:15:00.000", jakarta);
+    expect(sendsOf("taskPublished", "student", published, jakarta)).toEqual([
+      "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "email 2026-10-14T17:00:00.000+07:00[Asia/Jakarta]",
+    ]);
+  });
+
+  it("sends a deadline reminder to the student at 16:00 the day before and one hour before, in the inbox and push, never by email", () => {
+    const deadline = anchorAt("2026-10-15T00:30:00.000", jakarta);
+    expect(sendsOf("taskDeadline", "student", deadline, jakarta)).toEqual([
+      "inbox 2026-10-14T16:00:00.000+07:00[Asia/Jakarta]",
+      "inbox 2026-10-14T23:30:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T16:00:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T23:30:00.000+07:00[Asia/Jakarta]",
+    ]);
+  });
+
+  it("sends no deadline reminder to a guardian, because the deadline row names the student only", () => {
+    const deadline = anchorAt("2026-10-15T00:30:00.000", jakarta);
+    expect(sendsOf("taskDeadline", "guardian", deadline, jakarta)).toEqual([]);
+  });
+
+  it("reads the day before on the Berlin calendar across the spring change", () => {
     const deadline = anchorAt("2026-03-30T00:30:00.000", berlin);
-    expect(
-      show(deliveryInstant(DAY_BEFORE_AT_16, deadline, berlin), berlin)
-    ).toBe("2026-03-29T16:00:00.000+02:00[Europe/Berlin]");
+    expect(sendsOf("taskDeadline", "student", deadline, berlin)).toEqual([
+      "inbox 2026-03-29T16:00:00.000+02:00[Europe/Berlin]",
+      "inbox 2026-03-29T23:30:00.000+02:00[Europe/Berlin]",
+      "push 2026-03-29T16:00:00.000+02:00[Europe/Berlin]",
+      "push 2026-03-29T23:30:00.000+02:00[Europe/Berlin]",
+    ]);
   });
 
-  it("keeps the 16:00 reminder on the Berlin clock across the autumn change", () => {
-    const deadline = anchorAt("2026-10-26T10:00:00.000", berlin);
-    expect(
-      show(deliveryInstant(DAY_BEFORE_AT_16, deadline, berlin), berlin)
-    ).toBe("2026-10-25T16:00:00.000+01:00[Europe/Berlin]");
-  });
-
-  it("subtracts elapsed time for the hour-before reminder across the autumn change", () => {
+  it("keeps the 16:00 reminder on the Berlin clock across the autumn change, and subtracts elapsed time for the hour before", () => {
     const deadline = anchorAt("2026-10-25T03:30:00.000", berlin);
-    expect(
-      show(deliveryInstant(ONE_HOUR_BEFORE, deadline, berlin), berlin)
-    ).toBe("2026-10-25T02:30:00.000+01:00[Europe/Berlin]");
+    expect(sendsOf("taskDeadline", "student", deadline, berlin)).toEqual([
+      "inbox 2026-10-24T16:00:00.000+02:00[Europe/Berlin]",
+      "inbox 2026-10-25T02:30:00.000+01:00[Europe/Berlin]",
+      "push 2026-10-24T16:00:00.000+02:00[Europe/Berlin]",
+      "push 2026-10-25T02:30:00.000+01:00[Europe/Berlin]",
+    ]);
   });
 
-  it("sends an exam start fifteen minutes before the sitting opens, in Jakarta", () => {
+  it("sends an exam start fifteen minutes before the sitting opens, in the inbox, push and email", () => {
     const opens = anchorAt("2026-10-15T07:00:00.000", jakarta);
-    expect(
-      show(deliveryInstant(FIFTEEN_MINUTES_BEFORE, opens, jakarta), jakarta)
-    ).toBe("2026-10-15T06:45:00.000+07:00[Asia/Jakarta]");
+    expect(sendsOf("examStart", "student", opens, jakarta)).toEqual([
+      "inbox 2026-10-15T06:45:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-15T06:45:00.000+07:00[Asia/Jakarta]",
+      "email 2026-10-15T06:45:00.000+07:00[Asia/Jakarta]",
+    ]);
   });
 
-  it("sends the guardian's exam reminder at 06:30 on the day of the exam, in Jakarta and Berlin", () => {
-    const jakartaOpens = anchorAt("2026-10-15T07:00:00.000", jakarta);
-    const berlinOpens = anchorAt("2026-10-26T08:00:00.000", berlin);
-    expect(
-      show(deliveryInstant(EXAM_DAY_AT_0630, jakartaOpens, jakarta), jakarta)
-    ).toBe("2026-10-15T06:30:00.000+07:00[Asia/Jakarta]");
-    expect(
-      show(deliveryInstant(EXAM_DAY_AT_0630, berlinOpens, berlin), berlin)
-    ).toBe("2026-10-26T06:30:00.000+01:00[Europe/Berlin]");
-  });
-
-  it("sends a digest at the 17:00 of the next day when the notice comes after 17:00", () => {
-    const notice = anchorAt("2026-10-25T18:00:00.000", berlin);
-    expect(show(deliveryInstant(DIGEST, notice, berlin), berlin)).toBe(
-      "2026-10-26T17:00:00.000+01:00[Europe/Berlin]"
+  it("sends a guardian's exam reminder at 06:30 on the day of the exam, in the inbox and by email, never by push", () => {
+    const opens = anchorAt("2026-10-15T07:00:00.000", jakarta);
+    expect(sendsOf("examGuardianReminder", "guardian", opens, jakarta)).toEqual(
+      [
+        "inbox 2026-10-15T06:30:00.000+07:00[Asia/Jakarta]",
+        "email 2026-10-15T06:30:00.000+07:00[Asia/Jakarta]",
+      ]
     );
   });
 
-  it("sends now, or when the poster chose email, at the moment of the change", () => {
-    const change = anchorAt("2026-10-14T09:15:00.000", jakarta);
-    expect(show(deliveryInstant(NOW, change, jakarta), jakarta)).toBe(
-      "2026-10-14T09:15:00.000+07:00[Asia/Jakarta]"
-    );
-    expect(show(deliveryInstant(CHOSEN, change, jakarta), jakarta)).toBe(
-      "2026-10-14T09:15:00.000+07:00[Asia/Jakarta]"
-    );
+  it("sends a guardian's exam reminder at 06:30 on the Berlin clock of the exam day", () => {
+    const opens = anchorAt("2026-10-26T08:00:00.000", berlin);
+    expect(sendsOf("examGuardianReminder", "guardian", opens, berlin)).toEqual([
+      "inbox 2026-10-26T06:30:00.000+01:00[Europe/Berlin]",
+      "email 2026-10-26T06:30:00.000+01:00[Europe/Berlin]",
+    ]);
+  });
+
+  it("sends a released grade at once to the student in the inbox and push, and never by email", () => {
+    const released = anchorAt("2026-10-14T09:15:00.000", jakarta);
+    expect(sendsOf("gradeReleased", "student", released, jakarta)).toEqual([
+      "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+    ]);
+  });
+
+  it("sends a released grade at once to the guardian in the inbox, push and email", () => {
+    const released = anchorAt("2026-10-14T09:15:00.000", jakarta);
+    expect(sendsOf("gradeReleased", "guardian", released, jakarta)).toEqual([
+      "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "email 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+    ]);
+  });
+
+  it("sends a late task at once to the guardian in the inbox, push and email", () => {
+    const missed = anchorAt("2026-10-14T09:15:00.000", jakarta);
+    expect(sendsOf("taskMissed", "guardian", missed, jakarta)).toEqual([
+      "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "push 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "email 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+    ]);
+  });
+
+  it("sends an invitation at once in the inbox and by email, and never by push", () => {
+    const invited = anchorAt("2026-10-14T09:15:00.000", jakarta);
+    expect(sendsOf("invitation", "invitee", invited, jakarta)).toEqual([
+      "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+      "email 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
+    ]);
   });
 });

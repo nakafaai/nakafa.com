@@ -3,14 +3,21 @@ import {
   digestInstant,
   LocalClock,
 } from "@repo/backend/confect/notifications/clock";
-import { Array as Arr, DateTime, Duration, Match, Schema } from "effect";
+import {
+  Array as Arr,
+  DateTime,
+  Duration,
+  Match,
+  Option,
+  Schema,
+} from "effect";
 
 /**
  * A kind of notice, one row of the channel table of ADR 0027. A kind is keyed by
  * what it tells a person, not by the journal change it may come from: one change
  * can feed two kinds, and a forum mention has no journal change at all.
  */
-const NoticeKind = Schema.Literals([
+export const NoticeKind = Schema.Literals([
   "forumMention",
   "classAnnouncement",
   "taskPublished",
@@ -40,14 +47,16 @@ const Channel = Schema.Literals(["inbox", "push", "email"]);
  * When a channel sends, relative to the anchor of its notice: the change that
  * caused it, the deadline of a task, or the opening of a sitting. `Now` sends at
  * the anchor. `Chosen` sends at the anchor only when the person who posted the
- * notice chose email for it. `Before` sends a number of minutes before the
- * anchor. `Clock` sends at a wall-clock time on a day of the anchor's zone, and
- * `Digest` sends at the 17:00 digest that carries the anchor.
+ * notice chose email for it. `Before` sends a whole number of minutes, zero or
+ * more, before the anchor. `Clock` sends at a wall-clock time on a day of the
+ * anchor's zone, and `Digest` sends at the 17:00 digest that carries the anchor.
  */
 export const Timing = Schema.Union([
   Schema.TaggedStruct("Now", {}),
   Schema.TaggedStruct("Chosen", {}),
-  Schema.TaggedStruct("Before", { minutes: Schema.Int }),
+  Schema.TaggedStruct("Before", {
+    minutes: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  }),
   Schema.TaggedStruct("Clock", LocalClock.fields),
   Schema.TaggedStruct("Digest", {}),
 ]);
@@ -73,7 +82,7 @@ const NoticeRule = Schema.Struct({
 });
 
 /** One rule for every kind: a kind without a row does not compile. */
-const NoticeRules = Schema.Record(NoticeKind, NoticeRule);
+export const NoticeRules = Schema.Record(NoticeKind, NoticeRule);
 
 const NOW: typeof Timing.Type = { _tag: "Now" };
 const CHOSEN: typeof Timing.Type = { _tag: "Chosen" };
@@ -104,7 +113,7 @@ const EXAM_DAY_AT_0630: typeof Timing.Type = {
  * forum mention never reaches a guardian, a late task reaches only the guardian,
  * and an invitation email is always sent.
  */
-const NOTICE_RULES: typeof NoticeRules.Type = {
+export const NOTICE_RULES: typeof NoticeRules.Type = {
   forumMention: {
     routes: [
       { relation: "student", inbox: [NOW], push: [NOW], email: [DIGEST] },
@@ -165,6 +174,19 @@ const NOTICE_RULES: typeof NoticeRules.Type = {
 };
 
 /**
+ * The route of one relation for a kind, or none when the kind sends nothing to
+ * that relation.
+ */
+const routeOf = (
+  kind: typeof NoticeKind.Type,
+  relation: typeof Relation.Type
+): Option.Option<typeof Route.Type> =>
+  Arr.findFirst(
+    NOTICE_RULES[kind].routes,
+    (route) => route.relation === relation
+  );
+
+/**
  * The people of `people` who receive a notice of `kind`: those whose relation
  * has a route for that kind. Each person keeps the fields the caller gave.
  */
@@ -174,12 +196,7 @@ export const recipientsOf = <
   kind: typeof NoticeKind.Type,
   people: readonly Person[]
 ): readonly Person[] =>
-  Arr.filter(people, (person) =>
-    Arr.some(
-      NOTICE_RULES[kind].routes,
-      (route) => route.relation === person.relation
-    )
-  );
+  Arr.filter(people, (person) => Option.isSome(routeOf(kind, person.relation)));
 
 /**
  * Whether a person may switch a channel of a kind off. The inbox is never
@@ -194,10 +211,19 @@ export const canSwitchOff = (
   !Arr.contains(NOTICE_RULES[kind].alwaysSent ?? [], channel);
 
 /**
+ * One send that a notice makes to a person: the channel it goes out on, and the
+ * instant it is due.
+ */
+const Delivery = Schema.Struct({
+  channel: Channel,
+  instant: Schema.DateTimeUtc,
+});
+
+/**
  * The instant a timing sends for a notice, given its anchor and the zone of the
  * notice. A `Clock` time and a `Digest` read the calendar on the clock of `zone`.
  */
-export const deliveryInstant = (
+const deliveryInstant = (
   timing: typeof Timing.Type,
   anchor: DateTime.Utc,
   zone: DateTime.TimeZone.Named
@@ -212,3 +238,35 @@ export const deliveryInstant = (
       Digest: () => digestInstant(anchor, zone),
     })
   );
+
+/**
+ * The sends that a notice of `kind` makes to a person of `relation`, each with
+ * its channel and its instant, in the order of the channel table: inbox, push,
+ * then email. A relation with no route gets none. `emailChosen` says whether the
+ * poster chose email for the notice, and only a `Chosen` send depends on it.
+ */
+export const deliveriesOf = (
+  kind: typeof NoticeKind.Type,
+  relation: typeof Relation.Type,
+  anchor: DateTime.Utc,
+  zone: DateTime.TimeZone.Named,
+  emailChosen: boolean
+): readonly (typeof Delivery.Type)[] => {
+  const sendsOn = (
+    channel: typeof Channel.Type,
+    timings: readonly (typeof Timing.Type)[]
+  ) =>
+    Arr.map(
+      Arr.filter(timings, (timing) => timing._tag !== "Chosen" || emailChosen),
+      (timing) => ({ channel, instant: deliveryInstant(timing, anchor, zone) })
+    );
+  return Option.match(routeOf(kind, relation), {
+    onNone: () => [],
+    onSome: (route) =>
+      Arr.flatten([
+        sendsOn("inbox", route.inbox),
+        sendsOn("push", route.push ?? []),
+        sendsOn("email", route.email ?? []),
+      ]),
+  });
+};
