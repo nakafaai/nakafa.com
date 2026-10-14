@@ -108,7 +108,7 @@ describe("formatTurnContext", () => {
       },
     });
 
-    // This block weighs 265 tokens by the shared tokenizer, and it travels with every learner message.
+    // This block weighs under 300 tokens by the shared estimator, and it travels with every learner message.
     expect(countTextTokens(context)).toBeLessThan(300);
   });
 

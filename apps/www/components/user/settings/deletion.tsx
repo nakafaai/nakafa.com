@@ -46,7 +46,6 @@ import { requireConvexOnline } from "@/lib/convex/online";
 
 const dialogError = {
   generic: "generic",
-  schoolMemberRequired: "school-member-required",
   sessionExpired: "session-expired",
 } as const;
 type DialogError = (typeof dialogError)[keyof typeof dialogError] | null;
@@ -112,10 +111,6 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
       let nextError: Exclude<DialogError, null> = dialogError.generic;
       if (result.failure._tag === "AccountDeletionSessionExpired") {
         nextError = dialogError.sessionExpired;
-      } else if (
-        result.failure._tag === "AccountDeletionSchoolMemberRequired"
-      ) {
-        nextError = dialogError.schoolMemberRequired;
       }
       startTransition(() => setError(nextError));
     });
@@ -137,8 +132,6 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   let errorMessage = t("delete-account-error");
   if (error === dialogError.sessionExpired) {
     errorMessage = t("delete-account-session-expired");
-  } else if (error === dialogError.schoolMemberRequired) {
-    errorMessage = t("delete-account-school-member-required");
   }
   return (
     <>

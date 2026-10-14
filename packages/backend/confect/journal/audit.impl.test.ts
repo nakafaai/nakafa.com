@@ -155,7 +155,7 @@ describe("journal/audit list", () => {
       Schema.decodeUnknownSync(ChangeView)({ seat: 3, type: "seat.added" })
     ).toEqual({ type: "unknown" });
     expect(
-      Schema.decodeUnknownSync(SubjectView)({ id: "id", kind: "cohort" })
+      Schema.decodeUnknownSync(SubjectView)({ id: "id", kind: "invoice" })
     ).toEqual({ kind: "unknown" });
   });
 });

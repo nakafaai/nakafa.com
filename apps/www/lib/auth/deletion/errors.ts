@@ -1,4 +1,3 @@
-import { ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE } from "@repo/backend/confect/auth/deletion/constants";
 import { accountDeletionRequestPhase } from "@repo/backend/confect/auth/deletion/spec";
 import { Schema } from "effect";
 export const accountDeletionErrorCode = {
@@ -23,13 +22,6 @@ export class AccountDeletionRequestUncertain extends Schema.TaggedError<AccountD
       accountDeletionRequestPhase.preparation,
       accountDeletionRequestPhase.deletion,
     ]),
-  }
-) {}
-/** Raised when an owned school has no active successor. */
-export class AccountDeletionSchoolMemberRequired extends Schema.TaggedError<AccountDeletionSchoolMemberRequired>()(
-  "AccountDeletionSchoolMemberRequired",
-  {
-    code: Schema.Literal(ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE),
   }
 ) {}
 /** Raised when Better Auth requires a fresh session before account deletion. */

@@ -10,7 +10,9 @@ import { Effect } from "effect";
 /**
  * What an invitation says: the organisation that invited, where to sign in,
  * and the legal links of the email's language from the signed Pages. It names
- * no person. An invite that was revoked reads as nothing, so nothing is sent.
+ * no person. An invite that was revoked or has expired reads as nothing, so
+ * nothing is sent. The send step checks the term again, because the workflow
+ * runs after this read.
  */
 export const readInviteInput = Effect.fn("emails.invite.readInput")(function* (
   inviteId: GenericId.GenericId<"tenantInvites">,
@@ -21,7 +23,7 @@ export const readInviteInput = Effect.fn("emails.invite.readInput")(function* (
     .table("tenantInvites")
     .get(inviteId)
     .pipe(Effect.orDie);
-  if (invite.state.status === "revoked") {
+  if (invite.state.status === "revoked" || invite.state.status === "expired") {
     return null;
   }
   const tenant = yield* reader

@@ -13,8 +13,6 @@ import { authComponent } from "@repo/backend/confect/auth/client";
 import { readGoogleAuthConfig } from "@repo/backend/confect/auth/config";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
-  ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
-  ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
   ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import {
@@ -141,25 +139,6 @@ export const verifyAccountDeletionPreparation = Effect.fn(
     Effect.mapError(deletionUnavailableError),
     Effect.catchDefect(() => Effect.fail(deletionUnavailableError()))
   );
-  if (preparationOutcome === accountDeletionPreparationOutcome.continue) {
-    return yield* Effect.fail(
-      APIError.from("BAD_REQUEST", {
-        code: ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
-        message: "Account deletion preparation is incomplete.",
-      })
-    );
-  }
-  if (
-    preparationOutcome ===
-    accountDeletionPreparationOutcome.schoolSuccessorRequired
-  ) {
-    return yield* Effect.fail(
-      APIError.from("BAD_REQUEST", {
-        code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
-        message: "An owned school needs another active member.",
-      })
-    );
-  }
   if (
     preparationOutcome ===
     accountDeletionPreparationOutcome.temporarilyUnavailable

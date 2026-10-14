@@ -21,36 +21,16 @@ function normalizeRecurringInterval(
 }
 
 /**
- * Extract and validate schoolId from metadata.
- * Returns undefined if not present or invalid.
- */
-function getSchoolIdFromMetadata(
-  metadata: Record<string, unknown>
-): string | undefined {
-  const { schoolId } = metadata;
-  if (typeof schoolId === "string" && schoolId.length > 0) {
-    return schoolId;
-  }
-}
-
-/**
  * Convert one decoded Polar subscription to database format.
  * Dates are stored as Date.toISOString() strings, the form the tryout access
- * query compares. schoolId is extracted from metadata if present (for school
- * subscriptions).
+ * query compares. The metadata is stored whole, as Polar sent it.
  */
 export function convertToDatabaseSubscription(
   subscription: PolarSubscriptionSource
 ): WithoutSystemFields<Docs["subscriptions"]> {
-  const schoolId = getSchoolIdFromMetadata(subscription.metadata);
   return {
     id: subscription.id,
     customerId: subscription.customerId,
-    ...(schoolId === undefined
-      ? {}
-      : {
-          schoolId,
-        }),
     createdAt: subscription.createdAt.toISOString(),
     modifiedAt: subscription.modifiedAt?.toISOString() ?? null,
     productId: subscription.productId,
