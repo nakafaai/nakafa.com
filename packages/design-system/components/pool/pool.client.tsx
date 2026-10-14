@@ -29,9 +29,9 @@ const FIRST_FRAME = 0.016;
 /** The loop sleeps once the pile has rested for this many frames, with nobody holding or pointing. */
 const REST_FRAMES = 20;
 /**
- * Reduced motion settles the pile this many steps in a box. Measured on the 30
- * members, the loop would sleep at once after this many steps in every box size
- * tried (see the step in physics.ts).
+ * Reduced motion settles the pile this many steps in a box, eight seconds at the
+ * fixed step (see the step in physics.ts). Measured on the 30 members in 20 box
+ * sizes, the loop would sleep at once after this many steps in 18 of them.
  */
 const SETTLE_STEPS = 3840;
 /** Reduced motion settles a box again once it has been still this many milliseconds, so one drag costs one settle. */

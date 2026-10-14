@@ -36,9 +36,10 @@ const REST_TRAVEL = 0.05;
 /**
  * The fixed step of the pool, in seconds: 480 steps make a second, and a frame at
  * 60 frames a second runs eight of them. Measured on the 30 members at 60 frames a
- * second: two half steps a frame never let the loop sleep in 3600 frames, while
- * steps of this length let it sleep within 433 frames in every column size tried
- * (184 frames in a box of 1200 by 640).
+ * second in 20 box sizes from 390 to 1463 wide and from 500 to 1440 high: two half
+ * steps a frame kept the loop awake for 3600 frames in 18 of them, while steps of
+ * this length let it sleep after 153 to 394 frames (184 frames in a box of 1200 by
+ * 640).
  */
 export const STEP = 1 / 480;
 /** The most time one frame may move the pool, in seconds: a slow frame moves it in small steps, not in one jump. */
