@@ -4,9 +4,11 @@ import {
   useFocusWithin,
   useHover,
   useIntersection,
+  useInViewport,
   useMergedRef,
   useReducedMotion,
 } from "@mantine/hooks";
+import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import {
   Tabs,
   TabsList,
@@ -14,15 +16,13 @@ import {
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
 import { Array as Arr, Schema } from "effect";
-import { type ReactElement, useEffect, useState } from "react";
+import { type ComponentType, useEffect, useState } from "react";
 import {
-  bondEnds,
-  fitBox,
-  fitSameScale,
-  pathData,
-  projectilePath,
-  quadraticPath,
-} from "@/components/marketing/about/lesson/curve";
+  AtomVisual,
+  BacteriaVisual,
+  ProjectileVisual,
+  QuadraticVisual,
+} from "@/components/marketing/about/lesson/visual.client";
 
 /** The four lessons of the window, in the order they open. */
 const LessonSchema = Schema.Literals([
@@ -43,133 +43,16 @@ const NEXT: Record<Lesson, Lesson> = {
   quadratic: "mole",
 };
 
+/** The product's own visual of each lesson, as a lesson page renders it. */
+const VISUALS: Record<Lesson, ComponentType> = {
+  cell: BacteriaVisual,
+  mole: AtomVisual,
+  projectile: ProjectileVisual,
+  quadratic: QuadraticVisual,
+};
+
 /** How long a lesson stays open before the next one opens by itself. */
 const OPEN_FOR_MS = 6000;
-
-/** The size of every lesson picture, in the units of its own svg. */
-const WIDTH = 300;
-const HEIGHT = 150;
-
-/**
- * The flight of a ball thrown at 40 m/s and 60 degrees, from its formula, at
- * one scale on both axes. Its ground line is the bottom of the flight.
- */
-const FLIGHT = projectilePath(40, 60);
-const FLIGHT_BOX = fitSameScale(FLIGHT, WIDTH);
-const FLIGHT_PATH = pathData(FLIGHT, FLIGHT_BOX);
-
-/** The curve of x squared minus four x plus three, across its two roots. */
-const PARABOLA = quadraticPath(-0.5, 4.5);
-const PARABOLA_PATH = pathData(PARABOLA, fitBox(PARABOLA, WIDTH, HEIGHT));
-
-/** The two bonds of a water molecule, at its 104.5 degree angle. */
-const BONDS = bondEnds(104.5, 60);
-const OXYGEN = { x: WIDTH / 2, y: HEIGHT * 0.7 };
-
-/** The trajectory of the ball, drawn on the ground line of its picture. */
-function ProjectileFigure() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-40 w-full overflow-visible"
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-    >
-      <line
-        className="stroke-1 stroke-border"
-        x1="0"
-        x2={WIDTH}
-        y1={FLIGHT_BOX.height}
-        y2={FLIGHT_BOX.height}
-      />
-      <path className="fill-none stroke-2 stroke-primary" d={FLIGHT_PATH} />
-    </svg>
-  );
-}
-
-/** The curve of the quadratic, with its axis at the height of zero. */
-function QuadraticFigure() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-40 w-full overflow-visible"
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-    >
-      <path className="fill-none stroke-2 stroke-primary" d={PARABOLA_PATH} />
-    </svg>
-  );
-}
-
-/** The bent water molecule, one oxygen and two hydrogens, drawn flat. */
-function MoleFigure() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-40 w-full overflow-visible"
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-    >
-      {Arr.map(BONDS, (end) => (
-        <line
-          className="stroke-2 stroke-muted-foreground"
-          key={`${end.x}-${end.y}`}
-          x1={OXYGEN.x}
-          x2={OXYGEN.x + end.x}
-          y1={OXYGEN.y}
-          y2={OXYGEN.y + end.y}
-        />
-      ))}
-      <circle className="fill-primary" cx={OXYGEN.x} cy={OXYGEN.y} r="16" />
-      {Arr.map(BONDS, (end) => (
-        <circle
-          className="fill-muted-foreground"
-          cx={OXYGEN.x + end.x}
-          cy={OXYGEN.y + end.y}
-          key={`atom-${end.x}-${end.y}`}
-          r="9"
-        />
-      ))}
-    </svg>
-  );
-}
-
-/** A cell as a flat membrane around a nucleus and its small parts. */
-function CellFigure() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-40 w-full overflow-visible"
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-    >
-      <ellipse
-        className="fill-muted stroke-2 stroke-primary"
-        cx={WIDTH / 2}
-        cy={HEIGHT / 2}
-        rx="120"
-        ry="62"
-      />
-      <circle className="fill-primary" cx={WIDTH / 2} cy={HEIGHT / 2} r="26" />
-      <circle
-        className="fill-muted-foreground"
-        cx={WIDTH / 2 - 70}
-        cy={HEIGHT / 2 - 24}
-        r="8"
-      />
-      <circle
-        className="fill-muted-foreground"
-        cx={WIDTH / 2 + 74}
-        cy={HEIGHT / 2 + 20}
-        r="8"
-      />
-    </svg>
-  );
-}
-
-/** The picture of each lesson, by the lesson it shows. */
-const FIGURES: Record<Lesson, () => ReactElement> = {
-  cell: CellFigure,
-  mole: MoleFigure,
-  projectile: ProjectileFigure,
-  quadratic: QuadraticFigure,
-};
 
 const LessonCopySchema = Schema.Struct({
   tab: Schema.String,
@@ -186,16 +69,18 @@ interface LessonWindowProps {
 
 /**
  * The lesson window: four lessons on tabs, each with its text at the top and
- * its picture at the bottom. It opens the next lesson by itself while it is on
- * screen. It waits while the reader points at it or has focus in it, starts
- * the count again when the reader picks a lesson, stops when it leaves the
- * screen, and holds still with reduced motion.
+ * the product's own visual below it. It opens the next lesson by itself while it
+ * is on screen. It waits while the reader points at it or has focus in it, starts
+ * the count again when the reader picks a lesson, and holds still with reduced
+ * motion. Only the open lesson's visual is mounted, and only while the window is
+ * in the viewport.
  */
 export function LessonWindow({ label, lessons }: LessonWindowProps) {
   const { entry, ref: viewRef } = useIntersection({ threshold: 0.5 });
+  const { inViewport, ref: viewportRef } = useInViewport();
   const { hovered, ref: hoverRef } = useHover();
   const { focused, ref: focusRef } = useFocusWithin();
-  const ref = useMergedRef(viewRef, hoverRef, focusRef);
+  const ref = useMergedRef(viewRef, viewportRef, hoverRef, focusRef);
   const shouldReduceMotion = useReducedMotion();
   const [lesson, setLesson] = useState<Lesson>("projectile");
   const reading = hovered || focused;
@@ -233,13 +118,13 @@ export function LessonWindow({ label, lessons }: LessonWindowProps) {
           ))}
         </TabsList>
         {Arr.map(LessonSchema.literals, (id) => {
-          const Figure = FIGURES[id];
+          const Visual = VISUALS[id];
           return (
             <TabsPanel className="grid gap-6" key={id} value={id}>
               <p className="min-h-36 text-pretty text-base lg:min-h-12">
                 {lessons[id].text}
               </p>
-              <Figure />
+              {inViewport ? <Visual /> : <ScenePlaceholder />}
             </TabsPanel>
           );
         })}
