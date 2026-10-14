@@ -57,6 +57,11 @@ const AiStateSchema = Schema.Struct({
       submittedAt: Schema.Finite,
     })
   ),
+  /**
+   * The uploads the server refused. No file holds one any more, so no send takes
+   * one again, but the server counts its place until a release gives it back.
+   */
+  refusedUploads: Schema.Array(AiUploadIdSchema),
   text: Schema.String,
   /**
    * The uploads that are on their way or failed, by the id the composer gave
@@ -79,16 +84,18 @@ interface AiActions {
   /**
    * Ends the session of the learner the store held things for: the pending
    * ask, the chats that learner was starting or had open, and the uploads it
-   * kept and showed. The draft is not part of it, because a visitor who signs
+   * kept, showed or had refused. The draft is not part of it, because a visitor who signs
    * in keeps the draft, and the caller decides that. The uploads stay on the
    * server until they expire: the next learner cannot give them back, and the
    * server would refuse.
    */
   endSession: () => void;
   /**
-   * Forgets the holds of these uploads, wherever they are held. A hold is found
-   * by its upload, not by its file, so a file that got a new hold meanwhile
-   * keeps it. Nothing changes when none of the uploads is held.
+   * Forgets these uploads once the server gave their places back: the holds of
+   * them, wherever they are held, and their place among the refused uploads. A
+   * hold is found by its upload, not by its file, so a file that got a new hold
+   * meanwhile keeps it. Nothing changes when none of the uploads is held or
+   * refused.
    */
   forgetUploads: (uploadIds: readonly (typeof AiUploadIdSchema.Type)[]) => void;
   /**
@@ -105,6 +112,12 @@ interface AiActions {
   markUpload: (fileId: string, status: typeof AiUploadSchema.Type) => void;
   openAsk: (ask: AiAsk) => boolean;
   /**
+   * The refused uploads whose places the server still counts, in the order they
+   * were refused. Nothing changes: the caller gives them back, then forgets the
+   * ones given back.
+   */
+  readRefusedUploads: () => readonly (typeof AiUploadIdSchema.Type)[];
+  /**
    * The uploads that hold these files on the server, in the order of the files.
    * A file that holds none adds nothing. Nothing changes: the caller gives the
    * uploads back, then forgets the ones the server gave back.
@@ -112,6 +125,13 @@ interface AiActions {
   readUploads: (
     fileIds: readonly string[]
   ) => readonly (typeof AiUploadIdSchema.Type)[];
+  /**
+   * Moves the holds of these uploads to the refused uploads, because the server
+   * refused them: no send takes a refused upload again, and its place stays
+   * counted until a release gives it back. Nothing changes when none of the
+   * uploads is held.
+   */
+  refuseUploads: (uploadIds: readonly (typeof AiUploadIdSchema.Type)[]) => void;
   removeChatDraft: (key: string) => void;
   /** Starts every composer over, without the files it holds. */
   resetComposers: () => void;

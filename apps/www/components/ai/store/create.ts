@@ -3,7 +3,12 @@
 import { Array as Arr, DateTime, Option, Record as Rec } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { holdOf, keptUpload, strayFiles } from "@/components/ai/store/hold";
+import {
+  holdOf,
+  keptUpload,
+  refuseHolds,
+  strayFiles,
+} from "@/components/ai/store/hold";
 import { initialState } from "@/components/ai/store/state";
 import type { AiStore } from "@/components/ai/store/types";
 
@@ -31,6 +36,7 @@ export function createAiStore() {
             chatDrafts: [],
             held: {},
             openingChat: null,
+            refusedUploads: [],
             uploads: {},
           }),
         keepUpload: (fileId, uploadId, startedAt) =>
@@ -108,17 +114,26 @@ export function createAiStore() {
           })),
         strayFiles: (fileIds, now) => strayFiles(get().held, fileIds, now),
         // A hold is removed by its upload, so a file that got a new hold keeps
-        // it. Nothing changes when no listed upload is held, so nobody re-renders.
+        // it. Nothing changes when no listed upload is held or refused, so nobody
+        // re-renders.
         forgetUploads: (uploadIds) => {
-          const { held } = get();
+          const { held, refusedUploads } = get();
           const kept = Rec.filter(
             held,
             (hold) => !Arr.contains(uploadIds, hold.uploadId)
           );
-          if (Rec.size(kept) < Rec.size(held)) {
-            set({ held: kept });
+          const stillRefused = Arr.filter(
+            refusedUploads,
+            (uploadId) => !Arr.contains(uploadIds, uploadId)
+          );
+          if (
+            Rec.size(kept) < Rec.size(held) ||
+            stillRefused.length < refusedUploads.length
+          ) {
+            set({ held: kept, refusedUploads: stillRefused });
           }
         },
+        readRefusedUploads: () => get().refusedUploads,
         readUploads: (fileIds) => {
           const { held } = get();
           return Arr.getSomes(
@@ -126,6 +141,19 @@ export function createAiStore() {
               Option.map(Rec.get(held, fileId), (hold) => hold.uploadId)
             )
           );
+        },
+        // A refused upload leaves the holds at once, so no send reuses it. Its
+        // place stays counted until forgetUploads records that it was given back.
+        refuseUploads: (uploadIds) => {
+          const { held, refusedUploads } = get();
+          const refusal = refuseHolds(held, uploadIds);
+          if (refusal.refused.length === 0) {
+            return;
+          }
+          set({
+            held: refusal.held,
+            refusedUploads: Arr.union(refusedUploads, refusal.refused),
+          });
         },
         uploadOf: (fileId, now) => keptUpload(get().held, fileId, now),
         // The reader showed intent: the sheet's body renders hidden from now

@@ -1,5 +1,6 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
+import { NinaUploadError } from "@repo/backend/client/nina/uploads";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect } from "effect";
@@ -54,3 +55,27 @@ export const releaseUploads = Effect.fn("nina.uploads.release")(function* (
   );
   return Arr.getSomes(given);
 });
+
+/**
+ * Gives back the places of refused uploads, so the send that calls it counts the
+ * room it needs without them. The server counts a refused upload until a release
+ * gives its place back, and no send takes it again, so each upload given back is
+ * forgotten. When one could not be given back, the send fails, and that upload
+ * stays refused for the next send.
+ */
+export const giveBackRefusedUploads = Effect.fn("nina.uploads.refused")(
+  function* (
+    uploadIds: readonly Id<"ninaUploads">[],
+    release: ReleaseCall,
+    forget: (uploadIds: readonly Id<"ninaUploads">[]) => void
+  ) {
+    const given = yield* releaseUploads(uploadIds, release);
+    forget(given);
+    if (given.length < uploadIds.length) {
+      return yield* new NinaUploadError({
+        code: "NINA_UPLOAD_FAILED",
+        message: "An earlier attachment could not be released. Try again.",
+      });
+    }
+  }
+);

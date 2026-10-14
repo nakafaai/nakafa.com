@@ -366,6 +366,18 @@ describe("ai/store/create", () => {
     expect(listener).not.toHaveBeenCalled();
   });
 
+  it("keeps a refused upload out of the holds until the server gives its place back", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().refuseUploads([firstUpload]);
+    store.getState().refuseUploads([firstUpload]);
+
+    expect(store.getState().uploadOf("file-1", NOW)).toEqual(Option.none());
+    expect(store.getState().readRefusedUploads()).toEqual([firstUpload]);
+    store.getState().forgetUploads([firstUpload]);
+    expect(store.getState().readRefusedUploads()).toEqual([]);
+  });
+
   it("names the files outside a send whose uploads it holds, when the send would not fit", () => {
     const store = createAiStore();
     const strays = Arr.makeBy(NINA_FILE_COUNT, (index) => `stray-${index}`);
@@ -388,6 +400,7 @@ describe("ai/store/create", () => {
       submittedAt: 1,
     });
     store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().refuseUploads([firstUpload]);
     store.getState().markUpload("file-1", "error");
     store.getState().markUpload("file-2", "uploading");
     store.getState().setText("Half typed");
@@ -402,7 +415,7 @@ describe("ai/store/create", () => {
     expect(state.chatDrafts).toEqual([]);
     expect(state.openingChat).toBeNull();
     // The next learner finds no upload of the last one to send or to show.
-    expect(state.held).toEqual({});
+    expect(state).toMatchObject({ held: {}, refusedUploads: [] });
     expect(state.uploads).toEqual({});
     expect(state.uploadOf("file-1", NOW)).toEqual(Option.none());
     // The draft has its own rule, and the page keeps what it shows.

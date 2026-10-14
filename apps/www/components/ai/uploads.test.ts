@@ -9,13 +9,18 @@ import {
   Result,
   Schema,
 } from "effect";
-import { releaseUploads } from "@/components/ai/uploads";
+import {
+  giveBackRefusedUploads,
+  releaseUploads,
+} from "@/components/ai/uploads";
 
 const first = Schema.decodeUnknownSync(Id("ninaUploads"))("upload_1");
 const second = Schema.decodeUnknownSync(Id("ninaUploads"))("upload_2");
 
 /** The call that gives back one upload, as the page makes it. */
 type Release = Parameters<typeof releaseUploads>[1];
+/** The call that forgets the uploads the server gave back, as the page makes it. */
+type Forget = Parameters<typeof giveBackRefusedUploads>[2];
 
 /** The answer of a release that worked. */
 const released = () => Promise.resolve(Result.succeed(null));
@@ -138,5 +143,55 @@ describe("uploads the learner will not send", () => {
         expect(given).toEqual([first, second]);
         expect(warnings).toEqual([]);
       })
+  );
+});
+
+describe("uploads the server refused", () => {
+  it.effect(
+    "gives back each refused place, and forgets each upload the server gave back",
+    () =>
+      Effect.gen(function* () {
+        const release = vi.fn<Release>(released);
+        const forget = vi.fn<Forget>();
+
+        yield* giveBackRefusedUploads([first, second], release, forget);
+
+        expect(release).toHaveBeenCalledWith({ uploadId: first });
+        expect(release).toHaveBeenCalledWith({ uploadId: second });
+        expect(forget).toHaveBeenCalledWith([first, second]);
+      })
+  );
+
+  it.effect(
+    "forgets only the uploads the server gave back, and fails the send for the others",
+    () =>
+      Effect.gen(function* () {
+        const release = vi
+          .fn<Release>(released)
+          .mockImplementationOnce(() => refused("NINA_UPLOAD_FAILED"));
+        const forget = vi.fn<Forget>();
+
+        const failure = yield* giveBackRefusedUploads(
+          [first, second],
+          release,
+          forget
+        ).pipe(Effect.provide(Logger.layer([])), Effect.flip);
+
+        expect(failure).toMatchObject({
+          _tag: "NinaUploadError",
+          code: "NINA_UPLOAD_FAILED",
+        });
+        expect(forget).toHaveBeenCalledWith([second]);
+      })
+  );
+
+  it.effect("asks for nothing when no refused upload is left", () =>
+    Effect.gen(function* () {
+      const release = vi.fn<Release>(released);
+
+      yield* giveBackRefusedUploads([], release, vi.fn<Forget>());
+
+      expect(release).not.toHaveBeenCalled();
+    })
   );
 });

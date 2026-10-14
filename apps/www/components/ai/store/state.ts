@@ -11,6 +11,7 @@ export const initialState = {
   held: {},
   open: false,
   openingChat: null,
+  refusedUploads: [],
   text: "",
   uploads: {},
   warmed: false,

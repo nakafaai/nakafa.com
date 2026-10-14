@@ -37,6 +37,26 @@ export function keptUpload(held: Held, fileId: string, now: number) {
 }
 
 /**
+ * The holds without the ones of these uploads, and the uploads that held a file
+ * among them. The server refused each of these uploads: no send takes one again,
+ * and its place stays counted until the server gives it back.
+ */
+export function refuseHolds(
+  held: Held,
+  uploadIds: readonly Hold["uploadId"][]
+) {
+  return {
+    held: Rec.filter(held, (hold) => !Arr.contains(uploadIds, hold.uploadId)),
+    refused: Arr.map(
+      Arr.filter(Rec.values(held), (hold) =>
+        Arr.contains(uploadIds, hold.uploadId)
+      ),
+      (hold) => hold.uploadId
+    ),
+  };
+}
+
+/**
  * The files outside a send whose uploads the send has to give back, or none
  * when the send fits. The server counts every upload it has not dropped,
  * whichever composer holds its file, and refuses an upload beyond its limit. A

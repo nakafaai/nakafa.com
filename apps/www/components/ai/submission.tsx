@@ -44,7 +44,10 @@ import {
 import { optimisticPrompt } from "@/components/ai/optimistic";
 import type { AiStore } from "@/components/ai/store/types";
 import { messageInput, retryInput } from "@/components/ai/turn";
-import { releaseUploads } from "@/components/ai/uploads";
+import {
+  giveBackRefusedUploads,
+  releaseUploads,
+} from "@/components/ai/uploads";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 type Start = typeof nina.turns.start;
@@ -67,8 +70,9 @@ function requireNinaConnection(convex: ConvexReactClient) {
 
 /**
  * What the uploads of a send need from the store: to show a chip as uploading
- * or failed, to know which upload already holds a file, and to give back the
- * places held for files outside the send when the send needs the room.
+ * or failed, to know which upload already holds a file, to give back the places
+ * held for files outside the send when the send needs the room, and to give back
+ * the places of the uploads the server refused.
  */
 type UploadStore = Pick<
   AiStore,
@@ -76,6 +80,7 @@ type UploadStore = Pick<
   | "forgetUploads"
   | "keepUpload"
   | "markUpload"
+  | "readRefusedUploads"
   | "readUploads"
   | "strayFiles"
   | "uploadOf"
@@ -95,10 +100,11 @@ const holdAttachment = Effect.fn("nina.upload.hold")(function* (
   // The moment the upload begins, which the store counts its life from.
   const startedAt = yield* Clock.currentTimeMillis;
   // A file that holds an upload from an earlier send is not uploaded again,
-  // unless the server has dropped that upload by now. A failed send leaves its
-  // uploads where they are: the server refuses with a failure it throws, which
-  // rolls the whole mutation back, and Convex's client sends a mutation again
-  // when it lost the answer instead of failing it.
+  // unless the server has dropped that upload by now. An upload the server
+  // refused is no longer a hold, so it is never handed out again. A failed send
+  // leaves its uploads where they are: the server refuses with a failure it
+  // throws, which rolls the whole mutation back, and Convex's client sends a
+  // mutation again when it lost the answer instead of failing it.
   const cached = status.uploadOf(attachment.id, startedAt);
   if (Option.isSome(cached)) {
     return cached.value;
@@ -177,8 +183,9 @@ const uploadAttachment = Effect.fn("nina.upload")(function* (
 /**
  * Uploads one message's attachments, refusing oversized documents before any
  * upload starts. The server also counts the uploads held for files of
- * composers that are gone, and refuses an upload beyond its limit, so a send
- * that would not fit beside them gives those places back first.
+ * composers that are gone and the uploads it refused, and refuses an upload
+ * beyond its limit, so a send that would not fit beside them gives those places
+ * back first.
  */
 const uploadAttachments = Effect.fn("nina.uploads")(function* (
   files: NonNullable<NinaDraft["files"]>,
@@ -193,6 +200,14 @@ const uploadAttachments = Effect.fn("nina.uploads")(function* (
       code: "NINA_UPLOAD_SIZE",
       message: NINA_DOCUMENT_SIZE_MESSAGE,
     });
+  }
+  // A refused upload still counts on the server, so its place goes back before
+  // this send counts the room it needs.
+  const refused = status.readRefusedUploads();
+  if (Arr.isReadonlyArrayNonEmpty(refused)) {
+    // A call made offline waits for the connection, and the send with it.
+    yield* requireNinaConnection(convex);
+    yield* giveBackRefusedUploads(refused, release, status.forgetUploads);
   }
   const now = yield* Clock.currentTimeMillis;
   const strays = status.strayFiles(
@@ -230,7 +245,9 @@ export function useNinaSubmission(
   const forgetUploads = useAi((state) => state.forgetUploads);
   const keepUpload = useAi((state) => state.keepUpload);
   const markUpload = useAi((state) => state.markUpload);
+  const readRefusedUploads = useAi((state) => state.readRefusedUploads);
   const readUploads = useAi((state) => state.readUploads);
+  const refuseUploads = useAi((state) => state.refuseUploads);
   const removeChatDraft = useAi((state) => state.removeChatDraft);
   const resolveChatDraft = useAi((state) => state.resolveChatDraft);
   const strayFiles = useAi((state) => state.strayFiles);
@@ -348,11 +365,14 @@ export function useNinaSubmission(
               result.failure.code === "NINA_UPLOAD_INVALID"
             ) {
               MutableHashMap.clear(previews);
-              // Every file uploads again on the next send, so the places its
-              // earlier uploads hold go back now instead of when they expire.
-              // The release runs on its own, so the report never waits for it,
-              // and each hold is forgotten only once the server gave its place back.
-              return releaseUploads(readUploads(fileIds), release).pipe(
+              // Every file uploads again on the next send, so the server's refusal
+              // takes the earlier uploads out of the holds now: no send reuses them.
+              // Their places go back in the background, so the report never waits
+              // for it, and each one leaves the refused uploads only once the
+              // server gave its place back.
+              const refused = readUploads(fileIds);
+              refuseUploads(refused);
+              return releaseUploads(refused, release).pipe(
                 Effect.tap((given) => Effect.sync(() => forgetUploads(given))),
                 Effect.forkDetach,
                 Effect.andThen(report)
@@ -373,6 +393,7 @@ export function useNinaSubmission(
         forgetUploads,
         keepUpload,
         markUpload,
+        readRefusedUploads,
         readUploads,
         strayFiles,
         uploadOf,

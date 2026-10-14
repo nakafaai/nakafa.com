@@ -5,7 +5,12 @@ import {
 } from "@repo/backend/client/nina/uploads";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, Duration, Option, Record as Rec, Schema } from "effect";
-import { holdOf, keptUpload, strayFiles } from "@/components/ai/store/hold";
+import {
+  holdOf,
+  keptUpload,
+  refuseHolds,
+  strayFiles,
+} from "@/components/ai/store/hold";
 
 const uploadNamed = Schema.decodeUnknownSync(Id("ninaUploads"));
 /** Two moments: the server keeps an upload until the later one. */
@@ -98,5 +103,26 @@ describe("the files a send gives back to make room", () => {
     const held = { ...holding(strays), ...holding(["old"], NOW) };
 
     expect(strayFiles(held, ["old"], NOW)).toEqual(strays);
+  });
+});
+
+describe("the refusal of uploads", () => {
+  it("takes the holds of the refused uploads out, and names their uploads as refused", () => {
+    const { held, refused } = refuseHolds(holding(["file-1", "file-2"]), [
+      uploadNamed("file-1"),
+    ]);
+
+    expect(refused).toEqual([uploadNamed("file-1")]);
+    expect(Rec.keys(held)).toEqual(["file-2"]);
+    expect(keptUpload(held, "file-1", NOW)).toEqual(Option.none());
+  });
+
+  it("changes no hold and refuses nothing when none of the uploads is held", () => {
+    const held = holding(["file-1"]);
+
+    expect(refuseHolds(held, [uploadNamed("file-2")])).toEqual({
+      held,
+      refused: [],
+    });
   });
 });
