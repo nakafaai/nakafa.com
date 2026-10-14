@@ -293,9 +293,10 @@ describe("Nina provider context", () => {
       current: [{ role: "user", content: "Latest" }],
       history: Arr.map(Arr.range(1, 30), imageTurn),
     });
-    // An image costs 1,120 tokens, so 28 turns fit in 32,000 and the two oldest of 30 do not.
-    expect(encodeJsonText(result)).not.toContain('"Photo 2"');
-    expect(encodeJsonText(result)).toContain('"Photo 3"');
+    // A turn of this kind costs 1,626 tokens, so the ten oldest of 30 do not fit
+    // the history budget of 32,610.
+    expect(encodeJsonText(result)).not.toContain('"Photo 10"');
+    expect(encodeJsonText(result)).toContain('"Photo 11"');
     expect(encodeJsonText(result)).toContain('"Photo 30"');
   });
 
@@ -404,7 +405,8 @@ describe("Nina provider context", () => {
   });
 
   it("shortens older evidence within the current turn and keeps the newest result", () => {
-    const evidence = "Current evidence paragraph.\n\n".repeat(900);
+    // Seven hundred paragraphs fit the evidence budget of one tool result.
+    const evidence = "Current evidence paragraph.\n\n".repeat(700);
     const history = turn("Earlier", evidence);
     const result = boundStep([
       ...history,

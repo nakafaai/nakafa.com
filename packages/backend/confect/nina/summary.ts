@@ -29,10 +29,12 @@ import {
 const MESSAGE_PAGE = 100;
 
 /**
- * What the summary writer is told. By the shared tokenizer on the app's own
- * copy, 800 words are about 1,100 tokens in English and 1,400 in Indonesian and
- * German. That leaves room under `NINA_BUDGET.summary` for a writer that runs
- * long, and `boundText` stays the hard bound.
+ * What the summary writer is told. Counted with the old tokenizer, 800 words
+ * were about 1,100 tokens in English and 1,400 in Indonesian and German. Claude
+ * counts about 1.45 times the first and 1.7 to 1.75 times the second (the
+ * ratios of 14 October 2026), so 800 words are about 1,600 and 2,500 tokens. That
+ * leaves room under `NINA_BUDGET.summary` for a writer that runs long, and
+ * `boundText` stays the hard bound.
  */
 const INSTRUCTIONS = Arr.join(
   [

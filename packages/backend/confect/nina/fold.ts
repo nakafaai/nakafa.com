@@ -9,8 +9,8 @@ const CostedTurn = Schema.Struct({ order: Schema.Int, tokens: Schema.Int });
  * token budget bounds what a call costs, but each turn also costs documents to
  * read before the call, which no token counts. A chat of very short turns
  * would otherwise grow to thousands of messages before it reached the budget.
- * The messages themselves add no tokens beyond their content (see
- * `countTextTokens`), so this cap is about reads, not about the prompt.
+ * A message adds only the provider's overhead beyond its content (see
+ * `history.ts`), so this cap is about reads, not about the prompt.
  */
 export const HISTORY_TURNS = 4 * SUMMARY_FOLD_LIMIT;
 

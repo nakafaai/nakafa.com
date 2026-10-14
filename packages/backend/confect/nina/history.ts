@@ -1,9 +1,12 @@
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
+import { languageModel } from "@repo/backend/confect/gateway/model";
 import {
   boundText,
   countFileTokens,
   countTextTokens,
   NINA_BUDGET,
+  NINA_CALL_LIMIT,
+  NINA_RESERVED,
 } from "@repo/backend/confect/nina/budget";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import type { NinaUncoveredTurn } from "@repo/backend/confect/nina/summaries.spec";
@@ -16,12 +19,16 @@ const EXCERPT_TOKENS = 600;
 const EXCERPT_NOTE =
   "Earlier evidence in this conversation, shortened. Call the capability again when the full evidence matters.";
 
-/** Estimates provider tokens for one message; a file counts what the provider bills for it, not its bytes. */
+/**
+ * Estimates provider tokens for one message: the overhead the provider adds to
+ * every message, and its content. A file counts what the provider bills for it,
+ * not its bytes.
+ */
 function messageTokens(message: ModelMessage) {
   if (typeof message.content === "string") {
-    return countTextTokens(message.content);
+    return languageModel.tokens.message + countTextTokens(message.content);
   }
-  let total = 0;
+  let total = languageModel.tokens.message;
   for (const part of message.content) {
     if (part.type === "text" || part.type === "reasoning") {
       total += countTextTokens(part.text);
@@ -267,6 +274,12 @@ export function sentTurn(turn: readonly ModelMessage[]) {
  * evidence when it alone costs more than the budget. The current turn always
  * follows.
  *
+ * The budget of this call is what the call limit leaves after the reserved
+ * parts (`NINA_RESERVED`) and the current turn as it is sent, its newest
+ * message, its files and its evidence, so the history never takes the call past
+ * the limit. The history budget (`NINA_BUDGET.history`) is the most it may take,
+ * which keeps every call's history the size the summary fold works to.
+ *
  * The summary folds the oldest turns as soon as the turns it does not cover
  * cost more than the budget, so between two folds the history only grows at
  * its end, and its start moves only when a fold covers its oldest turns. Two
@@ -282,6 +295,9 @@ export function assembleContext({
   readonly current: readonly ModelMessage[];
   readonly history: readonly (readonly ModelMessage[])[];
 }) {
+  const latest = boundStep(current);
+  const room = NINA_CALL_LIMIT - NINA_RESERVED - turnTokens(latest);
+  const budget = Math.min(NINA_BUDGET.history, room);
   const [, candidates] = Arr.mapAccum(
     Arr.reverse(Arr.map(history, sentTurn)),
     0,
@@ -292,10 +308,10 @@ export function assembleContext({
   );
   const selected = Arr.takeWhile(
     candidates,
-    ({ offset, total }) => offset === 0 || total <= NINA_BUDGET.history
+    ({ offset, total }) => offset === 0 || total <= budget
   );
   return [
     ...Arr.flatten(Arr.reverse(Arr.map(selected, ({ messages }) => messages))),
-    ...boundStep(current),
+    ...latest,
   ];
 }

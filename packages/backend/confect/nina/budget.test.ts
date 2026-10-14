@@ -1,7 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { purposes } from "@repo/backend/confect/gateway/purpose";
+import { languageModel } from "@repo/backend/confect/gateway/model";
 import {
   boundText,
   countFileTokens,
@@ -43,18 +43,52 @@ afterEach(() => {
 
 describe("Nina file tokens", () => {
   it.each([
-    ["a png image, of any size", "image/png", 1120],
-    ["a jpeg image", "image/jpeg", 1120],
-    ["a webp image", "image/webp", 1120],
-    ["a gif image", "image/gif", 1120],
+    ["a png image, of any size", "image/png", 1600],
+    ["a jpeg image", "image/jpeg", 1600],
+    ["a webp image", "image/webp", 1600],
+    ["a gif image", "image/gif", 1600],
     [
       "a pdf as one page, since no stored page count exists",
       "application/pdf",
-      560,
+      3300,
     ],
-    ["a text file as one page, since no stored size exists", "text/plain", 560],
+    [
+      "a text file as one page, since no stored size exists",
+      "text/plain",
+      3300,
+    ],
   ] as const)("counts %s", (_name, mediaType, expected) => {
     expect(countFileTokens(mediaType)).toBe(expected);
+  });
+});
+
+describe("Nina token estimate", () => {
+  // Each expectation is the sum of the rules of the language model profile for
+  // its text, worked out by hand: a run of Latin letters costs one token per
+  // 2.25 letters, rounded up over the run; a Han character 1.25; a run of two
+  // or more spaces 0.5, one space 0; a newline and an underscore 0; any other
+  // character, a digit, or a letter of another script 1.
+  it.each([
+    ["a word of four letters", "word", 2],
+    ["nine letters", "abcdefghi", 4],
+    ["ten letters", "abcdefghij", 5],
+    ["Latin letters with a diacritic", "é", 1],
+    ["two Han characters", "中文", 3],
+    ["one space between words", "a b", 2],
+    ["a run of two spaces", "a  b", 3],
+    ["a newline", "a\nb", 2],
+    ["an underscore", "a_b", 2],
+    ["digits and symbols", "1+1=2", 5],
+    ["letters of another script", "αβγ", 3],
+    ["an emoji", "🙂", 1],
+  ])("prices %s by the rules", (_name, text, expected) => {
+    expect(countTextTokens(text)).toBe(expected);
+  });
+
+  it("charges the provider's overhead on every message, not only on its content", () => {
+    expect(sentTurn([{ role: "user", content: "word" }]).tokens).toBe(
+      languageModel.tokens.message + 2
+    );
   });
 });
 
@@ -65,16 +99,16 @@ describe("Nina token budgets", () => {
   });
 
   it("cuts long text on a paragraph boundary and explains the omission", () => {
-    const paragraph = "Limits describe values a function approaches. ".repeat(
-      12
-    );
-    const text = Arr.join([paragraph, paragraph, paragraph, paragraph], "\n\n");
+    // The first paragraph ends inside the kept text, past its last 40 percent,
+    // so the cut moves back to the paragraph break and not to the token limit.
+    const sentence = "Limits describe values a function approaches. ";
+    const text = Arr.join([sentence.repeat(6), sentence.repeat(12)], "\n\n");
     const bounded = boundText(text, 200, "Read the next section.");
     expect(countTextTokens(bounded)).toBeLessThanOrEqual(200);
     expect(bounded).toMatch(SHORTENED_NOTE);
-    expect(text.startsWith(bounded.slice(0, bounded.indexOf("\n\n[")))).toBe(
-      true
-    );
+    expect(
+      bounded.startsWith(`${sentence.repeat(6).trimEnd()}\n\n[Shortened`)
+    ).toBe(true);
   });
 
   it("keeps the token cut when no boundary is close", () => {
@@ -87,7 +121,7 @@ describe("Nina token budgets", () => {
 
 describe("Nina output caps", () => {
   it("keeps the output cap of a specialist just above the evidence that Nina reads of its answer", () => {
-    const cap = purposes.specialist.maxOutputTokens;
+    const cap = languageModel.output.specialist;
     // Nina reads at most the evidence budget of a specialist's answer. A cap at
     // or below it would end an answer before Nina had read all it may, so the
     // cap stands above it. It stays within one unit of it, so that it follows
@@ -103,7 +137,7 @@ describe("Nina call limit", () => {
   it("does not shorten the words of an oversized newest earlier turn, which the limit leaves out", () => {
     // A learner who pasted a long text and got a short reply: that turn alone costs more than the history.
     const earlier: ModelMessage[] = [
-      { role: "user", content: "word ".repeat(NINA_BUDGET.history + 3000) },
+      { role: "user", content: "word ".repeat(NINA_BUDGET.history) },
       { role: "assistant", content: "A short reply." },
     ];
     expect(sentTurn(earlier).tokens).toBeGreaterThan(NINA_BUDGET.history);
@@ -113,6 +147,28 @@ describe("Nina call limit", () => {
         history: [earlier],
       })
     ).toEqual([...earlier, { role: "user", content: "Follow up" }]);
+  });
+
+  it("gives a call with a large current turn less history, so the call stays within its limit", () => {
+    // Each earlier turn costs 14,024 tokens, so the two together (28,048) fit the
+    // history budget of 32,610. A current message of 32,608 tokens leaves 28,002
+    // of the call limit for the history (90,610 less 30,000 reserved and the
+    // message), less than the two turns, so the older turn is left out.
+    const older: ModelMessage[] = [
+      { role: "user", content: "word ".repeat(7000) },
+      { role: "assistant", content: "An older answer." },
+    ];
+    const newer: ModelMessage[] = [
+      { role: "user", content: "word ".repeat(7000) },
+      { role: "assistant", content: "A newer answer." },
+    ];
+    const current: ModelMessage[] = [
+      { role: "user", content: "word ".repeat(16_300) },
+    ];
+    expect(assembleContext({ current, history: [older, newer] })).toEqual([
+      ...newer,
+      ...current,
+    ]);
   });
 
   it("states the instructions, tool definitions and runtime facts of a call as a part that the real ones fit", async () => {
@@ -146,15 +202,15 @@ describe("Nina call limit", () => {
     ]);
     const measured = instructions + tools + runtime;
     expect(measured).toBeLessThanOrEqual(NINA_BUDGET.instructions);
-    // The stated part is the measure rounded up to the next 1,000 tokens.
-    expect(NINA_BUDGET.instructions - measured).toBeLessThan(1000);
+    // The stated part is the measure rounded up to the next 500 tokens.
+    expect(NINA_BUDGET.instructions - measured).toBeLessThan(500);
   }, 30_000);
 
   it("holds a call whose history and summary are full inside the limit", async () => {
     const languageModel = ninaModel();
     provider.languageModel.mockReturnValue(languageModel);
     // Eight turns of about 4,500 tokens. The summary covers the first, and the
-    // other seven cost 31,500, just inside the history budget of 32,000.
+    // other seven cost 31,500, inside the history budget of 32,610.
     const f = await createNinaTest({
       history: Arr.makeBy(8, () => ({ tokens: 4500 })),
     });

@@ -20,12 +20,13 @@ import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, DateTime, Effect, Schema } from "effect";
 
 /**
- * Text that costs `tokens` model tokens by the shared tokenizer, one word per
- * token, so a test sizes a turn by what the budgets count.
+ * Text that costs `tokens` model tokens by the shared estimator, one letter per
+ * token (a single Latin letter costs one token, and a single space none), so a
+ * test sizes a turn by what the budgets count.
  */
 export function filler(tokens: number) {
   return Arr.join(
-    Arr.makeBy(tokens, () => "word"),
+    Arr.makeBy(tokens, () => "a"),
     " "
   );
 }
