@@ -14,7 +14,6 @@ const page = Effect.fn("test.memory.topics.page")(function* (
   slug = SLUG
 ) {
   const { context } = yield* openNinaLearningSession({
-    capturedAt: "2026-10-10T00:00:00.000Z",
     learning: {
       ...(assetId === undefined ? {} : { assetId }),
       locale: "en",
@@ -22,15 +21,12 @@ const page = Effect.fn("test.memory.topics.page")(function* (
       url: `https://nakafa.com/en/${slug}`,
       verified: true,
     },
-    source: "current-page",
   });
   return {
     locale: "en",
     needsFetch: false,
     nina: context,
     slug,
-    url: `https://nakafa.com/en/${slug}`,
-    verified: true,
   } satisfies NinaPage;
 });
 

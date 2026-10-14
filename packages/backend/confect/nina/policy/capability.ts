@@ -18,13 +18,11 @@ export function denied(reason: string) {
 }
 
 /**
- * What a capability decides on: whether the learner's memory is on, and Nina's
- * context pack with the tool permissions of the turn. A turn that has no pack
- * offers no capability, so a capability never sees the absence of one.
+ * What a capability decides on: whether the learner's memory is on. A context
+ * without it has no memory capability. No page refuses a capability, so nothing
+ * of the page is part of it.
  */
-export type OfferContext = Pick<AgentContext, "memory"> & {
-  [Key in "nina"]-?: NonNullable<AgentContext[Key]>;
-};
+export type OfferContext = Pick<AgentContext, "memory">;
 
 /** The part of a capability that the policy reads. */
 interface Offering {
@@ -42,32 +40,18 @@ export class CapabilityDenied extends Schema.TaggedError<CapabilityDenied>()(
 ) {}
 
 /**
- * Resolves whether one capability may run under the turn's context. It fails
- * closed: a turn without Nina's context pack allows nothing, and a capability
- * is allowed only by its own `offered`, which every definition must give.
- */
-export function decideCapability(
-  capability: Offering,
-  { memory, nina }: Pick<AgentContext, "memory" | "nina">
-) {
-  if (!nina) {
-    return denied("Nina context is unavailable for this turn.");
-  }
-  return capability.offered({ memory, nina });
-}
-
-/**
  * Lists the capabilities of a registry that the context offers, in the order of
- * the registry. The prompt, the tools Nina is offered, and the policy of each
- * call all follow it.
+ * the registry. A capability is allowed only by its own `offered`, which every
+ * definition must give. The prompt, the tools Nina is offered, and the policy
+ * of each call all follow this list.
  */
 export function offeredCapabilities<Name extends string>(
   registry: Rec.ReadonlyRecord<Name, Offering>,
-  context: Pick<AgentContext, "memory" | "nina">
+  context: OfferContext
 ) {
   return Arr.filter(
     Rec.keys(registry),
-    (name) => decideCapability(registry[name], context).state === "allowed"
+    (name) => registry[name].offered(context).state === "allowed"
   );
 }
 

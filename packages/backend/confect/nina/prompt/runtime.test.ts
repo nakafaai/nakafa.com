@@ -4,12 +4,12 @@ import { countTextTokens } from "@repo/backend/confect/nina/budget";
 import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
 import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
 import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
+import { oldPage } from "@repo/backend/test/nina/legacy";
 import { Array as Arr } from "effect";
 
 const url = "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann";
 const learning = {
   assetId: "asset:id:material:mathematics:integral:riemann-sum",
-  contentId: "asset:id:material:mathematics:integral:riemann-sum",
   locale: "id",
   materialKey: "mathematics",
   section: "subject-lesson",
@@ -20,33 +20,15 @@ const learning = {
   verified: true,
 } as const;
 const tools = {
-  allowDeepResearch: true,
-  allowMath: true,
-  allowNakafa: true,
   allowPageFetch: true,
   evidenceScope: "verified-page",
 } as const;
-const nina = {
-  learning,
-  snapshot: {
-    capturedAt: "2026-05-09T00:00:00.000Z",
-    learning,
-    source: "current-page",
-    tools,
-  },
-  tools,
-  transition: {
-    reason: "page-context",
-    toContextKey: "canonical:materi/matematika/integral/jumlahan-riemann",
-  },
-} satisfies NinaContextPack;
+const nina = { learning, tools } satisfies NinaContextPack;
 const page = {
   locale: "id",
   needsFetch: true,
   nina,
   slug: learning.slug,
-  url,
-  verified: true,
 } satisfies NinaPage;
 const runtime = { currentDate: "2026-05-09T00:00:00.000Z" };
 
@@ -67,6 +49,18 @@ describe("formatTurnContext", () => {
     expect(
       Arr.every(context.split("\n"), (line) => !line.startsWith("      "))
     ).toBe(true);
+  });
+
+  it("reads the page of a turn stored in the old shape as it reads the page of a turn written now", () => {
+    for (const pinned of [false, true]) {
+      expect(
+        formatTurnContext({
+          page: oldPage(page, { pinned }),
+          runtime,
+          user: {},
+        })
+      ).toBe(formatTurnContext({ page, runtime, user: {} }));
+    }
   });
 
   it("names the page once, in the context pack, and not again as the current page", () => {
@@ -127,7 +121,7 @@ describe("formatTurnContext", () => {
       },
     });
 
-    // This block weighs 287 tokens by the shared tokenizer, and it travels with every learner message.
+    // This block weighs 265 tokens by the shared tokenizer, and it travels with every learner message.
     expect(countTextTokens(context)).toBeLessThan(300);
   });
 
@@ -145,11 +139,7 @@ describe("formatTurnContext", () => {
   it("says so when the page has no signed content", () => {
     const bare = { ...learning, verified: false };
     const context = formatTurnContext({
-      page: {
-        ...page,
-        nina: { ...nina, learning: bare },
-        verified: false,
-      },
+      page: { ...page, nina: { ...nina, learning: bare } },
       runtime,
       user: {},
     });

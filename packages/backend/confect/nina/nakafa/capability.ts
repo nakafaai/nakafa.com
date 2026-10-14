@@ -8,7 +8,7 @@ import {
   nakafaToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
-import { ALLOWED, denied } from "@repo/backend/confect/nina/policy/capability";
+import { ALLOWED } from "@repo/backend/confect/nina/policy/capability";
 import { getNakafaReferencesFromMessages } from "@repo/backend/confect/nina/research/source";
 import { Array as Arr, Effect } from "effect";
 
@@ -54,10 +54,7 @@ export const nakafaCapability = defineCapability({
     section: SECTION,
   },
   input: nakafaToolInputSchema,
-  offered: ({ nina }) =>
-    nina.tools.allowNakafa
-      ? ALLOWED
-      : denied("Nakafa evidence is not allowed for this context."),
+  offered: () => ALLOWED,
   run: (input, { context, locale, messages, publish, usageHandler, userId }) =>
     runNakafaAgent({
       userId,

@@ -10,7 +10,10 @@ import {
   requireStoredDocumentLimit,
 } from "@repo/backend/confect/nina/attachments";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
+import {
+  dropLegacyPage,
+  type NinaPage,
+} from "@repo/backend/confect/nina/contract/turn";
 import {
   type NinaInput,
   type NinaPageInput,
@@ -42,16 +45,10 @@ function isAskedPage(page: NinaPage, input: typeof NinaPageInput.Type) {
 export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   user: Docs["users"],
   chat: Docs["chats"] | null,
-  input: typeof NinaInput.Type,
-  capturedAt: string
+  input: typeof NinaInput.Type
 ) {
   if (input.kind === "message") {
-    const context = yield* resolveNinaContext(
-      input.page,
-      user,
-      capturedAt,
-      chat?._id
-    );
+    const context = yield* resolveNinaContext(input.page, user, chat?._id);
     const attachments = yield* consumeAttachments(
       user._id,
       input.prompt.uploadIds ?? []
@@ -110,9 +107,11 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   const fileIds = stored.fileIds ?? [];
   yield* requireStoredDocumentLimit(fileIds);
   const retryOf = original.retryOf ?? original.order;
+  // A turn stored before the shape change holds fields that no new turn does, so
+  // the page is copied through `dropLegacyPage`, whichever shape it was stored in.
   const asked =
     original.page && original.user
-      ? { page: original.page, user: original.user }
+      ? { page: yield* dropLegacyPage(original.page), user: original.user }
       : undefined;
   if (asked && (!input.page || isAskedPage(asked.page, input.page))) {
     return { ...asked, fileIds, message, retryOf };
@@ -121,7 +120,7 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     return yield* retryUnavailable();
   }
   return {
-    ...(yield* resolveNinaContext(input.page, user, capturedAt, chat._id)),
+    ...(yield* resolveNinaContext(input.page, user, chat._id)),
     fileIds,
     message,
     retryOf,

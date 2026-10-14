@@ -11,9 +11,16 @@ const database = (ctx: MutationCtx) =>
   RegisteredConvexFunction.mutationLayer(schema, ctx);
 type DatabaseServices = Layer.Success<ReturnType<typeof database>>;
 
-/** One Nina turn whose Pro owner also owns a finished single-question attempt. */
-export async function createFocusTest() {
-  const nina = await createNinaTest();
+/**
+ * One Nina turn whose Pro owner also owns a finished single-question attempt.
+ * With `legacy` the turn stores its page in the old shape (`oldPage`).
+ */
+export async function createFocusTest({
+  legacy = false,
+}: {
+  readonly legacy?: boolean;
+} = {}) {
+  const nina = await createNinaTest({ legacy });
   const seed = await nina.t.mutation(async (ctx) => {
     const seeded = await insertHistoryAttempt(ctx);
     await ctx.db.patch("tryoutAttempts", seeded.request.attemptId, {
