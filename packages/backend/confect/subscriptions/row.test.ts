@@ -61,31 +61,34 @@ describe("Polar subscription persistence", () => {
       })
   );
 
-  it.effect("retains school identity and populated lifecycle timestamps", () =>
+  it.effect("retains populated lifecycle timestamps", () =>
     Effect.gen(function* () {
       expect(
         yield* storedFrom({
           ended_at: "2026-09-15T12:00:00Z",
-          metadata: { schoolId: "school-1" },
           modified_at: "2026-09-02T08:30:00Z",
           started_at: "2026-09-01T00:00:00Z",
         })
       ).toMatchObject({
         endedAt: "2026-09-15T12:00:00.000Z",
         modifiedAt: "2026-09-02T08:30:00.000Z",
-        schoolId: "school-1",
         startedAt: "2026-09-01T00:00:00.000Z",
       });
     })
   );
 
-  it.effect.each(["", 123, false])(
-    "omits invalid school metadata %s",
-    (schoolId) =>
+  it.effect(
+    "writes no school link from the metadata and stores the metadata whole",
+    () =>
       Effect.gen(function* () {
-        expect(
-          yield* storedFrom({ metadata: { schoolId } })
-        ).not.toHaveProperty("schoolId");
+        const stored = yield* storedFrom({
+          metadata: { schoolId: "school-1", tier: "team" },
+        });
+        expect(stored).not.toHaveProperty("schoolId");
+        expect(stored.metadata).toStrictEqual({
+          schoolId: "school-1",
+          tier: "team",
+        });
       })
   );
 

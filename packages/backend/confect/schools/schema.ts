@@ -1,3 +1,8 @@
+/**
+ * Shapes of the retired School rows. The retired tables still validate their
+ * stored rows with them until the change that drops the tables also deletes
+ * this module.
+ */
 import { GenericId } from "@confect/core/GenericId";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
@@ -18,7 +23,6 @@ const schoolTypeSchema = Schema.Literals([
   "university",
   "other",
 ]);
-export const schoolTypeValidator = schoolTypeSchema;
 
 /**
  * School member role validator
@@ -30,7 +34,6 @@ export const schoolMemberRoleSchema = Schema.Literals([
   "parent",
   "demo",
 ]);
-export type SchoolMemberRole = typeof schoolMemberRoleSchema.Type;
 
 /**
  * School member status validator
@@ -52,7 +55,7 @@ export const schoolValidator = Schema.Struct({
   address: Schema.optionalKey(Schema.String),
   city: Schema.String,
   province: Schema.String,
-  type: schoolTypeValidator,
+  type: schoolTypeSchema,
   currentStudents: Schema.Finite,
   currentTeachers: Schema.Finite,
   updatedAt: Schema.Finite,
