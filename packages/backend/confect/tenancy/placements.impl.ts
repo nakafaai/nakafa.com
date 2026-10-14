@@ -12,6 +12,7 @@ import { Cohort } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
   cohortAccess,
+  cohortAuthority,
   personAuthority,
   placementOf,
   studentOf,
@@ -77,8 +78,10 @@ const place = FunctionImpl.make(
 );
 
 /**
- * Moves a placed Person to another cohort of the same period. The move is
- * decided on the target cohort, and a Person in that cohort already stays put.
+ * Moves a placed Person to another cohort of the same period. The target cohort
+ * is checked by its access middleware, and the cohort the Person leaves is
+ * checked here, because the move rewrites that placement. An archived cohort at
+ * either end refuses the move. A Person already in the target stays put.
  */
 const move = FunctionImpl.make(
   databaseSchema,
@@ -99,6 +102,7 @@ const move = FunctionImpl.make(
     if (from === cohort._id) {
       return view(placement.value);
     }
+    yield* cohortAuthority.authorize("cohort.manage", from);
     yield* (yield* DatabaseWriter)
       .table("tenantCohortMembers")
       .replace(

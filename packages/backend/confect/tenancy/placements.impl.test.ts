@@ -13,7 +13,7 @@ import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
 const { place, move } = refs.public.tenancy.placements;
-const { members, rename, create } = refs.public.tenancy.cohorts;
+const { archive, create, members, rename } = refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
@@ -50,6 +50,20 @@ const enrolInSma = (fixture: Fixture) =>
       unitId: fixture.units.sma,
     })
   );
+
+/** Places one Person in one cohort, as the school's Admin. */
+const placeAdmin = (
+  fixture: Fixture,
+  cohortId: GenericId.GenericId<"tenantCohorts">,
+  personId: GenericId.GenericId<"tenantPeople">
+) => fixture.as("admin").mutation(place, { cohortId, personId, slug: nf });
+
+/** Moves one placed Person to another cohort, as the school's Admin. */
+const moveAdmin = (
+  fixture: Fixture,
+  cohortId: GenericId.GenericId<"tenantCohorts">,
+  personId: GenericId.GenericId<"tenantPeople">
+) => fixture.as("admin").mutation(move, { cohortId, personId, slug: nf });
 
 describe("tenancy/placements place", () => {
   it.effect("places an active Person in a cohort, and records it", () =>
@@ -90,19 +104,10 @@ describe("tenancy/placements place", () => {
         const seventhB = yield* cohort(fixture, period.id, "7B");
         const student = fixture.people.student.personId;
         yield* enrolInSma(fixture);
-        yield* fixture.as("admin").mutation(place, {
-          cohortId: seventhA.id,
-          personId: student,
-          slug: nf,
-        });
-        const second = yield* fixture
-          .as("admin")
-          .mutation(place, {
-            cohortId: seventhB.id,
-            personId: student,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
+        yield* placeAdmin(fixture, seventhA.id, student);
+        const second = yield* placeAdmin(fixture, seventhB.id, student).pipe(
+          Effect.flip
+        );
         expect(second).toMatchObject({ _tag: "PersonAlreadyPlaced" });
         const nextPeriod = yield* fixture.as("admin").mutation(periods.create, {
           end: "2027-06-30",
@@ -112,11 +117,7 @@ describe("tenancy/placements place", () => {
           unitId: fixture.units.sma,
         });
         const nextCohort = yield* cohort(fixture, nextPeriod.id, "7A");
-        const again = yield* fixture.as("admin").mutation(place, {
-          cohortId: nextCohort.id,
-          personId: student,
-          slug: nf,
-        });
+        const again = yield* placeAdmin(fixture, nextCohort.id, student);
         expect(again.periodId).toBe(nextPeriod.id);
       })
   );
@@ -164,10 +165,9 @@ describe("tenancy/placements place", () => {
         )
       );
       const target = yield* cohort(fixture, period.id, "7A");
-      const refusal = yield* fixture
-        .as("admin")
-        .mutation(place, { cohortId: target.id, personId: student, slug: nf })
-        .pipe(Effect.flip);
+      const refusal = yield* placeAdmin(fixture, target.id, student).pipe(
+        Effect.flip
+      );
       expect(refusal).toMatchObject({ _tag: "PersonPlacementLimit" });
     })
   );
@@ -188,33 +188,19 @@ describe("tenancy/placements place", () => {
           )
         );
         const refusals = yield* Effect.all([
-          fixture
-            .as("admin")
-            .mutation(place, {
-              cohortId: target.id,
-              personId: fixture.people.teacher.personId,
-              slug: nf,
-            })
-            .pipe(Effect.flip),
-          fixture
-            .as("admin")
-            .mutation(place, {
-              cohortId: target.id,
-              personId: fixture.people.student.personId,
-              slug: nf,
-            })
-            .pipe(Effect.flip),
+          placeAdmin(fixture, target.id, fixture.people.teacher.personId).pipe(
+            Effect.flip
+          ),
+          placeAdmin(fixture, target.id, fixture.people.student.personId).pipe(
+            Effect.flip
+          ),
         ]);
         yield* fixture.run(
           grantRole(fixture.tenants.nf, fixture.invited, "student", {
             kind: "tenant",
           })
         );
-        const placed = yield* fixture.as("admin").mutation(place, {
-          cohortId: target.id,
-          personId: fixture.invited,
-          slug: nf,
-        });
+        const placed = yield* placeAdmin(fixture, target.id, fixture.invited);
         expect(refusals).toMatchObject([
           { _tag: "PersonNotStudent", code: "PERSON_NOT_STUDENT" },
           { _tag: "PersonNotStudent", code: "PERSON_NOT_STUDENT" },
@@ -230,22 +216,16 @@ describe("tenancy/placements place", () => {
         const fixture = yield* tenancyFixture;
         const period = yield* sma(fixture);
         const target = yield* cohort(fixture, period.id, "7A");
-        const suspended = yield* fixture
-          .as("admin")
-          .mutation(place, {
-            cohortId: target.id,
-            personId: fixture.people.suspended.personId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        const foreign = yield* fixture
-          .as("admin")
-          .mutation(place, {
-            cohortId: target.id,
-            personId: fixture.people.otherOwner.personId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
+        const suspended = yield* placeAdmin(
+          fixture,
+          target.id,
+          fixture.people.suspended.personId
+        ).pipe(Effect.flip);
+        const foreign = yield* placeAdmin(
+          fixture,
+          target.id,
+          fixture.people.otherOwner.personId
+        ).pipe(Effect.flip);
         const byPrincipal = yield* fixture
           .as("principal")
           .mutation(place, {
@@ -274,21 +254,9 @@ describe("tenancy/placements move", () => {
         const seventhB = yield* cohort(fixture, period.id, "7B");
         const student = fixture.people.student.personId;
         yield* enrolInSma(fixture);
-        yield* fixture.as("admin").mutation(place, {
-          cohortId: seventhA.id,
-          personId: student,
-          slug: nf,
-        });
-        const moved = yield* fixture.as("admin").mutation(move, {
-          cohortId: seventhB.id,
-          personId: student,
-          slug: nf,
-        });
-        const again = yield* fixture.as("admin").mutation(move, {
-          cohortId: seventhB.id,
-          personId: student,
-          slug: nf,
-        });
+        yield* placeAdmin(fixture, seventhA.id, student);
+        const moved = yield* moveAdmin(fixture, seventhB.id, student);
+        const again = yield* moveAdmin(fixture, seventhB.id, student);
         expect([moved.cohortId, again.cohortId]).toEqual([
           seventhB.id,
           seventhB.id,
@@ -315,14 +283,11 @@ describe("tenancy/placements move", () => {
       const fixture = yield* tenancyFixture;
       const period = yield* sma(fixture);
       const seventhA = yield* cohort(fixture, period.id, "7A");
-      const notPlaced = yield* fixture
-        .as("admin")
-        .mutation(move, {
-          cohortId: seventhA.id,
-          personId: fixture.people.teacher.personId,
-          slug: nf,
-        })
-        .pipe(Effect.flip);
+      const notPlaced = yield* moveAdmin(
+        fixture,
+        seventhA.id,
+        fixture.people.teacher.personId
+      ).pipe(Effect.flip);
       expect(notPlaced).toMatchObject({ _tag: "PersonNotPlaced" });
     })
   );
@@ -353,18 +318,48 @@ describe("tenancy/placements move", () => {
             })
           )
         );
-        const refused = yield* fixture
-          .as("admin")
-          .mutation(move, {
-            cohortId: seventhB.id,
-            personId: teacher,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
+        const refused = yield* moveAdmin(fixture, seventhB.id, teacher).pipe(
+          Effect.flip
+        );
         expect(refused).toMatchObject({
           _tag: "PersonNotStudent",
           code: "PERSON_NOT_STUDENT",
         });
+      })
+  );
+
+  it.effect(
+    "refuses to move a Person out of an archived cohort, and keeps the placement there",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* sma(fixture);
+        const seventhA = yield* cohort(fixture, period.id, "7A");
+        const seventhB = yield* cohort(fixture, period.id, "7B");
+        const student = fixture.people.student.personId;
+        yield* enrolInSma(fixture);
+        yield* placeAdmin(fixture, seventhA.id, student);
+        yield* fixture.as("admin").mutation(archive, {
+          cohortId: seventhA.id,
+          slug: nf,
+        });
+        const refused = yield* moveAdmin(fixture, seventhB.id, student).pipe(
+          Effect.flip
+        );
+        const held = yield* fixture.as("admin").query(members, {
+          ...firstPage,
+          cohortId: seventhA.id,
+          slug: nf,
+        });
+        expect(refused).toMatchObject(denied("condition"));
+        expect(Arr.map(held.page, (row) => row.id)).toEqual([student]);
+        expect(yield* fixture.run(journal)).toMatchObject([
+          { change: { type: "period.created" } },
+          { change: { type: "cohort.created" } },
+          { change: { type: "cohort.created" } },
+          { change: { type: "person.placed" } },
+          { change: { type: "cohort.archived" } },
+        ]);
       })
   );
 });
@@ -379,11 +374,11 @@ describe("tenancy/placements cohortMember relation", () => {
         const seventhA = yield* cohort(fixture, period.id, "7A");
         const seventhB = yield* cohort(fixture, period.id, "7B");
         yield* enrolInSma(fixture);
-        yield* fixture.as("admin").mutation(place, {
-          cohortId: seventhA.id,
-          personId: fixture.people.student.personId,
-          slug: nf,
-        });
+        yield* placeAdmin(
+          fixture,
+          seventhA.id,
+          fixture.people.student.personId
+        );
         const placedReads = yield* fixture
           .as("student")
           .query(members, { ...firstPage, cohortId: seventhA.id, slug: nf });
@@ -486,14 +481,11 @@ describe("tenancy/placements owner, unit admin, and tenants", () => {
       const fixture = yield* tenancyFixture;
       const period = yield* sma(fixture);
       const seventhA = yield* cohort(fixture, period.id, "7A");
-      const refusal = yield* fixture
-        .as("admin")
-        .mutation(place, {
-          cohortId: seventhA.id,
-          personId: fixture.people.otherOwner.personId,
-          slug: nf,
-        })
-        .pipe(Effect.flip);
+      const refusal = yield* placeAdmin(
+        fixture,
+        seventhA.id,
+        fixture.people.otherOwner.personId
+      ).pipe(Effect.flip);
       expect(refusal).toMatchObject(denied("resource"));
     })
   );
