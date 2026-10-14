@@ -77,9 +77,12 @@ import schoolMembers from "./tables/schoolMembers";
 import schools from "./tables/schools";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantCohortMembers from "./tables/tenantCohortMembers";
+import tenantCohorts from "./tables/tenantCohorts";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
 import tenantPeople from "./tables/tenantPeople";
+import tenantPeriods from "./tables/tenantPeriods";
 import tenantUnits from "./tables/tenantUnits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
@@ -173,9 +176,12 @@ export default $defineSchema({
   schools: $Table.tableDefinition(schools),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
+  tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),
+  tenantCohorts: $Table.tableDefinition(tenantCohorts),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),
   tenantPeople: $Table.tableDefinition(tenantPeople),
+  tenantPeriods: $Table.tableDefinition(tenantPeriods),
   tenantUnits: $Table.tableDefinition(tenantUnits),
   tenants: $Table.tableDefinition(tenants),
   tryoutAttemptPlacements: $Table.tableDefinition(tryoutAttemptPlacements),
