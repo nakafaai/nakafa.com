@@ -11,7 +11,7 @@ import {
   createAnonymousAnalyticsConsent,
   encodeAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -43,10 +43,10 @@ async function stopAppCode(page: Page) {
 
 /** Collects the hydration errors that the page reports while it runs. */
 function observeHydrationErrors(page: Page) {
-  const errors: string[] = [];
+  const errors = MutableList.make<string>();
   page.on("console", (message) => {
     if (message.type() === "error" && HYDRATION_ERROR.test(message.text())) {
-      errors.push(message.text());
+      MutableList.append(errors, message.text());
     }
   });
   return errors;
@@ -85,7 +85,7 @@ test("the usage data prompt is in the server HTML, paints before app code, and s
           await page.reload({ waitUntil: "load" });
 
           await expect(page.getByText(PROMPT_DESCRIPTION)).toBeVisible();
-          expect(hydrationErrors).toEqual([]);
+          expect(MutableList.toArray(hydrationErrors)).toEqual([]);
         })
     )
   );
@@ -125,7 +125,7 @@ test("a visitor who already decided gets no prompt before the page hydrates", as
           yield* Effect.promise(() =>
             expect(page.getByText(PROMPT_DESCRIPTION)).toBeHidden()
           );
-          expect(hydrationErrors).toEqual([]);
+          expect(MutableList.toArray(hydrationErrors)).toEqual([]);
         })
     )
   );
