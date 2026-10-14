@@ -13,32 +13,14 @@ import {
   LOGIN_NAME_MIN_LENGTH,
   LOGIN_NAME_PATTERN,
 } from "@repo/backend/confect/identity/schema";
-import { Effect, HashSet, Option, pipe, Result, String as Str } from "effect";
-
-/**
- * The names that no school may give, so a login never reads like Nakafa, its
- * staff, or one of its tools.
- */
-const RESERVED_LOGIN_NAMES = HashSet.fromIterable([
-  "admin",
-  "administrator",
-  "api",
-  "dev",
-  "help",
-  "login",
-  "nakafa",
-  "nina",
-  "operator",
-  "root",
-  "support",
-  "system",
-  "test",
-]);
+import { isMisleadingName } from "@repo/backend/confect/users/reserved";
+import { Effect, Option, pipe, Result, String as Str } from "effect";
 
 /**
  * Reads a login name as a person typed it: spaces around it drop and capitals
  * are lowercased. The reasons come in the order a person fixes them: the
- * length, then a character, then a reserved name.
+ * length, then a character, then a name that could pass for Nakafa, which the
+ * one list of `users/reserved` owns.
  */
 export function readLoginName(
   input: string
@@ -53,7 +35,7 @@ export function readLoginName(
   if (!LOGIN_NAME_PATTERN.test(name)) {
     return Result.fail("characters");
   }
-  if (HashSet.has(RESERVED_LOGIN_NAMES, name)) {
+  if (isMisleadingName(name)) {
     return Result.fail("reserved");
   }
   return Result.succeed(name);

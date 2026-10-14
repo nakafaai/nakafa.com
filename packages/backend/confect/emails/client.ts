@@ -24,16 +24,24 @@ export class LoginAddressRefused extends Schema.TaggedError<LoginAddressRefused>
   }
 ) {}
 
+/** Whether any recipient field of a message, `to`, `cc`, or `bcc`, names a login address. */
+const namesLoginAddress = (message: SendEmailOptions) =>
+  Arr.some(
+    [message.to, message.cc, message.bcc],
+    (field) =>
+      field !== undefined && Arr.some(Arr.ensure(field), isLoginAddress)
+  );
+
 /**
  * Hands one message to the mail provider, and refuses a message that names a
- * login address among its recipients. Every Nakafa sender goes through here, so
- * no path can mail a placeholder.
+ * login address in any recipient field. Every Nakafa sender goes through here,
+ * so no path can mail a placeholder.
  */
 export const sendMail = Effect.fn("emails.client.send")(function* (
   ctx: MutationCtx,
   message: SendEmailOptions
 ) {
-  if (Arr.some(Arr.ensure(message.to), isLoginAddress)) {
+  if (namesLoginAddress(message)) {
     return yield* new LoginAddressRefused({
       code: "LOGIN_ADDRESS_REFUSED",
       message: "A school login address never receives mail.",

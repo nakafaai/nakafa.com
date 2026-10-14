@@ -21,9 +21,20 @@ describe("identity/logins readLoginName", () => {
     expect(readLoginName("raka!!")).toEqual(Result.fail("characters"));
   });
 
-  it("refuses a reserved name in any case", () => {
-    expect(readLoginName("admin")).toEqual(Result.fail("reserved"));
-    expect(readLoginName("Admin")).toEqual(Result.fail("reserved"));
-    expect(readLoginName("nina")).toEqual(Result.fail("reserved"));
+  it.each([
+    "admin",
+    "Admin",
+    "nina",
+    "settings",
+    "sekolah",
+    "operator",
+    "root",
+    "login",
+  ])("refuses the name %s that could pass for Nakafa, in any case", (name) => {
+    expect(readLoginName(name)).toEqual(Result.fail("reserved"));
+  });
+
+  it("accepts a route word, because a school login name is never a URL", () => {
+    expect(readLoginName("materi")).toEqual(Result.succeed("materi"));
   });
 });

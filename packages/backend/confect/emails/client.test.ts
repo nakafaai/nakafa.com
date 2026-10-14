@@ -72,6 +72,52 @@ describe("emails/client sendMail", () => {
       })
   );
 
+  it.effect("refuses a message that copies a login address", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const send = vi.spyOn(resend, "sendEmail");
+      const refused = yield* fixture.run(
+        Effect.gen(function* () {
+          const ctx = yield* MutationCtx;
+          return yield* sendMail(ctx, {
+            ...message,
+            cc: loginAddress("raka"),
+            from: EMAIL_FROM,
+            to: "guru@harapan.example.test",
+          }).pipe(
+            Effect.flip,
+            Effect.map((error) => error._tag)
+          );
+        })
+      );
+      expect(refused).toBe("LoginAddressRefused");
+      expect(send).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refuses a message that blind-copies a login address", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const send = vi.spyOn(resend, "sendEmail");
+      const refused = yield* fixture.run(
+        Effect.gen(function* () {
+          const ctx = yield* MutationCtx;
+          return yield* sendMail(ctx, {
+            ...message,
+            bcc: ["guru@harapan.example.test", loginAddress("raka")],
+            from: EMAIL_FROM,
+            to: "guru@harapan.example.test",
+          }).pipe(
+            Effect.flip,
+            Effect.map((error) => error._tag)
+          );
+        })
+      );
+      expect(refused).toBe("LoginAddressRefused");
+      expect(send).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("hands a message to an ordinary address to the provider", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

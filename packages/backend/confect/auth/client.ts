@@ -104,7 +104,8 @@ const createUser = Effect.fn("auth.lifecycle.createUser")(function* (
 /**
  * Project changed profile fields while preventing deleted-account
  * resurrection, and, when Better Auth has just verified the address, ask for
- * the claim of any invite that waits for it.
+ * the claim of any invite that waits for it. A placeholder address gets no
+ * payment customer, the same as on creation.
  */
 const updateUser = Effect.fn("auth.lifecycle.updateUser")(function* (
   newDoc: AuthUser,
@@ -133,14 +134,16 @@ const updateUser = Effect.fn("auth.lifecycle.updateUser")(function* (
         image: newDoc.image ?? undefined,
       })
       .pipe(Effect.orDie);
-    const scheduler = yield* Scheduler;
-    yield* scheduler.runAfter(
-      Duration.zero,
-      refs.internal.customers.actions.internal.syncCustomer,
-      {
-        userId: appUser._id,
-      }
-    );
+    if (!isLoginAddress(newDoc.email)) {
+      const scheduler = yield* Scheduler;
+      yield* scheduler.runAfter(
+        Duration.zero,
+        refs.internal.customers.actions.internal.syncCustomer,
+        {
+          userId: appUser._id,
+        }
+      );
+    }
   }
   if (justVerified) {
     yield* claimAfterVerification(appUser._id, newDoc.email);

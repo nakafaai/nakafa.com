@@ -48,4 +48,45 @@ describe("auth/lifecycle", () => {
       Arr.filter(stored.jobs, (job) => job.name.includes("syncCustomer"))
     ).toEqual([]);
   });
+
+  it("projects a school account's new name but gives it no payment customer", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation(async (ctx) => {
+      const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
+      await adapter.create({
+        data: {
+          createdAt: NOW,
+          email: loginAddress("raka_p"),
+          emailVerified: false,
+          name: "Raka Pratama",
+          updatedAt: NOW,
+          username: "raka_p",
+        },
+        model: "user",
+      });
+    });
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    if (!user) {
+      throw new Error(
+        "Expected the placeholder account to create an app user."
+      );
+    }
+    await test.mutation(async (ctx) => {
+      const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
+      await adapter.update({
+        model: "user",
+        update: { name: "Raka P." },
+        where: [{ field: "_id", operator: "eq", value: user.authId }],
+      });
+    });
+
+    const stored = await test.query(async (ctx) => ({
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      user: await ctx.db.get("users", user._id),
+    }));
+    expect(stored.user).toMatchObject({ name: "Raka P." });
+    expect(
+      Arr.filter(stored.jobs, (job) => job.name.includes("syncCustomer"))
+    ).toEqual([]);
+  });
 });
