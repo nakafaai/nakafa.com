@@ -6,7 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { getArticleCategoryIcon } from "@/components/articles/category";
+import { getArticleCategoryIcons } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
 import { FooterContent } from "@/components/shared/content/footer";
 import { HeaderContent } from "@/components/shared/content/header";
@@ -132,14 +132,18 @@ async function ArticleCatalog({
       />
       <LayoutContent>
         <SubjectList>
-          {Arr.map(catalog.categories, ({ category, route, title }) => (
-            <SubjectItem
-              href={`/articles/${route}`}
-              icon={getArticleCategoryIcon(category)}
-              key={route}
-              label={title}
-            />
-          ))}
+          {Arr.zipWith(
+            catalog.categories,
+            getArticleCategoryIcons(catalog.categories),
+            ({ route, title }, icon) => (
+              <SubjectItem
+                href={`/articles/${route}`}
+                icon={icon}
+                key={route}
+                label={title}
+              />
+            )
+          )}
         </SubjectList>
       </LayoutContent>
       {nextHref ? <ArticleNext href={nextHref} /> : null}
