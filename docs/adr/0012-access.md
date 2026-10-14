@@ -4,8 +4,8 @@
 
 Accepted. Amended on 13 October 2026 for the homeroom and guardian relations, the
 actions of the school roles, and the 24-hour limit on operator visits. Amended on
-14 October 2026 for the cohort member relation, which is live, and for the
-period, cohort, people, and invite actions.
+14 October 2026 for the cohort member and homeroom relations, which are live, and
+for the period, cohort, people, invite, assignment, and promotion actions.
 
 ## Context
 
@@ -109,7 +109,8 @@ memoized relation checks:
    sitting. An attempt with undecided late records is in review and not ended,
    so this rule does not refuse the decision. A removed or suspended Person, an
    archived period, and an archived cohort are locked subjects, and an archived
-   school locks its periods and cohorts too, so a role's write to them is
+   school locks its periods and cohorts too. A promotion is locked once it is
+   opened, and when its school is archived. A role's write to a locked subject is
    `condition` and never `role`.
 2. A roles rule allows an active grant whose scope covers the subject and whose
    role is Owner or listed.
@@ -157,6 +158,12 @@ The school roles also hold these actions:
   student placed in a cohort reads that cohort and its members through the
   `cohortMember` relation and nothing else. Only a student with an active
   student grant over the cohort's unit or the whole school may be placed.
+- The Admin assigns and ends the homeroom teacher of a cohort (`cohort.manage`).
+- The Admin prepares a promotion, sets its plan, submits it, and cancels it while
+  it is a draft or submitted (`promotion.prepare`), and applies it and undoes its
+  steps (`promotion.apply`). The Principal approves a submitted promotion or
+  returns it to draft (`promotion.approve`). The Admin, Principal, Deputy, Staff,
+  and Auditor read a promotion and its plan (`promotion.view`).
 - The Staff (Staf TU) prepares report cards and school documents and views
   people's data. The Counselor (Guru BK) views people's data and insight. The
   Auditor reads the journal, the settings, and people's data, and changes
@@ -186,7 +193,7 @@ are:
 | Self | A person and their own data | Their own data and results | Live |
 | Member | A person and an organisation | The home page and the school space | Live |
 | Holder | A person and a role they hold | Their own role | Live |
-| Homeroom teacher (wali kelas) | A teacher and one class group in one period, from the teacher's assignment to that class group | The report cards, attendance, and insight of that class group | Planned |
+| Homeroom teacher (wali kelas) | A teacher and one class group in one period, from the teacher's assignment to that class group | The cohort and its members (`cohort.view`); its report cards, attendance, and insight are not built yet | Live |
 | Subject teacher | A teacher and one class | The grades, tasks, and posts of that class | Planned |
 | Class member | A student and one class | The posts, tasks, and grades of that class | Planned |
 | Cohort member (`cohortMember`) | A student and the cohort they are placed in, in one period (ADR 0011) | The cohort and its members (`cohort.view`); its announcements are not built yet | Live |
