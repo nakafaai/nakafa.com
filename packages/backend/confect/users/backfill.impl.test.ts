@@ -39,6 +39,9 @@ const assign = (
   dry: boolean
 ) => t.mutation(assignMascots, { cursor, dry });
 
+/** What one call of the backfill reports. */
+type Page = Awaited<ReturnType<typeof assign>>;
+
 /** The stored animal of every account, `null` for an account without one, in the order the accounts were made. */
 const mascotsOf = (t: TestConvex<typeof schema>) =>
   t.query(async (ctx) =>
@@ -123,26 +126,31 @@ describe("users/backfill", () => {
 
   it("walks the accounts page by page until no account is left to read", async () => {
     const t = convexTest(schema, convexModules);
+    const learners = Arr.range(1, 105);
     await t.mutation(async (ctx) => {
-      for (const index of Arr.range(1, 105)) {
+      for (const index of learners) {
         await insertAccount(ctx, `learner${index}`);
       }
     });
 
-    const first = await assign(t, null, false);
-    expect(first).toMatchObject({ assigned: 50, waiting: 50 });
-    expect(first.next).not.toBeNull();
-    const second = await assign(t, first.next, false);
-    expect(second).toMatchObject({ assigned: 50, waiting: 50 });
-    expect(second.next).not.toBeNull();
-    expect(await assign(t, second.next, false)).toEqual({
-      assigned: 5,
-      next: null,
-      waiting: 5,
-    });
+    // Each call continues from the cursor of the last one. The walk gives up
+    // after one call per account, so a cursor that never ends fails below.
+    let pages: readonly Page[] = [];
+    let cursor: string | null = null;
+    do {
+      const page = await assign(t, cursor, false);
+      pages = Arr.append(pages, page);
+      cursor = page.next;
+    } while (cursor !== null && pages.length <= learners.length);
+    expect(cursor).toBeNull();
 
+    // More accounts than one page holds, so the walk takes several calls.
+    expect(pages.length).toBeGreaterThan(1);
+    expect(Arr.reduce(pages, 0, (total, page) => total + page.assigned)).toBe(
+      learners.length
+    );
     const mascots = await mascotsOf(t);
-    expect(mascots).toHaveLength(105);
+    expect(mascots).toHaveLength(learners.length);
     expect(mascots).not.toContain(null);
   });
 });
