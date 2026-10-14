@@ -1,15 +1,18 @@
 "use client";
 
-import { useIntersection } from "@mantine/hooks";
+import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Array as Arr, Option, Schema } from "effect";
-import { useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 
 /** The time between two things that Nina writes down. */
 const WRITE_EVERY_MS = 2400;
 
+/** The query that asks for less motion. */
+const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+
+/** The shape of one fact that the desk writes down. */
 const FactSchema = Schema.Struct({
   said: Schema.String,
   when: Schema.String,
@@ -29,7 +32,7 @@ interface MemoryDeskProps {
  */
 export function MemoryDesk({ facts }: MemoryDeskProps) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
-  const shouldReduceMotion = useReducedMotion() ?? false;
+  const shouldReduceMotion = useMediaQuery(REDUCED_MOTION);
   const [written, setWritten] = useState(0);
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
   const shown = shouldReduceMotion ? facts.length : written;
@@ -50,7 +53,7 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
       <div className="grid justify-items-center gap-4">
         <p
           aria-live="polite"
-          className="min-h-12 max-w-md text-pretty rounded-xl bg-muted px-4 py-3 text-base"
+          className="min-h-24 max-w-md text-pretty rounded-xl bg-muted px-4 py-3 text-base"
         >
           {latest?.said}
         </p>

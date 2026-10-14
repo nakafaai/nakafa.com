@@ -1,7 +1,6 @@
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
-import { readBounds, swipeDown } from "@/e2e/support/input";
 
 const MarketingSurfaceSchema = Schema.Literals([
   "contributor-drawer",
@@ -91,11 +90,3 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
     return measurements;
   }
 );
-
-/** Dismisses the active contributor drawer through a real touch gesture. */
-export const swipeContributorDrawer = Effect.fn(
-  "NakafaE2E.swipeContributorDrawer"
-)(function* (drawer: Locator, page: Page) {
-  const bounds = yield* readBounds(drawer, "contributor-drawer");
-  yield* swipeDown(page, bounds, { inset: 20, stopAt: "surface" });
-});

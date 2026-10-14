@@ -1,8 +1,7 @@
 "use client";
 
-import { useIntersection } from "@mantine/hooks";
+import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { Array as Arr, Option } from "effect";
-import { useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 
 /** The time between two letters of the topic that is being typed. */
@@ -10,6 +9,9 @@ const TYPE_EVERY_MS = 90;
 
 /** How long a finished topic stays on the page before the next one is typed. */
 const HOLD_MS = 2400;
+
+/** The query that asks for less motion. */
+const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
 interface ClosingQuestionProps {
   /** The question as the locale words it, with `{topic}` where the topic goes. */
@@ -26,7 +28,7 @@ interface ClosingQuestionProps {
  */
 export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
-  const shouldReduceMotion = useReducedMotion() ?? false;
+  const shouldReduceMotion = useMediaQuery(REDUCED_MOTION);
   const [topic, setTopic] = useState(0);
   const [typed, setTyped] = useState(0);
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
@@ -34,7 +36,9 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   const shown = shouldReduceMotion
     ? Option.getOrElse(Arr.get(topics, 0), () => "")
     : current.slice(0, typed);
-  const rest = shouldReduceMotion ? "" : current.slice(typed);
+  const longest = Arr.reduce(topics, "", (best, text) =>
+    text.length > best.length ? text : best
+  );
   const [before = "", after = ""] = template.split("{topic}");
 
   useEffect(() => {
@@ -60,9 +64,11 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   return (
     <h2 className="text-balance text-3xl tracking-tight sm:text-4xl" ref={ref}>
       {before}
-      {shown}
-      <span aria-hidden="true" className="invisible">
-        {rest}
+      <span className="inline-grid">
+        <span className="col-start-1 row-start-1">{shown}</span>
+        <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+          {longest}
+        </span>
       </span>
       {after}
     </h2>

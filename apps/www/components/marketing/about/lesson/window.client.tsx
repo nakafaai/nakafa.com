@@ -219,7 +219,7 @@ export function LessonWindow({ label, lessons }: LessonWindowProps) {
           const Figure = FIGURES[id];
           return (
             <TabsPanel className="grid gap-6" key={id} value={id}>
-              <p className="min-h-12 text-pretty text-base">
+              <p className="min-h-36 text-pretty text-base lg:min-h-12">
                 {lessons[id].text}
               </p>
               <Figure />
