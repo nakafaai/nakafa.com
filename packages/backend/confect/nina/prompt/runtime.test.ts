@@ -9,7 +9,6 @@ import { Array as Arr } from "effect";
 const url = "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann";
 const learning = {
   assetId: "asset:id:material:mathematics:integral:riemann-sum",
-  contentId: "asset:id:material:mathematics:integral:riemann-sum",
   locale: "id",
   materialKey: "mathematics",
   section: "subject-lesson",
@@ -20,33 +19,15 @@ const learning = {
   verified: true,
 } as const;
 const tools = {
-  allowDeepResearch: true,
-  allowMath: true,
-  allowNakafa: true,
   allowPageFetch: true,
   evidenceScope: "verified-page",
 } as const;
-const nina = {
-  learning,
-  snapshot: {
-    capturedAt: "2026-05-09T00:00:00.000Z",
-    learning,
-    source: "current-page",
-    tools,
-  },
-  tools,
-  transition: {
-    reason: "page-context",
-    toContextKey: "canonical:materi/matematika/integral/jumlahan-riemann",
-  },
-} satisfies NinaContextPack;
+const nina = { learning, tools } satisfies NinaContextPack;
 const page = {
   locale: "id",
   needsFetch: true,
   nina,
   slug: learning.slug,
-  url,
-  verified: true,
 } satisfies NinaPage;
 const runtime = { currentDate: "2026-05-09T00:00:00.000Z" };
 
@@ -127,7 +108,7 @@ describe("formatTurnContext", () => {
       },
     });
 
-    // This block weighs 287 tokens by the shared tokenizer, and it travels with every learner message.
+    // This block weighs 265 tokens by the shared tokenizer, and it travels with every learner message.
     expect(countTextTokens(context)).toBeLessThan(300);
   });
 
@@ -145,11 +126,7 @@ describe("formatTurnContext", () => {
   it("says so when the page has no signed content", () => {
     const bare = { ...learning, verified: false };
     const context = formatTurnContext({
-      page: {
-        ...page,
-        nina: { ...nina, learning: bare },
-        verified: false,
-      },
+      page: { ...page, nina: { ...nina, learning: bare } },
       runtime,
       user: {},
     });

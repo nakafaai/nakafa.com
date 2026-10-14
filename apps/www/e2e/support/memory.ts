@@ -15,11 +15,20 @@ const MEMORY_TITLE = /Memory/;
  * resolve outside the bundler.
  */
 export const LIST_QUERY = "nina/memory:list";
+/**
+ * The Convex name of `nina.memory.restore`, the mutation that puts a deleted
+ * memory back when the learner presses Undo.
+ */
+export const RESTORE_MUTATION = "nina/memory:restore";
 
 /** What the Memory page says when the learner has no memory. */
 export const EMPTY = "No memories yet";
 /** What the Memory page says when every memory is loaded and none matches the search. */
 export const NO_RESULT = "No memory found";
+/** What the Memory page says when a change names a memory that is gone. */
+export const MISSING = "This memory no longer exists";
+/** What the Memory page says when the Undo of a deleted memory could not put it back. */
+export const UNDO_FAILED = "Undo failed";
 
 /** One memory on the page, found by its title or its words. */
 export const memoryRow = (page: Page, text: string) =>

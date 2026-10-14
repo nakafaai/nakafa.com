@@ -43,6 +43,10 @@ React uses Confect hooks for application functions and the official Agent
 optimistic update contract. There is no Next.js AI transport route or separate AI
 backend package.
 
+A stored turn holds only what something reads. Its page holds the locale, the
+slug, whether the page needs a signed read, and the context pack: the learning
+page, its placement, the question focus, and the evidence the model is told of.
+
 A public chat is shared by link, and the link holds a share token, not only the
 chat id. Turning sharing on draws 32 random bytes and stores their SHA-256 hash,
 which readers check without any key, and the token sealed for the owner, so the
@@ -521,13 +525,13 @@ deleted.
 
 A capability is one definition in its own folder and one entry in the registry.
 The tools Nina is offered, the policy of each call and the tool section of her
-prompt follow from them, and all three follow `offered`: a turn whose page does
-not allow a capability, or whose learner paused it, is offered neither its tool
-nor its entry and rules in the prompt, so that turn's prompt prefix differs from
-the others, as its tool list does. Every page allows every capability today, so
-only a pause changes it. A few other places still name a capability or its
-Agent, and they are the steps below, in order, with what the compiler enforces
-at each and what it leaves to the author.
+prompt follow from them, and all three follow `offered`: a turn for which a
+capability's `offered` says no, such as the memory capability of a learner who
+paused it, is offered neither its tool nor its entry and rules in the prompt, so
+that turn's prompt prefix differs from the others, as its tool list does. No
+page refuses a capability, so only a pause changes it today. A few other places
+still name a capability or its Agent, and they are the steps below, in order,
+with what the compiler enforces at each and what it leaves to the author.
 
 1. Write the run, an Effect program in the capability's own folder. It takes its
    input and the facts of the turn, publishes its cards through `publish`, and
@@ -585,8 +589,8 @@ Left to the author, because the compiler cannot judge them: the routing prose
 that combines capabilities in `policy/tool.ts`, `step.ts` when the capability
 should open a turn that names a source (the first step forces only a capability
 the turn offers, because the SDK lists no other tool in it), and the tests. No
-stored flag is added for a capability: `offered` reads the turn's context, and
-the allow flags of a turn page stay as they are.
+stored flag is added for a capability: `offered` reads the turn's context, which
+holds only whether the learner's memory is on.
 
 ## Verification
 

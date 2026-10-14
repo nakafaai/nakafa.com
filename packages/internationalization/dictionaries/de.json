@@ -515,6 +515,7 @@
     "delete": "Erinnerung löschen",
     "deleted": "Erinnerung gelöscht",
     "undo": "Rückgängig",
+    "undo-failed": "Rückgängig machen fehlgeschlagen",
     "written-by-you": "Von dir {time} geschrieben",
     "saved-by-nina": "Von Nina {time} gespeichert",
     "ends": "Endet {date}",

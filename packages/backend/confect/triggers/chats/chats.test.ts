@@ -12,13 +12,13 @@ import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/
 import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import { resolveEffectiveCreditState } from "@repo/backend/confect/credits/state";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { contextFor } from "@repo/backend/test/nina/admission";
 import { sealedSummary } from "@repo/backend/test/seal";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -57,31 +57,7 @@ const cleanup = Ref.getFunctionReference(
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
-  vi.mocked(resolveNinaContext).mockReturnValue(
-    openNinaLearningSession({
-      capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-      source: "current-page",
-      learning: {
-        locale: "en",
-        slug: "home",
-        url: "https://nakafa.com/en/home",
-        verified: false,
-      },
-    }).pipe(
-      Effect.orDie,
-      Effect.map((session) => ({
-        page: {
-          locale: "en" as const,
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-          needsFetch: false,
-          nina: session.context,
-        },
-        user: {},
-      }))
-    )
-  );
+  vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
 });
 afterEach(() => {
   vi.mocked(listMessages).mockReset();
