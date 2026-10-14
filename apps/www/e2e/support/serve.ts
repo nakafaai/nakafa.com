@@ -24,14 +24,11 @@ import {
   type ServedMessage,
   type StoredMessage,
 } from "@/e2e/support/query";
-import { BUBBLE_CONTENT } from "@/e2e/support/selector";
+import { BUBBLE_CONTENT, TRANSCRIPT_ROW } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The stream that carries the answer being written. */
 const STREAM_ID = "prose-stream";
-
-/** The rows of a transcript: one for each message, and the alert of the chat's failed turn after them. */
-const ROW = '[data-slot="message-scroller-item"]';
 
 /** A frame in which the server moves the page to a new view of the database. */
 type Transition = Option.Option.Value<ReturnType<typeof decodeTransition>>;
@@ -258,7 +255,7 @@ export const openServedChat = Effect.fn("NakafaE2E.openServedChat")(function* (
 
   yield* Effect.promise(async () => {
     await page.goto(`/${locale}/chat/${chat.chatId}`);
-    await expect(page.locator(ROW).first()).toBeVisible({
+    await expect(page.locator(TRANSCRIPT_ROW).first()).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
   });
@@ -267,7 +264,7 @@ export const openServedChat = Effect.fn("NakafaE2E.openServedChat")(function* (
 
 /** The row of the transcript that shows `message`, drawn or not. */
 export const rowOf = (page: Page, message: StoredMessage) =>
-  page.locator(`${ROW}[data-message-id="${message.key}"]`);
+  page.locator(`${TRANSCRIPT_ROW}[data-message-id="${message.key}"]`);
 
 /**
  * The row of the transcript that shows `message`, scrolled to and drawn.

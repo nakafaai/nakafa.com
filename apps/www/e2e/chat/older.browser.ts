@@ -3,6 +3,7 @@ import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation"
 import { Array as Arr, Duration, Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { answerTurn, chatOf } from "@/e2e/support/prose";
+import { TRANSCRIPT_ROW } from "@/e2e/support/selector";
 import { openServedChat } from "@/e2e/support/serve";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -16,13 +17,12 @@ const CHAT = Arr.makeBy(ANSWERS, (index) =>
   answerTurn({ markdown: `Jawaban ${index + 1}`, order: index + 1 })
 );
 
-/** The rows of the transcript, and the footer of each row of Nina's answers, whose keys end with `-1`. */
-const ROW = '[data-slot="message-scroller-item"]';
-const ANSWER_FOOTER = `${ROW}[data-message-id$="-1"] [data-slot="message-footer"]`;
+/** The footer of each row of Nina's answers, whose keys end with `-1`. */
+const ANSWER_FOOTER = `${TRANSCRIPT_ROW}[data-message-id$="-1"] [data-slot="message-footer"]`;
 
 /** Scrolls the oldest loaded row into view, which asks Agent for the older page when there is one. */
 const reachOldest = (page: Page) =>
-  page.locator(ROW).first().scrollIntoViewIfNeeded();
+  page.locator(TRANSCRIPT_ROW).first().scrollIntoViewIfNeeded();
 
 test.describe("An older page of a chat", () => {
   test.describe.configure({ timeout: 240_000 });
@@ -51,7 +51,7 @@ test.describe("An older page of a chat", () => {
             .poll(
               async () => {
                 await reachOldest(page);
-                return page.locator(ROW).count();
+                return page.locator(TRANSCRIPT_ROW).count();
               },
               { timeout: readinessTimeoutMilliseconds }
             )
@@ -61,7 +61,7 @@ test.describe("An older page of a chat", () => {
           yield* Effect.sleep(Duration.millis(400));
           yield* Effect.promise(async () => {
             await reachOldest(page);
-            expect(await page.locator(ROW).count()).toBe(
+            expect(await page.locator(TRANSCRIPT_ROW).count()).toBe(
               2 * NINA_MESSAGES_PAGE_SIZE
             );
           });
@@ -75,7 +75,7 @@ test.describe("An older page of a chat", () => {
             .poll(
               async () => {
                 await reachOldest(page);
-                return page.locator(ROW).count();
+                return page.locator(TRANSCRIPT_ROW).count();
               },
               { timeout: readinessTimeoutMilliseconds }
             )
