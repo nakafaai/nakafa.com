@@ -15,7 +15,7 @@ import {
 import { openRoute } from "@/e2e/support/route";
 import { DRAWER_TITLE, MARKETING_PAGE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { targetViewports } from "@/e2e/support/viewport";
+import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
@@ -337,7 +337,12 @@ for (const viewport of targetViewports) {
 }
 
 test.describe("detached contributor payloads", () => {
-  test.use({ viewport: { height: 900, width: 1440 } });
+  test.use({
+    viewport: {
+      height: desktopViewport.height,
+      width: desktopViewport.width,
+    },
+  });
 
   test("renders every contributor through one drawer root", async ({
     page,
@@ -357,7 +362,12 @@ test.describe("detached contributor payloads", () => {
 });
 
 test.describe("dedicated pricing page", () => {
-  test.use({ viewport: { height: 900, width: 1440 } });
+  test.use({
+    viewport: {
+      height: desktopViewport.height,
+      width: desktopViewport.width,
+    },
+  });
 
   test("renders plans and pricing questions through the marketing shell", async ({
     page,
