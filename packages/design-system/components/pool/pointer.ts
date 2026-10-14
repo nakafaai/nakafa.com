@@ -12,7 +12,7 @@ const POINTER_REACH = 44;
 const POINTER_PUSH = 110;
 /** The pointer's own speed that a ball takes over, in pixels per second, before it is clamped. */
 const POINTER_SPEED_LIMIT = 28;
-/** The share of the pointer's own speed that a ball takes over. */
+/** The share of the pointer's own speed that a ball takes over in each half frame. */
 const POINTER_SHARE = 0.5;
 /** The share of the pointer's speed that stays after each frame. */
 const POINTER_FADE = 0.8;
@@ -58,9 +58,17 @@ export function locate(pointer: Pointer, point: Point): Pointer {
 
 /**
  * The change of velocity that the pointer gives a free ball in one step of `dt`
- * seconds. Only a pointer over the box, and near the ball, gives any.
+ * seconds, in a frame that lasted `frame` seconds. Only a pointer over the box,
+ * and near the ball, gives any. The spring acts over the step. The pointer's own
+ * speed is passed on per half frame, so a frame passes on the same share at any
+ * refresh rate.
  */
-export function pointerPush(pointer: Pointer, ball: Ball, dt: number) {
+export function pointerPush(
+  pointer: Pointer,
+  ball: Ball,
+  dt: number,
+  frame: number
+) {
   if (!pointer.active) {
     return { vx: 0, vy: 0 };
   }
@@ -74,6 +82,8 @@ export function pointerPush(pointer: Pointer, ball: Ball, dt: number) {
   const distance = Math.sqrt(near);
   // A soft spring: the nearer the pointer, the firmer the push.
   const push = (reach - distance) * POINTER_PUSH;
+  // The share of a half frame that this step covers.
+  const share = (dt * 2) / frame;
   const limit = {
     maximum: POINTER_SPEED_LIMIT,
     minimum: -POINTER_SPEED_LIMIT,
@@ -81,10 +91,10 @@ export function pointerPush(pointer: Pointer, ball: Ball, dt: number) {
   return {
     vx:
       (dx / distance) * push * dt +
-      Num.clamp(pointer.vx, limit) * POINTER_SHARE,
+      Num.clamp(pointer.vx, limit) * POINTER_SHARE * share,
     vy:
       (dy / distance) * push * dt +
-      Num.clamp(pointer.vy, limit) * POINTER_SHARE,
+      Num.clamp(pointer.vy, limit) * POINTER_SHARE * share,
   };
 }
 

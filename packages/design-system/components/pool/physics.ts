@@ -29,18 +29,17 @@ import { Array as Arr, Number as Num, Option, Schema } from "effect";
 const GRAVITY = 1500;
 /** How much speed a free ball keeps each second: its speed is multiplied by `exp(-DAMPING * dt)`. */
 const DAMPING = 0.95;
-/** A held ball sits on its target at once. This share of the speed that gets it there is what it carries into a collision, its release, and its lean. */
+/** A held ball sits on its target at once. This share of its speed over half a frame is what it carries into a collision, its release, and its lean. */
 const HOLD_SHARE = 0.35;
-/** The pile is at rest when no ball traveled this far in the last step, in pixels. */
-const REST_TRAVEL = 0.05;
+/** The pile is at rest while no ball moves faster than this, in pixels per second, counting each axis. This is 0.05 pixels in one step at the fixed step, written per second so that a step of another length keeps the same rule. */
+const REST_SPEED = 24;
 /**
  * The fixed step of the pool, in seconds: 480 steps make a second, and a frame at
- * 60 frames a second runs eight of them. Measured on the 30 members at 60 frames a
- * second in 20 box sizes from 390 to 1463 wide and from 500 to 1440 high: two half
- * steps a frame kept the loop awake for 3600 frames in 18 of them, while steps of
- * this length let it sleep after 153 to 394 frames. In a box of 1200 by 640 it
- * sleeps after 184 frames, and in the 1440 by 900 column that the browser draws
- * (822.84 by 900 pixels) after 406.
+ * 60 frames a second runs eight of them. Measured at 60 frames a second with the
+ * 30 members in 20 box sizes from 390 to 1463 wide and from 500 to 1440 high: the
+ * loop sleeps after 154 to 426 frames, and after 185 frames in a box of 1200 by
+ * 640. A pile can still creep for seconds after the loop sleeps, so the rest
+ * speed is a threshold, not a proof of rest.
  */
 export const STEP = 1 / 480;
 /** The most time one frame may move the pool, in seconds: a slow frame moves it in small steps, not in one jump. */
@@ -54,7 +53,7 @@ const HOP_LIFT_SPREAD = 180;
 /** The sideways speed that a hop adds across its draw, in pixels per second. */
 const HOP_SIDE = 90;
 
-/** The whole pool: the box, its balls, the time that the last frame left over, the pointer, the ball that is held and the grip where it was taken, and the farthest that a ball moved in the last step. */
+/** The whole pool: the box, its balls, the time that the last frame left over, the pointer, the ball that is held and the grip where it was taken, and the fastest that a ball moved in the last frame, in pixels per second. */
 const WorldSchema = Schema.Struct({
   balls: Schema.Array(BallSchema),
   carry: Schema.Finite,
@@ -110,16 +109,20 @@ export function createWorld(
  * Moves the pool for one frame that took `seconds`. The frame runs as many whole
  * steps as its time holds, and keeps the rest for the next frame. The lean of
  * every ball and the fade of the pointer's speed change once per frame, as the
- * pool is drawn once per frame.
+ * pool is drawn once per frame. The pool is at rest only when no step of the
+ * frame moved a ball faster than the rest speed.
  */
 export function tick(world: World, seconds: number): World {
-  const owed = world.carry + Math.min(seconds, LONGEST_FRAME);
+  const frame = Math.min(seconds, LONGEST_FRAME);
+  const owed = world.carry + frame;
   const count = Math.floor(owed / STEP);
   let walked = world;
+  let fastestStep = 0;
   for (let index = 0; index < count; index += 1) {
-    walked = step(walked, STEP);
+    walked = step(walked, STEP, frame);
+    fastestStep = Math.max(fastestStep, walked.moved);
   }
-  const resting = isResting(walked);
+  const resting = isResting({ ...walked, moved: fastestStep });
   return {
     ...walked,
     balls: Arr.map(walked.balls, (ball) => ({
@@ -127,14 +130,20 @@ export function tick(world: World, seconds: number): World {
       tilt: tiltOf(ball, resting),
     })),
     carry: owed - count * STEP,
+    moved: fastestStep,
     pointer: fadePointer(walked.pointer),
   };
 }
 
-/** Moves every ball for `dt` seconds, pushes the balls apart, and keeps the free ones at the top speed and in the box. */
-export function step(world: World, dt: number): World {
+/**
+ * Moves every ball for `dt` seconds, of a frame that lasted `frame` seconds, and
+ * pushes the balls apart. The free balls keep the top speed and stay in the box.
+ */
+export function step(world: World, dt: number, frame: number): World {
   const flown = Arr.map(world.balls, (ball, index) =>
-    index === world.held ? holdAt(world, ball, dt) : flyBall(world, ball, dt)
+    index === world.held
+      ? holdAt(world, ball, frame)
+      : flyBall(world, ball, dt, frame)
   );
   const pushed = pushApart(flown, world.held);
   const kept = Arr.map(pushed, (ball, index) =>
@@ -142,17 +151,18 @@ export function step(world: World, dt: number): World {
       ? ball
       : fence(limitSpeed(ball), world.width, world.height)
   );
-  return { ...world, balls: kept, moved: travel(world.balls, kept) };
+  return { ...world, balls: kept, moved: travel(world.balls, kept, dt) };
 }
 
 /**
  * Moves the pool `steps` times at the fixed step, then stops the sideways speed and
- * the lean of every ball, so the pile stands still on its first paint.
+ * the lean of every ball, so the pile stands still on its first paint. A settle
+ * has no pointer and no held ball, so each of its steps stands for its own frame.
  */
 export function settle(world: World, steps: number): World {
   let walked = world;
   for (let count = 0; count < steps; count += 1) {
-    walked = step(walked, STEP);
+    walked = step(walked, STEP, STEP);
   }
   return {
     ...walked,
@@ -233,13 +243,18 @@ export function hop(
   };
 }
 
-/** Whether the pile is at rest: no ball traveled as far as the rest distance in the last step. */
+/** Whether the pile is at rest: no ball moved faster than the rest speed. */
 export function isResting(world: World): boolean {
-  return world.moved < REST_TRAVEL;
+  return world.moved < REST_SPEED;
 }
 
-/** A held ball goes to the pointer and its grip, inside the box, at a speed that gets it there. */
-function holdAt(world: World, ball: Ball, dt: number): Ball {
+/**
+ * A held ball goes to the pointer and its grip, inside the box. It hands on the
+ * speed of its move over half a frame. The prototype moved the pool in two half
+ * steps a frame, so a frame at any rate hands on the same speed for the same
+ * pointer speed.
+ */
+function holdAt(world: World, ball: Ball, frame: number): Ball {
   const x = Num.clamp(world.pointer.x + world.grip.x, {
     maximum: world.width - ball.r,
     minimum: ball.r,
@@ -248,16 +263,17 @@ function holdAt(world: World, ball: Ball, dt: number): Ball {
     maximum: world.height - ball.r,
     minimum: ball.r,
   });
+  const half = frame / 2;
   const speed = fastest(
-    ((x - ball.x) / dt) * HOLD_SHARE,
-    ((y - ball.y) / dt) * HOLD_SHARE
+    ((x - ball.x) / half) * HOLD_SHARE,
+    ((y - ball.y) / half) * HOLD_SHARE
   );
   return { ...ball, inside: true, vx: speed.vx, vy: speed.vy, x, y };
 }
 
 /** A free ball falls, feels the pointer, loses a little speed, and moves; the walls then hold it. */
-function flyBall(world: World, ball: Ball, dt: number): Ball {
-  const pushed = pointerPush(world.pointer, ball, dt);
+function flyBall(world: World, ball: Ball, dt: number, frame: number): Ball {
+  const pushed = pointerPush(world.pointer, ball, dt, frame);
   const slowed = Math.exp(-DAMPING * dt);
   const speed = fastest(
     (ball.vx + pushed.vx) * slowed,
@@ -283,9 +299,12 @@ function covers(ball: Ball, point: Point) {
   return dx * dx + dy * dy < ball.r * ball.r;
 }
 
-/** The farthest that a ball traveled from one list of balls to the next, counting each axis. */
-function travel(before: readonly Ball[], after: readonly Ball[]) {
+/** The fastest that a ball moved from one list of balls to the next, in pixels per second, counting each axis. */
+function travel(before: readonly Ball[], after: readonly Ball[], dt: number) {
   return Arr.reduce(Arr.zip(before, after), 0, (largest, [start, end]) =>
-    Math.max(largest, Math.abs(end.x - start.x) + Math.abs(end.y - start.y))
+    Math.max(
+      largest,
+      (Math.abs(end.x - start.x) + Math.abs(end.y - start.y)) / dt
+    )
   );
 }

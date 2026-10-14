@@ -12,9 +12,15 @@ function overBox(x: number, y: number) {
   return { active: true, vx: 0, vy: 0, x, y };
 }
 
+/** A step of one second in a frame of two seconds: the frame's half is then exactly one second. */
+const UNIT_STEP = 1;
+const UNIT_FRAME = 2;
+
 describe("the push of the pointer", () => {
   it("pushes nothing before the pointer comes over the box", () => {
-    expect(pointerPush(idlePointer(), ballAt({ x: 600 }), 1)).toEqual({
+    expect(
+      pointerPush(idlePointer(), ballAt({ x: 600 }), UNIT_STEP, UNIT_FRAME)
+    ).toEqual({
       vx: 0,
       vy: 0,
     });
@@ -22,7 +28,9 @@ describe("the push of the pointer", () => {
 
   it("pushes a ball away from the pointer, with the spring of its reach", () => {
     // The ball is 40 pixels from the pointer, and its reach is 64: (64 - 40) * 110.
-    expect(pointerPush(overBox(560, 300), ballAt({ x: 600 }), 1)).toEqual({
+    expect(
+      pointerPush(overBox(560, 300), ballAt({ x: 600 }), UNIT_STEP, UNIT_FRAME)
+    ).toEqual({
       vx: 2640,
       vy: 0,
     });
@@ -30,18 +38,24 @@ describe("the push of the pointer", () => {
 
   it("passes on the pointer's own speed, clamped to 28 pixels per second and halved", () => {
     const fast = { ...overBox(560, 300), vx: 500 };
-    expect(pointerPush(fast, ballAt({ x: 600 }), 1).vx).toBe(2640 + 14);
+    expect(
+      pointerPush(fast, ballAt({ x: 600 }), UNIT_STEP, UNIT_FRAME).vx
+    ).toBe(2640 + 14);
   });
 
   it("pushes nothing when the pointer lies exactly on the center of a ball", () => {
-    expect(pointerPush(overBox(600, 300), ballAt({ x: 600 }), 1)).toEqual({
+    expect(
+      pointerPush(overBox(600, 300), ballAt({ x: 600 }), UNIT_STEP, UNIT_FRAME)
+    ).toEqual({
       vx: 0,
       vy: 0,
     });
   });
 
   it("pushes nothing from beyond the reach of a ball", () => {
-    expect(pointerPush(overBox(500, 300), ballAt({ x: 600 }), 1)).toEqual({
+    expect(
+      pointerPush(overBox(500, 300), ballAt({ x: 600 }), UNIT_STEP, UNIT_FRAME)
+    ).toEqual({
       vx: 0,
       vy: 0,
     });

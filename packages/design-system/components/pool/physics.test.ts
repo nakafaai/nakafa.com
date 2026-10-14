@@ -66,7 +66,7 @@ function outsideBy(world: Pick<World, "height" | "width">, ball: Ball) {
 
 /** Steps the pool, then checks every ball: none may lie outside the box, and no free ball may be faster than the top speed. */
 function checkedStep(world: World, dt: number): World {
-  const next = step(world, dt);
+  const next = step(world, dt, FRAME);
   Arr.forEach(next.balls, (ball, index) => {
     expect(
       outsideBy(next, ball),
@@ -177,10 +177,31 @@ describe("the pile", () => {
     });
   }
 
-  it("is at rest only when no ball traveled as far as 0.05 pixels", () => {
+  it("is at rest only when no ball moved faster than the rest speed", () => {
     const world = boxWith([]);
-    expect(isResting({ ...world, moved: 0.049 })).toBe(true);
-    expect(isResting({ ...world, moved: 0.05 })).toBe(false);
+    expect(isResting({ ...world, moved: 0 })).toBe(true);
+    expect(isResting({ ...world, moved: 30 })).toBe(false);
+  });
+
+  it("is not at rest while a ball still slides at 30 pixels a second", () => {
+    // One step moves this ball only 0.06 pixels, so only a speed tells it apart from a pile at rest.
+    const sliding = tick(boxWith([ballAt({ vx: 30, x: 300, y: 300 })]), FRAME);
+    expect(isResting(sliding)).toBe(false);
+  });
+
+  it("reports the fastest ball in pixels per second, whatever the length of the step", () => {
+    // Gravity adds some downward speed in each step, so the fastest ball is a little faster than its sideways speed.
+    const world = boxWith([ballAt({ vx: 30, x: 300, y: 300 })]);
+    expect(step(world, SHORT, FRAME).moved).toBeGreaterThan(29);
+    expect(step(world, STEP, FRAME).moved).toBeGreaterThan(29);
+  });
+
+  it("is not at rest after a frame in which a held ball jumped, even when its last step stood still", () => {
+    const held = press(boxWith([ballAt({ x: 300, y: 300 })]), {
+      x: 300,
+      y: 300,
+    });
+    expect(isResting(tick(move(held, { x: 305, y: 300 }), FRAME))).toBe(false);
   });
 
   it("settles to a standstill with no sideways speed and no lean", () => {
@@ -218,7 +239,7 @@ describe("the frames and their steps", () => {
     const eight = Arr.reduce(
       Arr.makeBy(STEPS_IN_FRAME, () => STEP),
       world,
-      (current, dt) => step(current, dt)
+      (current, dt) => step(current, dt, FRAME)
     );
     expect(tick(world, FRAME).balls).toEqual(eight.balls);
   });
@@ -229,13 +250,31 @@ describe("the frames and their steps", () => {
     expect(short.balls).toEqual(world.balls);
     expect(short.carry).toBeCloseTo(STEP * 0.6, 12);
     const rest = tick(short, STEP * 0.6);
-    expect(rest.balls).toEqual(step(world, STEP).balls);
+    expect(rest.balls).toEqual(step(world, STEP, STEP * 0.6).balls);
     expect(rest.carry).toBeCloseTo(STEP * 0.2, 12);
   });
 
   it("moves the pool no further than the longest frame, however long the frame took", () => {
     const world = boxWith([ballAt({ y: 100 })]);
     expect(tick(world, 10)).toEqual(tick(world, LONGEST_FRAME));
+  });
+
+  it("passes on the pointer's own speed in the same share of a frame, however many steps the frame runs", () => {
+    // The pointer sits just inside the reach of the ball, on its right, and moves right: the ball stays in reach for the whole frame.
+    const pointed = {
+      ...boxWith([ballAt({ r: 20, x: 600, y: 300 })]),
+      pointer: { active: true, vx: 2, vy: 0, x: 600 + 64 - 0.001, y: 300 },
+    };
+    const passed = (steps: number, dt: number) =>
+      Arr.reduce(
+        Arr.makeBy(steps, () => dt),
+        pointed,
+        (current, length) => step(current, length, FRAME)
+      ).balls[0].vx;
+    // Eight steps of the fixed step and two half steps cover one frame, so each passes on the same speed.
+    expect(
+      Math.abs(passed(STEPS_IN_FRAME, STEP) - passed(2, FRAME / 2))
+    ).toBeLessThan(0.5);
   });
 });
 
@@ -246,7 +285,8 @@ describe("the top speed", () => {
         ballAt({ vy: TOP_SPEED, x: 500, y: 300 }),
         ballAt({ vx: -TOP_SPEED, x: 530, y: 300 }),
       ]),
-      SHORT
+      SHORT,
+      FRAME
     );
     Arr.forEach(next.balls, (ball) => {
       expect(Math.hypot(ball.vx, ball.vy)).toBeLessThanOrEqual(
@@ -302,8 +342,19 @@ describe("holding a ball", () => {
       x: 310,
       y: 300,
     });
-    const next = step(move(held, { x: 340, y: 300 }), SHORT);
+    const next = step(move(held, { x: 340, y: 300 }), SHORT, FRAME);
     expect(next.balls[0].x).toBeCloseTo(330, 6);
+  });
+
+  it("hands on the same speed for the same pointer speed, at any frame rate", () => {
+    const held = press(boxWith([ballAt({ x: 300, y: 300 })]), {
+      x: 300,
+      y: 300,
+    });
+    const handedOn = (frame: number, distance: number) =>
+      step(move(held, { x: 300 + distance, y: 300 }), STEP, frame).balls[0].vx;
+    // At 60 frames a second the pointer moves 5 pixels a frame, and at 120 frames a second 2.5.
+    expect(handedOn(FRAME / 2, 2.5)).toBeCloseTo(handedOn(FRAME, 5), 9);
   });
 
   it("keeps a held ball inside the box while the pointer is outside it, and lets it fall back in once released", () => {
