@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import { NakafaDataSchema } from "@repo/backend/confect/nina/contract/data";
+import {
+  DataPartSchema,
+  NakafaDataSchema,
+} from "@repo/backend/confect/nina/contract/data";
+import { NAKAFA_AGENT_MAX_QUERY_LENGTH } from "@repo/contents/agent/search";
 import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 
 const ref = readNakafaContentRefFixture("en", "quran/1", "quran");
 const common = {
@@ -87,5 +91,33 @@ describe("Nakafa persisted Quran data", () => {
         result: preview,
       })
     ).toBe(false);
+  });
+});
+
+describe("persisted search queries", () => {
+  it("keeps a query longer than a new search may send readable", () => {
+    const nakafa = "a".repeat(NAKAFA_AGENT_MAX_QUERY_LENGTH + 1);
+    // Far longer than the web search tool takes, which research/schema.test.ts pins.
+    const web = "a".repeat(5000);
+
+    // The recorded input decodes with no limit on the text a query was written in.
+    expect(
+      Result.isSuccess(
+        Schema.decodeResult(NakafaDataSchema)({
+          input: { limit: 10, locale: "en", offset: 0, queries: [nakafa] },
+          kind: "search",
+          status: "loading",
+        })
+      )
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        Schema.decodeResult(DataPartSchema.fields["web-search"])({
+          queries: [web],
+          sources: [],
+          status: "done",
+        })
+      )
+    ).toBe(true);
   });
 });

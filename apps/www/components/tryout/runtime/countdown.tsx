@@ -4,7 +4,6 @@ import {
   NumberFormat,
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
-import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
@@ -56,49 +55,5 @@ export function TryoutCountdown({ expiresAt }: { expiresAt: number }) {
         {tTryouts("remaining-time-label")}
       </p>
     </section>
-  );
-}
-
-/** Animates timer digits without changing the width at minute/hour rollover. */
-export function TryoutTimer({
-  className,
-  seconds,
-}: {
-  className?: string;
-  seconds: number;
-}) {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainder = seconds % 60;
-  return (
-    <time
-      className={cn(
-        "inline-flex shrink-0 items-baseline font-mono text-base tabular-nums",
-        className
-      )}
-      dateTime={`PT${seconds}S`}
-    >
-      <NumberFormatGroup>
-        <NumberFormat
-          format={{ minimumIntegerDigits: 2, useGrouping: false }}
-          trend={-1}
-          value={hours}
-        />
-        <span className="text-muted-foreground">:</span>
-        <NumberFormat
-          digits={{ 1: { max: 5 } }}
-          format={{ minimumIntegerDigits: 2 }}
-          trend={-1}
-          value={minutes}
-        />
-        <span className="text-muted-foreground">:</span>
-        <NumberFormat
-          digits={{ 1: { max: 5 } }}
-          format={{ minimumIntegerDigits: 2 }}
-          trend={-1}
-          value={remainder}
-        />
-      </NumberFormatGroup>
-    </time>
   );
 }

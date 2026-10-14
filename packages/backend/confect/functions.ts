@@ -10,14 +10,6 @@ import { chatsHandler } from "@repo/backend/confect/triggers/chats/chats";
 import { commentsHandler } from "@repo/backend/confect/triggers/comments/comments";
 import { commentVotesHandler } from "@repo/backend/confect/triggers/comments/commentVotes";
 import { learningViewsHandler } from "@repo/backend/confect/triggers/contents/views";
-import { postReactionsHandler } from "@repo/backend/confect/triggers/forums/postReactions";
-import { forumPostsHandler } from "@repo/backend/confect/triggers/forums/posts";
-import { forumReactionsHandler } from "@repo/backend/confect/triggers/forums/reactions";
-import { materialGroupsHandler } from "@repo/backend/confect/triggers/materials/groups";
-import { schoolClassesHandler } from "@repo/backend/confect/triggers/schools/classes";
-import { schoolClassMembersHandler } from "@repo/backend/confect/triggers/schools/classMembers";
-import { schoolMembersHandler } from "@repo/backend/confect/triggers/schools/members";
-import { schoolsHandler } from "@repo/backend/confect/triggers/schools/schools";
 import { subscriptionsHandler } from "@repo/backend/confect/triggers/subscriptions/subscriptions";
 import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scores";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
@@ -37,7 +29,8 @@ export const internalMutation = customMutation(
   customCtx(triggers.wrapDB)
 );
 
-// Active triggers with custom logic
+// Active triggers with custom logic. The trigger SDK owns this Promise
+// boundary and the wrapped transaction.
 triggers.register("subscriptions", (ctx, change) =>
   subscriptionsHandler(change).pipe(
     Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
@@ -64,55 +57,6 @@ triggers.register("commentVotes", (ctx, change) =>
 );
 triggers.register("chats", (ctx, change) =>
   chatsHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("schools", (ctx, change) =>
-  schoolsHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("schoolMembers", (ctx, change) =>
-  schoolMembersHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("schoolClasses", (ctx, change) =>
-  schoolClassesHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("schoolClassMembers", (ctx, change) =>
-  schoolClassMembersHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-// The trigger SDK owns this Promise boundary and the wrapped transaction.
-triggers.register("schoolClassForumPosts", (ctx, change) =>
-  forumPostsHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("schoolClassForumPostReactions", (ctx, change) =>
-  postReactionsHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("schoolClassForumReactions", (ctx, change) =>
-  forumReactionsHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("schoolClassMaterialGroups", (ctx, change) =>
-  materialGroupsHandler(change).pipe(
     Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
     runTrigger
   )

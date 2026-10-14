@@ -1,12 +1,15 @@
 "use client";
 
-import { type ReactNode, Suspense, use } from "react";
+import { type ReactNode, Suspense } from "react";
+import type { PlayerMode } from "@/components/player/mode";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
-import { getTryoutAttemptHref } from "@/components/tryout/route/path";
-import { TryoutRuntime } from "@/components/tryout/runtime/client";
-import { TryoutRuntimeControls } from "@/components/tryout/runtime/controls.client";
-import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
+import { TryoutPlayer } from "@/components/tryout/player/client";
+import type { TryoutFinish } from "@/components/tryout/player/finish.client";
+import {
+  isTryoutRuntimeRunning,
+  type TryoutRuntimeState,
+} from "@/components/tryout/runtime/state";
 import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
 import { TryoutSummaryAction } from "@/components/tryout/section/action.client";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
@@ -26,45 +29,48 @@ interface TryoutSetEntryProps {
   /** Render model for sets whose only section is the set entry itself. */
   value: TryoutSetOverviewProps["value"] & {
     entrySection: SetEntrySection;
+    /** The finish and the view of a live attempt; a page without one has none. */
+    player: { finish: TryoutFinish; mode: PlayerMode } | null;
     runtimeState: TryoutRuntimeState<LoadedRuntime>;
   };
 }
 
-/** Renders a no-nested-section set as the directly startable section surface. */
+/**
+ * Renders a no-nested-section set as the directly startable section surface.
+ * A running section is the player, and every other state is the set page.
+ */
 export function TryoutSetEntry({
   children,
   content,
   value,
 }: TryoutSetEntryProps) {
   const state = value.runtimeState;
-  const isRunning = state.kind === "active" || state.kind === "pending";
+  if (value.player && isTryoutRuntimeRunning(state)) {
+    return (
+      <TryoutPage>
+        <TryoutPlayer
+          content={content}
+          finish={value.player.finish}
+          locked={state.kind === "pending"}
+          mode={value.player.mode}
+          runtime={state.runtime}
+          title={value.page.set.title}
+        />
+      </TryoutPage>
+    );
+  }
+
   return (
     <TryoutPage>
-      {isRunning ? (
-        <TryoutRuntimeControls
-          title={value.page.set.title}
-          value={{
-            expired: state.kind === "pending",
-            returnHref: getTryoutAttemptHref(
-              value.page.set.publicPath,
-              state.runtime.attemptId
-            ),
-            runtime: state.runtime,
-          }}
-        />
-      ) : (
-        <TryoutSetPageHeader
-          action={<TryoutEntryAction value={value} />}
-          currentHref={value.currentHref}
-          page={value.page}
-          returnHref={value.returnHref}
-        />
-      )}
+      <TryoutSetPageHeader
+        action={<TryoutEntryAction value={value} />}
+        currentHref={value.currentHref}
+        page={value.page}
+        returnHref={value.returnHref}
+      />
       <TryoutPageBody>
-        {!isRunning && <TryoutEntryResult value={value} />}
-        <TryoutEntryRuntime content={content} value={value}>
-          {children}
-        </TryoutEntryRuntime>
+        <TryoutEntryResult value={value} />
+        <TryoutEntryReview runtimeState={state}>{children}</TryoutEntryReview>
       </TryoutPageBody>
     </TryoutPage>
   );
@@ -112,10 +118,7 @@ function TryoutEntryResult({ value }: { value: TryoutSetEntryProps["value"] }) {
 
 /** Renders a direct-entry action only outside active runtime states. */
 function TryoutEntryAction({ value }: { value: TryoutSetEntryProps["value"] }) {
-  if (
-    value.runtimeState.kind === "active" ||
-    value.runtimeState.kind === "pending"
-  ) {
+  if (isTryoutRuntimeRunning(value.runtimeState)) {
     return null;
   }
 
@@ -159,64 +162,18 @@ function TryoutEntryAction({ value }: { value: TryoutSetEntryProps["value"] }) {
   );
 }
 
-/** Renders the direct-entry question runtime when Convex has one. */
-function TryoutEntryRuntime({
+/** Renders the signed review of a finished direct-entry section, and nothing for any other state. */
+function TryoutEntryReview({
   children,
-  content,
-  value,
+  runtimeState,
 }: {
   children: ReactNode;
-  content: Promise<TryoutRuntimeContent> | null;
-  value: TryoutSetEntryProps["value"];
+  runtimeState: TryoutRuntimeState<LoadedRuntime>;
 }) {
-  if (value.runtimeState.kind === "none") {
+  if (runtimeState.kind !== "review") {
     return null;
   }
-  if (value.runtimeState.kind === "review") {
-    return (
-      <Suspense fallback={null}>
-        {children ?? <TryoutContentRefresh />}
-      </Suspense>
-    );
-  }
-
   return (
-    <Suspense fallback={null}>
-      <TryoutEntryRuntimeContent content={content} value={value} />
-    </Suspense>
-  );
-}
-
-/** Resolves signed content only inside the direct-entry runtime region. */
-function TryoutEntryRuntimeContent({
-  content,
-  value,
-}: {
-  content: Promise<TryoutRuntimeContent> | null;
-  value: TryoutSetEntryProps["value"];
-}) {
-  if (value.runtimeState.kind === "none") {
-    return null;
-  }
-  if (value.runtimeState.kind === "review") {
-    return <TryoutContentRefresh />;
-  }
-  if (!content) {
-    return <TryoutContentRefresh />;
-  }
-
-  const resolvedContent = use(content);
-  if (resolvedContent.questions.length === 0) {
-    return <TryoutContentRefresh />;
-  }
-
-  return (
-    <TryoutRuntime
-      value={{
-        expired: value.runtimeState.kind !== "active",
-        questions: resolvedContent.questions,
-        runtime: value.runtimeState.runtime,
-      }}
-    />
+    <Suspense fallback={null}>{children ?? <TryoutContentRefresh />}</Suspense>
   );
 }

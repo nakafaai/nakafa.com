@@ -31,6 +31,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Outcome**: How one answer scores: correct, incorrect, partial with earned points, or pending until the grader decides. A pending answer never counts as zero and keeps its score provisional.
 - **Live-attempt gate**: The one admission check every learner write to a running try-out passes, and every School assessment write will pass. The checks run in one order: owner, open attempt, proctor lock, device session, the attempt deadline (a finish checks it before it reads the section), the running section and its integrity, the live deadline (an answer checks the earlier of the attempt and section deadlines), and then, for an answer, the question's stored answer and its version. A refused write writes nothing. `confect/assessment/gate` owns it, and each kind of attempt provides the store it loads from and writes to.
 - **Attempt refusal**: The first gate rule a write failed: missing (no such target for this learner, including another learner's), attempt closed, locked, other device, section closed, or expired; an answer whose version is not newer than the latest write of its question, a clear included, is refused last, as stale. Each product maps it onto its own error codes.
+- **Player**: The one surface a learner answers questions in while a section runs. It knows questions, answers, and time, and nothing of try-out routes or Convex functions, so a School assessment binds the same parts. `apps/www/components/player` owns it, and try-out binds it in `apps/www/components/tryout/player`.
+- **Player view**: How the player lays out a section: every question in a list, or one question at a time. The server resolves it before it sends the page: the `view` parameter first, an unknown value being a 404, then the view the learner saved in a cookie, then the list.
 - **Question worth**: The points one placed question is worth, read only through the contract's `questionPoints`: its authored points or one, and a rubric's derived total.
 - **Penalized scoring**: A set strategy that adds each section's signed marks for a correct, wrong, or blank answer, such as +4, -1, and 0, times each question's worth.
 - **Learning program**: A durable educational pathway such as a school curriculum, assessment preparation track, or institution program. Public curriculum pages present Learning programs through localized routes.
@@ -139,16 +141,6 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Integration client**: An app that calls a school's REST API or MCP server with OAuth 2.0 client credentials. It holds the Integration role over its tenant or one unit, limited to the actions on its list.
 - **Webhook**: A signed HTTP callback of one Integration client, fed from the Journal. It delivers only published changes that the client could read, and one row for each attempt records the delivery.
 
-## Forum Conversation
-
-- **Forum Conversation**: The opened discussion surface for one class forum, usually shown as the right-side panel beside the forum list.
-- **Transcript**: The ordered message log rendered inside a Forum Conversation.
-- **Viewport**: The visible scroll window over a Transcript.
-- **Placement**: The intended Viewport target, such as the latest message edge or a specific post.
-- **Snapshot**: A persisted restorable Viewport state for one Forum Conversation.
-- **Navigation History**: The ordered semantic Viewport positions a user can return to inside one Forum Conversation.
-- **Latest Affinity**: The user state where a Forum Conversation Viewport is attached to the newest Transcript edge.
-
 ## Nakafa School
 
 - **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the web project and the Convex deployment of its data cell. Its data is isolated by every School function, never by the client.
@@ -159,12 +151,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Organisation policy**: A choice an Owner makes for the whole tenant: whether students may open forum threads, whether Nina is on, and which email domains it admits. An empty list of domains admits every address; otherwise only an address on one of them may claim an invite. The first two choices are stored until the School features they switch exist.
 - **Contract**: What a school signed with Nakafa when it was opened: the plan of its licence, its modules, and the versions of its data processing agreement and content licence. The journal records it with the tenant's provisioning; the rights it grants are built later.
 - **Provisioning**: Opening a tenant with its units, its first Owner as an unclaimed Person with an invite, and its journal entries in one transaction. An Operator does it with the deployment's key, so no browser can.
-- **Period**: One school year or semester of a tenant. Promotion archives a period and moves students into the next one.
+- **Period**: One school year or semester of a unit. Promotion archives a period and moves students into the next one.
 - **Cohort**: A rombel, the administrative class group that rapor, promotion, and Dapodik use. It is separate from a Classroom.
+- **Cohort placement**: One student's Cohort in one Period, for a student with a Student grant over the Cohort's unit or over the whole tenant. A student holds at most one placement per Period, and the placement opens its Cohort to them through the `cohortMember` relation.
 - **Classroom**: The learning space for one subject in one Cohort, or one per Cohort in SD.
 - **Person**: Someone in one tenant, separate from a User. A Person can exist before any account and is claimed later; an account holds at most one Person per tenant.
 - **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the address of an unexpired invite, the tenant is active, and the tenant's email domains admit the address; it is the one place an account is matched by its email. The journal records the claim method.
-- **Invite**: A pending offer of one Person to the account whose verified email equals its address. It expires 14 days after it is created, and an expired invite is never claimed.
+- **Invite**: A pending offer of one Person to the account whose verified email equals its address. It expires 14 days after it is created, and an expired invite is never claimed; a resend sends the same invite again without moving that date.
 - **Grant**: One role held by one Person over the whole tenant or one unit, standing or temporary.
 - **Built-in role**: One of the fixed roles every tenant shares: Owner, Admin, Principal, Deputy, Teacher, Counselor, Staff, Student, Guardian, Proctor, Auditor, and Integration.
 - **Owner**: The role that holds every roles-granted action and alone may appoint Owners and Admins. A tenant keeps at least one claimed Owner.

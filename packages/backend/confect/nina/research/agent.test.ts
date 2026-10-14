@@ -93,6 +93,11 @@ const noFindingStart =
 const unusable = providerStep([{ type: "text", text: "Invalid JSON" }]);
 const noQuery = searchCallWith({ queries: [] });
 /**
+ * Writes a query far longer than the provider takes, so the schema refuses the
+ * whole call. `schema.test.ts` pins the exact bound.
+ */
+const longQuery = searchCallWith({ queries: ["a".repeat(5000)] });
+/**
  * Names far more sites than a call may, so the schema refuses the whole call.
  * `schema.test.ts` pins the exact bound.
  */
@@ -393,6 +398,11 @@ describe("research Agent evidence boundary", () => {
       { phase: "search", rejected: true },
     ],
     [
+      "the model writes a query longer than the provider takes",
+      () => Promise.resolve(longQuery),
+      { phase: "search", rejected: true },
+    ],
+    [
       "the model names more sites than a call may",
       () => Promise.resolve(tooManySites),
       { phase: "search", rejected: true },
@@ -452,6 +462,11 @@ describe("research Agent evidence boundary", () => {
     [
       "the model writes no usable query",
       () => Promise.resolve(noQuery),
+      { message: "Research search wrote no usable query.", rejected: true },
+    ],
+    [
+      "the model writes a query longer than the provider takes, so no search runs and none is cut",
+      () => Promise.resolve(longQuery),
       { message: "Research search wrote no usable query.", rejected: true },
     ],
     [

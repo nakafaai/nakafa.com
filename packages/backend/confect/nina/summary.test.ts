@@ -295,7 +295,8 @@ describe("Nina rolling summary", () => {
 
   it.each([
     ["the provider fails", failingModel(), EARLIER_USAGE],
-    // A call that answered spent its tokens, so they count though its text is not stored.
+    // A call that answered spent its tokens, and the seeded summary counts them
+    // though its text is not stored.
     [
       "the answer is empty",
       summaryModel("   "),
