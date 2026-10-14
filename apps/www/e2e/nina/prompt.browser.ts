@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import {
   chipsIn,
+  composerOf,
   ENGLISH,
   openComposer,
   pickFiles,
@@ -36,6 +37,32 @@ const readComposerFit = (form: HTMLElement) => {
     send: inPage(send),
   };
 };
+
+/** A question in Arabic, which the composer reads from the right. */
+const ARABIC_QUESTION = "ما معنى الاشتقاق في الرياضيات؟";
+/** A question in English, which the composer reads from the left. */
+const ENGLISH_QUESTION = "What is a derivative in mathematics?";
+
+test.describe("The composer takes the direction of the text typed in it", () => {
+  test("reads Arabic from the right and English from the left", async ({
+    page,
+  }) => {
+    await runPage(
+      page,
+      Effect.gen(function* () {
+        const composer = yield* openComposer(page);
+        const input = composerOf(composer);
+
+        yield* Effect.promise(async () => {
+          await input.fill(ARABIC_QUESTION);
+          await expect(input).toHaveCSS("direction", "rtl");
+          await input.fill(ENGLISH_QUESTION);
+          await expect(input).toHaveCSS("direction", "ltr");
+        });
+      })
+    );
+  });
+});
 
 for (const width of [320, 1440]) {
   test.describe(`A long link in the composer at ${width}px`, () => {

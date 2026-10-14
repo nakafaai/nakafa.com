@@ -161,6 +161,7 @@ export function NinaInput({
           aria-label={t("text-placeholder")}
           autoFocus={autoFocus}
           className="text-(length:--text-chat) md:text-(length:--text-chat) max-h-[min(12rem,35dvh)] px-3 py-3"
+          dir="auto"
           onChange={(event) => setText(event.target.value)}
           onFocus={() =>
             // Load the stylesheet's math faces before streamed formulas arrive.
