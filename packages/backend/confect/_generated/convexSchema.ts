@@ -62,12 +62,16 @@ import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
+import tenantGraduates from "./tables/tenantGraduates";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
 import tenantPeople from "./tables/tenantPeople";
 import tenantPeriods from "./tables/tenantPeriods";
+import tenantPromotionMoves from "./tables/tenantPromotionMoves";
+import tenantPromotions from "./tables/tenantPromotions";
 import tenantUnits from "./tables/tenantUnits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
@@ -146,12 +150,16 @@ export default $defineSchema({
   quranSearch: $Table.tableDefinition(quranSearch),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
+  tenantAssignments: $Table.tableDefinition(tenantAssignments),
   tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),
   tenantCohorts: $Table.tableDefinition(tenantCohorts),
+  tenantGraduates: $Table.tableDefinition(tenantGraduates),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),
   tenantPeople: $Table.tableDefinition(tenantPeople),
   tenantPeriods: $Table.tableDefinition(tenantPeriods),
+  tenantPromotionMoves: $Table.tableDefinition(tenantPromotionMoves),
+  tenantPromotions: $Table.tableDefinition(tenantPromotions),
   tenantUnits: $Table.tableDefinition(tenantUnits),
   tenants: $Table.tableDefinition(tenants),
   tryoutAttemptPlacements: $Table.tableDefinition(tryoutAttemptPlacements),

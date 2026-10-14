@@ -26,6 +26,7 @@ import {
   parseCivilDate,
 } from "@repo/backend/confect/tenancy/period";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
+import { openTarget } from "@repo/backend/confect/tenancy/promotionOpen";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 /** One period as the wire shows it. */
@@ -136,6 +137,7 @@ const open = FunctionImpl.make(
     if (Option.isSome(active)) {
       return yield* new PeriodActive();
     }
+    yield* openTarget(personActor(person), period._id);
     const status: typeof PeriodStatus.Type = "active";
     yield* (yield* DatabaseWriter)
       .table("tenantPeriods")

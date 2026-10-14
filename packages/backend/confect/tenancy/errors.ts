@@ -174,3 +174,104 @@ export class InviteRateLimited extends Schema.TaggedError<InviteRateLimited>()(
     "This invite was sent too often. Try again later."
   )
 ) {}
+
+/** Naming a Person who is not an active teacher of the cohort's unit as a homeroom teacher. */
+export class PersonNotTeacher extends Schema.TaggedError<PersonNotTeacher>()(
+  "PersonNotTeacher",
+  refusal(
+    "PERSON_NOT_TEACHER",
+    "Only an active teacher of this unit can be a homeroom teacher."
+  )
+) {}
+
+/** Assigning a homeroom teacher to a cohort that already has one. */
+export class CohortHasHomeroom extends Schema.TaggedError<CohortHasHomeroom>()(
+  "CohortHasHomeroom",
+  refusal("COHORT_HAS_HOMEROOM", "This cohort already has a homeroom teacher.")
+) {}
+
+/** Making a teacher the homeroom teacher of a second cohort of one period. */
+export class TeacherHasHomeroom extends Schema.TaggedError<TeacherHasHomeroom>()(
+  "TeacherHasHomeroom",
+  refusal(
+    "TEACHER_HAS_HOMEROOM",
+    "This teacher is already the homeroom teacher of another cohort in this period."
+  )
+) {}
+
+/** Placing a Person who graduated from the unit of the cohort. */
+export class PersonGraduated extends Schema.TaggedError<PersonGraduated>()(
+  "PersonGraduated",
+  refusal(
+    "PERSON_GRADUATED",
+    "This person has graduated from this unit and cannot be placed in it again."
+  )
+) {}
+
+/** A promotion that the school's Admin may not create: its source period is not active. */
+export class SourcePeriodInvalid extends Schema.TaggedError<SourcePeriodInvalid>()(
+  "SourcePeriodInvalid",
+  refusal(
+    "SOURCE_PERIOD_INVALID",
+    "Only an active period of this school can be promoted."
+  )
+) {}
+
+/** A target period that is not a planned period of the same school after the source period ends. */
+export class TargetPeriodInvalid extends Schema.TaggedError<TargetPeriodInvalid>()(
+  "TargetPeriodInvalid",
+  refusal(
+    "TARGET_PERIOD_INVALID",
+    "The target must be a planned period of this school that starts after the source period ends, and no other promotion may use it."
+  )
+) {}
+
+/** A promotion step that the promotion's current state does not allow. */
+export class PromotionState extends Schema.TaggedError<PromotionState>()(
+  "PromotionState",
+  refusal(
+    "PROMOTION_STATE",
+    "This promotion cannot take this step in its current state."
+  )
+) {}
+
+/**
+ * Why a plan does not fit its school: `targets` too many, `sources` not one entry
+ * for each cohort of the source period, `destination` a cohort the plan does not
+ * create, `stay` no cohort of the same name and grade, `graduate` a cohort whose
+ * grade is not the last of its unit, and `homeroom` a homeroom teacher copied to
+ * anything but a named cohort.
+ */
+export const PromotionPlanIssue = Schema.Literals([
+  "targets",
+  "sources",
+  "destination",
+  "stay",
+  "graduate",
+  "homeroom",
+]);
+
+/** A plan that does not fit the school, for the reason its `reason` names. */
+export class PromotionPlanInvalid extends Schema.TaggedError<PromotionPlanInvalid>()(
+  "PromotionPlanInvalid",
+  {
+    code: Schema.Literal("PROMOTION_PLAN_INVALID").pipe(
+      Schema.withConstructorDefault(Effect.succeed("PROMOTION_PLAN_INVALID"))
+    ),
+    message: Schema.String.pipe(
+      Schema.withConstructorDefault(
+        Effect.succeed("The promotion plan does not fit this school's cohorts.")
+      )
+    ),
+    reason: PromotionPlanIssue,
+  }
+) {}
+
+/** Undoing a step while a cohort the promotion created still holds a person or a homeroom teacher. */
+export class PromotionCohortOccupied extends Schema.TaggedError<PromotionCohortOccupied>()(
+  "PromotionCohortOccupied",
+  refusal(
+    "PROMOTION_COHORT_OCCUPIED",
+    "A cohort this promotion created still holds people or a homeroom teacher."
+  )
+) {}
