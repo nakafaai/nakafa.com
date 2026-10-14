@@ -9,14 +9,12 @@ import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
-import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { oldPage } from "@repo/backend/test/nina/legacy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, DateTime, Effect, Schema } from "effect";
@@ -176,16 +174,11 @@ function plainTurns(count: number) {
   return count === 0 ? [] : Arr.makeBy(count, () => ({}));
 }
 
-/**
- * Reserves a turn's credits, saves its prompt and queues the turn as the chat's
- * active one. With `legacy` the turn stores its page in the shape turns had
- * before they stored only what their readers use (`oldPage`).
- */
+/** Reserves a turn's credits, saves its prompt and queues the turn as the chat's active one. */
 async function queueTurn(
   ctx: MutationCtx,
   {
     chatId,
-    legacy = false,
     needsFetch = false,
     slug = "home",
     text,
@@ -193,7 +186,6 @@ async function queueTurn(
     userId,
   }: {
     chatId: Docs["chats"]["_id"];
-    legacy?: boolean;
     needsFetch?: boolean;
     slug?: string;
     text: string;
@@ -224,12 +216,6 @@ async function queueTurn(
       },
     })
   );
-  const page: NinaPage = {
-    locale: "en",
-    slug,
-    needsFetch,
-    nina: session.context,
-  };
   const turnId = await ctx.db.insert("ninaTurns", {
     ...reservation,
     phase: "active",
@@ -241,7 +227,12 @@ async function queueTurn(
     order: prompt.message.order,
     usage: [],
     user: {},
-    page: legacy ? oldPage(page) : page,
+    page: {
+      locale: "en",
+      slug,
+      needsFetch,
+      nina: session.context,
+    },
     state: { status: "queued" },
   });
   await ctx.db.patch("chats", chatId, { activeTurnId: turnId });
@@ -257,13 +248,11 @@ async function queueTurn(
  */
 export async function createNinaTest({
   history = 0,
-  legacy = false,
   now = DateTime.toEpochMillis(DateTime.nowUnsafe()),
   prompt: text = "Explain a limit.",
   needsFetch = false,
 }: {
   history?: number | readonly (typeof EarlierTurn.Type)[];
-  legacy?: boolean;
   now?: number;
   prompt?: string;
   needsFetch?: boolean;
@@ -296,7 +285,6 @@ export async function createNinaTest({
     }
     const turn = await queueTurn(ctx, {
       chatId,
-      legacy,
       needsFetch,
       text,
       threadId,
