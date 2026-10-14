@@ -79,7 +79,7 @@ describe("Nina learner prompt", () => {
     const account = Option.getOrThrow(
       Option.fromNullishOr(formatLearnerProfile(crowded))
     );
-    expect(countTextTokens(account)).toBeLessThanOrEqual(500);
+    expect(countTextTokens(account)).toBeLessThanOrEqual(NINA_BUDGET.account);
     expect(account).toContain("Account facts shortened.");
     const prompt = Option.getOrThrow(
       Option.fromNullishOr(
