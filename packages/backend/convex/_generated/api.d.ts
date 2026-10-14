@@ -2384,7 +2384,6 @@ export declare const api: {
             section: "articles" | "material" | "tryout" | "quran";
             title: string;
             url: string;
-            viewCount: number;
           }>
         >;
       };
@@ -3943,7 +3942,6 @@ export declare const api: {
                   description?: string;
                   publicPath: string;
                   readyQuestionCount: number;
-                  readySetCount: number;
                   readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
@@ -4267,7 +4265,6 @@ export declare const api: {
                   description?: string;
                   publicPath: string;
                   readyQuestionCount: number;
-                  readySetCount: number;
                   readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
@@ -4576,7 +4573,6 @@ export declare const api: {
                   description?: string;
                   publicPath: string;
                   readyQuestionCount: number;
-                  readySetCount: number;
                   readyVisibleSectionCount: number;
                   title: string;
                   trackKey: string;
@@ -4644,7 +4640,6 @@ export declare const api: {
               description?: string;
               publicPath: string;
               readyQuestionCount: number;
-              readySetCount: number;
               readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
@@ -4847,7 +4842,6 @@ export declare const api: {
               description?: string;
               publicPath: string;
               readyQuestionCount: number;
-              readySetCount: number;
               readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
@@ -4904,7 +4898,6 @@ export declare const api: {
               description?: string;
               publicPath: string;
               readyQuestionCount: number;
-              readySetCount: number;
               readyVisibleSectionCount: number;
               title: string;
               trackKey: string;
@@ -4935,7 +4928,6 @@ export declare const api: {
               description?: string;
               publicPath: string;
               readyQuestionCount: number;
-              readySetCount: number;
               readyVisibleSectionCount: number;
               title: string;
               trackKey: string;

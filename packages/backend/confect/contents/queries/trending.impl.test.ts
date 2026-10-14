@@ -163,7 +163,6 @@ describe("contents/queries/trending", () => {
     ).resolves.toMatchObject([
       {
         content_id: popular.graph.assetId,
-        viewCount: 10,
       },
     ]);
   });
@@ -200,7 +199,6 @@ describe("contents/queries/trending", () => {
         route: second.publicPath,
         title: second.metadata.title,
         url: `https://nakafa.com/en/${second.publicPath}`,
-        viewCount: 10,
       }),
       expect.objectContaining({
         assetId: first.graph.assetId,
@@ -210,7 +208,6 @@ describe("contents/queries/trending", () => {
         materialDomain: "mathematics",
         route: first.publicPath,
         title: first.metadata.title,
-        viewCount: 7,
       }),
     ]);
     expect(results[0]).not.toHaveProperty("id");
@@ -240,9 +237,9 @@ describe("contents/queries/trending", () => {
     const results = await target.query(getTrendingSubjects, {
       locale: "en",
     });
-    expect(Arr.map(results, ({ viewCount }) => viewCount)).toEqual([
-      20, 19, 18, 17, 16, 15,
-    ]);
+    expect(Arr.map(results, ({ content_id }) => content_id)).toEqual(
+      Arr.map(Arr.take(projections, 6), ({ graph }) => graph.assetId)
+    );
   });
   it("pages past a full page of missing rankings and preserves a renamed material", async () => {
     // One more ranking than a page holds, so the renamed material is on page two.
@@ -310,11 +307,14 @@ describe("contents/queries/trending", () => {
       await expect(
         target.query(getTrendingSubjects, { locale: "en" })
       ).resolves.toEqual([
-        expect.objectContaining({
-          assetId: material.contentId,
-          viewCount: 5,
-        }),
+        expect.objectContaining({ assetId: material.contentId }),
       ]);
+      const counters = await target.run((ctx) =>
+        ctx.db.query("learningPopularityCounters").collect()
+      );
+      expect(
+        Arr.map(counters, ({ content_id, score }) => ({ content_id, score }))
+      ).toEqual([{ content_id: material.contentId, score: 5 }]);
     } finally {
       vi.useRealTimers();
     }
