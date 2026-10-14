@@ -59,7 +59,7 @@ function validInput(): PolicyInput {
         index === 0
           ? {
               doctor:
-                "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17",
+                "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18",
             }
           : undefined,
     },
@@ -241,7 +241,7 @@ describe("dependency policy validation", () => {
           scripts: { doctor: "pnpm dlx react-doctor@0.9.5" },
         })),
       problem:
-        "apps/www/package.json script doctor is pnpm dlx react-doctor@0.9.5; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17.",
+        "apps/www/package.json script doctor is pnpm dlx react-doctor@0.9.5; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18.",
     },
     {
       name: "a missing reviewed script",
@@ -251,7 +251,7 @@ describe("dependency policy validation", () => {
           scripts: undefined,
         })),
       problem:
-        "apps/www/package.json script doctor is missing; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17.",
+        "apps/www/package.json script doctor is missing; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18.",
     },
     {
       name: "missing update ignores",

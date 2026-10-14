@@ -41,7 +41,7 @@ export const EFFECT_COHORT_OVERRIDES = [
   "@effect/platform-node-shared",
 ] as const;
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
-export const VITEST_COHORT_VERSION = "5.0.3";
+export const VITEST_COHORT_VERSION = "5.0.4";
 /**
  * The AI SDK core and the Convex AI gateway provider move as one catalog
  * cohort, and each bump rechecks the gateway module's provider contracts
@@ -51,7 +51,7 @@ export const VITEST_COHORT_VERSION = "5.0.3";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.136",
+  ai: "7.0.140",
 } as const;
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
@@ -143,14 +143,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "24.19.1",
+    approved: "24.19.2",
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "7.12.4", dependency: "ultracite", minimumDeclarations: 1 },
-  { approved: "2.11.7", dependency: "turbo", minimumDeclarations: 1 },
+  { approved: "8.0.1", dependency: "ultracite", minimumDeclarations: 1 },
+  { approved: "2.11.8", dependency: "turbo", minimumDeclarations: 1 },
   {
-    approved: "2.11.7",
+    approved: "2.11.8",
     dependency: "@turbo/gen",
     minimumDeclarations: 1,
   },
@@ -233,18 +233,18 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.51.1",
-    "Compiler patching moves with TypeScript and Effect; 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), and 0.51 adds declaration locations to it.",
+    "0.52.0",
+    "Compiler patching moves with TypeScript and Effect; 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), and 0.51 adds declaration locations to it. 0.52 turns on schemaClassMissingBrand for Effect v4 schema classes by default. Its first typecheck run failed with TS377141 in packages/utilities alone, and about 340 lines in the repository declare Schema.Class, Schema.TaggedError or Schema.Opaque, so the compiler stays on 0.51.1 until those brands are adopted or the rule is decided in docs/adr/0021-rules.md.",
   ],
-  ["vitest@latest", "5.0.3", "The Effect 4 test adapter requires Vitest 5."],
+  ["vitest@latest", "5.0.4", "The Effect 4 test adapter requires Vitest 5."],
   [
     "@vitest/coverage-istanbul@latest",
-    "5.0.3",
+    "5.0.4",
     "Coverage must match the supported Vitest runner.",
   ],
   [
     "@vitest/ui@latest",
-    "5.0.3",
+    "5.0.4",
     "The test UI must match the supported Vitest runner.",
   ],
   [
@@ -284,8 +284,12 @@ export const REGISTRY_REVIEWS = [
     "The adapter defines the accepted Better Auth peer range.",
   ],
   ["@biomejs/biome@latest", "2.5.15", "Formatting is reviewed with Ultracite."],
-  ["ultracite@latest", "7.12.4", "Formatting is reviewed with Biome."],
-  ["@types/node@24", "24.19.1", "Declarations remain on the Node 24 line."],
+  [
+    "ultracite@latest",
+    "8.0.1",
+    "Ultracite 8 keeps the Biome presets. Its Biome core turns noForIn, noUndeclaredDependencies and three JSX rules into errors, and the repository passes them without code changes. Its ESLint, Oxlint and Zed changes do not apply to this Biome setup.",
+  ],
+  ["@types/node@24", "24.19.2", "Declarations remain on the Node 24 line."],
   ["node@24", "24.21.0", "The repository supports the Node 24 runtime line."],
   [
     "pnpm@latest",
@@ -294,13 +298,13 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "react-doctor@latest",
-    "0.9.17",
-    "The local and CI scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled.",
+    "0.9.18",
+    "The local and CI scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled. 0.9.18 narrows existing rules to reduce false positives and adds the opt-in --scope contextual mode, which this repository does not use.",
   ],
   [
     "turbo@latest",
-    "2.11.7",
-    "Turbo and its generator move together; 2.11 adds hash and scope-filtering performance work, and 2.11.4 respects negated global dependencies in affected detection, with no config change for this repository.",
+    "2.11.8",
+    "Turbo and its generator move together; 2.11 adds hash and scope-filtering performance work, 2.11.4 respects negated global dependencies in affected detection, and 2.11.8 hashes the Ruff and pytest configuration of the Python app and fixes affected listings, with no config change for this repository.",
   ],
   [
     "@react-three/fiber@latest",
@@ -320,7 +324,7 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
     // throwaway install took versions npm was still propagating: a 4-minute-old
     // electron-to-chromium tarball returned 404 and failed Doctor. The pnpm 11
     // default of one day keeps that install on settled releases.
-    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17",
+    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },
