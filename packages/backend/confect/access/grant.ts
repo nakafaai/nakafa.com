@@ -15,6 +15,7 @@ import {
   type GrantEndReason,
   GrantScope,
   type GrantStatus,
+  type GrantTerm,
   OwnerRole,
 } from "@repo/backend/confect/access/schema";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
@@ -38,7 +39,7 @@ export const OWNER_LIMIT = 8;
 const sameScope = Schema.toEquivalence(GrantScope);
 
 /** The tenant's active Owner grants, bounded by the Owner limit plus one. */
-const activeOwners = Effect.fn("access.grant.owners")(function* (
+export const activeOwners = Effect.fn("access.grant.owners")(function* (
   tenantId: GenericId.GenericId<"tenants">
 ) {
   return yield* (yield* DatabaseReader)
@@ -100,6 +101,100 @@ const refusal = (
   );
 
 /**
+ * The first invariant a new temporary grant breaks. Temporary grants are the
+ * visit grants of operators: only operator Persons hold them, only active ones,
+ * and never the Owner or Admin role, whose grants stand until someone ends them.
+ */
+const temporaryRefusal = (
+  person: TenantPeopleDoc,
+  role: BuiltinRole
+): Option.Option<GrantRejected> => {
+  if (person.kind !== "operator") {
+    return Option.some(
+      new GrantRejected({
+        code: "PERSON_KIND",
+        message: "Only operators hold temporary grants.",
+      })
+    );
+  }
+  if (person.status !== "active") {
+    return Option.some(
+      new GrantRejected({
+        code: "PERSON_INACTIVE",
+        message: "This person is not active.",
+      })
+    );
+  }
+  if (role === "integration") {
+    return Option.some(
+      new GrantRejected({
+        code: "GRANT_ROLE",
+        message: "Integrations are not people.",
+      })
+    );
+  }
+  if (Schema.is(OwnerRole)(role)) {
+    return Option.some(
+      new GrantRejected({
+        code: "TEMPORARY_ROLE",
+        message: "An Owner or Admin role is never temporary.",
+      })
+    );
+  }
+  return Option.none();
+};
+
+/**
+ * Writes one active grant under the Person and records it under the Person. The
+ * Person's grants are read by the caller; the limits of the Person and of the
+ * tenant's Owners are checked here before the grant is written.
+ */
+const writeGrant = Effect.fn("access.grant.write")(function* (
+  actor: typeof TenantActor.Type,
+  person: TenantPeopleDoc,
+  grants: readonly TenantGrantsDoc[],
+  role: BuiltinRole,
+  scope: GrantScope,
+  term: typeof GrantTerm.Type
+) {
+  if (grants.length >= GRANT_LIMIT) {
+    return yield* new GrantRejected({
+      code: "GRANT_LIMIT",
+      message: "This person has too many roles.",
+    });
+  }
+  if (
+    role === "owner" &&
+    (yield* activeOwners(person.tenantId)).length >= OWNER_LIMIT
+  ) {
+    return yield* new GrantRejected({
+      code: "GRANT_LIMIT",
+      message: "This school has too many owners.",
+    });
+  }
+  const grantId = yield* (yield* DatabaseWriter)
+    .table("tenantGrants")
+    .insert({
+      grantedBy: actor,
+      personId: person._id,
+      role: { key: role, kind: "builtin" },
+      scope,
+      status: "active",
+      tenantId: person.tenantId,
+      term,
+    })
+    .pipe(Effect.orDie);
+  yield* personAuthority.record(actor, person, {
+    grant: grantId,
+    role: { key: role, kind: "builtin" },
+    scope,
+    term,
+    type: "grant.created",
+  });
+  return grantId;
+});
+
+/**
  * Gives a member Person a standing built-in role under the tenant's
  * invariants and records it under the Person. An identical active grant is
  * returned instead of duplicated, so a retried request stays idempotent.
@@ -126,44 +221,44 @@ export const assignRole = Effect.fn("access.grant.assign")(function* (
   if (Option.isSome(existing)) {
     return existing.value._id;
   }
-  if (grants.length >= GRANT_LIMIT) {
-    return yield* new GrantRejected({
-      code: "GRANT_LIMIT",
-      message: "This person has too many roles.",
-    });
-  }
-  if (
-    role === "owner" &&
-    (yield* activeOwners(person.tenantId)).length >= OWNER_LIMIT
-  ) {
-    return yield* new GrantRejected({
-      code: "GRANT_LIMIT",
-      message: "This school has too many owners.",
-    });
-  }
-  const grantId = yield* (yield* DatabaseWriter)
-    .table("tenantGrants")
-    .insert({
-      grantedBy: actor,
-      personId: person._id,
-      role: { key: role, kind: "builtin" },
-      scope,
-      status: "active",
-      tenantId: person.tenantId,
-      term: { kind: "standing" },
-    })
-    .pipe(Effect.orDie);
-  yield* personAuthority.record(actor, person, {
-    grant: grantId,
-    role: { key: role, kind: "builtin" },
-    scope,
-    term: { kind: "standing" },
-    type: "grant.created",
+  return yield* writeGrant(actor, person, grants, role, scope, {
+    kind: "standing",
   });
-  return grantId;
 });
 
-/** Ends an active grant and records it under the Person who held it. */
+/**
+ * Gives an operator Person a temporary role that ends at `expiresAt`, under the
+ * invariants of temporary grants, and records it under the Person. A visit is
+ * its only use, and a visit grant is always the Auditor role, so approving one
+ * never mints an Admin. The caller schedules the end of the grant.
+ */
+export const assignTemporaryRole = Effect.fn("access.grant.assignTemporary")(
+  function* (
+    actor: typeof TenantActor.Type,
+    person: TenantPeopleDoc,
+    role: BuiltinRole,
+    scope: GrantScope,
+    expiresAt: number
+  ) {
+    yield* Option.match(temporaryRefusal(person, role), {
+      onNone: () => Effect.void,
+      onSome: Effect.fail,
+    });
+    return yield* writeGrant(
+      actor,
+      person,
+      yield* activeGrants(person._id),
+      role,
+      scope,
+      { expiresAt, kind: "temporary" }
+    );
+  }
+);
+
+/**
+ * Ends an active grant and records it under the Person who held it. A grant
+ * that expires is marked expired; every other reason marks it revoked.
+ */
 export const endGrant = Effect.fn("access.grant.end")(function* (
   actor: typeof TenantActor.Type,
   grant: TenantGrantsDoc,

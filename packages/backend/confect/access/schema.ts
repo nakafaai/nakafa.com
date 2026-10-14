@@ -36,8 +36,12 @@ export const RuleRole = BuiltinRole.pick([
 /** Roles only Owners may give or remove, so an Admin cannot mint Admins. */
 export const OwnerRole = BuiltinRole.pick(["owner", "admin"]);
 
-/** A write stops at a locked subject or a suspended tenant; a read does not. */
-const Access = Schema.Literals(["read", "write"]);
+/**
+ * A write stops at a locked subject or a suspended tenant; a read does not. A
+ * transition ends access or restores a tenant, so a suspended tenant and a
+ * locked subject do not refuse it: a school can always end a visit.
+ */
+const Access = Schema.Literals(["read", "write", "transition"]);
 
 /**
  * How one action is granted. A `roles` rule allows its roles, every Owner,
@@ -82,11 +86,15 @@ export const GrantTerm = Schema.Union([
 ]);
 export const GrantStatus = Schema.Literals(["active", "revoked", "expired"]);
 
-/** Why a grant stopped: a person revoked it, its term ran out, or a visit replaced it. */
+/**
+ * Why a grant stopped: the school revoked it, its term ran out, a replacement
+ * Owner took its place, or the operator left a visit before its term ended.
+ */
 export const GrantEndReason = Schema.Literals([
   "revoked",
   "expired",
   "replaced",
+  "left",
 ]);
 
 /** One active grant on the wire. */

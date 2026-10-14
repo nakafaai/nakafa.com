@@ -5,7 +5,8 @@
 Accepted. Amended on 13 October 2026 for the homeroom and guardian relations, the
 actions of the school roles, and the 24-hour limit on operator visits. Amended on
 14 October 2026 for the cohort member relation, which is live, and for the
-period, cohort, people, and invite actions.
+period, cohort, people, and invite actions. Amended on 14 October 2026 for the
+operator visits and their transition access, which are live.
 
 ## Context
 
@@ -117,6 +118,11 @@ memoized relation checks:
    subject.
 4. Otherwise the action is refused as `role`.
 
+A rule's `access` is `read`, `write`, or `transition`. Only a `write` is refused
+by a suspended tenant or a locked subject. A `transition` ends access or restores
+a tenant, so it runs in a suspended tenant, and a visit's end is one (see
+Operators inside tenants). Its roles and relations decide it like any other rule.
+
 A rule either grants by roles, where the listed roles, every Owner, and the
 listed relations allow it, or by relations only, where no role can allow it, so
 a guardian's consent, a student's exam answers, and private threads stay out of
@@ -194,6 +200,7 @@ are:
 | Session proctor | A proctor and one exam sitting | Every proctor action of that sitting (ADR 0013): the token and the participant dashboard, lock and unlock, add minutes, change the token, allow a second device, close the sitting, and accept or reject a late record of an attempt in it | Planned |
 | Exam author | A teacher and their exam | Changing and grading that exam, every proctor action of its sittings, and accepting or rejecting the late records of its attempts | Planned |
 | Shared practice | A student and a practice the student shared | School Insight, per topic, revocable by the student | Planned |
+| Visitor | An operator Person and its approved visit | Ending that visit (`visit.end`) | Live |
 
 ### Operators inside tenants
 
@@ -201,13 +208,22 @@ An operator enters a tenant through a visit: a temporary Auditor grant on a
 Person of kind operator, active only while the grant is. A visit grant is always
 the Auditor role, so no visit mints an Admin and approving one never needs
 `owner.manage`. The school's Owner or Admin approves each visit, and the grant
-lasts at most 24 hours. The visit's end, by schedule, by leaving, by the school
-revoking it, or by the operator losing their operator row, ends the grant and
-suspends that Person in the same transaction, so the member middleware refuses
-it at once. These end paths run in a suspended tenant (see Decisions), and the
-grant change records which one ended the visit (ADR 0016). An operator Person
-never holds the `member` relation and counts only the grants an operator gave
-for a visit.
+lasts at most 24 hours. `access/grant` gives a temporary grant with
+`assignTemporaryRole`, and refuses an Owner or Admin role (`TEMPORARY_ROLE`), a
+Person that is not an operator (`PERSON_KIND`), and an inactive Person. The
+visit's end, by schedule, by the operator leaving, or by the school ending it,
+ends the grant and suspends that Person in the same transaction, so the member
+middleware refuses it at once. Each end is a `transition` (see Decisions), so a
+suspended tenant does not refuse it. The grant change records the reason
+(`left` when the operator leaves, `revoked` when the school ends it, `expired`
+at its term) and the visit records the same reason (ADR 0016).
+
+An operator whose operator row is revoked is refused at once: the member
+middleware refuses its Person, so the grant stops working whatever its term.
+The grant and the Person end at the visit's own end, by its schedule or by the
+hourly sweep, because a revoke would otherwise read every tenant the operator
+is inside (ADR 0011, Operators). An operator Person never holds the `member`
+relation and counts only the grants an operator gave for a visit.
 
 ### Wire contracts
 
