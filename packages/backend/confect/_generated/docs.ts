@@ -56,6 +56,7 @@ export type NinaSummariesDoc = Document.Document<typeof schemaDefinition, "ninaS
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
 export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "onboardingProfiles">;
+export type OperatorsDoc = Document.Document<typeof schemaDefinition, "operators">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
@@ -69,6 +70,7 @@ export type TenantInvitesDoc = Document.Document<typeof schemaDefinition, "tenan
 export type TenantPeopleDoc = Document.Document<typeof schemaDefinition, "tenantPeople">;
 export type TenantPeriodsDoc = Document.Document<typeof schemaDefinition, "tenantPeriods">;
 export type TenantUnitsDoc = Document.Document<typeof schemaDefinition, "tenantUnits">;
+export type TenantVisitsDoc = Document.Document<typeof schemaDefinition, "tenantVisits">;
 export type TenantsDoc = Document.Document<typeof schemaDefinition, "tenants">;
 export type TryoutAttemptPlacementsDoc = Document.Document<typeof schemaDefinition, "tryoutAttemptPlacements">;
 export type TryoutAttemptsDoc = Document.Document<typeof schemaDefinition, "tryoutAttempts">;
@@ -140,6 +142,7 @@ export interface Docs {
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;
   onboardingProfiles: OnboardingProfilesDoc;
+  operators: OperatorsDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;
   quranRows: QuranRowsDoc;
@@ -153,6 +156,7 @@ export interface Docs {
   tenantPeople: TenantPeopleDoc;
   tenantPeriods: TenantPeriodsDoc;
   tenantUnits: TenantUnitsDoc;
+  tenantVisits: TenantVisitsDoc;
   tenants: TenantsDoc;
   tryoutAttemptPlacements: TryoutAttemptPlacementsDoc;
   tryoutAttempts: TryoutAttemptsDoc;
