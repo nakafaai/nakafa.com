@@ -6,7 +6,7 @@ import type { GoogleOptions } from "better-auth/social-providers";
  * refresh and ID tokens and their expiry times, all unset. Nothing in Nakafa
  * reads them after sign-in, so Better Auth stores none of them.
  */
-export const noProviderTokens = {
+const noProviderTokens = {
   accessToken: undefined,
   accessTokenExpiresAt: undefined,
   idToken: undefined,
