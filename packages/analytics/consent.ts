@@ -34,6 +34,14 @@ export const ANALYTICS_CONSENT_NOTICE_VERSION = CONSENT_NOTICE_VERSIONS[0];
 export const ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY =
   "nakafa-analytics-consent";
 
+/**
+ * Browser storage key that holds the current notice version once this browser
+ * has learned the signed-in account's choice for it. The account choice itself
+ * stays in Convex; this key only lets the next page hide the prompt before paint.
+ */
+export const ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY =
+  "nakafa-analytics-consent-account";
+
 const AnalyticsConsentDecisionSchema = Schema.Literals(["granted", "denied"]);
 
 export type AnalyticsConsentDecision =

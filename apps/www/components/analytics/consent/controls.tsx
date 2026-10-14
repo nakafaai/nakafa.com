@@ -23,6 +23,10 @@ import { usePageNavigation } from "@/lib/content/page/context";
 /**
  * Renders the non-blocking first decision and permanent preferences dialog.
  *
+ * The server renders the prompt while the choice is pending, so the text is in
+ * the first HTML. The bootstrap script hides it before paint for a visitor whose
+ * choice this browser keeps, and the store removes it once the choice is known.
+ *
  * The consent state is derived once here and handed to the decision and
  * detail parts, which render in both the prompt and the dialog.
  */
@@ -48,7 +52,7 @@ export function AnalyticsConsentControls() {
       {consent.isPromptOpen ? (
         <section
           aria-label={t("title")}
-          className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md"
+          className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md [:root[data-analytics-consent=decided]_&]:hidden"
         >
           <Card className="max-h-[calc(100dvh-2rem)] shadow-lg" size="sm">
             <CardHeader>

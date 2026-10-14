@@ -82,6 +82,23 @@ export function shouldPersistAnonymousAnalyticsDenial({
   });
 }
 
+/**
+ * Returns whether this browser must keep the signed-in account's choice for the
+ * current notice, so the next page hides the prompt before paint.
+ */
+export function shouldRecordAccountPromptChoice({
+  accountConsent,
+  isAuthenticated,
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly isAuthenticated: boolean;
+}) {
+  return (
+    isAuthenticated &&
+    accountConsent?.noticeVersion === ANALYTICS_CONSENT_NOTICE_VERSION
+  );
+}
+
 /** Resolves preview, auth, account, and anonymous consent into one state. */
 export function resolveBrowserAnalyticsConsentState({
   accountConsent,

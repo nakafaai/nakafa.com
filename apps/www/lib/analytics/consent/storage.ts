@@ -1,4 +1,6 @@
 import {
+  ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
+  ANALYTICS_CONSENT_NOTICE_VERSION,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   type AnonymousAnalyticsConsentRecord,
   decodeAnonymousAnalyticsConsent,
@@ -49,6 +51,25 @@ export const loadAnonymousAnalyticsConsent = Effect.fn(
   }
 
   return decodeAnonymousAnalyticsConsent(persisted);
+});
+
+/**
+ * Records that the signed-in account's choice for the current notice is known
+ * in this browser, so the next page hides the prompt before paint.
+ */
+export const saveAnalyticsConsentAccountChoice = Effect.fn(
+  "www.analytics.saveAnalyticsConsentAccountChoice"
+)(function* (storage?: AnalyticsConsentStorage) {
+  const target = yield* getAnalyticsConsentStorage(storage);
+
+  yield* Effect.try({
+    try: () =>
+      target.setItem(
+        ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
+        ANALYTICS_CONSENT_NOTICE_VERSION
+      ),
+    catch: analyticsConsentStorageFailure,
+  });
 });
 
 /** Persists one explicit anonymous browser decision under the current notice. */

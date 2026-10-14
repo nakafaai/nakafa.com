@@ -118,7 +118,6 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
     (!isAuthenticated && hasStorageError);
   const sessionPolicy = resolveAnalyticsConsentSessionPolicy({
     durableConsent,
-    hasLoadError,
     overrides: sessionOverrides,
     promptIdentity,
     status: state.status,

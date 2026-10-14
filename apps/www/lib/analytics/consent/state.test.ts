@@ -11,6 +11,7 @@ import {
   createBrowserAnalyticsIdentity,
   resolveBrowserAnalyticsConsentState,
   shouldPersistAnonymousAnalyticsDenial,
+  shouldRecordAccountPromptChoice,
   shouldRevokeAccountAnalyticsGrant,
 } from "@/lib/analytics/consent/state";
 
@@ -360,5 +361,33 @@ describe("browser analytics consent state", () => {
         },
       ])
     ).toBeNull();
+  });
+
+  it("records a signed-in choice only for the current notice", () => {
+    expect([
+      shouldRecordAccountPromptChoice({
+        accountConsent,
+        isAuthenticated: true,
+      }),
+      shouldRecordAccountPromptChoice({
+        accountConsent: { ...accountConsent, granted: false },
+        isAuthenticated: true,
+      }),
+      shouldRecordAccountPromptChoice({
+        accountConsent: {
+          ...accountConsent,
+          noticeVersion: "privacy-2026-08-21",
+        },
+        isAuthenticated: true,
+      }),
+      shouldRecordAccountPromptChoice({
+        accountConsent,
+        isAuthenticated: false,
+      }),
+      shouldRecordAccountPromptChoice({
+        accountConsent: null,
+        isAuthenticated: true,
+      }),
+    ]).toEqual([true, true, false, false, false]);
   });
 });

@@ -14,9 +14,11 @@ import {
   type AccountConsentDecision,
   type BrowserConsentSnapshot,
   shouldPersistAnonymousAnalyticsDenial,
+  shouldRecordAccountPromptChoice,
 } from "@/lib/analytics/consent/state";
 import {
   loadAnonymousAnalyticsConsent,
+  saveAnalyticsConsentAccountChoice,
   saveAnonymousAnalyticsConsent,
 } from "@/lib/analytics/consent/storage";
 import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
@@ -184,6 +186,36 @@ export function useBrowserConsentSync({
       Effect.runFork(Fiber.interrupt(loadFiber));
     };
   }, [isPreviewChild, setBrowserConsent, setHasStorageError]);
+}
+
+/**
+ * Keeps this browser's marker of the signed-in account's current choice, so the
+ * next page hides the prompt before paint. Blocked storage keeps no marker, and
+ * the prompt then waits for the account's choice as it does without one.
+ */
+export function useAccountPromptChoiceMarker({
+  accountConsent,
+  isAuthenticated,
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly isAuthenticated: boolean;
+}) {
+  const shouldRecord = shouldRecordAccountPromptChoice({
+    accountConsent,
+    isAuthenticated,
+  });
+
+  useEffect(() => {
+    if (!shouldRecord) {
+      return;
+    }
+
+    Effect.runFork(
+      saveAnalyticsConsentAccountChoice().pipe(
+        Effect.catchTag("AnalyticsConsentStorageFailed", () => Effect.void)
+      )
+    );
+  }, [shouldRecord]);
 }
 
 /**

@@ -5,6 +5,7 @@ import { Effect } from "effect";
 import { type ReactNode, useEffect, useState } from "react";
 import { useStore } from "zustand";
 import {
+  useAccountPromptChoiceMarker,
   useAnonymousDenialPersistence,
   useBrowserConsentSync,
 } from "@/lib/analytics/consent/browser";
@@ -80,6 +81,10 @@ function AnalyticsConsentController({
     isAuthenticated: consent.isAuthenticated,
     setBrowserConsent,
     setHasStorageError,
+  });
+  useAccountPromptChoiceMarker({
+    accountConsent: consent.accountConsent,
+    isAuthenticated: consent.isAuthenticated,
   });
 
   // The content-view identifier exists only under a durable grant; reading the
