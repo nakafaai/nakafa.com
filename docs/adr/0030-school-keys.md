@@ -54,12 +54,12 @@ learner's key.
   apart.
 - It is stored only wrapped by the current root key, in `tenantKeys`, and it is
   created when the tenant is created. The provisioning mutation of ADR 0011
-  (`tenancy/provision:open`, live today and writing no key) gains the creation
-  and runs it in the same transaction as the tenant, in the data cell that holds
-  the school (ADR 0026, K5). A learner's key is created on first use, because a
-  learner exists before anything is sealed for them. A school's key exists from
-  the first day, so no read or write has to create it. A tenant without a key is
-  a defect, and a reader fails with `VaultError` reason `key`.
+  (`tenancy/provision:open`) creates it in the same transaction as the tenant,
+  in the data cell that holds the school (ADR 0026, K5). A learner's key is
+  created on first use, because a learner exists before anything is sealed for
+  them. A school's key exists from the first day, so no read or write has to
+  create it. A tenant without a key is a defect, and a reader fails with
+  `VaultError` reason `key`.
 - The key never leaves its cell. `VAULT_ROOT_KEYS` is a value of one
   deployment's environment, and Convex refuses a push to a deployment without it
   (`packages/backend/convex/convex.config.ts`). Each cell has its own deployment
@@ -78,12 +78,13 @@ keys it derives (`vault/cipher.ts`), so a school key derives the same three keys
 as a learner key: an AES-256-GCM key that seals, an HMAC key that makes each
 nonce, and an HMAC key that blinds a word.
 
-| Part of `confect/vault` | Today | With the school key |
+| Part of `confect/vault` | On main at `6dbc43b76c` | With the school key |
 | --- | --- | --- |
 | `cipher.ts` | Seals, opens, and blinds with the keys that any 32-byte key derives | No change |
 | `ring.ts` | Reads the root keys from `VAULT_ROOT_KEYS` | No change |
-| `keys.ts` | Learner keys: `ensureLearnerKeys`, `readLearnerKeys`, `shredLearnerKeys`, and `rewrapLearnerKeys` | Gains the readers of a school key, its creation (called by provisioning), and its deletion. The wrapped key is bound to the tenant with a label of its own, so a wrapped learner key never opens as a school key. The rewrap (`vault/keys:rewrap`) covers both tables. |
-| `text.ts` | `sealText`, `openText`, and `blindText` bind a text to a learner, a table, and a field | They take the keys of an owner, a learner or a tenant, and bind a text to that owner, the table, and the field. A text opens only for that school and that field. |
+| `keys.ts` | Learner keys: `ensureLearnerKeys`, `readLearnerKeys`, `shredLearnerKeys`, and `rewrapLearnerKeys` | The learner keys stay as they are. Gains the reader and the creation of a school key (`readTenantKeys`, and `createTenantKey`, which provisioning calls). The wrapped key is bound to the school and its generation with a label of its own, so a wrapped learner key never opens as a school key. Shredding a school key is planned with the school deletion (Implementation Status). |
+| `rewrap.ts` | Does not exist. The rewrap is `rewrapLearnerKeys` in `keys.ts`. | New. `rewrapKeys` moves one page a call: the learner keys still on a retired root key, then the school keys. It returns zero only when both tables use the current root key, and it fails while a stored key names a root key that the environment lacks. `vault/keys:rewrap` runs it. |
+| `text.ts` | `sealText`, `openText`, and `blindText` bind a text to a learner, a table, and a field | They take the keys of an owner, a learner or a school, and bind a text to that owner, the table, and the field. A school's text opens only for that school, its generation, and that field. |
 | `schema.ts` | `VaultKey`, `VaultField`, and `VaultError` | Gains the row of `tenantKeys` (the tenant, the generation, the root key, the wrapped key, and the time of creation) |
 
 ### What the school key seals
@@ -170,12 +171,13 @@ never silently working.
 The root key rotates by rewrap. Put the new root key first in `VAULT_ROOT_KEYS`,
 run `vault/keys:rewrap` until it returns zero, remove the old root key, and
 destroy every copy of it (`vault/keys.spec.ts`). Sealed values do not change,
-only the wrapping of the keys. `rewrapLearnerKeys` moves `vaultKeys` alone
-today, so this ADR extends it to `tenantKeys` before any school key exists.
-Otherwise a retired root key could leave the environment while it still wraps a
-school key, and the school's text would be lost. The rewrap reports zero only
-when both tables are on the current root key. Its test: with a retired root key,
-the rewrap reports a count until it has moved both tables.
+only the wrapping of the keys. `rewrapKeys` in `vault/rewrap.ts` moves one page
+a call: first the learner keys still on a retired root key, then the school
+keys. Removing a retired root key while it still wraps a school key would lose
+that school's text, so the rewrap reports zero only when both tables use the
+current root key and no stored key names a root key that the environment lacks.
+Its test: with a retired root key, the rewrap reports a count until it has moved
+both tables.
 
 The school key itself is replaced only when a leak is suspected. A replacement
 is a migration, run the way ADR 0024 runs the migration of old messages.

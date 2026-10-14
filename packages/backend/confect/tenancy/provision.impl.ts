@@ -43,9 +43,11 @@ const createUnit = Effect.fn("tenancy.provision.unit")(function* (
 /**
  * Opens an organisation in one transaction: the tenant, its schools, its first
  * Owner as a Person nobody has claimed yet, the invite that names the Owner's
- * address, and the Owner role. Each write is in the journal. The invitation
- * email starts with the transaction, in the content language of the first
- * school, and an account that already holds the address claims the Person
+ * address, and the Owner role. Each of those writes is in the journal. The
+ * school's key is written in the same transaction but is not journaled, because
+ * ADR 0016 lists what the journal records and a key is not among them. The
+ * invitation email starts with the transaction, in the content language of the
+ * first school, and an account that already holds the address claims the Person
  * moments later.
  */
 const open = FunctionImpl.make(

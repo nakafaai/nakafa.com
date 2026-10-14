@@ -31,9 +31,9 @@ const readEntry = Effect.fn("vault.ring.readEntry")(function* (entry: string) {
 
 /**
  * Reads the root keys from `VAULT_ROOT_KEYS`: `id:key` entries separated by
- * commas. The first entry wraps new learner keys. The entries after it only
- * unwrap, while a rotation moves every learner key to the first. The value
- * never reaches a log or an error.
+ * commas. The first entry wraps new learner keys and new school keys. The entries
+ * after it only unwrap, while a rotation moves every learner key and every school
+ * key to the first. The value never reaches a log or an error.
  */
 export const readRing = Effect.fn("vault.ring.read")(function* () {
   const value = yield* Config.Redacted("VAULT_ROOT_KEYS").pipe(

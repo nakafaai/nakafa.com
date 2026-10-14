@@ -332,9 +332,10 @@ beside the old School. Four steps followed, in this order, and all four are done
   that school only and an archived school refuses them. Restoring is decided on
   the tenant because an archived school refuses every write.
 - Internal: `tenancy/provision:open` opens an organisation (the tenant, its
-  schools, its first Owner as an unclaimed Person with the Owner role, the
-  invite, and the journal) in one transaction, and starts the invitation email
-  through `emails/invite`, since `emails` is the only sender. Nakafa staff run
+  schools, the school key that ADR 0030 gives it, its first Owner as an
+  unclaimed Person with the Owner role, the invite, and the journal) in one
+  transaction, and starts the invitation email through `emails/invite`, since
+  `emails` is the only sender. Nakafa staff run
   it with the deployment's key. `tenancy/claims:run` claims the pending invites of one
   account whose address Better Auth has verified and the tenant admits, a page
   at a time. It is scheduled by the Better Auth user triggers after sign-up and
