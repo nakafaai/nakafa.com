@@ -22,8 +22,12 @@ const webSearchMaxSites = 5;
  * The most characters one search query may have. The search provider documents
  * its `query` with `maxLength: 500` (Firecrawl search endpoint,
  * https://docs.firecrawl.dev/api-reference/endpoint/search, read on 12 October
- * 2026). The tool input states the same limit, so the model is told it and no
- * query is cut afterwards.
+ * 2026) and documents no answer to a longer one. The tool input states the
+ * same limit, so the model is told it and no query is cut afterwards. A longer
+ * query makes the call invalid, like a fifth query, and `runResearchAgent`
+ * drops an invalid call: no search is planned, so the run answers from the
+ * links the learner sent, if any, and ends partial, or it fails when there are
+ * none. A search already stored keeps whatever query it ran with.
  */
 const webSearchQueryMaxLength = 500;
 /**
