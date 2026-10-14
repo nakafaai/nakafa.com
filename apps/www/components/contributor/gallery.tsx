@@ -30,7 +30,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import type { Mascot } from "@repo/mascot/code";
 import { cast, forSeed } from "@repo/mascot/seed";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
@@ -64,12 +63,6 @@ const avatarVariants = cva("shadow-sm", {
 /** The seed of the one cast that every contributor gallery draws its animals from. */
 const GALLERY_SEED = "contributors";
 
-/** One contributor of the gallery with the animal the gallery and its drawer show. */
-interface Entry {
-  contributor: Contributor;
-  mascot: typeof Mascot.Type;
-}
-
 /**
  * The contributors with their animals, taken in order from one cast, so no two
  * of them share an animal. Past the last animal of the cast no unique animal is
@@ -84,6 +77,9 @@ function galleryEntries(contributors: readonly Contributor[]) {
     ),
   }));
 }
+
+/** One contributor of the gallery with the animal the gallery and its drawer show. */
+type Entry = ReturnType<typeof galleryEntries>[number];
 
 type ContributorGalleryProps = VariantProps<typeof galleryVariants> & {
   contributors: readonly Contributor[];
