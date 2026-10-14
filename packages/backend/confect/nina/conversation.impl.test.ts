@@ -156,20 +156,101 @@ describe("Nina conversation visibility", () => {
     );
     expect(page.page).toHaveLength(1);
     expect(page.page[0]?.metadata).toEqual(conversation.turn);
-    // The page of messages tells no turn, and the turn runs, so only the
-    // conversation tells it.
-    const lean = Ref.decodeReturnsSync(
-      refs.public.nina.messages.page,
-      await f.t.query(messagesPage, { ...listed, shareToken })
-    );
-    expect(lean.page[0]).not.toHaveProperty("metadata");
-    expect(await turnsOf(f.t, { chatId: f.chatId, shareToken })).toEqual([]);
     expect(encodeJsonText(page)).not.toContain('"role":"teacher"');
     expect(encodeJsonText(page)).not.toContain("creditsResetAt");
     expect(encodeJsonText(conversation)).not.toContain("fingerprint");
   });
 
   it("tells the owner everything about a turn, and a reader who holds the share link only where it stands", async () => {
+    const f = await fixture();
+    // What the turn cost, what Nina kept from it and what she suggests next.
+    const ownerFacts = {
+      remembered: 1,
+      suggestions: ["How does a limit relate to continuity?"],
+      tokens: { input: 1200, output: 340, total: 1540 },
+      usage: [
+        {
+          agent: "nina" as const,
+          calls: 1,
+          cost: 0.002,
+          input: 1200,
+          model: "model-one",
+          output: 340,
+          provider: "provider-one",
+        },
+      ],
+    };
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", f.turnId, ownerFacts)
+    );
+    await f.owner.mutation(share, {
+      chatId: f.chatId,
+      visibility: "public",
+    });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
+    const stranger = await f.t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "stranger" })
+    );
+    const asStranger = f.t.withIdentity({
+      sessionId: stranger.sessionId,
+      subject: stranger.authUserId,
+    });
+    const where = {
+      order: f.order,
+      promptMessageId: f.promptMessageId,
+      promptedAt: NOW,
+      state: { status: "queued" },
+      usage: [],
+    };
+    const listed = {
+      chatId: f.chatId,
+      threadId: f.threadId,
+      paginationOpts: { cursor: null, numItems: 20 },
+    };
+    const read = async (
+      reader: typeof f.owner,
+      access: { shareToken?: string }
+    ) => {
+      const conversation = Ref.decodeReturnsSync(
+        refs.public.nina.conversation.get,
+        await reader.query(get, { chatId: f.chatId, ...access })
+      );
+      const page = Ref.decodeReturnsSync(
+        refs.public.nina.messages.list,
+        await reader.query(messages, { ...listed, ...access })
+      );
+      return { conversation, page };
+    };
+
+    // The owner is told everything, by the chat id and through the share link.
+    for (const access of [{}, { shareToken }]) {
+      const { conversation, page } = await read(f.owner, access);
+      const known = { ...where, credits: 5, ...ownerFacts };
+      expect(conversation.turn).toEqual(known);
+      expect(page.page[0]?.metadata).toEqual(known);
+    }
+    // A reader with no account, and a learner with another account, are told
+    // where the turn stands and nothing of what it cost or what Nina kept.
+    for (const reader of [f.t, asStranger]) {
+      const { conversation, page } = await read(reader, { shareToken });
+      expect(conversation.turn).toEqual(where);
+      expect(page.page[0]?.metadata).toEqual(where);
+      const told = encodeJsonText({ conversation, page });
+      for (const owned of [
+        "model-one",
+        "provider-one",
+        "continuity",
+        "1540",
+        "credits",
+        "remembered",
+      ]) {
+        expect(told).not.toContain(owned);
+      }
+    }
+  });
+
+  it("tells the owner everything about a turn that ended, through the turns that ended, and a reader who holds the share link only where it stands", async () => {
     const f = await fixture();
     // What the turn cost, what Nina kept from it and what she suggests next.
     const ownerFacts = {
@@ -252,6 +333,25 @@ describe("Nina conversation visibility", () => {
         expect(told).not.toContain(owned);
       }
     }
+  });
+
+  it("tells no turn in the page of messages, so only the conversation tells the turn that runs", async () => {
+    const f = await fixture();
+    await f.owner.mutation(share, { chatId: f.chatId, visibility: "public" });
+    const shareToken = await f.owner.query(token, { chatId: f.chatId });
+    assert(shareToken !== null);
+    const listed = {
+      chatId: f.chatId,
+      threadId: f.threadId,
+      paginationOpts: { cursor: null, numItems: 20 },
+    };
+    const lean = Ref.decodeReturnsSync(
+      refs.public.nina.messages.page,
+      await f.t.query(messagesPage, { ...listed, shareToken })
+    );
+    expect(lean.page).toHaveLength(1);
+    expect(lean.page[0]).not.toHaveProperty("metadata");
+    expect(await turnsOf(f.t, { chatId: f.chatId, shareToken })).toEqual([]);
   });
 
   it("reads the messages of a chat and no turn, so a turn can change without the page being read again", async () => {

@@ -132,24 +132,35 @@ describe("The Nina response run when generation fails", () => {
         yield* Effect.promise(() => f.t.action(run, { turnId: f.turnId }));
         const state = yield* Effect.promise(f.inspect);
         expect(state.turn?.state).toMatchObject({ status: "failed", reason });
-        // A run that ended badly has no history cost to keep.
-        expect(state.turn).not.toHaveProperty("history");
         expect(state.user?.credits).toBe(10);
-        const paginationOpts = { cursor: null, numItems: 20 };
         const page = yield* Effect.promise(() =>
           f.owner.query(
             Ref.getFunctionReference(refs.public.nina.messages.list),
-            { chatId: f.chatId, paginationOpts, threadId: f.threadId }
+            {
+              chatId: f.chatId,
+              threadId: f.threadId,
+              paginationOpts: { cursor: null, numItems: 20 },
+            }
           )
         ).pipe(
           Effect.flatMap((value) =>
             Ref.decodeReturns(refs.public.nina.messages.list, value)
           )
         );
+        expect(
+          Arr.some(
+            page.page,
+            (message) =>
+              message.metadata?.state.status === "failed" &&
+              message.metadata.state.reason === reason
+          )
+        ).toBe(true);
+        expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
+        // The turns that ended tell the same failure, and no private diagnostic.
         const turns = yield* Effect.promise(() =>
           f.owner.query(
             Ref.getFunctionReference(refs.public.nina.conversation.turns),
-            { chatId: f.chatId, paginationOpts }
+            { chatId: f.chatId, paginationOpts: { cursor: null, numItems: 20 } }
           )
         ).pipe(
           Effect.flatMap((value) =>
@@ -159,10 +170,13 @@ describe("The Nina response run when generation fails", () => {
         expect(
           Arr.some(
             turns.page,
-            ({ state }) => state.status === "failed" && state.reason === reason
+            (turn) =>
+              turn.state.status === "failed" && turn.state.reason === reason
           )
         ).toBe(true);
-        expect(encodeJsonText({ page, turns })).not.toMatch(PRIVATE_DIAGNOSTIC);
+        expect(encodeJsonText(turns)).not.toMatch(PRIVATE_DIAGNOSTIC);
+        // A run that ended badly has no history cost to keep.
+        expect(state.turn).not.toHaveProperty("history");
       })
   );
 
