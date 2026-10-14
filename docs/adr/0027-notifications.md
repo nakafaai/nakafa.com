@@ -286,6 +286,8 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | `notifications`, `notificationPreferences`, `notificationReminders`, `pushSubscriptions`, and `journalCursors` | Planned, program wave B |
 | The notify consumer, and the published list with `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |
+| The notification rules and the zone of a notice, `confect/notifications/rules.ts` and `confect/notifications/zone.ts`: the channel table as data, recipients by relation, and the zone that carries a notice | Built as pure functions, not called yet (program wave B) |
+| The zone clock, `confect/notifications/clock.ts`: quiet hours, the 17:00 digest, and local send times in an IANA zone | Built as pure functions, not called yet (program wave B) |
 | A service worker and Web Push | Planned, program wave B |
 | The inbox panel and `nakafa.com/id/notifications` | Planned, program wave B |
 | WhatsApp | Planned, after the first channels |
