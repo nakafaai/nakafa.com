@@ -5,7 +5,9 @@
 Accepted. Amended on 13 October 2026 for the homeroom and guardian relations, the
 actions of the school roles, and the 24-hour limit on operator visits. Amended on
 14 October 2026 for the cohort member relation, which is live, and for the
-period, cohort, people, and invite actions.
+period, cohort, people, and invite actions. Amended the same day for the
+integration client: `decide` takes the subject's tenant and judges a client
+principal, and the Integration role holds the roster reads (ADR 0029).
 
 ## Context
 
@@ -85,10 +87,11 @@ Tenant functions take the route `slug` and attach the session middleware and
   the member's grants and returns the loaded row, or `check(action, row)` for a
   row already loaded, such as the member's tenant. `allowed(row)` lists the
   caller's actions for `can`.
-- Tenant isolation lives in `check`: it derives the row's tenant from its data
-  and denies a row of another tenant with reason `resource`, whichever path
-  loaded the row, and `allowed` lists no actions on such a row. `authorize` is
-  a load followed by `check`, so a missing object and a foreign one get the
+- Tenant isolation lives in `decide`: `check` and `allowed` take the row's
+  tenant from its data and pass it with the row, and `decide` denies a subject
+  of another tenant than the principal's with reason `resource`, whichever path
+  loaded the row. `allowed` therefore lists no actions on such a row. `authorize`
+  is a load followed by `check`, so a missing object and a foreign one get the
   same denial on every entry point.
 
 ### Decisions
@@ -97,7 +100,12 @@ For one action on one subject, decided by `decide` (an Effect program), which
 reads neither the clock nor the database except through the subject's
 memoized relation checks:
 
-1. A write in a suspended tenant, or on a locked subject (ended, archived, or
+1. A subject of another tenant than the principal's is refused as `resource`,
+   whatever its state and whoever the principal is.
+2. A revoked integration client is refused as `condition`, on every action. A
+   client is decided by its own rule and action list (ADR 0029), never by a
+   Person's roles or relations.
+3. A write in a suspended tenant, or on a locked subject (ended, archived, or
    closed), is refused as `condition`, even for Owners. The system transitions
    that time or an operator starts are exempt and run in a suspended tenant,
    because they end access, keep a deadline, or restore the tenant: a visit end,
@@ -111,11 +119,11 @@ memoized relation checks:
    archived period, and an archived cohort are locked subjects, and an archived
    school locks its periods and cohorts too, so a role's write to them is
    `condition` and never `role`.
-2. A roles rule allows an active grant whose scope covers the subject and whose
+4. A roles rule allows an active grant whose scope covers the subject and whose
    role is Owner or listed.
-3. Otherwise the rule's relations decide, each checked at most once per
+5. Otherwise the rule's relations decide, each checked at most once per
    subject.
-4. Otherwise the action is refused as `role`.
+6. Otherwise the action is refused as `role`.
 
 A rule either grants by roles, where the listed roles, every Owner, and the
 listed relations allow it, or by relations only, where no role can allow it, so
@@ -163,6 +171,10 @@ The school roles also hold these actions:
   nothing.
 - The Guardian reaches a child only through a verified parent relation (see
   Relations).
+- The Integration role belongs to an integration client, never to a Person. A
+  client reads the periods, cohorts, and people of its school only for the
+  actions its action list names, and the catalog opens only the roster reads to
+  it (ADR 0029).
 
 Assigning or ending an Owner or Admin role needs `owner.manage`, which only
 Owners hold, so an Admin cannot mint Admins. The last Owner held by a claimed,

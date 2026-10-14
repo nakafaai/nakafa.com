@@ -440,12 +440,92 @@ The 19 files that import `convex-helpers`:
 | Public MCP `mcp.nakafa.com/mcp` | Live |
 | `@nakafa/cli` 0.1.1 | Live, public and read only |
 | `effect/http-api` in Nakafa code | Not used yet |
-| `confect/integration`, `integrationClients`, `integrationDeliveries` | Planned, program wave C |
+| `integrationClients` and the client registry (the amendment of 14 October 2026) | Built, with no route yet |
+| `confect/integration` (the `HttpApi` definition), `integrationDeliveries` | Planned, program wave C |
 | School REST, school MCP, and the CLI login | Planned, program wave C |
 | Webhooks and exports | Planned, program wave C |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
 | The OneRoster CSV import, which uses the file import checks of ADR 0015 | Planned, program wave C |
 | `hono@4.13.13` in `pnpm-lock.yaml` | Present. Removal and its check are planned, program wave A. |
+
+## Amendment: Decided on 14 October 2026
+
+These decisions settle the open questions of the school API, and they bind every
+slice that follows. The client registry and the decision for a client are built
+first. The token endpoint, the bearer middleware, and the routes come later.
+
+1. **Token engine.** `@better-auth/oauth-provider` at the version that matches
+   the installed `better-auth`, since both move together. It serves the client
+   credentials grant with resource indicators (RFC 8707), introspection, and
+   revocation. The registry slice does not add it. The token endpoint slice
+   adds it after the package-upgrades lane settles the Better Auth version.
+2. **Token format.** A JWT signed with Better Auth's JWT plugin keys, with the
+   audience set to the school's API resource (`https://<school host>/api/v1`),
+   never `convex`. Convex then never accepts an integration token as a session
+   identity.
+3. **Location.** The token endpoint and the protected resource metadata live on
+   the school host. The cell's Convex site receives them the way it receives
+   `/api/v1` and `/mcp` (ADR 0026).
+4. **Principal.** The HTTP layer verifies the bearer token and passes a verified
+   client principal to internal functions only. No public function takes it.
+   `confect/auth/session.ts` stays the one identity policy for people. `decide`
+   judges a client principal (`ClientPrincipal` in `confect/access/principal.ts`),
+   and `Member` stays a person principal.
+5. **Grants.** An `integrationClients` row per client holds its tenant, its scope
+   (the tenant, or one unit), its name, an explicit action list, the SHA-256
+   digest of its secret (never the secret), its status (`active` or `revoked`),
+   and its times. A client holds no `tenantGrants` row, and
+   `confect/access/grant.ts` keeps refusing the integration role for people.
+6. **First actions.** Roster reads only: `period.view`, `cohort.view`, and
+   `person.view` (names and statuses as `PersonView` shows them, with no email).
+   The placements of a period are the next read. Invites stay out of the school
+   API.
+7. **REST shape (next slice).** Flat paths `/periods`, `/cohorts?period=`,
+   `/people?status=`, and `/placements?period=`. An opaque cursor. At most 100
+   rows a page, clamped in the handler. A rate limit of 600 requests a minute per
+   client through `agentRateLimiter`, with its own bucket.
+
+### What the registry slice built
+
+- The `integrationClients` table (`confect/tables/integrationClients.ts`), whose
+  validator is `integrationClientValidator` in `confect/integrations/schema.ts`,
+  indexed by tenant. The secret digest is `null` when no secret applies, and
+  the revocation time is `null` until a client is revoked. Revoking a client
+  replaces its digest with `null`, so a revoked client keeps no secret.
+- The `integration` kind (`confect/integrations/kinds.ts`). `integration.manage`
+  creates a client on the scope it covers (the tenant for a tenant-wide client,
+  the unit for a unit client), rotates it, and revokes it. `integration.view`
+  lists the clients and reads a client for revocation. Both are opened to the
+  Admin, and the Owner holds them through the Owner rule. Its audited changes
+  are `integration.created`, `integration.rotated`, and `integration.revoked`.
+  They hold IDs and enums only: no name and no secret.
+- `integrations/clients:create`, `:rotate`, `:revoke`, and the paginated query
+  `:list`. `create` returns the secret once. `list` never returns a digest.
+  `create` refuses an action list that names an action the catalog does not open
+  to the Integration role, with `ActionClosed`, before it draws a secret.
+- The catalog opens the three roster reads to the Integration role, through
+  `planReaders` and `person.view` in `confect/tenancy/kinds.ts`. A client's
+  action list names only actions that a rule opens to that role
+  (`opensTo` in `confect/access/catalog.ts`). The `Action` union leaves out
+  entries that declare no action, because Confect cannot compile an empty union
+  into a validator.
+- `decide` takes the subject's tenant with the subject, so a principal of another
+  tenant is refused as `resource`, whichever principal it is. A client is decided
+  by three things: the rule must open the action to the Integration role, the
+  action list must name the action, and the scope must cover the subject. The
+  usual conditions come first, so a revoked client, a write in a suspended
+  tenant, and a write on a locked subject are each refused as `condition`. A
+  person's roles and relations never admit a client.
+
+### Not built yet
+
+- The token endpoint, the bearer middleware that turns a token into a client
+  principal, and the HTTP routes. Until then no code builds a `ClientPrincipal`
+  outside the tests.
+- `matchesClientSecret` (`confect/integrations/secret.ts`) compares a presented
+  secret with its stored digest in constant time. The token endpoint is its first
+  caller. The registry slice tests it, and no production code calls it yet.
+- Ending the webhooks of a revoked client. Webhooks do not exist yet.
 
 ## References
 
