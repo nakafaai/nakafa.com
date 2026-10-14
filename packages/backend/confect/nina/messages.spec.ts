@@ -23,9 +23,10 @@ export class NinaReadError extends Schema.TaggedError<NinaReadError>()(
   { message: Schema.String }
 ) {}
 
-// Temporary compatibility for `list`. A browser tab opened before `page` was
-// deployed still calls `list`, and it reads `metadata` on every turn but the
-// latest. `list` keeps its arguments and its response exactly as they were.
+// Temporary compatibility, the expand step of packages/backend/AGENTS.md, for
+// `list`: a browser tab opened before `page` was deployed still calls `list`,
+// and it reads `metadata` on every turn but the latest. `list` keeps its
+// arguments and its response exactly as they were.
 // Owner: the pull request that adds `page` (nakafaai/nakafa.com #1044).
 // Exit: no call of `nina/messages:list` for the 12-hour skew window after that
 // deploy, read from the production logs.
