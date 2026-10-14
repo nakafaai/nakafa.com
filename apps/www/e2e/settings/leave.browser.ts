@@ -6,6 +6,7 @@ import {
   EMPTY,
   editorOf,
   MEMORY_PATH,
+  MISSING,
   memoryRow,
   opened,
   openMemoryPage,
@@ -98,7 +99,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
     await page.waitForTimeout(1500);
     expect(changes.sent - once).toBe(1);
     await expect(toast.getByText("Memory deleted")).toHaveCount(1);
-    await expect(page.getByText("This memory no longer exists")).toHaveCount(0);
+    await expect(page.getByText(MISSING)).toHaveCount(0);
   });
 });
 
