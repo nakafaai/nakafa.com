@@ -25,23 +25,28 @@ const tileVariants = cva(
  * and one white icon. `row` is the 40px rounded square that leads a list row.
  * `card` takes the full width of a catalog card, and its height comes from the
  * caller. The same seed always gives the same tile, so a seed must be a key
- * that does not change with language or edits, such as an id or a path.
+ * that does not change with language or edits, such as an id or a path. Tiles
+ * of one list take their `seed` and `shift` from `getTileLooks`, or their
+ * `shift` from `getTileShifts` when the list has no icons to tell apart; the
+ * shift turns a blend away from the tiles before it. A tile on its own needs
+ * none.
  */
 function Tile({
   className,
   seed,
+  shift,
   style,
   variant = "row",
   ...props
 }: ComponentProps<"div"> &
-  VariantProps<typeof tileVariants> & { seed: string }) {
+  VariantProps<typeof tileVariants> & { seed: string; shift?: number }) {
   return (
     <div
       aria-hidden
       className={cn(tileVariants({ variant }), className)}
       data-slot="tile"
       data-variant={variant}
-      style={{ ...style, backgroundImage: getTileGradient(seed) }}
+      style={{ ...style, backgroundImage: getTileGradient(seed, shift) }}
       {...props}
     />
   );

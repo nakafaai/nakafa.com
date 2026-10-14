@@ -37,7 +37,7 @@ const onTheChatsPage = Effect.fn("NakafaE2E.onTheChatsPage")(function* (
   yield* learner.titleNewest(["Newest chat", "Oldest chat"]);
 
   yield* Effect.promise(async () => {
-    await page.goto(`/en/user/${learner.userId}/chat`);
+    await page.goto(`/en/@${learner.username}/chat`);
     await expect(rowOf(page, oldest.chatId)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
@@ -155,10 +155,9 @@ const movesOnWhenDeleted = Effect.fn("NakafaE2E.deleteMovesOn")(function* (
   yield* Effect.promise(async () => {
     await expect(sidebarRowOf(page, oldest.chatId)).toHaveCount(0);
     changes.release();
-    await expect(page).toHaveURL(
-      new RegExp(`/en/user/${learner.userId}/chat$`),
-      { timeout: readinessTimeoutMilliseconds }
-    );
+    await expect(page).toHaveURL(new RegExp(`/en/@${learner.username}/chat$`), {
+      timeout: readinessTimeoutMilliseconds,
+    });
     await saved(changes, before);
     await expect(rowOf(page, oldest.chatId)).toHaveCount(0);
     expect(await shownTexts(page)).toEqual([]);

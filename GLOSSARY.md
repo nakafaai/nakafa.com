@@ -86,6 +86,31 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Section index**: The derived rows of every Section of the active release, with its text for search by words and a vector for search by meaning. A build makes it from the active release, and Nina's Nakafa search trusts it only while its record names the active release and the embedding model; otherwise Nina searches by words.
 - **Section version**: What a document's Sections were made from: the section format, the embedding model, and the signed facts of the source. A build passes over a document whose version the index holds, a Section whose text its document holds is never embedded again, wherever it stands now, and an unchanged Section is not written again either.
 
+## Classroom
+
+- **Channel**: A named place in a class forum. A class has a general channel for all its members, and a teacher adds topic channels.
+- **Discussion**: A thread that starts with a titled message in a channel. Its number counts per class, like the number of an issue, and its title is the same wherever it shows.
+- **Mention**: A reference to a person inside a message. It writes one inbox row in the transaction of the message, and the journal does not record it.
+- **Class library index**: The derived rows that let Nina search the files a teacher published in a class library. It holds no text that a learner wrote.
+
+## Notifications
+
+- **Inbox**: The one list of an account's notifications across Nakafa. It is the source of truth, and push and email only point to it.
+- **Notification**: One inbox row: a recipient, a kind, the object it points to, and a time. It holds no text, and its title is read from the object when it is opened.
+- **Reminder**: A notification that the scheduler sends at a time that follows from a task or a sitting, such as the day before a deadline.
+- **Quiet hours**: The hours, 21:00 to 06:00 in the school's time zone, in which push is skipped. The inbox still holds the notification.
+
+## Collaborative Documents
+
+- **Document step**: One ProseMirror step that a client sends with the version it is based on. The server accepts it only at the current version.
+- **Document version**: The number of steps a collaborative document has accepted.
+
+## School Keys
+
+- **Key owner**: Whom a vault key belongs to: the root, a learner, a school, or a connection.
+- **School key**: The 32-byte key of a tenant that seals the free text of the school. A root key wraps it, as it wraps a learner key.
+- **Blind word**: The keyed hash of one word of a text, made with the key of its owner. The database matches the same word again without reading it.
+
 ## Evaluation
 
 - **EvalCase**: A schema-derived test input with deterministic expected evidence, routing, or trace assertions.
@@ -105,6 +130,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 - **Checkout admission**: The account-lifecycle revalidation performed after a checkout is created and before its link is released. Its result is Admitted or Unavailable; integration failures remain distinct.
 
+## Connectors And Integrations
+
+- **Connector**: An adapter in `confect/connectors` that brings one external source into Nakafa, such as Google Drive, Forms, Classroom, Calendar, or Gmail, or a file such as Dapodik XLSX. It writes nothing to Google. Data that leaves Nakafa (webhooks, exports, grades sent to a learning system) is not a Connector, except the Dapodik export, which the Dapodik adapter owns.
+- **Connection**: One Connector authorized by one owner, a learner for a personal connection or a school for a school connection. Its tokens are sealed in the vault under the owner's key. It enters the reconnect state when Google refuses its token or, for a school connection, when the account of the member who made it is deleted.
+- **Integration client**: An app that calls a school's REST API or MCP server with OAuth 2.0 client credentials. It holds the Integration role over its tenant or one unit, limited to the actions on its list.
+- **Webhook**: A signed HTTP callback of one Integration client, fed from the Journal. It delivers only published changes that the client could read, and one row for each attempt records the delivery.
+
 ## Forum Conversation
 
 - **Forum Conversation**: The opened discussion surface for one class forum, usually shown as the right-side panel beside the forum list.
@@ -117,15 +149,20 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 ## Nakafa School
 
-- **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the same deployments as every other tenant. Its data is isolated by every School function, never by the client.
-- **Tenant slug**: A tenant's public address, the `slug.nakafa.com` label and the `/[locale]/school/[slug]` route segment. It names the tenant context of a request; it never grants access.
+- **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the web project and the Convex deployment of its data cell. Its data is isolated by every School function, never by the client.
+- **Data cell**: One `www` project and one Convex deployment, with a registrable domain of its own. A tenant lives in one cell, and an account has one home cell. The `us` cell is live and the `eu` cell is planned.
+- **Tenant slug**: A tenant's public address, the `slug.nakafa.com` label under the domain of its data cell. It names the tenant context of a request; it never grants access.
 - **Unit**: One school level inside a tenant, such as the SD, SMP, or SMA of a foundation, with its own NPSN. An archived unit stays readable and refuses writes.
+- **Locale settings**: The country and the contract currency that a tenant holds, and the time zone and the content language that each unit holds. The interface language is not one of them: it follows the learner's `NEXT_LOCALE` cookie.
+- **Organisation policy**: A choice an Owner makes for the whole tenant: whether students may open forum threads, whether Nina is on, and which email domains it admits. An empty list of domains admits every address; otherwise only an address on one of them may claim an invite. The first two choices are stored until the School features they switch exist.
+- **Contract**: What a school signed with Nakafa when it was opened: the plan of its licence, its modules, and the versions of its data processing agreement and content licence. The journal records it with the tenant's provisioning; the rights it grants are built later.
+- **Provisioning**: Opening a tenant with its units, its first Owner as an unclaimed Person with an invite, and its journal entries in one transaction. An Operator does it with the deployment's key, so no browser can.
 - **Period**: One school year or semester of a tenant. Promotion archives a period and moves students into the next one.
 - **Cohort**: A rombel, the administrative class group that rapor, promotion, and Dapodik use. It is separate from a Classroom.
 - **Classroom**: The learning space for one subject in one Cohort, or one per Cohort in SD.
 - **Person**: Someone in one tenant, separate from a User. A Person can exist before any account and is claimed later; an account holds at most one Person per tenant.
-- **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the invite address.
-- **Invite**: A pending offer of one Person to the account whose verified email equals its address.
+- **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the address of an unexpired invite, the tenant is active, and the tenant's email domains admit the address; it is the one place an account is matched by its email. The journal records the claim method.
+- **Invite**: A pending offer of one Person to the account whose verified email equals its address. It expires 14 days after it is created, and an expired invite is never claimed.
 - **Grant**: One role held by one Person over the whole tenant or one unit, standing or temporary.
 - **Built-in role**: One of the fixed roles every tenant shares: Owner, Admin, Principal, Deputy, Teacher, Counselor, Staff, Student, Guardian, Proctor, Auditor, and Integration.
 - **Owner**: The role that holds every roles-granted action and alone may appoint Owners and Admins. A tenant keeps at least one claimed Owner.
@@ -142,4 +179,4 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Journal entry**: One immutable audited change: its owner space, actor, subject, and change, holding IDs and codes only.
 - **Published change type**: A change type its kind exposes to journal consumers such as notifications, webhooks, and exports.
 - **Operator**: Nakafa staff who provision tenants. Not the school's Admin, whom Indonesian schools also call operator sekolah.
-- **Operator visit**: An operator's temporary, audited admin or auditor grant inside one tenant, ended on schedule.
+- **Operator visit**: An operator's temporary, audited Auditor grant inside one tenant, approved by the school's Owner or Admin and ended on schedule.

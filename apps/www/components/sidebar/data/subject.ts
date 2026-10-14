@@ -1,17 +1,21 @@
-import { getCategoryIcon } from "@repo/contents/curriculum/icons";
 import { routing } from "@repo/internationalization/src/routing";
-import { Array as Arr } from "effect";
 import type { Locale } from "next-intl";
+import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
 
 const curriculaPath = routing.pathnames["/curricula"];
 
-const data = [
+/**
+ * The high school grades of the subject menu. Each grade draws the icon of its
+ * own navigation key, so the rows of one group never share the icon of the group.
+ */
+export const subjectMenu = [
   {
     title: "high-school",
     items: [
       {
         title: "grade",
         value: 10,
+        icon: CURRICULUM_NAVIGATION_ICONS["grade-10"],
         href: {
           de: `${curriculaPath.de}/merdeka/klasse-10`,
           en: `${curriculaPath.en}/merdeka/class-10`,
@@ -21,6 +25,7 @@ const data = [
       {
         title: "grade",
         value: 11,
+        icon: CURRICULUM_NAVIGATION_ICONS["grade-11"],
         href: {
           de: `${curriculaPath.de}/merdeka/klasse-11`,
           en: `${curriculaPath.en}/merdeka/class-11`,
@@ -30,6 +35,7 @@ const data = [
       {
         title: "grade",
         value: 12,
+        icon: CURRICULUM_NAVIGATION_ICONS["grade-12"],
         href: {
           de: `${curriculaPath.de}/merdeka/klasse-12`,
           en: `${curriculaPath.en}/merdeka/class-12`,
@@ -39,11 +45,6 @@ const data = [
     ],
   },
 ] as const;
-
-export const subjectMenu = Arr.map(data, (item) => ({
-  ...item,
-  icon: getCategoryIcon(item.title),
-}));
 
 type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
 

@@ -1,13 +1,12 @@
 import {
-  AiProgrammingIcon,
   BankIcon,
-  BulbIcon,
+  BinaryCodeIcon,
   CourtLawIcon,
   DnaIcon,
   ElectricWireIcon,
   GameIcon,
-  Globe02Icon,
   GlobeIcon,
+  HandshakeIcon,
   LaptopIcon,
   MapPinIcon,
   NeuralNetworkIcon,
@@ -18,12 +17,26 @@ import {
   TestTubeIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
+import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
+import {
+  isPresentedMaterialDomain,
+  type PresentedMaterialDomain,
+} from "@repo/contents/taxonomy";
+import { Array as Arr } from "effect";
 
+/** One Hugeicons drawing, as every icon of the product is stored. */
+export type MaterialIcon = typeof PiIcon;
+
+/**
+ * The icon of each subject: the one that its card shows, and the first icon of
+ * the family that its lessons draw from (see `getLessonIcons`). A subject's icon
+ * is its own, so no other key of the product uses it.
+ */
 const materialIconByKey = {
   "ai-ds": NeuralNetworkIcon,
   biology: DnaIcon,
   chemistry: TestTubeIcon,
-  "computer-science": AiProgrammingIcon,
+  "computer-science": BinaryCodeIcon,
   economy: BankIcon,
   "game-engineering": GameIcon,
   geography: GlobeIcon,
@@ -31,30 +44,24 @@ const materialIconByKey = {
   history: ScrollIcon,
   informatics: SourceCodeIcon,
   "informatics-engineering": LaptopIcon,
-  "international-relations": Globe02Icon,
+  "international-relations": HandshakeIcon,
   mathematics: PiIcon,
   physics: PhysicsIcon,
   "political-science": CourtLawIcon,
   sociology: UserGroupIcon,
   "technology-electro-medical": ElectricWireIcon,
-};
-
-type MaterialIconKey = keyof typeof materialIconByKey;
-
-function isMaterialIconKey(value: string): value is MaterialIconKey {
-  return Object.hasOwn(materialIconByKey, value);
-}
+} satisfies { readonly [Key in PresentedMaterialDomain]: MaterialIcon };
 
 /**
- * Resolves the icon used for a subject material slug.
+ * Resolves the icons that a subject slug may show, the best first. A subject
+ * the product knows has one: its own. A subject it does not know yet offers the
+ * spare icons, so it never borrows the icon of another subject.
  *
- * @param material - Material slug to map to an icon
- * @returns Hugeicons icon for the material
+ * @param material - Material slug to map to its icons
+ * @returns Hugeicons icons for the material, never empty
  */
-export function getMaterialIcon(material: string) {
-  if (!isMaterialIconKey(material)) {
-    return BulbIcon;
-  }
-
-  return materialIconByKey[material];
+export function getMaterialIcons(material: string) {
+  return isPresentedMaterialDomain(material)
+    ? Arr.of(materialIconByKey[material])
+    : SPARE_ICONS;
 }
