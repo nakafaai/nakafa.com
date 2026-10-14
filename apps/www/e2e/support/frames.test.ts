@@ -3,6 +3,7 @@ import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Option, Schema } from "effect";
 import { Base64 } from "effect/encoding";
 import {
+  changeAnswersIn,
   decodeGiven,
   decodeSent,
   encodeRefusal,
@@ -189,6 +190,73 @@ describe("the frames of the realtime connection", () => {
     }
   });
 
+  it("changes what a query answers and keeps the rest of the transition as it was", () => {
+    const versions = {
+      endVersion: { identity: 2, querySet: 4, ts: "AgAAAAAAAAA=" },
+      startVersion: { identity: 2, querySet: 3, ts: "AQAAAAAAAAA=" },
+    };
+    const answered = encodeJsonText({
+      ...versions,
+      modifications: [
+        {
+          journal: "j",
+          logLines: [],
+          queryId: 3,
+          type: "QueryUpdated",
+          value: { page: [1, 2], isDone: true },
+        },
+        {
+          journal: null,
+          logLines: [],
+          queryId: 4,
+          type: "QueryUpdated",
+          value: { page: [3] },
+        },
+        { queryId: 5, type: "QueryRemoved" },
+      ],
+      type: "Transition",
+    });
+    const double = (value: unknown) => ({ answered: value, doubled: true });
+
+    const changed = changeAnswersIn(answered, [3], double).pipe(
+      Option.map(Schema.decodeSync(JsonTextSchema)),
+      Option.getOrUndefined
+    );
+
+    expect(changed).toEqual({
+      ...versions,
+      modifications: [
+        {
+          journal: "j",
+          logLines: [],
+          queryId: 3,
+          type: "QueryUpdated",
+          value: { answered: { page: [1, 2], isDone: true }, doubled: true },
+        },
+        {
+          journal: null,
+          logLines: [],
+          queryId: 4,
+          type: "QueryUpdated",
+          value: { page: [3] },
+        },
+        { queryId: 5, type: "QueryRemoved" },
+      ],
+      type: "Transition",
+    });
+    // A transition that updates none of the queries, a query that was removed
+    // and a frame that is no transition are left alone.
+    const removed = encodeJsonText({
+      modifications: [{ queryId: 3, type: "QueryRemoved" }],
+      type: "Transition",
+    });
+    const ping = encodeJsonText({ type: "Ping" });
+
+    expect(Option.isNone(changeAnswersIn(answered, [9], double))).toBe(true);
+    expect(Option.isNone(changeAnswersIn(removed, [3], double))).toBe(true);
+    expect(Option.isNone(changeAnswersIn(ping, [3], double))).toBe(true);
+  });
+
   it("keeps the later of two moments", () => {
     expect(later(258n, 3n)).toBe(258n);
     expect(later(3n, 258n)).toBe(258n);
@@ -204,5 +272,28 @@ describe("the frames of the realtime connection", () => {
     } as const;
 
     expect(encodeRefusal(refusal)).toBe(encodeJsonText(refusal));
+  });
+
+  it("carries the typed failure a function threw in a refusal, and writes none for a server that broke", () => {
+    const failure = { _tag: "NinaMemoryRejected", reason: "missing" };
+    const broke: Parameters<typeof encodeRefusal>[0] = {
+      logLines: [],
+      requestId: 7,
+      result: "Refused by the test",
+      success: false,
+      type: "MutationResponse",
+    };
+    const read = Schema.decodeSync(JsonTextSchema);
+
+    expect(read(encodeRefusal({ ...broke, errorData: failure }))).toEqual({
+      ...broke,
+      errorData: failure,
+    });
+    expect(read(encodeRefusal({ ...broke, errorData: undefined }))).toEqual(
+      broke
+    );
+    expect(encodeRefusal({ ...broke, errorData: undefined })).not.toContain(
+      "errorData"
+    );
   });
 });

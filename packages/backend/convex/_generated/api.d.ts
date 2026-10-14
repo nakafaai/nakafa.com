@@ -3176,10 +3176,7 @@ export declare const api: {
                 }
               | { country: string; currency: string; type: "tenant.locale.set" }
               | {
-                  policy:
-                    | { key: "emailDomains"; value: Array<string> }
-                    | { key: "nina"; value: boolean }
-                    | { key: "studentThreads"; value: boolean };
+                  key: "emailDomains" | "nina" | "studentThreads";
                   type: "tenant.policy.set";
                 }
               | { type: "unit.created" }
@@ -3442,6 +3439,20 @@ export declare const api: {
         "public",
         { id: Id<"ninaMemories"> },
         null
+      >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { id: Id<"ninaMemories"> },
+        {
+          author: "nina" | "learner";
+          confirmedAt: number;
+          createdAt: number;
+          id: Id<"ninaMemories">;
+          text: string;
+          title?: string;
+          validUntil?: number;
+        }
       >;
       state: FunctionReference<
         "query",
@@ -8948,52 +8959,19 @@ export declare const internal: {
                   parentTitle: string;
                   programKey: string;
                 };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
+                snapshot?: Record<string, any>;
                 tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
+                  allowDeepResearch?: boolean;
+                  allowMath?: boolean;
+                  allowNakafa?: boolean;
                   allowPageFetch: boolean;
                   evidenceScope: "verified-page" | "general-learning";
                 };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
+                transition?: Record<string, any>;
               };
               slug: string;
-              url: string;
-              verified: boolean;
+              url?: string;
+              verified?: boolean;
             };
             phase: "active";
             planCreditGrantId?: Id<"creditTransactions">;
@@ -9002,36 +8980,7 @@ export declare const internal: {
             remembered?: number;
             requestId: string;
             retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
+            snapshot?: Record<string, any>;
             state:
               { status: "queued" } | { startedAt: number; status: "running" };
             suggestions?: Array<string>;
@@ -9044,11 +8993,7 @@ export declare const internal: {
             };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
+            transition?: Record<string, any>;
             usage: Array<{
               agent:
                 | "nina"
@@ -9114,52 +9059,19 @@ export declare const internal: {
                   parentTitle: string;
                   programKey: string;
                 };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
+                snapshot?: Record<string, any>;
                 tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
+                  allowDeepResearch?: boolean;
+                  allowMath?: boolean;
+                  allowNakafa?: boolean;
                   allowPageFetch: boolean;
                   evidenceScope: "verified-page" | "general-learning";
                 };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
+                transition?: Record<string, any>;
               };
               slug: string;
-              url: string;
-              verified: boolean;
+              url?: string;
+              verified?: boolean;
             };
             phase: "settled";
             promptMessageId: string;
@@ -9167,36 +9079,7 @@ export declare const internal: {
             remembered?: number;
             requestId?: string;
             retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
+            snapshot?: Record<string, any>;
             state:
               | { finishedAt: number; status: "complete" }
               | {
@@ -9225,11 +9108,7 @@ export declare const internal: {
             };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
+            transition?: Record<string, any>;
             usage: Array<{
               agent:
                 | "nina"
@@ -9315,52 +9194,19 @@ export declare const internal: {
                   parentTitle: string;
                   programKey: string;
                 };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
+                snapshot?: Record<string, any>;
                 tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
+                  allowDeepResearch?: boolean;
+                  allowMath?: boolean;
+                  allowNakafa?: boolean;
                   allowPageFetch: boolean;
                   evidenceScope: "verified-page" | "general-learning";
                 };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
+                transition?: Record<string, any>;
               };
               slug: string;
-              url: string;
-              verified: boolean;
+              url?: string;
+              verified?: boolean;
             };
             phase: "active";
             planCreditGrantId?: Id<"creditTransactions">;
@@ -9369,36 +9215,7 @@ export declare const internal: {
             remembered?: number;
             requestId: string;
             retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
+            snapshot?: Record<string, any>;
             state:
               { status: "queued" } | { startedAt: number; status: "running" };
             suggestions?: Array<string>;
@@ -9411,11 +9228,7 @@ export declare const internal: {
             };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
+            transition?: Record<string, any>;
             usage: Array<{
               agent:
                 | "nina"
@@ -9481,52 +9294,19 @@ export declare const internal: {
                   parentTitle: string;
                   programKey: string;
                 };
-                snapshot: {
-                  capturedAt: string;
-                  learning: {
-                    assetId?: string;
-                    contentId?: string;
-                    locale: "en" | "id" | "de";
-                    materialKey?: string;
-                    section?: string;
-                    slug: string;
-                    sourcePath?: string;
-                    title?: string;
-                    url: string;
-                    verified: boolean;
-                  };
-                  placement?: {
-                    mode: "placement";
-                    nodeKey: string;
-                    parentHref: string;
-                    parentTitle: string;
-                    programKey: string;
-                  };
-                  source: "current-page" | "pinned-chat" | "message";
-                  tools: {
-                    allowDeepResearch: boolean;
-                    allowMath: boolean;
-                    allowNakafa: boolean;
-                    allowPageFetch: boolean;
-                    evidenceScope: "verified-page" | "general-learning";
-                  };
-                };
+                snapshot?: Record<string, any>;
                 tools: {
-                  allowDeepResearch: boolean;
-                  allowMath: boolean;
-                  allowNakafa: boolean;
+                  allowDeepResearch?: boolean;
+                  allowMath?: boolean;
+                  allowNakafa?: boolean;
                   allowPageFetch: boolean;
                   evidenceScope: "verified-page" | "general-learning";
                 };
-                transition: {
-                  fromContextKey?: string;
-                  reason: "same-context" | "page-context";
-                  toContextKey: string;
-                };
+                transition?: Record<string, any>;
               };
               slug: string;
-              url: string;
-              verified: boolean;
+              url?: string;
+              verified?: boolean;
             };
             phase: "settled";
             promptMessageId: string;
@@ -9534,36 +9314,7 @@ export declare const internal: {
             remembered?: number;
             requestId?: string;
             retryOf?: number;
-            snapshot?: {
-              capturedAt: string;
-              learning: {
-                assetId?: string;
-                contentId?: string;
-                locale: "en" | "id" | "de";
-                materialKey?: string;
-                section?: string;
-                slug: string;
-                sourcePath?: string;
-                title?: string;
-                url: string;
-                verified: boolean;
-              };
-              placement?: {
-                mode: "placement";
-                nodeKey: string;
-                parentHref: string;
-                parentTitle: string;
-                programKey: string;
-              };
-              source: "current-page" | "pinned-chat" | "message";
-              tools: {
-                allowDeepResearch: boolean;
-                allowMath: boolean;
-                allowNakafa: boolean;
-                allowPageFetch: boolean;
-                evidenceScope: "verified-page" | "general-learning";
-              };
-            };
+            snapshot?: Record<string, any>;
             state:
               | { finishedAt: number; status: "complete" }
               | {
@@ -9592,11 +9343,7 @@ export declare const internal: {
             };
             tokens?: { input?: number; output?: number; total?: number };
             transactionId?: Id<"creditTransactions">;
-            transition?: {
-              fromContextKey?: string;
-              reason: "same-context" | "page-context";
-              toContextKey: string;
-            };
+            transition?: Record<string, any>;
             usage: Array<{
               agent:
                 | "nina"
@@ -9754,6 +9501,12 @@ export declare const internal: {
         { userId: Id<"users"> },
         boolean
       >;
+      purge: FunctionReference<
+        "mutation",
+        "internal",
+        { id: Id<"ninaMemoryRestores"> },
+        null
+      >;
       read: FunctionReference<
         "query",
         "internal",
@@ -9849,6 +9602,14 @@ export declare const internal: {
           turnId: Id<"ninaTurns">;
         },
         null
+      >;
+    };
+    reshape: {
+      rewrite: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; dry: boolean },
+        { next: string | null; old: number; rewritten: number }
       >;
     };
     response: {

@@ -46,11 +46,11 @@ const MemoryStateSchema = Schema.Struct({
   target: Schema.NullOr(NinaMemoryView),
   /**
    * The words an editor still held when the learner deleted its memory, by the
-   * id of the memory. The editor does not save them. They come back when the
-   * learner undoes the deletion or the server does not delete the memory, and
-   * each deletion keeps its own, so deleting another memory meanwhile takes
-   * nothing from an Undo that is still offered. They go when the Undo takes
-   * them, when its offer ends, or when an editor opens on the memory again.
+   * id of the memory. The editor does not save them. They come back in an
+   * editor when the server does not delete the memory, and each deletion keeps
+   * its own. They go when the server has deleted the memory, because from then
+   * on the server keeps the memory for the Undo and the words were never part
+   * of it, or when an editor opens on the memory again.
    */
   withheld: Schema.Record(Schema.String, DraftSchema),
 });
@@ -99,8 +99,8 @@ interface MemoryActions {
    */
   recallAll: () => void;
   /**
-   * Lets go of the words kept for the deleted memory `id`: its Undo took them,
-   * or its offer ended.
+   * Lets go of the words kept for the deleted memory `id`: the server deleted
+   * the memory, or the page is giving them back.
    */
   release: (id: Memory["id"]) => void;
   /**

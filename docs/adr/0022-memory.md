@@ -374,8 +374,9 @@ deletes its key rows with it:
 - A daily job deletes the situations whose end day has passed, 25 per call, and
   schedules itself again while a call is full.
 - Account deletion removes the learner's memories in bounded batches, and
-  their portrait, before the learner's vault key goes. Every pass looks for
-  memories and the portrait first, so a capture still running when the deletion
+  their portrait and the records that keep a deleted memory for its Undo,
+  before the learner's vault key goes. Every pass looks for memories, the
+  portrait and the records first, so a capture still running when the deletion
   starts is swept by the next pass, and one that lands after the key is gone
   seals nothing, because a deleted account gets no new key. The capture write
   needs no check of its own for a deleted account.
@@ -483,7 +484,8 @@ with it in the same transaction, the time included: `add`, `edit`, and the
 capture write (a new memory, and a confirmed memory, which gives its keys the
 time of the confirmation and its new words and topics). Every path that deletes
 a memory deletes its keys: `remove`, `clear`, the daily expiry, and account
-deletion.
+deletion. `remove` hands the keys it deletes to the restore record, and
+`restore` inserts the same rows again (see Implementation Contract).
 
 One function searches: `searchMemories` takes the learner, the text, the
 topics, a limit and the moment the learner last deleted all of it, if ever. It
@@ -660,20 +662,22 @@ nobody tries them again without a new reason.
   replaces the document with a `facts` array, and `ninaMemoryKeys` (index by
   user, key and confirmation time, index by memory) is its index. No table ties
   a memory to a chat, and the chats trigger touches no memory.
-- `nina/memory:list`, `state`, `add`, `edit`, `remove`, `pause` and `clear` are
-  public, pass the session middleware, and act only on the signed-in learner.
+- `nina/memory:list`, `state`, `add`, `edit`, `remove`, `restore`, `pause` and
+  `clear` are public, pass the session middleware, and act only on the
+  signed-in learner.
   `list` is paginated, the most recently confirmed memory first, and holds at
   most 50 memories to a page; a visitor gets an empty page. `state` tells
   whether memory is paused. `add` and `edit` fail with `NinaMemoryRejected` for
   `empty` and `missing`. `empty` means the write holds neither a title nor
   words, and it is checked first, before the memory is read. A title of more
   than 80 characters, or of only spaces, never reaches the function: its
-  arguments refuse it. `read`, `paused`, `known`, `lookup`, `capture`, `drain`
-  and `expire` are internal. `paused` tells whether the learner paused memory,
-  and the capture asks it once, before it sends the learner's message to any
-  model and before it reads a memory. `known` reads the learner's memory state
-  once more for the moment of the last Delete all, and the write reads it again
-  as the authority.
+  arguments refuse it. `restore` fails with `NinaMemoryRejected` and `missing`
+  (see the restore record below). `read`, `paused`, `known`, `lookup`,
+  `capture`, `drain`, `expire` and `purge` are internal. `paused` tells whether
+  the learner paused memory, and the capture asks it once, before it sends the
+  learner's message to any model and before it reads a memory. `known` reads
+  the learner's memory state once more for the moment of the last Delete all,
+  and the write reads it again as the authority.
 - `ninaMemoryPortraits` (index by user) holds one row for a learner who has
   asked for a portrait: its sealed `text`, absent until a build has written
   one and after a memory was deleted or rewritten; `through`, the newest
@@ -810,14 +814,17 @@ nobody tries them again without a new reason.
   and in the list. A new memory that was never given a word creates nothing. A
   new memory that the learner deletes or empties while its first save is on its
   way has a row from the moment that save goes out, so it is deleted when the
-  server has stored it, with the same Undo. The Undo writes the title and the
-  words back as the learner's own memory with `add`, which takes no kind and no
-  end date, so a situation that is undone no longer ends. To give it back its
-  end date, `add` would have to take one; that is left for a decision. A paste
-  that would take the Markdown past 2,000 characters is refused as a whole, and
-  the page says so. The panel beside the page never takes the room
-  the list needs: the list keeps a card of 20rem between its padding, whatever
-  width the learner dragged the panel to and whatever the window is, and its
+  server has stored it, with the same Undo. The Undo asks the server to put
+  the memory back (`restore`, below), so it gives back what the learner saw:
+  a situation keeps its end day and a memory Nina saved keeps Nina as its
+  author. Words that an open editor held and had not saved when the learner
+  deleted the memory were never part of it, so the Undo does not bring them
+  back. They open in the editor again only when the server does not delete the
+  memory. A paste that would take the Markdown past 2,000 characters is
+  refused as a whole, and the page says so. The panel beside the page never
+  takes the room the list needs: the list keeps a card of 20rem between its
+  padding, whatever width the learner dragged the panel to and whatever the
+  window is, and its
   resizer says the width the panel has and the widths it can have. A drag of
   its edge measures from where the page ends and not from the window, so a
   scrollbar never leaves the edge beside the pointer. Nina's sheet, which is
@@ -845,7 +852,62 @@ nobody tries them again without a new reason.
   the browser draws the field from (`e2e/support/placeholder.ts`).
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
-  because the browser has no page of its own to change until then.
+  because the browser has no page of its own to change until then. The Undo
+  shows the memory again at once, as the learner saw it, in the one page that
+  holds its place (`pageForRestored`): the first page whose last memory was
+  confirmed at or before it. Until the server answers it carries an id the
+  server has not stored, like a memory that is being added, because the id the
+  memory had is gone and Convex gives the restored memory another. When the
+  server cannot put it back, the row goes and a toast says that the Undo
+  failed, whether the server refused or broke. If it broke the learner can try
+  again, so the memory's words open in the editor as a new memory and nothing
+  they wrote is lost. A refusal means there is nothing left to put back, so no
+  editor opens.
+- `remove` keeps what it deletes for the length of the Undo, and `restore` gives
+  it back as it was. The table `ninaMemoryRestores` (index by user and the id
+  the memory had, index by user and confirmation time) holds one record for each
+  memory the learner deleted whose Undo has not ended. A record holds every
+  stored field of the memory, sealed as stored and never opened (author,
+  confirmation time, kind, topics, end day, words and title), the id the memory
+  had (`memoryId`), the keys it had in the memory index, and the moment its Undo
+  ends (`expiresAt`). `remove` writes it in the transaction that deletes the
+  memory and its keys, and schedules the internal `purge` for that moment, which
+  deletes the record if it is still there. The window is `MEMORY_UNDO`, 5
+  seconds, in `memory.spec`, which the Memory page reads for its toast too, so
+  one number owns both. A toast waits while the pointer rests on it or the tab
+  is hidden, so the page closes it when the window ends and offers no Undo after
+  the server stopped keeping the memory. The page's window starts when the toast
+  shows and the server's when it has deleted the memory, so the page's ends
+  first, but an Undo that travels slower than the delete did can still arrive
+  late: the server then answers `missing` and the page says that the Undo
+  failed. `restore({ id })` takes the id the memory had. It fails with
+  `NinaMemoryRejected` and `missing` when the learner has no record under it:
+  the id is another learner's, the window ended, the memory was put back
+  already, or "Delete all" took the memory (it was confirmed at or before the
+  moment the learner last deleted every memory, which every reader would hide
+  and no batch might delete). A "Delete all" counts the newest record in its
+  moment as it counts the newest memory, so a memory deleted before the learner
+  asked is refused even when the clock had not moved on since the memory was
+  written. Otherwise it inserts the stored fields back as they were, so a
+  situation keeps its end day, a memory Nina saved keeps Nina as its author, and
+  the memory keeps its confirmation time and so its place in the list. It
+  inserts the same key rows, deletes the record, asks for a build of the
+  portrait from scratch (the memory returns with a confirmation time older than
+  the moment a build reads on from, which such a build would never meet), and
+  returns the memory as the Memory page shows it. Only what Convex gives a
+  document differs: a new id and a new creation time. Nothing is sealed or
+  computed again, and a record is used once. A situation whose end day passed
+  meanwhile is put back and then ends as any ended situation does (`hasEnded`):
+  the daily job deletes it. No other deletion is taken back: "Delete all", the
+  daily expiry and account deletion keep no record, and account deletion deletes
+  the learner's records with their memories, before the key goes. A deleted
+  memory's words therefore stay on the server, sealed for the learner, for the
+  window and until the job that deletes the record at its end has run, and only
+  for a memory the learner deleted one at a time (`restore` refuses the record
+  from the end of the window, whether or not the job has run). The words stay
+  because `add` cannot give a memory back: it takes no kind, no end day and no
+  author, so a situation that was undone no longer ended and a memory Nina saved
+  came back as one the learner wrote.
 - `read` gives a turn the account profile, the portrait when the learner has
   one, and the at most 8 memories that the learner's words and the topics of
   the open page recall. `known` gives the capture call the account profile and

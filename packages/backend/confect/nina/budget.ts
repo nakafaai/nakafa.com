@@ -35,8 +35,8 @@ export const NINA_BUDGET = {
    * cuts to this number. The budget test measures a real turn by
    * `countTextTokens`: the instructions with a question focus for the role that
    * makes them longest, the tool definitions of the call, and its newest message
-   * with the runtime facts. With the memory capability on, that measure was 6,118
-   * tokens on 14 October 2026: 3,894 instructions, 1,933 tool definitions and 291
+   * with the runtime facts. With the memory capability on, that measure was 6,094
+   * tokens on 14 October 2026: 3,894 instructions, 1,933 tool definitions and 267
    * runtime facts. This number is the measure rounded up to the next 1,000. The
    * tokenizer that `countTextTokens` replaced measured 5,143 on 12 October 2026.
    */
