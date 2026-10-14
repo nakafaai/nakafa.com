@@ -42,7 +42,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Learning focus**: The onboarding choice between opening curriculum learning or try-out discovery first. It selects the first destination without restricting later access to either surface.
 - **Material placement**: A source-owned relation connecting one canonical material asset to the exact Learning program and curriculum card group that presented it. It is interaction context, not canonical URL identity or a learner preference.
 - **Learning context**: The verified page, Material placement, and tool policy facts available for one user interaction. A direct or SEO material visit has canonical context unless the request carries a valid Material placement.
-- **NinaContextPack**: The immutable learning context snapshot built during authenticated admission and stored with the Nina turn for replay.
+- **NinaContextPack**: The immutable learning context built during authenticated admission and stored once with the Nina turn: the learning page, its placement, the question focus and the evidence the model is told of.
 - **Continue Learning**: A signed-in user read model ranked from recent learning interactions. It must not be inferred for anonymous users.
 - **Popularity**: Aggregate learning interest derived from view events and a windowed counter. The one ranking kept is the homepage's: material lessons, global scope, the last seven UTC days. Product reads use bounded read models, not raw event scans.
 - **Popularity retention**: Daily viewer keys prevent duplicate contributions only within their UTC day. Daily aggregate signals are kept for the seven-day window: the daily pass reads the one leaving it and the weekly pass reads those inside it. Expiration removes these inputs after their consumers finish; queued events remain authoritative for pending work.
@@ -68,6 +68,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Learner memory**: What a learner shared about themself, as many memories as they write. A memory holds a title, words, or both. The title is optional, up to 80 characters, and only the learner writes it. The words are up to 2000 characters and free to hold Markdown. Memory is on for everyone until the learner pauses it, and the learner reads, writes, edits and deletes memories under Settings, AI, Memory. The learner writes pure text. A memory Nina wrote is one sentence of up to 280 characters with a kind (level, goal, style, struggle, or situation), and one the learner wrote takes a kind when a later chat says it again. Nina never replaces words the learner wrote: a chat that says something else about such a memory adds a memory of Nina's and leaves the learner's as it is. The words and the title are each sealed for their learner. A memory is independent of chats, so deleting a chat deletes no memory. Only the learner, the end day of a situation Nina dated, and account deletion remove one. No function reads all the memories of a learner: Nina reads them through the Learner portrait, which is built from the memories it has not read yet, 40 at a time and the oldest first, and through Memory recall and the Memory capability, which find memories through the memory index, and every read is bounded.
 - **Memory index**: The rows that link each memory to the topics it was said at and to each word of its title and words, 104 links at most. A topic is a lesson or a path above a page, kept in plain text. A word is kept as a keyed hash, so the database matches a word again without being able to read it, and another learner's hash for the same word differs. Each row holds the time its memory was confirmed, so a lookup meets the memories confirmed last first. Every writer and every deleter of a memory keeps the index in step with it in the same transaction.
 - **Memory search**: The one function that finds a memory by words and topics through the memory index, the best match first. A lesson that is open counts most, then a path above it, then a word. It reads a bounded number of documents whatever the learner keeps.
+- **Memory restore record**: The sealed copy of a memory that the learner deleted, which the server keeps for the length of the Undo so that Undo gives the memory back exactly as it was: its kind, end day, author, confirmation time, words, title and index keys. It is never opened, it is used once, and a scheduled job deletes it when the window ends. Only the learner deleting one memory keeps a record.
 - **Learner portrait**: One sealed text of at most 1,200 characters about a learner, written in the background from their memories, and, once it exists and while memory is on, in the Learner section of the system prompt, within 300 tokens. It holds what stays true for months (who they are, what they aim for, how they like to learn, what they find hard), never anything with an end date, and changes rarely, so the cached prompt prefix survives. It is derived data and has its own word because Learner profile already names the account facts. Each build reads the next 40 memories it has not read, the oldest first, and asks for the next build while memories remain, so none is skipped. A memory the learner deletes or rewrites takes its text out at once, and a build from scratch writes it again.
 - **Memory recall**: The few memories, at most 8 and at least 3 when the learner has them, that fit one turn: the search of the memory index by the words of the learner's message and the topics of the open page, filled up to 3 with the most recently confirmed. They travel in a "Memories" list in front of the learner's message, outside the cached prompt prefix, and a turn with none has no list and no heading.
 - **Memory capability**: The read-only LearningCapability `memory`, with one input, the query. It answers with the memory search for the words of the query, at most 6 memories and 1,500 tokens, or says that nothing was found. It makes no model call, costs no credits, is not offered while memory is paused, and shows in the chat as one activity row that opens to nothing. What it finds is read in the next step of the turn and is never stored in the chat, which keeps only a note, so a public chat, a later turn and a deleted memory leave no copy of the words. A memory it returns is not thereby confirmed.
@@ -85,6 +86,31 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Section**: One heading section of a lesson or article, or one signed chunk of six verses of a surah, in one language. Its place, the document and its ordinal, is the same in every language, so a question in one language can lead to the same place in another.
 - **Section index**: The derived rows of every Section of the active release, with its text for search by words and a vector for search by meaning. A build makes it from the active release, and Nina's Nakafa search trusts it only while its record names the active release and the embedding model; otherwise Nina searches by words.
 - **Section version**: What a document's Sections were made from: the section format, the embedding model, and the signed facts of the source. A build passes over a document whose version the index holds, a Section whose text its document holds is never embedded again, wherever it stands now, and an unchanged Section is not written again either.
+
+## Classroom
+
+- **Channel**: A named place in a class forum. A class has a general channel for all its members, and a teacher adds topic channels.
+- **Discussion**: A thread that starts with a titled message in a channel. Its number counts per class, like the number of an issue, and its title is the same wherever it shows.
+- **Mention**: A reference to a person inside a message. It writes one inbox row in the transaction of the message, and the journal does not record it.
+- **Class library index**: The derived rows that let Nina search the files a teacher published in a class library. It holds no text that a learner wrote.
+
+## Notifications
+
+- **Inbox**: The one list of an account's notifications across Nakafa. It is the source of truth, and push and email only point to it.
+- **Notification**: One inbox row: a recipient, a kind, the object it points to, and a time. It holds no text, and its title is read from the object when it is opened.
+- **Reminder**: A notification that the scheduler sends at a time that follows from a task or a sitting, such as the day before a deadline.
+- **Quiet hours**: The hours, 21:00 to 06:00 in the school's time zone, in which push is skipped. The inbox still holds the notification.
+
+## Collaborative Documents
+
+- **Document step**: One ProseMirror step that a client sends with the version it is based on. The server accepts it only at the current version.
+- **Document version**: The number of steps a collaborative document has accepted.
+
+## School Keys
+
+- **Key owner**: Whom a vault key belongs to: the root, a learner, a school, or a connection.
+- **School key**: The 32-byte key of a tenant that seals the free text of the school. A root key wraps it, as it wraps a learner key.
+- **Blind word**: The keyed hash of one word of a text, made with the key of its owner. The database matches the same word again without reading it.
 
 ## Evaluation
 
@@ -104,6 +130,13 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 ## Billing
 
 - **Checkout admission**: The account-lifecycle revalidation performed after a checkout is created and before its link is released. Its result is Admitted or Unavailable; integration failures remain distinct.
+
+## Connectors And Integrations
+
+- **Connector**: An adapter in `confect/connectors` that brings one external source into Nakafa, such as Google Drive, Forms, Classroom, Calendar, or Gmail, or a file such as Dapodik XLSX. It writes nothing to Google. Data that leaves Nakafa (webhooks, exports, grades sent to a learning system) is not a Connector, except the Dapodik export, which the Dapodik adapter owns.
+- **Connection**: One Connector authorized by one owner, a learner for a personal connection or a school for a school connection. Its tokens are sealed in the vault under the owner's key. It enters the reconnect state when Google refuses its token or, for a school connection, when the account of the member who made it is deleted.
+- **Integration client**: An app that calls a school's REST API or MCP server with OAuth 2.0 client credentials. It holds the Integration role over its tenant or one unit, limited to the actions on its list.
+- **Webhook**: A signed HTTP callback of one Integration client, fed from the Journal. It delivers only published changes that the client could read, and one row for each attempt records the delivery.
 
 ## Forum Conversation
 

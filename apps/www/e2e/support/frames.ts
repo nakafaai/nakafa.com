@@ -25,8 +25,13 @@ const ActionSchema = Schema.Struct({
   type: Schema.Literal("Action"),
 });
 
-/** The answer of a server that could not take a change, as the protocol words it. */
+/**
+ * The answer of a server that could not take a change, as the protocol words
+ * it. `errorData` is the typed failure a function throws on purpose, which the
+ * page decodes; a server that broke sends none.
+ */
 const RefusalSchema = Schema.Struct({
+  errorData: Schema.optionalKey(Schema.Unknown),
   logLines: Schema.Array(Schema.String),
   requestId: Schema.Finite,
   result: Schema.String,
@@ -196,6 +201,23 @@ export const failQueriesIn = (
           queryId: update.queryId,
           type: "QueryFailed",
         })
+      : Option.none()
+  );
+
+/**
+ * The transition `text` with the value that each of the queries `queryIds`
+ * answers changed by `change`, the way a backend that held other data would
+ * answer, and the rest of each update as the server wrote it. None when the
+ * transition updates none of those queries.
+ */
+export const changeAnswersIn = (
+  text: string,
+  queryIds: readonly number[],
+  change: (value: unknown) => unknown
+) =>
+  replaceUpdatesIn(text, (update) =>
+    update.type === "QueryUpdated" && Arr.contains(queryIds, update.queryId)
+      ? Option.some({ ...update, value: change(update.value) })
       : Option.none()
   );
 
