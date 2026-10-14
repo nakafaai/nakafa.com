@@ -3,10 +3,11 @@
 ## Status
 
 Accepted on 13 October 2026 with owner decisions K3, K5, and K10. The owner
-approved decisions K1 to K20 on that day. The school key is planned for program
+approved decisions K1 to K20 on that day. The school key is built in program
 wave B (ADR 0013 describes the waves). The learner vault in
-`packages/backend/confect/vault` is live and works as it does today. The
-repository holds no `tenantKeys` table, no school key, and no connector secret.
+`packages/backend/confect/vault` is live and works as it does today. Every
+tenant gets its school key when it is opened, and the repository holds no
+connector secret yet.
 
 ## Context
 
@@ -39,7 +40,7 @@ Each key has one owner, and the key above it wraps it.
 | --- | --- | --- | --- | --- |
 | Root | `VAULT_ROOT_KEYS` in the Convex environment | Nothing. A rotation rewraps the keys it wrapped. | The environment | Live |
 | Learner | 32 random bytes for each learner | A root key | `vaultKeys` | Live |
-| School | 32 random bytes for each tenant | A root key | `tenantKeys` | Planned |
+| School | 32 random bytes for each tenant | A root key | `tenantKeys` | Built, wave B |
 | Connection | The secret of a connector | The learner's key for a personal connection, the school's key for a school connection | `connectorSecrets` | Planned |
 
 The vault is one module for all of them. A connection has no vault of its own.
@@ -243,8 +244,7 @@ does another job.
 - Replacing a school key re-seals the whole school. It is rare and costs one
   pass over every sealed field.
 - The comment on `VAULT_ROOT_KEYS` in `packages/backend/convex/convex.config.ts`
-  says the keys wrap each learner's vault key. The change that builds the school
-  key makes it say learners and schools.
+  says the keys wrap each learner's vault key and each school's key.
 
 ## Rejected Alternatives
 
@@ -264,8 +264,8 @@ does another job.
 | --- | --- |
 | `packages/backend/confect/vault`: learner keys, seal, open, blind hash, and `rewrap` for `vaultKeys` | Live |
 | `VAULT_ROOT_KEYS` in `packages/backend/convex/convex.config.ts` | Live |
-| `tenantKeys`, the school key readers, and the owner argument of `vault/text.ts` | Planned, program wave B |
-| `rewrap` for `tenantKeys` | Planned, with the school key |
+| The school key: `tenantKeys`, its creation in `tenancy/provision:open`, `readTenantKeys`, the owner argument of `vault/text.ts`, and `rewrap` for `tenantKeys` | Built, program wave B |
 | `wordsOf` moved into `confect/vault`, and the forum index | Planned, with the forum (ADR 0025) |
-| The job that replaces a school key | Planned, in the wave of the first table that seals under the school key |
+| Shredding a school key, with the deletion of its school | Planned, with the school deletion lane |
+| Replacing a school key by a new generation, on a suspected leak | Planned, as a migration (Rotation and replacement) |
 | `connectorSecrets` | Planned (ADR 0015) |
