@@ -11,7 +11,10 @@ import {
   TITLE_FIELD,
 } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
-import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
+import {
+  deleteBatch,
+  readMemoryState,
+} from "@repo/backend/confect/nina/memory/store";
 import { recallLearner } from "@repo/backend/confect/nina/memory/turn";
 import {
   MEMORY_KNOWN_LIMIT,
@@ -298,6 +301,24 @@ export async function createMemoryTest(
 ) {
   const f = await createNinaTest(options);
   return { ...f, ...memoryTools(f) };
+}
+
+/**
+ * Deletes one batch of a learner's memories with no moment bounding it, as the
+ * account deletion of `auth/cleanup/social.ts` does, in one convex-test mutation
+ * the way a Confect mutation runs it. It returns how many it deleted.
+ */
+export function deleteAccountBatch(
+  f: Awaited<ReturnType<typeof createNinaTest>>,
+  userId: Docs["users"]["_id"]
+) {
+  return f.t.run((ctx) =>
+    Effect.runPromise(
+      deleteBatch(userId).pipe(
+        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+      )
+    )
+  );
 }
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
