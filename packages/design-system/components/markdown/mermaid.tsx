@@ -21,6 +21,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
+import { useTranslations } from "next-intl";
 
 interface Props {
   chart: string;
@@ -41,6 +42,7 @@ export function MermaidMdx({
   description,
   title,
 }: Props) {
+  const t = useTranslations("Ai");
   const renderableChart = normalizeMermaidChart(chart);
 
   return (
@@ -51,8 +53,9 @@ export function MermaidMdx({
             <DialogTrigger
               render={
                 <Button
-                  aria-label="Open larger diagram"
+                  aria-label={t("open-diagram")}
                   size="icon"
+                  title={t("open-diagram")}
                   variant="ghost"
                 >
                   <HugeIcons icon={Maximize02Icon} />

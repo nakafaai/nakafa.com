@@ -6,6 +6,15 @@ import type { ReactMarkdownComponents } from "@repo/design-system/components/mar
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import { cn } from "cn";
 
+/**
+ * The text blocks of a Markdown response take the direction of their own text.
+ * `rehypeDirection` marks them, so no element here sets a `dir`.
+ *
+ * A list item owns the room for its marker: its margin on its start side. An
+ * item in Arabic keeps that room on the right and its neighbour in Latin on
+ * the left. The item sets `text-start` itself, because WebKit aligns the text
+ * of a list item with the direction of its list and not its own.
+ */
 export const reactTextComponents: ReactMarkdownComponents = {
   a: ({ node: _node, ...props }) => <Anchor data-nakafa="anchor" {...props} />,
   blockquote: ({ node: _node, ...props }) => (
@@ -78,14 +87,14 @@ export const reactTextComponents: ReactMarkdownComponents = {
   ),
   li: ({ node: _node, ...props }) => (
     <li
-      className="text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
+      className="ms-8 text-pretty ps-1 text-start leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
       data-nakafa="list-item"
       {...props}
     />
   ),
   ol: ({ node: _node, ...props }) => (
     <ol
-      className="my-4 list-decimal space-y-4 ps-8 last:mb-0"
+      className="my-4 list-decimal space-y-4 last:mb-0"
       data-nakafa="ordered-list"
       {...props}
     />
@@ -120,7 +129,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
   ),
   ul: ({ node: _node, ...props }) => (
     <ul
-      className="my-4 list-disc space-y-4 ps-8 last:mb-0"
+      className="my-4 list-disc space-y-4 last:mb-0"
       data-nakafa="unordered-list"
       {...props}
     />

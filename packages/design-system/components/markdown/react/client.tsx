@@ -10,6 +10,7 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { type ComponentProps, Suspense } from "react";
 
 const LazyMarkdownCodeBlock = dynamic(() =>
@@ -54,18 +55,34 @@ export function MarkdownCodeBlock(
 /**
  * Defers Mermaid until a rendered response contains a diagram. The card's
  * frame holds its place while the code loads, so the answer never falls back
- * to the page's loading state and nothing around the card moves.
+ * to the page's loading state and nothing around the card moves. A diagram
+ * the model gave no title or description takes the words of the reader's
+ * language, in the frame and in the card alike.
  */
-export function MermaidMdx(props: ComponentProps<typeof LazyMermaidMdx>) {
+export function MermaidMdx({
+  description,
+  title,
+  ...props
+}: Omit<ComponentProps<typeof LazyMermaidMdx>, "description" | "title"> & {
+  description: string | undefined;
+  title: string | undefined;
+}) {
+  const t = useTranslations("Ai");
+  const heading = title ?? t("diagram-title");
+
   return (
     <Suspense
       fallback={
-        <DiagramFrame className={props.className} title={props.title}>
+        <DiagramFrame className={props.className} title={heading}>
           <Spinner className="m-auto" />
         </DiagramFrame>
       }
     >
-      <LazyMermaidMdx {...props} />
+      <LazyMermaidMdx
+        {...props}
+        description={description ?? t("diagram-description")}
+        title={heading}
+      />
     </Suspense>
   );
 }

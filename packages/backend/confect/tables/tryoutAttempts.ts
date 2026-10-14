@@ -1,7 +1,7 @@
 import { Table } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { EndReason } from "@repo/backend/confect/assessment/gate/end";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
-import { attemptEndReasonValidator } from "@repo/backend/confect/lib/attempts";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/confect/tryouts/access/source";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutSectionSnapshotValidator } from "@repo/backend/confect/tryouts/runtime/schema";
@@ -47,7 +47,7 @@ export default Table.make(() =>
     expiresAt: Schema.Finite,
     lastActivityAt: Schema.Finite,
     completedAt: Schema.Union([Schema.Finite, Schema.Null]),
-    endReason: Schema.Union([attemptEndReasonValidator, Schema.Null]),
+    endReason: Schema.Union([EndReason, Schema.Null]),
   })
 )
   .index("by_scaleVersionId", ["scaleVersionId"])

@@ -37,6 +37,7 @@ import {
   researchProviderConcurrency,
   webSearchInputSchema,
 } from "@repo/backend/confect/nina/research/schema";
+import { formatSearchLimit } from "@repo/backend/confect/nina/research/search/format";
 import { getSourceReferences } from "@repo/backend/confect/nina/research/source";
 import {
   formatScrapeOutput,
@@ -64,7 +65,9 @@ const exactSourceContentMaxLength = 8000;
  * failure still hands that source to Nina, so the answer never contradicts the
  * cards. Every model and provider call is cut to the time the capability has
  * left, so a call that runs out ends here, with what was gathered, before the
- * run itself is cut. The usage handler records each provider call.
+ * run itself is cut. A search limited to sites that finds no source tells Nina
+ * which sites it was limited to, whatever else the run answers from. The usage
+ * handler records each provider call.
  */
 export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   function* ({
@@ -193,12 +196,22 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     const eligibleCitationUrls = MutableHashSet.empty<string>();
     addEligibleSourceUrls(eligibleCitationUrls, read);
     addEligibleSourceUrls(eligibleCitationUrls, found);
+    // A search limited to sites that returned no source says so to Nina, after
+    // whatever else the run answers from: the limit may be why it found
+    // nothing, and she is the one who can research again without it.
+    const limit = Option.match(search, {
+      onNone: () => [],
+      onSome: ({ result }) => formatSearchLimit(result),
+    });
+    const withLimit = (text: string) => Arr.join([text, ...limit], "\n\n");
 
     if (MutableHashSet.size(eligibleCitationUrls) === 0) {
       if (searched) {
         return {
           outcome: "empty" as const,
-          text: formatResearchOutput({ findings: [], limitations: [] }),
+          text: withLimit(
+            formatResearchOutput({ findings: [], limitations: [] })
+          ),
         };
       }
       return yield* Result.isFailure(planned)
@@ -251,12 +264,14 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       yield* logResearchFailure(synthesis.failure);
       return {
         outcome: "partial" as const,
-        text: formatUnsynthesizedEvidence(evidence, unreadUrls),
+        text: withLimit(formatUnsynthesizedEvidence(evidence, unreadUrls)),
       };
     }
 
-    const text = formatResearchOutput(
-      filterResearchOutputCitations(synthesis.success, eligibleCitationUrls)
+    const text = withLimit(
+      formatResearchOutput(
+        filterResearchOutputCitations(synthesis.success, eligibleCitationUrls)
+      )
     );
     // Sources that support no finding are still sources the learner sees, so
     // such a run is not `empty`; Nina reads what to say in `text`.

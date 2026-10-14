@@ -3,11 +3,9 @@
 import type { Ref } from "@confect/core";
 
 import type contents from "@repo/backend/confect/_generated/refs/contents";
-import { getMaterialIcon } from "@repo/contents/curriculum/material";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
-
-import type { ReactNode } from "react";
+import type { TileLook } from "@repo/design-system/lib/look";
 
 /**
  * The fields one home list row renders.
@@ -22,26 +20,23 @@ type RankedMaterial = Ref.Returns<
 
 type HomeMaterial = Pick<
   RankedMaterial,
-  | "content_id"
-  | "contextKey"
-  | "description"
-  | "href"
-  | "materialDomain"
-  | "title"
+  "content_id" | "contextKey" | "description" | "href" | "title"
 >;
 
 /**
  * Renders one home learning row.
  *
  * Continue Learning and Trending read the same row shape, so they share this
- * markup and differ only through `trailing`.
+ * markup. The `look` is the icon and the turn that the list gave this row (see
+ * `getMaterialLooks`), so that no two rows of one list share an icon or a
+ * blend.
  */
 export function MaterialRow({
+  look,
   material,
-  trailing,
 }: {
+  look: TileLook;
   material: HomeMaterial;
-  trailing?: ReactNode;
 }) {
   return (
     <NavigationLink
@@ -49,18 +44,11 @@ export function MaterialRow({
       href={material.href}
     >
       <div className="flex items-start gap-3">
-        <Tile seed={material.content_id}>
-          <TileIcon icon={getMaterialIcon(material.materialDomain)} />
+        <Tile seed={look.seed} shift={look.shift}>
+          <TileIcon icon={look.icon} />
         </Tile>
         <div className="-mt-1 flex flex-1 flex-col gap-0.5">
-          {trailing ? (
-            <div className="relative">
-              <h3 className="pr-20">{material.title}</h3>
-              {trailing}
-            </div>
-          ) : (
-            <h3>{material.title}</h3>
-          )}
+          <h3>{material.title}</h3>
           <span className="line-clamp-1 text-muted-foreground text-sm group-hover:text-accent-foreground sm:mr-12">
             {material.description}
           </span>

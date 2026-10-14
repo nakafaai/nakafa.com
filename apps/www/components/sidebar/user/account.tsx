@@ -19,6 +19,7 @@ import { AccountMenu } from "@/components/sidebar/menu/account";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/identity/client";
+import { profileHref } from "@/lib/profile/href";
 
 /** Renders the app account menu, with the account and legal pages, once authentication is confirmed. */
 export function NavUserAccount({ user }: { user: CurrentUser }) {
@@ -26,17 +27,20 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
   const tLegal = useTranslations("Legal");
   const pageNavigation = usePageNavigation((navigation) => navigation);
   const router = useRouter();
+  const { username } = user.appUser;
 
   return (
     <AccountMenu user={user}>
       <DropdownMenuGroup>
-        <DropdownMenuItem
-          className="cursor-pointer"
-          onClick={() => router.push(`/user/${user.appUser._id}`)}
-        >
-          <HugeIcons icon={UserIcon} />
-          {t("profile")}
-        </DropdownMenuItem>
+        {username === undefined ? null : (
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => router.push(profileHref(username))}
+          >
+            <HugeIcons icon={UserIcon} />
+            {t("profile")}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => router.push("/user/settings")}
