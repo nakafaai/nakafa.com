@@ -270,8 +270,8 @@ Provider input keeps whole turns that the conversation summary does not
 cover, newest first, within the history budget of 32,610 tokens: what a call
 leaves for its history after the reserved parts at their budgets (30,000
 tokens) and the current turn's evidence (28,000 tokens). The budget of a call
-whose current turn costs more is smaller, so the call stays within its limit,
-and the history budget is the most a call takes (`assembleContext`). The turns
+whose current turn costs more is smaller, and the history budget is the most a
+call takes (`assembleContext`). The turns
 come from the chat's turn records, by turn
 order, not from the last messages of the thread: a cancelled or failed turn
 leaves no messages in it, and a question the learner asked again appears once,
@@ -283,13 +283,13 @@ tab that sends no page, keeps that turn's own context, with its placement and
 question focus. Older evidence shortens with a visible note before a turn is
 dropped, and no budget fails a turn. Earlier turns keep their images, while
 their PDF and text attachments, whose cost grows with size, leave provider
-history as a note naming the file. An image counts 1,600 tokens whatever its
-size, about what Claude bills for an image after the provider's resize
-(measured 14 October 2026), so a few images fill the history budget. A document
-counts 3,300 tokens a page. A stored message keeps neither the size nor the page
-count of a file, so the rule reads the media type alone and counts one page.
-The learner's own message and its attachments are not evidence and do not count
-against the evidence budget.
+history as a note naming the file. An image counts 4,784 tokens whatever its
+size, the most the high-resolution tier bills for one image (Anthropic's vision
+guide), so a few images fill the history budget. A document counts 3,300 tokens
+a page. A stored message keeps neither the size nor the page count of a file, so
+the rule reads the media type alone and counts one page. The learner's own
+message and its attachments are not evidence and do not count against the
+evidence budget, but the send counts them against the message budget below.
 
 One call carries at most `NINA_CALL_LIMIT` tokens by design: 90,610, which is
 the context limit of the language model profile, 100,000, less a margin of 9,390
@@ -303,16 +303,19 @@ call with its result costs what the budget counts for them. A call holds its
 reserved parts at their budgets, 30,000 tokens (instructions 12,500, page
 10,500, account 1,000, portrait 1,000, recall 1,500, summary 3,500), then its
 current turn as it is sent: the newest learner message and its files, counted at
-the profile's costs, and the evidence, within 28,000. The history gets what is
+the profile's costs, and the evidence, within 28,000. The learner's message may
+cost at most 32,610 tokens, the room the call leaves after the reserved parts and
+the evidence, and the send refuses a longer one (`NINA_MESSAGE_SIZE`), so the
+message and the evidence fit the call limit together. The history gets what is
 left, at most 32,610. Nina stays below the price step at 100,000 tokens, because
 the provider bills a call above it at five times the input price (measured on
-calls of 94,423 and 104,573 prompt tokens). Four things lie outside the number.
-The newest earlier turn is kept whatever it costs, and only its tool results are
-shortened, never the words of the learner or of Nina, so one very long answer in
-it can take a call past the limit. A question focus has no budget of its own.
-The learner's text is bounded only by the admission limit of 100,000 characters,
-and a document counts one page however long it is, since admission bounds the
-bytes of a message's documents (10 MiB) and not their pages.
+calls of 94,423 and 104,573 prompt tokens). Three things can still take a call
+past the limit. The newest earlier turn is kept whatever it costs, and only its
+tool results are shortened, never the words of the learner or of Nina, so one
+very long answer in it can take a call past the limit. A question focus has no
+budget of its own. A document counts one page however long it is, since the send
+bounds the bytes of a message's documents (10 MiB) and not their pages, so a
+long PDF can take a call past the limit, and no measured page cost bounds it yet.
 
 The size of the history starts a fold of the conversation summary. After a
 completed turn, the follow-up action counts the complete turns the summary does
@@ -326,8 +329,10 @@ summarizes the oldest of them with a fast
 model, as many as it takes for the rest to cost at most 16,305 tokens, half the
 budget, so the next fold waits for about half a budget of new turns and the
 cached prefix holds in between. The newest complete turn is never folded, a
-fold covers at most 16 turns, and a longer backlog advances one bounded batch
-per completed turn. When the count reached the oldest of the turns, the fold
+fold covers at most 16 turns, and its transcript stays within the fold budget,
+which is what the call limit leaves after the previous summary and the writer's
+instructions. A fold stops at the newest turn that fits, and the next fold covers
+the rest. A longer backlog advances one bounded batch per completed turn. When the count reached the oldest of the turns, the fold
 summarizes from the messages it read. Otherwise it reads back from its last
 folded turn alone. The fold leaves out what the history would: a cancelled or
 failed turn, and an answer that a later retry replaced.

@@ -192,21 +192,24 @@ of the first calls a model, in the background:
 
 | Way | Where it sits | Tokens at its bound | Typical learner | Documents it reads | Model calls |
 | --- | --- | --- | --- | --- | --- |
-| Portrait | The Learner section of the system prompt, after the account facts | 300, and 348 with its block | 154 to 171 | 2 | None in the turn |
-| Recall | A list in the text part in front of the learner's message | 700, and 757 with its block | 110 to 144 | 435 at most | None |
-| Memory capability | The answer to a tool call Nina makes, only when she makes it | 1,500, and 1,555 with its block | 89 to 142 a call | 405 at most for one call | None |
+| Portrait | The Learner section of the system prompt, after the account facts | 1,000, plus its block | 154 to 171 (former tokenizer) | 2 | None in the turn |
+| Recall | A list in the text part in front of the learner's message | 1,500, plus its block | 110 to 144 (former tokenizer) | 435 at most | None |
+| Memory capability | The answer to a tool call Nina makes, only when she makes it | 3,000, plus its block | 89 to 142 a call (former tokenizer) | 405 at most for one call | None |
 
-The tokens are counted with the tokenizer behind every Nina budget
-(`gpt-tokenizer`). A bound cuts the memories' text, and the block around it,
-which is a heading, one sentence that names it as data and its tags, adds 48,
-57 and 55 tokens. A typical learner is a portrait of 500 characters and three
-to five one-sentence memories, measured on 12 October 2026 in Indonesian and
-English. A portrait of 1,200 characters, the most the build may write, measures
-249 to 292 tokens, so the character limit and the token bound agree for
-ordinary text, and the cut only guards against odd text. Offering the tool costs
-416 tokens in every turn while memory is on, whether or not Nina calls it: 191
-for its paragraphs of the tool policy and 225 for its definition. The other
-three tools cost 388, 392 and 362 tokens as definitions.
+The bounds are counted by the estimator of `confect/nina/budget.ts`, whose costs
+live in the language model profile. The figures without a current count were
+measured with the former tokenizer (`gpt-tokenizer`), before the model change of
+14 October 2026, and they have not been counted again. A bound cuts the
+memories' text, and the block around it, which is a heading, one sentence that
+names it as data and its tags. A typical learner is a portrait of 500 characters
+and three to five one-sentence memories, measured on 12 October 2026 in
+Indonesian and English. A portrait of 1,200 characters, the most the build may
+write, measured 249 to 292 tokens with the former tokenizer, so the character
+limit and the token bound agree for ordinary text, and the cut only guards
+against odd text. Offering the tool cost 416 tokens in every turn while memory
+was on, whether or not Nina called it: 191 for its paragraphs of the tool policy
+and 225 for its definition, with the former tokenizer. The other three tools cost
+388, 392 and 362 tokens as definitions, with the former tokenizer.
 
 The documents of the portrait are its row and the learner's key. Recall is one
 search (410 at most: one memory to know there is one, the key, 16 keys of 24

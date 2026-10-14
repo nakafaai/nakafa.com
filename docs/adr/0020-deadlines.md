@@ -87,7 +87,7 @@ of its own, and every model call has a cap on its output.
   it gathered. A call outside a capability run has only its own budget.
 - Each purpose's output cap is in the language model profile
   (`gateway/model.ts`), sent to the provider as `maxOutputTokens`: chat 48,000
-  tokens, specialist 11,264, background 7,168, suggestion 512, presentation 512.
+  tokens, specialist 11,264, background 7,168, suggestion 1,024, presentation 512.
   Each purpose's reasoning effort and deadlines are in `gateway/purpose.ts`. A call that ends at its
   cap finishes with `length`, which a chat turn already reads as
   `response-limit`. A specialist whose last step ends at its cap reports its
@@ -113,8 +113,9 @@ of its own, and every model call has a cap on its output.
   - Chat total 510,000 ms: the step plus 330,000 ms for the other steps of a turn,
     which keeps the allowance of 420,000 less the old 90,000 step. So 180 + 330 =
     510 s.
-  - Chat chunk 45,000 ms, unchanged, since no measured gap between chunks
-    exceeds it.
+  - Chat chunk 45,000 ms, unchanged. No gap between streamed chunks was measured
+    on a long answer, so 45 s is a judgment and not a measurement: a silent gap
+    longer than it ends the call as a response timeout.
   - The turn's deadline is 30 s to start, the chat total and 30 s to settle, so
     570 s (was 480 s). The capabilities have the step less 10 s, 170 s (was 80 s),
     and the turn has its total less 10 s, 500 s (was 410 s).
@@ -125,10 +126,13 @@ of its own, and every model call has a cap on its output.
   - Background cap 7,168: a summary of 3,500 tokens, which is a little over twice,
     since the reasoning of its call counts against the same cap. Step 30,000 ms:
     7,168 / 278, about 26 s. Total 90,000 ms, three steps, as before.
-  - Suggestion and presentation caps stay at 512 tokens, and their deadlines stay.
-    On Gemini, five follow-up questions wrote 85 tokens, and a 16-turn summary at
-    `low` reasoned 94 tokens on Claude. Neither has a Claude measurement of its
-    own yet, so measure them before the caps are lowered.
+  - Suggestion cap 1,024 tokens, raised from 512: the schema admits five
+    suggestions of 300 characters each, which the estimator prices at 716 tokens
+    (a calculation with the profile's rules, not a Claude count), so 512 could cut
+    the longest answer the schema allows. Presentation stays at 512, which covers
+    a title of 80 characters. Their deadlines stay. On Gemini, five follow-up
+    questions wrote 85 tokens. Neither cap has a Claude measurement of its own yet,
+    so measure both before either is changed.
 
   Earlier caps were measured on Gemini 3.8 Flash through the gateway on the dev
   deployment on 11 October 2026, with a short system prompt and no cap:
