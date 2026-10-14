@@ -515,6 +515,7 @@
     "delete": "Hapus memori",
     "deleted": "Memori dihapus",
     "undo": "Urungkan",
+    "undo-failed": "Gagal mengurungkan",
     "written-by-you": "Ditulis olehmu {time}",
     "saved-by-nina": "Disimpan Nina {time}",
     "ends": "Berakhir {date}",

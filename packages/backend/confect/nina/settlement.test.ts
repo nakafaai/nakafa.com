@@ -3,10 +3,10 @@ import { listMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { STOP_GRACE } from "@repo/backend/confect/nina/settlement";
 import { createNinaTest } from "@repo/backend/test/nina";
-import { Array as Arr, DateTime, Duration, Effect } from "effect";
+import { contextFor } from "@repo/backend/test/nina/admission";
+import { Array as Arr, Duration } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -31,8 +31,8 @@ const args = {
 };
 
 /** A chat whose first turn holds five of the learner's ten credits. */
-async function fixture() {
-  const seeded = await createNinaTest({ now: NOW });
+async function fixture({ legacy = false }: { readonly legacy?: boolean } = {}) {
+  const seeded = await createNinaTest({ legacy, now: NOW });
   const { t, identity } = seeded;
   const inspect = () =>
     t.query(async (ctx) => ({
@@ -52,31 +52,7 @@ describe("native Nina stop and resend", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
-    vi.mocked(resolveNinaContext).mockReturnValue(
-      openNinaLearningSession({
-        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-        source: "current-page",
-        learning: {
-          locale: "en",
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-        },
-      }).pipe(
-        Effect.orDie,
-        Effect.map((session) => ({
-          page: {
-            locale: "en" as const,
-            slug: "home",
-            url: "https://nakafa.com/en/home",
-            verified: false,
-            needsFetch: false,
-            nina: session.context,
-          },
-          user: {},
-        }))
-      )
-    );
+    vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
   });
   afterEach(() => {
     vi.mocked(listMessages).mockReset();
@@ -251,6 +227,26 @@ describe("native Nina stop and resend", () => {
       "refund",
       "usage",
     ]);
+  });
+
+  it("settles a stopped turn stored in the old shape on the next prompt, and keeps its page as stored", async () => {
+    const f = await fixture({ legacy: true });
+    const stored = (await f.inspect()).turns[0]?.page;
+    expect(stored?.nina).toHaveProperty("snapshot");
+    await f.t.mutation(claim, { turnId: f.turnId });
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+
+    vi.setSystemTime(NOW + 1000);
+    await f.owner.mutation(start, args);
+
+    const state = await f.inspect();
+    expect(state.turns[0]).toMatchObject({
+      _id: f.turnId,
+      phase: "settled",
+      state: { status: "cancelled" },
+      page: stored,
+    });
+    expect(state.chats[0]?.activeTurnId).toBeUndefined();
   });
 
   it("settles every turn the learner stopped, in whichever chat it ran, and pays each hold back once", async () => {

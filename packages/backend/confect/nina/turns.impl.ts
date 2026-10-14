@@ -24,15 +24,7 @@ import { settleStopped } from "@repo/backend/confect/nina/settlement";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { sha256Hex } from "@repo/utilities/digest";
 import { JsonTextSchema } from "@repo/utilities/json";
-import {
-  Array as Arr,
-  Clock,
-  DateTime,
-  Duration,
-  Effect,
-  Layer,
-  Schema,
-} from "effect";
+import { Array as Arr, Clock, Duration, Effect, Layer, Schema } from "effect";
 
 const writeFailure = () =>
   new NinaTurnError({
@@ -114,12 +106,7 @@ const start = FunctionImpl.make(
     yield* requireOpenCapacity(appUser._id);
     const now = yield* Clock.currentTimeMillis;
     const reservation = yield* reserveCredits(learner);
-    const prompt = yield* preparePrompt(
-      learner,
-      chat,
-      args.input,
-      DateTime.formatIso(DateTime.makeUnsafe(now))
-    );
+    const prompt = yield* preparePrompt(learner, chat, args.input);
     const ctx = yield* MutationCtx;
     const threadId =
       chat?.threadId ??

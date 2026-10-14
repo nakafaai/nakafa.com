@@ -34,10 +34,7 @@ export function formatNinaContextPackPrompt(context: NinaContextPack) {
     ${placement}
 
     Tool policy:
-    - Nakafa evidence allowed: ${context.tools.allowNakafa ? "yes" : "no"}
     - current page content provided: ${context.tools.allowPageFetch ? "yes" : "no"}
-    - math evidence allowed: ${context.tools.allowMath ? "yes" : "no"}
-    - deep research allowed: ${context.tools.allowDeepResearch ? "yes" : "no"}
     - evidence scope: ${context.tools.evidenceScope}
   `;
 }
