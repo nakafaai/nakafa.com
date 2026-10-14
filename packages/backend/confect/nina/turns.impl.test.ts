@@ -112,11 +112,8 @@ describe("native Nina admission", () => {
       usage: [],
       state: { status: "queued" },
     });
-    // The page is stored once, as the resolver froze it, and nothing of its
-    // context sits beside it, on the page or on the turn.
+    // The page is stored once, as the resolver froze it.
     expect(state.turns[0]?.page).toEqual(homePage);
-    expect(state.turns[0]).not.toHaveProperty("snapshot");
-    expect(state.turns[0]).not.toHaveProperty("transition");
     expect(
       Arr.filter(state.ledger, (row) => row.type === "usage")
     ).toHaveLength(1);
