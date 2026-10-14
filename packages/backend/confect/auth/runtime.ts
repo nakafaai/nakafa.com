@@ -20,8 +20,11 @@ import {
   accountDeletionPreparationOutcome,
 } from "@repo/backend/confect/auth/deletion/spec";
 import {
+  disabledSignInPaths,
   disabledTokenPaths,
+  passwordSignInRoutesDisabled,
   tokenRoutesDisabled,
+  usernameUpdatesDisabled,
 } from "@repo/backend/confect/auth/routes";
 import {
   accountTokenHooks,
@@ -60,8 +63,9 @@ const providerErrorRoutePathnames = HashSet.fromIterable(
 /**
  * Better Auth's paths for password accounts. Each one stays closed on every
  * host: sign-in with a school username opens later, on the school host alone
- * (ADR 0009). `/is-username-available` is closed too, because it would tell any
- * visitor which school usernames exist.
+ * (ADR 0009). The sign-in paths are in `disabledSignInPaths`, which also closes
+ * them for server code. `/is-username-available` is closed too, because it would
+ * tell any visitor which school usernames exist.
  */
 const disabledCredentialPaths = [
   "/change-password",
@@ -69,8 +73,6 @@ const disabledCredentialPaths = [
   "/request-password-reset",
   "/reset-password",
   "/set-password",
-  "/sign-in/email",
-  "/sign-in/username",
   "/sign-up/email",
   "/verify-password",
 ] as const;
@@ -196,7 +198,11 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       encryptOAuthTokens: true,
     },
     databaseHooks: accountTokenHooks,
-    disabledPaths: [...disabledCredentialPaths, ...disabledTokenPaths],
+    disabledPaths: [
+      ...disabledCredentialPaths,
+      ...disabledSignInPaths,
+      ...disabledTokenPaths,
+    ],
     // Passwords are a store for school accounts only: nobody signs up with one,
     // and a password reset (a card redemption) ends every session it replaces.
     emailAndPassword: {
@@ -229,6 +235,8 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     plugins: [
       credentialSurfaceDisabled,
       tokenRoutesDisabled,
+      passwordSignInRoutesDisabled,
+      usernameUpdatesDisabled,
       openAPI(),
       // A school username is the global username of the account (ADR 0009), so
       // the plugin holds the same value as `users.username`, under one rule.

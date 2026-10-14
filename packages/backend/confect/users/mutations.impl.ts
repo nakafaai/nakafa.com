@@ -6,6 +6,7 @@ import {
   MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { renameAuthUsername } from "@repo/backend/confect/auth/username";
 import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
@@ -65,19 +66,22 @@ const updateUserName = FunctionImpl.make(
 /**
  * Renames the caller's profile address. The old username is free the moment the
  * new one is stored, in the same transaction that checks the new one, so two
- * accounts that ask for the same name at once cannot both win.
+ * accounts that ask for the same name at once cannot both win. A school
+ * account's Better Auth username changes with it, so the two stay one value.
  */
 const updateUsername = FunctionImpl.make(
   databaseSchema,
   spec,
   "updateUsername",
   Effect.fn("users.mutations.updateUsername")(function* (args) {
+    const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
     const user = yield* requireAuth();
     const inspected = yield* inspectUsername(args.username, user.appUser._id);
     if (Result.isFailure(inspected)) {
       return yield* new UsernameRejected({ reason: inspected.failure });
     }
+    yield* renameAuthUsername(ctx, user.authId, inspected.success);
     yield* writer
       .table("users")
       .patch(user.appUser._id, { username: inspected.success })
