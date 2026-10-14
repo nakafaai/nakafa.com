@@ -45,12 +45,11 @@ that the model must change:
   (`packages/backend/confect/tryouts/runtime/estimate.ts`).
 - Multiple choice and category answers are all or nothing in code
   (`packages/backend/confect/response/evaluation.ts`).
-- The player (`apps/www/components/tryout`) has no calculator, formula sheet,
+- The player (`apps/www/components/player`) has no calculator, formula sheet,
   option elimination, highlighter, notes, line reader, or accommodations. It
-  shows every item of a section in one list
-  (`apps/www/components/tryout/runtime/client.tsx`), and a learner can end a
+  shows a section as a list or one item at a time, and a learner can end a
   section before its time runs out, from a confirmation dialog
-  (`apps/www/components/tryout/runtime/controls.client.tsx`).
+  (`apps/www/components/player/finish.tsx`).
 - `packages/backend/confect/response` rewrites the option, category, statement,
   and rubric shapes that the Aksara contract already holds. One shape then has
   two sources of truth.
@@ -353,5 +352,6 @@ has exactly one owner.
 | `@convex-dev/presence` | Not installed. Planned for wave B. |
 | The other `confect/assessment` modules | Planned |
 | Assessment document and its compiler | Planned, program wave A |
-| Shared player and tool registry | Planned, program wave B |
+| `apps/www/components/player` (list or one item, navigator, keys), bound to try-outs | Live. A School binding is planned for wave B. |
+| Player tool registry | Planned, program wave B |
 | Grading queue and Nina suggestions | Planned, program wave B, after K6 passes |

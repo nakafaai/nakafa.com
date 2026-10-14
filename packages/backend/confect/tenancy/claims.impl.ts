@@ -14,7 +14,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { authReader } from "@repo/backend/confect/auth/reader";
-import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import spec from "@repo/backend/confect/tenancy/claims.spec";
@@ -24,9 +24,6 @@ import type {
   InviteState,
 } from "@repo/backend/confect/tenancy/schema";
 import { Clock, Duration, Effect, Layer, Option, Struct } from "effect";
-
-/** A claim runs as scheduled work, not as the Person it binds. */
-const system: typeof TenantActor.Type = { kind: "system" };
 
 /**
  * The address Better Auth has verified for an account. Better Auth lowercases
@@ -48,9 +45,9 @@ const verifiedEmail = Effect.fn("tenancy.claims.email")(function* (
 /**
  * Binds the invited Person to the account and accepts the invite, unless the
  * Person is not waiting any more, the account already holds a Person in the
- * tenant, the tenant is suspended, which refuses every write, or the tenant's
- * email domains do not admit the address: then the invite stays pending for
- * the school to resolve.
+ * tenant, the tenant is suspended, which refuses every write, the invite has
+ * reached its expiry, or the tenant's email domains do not admit the address:
+ * then the invite stays as it is for the school to resolve.
  */
 const claim = Effect.fn("tenancy.claims.claim")(function* (
   invite: TenantInvitesDoc,
@@ -74,16 +71,17 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
       Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
       Effect.orDie
     );
+  const at = yield* Clock.currentTimeMillis;
   if (
     tenant.status !== "active" ||
     person.status !== "active" ||
     person.account.state !== "unclaimed" ||
     Option.isSome(held) ||
+    invite.expiresAt <= at ||
     !admitsAddress(tenant.policies, invite.channel.email)
   ) {
     return;
   }
-  const at = yield* Clock.currentTimeMillis;
   const account: typeof Account.Type = {
     claimedAt: at,
     method: "invite",
@@ -105,7 +103,7 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
       Struct.assign(Struct.omit(invite, ["_creationTime", "_id"]), { state })
     )
     .pipe(Effect.orDie);
-  yield* personAuthority.record(system, person, {
+  yield* personAuthority.record(systemActor, person, {
     method: "invite",
     type: "person.claimed",
   });

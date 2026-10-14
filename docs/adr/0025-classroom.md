@@ -317,9 +317,9 @@ The persisted snapshots and the navigation history of ADR 0005 are two of them.
 
 | Part | Status |
 | --- | --- |
-| The first School's forum backend: `schoolClassForums`, `schoolClassForumPosts`, and `confect/classes/forums` | Live on main at `f8a5610808`. The contract release of ADR 0011 deletes it, as K11 decides. |
+| The first School's forum backend: `schoolClassForums`, `schoolClassForumPosts`, and `confect/classes/forums` | Deleted, as K11 decides: the contract release of ADR 0011 (#1037) removed its code and rows, and the drop release removed its tables and its two aggregates |
 | The first School's forum screens and viewport in `apps/www/components/school` | Deleted from main by #1051 |
-| ADR 0005, and the glossary section `Forum Conversation` | Live. The contract release of ADR 0011 deletes both with the backend. |
+| ADR 0005, and the glossary section `Forum Conversation` | Deleted by #1037 |
 | `Message`, `Bubble`, `Attachment`, and `MessageScroller` in `packages/design-system/components/ui` | Live |
 | `Marker`, `Item`, `MessageAvatar`, `MessageHeader`, `MessageGroup`, `BubbleGroup`, and `BubbleReactions` | Planned, program wave B, from the registry |
 | `confect/classroom` and its tables `classrooms`, `classroomMembers`, `classroomPosts`, `classroomThreads`, `classroomMessages`, `classroomReactions`, `classroomReads`, `classroomFolders`, `classroomTasks`, `classroomSubmissions`, and `classroomChannels` | Planned, program wave B |

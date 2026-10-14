@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { UserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
-  ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
   ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import {
@@ -17,7 +16,6 @@ import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";
 import {
   AccountDeletionFailed,
   AccountDeletionRequestUncertain,
-  AccountDeletionSchoolMemberRequired,
   AccountDeletionSessionExpired,
   accountDeletionErrorCode,
 } from "@/lib/auth/deletion/errors";
@@ -300,30 +298,6 @@ describe("account deletion", () => {
       expect(request).not.toHaveBeenCalled();
     })
   );
-  it.effect(
-    "cancels before retrying when the auth safety check is not ready",
-    () =>
-      Effect.gen(function* () {
-        const cancelPreparation = vi.fn(() =>
-          Promise.resolve(
-            Result.succeed(accountDeletionCancellationOutcome.complete)
-          )
-        );
-        const clearAttempt = vi.fn();
-        const failure = yield* deletionFailure({
-          cancelPreparation,
-          clearAttempt: Effect.sync(clearAttempt),
-          request: requestFailure(ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE),
-        });
-        expect(failure).toMatchObject({
-          _tag: "AccountDeletionRequestUncertain",
-          attemptId: ATTEMPT_ID,
-          phase: accountDeletionRequestPhase.preparation,
-        });
-        expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
-        expect(clearAttempt).toHaveBeenCalledOnce();
-      })
-  );
   it.effect("rotates an attempt canceled by background recovery", () =>
     Effect.gen(function* () {
       const cancelPreparation = vi.fn(() =>
@@ -359,27 +333,23 @@ describe("account deletion", () => {
       expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
     })
   );
-  it.effect(
-    "drains cancellation before resetting a stale-session attempt",
-    () =>
-      Effect.gen(function* () {
-        const cancelPreparation = vi
-          .fn<AccountDeletionOperations["cancelPreparation"]>()
-          .mockResolvedValueOnce(
-            Result.succeed(accountDeletionCancellationOutcome.continue)
-          )
-          .mockResolvedValueOnce(
-            Result.succeed(accountDeletionCancellationOutcome.complete)
-          );
-        const failure = yield* deletionFailure({
-          cancelPreparation,
-          request: requestFailure("SESSION_EXPIRED"),
-        });
-        expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
-        expect(cancelPreparation).toHaveBeenCalledTimes(2);
-        expect(cancelPreparation).toHaveBeenNthCalledWith(1, ATTEMPT_ID);
-        expect(cancelPreparation).toHaveBeenNthCalledWith(2, ATTEMPT_ID);
-      })
+  it.effect("cancels the preparation of a stale-session attempt", () =>
+    Effect.gen(function* () {
+      const cancelPreparation = vi.fn(() =>
+        Promise.resolve(
+          Result.succeed(accountDeletionCancellationOutcome.complete)
+        )
+      );
+      const clearAttempt = vi.fn();
+      const failure = yield* deletionFailure({
+        cancelPreparation,
+        clearAttempt: Effect.sync(clearAttempt),
+        request: requestFailure("SESSION_EXPIRED"),
+      });
+      expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
+      expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
+      expect(clearAttempt).toHaveBeenCalledOnce();
+    })
   );
   it.effect("leaves other delete errors to durable server recovery", () =>
     Effect.gen(function* () {
@@ -399,26 +369,6 @@ describe("account deletion", () => {
       });
       expect(cancelPreparation).not.toHaveBeenCalled();
     })
-  );
-  it.effect(
-    "returns a typed failure when an owned school needs a successor",
-    () =>
-      Effect.gen(function* () {
-        const cancelPreparation = vi.fn(() =>
-          Promise.resolve(
-            Result.succeed(accountDeletionCancellationOutcome.complete)
-          )
-        );
-        const clearAttempt = vi.fn();
-        const failure = yield* deletionFailure({
-          cancelPreparation,
-          clearAttempt: Effect.sync(clearAttempt),
-          request: requestFailure("ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER"),
-        });
-        expect(failure).toBeInstanceOf(AccountDeletionSchoolMemberRequired);
-        expect(cancelPreparation).toHaveBeenCalledExactlyOnceWith(ATTEMPT_ID);
-        expect(clearAttempt).toHaveBeenCalledOnce();
-      })
   );
   it.effect(
     "preserves the attempt when immediate cancellation also fails",

@@ -53,6 +53,7 @@ export const SentSchema = Schema.Union([
   Schema.Struct({
     modifications: Schema.Array(
       Schema.Struct({
+        /** What an added query is called with: one record of arguments. */
         args: Schema.optionalKey(Schema.Array(Schema.Unknown)),
         queryId: Schema.Finite,
         type: Schema.String,
@@ -146,36 +147,38 @@ export const encodeTransition = Schema.encodeSync(
   Schema.fromJsonString(WholeTransitionSchema)
 );
 
-/** One update of a whole transition. */
+/** What a transition says about one query, with every field the server wrote. */
 type Update = (typeof WholeTransitionSchema.Type)["modifications"][number];
 
 /**
- * The transition `text` with each answer to the queries `queryIds` replaced by
- * what `replace` makes of it, and every other update and field as the server
- * wrote it. None when the transition updates none of those queries.
+ * The transition `text` with each update that `replace` gives another one put
+ * in its place, and every other field kept as the server wrote it. None when
+ * `replace` gives none, and for a frame that is no transition.
  */
-const replaceAnswersIn = (
+const replaceUpdatesIn = (
   text: string,
-  queryIds: readonly number[],
-  replace: (update: Update) => Update
-) => {
-  const answersQuery = (update: Update) =>
-    update.type === "QueryUpdated" && Arr.contains(queryIds, update.queryId);
-
-  return decodeTransition(text).pipe(
-    Option.filter((transition) =>
-      Arr.some(transition.modifications, answersQuery)
-    ),
-    Option.map((transition) =>
-      encodeTransition({
-        ...transition,
-        modifications: Arr.map(transition.modifications, (update) =>
-          answersQuery(update) ? replace(update) : update
-        ),
-      })
-    )
+  replace: (update: Update) => Option.Option<Update>
+) =>
+  decodeTransition(text).pipe(
+    Option.flatMap((transition) => {
+      const replacements = Arr.map(transition.modifications, (update) =>
+        replace(update)
+      );
+      if (!Arr.some(replacements, Option.isSome)) {
+        return Option.none();
+      }
+      return Option.some(
+        encodeTransition({
+          ...transition,
+          modifications: Arr.zipWith(
+            transition.modifications,
+            replacements,
+            (update, replacement) => Option.getOrElse(replacement, () => update)
+          ),
+        })
+      );
+    })
   );
-};
 
 /**
  * The transition `text` with the answers to the queries `queryIds` turned into
@@ -188,14 +191,18 @@ export const failQueriesIn = (
   queryIds: readonly number[],
   data: unknown
 ) =>
-  replaceAnswersIn(text, queryIds, ({ journal, queryId }) => ({
-    errorData: data,
-    errorMessage: "Refused by the test",
-    journal,
-    logLines: [],
-    queryId,
-    type: "QueryFailed",
-  }));
+  replaceUpdatesIn(text, (update) =>
+    update.type === "QueryUpdated" && Arr.contains(queryIds, update.queryId)
+      ? Option.some({
+          errorData: data,
+          errorMessage: "Refused by the test",
+          journal: update.journal,
+          logLines: [],
+          queryId: update.queryId,
+          type: "QueryFailed",
+        })
+      : Option.none()
+  );
 
 /**
  * The transition `text` with the value that each of the queries `queryIds`
@@ -208,7 +215,28 @@ export const changeAnswersIn = (
   queryIds: readonly number[],
   change: (value: unknown) => unknown
 ) =>
-  replaceAnswersIn(text, queryIds, (update) => ({
-    ...update,
-    value: change(update.value),
-  }));
+  replaceUpdatesIn(text, (update) =>
+    update.type === "QueryUpdated" && Arr.contains(queryIds, update.queryId)
+      ? Option.some({ ...update, value: change(update.value) })
+      : Option.none()
+  );
+
+/**
+ * The transition `text` with what the server said of each query that
+ * `valueFor` knows turned into the update of a function that returned that
+ * value, whatever the server said. None when the transition says nothing of
+ * those queries.
+ */
+export const answerQueriesIn = (
+  text: string,
+  valueFor: (queryId: number) => Option.Option<unknown>
+) =>
+  replaceUpdatesIn(text, (update) =>
+    Option.map(valueFor(update.queryId), (value) => ({
+      journal: null,
+      logLines: [],
+      queryId: update.queryId,
+      type: "QueryUpdated",
+      value,
+    }))
+  );

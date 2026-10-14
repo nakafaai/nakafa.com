@@ -5,7 +5,6 @@ import refs from "@repo/backend/confect/_generated/refs";
 import access from "@repo/backend/confect/_generated/refs/access";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
-import classes from "@repo/backend/confect/_generated/refs/classes";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import consents from "@repo/backend/confect/_generated/refs/consents";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
@@ -15,7 +14,6 @@ import journal from "@repo/backend/confect/_generated/refs/journal";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
-import schools from "@repo/backend/confect/_generated/refs/schools";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
@@ -90,7 +88,6 @@ const domainModules = {
   access,
   auth,
   chats,
-  classes,
   comments,
   consents,
   contentRelease,
@@ -100,7 +97,6 @@ const domainModules = {
   learningPreferences,
   nina,
   onboarding,
-  schools,
   subscriptions,
   tenancy,
   tryouts,
