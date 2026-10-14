@@ -1,27 +1,19 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
-import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
-  createTenantKey,
-  ensureLearnerKeys,
   readLearnerKeys,
   readTenantKeys,
 } from "@repo/backend/confect/vault/keys";
 import { rewrapKeys } from "@repo/backend/confect/vault/rewrap";
 import { Sealed } from "@repo/backend/confect/vault/schema";
-import { openText, sealText } from "@repo/backend/confect/vault/text";
-import { TEST_ROOT_KEYS } from "@repo/backend/test/vault";
-import { Array as Arr, ConfigProvider, Effect, Schema } from "effect";
+import { openText } from "@repo/backend/confect/vault/text";
+import { learnerUnder, memory, schoolUnder } from "@repo/backend/test/owner";
+import { TEST_ROOT_KEYS, withRoots } from "@repo/backend/test/vault";
+import { Array as Arr, Effect, Schema } from "effect";
 
-const memory = { field: "text", table: "ninaMemories" };
-const slugOf = Schema.decodeSync(TenantSlug);
 const Learners = Schema.mutable(
   Schema.Array(Schema.Struct({ sealed: Sealed, userId: Id("users") }))
 );
@@ -30,48 +22,6 @@ const Moved = Schema.Struct({
   school: Schema.Struct({ sealed: Sealed, tenantId: Id("tenants") }),
 });
 const { current, retired } = TEST_ROOT_KEYS;
-
-/** Runs an effect with only the named root keys in the environment. */
-const withRoots = (roots: string) =>
-  Effect.provide(
-    ConfigProvider.layer(ConfigProvider.fromUnknown({ VAULT_ROOT_KEYS: roots }))
-  );
-
-/** Creates one account whose key the given root key wraps, and seals its name. */
-const learner = Effect.fn("test.vault.rotation.learner")(function* (
-  name: string,
-  roots: string
-) {
-  const userId = yield* (yield* DatabaseWriter).table("users").insert({
-    authId: `rotation-${name}`,
-    credits: 0,
-    creditsResetAt: 0,
-    email: `${name}@example.com`,
-    name,
-    plan: "free",
-  });
-  const keys = yield* ensureLearnerKeys(userId).pipe(withRoots(roots));
-  return { sealed: yield* sealText(keys, memory, name), userId };
-});
-
-/** Creates one school whose key the given root key wraps, and seals its slug. */
-const school = Effect.fn("test.vault.rotation.school")(function* (
-  slug: string,
-  roots: string
-) {
-  const tenantId = yield* (yield* DatabaseWriter).table("tenants").insert({
-    country: "ID",
-    currency: "IDR",
-    kind: "school",
-    name: `Sekolah ${slug}`,
-    policies: NEW_TENANT_POLICIES,
-    slug: slugOf(slug),
-    status: "active",
-  });
-  yield* createTenantKey(tenantId).pipe(withRoots(roots));
-  const keys = yield* readTenantKeys(tenantId).pipe(withRoots(roots));
-  return { sealed: yield* sealText(keys, memory, slug), tenantId };
-});
 
 const roots = Effect.fn("test.vault.rotation.roots")(function* () {
   const rows = yield* (yield* DatabaseReader)
@@ -98,11 +48,11 @@ describe("vault root key rotation through the registered function", () => {
         const moved = yield* t.run(
           Effect.gen(function* () {
             const learners = [
-              yield* learner("ani", retired),
-              yield* learner("budi", retired),
-              yield* learner("citra", current),
+              yield* learnerUnder("ani", retired),
+              yield* learnerUnder("budi", retired),
+              yield* learnerUnder("citra", current),
             ];
-            const harapan = yield* school("harapan", retired);
+            const harapan = yield* schoolUnder("harapan", retired);
             expect(yield* roots()).toEqual(["old", "old", "test"]);
             expect(yield* rewrapKeys(1)).toBe(1);
             expect(yield* roots()).toEqual(["test", "old", "test"]);

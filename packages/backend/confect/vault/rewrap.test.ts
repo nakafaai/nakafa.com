@@ -1,70 +1,22 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
-import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
-  createTenantKey,
-  ensureLearnerKeys,
   readLearnerKeys,
   readTenantKeys,
 } from "@repo/backend/confect/vault/keys";
 import { rewrapKeys } from "@repo/backend/confect/vault/rewrap";
-import { openText, sealText } from "@repo/backend/confect/vault/text";
-import { TEST_ROOT_KEYS } from "@repo/backend/test/vault";
-import { Array as Arr, ConfigProvider, Effect, Schema } from "effect";
+import { openText } from "@repo/backend/confect/vault/text";
+import { learnerUnder, memory, schoolUnder } from "@repo/backend/test/owner";
+import { TEST_ROOT_KEYS, withRoots } from "@repo/backend/test/vault";
+import { Array as Arr, Effect } from "effect";
 import { Base64 } from "effect/encoding";
 
-const memory = { field: "text", table: "ninaMemories" };
-const slugOf = Schema.decodeSync(TenantSlug);
 const { current, retired } = TEST_ROOT_KEYS;
 const former = `former:${Base64.encode(new Uint8Array(32).fill(5))}`;
+/** A root key the environment does not hold, whose name sorts above the current one. */
+const above = `zed:${Base64.encode(new Uint8Array(32).fill(7))}`;
 const bothRetired = `${current},${retired},${former}`;
-
-/** Runs an effect with only the named root keys in the environment. */
-const withRoots = (roots: string) =>
-  Effect.provide(
-    ConfigProvider.layer(ConfigProvider.fromUnknown({ VAULT_ROOT_KEYS: roots }))
-  );
-
-/** Creates one account whose key the given root key wraps, and seals its name. */
-const learner = Effect.fn("test.vault.rewrap.learner")(function* (
-  name: string,
-  roots: string
-) {
-  const userId = yield* (yield* DatabaseWriter).table("users").insert({
-    authId: `rewrap-${name}`,
-    credits: 0,
-    creditsResetAt: 0,
-    email: `${name}@example.com`,
-    name,
-    plan: "free",
-  });
-  const keys = yield* ensureLearnerKeys(userId).pipe(withRoots(roots));
-  return { sealed: yield* sealText(keys, memory, name), userId };
-});
-
-/** Creates one school whose key the given root key wraps, and seals its slug. */
-const school = Effect.fn("test.vault.rewrap.school")(function* (
-  slug: string,
-  roots: string
-) {
-  const tenantId = yield* (yield* DatabaseWriter).table("tenants").insert({
-    country: "ID",
-    currency: "IDR",
-    kind: "school",
-    name: `Sekolah ${slug}`,
-    policies: NEW_TENANT_POLICIES,
-    slug: slugOf(slug),
-    status: "active",
-  });
-  yield* createTenantKey(tenantId).pipe(withRoots(roots));
-  const keys = yield* readTenantKeys(tenantId).pipe(withRoots(roots));
-  return { sealed: yield* sealText(keys, memory, slug), tenantId };
-});
 
 /** The root key that each stored key names, in creation order, per table. */
 const keyRoots = Effect.fn("test.vault.rewrap.roots")(function* () {
@@ -91,8 +43,8 @@ describe("vault key rewrap", () => {
         const t = yield* Confect;
         yield* t.run(
           Effect.gen(function* () {
-            yield* learner("dewi", former);
-            yield* learner("eko", retired);
+            yield* learnerUnder("dewi", former);
+            yield* learnerUnder("eko", retired);
             expect(yield* rewrapKeys(10)).toBe(1);
             expect((yield* keyRoots()).learners).toEqual(["former", "test"]);
             expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe("key");
@@ -111,8 +63,8 @@ describe("vault key rewrap", () => {
         const t = yield* Confect;
         yield* t.run(
           Effect.gen(function* () {
-            const ani = yield* learner("ani", retired);
-            const harapan = yield* school("harapan", retired);
+            const ani = yield* learnerUnder("ani", retired);
+            const harapan = yield* schoolUnder("harapan", retired);
             expect(yield* rewrapKeys(1)).toBe(1);
             expect(yield* keyRoots()).toEqual({
               learners: ["test"],
@@ -147,11 +99,41 @@ describe("vault key rewrap", () => {
         const t = yield* Confect;
         yield* t.run(
           Effect.gen(function* () {
-            yield* school("baru", former);
+            yield* schoolUnder("baru", former);
             expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe("key");
             expect(yield* rewrapKeys(10).pipe(withRoots(bothRetired))).toBe(1);
             expect(yield* rewrapKeys(10).pipe(withRoots(bothRetired))).toBe(0);
             expect((yield* keyRoots()).schools).toEqual(["test"]);
+          }).pipe(Effect.orDie)
+        );
+      }).pipe(Effect.provide(confectLayer))
+  );
+
+  it.effect(
+    "refuses to report zero while a learner key names a root key above the current one",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect;
+        yield* t.run(
+          Effect.gen(function* () {
+            yield* learnerUnder("fitri", above);
+            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe("key");
+            expect((yield* keyRoots()).learners).toEqual(["zed"]);
+          }).pipe(Effect.orDie)
+        );
+      }).pipe(Effect.provide(confectLayer))
+  );
+
+  it.effect(
+    "refuses to report zero while a school key names a root key above the current one",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect;
+        yield* t.run(
+          Effect.gen(function* () {
+            yield* schoolUnder("bahari", above);
+            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe("key");
+            expect((yield* keyRoots()).schools).toEqual(["zed"]);
           }).pipe(Effect.orDie)
         );
       }).pipe(Effect.provide(confectLayer))
