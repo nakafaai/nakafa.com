@@ -250,6 +250,21 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   once.
 - The final times of the proposals in the tables, and the final period of an
   inbox row. The owner sets them (K10).
+- Quiet hours and push. The Push section and Rejected Alternatives say quiet
+  hours skip push, while the school blueprint's class page says quiet hours
+  withhold push except for exams. `confect/notifications/clock.ts` gives the
+  instant at which quiet hours end, which only a push that waits needs. The
+  owner sets one rule before the scheduler slice, and it says whether an exam
+  start is exempt.
+- Late reminders. A push that waits for quiet hours to end can arrive at or
+  after the deadline or opening it reminds of: a one-hour reminder before a 22:00
+  deadline would arrive at 06:00. A reminder whose send instant has already
+  passed when its task is published, such as the deadline reminder for a task
+  published after 16:00 on the day before the deadline, raises the same
+  question. No rule says whether such a send is dropped or sent at once.
+- Quiet hours by age. The Indonesian profile uses under 18 (ADR 0032), but no
+  birth date or age is stored yet. Until the country profile and a DPIA exist,
+  the rule must name the accounts it covers.
 
 ## Consequences
 
@@ -286,7 +301,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | `notifications`, `notificationPreferences`, `notificationReminders`, `pushSubscriptions`, and `journalCursors` | Planned, program wave B |
 | The notify consumer, and the published list with `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |
-| The notification rules and the zone of a notice, `confect/notifications/rules.ts` and `confect/notifications/zone.ts`: the channel table as data, recipients by relation, and the zone that carries a notice | Built as pure functions, not called yet (program wave B) |
+| The notification rules and the zone of a notice, `confect/notifications/rules.ts` and `confect/notifications/zone.ts`: the channel table as data, recipients by relation, the sends of a notice with their instants, and the zone that carries a notice | Built as pure functions, not called yet (program wave B) |
 | The zone clock, `confect/notifications/clock.ts`: quiet hours, the 17:00 digest, and local send times in an IANA zone | Built as pure functions, not called yet (program wave B) |
 | A service worker and Web Push | Planned, program wave B |
 | The inbox panel and `nakafa.com/id/notifications` | Planned, program wave B |
