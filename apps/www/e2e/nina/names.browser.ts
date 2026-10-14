@@ -163,7 +163,7 @@ const readOverhang = (chip: HTMLElement) => {
 };
 
 // A chip keeps its 16rem cap, so on a narrow screen it can be wider than the
-// row it sits in. The row then cannot scroll to the end of the chip.
+// row it sits in.
 test.describe("Document chips inside their row at 300px", () => {
   test.use({ viewport: { height: 900, width: 300 } });
 
