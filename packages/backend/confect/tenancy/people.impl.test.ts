@@ -305,6 +305,28 @@ describe("tenancy/people rename and remove", () => {
   );
 
   it.effect(
+    "journals only the removal of a Person who never held an account",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const admin = fixture.as("admin");
+        const made = yield* admin.mutation(create, {
+          name: "Tanpa Akun",
+          slug: nf,
+        });
+        yield* admin.mutation(remove, { personId: made.id, slug: nf });
+        const entries = Arr.filter(
+          yield* fixture.run(journal),
+          (entry) => entry.subject.id === made.id
+        );
+        expect(entries).toMatchObject([
+          { change: { type: "person.created" } },
+          { change: { type: "person.removed" } },
+        ]);
+      })
+  );
+
+  it.effect(
     "keeps a removed Person's placements in an archived period and an archived cohort, and ends the rest",
     () =>
       Effect.gen(function* () {

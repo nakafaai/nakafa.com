@@ -19,7 +19,9 @@ const unclaimed: typeof Account.Type = { state: "unclaimed" };
  * Releases the account a Person holds and sets the Person's status, as `actor`.
  * The Person becomes unclaimed, and its accepted invite is revoked, so the invite
  * names no account and can never be claimed. The address of that account can be
- * invited again. The journal records the release. Returns the Person as stored.
+ * invited again. The journal records the release only when the Person held an
+ * account, because an unclaimed Person has none to release. Returns the Person as
+ * stored.
  */
 export const releaseAccount = Effect.fn("tenancy.release.account")(function* (
   person: TenantPeopleDoc,
@@ -47,6 +49,8 @@ export const releaseAccount = Effect.fn("tenancy.release.account")(function* (
   if (Option.isSome(accepted)) {
     yield* replaceInviteState(accepted.value, { at, status: "revoked" });
   }
-  yield* personAuthority.record(actor, person, { type: "person.released" });
+  if (person.account.state === "claimed") {
+    yield* personAuthority.record(actor, person, { type: "person.released" });
+  }
   return Struct.assign(person, { account: unclaimed, status });
 });
