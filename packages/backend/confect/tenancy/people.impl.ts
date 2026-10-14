@@ -1,5 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  TenantCohortMembersDoc,
+  TenantPeopleDoc,
+} from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -20,7 +23,7 @@ import {
 import { replaceInviteState } from "@repo/backend/confect/tenancy/invite";
 import spec from "@repo/backend/confect/tenancy/people.spec";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
-import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";
+import { releaseAccount } from "@repo/backend/confect/tenancy/release";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /** One Person as the school's list shows them. */
@@ -110,10 +113,31 @@ const rename = FunctionImpl.make(
 );
 
 /**
+ * Whether a placement is history that removal keeps: its period or its cohort is
+ * archived, so it stays as the record of where the Person was placed.
+ */
+const isHistory = Effect.fn("tenancy.people.history")(function* (
+  placement: TenantCohortMembersDoc
+) {
+  const reader = yield* DatabaseReader;
+  const term = yield* reader
+    .table("tenantPeriods")
+    .get(placement.periodId)
+    .pipe(Effect.orDie);
+  const cohort = yield* reader
+    .table("tenantCohorts")
+    .get(placement.cohortId)
+    .pipe(Effect.orDie);
+  return term.status === "archived" || cohort.status === "archived";
+});
+
+/**
  * Removes one Person. Each standing grant ends through the access lane's revoke
- * path, every cohort placement ends, and the pending invite is revoked, all in
- * this transaction. The Person then refuses every write, and a claimed account
- * loses the school at once, because membership needs an active Person.
+ * path, and each cohort placement ends unless it is history. The pending invite
+ * is revoked, and the account is released as account deletion releases it, so
+ * the account can be invited again. The Person then refuses every write, and a
+ * claimed account loses the school at once, because membership needs an active
+ * Person.
  */
 const remove = FunctionImpl.make(
   databaseSchema,
@@ -125,6 +149,7 @@ const remove = FunctionImpl.make(
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const by = personActor(actor);
+    const at = yield* Clock.currentTimeMillis;
     yield* Effect.forEach(
       yield* activeGrants(person._id),
       (grant) => revokeGrant(by, grant, person),
@@ -135,8 +160,11 @@ const remove = FunctionImpl.make(
       .index("by_personId", (query) => query.eq("personId", person._id))
       .take(PERSON_PLACEMENT_LIMIT)
       .pipe(Effect.orDie);
+    const ended = yield* Effect.filter(placements, (placement) =>
+      isHistory(placement).pipe(Effect.map((history) => !history))
+    );
     yield* Effect.forEach(
-      placements,
+      ended,
       (placement) =>
         writer
           .table("tenantCohortMembers")
@@ -152,25 +180,15 @@ const remove = FunctionImpl.make(
       .first()
       .pipe(Effect.orDie);
     if (Option.isSome(pending)) {
-      yield* replaceInviteState(pending.value, {
-        at: yield* Clock.currentTimeMillis,
-        status: "revoked",
-      });
+      yield* replaceInviteState(pending.value, { at, status: "revoked" });
       yield* personAuthority.record(by, person, {
         invite: pending.value._id,
         type: "invite.revoked",
       });
     }
-    const status: typeof PersonStatus.Type = "removed";
-    yield* writer
-      .table("tenantPeople")
-      .replace(
-        person._id,
-        Struct.assign(Struct.omit(person, ["_creationTime", "_id"]), { status })
-      )
-      .pipe(Effect.orDie);
+    const removed = yield* releaseAccount(person, "removed", at, by);
     yield* personAuthority.record(by, person, { type: "person.removed" });
-    return view(Struct.assign(person, { status }));
+    return view(removed);
   })
 );
 

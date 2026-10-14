@@ -122,10 +122,14 @@ tenant ownership; an operator of the tenant's cell restores an Owner when needed
 
 The Admin creates, renames, and removes the Persons of a school. Removing a
 Person runs in one transaction: each standing grant ends through the access
-lane's revoke path (ADR 0012), every cohort placement is deleted, the pending
-invite is revoked and journaled, and the status becomes `removed`. A removed
-Person refuses every write as `condition` (ADR 0012), and a claimed account
-loses the school at once, because membership needs an active Person.
+lane's revoke path (ADR 0012), each cohort placement ends unless it is history
+(its period or its cohort is archived, and then it stays as the record of where
+the Person was placed), the pending invite is revoked and journaled, and the
+account is released as account deletion releases it, so the account can be
+invited again. The journal records `person.released` and `person.removed`, and
+the status becomes `removed`. A removed Person refuses every write as
+`condition` (ADR 0012), and a claimed account loses the school at once, because
+membership needs an active Person.
 
 The Admin invites a Person to an address that the school's allowed email
 domains admit, and a Person has at most one pending invite. An invite waits 14
@@ -180,8 +184,9 @@ the cohort's unit or over the whole school. A Person holds at most one placement
 per period, and a move keeps them in the same period. The placement opens `cohort.view` of its
 cohort to the Person, through the relation and nothing else; the relation is
 read from the placement table for each request and never copied onto the
-Person. A Person holds at most 64 placements in all, across every period, so a
-removed Person's placements end in one transaction.
+Person. A Person holds at most 64 placements in all, across every period, and
+`tenancy/placement.ts` derives that limit. Removal reads at most those
+placements, and each one's period and cohort, in one transaction.
 
 ### Tenant settings
 
@@ -282,6 +287,7 @@ beside the old School. Four steps follow, in this order, and the first is merged
   `tenantPeople` (`by_tenantId_and_account_userId`, `by_tenantId_and_status`,
   `by_account_userId_and_kind_and_status`), `tenantInvites`
   (`by_channel_email_and_state_status`, `by_personId_and_state_status`,
+  `by_state_status_and_expiresAt` for the expiry sweep,
   `by_tenantId_and_state_status`), `tenantGrants` (ADR 0012), and
   `journalEntries` (ADR 0016).
 - Public: `tenancy/profile:get`, `tenancy/viewer:get` (the School shell for one
@@ -332,8 +338,8 @@ beside the old School. Four steps follow, in this order, and the first is merged
   `tenancy/expiry:sweep` runs every hour as the backstop for a run that never
   happened: it expires each pending invite whose expiry has passed.
 - Operators, visits, and grant expiry follow as one change that extends this
-  contract. Invite expiry and the account deletion release are built, in
-  `tenancy/expiry` and `auth/deletion/release.ts`.
+  contract. Invite expiry is built in `tenancy/expiry`, and the account release
+  in `tenancy/release.ts`, which account deletion and removal both call.
 - A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
   email domains. A period holds at most 200 cohorts, a Person holds at most 64
   placements, and a Person's invite is sent again at most 3 times in any hour.

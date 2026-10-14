@@ -12,11 +12,15 @@ import { Array as Arr, Effect, Schema } from "effect";
 
 const nf = slugOf("nf");
 const calon = Schema.decodeSync(Email)("calon@harapan.example.test");
+const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
 const { create, list, remove, rename } = refs.public.tenancy.people;
 const { invite, list: invites } = refs.public.tenancy.invites;
 const { place } = refs.public.tenancy.placements;
-const { create: createCohort } = refs.public.tenancy.cohorts;
+const { archive: archiveCohort, create: createCohort } =
+  refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
+const holdersSchedule = refs.internal.tenancy.holders.schedule;
+const claimsRun = refs.internal.tenancy.claims.run;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
@@ -176,6 +180,7 @@ describe("tenancy/people rename and remove", () => {
           slug: nf,
         });
         expect(removed).toMatchObject({
+          account: "unclaimed",
           id: fixture.people.student.personId,
           status: "removed",
         });
@@ -219,6 +224,176 @@ describe("tenancy/people rename and remove", () => {
           .query(list, { ...firstPage, slug: nf, status: "active" })
           .pipe(Effect.flip);
         expect(studentReads).toMatchObject(notMember);
+      })
+  );
+
+  it.effect(
+    "releases a removed Person's account, so the account can be invited again",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const admin = fixture.as("admin");
+        const account = yield* fixture.account("guru", guru, true);
+        yield* admin.mutation(invite, {
+          email: guru,
+          locale: "id",
+          personId: fixture.invited,
+          slug: nf,
+        });
+        yield* fixture.internal.mutation(holdersSchedule, {
+          cursor: null,
+          email: guru,
+        });
+        yield* fixture.internal.mutation(claimsRun, {
+          cursor: null,
+          userId: account.userId,
+        });
+        const removed = yield* admin.mutation(remove, {
+          personId: fixture.invited,
+          slug: nf,
+        });
+        expect(removed).toMatchObject({
+          account: "unclaimed",
+          status: "removed",
+        });
+        const replacement = yield* admin.mutation(create, {
+          name: "Pengganti",
+          slug: nf,
+        });
+        yield* admin.mutation(invite, {
+          email: guru,
+          locale: "id",
+          personId: replacement.id,
+          slug: nf,
+        });
+        yield* fixture.internal.mutation(holdersSchedule, {
+          cursor: null,
+          email: guru,
+        });
+        yield* fixture.internal.mutation(claimsRun, {
+          cursor: null,
+          userId: account.userId,
+        });
+        const claimed = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantPeople").get(replacement.id)
+          )
+        );
+        expect(claimed.account).toMatchObject({
+          state: "claimed",
+          userId: account.userId,
+        });
+        const entries = Arr.filter(
+          yield* fixture.run(journal),
+          (entry) =>
+            entry.change.type === "person.released" ||
+            entry.change.type === "person.removed"
+        );
+        expect(entries).toMatchObject([
+          {
+            actor: { id: fixture.people.admin.personId, kind: "person" },
+            change: { type: "person.released" },
+            subject: { id: fixture.invited, kind: "person" },
+          },
+          {
+            actor: { id: fixture.people.admin.personId, kind: "person" },
+            change: { type: "person.removed" },
+            subject: { id: fixture.invited, kind: "person" },
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "keeps a removed Person's placements in an archived period and an archived cohort, and ends the rest",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const admin = fixture.as("admin");
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, fixture.invited, "student", {
+            kind: "tenant",
+          })
+        );
+        const spring = yield* admin.mutation(periods.create, {
+          end: "2026-06-20",
+          name: "Genap 2026",
+          slug: nf,
+          start: "2026-01-05",
+          unitId: fixture.units.sma,
+        });
+        const springRoom = yield* admin.mutation(createCohort, {
+          grade: 7,
+          name: "7A",
+          periodId: spring.id,
+          slug: nf,
+        });
+        yield* admin.mutation(periods.open, { periodId: spring.id, slug: nf });
+        yield* admin.mutation(place, {
+          cohortId: springRoom.id,
+          personId: fixture.invited,
+          slug: nf,
+        });
+        yield* admin.mutation(periods.archive, {
+          periodId: spring.id,
+          slug: nf,
+        });
+        const autumn = yield* admin.mutation(periods.create, {
+          end: "2026-12-19",
+          name: "Ganjil 2026",
+          slug: nf,
+          start: "2026-07-13",
+          unitId: fixture.units.sma,
+        });
+        const autumnRoom = yield* admin.mutation(createCohort, {
+          grade: 8,
+          name: "8A",
+          periodId: autumn.id,
+          slug: nf,
+        });
+        yield* admin.mutation(periods.open, { periodId: autumn.id, slug: nf });
+        yield* admin.mutation(place, {
+          cohortId: autumnRoom.id,
+          personId: fixture.invited,
+          slug: nf,
+        });
+        yield* admin.mutation(archiveCohort, {
+          cohortId: autumnRoom.id,
+          slug: nf,
+        });
+        const next = yield* admin.mutation(periods.create, {
+          end: "2027-06-18",
+          name: "Genap 2027",
+          slug: nf,
+          start: "2027-01-04",
+          unitId: fixture.units.sma,
+        });
+        const nextRoom = yield* admin.mutation(createCohort, {
+          grade: 8,
+          name: "8B",
+          periodId: next.id,
+          slug: nf,
+        });
+        yield* admin.mutation(place, {
+          cohortId: nextRoom.id,
+          personId: fixture.invited,
+          slug: nf,
+        });
+        yield* admin.mutation(remove, { personId: fixture.invited, slug: nf });
+        const kept = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("tenantCohortMembers")
+              .index("by_personId", (query) =>
+                query.eq("personId", fixture.invited)
+              )
+              .take(10)
+          )
+        );
+        expect(Arr.map(kept, (placement) => placement.periodId)).toEqual([
+          spring.id,
+          autumn.id,
+        ]);
       })
   );
 
