@@ -150,9 +150,10 @@ only, each at its own address (ADR 0026).
   username account, runs the card claim, and asks the student to set a password.
   A teacher or an admin prints a card again, which voids the old code and writes
   a journal entry, and redeeming the new card lets the student set a new
-  password. A card is an invite on the card channel, so the rules of ADR 0011
-  apply to it, including who may print one for a Person who holds the Owner or
-  Admin role. A code is shown with dashes and accepted with or without them.
+  password. A card is not an invite row (ADR 0011), but the same rules apply to
+  it: who may print one for a Person who holds the Owner or Admin role, and a
+  card goes only to a Person with no account yet or with an account that a card
+  made. A code is shown with dashes and accepted with or without them.
 - **Parent.** A parent signs in with an email code: six digits, valid for five
   minutes, void after three wrong tries, and stored as a keyed hash (an HMAC
   under a server secret, like the login-card code), because six digits have
@@ -183,14 +184,24 @@ stays closed on every host.
 
 - **Password store.** `emailAndPassword` is enabled only as the store of school
   passwords, with `disableSignUp`, so Better Auth refuses a public sign-up even
-  from server code. The router refuses sign-in with a password on every host.
+  from server code. Sign-in with a password is closed on every host: the router
+  answers 404 (`disabledPaths`), and server code gets the same refusal from
+  `auth/routes`, because `auth.api` runs an endpoint without the router's check.
   The minimum length is Better Auth's default, 8 (`context/create-context`). A
   password reset ends the sessions it replaces (`revokeSessionsOnPasswordReset`).
 - **Username.** The `username` plugin holds the global username of the account,
   under the rule of `users/username.ts`, so the Better Auth username and
-  `users.username` are one value. `/sign-in/username` and
+  `users.username` are one value. A rename changes both in one transaction
+  (`auth/username`, which changes only an account that holds a Better Auth
+  username). `update-user` refuses a username field (`usernameUpdatesDisabled`),
+  so the app's rename is the only writer. `/sign-in/username` and
   `/is-username-available` stay closed. The second one would tell any visitor
   which usernames exist.
+- **Login name.** A school login name is 3 to 32 characters of lowercase letters,
+  digits, dots, underscores, and hyphens, unique within its school. It refuses
+  the names that could pass for Nakafa, the one list in `users/reserved.ts` that
+  a username also refuses. It does not refuse a route word, because a login is
+  never a URL.
 - **Login card.** `loginCards` keeps one row per Person: the HMAC-SHA-256 of the
   canonical code under `LOGIN_CARD_SECRET`, read through `Config` and never
   printed or stored, its issuer, its dates, and `redeemedAt`. The code has ten
@@ -198,7 +209,11 @@ stays closed on every host.
   because the default `Random` is not secure. A card works for `CARD_TERM`, 14
   days. Issuing or reissuing replaces the row, so the old code matches nothing.
   `card.issue` is an Admin's right. An Owner or Admin role that the Person holds
-  also needs `owner.manage`, because a card hands over the Person's grants.
+  also needs `owner.manage`, because a card hands over the Person's grants. A
+  card goes only to a Person with no account or with an account a card made
+  (`takesCard`, `identity/card`). Issuing for any other Person answers
+  `PersonClaimed`, the refusal an invite gives, and redeeming a card for one
+  reads as `invalid`.
 - **Redeem.** `cards:redeem` is one mutation, in this order: it counts the
   attempt against two limits, reads the code, opens the card on the school's
   host, refuses a password outside Better Auth's length before any write, creates
@@ -208,17 +223,19 @@ stays closed on every host.
   and marks the card used. A refusal is a value, so the attempt still counts.
   A failure that throws rolls back the whole mutation, so an account, a claim,
   or a redemption never survives without the others. A card whose Person has no
-  school login is refused.
+  school login cannot exist: issuing writes the login first and nothing deletes
+  one, so the login is a required read, and a broken row fails the mutation.
 - **Rate limits.** Per device (the UUID the sign-in page keeps): five attempts at
   once, then five more every 15 minutes. Per code prefix (the first five
   characters, from every device): ten attempts at once, then ten every hour.
   These are design choices, not measurements. Every attempt counts against both.
 - **Placeholder address.** An account made from a school login holds
   `<username>@login.nakafa.invalid`. `identity/address` owns the domain.
-  `emails/client` refuses a message to it before the provider is called. No
-  welcome intent and no payment customer is made for it, and an invitation to it
-  sends nothing. The address is an internal key, not personal data, and RFC 2606
-  keeps mail from ever reaching it.
+  `emails/client` refuses a message to it before the provider is called, in any
+  recipient field. No welcome intent and no payment customer is made for it, on
+  creation or on a profile change, and an invitation to it sends nothing. The
+  address is an internal key, not personal data, and RFC 2606 keeps mail from
+  ever reaching it.
 - **Workspace domain check.** `identity/domain` decides a Google sign-in on a
   school host. An empty list of allowed domains allows every account. Otherwise
   the hosted domain claim must be one of them. A refusal is journaled as the
