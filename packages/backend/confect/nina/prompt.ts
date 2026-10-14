@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   consumeAttachments,
+  requirePromptLimit,
   requireStoredDocumentLimit,
 } from "@repo/backend/confect/nina/attachments";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -48,7 +49,8 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     const context = yield* resolveNinaContext(input.page, user, chat?._id);
     const attachments = yield* consumeAttachments(
       user._id,
-      input.prompt.uploadIds ?? []
+      input.prompt.uploadIds ?? [],
+      input.prompt.text
     );
     return {
       ...context,
@@ -103,6 +105,8 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   });
   const fileIds = stored.fileIds ?? [];
   yield* requireStoredDocumentLimit(fileIds);
+  // A message stored before the limit existed can cost more than a turn carries.
+  yield* requirePromptLimit(message);
   const retryOf = original.retryOf ?? original.order;
   const asked =
     original.page && original.user

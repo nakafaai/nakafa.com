@@ -20,7 +20,8 @@ const ReasoningEffort = Schema.Literals([
  * every fact the code takes from it. Switching the model changes this record
  * alone, and nothing outside `confect/gateway` names the model or a fact of it.
  * The facts were measured on 14 October 2026 through the Convex AI gateway on
- * the dev deployment (ADR 0019, ADR 0020, ADR 0001).
+ * the dev deployment (ADR 0019, ADR 0020, ADR 0001), except the ones whose doc
+ * comment says they come from the provider's documentation.
  */
 const LanguageModel = Schema.Struct({
   /** The model's id on the gateway, as each usage row stores it. */
@@ -51,8 +52,12 @@ const LanguageModel = Schema.Struct({
    * itself, and 48,000 is that rounded up with a margin of about 1.6. The other
    * purposes reason at `low`, where a 16-turn summary wrote 339 tokens (94 of
    * them reasoning) in 3 s. A specialist's cap is `NINA_BUDGET.evidence`
-   * rounded up to a unit of 1,024, a background cap a little over twice the
-   * summary budget, and a suggestion or title is far below 512 tokens.
+   * rounded up to a unit of 1,024, and a background cap a little over twice the
+   * summary budget. The suggestion cap covers the longest answer the schema
+   * admits, five suggestions of 300 characters each, which the estimator prices
+   * at 716 tokens, with room for its error and for reasoning. The presentation
+   * cap covers a title, which the schema holds to 80 characters. No Claude
+   * measurement of either exists yet (ADR 0020).
    */
   output: Schema.Struct({
     chat: Schema.Int,
@@ -89,12 +94,20 @@ const LanguageModel = Schema.Struct({
     undercount: Schema.Int,
   }),
   /**
-   * What the provider bills for one attachment. An image costs about 1,600
-   * tokens at any size the resize allows, against 46 for a 96 by 96 PNG (the
-   * provider bills pixels over 750, after a resize to 1,568 pixels on the long
-   * edge). One document page costs about 3,300: a full US Letter page of 52
-   * lines of 10-point text cost 3,298, and a one-page PDF with one line cost
-   * 1,146.
+   * What the provider bills for one attachment. An image costs
+   * ceil(width / 28) times ceil(height / 28) visual tokens after the provider
+   * downscales it to its tier's limit. Claude Haiku 5.5 uses the high-resolution
+   * tier, which downscales to 2,576 pixels on the long edge and caps an image at
+   * 4,784 visual tokens (Anthropic's vision guide, "Resolution and token cost",
+   * and the Haiku 5.5 migration guide, "Recount tokens"). So 4,784 is the most
+   * one image costs, and the budgets count every image at it. The 1,600 of the
+   * earlier profile was the standard tier's cap, not this model's cost. The
+   * gateway measured a 96 by 96 PNG at 46 prompt tokens on 14 October 2026, and
+   * no large image is measured yet, so the cap is documented, not measured.
+   * One document page costs about 3,300: a full US Letter page of 52 lines of
+   * 10-point text cost 3,298 (its text and its page image), and a one-page PDF
+   * with one line cost 1,146. A stored document keeps no page count, so it
+   * counts one page however long it is.
    */
   files: Schema.Struct({
     image: Schema.Int,
@@ -125,7 +138,7 @@ export const languageModel = {
     chat: 48_000,
     specialist: 11_264,
     background: 7168,
-    suggestion: 512,
+    suggestion: 1024,
     presentation: 512,
   },
   tokens: {
@@ -141,7 +154,7 @@ export const languageModel = {
     message: 8,
     undercount: 939,
   },
-  files: { image: 1600, documentPage: 3300 },
+  files: { image: 4784, documentPage: 3300 },
   cache: {
     marker: { cache_control: { type: "ephemeral" } },
     minimumPrefix: 1058,

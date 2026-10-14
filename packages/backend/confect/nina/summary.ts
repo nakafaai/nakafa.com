@@ -8,14 +8,21 @@ import {
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import { boundText, NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
-import { nextSummaryTarget } from "@repo/backend/confect/nina/fold";
-import { newestAskings, questionKey } from "@repo/backend/confect/nina/history";
+import { languageModel } from "@repo/backend/confect/gateway/model";
+import { newestAskings, questionKey } from "@repo/backend/confect/nina/asking";
 import {
-  readUncovered,
-  storedTurn,
-} from "@repo/backend/confect/nina/uncovered";
+  boundText,
+  countTextTokens,
+  NINA_BUDGET,
+  NINA_CALL_LIMIT,
+} from "@repo/backend/confect/nina/budget";
+import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
+import { foldWithin, nextSummaryTarget } from "@repo/backend/confect/nina/fold";
+import {
+  foldedTurns,
+  transcriptOf,
+} from "@repo/backend/confect/nina/transcript";
+import { readUncovered } from "@repo/backend/confect/nina/uncovered";
 import {
   Array as Arr,
   Effect,
@@ -29,12 +36,9 @@ import {
 const MESSAGE_PAGE = 100;
 
 /**
- * What the summary writer is told. Counted with the old tokenizer, 800 words
- * were about 1,100 tokens in English and 1,400 in Indonesian and German. Claude
- * counts about 1.45 times the first and 1.7 to 1.75 times the second (the
- * ratios of 14 October 2026), so 800 words are about 1,600 and 2,500 tokens. That
- * leaves room under `NINA_BUDGET.summary` for a writer that runs long, and
- * `boundText` stays the hard bound.
+ * What the summary writer is told. The summary it writes is held to
+ * `NINA_BUDGET.summary` by `boundText`, and the turns it reads are held to
+ * `FOLD_BUDGET`.
  */
 const INSTRUCTIONS = Arr.join(
   [
@@ -46,6 +50,19 @@ const INSTRUCTIONS = Arr.join(
   ],
   "\n"
 );
+
+/**
+ * The most tokens a fold's transcript may carry: what the call limit leaves after
+ * the previous summary at its budget, the writer's instructions, the two headings
+ * of its prompt, and the overhead of its two messages, the instructions and the
+ * prompt. A fold covers only the turns that fit, and the next fold covers the rest.
+ */
+const FOLD_BUDGET =
+  NINA_CALL_LIMIT -
+  NINA_BUDGET.summary -
+  countTextTokens(INSTRUCTIONS) -
+  countTextTokens("# Previous Summary\n\n# New Turns\n\n") -
+  2 * languageModel.tokens.message;
 
 class NinaSummaryError extends Schema.TaggedError<NinaSummaryError>()(
   "NinaSummaryError",
@@ -121,31 +138,11 @@ const readWindow = Effect.fn("nina.summary.window")(function* (
 });
 
 /**
- * The learner and Nina text of the turns at `orders`, oldest first, from the
- * messages of a read. A message that holds a tool call or a tool result is
- * left out, so Nina's words are her answers.
- */
-function transcriptOf(docs: readonly MessageDoc[], orders: readonly number[]) {
-  return pipe(
-    orders,
-    Arr.flatMap((order) => storedTurn(docs, order)),
-    Arr.filterMap((doc) =>
-      doc.tool || !doc.text
-        ? Result.failVoid
-        : Result.succeed(
-            `${doc.message?.role === "user" ? "Learner" : "Nina"}: ${boundText(doc.text, NINA_BUDGET.foldMessage, "Message shortened.")}`
-          )
-    ),
-    Arr.join("\n\n")
-  );
-}
-
-/**
- * Reads the text of the turns a fold covers through `target`. When the read of
- * the uncovered turns reached the oldest of them, it already holds them and its
- * messages, so nothing is read again. A longer backlog leaves the oldest turns
- * unread, so their text comes from the thread, starting at the prompt of the
- * last turn the fold covers.
+ * Reads the turns a fold covers through `target`, each with the text the writer
+ * reads of it. When the read of the uncovered turns reached the oldest of them,
+ * it already holds them and its messages, so nothing is read again. A longer
+ * backlog leaves the oldest turns unread, so their text comes from the thread,
+ * starting at the prompt of the last turn the fold covers.
  */
 const readTranscript = Effect.fn("nina.summary.transcript")(function* (
   turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId">,
@@ -154,7 +151,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
   uncovered: Effect.Success<ReturnType<typeof readUncovered>>
 ) {
   if (Option.isNone(uncovered.unread)) {
-    return transcriptOf(
+    return foldedTurns(
       uncovered.docs,
       Arr.filterMap(uncovered.turns, ({ order }) =>
         order <= target ? Result.succeed(order) : Result.failVoid
@@ -170,7 +167,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
     return yield* new NinaSummaryError({ operation: "read" });
   }
   const orders = yield* readOrders(turn, covered, target);
-  return transcriptOf(
+  return foldedTurns(
     yield* readWindow(turn.threadId, covered ?? -1, anchor),
     orders
   );
@@ -210,7 +207,13 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
       return;
     }
     const target = next.value;
-    const transcript = yield* readTranscript(turn, covered, target, uncovered);
+    const folded = yield* readTranscript(turn, covered, target, uncovered);
+    // The writer reads at most `FOLD_BUDGET`, so a fold may stop before its
+    // target, and the next fold covers the rest.
+    const through = foldWithin(folded, FOLD_BUDGET, target);
+    const transcript = transcriptOf(
+      Arr.takeWhile(folded, ({ order }) => order <= through)
+    );
     const ctx = yield* ActionCtx;
     const handle = (yield* Gateway).language("background");
     const agent = new Agent(components.nina, {
@@ -255,7 +258,7 @@ export const refreshSummary = Effect.fn("nina.summary.refresh")(
               ),
             }
           : {}),
-        throughOrder: target,
+        throughOrder: through,
         usage: {
           input: usage.inputTokens ?? 0,
           output: usage.outputTokens ?? 0,

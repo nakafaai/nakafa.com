@@ -165,6 +165,7 @@ async function seedEarlierTurn(
 /** What a test says about one earlier turn: it was cancelled, asks again the question that the turn `retryOf` first asked, took `steps` tool steps, or has an answer of `tokens` more tokens. */
 export const EarlierTurn = Schema.Struct({
   cancelled: Schema.optionalKey(Schema.Boolean),
+  replies: Schema.optionalKey(Schema.Int),
   retryOf: Schema.optionalKey(Schema.Int),
   steps: Schema.optionalKey(Schema.Int),
   tokens: Schema.optionalKey(Schema.Int),

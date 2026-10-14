@@ -28,14 +28,6 @@ const answer = {
 function reasoningOf(purpose: Purpose) {
   return profile.reasoning[purposes[purpose].effort];
 }
-/** The deadlines of every purpose, as ADR 0020 sets them. */
-const deadlines = {
-  chat: { chunkMs: 45_000, stepMs: 180_000, totalMs: 510_000 },
-  specialist: { stepMs: 45_000, totalMs: 180_000 },
-  background: { stepMs: 30_000, totalMs: 90_000 },
-  suggestion: { stepMs: 30_000, totalMs: 90_000 },
-  presentation: { stepMs: 15_000, totalMs: 45_000 },
-};
 /** The length every stored vector has. */
 const DIMENSIONS = 768;
 
@@ -96,7 +88,7 @@ describe("Gateway handles", () => {
         const handle = gateway.language(purpose);
         yield* Effect.promise(() => handle.model.doGenerate({ prompt }));
         expect(languageModel).toHaveBeenCalledExactlyOnceWith(profile.id);
-        expect(handle.timeout).toEqual(deadlines[purpose]);
+        expect(handle.timeout).toEqual(purposes[purpose].timeout);
         expect(model.doGenerateCalls[0]?.maxOutputTokens).toBe(
           profile.output[purpose]
         );

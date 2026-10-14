@@ -733,6 +733,7 @@
       "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
       "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",
       "attachment-size": "Total ukuran dokumen dalam satu pesan paling banyak 10 MB. Hapus salah satu dokumen atau kirim dalam pesan terpisah.",
+      "message-size": "Pesan ini terlalu panjang untuk dibaca Nina dalam satu giliran. Persingkat, atau kirim sisanya dalam pesan baru.",
       "attachment-failed": "Nina belum bisa membaca atau menyimpan lampiran. Coba unggah lagi.",
       "provider-busy": "Layanan AI sedang menerima terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.",
       "provider-unavailable": "Layanan AI sedang mengalami gangguan sementara. Coba lagi sebentar lagi.",

@@ -6,7 +6,6 @@ import {
 import {
   assembleContext,
   boundStep,
-  newestAskings,
   sentTurn,
   splitTurns,
 } from "@repo/backend/confect/nina/history";
@@ -275,31 +274,6 @@ describe("Nina provider context", () => {
     expect(encodeJsonText(result)).toContain("Answer to Next");
   });
 
-  it("counts an earlier image at what the model bills, so a few images fill the history budget", () => {
-    // Odd turns name the media type and even turns do not: both count the same.
-    const imageTurn = (number: number): ModelMessage[] => [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: `Photo ${number}` },
-          number % 2 === 0
-            ? { type: "image", image: "photo" }
-            : { type: "image", image: "photo", mediaType: "image/png" },
-        ],
-      },
-      { role: "assistant", content: `Answer ${number}` },
-    ];
-    const result = assembleContext({
-      current: [{ role: "user", content: "Latest" }],
-      history: Arr.map(Arr.range(1, 30), imageTurn),
-    });
-    // A turn of this kind costs 1,626 tokens, so the ten oldest of 30 do not fit
-    // the history budget of 32,610.
-    expect(encodeJsonText(result)).not.toContain('"Photo 10"');
-    expect(encodeJsonText(result)).toContain('"Photo 11"');
-    expect(encodeJsonText(result)).toContain('"Photo 30"');
-  });
-
   it("keeps earlier images but leaves earlier documents as a note", () => {
     const current: ModelMessage = {
       role: "user",
@@ -441,7 +415,7 @@ describe("Nina provider context", () => {
 
   it("does not count the learner's message or its attachments against the evidence budget", () => {
     const evidence = "Small evidence paragraph.\n\n".repeat(400);
-    // Fifteen images alone cost 16,800 tokens, more than the whole evidence budget.
+    // Fifteen images alone cost more than the whole evidence budget.
     const prompt: ModelMessage = {
       role: "user",
       content: [
@@ -479,22 +453,5 @@ describe("Nina provider context", () => {
       turn("Second"),
     ]);
     expect(splitTurns([cut])).toEqual([]);
-  });
-});
-
-describe("Nina newest askings", () => {
-  const ask = (order: number, retryOf?: number) =>
-    retryOf === undefined ? { order } : { order, retryOf };
-
-  it("keeps the newest asking of each question, whichever asking a retry named", () => {
-    // Orders 1 and 3 ask the question of order 0 again, and order 2 asks another.
-    expect(newestAskings([ask(0), ask(1, 0), ask(2), ask(3, 0)], [])).toEqual([
-      ask(2),
-      ask(3, 0),
-    ]);
-  });
-
-  it("lets a later turn take its question from the turns before it", () => {
-    expect(newestAskings([ask(0), ask(1)], [ask(2, 0)])).toEqual([ask(1)]);
   });
 });

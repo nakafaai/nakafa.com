@@ -28,6 +28,7 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 }));
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
+const LONG_RUN_NOTE = /\[Shortened to about 200 of \d+ tokens\. Read more\.\]$/;
 const SHORTENED_NOTE =
   /\n\n\[Shortened to about 200 of \d+ tokens\. Read the next section\.\]$/;
 /** The unit that the large output caps of `purposes` are whole multiples of. */
@@ -43,31 +44,52 @@ afterEach(() => {
 
 describe("Nina file tokens", () => {
   it.each([
-    ["a png image, of any size", "image/png", 1600],
-    ["a jpeg image", "image/jpeg", 1600],
-    ["a webp image", "image/webp", 1600],
-    ["a gif image", "image/gif", 1600],
+    ["a png image, of any size", "image/png", "image"],
+    ["a jpeg image", "image/jpeg", "image"],
+    ["a webp image", "image/webp", "image"],
+    ["a gif image", "image/gif", "image"],
     [
       "a pdf as one page, since no stored page count exists",
       "application/pdf",
-      3300,
+      "documentPage",
     ],
     [
       "a text file as one page, since no stored size exists",
       "text/plain",
-      3300,
+      "documentPage",
     ],
-  ] as const)("counts %s", (_name, mediaType, expected) => {
-    expect(countFileTokens(mediaType)).toBe(expected);
-  });
+  ] as const)(
+    "counts %s at the profile's cost of its kind",
+    (_name, mediaType, kind) => {
+      expect(countFileTokens(mediaType)).toBe(languageModel.files[kind]);
+    }
+  );
 });
 
+/**
+ * The rules of the estimator at fixed costs. The table below pins the rules, so
+ * a model change that moves the profile's costs leaves these expectations alone.
+ */
+const RULE_COSTS = {
+  latinLettersPerToken: 2.25,
+  otherLetter: 1,
+  han: 1.25,
+  digit: 1,
+  other: 1,
+  newline: 0,
+  space: 0,
+  spaceRun: 0.5,
+  underscore: 0,
+  message: 8,
+  undercount: 939,
+};
+
 describe("Nina token estimate", () => {
-  // Each expectation is the sum of the rules of the language model profile for
-  // its text, worked out by hand: a run of Latin letters costs one token per
-  // 2.25 letters, rounded up over the run; a Han character 1.25; a run of two
-  // or more spaces 0.5, one space 0; a newline and an underscore 0; any other
-  // character, a digit, or a letter of another script 1.
+  // Each expectation is the sum of the rules for its text, worked out by hand: a
+  // run of Latin letters costs one token per 2.25 letters, rounded up over the
+  // run; a Han character 1.25; a run of two or more spaces 0.5, one space 0; a
+  // newline and an underscore 0; any other character, a digit, or a letter of
+  // another script 1.
   it.each([
     ["a word of four letters", "word", 2],
     ["nine letters", "abcdefghi", 4],
@@ -82,7 +104,7 @@ describe("Nina token estimate", () => {
     ["letters of another script", "αβγ", 3],
     ["an emoji", "🙂", 1],
   ])("prices %s by the rules", (_name, text, expected) => {
-    expect(countTextTokens(text)).toBe(expected);
+    expect(countTextTokens(text, RULE_COSTS)).toBe(expected);
   });
 
   it("charges the provider's overhead on every message, not only on its content", () => {
@@ -116,6 +138,16 @@ describe("Nina token budgets", () => {
     const bounded = boundText(text, 150, "Narrow the request.");
     expect(countTextTokens(bounded)).toBeLessThanOrEqual(150);
     expect(bounded).toContain("Narrow the request.");
+  });
+
+  it("cuts inside one unbroken run of letters that alone outgrows the limit", () => {
+    // The run is one piece of the estimator, so it must be cut inside, not
+    // dropped whole, which would leave the note and none of the learner's words.
+    const bounded = boundText("a".repeat(30_000), 200, "Read more.");
+    expect(bounded.startsWith("aaaa")).toBe(true);
+    expect(bounded).toMatch(LONG_RUN_NOTE);
+    expect(countTextTokens(bounded)).toBeLessThanOrEqual(200);
+    expect(countTextTokens(bounded)).toBeGreaterThan(150);
   });
 });
 
@@ -238,4 +270,56 @@ describe("Nina call limit", () => {
     expect(carried).toBeGreaterThan(NINA_BUDGET.history);
     expect(carried).toBeLessThanOrEqual(NINA_CALL_LIMIT);
   }, 30_000);
+
+  /** A turn with one photo and its answer. Odd turns name the media type and even turns do not: both count the same. */
+  function photoTurn(number: number): ModelMessage[] {
+    return [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: `Photo ${number}` },
+          number % 2 === 0
+            ? { type: "image", image: "photo" }
+            : { type: "image", image: "photo", mediaType: "image/png" },
+        ],
+      },
+      { role: "assistant", content: `Answer ${number}` },
+    ];
+  }
+
+  it("counts an earlier image at what the model bills, so a few images fill the history budget", () => {
+    const result = assembleContext({
+      current: [{ role: "user", content: "Latest" }],
+      history: Arr.map(Arr.range(1, 30), photoTurn),
+    });
+    // Each turn costs at least one image, so the photos kept fit the history
+    // budget, and the oldest photo does not fit.
+    const photos = (encodeJsonText(result).match(/Photo \d+/g) ?? []).length;
+    expect(photos * languageModel.files.image).toBeLessThanOrEqual(
+      NINA_BUDGET.history
+    );
+    expect(encodeJsonText(result)).not.toContain('"Photo 1"');
+    expect(encodeJsonText(result)).toContain('"Photo 30"');
+  });
+
+  it("keeps the image blocks of one request within the provider's many-image limit", () => {
+    // Above twenty image blocks in one request, the provider rejects any image
+    // whose side is over 2,000 pixels, and it counts the images of earlier turns
+    // too. So a long chat with photos keeps its request well under twenty.
+    const result = assembleContext({
+      current: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Latest" },
+            { type: "image", image: "photo", mediaType: "image/png" },
+          ],
+        },
+      ],
+      history: Arr.map(Arr.range(1, 25), photoTurn),
+    });
+    // Every image block of the request, the current message's included.
+    const blocks = encodeJsonText(result).split('"type":"image"').length - 1;
+    expect(blocks).toBeLessThanOrEqual(20);
+  });
 });
