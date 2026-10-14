@@ -42,7 +42,7 @@ describe("code highlighting", () => {
           lang: "typescript",
           themes: {
             dark: "github-dark-default",
-            light: "github-light",
+            light: "github-light-high-contrast",
           },
         })
       );

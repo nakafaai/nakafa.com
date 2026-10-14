@@ -10,8 +10,10 @@ import {
 import { Effect, Schema } from "effect";
 import { type CodeOptionsMultipleThemes, codeToHtml } from "shiki";
 
+// The light theme is the high-contrast variant: its token colours meet WCAG 2.2
+// AA (4.5:1) on the default code block background, where github-light does not.
 const DEFAULT_CODE_THEMES = {
-  light: "github-light",
+  light: "github-light-high-contrast",
   dark: "github-dark-default",
 } satisfies CodeOptionsMultipleThemes["themes"];
 const PRE_TAG_PATTERN = /<pre(\s|>)/;
