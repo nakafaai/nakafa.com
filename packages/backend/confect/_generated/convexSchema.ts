@@ -66,6 +66,7 @@ import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
+import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
 import tenantPeriods from "./tables/tenantPeriods";
 import tenantUnits from "./tables/tenantUnits";
@@ -150,6 +151,7 @@ export default $defineSchema({
   tenantCohorts: $Table.tableDefinition(tenantCohorts),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),
+  tenantKeys: $Table.tableDefinition(tenantKeys),
   tenantPeople: $Table.tableDefinition(tenantPeople),
   tenantPeriods: $Table.tableDefinition(tenantPeriods),
   tenantUnits: $Table.tableDefinition(tenantUnits),

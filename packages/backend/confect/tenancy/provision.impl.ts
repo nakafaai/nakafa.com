@@ -20,6 +20,7 @@ import spec, {
 } from "@repo/backend/confect/tenancy/provision.spec";
 import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import { NewTenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 
 /** Adds one active school to the organisation and records it. */
@@ -95,6 +96,9 @@ const open = FunctionImpl.make(
         status: "active",
       })
       .pipe(Effect.orDie);
+    // The school's key is written in this transaction too, so no school exists
+    // without one (ADR 0030).
+    yield* createTenantKey(tenantId).pipe(Effect.orDie);
     yield* tenantAuthority.record(
       systemActor,
       yield* reader.table("tenants").get(tenantId).pipe(Effect.orDie),
