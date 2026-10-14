@@ -1,12 +1,9 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   formatTrimmedMeterMath,
   formatTrimmedSecondMath,
   formatTrimmedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
-import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import {
-  DEFAULT_PROJECTILE_SCENARIO_ID,
   formatVelocityVectorMath,
   getProjectileMotionState,
   getVelocityAtTime,
@@ -19,17 +16,12 @@ import {
   Message,
   MessageContent,
 } from "@repo/design-system/components/ui/message";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { getLocale, getTranslations } from "next-intl/server";
 import { NinaPrompt } from "@/components/ai/message/prompt";
 import { ProjectileClient } from "@/components/marketing/about/projectile/client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-
-const decimalSeparators = {
-  de: "comma",
-  en: "dot",
-  id: "comma",
-} as const satisfies Record<ActiveAppLocaleCode, DecimalSeparator>;
+import { decimalSeparators } from "@/lib/marketing/decimal";
 
 /**
  * The full-width lesson scene. The server works out every formula the scene
@@ -122,18 +114,9 @@ export async function ProjectileStage() {
       motion,
     };
   });
-  const initialScenario = Option.orElse(
-    Arr.findFirst(scenarios, ({ id }) => id === DEFAULT_PROJECTILE_SCENARIO_ID),
-    () => Arr.head(scenarios)
-  );
-
-  if (Option.isNone(initialScenario)) {
-    return null;
-  }
-
   return (
     <ProjectileClient
-      initialScenario={initialScenario.value}
+      initialScenario={Arr.headNonEmpty(scenarios)}
       lead={tHome("scene-lead")}
       scenarios={scenarios}
       talk={

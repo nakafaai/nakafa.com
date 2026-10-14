@@ -21,8 +21,15 @@ const ProjectileScenarioSchema = Schema.Struct({
 type ProjectileScenario = typeof ProjectileScenarioSchema.Type;
 
 const PROJECTILE_GRAVITY = 10;
-export const DEFAULT_PROJECTILE_SCENARIO_ID =
-  "sixty-degree" satisfies ProjectileScenarioId;
+/** The trajectory that opens first: 40 m/s at 60 degrees. */
+const DEFAULT_PROJECTILE_SCENARIO = {
+  angleDegrees: 60,
+  color: getColor("TEAL"),
+  id: "sixty-degree",
+  initialSpeed: 40,
+} satisfies ProjectileScenario;
+
+export const DEFAULT_PROJECTILE_SCENARIO_ID = DEFAULT_PROJECTILE_SCENARIO.id;
 
 export const PROJECTILE_ASSET_PATHS = {
   ball: "/models/physics/kinematics/kenney-pirate-kit/cannon-ball.glb",
@@ -58,13 +65,12 @@ export const PROJECTILE_SCENE = {
 
 export const PROJECTILE_INSTANT_TIME = 2;
 
-export const PROJECTILE_SCENARIOS: ProjectileScenario[] = [
-  {
-    id: "sixty-degree",
-    angleDegrees: 60,
-    color: getColor("TEAL"),
-    initialSpeed: 40,
-  },
+/** Every trajectory of the scene. The default one comes first, so it opens first. */
+export const PROJECTILE_SCENARIOS: readonly [
+  ProjectileScenario,
+  ...ProjectileScenario[],
+] = [
+  DEFAULT_PROJECTILE_SCENARIO,
   {
     id: "long-drive",
     angleDegrees: 35,
