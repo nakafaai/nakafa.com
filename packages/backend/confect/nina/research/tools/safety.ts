@@ -1,19 +1,20 @@
-import { lookup } from "node:dns/promises";
 import { ResearchUnsafeUrlError } from "@repo/backend/confect/nina/research/schema";
 import {
   isPublicHttpUrlSyntax,
   judgeAddress,
   normalizeHostname,
 } from "@repo/backend/confect/nina/research/url";
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect, Option } from "effect";
 
 const unsafeUrlMessage =
   "Only public http(s) URLs can be scraped by the research agent.";
 
 /**
- * Resolves and validates a scrape URL before any server-side fetch happens.
- * Hostname URLs keep native server fetching disabled so they cannot rebind
- * between validation and the actual fetch.
+ * Validates a scrape URL before any fetch happens, and names the one native
+ * fetch it may get. A public address literal keeps its native fetch, which is
+ * the only fetch Nakafa makes itself. A host name gets none and is never looked
+ * up in DNS: Firecrawl's servers fetch it, so a DNS answer would protect no
+ * Nakafa network.
  */
 export const assertPublicResearchUrl = Effect.fn(
   "research.assertPublicResearchUrl"
@@ -25,34 +26,8 @@ export const assertPublicResearchUrl = Effect.fn(
   const url = new URL(value);
   const hostname = normalizeHostname(url.hostname);
 
-  // A public address literal needs no lookup. Any other host goes to DNS. A
-  // literal the judge calls refused never gets here, because
-  // isPublicHttpUrlSyntax has already refused it.
-  if (isPublicAddress(hostname)) {
-    return {
-      nativeFetchUrl: url.toString(),
-      publicUrl: url.toString(),
-    };
-  }
-
-  const addresses = yield* Effect.tryPromise({
-    try: () => lookup(hostname, { all: true, verbatim: true }),
-    catch: () => new ResearchUnsafeUrlError({ message: unsafeUrlMessage }),
-  });
-
-  if (addresses.length === 0) {
-    return yield* rejectUnsafeUrl();
-  }
-
-  // Fail closed: every answer must judge as a public address. An answer the
-  // address parser does not understand, such as a zone-suffixed IPv6 text, is
-  // not public, so it refuses the URL.
-  if (!Arr.every(addresses, (address) => isPublicAddress(address.address))) {
-    return yield* rejectUnsafeUrl();
-  }
-
   return {
-    nativeFetchUrl: null,
+    nativeFetchUrl: isPublicAddress(hostname) ? url.toString() : null,
     publicUrl: url.toString(),
   };
 });
