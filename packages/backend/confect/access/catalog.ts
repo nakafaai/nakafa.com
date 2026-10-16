@@ -1,6 +1,7 @@
 import { Kind } from "@repo/backend/confect/access/kind";
 import { access } from "@repo/backend/confect/access/kinds";
 import { classroom } from "@repo/backend/confect/classroom/kinds";
+import { operators } from "@repo/backend/confect/operators/kinds";
 import { tenancy } from "@repo/backend/confect/tenancy/kinds";
 import { Array as Arr, Schema, SchemaGetter } from "effect";
 
@@ -9,6 +10,7 @@ export const kinds = [
   ...tenancy.kinds,
   ...access.kinds,
   ...classroom.kinds,
+  ...operators.kinds,
 ] as const;
 
 /** Every lane's extensions of another lane's kinds. */
@@ -16,6 +18,7 @@ const extensions = [
   ...tenancy.extensions,
   ...access.extensions,
   ...classroom.extensions,
+  ...operators.extensions,
 ] as const;
 
 /** Every declaration and extension; each kind's actions, rules, and changes join from these. */

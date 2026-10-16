@@ -1,14 +1,16 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
+import { endReleasedVisit } from "@repo/backend/confect/operators/visit";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { releaseAccount } from "@repo/backend/confect/tenancy/release";
 import { Array as Arr, Effect } from "effect";
 
 /**
  * Releases the Persons of a deleted account, one bounded batch in each
- * transaction, so no number of schools is assumed. Returns whether more of them
- * remain, and the caller then continues in a later transaction.
+ * transaction, so no number of schools is assumed. An operator's approved visit
+ * ends with its account, so the released Person keeps no access. Returns whether
+ * more of them remain, and the caller then continues in a later transaction.
  */
 export const releaseTenantPeople = Effect.fn(
   "auth.deletion.releaseTenantPeople"
@@ -22,7 +24,10 @@ export const releaseTenantPeople = Effect.fn(
     .pipe(Effect.orDie);
   yield* Effect.forEach(
     Arr.take(people, ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE),
-    (person) => releaseAccount(person, person.status, at, systemActor),
+    (person) =>
+      releaseAccount(person, person.status, at, systemActor).pipe(
+        Effect.andThen(endReleasedVisit(user._id, person))
+      ),
     { discard: true }
   );
   return people.length > ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
