@@ -13,6 +13,7 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
+const INBOX_SWEEP_INTERVAL_MINUTES = 1;
 const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
@@ -247,5 +248,17 @@ export default CronJobs.make()
       PRUNE_INTERVAL,
       internal.editor.prune.sweepClients,
       { cursor: null }
+    )
+  )
+  .add(
+    /**
+     * Starts a run for each inbox cursor that a change left pending, if the run
+     * that the change scheduled never happened.
+     */
+    CronJob.make(
+      "sweep inbox runs",
+      Duration.minutes(INBOX_SWEEP_INTERVAL_MINUTES),
+      internal.notifications.consume.sweep,
+      {}
     )
   );

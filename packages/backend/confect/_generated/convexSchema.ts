@@ -47,6 +47,7 @@ import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
 import learningPopularityCounters from "./tables/learningPopularityCounters";
@@ -55,6 +56,7 @@ import learningPopularitySignals from "./tables/learningPopularitySignals";
 import learningPopularityViewerSignals from "./tables/learningPopularityViewerSignals";
 import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
+import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
@@ -64,12 +66,14 @@ import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
+import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
 import tenantAssignments from "./tables/tenantAssignments";
@@ -147,6 +151,7 @@ export default $defineSchema({
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
+  journalCursors: $Table.tableDefinition(journalCursors),
   journalEntries: $Table.tableDefinition(journalEntries),
   learningEngagementQueue: $Table.tableDefinition(learningEngagementQueue),
   learningPopularityCounters: $Table.tableDefinition(learningPopularityCounters),
@@ -155,6 +160,7 @@ export default $defineSchema({
   learningPopularityViewerSignals: $Table.tableDefinition(learningPopularityViewerSignals),
   learningPreferences: $Table.tableDefinition(learningPreferences),
   learningViews: $Table.tableDefinition(learningViews),
+  loginCards: $Table.tableDefinition(loginCards),
   materialBuckets: $Table.tableDefinition(materialBuckets),
   materialCatalog: $Table.tableDefinition(materialCatalog),
   ninaMemories: $Table.tableDefinition(ninaMemories),
@@ -164,12 +170,14 @@ export default $defineSchema({
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
+  notifications: $Table.tableDefinition(notifications),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),
   operators: $Table.tableDefinition(operators),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
+  schoolLogins: $Table.tableDefinition(schoolLogins),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
   tenantAssignments: $Table.tableDefinition(tenantAssignments),

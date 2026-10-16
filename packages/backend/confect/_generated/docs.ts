@@ -47,6 +47,7 @@ export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
+export type JournalCursorsDoc = Document.Document<typeof schemaDefinition, "journalCursors">;
 export type JournalEntriesDoc = Document.Document<typeof schemaDefinition, "journalEntries">;
 export type LearningEngagementQueueDoc = Document.Document<typeof schemaDefinition, "learningEngagementQueue">;
 export type LearningPopularityCountersDoc = Document.Document<typeof schemaDefinition, "learningPopularityCounters">;
@@ -55,6 +56,7 @@ export type LearningPopularitySignalsDoc = Document.Document<typeof schemaDefini
 export type LearningPopularityViewerSignalsDoc = Document.Document<typeof schemaDefinition, "learningPopularityViewerSignals">;
 export type LearningPreferencesDoc = Document.Document<typeof schemaDefinition, "learningPreferences">;
 export type LearningViewsDoc = Document.Document<typeof schemaDefinition, "learningViews">;
+export type LoginCardsDoc = Document.Document<typeof schemaDefinition, "loginCards">;
 export type MaterialBucketsDoc = Document.Document<typeof schemaDefinition, "materialBuckets">;
 export type MaterialCatalogDoc = Document.Document<typeof schemaDefinition, "materialCatalog">;
 export type NinaMemoriesDoc = Document.Document<typeof schemaDefinition, "ninaMemories">;
@@ -64,12 +66,14 @@ export type NinaMemoryRestoresDoc = Document.Document<typeof schemaDefinition, "
 export type NinaSummariesDoc = Document.Document<typeof schemaDefinition, "ninaSummaries">;
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
+export type NotificationsDoc = Document.Document<typeof schemaDefinition, "notifications">;
 export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "onboardingProfiles">;
 export type OperatorsDoc = Document.Document<typeof schemaDefinition, "operators">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
 export type QuranSearchDoc = Document.Document<typeof schemaDefinition, "quranSearch">;
+export type SchoolLoginsDoc = Document.Document<typeof schemaDefinition, "schoolLogins">;
 export type SnapshotBatchesDoc = Document.Document<typeof schemaDefinition, "snapshotBatches">;
 export type SubscriptionsDoc = Document.Document<typeof schemaDefinition, "subscriptions">;
 export type TenantAssignmentsDoc = Document.Document<typeof schemaDefinition, "tenantAssignments">;
@@ -147,6 +151,7 @@ export interface Docs {
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;
+  journalCursors: JournalCursorsDoc;
   journalEntries: JournalEntriesDoc;
   learningEngagementQueue: LearningEngagementQueueDoc;
   learningPopularityCounters: LearningPopularityCountersDoc;
@@ -155,6 +160,7 @@ export interface Docs {
   learningPopularityViewerSignals: LearningPopularityViewerSignalsDoc;
   learningPreferences: LearningPreferencesDoc;
   learningViews: LearningViewsDoc;
+  loginCards: LoginCardsDoc;
   materialBuckets: MaterialBucketsDoc;
   materialCatalog: MaterialCatalogDoc;
   ninaMemories: NinaMemoriesDoc;
@@ -164,12 +170,14 @@ export interface Docs {
   ninaSummaries: NinaSummariesDoc;
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;
+  notifications: NotificationsDoc;
   onboardingProfiles: OnboardingProfilesDoc;
   operators: OperatorsDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;
   quranRows: QuranRowsDoc;
   quranSearch: QuranSearchDoc;
+  schoolLogins: SchoolLoginsDoc;
   snapshotBatches: SnapshotBatchesDoc;
   subscriptions: SubscriptionsDoc;
   tenantAssignments: TenantAssignmentsDoc;

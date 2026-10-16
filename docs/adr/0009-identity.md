@@ -184,9 +184,11 @@ only, each at its own address (ADR 0026).
   username account, runs the card claim, and asks the student to set a password.
   A teacher or an admin prints a card again, which voids the old code and writes
   a journal entry, and redeeming the new card lets the student set a new
-  password. A card is an invite on the card channel, so the rules of ADR 0011
-  apply to it, including who may print one for a Person who holds the Owner or
-  Admin role. A code is shown with dashes and accepted with or without them.
+  password. A card is not an invite row (ADR 0011), but the same rules apply to
+  it: a card never goes to a Person who holds the Owner or Admin role, and it goes
+  only to a Person with no account yet or with an account that a card made. A code
+  is shown with dashes and accepted with or without them. A typed code reads O as 0
+  and I or L as 1, as Crockford base32 does, and U is refused.
 - **Parent.** A parent signs in with an email code: six digits, valid for five
   minutes, void after three wrong tries, and stored as a keyed hash (an HMAC
   under a server secret, like the login-card code), because six digits have
@@ -208,13 +210,90 @@ signs in with the username and that password. The status name that Google shows
 for that block comes from third-party documentation and is not yet tested on a
 Workspace account.
 
+### As built: login cards and the password store
+
+`confect/identity` builds the login card, the school login, the password store,
+and the placeholder address. The school host, its sign-in endpoint with the
+Workspace domain check, and its card page are not built yet, so the username
+sign-in stays closed on every host.
+
+- **Password store.** `emailAndPassword` is enabled only as the store of school
+  passwords, with `disableSignUp`, so Better Auth refuses a public sign-up even
+  from server code. Sign-in with a password is closed on every host: the router
+  answers 404 (`disabledPaths`), and server code gets the same refusal from
+  `auth/routes`, because `auth.api` runs an endpoint without the router's check.
+  The minimum length is Better Auth's default, 8 (`context/create-context`). A
+  password reset ends the sessions it replaces (`revokeSessionsOnPasswordReset`).
+- **Username.** The `username` plugin holds the global username of the account,
+  under the rule of `users/username.ts`, so the Better Auth username and
+  `users.username` are one value. A rename changes both in one transaction
+  (`auth/username`, which changes only an account that holds a Better Auth
+  username). `update-user` refuses a username field (`usernameUpdatesDisabled`),
+  so the app's rename is the only writer. `/sign-in/username` and
+  `/is-username-available` stay closed. The second one would tell any visitor
+  which usernames exist.
+- **Login name.** A school login name is 3 to 32 characters of lowercase letters,
+  digits, dots, underscores, and hyphens, unique within its school. It refuses
+  the names that could pass for Nakafa, the one list in `users/reserved.ts` that
+  a username also refuses. It does not refuse a route word, because a login is
+  never a URL.
+- **Login card.** `loginCards` keeps one row per Person: the HMAC-SHA-256 of the
+  canonical code under `LOGIN_CARD_SECRET`, read through `Config` and never
+  printed or stored (declared in `convex/convex.config.ts`, so Convex refuses a
+  push to a deployment without it), its issuer, its dates, and `redeemedAt`. The code has ten
+  characters of Crockford base32. It is drawn from Effect's `Crypto` service,
+  because the default `Random` is not secure. A card works for `CARD_TERM`, 14
+  days. Issuing or reissuing replaces the row, so the old code matches nothing.
+  `card.issue` is an Admin's right. A card never goes to a Person who holds the
+  Owner or Admin role: issuing or reissuing for one answers `CardRoleRefused`, and
+  redeeming a card for one reads as `invalid`. `cardRefusalOf` (`identity/card`)
+  is the one rule that issue, reissue, and redeem all call. A card goes only to a
+  Person with no account or with an account a card made. Issuing for any other
+  Person answers `PersonClaimed`, the refusal an invite gives, and redeeming a card
+  for one reads as `invalid`.
+- **Redeem.** `identity/cards:redeem` is one mutation, in this order: it
+  refuses a request that carries a signed-in identity as `invalid` before any
+  limit is spent, counts the attempt against the device limit, reads the code,
+  reads the Person and refuses one that is removed or that the card rule
+  refuses (the Owner or Admin role, or an account that a card did not make) as
+  `invalid` whatever the card says, opens the card on the school's host (`used`,
+  then `expired`), refuses a password outside Better Auth's length before any
+  write, creates the account if the Person has none (the global username from
+  `users/allocation`, the placeholder address named by a random key, no Google
+  link), binds the Person with method `card`, stores the password through Better
+  Auth's reset endpoint, marks the card used, and journals `card.redeemed` with
+  the Person and the card. A reissue keeps the card's row, so the `card.issued`
+  or `card.reissued` entry before it in journal order names the printing that
+  was redeemed. A refusal is a value, so the attempt still counts.
+  A failure that throws rolls back the whole mutation, so an account, a claim,
+  or a redemption never survives without the others. A card whose Person has no
+  school login cannot exist: issuing writes the login first and nothing deletes
+  one, so the login is a required read, and a broken row fails the mutation.
+- **Rate limits.** Per device (the UUID the sign-in page keeps): five attempts at
+  once, then five more every 15 minutes. These are design choices, not
+  measurements. Every attempt counts against it. A code is 50 bits, ten characters
+  of five bits each, so guessing one takes about 2^49, or 5.6 x 10^14, tries on
+  average. That figure is computed from the alphabet, not measured. A bucket shared
+  by every device would add no protection against that guessing, and it would let
+  one person block another's card, so there is no limit per code prefix.
+- **Placeholder address.** An account made from a school login holds
+  `<random key>@login.nakafa.invalid`, where the key is a random UUID drawn for that
+  account, so the address names no one. The Convex adapter writes the Better Auth
+  id itself, so the id is not known before the write. The handle is allocated from
+  the Person's name, as it is for every account. `identity/address` owns the domain.
+  `emails/client` refuses a message to it before the provider is called, in any
+  recipient field and in any written form of the address. No welcome intent and
+  no payment customer is made for it, on creation or on a profile change, and an
+  invitation to it sends nothing. The address is an internal key, not personal
+  data, and RFC 2606 keeps mail from ever reaching it.
+
 ## Usernames And Profiles
 
 A profile lives at `/{locale}/@username`. The username belongs to the app user
-row (`users.username`, with the index `by_username`), not to Better Auth,
-because sign-in is Google only and a username is no credential. It is the only
-namespace of profile names. If the Better Auth username plugin is ever enabled,
-for School accounts, it must hold this value and never a second one.
+row (`users.username`, with the index `by_username`). It is the only namespace
+of profile names, and it is no credential: a password or a Google sign-in is.
+The Better Auth username plugin holds this same value for school accounts, and
+never a second one.
 
 - A live account holds exactly one username. A deleted account keeps none: the
   tombstone removes the username and the bio, which frees the name at once, so
@@ -237,11 +316,12 @@ for School accounts, it must hold this value and never a second one.
 - A new account gets its username in the transaction that makes the row: the
   letters and digits of its name, then the name with 2 up to 9, then the name
   with a random number from `Random` that has two digits and gains a digit
-  after two collisions, up to eight digits. A name with no Latin letter becomes
-  `teman`. Each try is one indexed read, and the write follows inside one
-  Convex transaction, so two accounts that ask for the same name cannot both
-  win. The tries are a fixed list, so one allocation reads at most
-  `MAX_ALLOCATION_TRIES` rows however many accounts share a name. An
+  after two collisions, up to eight digits. A name with no Latin letter to start
+  from, or a reserved one such as `nakafa` or `admin`, becomes `teman`, so no
+  handle is built on a reserved base. Each try is one indexed read, and the
+  write follows inside one Convex transaction, so two accounts that ask for the
+  same name cannot both win. The tries are a fixed list, so one allocation reads
+  at most `MAX_ALLOCATION_TRIES` rows however many accounts share a name. An
   allocation that finds every try taken dies with `UsernameExhausted`. A rename
   uses the same check, and the same check answers while a person types.
 - A folder named `@username` would be a parallel route slot and not an address,

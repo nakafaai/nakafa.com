@@ -2552,6 +2552,38 @@ export declare const api: {
       };
     };
   };
+  identity: {
+    cards: {
+      issue: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; personId: Id<"tenantPeople">; slug: string },
+        { code: string; expiresAt: number; loginName: string }
+      >;
+      redeem: FunctionReference<
+        "mutation",
+        "public",
+        { code: string; deviceId: string; password: string; slug: string },
+        | { loginName: string; outcome: "redeemed" }
+        | {
+            outcome: "refused";
+            reason:
+              | "expired"
+              | "invalid"
+              | "passwordTooLong"
+              | "passwordTooShort"
+              | "rateLimited"
+              | "used";
+          }
+      >;
+      reissue: FunctionReference<
+        "mutation",
+        "public",
+        { personId: Id<"tenantPeople">; slug: string },
+        { code: string; expiresAt: number; loginName: string }
+      >;
+    };
+  };
   integrations: {
     clients: {
       create: FunctionReference<
@@ -2564,6 +2596,7 @@ export declare const api: {
             | "tenant.view"
             | "unit.manage"
             | "unit.view"
+            | "card.issue"
             | "person.invite"
             | "person.manage"
             | "person.view"
@@ -2629,6 +2662,7 @@ export declare const api: {
               | "tenant.view"
               | "unit.manage"
               | "unit.view"
+              | "card.issue"
               | "person.invite"
               | "person.manage"
               | "person.view"
@@ -2746,7 +2780,10 @@ export declare const api: {
                   reason?: "break-glass";
                   type: "person.invited";
                 }
-              | { method: "invite" | "operator"; type: "person.claimed" }
+              | {
+                  method: "card" | "invite" | "operator";
+                  type: "person.claimed";
+                }
               | { type: "person.released" }
               | { reason?: "break-glass"; type: "person.removed" }
               | { type: "person.renamed" }
@@ -2760,6 +2797,9 @@ export declare const api: {
               | { invite: Id<"tenantInvites">; type: "invite.expired" }
               | { invite: Id<"tenantInvites">; type: "invite.resent" }
               | { invite: Id<"tenantInvites">; type: "invite.revoked" }
+              | { card: Id<"loginCards">; type: "card.issued" }
+              | { card: Id<"loginCards">; type: "card.reissued" }
+              | { card: Id<"loginCards">; type: "card.redeemed" }
               | { type: "period.created" }
               | { type: "period.opened" }
               | { type: "period.archived" }
@@ -3431,6 +3471,84 @@ export declare const api: {
         },
         Id<"ninaUploads">
       >;
+    };
+  };
+  notifications: {
+    inbox: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            changeType: "person.invited";
+            createdAt: number;
+            id: Id<"notifications">;
+            readAt?: number;
+            subject:
+              | { id: Id<"tenants">; kind: "tenant" }
+              | { id: Id<"tenantUnits">; kind: "unit" }
+              | { id: Id<"tenantPeople">; kind: "person" }
+              | { id: Id<"tenantPeriods">; kind: "period" }
+              | { id: Id<"tenantCohorts">; kind: "cohort" }
+              | { id: Id<"tenantPromotions">; kind: "promotion" }
+              | { id: Id<"tenantGrants">; kind: "grant" }
+              | { id: Id<"integrationClients">; kind: "integration" }
+              | { id: Id<"classes">; kind: "class" }
+              | { id: Id<"tenantVisits">; kind: "visit" }
+              | { kind: string };
+            tenant: {
+              kind: "school" | "foundation";
+              name: string;
+              slug: string;
+              status: "active" | "suspended";
+            };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      read: FunctionReference<
+        "mutation",
+        "public",
+        { notificationId: Id<"notifications"> },
+        {
+          changeType: "person.invited";
+          createdAt: number;
+          id: Id<"notifications">;
+          readAt?: number;
+          subject:
+            | { id: Id<"tenants">; kind: "tenant" }
+            | { id: Id<"tenantUnits">; kind: "unit" }
+            | { id: Id<"tenantPeople">; kind: "person" }
+            | { id: Id<"tenantPeriods">; kind: "period" }
+            | { id: Id<"tenantCohorts">; kind: "cohort" }
+            | { id: Id<"tenantPromotions">; kind: "promotion" }
+            | { id: Id<"tenantGrants">; kind: "grant" }
+            | { id: Id<"integrationClients">; kind: "integration" }
+            | { id: Id<"classes">; kind: "class" }
+            | { id: Id<"tenantVisits">; kind: "visit" }
+            | { kind: string };
+          tenant: {
+            kind: "school" | "foundation";
+            name: string;
+            slug: string;
+            status: "active" | "suspended";
+          };
+        }
+      >;
+      readAll: FunctionReference<"mutation", "public", {}, null>;
     };
   };
   onboarding: {
@@ -10529,6 +10647,33 @@ export declare const internal: {
             turns: number;
           }>;
         }
+      >;
+    };
+  };
+  notifications: {
+    consume: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { tenantId: Id<"tenants"> },
+        null
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+    purge: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { personId: Id<"tenantPeople"> },
+        null
+      >;
+    };
+    read: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; personId: Id<"tenantPeople">; readAt: number },
+        null
       >;
     };
   };
