@@ -81,12 +81,17 @@ passes an entry only once it has settled: an entry created at or before the cloc
 less five seconds counts as committed. That window covers the one second of user
 code that a Convex mutation may run (the limits page, read on 16 October 2026,
 which does not count database operations), with a margin for the rest. A run
-handles an unsettled entry early and holds its ID, and it holds at most one page
-of such IDs, fifty entries, half of the 100-entry list page, so the cursor's state
-stays bounded. A run that leaves entries unread schedules the next run for the
-moment the oldest of them settles, so a burst drains without the minute sweep and
-nothing is refused. A cursor starts five seconds before the entry that makes it,
-so an entry created up to that long before the first one is read.
+handles an unsettled entry early and holds its ID. The cursor holds at most one
+page of IDs, fifty entries, half of the 100-entry list page, so its state stays
+bounded, and one of the fifty stays free for the record of a settled entry that a
+late commit may need. A run that leaves entries unread schedules the next run: at
+once when the next entry has settled or the list has room for it, and for the
+moment the oldest of them settles otherwise. So a burst drains without the minute
+sweep and nothing is refused, and a burst starts one chain of runs, because an
+invitation schedules a run only when none is owed. Entries that share one creation
+time each keep a record, so the design assumes such groups stay small. A cursor
+starts five seconds before the entry that makes it, so an entry created up to that
+long before the first one is read.
 
 ### Retention
 

@@ -101,12 +101,13 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   visible at its commit, so the cursor does not rely on a proof of that order. It
   passes an entry only once the entry has settled, five seconds behind the clock,
   so an entry that commits late is still read. It holds each unsettled entry it
-  handles early, at most one page of them, until its position passes that entry,
-  and it skips them when it reads again. A run that leaves entries unread schedules
-  the next run for the moment the oldest of them settles, so a burst drains without
-  the minute sweep. A run that the page size stopped continues at once, and a run
-  that the bound stopped waits until the oldest entry it left settles. A cursor
-  with nothing left to read is not pending. A cursor
+  handles early, at most one page of them with one slot kept free, until its
+  position passes that entry, and it skips them when it reads again. A run that
+  leaves entries unread schedules the next run: at once when the next entry has
+  settled or the list has room for it, and for the moment the oldest unread entry
+  settles otherwise. So a burst drains without the minute sweep. An invitation
+  schedules a run only when its cursor is not pending already, so a burst starts
+  one chain of runs. A cursor with nothing left to read is not pending. A cursor
   starts five seconds before the entry that makes it, not at a clock reading, so an
   invitation created up to that long before the entry gets a row, and an earlier
   one gets none. An entry holds IDs and codes, never a name or a message.
@@ -333,7 +334,7 @@ sitting does not show.
 | The welcome email through `confect/emails` and the Resend component | Live |
 | The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
 | `apps/www/app/manifest.ts` with `display: "standalone"` | Live |
-| `journalCursors`, which start five seconds before the entry that makes them, pass only settled entries, hold at most one page of unsettled handled entries, and schedule their next run when a run leaves entries unread; and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Built |
+| `journalCursors`, which start five seconds before the entry that makes them, pass only settled entries, hold at most one page of handled ids with one slot kept free, and schedule their next run when a run leaves entries unread; and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Built |
 | `notifications`, one row for each Person and invitation (`by_recipientPersonId_and_inviteId`), with the purge of a released Person's rows and of a revoked invitation's row | Built |
 | The invitation rows: `person.invited` is published, written by the invite, and refreshed by the resend; the inbox consumer writes them from the start of its cursor; an invitation revoked before its run gets no row, and a revoked invitation loses its row | Built |
 | The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
