@@ -81,10 +81,7 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
   const togglePlay = useCoordinateControls((controls) => controls.togglePlay);
 
   return (
-    <VisualCardFooter
-      className="flex-col items-stretch px-0"
-      data-coordinate-controls=""
-    >
+    <VisualCardFooter data-coordinate-controls="" stacked>
       <div className="flex gap-2 px-(--card-spacing)">
         <Button
           aria-pressed={showGrid}

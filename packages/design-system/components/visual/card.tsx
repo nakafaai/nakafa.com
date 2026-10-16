@@ -22,7 +22,7 @@ import {
   type VisualState,
   type VisualStore,
 } from "@repo/design-system/components/visual/store";
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import {
@@ -182,14 +182,29 @@ function VisualCardScene({
   });
 }
 
-/** The bordered footer for the visual's own controls and its full screen action. */
+const visualCardFooterVariants = cva("items-start gap-4 border-t", {
+  variants: {
+    stacked: {
+      false: "",
+      true: "flex-col items-stretch px-0",
+    },
+  },
+});
+
+/**
+ * The bordered footer for the visual's own controls and its full screen action.
+ * A stacked footer holds rows of controls, each one full width and one above
+ * the next.
+ */
 function VisualCardFooter({
   className,
+  stacked,
   ...props
-}: ComponentProps<typeof CardFooter>) {
+}: ComponentProps<typeof CardFooter> &
+  VariantProps<typeof visualCardFooterVariants>) {
   return (
     <CardFooter
-      className={cn("items-start gap-4 border-t", className)}
+      className={cn(visualCardFooterVariants({ stacked }), className)}
       {...props}
     />
   );

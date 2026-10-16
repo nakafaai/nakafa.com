@@ -225,7 +225,7 @@ export function BacterialGrowth({
         </VisualCardScene>
       </VisualCardBody>
 
-      <VisualCardFooter className="flex-col items-stretch px-0">
+      <VisualCardFooter stacked>
         <BacterialPlayback
           isPlaying={isEffectivelyPlaying}
           onReset={resetAnimation}

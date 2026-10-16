@@ -226,7 +226,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
         </VisualCardScene>
       </VisualCardBody>
 
-      <VisualCardFooter className="flex-col items-stretch px-0">
+      <VisualCardFooter stacked>
         <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <div className="flex justify-between gap-2">
             <Button
