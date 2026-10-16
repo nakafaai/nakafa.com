@@ -15,9 +15,20 @@ export function nested(levels: number): DocumentNode {
   return node;
 }
 
-/** A document whose deepest node is `levels` node levels down, counting the `doc` node as level 1. */
+/**
+ * A document whose deepest node is `levels` node levels down, counting the `doc` node as
+ * level 1. Its leaf is text, which a paragraph holds, and the blockquotes above the paragraph
+ * are blocks, so the contract reads the whole chain as a document (ADR 0031).
+ */
 export function documentOf(levels: number): Document {
-  return { content: [nested(levels - 1)], type: "doc" };
+  let node: DocumentNode = {
+    content: [{ text: "x", type: "text" }],
+    type: "paragraph",
+  };
+  for (let level = 3; level < levels; level += 1) {
+    node = { content: [node], type: "blockquote" };
+  }
+  return { content: [node], type: "doc" };
 }
 
 /**

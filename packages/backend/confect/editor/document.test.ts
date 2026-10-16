@@ -293,4 +293,53 @@ describe("editor/document snapshot", () => {
         expect(failure._tag).toBe("DocumentInvalid");
       })
   );
+
+  it.effect(
+    "stores the contract's output, so a link's target and rel, which the contract does not name, are not stored",
+    () =>
+      Effect.gen(function* () {
+        const text = encodeJsonText({
+          content: [
+            {
+              content: [
+                {
+                  marks: [
+                    {
+                      attrs: {
+                        href: "https://nakafa.com",
+                        rel: "noopener noreferrer nofollow",
+                        target: "_blank",
+                      },
+                      type: "link",
+                    },
+                  ],
+                  text: "Nakafa",
+                  type: "text",
+                },
+              ],
+              type: "paragraph",
+            },
+          ],
+          type: "doc",
+        });
+        const stored = yield* storedDocument(text);
+        expect(yield* Schema.decodeEffect(DocumentTextSchema)(stored)).toEqual({
+          content: [
+            {
+              content: [
+                {
+                  marks: [
+                    { attrs: { href: "https://nakafa.com" }, type: "link" },
+                  ],
+                  text: "Nakafa",
+                  type: "text",
+                },
+              ],
+              type: "paragraph",
+            },
+          ],
+          type: "doc",
+        });
+      })
+  );
 });

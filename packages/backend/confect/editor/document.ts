@@ -74,17 +74,28 @@ export class DocumentTooLarge extends Schema.TaggedError<DocumentTooLarge>()(
   }
 ) {}
 
+/** The JSON text of a contract document: the one string field a snapshot is stored in (ADR 0028). */
+const StoredTextSchema = Schema.fromJsonString(AssessmentDocumentSchema);
+
 /**
- * Writes a document as its JSON text. The depth of the typed input is checked
- * before the encoder walks it, so a deep document fails as a schema issue and
- * never as a stack overflow. A text over `MAX_DOCUMENT_BYTES` is refused here,
- * before any write, with the bytes it would take and the limit.
+ * Writes a document as the JSON text a snapshot stores. The editor's own Schema checks
+ * the typed input first, its depth before any node is read and its attributes, so a deep
+ * document fails as a schema issue and never as a stack overflow. The contract's Schema
+ * then decodes the document, and its output is what is written: an attribute the contract
+ * does not name, such as a link's `target` and `rel`, is not stored, so the stored text is
+ * the contract's normalized form (ADR 0028). A text over `MAX_DOCUMENT_BYTES` is refused
+ * here, before any write, with the bytes it would take and the limit.
  */
 export const encodeDocument = Effect.fn("editor.document.encode")(function* (
   document: Document
 ) {
-  yield* Schema.decodeEffect(UncheckedDocumentSchema)(document);
-  const text = yield* Schema.encodeEffect(DocumentTextSchema)(document);
+  const checked = yield* Schema.decodeEffect(DocumentSchema)(document);
+  const normalized = yield* Schema.decodeEffect(AssessmentDocumentSchema)(
+    checked
+  );
+  const text = yield* Schema.encodeEffect(StoredTextSchema)(normalized).pipe(
+    Effect.catchTag("SchemaError", Effect.die)
+  );
   const bytes = utf8Bytes(text);
   if (bytes > MAX_DOCUMENT_BYTES) {
     return yield* new DocumentTooLarge({ bytes, limit: MAX_DOCUMENT_BYTES });
@@ -93,13 +104,11 @@ export const encodeDocument = Effect.fn("editor.document.encode")(function* (
 });
 
 /**
- * The text a document is stored as, from the text a client sent. The text must read
- * as a document of the editor, with the node and mark types the editor reads, and the
- * contract's Schema must accept it, so every stored document is one the contract
+ * The text a snapshot stores, from the text a client sent. The text must read as a
+ * document of the editor, with the node and mark types the editor reads, and the
+ * contract's Schema must decode it, so every stored document is one the contract
  * accepts (ADR 0028, ADR 0031). A text that fails either check fails with
- * `DocumentInvalid`, and a stored text over the bound with `DocumentTooLarge`. A
- * document that passed both checks cannot fail to encode, so an encoding failure is
- * a defect.
+ * `DocumentInvalid`, and a stored text over the bound with `DocumentTooLarge`.
  */
 export const storedDocument = Effect.fn("editor.document.stored")(function* (
   text: string
@@ -107,11 +116,8 @@ export const storedDocument = Effect.fn("editor.document.stored")(function* (
   const document = yield* Schema.decodeEffect(DocumentTextSchema)(text).pipe(
     Effect.mapError(() => new DocumentInvalid())
   );
-  yield* Schema.decodeEffect(AssessmentDocumentSchema)(document).pipe(
-    Effect.mapError(() => new DocumentInvalid())
-  );
   return yield* encodeDocument(document).pipe(
-    Effect.catchTag("SchemaError", Effect.die)
+    Effect.catchTag("SchemaError", () => Effect.fail(new DocumentInvalid()))
   );
 });
 
