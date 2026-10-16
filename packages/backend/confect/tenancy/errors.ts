@@ -255,13 +255,9 @@ export const PromotionPlanIssue = Schema.Literals([
 export class PromotionPlanInvalid extends Schema.TaggedError<PromotionPlanInvalid>()(
   "PromotionPlanInvalid",
   {
-    code: Schema.Literal("PROMOTION_PLAN_INVALID").pipe(
-      Schema.withConstructorDefault(Effect.succeed("PROMOTION_PLAN_INVALID"))
-    ),
-    message: Schema.String.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed("The promotion plan does not fit this school's cohorts.")
-      )
+    ...refusal(
+      "PROMOTION_PLAN_INVALID",
+      "The promotion plan does not fit this school's cohorts."
     ),
     reason: PromotionPlanIssue,
   }

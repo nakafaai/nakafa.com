@@ -44,6 +44,7 @@ export const toEightB: typeof PromotionDestination.Type = {
 export const toGraduate: typeof PromotionDestination.Type = {
   kind: "graduate",
 };
+export const toStay: typeof PromotionDestination.Type = { kind: "stay" };
 
 /** Every journal entry, oldest first, with room for one whole promotion. */
 export const allJournal = Effect.flatMap(DatabaseReader, (reader) =>
@@ -172,13 +173,13 @@ export const scenario = Effect.fn("test.promotion.scenario")(function* (
  * The plan of the scenario: 7A moves on to 8A with its homeroom teacher, and 9A
  * graduates. Each argument is a cohort of the scenario's source period.
  */
-const scenarioPlan = (
-  seventh: GenericId.GenericId<"tenantCohorts">,
-  ninth: GenericId.GenericId<"tenantCohorts">
+export const scenarioPlan = (
+  seventh: { readonly id: GenericId.GenericId<"tenantCohorts"> },
+  ninth: { readonly id: GenericId.GenericId<"tenantCohorts"> }
 ) => {
   const sources: (typeof PromotionSource.Type)[] = [
-    { cohortId: seventh, homeroom: true, to: toEightA },
-    { cohortId: ninth, homeroom: false, to: toGraduate },
+    { cohortId: seventh.id, homeroom: true, to: toEightA },
+    { cohortId: ninth.id, homeroom: false, to: toGraduate },
   ];
   const targets: (typeof PromotionTarget.Type)[] = [{ grade: 8, name: "8A" }];
   return { sources, targets };
@@ -202,7 +203,7 @@ export const approvedPromotion = Effect.fn("test.promotion.approved")(
     yield* fixture.as("admin").mutation(promotions.plan, {
       promotionId: made.id,
       slug: nf,
-      ...(custom ?? scenarioPlan(s.seventh.id, s.ninth.id)),
+      ...(custom ?? scenarioPlan(s.seventh, s.ninth)),
     });
     yield* fixture
       .as("admin")
@@ -277,40 +278,41 @@ export const snapshot = (fixture: Fixture) =>
     })
   );
 
-/** Moves every student grant of some Persons from one status to another, as a school's roster does. */
-export const flipStudentGrants = Effect.fn("test.promotion.flipGrants")(
-  function* (
-    fixture: Fixture,
-    personIds: readonly PersonId[],
-    from: "active" | "revoked",
-    to: "active" | "revoked"
-  ) {
-    yield* fixture.run(
-      Effect.forEach(
-        personIds,
-        (personId) =>
-          Effect.gen(function* () {
-            const reader = yield* DatabaseReader;
-            const grant = yield* reader
-              .table("tenantGrants")
-              .index("by_personId_and_status", (query) =>
-                query.eq("personId", personId).eq("status", from)
-              )
-              .first()
-              .pipe(Effect.orDie);
-            if (Option.isNone(grant)) {
-              return;
-            }
-            yield* (yield* DatabaseWriter)
-              .table("tenantGrants")
-              .patch(grant.value._id, { status: to })
-              .pipe(Effect.orDie);
-          }),
-        { discard: true }
-      )
-    );
-  }
-);
+/**
+ * Moves the first grant of some Persons from one status to another, as a school's
+ * roster does when access ends or returns. A Person with no such grant is skipped.
+ */
+export const flipGrants = Effect.fn("test.promotion.flipGrants")(function* (
+  fixture: Fixture,
+  personIds: readonly PersonId[],
+  from: "active" | "revoked",
+  to: "active" | "revoked"
+) {
+  yield* fixture.run(
+    Effect.forEach(
+      personIds,
+      (personId) =>
+        Effect.gen(function* () {
+          const reader = yield* DatabaseReader;
+          const grant = yield* reader
+            .table("tenantGrants")
+            .index("by_personId_and_status", (query) =>
+              query.eq("personId", personId).eq("status", from)
+            )
+            .first()
+            .pipe(Effect.orDie);
+          if (Option.isNone(grant)) {
+            return;
+          }
+          yield* (yield* DatabaseWriter)
+            .table("tenantGrants")
+            .patch(grant.value._id, { status: to })
+            .pipe(Effect.orDie);
+        }),
+      { discard: true }
+    )
+  );
+});
 
 /**
  * Adds `count` students of the SMP unit placed in one cohort, written in one go,

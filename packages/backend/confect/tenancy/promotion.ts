@@ -1,5 +1,19 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { CohortGrade, CohortName } from "@repo/backend/confect/tenancy/cohort";
+import {
+  CohortHasHomeroom,
+  CohortLimit,
+  CohortNameTaken,
+  PeriodActive,
+  PersonAlreadyPlaced,
+  PersonNotStudent,
+  PersonNotTeacher,
+  PersonPlacementLimit,
+  PromotionCohortOccupied,
+  PromotionPlanInvalid,
+  SourcePeriodInvalid,
+  TeacherHasHomeroom,
+} from "@repo/backend/confect/tenancy/errors";
 import type { UnitLevel } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -33,20 +47,33 @@ export const PromotionReturnReason = Schema.Literals([
   "other",
 ]);
 
-/** The typed failure that stopped a step, kept on the promotion so the wizard shows where it stopped. */
-const PromotionFailure = Schema.Literals([
-  "CohortHasHomeroom",
-  "CohortLimit",
-  "CohortNameTaken",
-  "PeriodActive",
-  "PersonAlreadyPlaced",
-  "PersonNotStudent",
-  "PersonPlacementLimit",
-  "PromotionCohortOccupied",
-  "PromotionPlanInvalid",
-  "SourcePeriodInvalid",
-  "TeacherHasHomeroom",
-]);
+/**
+ * Every typed failure a step may stop with. The stored failure of a promotion and the
+ * error type of a step both come from this list, so a new failure is added once.
+ */
+export const PROMOTION_STEP_FAILURES = [
+  CohortHasHomeroom,
+  CohortLimit,
+  CohortNameTaken,
+  PeriodActive,
+  PersonAlreadyPlaced,
+  PersonNotStudent,
+  PersonNotTeacher,
+  PersonPlacementLimit,
+  PromotionCohortOccupied,
+  PromotionPlanInvalid,
+  SourcePeriodInvalid,
+  TeacherHasHomeroom,
+];
+
+/** A typed failure that stopped a step, kept on the promotion so the wizard shows where it stopped. */
+const PromotionFailure = Schema.Union(
+  Arr.map(PROMOTION_STEP_FAILURES, (failure) => failure.fields._tag)
+);
+
+/** Any typed failure a step may stop with. */
+export type PromotionStepFailure =
+  (typeof PROMOTION_STEP_FAILURES)[number]["Type"];
 
 /**
  * Where a student goes: a cohort of the plan by its name, graduation, or `stay`,
@@ -248,3 +275,18 @@ export const applyFinished = (progress: typeof PromotionProgress.Type) =>
   Option.exists(Arr.last(progress.done), (step) =>
     Option.isNone(nextStepOf(step))
   );
+
+/**
+ * The step where an apply stopped before any step finished, if it did. Undoing such
+ * an apply undoes no step and only returns the plan to approved, because the stopped
+ * step wrote nothing before it stopped.
+ */
+export const stoppedBeforeAnyStep = (
+  progress: typeof PromotionProgress.Type
+) =>
+  progress.direction === "apply" &&
+  !progress.running &&
+  progress.failure !== null &&
+  progress.done.length === 0
+    ? Option.fromNullishOr(progress.step)
+    : Option.none();

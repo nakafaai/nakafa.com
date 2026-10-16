@@ -53,19 +53,28 @@ const firstIn = <R>(
   );
 
 /** The live promotion of a source period: draft through applied, never cancelled. */
-export const liveForSource = (
-  sourcePeriodId: GenericId.GenericId<"tenantPeriods">
-) => firstIn(LIVE_PROMOTION_STATES, (state) => bySource(sourcePeriodId, state));
+export const liveForSource = Effect.fn("tenancy.promotionFind.liveForSource")(
+  function* (sourcePeriodId: GenericId.GenericId<"tenantPeriods">) {
+    return yield* firstIn(LIVE_PROMOTION_STATES, (state) =>
+      bySource(sourcePeriodId, state)
+    );
+  }
+);
 
 /** The promotion of a source period that the wizard shows: live, or opened once its target opened. */
-export const shownForSource = (
-  sourcePeriodId: GenericId.GenericId<"tenantPeriods">
-) =>
-  firstIn([...LIVE_PROMOTION_STATES, "opened"], (state) =>
-    bySource(sourcePeriodId, state)
-  );
+export const shownForSource = Effect.fn("tenancy.promotionFind.shownForSource")(
+  function* (sourcePeriodId: GenericId.GenericId<"tenantPeriods">) {
+    return yield* firstIn([...LIVE_PROMOTION_STATES, "opened"], (state) =>
+      bySource(sourcePeriodId, state)
+    );
+  }
+);
 
 /** The live promotion that targets a period, if one does. */
-export const liveForTarget = (
-  targetPeriodId: GenericId.GenericId<"tenantPeriods">
-) => firstIn(LIVE_PROMOTION_STATES, (state) => byTarget(targetPeriodId, state));
+export const liveForTarget = Effect.fn("tenancy.promotionFind.liveForTarget")(
+  function* (targetPeriodId: GenericId.GenericId<"tenantPeriods">) {
+    return yield* firstIn(LIVE_PROMOTION_STATES, (state) =>
+      byTarget(targetPeriodId, state)
+    );
+  }
+);

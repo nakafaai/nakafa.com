@@ -4,14 +4,17 @@ import {
   cohort,
   crowd,
   drain,
-  flipStudentGrants,
+  entriesOf,
+  flipGrants,
   nf,
   periods,
   promotionApply,
+  promotionReview,
   promotions,
   readPromotion,
   runPromotion,
   scenario,
+  scenarioPlan,
   snapshot,
   undoOnce,
 } from "@repo/backend/test/promotion";
@@ -291,7 +294,7 @@ describe("tenancy/promotionApply stopped undo", () => {
           actorId: fixture.people.admin.personId,
           promotionId,
         });
-        yield* flipStudentGrants(fixture, everyone, "active", "revoked");
+        yield* flipGrants(fixture, everyone, "active", "revoked");
         yield* fixture.internal.mutation(runPromotion, {
           actorId: fixture.people.admin.personId,
           promotionId,
@@ -321,6 +324,57 @@ describe("tenancy/promotionApply stopped undo", () => {
           state: "approved",
         });
         expect(yield* snapshot(fixture)).toEqual(before);
+      })
+  );
+
+  it.effect(
+    "returns an apply that stopped before any step finished to approved, and its plan can then be cancelled",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        yield* fixture
+          .as("admin")
+          .mutation(periods.archive, { periodId: s.source.id, slug: nf });
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        const stopped = yield* readPromotion(fixture, promotionId);
+        expect(stopped.progress).toMatchObject({
+          done: [],
+          failure: "SourcePeriodInvalid",
+          running: false,
+          step: "archive",
+        });
+        const undone = yield* fixture
+          .as("admin")
+          .mutation(undo, { promotionId, slug: nf });
+        expect(undone).toMatchObject({
+          progress: {
+            cursor: null,
+            direction: null,
+            done: [],
+            failure: null,
+            running: false,
+            step: null,
+          },
+          state: "approved",
+        });
+        yield* fixture.as("admin").mutation(promotions.plan, {
+          promotionId,
+          slug: nf,
+          ...scenarioPlan(s.seventh, s.ninth),
+        });
+        const cancelled = yield* fixture
+          .as("admin")
+          .mutation(promotionReview.cancel, { promotionId, slug: nf });
+        expect(cancelled.state).toBe("cancelled");
+        expect(yield* entriesOf(fixture, "promotion.undone")).toMatchObject([
+          { change: { step: "archive", type: "promotion.undone" } },
+        ]);
       })
   );
 });

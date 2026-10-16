@@ -1,4 +1,3 @@
-import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import type { PromotionDestination } from "@repo/backend/confect/tenancy/promotion";
 import {
@@ -8,6 +7,10 @@ import {
   promotionReview,
   promotions,
   scenario,
+  scenarioPlan,
+  toEightA,
+  toGraduate,
+  toStay,
 } from "@repo/backend/test/promotion";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
@@ -15,26 +18,6 @@ import { Array as Arr, Effect } from "effect";
 const { create, moves, plan, setMove } = promotions;
 const { approve, cancel, submit } = promotionReview;
 const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
-
-/** A destination of the plan: a new cohort, graduation, and a repeated year. */
-const toEightA: typeof PromotionDestination.Type = {
-  kind: "cohort",
-  name: "8A",
-};
-const toGraduate: typeof PromotionDestination.Type = { kind: "graduate" };
-const toStay: typeof PromotionDestination.Type = { kind: "stay" };
-
-/** The plan of the scenario: 7A moves on to 8A with its homeroom teacher, and 9A graduates. */
-const scenarioPlan = (
-  seventh: { readonly id: GenericId.GenericId<"tenantCohorts"> },
-  ninth: { readonly id: GenericId.GenericId<"tenantCohorts"> }
-) => ({
-  sources: [
-    { cohortId: seventh.id, homeroom: true, to: toEightA },
-    { cohortId: ninth.id, homeroom: false, to: toGraduate },
-  ],
-  targets: [{ grade: 8, name: "8A" }],
-});
 
 describe("tenancy/promotions plan", () => {
   it.effect("replaces the plan, keeps it in draft, and journals it", () =>
@@ -381,6 +364,31 @@ describe("tenancy/promotions moves", () => {
         })
         .pipe(Effect.flip);
       expect(unplaced).toMatchObject({ _tag: "PersonNotPlaced" });
+    })
+  );
+
+  it.effect("denies a Person of another school as a foreign object", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const s = yield* scenario(fixture);
+      const made = yield* fixture.as("admin").mutation(create, {
+        periodId: s.source.id,
+        slug: nf,
+        targetPeriodId: s.target.id,
+      });
+      const foreign = yield* fixture
+        .as("admin")
+        .mutation(setMove, {
+          personId: fixture.people.otherOwner.personId,
+          promotionId: made.id,
+          slug: nf,
+          to: toGraduate,
+        })
+        .pipe(Effect.flip);
+      expect(foreign).toMatchObject({
+        _tag: "AccessDenied",
+        reason: "resource",
+      });
     })
   );
 

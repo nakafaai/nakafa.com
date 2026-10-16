@@ -9,7 +9,7 @@ import {
   cohort,
   drain,
   entriesOf,
-  flipStudentGrants,
+  flipGrants,
   nf,
   people,
   placedStudent,
@@ -201,7 +201,7 @@ describe("tenancy/promotionSteps undo", () => {
           actorId: fixture.people.admin.personId,
           promotionId,
         });
-        yield* flipStudentGrants(
+        yield* flipGrants(
           fixture,
           [s.first, s.second, s.third],
           "active",
@@ -398,6 +398,30 @@ describe("tenancy/promotionSteps apply failures", () => {
           running: false,
           step: "homeroom",
         });
+      })
+  );
+
+  it.effect(
+    "stops the homeroom step at a homeroom teacher who no longer holds a teacher grant, and copies nobody",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* flipGrants(
+          fixture,
+          [fixture.people.teacher.personId],
+          "active",
+          "revoked"
+        );
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress).toMatchObject({
+          failure: "PersonNotTeacher",
+          running: false,
+          step: "homeroom",
+        });
+        expect(finished.copies).toEqual([]);
       })
   );
 

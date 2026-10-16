@@ -31,13 +31,12 @@ export const planOf = (promotion: TenantPromotionsDoc) => ({
 });
 
 /** Patches fields of one promotion and returns the row as it now reads. */
-export const update = <F extends Partial<TenantPromotionsDoc>>(
-  promotion: TenantPromotionsDoc,
-  fields: F
-) =>
-  Effect.flatMap(DatabaseWriter, (writer) =>
-    writer
-      .table("tenantPromotions")
-      .patch(promotion._id, fields)
-      .pipe(Effect.orDie, Effect.as(Struct.assign(promotion, fields)))
-  );
+export const update = Effect.fn("tenancy.promotionRow.update")(function* <
+  F extends Partial<TenantPromotionsDoc>,
+>(promotion: TenantPromotionsDoc, fields: F) {
+  yield* (yield* DatabaseWriter)
+    .table("tenantPromotions")
+    .patch(promotion._id, fields)
+    .pipe(Effect.orDie);
+  return Struct.assign(promotion, fields);
+});

@@ -16,6 +16,8 @@ import { Period, Promotion } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
   periodAccess,
+  periodAuthority,
+  personAuthority,
   placementOf,
   promotionAccess,
   promotionAuthority,
@@ -50,19 +52,6 @@ import {
 } from "@repo/backend/confect/tenancy/promotionRow";
 import spec from "@repo/backend/confect/tenancy/promotions.spec";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
-
-/** Reads one period of the tenant by ID; a period of another tenant or none at all is `None`. */
-const readPeriod = (periodId: TenantPeriodsDoc["_id"]) =>
-  Effect.flatMap(DatabaseReader, (reader) =>
-    reader
-      .table("tenantPeriods")
-      .get(periodId)
-      .pipe(
-        Effect.asSome,
-        Effect.catchTag("GetByIdFailure", () => Effect.succeedNone),
-        Effect.orDie
-      )
-  );
 
 /**
  * Whether a period is a planned target of a source period: the same unit, planned,
@@ -104,11 +93,14 @@ const create = FunctionImpl.make(
     if (Option.isSome(yield* liveForSource(period._id))) {
       return yield* new PromotionState();
     }
-    const target = yield* readPeriod(targetPeriodId);
-    if (Option.isNone(target) || !isTargetOf(period, target.value)) {
+    const target = yield* periodAuthority.authorize(
+      "period.manage",
+      targetPeriodId
+    );
+    if (!isTargetOf(period, target)) {
       return yield* new TargetPeriodInvalid();
     }
-    if (Option.isSome(yield* liveForTarget(target.value._id))) {
+    if (Option.isSome(yield* liveForTarget(target._id))) {
       return yield* new TargetPeriodInvalid();
     }
     const promotionId = yield* (yield* DatabaseWriter)
@@ -121,7 +113,7 @@ const create = FunctionImpl.make(
         sourcePeriodId: period._id,
         sources: [],
         state: "draft",
-        targetPeriodId: target.value._id,
+        targetPeriodId: target._id,
         targets: [],
         tenantId: period.tenantId,
         unitId: period.unitId,
@@ -227,6 +219,7 @@ const setMove = FunctionImpl.make(
     if (!Arr.contains(PLANNABLE, promotion.state)) {
       return yield* new PromotionState();
     }
+    yield* personAuthority.authorize("person.manage", personId);
     const placed = yield* placementOf(promotion.sourcePeriodId, personId);
     if (Option.isNone(placed)) {
       return yield* new PersonNotPlaced();

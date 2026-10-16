@@ -11,6 +11,7 @@ import {
   IDLE_PROGRESS,
   nextStepOf,
   type PromotionStep,
+  type PromotionStepFailure,
 } from "@repo/backend/confect/tenancy/promotion";
 import {
   placeApply,
@@ -25,7 +26,6 @@ import {
   cohortsUndo,
   homeroomApply,
   homeroomUndo,
-  type PromotionStepFailure,
   type StepOutcome,
 } from "@repo/backend/confect/tenancy/promotionSteps";
 import { Array as Arr, Effect, Layer, Option, Result } from "effect";

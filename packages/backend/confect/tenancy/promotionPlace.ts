@@ -23,8 +23,14 @@ import {
   PromotionPlanInvalid,
 } from "@repo/backend/confect/tenancy/errors";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
-import { PROMOTION_PAGE_SIZE } from "@repo/backend/confect/tenancy/promotion";
-import { targetOf } from "@repo/backend/confect/tenancy/promotionPlan";
+import {
+  lastGradeOf,
+  PROMOTION_PAGE_SIZE,
+} from "@repo/backend/confect/tenancy/promotion";
+import {
+  destinationIssue,
+  targetOf,
+} from "@repo/backend/confect/tenancy/promotionPlan";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** One page of the source period's placements, read in placement order. */
@@ -53,19 +59,23 @@ const cohortsOf = (
       )
   );
 
-/** The source cohort of a placement, read once for the page it is on. */
-const cohortIn = (
+/**
+ * The source cohort of a placement, read once for the page it is on. The page's
+ * placements name every cohort that is read, so the lookup always finds one.
+ */
+const cohortIn = Effect.fn("tenancy.promotionPlace.cohortIn")(function* (
   cohorts: readonly TenantCohortsDoc[],
   cohortId: GenericId.GenericId<"tenantCohorts">
-) =>
-  Option.getOrThrow(
+) {
+  return yield* Effect.fromOption(
     Arr.findFirst(cohorts, (cohort) => cohort._id === cohortId)
-  );
+  ).pipe(Effect.orDie);
+});
 
 /**
- * The checks that place one student of a unit in a cohort of the target period: a
- * student of the unit, no place in the target period yet, and room under the
- * placement limit.
+ * The checks every destination needs: the Person is a student of the unit, and
+ * holds no place in the target period yet. A graduate needs them too, so a placement
+ * that someone made by hand in the target period stops the promotion before it writes.
  */
 const checkStudent = Effect.fn("tenancy.promotionPlace.checkStudent")(
   function* (
@@ -83,29 +93,40 @@ const checkStudent = Effect.fn("tenancy.promotionPlace.checkStudent")(
     ) {
       return yield* new PersonAlreadyPlaced();
     }
-    const held = yield* (yield* DatabaseReader)
-      .table("tenantCohortMembers")
-      .index("by_personId", (query) => query.eq("personId", placement.personId))
-      .take(PERSON_PLACEMENT_LIMIT)
-      .pipe(Effect.orDie);
-    if (held.length >= PERSON_PLACEMENT_LIMIT) {
-      return yield* new PersonPlacementLimit();
-    }
   }
 );
 
 /**
+ * The check that a new placement in the target period fits the placement limit. A
+ * graduate gets no new placement, so only a cohort destination runs it.
+ */
+const checkRoom = Effect.fn("tenancy.promotionPlace.checkRoom")(function* (
+  personId: GenericId.GenericId<"tenantPeople">
+) {
+  const held = yield* (yield* DatabaseReader)
+    .table("tenantCohortMembers")
+    .index("by_personId", (query) => query.eq("personId", personId))
+    .take(PERSON_PLACEMENT_LIMIT)
+    .pipe(Effect.orDie);
+  if (held.length >= PERSON_PLACEMENT_LIMIT) {
+    return yield* new PersonPlacementLimit();
+  }
+});
+
+/**
  * Where one student of the source period goes, checked against the target period
  * before any write. A student's own move wins over the destination of their cohort.
- * A cohort destination needs the student checks, and graduation needs none of them.
+ * The destination must fit the cohort the student is in now, so a move set for an
+ * earlier cohort stops the promotion rather than graduating a student who moved.
  */
 const planStudent = Effect.fn("tenancy.promotionPlace.planStudent")(function* (
   promotion: TenantPromotionsDoc,
   placement: TenantCohortMembersDoc,
-  cohorts: readonly TenantCohortsDoc[]
+  cohorts: readonly TenantCohortsDoc[],
+  lastGrade: Option.Option<number>
 ) {
   const reader = yield* DatabaseReader;
-  const cohort = cohortIn(cohorts, placement.cohortId);
+  const cohort = yield* cohortIn(cohorts, placement.cohortId);
   const entry = Arr.findFirst(
     promotion.sources,
     (source) => source.cohortId === placement.cohortId
@@ -125,6 +146,11 @@ const planStudent = Effect.fn("tenancy.promotionPlace.planStudent")(function* (
     onNone: () => entry.value.to,
     onSome: (found) => found.to,
   });
+  const issue = destinationIssue(promotion.targets, cohort, to, lastGrade);
+  if (Option.isSome(issue)) {
+    return yield* new PromotionPlanInvalid({ reason: issue.value });
+  }
+  yield* checkStudent(promotion, placement, cohort);
   const person = yield* reader
     .table("tenantPeople")
     .get(placement.personId)
@@ -133,10 +159,10 @@ const planStudent = Effect.fn("tenancy.promotionPlace.planStudent")(function* (
   if (to.kind === "graduate") {
     return { cohort, person, target: Option.none() };
   }
-  const cohortId = yield* Effect.fromOption(target).pipe(
-    Effect.mapError(() => new PromotionPlanInvalid({ reason: "destination" }))
-  );
-  yield* checkStudent(promotion, placement, cohort);
+  // The destination check above named a target of the plan, and the cohorts step
+  // created every target, so the target is always there.
+  const cohortId = yield* Effect.fromOption(target).pipe(Effect.orDie);
+  yield* checkRoom(placement.personId);
   return { cohort, person, target: Option.some(cohortId) };
 });
 
@@ -200,10 +226,15 @@ export const placeApply = Effect.fn("tenancy.promotionPlace.apply")(function* (
   actor: typeof TenantActor.Type,
   cursor: string | null
 ) {
+  const unit = yield* (yield* DatabaseReader)
+    .table("tenantUnits")
+    .get(promotion.unitId)
+    .pipe(Effect.orDie);
+  const lastGrade = lastGradeOf(unit.level);
   const page = yield* sourcePage(promotion, cursor);
   const cohorts = yield* cohortsOf(page.page);
   const plans = yield* Effect.forEach(page.page, (placement) =>
-    planStudent(promotion, placement, cohorts).pipe(
+    planStudent(promotion, placement, cohorts, lastGrade).pipe(
       Effect.map((plan) => ({ placement, plan }))
     )
   );

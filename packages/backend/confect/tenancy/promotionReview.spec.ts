@@ -15,9 +15,9 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /**
- * The review of a promotion's plan: the Admin submits a draft, the principal
- * approves a submitted plan or returns it, and either of them may cancel a plan
- * that is not applied yet.
+ * The review of a promotion's plan: the Admin submits a draft and cancels a draft
+ * or a submitted plan, and the principal approves a submitted plan or returns it
+ * to draft. An Owner holds every role's actions, so the Owner does the same.
  */
 export default GroupSpec.make()
   .middleware(Session)

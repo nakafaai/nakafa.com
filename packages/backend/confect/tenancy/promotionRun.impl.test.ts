@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import type { PromotionDestination } from "@repo/backend/confect/tenancy/promotion";
+import { placementOf } from "@repo/backend/confect/tenancy/authority";
 import {
   allJournal,
   approvedPromotion,
@@ -8,7 +8,7 @@ import {
   crowd,
   drain,
   entriesOf,
-  flipStudentGrants,
+  flipGrants,
   nf,
   periods,
   placedStudent,
@@ -19,10 +19,13 @@ import {
   readPromotion,
   runPromotion,
   scenario,
+  scenarioPlan,
   snapshot,
   toEightA,
   toEightB,
   toGraduate,
+  toStay,
+  undoOnce,
 } from "@repo/backend/test/promotion";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
@@ -31,7 +34,6 @@ const { create, plan } = promotions;
 const { apply } = promotionApply;
 const { approve, submit } = promotionReview;
 const NOW = Date.UTC(2026, 9, 14, 9, 0, 0);
-const toStay: typeof PromotionDestination.Type = { kind: "stay" };
 
 /** Fake timers keep every scheduled run from starting before the test runs it. */
 beforeEach(() => {
@@ -124,7 +126,7 @@ describe("tenancy/promotionRun apply", () => {
           step: "place",
         });
         expect(firstPage.progress.cursor).not.toBeNull();
-        yield* flipStudentGrants(fixture, everyone, "active", "revoked");
+        yield* flipGrants(fixture, everyone, "active", "revoked");
         yield* fixture.internal.mutation(runPromotion, {
           actorId: fixture.people.admin.personId,
           promotionId,
@@ -136,7 +138,7 @@ describe("tenancy/promotionRun apply", () => {
           step: "place",
         });
         expect(stopped.progress.cursor).toBe(firstPage.progress.cursor);
-        yield* flipStudentGrants(fixture, everyone, "revoked", "active");
+        yield* flipGrants(fixture, everyone, "revoked", "active");
         yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
         const finished = yield* drain(fixture, promotionId);
         expect(finished.progress.done).toEqual([
@@ -430,6 +432,88 @@ describe("tenancy/promotionRun apply", () => {
           running: false,
           step: "place",
         });
+      })
+  );
+
+  it.effect(
+    "stops the place step at a graduate who already holds a placement in the target period, and graduates nobody",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const lain = yield* cohort(fixture, s.target.id, "Lain", 8);
+        yield* fixture.as("admin").mutation(placements.place, {
+          cohortId: lain.id,
+          personId: s.third,
+          slug: nf,
+        });
+        // The answer is read as a boolean inside the fixture: an Option copied out
+        // of it loses the tag that `Option.isSome` reads.
+        const holdsTargetPlace = fixture.run(
+          Effect.map(placementOf(s.target.id, s.third), Option.isSome)
+        );
+        expect(yield* holdsTargetPlace).toBe(true);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress).toMatchObject({
+          failure: "PersonAlreadyPlaced",
+          running: false,
+          step: "place",
+        });
+        expect(yield* entriesOf(fixture, "person.graduated")).toEqual([]);
+        expect(yield* holdsTargetPlace).toBe(true);
+        const undone = yield* undoOnce(fixture, promotionId);
+        const reverted = yield* undoOnce(fixture, promotionId);
+        expect(undone.progress.done).toEqual(["archive"]);
+        expect(reverted.state).toBe("approved");
+        expect(yield* holdsTargetPlace).toBe(true);
+      })
+  );
+
+  it.effect(
+    "stops the place step at a graduate move of a student who moved to a cohort of a lower grade",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const made = yield* fixture.as("admin").mutation(create, {
+          periodId: s.source.id,
+          slug: nf,
+          targetPeriodId: s.target.id,
+        });
+        yield* fixture.as("admin").mutation(plan, {
+          promotionId: made.id,
+          slug: nf,
+          ...scenarioPlan(s.seventh, s.ninth),
+        });
+        yield* fixture.as("admin").mutation(promotions.setMove, {
+          personId: s.third,
+          promotionId: made.id,
+          slug: nf,
+          to: toGraduate,
+        });
+        yield* fixture.as("admin").mutation(placements.move, {
+          cohortId: s.seventh.id,
+          personId: s.third,
+          slug: nf,
+        });
+        yield* fixture
+          .as("admin")
+          .mutation(submit, { promotionId: made.id, slug: nf });
+        yield* fixture
+          .as("principal")
+          .mutation(approve, { promotionId: made.id, slug: nf });
+        yield* fixture
+          .as("admin")
+          .mutation(apply, { promotionId: made.id, slug: nf });
+        const finished = yield* drain(fixture, made.id);
+        expect(finished.progress).toMatchObject({
+          failure: "PromotionPlanInvalid",
+          running: false,
+          step: "place",
+        });
+        expect(yield* entriesOf(fixture, "person.graduated")).toEqual([]);
       })
   );
 

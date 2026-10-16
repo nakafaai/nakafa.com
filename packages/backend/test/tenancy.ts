@@ -183,6 +183,7 @@ const seed = Effect.fn("test.tenancy.seed")(function* (ctx: MutationCtx) {
     admin: account("admin"),
     auditor: account("auditor"),
     counselor: account("counselor"),
+    deputy: account("deputy"),
     otherOwner: account("other-owner"),
     owner: account("owner"),
     principal: account("principal"),
@@ -312,6 +313,7 @@ const seed = Effect.fn("test.tenancy.seed")(function* (ctx: MutationCtx) {
       tenantWide,
       "active"
     ),
+    deputy: member(nf, users.deputy.userId, "Deputy", "deputy", smp, "active"),
     otherOwner: member(
       other,
       users.otherOwner.userId,

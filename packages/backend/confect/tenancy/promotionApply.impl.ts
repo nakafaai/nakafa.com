@@ -18,6 +18,7 @@ import {
 import {
   IDLE_PROGRESS,
   resumePoint,
+  stoppedBeforeAnyStep,
 } from "@repo/backend/confect/tenancy/promotion";
 import spec from "@repo/backend/confect/tenancy/promotionApply.spec";
 import { checkPlan } from "@repo/backend/confect/tenancy/promotionPlan";
@@ -98,9 +99,10 @@ const apply = FunctionImpl.make(
 );
 
 /**
- * Undoes the last step an applied promotion finished, or resumes a stopped undo.
- * Undo is possible while the target period is planned: an opened promotion is
- * locked, so its undo is refused before this handler runs.
+ * Undoes the last step an applied promotion finished, or resumes a stopped undo. An
+ * apply that stopped before any step finished has no step to undo, so undo returns
+ * its plan to approved. Undo is possible while the target period is planned: an
+ * opened promotion is locked, so its undo is refused before this handler runs.
  */
 const undo = FunctionImpl.make(
   databaseSchema,
@@ -111,6 +113,18 @@ const undo = FunctionImpl.make(
     const promotion = yield* Promotion;
     if (promotion.state !== "applied") {
       return yield* new PromotionState();
+    }
+    const stopped = stoppedBeforeAnyStep(promotion.progress);
+    if (Option.isSome(stopped)) {
+      const next = yield* update(promotion, {
+        progress: IDLE_PROGRESS,
+        state: "approved",
+      });
+      yield* promotionAuthority.record(personActor(person), promotion, {
+        step: stopped.value,
+        type: "promotion.undone",
+      });
+      return view(next);
     }
     const point = resumePoint(promotion.progress, "undo");
     if (Option.isNone(point)) {

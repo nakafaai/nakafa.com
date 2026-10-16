@@ -1,6 +1,4 @@
-import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
-import type { PromotionDestination } from "@repo/backend/confect/tenancy/promotion";
 import {
   cohort,
   entriesOf,
@@ -8,6 +6,7 @@ import {
   promotionReview,
   promotions,
   scenario,
+  scenarioPlan,
 } from "@repo/backend/test/promotion";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
@@ -18,25 +17,6 @@ const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
   reason,
-});
-
-/** The destinations of the scenario's plan: 7A moves on to 8A, and 9A graduates. */
-const toEightA: typeof PromotionDestination.Type = {
-  kind: "cohort",
-  name: "8A",
-};
-const toGraduate: typeof PromotionDestination.Type = { kind: "graduate" };
-
-/** The plan of the scenario, with the cohorts of its source period. */
-const scenarioPlan = (
-  seventh: { readonly id: GenericId.GenericId<"tenantCohorts"> },
-  ninth: { readonly id: GenericId.GenericId<"tenantCohorts"> }
-) => ({
-  sources: [
-    { cohortId: seventh.id, homeroom: true, to: toEightA },
-    { cohortId: ninth.id, homeroom: false, to: toGraduate },
-  ],
-  targets: [{ grade: 8, name: "8A" }],
 });
 
 describe("tenancy/promotions review", () => {
@@ -131,6 +111,48 @@ describe("tenancy/promotions review", () => {
         expect(onDraft).toMatchObject({ _tag: "PromotionState" });
         expect(approved.state).toBe("approved");
         expect(onApproved).toMatchObject({ _tag: "PromotionState" });
+      })
+  );
+
+  it.effect(
+    "refuses a deputy the approval and the return of a submitted plan, which the principal makes",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const made = yield* fixture.as("admin").mutation(create, {
+          periodId: s.source.id,
+          slug: nf,
+          targetPeriodId: s.target.id,
+        });
+        yield* fixture.as("admin").mutation(plan, {
+          promotionId: made.id,
+          slug: nf,
+          ...scenarioPlan(s.seventh, s.ninth),
+        });
+        yield* fixture
+          .as("admin")
+          .mutation(submit, { promotionId: made.id, slug: nf });
+        const byDeputy = yield* fixture
+          .as("deputy")
+          .mutation(approve, { promotionId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        const returned = yield* fixture
+          .as("deputy")
+          .mutation(returnToDraft, {
+            promotionId: made.id,
+            reason: "other",
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        const approved = yield* fixture
+          .as("principal")
+          .mutation(approve, { promotionId: made.id, slug: nf });
+        expect([byDeputy, returned]).toMatchObject([
+          denied("role"),
+          denied("role"),
+        ]);
+        expect(approved.state).toBe("approved");
       })
   );
 

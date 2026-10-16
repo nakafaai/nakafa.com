@@ -110,16 +110,20 @@ const holdsRoleIn = Effect.fn("tenancy.authority.holdsRoleIn")(function* (
 });
 
 /** Whether one Person holds an active student grant that covers a unit, so a placement may name them. */
-export const studentOf = (
+export const studentOf = Effect.fn("tenancy.authority.studentOf")(function* (
   personId: GenericId.GenericId<"tenantPeople">,
   unitId: GenericId.GenericId<"tenantUnits">
-) => holdsRoleIn(personId, unitId, "student");
+) {
+  return yield* holdsRoleIn(personId, unitId, "student");
+});
 
 /** Whether one Person holds an active teacher grant that covers a unit, so a homeroom assignment may name them. */
-export const teacherOf = (
+export const teacherOf = Effect.fn("tenancy.authority.teacherOf")(function* (
   personId: GenericId.GenericId<"tenantPeople">,
   unitId: GenericId.GenericId<"tenantUnits">
-) => holdsRoleIn(personId, unitId, "teacher");
+) {
+  return yield* holdsRoleIn(personId, unitId, "teacher");
+});
 
 /**
  * The homeroom teacher assignment of one cohort, if it has one. A cohort holds at

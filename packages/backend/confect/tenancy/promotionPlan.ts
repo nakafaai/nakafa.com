@@ -121,21 +121,16 @@ export const checkPlan = Effect.fn("tenancy.promotionPlan.check")(
     yield* Effect.forEach(
       plan.sources,
       (source) =>
-        Option.match(
-          sourceIssue(
-            plan.targets,
-            Option.getOrThrow(
-              Arr.findFirst(cohorts, (cohort) => cohort._id === source.cohortId)
-            ),
-            source,
-            lastGrade
-          ),
-          {
-            onNone: () => Effect.void,
-            onSome: (reason) =>
-              Effect.fail(new PromotionPlanInvalid({ reason })),
+        Effect.gen(function* () {
+          // The cover check above names a cohort of the period for every source.
+          const cohort = yield* Effect.fromOption(
+            Arr.findFirst(cohorts, (found) => found._id === source.cohortId)
+          ).pipe(Effect.orDie);
+          const issue = sourceIssue(plan.targets, cohort, source, lastGrade);
+          if (Option.isSome(issue)) {
+            return yield* new PromotionPlanInvalid({ reason: issue.value });
           }
-        ),
+        }),
       { discard: true }
     );
   }

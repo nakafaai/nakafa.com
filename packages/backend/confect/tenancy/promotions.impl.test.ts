@@ -83,7 +83,7 @@ describe("tenancy/promotions create", () => {
   );
 
   it.effect(
-    "refuses a target that is the source, is in another unit, starts too early, or is gone",
+    "refuses a target that is the source, is in another unit, or starts too early, and denies a target of another school or one that is gone",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -139,8 +139,8 @@ describe("tenancy/promotions create", () => {
           { _tag: "TargetPeriodInvalid" },
           { _tag: "TargetPeriodInvalid" },
           { _tag: "TargetPeriodInvalid" },
-          { _tag: "TargetPeriodInvalid" },
-          { _tag: "TargetPeriodInvalid" },
+          denied("resource"),
+          denied("resource"),
         ]);
       })
   );
