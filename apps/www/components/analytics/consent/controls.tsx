@@ -43,8 +43,9 @@ const HIDE_PROMPT_WITHOUT_SCRIPTS = `[${PROMPT_ATTRIBUTE}]{display:none}`;
  *
  * The server renders the prompt while the choice is pending, so the text is in
  * the first HTML. The bootstrap script marks the root before paint for a visitor
- * whose choice this browser keeps, and the store removes the mark once it knows
- * the choice. Without scripts the prompt stays hidden.
+ * whose choice this browser keeps, or whose sign-in is on its way, and the store
+ * removes the mark once it knows the choice. Without scripts the prompt stays
+ * hidden.
  *
  * The consent state is derived once here and handed to the decision and
  * detail parts, which render in both the prompt and the dialog.

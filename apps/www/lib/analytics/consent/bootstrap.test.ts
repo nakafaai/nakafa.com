@@ -13,7 +13,7 @@ import { Option, Schema } from "effect";
 import {
   ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT,
   ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY,
-  isAnalyticsConsentDecidedBeforePaint,
+  resolveAnalyticsConsentMark,
 } from "@/lib/analytics/consent/bootstrap";
 import { EXPECTED_SESSION } from "@/lib/auth/keys";
 
@@ -51,7 +51,10 @@ function marker(overrides: Readonly<Record<string, unknown>> = {}) {
   });
 }
 
-/** One case: the stored values and browser signal, and the decision the page must reach. */
+/**
+ * One case: the stored values and browser signal, and what the page must do with
+ * them. `decided` and `signingIn` name the mark the decision writes on the root.
+ */
 const BootstrapCaseSchema = Schema.Struct({
   accountMarker: Schema.optionalKey(Schema.String),
   anonymousRecord: Schema.optionalKey(Schema.String),
@@ -60,11 +63,15 @@ const BootstrapCaseSchema = Schema.Struct({
   globalPrivacyControl: Schema.optionalKey(Schema.Unknown),
   knownSession: Schema.optionalKey(Schema.String),
   name: Schema.String,
+  signingIn: Schema.optionalKey(Schema.Boolean),
 });
 
 type BootstrapCase = typeof BootstrapCaseSchema.Type;
 
-/** The reader the table passes: an object, or undefined for anything else. */
+/**
+ * The reader the table passes, with the same answer as the page's: an object, or
+ * undefined for anything else. The script test below runs the page's own reader.
+ */
 const readRecord = (text: string) =>
   Option.getOrUndefined(Schema.decodeOption(JsonRecordSchema)(text));
 
@@ -129,9 +136,9 @@ function storeStatusOf(
   }).status;
 }
 
-/** Runs the decision on the stored values of one case, as the inline script does. */
-function decideOn(bootstrapCase: BootstrapCase) {
-  return isAnalyticsConsentDecidedBeforePaint({
+/** The mark the decision resolves for one case, with the table's reader. */
+function markOf(bootstrapCase: BootstrapCase) {
+  return resolveAnalyticsConsentMark({
     accountMarker: bootstrapCase.accountMarker ?? null,
     anonymousRecord: bootstrapCase.anonymousRecord ?? null,
     doNotTrack: bootstrapCase.doNotTrack ?? null,
@@ -141,6 +148,17 @@ function decideOn(bootstrapCase: BootstrapCase) {
     readRecord,
     vocabulary: ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY,
   });
+}
+
+/** The mark that the table says the page writes for one case, or null for none. */
+function expectedMarkOf(bootstrapCase: BootstrapCase) {
+  if (bootstrapCase.decided) {
+    return "decided";
+  }
+  if (bootstrapCase.signingIn) {
+    return "signing-in";
+  }
+  return null;
 }
 
 const cases: readonly BootstrapCase[] = [
@@ -263,18 +281,21 @@ const cases: readonly BootstrapCase[] = [
     decided: false,
     knownSession: EXPECTED_SESSION,
     name: "a sign-in on its way decides nothing, even with an anonymous denial",
+    signingIn: true,
   },
   {
     anonymousRecord: anonymous(),
     decided: false,
     knownSession: EXPECTED_SESSION,
     name: "a sign-in on its way decides nothing, even with an anonymous grant",
+    signingIn: true,
   },
   {
     accountMarker: marker({ sessionId: EXPECTED_SESSION }),
     decided: false,
     knownSession: EXPECTED_SESSION,
     name: "a marker that names the expected session does not decide",
+    signingIn: true,
   },
   {
     decided: true,
@@ -362,21 +383,25 @@ const cases: readonly BootstrapCase[] = [
 describe("analytics consent bootstrap decision", () => {
   for (const bootstrapCase of cases) {
     it(`matches the consent store for ${bootstrapCase.name}`, () => {
-      const decided = decideOn(bootstrapCase);
+      const mark = markOf(bootstrapCase);
       const storeStatus = storeStatusOf(bootstrapCase);
 
-      expect(decided).toBe(bootstrapCase.decided);
+      expect(mark).toBe(expectedMarkOf(bootstrapCase));
       expect(storeStatus !== "prompt" && storeStatus !== "pending").toBe(
-        decided
+        mark === "decided"
       );
+      // The mark for a sign-in on its way lasts only while the store is pending.
+      if (mark === "signing-in") {
+        expect(storeStatus).toBe("pending");
+      }
     });
   }
 
   // The script runs the decision on the source text of the function, so the two
-  // cannot drift apart. The browser suite runs the real script in a page.
+  // cannot drift. The browser suite runs the real script in a page.
   it("is the decision the inline script calls, so no second copy of the rule exists", () => {
     expect(ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT).toContain(
-      `(${isAnalyticsConsentDecidedBeforePaint.toString()})({`
+      `(${resolveAnalyticsConsentMark.toString()})({`
     );
   });
 });

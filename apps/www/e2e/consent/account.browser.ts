@@ -22,8 +22,9 @@ import {
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { signInLearner } from "@/e2e/support/learner";
+import { NEXT_CHUNK_PATH } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
+import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
 /** The name of the synthetic learner, which the account button shows. */
 const LEARNER_NAME = "Acceptance Learner";
@@ -95,6 +96,56 @@ test("an anonymous denial followed by sign-in to an account with no choice shows
               waitUntil: "domcontentloaded",
             })
           );
+
+          yield* Effect.promise(() =>
+            expect(page.getByText(PROMPT_DESCRIPTION)).toBeVisible({
+              timeout: readinessTimeoutMilliseconds,
+            })
+          );
+        })
+    )
+  );
+});
+
+test("a sign-in on its way hides the prompt before the page hydrates, then shows the account's prompt", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      { baseURL: baseURL ?? "", ...compactContext },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* signInLearner(context, baseURL ?? "");
+          yield* Effect.promise(() => stopAppCode(page));
+          yield* Effect.promise(() =>
+            page.goto(pinnedRoutes.material.en, {
+              waitUntil: "domcontentloaded",
+            })
+          );
+          // A sign-in leaves the browser knowing only that a session is expected.
+          yield* Effect.promise(() =>
+            page.evaluate(
+              ({ key, value }) => localStorage.setItem(key, value),
+              { key: KNOWN_SESSION_KEY, value: EXPECTED_SESSION }
+            )
+          );
+          yield* Effect.promise(() =>
+            page.reload({ waitUntil: "domcontentloaded" })
+          );
+
+          yield* Effect.promise(() => expectPromptRendered(page));
+          yield* Effect.promise(() =>
+            expect(page.getByText(PROMPT_DESCRIPTION)).toBeHidden()
+          );
+
+          // The page learns the session and the account's choice, and then the
+          // account with no choice gets its prompt.
+          yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
+          yield* Effect.promise(() => page.reload({ waitUntil: "load" }));
 
           yield* Effect.promise(() =>
             expect(page.getByText(PROMPT_DESCRIPTION)).toBeVisible({
