@@ -10,13 +10,12 @@ welcome email (`packages/backend/confect/emails/welcome/internal.ts`) and the
 invitation email (`packages/backend/confect/emails/invite`), which the invite
 mutation starts (ADR 0011).
 
-Amended on 16 October 2026 after review. These rules are not among the owner's
-decisions K1 to K28, so the owner confirms or changes them before the scheduler
-is built (see What Stays Open): a reminder keeps its anchor and Timing rather
-than its send instant, a notice rule holds one route for each relation, a Chosen
-time belongs to email only, and the guardian's exam reminder is the earlier of
-06:30 and 30 minutes before the sitting opens, and it is not sent once that
-instant has passed.
+Amended on 16 October 2026 after review: a reminder keeps its anchor and Timing
+rather than its send instant, a notice rule holds one route for each relation, a
+Chosen time belongs to email only, the guardian's exam reminder is the earlier of
+06:30 and 30 minutes before the sitting opens, a reminder is sent only before its
+anchor, quiet hours hold a push back until they end except for an exam start,
+and quiet hours cover every student account while no age is stored.
 
 ## Context
 
@@ -187,13 +186,25 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | Deadline, the day before | A task is published or its deadline changes. Journal cursor. | 16:00 on the day before the deadline (proposal) | Push, inbox |
 | Deadline, one hour before | The same trigger | One hour before the deadline | Push, inbox |
 | Exam starts | A sitting is scheduled. Journal cursor. | 15 minutes before the sitting opens | Push, inbox, email |
-| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | The earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens. Not sent if that instant has passed when the sweep reads the row. | Inbox, email |
+| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | The earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens | Inbox, email |
 | Daily digest | Email that is not sent yet. A cursor for each recipient. | 17:00 every day (proposal) | Email |
+
+A reminder is sent only while its anchor, the deadline or the opening it is
+about, is still ahead. The sweep sends a due reminder when it reads it before
+the anchor, and at once when its send instant had already passed when the row
+was made, such as the day-before reminder of a task published after 16:00 on
+that day. Once the anchor has passed, the reminder is dropped and writes
+nothing, because a reminder after the fact tells nothing the task or the
+sitting does not show.
 
 ### Push
 
 - Web Push is best effort, and its payload is what ADR 0026 allows. Quiet hours
-  skip it, and the inbox still holds the notification.
+  hold a push back until they end (`confect/notifications/clock.ts` gives that
+  instant), and the inbox holds the notification at once. An exam start is the
+  one push that quiet hours do not hold, because it is about a sitting that
+  opens in 15 minutes. A held push whose anchor has passed when quiet hours end
+  is dropped, as a late reminder is (Reminders).
 - On iPhone and iPad, push needs three things (WebKit, "Web Push for Web Apps on
   iOS and iPadOS", `webkit.org/blog/13878`, read on 13 October 2026). The site is
   a web app on the Home Screen, opened from its icon, whose manifest sets
@@ -218,9 +229,11 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 
 ### Quiet hours and time zones
 
-- Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on by
-  default for an account under 18, and a school can relax them only as its data
-  protection impact assessment (DPIA) allows.
+- Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on for
+  every student account. The Indonesian profile puts them on for an account
+  under 18 (ADR 0032), and no birth date is stored, so they cover every student
+  until the country profile stores an age. A school can relax them only as its
+  data protection impact assessment (DPIA) allows.
 - Quiet hours, reminders, and digests use the IANA time zone of the school the
   notification is about (ADR 0032). Instants are stored in UTC.
 - A reminder stores its anchor and its Timing, not its send instant. The anchor
@@ -269,25 +282,6 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   once.
 - The final times of the proposals in the tables, and the final period of an
   inbox row. The owner sets them (K10).
-- Quiet hours and push. The Push section and Rejected Alternatives say quiet
-  hours skip push, while the school blueprint's class page says quiet hours
-  withhold push except for exams. `confect/notifications/clock.ts` gives the
-  instant at which quiet hours end, which only a push that waits needs. The
-  owner sets one rule before the scheduler slice, and it says whether an exam
-  start is exempt.
-- Late reminders. A push that waits for quiet hours to end can arrive at or
-  after the deadline or opening it reminds of: a one-hour reminder before a 22:00
-  deadline would arrive at 06:00. A reminder whose send instant has already
-  passed when its task is published, such as the deadline reminder for a task
-  published after 16:00 on the day before the deadline, raises the same
-  question. The guardian's exam reminder is dropped once its instant has passed
-  (Reminders). No other rule says whether such a send is dropped or sent at once.
-- The guardian's exam reminder and its drop rule. They come from the review of
-  16 October 2026 and are not among the owner's decisions K1 to K28. The owner
-  confirms them, or sets other times, before the scheduler is built.
-- Quiet hours by age. The Indonesian profile uses under 18 (ADR 0032), but no
-  birth date or age is stored yet. Until the country profile and a DPIA exist,
-  the rule must name the accounts it covers.
 
 ## Consequences
 
@@ -307,7 +301,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 - Push as the main channel. It is best effort, and iOS needs steps that not every
   person takes.
 - Skipping the inbox in quiet hours. The inbox is the source of truth, and quiet
-  hours stop only the push.
+  hours hold back only the push.
 - A name, a grade, or a message text in a push or an email. A lock screen and a
   mailbox show them to people who are not the recipient.
 - An outbox copy of the journal for notifications. ADR 0016 rejects it.
