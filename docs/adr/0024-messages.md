@@ -258,7 +258,10 @@ changes.
    attachments reader takes the file through it and gets the part with its name
    opened, so neither the model's file part, the admission receipt, nor the page
    sees the sealed form. A file part inside a message row is sealed and opened
-   with its row. The dry run reports how many attachments and bytes it would copy. The
+   with its row. Wave one keeps the name plain: `getFile` moves into the module
+   (`confect/nina/sealed/file.ts`), which returns the stored name. The sealed
+   name, its format, and its opening come with the writer in wave two (S2b), in
+   one pull request. The dry run reports how many attachments and bytes it would copy. The
    stored file is removed within two days of its chat's deletion, as
    the live policy already says (ADR 0001). The cleanup runs once a day, and it
    removes a file once no chat refers to it and 24 hours have passed since its
@@ -358,7 +361,7 @@ read for the whole function.
 | The summary job | 100 rows a page, text rows | 1 | rows read |
 | Capture, retry, replay | 1 row | 1 | 1 |
 | Attachments | 1 file row for each attachment | 1 | 1 name for each |
-| Suggestions | up to 50 rows | 1 | up to 50 |
+| Suggestions | up to 16 rows, the window of `SUGGESTION_MESSAGES` (`presentation.ts`) | 1 | up to 16 |
 | Title | 1 row: it runs for the first turn only (`presentation.ts:102`) | 1 | 1 |
 
 A sealed row has an empty `text`, so the readers that used it take the text of
@@ -491,4 +494,8 @@ module then keeps only the opening.
 
 | Part | Status |
 | --- | --- |
-| `packages/backend/confect/nina/sealed.ts`: seals a message's content into a skeleton row, and opens it only for its own thread, order and step. The field binds the row through `row` in `vault/text.ts`, so existing learner bindings do not change. | Built in program wave A, order of work step 1 (slice S1a). No reader or writer uses it yet: the readers open through it in S1b and S1c, and the writers seal in wave two. |
+| `packages/backend/confect/nina/sealed.ts`: seals a message's content into a skeleton row, and opens it only for its own thread, order and step. The field binds the row through `row` in `vault/text.ts`, so existing learner bindings do not change. | Built in program wave A, order of work step 1 (slice S1a). The readers open through it in S1b and S1c, and the writers seal in wave two. |
+| `packages/backend/confect/nina/sealed/`: the reads of stored rows and files. `thread.ts` reads a page of a thread, `message.ts` one message by id, `file.ts` a stored file, `model.ts` converts opened rows to model messages, `action.ts` reads from an action through the module's own internal queries (`sealed.spec.ts`, `sealed.impl.ts`), and `context.ts` gives the recent context of suggestions and the prompt of the title. `open.ts` opens the rows of one read for the owner it is given: a read of plain rows reads no key, and a read with a sealed row reads the owner's key once. | Built in S1b. Each read names the owner whose key opens it: the chat's owner, the turn's learner, or the learner who asks for a memory. |
+| Readers that open through the module. A test gives the same result for a plain thread and for the same thread sealed in place (`test/nina/seal.ts`) for the page (`messages/page.ts`), the list (`messages.impl.ts`), the next turn's history (`uncovered.ts`), memory capture's words of a turn (`memory/said.ts`), the replay of a turn start (`turns.impl.ts`), retry of a sealed prompt (`prompt.ts`), the suggestions' and the title's model input (`presentation.ts`, with the sealed window of `sealed/context.ts`), The summary (`summary.ts`) reads its window through the same action read as the next turn, and its fold has no parity test of its own yet. The settlement check of the newest row (`journal.ts`), the brief (`brief.impl.ts`) and attachments (`attachments.ts`, whose file names stay plain in this wave) open through the module and have no parity test of their own yet: their reads are the module's reads, tested in `sealed/`. | Built in S1b and S1c. The CLI journal gate (`packages/backend/scripts/nina/deployment.ts`) stays as it is: it reads only the status, the role, the agent name, the finish reason and the usage of each row, none of them sealed. |
+| Agent audit. Suggestions and title set `recentMessages: 0` and take their input from the module through `contextHandler`, as `generation.ts` already did. Every other Agent call (`math/agent.ts`, `math/repair.ts`, `memory/capture.ts`, `nakafa/agent.ts`, `portrait/build.ts`, `repair.ts`, the two calls of `research/agent.ts`, `summary.ts`, and the test helper `test/nina/capability.ts`) passes `userId` and no `threadId`, so its fetch of recent messages cannot run. Every `generateText`, `streamText`, `generateObject` and `streamObject` call of the backend goes through one of these Agents. | Built in S1b. |
+| `scripts/check/sealed.ts`, the source rule of ADR 0021 (Sealed message readers): no import or re-export of the Agent's readers of stored rows and files, and no reference to the component's reads that return sealed rows as they are, outside the sealed module. | Built in S1b, with its tests and the planted violation of each form. |
