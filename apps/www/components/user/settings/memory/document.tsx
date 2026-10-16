@@ -5,9 +5,17 @@ import {
   MEMORY_TEXT_LIMIT,
   MEMORY_TITLE_LIMIT,
 } from "@repo/backend/confect/nina/memory.spec";
-import { EditorPreview } from "@repo/design-system/components/editor/words";
+import {
+  editorBar,
+  editorDocument,
+  editorRow,
+  editorScroll,
+} from "@repo/design-system/components/editor/frame";
+import { plainText } from "@repo/design-system/components/editor/plain";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import { lazy, Suspense, useRef, useState } from "react";
@@ -22,14 +30,47 @@ import {
   type Memory,
   type MemoryDraft,
 } from "@/components/user/settings/memory/list";
+import {
+  loadEditorPreviewModule,
+  loadRichEditorModule,
+} from "@/components/user/settings/memory/module";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
-/** The editor loads when a learner opens it, never with the page. */
+/** The editor's code loads when a learner opens it, never with the page. */
 const Editor = lazy(() =>
-  import("@repo/design-system/components/editor/rich").then((module) => ({
+  loadRichEditorModule().then((module) => ({
     default: module.RichEditor,
   }))
 );
+
+/** The saved words drawn as the editor draws them, which show while the editor's code loads. */
+const Preview = lazy(() =>
+  loadEditorPreviewModule().then((module) => ({
+    default: module.EditorPreview,
+  }))
+);
+
+/**
+ * The saved words as plain text, in the frame the editor and its preview share.
+ * It shows until the preview's code arrives, so the words never leave their
+ * place: the frame is the same, and only the drawing of the words changes.
+ */
+function SavedWords({ markdown }: { markdown: string }) {
+  const words = plainText(markdown);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div aria-hidden className={editorBar()}>
+        <div className={editorRow()} />
+      </div>
+      <div className={editorScroll()}>
+        <div className={editorDocument()} dir="auto">
+          <p dir="auto">{words === "" ? <br /> : words}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * One opening of the editor, from top to bottom: the title, which the learner
@@ -39,9 +80,10 @@ const Editor = lazy(() =>
  * save may be on its way even when the learner has erased every word again.
  * Everything the learner writes is saved by itself. After a save that failed,
  * the editor opens again with what they wrote. While the editor's code loads,
- * the saved words show in the editor's own frame, so nothing moves when it
- * arrives. `open` is false while a closing editor is still on the page, and
- * such an editor takes no focus.
+ * the saved words show in the editor's own frame: as the preview draws them when
+ * its code has arrived, and as plain text before that or when the preview's code
+ * cannot load, so nothing moves when the editor arrives. `open` is false while a
+ * closing editor is still on the page, and such an editor takes no focus.
  */
 export function MemoryDocument({
   memory,
@@ -60,6 +102,7 @@ export function MemoryDocument({
   const [written, setWritten] = useState(() => !isBlank(starting));
   const body = useRef<HTMLDivElement>(null);
   const length = Str.length(Str.trim(draft.text));
+  const savedWords = <SavedWords markdown={starting.text} />;
 
   /** Shows what the learner wrote and hands it to the saving. */
   function write(next: MemoryDraft) {
@@ -81,7 +124,7 @@ export function MemoryDocument({
             onKeyDown={(event) => {
               // Enter leaves the title for the text, as in a document. While
               // the learner composes a character, Enter belongs to the keyboard.
-              if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              if (isEnterOutsideComposition(event.nativeEvent)) {
                 event.preventDefault();
                 body.current
                   ?.querySelector<HTMLElement>("[contenteditable]")
@@ -114,10 +157,14 @@ export function MemoryDocument({
       <div className="flex min-h-0 flex-1 flex-col" ref={body}>
         <Suspense
           fallback={
-            <EditorPreview
-              markdown={starting.text}
-              placeholder={t("placeholder")}
-            />
+            <ErrorBoundary fallback={savedWords}>
+              <Suspense fallback={savedWords}>
+                <Preview
+                  markdown={starting.text}
+                  placeholder={t("placeholder")}
+                />
+              </Suspense>
+            </ErrorBoundary>
           }
         >
           <Editor

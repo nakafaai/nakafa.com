@@ -14,6 +14,7 @@ import {
   MEMORY_ADD_ID,
   MEMORY_SEARCH_ID,
 } from "@/components/user/settings/memory/focus";
+import { warmMemoryEditor } from "@/components/user/settings/memory/module";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /**
@@ -57,6 +58,9 @@ export function MemoryToolbar() {
           className="@sm/card-header:w-auto w-9"
           id={MEMORY_ADD_ID}
           onClick={openNew}
+          onFocus={warmMemoryEditor}
+          onPointerDown={warmMemoryEditor}
+          onPointerEnter={warmMemoryEditor}
           title={t("add")}
         >
           <HugeIcons icon={Add01Icon} />

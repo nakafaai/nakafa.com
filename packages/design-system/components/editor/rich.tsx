@@ -52,8 +52,8 @@ interface RichEditorProps {
  * sits above the text, and the text fills the space its parent gives, so the
  * parent decides the height. Each block takes the direction of its own words.
  *
- * Load it with `next/dynamic` and `ssr: false`: the editor needs the browser
- * and brings the editing library with it. Until the editor exists, the saved
+ * Load it with `import()` where the learner opens it, not with the page, because
+ * it brings the editing library with it. Until the editor exists, the saved
  * words show in its place, drawn the same way, so the words do not move when
  * the editor takes their place.
  */
