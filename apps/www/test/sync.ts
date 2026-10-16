@@ -3,6 +3,7 @@ import {
   decodeBatch,
   VersionStale,
 } from "@repo/backend/confect/editor/batch";
+import { DocumentInvalid } from "@repo/backend/confect/editor/document";
 import { SnapshotRefused } from "@repo/backend/confect/editor/errors";
 import { SNAPSHOT_IDLE_DELAY } from "@repo/backend/confect/editor/snapshot";
 import { encodeStep } from "@repo/backend/confect/editor/step";
@@ -106,6 +107,7 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
     submits: 0,
   });
   const refuseSaves = yield* Ref.make(false);
+  const refuseContent = yield* Ref.make(false);
 
   const transport: SyncTransport = {
     open: (clientId) =>
@@ -189,6 +191,9 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
         if (yield* Ref.get(refuseSaves)) {
           return yield* new SnapshotRefused({ reason: "notDue" });
         }
+        if (yield* Ref.get(refuseContent)) {
+          return yield* new DocumentInvalid();
+        }
         yield* Ref.update(log, (state) => ({
           ...state,
           saves: state.saves + 1,
@@ -215,6 +220,7 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
         firstKept: through + 1,
         steps: Arr.filter(state.steps, (step) => step.version > through),
       })),
+    refuseContent: (refuse: boolean) => Ref.set(refuseContent, refuse),
     refuseSaves: (refuse: boolean) => Ref.set(refuseSaves, refuse),
     transport,
   };

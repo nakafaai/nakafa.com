@@ -1,10 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Ref } from "effect";
+import { Array as Arr, Effect, Option, Ref } from "effect";
 import { TestClock } from "effect/testing";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import {
+  SyncDropped,
   SyncFailed,
   type SyncSession,
   type SyncTransport,
@@ -251,6 +252,32 @@ describe("editor/sync snapshots", () => {
         yield* TestClock.adjust(IDLE);
         yield* server.refuseSaves(true);
         yield* tick(editor.session);
+        yield* tick(editor.session);
+        expect(yield* server.counts).toMatchObject({
+          saveAttempts: 1,
+          saves: 0,
+        });
+      })
+  );
+
+  it.effect(
+    "completes the round when the server refuses the content of a snapshot, and still reports the steps dropped",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const editor = yield* openEditor(server.transport);
+        yield* typeText(editor.state, "a");
+        yield* tick(editor.session);
+        yield* TestClock.adjust(IDLE);
+        yield* server.refuseContent(true);
+        yield* Ref.update(editor.session.memory, (current) => ({
+          ...current,
+          dropped: 2,
+        }));
+        // The contract's refusal of the content is an answer, not a failure of the call:
+        // the round completes, and the count of dropped steps is reported.
+        const reported = yield* tick(editor.session);
+        expect(reported).toEqual(Option.some(new SyncDropped({ count: 2 })));
         yield* tick(editor.session);
         expect(yield* server.counts).toMatchObject({
           saveAttempts: 1,

@@ -1,5 +1,9 @@
 import type { VersionStale } from "@repo/backend/confect/editor/batch";
 import type {
+  DocumentInvalid,
+  DocumentTooLarge,
+} from "@repo/backend/confect/editor/document";
+import type {
   ClientTaken,
   SnapshotRefused,
 } from "@repo/backend/confect/editor/errors";
@@ -53,12 +57,13 @@ export interface SyncTransport {
   readonly open: (
     clientId: string
   ) => Effect.Effect<typeof OpenedDocument.Type, SyncFailed>;
+  /** The server refuses a snapshot whose rule is not due, or whose content the contract or the row size refuses. */
   readonly save: (snapshot: {
     readonly content: string;
     readonly version: number;
   }) => Effect.Effect<
     { readonly version: number },
-    SyncFailed | SnapshotRefused
+    DocumentInvalid | DocumentTooLarge | SnapshotRefused | SyncFailed
   >;
   readonly since: (
     clientId: string,
