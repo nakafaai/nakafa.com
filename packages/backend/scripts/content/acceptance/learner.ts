@@ -1,7 +1,10 @@
 import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import {
+  acceptanceRuntimeError,
+  retryFunctionTimeout,
+} from "@repo/backend/scripts/content/acceptance/error";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { makeSignature } from "better-auth/crypto";
 import { Duration, Effect, FileSystem, Schema } from "effect";
@@ -54,10 +57,14 @@ export const createAcceptanceLearner = Effect.fn(
       "Run pnpm acceptance:prepare and start acceptance before creating a learner."
     );
   }
-  const { token } = yield* createLearnerAccount(
-    (operation, args, sensitiveValues) =>
-      runLocalConvex(runtime, operation, args, sensitiveValues),
-    SESSION_LIFETIME
+  // A loaded machine pushes the local backend past its function time limit, and
+  // the learner's setup is not what a browser test checks, so it tries again.
+  const { token } = yield* retryFunctionTimeout(
+    createLearnerAccount(
+      (operation, args, sensitiveValues) =>
+        runLocalConvex(runtime, operation, args, sensitiveValues),
+      SESSION_LIFETIME
+    )
   );
   yield* writeSessionCookie(output, token);
 });
