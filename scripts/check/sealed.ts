@@ -34,24 +34,21 @@ const COMPONENT_READS = HashSet.make(
 /** The sealed module of Nina messages: its form, and every read of a stored row or file. */
 const SEALED_MODULE = "packages/backend/confect/nina/sealed.ts";
 const SEALED_FOLDER = "packages/backend/confect/nina/sealed/";
-/** The backend, whose product modules the rule judges. */
-const BACKEND_FOLDER = "packages/backend/";
 /** The backend test helpers, which read the stored form on purpose. */
 const BACKEND_TEST_FOLDER = "packages/backend/test/";
 const AGENT_RULE =
-  "read Nina messages and files through the sealed module in packages/backend/confect/nina (its thread, message, and file reads open each row, and its model messages convert opened rows), instead of listMessages, listUIMessages, docsToModelMessages, or getFile from @convex-dev/agent";
+  "read Nina messages and files through the sealed module, packages/backend/confect/nina/sealed (its thread, message, and file reads open each row, and its model messages convert opened rows), instead of listMessages, listUIMessages, docsToModelMessages, or getFile from @convex-dev/agent";
 const COMPONENT_RULE =
-  "read the Agent component's messages through the sealed module in packages/backend/confect/nina, instead of messages.listMessagesByThreadId or messages.getMessagesByIds, which return sealed rows as they are";
+  "read the Agent component's messages through the sealed module, packages/backend/confect/nina/sealed, instead of messages.listMessagesByThreadId or messages.getMessagesByIds, which return sealed rows as they are";
 
 /**
- * Whether the rule judges a module: backend product code, which is neither a
- * test, a backend test helper, nor the sealed module itself (ADR 0024).
+ * Whether the rule judges a module: every authored module, except tests, the
+ * backend test helpers, and the sealed module itself (ADR 0024). A read added
+ * in any module is reported, so the rule never depends on where a module sits.
  */
 function judges(file: string) {
   return (
-    file.startsWith(BACKEND_FOLDER) &&
-    !file.startsWith(BACKEND_TEST_FOLDER) &&
-    !TEST_PATTERN.test(file) &&
+    !(file.startsWith(BACKEND_TEST_FOLDER) || TEST_PATTERN.test(file)) &&
     file !== SEALED_MODULE &&
     !file.startsWith(SEALED_FOLDER)
   );

@@ -5,9 +5,9 @@ import { parseSources } from "#scripts/check/source";
 
 const MODULE = "packages/backend/confect/nina/messages/page.ts";
 const RULE_AGENT =
-  "read Nina messages and files through the sealed module in packages/backend/confect/nina (its thread, message, and file reads open each row, and its model messages convert opened rows), instead of listMessages, listUIMessages, docsToModelMessages, or getFile from @convex-dev/agent";
+  "read Nina messages and files through the sealed module, packages/backend/confect/nina/sealed (its thread, message, and file reads open each row, and its model messages convert opened rows), instead of listMessages, listUIMessages, docsToModelMessages, or getFile from @convex-dev/agent";
 const RULE_COMPONENT =
-  "read the Agent component's messages through the sealed module in packages/backend/confect/nina, instead of messages.listMessagesByThreadId or messages.getMessagesByIds, which return sealed rows as they are";
+  "read the Agent component's messages through the sealed module, packages/backend/confect/nina/sealed, instead of messages.listMessagesByThreadId or messages.getMessagesByIds, which return sealed rows as they are";
 
 /** Inspects one module with the sealed message policy alone. */
 function inspect(sourceText: string, file = MODULE) {
@@ -53,28 +53,38 @@ const rows = await ctx.runQuery(components.nina.messages.getMessagesByIds, ids);
     })
   );
 
-  it.effect(
-    "accepts the readers outside the backend, the backend test helpers, and tests",
-    () =>
-      Effect.gen(function* () {
-        const reader = `import { listUIMessages } from "@convex-dev/agent";
+  it.effect("accepts the backend test helpers and the tests", () =>
+    Effect.gen(function* () {
+      const reader = `import { listUIMessages } from "@convex-dev/agent";
 const rows = await ctx.runQuery(components.nina.messages.listMessagesByThreadId, args);`;
-        assert.deepStrictEqual(
-          yield* inspect(reader, "apps/www/lib/example.ts"),
-          []
-        );
-        assert.deepStrictEqual(
-          yield* inspect(reader, "packages/backend/test/nina.ts"),
-          []
-        );
-        assert.deepStrictEqual(
-          yield* inspect(
-            reader,
-            "packages/backend/confect/nina/memory/said.test.ts"
-          ),
-          []
-        );
-      })
+      assert.deepStrictEqual(
+        yield* inspect(reader, "packages/backend/test/nina.ts"),
+        []
+      );
+      assert.deepStrictEqual(
+        yield* inspect(
+          reader,
+          "packages/backend/confect/nina/memory/said.test.ts"
+        ),
+        []
+      );
+    })
+  );
+
+  it.effect("rejects a reader in a module outside the backend too", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect(
+          `import { listUIMessages } from "@convex-dev/agent";
+const rows = await ctx.runQuery(components.nina.messages.listMessagesByThreadId, args);`,
+          "apps/www/lib/example.ts"
+        ),
+        [
+          `apps/www/lib/example.ts: ${RULE_AGENT}.`,
+          `apps/www/lib/example.ts: ${RULE_COMPONENT}.`,
+        ]
+      );
+    })
   );
 
   it.effect("rejects a reader imported under any local name", () =>

@@ -256,13 +256,14 @@ table. A browser module never gains a run-time import only to name a type.
 
 ### Sealed message readers
 
-`sealed` reports each read of stored Nina messages and files that a backend
-module makes outside the sealed module, which owns the form and every read of
-those rows (ADR 0024). It judges backend product code: a module under
-`packages/backend/` that is not a test, not a helper under
-`packages/backend/test/` (which reads the stored form on purpose), and not
-`confect/nina/sealed.ts` or the `confect/nina/sealed/` folder. A type-only
-import reads nothing. Two constructions break it:
+`sealed` reports each read of stored Nina messages and files that a module
+makes outside the sealed module, which owns the form and every read of those
+rows (ADR 0024). It judges every authored module except a test (`TEST_PATTERN`),
+a helper under `packages/backend/test/` (which reads the stored form on
+purpose), and the sealed module itself: `confect/nina/sealed.ts` and the
+`confect/nina/sealed/` folder. The scope is the whole repository, so a read
+added in any module is reported. A type-only import reads nothing. Two
+constructions break it:
 
 - an import, a re-export, or an `export *` of `listMessages`,
   `listUIMessages`, `docsToModelMessages`, or `getFile` from
