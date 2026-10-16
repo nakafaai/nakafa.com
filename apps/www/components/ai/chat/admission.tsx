@@ -112,44 +112,59 @@ export function useChatAdmission({
     // No async transition holds the admission. React makes every transition that
     // starts while one is pending wait for its end, the navigation to another
     // chat included, so the learner could not leave until the answer came back.
-    setPrompt({ text: draft.text, files: draft.files ?? [] });
+    // The text goes first: if the store refuses the write, no prompt is left on its way.
     setText("");
-    return send(draft).then((receipt) => {
-      if (!receipt) {
-        // The words go back to the composer wherever the learner has gone
-        // meanwhile, ahead of anything typed since, so a refusal never loses
-        // them. Another account that has signed in since does not get them.
-        setPrompt(null);
-        if (session.getState().userId === submittedBy) {
-          setText((typed) => restoreRefusedText(query, typed));
+    setPrompt({ text: draft.text, files: draft.files ?? [] });
+    return send(draft)
+      .then((receipt) => {
+        if (!receipt) {
+          // The words go back to the composer wherever the learner has gone
+          // meanwhile, ahead of anything typed since, so a refusal never loses
+          // them. Another account that has signed in since does not get them.
+          setPrompt(null);
+          setText((typed) =>
+            restoreRefusedText({
+              refused: query,
+              sentBy: submittedBy,
+              signedInAs: session.getState().userId,
+              typed,
+            })
+          );
+          return false;
         }
-        return false;
-      }
-      if (activation.current !== submittedFrom || !shownNow.current) {
-        // The learner left, or closed the surface, before the answer came back.
-        // The chat exists now, so they are told once and may open it, but they
-        // are not moved. The admission has settled, so its prompt is no longer
-        // on its way, even if the surface is shown again before it hides.
-        setPrompt(null);
-        toast(t("admitted-elsewhere"), {
-          action: {
-            label: t("open-chat"),
-            onClick: () => onComplete(receipt.chatId),
-          },
+        if (activation.current !== submittedFrom || !shownNow.current) {
+          // The learner left, or closed the surface, before the answer came back.
+          // The chat exists now, so they are told once and may open it, but they
+          // are not moved. The admission has settled, so its prompt is no longer
+          // on its way, even if the surface is shown again before it hides.
+          setPrompt(null);
+          toast(t("admitted-elsewhere"), {
+            action: {
+              label: t("open-chat"),
+              onClick: () => onComplete(receipt.chatId),
+            },
+          });
+          return true;
+        }
+        setPrompt({
+          text: receipt.prompt.text,
+          files: Arr.map(receipt.prompt.files, ({ filename, ...file }) => ({
+            ...file,
+            type: "file",
+            ...(filename === undefined ? {} : { filename }),
+          })),
         });
+        onComplete(receipt.chatId);
         return true;
-      }
-      setPrompt({
-        text: receipt.prompt.text,
-        files: Arr.map(receipt.prompt.files, ({ filename, ...file }) => ({
-          ...file,
-          type: "file",
-          ...(filename === undefined ? {} : { filename }),
-        })),
+      })
+      .catch((defect: unknown) => {
+        // A defect ends the admission without an answer, so its prompt leaves at
+        // once and the composer is not held. The defect still reaches the caller.
+        // The words stay out of the composer: the server may already have admitted
+        // them, and a second send would repeat the prompt.
+        setPrompt(null);
+        return Promise.reject(defect);
       });
-      onComplete(receipt.chatId);
-      return true;
-    });
   }
 
   return { disabled: busy || gate.pending, prompt, promptId, submit };

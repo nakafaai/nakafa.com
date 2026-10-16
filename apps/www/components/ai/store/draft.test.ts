@@ -14,6 +14,9 @@ afterEach(() => {
   window.sessionStorage.clear();
 });
 
+/** The learner who sent a refused prompt is still the one signed in when it returns. */
+const sameLearner = { sentBy: "learner-a", signedInAs: "learner-a" };
+
 /** Reads the saved draft through the resolver's public path, with no new input. */
 function readSavedDraft(ownerId: string | null) {
   return resolveAiDraftText({
@@ -154,19 +157,56 @@ describe("ai/store/draft", () => {
   );
 
   it("gives a refused prompt back alone when nothing new was typed", () => {
-    expect(restoreRefusedText("What is a limit?", "")).toBe("What is a limit?");
-    expect(restoreRefusedText("What is a limit?", "   ")).toBe(
-      "What is a limit?"
-    );
-    expect(restoreRefusedText("What is a limit?", "What is a limit? ")).toBe(
-      "What is a limit?"
-    );
+    expect(
+      restoreRefusedText({
+        refused: "What is a limit?",
+        typed: "",
+        ...sameLearner,
+      })
+    ).toBe("What is a limit?");
+    expect(
+      restoreRefusedText({
+        refused: "What is a limit?",
+        typed: "   ",
+        ...sameLearner,
+      })
+    ).toBe("What is a limit?");
+    expect(
+      restoreRefusedText({
+        refused: "What is a limit?",
+        typed: "What is a limit? ",
+        ...sameLearner,
+      })
+    ).toBe("What is a limit?");
   });
 
   it("keeps a refused prompt ahead of what the learner typed meanwhile", () => {
-    expect(restoreRefusedText("What is a limit?", "And a derivative?")).toBe(
-      "What is a limit?\n\nAnd a derivative?"
-    );
+    expect(
+      restoreRefusedText({
+        refused: "What is a limit?",
+        typed: "And a derivative?",
+        ...sameLearner,
+      })
+    ).toBe("What is a limit?\n\nAnd a derivative?");
+  });
+
+  it("does not give a refused prompt to another learner, or to nobody after sign-out", () => {
+    expect(
+      restoreRefusedText({
+        refused: "What is a limit?",
+        sentBy: "learner-a",
+        signedInAs: "learner-b",
+        typed: "And a derivative?",
+      })
+    ).toBe("And a derivative?");
+    expect(
+      restoreRefusedText({
+        refused: "What is a limit?",
+        sentBy: "learner-a",
+        signedInAs: null,
+        typed: "",
+      })
+    ).toBe("");
   });
 });
 

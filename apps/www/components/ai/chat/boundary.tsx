@@ -1,9 +1,18 @@
 "use client";
 
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
-import { ChatFailure } from "@/components/ai/chat/failure";
+
+// The failure card holds the sign-in chain, which only a signed-out visitor who
+// cannot read a chat needs. It loads when a card is needed, so the first
+// JavaScript of every chat route does not carry it.
+const ChatFailure = dynamic(
+  () =>
+    import("@/components/ai/chat/failure").then((module) => module.ChatFailure),
+  { loading: () => null, ssr: false }
+);
 
 /**
  * The boundary of every chat surface. A failure shows the failure card in

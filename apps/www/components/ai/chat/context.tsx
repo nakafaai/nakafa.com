@@ -2,7 +2,6 @@
 
 import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DateTime, Effect, Fiber } from "effect";
 import {
@@ -28,6 +27,7 @@ import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { restoreRefusedText } from "@/components/ai/store/draft";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
+import { useAuthSessionStore } from "@/components/auth/session";
 import { useViewer } from "@/lib/identity/client";
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -54,13 +54,14 @@ function useChatState(
     turnsStatus,
   } = useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
-  // A send, stop or retry on its way holds these as plain state. A transition
-  // would hold them until the server answers, and React makes every transition
-  // started meanwhile wait for a pending one: the learner's next navigation
-  // would wait for the answer too.
-  const [isPending, setPending] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
-  const [draft, setDraft] = useState<NinaMessage | null>(null);
+  const session = useAuthSessionStore();
+  // A send, stop or retry on its way is held by the chat store as plain state. A
+  // transition would hold it until the server answers, and React makes every
+  // transition started meanwhile wait for a pending one: the learner's next
+  // navigation would wait for the answer too.
+  const isPending = useStore(store, (state) => state.isPending);
+  const cancelling = useStore(store, (state) => state.cancelling);
+  const draft = useStore(store, (state) => state.draft);
   const setText = useAi((state) => state.setText);
   const opening = useAi(
     (state) => state.openingChat?.receipt.chatId === chatId
@@ -106,7 +107,7 @@ function useChatState(
       if (now.isPending || now.loading) {
         return;
       }
-      const { setStopFailure } = store.getState();
+      const { setCancelling, setPending, setStopFailure } = store.getState();
       setStopFailure(null);
       const stoppedOrder = now.turn?.order;
       const cancelTurn = now.cancelChat.withOptimisticUpdate(
@@ -143,6 +144,7 @@ function useChatState(
     /** Sends the same prompt again, or the latest one when no turn is named. */
     retry(order?: number) {
       const now = latest.current;
+      const { setPending } = store.getState();
       const target = order ?? now.turn?.order;
       if (
         target === undefined ||
@@ -167,10 +169,10 @@ function useChatState(
      * readers: the optimistic prompt, which shows until the admission settles,
      * and the composer, which keeps the learner's text and files until it knows
      * the prompt was admitted. A prompt that was not admitted returns to the
-     * composer ahead of anything the learner has typed since. The text
-     * is one draft for every chat, so a prompt that fails after the learner
-     * opened another chat returns to the composer open then, and its files
-     * stay with the composer they were added in.
+     * composer ahead of anything the learner has typed since, and only to the
+     * learner who sent it. The text is one draft for every chat, so a prompt
+     * that fails after the learner opened another chat returns to the composer
+     * open then, and its files stay with the composer they were added in.
      */
     send(prompt: NinaDraft) {
       const now = latest.current;
@@ -178,6 +180,8 @@ function useChatState(
       if (!chat || now.busy || now.isPending || now.loading) {
         return false;
       }
+      const { setDraft, setPending } = store.getState();
+      const sentBy = session.getState().userId;
       now.setText((previous) =>
         previous.trim() === prompt.text.trim() ? "" : previous
       );
@@ -188,7 +192,14 @@ function useChatState(
             admitted
               ? Effect.void
               : Effect.sync(() =>
-                  now.setText((typed) => restoreRefusedText(prompt.text, typed))
+                  now.setText((typed) =>
+                    restoreRefusedText({
+                      refused: prompt.text,
+                      sentBy,
+                      signedInAs: session.getState().userId,
+                      typed,
+                    })
+                  )
                 )
           )
         )
