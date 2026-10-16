@@ -32,13 +32,17 @@ export const formatCardCode = (code: string) =>
 
 /**
  * Reads a code as it was typed: spaces and dashes drop, and letters take any
- * case. It is `None` when what is left is not a code of the alphabet.
+ * case. As Crockford base32 reads them, O is 0 and I and L are 1, so a code typed
+ * with those letters still reads. U is not a symbol of the alphabet and stays
+ * refused. It is `None` when what is left is not a code of the alphabet.
  */
 export const readCardCode = (input: string) =>
   pipe(
     input,
     Str.toUpperCase,
     Str.replaceAll(/[\s-]/gu, ""),
+    Str.replaceAll(/O/gu, "0"),
+    Str.replaceAll(/[IL]/gu, "1"),
     Schema.decodeOption(CardCode)
   );
 

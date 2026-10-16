@@ -34,10 +34,18 @@ describe("identity/code", () => {
     expect(readCardCode(" 0123a-5678b ")).toEqual(Option.some("0123A5678B"));
   });
 
-  it("refuses a typed code with a letter the alphabet leaves out", () => {
-    for (const letter of ["I", "L", "O", "U"]) {
-      expect(readCardCode(`0123${letter}-56789`)).toEqual(Option.none());
-    }
+  it("reads O as 0 and I and L as 1, in either case", () => {
+    expect(readCardCode("0123O-56789")).toEqual(Option.some("0123056789"));
+    expect(readCardCode("0123o-56789")).toEqual(Option.some("0123056789"));
+    expect(readCardCode("I123456789")).toEqual(Option.some("1123456789"));
+    expect(readCardCode("i123456789")).toEqual(Option.some("1123456789"));
+    expect(readCardCode("L123456789")).toEqual(Option.some("1123456789"));
+    expect(readCardCode("l123456789")).toEqual(Option.some("1123456789"));
+  });
+
+  it("refuses U in either case, because the alphabet leaves it out", () => {
+    expect(readCardCode("0123U-56789")).toEqual(Option.none());
+    expect(readCardCode("0123u-56789")).toEqual(Option.none());
   });
 
   it("refuses a typed code of the wrong length or with other characters", () => {
