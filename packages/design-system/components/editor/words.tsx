@@ -10,11 +10,12 @@ import {
   editorScroll,
 } from "@repo/design-system/components/editor/frame";
 import {
-  isEmptyMarker,
-  itemTokens,
-} from "@repo/design-system/components/editor/plain";
+  isEmptyDocument,
+  isEmptyText,
+} from "@repo/design-system/components/editor/hint";
+import { itemTokens } from "@repo/design-system/components/editor/plain";
 import { decodeReferences } from "@repo/design-system/components/editor/references";
-import { Array as Arr, Match, Option, String as Str } from "effect";
+import { Array as Arr, Match, String as Str } from "effect";
 import type { Token, Tokens } from "marked-tiptap";
 
 /**
@@ -34,7 +35,13 @@ export function EditorPreview({
   markdown: string;
   placeholder: string;
 }) {
-  const blocks = blocksOf(markdown);
+  const blocks = Arr.filter(
+    blocksOf(markdown),
+    ({ token }) => token.type !== "space"
+  );
+  const hint = isEmptyDocument(Arr.map(blocks, ({ token }) => token))
+    ? placeholder
+    : undefined;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -43,39 +50,14 @@ export function EditorPreview({
       </div>
       <div className={editorScroll()}>
         <div className={editorDocument()} dir="auto">
-          {isEmptyDocument(blocks) ? (
+          {Arr.isReadonlyArrayEmpty(blocks) ? (
             <EmptyParagraph placeholder={placeholder} />
           ) : (
-            <Blocks blocks={blocks} />
+            <Blocks blocks={blocks} hint={hint} />
           )}
         </div>
       </div>
     </div>
-  );
-}
-
-/**
- * Whether the editor shows its hint: no block but spacing, or one empty
- * paragraph, which is the only document the editor shows the hint for.
- */
-function isEmptyDocument(blocks: readonly Keyed<Token>[]) {
-  const visible = Arr.filter(blocks, ({ token }) => token.type !== "space");
-
-  return (
-    Arr.isReadonlyArrayEmpty(visible) ||
-    (Arr.length(visible) === 1 &&
-      Option.exists(Arr.head(visible), ({ token }) => isEmptyBlock(token)))
-  );
-}
-
-/** Whether a block is a paragraph that holds no words. */
-function isEmptyBlock(token: Token) {
-  return Match.value(token).pipe(
-    Match.when(
-      { type: "paragraph" },
-      ({ tokens }) => Arr.isReadonlyArrayEmpty(tokens) || isEmptyMarker(tokens)
-    ),
-    Match.orElse(() => false)
   );
 }
 
@@ -88,16 +70,34 @@ function EmptyParagraph({ placeholder }: { placeholder: string }) {
   );
 }
 
-/** The blocks of one level of the document, each with the key of its place. */
-function Blocks({ blocks }: { blocks: readonly Keyed<Token>[] }) {
-  return Arr.map(blocks, ({ key, token }) => <Block key={key} token={token} />);
+/** The class and the placeholder that show the editor's hint in an empty block, or none. */
+function hintOf(hint: string | undefined) {
+  return hint === undefined
+    ? {}
+    : { className: "is-editor-empty", "data-placeholder": hint };
+}
+
+/**
+ * The blocks of one level of the document, each with the key of its place. The
+ * first block takes `hint`, the placeholder of an empty document.
+ */
+function Blocks({
+  blocks,
+  hint,
+}: {
+  blocks: readonly Keyed<Token>[];
+  hint?: string | undefined;
+}) {
+  return Arr.map(blocks, ({ key, token }, index) => (
+    <Block hint={index === 0 ? hint : undefined} key={key} token={token} />
+  ));
 }
 
 /** One block of the document. A block the editor does not hold, such as spacing, draws nothing. */
-function Block({ token }: { token: Token }) {
+function Block({ hint, token }: { hint?: string | undefined; token: Token }) {
   return Match.value(token).pipe(
     Match.when({ type: "paragraph" }, ({ tokens }) => (
-      <p dir="auto">
+      <p dir="auto" {...hintOf(hint)}>
         <Textblock tokens={tokens} />
       </p>
     )),
@@ -107,7 +107,7 @@ function Block({ token }: { token: Token }) {
       </p>
     )),
     Match.when({ type: "heading" }, ({ depth, tokens }) => (
-      <Heading depth={depth} tokens={tokens} />
+      <Heading depth={depth} hint={hint} tokens={tokens} />
     )),
     Match.when({ type: "list" }, (list) => <List list={list} />),
     Match.when({ type: "blockquote" }, ({ tokens }) => (
@@ -116,7 +116,7 @@ function Block({ token }: { token: Token }) {
       </blockquote>
     )),
     Match.when({ type: "code" }, ({ lang, text }) => (
-      <pre dir="auto">
+      <pre dir="auto" {...hintOf(hint)}>
         <code className={lang ? `language-${lang}` : undefined}>{text}</code>
       </pre>
     )),
@@ -132,20 +132,28 @@ function Block({ token }: { token: Token }) {
 }
 
 /** A heading. The editor has three levels, and a deeper heading is drawn as the first. */
-function Heading({ depth, tokens }: { depth: number; tokens: Token[] }) {
+function Heading({
+  depth,
+  hint,
+  tokens,
+}: {
+  depth: number;
+  hint?: string | undefined;
+  tokens: Token[];
+}) {
   return Match.value(depth).pipe(
     Match.when(2, () => (
-      <h2 dir="auto">
+      <h2 dir="auto" {...hintOf(hint)}>
         <Textblock tokens={tokens} />
       </h2>
     )),
     Match.when(3, () => (
-      <h3 dir="auto">
+      <h3 dir="auto" {...hintOf(hint)}>
         <Textblock tokens={tokens} />
       </h3>
     )),
     Match.orElse(() => (
-      <h1 dir="auto">
+      <h1 dir="auto" {...hintOf(hint)}>
         <Textblock tokens={tokens} />
       </h1>
     ))
@@ -184,7 +192,11 @@ function List({ list }: { list: Tokens.List }) {
   );
 }
 
-/** One item of a list: a task with its check box, or the blocks the item holds. */
+/**
+ * One item of a list: a task with its check box, or the blocks the item holds.
+ * The preview changes no check: a controlled box with no change handler takes a
+ * click back, as the editor's own box does when the editor is read-only.
+ */
 function ListItem({ item }: { item: Tokens.ListItem }) {
   if (!item.task) {
     return (
@@ -199,7 +211,7 @@ function ListItem({ item }: { item: Tokens.ListItem }) {
   return (
     <li data-checked={checked} data-type="taskItem" dir="auto">
       <label>
-        <input defaultChecked={checked} tabIndex={-1} type="checkbox" />
+        <input checked={checked} readOnly tabIndex={-1} type="checkbox" />
         <span />
       </label>
       <div>
@@ -215,7 +227,7 @@ function ListItem({ item }: { item: Tokens.ListItem }) {
 
 /** The inline words of a block. A block with no words holds a break, as the editor's block does. */
 function Textblock({ tokens }: { tokens: readonly Token[] }) {
-  if (Arr.isReadonlyArrayEmpty(tokens) || isEmptyMarker(tokens)) {
+  if (isEmptyText(tokens)) {
     return <br />;
   }
 
