@@ -205,7 +205,8 @@ stays closed on every host.
   never a URL.
 - **Login card.** `loginCards` keeps one row per Person: the HMAC-SHA-256 of the
   canonical code under `LOGIN_CARD_SECRET`, read through `Config` and never
-  printed or stored, its issuer, its dates, and `redeemedAt`. The code has ten
+  printed or stored (declared in `convex/convex.config.ts`, so Convex refuses a
+  push to a deployment without it), its issuer, its dates, and `redeemedAt`. The code has ten
   characters of Crockford base32. It is drawn from Effect's `Crypto` service,
   because the default `Random` is not secure. A card works for `CARD_TERM`, 14
   days. Issuing or reissuing replaces the row, so the old code matches nothing.
