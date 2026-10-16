@@ -93,6 +93,7 @@ const previewMocks = vi.hoisted(() => ({
 vi.mock("@repo/internationalization/src/routing", () => ({
   previewRouting: { defaultLocale: "en", locales: ["en", "id", "de", "fr"] },
   routing: { defaultLocale: "en", locales: ["en", "id", "de"] },
+  schoolRouting: { locales: ["en", "id", "de"] },
 }));
 vi.mock("@nakafa/aksara-contracts/locale", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -196,6 +197,15 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe(
       "http://localhost:3000/en/search"
     );
+  });
+  it("rewrites a school host into the school tree before the public routes read it", async () => {
+    const response = await proxy(
+      new NextRequest("https://harapan.nakafa.com/classes")
+    );
+
+    expect(mockLocaleRouting.activeMiddleware).toHaveBeenCalledOnce();
+    expect(response.headers.get("x-robots-tag")).toBe("noindex");
+    expect(runtimeMocks.readRedirect).not.toHaveBeenCalled();
   });
   it.each(redirectCases)("permanently redirects %s", async (...args) => {
     const [source, target, init] = args;

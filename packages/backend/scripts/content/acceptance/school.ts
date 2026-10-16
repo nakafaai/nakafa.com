@@ -1,0 +1,73 @@
+import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import { JsonTextSchema } from "@repo/utilities/json";
+import { Crypto, Effect, FileSystem, Schema } from "effect";
+import { Hex } from "effect/encoding";
+
+/** The school that a browser test opens: its address and its name. */
+const SchoolFixture = Schema.fromJsonString(
+  Schema.Struct({ name: Schema.String, slug: Schema.String })
+);
+/** One Convex function's arguments as the CLI takes them, JSON text. */
+const encodeArguments = Schema.encodeEffect(JsonTextSchema);
+
+/**
+ * The address of the first Owner of a school opened by `createAcceptanceSchool`.
+ * `owner` signs in the account that holds it, so the school and its Owner
+ * agree on one address.
+ */
+export const ownerAddress = (slug: string) =>
+  `owner-${slug}@acceptance.example.test`;
+
+/**
+ * Opens one school in the running local acceptance backend, the way Nakafa
+ * staff open one: `tenancy/provision:open` writes the school, its unit, and an
+ * invite for its first Owner, whose address matches no account, so the school
+ * has no member yet. The school's address and name go to `output` for a
+ * browser test. Each call opens a new school, so every test starts from one
+ * that no test has used.
+ */
+export const createAcceptanceSchool = Effect.fn(
+  "contentAcceptance.createSchool"
+)(function* (root: string, output: string) {
+  const runtime = yield* readLocalRuntime(root);
+  if (runtime === undefined) {
+    return yield* acceptanceRuntimeError(
+      "Run pnpm acceptance:prepare and start acceptance before creating a school."
+    );
+  }
+  const crypto = yield* Crypto.Crypto;
+  const id = Hex.encode(yield* crypto.randomBytes(4));
+  const school = { name: `Sekolah ${id}`, slug: `acc-${id}` };
+  const args = yield* encodeArguments({
+    contract: {
+      contentLicense: "1.0",
+      dpaVersion: "2026-10",
+      modules: ["classes", "exams"],
+      plan: "tenant",
+    },
+    country: "ID",
+    currency: "IDR",
+    kind: "school",
+    name: school.name,
+    owner: { email: ownerAddress(school.slug), name: "Acceptance Owner" },
+    slug: school.slug,
+    units: [
+      {
+        contentLanguage: "id",
+        level: "sma",
+        name: `SMA ${school.name}`,
+        timeZone: "Asia/Jakarta",
+      },
+    ],
+  });
+  yield* runLocalConvex(runtime, "tenancy/provision:open", [
+    "run",
+    "tenancy/provision:open",
+    args,
+  ]);
+  const fixture = yield* Schema.encodeEffect(SchoolFixture)(school);
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.writeFileString(output, fixture, { flag: "wx", mode: 0o600 });
+});

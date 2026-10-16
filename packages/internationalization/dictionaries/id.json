@@ -1,4 +1,29 @@
 {
+  "School": {
+    "account-settings": "Pengaturan akun",
+    "back-to-learning": "Pindah ke Nakafa belajar",
+    "for-you": "Untukmu",
+    "home": "Beranda",
+    "language": "Bahasa",
+    "nina-memory": "Memori Nina",
+    "role": {
+      "admin": "Admin",
+      "auditor": "Auditor",
+      "counselor": "Konselor",
+      "deputy": "Wakil kepala sekolah",
+      "guardian": "Wali",
+      "integration": "Integrasi",
+      "owner": "Pemilik",
+      "principal": "Kepala sekolah",
+      "proctor": "Pengawas",
+      "staff": "Staf",
+      "student": "Siswa",
+      "teacher": "Guru"
+    },
+    "sign-in-title": "Masuk ke {school}",
+    "signed-in-as": "Kamu masuk sebagai {role} di {school}.",
+    "signed-in-to": "Kamu masuk ke {school}."
+  },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
     "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",

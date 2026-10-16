@@ -34,6 +34,7 @@ import {
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
+import { routeSchoolRequest } from "@/lib/routing/school/request";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
@@ -45,8 +46,8 @@ const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
  *
  * The proxy keeps platform concerns here: PostHog bypasses, canonical slash
- * redirects, public discovery bypasses, locale middleware, and response
- * rewrites. The llms route seam handles Markdown negotiation, while the route
+ * redirects, school host rewrites (ADR 0026), public discovery bypasses, locale
+ * middleware, and response rewrites. The llms route seam handles Markdown negotiation, while the route
  * handler owns content lookup and final response status.
  *
  * References:
@@ -60,11 +61,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.length > 1 && pathname.endsWith("/")) {
-    const redirectUrl = new URL(request.url);
-    redirectUrl.pathname = pathname.replace(TRAILING_SLASH_PATTERN, "");
+  const slashRedirect = redirectTrailingSlash(request);
+  if (slashRedirect) {
+    return slashRedirect;
+  }
 
-    return NextResponse.redirect(redirectUrl, 308);
+  const schoolResponse = routeSchoolRequest(request);
+  if (schoolResponse) {
+    return schoolResponse;
   }
 
   const isRetired = await Effect.runPromise(
@@ -223,6 +227,19 @@ function rewriteToLlmsMdx(
   return response;
 }
 
+/** Redirects a path with a trailing slash to its one canonical spelling, as a 308. */
+function redirectTrailingSlash(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (pathname.length <= 1 || !pathname.endsWith("/")) {
+    return null;
+  }
+
+  const redirectUrl = new URL(request.url);
+  redirectUrl.pathname = pathname.replace(TRAILING_SLASH_PATTERN, "");
+
+  return NextResponse.redirect(redirectUrl, 308);
+}
+
 /** Answers a retired or unknown resource in plain text that search engines must not index. */
 function plainTextAnswer(status: 404 | 410, body: string) {
   return new Response(body, {
@@ -291,7 +308,11 @@ function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
  *   `/robots.txt`, `/rss.xml`, the sitemaps, `/skill.md`, the IndexNow key and
  *   the agent skill files. The proxy passes each of them on by name. The first
  *   pattern holds the ones that end in `.md` or `.json`, and the root file
- *   pattern the others.
+ *   pattern the others. These files are the same on every host, so a school
+ *   host and a refused host such as `www` get the file of the main site. Every
+ *   path that the matcher leaves out reaches the app on every host, a refused
+ *   host included, so a refused host gets the 307 only for the paths that stay
+ *   in.
  *
  * What stays in, and what the proxy does with it:
  *

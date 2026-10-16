@@ -1,4 +1,29 @@
 {
+  "School": {
+    "account-settings": "Account settings",
+    "back-to-learning": "Back to Nakafa learning",
+    "for-you": "For you",
+    "home": "Home",
+    "language": "Language",
+    "nina-memory": "Nina memory",
+    "role": {
+      "admin": "Admin",
+      "auditor": "Auditor",
+      "counselor": "Counselor",
+      "deputy": "Deputy principal",
+      "guardian": "Guardian",
+      "integration": "Integration",
+      "owner": "Owner",
+      "principal": "Principal",
+      "proctor": "Proctor",
+      "staff": "Staff",
+      "student": "Student",
+      "teacher": "Teacher"
+    },
+    "sign-in-title": "Sign in to {school}",
+    "signed-in-as": "You are signed in as {role} at {school}.",
+    "signed-in-to": "You are signed in to {school}."
+  },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
     "description": "Study math, science, computer science, AI, and exam prep on Nakafa. Free lessons from K-12 to university with practice questions and explanations.",

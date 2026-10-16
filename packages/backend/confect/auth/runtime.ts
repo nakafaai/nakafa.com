@@ -20,6 +20,11 @@ import {
   accountDeletionPreparationOutcome,
 } from "@repo/backend/confect/auth/deletion/spec";
 import {
+  hostOnlySessionCookiePlugin,
+  readHostOnlySessionCookieName,
+  readSchoolTrustedOrigins,
+} from "@repo/backend/confect/auth/host";
+import {
   disabledTokenPaths,
   tokenRoutesDisabled,
 } from "@repo/backend/confect/auth/routes";
@@ -231,7 +236,13 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
     const options = createAuthOptions(ctx);
     return betterAuth({
       ...options,
+      advanced: {
+        // The cookie domain is the host of `SITE_URL`, so every school host
+        // under it shares the session (ADR 0026).
+        crossSubDomainCookies: { enabled: true },
+      },
       baseURL: siteUrl.href,
+      trustedOrigins: readSchoolTrustedOrigins(siteUrl),
       socialProviders: {
         google: {
           clientId: google.clientId,
@@ -257,6 +268,7 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
             );
           },
         },
+        hostOnlySessionCookiePlugin(readHostOnlySessionCookieName(siteUrl)),
       ],
     });
   });

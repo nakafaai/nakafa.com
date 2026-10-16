@@ -9,10 +9,29 @@ import { Duration, Effect, FileSystem, Schema } from "effect";
 /** Better Auth's session cookie under its default name on plain HTTP. */
 const SESSION_COOKIE = "better-auth.session_token";
 /** Outlives any browser suite run; the whole runtime is discarded after. */
-const SESSION_LIFETIME = Duration.hours(24);
+export const SESSION_LIFETIME = Duration.hours(24);
 /** The cookie file a browser test reads back before it signs in. */
 const SessionCookie = Schema.fromJsonString(
   Schema.Struct({ name: Schema.String, value: Schema.String })
+);
+
+/**
+ * Writes the session cookie of one session token, mode 600, for a browser test
+ * to send. Better Auth signs its cookie with HMAC-SHA256, which Effect's Crypto
+ * does not provide, so Node's signs it.
+ */
+export const writeSessionCookie = Effect.fn("contentAcceptance.writeCookie")(
+  function* (output: string, token: string) {
+    const signature = createHmac("sha256", LOCAL_AUTH_SECRET)
+      .update(token)
+      .digest("base64");
+    const cookie = yield* Schema.encodeEffect(SessionCookie)({
+      name: SESSION_COOKIE,
+      value: encodeURIComponent(`${token}.${signature}`),
+    });
+    const fs = yield* FileSystem.FileSystem;
+    yield* fs.writeFileString(output, cookie, { flag: "wx", mode: 0o600 });
+  }
 );
 
 /**
@@ -38,15 +57,5 @@ export const createAcceptanceLearner = Effect.fn(
       runLocalConvex(runtime, operation, args, sensitiveValues),
     SESSION_LIFETIME
   );
-  // Better Auth signs its cookie with HMAC-SHA256, which Effect's Crypto does
-  // not provide, so Node's signs it.
-  const signature = createHmac("sha256", LOCAL_AUTH_SECRET)
-    .update(token)
-    .digest("base64");
-  const cookie = yield* Schema.encodeEffect(SessionCookie)({
-    name: SESSION_COOKIE,
-    value: encodeURIComponent(`${token}.${signature}`),
-  });
-  const fs = yield* FileSystem.FileSystem;
-  yield* fs.writeFileString(output, cookie, { flag: "wx", mode: 0o600 });
+  yield* writeSessionCookie(output, token);
 });
