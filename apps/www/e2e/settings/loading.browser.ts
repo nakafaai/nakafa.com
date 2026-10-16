@@ -179,11 +179,13 @@ const keepsTheTaskCheck = Effect.fn("NakafaE2E.memoryKeepsTaskCheck")(
       // The label wraps the box, so a click on the label is a click on the box.
       await panelOf(page).locator('[data-type="taskItem"] label').click();
       await expect(box).not.toBeChecked();
+      await expect(editorOf(page)).toHaveCount(0);
 
       await release();
-      await expect(panelOf(page).getByRole("checkbox")).not.toBeChecked({
+      await expect(editorOf(page)).toContainText(MILK, {
         timeout: readinessTimeoutMilliseconds,
       });
+      await expect(editorOf(page).getByRole("checkbox")).not.toBeChecked();
     });
   }
 );
