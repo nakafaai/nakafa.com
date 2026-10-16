@@ -7,6 +7,7 @@ import {
   getBiologySceneColors,
   isBiologyItemIndex,
 } from "@repo/design-system/components/contents/biology/data";
+import { biologyReadings } from "@repo/design-system/components/contents/biology/readings";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -87,8 +88,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   const colors = getBiologySceneColors(resolvedTheme);
   const selectedItem = labels.items[selectedIndex];
   const hasMultipleItems = labels.items.length > 1;
-  const hasFacts =
-    selectedItem.focus !== undefined || selectedItem.takeaway !== undefined;
+  const readings = biologyReadings(selectedItem, labels);
 
   /**
    * Keeps one tab active when ToggleGroup emits an empty value.
@@ -172,22 +172,17 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
       </VisualCardBody>
 
       <VisualCardFooter>
-        {hasFacts ? (
+        {readings.length === 0 ? null : (
           <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            {selectedItem.focus === undefined ? null : (
+            {Arr.map(readings, (reading) => (
               <VisualFact
-                label={labels.focusLabel}
-                value={selectedItem.focus}
+                key={reading.key}
+                label={reading.label}
+                value={reading.value}
               />
-            )}
-            {selectedItem.takeaway === undefined ? null : (
-              <VisualFact
-                label={labels.takeawayLabel}
-                value={selectedItem.takeaway}
-              />
-            )}
+            ))}
           </dl>
-        ) : null}
+        )}
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
