@@ -1,4 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
@@ -21,9 +24,9 @@ const FORBIDDEN = {
   code: "FORBIDDEN",
   message: "This chat is not available.",
 };
-const FAILED_TITLE = "Something went wrong";
-const FAILED_COPY = "Nakafa could not load this chat";
-const RETRY = "Retry";
+const FAILED_TITLE = en.Ai["chat-failed"];
+const FAILED_COPY = en.Ai["chat-failed-description"];
+const RETRY = en.Ai.retry;
 /** The Google sign-in button a signed-out visitor is offered. */
 const GOOGLE_SIGN_IN = /google/i;
 /** The Next.js code chunks, and the request the new chat page's weather widget makes. */

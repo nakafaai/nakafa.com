@@ -4,6 +4,9 @@ import {
   type Page,
   type Request,
 } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import {
   ANSWER_MILLISECONDS,
@@ -18,9 +21,9 @@ import { SHARE_ENTRY } from "@/lib/share/fragment";
 /** The shape of a share token: 32 random bytes in URL-safe Base64, 43 characters. */
 export const SHARE_TOKEN = /^[A-Za-z0-9_-]{43}$/u;
 /** The title of the card a chat the viewer may not read shows, on the page and in the sheet. */
-export const ACCESS_TITLE = "Access denied";
+export const ACCESS_TITLE = en.Ai["private-chat-error"];
 /** The description of that card, which says the chat is not available to this viewer. */
-export const UNAVAILABLE_COPY = "This chat is not available to you";
+export const UNAVAILABLE_COPY = en.Ai["chat-unavailable"];
 /** The path of the proxy that forwards a page's analytics to the runtime's stand-in. */
 const ANALYTICS_PATH = "/_nakafa/";
 

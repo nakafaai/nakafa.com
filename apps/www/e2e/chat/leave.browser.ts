@@ -1,4 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect } from "effect";
 import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
@@ -24,8 +27,8 @@ const FIRST = {
 const FOLLOW_UP = "And what about the tangent?";
 /** The page of a chat, where the new chat opens once the learner asks for it. */
 const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
-const NOTICE = "Nina is answering in a new chat";
-const OPEN = "Open chat";
+const NOTICE = en.Ai["admitted-elsewhere"];
+const OPEN = en.Ai["open-chat"];
 
 /** The page of the new chat: the chat page holds its conversation in the main pane. */
 const onThePage = (page: Page) => page.locator("main main");

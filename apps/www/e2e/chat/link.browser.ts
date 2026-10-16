@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { AuthFailure, AuthReadError } from "@repo/backend/confect/auth/spec";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect, Schema } from "effect";
 import { ANSWER_MILLISECONDS } from "@/e2e/support/changes";
 import { openChatPage, runOnPage, SHARE_TOKEN_QUERY } from "@/e2e/support/chat";
@@ -105,7 +108,7 @@ test.describe("A share link at 1440px", () => {
 
           // The server recovers, the retry loads the link, and the owner copies it.
           owner.changes.recoverQuery();
-          await dialog.getByRole("button", { name: "Retry" }).click();
+          await dialog.getByRole("button", { name: en.Ai.retry }).click();
           await expect(copy).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
           await copy.click();
           const link = await page.evaluate(() =>
