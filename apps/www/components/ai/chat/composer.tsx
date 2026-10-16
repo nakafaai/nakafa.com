@@ -40,7 +40,8 @@ export function ChatComposer({
       cancel();
       return false;
     }
-    if (!message.text?.trim() || isUserPending) {
+    const text = message.text?.trim();
+    if (!text || isUserPending) {
       return false;
     }
     if (viewer === null) {
@@ -49,7 +50,7 @@ export function ChatComposer({
     }
 
     return send({
-      text: message.text,
+      text,
       ...(message.files === undefined ? {} : { files: message.files }),
     });
   }

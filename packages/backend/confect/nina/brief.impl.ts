@@ -1,10 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import { QueryCtx } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/nina/brief.spec";
 import { saidOf } from "@repo/backend/confect/nina/memory/said";
 import { recallLearner } from "@repo/backend/confect/nina/memory/turn";
+import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import {
   listUncovered,
   readSummary,
@@ -31,11 +31,9 @@ const read = FunctionImpl.make(
     userId,
   }) {
     const ctx = yield* QueryCtx;
-    const [prompt] = yield* Effect.tryPromise(() =>
-      ctx.runQuery(components.nina.messages.getMessagesByIds, {
-        messageIds: [promptMessageId],
-      })
-    ).pipe(Effect.orDie);
+    const prompt = yield* readMessage(ctx, userId, promptMessageId).pipe(
+      Effect.orDie
+    );
     const learner = yield* recallLearner({
       now,
       said: saidOf(prompt),

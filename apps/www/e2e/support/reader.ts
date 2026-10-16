@@ -18,12 +18,12 @@ const readerOptions = (baseURL: string) =>
  * A page in a browser with no session, the way a reader without an account has
  * it, with the tracker of the changes it sends.
  */
-export const withReader = <A, E, R>(
+export const withReader = Effect.fn("NakafaE2E.withReader")(function* <A, E, R>(
   browser: Browser,
   baseURL: string,
   use: (page: Page, changes: Changes) => Effect.Effect<A, E, R>
-) =>
-  withBrowserContext(browser, readerOptions(baseURL), (context) =>
+) {
+  return yield* withBrowserContext(browser, readerOptions(baseURL), (context) =>
     Effect.gen(function* () {
       const page = yield* Effect.promise(() => context.newPage());
       const changes = yield* trackChanges(page, []);
@@ -31,20 +31,26 @@ export const withReader = <A, E, R>(
       return yield* withObservedPageErrors(page, use(page, changes));
     })
   );
+});
 
 /**
  * A page in a browser signed in as another learner, who owns none of the
  * owner's chats, with the tracker of the changes it sends.
  */
-export const withLearner = <A, E, R>(
+export const withLearner = Effect.fn("NakafaE2E.withLearner")(function* <
+  A,
+  E,
+  R,
+>(
   browser: Browser,
   baseURL: string,
   use: (page: Page, changes: Changes) => Effect.Effect<A, E, R>
-) =>
-  withBrowserContext(browser, readerOptions(baseURL), (context) =>
+) {
+  return yield* withBrowserContext(browser, readerOptions(baseURL), (context) =>
     Effect.gen(function* () {
       const page = yield* Effect.promise(() => context.newPage());
       const { changes } = yield* openChatPage(page, baseURL);
       return yield* withObservedPageErrors(page, use(page, changes));
     })
   );
+});

@@ -287,6 +287,42 @@ reference, a type that Next.js generates. A new Schema is for a real contract:
 an exported shape, a shape that two places use, or the row type of an authored
 table. A browser module never gains a run-time import only to name a type.
 
+### Sealed message readers
+
+`sealed` reports each read of stored Nina messages and files that a module
+makes outside the sealed module, which owns the form and every read of those
+rows (ADR 0024). It judges every authored module except a test (`TEST_PATTERN`),
+a helper under `packages/backend/test/` (which reads the stored form on
+purpose), and the sealed module itself: `confect/nina/sealed.ts` and the
+`confect/nina/sealed/` folder. The scope is the whole repository, so a read
+added in any module is reported. A type-only specifier or declaration reads
+nothing. Two constructions break it:
+
+- a load of `@convex-dev/agent` that reaches a reader. A named import, a
+  re-export, or an `export *` of `listMessages`, `listUIMessages`,
+  `docsToModelMessages`, or `getFile` breaks it under any local name. A
+  namespace import or `export * as` of the package breaks it whichever member
+  it reads, because its namespace object reaches every reader under any member
+  name, and Biome already rejects a namespace import in authored code. A dynamic
+  `import()` of the package breaks it for the same reason. Named imports of the
+  package's other exports, such as `toUIMessages`, are not judged;
+- a read of the Agent component's messages that returns sealed rows as they
+  are: `messages.listMessagesByThreadId` or `messages.getMessagesByIds` through a
+  receiver named `messages`, as in `components.nina.messages.getMessagesByIds`.
+  It also breaks it when the read is taken by destructuring, as in
+  `const { getMessagesByIds } = messages`, by an element, as in
+  `components.nina.messages["listMessagesByThreadId"]` or a computed key of
+  `components.nina.messages`, or by taking the messages object itself, as in
+  `const reads = components.nina.messages`, or by destructuring the handle, as
+  in `const { messages } = components.nina`. The rule reads syntax, not types,
+  so a messages object that reaches a name through a call or a nested pattern is
+  not followed.
+
+The rule names its fix: read through the sealed module's thread, message, file,
+and model reads, which open each row for its owner. It does not judge a command
+string, such as the `messages:listMessagesByThreadId` that the CLI gate sends to
+`convex run`: that gate reads only plain fields, which ADR 0024 records.
+
 ### Module size
 
 A hand-written module has at most 500 lines. The check reports a longer one

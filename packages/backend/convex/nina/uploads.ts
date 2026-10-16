@@ -2,5 +2,6 @@ import registeredFunctions from "../../confect/_generated/registeredFunctions/ni
 
 export const complete = registeredFunctions.complete;
 export const discard = registeredFunctions.discard;
+export const release = registeredFunctions.release;
 export const reserve = registeredFunctions.reserve;
 export const save = registeredFunctions.save;
