@@ -80,7 +80,7 @@ describe("identity/cards redeem", () => {
         expect(user?.email).not.toContain("invited");
         expect(person.account).toMatchObject({ userId: user?._id });
         expect(yield* fixture.run(journal)).toMatchObject([
-          { change: { type: "login.card.issued" } },
+          { change: { type: "card.issued" } },
           {
             actor: { id: fixture.invited, kind: "person" },
             change: { method: "card", type: "person.claimed" },

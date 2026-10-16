@@ -226,8 +226,10 @@ stays closed on every host.
   write, creates the account if the Person has none (the global username from
   `users/allocation`, the placeholder address named by a random key, no Google
   link), binds the Person with method `card`, stores the password through Better
-  Auth's reset endpoint, marks the card used, and journals `card.redeemed`. A
-  refusal is a value, so the attempt still counts.
+  Auth's reset endpoint, marks the card used, and journals `card.redeemed` with
+  the Person and the card. A reissue keeps the card's row, so the `card.issued`
+  or `card.reissued` entry before it in journal order names the printing that
+  was redeemed. A refusal is a value, so the attempt still counts.
   A failure that throws rolls back the whole mutation, so an account, a claim,
   or a redemption never survives without the others. A card whose Person has no
   school login cannot exist: issuing writes the login first and nothing deletes

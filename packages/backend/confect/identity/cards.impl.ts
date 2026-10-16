@@ -67,7 +67,7 @@ const issue = FunctionImpl.make(
     const card = yield* writeCard(person, issuer, Option.none());
     yield* personAuthority.record(personActor(issuer), person, {
       card: card.cardId,
-      type: "login.card.issued",
+      type: "card.issued",
     });
     return {
       code: card.code,
@@ -100,7 +100,7 @@ const reissue = FunctionImpl.make(
     const card = yield* writeCard(person, issuer, yield* cardOf(person._id));
     yield* personAuthority.record(personActor(issuer), person, {
       card: card.cardId,
-      type: "login.card.reissued",
+      type: "card.reissued",
     });
     return {
       code: card.code,

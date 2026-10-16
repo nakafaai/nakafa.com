@@ -67,7 +67,7 @@ describe("identity/cards issue", () => {
         expect(yield* fixture.run(journal)).toMatchObject([
           {
             actor: { id: fixture.people.admin.personId, kind: "person" },
-            change: { type: "login.card.issued" },
+            change: { type: "card.issued" },
             subject: { id: fixture.invited, kind: "person" },
           },
         ]);
@@ -320,8 +320,8 @@ describe("identity/cards reissue", () => {
         .mutation(reissue, { personId: fixture.invited, slug: nf });
       const entries = yield* fixture.run(journal);
       expect(Arr.map(entries, (entry) => entry.change)).toMatchObject([
-        { card: expect.any(String), type: "login.card.issued" },
-        { card: expect.any(String), type: "login.card.reissued" },
+        { card: expect.any(String), type: "card.issued" },
+        { card: expect.any(String), type: "card.reissued" },
       ]);
       const cardIds = Arr.flatMap(entries, (entry) =>
         "card" in entry.change ? [entry.change.card] : []

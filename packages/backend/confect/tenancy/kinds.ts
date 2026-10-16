@@ -169,11 +169,11 @@ export const person = Kind.make("person", "tenantPeople", {
     }),
     Schema.Struct({
       card: Id("loginCards"),
-      type: Schema.Literal("login.card.issued"),
+      type: Schema.Literal("card.issued"),
     }),
     Schema.Struct({
       card: Id("loginCards"),
-      type: Schema.Literal("login.card.reissued"),
+      type: Schema.Literal("card.reissued"),
     }),
     Schema.Struct({
       card: Id("loginCards"),
