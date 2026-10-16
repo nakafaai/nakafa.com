@@ -22,6 +22,15 @@ import { nakafaSuggestions } from "@repo/backend/confect/nina/prompt/suggestions
 import { Output } from "ai";
 import { Effect, Schema } from "effect";
 
+/**
+ * Messages the follow-up suggestions look back on, answers included: eight
+ * exchanges. A follow-up question depends on the latest answer and a few before
+ * it. The call reads every message it looks back on from the database, once
+ * for each completed turn, and the history budget would keep fewer than 50 of
+ * them whenever the answers are long.
+ */
+const SUGGESTION_MESSAGES = 16;
+
 class NinaPresentationError extends Schema.TaggedError<NinaPresentationError>()(
   "NinaPresentationError",
   { operation: Schema.Literals(["suggestions", "title"]) }
@@ -45,7 +54,10 @@ export const generatePresentation = Effect.fn("nina.presentation.generate")(
       languageModel: suggestion.model,
       usageHandler,
       instructions: nakafaSuggestions({ locale: turn.page.locale }),
-      contextOptions: { recentMessages: 50, excludeToolMessages: true },
+      contextOptions: {
+        recentMessages: SUGGESTION_MESSAGES,
+        excludeToolMessages: true,
+      },
       // The completed turn is the newest history; the request is the new turn.
       contextHandler: (_ctx, fetched) =>
         Promise.resolve(

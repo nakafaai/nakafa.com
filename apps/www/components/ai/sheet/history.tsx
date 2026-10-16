@@ -7,6 +7,7 @@ import {
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -23,7 +24,6 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { Authenticated } from "@/components/auth/gate";

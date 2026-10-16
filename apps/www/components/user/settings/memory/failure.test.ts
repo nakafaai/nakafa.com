@@ -13,6 +13,7 @@ vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 afterEach(() => vi.clearAllMocks());
 
 const messages = {
+  limit: "Wait a moment before saving again.",
   missing: "This memory no longer exists.",
   other: "We could not complete this action.",
 };
@@ -29,6 +30,21 @@ describe("memory failure", () => {
       expect(captureException).not.toHaveBeenCalled();
       expect(again).toBe(false);
     })
+  );
+
+  it.effect(
+    "asks the learner to wait when they saved too often, and lets them try the change again",
+    () =>
+      Effect.gen(function* () {
+        const again = yield* reportMemoryFailure(
+          new NinaMemoryRejected({ reason: "limit" }),
+          messages
+        );
+
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(messages.limit);
+        expect(captureException).not.toHaveBeenCalled();
+        expect(again).toBe(true);
+      })
   );
 
   it.effect(

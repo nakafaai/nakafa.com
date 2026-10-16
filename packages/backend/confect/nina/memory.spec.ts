@@ -41,6 +41,13 @@ export const MEMORY_TOPIC_LIMIT = 8;
 export const MEMORY_TOPIC_LENGTH = 256;
 /** Memories one page of the Memory page holds, however many the browser asks for. */
 export const MEMORY_PAGE_LIMIT = 50;
+/**
+ * Writes a learner may make by hand in a minute: a new memory or a rewrite. The
+ * editor saves 600 milliseconds after a keystroke at the soonest, which is 100
+ * saves a minute for one learner who types slowly, so a person never reaches
+ * this. A learner keeps as many memories as they write.
+ */
+export const MEMORY_WRITES_PER_MINUTE = 120;
 
 /** The kinds of memory that never end. */
 const NinaLastingKind = Schema.Literals(["level", "goal", "style", "struggle"]);
@@ -90,9 +97,9 @@ const NinaMemoryTopic = Schema.NonEmptyString.check(
 );
 
 /** The topics of one page, or the topics one memory is linked to. */
-const NinaMemoryTopics = Schema.mutable(Schema.Array(NinaMemoryTopic)).check(
-  Schema.isMaxLength(MEMORY_TOPIC_LIMIT)
-);
+export const NinaMemoryTopics = Schema.mutable(
+  Schema.Array(NinaMemoryTopic)
+).check(Schema.isMaxLength(MEMORY_TOPIC_LIMIT));
 
 /**
  * One stored memory. `text` and `title` are sealed for its learner. Only the
@@ -155,10 +162,11 @@ export const NinaMemoryDraft = Schema.Struct({
  * Why a memory could not be written or put back. `empty`: it holds neither a
  * title nor words. `missing`: the memory was deleted meanwhile, or, for
  * `restore`, there is nothing to put back under that id for the learner.
+ * `limit`: the learner made `MEMORY_WRITES_PER_MINUTE` writes in the last minute.
  */
 export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()(
   "NinaMemoryRejected",
-  { reason: Schema.Literals(["empty", "missing"]) }
+  { reason: Schema.Literals(["empty", "missing", "limit"]) }
 ) {}
 
 /**
@@ -270,7 +278,7 @@ export const NinaMemorySeen = NinaMemoryNote.mapFields(
  * page call up (`recalled`), at most `MEMORY_RECALL_LIMIT`. While memory is
  * paused it holds neither the portrait nor a memory.
  */
-const NinaLearner = Schema.Struct({
+export const NinaLearner = Schema.Struct({
   paused: Schema.Boolean,
   portrait: Schema.optionalKey(NinaPortraitText),
   profile: NinaLearnerProfile,
@@ -377,23 +385,6 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => AuthFailure,
     }).middleware(Session)
-  )
-  // What a turn knows about the learner: the account facts, the portrait, and
-  // the memories that the learner's words (`said`) and the pages they have open
-  // call up. `now` is the caller's time, which leaves out the situations that
-  // ended: a query never reads the clock, because it is not run again when time
-  // passes.
-  .addFunction(
-    FunctionSpec.internalQuery({
-      name: "read",
-      args: () => ({
-        now: Schema.Finite,
-        said: Schema.String,
-        topics: NinaMemoryTopics,
-        userId: Id("users"),
-      }),
-      returns: () => NinaLearner,
-    })
   )
   // What the memory capability finds for Nina's query, as the memories are at
   // the caller's time `now`. It reads the learner's words only, not the page.
