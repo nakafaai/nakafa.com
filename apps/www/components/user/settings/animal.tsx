@@ -36,6 +36,7 @@ const OFFERED_COUNT = 4;
 export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
+  const animals = useTranslations("Animals");
   const updateMascot = useUpdateMascotMutation();
   const current = user.appUser.mascot;
   // The set on screen is a function of this seed and of the current animal, so
@@ -82,7 +83,9 @@ export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
           {Arr.map(offered, (mascot) => (
             <li key={mascot.animal}>
               <button
-                aria-label={t("animal-pick")}
+                aria-label={t("animal-pick", {
+                  animal: animals(mascot.animal),
+                })}
                 className="cursor-pointer rounded-full outline-none transition-transform focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95"
                 onClick={() => pick(mascot)}
                 type="button"

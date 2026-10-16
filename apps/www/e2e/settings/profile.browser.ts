@@ -4,7 +4,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect } from "effect";
+import { Array as Arr, Effect, String as Str } from "effect";
 import { animalOf, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -12,9 +12,15 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 /** The settings page, where the Profile cards are. */
 const SETTINGS = "/en/user/settings";
 
-/** The buttons that pick an animal: one for each animal the card offers. */
+/**
+ * The buttons that pick an animal: one for each animal the card offers, each
+ * named by its animal, so they share the words of the label before the name.
+ */
 function animalPicks(page: Page) {
-  return page.getByRole("button", { name: app.Auth["animal-pick"] });
+  const before = Arr.headNonEmpty(
+    Str.split(app.Auth["animal-pick"], "{animal}")
+  );
+  return page.getByRole("button", { name: new RegExp(`^${before}`) });
 }
 
 /** The markup of the animal that each button draws, in the order the card shows them. */
