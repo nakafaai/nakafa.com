@@ -7,7 +7,7 @@ import type {
   ConsumedChangeType,
   JournalConsumer,
 } from "@repo/backend/confect/journal/schema";
-import { Effect, Option } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 /** The cursor of one consumer for one tenant and change type, once a change has reached it. */
 export const cursorOf = Effect.fn("journal.cursor.of")(function* (
@@ -32,8 +32,11 @@ export const cursorOf = Effect.fn("journal.cursor.of")(function* (
 
 /**
  * Marks one consumer's cursor pending, and creates the cursor when no change of
- * that type has reached the tenant before. Two writers that both find no cursor
- * conflict on the index range they read, so only one cursor is created.
+ * that type has reached the tenant before. A new cursor starts at the current
+ * time, so the entries recorded before it are never read. The change that creates
+ * it is written in the same transaction, so its entry is not before the start.
+ * Two writers that both find no cursor conflict on the index range they read, so
+ * only one cursor is created.
  */
 export const markPending = Effect.fn("journal.cursor.markPending")(function* (
   consumer: typeof JournalConsumer.Type,
@@ -43,6 +46,7 @@ export const markPending = Effect.fn("journal.cursor.markPending")(function* (
   const writer = yield* DatabaseWriter;
   const cursor = yield* cursorOf(consumer, tenantId, changeType);
   if (Option.isNone(cursor)) {
+    const since = yield* Clock.currentTimeMillis;
     yield* writer
       .table("journalCursors")
       .insert({
@@ -50,6 +54,7 @@ export const markPending = Effect.fn("journal.cursor.markPending")(function* (
         consumer,
         pending: true,
         position: null,
+        since,
         tenantId,
       })
       .pipe(Effect.orDie);
@@ -63,19 +68,24 @@ export const markPending = Effect.fn("journal.cursor.markPending")(function* (
 
 /**
  * Reads one page of the journal entries of one change type in one tenant, after
- * a cursor position. Index order is creation order, so each page holds the next
- * entries of the tenant.
+ * a cursor position. Creation time is the last column of the index, so the range
+ * from `since` holds the entries created at or after it, in creation order, and
+ * each page holds the next of them.
  */
 export const readAfter = Effect.fn("journal.cursor.readAfter")(function* (
   tenantId: GenericId.GenericId<"tenants">,
   changeType: typeof ConsumedChangeType.Type,
+  since: number,
   position: string | null,
   numItems: number
 ) {
   return yield* (yield* DatabaseReader)
     .table("journalEntries")
     .index("by_owner_tenantId_and_change_type", (query) =>
-      query.eq("owner.tenantId", tenantId).eq("change.type", changeType)
+      query
+        .eq("owner.tenantId", tenantId)
+        .eq("change.type", changeType)
+        .gte("_creationTime", since)
     )
     .paginate({ cursor: position, numItems })
     .pipe(Effect.orDie);

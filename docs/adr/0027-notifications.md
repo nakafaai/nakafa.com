@@ -98,7 +98,9 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   subject, and proves its ordering assumption on Convex before it relies on a
   creation-time cursor. The cursor holds the pagination position after the last
   entry read, so entries that share a creation millisecond are read in order
-  and none is skipped. The Convex proof is still owed. An entry holds IDs and
+  and none is skipped. A cursor starts at the moment it is created, so an
+  invitation recorded before the inbox existed gets no row. The Convex proof is
+  still owed. An entry holds IDs and
   codes, never a name or a message.
 - Preferences are kept for each kind and each channel (`notificationPreferences`,
   planned). The email for an invitation and for the account is always sent.
@@ -319,9 +321,9 @@ sitting does not show.
 | The welcome email through `confect/emails` and the Resend component | Live |
 | The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
 | `apps/www/app/manifest.ts` with `display: "standalone"` | Live |
-| `journalCursors`, and the index of `journalEntries` on the owner and the change type | Live |
+| `journalCursors`, with the start of each cursor, and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Live |
 | `notifications`, with the invitation rows and the purge of a released Person's rows | Live |
-| The invitation rows: `person.invited` is published, written by the invite and the resend, and read by the inbox consumer | Live |
+| The invitation rows: `person.invited` is published, written by the invite and the resend, and read by the inbox consumer from the start of its cursor; an invitation revoked before its run gets no row | Live |
 | The minute sweep that starts a run for each pending journal cursor | Live |
 | `notificationPreferences`, `notificationReminders`, and `pushSubscriptions` | Planned, program wave B |
 | The notify consumer for the change types other than `person.invited` | Planned, program wave B |

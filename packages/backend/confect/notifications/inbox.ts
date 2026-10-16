@@ -1,4 +1,5 @@
 import type { GenericId } from "@confect/core";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -18,13 +19,16 @@ import type {
   JournalConsumer,
 } from "@repo/backend/confect/journal/schema";
 import { deliveriesOf } from "@repo/backend/confect/notifications/delivery";
-import { Array as Arr, Duration, Effect, Option } from "effect";
+import { Array as Arr, Duration, Effect, Option, Schema } from "effect";
 
 /** The consumer that writes the inbox rows of invitations. */
 const CONSUMER: typeof JournalConsumer.Type = "inbox";
 
 /** The change that this consumer reads. */
 const CHANGE: typeof ConsumedChangeType.Type = "person.invited";
+
+/** The part of a `person.invited` change that names its invite. */
+const InvitedChange = Schema.Struct({ invite: Id("tenantInvites") });
 
 /**
  * Journal entries one run reads. A run reads and writes at most this many
@@ -63,8 +67,10 @@ const scheduleRun = Effect.fn("notifications.inbox.scheduleRun")(function* (
 
 /**
  * Writes the inbox row of the invitation that one journal entry records. A
- * Person that is missing, removed, or in another school gets no row. A row that
- * exists already is kept, so a run that reads an entry again writes nothing new.
+ * Person that is missing, removed, or in another school gets no row, and neither
+ * does an invitation that is revoked by the time its run reads it, such as the
+ * one a release revokes. A row that exists already is kept, so a run that reads
+ * an entry again writes nothing new.
  */
 const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
   tenantId: GenericId.GenericId<"tenants">,
@@ -85,6 +91,16 @@ const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
     person.value.tenantId !== tenantId ||
     person.value.status !== "active"
   ) {
+    return;
+  }
+  const { invite } = yield* Schema.decodeUnknownEffect(InvitedChange)(
+    entry.change
+  ).pipe(Effect.orDie);
+  const stored = yield* reader
+    .table("tenantInvites")
+    .get(invite)
+    .pipe(Effect.orDie);
+  if (stored.state.status === "revoked") {
     return;
   }
   const existing = yield* reader
@@ -113,9 +129,10 @@ const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
 
 /**
  * Runs the inbox consumer for one tenant. It reads one page of the tenant's
- * invitations after the cursor, writes their rows, and moves the cursor to the
- * end of the page in the same transaction, so a run that fails writes nothing.
- * A page that is not the last one schedules the next run.
+ * invitations recorded since the cursor started, after the cursor's position,
+ * writes their rows, and moves the cursor to the end of the page in the same
+ * transaction, so a run that fails writes nothing. A page that is not the last
+ * one schedules the next run.
  */
 export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
   function* (tenantId: GenericId.GenericId<"tenants">, numItems: number) {
@@ -126,6 +143,7 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
     const page = yield* readAfter(
       tenantId,
       CHANGE,
+      cursor.value.since,
       cursor.value.position,
       numItems
     );
@@ -155,8 +173,10 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
 
 /**
  * After an invitation is recorded, marks the inbox cursor of its tenant pending
- * and schedules a run. The run is the normal path; the minute sweep is the
- * backstop for a run that never happened.
+ * and schedules a run. The first invitation of a tenant creates its cursor, which
+ * starts at that moment, so only the invitations recorded from then on get rows.
+ * The run is the normal path; the minute sweep is the backstop for a run that
+ * never happened.
  */
 export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
   function* (tenantId: GenericId.GenericId<"tenants">) {

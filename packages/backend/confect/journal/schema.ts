@@ -70,16 +70,19 @@ export const ConsumedChangeType = Schema.Literals(["person.invited"]);
 
 /**
  * One consumer's place in the journal for one tenant and one change type.
- * `position` is the pagination cursor that the consumer's last read ended on,
- * so its next read starts exactly after the entries already read, including
- * entries that share a creation millisecond. `pending` says a run is owed: a
- * change sets it, and a run that reads to the end clears it, so the sweep can
- * find the cursors whose run never happened.
+ * `since` is the creation time of the cursor: the consumer reads only the entries
+ * created at or after it, so the entries recorded before the consumer existed
+ * are never replayed. `position` is the pagination cursor that the consumer's
+ * last read ended on, so its next read starts exactly after the entries already
+ * read, including entries that share a creation millisecond. `pending` says a
+ * run is owed: a change sets it, and a run that reads to the end clears it, so
+ * the sweep can find the cursors whose run never happened.
  */
 export const JournalCursor = Schema.Struct({
   changeType: ConsumedChangeType,
   consumer: JournalConsumer,
   pending: Schema.Boolean,
   position: Schema.NullOr(Schema.String),
+  since: Schema.Finite,
   tenantId: Id("tenants"),
 });

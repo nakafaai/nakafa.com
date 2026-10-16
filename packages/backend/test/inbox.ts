@@ -10,7 +10,7 @@ import {
   slugOf,
   type tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** The instant the inbox fixtures start from, in fake time. */
 export const NOW = Date.UTC(2026, 9, 14, 9, 0, 0);
@@ -54,20 +54,61 @@ export const inviteAt = (
     slug: school === "nf" ? nf : other,
   });
 
-/** Gives a Person to an account, as a claim does. */
+/**
+ * Gives a Person to an account, as a claim does: the Person names the account,
+ * and the Person's pending invite, when it has one, is accepted by it.
+ */
 export const claim = (fixture: Fixture, personId: PersonId, userId: UserId) =>
   fixture.run(
-    Effect.flatMap(DatabaseWriter, (writer) =>
-      writer.table("tenantPeople").patch(personId, {
+    Effect.gen(function* () {
+      const reader = yield* DatabaseReader;
+      const writer = yield* DatabaseWriter;
+      const pending = yield* reader
+        .table("tenantInvites")
+        .index("by_personId_and_state_status", (query) =>
+          query.eq("personId", personId).eq("state.status", "pending")
+        )
+        .first()
+        .pipe(Effect.orDie);
+      yield* Option.match(pending, {
+        onNone: () => Effect.void,
+        onSome: (invite) =>
+          writer.table("tenantInvites").patch(invite._id, {
+            state: { at: NOW, status: "accepted", userId },
+          }),
+      });
+      return yield* writer.table("tenantPeople").patch(personId, {
         account: {
           claimedAt: NOW,
           method: "invite",
           state: "claimed",
           userId,
         },
-      })
-    )
+      });
+    })
   );
+
+/** Adds `count` Persons to the first school, each claimed by the account. */
+export const claimedPersons = (
+  fixture: Fixture,
+  userId: UserId,
+  count: number
+) =>
+  Effect.gen(function* () {
+    const persons = yield* Effect.forEach(
+      Arr.makeBy(count, (index) => index),
+      (index) => addPerson(fixture, fixture.tenants.nf, `Orang ${index}`),
+      { concurrency: 1 }
+    );
+    yield* Effect.forEach(
+      persons,
+      (personId) => claim(fixture, personId, userId),
+      {
+        discard: true,
+      }
+    );
+    return persons;
+  });
 
 /** Runs the inbox consumer of one school to its end. */
 export const consumeSchool = (fixture: Fixture, tenantId: TenantId) =>
