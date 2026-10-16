@@ -19,8 +19,9 @@ import {
   tick,
   type World,
 } from "@repo/design-system/components/pool/physics";
-import { Animal } from "@repo/design-system/components/ui/character";
+import { Animal } from "@repo/design-system/components/ui/animal";
 import { Thing } from "@repo/design-system/components/ui/thing";
+import { cva } from "class-variance-authority";
 import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
 import { useEffect, useEffectEvent, useRef } from "react";
@@ -56,12 +57,22 @@ function draw() {
   return Effect.runSync(Random.next);
 }
 
+/**
+ * The box of one member. An animal fills a circle, as it does in an avatar, and
+ * a thing keeps its own outline.
+ */
+const memberVariants = cva("absolute top-0 left-0", {
+  variants: {
+    kind: { animal: "overflow-hidden rounded-full", thing: "" },
+  },
+});
+
 /** One member of the pool, drawn once. The frame loop writes its place, not React. */
 function Member({ member }: { member: PoolMember }) {
   return (
-    <div className="absolute top-0 left-0">
+    <div className={memberVariants({ kind: member.kind })}>
       {member.kind === "animal" ? (
-        <Animal className="size-full rounded-full" mascot={member.mascot} />
+        <Animal mascot={member.mascot} />
       ) : (
         <Thing className="size-full" name={member.name} />
       )}
