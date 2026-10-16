@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import type { JournalEntriesDoc } from "@repo/backend/confect/_generated/docs";
 import type { JournalCursor } from "@repo/backend/confect/journal/schema";
-import { Array as Arr, Duration, Option } from "effect";
+import { Array as Arr, Duration, Number as Num, Option } from "effect";
 
 /**
  * How far behind the clock a run settles the journal. An entry takes its creation time
@@ -41,7 +41,7 @@ const handledOf = (entry: EntryRef) => ({
  * handled. Entries that share the new `since` time each keep a record, so a group larger than
  * the free slot can take `handled` past its limit. The design does not bound such a group; it
  * assumes the group stays small. `nextRunAt` is now when the next run can handle an entry at
- * once, the moment the oldest unread entry settles when it cannot, and undefined when no entry
+ * once, the moment the oldest unread entry settles when it cannot, and none when no entry
  * is unread. Records before the new `since` are dropped.
  */
 export const planRun = <Entry extends EntryRef>(
@@ -74,18 +74,18 @@ export const planRun = <Entry extends EntryRef>(
   const free = handledLimit - 1 - kept.length;
   const early = Arr.take(
     rest,
-    Math.max(0, Math.min(pageSize - lead.length, free))
+    Num.max(0, Num.min(pageSize - lead.length, free))
   );
   const handled = Arr.appendAll(kept, Arr.map(early, handledOf));
-  const nextRunAt = Option.match(Arr.head(Arr.drop(rest, early.length)), {
-    onNone: () => undefined,
-    onSome: (entry) => {
+  const nextRunAt = Option.map(
+    Arr.head(Arr.drop(rest, early.length)),
+    (entry) => {
       const nextRoom = handledLimit - 1 - handled.length;
       return entry._creationTime <= settled || nextRoom > 0
         ? now
         : Math.ceil(entry._creationTime + JOURNAL_COMMIT_LAG);
-    },
-  });
+    }
+  );
   return {
     handle: Arr.appendAll(lead, early),
     nextRunAt,

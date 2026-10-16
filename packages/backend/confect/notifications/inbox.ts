@@ -190,9 +190,9 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
       { discard: true }
     );
     const { nextRunAt } = plan;
-    yield* advance(cursor.value._id, plan.position, nextRunAt !== undefined);
-    if (nextRunAt !== undefined) {
-      yield* scheduleRun(tenantId, Duration.millis(nextRunAt - now));
+    yield* advance(cursor.value._id, plan.position, Option.isSome(nextRunAt));
+    if (Option.isSome(nextRunAt)) {
+      yield* scheduleRun(tenantId, Duration.millis(nextRunAt.value - now));
     }
   }
 );

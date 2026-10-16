@@ -4,7 +4,7 @@ import {
   JOURNAL_COMMIT_LAG,
   planRun,
 } from "@repo/backend/confect/journal/cursor";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 
 /** The ID of a journal entry, as a test names it. */
 const entryId = (name: string) =>
@@ -36,7 +36,7 @@ describe("journal/cursor planRun", () => {
       handled: [handled("a", 1000)],
       since: 1000,
     });
-    expect(plan.nextRunAt).toBeUndefined();
+    expect(plan.nextRunAt).toEqual(Option.none());
   });
 
   it("skips the entries its position already handled", () => {
@@ -52,7 +52,7 @@ describe("journal/cursor planRun", () => {
       handled: [handled("b", 2000)],
       since: 2000,
     });
-    expect(plan.nextRunAt).toBeUndefined();
+    expect(plan.nextRunAt).toEqual(Option.none());
   });
 
   it("keeps the entries that share the time of since, and reads a later one with that time", () => {
@@ -94,7 +94,7 @@ describe("journal/cursor planRun", () => {
     );
     expect(plan.handle).toEqual([entry("u", 1000)]);
     expect(plan.position).toEqual({ handled: [handled("u", 1000)], since: 0 });
-    expect(plan.nextRunAt).toBeUndefined();
+    expect(plan.nextRunAt).toEqual(Option.none());
   });
 
   it("reads an entry that commits late even when it is older than an unsettled entry the run handled", () => {
@@ -118,7 +118,7 @@ describe("journal/cursor planRun", () => {
       handled: [handled("u", 1000), handled("late", 500)],
       since: 500,
     });
-    expect(later.nextRunAt).toBeUndefined();
+    expect(later.nextRunAt).toEqual(Option.none());
   });
 
   it("stops at the handled limit, which keeps one slot free, and asks for the next run when the oldest entry it left settles", () => {
@@ -135,7 +135,7 @@ describe("journal/cursor planRun", () => {
       since: 0,
     });
     // u3 settles at 7000 plus the lag, and by then every handled entry has settled too.
-    expect(plan.nextRunAt).toBe(7000 + JOURNAL_COMMIT_LAG);
+    expect(plan.nextRunAt).toEqual(Option.some(7000 + JOURNAL_COMMIT_LAG));
   });
 
   it("keeps a late settled entry within the limit, beside the unsettled entries it handled", () => {
@@ -163,7 +163,9 @@ describe("journal/cursor planRun", () => {
       ],
       since: 5500,
     });
-    expect(late.nextRunAt).toBe(Math.ceil(6020 + JOURNAL_COMMIT_LAG));
+    expect(late.nextRunAt).toEqual(
+      Option.some(Math.ceil(6020 + JOURNAL_COMMIT_LAG))
+    );
   });
 
   it("waits for the oldest unread entry when the bound stopped a run that filled its page", () => {
@@ -171,7 +173,7 @@ describe("journal/cursor planRun", () => {
     // The page holds two entries and the limit three, so the next run would have no room.
     const plan = planRun(10_000, { handled: [], since: 0 }, page, 2, 3);
     expect(plan.handle).toEqual([entry("u1", 6000), entry("u2", 6500)]);
-    expect(plan.nextRunAt).toBe(7000 + JOURNAL_COMMIT_LAG);
+    expect(plan.nextRunAt).toEqual(Option.some(7000 + JOURNAL_COMMIT_LAG));
   });
 
   it("hands no unsettled entry while its position already holds the limit", () => {
@@ -187,7 +189,7 @@ describe("journal/cursor planRun", () => {
       handled: [handled("h1", 6000), handled("h2", 6500)],
       since: 6000,
     });
-    expect(plan.nextRunAt).toBe(7000 + JOURNAL_COMMIT_LAG);
+    expect(plan.nextRunAt).toEqual(Option.some(7000 + JOURNAL_COMMIT_LAG));
   });
 
   it("asks for the next run at once when a full page stopped the run", () => {
@@ -203,7 +205,7 @@ describe("journal/cursor planRun", () => {
       handled: [handled("b", 2000)],
       since: 2000,
     });
-    expect(plan.nextRunAt).toBe(10_000);
+    expect(plan.nextRunAt).toEqual(Option.some(10_000));
   });
 
   it("asks for the next run at once while the limit leaves room for an unsettled entry", () => {
@@ -215,7 +217,7 @@ describe("journal/cursor planRun", () => {
     ];
     const plan = planRun(10_000, { handled: [], since: 0 }, page, 2, 5);
     expect(plan.handle).toEqual([entry("u1", 6000), entry("u2", 6500)]);
-    expect(plan.nextRunAt).toBe(10_000);
+    expect(plan.nextRunAt).toEqual(Option.some(10_000));
   });
 
   it("has no next run when the page held every entry left", () => {
@@ -231,7 +233,7 @@ describe("journal/cursor planRun", () => {
       handled: [handled("b", 2000)],
       since: 2000,
     });
-    expect(plan.nextRunAt).toBeUndefined();
+    expect(plan.nextRunAt).toEqual(Option.none());
   });
 
   it("does not read an entry created before its since", () => {
@@ -244,7 +246,7 @@ describe("journal/cursor planRun", () => {
     );
     expect(plan.handle).toEqual([]);
     expect(plan.position).toEqual({ handled: [], since: 5000 });
-    expect(plan.nextRunAt).toBeUndefined();
+    expect(plan.nextRunAt).toEqual(Option.none());
   });
 
   it("hands the settled entries and the unsettled ones that fit a full page, and asks for a run at once", () => {
@@ -264,7 +266,7 @@ describe("journal/cursor planRun", () => {
       handled: [handled("s2", 2000), handled("u1", 6000)],
       since: 2000,
     });
-    expect(plan.nextRunAt).toBe(10_000);
+    expect(plan.nextRunAt).toEqual(Option.some(10_000));
   });
 
   it("drains the entries it left once they settle, in the next run", () => {
@@ -276,13 +278,13 @@ describe("journal/cursor planRun", () => {
     ];
     const first = planRun(10_000, { handled: [], since: 0 }, page, 10, 3);
     const settleOfU3 = 7000 + JOURNAL_COMMIT_LAG;
-    expect(first.nextRunAt).toBe(settleOfU3);
+    expect(first.nextRunAt).toEqual(Option.some(settleOfU3));
     const second = planRun(settleOfU3, first.position, page, 10, 3);
     expect(second.handle).toEqual([entry("u3", 7000), entry("u4", 7500)]);
     expect(second.position).toEqual({
       handled: [handled("u3", 7000), handled("u4", 7500)],
       since: 7000,
     });
-    expect(second.nextRunAt).toBeUndefined();
+    expect(second.nextRunAt).toEqual(Option.none());
   });
 });
