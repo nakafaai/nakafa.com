@@ -20,7 +20,6 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "cn";
-import { formatDistanceToNow } from "date-fns";
 import { Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, type ReactNode, useState } from "react";
@@ -32,7 +31,7 @@ import {
   useCommentActions,
 } from "@/components/comments/actions";
 import { CommentsAdd } from "@/components/comments/add";
-import { getLocale } from "@/lib/i18n/date";
+import { formatAge } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
 import { getInitialName } from "@/lib/identity/initials";
 
@@ -121,10 +120,7 @@ export function CommentContent({
               {userName}
             </span>
             <time className="min-w-0 truncate text-muted-foreground text-xs tracking-tight">
-              {formatDistanceToNow(comment._creationTime, {
-                locale: getLocale(locale),
-                addSuffix: true,
-              })}
+              {formatAge(comment._creationTime, locale)}
             </time>
           </div>
 

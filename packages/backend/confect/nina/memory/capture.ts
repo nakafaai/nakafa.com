@@ -76,12 +76,10 @@ const INSTRUCTIONS = Arr.join(
 type Known = (typeof NinaKnown.Type)["known"];
 
 /**
- * The memories the capture call lists, one line each with the place it can name,
- * best match first. The list holds at most `MEMORY_KNOWN_LIMIT` (12) memories,
- * and a line shows at most 240 characters of its words, then `...` when they
- * are longer (`memory/line.ts`). So the whole list costs at most 3,015 tokens,
- * and no budget cuts it: every memory that the query returns is listed, and the
- * model can name each one.
+ * The known memories, one line each with its place, which is how the model
+ * names a memory. The query holds them to `MEMORY_KNOWN_LIMIT`, and a line shows
+ * the first `KNOWN_LENGTH` characters of its memory, so the whole list stays far
+ * within the budget of the call (about 3,800 tokens at most by the estimator).
  */
 function formatKnown(known: Known) {
   return Arr.isReadonlyArrayNonEmpty(known)

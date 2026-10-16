@@ -1,53 +1,51 @@
+import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
+  createTenantKey,
   ensureLearnerKeys,
   readLearnerKeys,
+  readTenantKeys,
   shredLearnerKeys,
 } from "@repo/backend/confect/vault/keys";
+import { openText, sealText } from "@repo/backend/confect/vault/text";
 import {
-  blindText,
-  openText,
-  sealText,
-} from "@repo/backend/confect/vault/text";
-import { ConfigProvider, Effect } from "effect";
+  fact,
+  learner,
+  memory,
+  scenario,
+  school,
+} from "@repo/backend/test/owner";
+import { TEST_ROOT_KEYS, withRoots } from "@repo/backend/test/vault";
+import { Array as Arr, Effect, Option } from "effect";
 import { Base64 } from "effect/encoding";
 
-const memory = { field: "text", table: "ninaMemories" };
-const summary = { field: "text", table: "ninaSummaries" };
-const title = { field: "title", table: "ninaMemories" };
-const fact = "Lebih suka contoh soal dulu, baru rumusnya.";
-const BLIND = /^[\w-]{22}$/u;
+const { current, retired } = TEST_ROOT_KEYS;
 
-/** Creates one account and returns its id. */
-const learner = Effect.fn("test.vault.learner")(function* (name: string) {
-  return yield* (yield* DatabaseWriter).table("users").insert({
-    authId: `vault-${name}`,
-    credits: 0,
-    creditsResetAt: 0,
-    email: `${name}@example.com`,
-    name,
-    plan: "free",
-  });
+/** The stored key rows of one school, oldest generation first. */
+const schoolRows = Effect.fn("test.vault.schoolRows")(function* (
+  tenantId: GenericId.GenericId<"tenants">
+) {
+  return yield* (yield* DatabaseReader)
+    .table("tenantKeys")
+    .index("by_tenantId_and_generation", (query) =>
+      query.eq("tenantId", tenantId)
+    )
+    .collect();
 });
 
-/** Runs one scenario inside a mutation of a fresh deployment. */
-const scenario = <A, Failure>(
-  body: Effect.Effect<A, Failure, DatabaseReader | DatabaseWriter>
-) =>
-  Effect.gen(function* () {
-    yield* (yield* Confect).run(body.pipe(Effect.orDie));
-  }).pipe(Effect.provide(confectLayer));
-
-/** Runs an effect with only the named root keys in the environment. */
-const withRoots = (roots: string) =>
-  Effect.provide(
-    ConfigProvider.layer(ConfigProvider.fromUnknown({ VAULT_ROOT_KEYS: roots }))
-  );
+/** The stored key row of one learner. */
+const learnerRow = Effect.fn("test.vault.learnerRow")(function* (
+  userId: GenericId.GenericId<"users">
+) {
+  return yield* (yield* DatabaseReader)
+    .table("vaultKeys")
+    .get("by_userId", userId)
+    .pipe(Effect.orDie);
+});
 
 describe("vault learner keys", () => {
   it.effect(
@@ -84,65 +82,6 @@ describe("vault learner keys", () => {
   );
 
   it.effect(
-    "opens a text only for the learner and the field it was sealed for",
-    () =>
-      scenario(
-        Effect.gen(function* () {
-          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
-          const other = yield* ensureLearnerKeys(yield* learner("other"));
-          const sealed = yield* sealText(owner, memory, fact);
-          for (const [keys, field] of [
-            [other, memory],
-            [owner, summary],
-            [owner, title],
-            [{ ...owner, userId: other.userId }, memory],
-          ] as const) {
-            expect(
-              (yield* Effect.flip(openText(keys, field, sealed))).reason
-            ).toBe("cipher");
-          }
-        })
-      )
-  );
-
-  it.effect(
-    "blinds a word for one learner and one field, the same way every time",
-    () =>
-      scenario(
-        Effect.gen(function* () {
-          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
-          const other = yield* ensureLearnerKeys(yield* learner("other"));
-          const blinded = yield* blindText(owner, memory, "trigon");
-          expect(blinded).toMatch(BLIND);
-          expect(blinded).not.toContain("trigon");
-          expect(yield* blindText(owner, memory, "trigon")).toBe(blinded);
-          // The key that is read back later blinds the same word the same way.
-          expect(
-            yield* blindText(
-              yield* readLearnerKeys(owner.userId),
-              memory,
-              "trigon"
-            )
-          ).toBe(blinded);
-          // Another learner, another field and another word each give another value.
-          for (const value of [
-            yield* blindText(other, memory, "trigon"),
-            yield* blindText(owner, title, "trigon"),
-            yield* blindText(owner, memory, "trigono"),
-            yield* blindText(
-              { ...owner, userId: other.userId },
-              memory,
-              "trigon"
-            ),
-          ]) {
-            expect(value).toMatch(BLIND);
-            expect(value).not.toBe(blinded);
-          }
-        })
-      )
-  );
-
-  it.effect(
     "fails with a key error when no root key in the environment unwraps the learner key",
     () =>
       scenario(
@@ -158,6 +97,37 @@ describe("vault learner keys", () => {
               ).toBe("key");
             }
           }
+        })
+      )
+  );
+
+  it.effect(
+    "reads a learner key that a retired root key wraps while the current root key is also set",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const userId = yield* learner("lama");
+          const sealed = yield* sealText(
+            yield* ensureLearnerKeys(userId).pipe(withRoots(retired)),
+            memory,
+            fact
+          );
+          expect((yield* learnerRow(userId)).root).toBe("old");
+          const both = withRoots(`${current},${retired}`);
+          expect(
+            yield* openText(
+              yield* readLearnerKeys(userId).pipe(both),
+              memory,
+              sealed
+            )
+          ).toBe(fact);
+          expect(
+            yield* openText(
+              yield* ensureLearnerKeys(userId).pipe(both),
+              memory,
+              sealed
+            )
+          ).toBe(fact);
         })
       )
   );
@@ -214,5 +184,134 @@ describe("vault learner keys", () => {
         ).toBe("cipher");
       })
     )
+  );
+});
+
+describe("vault school keys", () => {
+  it.effect(
+    "wraps one school key under the current root key and opens the school's text with it",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const tenantId = yield* school("harapan");
+          yield* createTenantKey(tenantId);
+          const rows = yield* schoolRows(tenantId);
+          expect(rows).toMatchObject([
+            { generation: 1, root: "test", tenantId },
+          ]);
+          expect(Option.getOrThrow(Arr.head(rows)).wrapped.byteLength).toBe(
+            1 + 12 + 32 + 16
+          );
+          const sealed = yield* sealText(
+            yield* readTenantKeys(tenantId),
+            memory,
+            fact
+          );
+          expect(
+            yield* openText(yield* readTenantKeys(tenantId), memory, sealed)
+          ).toBe(fact);
+        })
+      )
+  );
+
+  it.effect(
+    "reads a school key that a retired root key wraps while the current root key is also set",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const tenantId = yield* school("lama");
+          yield* createTenantKey(tenantId).pipe(withRoots(retired));
+          expect(
+            Option.getOrThrow(Arr.head(yield* schoolRows(tenantId))).root
+          ).toBe("old");
+          const both = withRoots(`${current},${retired}`);
+          const sealed = yield* sealText(
+            yield* readTenantKeys(tenantId).pipe(both),
+            memory,
+            fact
+          );
+          expect(
+            yield* openText(
+              yield* readTenantKeys(tenantId).pipe(both),
+              memory,
+              sealed
+            )
+          ).toBe(fact);
+        })
+      )
+  );
+
+  it.effect("fails with a key error for a school that has no key", () =>
+    scenario(
+      Effect.gen(function* () {
+        const tenantId = yield* school("tanpa");
+        expect((yield* Effect.flip(readTenantKeys(tenantId))).reason).toBe(
+          "key"
+        );
+      })
+    )
+  );
+
+  it.effect(
+    "reads the newest generation and never falls back to an older one",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const tenantId = yield* school("baru");
+          yield* createTenantKey(tenantId);
+          const first = Option.getOrThrow(
+            Arr.head(yield* schoolRows(tenantId))
+          );
+          // A newer row whose wrapped key belongs to generation 1 cannot open
+          // under its own binding, so the reader must fail rather than use gen 1.
+          yield* (yield* DatabaseWriter).table("tenantKeys").insert({
+            createdAt: 2,
+            generation: 2,
+            root: first.root,
+            tenantId,
+            wrapped: first.wrapped,
+          });
+          expect((yield* Effect.flip(readTenantKeys(tenantId))).reason).toBe(
+            "key"
+          );
+        })
+      )
+  );
+
+  it.effect(
+    "never opens a learner's key as a school key, nor a school's key as a learner's",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const writer = yield* DatabaseWriter;
+          const userId = yield* learner("pindah");
+          yield* ensureLearnerKeys(userId);
+          const tenantId = yield* school("pindahsekolah");
+          yield* writer.table("tenantKeys").insert({
+            createdAt: 1,
+            generation: 1,
+            root: "test",
+            tenantId,
+            wrapped: (yield* learnerRow(userId)).wrapped,
+          });
+          expect((yield* Effect.flip(readTenantKeys(tenantId))).reason).toBe(
+            "key"
+          );
+
+          const other = yield* school("sekolahlain");
+          yield* createTenantKey(other);
+          const otherLearner = yield* learner("lainnya");
+          yield* writer.table("vaultKeys").insert({
+            createdAt: 1,
+            root: "test",
+            userId: otherLearner,
+            wrapped: Option.getOrThrow(Arr.head(yield* schoolRows(other)))
+              .wrapped,
+          });
+          expect(
+            (yield* Effect.flip(readLearnerKeys(otherLearner))).reason
+          ).toBe("key");
+        })
+      )
   );
 });

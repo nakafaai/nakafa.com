@@ -1,7 +1,7 @@
 import type { AnalyticsConsentState } from "@repo/analytics/consent";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
-import { Clock, Effect, Option, Schema } from "effect";
-import { nanoid } from "nanoid";
+import { randomUuid } from "@repo/utilities/uuid";
+import { Effect, Option, Schema } from "effect";
 
 /** Browser storage key of the identifier that counts one consented device. */
 const contentViewDeviceKey = "nakafa-device-id";
@@ -103,8 +103,7 @@ export const ensureContentViewDevice = Effect.fn(
     return existing.value;
   }
 
-  const createdAt = yield* Clock.currentTimeMillis;
-  const deviceId = `${createdAt}-${nanoid(9)}`;
+  const deviceId = yield* randomUuid;
   const encoded = yield* encodeContentViewDevice(deviceId).pipe(
     Effect.mapError(contentViewDeviceStorageFailure)
   );

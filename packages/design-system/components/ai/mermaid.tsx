@@ -9,6 +9,7 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { naturalSizeSvg } from "@repo/design-system/lib/mermaid/natural";
 import {
   type MermaidRenderConfig,
   renderMermaid,
@@ -31,8 +32,8 @@ const diagramVariants = cva("flex [&>svg]:m-auto", {
     fit: {
       /** Scales the diagram to fit the box; Mermaid's own max width keeps it from growing past its natural size. */
       contain: "[&>svg]:size-full",
-      /** Fits the diagram to the box width and scrolls the rest of its height. */
-      width: "overflow-auto [&>svg]:h-auto [&>svg]:w-full [&>svg]:max-w-full",
+      /** Keeps the diagram at its natural size: a larger one scrolls both ways, and a smaller one stays centred. */
+      natural: "overflow-auto",
     },
   },
 });
@@ -177,12 +178,14 @@ export function Mermaid({
     );
   }
   // Always render the SVG if we have content (either current or last valid)
+  const svg =
+    fit === "natural" ? naturalSizeSvg(renderState.svg) : renderState.svg;
   return (
     <div
       aria-label={label}
       className={cn(diagramVariants({ fit }), className)}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: Mermaid returns sanitized SVG in strict security mode.
-      dangerouslySetInnerHTML={{ __html: renderState.svg }}
+      dangerouslySetInnerHTML={{ __html: svg }}
       role="img"
     />
   );

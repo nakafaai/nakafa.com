@@ -8,6 +8,7 @@ import RequireMember, {
   Member,
   NotMember,
 } from "@repo/backend/confect/middleware/member.spec";
+import { isActiveOperator } from "@repo/backend/confect/operators/staff";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Schema } from "effect";
 
@@ -18,7 +19,8 @@ const SlugArgs = Schema.Struct({ slug: TenantSlug });
  * Three indexed reads: the tenant by slug, the caller's Person in it, then the
  * Person's active grants, which every access check of the execution reuses.
  * An unknown slug, a caller without a Person, and an inactive Person get the
- * same `NotMember`.
+ * same `NotMember`. So does an operator whose operator access was revoked: its
+ * visit grants stop at once, whatever their term.
  */
 export const member = Effect.fn("tenancy.member")(function* <E>(
   effect: Effect.Effect<MiddlewareSpec.SuccessValue, E, Member>,
@@ -48,6 +50,9 @@ export const member = Effect.fn("tenancy.member")(function* <E>(
         () => new NotMember()
       )
     );
+  if (person.kind === "operator" && !(yield* isActiveOperator(appUser._id))) {
+    return yield* new NotMember();
+  }
   return yield* effect.pipe(
     Effect.provideService(Member, {
       grants: yield* activeGrants(person._id),
