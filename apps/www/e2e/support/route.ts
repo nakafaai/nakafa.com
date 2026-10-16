@@ -59,7 +59,7 @@ const COMPRESSED_BODY_HEADERS = ["content-encoding", "content-length"];
  * has loaded: a chunk that the page loads with it would wait for the release.
  *
  * With `containing`, only a chunk whose code holds that text waits, and every
- * other chunk loads at once. Such a chunk is fetched once to read its code, and
+ * other chunk loads at once. Every chunk is fetched once to read its code, and
  * the page then receives that same code.
  */
 export const holdChunks = Effect.fn("NakafaE2E.holdChunks")(function* (
