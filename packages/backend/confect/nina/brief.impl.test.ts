@@ -2,6 +2,7 @@ import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import { copyOf, sealThreadIn } from "@repo/backend/test/nina/seal";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { Array as Arr } from "effect";
 
@@ -9,14 +10,17 @@ const brief = Ref.getFunctionReference(refs.internal.nina.brief.read);
 const NOW = Date.UTC(2026, 9, 10, 12);
 
 /** The brief of the queued turn of a fixture whose chat holds three turns before it. */
-async function briefOf(f: Awaited<ReturnType<typeof fixture>>) {
+async function briefOf(
+  f: Awaited<ReturnType<typeof fixture>>,
+  promptMessageId: string = f.promptMessageId
+) {
   return Ref.decodeReturnsSync(
     refs.internal.nina.brief.read,
     await f.t.query(brief, {
       chatId: f.chatId,
       now: NOW,
       order: 3,
-      promptMessageId: f.promptMessageId,
+      promptMessageId,
       topics: [],
       userId: f.identity.userId,
     })
@@ -65,6 +69,26 @@ describe("the brief of a Nina turn", () => {
       text: "Mau ikut SNBT 2027.",
     });
     expect(read.learner.paused).toBe(false);
+  });
+
+  it("tells what the turn knows of the learner from a sealed message as from a plain one", async () => {
+    /** The brief of a turn whose prompt is plain, or sealed in place, with the same memory. */
+    const briefWith = async (sealed: boolean) => {
+      const f = await fixture();
+      await f.seed({ text: "Mau ikut SNBT 2027." });
+      // The newer memory comes first when the words of the prompt are not read.
+      await f.seed({ text: "Suka contoh soal dulu." });
+      const replacements = sealed
+        ? await sealThreadIn(f.t, f.threadId, f.identity.userId)
+        : [];
+      return briefOf(f, copyOf(replacements, f.promptMessageId));
+    };
+    const plain = await briefWith(false);
+    const sealed = await briefWith(true);
+    expect(sealed).toEqual(plain);
+    expect(sealed.learner.recalled[0]).toMatchObject({
+      text: "Mau ikut SNBT 2027.",
+    });
   });
 
   it("tells a learner who paused memory that no memory is read, and no summary of a chat that is gone", async () => {

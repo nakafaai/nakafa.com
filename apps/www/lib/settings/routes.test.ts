@@ -17,6 +17,7 @@ describe("user settings routes", () => {
       ])
     ).toEqual([
       ["/user/settings", "account", "personal"],
+      ["/user/settings/learning", "learning", "personal"],
       ["/user/settings/subscriptions", "billing", "personal"],
       ["/user/settings/memory", "memory", "ai"],
     ]);
@@ -29,7 +30,7 @@ describe("user settings routes", () => {
         Arr.map(group.sections, (section) => section.labelKey),
       ])
     ).toEqual([
-      ["personal", ["account", "billing"]],
+      ["personal", ["account", "learning", "billing"]],
       ["ai", ["memory"]],
     ]);
   });
@@ -37,13 +38,21 @@ describe("user settings routes", () => {
   it("links each group to the first section it holds", () => {
     expect(
       Arr.map(userSettingsSections, (section) => section.group.href)
-    ).toEqual(["/user/settings", "/user/settings", "/user/settings/memory"]);
+    ).toEqual([
+      "/user/settings",
+      "/user/settings",
+      "/user/settings",
+      "/user/settings/memory",
+    ]);
   });
 
   it("resolves each declared settings path to its own section", () => {
     expect(
       getUserSettingsSection("/user/settings/subscriptions").labelKey
     ).toBe("billing");
+    expect(getUserSettingsSection("/user/settings/learning").labelKey).toBe(
+      "learning"
+    );
     expect(getUserSettingsSection("/user/settings/memory").labelKey).toBe(
       "memory"
     );

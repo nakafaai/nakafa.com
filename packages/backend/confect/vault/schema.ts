@@ -36,10 +36,15 @@ export const TenantKey = Schema.Struct({
 
 /**
  * The stored field a sealed value belongs to. A value opens only for the owner
- * and the field it was sealed for.
+ * and the field it was sealed for. When the field belongs to one row, `row` holds
+ * the values that name that row, in a fixed order (ADR 0024), so a value copied
+ * to another row never opens.
  */
 export const VaultField = Schema.Struct({
   field: Schema.String,
+  row: Schema.optionalKey(
+    Schema.Array(Schema.Union([Schema.String, Schema.Finite]))
+  ),
   table: Schema.String,
 });
 
@@ -47,9 +52,11 @@ export const VaultField = Schema.Struct({
  * Why the vault could not seal or open. `configuration`: `VAULT_ROOT_KEYS` is
  * missing or malformed. `key`: the learner or the school has no key, the account
  * is deleted, or no root key in the environment opens the stored key. `cipher`:
- * the value was not sealed for this owner, table and field, or it was changed.
- * `runtime`: the platform could not derive a key or seal, which says nothing
- * about stored data. No reason carries key material or text.
+ * the value does not open for this owner, table, field and row, or it was
+ * changed. It also covers sealed content that authenticates but does not decode
+ * as the value its module expects. `runtime`: the platform could not derive a key
+ * or seal, which says nothing about stored data. No reason carries key material
+ * or text.
  */
 export class VaultError extends Schema.TaggedError<VaultError>()("VaultError", {
   reason: Schema.Literals(["configuration", "key", "cipher", "runtime"]),

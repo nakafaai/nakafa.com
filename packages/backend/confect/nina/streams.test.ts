@@ -1,22 +1,24 @@
 import { Ref } from "@confect/core";
-import {
-  createThread,
-  listStreams,
-  listUIMessages,
-  syncStreams,
-} from "@convex-dev/agent";
+import { createThread, listStreams, syncStreams } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { AGENT_ID_LENGTH } from "@repo/backend/confect/nina/contract/message";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { createThreadTest } from "@repo/backend/test/nina/thread";
 
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@repo/backend/confect/nina/sealed/thread")
+    >();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
   return {
     ...actual,
     listStreams: vi.fn(actual.listStreams),
-    listUIMessages: vi.fn(actual.listUIMessages),
     syncStreams: vi.fn(actual.syncStreams),
   };
 });
@@ -94,7 +96,7 @@ describe("Nina stream reads", () => {
     });
     expect(resumed.page).toEqual([]);
     // Stream round trips never re-read the transcript.
-    expect(listUIMessages).not.toHaveBeenCalled();
+    expect(readThread).not.toHaveBeenCalled();
     expect(syncStreams).toHaveBeenLastCalledWith(
       expect.anything(),
       components.nina,
@@ -119,7 +121,7 @@ describe("Nina stream reads", () => {
       await expect(
         owner.query(query, { ...args, streamArgs: { kind: "deltas", cursors } })
       ).rejects.toThrow();
-      expect(listUIMessages).not.toHaveBeenCalled();
+      expect(readThread).not.toHaveBeenCalled();
       expect(syncStreams).not.toHaveBeenCalled();
     }
   );

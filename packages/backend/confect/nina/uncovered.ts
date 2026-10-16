@@ -1,19 +1,16 @@
 import {
-  docsToModelMessages,
   filterOutOrphanedToolMessages,
   type MessageDoc,
 } from "@convex-dev/agent";
-import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  ActionCtx,
-  QueryRunner,
-} from "@repo/backend/confect/_generated/services";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { type Asking, newestAskings } from "@repo/backend/confect/nina/asking";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { foldCanWait, HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
 import { sentTurn } from "@repo/backend/confect/nina/history";
+import { readThreadFromAction } from "@repo/backend/confect/nina/sealed/action";
+import { toModelMessages } from "@repo/backend/confect/nina/sealed/model";
 import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
 import {
   Array as Arr,
@@ -73,7 +70,7 @@ function isComplete(stored: readonly MessageDoc[]) {
 
 /** Model messages of one stored turn, without a tool call or result that lost its partner. */
 function toMessages(stored: MessageDoc[]) {
-  return docsToModelMessages(filterOutOrphanedToolMessages(stored));
+  return toModelMessages(filterOutOrphanedToolMessages(stored));
 }
 
 /** The model messages of the turn at `order`, from messages a read returned. */
@@ -93,10 +90,9 @@ function costed(order: number, stored: MessageDoc[]) {
  * `docs` holds everything read so far.
  */
 const threadReader = Effect.fn("nina.uncovered.thread")(function* (
-  turn: Pick<NinaTurnsDoc, "promptMessageId" | "threadId">,
+  turn: Pick<NinaTurnsDoc, "promptMessageId" | "threadId" | "userId">,
   size: number
 ) {
-  const ctx = yield* ActionCtx;
   let docs: MessageDoc[] = [];
   let cursor: string | null = null;
   let done = false;
@@ -104,18 +100,14 @@ const threadReader = Effect.fn("nina.uncovered.thread")(function* (
     docs: () => docs,
     down: Effect.fn("nina.uncovered.docs")(function* (oldest: number) {
       while (!(done || Arr.some(docs, (doc) => doc.order < oldest))) {
-        const page = yield* Effect.tryPromise({
-          try: () =>
-            ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
-              excludeToolMessages: false,
-              order: "desc",
-              paginationOpts: { cursor, numItems: size },
-              statuses: ["success"],
-              threadId: turn.threadId,
-              upToAndIncludingMessageId: turn.promptMessageId,
-            }),
-          catch: () => new NinaUncoveredError(),
-        });
+        const page = yield* readThreadFromAction({
+          excludeToolMessages: false,
+          owner: turn.userId,
+          paginationOpts: { cursor, numItems: size },
+          statuses: ["success"],
+          threadId: turn.threadId,
+          upToAndIncludingMessageId: turn.promptMessageId,
+        }).pipe(Effect.mapError(() => new NinaUncoveredError()));
         docs = Arr.appendAll(docs, page.page);
         done = page.isDone;
         cursor = page.continueCursor;
@@ -167,7 +159,10 @@ function outweighs(turns: readonly ReturnType<typeof costed>[]) {
  * for them again.
  */
 export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
-  turn: Pick<NinaTurnsDoc, "chatId" | "promptMessageId" | "threadId">,
+  turn: Pick<
+    NinaTurnsDoc,
+    "chatId" | "promptMessageId" | "threadId" | "userId"
+  >,
   before: number,
   through: number | null,
   later: readonly Asking[],
@@ -242,7 +237,7 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
  * no answer reads as none.
  */
 const readOwnCost = Effect.fn("nina.uncovered.own")(function* (
-  turn: Pick<NinaTurnsDoc, "order" | "promptMessageId" | "threadId">
+  turn: Pick<NinaTurnsDoc, "order" | "promptMessageId" | "threadId" | "userId">
 ) {
   const thread = yield* threadReader(turn, OWN_PAGE);
   yield* thread.down(turn.order);
@@ -263,7 +258,10 @@ const readOwnCost = Effect.fn("nina.uncovered.own")(function* (
  * fails.
  */
 export const foldWaits = Effect.fn("nina.uncovered.waits")(function* (
-  turn: Pick<NinaTurnsDoc, "history" | "order" | "promptMessageId" | "threadId">
+  turn: Pick<
+    NinaTurnsDoc,
+    "history" | "order" | "promptMessageId" | "threadId" | "userId"
+  >
 ) {
   const cost = turn.history;
   if (!(cost && foldCanWait(cost, 0, NINA_BUDGET.history))) {

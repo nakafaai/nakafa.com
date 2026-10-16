@@ -2,6 +2,7 @@
 
 import {
   AiBrain01Icon,
+  BookOpen02Icon,
   HeartAddIcon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
@@ -32,6 +33,7 @@ const sectionIcons: Record<
   ComponentProps<typeof HugeIcons>["icon"]
 > = {
   account: UserIcon,
+  learning: BookOpen02Icon,
   billing: HeartAddIcon,
   memory: AiBrain01Icon,
 };

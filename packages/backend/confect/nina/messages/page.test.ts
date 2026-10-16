@@ -1,15 +1,12 @@
 import { Ref } from "@confect/core";
-import {
-  listStreams,
-  listUIMessages,
-  saveMessage,
-  syncStreams,
-} from "@convex-dev/agent";
+import { listStreams, saveMessage, syncStreams } from "@convex-dev/agent";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { AGENT_ID_LENGTH } from "@repo/backend/confect/nina/contract/message";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
@@ -17,6 +14,7 @@ import {
   ninaStream,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { sealThreadIn, withoutRowIds } from "@repo/backend/test/nina/seal";
 import {
   createThreadTest,
   MEMORY_TURN,
@@ -25,17 +23,23 @@ import {
 } from "@repo/backend/test/nina/thread";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { FunctionArgs } from "convex/server";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@repo/backend/confect/nina/sealed/thread")
+    >();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
   return {
     ...actual,
     listStreams: vi.fn(actual.listStreams),
-    listUIMessages: vi.fn(actual.listUIMessages),
     syncStreams: vi.fn(actual.syncStreams),
   };
 });
@@ -195,7 +199,7 @@ describe("Nina message page", () => {
     ).rejects.toMatchObject({
       data: { _tag: "ChatAccessError", code: "CHAT_NOT_FOUND" },
     });
-    expect(listUIMessages).not.toHaveBeenCalled();
+    expect(readThread).not.toHaveBeenCalled();
   });
 
   it("cuts a page to the page size however many messages the caller asks for", async () => {
@@ -220,7 +224,7 @@ describe("Nina message page", () => {
     ).rejects.toMatchObject({
       data: { _tag: "ChatAccessError", code: "FORBIDDEN" },
     });
-    expect(listUIMessages).not.toHaveBeenCalled();
+    expect(readThread).not.toHaveBeenCalled();
   });
 
   it("takes the id of a thread of the longest length and refuses a longer one before it reads anything", async () => {
@@ -243,7 +247,7 @@ describe("Nina message page", () => {
       _tag: "SchemaError",
       message: expect.stringContaining("threadId"),
     });
-    expect(listUIMessages).not.toHaveBeenCalled();
+    expect(readThread).not.toHaveBeenCalled();
   });
 
   it("names the account that owns the chat in every message and live stream it tells the owner", async () => {
@@ -391,10 +395,19 @@ describe("Nina message page", () => {
     expect(encodeJsonText(readerTold)).not.toMatch(REPORTED);
   });
 
+  it("gives the owner the same page of a sealed thread as of the plain thread, with every row opened", async () => {
+    const { t, owner, identity, args } = await createThreadTest();
+    const plain = await owner.query(query, args);
+    await sealThreadIn(t, identity.threadId, identity.userId);
+    const sealed = await owner.query(query, args);
+    expect(withoutRowIds(sealed)).toEqual(withoutRowIds(plain));
+    expect(encodeJsonText(sealed)).toContain("Check the expression.");
+  });
+
   it("redacts a transport failure of the messages", async () => {
     const { owner, args } = await createThreadTest();
-    vi.mocked(listUIMessages).mockRejectedValueOnce(
-      new Error("private transport diagnostic")
+    vi.mocked(readThread).mockReturnValueOnce(
+      Effect.fail(new SealedReadError())
     );
     await expect(owner.query(query, args)).rejects.toMatchObject({
       data: { _tag: "NinaReadError", message: "Unable to read Nina messages." },
