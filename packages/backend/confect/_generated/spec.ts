@@ -186,6 +186,273 @@ const spec: Spec.Spec<{
   readonly tryouts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tryouts", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "mutations", never, GroupSpec.NamedAt<typeof tryouts_mutations_access, "access"> | GroupSpec.NamedAt<typeof tryouts_mutations_attempts, "attempts"> | GroupSpec.NamedAt<typeof tryouts_mutations_expiry, "expiry"> | GroupSpec.NamedAt<typeof tryouts_mutations_responses, "responses"> | GroupSpec.NamedAt<typeof tryouts_mutations_sections, "sections">>, "mutations"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "queries", never, GroupSpec.NamedAt<typeof tryouts_queries_access, "access"> | GroupSpec.NamedAt<typeof tryouts_queries_attempt, "attempt"> | GroupSpec.NamedAt<typeof tryouts_queries_attemptPage, "attemptPage"> | GroupSpec.NamedAt<typeof tryouts_queries_catalog, "catalog"> | GroupSpec.NamedAt<typeof tryouts_queries_content, "content"> | GroupSpec.NamedAt<typeof tryouts_queries_history, "history"> | GroupSpec.NamedAt<typeof tryouts_queries_runtime, "runtime"> | GroupSpec.NamedAt<typeof tryouts_queries_sets, "sets">>, "queries"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "runtime", never, GroupSpec.NamedAt<typeof tryouts_runtime_signed, "signed">>, "runtime">>, "tryouts">;
   readonly users: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "users", never, GroupSpec.NamedAt<typeof users_mutations, "mutations"> | GroupSpec.NamedAt<typeof users_queries, "queries">>, "users">;
   readonly vault: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "vault", never, GroupSpec.NamedAt<typeof vault_keys, "keys">>, "vault">;
-}> = Spec.make().addAt("access", GroupSpec.makeAt("access").addGroupAt("grants", access_grants)).addAt("analytics", GroupSpec.makeAt("analytics").addGroupAt("capture", analytics_capture).addGroupAt("erasure", GroupSpec.makeAt("erasure").addGroupAt("action", analytics_erasure_action).addGroupAt("workflow", analytics_erasure_workflow))).addAt("auth", GroupSpec.makeAt("auth").addGroupAt("actions", auth_actions).addGroupAt("cleanup", auth_cleanup).addGroupAt("deletion", auth_deletion.addGroupAt("recovery", auth_deletion_recovery).addGroupAt("verification", auth_deletion_verification)).addGroupAt("lifecycle", auth_lifecycle).addGroupAt("queries", auth_queries)).addAt("chats", GroupSpec.makeAt("chats").addGroupAt("mutations", chats_mutations).addGroupAt("queries", chats_queries)).addAt("classroom", GroupSpec.makeAt("classroom").addGroupAt("classes", classroom_classes).addGroupAt("teachers", classroom_teachers)).addAt("comments", GroupSpec.makeAt("comments").addGroupAt("mutations", comments_mutations).addGroupAt("queries", comments_queries)).addAt("consents", GroupSpec.makeAt("consents").addGroupAt("current", consents_current)).addAt("contentRelease", GroupSpec.makeAt("contentRelease").addGroupAt("accept", contentRelease_accept).addGroupAt("activate", contentRelease_activate).addGroupAt("article", contentRelease_article.addGroupAt("internal", contentRelease_article_internal)).addGroupAt("artifacts", contentRelease_artifacts).addGroupAt("cleanup", contentRelease_cleanup).addGroupAt("compact", contentRelease_compact).addGroupAt("envelope", contentRelease_envelope).addGroupAt("heads", contentRelease_heads).addGroupAt("ingress", GroupSpec.makeAt("ingress").addGroupAt("dispatch", contentRelease_ingress_dispatch)).addGroupAt("items", contentRelease_items).addGroupAt("manifest", contentRelease_manifest).addGroupAt("material", contentRelease_material).addGroupAt("models", contentRelease_models).addGroupAt("ownership", contentRelease_ownership).addGroupAt("page", contentRelease_page).addGroupAt("program", contentRelease_program).addGroupAt("proof", GroupSpec.makeAt("proof").addGroupAt("catalog", contentRelease_proof_catalog).addGroupAt("commit", contentRelease_proof_commit).addGroupAt("poll", contentRelease_proof_poll).addGroupAt("read", contentRelease_proof_read).addGroupAt("routes", contentRelease_proof_routes).addGroupAt("verify", contentRelease_proof_verify).addGroupAt("workflow", contentRelease_proof_workflow)).addGroupAt("quran", contentRelease_quran).addGroupAt("recovery", contentRelease_recovery).addGroupAt("reference", contentRelease_reference.addGroupAt("internal", contentRelease_reference_internal)).addGroupAt("rollback", contentRelease_rollback).addGroupAt("routes", contentRelease_routes).addGroupAt("runtime", GroupSpec.makeAt("runtime").addGroupAt("active", contentRelease_runtime_active).addGroupAt("publication", GroupSpec.makeAt("publication").addGroupAt("internal", contentRelease_runtime_publication_internal)).addGroupAt("tryout", GroupSpec.makeAt("tryout").addGroupAt("dispatch", contentRelease_runtime_tryout_dispatch).addGroupAt("internal", contentRelease_runtime_tryout_internal))).addGroupAt("snapshot", GroupSpec.makeAt("snapshot").addGroupAt("batch", contentRelease_snapshot_batch).addGroupAt("manifest", contentRelease_snapshot_manifest).addGroupAt("read", contentRelease_snapshot_read)).addGroupAt("status", contentRelease_status).addGroupAt("tryout", contentRelease_tryout).addGroupAt("verify", contentRelease_verify)).addAt("contents", GroupSpec.makeAt("contents").addGroupAt("mutations", GroupSpec.makeAt("mutations").addGroupAt("analytics", contents_mutations_analytics).addGroupAt("popularity", contents_mutations_popularity).addGroupAt("views", contents_mutations_views)).addGroupAt("queries", GroupSpec.makeAt("queries").addGroupAt("recent", contents_queries_recent).addGroupAt("search", contents_queries_search).addGroupAt("trending", contents_queries_trending)).addGroupAt("sections", GroupSpec.makeAt("sections").addGroupAt("build", contents_sections_build).addGroupAt("compare", contents_sections_compare).addGroupAt("hits", contents_sections_hits).addGroupAt("rows", contents_sections_rows).addGroupAt("search", contents_sections_search).addGroupAt("state", contents_sections_state))).addAt("credits", GroupSpec.makeAt("credits").addGroupAt("mutations", credits_mutations)).addAt("customers", GroupSpec.makeAt("customers").addGroupAt("actions", GroupSpec.makeAt("actions").addGroupAt("internal", customers_actions_internal).addGroupAt("sessions", customers_actions_sessions)).addGroupAt("checkout", GroupSpec.makeAt("checkout").addGroupAt("admission", customers_checkout_admission)).addGroupAt("deletion", GroupSpec.makeAt("deletion").addGroupAt("cleanup", customers_deletion_cleanup).addGroupAt("workflow", customers_deletion_workflow)).addGroupAt("integrity", GroupSpec.makeAt("integrity").addGroupAt("internal", customers_integrity_internal)).addGroupAt("mutations", GroupSpec.makeAt("mutations").addGroupAt("internal", customers_mutations_internal)).addGroupAt("queries", GroupSpec.makeAt("queries").addGroupAt("internal", GroupSpec.makeAt("internal").addGroupAt("customer", customers_queries_internal_customer)))).addAt("emails", GroupSpec.makeAt("emails").addGroupAt("invite", GroupSpec.makeAt("invite").addGroupAt("delivery", emails_invite_delivery).addGroupAt("internal", emails_invite_internal).addGroupAt("workflow", emails_invite_workflow)).addGroupAt("retention", emails_retention).addGroupAt("welcome", GroupSpec.makeAt("welcome").addGroupAt("delivery", emails_welcome_delivery).addGroupAt("internal", emails_welcome_internal).addGroupAt("reconciliation", emails_welcome_reconciliation).addGroupAt("workflow", emails_welcome_workflow))).addAt("integrations", GroupSpec.makeAt("integrations").addGroupAt("clients", integrations_clients)).addAt("journal", GroupSpec.makeAt("journal").addGroupAt("audit", journal_audit)).addAt("learningPreferences", GroupSpec.makeAt("learningPreferences").addGroupAt("mutations", learningPreferences_mutations).addGroupAt("queries", learningPreferences_queries)).addAt("nina", GroupSpec.makeAt("nina").addGroupAt("brief", nina_brief).addGroupAt("conversation", nina_conversation).addGroupAt("focus", nina_focus).addGroupAt("judgment", nina_judgment).addGroupAt("lifecycle", nina_lifecycle).addGroupAt("memory", nina_memory).addGroupAt("messages", nina_messages).addGroupAt("portrait", nina_portrait.addGroupAt("build", nina_portrait_build)).addGroupAt("presentation", nina_presentation).addGroupAt("response", nina_response).addGroupAt("summaries", nina_summaries).addGroupAt("turns", nina_turns).addGroupAt("uploads", nina_uploads).addGroupAt("usage", nina_usage).addGroupAt("waits", nina_waits)).addAt("onboarding", GroupSpec.makeAt("onboarding").addGroupAt("mutations", onboarding_mutations).addGroupAt("queries", onboarding_queries)).addAt("operators", GroupSpec.makeAt("operators").addGroupAt("expiry", operators_expiry).addGroupAt("staff", operators_staff).addGroupAt("tenants", operators_tenants).addGroupAt("visits", operators_visits)).addAt("privacy", GroupSpec.makeAt("privacy").addGroupAt("recovery", privacy_recovery)).addAt("routes", GroupSpec.makeAt("routes").addGroupAt("agent", GroupSpec.makeAt("agent").addGroupAt("quota", routes_agent_quota))).addAt("storage", storage).addAt("subscriptions", GroupSpec.makeAt("subscriptions").addGroupAt("mutations", subscriptions_mutations).addGroupAt("queries", subscriptions_queries)).addAt("tenancy", GroupSpec.makeAt("tenancy").addGroupAt("assignments", tenancy_assignments).addGroupAt("claims", tenancy_claims).addGroupAt("cohorts", tenancy_cohorts).addGroupAt("expiry", tenancy_expiry).addGroupAt("holders", tenancy_holders).addGroupAt("invites", tenancy_invites).addGroupAt("memberships", tenancy_memberships).addGroupAt("people", tenancy_people).addGroupAt("periods", tenancy_periods).addGroupAt("placements", tenancy_placements).addGroupAt("profile", tenancy_profile).addGroupAt("promotion", GroupSpec.makeAt("promotion").addGroupAt("apply", tenancy_promotion_apply).addGroupAt("draft", tenancy_promotion_draft).addGroupAt("moves", tenancy_promotion_moves).addGroupAt("review", tenancy_promotion_review).addGroupAt("run", tenancy_promotion_run).addGroupAt("undo", tenancy_promotion_undo)).addGroupAt("provision", tenancy_provision).addGroupAt("settings", tenancy_settings).addGroupAt("units", tenancy_units).addGroupAt("viewer", tenancy_viewer)).addAt("triggers", GroupSpec.makeAt("triggers").addGroupAt("chats", GroupSpec.makeAt("chats").addGroupAt("cleanup", triggers_chats_cleanup)).addGroupAt("comments", GroupSpec.makeAt("comments").addGroupAt("cleanup", triggers_comments_cleanup))).addAt("tryouts", GroupSpec.makeAt("tryouts").addGroupAt("mutations", GroupSpec.makeAt("mutations").addGroupAt("access", tryouts_mutations_access).addGroupAt("attempts", tryouts_mutations_attempts).addGroupAt("expiry", tryouts_mutations_expiry).addGroupAt("responses", tryouts_mutations_responses).addGroupAt("sections", tryouts_mutations_sections)).addGroupAt("queries", GroupSpec.makeAt("queries").addGroupAt("access", tryouts_queries_access).addGroupAt("attempt", tryouts_queries_attempt).addGroupAt("attemptPage", tryouts_queries_attemptPage).addGroupAt("catalog", tryouts_queries_catalog).addGroupAt("content", tryouts_queries_content).addGroupAt("history", tryouts_queries_history).addGroupAt("runtime", tryouts_queries_runtime).addGroupAt("sets", tryouts_queries_sets)).addGroupAt("runtime", GroupSpec.makeAt("runtime").addGroupAt("signed", tryouts_runtime_signed))).addAt("users", GroupSpec.makeAt("users").addGroupAt("mutations", users_mutations).addGroupAt("queries", users_queries)).addAt("vault", GroupSpec.makeAt("vault").addGroupAt("keys", vault_keys));
+}> = Spec.fromGroups({
+  ["access"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["grants"]: access_grants,
+  }),
+  ["analytics"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["capture"]: analytics_capture,
+    ["erasure"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["action"]: analytics_erasure_action,
+      ["workflow"]: analytics_erasure_workflow,
+    }),
+  }),
+  ["auth"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["actions"]: auth_actions,
+    ["cleanup"]: auth_cleanup,
+    ["deletion"]: GroupSpec.addGroupsAt(auth_deletion, {
+      ["recovery"]: auth_deletion_recovery,
+      ["verification"]: auth_deletion_verification,
+    }),
+    ["lifecycle"]: auth_lifecycle,
+    ["queries"]: auth_queries,
+  }),
+  ["chats"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: chats_mutations,
+    ["queries"]: chats_queries,
+  }),
+  ["classroom"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["classes"]: classroom_classes,
+    ["teachers"]: classroom_teachers,
+  }),
+  ["comments"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: comments_mutations,
+    ["queries"]: comments_queries,
+  }),
+  ["consents"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["current"]: consents_current,
+  }),
+  ["contentRelease"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["accept"]: contentRelease_accept,
+    ["activate"]: contentRelease_activate,
+    ["article"]: GroupSpec.addGroupsAt(contentRelease_article, {
+      ["internal"]: contentRelease_article_internal,
+    }),
+    ["artifacts"]: contentRelease_artifacts,
+    ["cleanup"]: contentRelease_cleanup,
+    ["compact"]: contentRelease_compact,
+    ["envelope"]: contentRelease_envelope,
+    ["heads"]: contentRelease_heads,
+    ["ingress"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["dispatch"]: contentRelease_ingress_dispatch,
+    }),
+    ["items"]: contentRelease_items,
+    ["manifest"]: contentRelease_manifest,
+    ["material"]: contentRelease_material,
+    ["models"]: contentRelease_models,
+    ["ownership"]: contentRelease_ownership,
+    ["page"]: contentRelease_page,
+    ["program"]: contentRelease_program,
+    ["proof"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["catalog"]: contentRelease_proof_catalog,
+      ["commit"]: contentRelease_proof_commit,
+      ["poll"]: contentRelease_proof_poll,
+      ["read"]: contentRelease_proof_read,
+      ["routes"]: contentRelease_proof_routes,
+      ["verify"]: contentRelease_proof_verify,
+      ["workflow"]: contentRelease_proof_workflow,
+    }),
+    ["quran"]: contentRelease_quran,
+    ["recovery"]: contentRelease_recovery,
+    ["reference"]: GroupSpec.addGroupsAt(contentRelease_reference, {
+      ["internal"]: contentRelease_reference_internal,
+    }),
+    ["rollback"]: contentRelease_rollback,
+    ["routes"]: contentRelease_routes,
+    ["runtime"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["active"]: contentRelease_runtime_active,
+      ["publication"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+        ["internal"]: contentRelease_runtime_publication_internal,
+      }),
+      ["tryout"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+        ["dispatch"]: contentRelease_runtime_tryout_dispatch,
+        ["internal"]: contentRelease_runtime_tryout_internal,
+      }),
+    }),
+    ["snapshot"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["batch"]: contentRelease_snapshot_batch,
+      ["manifest"]: contentRelease_snapshot_manifest,
+      ["read"]: contentRelease_snapshot_read,
+    }),
+    ["status"]: contentRelease_status,
+    ["tryout"]: contentRelease_tryout,
+    ["verify"]: contentRelease_verify,
+  }),
+  ["contents"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["analytics"]: contents_mutations_analytics,
+      ["popularity"]: contents_mutations_popularity,
+      ["views"]: contents_mutations_views,
+    }),
+    ["queries"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["recent"]: contents_queries_recent,
+      ["search"]: contents_queries_search,
+      ["trending"]: contents_queries_trending,
+    }),
+    ["sections"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["build"]: contents_sections_build,
+      ["compare"]: contents_sections_compare,
+      ["hits"]: contents_sections_hits,
+      ["rows"]: contents_sections_rows,
+      ["search"]: contents_sections_search,
+      ["state"]: contents_sections_state,
+    }),
+  }),
+  ["credits"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: credits_mutations,
+  }),
+  ["customers"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["actions"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["internal"]: customers_actions_internal,
+      ["sessions"]: customers_actions_sessions,
+    }),
+    ["checkout"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["admission"]: customers_checkout_admission,
+    }),
+    ["deletion"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["cleanup"]: customers_deletion_cleanup,
+      ["workflow"]: customers_deletion_workflow,
+    }),
+    ["integrity"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["internal"]: customers_integrity_internal,
+    }),
+    ["mutations"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["internal"]: customers_mutations_internal,
+    }),
+    ["queries"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["internal"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+        ["customer"]: customers_queries_internal_customer,
+      }),
+    }),
+  }),
+  ["emails"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["invite"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["delivery"]: emails_invite_delivery,
+      ["internal"]: emails_invite_internal,
+      ["workflow"]: emails_invite_workflow,
+    }),
+    ["retention"]: emails_retention,
+    ["welcome"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["delivery"]: emails_welcome_delivery,
+      ["internal"]: emails_welcome_internal,
+      ["reconciliation"]: emails_welcome_reconciliation,
+      ["workflow"]: emails_welcome_workflow,
+    }),
+  }),
+  ["integrations"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["clients"]: integrations_clients,
+  }),
+  ["journal"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["audit"]: journal_audit,
+  }),
+  ["learningPreferences"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: learningPreferences_mutations,
+    ["queries"]: learningPreferences_queries,
+  }),
+  ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["brief"]: nina_brief,
+    ["conversation"]: nina_conversation,
+    ["focus"]: nina_focus,
+    ["judgment"]: nina_judgment,
+    ["lifecycle"]: nina_lifecycle,
+    ["memory"]: nina_memory,
+    ["messages"]: nina_messages,
+    ["portrait"]: GroupSpec.addGroupsAt(nina_portrait, {
+      ["build"]: nina_portrait_build,
+    }),
+    ["presentation"]: nina_presentation,
+    ["response"]: nina_response,
+    ["summaries"]: nina_summaries,
+    ["turns"]: nina_turns,
+    ["uploads"]: nina_uploads,
+    ["usage"]: nina_usage,
+    ["waits"]: nina_waits,
+  }),
+  ["onboarding"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: onboarding_mutations,
+    ["queries"]: onboarding_queries,
+  }),
+  ["operators"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["expiry"]: operators_expiry,
+    ["staff"]: operators_staff,
+    ["tenants"]: operators_tenants,
+    ["visits"]: operators_visits,
+  }),
+  ["privacy"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["recovery"]: privacy_recovery,
+  }),
+  ["routes"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["agent"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["quota"]: routes_agent_quota,
+    }),
+  }),
+  ["storage"]: storage,
+  ["subscriptions"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: subscriptions_mutations,
+    ["queries"]: subscriptions_queries,
+  }),
+  ["tenancy"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["assignments"]: tenancy_assignments,
+    ["claims"]: tenancy_claims,
+    ["cohorts"]: tenancy_cohorts,
+    ["expiry"]: tenancy_expiry,
+    ["holders"]: tenancy_holders,
+    ["invites"]: tenancy_invites,
+    ["memberships"]: tenancy_memberships,
+    ["people"]: tenancy_people,
+    ["periods"]: tenancy_periods,
+    ["placements"]: tenancy_placements,
+    ["profile"]: tenancy_profile,
+    ["promotion"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["apply"]: tenancy_promotion_apply,
+      ["draft"]: tenancy_promotion_draft,
+      ["moves"]: tenancy_promotion_moves,
+      ["review"]: tenancy_promotion_review,
+      ["run"]: tenancy_promotion_run,
+      ["undo"]: tenancy_promotion_undo,
+    }),
+    ["provision"]: tenancy_provision,
+    ["settings"]: tenancy_settings,
+    ["units"]: tenancy_units,
+    ["viewer"]: tenancy_viewer,
+  }),
+  ["triggers"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["chats"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["cleanup"]: triggers_chats_cleanup,
+    }),
+    ["comments"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["cleanup"]: triggers_comments_cleanup,
+    }),
+  }),
+  ["tryouts"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["access"]: tryouts_mutations_access,
+      ["attempts"]: tryouts_mutations_attempts,
+      ["expiry"]: tryouts_mutations_expiry,
+      ["responses"]: tryouts_mutations_responses,
+      ["sections"]: tryouts_mutations_sections,
+    }),
+    ["queries"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["access"]: tryouts_queries_access,
+      ["attempt"]: tryouts_queries_attempt,
+      ["attemptPage"]: tryouts_queries_attemptPage,
+      ["catalog"]: tryouts_queries_catalog,
+      ["content"]: tryouts_queries_content,
+      ["history"]: tryouts_queries_history,
+      ["runtime"]: tryouts_queries_runtime,
+      ["sets"]: tryouts_queries_sets,
+    }),
+    ["runtime"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["signed"]: tryouts_runtime_signed,
+    }),
+  }),
+  ["users"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["mutations"]: users_mutations,
+    ["queries"]: users_queries,
+  }),
+  ["vault"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["keys"]: vault_keys,
+  }),
+}) as typeof spec;
 
 export default spec;
