@@ -20,7 +20,7 @@ export const TenantActor = Schema.Union([
 export const Actor = Schema.Union([
   /** An account acting in its personal space. */
   Schema.Struct({ id: Id("users"), kind: Schema.Literal("user") }),
-  ...TenantActor.members,
+  TenantActor,
 ]).pipe(Schema.toTaggedUnion("kind"));
 
 /**
