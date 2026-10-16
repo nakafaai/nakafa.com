@@ -1,10 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
   admitBatch,
   type Batch,
   BatchSchema,
   decodeBatch,
+  decodeStoredStep,
   encodeBatch,
+  encodeStoredStep,
+  MAX_CLIENT_ID_LENGTH,
 } from "@repo/backend/confect/editor/batch";
 import {
   MAX_BATCH_BYTES,
@@ -13,6 +18,7 @@ import {
 } from "@repo/backend/confect/editor/size";
 import type { Step } from "@repo/backend/confect/editor/step";
 import { nested } from "@repo/backend/test/editor/nodes";
+import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Schema } from "effect";
 
 /** A step that is valid whatever the document holds. */
@@ -27,13 +33,35 @@ function batchOf(clientId: string, baseVersion: number, count: number): Batch {
   return { baseVersion, clientId, steps: Arr.makeBy(count, () => oneStep) };
 }
 
+/**
+ * A batch of one step whose JSON value is `text`. The client id is bounded, so
+ * a test that sets the size of the call uses the value of a step instead.
+ */
+function batchWithText(text: string): Batch {
+  return {
+    baseVersion: 0,
+    clientId: "rina",
+    steps: [{ attr: "title", stepType: "docAttr", value: text }],
+  };
+}
+
 describe("editor/batch version rule", () => {
   it.effect(
-    "applies a batch on the version it names and counts up by its steps",
+    "admits a batch on the version it names and counts up by its steps",
     () =>
       Effect.gen(function* () {
-        expect(yield* admitBatch(0, batchOf("rina", 0, 2))).toBe(2);
-        expect(yield* admitBatch(40, batchOf("hendra", 40, 3))).toBe(43);
+        const rina = yield* admitBatch(
+          0,
+          yield* encodeBatch(batchOf("rina", 0, 2))
+        );
+        expect(rina.version).toBe(2);
+        expect(rina.batch).toEqual(batchOf("rina", 0, 2));
+
+        const hendra = yield* admitBatch(
+          40,
+          yield* encodeBatch(batchOf("hendra", 40, 3))
+        );
+        expect(hendra.version).toBe(43);
       })
   );
 
@@ -44,16 +72,29 @@ describe("editor/batch version rule", () => {
     "refuses a batch made on version $baseVersion when the document is at $version",
     ({ baseVersion, version }) =>
       Effect.gen(function* () {
-        const failure = yield* admitBatch(
-          version,
-          batchOf("rina", baseVersion, 1)
-        ).pipe(Effect.flip);
+        const text = yield* encodeBatch(batchOf("rina", baseVersion, 1));
+        const failure = yield* admitBatch(version, text).pipe(Effect.flip);
         expect(failure).toMatchObject({
           _tag: "StaleBatch",
           baseVersion,
           version,
         });
       })
+  );
+
+  it.effect("refuses a call over the step bound on the version it names", () =>
+    Effect.gen(function* () {
+      // One step more than the bound, on the version the document is at, so only the bound refuses it.
+      const step = '{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}';
+      const steps = Arr.join(
+        Arr.makeBy(MAX_BATCH_STEPS + 1, () => step),
+        ","
+      );
+      const text = `{"baseVersion":40,"clientId":"rina","steps":[${steps}]}`;
+      const failure = yield* admitBatch(40, text).pipe(Effect.flip);
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain(`at most ${MAX_BATCH_STEPS} steps`);
+    })
   );
 });
 
@@ -107,16 +148,41 @@ describe("editor/batch limits", () => {
     })
   );
 
+  it.effect("refuses a client id longer than MAX_CLIENT_ID_LENGTH", () =>
+    Effect.gen(function* () {
+      const failure = yield* Schema.decodeEffect(BatchSchema)({
+        baseVersion: 0,
+        clientId: "x".repeat(MAX_CLIENT_ID_LENGTH + 1),
+        steps: [oneStep],
+      }).pipe(Effect.flip);
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain(
+        `at most ${MAX_CLIENT_ID_LENGTH} characters`
+      );
+    })
+  );
+
+  it.effect("accepts the client id that randomUuid makes", () =>
+    Effect.gen(function* () {
+      const clientId = yield* randomUuid;
+      yield* Schema.decodeEffect(BatchSchema)({
+        baseVersion: 0,
+        clientId,
+        steps: [oneStep],
+      });
+    })
+  );
+
   it.effect(
     "writes a batch at exactly MAX_BATCH_BYTES and refuses one byte more",
     () =>
       Effect.gen(function* () {
-        const base = utf8Bytes(yield* encodeBatch(batchOf("x", 0, 1)));
+        const base = utf8Bytes(yield* encodeBatch(batchWithText("")));
         const room = MAX_BATCH_BYTES - base;
-        const text = yield* encodeBatch(batchOf("x".repeat(room + 1), 0, 1));
+        const text = yield* encodeBatch(batchWithText("x".repeat(room)));
         expect(utf8Bytes(text)).toBe(MAX_BATCH_BYTES);
         const refused = yield* encodeBatch(
-          batchOf("x".repeat(room + 2), 0, 1)
+          batchWithText("x".repeat(room + 1))
         ).pipe(Effect.flip);
         expect(refused).toMatchObject({
           _tag: "BatchTooLarge",
@@ -150,8 +216,8 @@ describe("editor/batch limits", () => {
 describe("editor/batch call body", () => {
   it.effect("reads the text of a call at exactly MAX_BATCH_BYTES", () =>
     Effect.gen(function* () {
-      const base = utf8Bytes(yield* encodeBatch(batchOf("x", 0, 1)));
-      const full = batchOf("x".repeat(MAX_BATCH_BYTES - base + 1), 0, 1);
+      const base = utf8Bytes(yield* encodeBatch(batchWithText("")));
+      const full = batchWithText("x".repeat(MAX_BATCH_BYTES - base));
       const text = yield* encodeBatch(full);
       expect(utf8Bytes(text)).toBe(MAX_BATCH_BYTES);
       expect(yield* decodeBatch(text)).toEqual(full);
@@ -182,5 +248,54 @@ describe("editor/batch call body", () => {
       ).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
     })
+  );
+});
+
+describe("editor/batch stored steps", () => {
+  it.effect("keeps the author and the client of each stored step", () =>
+    Effect.gen(function* () {
+      const author = yield* Schema.decodeUnknownEffect(IdSchema("users"))(
+        "users_rina"
+      );
+      const stored = { author, clientId: "rina-tab", step: oneStep };
+      const row = yield* encodeStoredStep(stored);
+      expect(row).toMatchObject({ author: "users_rina", clientId: "rina-tab" });
+      expect(yield* decodeStoredStep(row)).toEqual(stored);
+    })
+  );
+
+  it.effect("refuses a stored row without an author", () =>
+    Effect.gen(function* () {
+      const failure = yield* decodeStoredStep({
+        clientId: "rina-tab",
+        step: '{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}',
+      }).pipe(Effect.flip);
+      expect(failure._tag).toBe("SchemaError");
+    })
+  );
+
+  it.effect(
+    "refuses a stored step whose slice is one level deeper than the bound",
+    () =>
+      Effect.gen(function* () {
+        const author = yield* Schema.decodeUnknownEffect(IdSchema("users"))(
+          "users_rina"
+        );
+        const deep: Step = {
+          from: 0,
+          slice: { content: [nested(MAX_DOCUMENT_DEPTH + 1)] },
+          stepType: "replace",
+          to: 0,
+        };
+        const failure = yield* encodeStoredStep({
+          author,
+          clientId: "rina-tab",
+          step: deep,
+        }).pipe(Effect.flip);
+        expect(failure._tag).toBe("SchemaError");
+        expect(failure.message).toContain(
+          `at most ${MAX_DOCUMENT_DEPTH} levels deep`
+        );
+      })
   );
 });
