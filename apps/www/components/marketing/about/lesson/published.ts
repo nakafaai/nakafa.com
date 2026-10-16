@@ -23,15 +23,15 @@ export const HOME_LESSON_PATHS = {
     en: "subjects/biology/biodiversity/bacteria",
     id: "materi/biologi/keanekaragaman-makhluk-hidup/bakteri",
   },
+  circle: {
+    de: "faecher/mathematik/trigonometrie/sinus-kosinus-und-tangens-vergleichen",
+    en: "subjects/mathematics/trigonometry/trigonometric-comparison-three-primary",
+    id: "materi/matematika/trigonometri/tiga-serangkai-perbandingan-trigonometri",
+  },
   projectile: {
     de: "faecher/physik/kinematik/parabelfoermige-bewegung",
     en: "subjects/physics/kinematics/parabolic-movement",
     id: "materi/fisika/kinematika/gerak-parabola",
-  },
-  quadratic: {
-    de: "faecher/mathematik/quadratische-funktionen/eigenschaften-quadratischer-funktionen",
-    en: "subjects/mathematics/quadratic-function/quadratic-function-characteristics",
-    id: "materi/matematika/persamaan-dan-fungsi-kuadrat/karakteristik-fungsi-kuadrat",
   },
 } satisfies Record<Lesson, Record<AppLocaleCode, string>>;
 
@@ -110,8 +110,8 @@ export const readHomeLessons = Effect.fn("www.home.readLessons")(function* (
     {
       atom: readHomeLesson(locale, "atom", readLesson),
       cell: readHomeLesson(locale, "cell", readLesson),
+      circle: readHomeLesson(locale, "circle", readLesson),
       projectile: readHomeLesson(locale, "projectile", readLesson),
-      quadratic: readHomeLesson(locale, "quadratic", readLesson),
     },
     { concurrency: "unbounded" }
   );

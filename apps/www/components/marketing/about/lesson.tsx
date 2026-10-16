@@ -35,8 +35,7 @@ async function readLessons(locale: AppLocaleCode) {
 /**
  * The lessons row: a short chat with Nina on one side and the lesson window on
  * the other. The chat uses the product's own bubbles, and the window holds four
- * published lessons, each named and described by the lesson itself. The quadratic
- * visual is the exception: it draws its own scene (see quadratic.ts).
+ * published lessons, each named and described by the lesson itself.
  */
 export async function Lesson() {
   const locale = getLocaleOrThrow(await getLocale());

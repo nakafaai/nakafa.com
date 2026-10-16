@@ -57,13 +57,13 @@ const INDONESIAN = {
     "Bakteri",
     "Bakteri adalah sel prokariotik."
   ),
+  [HOME_LESSON_PATHS.circle.id]: publishedLesson(
+    "Tiga Perbandingan Trigonometri Dasar",
+    "Hubungkan rasio sinus, kosinus, dan tangen pada segitiga siku-siku dengan koordinat pada lingkaran satuan."
+  ),
   [HOME_LESSON_PATHS.projectile.id]: publishedLesson(
     "Gerak Parabola",
     "Gerak parabola menggabungkan dua gerak."
-  ),
-  [HOME_LESSON_PATHS.quadratic.id]: publishedLesson(
-    "Karakteristik Fungsi Kuadrat",
-    "Baca grafik fungsi kuadrat."
   ),
 };
 
@@ -83,7 +83,12 @@ describe("the lessons of the home page window", () => {
         expect(lessons.projectile.href).toBe(
           "/id/materi/fisika/kinematika/gerak-parabola"
         );
-        expect(lessons.quadratic.title).toBe("Karakteristik Fungsi Kuadrat");
+        expect(lessons.circle.title).toBe(
+          "Tiga Perbandingan Trigonometri Dasar"
+        );
+        expect(lessons.circle.href).toBe(
+          "/id/materi/matematika/trigonometri/tiga-serangkai-perbandingan-trigonometri"
+        );
       })
   );
 

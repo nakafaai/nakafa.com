@@ -25,7 +25,7 @@ const LOADING_HOLD_MS = 8000;
 const FOCUS_PROBE = "data-focus-probe";
 
 /** A translation key that only the lesson visual's code names, so its chunk is the one held. */
-const LESSON_VISUAL_MARKER = "lab.quadratic.view";
+const LESSON_VISUAL_MARKER = "lab.atom.choose";
 
 /** The first lesson's tab, and the view its visual names, in Indonesian. */
 const PROJECTILE_VIEW = "Visual lintasan bola lontar";

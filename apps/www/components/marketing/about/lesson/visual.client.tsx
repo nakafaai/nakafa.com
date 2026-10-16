@@ -2,30 +2,23 @@
 
 import { ATOM_SHELL_SAMPLES } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import type { ComponentType } from "react";
 import type { Lesson } from "@/components/marketing/about/lesson/id";
-import {
-  QUADRATIC_POINTS,
-  QUADRATIC_SCENE,
-} from "@/components/marketing/about/lesson/quadratic";
+import type { HomeLesson } from "@/components/marketing/about/lesson/published";
 import { BacteriaStructureLab } from "@/lib/content/renderer/client/biology/bacteria";
 import { AtomShellLab } from "@/lib/content/renderer/client/chemistry/atom";
+import { UnitCircle } from "@/lib/content/renderer/client/mathematics/geometry";
 import { ParabolicMovementLab } from "@/lib/content/renderer/client/physics/parabolic";
 
-/** What every lesson visual receives from the window: the page's decimal separator. */
+/**
+ * What every lesson visual receives from the window: the page's decimal separator,
+ * and the lesson as Aksara published it for the page's locale.
+ */
 interface LessonVisualProps {
   readonly decimalSeparator: DecimalSeparator;
+  readonly published: HomeLesson;
 }
-
-/** The math visual of the product, loaded when its lesson opens. */
-const MathVisual = dynamic(() =>
-  import("@/lib/content/renderer/client/base/visual/math").then(
-    ({ MathVisual }) => MathVisual
-  )
-);
 
 /**
  * The projectile lesson's visual: a ball thrown at a chosen angle, in three
@@ -51,25 +44,13 @@ function ProjectileVisual({ decimalSeparator }: LessonVisualProps) {
   );
 }
 
-/** The point as the lesson writes it, such as (1,0). */
-function pointMath(point: { readonly x: number; readonly y: number }) {
-  return `(${point.x},${point.y})`;
-}
-
-/** The quadratic lesson's visual: a parabola with its two roots and its vertex. */
-function QuadraticVisual() {
-  const t = useTranslations("Landing");
-
+/**
+ * The circle lesson's visual: the renderer's unit circle. Its card names the
+ * lesson with the title and description that Aksara published for it.
+ */
+function CircleVisual({ published }: LessonVisualProps) {
   return (
-    <MathVisual
-      labels={{
-        left: <InlineMath math={pointMath(QUADRATIC_POINTS.left)} />,
-        right: <InlineMath math={pointMath(QUADRATIC_POINTS.right)} />,
-        vertex: <InlineMath math={pointMath(QUADRATIC_POINTS.vertex)} />,
-      }}
-      scene={QUADRATIC_SCENE}
-      viewLabel={t("lab.quadratic.view")}
-    />
+    <UnitCircle description={published.description} title={published.title} />
   );
 }
 
@@ -131,20 +112,23 @@ function BacteriaVisual() {
 const VISUALS: Record<Lesson, ComponentType<LessonVisualProps>> = {
   atom: AtomVisual,
   cell: BacteriaVisual,
+  circle: CircleVisual,
   projectile: ProjectileVisual,
-  quadratic: QuadraticVisual,
 };
 
 /**
  * The visual of one lesson of the home page window. The window loads this module
  * only when it nears the screen, so the labs stay out of the first JavaScript.
- * The visual gets interface labels only: the lesson's own words stay in its
- * published page, so the window never copies them.
+ * Each visual gets interface labels only, so the lesson's own words stay in its
+ * published page. The circle is the one exception: its card shows the title and
+ * description that Aksara published, read from the publication and never written
+ * into Nakafa.
  */
 export function LessonVisual({
   decimalSeparator,
   lesson,
+  published,
 }: LessonVisualProps & { readonly lesson: Lesson }) {
   const Visual = VISUALS[lesson];
-  return <Visual decimalSeparator={decimalSeparator} />;
+  return <Visual decimalSeparator={decimalSeparator} published={published} />;
 }

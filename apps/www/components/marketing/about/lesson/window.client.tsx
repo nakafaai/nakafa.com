@@ -47,16 +47,22 @@ interface LessonWindowProps {
 function LessonScene({
   decimalSeparator,
   lesson,
+  published,
   revealed,
 }: {
   readonly decimalSeparator: DecimalSeparator;
   readonly lesson: Lesson;
+  readonly published: HomeLesson;
   readonly revealed: boolean;
 }) {
   return (
     <div className="grid">
       {revealed ? (
-        <LessonVisual decimalSeparator={decimalSeparator} lesson={lesson} />
+        <LessonVisual
+          decimalSeparator={decimalSeparator}
+          lesson={lesson}
+          published={published}
+        />
       ) : (
         <div aria-hidden="true" className={threeSceneFrameVariants()} />
       )}
@@ -125,6 +131,7 @@ export function LessonWindow({
             <LessonScene
               decimalSeparator={decimalSeparator}
               lesson={id}
+              published={lessons[id]}
               revealed={revealed}
             />
           </TabsPanel>
