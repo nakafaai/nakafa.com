@@ -162,7 +162,7 @@ describe("generateRefs", () => {
           specPath,
           `import { GroupSpec, Spec } from "@confect/core";
 import nina_turns from "../nina/turns.spec";
-const spec: Spec.Spec<{}> = Spec.make().addAt("nina", GroupSpec.makeAt("nina").addGroupAt("other", nina_turns));
+const spec: Spec.Spec<{}> = Spec.fromGroups({ ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), { ["other"]: nina_turns }) });
 export default spec;
 `
         );
