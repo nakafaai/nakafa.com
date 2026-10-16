@@ -1,7 +1,7 @@
 import { pipe, Result, Schema, String as Str } from "effect";
 
 /** The fewest characters a username holds. */
-const USERNAME_MIN_LENGTH = 3;
+export const USERNAME_MIN_LENGTH = 3;
 
 /** The most characters a username holds. */
 export const USERNAME_MAX_LENGTH = 20;

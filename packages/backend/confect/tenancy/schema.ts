@@ -67,7 +67,8 @@ export const PersonName = Schema.String.check(
 export const PersonKind = Schema.Literals(["member", "operator"]);
 /** Operator Persons are suspended between visits; replaced pending Owners are removed. */
 export const PersonStatus = Schema.Literals(["active", "suspended", "removed"]);
-export const ClaimMethod = Schema.Literals(["invite", "operator"]);
+/** How an account came to hold a Person: an invite, a login card, or operator work. */
+export const ClaimMethod = Schema.Literals(["card", "invite", "operator"]);
 /**
  * Why an operator changed a Person without the school's own action.
  * `break-glass` removes an unclaimed Owner and invites a replacement.

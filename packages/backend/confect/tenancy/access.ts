@@ -3,6 +3,7 @@ import type {
   TenantCohortsDoc,
   TenantPeopleDoc,
   TenantPeriodsDoc,
+  TenantPromotionsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
@@ -41,3 +42,15 @@ export class CohortAccess extends MiddlewareSpec.MiddlewareSpec<
   CohortAccess,
   { provides: Cohort; requires: Member }
 >()("CohortAccess", Kind.middleware(entries, "cohort")) {}
+
+/** The promotion that the function's `PromotionAccess` check loaded and allowed. */
+export class Promotion extends Context.Service<
+  Promotion,
+  TenantPromotionsDoc
+>()("@repo/backend/confect/tenancy/access/Promotion") {}
+
+/** Checks a promotion action on the promotion whose ID the `arg` argument holds. */
+export class PromotionAccess extends MiddlewareSpec.MiddlewareSpec<
+  PromotionAccess,
+  { provides: Promotion; requires: Member }
+>()("PromotionAccess", Kind.middleware(entries, "promotion")) {}

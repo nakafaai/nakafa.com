@@ -22,8 +22,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const PROMPT = "Why is the derivative of sine the cosine?";
 /** The curriculum context a lesson link carries. */
 const CONTEXT = "high-school~functions";
-/** The Convex name of `nina.messages.list`, the query that reads the messages of a chat. */
-const MESSAGES = "nina/messages:list";
+/** The Convex name of `nina.messages.page`, the query that reads the messages of a chat. */
+const MESSAGES = "nina/messages:page";
 /** The address of a chat that the page moves to once its first prompt is admitted. */
 const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 
