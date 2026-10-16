@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Deferred, Effect } from "effect";
+import { Effect } from "effect";
 import {
   ANSWER_MILLISECONDS,
   reloadUntil,
@@ -21,11 +21,11 @@ import {
   LIST_QUERY,
   MEMORY_PATH,
   memoryRow,
+  nameOf,
   opened,
   openMemoryPage,
+  runMemory,
 } from "@/e2e/support/memory";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { NEXT_CHUNK_PATH } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const WRITTEN = "Prefers worked examples before the formula";
@@ -37,17 +37,9 @@ const REMEMBER = "Let Nina save and use memories";
 /** The title of the Memory page. */
 const MEMORY_TITLE = /Memory/;
 
-/** The name button of one memory's row, which opens the memory in the editor. */
-const nameOf = (page: Page, text: string) =>
-  memoryRow(page, text).locator("button").first();
-
 /** The search field of the list, which stays on the page whatever the list holds. */
 const searchOf = (page: Page) =>
   page.getByRole("searchbox", { name: "Search memories" });
-
-/** The editor on a wide screen: the panel beside the list. */
-const panelOf = (page: Page) =>
-  page.getByRole("complementary", { name: "Edit memory" });
 
 /** Opens the memory that a row names, and waits until its editor holds the words and the focus. */
 const openRow = async (page: Page, text: string) => {
@@ -97,6 +89,32 @@ const deletesToTheList = Effect.fn("NakafaE2E.memoryDeletesToList")(function* (
     await expect(memoryRow(page, SECOND)).toHaveCount(0);
     await expect(page.locator("#user-settings-memory-list")).toBeFocused();
     await saved(changes, before);
+  });
+});
+
+/**
+ * A new memory that its first save has stored is still the memory the Add button
+ * opened, so closing the editor returns the focus to that button, not to the row
+ * the save made.
+ */
+const closesNewToAdd = Effect.fn("NakafaE2E.memoryClosesNewToAdd")(function* (
+  page: Page,
+  baseURL: string
+) {
+  const changes = yield* openMemoryPage(page, baseURL);
+  const before = changes.sent;
+
+  yield* Effect.promise(async () => {
+    await page.getByRole("button", { name: "Add memory" }).click();
+    await opened(page, "");
+    await page.keyboard.type(WRITTEN);
+    await saved(changes, before);
+    await expect(memoryRow(page, WRITTEN)).toBeVisible();
+    await editorOf(page).press("Escape");
+    await expect(editorOf(page)).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Add memory" })
+    ).toBeFocused();
   });
 });
 
@@ -220,66 +238,6 @@ const pausesBeforeTheAnswer = Effect.fn("NakafaE2E.memoryPausesBeforeAnswer")(
   }
 );
 
-/**
- * The editor's code loads when the learner opens it. Until it arrives, the box
- * shows the saved words as plain text in the same place, so nothing pops in,
- * and the editor takes the words' place without moving them.
- */
-const showsSavedWordsWhileLoading = Effect.fn(
-  "NakafaE2E.memoryShowsWordsWhileLoading"
-)(function* (page: Page, baseURL: string) {
-  const changes = yield* openMemoryPage(page, baseURL);
-  const before = changes.sent;
-  yield* writeMemory(page, WRITTEN);
-
-  // The editor's code is the chunk that loads on the press, and it waits here.
-  const gate = yield* Deferred.make<void>();
-  const services = yield* Effect.context<never>();
-
-  yield* Effect.promise(async () => {
-    await saved(changes, before);
-    await reloadUntil(page, () =>
-      expect(memoryRow(page, WRITTEN)).toBeVisible({ timeout: 3000 })
-    );
-
-    await page.route(NEXT_CHUNK_PATH, async (route) => {
-      await Effect.runPromiseWith(services)(Deferred.await(gate));
-      await route.continue();
-    });
-    await nameOf(page, WRITTEN).click();
-
-    const words = panelOf(page).getByText(WRITTEN, { exact: true });
-    await expect(words).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-    await expect(editorOf(page)).toHaveCount(0);
-    const placed = await words.boundingBox();
-
-    await Effect.runPromiseWith(services)(Deferred.succeed(gate, undefined));
-    await expect(editorOf(page)).toHaveText(WRITTEN, {
-      timeout: readinessTimeoutMilliseconds,
-    });
-    await expect(words).toHaveCount(1);
-    const settled = await words.boundingBox();
-
-    expect(settled?.y).toBeCloseTo(placed?.y ?? Number.NaN, 0);
-    expect(settled?.x).toBeCloseTo(placed?.x ?? Number.NaN, 0);
-  });
-});
-
-/** Runs one Memory flow in a browser, with the page's errors observed. */
-const runMemory = <E>(
-  page: Page,
-  baseURL: string | undefined,
-  flow: (page: Page, origin: string) => Effect.Effect<void, E, never>
-) =>
-  Effect.runPromise(
-    withObservedPageErrors(
-      page,
-      Effect.fromNullishOr(baseURL).pipe(
-        Effect.flatMap((origin) => flow(page, origin))
-      )
-    )
-  );
-
 test.describe("Memory editor focus at 390px and 1440px", () => {
   test.describe.configure({ timeout: 180_000 });
 
@@ -293,6 +251,13 @@ test.describe("Memory editor focus at 390px and 1440px", () => {
       }) => {
         await runMemory(page, baseURL, closesToTheRow);
       });
+
+      test("moves the focus to the list when the editor deletes its memory", async ({
+        baseURL,
+        page,
+      }) => {
+        await runMemory(page, baseURL, deletesToTheList);
+      });
     });
   }
 });
@@ -301,11 +266,11 @@ test.describe("Memory focus and the switch at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
   test.describe.configure({ timeout: 180_000 });
 
-  test("moves the focus to the list when the editor deletes its memory", async ({
+  test("returns the focus to the Add button when a new memory closes", async ({
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, deletesToTheList);
+    await runMemory(page, baseURL, closesNewToAdd);
   });
 
   test("moves the focus to the search field when the last memory goes", async ({
@@ -345,12 +310,5 @@ test.describe("Memory focus and the switch at 1440px", () => {
     await runMemory(page, baseURL, (flowPage, origin) =>
       pausesBeforeTheAnswer(flowPage, origin, true)
     );
-  });
-
-  test("shows the saved words as plain text while the editor's code loads", async ({
-    baseURL,
-    page,
-  }) => {
-    await runMemory(page, baseURL, showsSavedWordsWhileLoading);
   });
 });

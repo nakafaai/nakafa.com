@@ -28,12 +28,3 @@ export function focusFirst(candidates: readonly (HTMLElement | null)[]) {
     }
   }
 }
-
-/**
- * Whether the focus has gone nowhere the learner chose: to the body, or into
- * `box`, which is leaving the page with it.
- */
-export function focusIsLost(box: Element) {
-  const active = document.activeElement;
-  return active === null || active === document.body || box.contains(active);
-}

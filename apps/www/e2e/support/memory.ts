@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
 import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The Memory page of the English site. */
@@ -67,3 +68,26 @@ export const openMemoryPage = Effect.fn("NakafaE2E.openMemoryPage")(function* (
   yield* declineUsageData(page, changes);
   return changes;
 });
+
+/** The name button of one memory's row, which opens the memory in the editor. */
+export const nameOf = (page: Page, text: string) =>
+  memoryRow(page, text).locator("button").first();
+
+/** The editor on a wide screen: the panel beside the list. */
+export const panelOf = (page: Page) =>
+  page.getByRole("complementary", { name: "Edit memory" });
+
+/** Runs one Memory flow in a browser, with the page's errors observed. */
+export const runMemory = <E>(
+  page: Page,
+  baseURL: string | undefined,
+  flow: (page: Page, origin: string) => Effect.Effect<void, E, never>
+) =>
+  Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.fromNullishOr(baseURL).pipe(
+        Effect.flatMap((origin) => flow(page, origin))
+      )
+    )
+  );

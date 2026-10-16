@@ -5,10 +5,10 @@ import {
   MEMORY_TEXT_LIMIT,
   MEMORY_TITLE_LIMIT,
 } from "@repo/backend/confect/nina/memory.spec";
+import { EditorPreview } from "@repo/design-system/components/editor/words";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { cn } from "cn";
-import { Array as Arr, String as Str } from "effect";
+import { String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import { lazy, Suspense, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -32,53 +32,24 @@ const Editor = lazy(() =>
 );
 
 /**
- * The saved words as plain text, in the place the editor takes while its code
- * loads. The toolbar's height is kept, and each blank-line part is a paragraph
- * with the editor's own spacing, so the editor takes the words' place without
- * moving them. A memory with no words shows the editor's hint, in its colour.
- */
-function SavedWords({
-  placeholder,
-  text,
-}: {
-  placeholder: string;
-  text: string;
-}) {
-  const empty = Str.isEmpty(text);
-  const paragraphs = empty ? [placeholder] : Str.split(text, "\n\n");
-
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div aria-hidden className="border-b px-2 py-1.5">
-        <div className="h-8" />
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto text-sm/relaxed">
-        <div className="px-4 py-3">
-          {Arr.map(paragraphs, (paragraph) => (
-            <p
-              className={cn("[&+p]:mt-2", empty && "text-muted-foreground")}
-              dir="auto"
-              key={paragraph}
-            >
-              {paragraph}
-            </p>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
  * One opening of the editor, from top to bottom: the title, which the learner
  * writes in place, the text, and a foot with the length of the text and the
  * button that deletes the memory. A new memory has nothing to delete, so the
  * button waits for the first word. From then on it stays, because a first
  * save may be on its way even when the learner has erased every word again.
- * Everything the learner writes is saved by itself. After a save that failed, the editor opens again
- * with what they wrote.
+ * Everything the learner writes is saved by itself. After a save that failed,
+ * the editor opens again with what they wrote. While the editor's code loads,
+ * the saved words show in the editor's own frame, so nothing moves when it
+ * arrives. `open` is false while a closing editor is still on the page, and
+ * such an editor takes no focus.
  */
-export function MemoryDocument({ memory }: { memory: Memory | null }) {
+export function MemoryDocument({
+  memory,
+  open,
+}: {
+  memory: Memory | null;
+  open: boolean;
+}) {
   const t = useTranslations("Memory");
   const labels = useTranslations("Editor");
   const common = useTranslations("Common");
@@ -143,10 +114,14 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
       <div className="flex min-h-0 flex-1 flex-col" ref={body}>
         <Suspense
           fallback={
-            <SavedWords placeholder={t("placeholder")} text={starting.text} />
+            <EditorPreview
+              markdown={starting.text}
+              placeholder={t("placeholder")}
+            />
           }
         >
           <Editor
+            autoFocus={open}
             defaultValue={starting.text}
             label={t("text")}
             labels={{

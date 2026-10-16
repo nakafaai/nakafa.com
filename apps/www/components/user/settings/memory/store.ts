@@ -30,6 +30,12 @@ const MemoryStateSchema = Schema.Struct({
   deleted: Schema.NullOr(Id("ninaMemories")),
   /** The title and words of a save that failed, which the editor shows when it opens again. */
   draft: Schema.NullOr(DraftSchema),
+  /**
+   * The memory that the opening of the editor began with, or none for a new
+   * memory. Closing the editor returns the focus to the row of that memory, or to
+   * the Add button for a new one. The first save of a new memory does not change it.
+   */
+  opener: Schema.NullOr(Id("ninaMemories")),
   /** Whether the editor panel is open. */
   open: Schema.Boolean,
   /** The words the learner typed to search. */
@@ -169,6 +175,7 @@ export function createMemoryStore() {
     openEdit: (memory) =>
       set((state) => ({
         draft: null,
+        opener: memory.id,
         open: true,
         session: state.session + 1,
         target: memory,
@@ -177,10 +184,12 @@ export function createMemoryStore() {
     openNew: () =>
       set((state) => ({
         draft: null,
+        opener: null,
         open: true,
         session: state.session + 1,
         target: null,
       })),
+    opener: null,
     query: "",
     reopen: (session, draft, memory) =>
       set((state) =>
@@ -190,6 +199,7 @@ export function createMemoryStore() {
           ? state
           : {
               draft,
+              opener: memory?.id ?? null,
               open: true,
               session: state.session + 1,
               target: memory,

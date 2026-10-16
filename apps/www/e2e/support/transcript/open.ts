@@ -76,24 +76,25 @@ const declineIfAsked = Effect.fn("NakafaE2E.declineIfAsked")(function* (
 /**
  * Serves the conversation that the returned reference holds, and signs a
  * learner in. Pages that open afterwards show whatever the reference holds then.
+ * The `stream` it returns puts new messages in front of a page that is open.
  */
 export const startTranscript = Effect.fn("NakafaE2E.startTranscript")(
   function* (page: Page, baseURL: string) {
     const shown = MutableRef.make<readonly NinaMessage[]>([]);
     yield* seedAnalyticsConsent(page, "denied");
     yield* serveIcons(page);
-    yield* serveConversation(page, shown);
+    const served = yield* serveConversation(page, shown);
     const cookies = MutableRef.get(session);
     if (Option.isSome(cookies)) {
       yield* Effect.promise(() => page.context().addCookies(cookies.value));
-      return shown;
+      return { shown, stream: served.stream };
     }
     yield* signInLearner(page.context(), baseURL);
     MutableRef.set(
       session,
       Option.some(yield* Effect.promise(() => page.context().cookies()))
     );
-    return shown;
+    return { shown, stream: served.stream };
   }
 );
 
@@ -247,7 +248,7 @@ export function onChat(
         page,
         Effect.gen(function* () {
           const origin = yield* Effect.fromNullishOr(baseURL);
-          const shown = yield* startTranscript(page, origin);
+          const { shown } = yield* startTranscript(page, origin);
           const scope = yield* showChat(
             page,
             shown,
@@ -281,7 +282,7 @@ export function onSheet(
         page,
         Effect.gen(function* () {
           const origin = yield* Effect.fromNullishOr(baseURL);
-          const shown = yield* startTranscript(page, origin);
+          const { shown } = yield* startTranscript(page, origin);
           const scope = yield* showSheet(
             page,
             shown,

@@ -245,6 +245,34 @@ const keepsFocusTheLearnerChose = Effect.fn("NakafaE2E.renameKeepsFocus")(
   }
 );
 
+/**
+ * A refused rename brings the box back with the focus, unless a control the
+ * learner chose while the rename was held has it: that control keeps it.
+ */
+const keepsFocusWhenRefused = Effect.fn(
+  "NakafaE2E.renameKeepsFocusWhenRefused"
+)(function* (page: Page, baseURL: string) {
+  const { changes } = yield* openedChat(page, baseURL);
+
+  yield* Effect.promise(async () => {
+    const before = changes.sent;
+    const history = headerControl(page, "Chat history");
+
+    changes.hold();
+    changes.failNext(RENAME);
+    await startRename(page);
+    await page.keyboard.type(REFUSED);
+    await page.keyboard.press("Enter");
+    await expect(titleOf(page)).toHaveText(REFUSED);
+    await history.click();
+    changes.release();
+    await expect(page.getByText(FAILED).first()).toBeVisible();
+    await expect(editorOf(page)).toHaveValue(REFUSED);
+    await expect(history).toBeFocused();
+    await saved(changes, before);
+  });
+});
+
 test.describe("Chat rename at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
   test.describe.configure({ timeout: 180_000 });
@@ -311,6 +339,15 @@ test.describe("Chat rename at 1440px", () => {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       givesBackWhenRefused(page, origin)
+    );
+  });
+
+  test("keeps the focus a learner chose when a refused rename brings the box back", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      keepsFocusWhenRefused(page, origin)
     );
   });
 });

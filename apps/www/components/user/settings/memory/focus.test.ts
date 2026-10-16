@@ -3,7 +3,6 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 import {
   focusFirst,
-  focusIsLost,
   memoryRowId,
 } from "@/components/user/settings/memory/focus";
 
@@ -37,22 +36,5 @@ describe("memory focus", () => {
     focusFirst([null, document.getElementById("off")]);
 
     expect(document.activeElement).toBe(document.body);
-  });
-
-  it("knows when the focus has gone nowhere the learner chose, which is the body or the box that leaves", () => {
-    const box = document.createElement("div");
-    const inside = document.createElement("button");
-    const elsewhere = document.createElement("button");
-    box.append(inside);
-    document.body.replaceChildren(box, elsewhere);
-
-    inside.focus();
-    expect(focusIsLost(box)).toBe(true);
-
-    inside.blur();
-    expect(focusIsLost(box)).toBe(true);
-
-    elsewhere.focus();
-    expect(focusIsLost(box)).toBe(false);
   });
 });

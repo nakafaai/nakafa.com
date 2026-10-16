@@ -29,6 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { focusIsLost } from "@repo/design-system/lib/focus";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import {
@@ -71,36 +72,37 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   // Set when the box closes, until the focus has gone back to a control.
   const returnFocus = useRef(false);
+  // Set when a refused rename brings the box back, until the box has the focus.
+  const reopened = useRef(false);
   const isOwner = useChat((state) => state.owner);
   const updateChatTitle = useUpdateChatTitleMutation();
   const { change, isPending } = useChange();
 
-  // The box takes the focus when it opens, and again when a refused rename
-  // brings it back, as soon as it can take input: it stays disabled while the
-  // rename is pending. When the box closes, the focus goes back to the control
-  // that opened it, or to the title when that control is gone. The control
-  // is disabled while the rename is pending, so the focus waits for it, and
-  // it moves only while the focus is still lost, never over a control the
-  // learner has chosen meanwhile.
+  // The box takes the focus when it opens from the menu. A refused rename brings
+  // it back as soon as it can take input, because the box stays disabled while
+  // the rename is pending. When the box closes, the focus goes back to the
+  // control that opened it, or to the title when that control is gone. The
+  // control is disabled while the rename is pending, so the focus waits for it.
+  // A refusal and a close move the focus only while it is still lost, so they
+  // never take it from a control the learner has chosen meanwhile.
   useEffect(() => {
     if (isPending) {
       return;
     }
     if (isEditing) {
+      const comingBack = reopened.current;
+      reopened.current = false;
       returnFocus.current = false;
-      inputRef.current?.focus();
+      if (!comingBack || focusIsLost(inputRef.current)) {
+        inputRef.current?.focus();
+      }
       return;
     }
     if (!returnFocus.current) {
       return;
     }
     returnFocus.current = false;
-    const active = document.activeElement;
-    const lost =
-      !active ||
-      active === document.body ||
-      !!inputRef.current?.contains(active);
-    if (lost) {
+    if (focusIsLost(inputRef.current)) {
       (moreActions.current ?? titleRef.current)?.focus();
     }
   }, [isEditing, isPending]);
@@ -142,6 +144,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                 Effect.andThen(
                   Effect.sync(() => {
                     // The box comes back with the words the learner wrote.
+                    reopened.current = true;
                     setIsEditing(true);
                     toast.error(actionErrorMessage);
                   })

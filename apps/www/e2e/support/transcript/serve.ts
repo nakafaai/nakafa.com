@@ -7,7 +7,7 @@ import {
   Array as Arr,
   Effect,
   MutableHashMap,
-  type MutableRef,
+  MutableRef,
   Option,
   Schema,
 } from "effect";
@@ -15,12 +15,22 @@ import {
   answerQueriesIn,
   CONVEX_SOCKET,
   decodeSent,
+  decodeTransition,
+  encodeTransition,
 } from "@/e2e/support/frames";
 import { THREAD } from "@/e2e/support/transcript/message";
 
 /** The Convex names of the two queries that give a chat its messages. */
 const CONVERSATION = "nina/conversation:get";
 const MESSAGES = "nina/messages:list";
+
+/** The socket of the page's realtime connection, as Playwright routes it. */
+type Socket = Parameters<Parameters<Page["routeWebSocket"]>[1]>[0];
+
+/** A stream was asked for before the page's connection read the chat. */
+class NoConnection extends Schema.TaggedError<NoConnection>()("NoConnection", {
+  message: Schema.String,
+}) {}
 
 /** The id of the fixture chat. The page takes any string for the id of a chat. */
 export const CHAT = "e2e-evidence-chat";
@@ -110,6 +120,7 @@ type Served = MutableHashMap.MutableHashMap<number, unknown>;
 function noticeChange(
   served: Served,
   shown: MutableRef.MutableRef<readonly NinaMessage[]>,
+  transcript: MutableRef.MutableRef<Option.Option<number>>,
   text: string
 ) {
   const frame = decodeSent(text);
@@ -136,6 +147,9 @@ function noticeChange(
       );
     }
     if (modification.udfPath === MESSAGES) {
+      if (args.value.streamArgs === undefined) {
+        MutableRef.set(transcript, Option.some(modification.queryId));
+      }
       MutableHashMap.set(
         served,
         modification.queryId,
@@ -169,19 +183,71 @@ function replaceResults(served: Served, text: string) {
  */
 export const serveConversation = Effect.fn("NakafaE2E.serveConversation")(
   function* (page: Page, shown: MutableRef.MutableRef<readonly NinaMessage[]>) {
+    const socket = MutableRef.make<Option.Option<Socket>>(Option.none());
+    const version = MutableRef.make<Option.Option<unknown>>(Option.none());
+    const transcript = MutableRef.make<Option.Option<number>>(Option.none());
+
     yield* Effect.promise(() =>
-      page.routeWebSocket(CONVEX_SOCKET, (socket) => {
-        const server = socket.connectToServer();
+      page.routeWebSocket(CONVEX_SOCKET, (route) => {
+        const server = route.connectToServer();
         const served: Served = MutableHashMap.empty();
 
-        socket.onMessage((message) => {
-          noticeChange(served, shown, message.toString());
+        MutableRef.set(socket, Option.some(route));
+        route.onMessage((message) => {
+          noticeChange(served, shown, transcript, message.toString());
           server.send(message);
         });
         server.onMessage((message) => {
-          socket.send(replaceResults(served, message.toString()));
+          const text = message.toString();
+          const transition = decodeTransition(text);
+          if (Option.isSome(transition)) {
+            MutableRef.set(version, Option.some(transition.value.endVersion));
+          }
+          route.send(replaceResults(served, text));
         });
       })
     );
+
+    return {
+      /**
+       * Puts `messages` in front of the page as a new answer of the transcript,
+       * the way Agent does while a turn streams. The connection keeps the version
+       * it holds, so the page reads the answer as one more update of the same
+       * query. It fails until the page's connection has read the transcript.
+       */
+      stream: Effect.fn("NakafaE2E.streamChat")(function* (
+        messages: readonly NinaMessage[]
+      ) {
+        const open = MutableRef.get(socket);
+        const current = MutableRef.get(version);
+        const query = MutableRef.get(transcript);
+        if (
+          Option.isNone(open) ||
+          Option.isNone(current) ||
+          Option.isNone(query)
+        ) {
+          return yield* new NoConnection({
+            message: "The page has not read the chat yet.",
+          });
+        }
+        MutableRef.set(shown, messages);
+        open.value.send(
+          encodeTransition({
+            endVersion: current.value,
+            modifications: [
+              {
+                journal: null,
+                logLines: [],
+                queryId: query.value,
+                type: "QueryUpdated",
+                value: transcriptOf(messages),
+              },
+            ],
+            startVersion: current.value,
+            type: "Transition",
+          })
+        );
+      }),
+    };
   }
 );

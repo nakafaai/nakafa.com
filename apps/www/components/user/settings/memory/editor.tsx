@@ -8,6 +8,7 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { focusIsLost } from "@repo/design-system/lib/focus";
 import { cn } from "cn";
 import { Function as Fn } from "effect";
 import { useTranslations } from "next-intl";
@@ -22,7 +23,6 @@ import { createPortal } from "react-dom";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
 import {
   focusFirst,
-  focusIsLost,
   MEMORY_ADD_ID,
   MEMORY_LIST_ID,
   MEMORY_SEARCH_ID,
@@ -110,6 +110,7 @@ function useMemoryEditor() {
   return useMemoryPage((state) => ({
     memory: state.target,
     open: state.open,
+    opener: state.opener,
     session: state.session,
   }));
 }
@@ -223,11 +224,12 @@ function useEditorHost() {
  * it. The editor leaves the page with the focus, so it would fall to the body.
  * The focus goes to the row or the button that opened the editor, then to the
  * list, and to the search field when the list has left the page too. A sheet
- * may already have returned the focus itself, which this leaves alone.
+ * may already have returned the focus itself, which this leaves alone. `opener`
+ * is the memory the opening began with, or none for a new memory.
  */
 function useFocusAfterClose(
   open: boolean,
-  memory: Memory | null,
+  opener: Memory["id"] | null,
   host: HTMLElement | null
 ) {
   const wasOpen = useRef(false);
@@ -237,7 +239,7 @@ function useFocusAfterClose(
       wasOpen.current = true;
       return;
     }
-    if (!wasOpen.current || host === null) {
+    if (!wasOpen.current) {
       return;
     }
     wasOpen.current = false;
@@ -245,11 +247,11 @@ function useFocusAfterClose(
       return;
     }
     focusFirst([
-      document.getElementById(memory ? memoryRowId(memory.id) : MEMORY_ADD_ID),
+      document.getElementById(opener ? memoryRowId(opener) : MEMORY_ADD_ID),
       document.getElementById(MEMORY_LIST_ID),
       document.getElementById(MEMORY_SEARCH_ID),
     ]);
-  }, [host, memory, open]);
+  }, [host, opener, open]);
 }
 
 /** The ref each layout puts on the element that holds the editor. */
@@ -267,15 +269,18 @@ type Remember = ReturnType<typeof useEditorHost>["remember"];
  */
 export function MemoryEditor() {
   const wide = useMediaQuery(WIDE);
-  const { memory, open, session } = useMemoryEditor();
+  const { memory, open, opener, session } = useMemoryEditor();
   const { host, place, remember, slot } = useEditorHost();
 
-  useFocusAfterClose(open, memory, host);
+  useFocusAfterClose(open, opener, host);
 
   return (
     <>
       {host && (open || slot)
-        ? createPortal(<MemoryDocument key={session} memory={memory} />, host)
+        ? createPortal(
+            <MemoryDocument key={session} memory={memory} open={open} />,
+            host
+          )
         : null}
       {wide ? (
         <MemoryEditorPanel
