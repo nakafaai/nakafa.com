@@ -9,7 +9,7 @@ import { createContext, use } from "react";
  * the viewer holds no grant. A type only: the browser bundle never evaluates
  * the schemas it is derived from.
  */
-export type TenantValue = Pick<typeof TenantProfile.Type, "name" | "slug"> &
+export type TenantValue = Pick<typeof TenantProfile.Type, "name"> &
   Record<"role", BuiltinRole | null>;
 
 /**

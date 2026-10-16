@@ -26,20 +26,22 @@ import { TenantAccountMenu } from "@/components/tenant/account";
 import { TenantContext, type TenantValue } from "@/components/tenant/context";
 
 /**
- * The shell of a school: the school's name in the header and the sidebar of the
- * signed-in viewer. The sidebar lists only the pages that exist, so a page
- * joins its group here when it is built.
+ * The shell of a school: the school's name at the top of the sidebar, and the
+ * sidebar groups of the signed-in viewer. A sidebar item joins its group only
+ * when its page exists in the school tree and the viewer's `can` capabilities
+ * allow it. This lane builds Beranda alone, and Beranda needs no capability,
+ * because the school layout admits only members. A group with no item stays
+ * hidden.
  */
 export function TenantShell({
   children,
   name,
   role,
-  slug,
 }: TenantValue & { children: ReactNode }) {
   const t = useTranslations("School");
 
   return (
-    <TenantContext value={{ name, role, slug }}>
+    <TenantContext value={{ name, role }}>
       <SidebarProvider>
         <Sidebar side="left">
           <SidebarHeader className="border-b">

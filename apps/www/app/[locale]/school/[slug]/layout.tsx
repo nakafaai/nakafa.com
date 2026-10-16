@@ -71,11 +71,7 @@ export default async function SchoolLayout({
   });
 
   return (
-    <TenantShell
-      name={profile.value.name}
-      role={role}
-      slug={profile.value.slug}
-    >
+    <TenantShell name={profile.value.name} role={role}>
       {children}
     </TenantShell>
   );
