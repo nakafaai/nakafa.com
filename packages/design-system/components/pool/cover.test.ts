@@ -4,17 +4,23 @@ import {
   type Cover,
   coverOf,
 } from "@repo/design-system/components/pool/cover";
+import { TAILWIND_BREAKPOINT_PIXELS } from "@repo/design-system/lib/breakpoints";
 import { Animal } from "@repo/mascot/animal";
 import { Array as Arr, Order } from "effect";
 
 /** The share of the pool that the discs of the animals should cover, with a margin for the sizes that are left over. */
 const SHARE = 0.5;
 const MARGIN = 0.02;
+/** The pool on the narrowest screen: the lg breakpoint, where its four of seven columns start. */
+const NARROWEST_POOL_WIDTH = TAILWIND_BREAKPOINT_PIXELS.lg * (4 / 7);
 
 /** The area that the discs of the animals of a cover cover, in square pixels. */
 function coveredBy(cover: Cover) {
   return Arr.reduce(
-    Arr.makeBy(cover.animals, (place) => ANIMAL_RADII[place % 6] * cover.scale),
+    Arr.makeBy(
+      cover.animals,
+      (place) => ANIMAL_RADII[place % ANIMAL_RADII.length] * cover.scale
+    ),
     0,
     (total, radius) => total + Math.PI * radius * radius
   );
@@ -45,7 +51,9 @@ describe("the animals of the pool", () => {
   });
 
   it("holds the floor of animals on a pool smaller than the narrowest screen", () => {
-    expect(coverOf(100, 100).animals).toBe(coverOf(585.14, 640).animals);
+    expect(coverOf(100, 100).animals).toBe(
+      coverOf(NARROWEST_POOL_WIDTH, 640).animals
+    );
   });
 
   it("never holds more animals than the catalog, so no animal appears twice", () => {

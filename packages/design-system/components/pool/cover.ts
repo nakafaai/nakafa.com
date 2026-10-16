@@ -1,3 +1,4 @@
+import { TAILWIND_BREAKPOINT_PIXELS } from "@repo/design-system/lib/breakpoints";
 import { Animal } from "@repo/mascot/animal";
 import { Array as Arr, Number as Num, Schema } from "effect";
 
@@ -14,8 +15,8 @@ const COVER = 0.5;
  * come in six sizes, from 60 to 112 pixels across.
  */
 export const ANIMAL_RADII: readonly number[] = [30, 38, 38, 46, 46, 56];
-/** The narrowest screen that shows the pool: the lg breakpoint, 64 rem at 16 pixels a rem. */
-const NARROWEST_SCREEN = 1024;
+/** The narrowest screen that shows the pool: the lg breakpoint, where the artwork column appears. */
+const NARROWEST_SCREEN = TAILWIND_BREAKPOINT_PIXELS.lg;
 /** The share of the width of the pool that the artwork takes: four of the seven columns from the lg breakpoint up. */
 const ARTWORK_SHARE = 4 / 7;
 /** The shortest height that the sign-in page is checked at, in pixels. */

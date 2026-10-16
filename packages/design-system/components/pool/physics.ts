@@ -8,8 +8,8 @@ import {
 } from "@repo/design-system/components/pool/ball";
 import { pushApart } from "@repo/design-system/components/pool/collide";
 import {
-  fadePointer,
   locate,
+  measure,
   type Point,
   PointerSchema,
   PointSchema,
@@ -46,10 +46,6 @@ export const STEP = 1 / 480;
 export const LONGEST_FRAME = 0.032;
 /** The loop sleeps once the pile has rested for this many frames in a row, with nobody holding a ball. */
 export const REST_FRAMES = 20;
-/** The length of a settle's frame, in seconds: a frame at 60 frames a second. */
-const SETTLE_FRAME = 1 / 60;
-/** The most frames that a settle runs, so that a pile which never rests still ends: 30 seconds at 60 frames a second. */
-const SETTLE_FRAMES = 60 * 30;
 /** The upward speed that a hop adds, in pixels per second, before its draw. */
 const HOP_LIFT = 260;
 /** The extra upward speed that a hop adds at the top of its draw, in pixels per second. */
@@ -58,7 +54,7 @@ const HOP_LIFT_SPREAD = 180;
 const HOP_SIDE = 90;
 
 /** The whole pool: the box, its balls, the time that the last frame left over, the pointer, the ball that is held and the grip where it was taken, and the fastest that a ball moved in the last frame, in pixels per second. */
-const WorldSchema = Schema.Struct({
+export const WorldSchema = Schema.Struct({
   balls: Schema.Array(BallSchema),
   carry: Schema.Finite,
   grip: PointSchema,
@@ -73,10 +69,10 @@ const WorldSchema = Schema.Struct({
 export type World = typeof WorldSchema.Type;
 
 /**
- * Moves the pool for one frame that took `seconds`. The frame runs as many whole
- * steps as its time holds, and keeps the rest for the next frame. The lean of
- * every ball and the fade of the pointer's speed change once per frame, as the
- * pool is drawn once per frame. The pool is at rest only when no step of the
+ * Moves the pool for one frame that took `seconds`. The pointer's speed is measured
+ * over that whole time. The frame runs as many whole steps as its time holds, and
+ * keeps the rest for the next frame. The lean of every ball changes once per frame,
+ * as the pool is drawn once per frame. The pool is at rest only when no step of the
  * frame moved a ball faster than the rest speed. A frame too short for one step
  * moves nothing, so it keeps the reading of the frame before.
  */
@@ -84,7 +80,7 @@ export function tick(world: World, seconds: number): World {
   const frame = Math.min(seconds, LONGEST_FRAME);
   const owed = world.carry + frame;
   const count = Math.floor(owed / STEP);
-  let walked = world;
+  let walked: World = { ...world, pointer: measure(world.pointer, seconds) };
   let fastestStep = 0;
   for (let index = 0; index < count; index += 1) {
     walked = step(walked, STEP, frame);
@@ -100,7 +96,6 @@ export function tick(world: World, seconds: number): World {
     })),
     carry: owed - count * STEP,
     moved,
-    pointer: fadePointer(walked.pointer),
   };
 }
 
@@ -110,9 +105,7 @@ export function tick(world: World, seconds: number): World {
  */
 export function step(world: World, dt: number, frame: number): World {
   const flown = Arr.map(world.balls, (ball, index) =>
-    index === world.held
-      ? holdAt(world, ball, frame)
-      : flyBall(world, ball, dt, frame)
+    index === world.held ? holdAt(world, ball, frame) : flyBall(world, ball, dt)
   );
   const pushed = pushApart(flown, world.held);
   const kept = Arr.map(pushed, (ball, index) =>
@@ -121,25 +114,6 @@ export function step(world: World, dt: number, frame: number): World {
       : fence(limitSpeed(ball), world.width, world.height)
   );
   return { ...world, balls: kept, moved: travel(world.balls, kept, dt) };
-}
-
-/**
- * Moves the pool a frame at a time until the pile has rested for `REST_FRAMES`
- * frames, or until the limit runs out, then stops the sideways speed and the lean of
- * every ball, so the pile stands still on its first paint. A settle has no pointer
- * and no held ball.
- */
-export function settle(world: World): World {
-  let walked = world;
-  let calm = 0;
-  for (let frame = 0; frame < SETTLE_FRAMES && calm < REST_FRAMES; frame += 1) {
-    walked = tick(walked, SETTLE_FRAME);
-    calm = isResting(walked) ? calm + 1 : 0;
-  }
-  return {
-    ...walked,
-    balls: Arr.map(walked.balls, (ball) => ({ ...ball, tilt: 0, vx: 0 })),
-  };
 }
 
 /**
@@ -244,8 +218,8 @@ function holdAt(world: World, ball: Ball, frame: number): Ball {
 }
 
 /** A free ball falls, feels the pointer, loses a little speed, and moves; the walls then hold it. */
-function flyBall(world: World, ball: Ball, dt: number, frame: number): Ball {
-  const pushed = pointerPush(world.pointer, ball, dt, frame);
+function flyBall(world: World, ball: Ball, dt: number): Ball {
+  const pushed = pointerPush(world.pointer, ball, dt);
   const slowed = Math.exp(-DAMPING * dt);
   const speed = fastest(
     (ball.vx + pushed.vx) * slowed,

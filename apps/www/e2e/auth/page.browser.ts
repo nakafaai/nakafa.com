@@ -30,9 +30,14 @@ const CROSSING_INSET = 4;
 const CROSSING_STEPS = 60;
 /** The share of the pool's height that a pointer crossing runs along. */
 const CROSSING_HEIGHT = 0.6;
-/** The share of the pool that the members cover at rest: about half, with Nina's things counted. */
-const COVER_LOWEST = 0.42;
-const COVER_HIGHEST = 0.62;
+/**
+ * The share of the pool that the members cover at rest: about half, with Nina's
+ * things counted. The margin is the one the animal count's unit test uses. An
+ * offline replica of this grid, on the settled pile, reads about 0.51 of the
+ * laptop layout and 0.50 of the wide layout; the browser run has not measured it.
+ */
+const COVER = 0.5;
+const COVER_MARGIN = 0.02;
 /** The spacing of the grid that the covered share is read on, in pixels. */
 const GRID_PIXELS = 4;
 /** The height of the screen that must show the whole sign-in page. */
@@ -90,11 +95,7 @@ function transformsOf(page: Page): Promise<readonly string[]> {
  * member covers a disc of half its width around its center, as the physics has it.
  */
 function coveredShare(page: Page): Promise<number> {
-  return page.evaluate((step) => {
-    const pool = document.querySelector<HTMLElement>('[data-slot="pool"]');
-    if (pool === null) {
-      return 0;
-    }
+  return page.locator(POOL).evaluate((pool, step) => {
     const origin = pool.getBoundingClientRect();
     const discs = Array.from(
       pool.querySelectorAll<HTMLElement>(":scope > div"),
@@ -234,8 +235,7 @@ const verifyRestCover = Effect.fn("NakafaE2E.verifyPoolCoversHalf")(function* (
   yield* openSignIn(page);
   yield* waitForRest(page);
   const share = yield* Effect.promise(() => coveredShare(page));
-  expect(share).toBeGreaterThanOrEqual(COVER_LOWEST);
-  expect(share).toBeLessThanOrEqual(COVER_HIGHEST);
+  expect(Math.abs(share - COVER)).toBeLessThanOrEqual(COVER_MARGIN);
   const column = yield* Effect.promise(() => boxOf(page.locator(POOL)));
   const members = yield* Effect.promise(() => memberBoxes(page));
   yield* Effect.sync(() => expectInside(members, column));
@@ -391,9 +391,8 @@ test.describe("the animal pool beside the sign-in form at 1440 by 900", () => {
 test.describe("the animal pool beside the sign-in form at 2560 by 1440", () => {
   test.use({ viewport: { height: 1440, width: 2560 } });
 
-  test("covers about half of the wide pool at rest, with its animals grown past the catalog", async ({
-    page,
-  }) => {
+  // The catalog is too small to cover half of this pool at the animals' own size, so the animals grow.
+  test("covers about half of the wide pool at rest", async ({ page }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyRestCover(page))
     );
