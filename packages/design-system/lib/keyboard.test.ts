@@ -22,6 +22,16 @@ describe("keyboard", () => {
     ).toBe(false);
   });
 
+  it("does not read an Enter that arrives while a composition runs, whatever its key code", () => {
+    expect(
+      isEnterOutsideComposition({
+        isComposing: true,
+        key: "Enter",
+        keyCode: 13,
+      })
+    ).toBe(false);
+  });
+
   it("does not read the Enter that Safari sends after a composed character has ended", () => {
     expect(
       isEnterOutsideComposition({

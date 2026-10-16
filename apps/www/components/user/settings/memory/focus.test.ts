@@ -18,23 +18,25 @@ describe("memory focus", () => {
 
   it("gives the focus to the first candidate that takes it, skipping a missing or disabled one", () => {
     document.body.innerHTML =
-      '<button disabled id="off" type="button"></button><button id="on" type="button"></button>';
+      '<button disabled id="off" type="button"></button><button id="first" type="button"></button><button id="second" type="button"></button>';
 
     focusFirst([
       null,
       document.getElementById("off"),
-      document.getElementById("on"),
+      document.getElementById("first"),
+      document.getElementById("second"),
     ]);
 
-    expect(document.activeElement?.id).toBe("on");
+    expect(document.activeElement?.id).toBe("first");
   });
 
   it("leaves the focus where it is when no candidate takes it", () => {
     document.body.innerHTML =
-      '<button disabled id="off" type="button"></button>';
+      '<button id="kept" type="button"></button><button disabled id="off" type="button"></button>';
+    document.getElementById("kept")?.focus();
 
     focusFirst([null, document.getElementById("off")]);
 
-    expect(document.activeElement).toBe(document.body);
+    expect(document.activeElement?.id).toBe("kept");
   });
 });
