@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
+import type { NinaUpkeepCall } from "@repo/backend/confect/nina/contract/usage";
 import {
   generationFailure,
   logFailure,
@@ -69,6 +70,28 @@ const writePortrait = Effect.fn("nina.portrait.write")(function* (
 });
 
 /**
+ * Counts the tokens of a call whose answer was rejected on the portrait row. The
+ * portrait stays as it was: nothing was read past `through`, so the memories the
+ * call was given are fed to the next build again.
+ */
+const countSpent = Effect.fn("nina.portrait.count")(function* (
+  userId: Docs["users"]["_id"],
+  through: number,
+  spent: typeof NinaUpkeepCall.Type
+) {
+  yield* (yield* MutationRunner)
+    .runMutation(refs.internal.nina.portrait.save, {
+      expected: through,
+      memories: [],
+      more: false,
+      reached: through,
+      usage: spent,
+      userId,
+    })
+    .pipe(Effect.orDie);
+});
+
+/**
  * Builds the portrait of a learner in the background, when a request has had
  * its quiet (`claimPortrait`). Nothing waits for it: a request schedules it
  * after a delay. The model gets the portrait as it stands and the next page of
@@ -77,7 +100,8 @@ const writePortrait = Effect.fn("nina.portrait.write")(function* (
  * more memories remain after that page, storing it asks for the next build. A
  * build with no memory newer than the portrait asks no model. Whatever fails,
  * the portrait stays as it was: the failure is logged and the next request asks
- * again after a day.
+ * again after a day. An answer the model gave that does not fit the portrait
+ * still cost its tokens, and they are counted on the row (`countSpent`).
  */
 export const buildPortrait = Effect.fn("nina.portrait.build")(
   function* (userId: Docs["users"]["_id"]) {
@@ -96,7 +120,16 @@ export const buildPortrait = Effect.fn("nina.portrait.build")(
       return;
     }
     const written = Arr.isReadonlyArrayNonEmpty(memories)
-      ? yield* writePortrait(userId, formatPortraitPrompt(portrait, memories))
+      ? yield* writePortrait(
+          userId,
+          formatPortraitPrompt(portrait, memories)
+        ).pipe(
+          Effect.tapError(({ spent }) =>
+            spent === undefined
+              ? Effect.void
+              : countSpent(userId, through, spent)
+          )
+        )
       : undefined;
     yield* (yield* MutationRunner)
       .runMutation(refs.internal.nina.portrait.save, {

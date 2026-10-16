@@ -1,25 +1,21 @@
+import {
+  CHAT_LIST_PAGE_SIZE,
+  CHAT_SEARCH_LENGTH,
+  CHAT_SEARCH_WINDOW,
+  CHAT_SEARCH_WORDS,
+} from "@repo/backend/client/chats/list";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { ChatVisibility } from "@repo/backend/confect/chats/schema";
 import { openChats } from "@repo/backend/confect/chats/title";
 import type { PaginationOptions } from "convex/server";
-import { Array as Arr, Effect, String as Str } from "effect";
-
-/**
- * Chats one search page reads, newest first, whatever page size was asked. The
- * database cannot search sealed titles, so a search page opens a window of the
- * learner's chats and keeps those whose title holds every word. A window that
- * stops before the oldest chat comes back with the cursor of the next one, so
- * no chat is out of reach.
- */
-export const CHAT_SEARCH_WINDOW = 500;
-
-/**
- * Words of a search query that count. The query is a public argument of any
- * length, and every word is looked for in every title of a window, so the
- * words after these are left out.
- */
-const CHAT_SEARCH_WORDS = 8;
+import {
+  Array as Arr,
+  Effect,
+  Number as Num,
+  String as Str,
+  Struct,
+} from "effect";
 
 /** What separates the words of a search query. */
 const SPACES = /\s+/u;
@@ -58,11 +54,16 @@ const chatsOf = Effect.fn("chats.list.chatsOf")(function* (
   return chats.index("by_userId", (q) => q.eq("userId", userId), "desc");
 });
 
-/** The first lower-case words of a search query, none when the query is blank. */
+/**
+ * The first lower-case words of a search query, none when the query is blank.
+ * Only its first `CHAT_SEARCH_LENGTH` characters count, as many as the search box
+ * takes, so a longer query costs no more to read.
+ */
 function searchWords(searchQuery: string | undefined) {
+  const counted = Str.slice(0, CHAT_SEARCH_LENGTH)(searchQuery ?? "");
   return Arr.take(
     Arr.filter(
-      Str.split(Str.toLowerCase(Str.trim(searchQuery ?? "")), SPACES),
+      Str.split(Str.toLowerCase(Str.trim(counted)), SPACES),
       Str.isNonEmpty
     ),
     CHAT_SEARCH_WORDS
@@ -76,10 +77,12 @@ function titleHasWords(title: string | undefined, words: readonly string[]) {
 }
 
 /**
- * Reads one page of one learner's chats with their titles opened. A search
- * page reads `CHAT_SEARCH_WINDOW` chats from the cursor and returns those whose
- * title holds every word, so it may hold more titles than `numItems`, or none
- * while `isDone` is false. The search is over when `isDone` is true.
+ * Reads one page of one learner's chats with their titles opened. A page holds
+ * at most `CHAT_LIST_PAGE_SIZE` chats, however many the caller asks for. A
+ * search page reads `CHAT_SEARCH_WINDOW` chats from the cursor and returns
+ * those whose title holds every word, so it may hold more titles than
+ * `numItems`, or none while `isDone` is false. The search is over when `isDone`
+ * is true.
  */
 export const listChats = Effect.fn("chats.list.page")(function* (list: {
   readonly paginationOpts: PaginationOptions;
@@ -92,7 +95,13 @@ export const listChats = Effect.fn("chats.list.page")(function* (list: {
   const chats = yield* chatsOf(userId, list.visibility, list.type);
   const words = searchWords(list.q);
   if (Arr.isReadonlyArrayEmpty(words)) {
-    const page = yield* chats.paginate(paginationOpts).pipe(Effect.orDie);
+    const page = yield* chats
+      .paginate(
+        Struct.assign(paginationOpts, {
+          numItems: Num.min(paginationOpts.numItems, CHAT_LIST_PAGE_SIZE),
+        })
+      )
+      .pipe(Effect.orDie);
     return { ...page, page: yield* openChats(userId, page.page) };
   }
   const scanned = yield* chats

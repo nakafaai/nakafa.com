@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import {
   getLocale,
   getMaterialContextHint,
@@ -59,6 +60,17 @@ describe("browser utilities", () => {
 
   it("returns undefined without a material context hint", () => {
     window.location.search = "?other=value";
+
+    expect(getMaterialContextHint()).toBeUndefined();
+  });
+
+  it("reads a hint of the longest length the server takes and leaves out a longer one", () => {
+    const longest = "h".repeat(MATERIAL_CONTEXT_HINT_LENGTH);
+    window.location.search = `?ctx=${longest}`;
+
+    expect(getMaterialContextHint()).toBe(longest);
+
+    window.location.search = `?ctx=${longest}h`;
 
     expect(getMaterialContextHint()).toBeUndefined();
   });
