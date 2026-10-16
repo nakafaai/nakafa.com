@@ -1,9 +1,9 @@
 "use client";
 
-import { useWindowEvent } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import dynamic from "next/dynamic";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
+import { useReachedPage } from "@/components/marketing/about/toys/reach";
 
 /**
  * The toy layer's code. Its import starts only when the layer is first rendered,
@@ -16,17 +16,13 @@ const HomeToyLayer = dynamic(() =>
 );
 
 /**
- * Mounts the toys at the reader's first scroll, pointer movement or touch on the
+ * Mounts the toys once the reader has scrolled, moved the pointer or touched the
  * page. Until then the page holds no toy and downloads none of their code. A
  * layer that fails to load leaves the page as it is, and its absence never
  * reaches the error page.
  */
 export function HomeToys() {
-  const [reached, setReached] = useState(false);
-
-  useWindowEvent("scroll", () => setReached(true), { passive: true });
-  useWindowEvent("pointermove", () => setReached(true), { passive: true });
-  useWindowEvent("touchstart", () => setReached(true), { passive: true });
+  const reached = useReachedPage();
 
   if (!reached) {
     return null;
