@@ -71,6 +71,7 @@ const localEnvironment = {
   BETTER_AUTH_SECRET: LOCAL_AUTH_SECRET,
   CONTENT_RUNTIME_TOKEN: LOCAL_RUNTIME_TOKEN,
   FIRECRAWL_API_KEY: "build-disabled",
+  LOGIN_CARD_SECRET: "acceptance-local-login-card-secret",
   [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: "build-api-edge-secret",
   [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: "build-mcp-edge-secret",
   NEXT_PUBLIC_POLAR_SERVER: "sandbox",
