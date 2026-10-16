@@ -77,13 +77,15 @@ export const cohortsApply = Effect.fn("tenancy.promotion.cohorts.apply")(
 );
 
 /**
- * Whether a cohort the promotion created still holds a Person or a homeroom
- * teacher. Undo refuses to delete such a cohort, because its rows would be lost.
+ * Whether a cohort the promotion created still holds a Person, a homeroom teacher,
+ * or a class, active or archived. Undo refuses to delete such a cohort, because its
+ * rows would be lost or would name a cohort that no longer exists.
  */
 const isOccupied = Effect.fn("tenancy.promotion.cohorts.occupied")(function* (
   cohortId: GenericId.GenericId<"tenantCohorts">
 ) {
-  const holder = yield* (yield* DatabaseReader)
+  const reader = yield* DatabaseReader;
+  const holder = yield* reader
     .table("tenantCohortMembers")
     .index("by_cohortId_and_personId", (query) =>
       query.eq("cohortId", cohortId)
@@ -91,7 +93,18 @@ const isOccupied = Effect.fn("tenancy.promotion.cohorts.occupied")(function* (
     .first()
     .pipe(Effect.orDie);
   const homeroom = yield* homeroomOf(cohortId);
-  return Option.isSome(holder) || Option.isSome(homeroom);
+  const classOfCohort = yield* reader
+    .table("classes")
+    .index("by_cohortId_and_status_and_nameKey", (query) =>
+      query.eq("cohortId", cohortId)
+    )
+    .first()
+    .pipe(Effect.orDie);
+  return (
+    Option.isSome(holder) ||
+    Option.isSome(homeroom) ||
+    Option.isSome(classOfCohort)
+  );
 });
 
 /** Deletes the cohorts that applying the promotion created, while none holds anyone. */

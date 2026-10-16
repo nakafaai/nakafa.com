@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { COHORT_LIMIT } from "@repo/backend/confect/tenancy/cohort";
+import { classOf } from "@repo/backend/test/classroom";
 import {
   approvedPromotion,
   cohort,
@@ -78,6 +82,47 @@ describe("tenancy/promotion cohorts step", () => {
           running: false,
           step: "cohorts",
         });
+      })
+  );
+
+  it.effect(
+    "refuses to undo a created cohort that still holds a class, and keeps the cohort and the class",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        yield* drain(fixture, promotionId);
+        yield* undoOnce(fixture, promotionId);
+        yield* undoOnce(fixture, promotionId);
+        const eightA = yield* createdFor(fixture, promotionId, "8a");
+        yield* classOf(fixture, eightA.cohortId, "Fisika");
+        const stopped = yield* fixture
+          .as("admin")
+          .mutation(undo, { promotionId, slug: nf })
+          .pipe(Effect.andThen(drain(fixture, promotionId)));
+        expect(stopped.progress).toMatchObject({
+          direction: "undo",
+          failure: "PromotionCohortOccupied",
+          running: false,
+          step: "cohorts",
+        });
+        const state = yield* snapshot(fixture);
+        expect(
+          Arr.some(state.cohorts, (row) => row._id === eightA.cohortId)
+        ).toBe(true);
+        const held = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("classes")
+              .index("by_cohortId_and_status_and_nameKey", (query) =>
+                query.eq("cohortId", eightA.cohortId)
+              )
+              .take(5)
+          )
+        );
+        expect(held).toHaveLength(1);
       })
   );
 

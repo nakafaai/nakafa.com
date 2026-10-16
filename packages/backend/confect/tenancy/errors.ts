@@ -266,11 +266,11 @@ export class PromotionPlanInvalid extends Schema.TaggedError<PromotionPlanInvali
   }
 ) {}
 
-/** Undoing a step while a cohort the promotion created still holds a person or a homeroom teacher. */
+/** Undoing a step while a cohort the promotion created still holds a person, a homeroom teacher, or a class. */
 export class PromotionCohortOccupied extends Schema.TaggedError<PromotionCohortOccupied>()(
   "PromotionCohortOccupied",
   refusal(
     "PROMOTION_COHORT_OCCUPIED",
-    "A cohort this promotion created still holds people or a homeroom teacher."
+    "A cohort this promotion created still holds people, a homeroom teacher, or a class."
   )
 ) {}

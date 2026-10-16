@@ -1,18 +1,24 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { placementOf } from "@repo/backend/confect/tenancy/authority";
 import {
   approvedPromotion,
   cohort,
   drain,
+  entriesOf,
   nf,
+  people,
   periods,
   promotion,
   readPromotion,
   runPromotion,
   scenario,
+  snapshot,
+  toEightA,
   undoOnce,
 } from "@repo/backend/test/promotion";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const { create } = promotion.draft;
 const { apply } = promotion.apply;
@@ -162,6 +168,113 @@ describe("tenancy/promotion apply target period", () => {
           .mutation(periods.open, { periodId: s.target.id, slug: nf })
           .pipe(Effect.flip);
         expect(midway).toMatchObject({ _tag: "PromotionState" });
+      })
+  );
+});
+
+describe("tenancy/promotion apply removal and graduates", () => {
+  it.effect(
+    "a student removed while the source period is archived keeps their history placement, and the run neither moves nor graduates them",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        // Only the archive step runs here, so the source period is archived when the student leaves.
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        yield* fixture
+          .as("admin")
+          .mutation(people.remove, { personId: s.first, slug: nf });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress).toMatchObject({
+          failure: null,
+          running: false,
+        });
+        expect(finished.progress.done).toEqual([
+          "archive",
+          "cohorts",
+          "place",
+          "homeroom",
+        ]);
+        expect(yield* entriesOf(fixture, "person.moved")).toHaveLength(1);
+        const keptAsHistory = fixture.run(
+          Effect.map(placementOf(s.source.id, s.first), Option.isSome)
+        );
+        expect(yield* keptAsHistory).toBe(true);
+        const movedToTarget = fixture.run(
+          Effect.map(placementOf(s.target.id, s.first), Option.isSome)
+        );
+        expect(yield* movedToTarget).toBe(false);
+      })
+  );
+
+  it.effect(
+    "refuses to graduate a Person who already graduated from the unit, and writes no second graduation",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantGraduates").insert({
+              personId: s.third,
+              promotionId,
+              tenantId: fixture.tenants.nf,
+              unitId: fixture.units.smp,
+            })
+          )
+        );
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress).toMatchObject({
+          failure: "PersonGraduated",
+          running: false,
+          step: "place",
+        });
+        expect(yield* entriesOf(fixture, "person.graduated")).toEqual([]);
+        const state = yield* snapshot(fixture);
+        expect(
+          Arr.filter(state.graduates, (row) => row.personId === s.third)
+        ).toHaveLength(1);
+      })
+  );
+
+  it.effect(
+    "refuses to place a Person who already graduated from the unit in a new cohort",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s, {
+          sources: [
+            { cohortId: s.seventh.id, homeroom: true, to: toEightA },
+            { cohortId: s.ninth.id, homeroom: false, to: toEightA },
+          ],
+          targets: [{ grade: 8, name: "8A" }],
+        });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantGraduates").insert({
+              personId: s.third,
+              promotionId,
+              tenantId: fixture.tenants.nf,
+              unitId: fixture.units.smp,
+            })
+          )
+        );
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress).toMatchObject({
+          failure: "PersonGraduated",
+          running: false,
+          step: "place",
+        });
+        expect(yield* entriesOf(fixture, "person.moved")).toEqual([]);
       })
   );
 });

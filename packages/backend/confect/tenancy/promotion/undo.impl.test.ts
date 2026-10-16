@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { placementOf } from "@repo/backend/confect/tenancy/authority";
 import {
   allJournal,
   approvedPromotion,
@@ -10,6 +12,7 @@ import {
   flipGrants,
   nf,
   periods,
+  placements,
   promotion,
   readPromotion,
   runPromotion,
@@ -19,7 +22,7 @@ import {
   undoOnce,
 } from "@repo/backend/test/promotion";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const { plan } = promotion.draft;
 const { apply } = promotion.apply;
@@ -34,6 +37,53 @@ beforeEach(() => {
 });
 
 describe("tenancy/promotion undo", () => {
+  it.effect(
+    "undo of a stopped place step keeps a placement made by hand before apply, and restores every other row",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        yield* crowd(fixture, s.seventh.id, s.source.id, 150);
+        // Apply reads the source students in Person ID order, so the last one is on the second page.
+        const sourceRows = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("tenantCohortMembers")
+              .index("by_periodId_and_personId", (query) =>
+                query.eq("periodId", s.source.id)
+              )
+              .take(1000)
+          )
+        );
+        const lastStudent = Option.getOrThrow(Arr.last(sourceRows)).personId;
+        const holder = yield* cohort(fixture, s.target.id, "8B", 8);
+        yield* fixture.as("admin").mutation(placements.place, {
+          cohortId: holder.id,
+          personId: lastStudent,
+          slug: nf,
+        });
+        const before = yield* snapshot(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const stopped = yield* drain(fixture, promotionId);
+        expect(stopped.progress).toMatchObject({
+          failure: "PersonAlreadyPlaced",
+          running: false,
+          step: "place",
+        });
+        expect(stopped.progress.cursor).not.toBeNull();
+        const heldByHand = fixture.run(
+          Effect.map(placementOf(s.target.id, lastStudent), Option.isSome)
+        );
+        const undonePlace = yield* undoOnce(fixture, promotionId);
+        expect(undonePlace.progress.done).toEqual(["archive", "cohorts"]);
+        expect(yield* heldByHand).toBe(true);
+        yield* undoOnce(fixture, promotionId);
+        yield* undoOnce(fixture, promotionId);
+        expect(yield* snapshot(fixture)).toEqual(before);
+      })
+  );
+
   it.effect(
     "undoes the steps last first, and restores every row exactly as it was before apply",
     () =>

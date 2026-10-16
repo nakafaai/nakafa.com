@@ -79,9 +79,11 @@ export const targetNameOf = (
   to: typeof PromotionDestination.Type,
   sourceName: string
 ): Option.Option<string> =>
-  to.kind === "graduate"
-    ? Option.none()
-    : Option.some(to.kind === "cohort" ? to.name : sourceName);
+  PromotionDestination.match(to, {
+    cohort: ({ name }) => Option.some(name),
+    graduate: () => Option.none(),
+    stay: () => Option.some(sourceName),
+  });
 
 /** The cohort that applying the promotion created under a name, if it created one. */
 export const createdCohort = (
