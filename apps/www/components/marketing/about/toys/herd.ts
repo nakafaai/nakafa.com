@@ -1,10 +1,10 @@
 import { cast } from "@repo/mascot/seed";
 import { Array as Arr } from "effect";
 
-/** The seed that names the animals of the home page. */
+/** The seed that names the animals of the marketing pages. */
 const HOME_SEED = "nakafa-home";
 
-/** How many animals the toys beside the parts of the page take. */
+/** How many animals the toys beside the parts of the home page take. */
 const TOY_COUNT = 17;
 
 /** How many friends stand in the crowd of the community part. */
@@ -13,11 +13,21 @@ const CROWD_COUNT = 18;
 /** How many animals sit in the class photo of the school part. */
 const CLASS_COUNT = 7;
 
+/** How many animals the home page takes from the start of the cast. */
+const HOME_COUNT = TOY_COUNT + CROWD_COUNT + CLASS_COUNT;
+
+/** How many animals sit in the open space beside the parts of the pricing page. */
+const PRICING_TOY_COUNT = 6;
+
+/** How many animals sit in the class of the pricing page. */
+const PRICING_CLASS_COUNT = 7;
+
 /**
- * The one cast of the home page. Its toys, crowd and class are slices of it, in
- * that order, so no animal appears twice on the page.
+ * The one cast of the marketing pages. The home page takes its toys, crowd and
+ * class as slices of it, in that order, and the pricing page takes the slices
+ * after them, so no animal appears twice on a page or on both pages.
  */
-export const HOME_CAST = cast(HOME_SEED, TOY_COUNT + CROWD_COUNT + CLASS_COUNT);
+export const HOME_CAST = cast(HOME_SEED, HOME_COUNT);
 
 /** The animals of the toys, from the start of the cast. */
 export const TOY_HERD = Arr.take(HOME_CAST, TOY_COUNT);
@@ -25,5 +35,18 @@ export const TOY_HERD = Arr.take(HOME_CAST, TOY_COUNT);
 /** The friends of the crowd, straight after the toys. */
 export const CROWD_HERD = Arr.take(Arr.drop(HOME_CAST, TOY_COUNT), CROWD_COUNT);
 
-/** The animals of the class, at the end of the cast. */
+/** The animals of the class, at the end of the home cast. */
 export const CLASS_HERD = Arr.drop(HOME_CAST, TOY_COUNT + CROWD_COUNT);
+
+/** The animals of the pricing page, straight after the home cast. */
+const PRICING_CAST = cast(
+  HOME_SEED,
+  PRICING_TOY_COUNT + PRICING_CLASS_COUNT,
+  HOME_COUNT
+);
+
+/** The animals of the pricing toys, from the start of their slice. */
+export const PRICING_TOY_HERD = Arr.take(PRICING_CAST, PRICING_TOY_COUNT);
+
+/** The animals of the pricing class, at the end of their slice. */
+export const PRICING_CLASS_HERD = Arr.drop(PRICING_CAST, PRICING_TOY_COUNT);

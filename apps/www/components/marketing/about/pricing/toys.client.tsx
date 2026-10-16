@@ -1,34 +1,17 @@
 "use client";
 
-import { Animal } from "@repo/design-system/components/ui/animal";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import type { ThingName } from "@repo/mascot/thing/name";
-import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
-import { PRICING_TOY_HERD } from "@/components/marketing/about/pricing/herd";
+import { PRICING_TOY_HERD } from "@/components/marketing/about/toys/herd";
 import {
-  ToyLayer,
+  ToyAnimal,
+  ToyOverlay,
   type ToyPlacement,
 } from "@/components/marketing/about/toys/layer.client";
 import { within } from "@/components/marketing/about/toys/place";
 
 /** The distance from an animal to the thing beside it: a toy is 56px wide, with 14px between. */
 const PAIR_OFFSET = 70;
-
-/** An animal of the cast, at its index in the slice that the toys take. */
-function animal(index: number) {
-  return (
-    <Animal
-      className="size-14"
-      mascot={Arr.getUnsafe(PRICING_TOY_HERD, index)}
-    />
-  );
-}
-
-/** A thing of Nina's world, drawn at the size of a toy. */
-function thing(name: ThingName) {
-  return <Thing name={name} />;
-}
 
 /**
  * An animal and one thing beside it, in the open space above a part of the
@@ -44,12 +27,12 @@ function pair(
   return [
     {
       key: `${part}-${index}-animal`,
-      picture: animal(index),
+      picture: <ToyAnimal herd={PRICING_TOY_HERD} index={index} />,
       place: within(part, { dy: -30, minWidth: 1024, x, y: 0 }),
     },
     {
       key: `${part}-${index}-${name}`,
-      picture: thing(name),
+      picture: <Thing name={name} />,
       place: within(part, { dx: offset, dy: -30, minWidth: 1024, x, y: 0 }),
     },
   ];
@@ -65,7 +48,7 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   ...pair("faq", 0.82, 5, "magnifier"),
 ];
 
-/** The layer of toys over the whole pricing page. */
-export function PricingToys({ children }: { children: ReactNode }) {
-  return <ToyLayer placements={PLACEMENTS}>{children}</ToyLayer>;
+/** The layer of toys laid over the pricing page, which renders its own parts. */
+export function PricingToys() {
+  return <ToyOverlay placements={PLACEMENTS} />;
 }

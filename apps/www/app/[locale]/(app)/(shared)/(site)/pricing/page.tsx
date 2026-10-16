@@ -4,32 +4,22 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import { Array as Arr } from "effect";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { locale as rootLocale } from "next/root-params";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Faq } from "@/components/marketing/about/faq/landing";
 import { PricingComparison } from "@/components/marketing/about/pricing/comparison";
-import { PRICING_CLASS_HERD } from "@/components/marketing/about/pricing/herd";
+import { DeferredPricingToys } from "@/components/marketing/about/pricing/deferred.client";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import { StaticPrice } from "@/components/marketing/about/pricing/price";
 import { Schools } from "@/components/marketing/about/schools";
+import { PRICING_CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/seo/social";
-
-/**
- * The toys of the page load after the page renders, so their drag code is not
- * part of the first JavaScript of the pricing page.
- */
-const PricingToys = dynamic(() =>
-  import("@/components/marketing/about/pricing/toys.client").then(
-    (module) => module.PricingToys
-  )
-);
 
 /** The first part of the page: the headline above the two plans. */
 function PricingPagePlans() {
@@ -114,14 +104,13 @@ export default async function Page() {
         }))}
         url={url}
       />
-      <PricingToys>
-        <div className="relative grid">
-          <PricingPagePlans />
-          <PricingComparison />
-          <Schools herd={PRICING_CLASS_HERD} />
-          <Faq faqs={faqItems} />
-        </div>
-      </PricingToys>
+      <div className="relative grid">
+        <PricingPagePlans />
+        <DeferredPricingToys />
+        <PricingComparison />
+        <Schools herd={PRICING_CLASS_HERD} />
+        <Faq faqs={faqItems} />
+      </div>
     </>
   );
 }
