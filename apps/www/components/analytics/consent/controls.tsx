@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -20,12 +21,31 @@ import {
 } from "@/lib/analytics/consent/context";
 import { usePageNavigation } from "@/lib/content/page/context";
 
+/** Names the prompt section, so the hide rules below can match it. */
+const PROMPT_ATTRIBUTE = "data-analytics-consent-prompt";
+const promptAttributes = { [PROMPT_ATTRIBUTE]: "" };
+
+/**
+ * Hides the prompt while the document root carries the mark that the bootstrap
+ * writes before paint. The root attribute's name comes from the shared consent
+ * module, so this rule cannot drift from the script.
+ */
+const HIDE_PROMPT_WHILE_MARKED = `:root[${ANALYTICS_CONSENT_ROOT_ATTRIBUTE}] [${PROMPT_ATTRIBUTE}]{display:none}`;
+
+/**
+ * Hides the prompt where scripts are off. Nothing runs there to record a choice,
+ * so the buttons could never work.
+ */
+const HIDE_PROMPT_WITHOUT_SCRIPTS = `[${PROMPT_ATTRIBUTE}]{display:none}`;
+
 /**
  * Renders the non-blocking first decision and permanent preferences dialog.
  *
  * The server renders the prompt while the choice is pending, so the text is in
- * the first HTML. The bootstrap script hides it before paint for a visitor whose
- * choice this browser keeps, and the store removes it once the choice is known.
+ * the first HTML. The bootstrap script marks the root before paint for a visitor
+ * whose choice this browser keeps, or whose sign-in is on its way, and the store
+ * removes the mark once it knows the choice. Without scripts the prompt stays
+ * hidden.
  *
  * The consent state is derived once here and handed to the decision and
  * detail parts, which render in both the prompt and the dialog.
@@ -49,10 +69,15 @@ export function AnalyticsConsentControls() {
 
   return (
     <>
+      <style>{HIDE_PROMPT_WHILE_MARKED}</style>
+      <noscript>
+        <style>{HIDE_PROMPT_WITHOUT_SCRIPTS}</style>
+      </noscript>
       {consent.isPromptOpen ? (
         <section
+          {...promptAttributes}
           aria-label={t("title")}
-          className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md [:root[data-analytics-consent=decided]_&]:hidden"
+          className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md"
         >
           <Card className="max-h-[calc(100dvh-2rem)] shadow-lg" size="sm">
             <CardHeader>

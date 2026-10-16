@@ -185,6 +185,7 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
     currentAccountUserId: user?.appUser._id ?? null,
     currentBrowserPrivacySignal,
     durableStatus: state.status,
+    hasLoadError,
     interruptDepartedSave,
     isAuthenticated,
     isPreviewChild,

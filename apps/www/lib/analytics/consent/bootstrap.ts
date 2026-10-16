@@ -6,14 +6,12 @@ import {
   ANALYTICS_CONSENT_GRANTED,
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
+  ANALYTICS_CONSENT_ROOT_ATTRIBUTE,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
 import { Schema } from "effect";
 import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
-
-/** The attribute that marks the document root once this browser has decided. */
-export const ANALYTICS_CONSENT_DECIDED_ATTRIBUTE = "data-analytics-consent";
 
 /** The literals the decision compares against, named as the consent store names them. */
 const BootstrapVocabularySchema = Schema.Struct({
@@ -70,19 +68,22 @@ const READ_RECORD_SCRIPT = `function (text) {
 }`;
 
 /**
- * Decides whether this browser's viewer has already decided analytics consent
- * for the current notice, from the raw values the browser holds.
+ * Resolves the mark the inline script writes on the document root before paint,
+ * from the raw values this browser holds. It is "decided" when the viewer has
+ * already decided for the current notice, "signing-in" while a sign-in is on its
+ * way, and null when the prompt may show.
  *
- * The inline script that marks the document root before the app loads is built
- * from this function's source text, so it refers to nothing outside its body:
- * every value arrives as an argument, and so does the reader that turns a stored
- * text into a record. The page passes JSON parsing, and the unit test passes the
- * store's own decoding. It runs before any import, the same exception AGENTS.md
- * names for code that Playwright serializes into the page. It mirrors
- * `resolveAnalyticsConsentState` in the consent store, and the unit test checks
- * the two case by case.
+ * The inline script is built from this function's source text, so it refers to
+ * nothing outside its body: every value arrives as an argument, and so does the
+ * reader that turns a stored text into a record. The page passes JSON parsing. The
+ * unit table passes a generic JSON record reader, and the script test runs the
+ * page's own reader through the real script. This runs before any import, the
+ * same exception AGENTS.md names for code that Playwright serializes into the
+ * page. It mirrors `resolveAnalyticsConsentState` in the consent store: "decided"
+ * exactly when the store's status is neither prompt nor pending, and
+ * "signing-in" only while that status is pending.
  */
-export function isAnalyticsConsentDecidedBeforePaint({
+export function resolveAnalyticsConsentMark({
   accountMarker,
   anonymousRecord,
   doNotTrack,
@@ -102,19 +103,19 @@ export function isAnalyticsConsentDecidedBeforePaint({
     text: string
   ) => Readonly<Record<string, unknown>> | undefined;
   readonly vocabulary: BootstrapVocabulary;
-}): boolean {
+}): "decided" | "signing-in" | null {
   // A browser privacy signal is a decision of its own, as the store reads it.
   if (
     globalPrivacyControl === true ||
     doNotTrack === "1" ||
     doNotTrack === "yes"
   ) {
-    return true;
+    return "decided";
   }
 
-  // A sign-in on its way decides nothing until Better Auth names its session.
+  // A sign-in on its way holds the prompt until Better Auth names its session.
   if (knownSession === vocabulary.expectedSession) {
-    return false;
+    return "signing-in";
   }
 
   // A signed-in session decides only through the account marker it names. A
@@ -124,12 +125,12 @@ export function isAnalyticsConsentDecidedBeforePaint({
       accountMarker === null ? undefined : readRecord(accountMarker);
     const granted = marker?.granted;
     const markerNotice = marker?.noticeVersion;
-    return (
+    const isMarkerDecided =
       marker?.sessionId === knownSession &&
       typeof granted === "boolean" &&
       typeof markerNotice === "string" &&
-      (!granted || markerNotice === noticeVersion)
-    );
+      (!granted || markerNotice === noticeVersion);
+    return isMarkerDecided ? "decided" : null;
   }
 
   // Without a signed-in session, the anonymous record decides, under the same
@@ -147,7 +148,7 @@ export function isAnalyticsConsentDecidedBeforePaint({
     record?.mechanism === vocabulary.mechanisms.privacyControls;
   const hasBrowserSignal =
     record?.mechanism === vocabulary.mechanisms.browserSignal;
-  return (
+  const isRecordDecided =
     record !== undefined &&
     record.category === vocabulary.category &&
     typeof decidedAt === "number" &&
@@ -155,22 +156,21 @@ export function isAnalyticsConsentDecidedBeforePaint({
     isKnownNotice &&
     ((isGranted && hasPrivacyControls) ||
       (isDenied && (hasPrivacyControls || hasBrowserSignal))) &&
-    (isDenied || record.noticeVersion === noticeVersion)
-  );
+    (isDenied || record.noticeVersion === noticeVersion);
+  return isRecordDecided ? "decided" : null;
 }
 
 /**
  * The inline script that runs before the usage-data prompt paints. It reads what
- * the consent store writes, asks the decision whether this browser already
- * decided, and marks the document root when it did. The prompt's class hides the
- * prompt while that mark stands, and the consent provider removes the mark once
- * the store knows the choice.
+ * the consent store writes, asks the decision for the mark, and writes the mark on
+ * the document root when there is one. The prompt's hide rule matches that mark,
+ * and the consent provider removes the mark once the store knows the choice.
  *
  * It never writes a decision. Storage that cannot be read keeps the prompt shown.
  */
 export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
   try {
-    var decided = (${isAnalyticsConsentDecidedBeforePaint.toString()})({
+    var mark = (${resolveAnalyticsConsentMark.toString()})({
       accountMarker: localStorage.getItem(${literal(ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY)}),
       anonymousRecord: localStorage.getItem(${literal(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)}),
       doNotTrack: navigator.doNotTrack,
@@ -180,8 +180,8 @@ export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
       readRecord: ${READ_RECORD_SCRIPT},
       vocabulary: ${vocabularyLiteral(ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY)}
     });
-    if (decided) {
-      document.documentElement.setAttribute(${literal(ANALYTICS_CONSENT_DECIDED_ATTRIBUTE)}, "decided");
+    if (mark !== null) {
+      document.documentElement.setAttribute(${literal(ANALYTICS_CONSENT_ROOT_ATTRIBUTE)}, mark);
     }
   } catch (error) {
     // Storage that cannot be read keeps the prompt shown.
