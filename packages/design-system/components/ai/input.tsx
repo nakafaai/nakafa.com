@@ -12,6 +12,7 @@ import {
   type PromptInputMessage,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
+import { isComposingKey } from "@repo/utilities/composition";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import {
@@ -173,7 +174,8 @@ const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
   if (event.key !== "Enter") {
     return;
   }
-  if (event.nativeEvent.isComposing) {
+  // The key that confirms a composition is not a send.
+  if (isComposingKey(event.nativeEvent)) {
     return;
   }
   if (event.shiftKey) {

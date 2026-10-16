@@ -29,6 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { isComposingKey } from "@repo/utilities/composition";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import {
@@ -203,8 +204,12 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
             maxLength={MAX_TITLE_LENGTH}
             onChange={(e) => setChatTitle(e.target.value)}
             onKeyDown={(e) => {
-              // Enter ends an IME composition first, so it does not save the title.
-              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+              // Enter confirms a composition and Escape cancels it, so neither
+              // saves nor closes the title while an input method is composing.
+              if (isComposingKey(e.nativeEvent)) {
+                return;
+              }
+              if (e.key === "Enter") {
                 handleSave();
               }
               if (e.key === "Escape") {
