@@ -12,8 +12,8 @@ import type {
 /**
  * What the actions of one conversation write: whether the learner is deleting
  * the chat, and the failures of what they asked of it. Everything else the
- * conversation holds is read from the server or follows a transition, so it
- * lives in the chat context.
+ * conversation holds is read from the server or is the plain state of a send,
+ * stop or retry in flight, so it lives in the chat context.
  */
 interface ChatStore {
   /** Stops reading the chat, because the learner is deleting it. */

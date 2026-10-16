@@ -1,21 +1,26 @@
 "use client";
 
-import { useTransition } from "react";
+import { Effect } from "effect";
+import { useState } from "react";
 
 /**
  * Runs the changes a learner makes to a chat, such as renaming, sharing or
- * deleting it. A change starts at once, outside the transition: Convex shows
- * the optimistic result through a state update, and an update made inside a
- * transition waits until the transition ends, which is when the server has
- * answered. The transition only holds `isPending` until the change settles.
+ * deleting it. A change starts at once, and Convex shows its optimistic result
+ * through a state update. `isPending` is plain state, not a transition: a
+ * transition that waited for the server would hold every navigation the learner
+ * makes meanwhile, because React makes each transition wait for a pending one.
  */
 export function useChange() {
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setPending] = useState(false);
 
   /** Starts the change now, and keeps `isPending` true until what it returns settles. */
   function change(start: () => Promise<void>) {
-    const settling = start();
-    startTransition(() => settling);
+    setPending(true);
+    Effect.runFork(
+      Effect.promise(start).pipe(
+        Effect.ensuring(Effect.sync(() => setPending(false)))
+      )
+    );
   }
 
   return { change, isPending };

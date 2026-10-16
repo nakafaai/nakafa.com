@@ -10,10 +10,8 @@ import {
   type PropsWithChildren,
   use,
   useLayoutEffect,
-  useOptimistic,
   useRef,
   useState,
-  useTransition,
 } from "react";
 import { useStore } from "zustand";
 import { readChatAccess } from "@/components/ai/chat/access";
@@ -48,9 +46,13 @@ function useChatState(
   const { chat, loadMoreTurns, turn, turnAt, turnsLoading, turnsStatus } =
     useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
-  const [isPending, startTransition] = useTransition();
-  const [cancelling, optimisticallyCancel] = useOptimistic(false);
-  const [draft, showDraft] = useOptimistic<NinaMessage | null>(null);
+  // A send, stop or retry on its way holds these as plain state. A transition
+  // would hold them until the server answers, and React makes every transition
+  // started meanwhile wait for a pending one: the learner's next navigation
+  // would wait for the answer too.
+  const [isPending, setPending] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [draft, setDraft] = useState<NinaMessage | null>(null);
   const setText = useAi((state) => state.setText);
   const opening = useAi(
     (state) => state.openingChat?.receipt.chatId === chatId
@@ -80,10 +82,7 @@ function useChatState(
     chat,
     chatId,
     isPending,
-    optimisticallyCancel,
     setText,
-    showDraft,
-    startTransition,
     submission,
     turn,
   };
@@ -104,31 +103,33 @@ function useChatState(
       const cancelTurn = now.cancelChat.withOptimisticUpdate(
         optimisticCancel(DateTime.toEpochMillis(DateTime.nowUnsafe()))
       );
-      // The stop starts before the transition, so Convex shows the cancelled
-      // turn at once: an update made inside a transition waits for its end.
-      const stopping = Effect.runPromise(
-        Effect.tryPromise({
-          try: () => cancelTurn({ chatId: now.chatId }),
-          catch: () =>
-            new NinaConnectionError({
-              code: "NINA_CONNECTION_FAILED",
-              message: "Nina cancellation could not be confirmed.",
-            }),
-        }).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.matchEffect({
-            onFailure: (failure) =>
-              Effect.sync(() =>
-                setStopFailure({ failure, order: stoppedOrder })
-              ),
-            onSuccess: () => Effect.void,
+      // The stop holds `cancelling` and `isPending` until the server answers, so
+      // the turn shows as cancelled at once. Convex applies the optimistic
+      // update when the stop starts, and no transition holds the navigation.
+      const stopping = Effect.tryPromise({
+        try: () => cancelTurn({ chatId: now.chatId }),
+        catch: () =>
+          new NinaConnectionError({
+            code: "NINA_CONNECTION_FAILED",
+            message: "Nina cancellation could not be confirmed.",
+          }),
+      }).pipe(
+        Effect.flatMap(Effect.fromResult),
+        Effect.matchEffect({
+          onFailure: (failure) =>
+            Effect.sync(() => setStopFailure({ failure, order: stoppedOrder })),
+          onSuccess: () => Effect.void,
+        }),
+        Effect.ensuring(
+          Effect.sync(() => {
+            setCancelling(false);
+            setPending(false);
           })
         )
       );
-      now.startTransition(() => {
-        now.optimisticallyCancel(true);
-        return stopping;
-      });
+      setCancelling(true);
+      setPending(true);
+      Effect.runFork(stopping);
     },
     /** Sends the same prompt again, or the latest one when no turn is named. */
     retry(order?: number) {
@@ -137,17 +138,20 @@ function useChatState(
       if (target === undefined || !now.chat || now.busy || now.isPending) {
         return;
       }
-      // The retry starts before the transition, for the same reason as a stop.
+      // The retry holds `isPending` until it settles, for the same reason as a stop.
       const retrying = now.submission.retry(target, now.chatId);
-      now.startTransition(() =>
-        Effect.runPromise(Effect.asVoid(Effect.promise(() => retrying)))
+      setPending(true);
+      Effect.runFork(
+        Effect.promise(() => retrying).pipe(
+          Effect.ensuring(Effect.sync(() => setPending(false)))
+        )
       );
     },
     /**
      * Sends a prompt. The send starts at once and its one outcome has two
-     * readers: the transition that holds the optimistic prompt, and the
-     * composer, which keeps the learner's text and files until it knows the
-     * prompt was admitted. A prompt that was not admitted returns to the
+     * readers: the optimistic prompt, which shows until the admission settles,
+     * and the composer, which keeps the learner's text and files until it knows
+     * the prompt was admitted. A prompt that was not admitted returns to the
      * composer, unless the learner has typed something else since. The text
      * is one draft for every chat, so a prompt that fails after the learner
      * opened another chat returns to the composer open then, and its files
@@ -174,19 +178,26 @@ function useChatState(
           )
         )
       );
-      now.startTransition(() => {
-        now.showDraft(
-          draftMessage({
-            chatId: now.chatId,
-            createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-            prompt,
-            threadId: chat.threadId,
-            turnOrder: now.turn?.order,
-          })
-        );
-        return Effect.runPromise(Effect.asVoid(Fiber.join(admission)));
-      });
-      return Effect.runPromise(Fiber.join(admission));
+      setPending(true);
+      setDraft(
+        draftMessage({
+          chatId: now.chatId,
+          createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+          prompt,
+          threadId: chat.threadId,
+          turnOrder: now.turn?.order,
+        })
+      );
+      return Effect.runPromise(
+        Fiber.join(admission).pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              setDraft(null);
+              setPending(false);
+            })
+          )
+        )
+      );
     },
   }));
 

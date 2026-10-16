@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import {
   clearAiDraftText,
   resolveAiDraftText,
+  restoreRefusedText,
   saveAiDraftText,
 } from "@/components/ai/store/draft";
 
@@ -150,4 +151,20 @@ describe("ai/store/draft", () => {
       expect(yield* readSavedDraft(null)).toBeNull();
     })
   );
+
+  it("gives a refused prompt back alone when nothing new was typed", () => {
+    expect(restoreRefusedText("What is a limit?", "")).toBe("What is a limit?");
+    expect(restoreRefusedText("What is a limit?", "   ")).toBe(
+      "What is a limit?"
+    );
+    expect(restoreRefusedText("What is a limit?", "What is a limit? ")).toBe(
+      "What is a limit?"
+    );
+  });
+
+  it("keeps a refused prompt ahead of what the learner typed meanwhile", () => {
+    expect(restoreRefusedText("What is a limit?", "And a derivative?")).toBe(
+      "What is a limit?\n\nAnd a derivative?"
+    );
+  });
 });
