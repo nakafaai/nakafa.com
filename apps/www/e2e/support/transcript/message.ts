@@ -3,6 +3,7 @@ import type { LearningCapabilityName } from "@repo/backend/confect/nina/capabili
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { ToolUIPart } from "ai";
+import type { ServedMessage } from "@/e2e/support/query";
 
 /**
  * What a capability stored when it ended, as the wire holds it: its cards, its
@@ -160,7 +161,9 @@ function summaryOf(
 
 /**
  * The learner's question and Nina's reply to it, as Agent hands both to the
- * page. A reply with a running turn is still streaming.
+ * page, with the facts of the turn kept in the reply's metadata: the served
+ * chat strips them, since the page reads them from the turns query. A reply
+ * with a running turn is still streaming.
  */
 export function exchange({
   order,
@@ -172,7 +175,7 @@ export function exchange({
   readonly parts: readonly Part[];
   readonly question: string;
   readonly running?: boolean;
-}): readonly NinaMessage[] {
+}): readonly ServedMessage[] {
   return [
     {
       _creationTime: startedAt(order),

@@ -10,9 +10,13 @@ import {
 } from "effect";
 import type { Changes } from "@/e2e/support/changes";
 
-/** The queries that tell a page of a chat: its conversation with the latest turn, and its messages. */
+/**
+ * The queries that tell a page of a chat: its conversation with the latest
+ * turn, the turns that ended, and its messages.
+ */
 const CONVERSATION = "nina/conversation:get";
-const MESSAGES = "nina/messages:list";
+const TURNS = "nina/conversation:turns";
+const MESSAGES = "nina/messages:page";
 /** The facts a reader's page is told of a turn: where it stands, and which prompt it answers. */
 const READER_FACTS = [
   "order",
@@ -39,6 +43,10 @@ const ToldConversation = Schema.fromJsonString(
     turn: Schema.NullOr(TurnSummary),
   })
 );
+/** A page of the turns that ended, each as a page was told it. */
+const ToldTurns = Schema.fromJsonString(
+  Schema.Struct({ page: Schema.Array(TurnSummary) })
+);
 /** What a page is told of the live streams: the running ones, or the new parts of some. */
 const ToldStreams = Schema.Union([
   Schema.Struct({
@@ -58,7 +66,6 @@ const ToldMessages = Schema.fromJsonString(
   Schema.Struct({
     page: Schema.Array(
       Schema.Struct({
-        metadata: Schema.optionalKey(TurnSummary),
         parts: Schema.Array(ToldPart),
         ...Owned,
       })
@@ -67,6 +74,7 @@ const ToldMessages = Schema.fromJsonString(
   })
 );
 const readConversation = Schema.decodeResult(ToldConversation);
+const readTurns = Schema.decodeResult(ToldTurns);
 const readMessages = Schema.decodeResult(ToldMessages);
 
 /** What a check asks of a page: the answers its queries were given. */
@@ -94,13 +102,14 @@ const readAnswers = <A>(
 
 /**
  * Everything a page was told of its chat, in the order it was told: its
- * conversations, each with the latest turn, the messages of every page of
- * messages, and the streams that each answer about messages carried. A page
- * that was told no conversation or no message fails the check, so one source
- * cannot stand in for the other.
+ * conversations, each with the latest turn, the turns that ended of every page
+ * of them, the messages of every page of messages, and the streams that each
+ * answer about messages carried. A page that was told no conversation, no turns
+ * or no message fails the check, so one source cannot stand in for another.
  */
 const told = (page: Answered) => {
   const conversations = readAnswers(page, CONVERSATION, readConversation);
+  const turnAnswers = readAnswers(page, TURNS, readTurns);
   const answers = readAnswers(page, MESSAGES, readMessages);
   const messages = Arr.flatMap(answers, (answer) => answer.page);
 
@@ -108,25 +117,29 @@ const told = (page: Answered) => {
     conversations.length,
     "the conversations the page was told"
   ).toBeGreaterThan(0);
+  // A chat whose turn still runs has no turn that ended, but the page is told so.
+  expect(
+    turnAnswers.length,
+    "the answers about the turns that ended the page was given"
+  ).toBeGreaterThan(0);
   expect(messages.length, "the messages the page was told").toBeGreaterThan(0);
   return {
     conversations,
     messages,
     streams: Arr.map(answers, (answer) => answer.streams),
+    turns: Arr.flatMap(turnAnswers, (answer) => answer.page),
   };
 };
 
 type Told = ReturnType<typeof told>;
 
-/** Every turn summary a page was told, in its conversations and in its messages. */
-const summariesOf = ({ conversations, messages }: Told) =>
+/** Every turn summary a page was told, in its conversations and among the turns that ended. */
+const summariesOf = ({ conversations, turns }: Told) =>
   Arr.appendAll(
     Arr.flatMap(conversations, ({ turn }) =>
       Option.toArray(Option.fromNullishOr(turn))
     ),
-    Arr.flatMap(messages, ({ metadata }) =>
-      Option.toArray(Option.fromNullishOr(metadata))
-    )
+    turns
   );
 
 /** The account a page was told owns its chat, in each chat and in each message of it. */
@@ -157,7 +170,7 @@ export const learnsWhatTurnsCost = (page: Answered) => {
  * the call cost. The local runtime has no model, so no part of a chat of a
  * browser test was written by a call: the last check shows only what the
  * production build answers with, and the tests of this module show that it
- * fails for a page that was told such a part. `nina/messages.impl.test.ts` runs
+ * fails for a page that was told such a part. `nina/messages/page.test.ts` runs
  * a real turn and reads it as a reader.
  */
 export const learnsOnlyWhereTurnsStand = (page: Answered) => {

@@ -1,6 +1,6 @@
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Array as Arr } from "effect";
-import type { StoredMessage } from "@/e2e/support/query";
+import type { ServedMessage, StoredMessage } from "@/e2e/support/query";
 
 /** The moment every stored message was written, in milliseconds. */
 const WRITTEN = 1_760_000_000_000;
@@ -34,7 +34,6 @@ export const learnerMessage = ({
   _creationTime: WRITTEN + order,
   id: `prose-learner-${order}`,
   key: `prose-${order}-0`,
-  metadata: finishedTurn(order),
   order,
   parts: [{ text, type: "text" }, ...files],
   role: "user",
@@ -57,7 +56,7 @@ export const answerMessage = ({
   order: number;
   reasoning?: string;
   suggestions?: readonly string[];
-}): StoredMessage => ({
+}): ServedMessage => ({
   _creationTime: WRITTEN + order,
   id: `prose-answer-${order}`,
   key: `prose-${order}-1`,

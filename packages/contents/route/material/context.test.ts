@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
 import {
+  MATERIAL_CONTEXT_HINT_LENGTH,
   projectMaterialContextToLocale,
   readMaterialContextHint,
   resolveMaterialHeaderLink,
@@ -81,6 +82,15 @@ describe("material route context", () => {
     expect(readMaterialContextHint(["merdeka~node"])).toBeUndefined();
     expect(readMaterialContextHint("merdeka")).toBeUndefined();
     expect(readMaterialContextHint("~node")).toBeUndefined();
+    // A hint takes no more characters than a public route may hold.
+    const room = MATERIAL_CONTEXT_HINT_LENGTH - "merdeka~".length;
+    expect(readMaterialContextHint(`merdeka~${"n".repeat(room)}`)).toEqual({
+      nodeKey: "n".repeat(room),
+      programKey: "merdeka",
+    });
+    expect(
+      readMaterialContextHint(`merdeka~${"n".repeat(room + 1)}`)
+    ).toBeUndefined();
     expect(
       toContextualMaterialHref({ href: `/id/${PUBLIC_PATH}`, ref: undefined })
     ).toBe(`/id/${PUBLIC_PATH}`);

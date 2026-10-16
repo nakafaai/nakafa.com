@@ -17,18 +17,13 @@ import {
 import {
   type Asked,
   type AskedQueries,
+  answerTo,
   noticeQueries,
-  pageOf,
+  type ServedMessage,
   type StoredMessage,
 } from "@/e2e/support/query";
-import { BUBBLE_CONTENT } from "@/e2e/support/selector";
+import { BUBBLE_CONTENT, TRANSCRIPT_ROW } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-
-/** The stream that carries the answer being written. */
-const STREAM_ID = "prose-stream";
-
-/** The rows of a transcript: one for each message, and the alert of the chat's failed turn after them. */
-const ROW = '[data-slot="message-scroller-item"]';
 
 /** A frame in which the server moves the page to a new view of the database. */
 type Transition = Option.Option.Value<ReturnType<typeof decodeTransition>>;
@@ -48,11 +43,13 @@ type Transition = Option.Option.Value<ReturnType<typeof decodeTransition>>;
  */
 const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
   page: Page,
-  messages: readonly StoredMessage[]
+  messages: readonly ServedMessage[]
 ) {
   /** The chunks of the answer being written, and the turn it answers. */
   const chunks = MutableList.make<unknown>();
   let order: number | null = null;
+  /** Whether the turns that ended are held back, as `hold` asks. */
+  let held = false;
   /** Each connection of the page: what it asked, how to reach it, and the view it last held. */
   const connections = MutableList.make<{
     readonly asked: AskedQueries;
@@ -60,59 +57,16 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
     view: Option.Option<Transition>;
   }>();
 
-  /** The value one query is given, from the messages and the answer being written. */
-  const answerTo = (asked: typeof Asked.Type) => {
-    if (asked.kind === "page") {
-      return pageOf(messages, asked.cursor, asked.numItems);
-    }
-    const base = { continueCursor: "", isDone: true, page: [] };
-    if (asked.kind === "list") {
-      return {
-        ...base,
-        streams: {
-          kind: "list",
-          messages:
-            order === null
-              ? []
-              : [
-                  {
-                    format: "UIMessageChunk",
-                    order,
-                    status: "streaming",
-                    stepOrder: 1,
-                    streamId: STREAM_ID,
-                  },
-                ],
-        },
-      };
-    }
-    const all = MutableList.toArray(chunks);
-    const parts = Arr.drop(all, asked.cursor);
-    return {
-      ...base,
-      streams: {
-        deltas: Arr.isReadonlyArrayNonEmpty(parts)
-          ? [
-              {
-                end: all.length,
-                parts,
-                start: asked.cursor,
-                streamId: STREAM_ID,
-              },
-            ]
-          : [],
-        kind: "deltas",
-      },
-    };
-  };
-
   /** The change that gives a query the value it asks for. */
   const updateOf = (queryId: number, asked: typeof Asked.Type) => ({
     journal: null,
     logLines: [],
     queryId,
     type: "QueryUpdated",
-    value: answerTo(asked),
+    value: answerTo(asked, messages, {
+      chunks: MutableList.toArray(chunks),
+      order,
+    }),
   });
 
   /** Gives every connection the new value of the queries a change moves. */
@@ -169,19 +123,33 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
         }
         connection.view = transition;
         // The answers to our queries are ours, and everything else is the server's.
+        // A turns answer that `hold` keeps back is left out, and `release` sends it.
         socket.send(
           encodeTransition({
             ...transition.value,
-            modifications: Arr.map(transition.value.modifications, (change) => {
-              const query =
-                change.type === "QueryUpdated" || change.type === "QueryFailed"
-                  ? MutableHashMap.get(connection.asked, change.queryId)
-                  : Option.none();
+            modifications: Arr.filterMap(
+              transition.value.modifications,
+              (change) => {
+                const query =
+                  change.type === "QueryUpdated" ||
+                  change.type === "QueryFailed"
+                    ? MutableHashMap.get(connection.asked, change.queryId)
+                    : Option.none();
 
-              return Option.isNone(query)
-                ? change
-                : updateOf(change.queryId, query.value);
-            }),
+                if (
+                  Option.isSome(query) &&
+                  held &&
+                  query.value.kind === "turns"
+                ) {
+                  return Result.failVoid;
+                }
+                return Result.succeed(
+                  Option.isNone(query)
+                    ? change
+                    : updateOf(change.queryId, query.value)
+                );
+              }
+            ),
           })
         );
       });
@@ -201,6 +169,15 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
       }
       refresh((asked) => asked.kind === "deltas");
     },
+    /** Keeps the turns that ended back from the page, so it holds none of them until `release`. */
+    hold() {
+      held = true;
+    },
+    /** Gives the page the turns that `hold` kept back, and every turns answer after it. */
+    release() {
+      held = false;
+      refresh((asked) => asked.kind === "turns");
+    },
   };
 });
 
@@ -213,7 +190,7 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
 export const openServedChat = Effect.fn("NakafaE2E.openServedChat")(function* (
   page: Page,
   baseURL: string,
-  messages: readonly StoredMessage[],
+  messages: readonly ServedMessage[],
   locale = "en"
 ) {
   const { learner } = yield* openChatPage(page, baseURL);
@@ -222,7 +199,7 @@ export const openServedChat = Effect.fn("NakafaE2E.openServedChat")(function* (
 
   yield* Effect.promise(async () => {
     await page.goto(`/${locale}/chat/${chat.chatId}`);
-    await expect(page.locator(ROW).first()).toBeVisible({
+    await expect(page.locator(TRANSCRIPT_ROW).first()).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
   });
@@ -231,7 +208,7 @@ export const openServedChat = Effect.fn("NakafaE2E.openServedChat")(function* (
 
 /** The row of the transcript that shows `message`, drawn or not. */
 export const rowOf = (page: Page, message: StoredMessage) =>
-  page.locator(`${ROW}[data-message-id="${message.key}"]`);
+  page.locator(`${TRANSCRIPT_ROW}[data-message-id="${message.key}"]`);
 
 /**
  * The row of the transcript that shows `message`, scrolled to and drawn.
