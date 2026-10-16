@@ -475,3 +475,9 @@ module then keeps only the opening.
   can be turned back into text.
 - The model provider sees plain text for the length of a call. ADR 0019 covers
   retention.
+
+## Implementation Status
+
+| Part | Status |
+| --- | --- |
+| `packages/backend/confect/nina/sealed.ts`: seals a message's content into a skeleton row, and opens it only for its own thread, order and step. The field binds the row through `row` in `vault/text.ts`, so existing learner bindings do not change. | Built in program wave A, order of work step 1 (slice S1a). No reader or writer uses it yet: the readers open through it in S1b and S1c, and the writers seal in wave two. |
