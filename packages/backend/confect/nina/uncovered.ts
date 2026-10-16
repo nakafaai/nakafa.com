@@ -10,13 +10,10 @@ import {
   ActionCtx,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { type Asking, newestAskings } from "@repo/backend/confect/nina/asking";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
-import { HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
-import {
-  type Asking,
-  newestAskings,
-  sentTurn,
-} from "@repo/backend/confect/nina/history";
+import { foldCanWait, HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
+import { sentTurn } from "@repo/backend/confect/nina/history";
 import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
 import {
   Array as Arr,
@@ -30,6 +27,17 @@ import {
 
 /** Messages one query reads from the thread. */
 const PAGE = 50;
+
+/**
+ * Messages one query reads when it reads one turn only. A turn holds its prompt,
+ * an answer for each step and a result for each step that called tools, so ten
+ * rows hold the prompt, three steps that called tools and the answer, and one
+ * row of the turn before that ends the read. A longer turn takes another query,
+ * and the step limit of a run (`isStepCount` in `generation.ts`) bounds how
+ * many. A page of `PAGE` would read more rows of the turns before it, which
+ * this read does not need.
+ */
+const OWN_PAGE = 10;
 
 /**
  * Rows the read may pass without keeping a turn from them, which is two pages
@@ -79,6 +87,44 @@ function costed(order: number, stored: MessageDoc[]) {
 }
 
 /**
+ * Reads the messages of a thread in pages of `size`, newest first, from the
+ * prompt of `turn` down. `down(oldest)` reads pages until one reaches a message
+ * older than `oldest`, so every message of the turn at `oldest` is read, and
+ * `docs` holds everything read so far.
+ */
+const threadReader = Effect.fn("nina.uncovered.thread")(function* (
+  turn: Pick<NinaTurnsDoc, "promptMessageId" | "threadId">,
+  size: number
+) {
+  const ctx = yield* ActionCtx;
+  let docs: MessageDoc[] = [];
+  let cursor: string | null = null;
+  let done = false;
+  return {
+    docs: () => docs,
+    down: Effect.fn("nina.uncovered.docs")(function* (oldest: number) {
+      while (!(done || Arr.some(docs, (doc) => doc.order < oldest))) {
+        const page = yield* Effect.tryPromise({
+          try: () =>
+            ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
+              excludeToolMessages: false,
+              order: "desc",
+              paginationOpts: { cursor, numItems: size },
+              statuses: ["success"],
+              threadId: turn.threadId,
+              upToAndIncludingMessageId: turn.promptMessageId,
+            }),
+          catch: () => new NinaUncoveredError(),
+        });
+        docs = Arr.appendAll(docs, page.page);
+        done = page.isDone;
+        cursor = page.continueCursor;
+      }
+    }),
+  };
+});
+
+/**
  * Whether the turns together cost more than the history budget. A fold needs a
  * turn to take and the newest to keep, so a lone turn never counts: the read
  * goes on to find an older one.
@@ -115,46 +161,29 @@ function outweighs(turns: readonly ReturnType<typeof costed>[]) {
  * neither the history nor the summary until a fold covers them. `docs` returns
  * every message read: all those of the turns listed, and of the turn at
  * `before`, so a caller finds that turn in them too.
+ *
+ * `first` holds the first page of turns, those below `before` and above
+ * `through`, when the caller has read them already, so the read does not ask
+ * for them again.
  */
 export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
   turn: Pick<NinaTurnsDoc, "chatId" | "promptMessageId" | "threadId">,
   before: number,
   through: number | null,
-  later: readonly Asking[]
+  later: readonly Asking[],
+  first?: readonly Asking[]
 ) {
-  const ctx = yield* ActionCtx;
   const { runQuery: query } = yield* QueryRunner;
-  let docs: MessageDoc[] = [];
-  let cursor: string | null = null;
-  let done = false;
-  // Reads pages of the thread, newest first, until one reaches a message
-  // older than `oldest`, so every message of the turn at `oldest` is read.
-  const readDown = Effect.fn("nina.uncovered.docs")(function* (oldest: number) {
-    while (!(done || Arr.some(docs, (doc) => doc.order < oldest))) {
-      const page = yield* Effect.tryPromise({
-        try: () =>
-          ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
-            excludeToolMessages: false,
-            order: "desc",
-            paginationOpts: { cursor, numItems: PAGE },
-            statuses: ["success"],
-            threadId: turn.threadId,
-            upToAndIncludingMessageId: turn.promptMessageId,
-          }),
-        catch: () => new NinaUncoveredError(),
-      });
-      docs = Arr.appendAll(docs, page.page);
-      done = page.isDone;
-      cursor = page.continueCursor;
-    }
-  });
-  yield* readDown(before);
+  const thread = yield* threadReader(turn, PAGE);
+  yield* thread.down(before);
   let newer = later;
   let found: ReturnType<typeof costed>[] = [];
   let upTo = before;
   let exhausted = false;
   // Rows listed that kept no turn, which `PASSED_LIMIT` bounds.
   let passed = 0;
+  // The page of turns the caller read, for the first round only.
+  let known = first;
   while (
     !(
       exhausted ||
@@ -163,17 +192,20 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
       passed >= PASSED_LIMIT
     )
   ) {
-    const rows = yield* query(refs.internal.nina.summaries.uncovered, {
-      before: upTo,
-      chatId: turn.chatId,
-      through,
-    }).pipe(Effect.mapError(() => new NinaUncoveredError()));
+    const rows =
+      known ??
+      (yield* query(refs.internal.nina.summaries.uncovered, {
+        before: upTo,
+        chatId: turn.chatId,
+        through,
+      }).pipe(Effect.mapError(() => new NinaUncoveredError())));
+    known = undefined;
     exhausted = rows.length < SUMMARY_FOLD_LIMIT;
     if (Arr.isReadonlyArrayNonEmpty(rows)) {
       const oldest = Arr.lastNonEmpty(rows).order;
-      yield* readDown(oldest);
+      yield* thread.down(oldest);
       const kept = Arr.filterMap(newestAskings(rows, newer), ({ order }) => {
-        const stored = storedTurn(docs, order);
+        const stored = storedTurn(thread.docs(), order);
         return isComplete(stored)
           ? Result.succeed(costed(order, stored))
           : Result.failVoid;
@@ -197,8 +229,48 @@ export const readUncovered = Effect.fn("nina.uncovered.read")(function* (
   // The oldest turn the summary does not cover is the one after `through`.
   const listedAll = exhausted || upTo <= (through ?? -1) + 1;
   return {
-    docs,
+    docs: thread.docs(),
     turns: Arr.reverse(found),
     unread: listedAll ? Option.none() : Option.some(upTo - 1),
   };
+});
+
+/**
+ * Reads what the turn that settled costs as the model would receive it, from
+ * its own messages alone: pages of `OWN_PAGE` from its prompt down, until one
+ * reaches an older turn. A turn that does not open with its question or holds
+ * no answer reads as none.
+ */
+const readOwnCost = Effect.fn("nina.uncovered.own")(function* (
+  turn: Pick<NinaTurnsDoc, "order" | "promptMessageId" | "threadId">
+) {
+  const thread = yield* threadReader(turn, OWN_PAGE);
+  yield* thread.down(turn.order);
+  const stored = storedTurn(thread.docs(), turn.order);
+  return isComplete(stored)
+    ? Option.some(costed(turn.order, stored).tokens)
+    : Option.none();
+});
+
+/**
+ * Whether the fold can wait for the turn that settled without reading the
+ * turns before it again. Its prompt stored what the history cost when it was
+ * built (`NinaHistoryCost`), so only the turn itself is read: the history of
+ * its prompt together with it still fits the budget, and the read left no turn
+ * out (`foldCanWait`). A turn that stored no cost, a history that did not fit
+ * or left a turn out, and a turn that holds no question and answer all leave
+ * the decision to the read of the turns. A turn whose messages cannot be read
+ * fails.
+ */
+export const foldWaits = Effect.fn("nina.uncovered.waits")(function* (
+  turn: Pick<NinaTurnsDoc, "history" | "order" | "promptMessageId" | "threadId">
+) {
+  const cost = turn.history;
+  if (!(cost && foldCanWait(cost, 0, NINA_BUDGET.history))) {
+    return false;
+  }
+  const own = yield* readOwnCost(turn);
+  return Option.exists(own, (tokens) =>
+    foldCanWait(cost, tokens, NINA_BUDGET.history)
+  );
 });

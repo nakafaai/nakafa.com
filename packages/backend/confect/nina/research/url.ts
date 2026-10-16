@@ -37,9 +37,16 @@ export function isPublicHttpUrlSyntax(value: string) {
   return true;
 }
 
-/** Normalizes URL hostnames before IP and localhost checks. */
+/** The root dots at the end of a name, which mark it as fully qualified. */
+const ROOT_DOTS = /\.+$/u;
+
+/**
+ * Normalizes URL hostnames before IP and localhost checks: lowercase, without
+ * the root dots that end a fully qualified name, and without the brackets of an
+ * IPv6 literal. Each name then has one spelling, so no check can miss another.
+ */
 export function normalizeHostname(hostname: string) {
-  const host = hostname.trim().toLowerCase();
+  const host = hostname.trim().toLowerCase().replace(ROOT_DOTS, "");
 
   if (host.startsWith("[") && host.endsWith("]")) {
     return host.slice(1, -1);
@@ -135,7 +142,11 @@ function isRefusedIpv6(address: NetAddress.Ipv6Address): boolean {
   );
 }
 
-/** Localhost names are refused before DNS can resolve them to loopback. */
+/**
+ * Localhost names are refused by name. The caller normalizes the name first, so
+ * a root dot cannot hide it. No lookup is made, because Firecrawl fetches a host
+ * name.
+ */
 function isLocalHostname(hostname: string) {
   return hostname === "localhost" || hostname.endsWith(".localhost");
 }

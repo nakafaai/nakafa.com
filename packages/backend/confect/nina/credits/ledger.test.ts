@@ -8,6 +8,7 @@ import {
   it,
 } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
+import usersTable from "@repo/backend/confect/_generated/tables/users";
 import { products } from "@repo/backend/confect/customers/polar/products";
 import {
   refundCredits,
@@ -18,9 +19,11 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { Array as Arr, DateTime, Effect, Option } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 8, 1);
+/** Reads a raw account the way Confect reads it, so its animal is decoded. */
+const decodeUser = Schema.decodeUnknownSync(usersTable.Doc);
 async function fixture(credits = 5, creditsResetAt = NOW) {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation((ctx) =>
@@ -31,7 +34,7 @@ async function fixture(credits = 5, creditsResetAt = NOW) {
       const user = await ctx.db.get("users", identity.userId);
       assert(user);
       return Effect.runPromise(
-        reserveCredits(user).pipe(
+        reserveCredits(decodeUser(user)).pipe(
           Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
         )
       );
@@ -113,7 +116,7 @@ describe("Nina credit transactions", () => {
             );
           }
           return Effect.runPromise(
-            reserveCredits(user).pipe(
+            reserveCredits(decodeUser(user)).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(schema, ctx)
               )

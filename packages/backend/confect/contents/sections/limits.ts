@@ -95,9 +95,3 @@ export const SEARCH_VERIFY_SLACK = 4;
 
 /** How long a whole search may run before the caller falls back to words. */
 export const SEARCH_DEADLINE_MS = 10_000;
-
-/** Search terms Convex accepts in one text query. */
-export const TEXT_QUERY_TERMS = 16;
-
-/** Bytes at which Convex discards one search term. */
-export const TEXT_TERM_BYTES = 32;

@@ -3,7 +3,9 @@
 ## Decision
 
 Authored MDX and its editorial rules live only in Aksara. Nakafa owns the
-React renderer and renders exactly what the signed publication declares.
+React renderer and renders exactly what a signed Aksara publication declares.
+That statement covers Aksara publications only: a school's own items are not
+signed and are in no publication, and the last point below says how they render.
 
 - Rendered content follows the audited Aksara locale equivalent without
   fallback. Renderer work preserves reviewed facts, pedagogy, exercises,
@@ -25,6 +27,17 @@ React renderer and renders exactly what the signed publication declares.
   current implementation and component set. There are no component or
   renderer contract version fields, dual registries, or compatibility
   adapters for additive props.
+- Assessment items, the try-out and school exam items of ADR 0031, are not MDX
+  code. Their body is an assessment document: a structured tree of paragraphs,
+  headings, lists, tables, math written in LaTeX with MathML, and figures. A
+  figure is one of the published components (`MathVisual`, `NumberLine`,
+  `LineEquation`, `UnitCircle`, `Mermaid`) or an image with alternative text. ADR
+  0031 says how the other figure kinds of the corpus migrate. Aksara still
+  writes MDX, and its compiler produces the document. The renderer draws the
+  document and runs no authored code. Nakafa items and school items share this
+  renderer, and it carries no version field. Program wave A (the first School
+  delivery wave) builds the contract, the compiler, and this renderer. The
+  player that uses them is wave B.
 
 ## Consequences
 

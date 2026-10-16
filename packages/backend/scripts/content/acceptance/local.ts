@@ -1,4 +1,3 @@
-import { parseEnv } from "node:util";
 import {
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_MCP_EDGE_CONTRACT,
@@ -27,6 +26,8 @@ import { sha256Hex } from "@repo/utilities/digest";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
+  Config,
+  ConfigProvider,
   Effect,
   FileSystem,
   Option,
@@ -241,17 +242,16 @@ export const initializeLocalRuntime = Effect.fn(
   }, Effect.scoped);
   yield* retryVersionServiceStart(command(["init"]));
   const source = yield* fs.readFileString(`${backend}/.env.local`);
-  const environment = parseEnv(source);
-  const urls = yield* Schema.decodeUnknownEffect(
-    Schema.Struct({ query: LoopbackUrl, site: LoopbackUrl })
-  )({
-    query: environment.VITE_CONVEX_URL,
-    site: environment.VITE_CONVEX_SITE_URL,
-  }).pipe(
-    Effect.mapError(() =>
-      acceptanceRuntimeError("Anonymous Convex must provide loopback URLs.")
-    )
-  );
+  const urls = yield* Config.all({
+    query: Config.schema(LoopbackUrl, "VITE_CONVEX_URL"),
+    site: Config.schema(LoopbackUrl, "VITE_CONVEX_SITE_URL"),
+  })
+    .parse(ConfigProvider.fromDotEnvContents(source))
+    .pipe(
+      Effect.mapError(() =>
+        acceptanceRuntimeError("Anonymous Convex must provide loopback URLs.")
+      )
+    );
   if (urls.query === urls.site) {
     return yield* acceptanceRuntimeError(
       "Anonymous Convex query and HTTP ports must differ."

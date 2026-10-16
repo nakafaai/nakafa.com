@@ -2,6 +2,7 @@
 
 import { Logout01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { Animal } from "@repo/design-system/components/ui/animal";
 import {
   Avatar,
   AvatarFallback,
@@ -31,7 +32,6 @@ import { clearAiDraftText } from "@/components/ai/store/draft";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import type { CurrentUser } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/identity/initials";
 
 /**
  * The account menu every sidebar shares: the account button, the account at
@@ -84,8 +84,8 @@ export function AccountMenu({
                   role="presentation"
                   src={user.authUser.image ?? ""}
                 />
-                <AvatarFallback className="text-xs">
-                  {getInitialName(user.authUser.name)}
+                <AvatarFallback>
+                  <Animal mascot={user.appUser.mascot} />
                 </AvatarFallback>
               </Avatar>
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
@@ -112,7 +112,7 @@ export function AccountMenu({
                     src={user.authUser.image ?? ""}
                   />
                   <AvatarFallback>
-                    {getInitialName(user.authUser.name)}
+                    <Animal mascot={user.appUser.mascot} />
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">

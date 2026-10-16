@@ -1,6 +1,5 @@
-import { createHash } from "node:crypto";
 import { assert } from "@effect/vitest";
-import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import type { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { replaceContentSnapshot } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   tryoutCatalogNodeIdentity,
@@ -22,6 +21,7 @@ import {
   testSignedRelease,
   testSignedTryoutRuntimeBundle,
 } from "@repo/backend/test/content/proof";
+import { testTextHash } from "@repo/backend/test/content/release";
 import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -32,6 +32,9 @@ import {
   Order,
   Record as Rec,
 } from "effect";
+
+/** The domain text that opens the hash of a placement and of the placement digest. */
+const PLACEMENT_DOMAIN = "nakafa.aksara.tryout-placements\n";
 
 /** Rebuilds a technical fixture using the exact choices-era placement hash format. */
 async function retainChoicesSnapshot(
@@ -51,10 +54,8 @@ async function retainChoicesSnapshot(
     stored: Doc<"tryoutPlacements">;
     rowJson: string;
     rowHash: typeof Sha256HashSchema.Type;
+    digestLine: string;
   }>();
-  const digest = createHash("sha256").update(
-    "nakafa.aksara.tryout-placements\n"
-  );
   for (const stored of placements) {
     const original = await Effect.runPromise(
       decodeSnapshotRowJson(stored.rowJson)
@@ -80,10 +81,7 @@ async function retainChoicesSnapshot(
         )
       )
     );
-    const rowHash = Sha256HashSchema.make(
-      `sha256:${createHash("sha256").update("nakafa.aksara.tryout-placements\n").update(canonical).digest("hex")}`
-    );
-    digest.update(`${canonical}\0${rowHash}\n`);
+    const rowHash = testTextHash(`${PLACEMENT_DOMAIN}${canonical}`);
     MutableList.append(records, {
       stored,
       rowJson: encodeJsonText({
@@ -92,11 +90,17 @@ async function retainChoicesSnapshot(
         record: { row, rowHash },
       }),
       rowHash,
+      digestLine: `${canonical}\0${rowHash}\n`,
     });
   }
   const snapshot = makeTryoutSnapshot({
     ...decoded.payload.snapshot,
-    placementDigest: Sha256HashSchema.make(`sha256:${digest.digest("hex")}`),
+    placementDigest: testTextHash(
+      `${PLACEMENT_DOMAIN}${Arr.join(
+        Arr.map(MutableList.toArray(records), ({ digestLine }) => digestLine),
+        ""
+      )}`
+    ),
   });
   const release = await ctx.db.query("contentReleases").unique();
   const storedSnapshot = await ctx.db

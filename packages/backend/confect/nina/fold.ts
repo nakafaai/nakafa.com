@@ -1,3 +1,4 @@
+import type { NinaHistoryCost } from "@repo/backend/confect/nina/contract/turn";
 import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
 import { Array as Arr, Option, pipe, Schema } from "effect";
 
@@ -9,10 +10,51 @@ const CostedTurn = Schema.Struct({ order: Schema.Int, tokens: Schema.Int });
  * token budget bounds what a call costs, but each turn also costs documents to
  * read before the call, which no token counts. A chat of very short turns
  * would otherwise grow to thousands of messages before it reached the budget.
- * The messages themselves add no tokens beyond their content (see
- * `countTextTokens`), so this cap is about reads, not about the prompt.
+ * A message adds only the provider's overhead beyond its content (see
+ * `history.ts`), so this cap is about reads, not about the prompt.
  */
 export const HISTORY_TURNS = 4 * SUMMARY_FOLD_LIMIT;
+
+/**
+ * What the history cost: the tokens of `turns`, how many they are, and the
+ * highest order the read left out (`unread`). A turn stores it when its prompt
+ * is built (`NinaHistoryCost`).
+ */
+export function historyCost(
+  turns: readonly (typeof CostedTurn.Type)[],
+  unread: Option.Option<number>
+) {
+  return {
+    tokens: Arr.reduce(turns, 0, (total, { tokens }) => total + tokens),
+    turns: turns.length,
+    ...(Option.isSome(unread) ? { unread: unread.value } : {}),
+  };
+}
+
+/**
+ * Whether the fold can wait without reading a single turn again: the read left
+ * no turn out, the turns it read and the turn that settled leave the history
+ * under the most turns it takes, and together they cost no more than `budget`,
+ * with `own` tokens for the turn that settled. Then `nextSummaryTarget` finds
+ * nothing to fold, whatever each turn costs. Otherwise only reading the turns
+ * tells whether a fold is due and what it covers: the count of turns decides a
+ * fold too, once a read holds `HISTORY_TURNS` of them.
+ *
+ * The summary may have covered more turns since the prompt was built, never
+ * fewer, so the stored cost can only count too many turns, and a fold that
+ * waits on it waits on the real state too.
+ */
+export function foldCanWait(
+  cost: typeof NinaHistoryCost.Type,
+  own: number,
+  budget: number
+) {
+  return (
+    cost.unread === undefined &&
+    cost.turns + 1 < HISTORY_TURNS &&
+    cost.tokens + own <= budget
+  );
+}
 
 /**
  * Returns the order a fold should summarize through, or none while the turns
@@ -62,4 +104,30 @@ export function nextSummaryTarget(
     Option.map(([{ order }]) => Math.min(order, limit)),
     Option.orElse(() => hidden)
   );
+}
+
+/**
+ * The order a fold covers through, when its transcript may carry at most `budget`
+ * tokens. `target` when every turn fits. Otherwise the fold covers the oldest turns
+ * up to the newest one that still fits, and the next fold covers the rest. The
+ * first turn always folds, so a summary advances even when that turn alone
+ * outgrows the budget.
+ */
+export function foldWithin(
+  turns: readonly (typeof CostedTurn.Type)[],
+  budget: number,
+  target: number
+) {
+  const [, totals] = Arr.mapAccum(turns, 0, (sum, { tokens }) => [
+    sum + tokens,
+    sum + tokens,
+  ]);
+  const count = Math.max(
+    1,
+    Arr.takeWhile(totals, (total) => total <= budget).length
+  );
+  if (count >= turns.length) {
+    return target;
+  }
+  return Arr.reduce(Arr.take(turns, count), target, (_, { order }) => order);
 }

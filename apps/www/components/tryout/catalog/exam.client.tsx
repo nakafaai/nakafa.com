@@ -4,18 +4,17 @@ import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { TileIcon } from "@repo/design-system/components/ui/tile";
+import { getTileLooks } from "@repo/design-system/lib/look";
 
-import { Array as Arr } from "effect";
+import { Array as Arr, Tuple } from "effect";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
   CatalogCard,
-  CatalogCardImage,
-  CatalogCardTile,
+  CatalogCardVisual,
 } from "@/components/shared/catalog/card";
 import { ComingSoon } from "@/components/shared/upcoming";
-import { getTryoutTrackIcon } from "@/components/tryout/catalog/icons";
+import { getTryoutTrackIcons } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { getTryoutTrackCatalogArtwork } from "@/lib/tryout/artwork";
 
@@ -35,39 +34,38 @@ export function TryoutExamPageClient({
     return <ComingSoon />;
   }
 
+  const visuals = getTileLooks(
+    Arr.map(
+      page.tracks,
+      (track) =>
+        getTryoutTrackCatalogArtwork(locale, {
+          countryKey: page.country.countryKey,
+          examKey: page.exam.examKey,
+          trackKey: track.trackKey,
+          trackKind: track.trackKind,
+        }) ??
+        Tuple.make(
+          getTryoutTrackIcons(track.trackKind, track.trackKey),
+          track.trackKey
+        )
+    )
+  );
+
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-24">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {Arr.map(page.tracks, (track, index) => {
-          const imageSrc = getTryoutTrackCatalogArtwork(locale, {
-            countryKey: page.country.countryKey,
-            examKey: page.exam.examKey,
-            trackKey: track.trackKey,
-            trackKind: track.trackKind,
-          });
-
-          return (
-            <CatalogCard
-              action={
-                <IntentLink href={getTryoutPublicPathHref(track.publicPath)} />
-              }
-              actionLabel={tTryouts("open-set-cta")}
-              badge={tTryouts("set-count", { count: track.readySetCount })}
-              key={track.trackKey}
-              title={track.title}
-            >
-              {imageSrc ? (
-                <CatalogCardImage preload={index === 0} src={imageSrc} />
-              ) : (
-                <CatalogCardTile seed={track.publicPath}>
-                  <TileIcon
-                    icon={getTryoutTrackIcon(track.trackKind, track.trackKey)}
-                  />
-                </CatalogCardTile>
-              )}
-            </CatalogCard>
-          );
-        })}
+        {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
+          <CatalogCard
+            action={
+              <IntentLink href={getTryoutPublicPathHref(track.publicPath)} />
+            }
+            actionLabel={tTryouts("open-set-cta")}
+            key={track.trackKey}
+            title={track.title}
+          >
+            <CatalogCardVisual preload={index === 0} visual={visual} />
+          </CatalogCard>
+        ))}
       </div>
     </div>
   );

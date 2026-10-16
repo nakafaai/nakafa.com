@@ -1,6 +1,8 @@
+import { Ref } from "@confect/core";
 import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import refs from "@repo/backend/confect/_generated/refs";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   DEFAULT_USER_CREDITS,
@@ -164,5 +166,215 @@ describe("users/mutations", () => {
     expect(appUser.user?.credits).toBe(DEFAULT_USER_CREDITS);
     expect(appUser.user?.creditsResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
     expect(appUser.creditTransactions).toHaveLength(0);
+  });
+
+  describe("username", () => {
+    /** Seeds an account, optionally with a username, and the caller that signs in as it. */
+    async function seedAccount(
+      t: ReturnType<typeof createConvexTestWithBetterAuth>,
+      suffix: string,
+      username?: string
+    ) {
+      const identity = await t.mutation(
+        async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW, suffix })
+      );
+      if (username !== undefined) {
+        await t.mutation((ctx) =>
+          ctx.db.patch("users", identity.userId, { username })
+        );
+      }
+      return {
+        as: t.withIdentity({
+          subject: identity.authUserId,
+          sessionId: identity.sessionId,
+        }),
+        userId: identity.userId,
+      };
+    }
+
+    it("stores the new username in lowercase and frees the old one", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const first = await seedAccount(t, "first", "alpha");
+      const second = await seedAccount(t, "second", "bravo");
+
+      await first.as.mutation(api.users.mutations.updateUsername, {
+        username: "  Alpha_2 ",
+      });
+      await second.as.mutation(api.users.mutations.updateUsername, {
+        username: "alpha",
+      });
+
+      const stored = await t.query(async (ctx) => ({
+        first: await ctx.db.get("users", first.userId),
+        second: await ctx.db.get("users", second.userId),
+      }));
+      expect(stored.first?.username).toBe("alpha_2");
+      expect(stored.second?.username).toBe("alpha");
+    });
+
+    it("keeps the username when the caller asks for it again", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const account = await seedAccount(t, "again", "alpha");
+
+      await expect(
+        account.as.mutation(api.users.mutations.updateUsername, {
+          username: "Alpha",
+        })
+      ).resolves.toBeNull();
+
+      const stored = await t.query((ctx) =>
+        ctx.db.get("users", account.userId)
+      );
+      expect(stored?.username).toBe("alpha");
+    });
+
+    it.each([
+      ["bravo", "taken"],
+      ["Bravo", "taken"],
+      ["ab", "tooShort"],
+      ["9lives", "letterFirst"],
+      ["no spaces", "characters"],
+      ["alpha.md", "characters"],
+      ["admin", "notAllowed"],
+      ["pricing", "notAllowed"],
+      ["a".repeat(21), "notAllowed"],
+    ])(
+      "refuses %j because %s and keeps the username",
+      async (username, reason) => {
+        const t = createConvexTestWithBetterAuth();
+        const account = await seedAccount(t, "asking", "alpha");
+        await seedAccount(t, "holder", "bravo");
+
+        await expect(
+          account.as.mutation(api.users.mutations.updateUsername, { username })
+        ).rejects.toMatchObject({
+          data: { _tag: "UsernameRejected", reason },
+        });
+
+        const stored = await t.query((ctx) =>
+          ctx.db.get("users", account.userId)
+        );
+        expect(stored?.username).toBe("alpha");
+      }
+    );
+
+    it("answers a visitor without a session as unauthenticated", async () => {
+      const t = createConvexTestWithBetterAuth();
+
+      await expect(
+        t.mutation(api.users.mutations.updateUsername, { username: "alpha" })
+      ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    });
+  });
+
+  describe("bio", () => {
+    it("stores one trimmed line and clears the bio when the text holds nothing", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const identity = await t.mutation(
+        async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
+      );
+      const as = t.withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      });
+      const read = () => t.query((ctx) => ctx.db.get("users", identity.userId));
+
+      await as.mutation(api.users.mutations.updateBio, {
+        bio: "  Belajar fisika\nsambil minum teh.  ",
+      });
+      expect((await read())?.bio).toBe("Belajar fisika sambil minum teh.");
+
+      await as.mutation(api.users.mutations.updateBio, { bio: " \n " });
+      expect(await read()).not.toHaveProperty("bio");
+    });
+
+    it("refuses a bio of more than 160 characters and keeps the bio", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const identity = await t.mutation(
+        async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
+      );
+      const as = t.withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      });
+      await as.mutation(api.users.mutations.updateBio, { bio: "Kept." });
+
+      await expect(
+        as.mutation(api.users.mutations.updateBio, { bio: "a".repeat(161) })
+      ).rejects.toMatchObject({ data: { _tag: "BioTooLong" } });
+
+      const stored = await t.query((ctx) =>
+        ctx.db.get("users", identity.userId)
+      );
+      expect(stored?.bio).toBe("Kept.");
+    });
+  });
+
+  describe("mascot", () => {
+    const setMascot = Ref.getFunctionReference(
+      refs.public.users.mutations.setMascot
+    );
+    /** An animal that the mascot code of Nakafa's own seed names, so the text is a real one. */
+    const CODE = "crab.1.6d4b78.left.smile";
+    const OTHER = "cat.0.243e66.right.open";
+
+    it("stores the animal the caller chooses, answers it, and keeps the rest of the account", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const identity = await t.mutation(async (ctx) => {
+        const user = await seedAuthenticatedUser(ctx, { now: NOW });
+        await ctx.db.patch("users", user.userId, {
+          bio: "Belajar fisika.",
+          username: "rubah",
+        });
+        return user;
+      });
+      const as = t.withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      });
+
+      await expect(as.mutation(setMascot, { mascot: CODE })).resolves.toEqual({
+        mascot: CODE,
+      });
+      await expect(as.mutation(setMascot, { mascot: OTHER })).resolves.toEqual({
+        mascot: OTHER,
+      });
+
+      const stored = await t.query((ctx) =>
+        ctx.db.get("users", identity.userId)
+      );
+      expect(stored).toMatchObject({
+        bio: "Belajar fisika.",
+        mascot: OTHER,
+        username: "rubah",
+      });
+    });
+
+    it("stores the code of the animal as its canonical text", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const identity = await t.mutation(
+        async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
+      );
+
+      await t
+        .withIdentity({
+          subject: identity.authUserId,
+          sessionId: identity.sessionId,
+        })
+        .mutation(setMascot, { mascot: CODE });
+
+      const stored = await t.query((ctx) =>
+        ctx.db.get("users", identity.userId)
+      );
+      expect(stored?.mascot).toBe(CODE);
+    });
+
+    it("answers a visitor without a session as unauthenticated", async () => {
+      const t = createConvexTestWithBetterAuth();
+
+      await expect(
+        t.mutation(setMascot, { mascot: CODE })
+      ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    });
   });
 });

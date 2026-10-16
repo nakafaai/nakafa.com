@@ -49,7 +49,7 @@ export default GroupSpec.make()
         authId: Schema.String,
         expectedPreparation: accountDeletionPreparationVersionValidator,
       }),
-      returns: () => Schema.Boolean,
+      returns: () => Schema.Null,
       error: () => UserCleanupErrorWire,
     }).middleware(Atomic)
   )

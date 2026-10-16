@@ -16,9 +16,11 @@ import type {
   BuiltinRole,
   GrantScope,
 } from "@repo/backend/confect/access/schema";
+import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { MASCOT } from "@repo/backend/test/mascot";
 import type { Value } from "convex/values";
 import { Array as Arr, Effect, Ref, Schema } from "effect";
 
@@ -36,8 +38,11 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
   const writer = yield* DatabaseWriter;
   const reader = yield* DatabaseReader;
   const tenantId = yield* writer.table("tenants").insert({
+    country: "ID",
+    currency: "IDR",
     kind: "school",
     name: "Sekolah",
+    policies: NEW_TENANT_POLICIES,
     slug,
     status: "active",
   });
@@ -49,6 +54,7 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
       credits: 0,
       creditsResetAt: 0,
       email: "person@example.com",
+      mascot: MASCOT,
       name: "Person",
       plan: "free",
     });
@@ -89,9 +95,14 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
     return yield* reader.table("tenantGrants").get(id);
   });
   const unit = Effect.fn(function* () {
-    const unitId = yield* writer
-      .table("tenantUnits")
-      .insert({ level: "sd", name: "SD", status: "active", tenantId });
+    const unitId = yield* writer.table("tenantUnits").insert({
+      contentLanguage: "id",
+      level: "sd",
+      name: "SD",
+      status: "active",
+      tenantId,
+      timeZone: "Asia/Jakarta",
+    });
     return { kind: "unit", unitId } as const;
   });
   return { grant, person, unit };
@@ -240,3 +251,5 @@ describe("access/grant ensureOwnerRemains", () => {
     })
   );
 });
+
+/** Inserts one Person of the school, of the given kind and status, and reads it back. */

@@ -11,8 +11,14 @@ import {
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoreStatusValidator } from "@repo/backend/confect/tryouts/score";
 import { Sealed } from "@repo/backend/confect/vault/schema";
-import { Schema, Struct } from "effect";
+import { Duration, Schema, Struct } from "effect";
 
+/**
+ * How long a deleted memory can be put back. The Memory page offers its Undo
+ * for this long, and the server keeps the memory it deleted, sealed, for the
+ * same time (`restore`), so the one number is read by both.
+ */
+export const MEMORY_UNDO = Duration.seconds(5);
 /** Characters of one memory's words, their Markdown formatting included. */
 export const MEMORY_TEXT_LIMIT = 2000;
 /** Characters of the title a learner gives a memory. */
@@ -35,6 +41,13 @@ export const MEMORY_TOPIC_LIMIT = 8;
 export const MEMORY_TOPIC_LENGTH = 256;
 /** Memories one page of the Memory page holds, however many the browser asks for. */
 export const MEMORY_PAGE_LIMIT = 50;
+/**
+ * Writes a learner may make by hand in a minute: a new memory or a rewrite. The
+ * editor saves 600 milliseconds after a keystroke at the soonest, which is 100
+ * saves a minute for one learner who types slowly, so a person never reaches
+ * this. A learner keeps as many memories as they write.
+ */
+export const MEMORY_WRITES_PER_MINUTE = 120;
 
 /** The kinds of memory that never end. */
 const NinaLastingKind = Schema.Literals(["level", "goal", "style", "struggle"]);
@@ -84,9 +97,9 @@ const NinaMemoryTopic = Schema.NonEmptyString.check(
 );
 
 /** The topics of one page, or the topics one memory is linked to. */
-const NinaMemoryTopics = Schema.mutable(Schema.Array(NinaMemoryTopic)).check(
-  Schema.isMaxLength(MEMORY_TOPIC_LIMIT)
-);
+export const NinaMemoryTopics = Schema.mutable(
+  Schema.Array(NinaMemoryTopic)
+).check(Schema.isMaxLength(MEMORY_TOPIC_LIMIT));
 
 /**
  * One stored memory. `text` and `title` are sealed for its learner. Only the
@@ -146,12 +159,14 @@ export const NinaMemoryDraft = Schema.Struct({
 });
 
 /**
- * Why a memory could not be written. `empty`: it holds neither a title nor
- * words. `missing`: the memory was deleted meanwhile.
+ * Why a memory could not be written or put back. `empty`: it holds neither a
+ * title nor words. `missing`: the memory was deleted meanwhile, or, for
+ * `restore`, there is nothing to put back under that id for the learner.
+ * `limit`: the learner made `MEMORY_WRITES_PER_MINUTE` writes in the last minute.
  */
 export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()(
   "NinaMemoryRejected",
-  { reason: Schema.Literals(["empty", "missing"]) }
+  { reason: Schema.Literals(["empty", "missing", "limit"]) }
 ) {}
 
 /**
@@ -177,9 +192,8 @@ const NinaMemoryStatement = {
  * One thing a capture call says the learner stated about themself, as the model
  * writes it: a kind, a statement, and `until`, the day a situation ends, as
  * `YYYY-MM-DD`. The model is asked for this one flat shape for every kind,
- * because a union in a structured output is not known to pass the gateway
- * (Gemini's structured output page lists no `anyOf`, read on 12 October 2026,
- * and the capture call has never sent one). A claim that fits no candidate is
+ * because a union in a structured output is not known to pass the gateway, and
+ * the capture call has never sent one. A claim that fits no candidate is
  * dropped by the check, so one claim cannot refuse the others.
  */
 export const NinaMemoryClaim = Schema.Struct({
@@ -264,7 +278,7 @@ export const NinaMemorySeen = NinaMemoryNote.mapFields(
  * page call up (`recalled`), at most `MEMORY_RECALL_LIMIT`. While memory is
  * paused it holds neither the portrait nor a memory.
  */
-const NinaLearner = Schema.Struct({
+export const NinaLearner = Schema.Struct({
   paused: Schema.Boolean,
   portrait: Schema.optionalKey(NinaPortraitText),
   profile: NinaLearnerProfile,
@@ -330,12 +344,28 @@ export default GroupSpec.make()
       error: () => Schema.Union([AuthFailure, NinaMemoryRejected]),
     }).middleware(Session)
   )
+  // Deletes one memory, and keeps what it deleted, sealed as stored, for
+  // `MEMORY_UNDO` so that `restore` can give it back.
   .addFunction(
     FunctionSpec.publicMutation({
       name: "remove",
       args: () => ({ id: Id("ninaMemories") }),
       returns: () => Schema.Null,
       error: () => AuthFailure,
+    }).middleware(Session)
+  )
+  // Puts back the memory that `remove` deleted, named by the id it had, with
+  // every field it had: kind, end day, author, confirmation time, words and
+  // title. It returns the memory as the Memory page shows it, under the id
+  // Convex gives it again. `missing` answers an id with nothing to put back
+  // for the learner: the window ended, the memory was put back already,
+  // "Delete all" took it, or it is not the learner's.
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "restore",
+      args: () => ({ id: Id("ninaMemories") }),
+      returns: () => NinaMemoryView,
+      error: () => Schema.Union([AuthFailure, NinaMemoryRejected]),
     }).middleware(Session)
   )
   .addFunction(
@@ -355,23 +385,6 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => AuthFailure,
     }).middleware(Session)
-  )
-  // What a turn knows about the learner: the account facts, the portrait, and
-  // the memories that the learner's words (`said`) and the pages they have open
-  // call up. `now` is the caller's time, which leaves out the situations that
-  // ended: a query never reads the clock, because it is not run again when time
-  // passes.
-  .addFunction(
-    FunctionSpec.internalQuery({
-      name: "read",
-      args: () => ({
-        now: Schema.Finite,
-        said: Schema.String,
-        topics: NinaMemoryTopics,
-        userId: Id("users"),
-      }),
-      returns: () => NinaLearner,
-    })
   )
   // What the memory capability finds for Nina's query, as the memories are at
   // the caller's time `now`. It reads the learner's words only, not the page.
@@ -448,5 +461,14 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "expire",
       returns: () => Schema.Int,
+    })
+  )
+  // Deletes the restore record `id` if it is still there. `remove` schedules
+  // it for the end of the Undo window.
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "purge",
+      args: () => ({ id: Id("ninaMemoryRestores") }),
+      returns: () => Schema.Null,
     })
   );

@@ -31,6 +31,8 @@ import { Schema } from "effect";
 export const NinaPageInput = Schema.Struct({
   locale: LocaleSchema,
   slug: Schema.String.pipe(Schema.check(Schema.isMaxLength(2048))),
+  // Any text: `readMaterialContextHint` leaves out a hint longer than a page
+  // writes, which a client built before that bound may still send.
   materialContextHint: Schema.optionalKey(Schema.String),
   focus: Schema.optionalKey(NinaFocusInputSchema),
 });
@@ -93,6 +95,7 @@ export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
       "NINA_REQUEST_CONFLICT",
       "NINA_WRITE_FAILED",
       "NINA_CONTEXT_FAILED",
+      "NINA_MESSAGE_SIZE",
     ]),
     message: Schema.String,
   }

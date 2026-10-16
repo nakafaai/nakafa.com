@@ -17,15 +17,12 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
-import aggregateSchema from "@repo/backend/node_modules/@convex-dev/aggregate/src/component/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest, type TestConvex } from "convex-test";
 
 const betterAuthModules = import.meta.glob([
   "../components/betterAuth/**/*.ts",
   "!../components/betterAuth/**/*.test.ts",
-]);
-const aggregateModules = import.meta.glob([
-  "../node_modules/@convex-dev/aggregate/src/component/**/*.ts",
 ]);
 const DEFAULT_SESSION_DURATION_MS = 365 * 24 * 60 * 60 * 1000;
 
@@ -43,16 +40,6 @@ export function registerLearningPopularityAggregate(
 export function createConvexTestWithBetterAuth() {
   const t = convexTest(schema, convexModules);
   t.registerComponent("betterAuth", authSchema, betterAuthModules);
-  t.registerComponent(
-    "forumPostsByAuthorSequence",
-    aggregateSchema,
-    aggregateModules
-  );
-  t.registerComponent(
-    "forumPostsBySequence",
-    aggregateSchema,
-    aggregateModules
-  );
   registerLearningPopularityAggregate(t);
   rateLimiterTest.register(t, "agentRateLimiter");
   agentTest.register(t, "nina");
@@ -94,6 +81,7 @@ export async function seedAuthenticatedUser(
     credits = DEFAULT_USER_CREDITS,
     creditsResetAt = now,
     email = `${suffix}@example.com`,
+    emailVerified = true,
     name = `User ${suffix}`,
     plan = DEFAULT_USER_PLAN,
     role,
@@ -103,6 +91,7 @@ export async function seedAuthenticatedUser(
     credits?: Doc<"users">["credits"];
     creditsResetAt?: Doc<"users">["creditsResetAt"];
     email?: Doc<"users">["email"];
+    emailVerified?: boolean;
     name?: Doc<"users">["name"];
     now: number;
     plan?: Doc<"users">["plan"];
@@ -118,7 +107,7 @@ export async function seedAuthenticatedUser(
       data: {
         createdAt: now,
         email,
-        emailVerified: true,
+        emailVerified,
         name,
         updatedAt: now,
       },
@@ -143,6 +132,7 @@ export async function seedAuthenticatedUser(
     credits,
     creditsResetAt,
     email: authUser.email,
+    mascot: MASCOT_CODE,
     name: authUser.name,
     plan,
     ...(role

@@ -40,7 +40,8 @@ export const CapabilityOutcomeSchema = Schema.Literals([
 
 /**
  * The final output owns every card; model context can project only its text.
- * An output without an outcome ran to its end with its evidence.
+ * An output without an outcome ran to its end with its evidence, or was stored
+ * before every run settled one, and `readOutcome` (`outcome.ts`) says which.
  */
 export const CapabilityOutputSchema = Schema.Struct({
   artifacts: Schema.Array(CapabilityArtifactSchema),

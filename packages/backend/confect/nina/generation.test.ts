@@ -2,6 +2,7 @@ import { Ref } from "@confect/core";
 import { Agent } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { languageModel as profile } from "@repo/backend/confect/gateway/model";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
@@ -29,8 +30,8 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 
 const fixture = () => createNinaTest({ prompt: "Explain a function limit." });
 
-const CACHE_MARKER =
-  ',"providerOptions":{"openaiCompatible":{"cache_control":{"type":"ephemeral"}}}';
+/** The cache marker as the request body carries it, from the language model profile. */
+const CACHE_MARKER = `,"providerOptions":${encodeJsonText({ openaiCompatible: profile.cache.marker })}`;
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
@@ -407,6 +408,9 @@ describe("Nina generation through the real Agent component", () => {
     expect(prompt).not.toContain("Earlier question 3");
     expect(prompt).toContain("Earlier question 4");
     expect(prompt).toContain("Earlier answer 5");
+    // The settled turn keeps what the history of its prompt cost: orders 4 and 5.
+    const turn = await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId));
+    expect(turn?.history).toEqual({ tokens: expect.any(Number), turns: 2 });
   });
 
   it("dates the prompt with the turn's creation time as an ISO string", async () => {

@@ -77,11 +77,14 @@ const claim = FunctionImpl.make(
     // Its time since the admission is the wait for the run to start.
     const state = { status: "running" as const, startedAt };
     const timing = { claimedMs: sinceAdmission(turn, startedAt) };
+    const claimed = { ...turn, state, timing };
+    // The turn is loaded already, so it is written back whole: a `patch` would
+    // read it once more.
     yield* (yield* DatabaseWriter)
       .table("ninaTurns")
-      .patch(turn._id, { state, timing })
+      .replace(turn._id, claimed)
       .pipe(Effect.orDie);
-    return { ...turn, state, timing };
+    return claimed;
   }, Effect.catchDefect(lifecycleFailure))
 );
 
@@ -122,7 +125,10 @@ const presentation = FunctionImpl.make(
  * sweep all come here. Reconciles committed Agent output before releasing an
  * interrupted turn's credits. A turn the learner stopped ends as cancelled,
  * whatever ended its run. Only the run's own exit knows which stages the turn
- * reached, so only it passes `timing`.
+ * reached and what the history of its prompt cost, so only it passes `timing`
+ * and `history`, and the settlement reads `timing` as a run that came back to
+ * end its own turn: it reports its failure itself, so the settlement does not
+ * report the turn as a lost run.
  */
 const recover = FunctionImpl.make(
   schema,
@@ -137,7 +143,8 @@ const recover = FunctionImpl.make(
       turn,
       turn.cancelRequestedAt === undefined ? "failed" : "cancelled",
       args.failure,
-      args.timing
+      args.timing,
+      args.history
     );
     return null;
   }, Effect.catchDefect(lifecycleFailure))

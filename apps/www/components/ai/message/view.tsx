@@ -1,7 +1,6 @@
 "use client";
 
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { Response } from "@repo/design-system/components/ai/response";
 import {
   MessageContent,
   MessageFooter,
@@ -26,17 +25,15 @@ interface Props {
 }
 
 export function AiChatMessage({ last, message }: Props) {
-  const latest = useChat((state) => state.turn);
-  const turn = latest?.order === message.order ? latest : message.metadata;
+  const turn = useChat((state) => state.turnAt(message.order));
   if (message.role === "user") {
     return (
       <MessageProvider last={last} message={message} turn={turn}>
         <NinaPrompt
           actions={<AiChatMessageActions />}
           files={Arr.filter(message.parts, (part) => part.type === "file")}
-        >
-          <Response id={message.id}>{message.text}</Response>
-        </NinaPrompt>
+          text={message.text}
+        />
       </MessageProvider>
     );
   }

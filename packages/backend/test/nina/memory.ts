@@ -11,7 +11,11 @@ import {
   TITLE_FIELD,
 } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
-import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
+import {
+  deleteBatch,
+  readMemoryState,
+} from "@repo/backend/confect/nina/memory/store";
+import { recallLearner } from "@repo/backend/confect/nina/memory/turn";
 import {
   MEMORY_KNOWN_LIMIT,
   type NinaMemory,
@@ -49,6 +53,17 @@ function run<A, E>(
       Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
     )
   );
+}
+
+/**
+ * What a turn knows about a learner, read the way the brief of a turn reads it
+ * (`recallLearner`), in a test mutation.
+ */
+export function readLearner(
+  f: Pick<Awaited<ReturnType<typeof createNinaTest>>, "t">,
+  args: Parameters<typeof recallLearner>[0]
+) {
+  return f.t.mutation((ctx) => run(ctx, recallLearner(args)));
 }
 
 /**
@@ -177,6 +192,14 @@ export function memoryTools(f: NinaTest) {
   const keys = () =>
     f.t.query((ctx) => ctx.db.query("ninaMemoryKeys").collect());
 
+  /** Every stored restore record: a deleted memory kept for its Undo. */
+  const restores = () =>
+    f.t.query((ctx) => ctx.db.query("ninaMemoryRestores").collect());
+
+  /** One stored memory row as stored, or nothing when it is gone. */
+  const rowOf = (id: Docs["ninaMemories"]["_id"]) =>
+    f.t.query((ctx) => ctx.db.get("ninaMemories", id));
+
   /** The opened text of every stored memory of a learner, in storage order. */
   const texts = (userId: UserId = f.identity.userId) =>
     f.t.mutation(async (ctx) => {
@@ -271,6 +294,8 @@ export function memoryTools(f: NinaTest) {
     keys,
     markCleared,
     openLesson,
+    restores,
+    rowOf,
     seed,
     stored,
     stranger,
@@ -286,6 +311,24 @@ export async function createMemoryTest(
 ) {
   const f = await createNinaTest(options);
   return { ...f, ...memoryTools(f) };
+}
+
+/**
+ * Deletes one batch of a learner's memories with no moment bounding it, as the
+ * account deletion of `auth/cleanup/social.ts` does, in one convex-test mutation
+ * the way a Confect mutation runs it. It returns how many it deleted.
+ */
+export function deleteAccountBatch(
+  f: Awaited<ReturnType<typeof createNinaTest>>,
+  userId: Docs["users"]["_id"]
+) {
+  return f.t.run((ctx) =>
+    Effect.runPromise(
+      deleteBatch(userId).pipe(
+        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+      )
+    )
+  );
 }
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);

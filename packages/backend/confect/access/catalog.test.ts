@@ -4,12 +4,13 @@ import {
   entries,
   kinds,
   ObjectRef,
+  opensTo,
   TenantAction,
   TenantCapabilities,
 } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { Rule } from "@repo/backend/confect/access/schema";
-import { Array as Arr, Option, pipe, Record, Schema } from "effect";
+import { Array as Arr, Option, Order, pipe, Record, Schema } from "effect";
 
 describe("access/catalog", () => {
   it("derives one object reference per declared kind", () => {
@@ -17,10 +18,28 @@ describe("access/catalog", () => {
       "tenant",
       "unit",
       "person",
+      "period",
+      "cohort",
       "grant",
+      "integration",
+      "class",
+      "visit",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
-    expect(Schema.is(ObjectRef)({ id: "id", kind: "cohort" })).toBe(false);
+    expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
+  });
+
+  it("opens exactly the roster reads of a school to the integration role", () => {
+    const opened = Arr.flatMap(entries, (entry) =>
+      Arr.filter(Record.keys<string, Rule>(entry.actions), (action) =>
+        opensTo(action, "integration")
+      )
+    );
+    expect(Arr.sort(Arr.dedupe(opened), Order.String)).toEqual([
+      "cohort.view",
+      "period.view",
+      "person.view",
+    ]);
   });
 
   it("derives every change of every kind and extension", () => {
@@ -28,14 +47,47 @@ describe("access/catalog", () => {
       Arr.map(Change.members, (change) => change.fields.type.literal)
     ).toEqual([
       "tenant.provisioned",
+      "tenant.locale.set",
+      "tenant.policy.set",
       "unit.created",
+      "unit.locale.set",
+      "unit.archived",
+      "unit.unarchived",
       "person.created",
       "person.invited",
       "person.claimed",
       "person.released",
       "person.removed",
+      "person.renamed",
+      "person.placed",
+      "person.moved",
+      "invite.expired",
+      "invite.resent",
+      "invite.revoked",
+      "period.created",
+      "period.opened",
+      "period.archived",
+      "cohort.created",
+      "cohort.renamed",
+      "cohort.archived",
+      "integration.created",
+      "integration.rotated",
+      "integration.revoked",
+      "class.created",
+      "class.renamed",
+      "class.archived",
+      "class.teacherAssigned",
+      "class.teacherRemoved",
+      "visit.requested",
+      "visit.approved",
+      "visit.declined",
+      "visit.ended",
       "grant.created",
       "grant.ended",
+      "tenant.suspended",
+      "tenant.reactivated",
+      "person.reactivated",
+      "person.suspended",
     ]);
   });
 
@@ -91,8 +143,14 @@ describe("access/catalog", () => {
       "audit.view",
       "tenant.manage",
       "tenant.view",
+      "invite.view",
+      "person.manage",
+      "person.view",
       "grant.manage",
       "owner.manage",
+      "integration.manage",
+      "integration.view",
+      "visit.approve",
     ]);
   });
 

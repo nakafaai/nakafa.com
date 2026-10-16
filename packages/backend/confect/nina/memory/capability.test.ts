@@ -17,10 +17,7 @@ import {
   toolCall,
 } from "@repo/backend/test/nina/capability";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
-import {
-  openHomeSession,
-  specialistRequest,
-} from "@repo/backend/test/nina/specialist";
+import { specialistRequest } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Effect, type Layer, MutableHashMap, MutableRef, Option } from "effect";
@@ -58,13 +55,8 @@ async function search(
   const played = await f.t.action((ctx) =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const session = yield* openHomeSession;
         const turn = playTurn({
-          context: {
-            ...specialistRequest.context,
-            memory,
-            nina: session.context,
-          },
+          context: { ...specialistRequest.context, memory },
           held: found,
           model,
           prompt: "What do you remember about my exam?",

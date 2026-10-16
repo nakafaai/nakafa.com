@@ -1,12 +1,12 @@
 import { CapabilityOutputSchema } from "@repo/backend/client/nina/capability";
 import {
   boundText,
-  countFileTokens,
-  countTextTokens,
+  countMessageTokens,
   NINA_BUDGET,
+  NINA_CALL_LIMIT,
+  NINA_RESERVED,
 } from "@repo/backend/confect/nina/budget";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
-import type { NinaUncoveredTurn } from "@repo/backend/confect/nina/summaries.spec";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
 import { Array as Arr, MutableHashSet, Option, Schema } from "effect";
@@ -16,35 +16,11 @@ const EXCERPT_TOKENS = 600;
 const EXCERPT_NOTE =
   "Earlier evidence in this conversation, shortened. Call the capability again when the full evidence matters.";
 
-/** Estimates provider tokens for one message; a file counts what the provider bills for it, not its bytes. */
-function messageTokens(message: ModelMessage) {
-  if (typeof message.content === "string") {
-    return countTextTokens(message.content);
-  }
-  let total = 0;
-  for (const part of message.content) {
-    if (part.type === "text" || part.type === "reasoning") {
-      total += countTextTokens(part.text);
-    } else if (part.type === "tool-call") {
-      total += countTextTokens(encodeJsonText(part.input));
-    } else if (part.type === "tool-result") {
-      total += countTextTokens(encodeJsonText(part.output));
-    } else if (part.type === "image") {
-      total += countFileTokens(part.mediaType ?? "image/*");
-    } else if (part.type === "file") {
-      total += countFileTokens(part.mediaType);
-    } else {
-      total += countTextTokens(encodeJsonText(part));
-    }
-  }
-  return total;
-}
-
 function turnTokens(turn: readonly ModelMessage[]) {
   return Arr.reduce(
     turn,
     0,
-    (total, message) => total + messageTokens(message)
+    (total, message) => total + countMessageTokens(message)
   );
 }
 
@@ -183,37 +159,6 @@ export function splitTurns(
   });
 }
 
-/** A complete turn by its order, and the order of the turn that first asked its question. */
-export type Asking = typeof NinaUncoveredTurn.Type;
-
-/** Names the question of a turn by the order of the turn that first asked it. */
-export function questionKey({ order, retryOf }: Asking) {
-  return retryOf ?? order;
-}
-
-/**
- * Keeps the complete turns whose question no later turn asks again. A learner
- * who retries an answer prefers the newest asking, so each question keeps only
- * its newest complete asking, whichever of its askings was retried. `later`
- * holds the turns that come after `turns`, such as the one being answered: a
- * question one of them asks again leaves none of `turns`.
- */
-export function newestAskings(
-  turns: readonly Asking[],
-  later: readonly Asking[]
-) {
-  const all = Arr.appendAll(turns, later);
-  return Arr.filter(
-    turns,
-    (turn) =>
-      !Arr.some(
-        all,
-        (other) =>
-          other.order > turn.order && questionKey(other) === questionKey(turn)
-      )
-  );
-}
-
 /**
  * Keeps the current turn's evidence within its budget while a tool loop runs.
  * The learner's message opens the turn and is not evidence, so neither it nor
@@ -263,9 +208,16 @@ export function sentTurn(turn: readonly ModelMessage[]) {
  * complete earlier turns the rolling summary does not cover, oldest first,
  * each with its question and answer. They are kept newest first within the
  * history budget and trimmed only at a turn boundary: a turn that does not fit
- * is dropped whole, and the newest turn is always kept, with shortened
- * evidence when it alone costs more than the budget. The current turn always
- * follows.
+ * is dropped whole. The newest earlier turn is the exception. It is kept whole
+ * whatever it costs, so one very long answer in it can take a call past the
+ * call limit (ADR 0001). The current turn always follows, with its evidence
+ * shortened when the evidence alone costs more than its budget.
+ *
+ * The budget of this call is what the call limit leaves after the reserved
+ * parts (`NINA_RESERVED`) and the current turn as it is sent, its newest
+ * message, its files and its evidence. The history budget
+ * (`NINA_BUDGET.history`) is the most it may take, which keeps every call's
+ * history the size the summary fold works to.
  *
  * The summary folds the oldest turns as soon as the turns it does not cover
  * cost more than the budget, so between two folds the history only grows at
@@ -282,6 +234,9 @@ export function assembleContext({
   readonly current: readonly ModelMessage[];
   readonly history: readonly (readonly ModelMessage[])[];
 }) {
+  const latest = boundStep(current);
+  const room = NINA_CALL_LIMIT - NINA_RESERVED - turnTokens(latest);
+  const budget = Math.min(NINA_BUDGET.history, room);
   const [, candidates] = Arr.mapAccum(
     Arr.reverse(Arr.map(history, sentTurn)),
     0,
@@ -292,10 +247,10 @@ export function assembleContext({
   );
   const selected = Arr.takeWhile(
     candidates,
-    ({ offset, total }) => offset === 0 || total <= NINA_BUDGET.history
+    ({ offset, total }) => offset === 0 || total <= budget
   );
   return [
     ...Arr.flatten(Arr.reverse(Arr.map(selected, ({ messages }) => messages))),
-    ...boundStep(current),
+    ...latest,
   ];
 }

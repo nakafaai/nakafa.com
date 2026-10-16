@@ -7,10 +7,17 @@ import {
   SubjectView,
   type TenantActor,
 } from "@repo/backend/confect/journal/schema";
+import type { Contract } from "@repo/backend/confect/tenancy/contract";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Exit, Option, Schema } from "effect";
 
 const nf = slugOf("nf");
+const contract: typeof Contract.Type = {
+  contentLicense: "1.0",
+  dpaVersion: "2026-10",
+  modules: ["classes"],
+  plan: "tenant",
+};
 const audit = refs.public.journal.audit.list;
 const page = (numItems: number) => ({
   paginationOpts: { cursor: null, numItems },
@@ -27,7 +34,7 @@ const provisioned = Effect.fn("test.audit.provisioned")(function* (
   return yield* Effect.forEach(Arr.range(1, count), () =>
     writer.table("journalEntries").insert({
       actor,
-      change: { type: "tenant.provisioned" },
+      change: { contract, type: "tenant.provisioned" },
       owner: { kind: "tenant", tenantId },
       subject: { id: tenantId, kind: "tenant" },
     })
@@ -35,6 +42,34 @@ const provisioned = Effect.fn("test.audit.provisioned")(function* (
 });
 
 describe("journal/audit list", () => {
+  it.effect(
+    "shows an operator's change as Nakafa staff, without the operator's identity",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const operatorId = yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("operators").insert({
+              changedAt: 0,
+              grantedAt: 0,
+              status: "active",
+              userId: fixture.users.stranger.userId,
+            })
+          )
+        );
+        yield* fixture.run(
+          provisioned(fixture.tenants.nf, 1, {
+            id: operatorId,
+            kind: "operator",
+          })
+        );
+        const result = yield* fixture.as("auditor").query(audit, page(10));
+        expect(Arr.map(result.page, (entry) => entry.actor)).toEqual([
+          { kind: "operator" },
+        ]);
+      })
+  );
+
   it.effect(
     "shows the member tenant's changes newest first with Person names",
     () =>
@@ -129,7 +164,7 @@ describe("journal/audit list", () => {
         Effect.flatMap(DatabaseWriter, (writer) =>
           writer.table("journalEntries").insert({
             actor: { id: fixture.users.owner.userId, kind: "user" },
-            change: { type: "tenant.provisioned" },
+            change: { contract, type: "tenant.provisioned" },
             owner: { kind: "tenant", tenantId: fixture.tenants.nf },
             subject: { id: fixture.tenants.nf, kind: "tenant" },
           })
@@ -148,7 +183,7 @@ describe("journal/audit list", () => {
       Schema.decodeUnknownSync(ChangeView)({ seat: 3, type: "seat.added" })
     ).toEqual({ type: "unknown" });
     expect(
-      Schema.decodeUnknownSync(SubjectView)({ id: "id", kind: "cohort" })
+      Schema.decodeUnknownSync(SubjectView)({ id: "id", kind: "invoice" })
     ).toEqual({ kind: "unknown" });
   });
 });

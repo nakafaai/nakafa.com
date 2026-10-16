@@ -9,7 +9,7 @@ import { Array as Arr, HashMap, Option, Schema } from "effect";
 import { optimisticPrompt } from "@/components/ai/optimistic";
 import { createLocalStore } from "@/test/optimistic";
 
-type SavedMessage = Ref.Returns<typeof nina.messages.list>["page"][number];
+type SavedMessage = Ref.Returns<typeof nina.messages.page>["page"][number];
 
 const NOW = 1_700_000_000_000;
 const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");
@@ -54,7 +54,7 @@ const sendArgs: Ref.Args<typeof nina.turns.start> = {
   requestId: "request_1",
 };
 
-/** One saved message of the Agent feed, in the shape `nina.messages.list` returns. */
+/** One saved message of the Agent feed, in the shape `nina.messages.page` returns. */
 function message(
   order: number,
   role: SavedMessage["role"],
@@ -73,7 +73,7 @@ function message(
   };
 }
 
-/** The arguments of one `nina.messages.list` subscription. */
+/** The arguments of one `nina.messages.page` subscription. */
 function listArgs(
   overrides: {
     chatId?: typeof chatId;
@@ -82,7 +82,7 @@ function listArgs(
     streamed?: boolean;
     threadId?: string;
   } = {}
-): Ref.Args<typeof nina.messages.list> {
+): Ref.Args<typeof nina.messages.page> {
   return {
     chatId: overrides.chatId ?? chatId,
     paginationOpts: { cursor: overrides.cursor ?? null, numItems: 50 },
@@ -99,7 +99,7 @@ function listArgs(
 /** One saved page of the Agent feed, newest message first as the server sends it. */
 function listPage(
   messages: readonly SavedMessage[]
-): Ref.Returns<typeof nina.messages.list> {
+): Ref.Returns<typeof nina.messages.page> {
   return {
     continueCursor: "",
     isDone: true,
@@ -111,9 +111,9 @@ function listPage(
 /** The loaded messages of one subscription, as the store holds them now. */
 function readPage(
   local: ReturnType<typeof createLocalStore>,
-  args: Ref.Args<typeof nina.messages.list>
+  args: Ref.Args<typeof nina.messages.page>
 ) {
-  return Option.getOrUndefined(local.store.getQuery(nina.messages.list, args))
+  return Option.getOrUndefined(local.store.getQuery(nina.messages.page, args))
     ?.page;
 }
 
@@ -122,7 +122,7 @@ function loadedChat() {
   const local = createLocalStore();
   local.seed(nina.conversation.get, { chatId }, { chat, turn: null });
   local.seed(
-    nina.messages.list,
+    nina.messages.page,
     listArgs(),
     listPage([
       message(0, "user", "What is a limit?"),
@@ -182,18 +182,18 @@ describe("ai/optimistic prompt", () => {
     const local = loadedChat();
     const older = listArgs({ cursor: "cursor_1" });
     local.seed(
-      nina.messages.list,
+      nina.messages.page,
       older,
       listPage([message(0, "user", "Old")])
     );
-    local.seed(nina.messages.list, listArgs({ streamed: true }), listPage([]));
+    local.seed(nina.messages.page, listArgs({ streamed: true }), listPage([]));
     local.seed(
-      nina.messages.list,
+      nina.messages.page,
       listArgs({ threadId: "thread_2" }),
       listPage([])
     );
     local.seed(
-      nina.messages.list,
+      nina.messages.page,
       listArgs({ chatId: otherChatId }),
       listPage([])
     );
@@ -213,7 +213,7 @@ describe("ai/optimistic prompt", () => {
       { chat, turn: null }
     );
     local.seed(
-      nina.messages.list,
+      nina.messages.page,
       listArgs({ shareToken }),
       listPage([message(0, "user", "What is a limit?")])
     );
@@ -232,7 +232,7 @@ describe("ai/optimistic prompt", () => {
   it("leaves a first page that is still loading alone", () => {
     const local = createLocalStore();
     local.seed(nina.conversation.get, { chatId }, { chat, turn: null });
-    local.seed(nina.messages.list, listArgs(), undefined);
+    local.seed(nina.messages.page, listArgs(), undefined);
 
     optimisticPrompt(previews, NOW)(local.store, sendArgs);
 
@@ -242,7 +242,7 @@ describe("ai/optimistic prompt", () => {
   it("numbers the first prompt of a chat from zero", () => {
     const local = createLocalStore();
     local.seed(nina.conversation.get, { chatId }, { chat, turn: null });
-    local.seed(nina.messages.list, listArgs(), listPage([]));
+    local.seed(nina.messages.page, listArgs(), listPage([]));
 
     optimisticPrompt(previews, NOW)(local.store, sendArgs);
 

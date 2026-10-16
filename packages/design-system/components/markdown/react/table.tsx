@@ -33,9 +33,11 @@ export const reactTableComponents: ReactMarkdownComponents = {
       {filterWhitespaceNodes(children)}
     </TableCell>
   ),
+  // `text-start` follows the cell's direction, where the table head's own
+  // `text-left` would keep an Arabic heading on the left.
   th: ({ children, node: _node, ...props }) => (
     <TableHead
-      className="border-r font-medium last:border-r-0"
+      className="border-r text-start font-medium last:border-r-0"
       data-nakafa="table-head"
       {...props}
     >

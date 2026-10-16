@@ -15,6 +15,7 @@ import {
   seedAnalyticsConsent,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect, Layer } from "effect";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
@@ -44,6 +45,7 @@ describe("auth/cleanup", () => {
             credits: 10,
             creditsResetAt: NOW,
             email: "bounded@example.com",
+            mascot: MASCOT_CODE,
             name: "Bounded User",
             plan: "free",
           });
@@ -57,6 +59,7 @@ describe("auth/cleanup", () => {
             credits: 10,
             creditsResetAt: NOW,
             email: "reader@example.com",
+            mascot: MASCOT_CODE,
             name: "Reader",
             plan: "free",
           });
@@ -120,6 +123,7 @@ describe("auth/cleanup", () => {
               credits: 10,
               creditsResetAt: NOW,
               email: "deleted@example.com",
+              mascot: MASCOT_CODE,
               name: "Deleted User",
               plan: "free",
             });
@@ -133,6 +137,7 @@ describe("auth/cleanup", () => {
               credits: 10,
               creditsResetAt: NOW,
               email: "retained@example.com",
+              mascot: MASCOT_CODE,
               name: "Retained User",
               plan: "free",
             });
@@ -177,118 +182,6 @@ describe("auth/cleanup", () => {
               downvoteCount: 0,
               replyCount: 0,
             });
-            const schoolId = await ctx.db.insert("schools", {
-              name: "Retained School",
-              slug: "retained-school",
-              email: "school@example.com",
-              city: "Jakarta",
-              province: "DKI Jakarta",
-              type: "high-school",
-              currentStudents: 0,
-              currentTeachers: 0,
-              updatedAt: NOW,
-              createdBy: otherUserId,
-            });
-            const classId = await ctx.db.insert("schoolClasses", {
-              schoolId,
-              name: "Retained Class",
-              subject: "Mathematics",
-              year: "2026",
-              image: "logic",
-              isArchived: false,
-              visibility: "private",
-              studentCount: 0,
-              teacherCount: 1,
-              updatedAt: NOW,
-              createdBy: otherUserId,
-            });
-            const forumId = await ctx.db.insert("schoolClassForums", {
-              classId,
-              schoolId,
-              title: "Retained discussion",
-              body: "Shared class discussion",
-              tag: "general",
-              status: "open",
-              isPinned: false,
-              postCount: 2,
-              nextPostSequence: 3,
-              reactionCounts: [],
-              lastPostAt: NOW,
-              lastPostBy: otherUserId,
-              createdBy: otherUserId,
-              updatedAt: NOW,
-            });
-            const deletedPostId = await ctx.db.insert("schoolClassForumPosts", {
-              forumId,
-              classId,
-              body: "Deleted personal post",
-              mentions: [],
-              replyCount: 1,
-              reactionCounts: [],
-              sequence: 1,
-              createdBy: userId,
-              updatedAt: NOW,
-            });
-            const retainedPostId = await ctx.db.insert(
-              "schoolClassForumPosts",
-              {
-                forumId,
-                classId,
-                body: "Retained reply",
-                mentions: [],
-                parentId: deletedPostId,
-                replyToUserId: userId,
-                replyToBody: "Deleted personal post",
-                replyCount: 0,
-                reactionCounts: [],
-                sequence: 2,
-                createdBy: otherUserId,
-                updatedAt: NOW,
-              }
-            );
-            const deletedForumId = await ctx.db.insert("schoolClassForums", {
-              body: "Deleted account forum body",
-              classId,
-              createdBy: userId,
-              isPinned: false,
-              lastPostAt: NOW,
-              lastPostBy: otherUserId,
-              nextPostSequence: 2,
-              postCount: 1,
-              reactionCounts: [],
-              schoolId,
-              status: "open",
-              tag: "general",
-              title: "Deleted account forum",
-              updatedAt: NOW,
-            });
-            await ctx.db.insert("schoolClassForumPosts", {
-              body: "Dependent shared reply",
-              classId,
-              createdBy: otherUserId,
-              forumId: deletedForumId,
-              mentions: [],
-              reactionCounts: [],
-              replyCount: 0,
-              sequence: 1,
-              updatedAt: NOW,
-            });
-            await ctx.db.insert("schoolClassForumReactions", {
-              emoji: "👍",
-              forumId: deletedForumId,
-              userId: otherUserId,
-            });
-            await ctx.db.insert("schoolActivityLogs", {
-              schoolId,
-              userId: otherUserId,
-              action: "member_invited",
-              entityType: "schoolMembers",
-              entityId: "deleted-membership",
-              metadata: {
-                invitedUserId: userId,
-                role: "student",
-              },
-            });
             let hasMore = true;
             while (hasMore) {
               hasMore = await Effect.runPromiseWith(runtimeServices)(
@@ -325,22 +218,6 @@ describe("auth/cleanup", () => {
                 .query("chats")
                 .withIndex("by_userId", (query) => query.eq("userId", userId))
                 .collect(),
-              deletedForum: await ctx.db.get(
-                "schoolClassForums",
-                deletedForumId
-              ),
-              deletedForumPosts: await ctx.db
-                .query("schoolClassForumPosts")
-                .withIndex("by_forumId_and_sequence", (query) =>
-                  query.eq("forumId", deletedForumId)
-                )
-                .collect(),
-              deletedForumReactions: await ctx.db
-                .query("schoolClassForumReactions")
-                .withIndex("by_forumId_and_emoji_and_userId", (query) =>
-                  query.eq("forumId", deletedForumId)
-                )
-                .collect(),
               creditTransactions: await ctx.db
                 .query("creditTransactions")
                 .withIndex("by_userId", (query) => query.eq("userId", userId))
@@ -353,16 +230,6 @@ describe("auth/cleanup", () => {
                 "comments",
                 referencedCommentId
               ),
-              retainedPost: await ctx.db.get(
-                "schoolClassForumPosts",
-                retainedPostId
-              ),
-              schoolActivity: await ctx.db
-                .query("schoolActivityLogs")
-                .withIndex("by_schoolId", (query) =>
-                  query.eq("schoolId", schoolId)
-                )
-                .collect(),
               user: await ctx.db.get("users", userId),
             };
           })
@@ -372,17 +239,10 @@ describe("auth/cleanup", () => {
           consentDecisions: [],
           consents: [],
           creditTransactions: [],
-          deletedForum: null,
-          deletedForumPosts: [],
-          deletedForumReactions: [],
           learningPreferences: [],
           referencedComment: expect.objectContaining({
             text: "Reply without retained personal preview",
           }),
-          retainedPost: expect.objectContaining({
-            body: "Retained reply",
-          }),
-          schoolActivity: [],
           user: expect.objectContaining({
             authId: expect.stringMatching(deletedAuthIdPattern),
             credits: 0,
@@ -398,9 +258,6 @@ describe("auth/cleanup", () => {
         expect(result.referencedComment).not.toHaveProperty("parentId");
         expect(result.referencedComment).not.toHaveProperty("replyToText");
         expect(result.referencedComment).not.toHaveProperty("replyToUserId");
-        expect(result.retainedPost).not.toHaveProperty("parentId");
-        expect(result.retainedPost).not.toHaveProperty("replyToBody");
-        expect(result.retainedPost).not.toHaveProperty("replyToUserId");
       })
   );
 });

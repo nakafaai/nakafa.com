@@ -12,11 +12,7 @@ export default async function NotFound() {
 
   return (
     <Stage>
-      <Missing
-        description={t("description")}
-        scene="missing"
-        title={t("title")}
-      >
+      <Missing description={t("description")} title={t("title")}>
         <ActionNavigation
           href="/"
           label={tState("home-button")}

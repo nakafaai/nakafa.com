@@ -4,7 +4,6 @@ import { Agent } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
-import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { turnHalted } from "@repo/backend/confect/nina/halt";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
@@ -134,6 +133,8 @@ describe("The Nina response run when generation fails", () => {
         const state = yield* Effect.promise(f.inspect);
         expect(state.turn?.state).toMatchObject({ status: "failed", reason });
         expect(state.user?.credits).toBe(10);
+        // `list` is read for the turn metadata that tabs opened before `page`
+        // still use. `page` returns no metadata, so this check goes with `list`.
         const page = yield* Effect.promise(() =>
           f.owner.query(
             Ref.getFunctionReference(refs.public.nina.messages.list),
@@ -157,54 +158,29 @@ describe("The Nina response run when generation fails", () => {
           )
         ).toBe(true);
         expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
+        // The turns that ended tell the same failure, and no private diagnostic.
+        const turns = yield* Effect.promise(() =>
+          f.owner.query(
+            Ref.getFunctionReference(refs.public.nina.conversation.turns),
+            { chatId: f.chatId, paginationOpts: { cursor: null, numItems: 20 } }
+          )
+        ).pipe(
+          Effect.flatMap((value) =>
+            Ref.decodeReturns(refs.public.nina.conversation.turns, value)
+          )
+        );
+        expect(
+          Arr.some(
+            turns.page,
+            (turn) =>
+              turn.state.status === "failed" && turn.state.reason === reason
+          )
+        ).toBe(true);
+        expect(encodeJsonText(turns)).not.toMatch(PRIVATE_DIAGNOSTIC);
+        // A run that ended badly has no history cost to keep.
+        expect(state.turn).not.toHaveProperty("history");
       })
   );
-
-  it("stores a response timeout when the provider goes silent for longer than the chunk deadline", async () => {
-    // The SDK arms its chunk timer with a timeout of its own, so the fake clock
-    // drives it, and it reports the deadline through the abort, not as an
-    // error. The clock advances from inside the model's stream, as in the
-    // readiness test of the generation tests: a timer that the test body fires
-    // would run outside the action and could not call the backend.
-    provider.languageModel.mockReturnValue(
-      new MockLanguageModelV4({
-        doStream: () =>
-          Promise.resolve({
-            stream: new ReadableStream({
-              start(controller) {
-                controller.enqueue({ type: "stream-start", warnings: [] });
-                controller.enqueue({ type: "text-start", id: "answer" });
-                controller.enqueue({
-                  type: "text-delta",
-                  id: "answer",
-                  delta: "A limit",
-                });
-                controller.enqueue({
-                  type: "text-delta",
-                  id: "answer",
-                  delta: " is",
-                });
-              },
-              // The SDK asks for more as it reads the last part above, and it
-              // has armed its chunk timer on the one before. The model then
-              // says nothing more, for longer than the deadline.
-              pull() {
-                vi.advanceTimersByTime(purposes.chat.timeout.chunkMs);
-                return new Promise<void>(() => undefined);
-              },
-            }),
-          }),
-      })
-    );
-    const f = await failing();
-    await f.t.action(run, { turnId: f.turnId });
-    const state = await f.inspect();
-    expect(state.turn?.state).toMatchObject({
-      status: "failed",
-      reason: "response-timeout",
-    });
-    expect(state.user?.credits).toBe(10);
-  }, 30_000);
 
   it("stores the reason the generation failed with when the read that asks whether its turn was halted fails too", async () => {
     const halt = await vi.importActual<

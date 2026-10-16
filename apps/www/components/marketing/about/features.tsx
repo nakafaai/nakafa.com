@@ -9,7 +9,7 @@ import { SubjectItem } from "@/components/shared/subject/item";
 import { SubjectList } from "@/components/shared/subject/list";
 import { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { getPublishedProgramSubjects } from "@/lib/content/program/catalog";
-import { readCurriculumRouteIcon } from "@/lib/curriculum/icons";
+import { getCurriculumLooks } from "@/lib/curriculum/look";
 
 export async function Features({ locale }: { locale: Locale }) {
   const [t, subjects, featuredTryout] = await Promise.all([
@@ -17,6 +17,7 @@ export async function Features({ locale }: { locale: Locale }) {
     getPublishedProgramSubjects(locale),
     readFeaturedTryout(locale),
   ]);
+  const looks = getCurriculumLooks(subjects);
   return (
     <section
       className="relative isolate z-0 scroll-mt-28 border-y bg-background"
@@ -43,10 +44,10 @@ export async function Features({ locale }: { locale: Locale }) {
                 aria-label={t("subjects-navigation")}
                 className="mt-auto w-full max-w-lg"
               >
-                {Arr.map(subjects, (route) => (
+                {Arr.zipWith(subjects, looks, (route, look) => (
                   <SubjectItem
                     href={`/${locale}/${route.publicPath}`}
-                    icon={readCurriculumRouteIcon(route)}
+                    icon={look.icon}
                     key={route.publicPath}
                     label={route.title}
                     labelElement="span"

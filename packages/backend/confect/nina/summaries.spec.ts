@@ -7,7 +7,8 @@ import {
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { Schema, Struct } from "effect";
 
-const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
+/** The order of a turn: its place among the prompts of its chat. */
+export const TurnOrder = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
 /**
  * A chat's rolling summary of every turn up to and including `throughOrder`.
@@ -24,7 +25,7 @@ export const NinaSummary = Schema.Struct({
 });
 
 /** The summary facts generation and refresh read back, with the text opened. */
-const NinaSummaryView = NinaSummary.mapFields((fields) => ({
+export const NinaSummaryView = NinaSummary.mapFields((fields) => ({
   text: Schema.String,
   throughOrder: fields.throughOrder,
 }));
@@ -91,7 +92,8 @@ export default GroupSpec.make()
         ...NinaSummary.mapFields(Struct.pick(["chatId", "throughOrder"]))
           .fields,
         // The caller sends plain text and the mutation seals it. A refresh whose
-        // answer was rejected sends none, and only its tokens count.
+        // answer was rejected sends none, and its tokens count only when the chat
+        // already has a summary row.
         text: Schema.optionalKey(Schema.String),
         usage: NinaUpkeepCall,
       }),

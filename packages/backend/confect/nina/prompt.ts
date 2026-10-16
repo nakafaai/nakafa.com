@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   consumeAttachments,
+  requirePromptLimit,
   requireStoredDocumentLimit,
 } from "@repo/backend/confect/nina/attachments";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -42,19 +43,14 @@ function isAskedPage(page: NinaPage, input: typeof NinaPageInput.Type) {
 export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   user: Docs["users"],
   chat: Docs["chats"] | null,
-  input: typeof NinaInput.Type,
-  capturedAt: string
+  input: typeof NinaInput.Type
 ) {
   if (input.kind === "message") {
-    const context = yield* resolveNinaContext(
-      input.page,
-      user,
-      capturedAt,
-      chat?._id
-    );
+    const context = yield* resolveNinaContext(input.page, user, chat?._id);
     const attachments = yield* consumeAttachments(
       user._id,
-      input.prompt.uploadIds ?? []
+      input.prompt.uploadIds ?? [],
+      input.prompt.text
     );
     return {
       ...context,
@@ -109,6 +105,8 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   });
   const fileIds = stored.fileIds ?? [];
   yield* requireStoredDocumentLimit(fileIds);
+  // A message stored before the limit existed can cost more than a turn carries.
+  yield* requirePromptLimit(message);
   const retryOf = original.retryOf ?? original.order;
   const asked =
     original.page && original.user
@@ -121,7 +119,7 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     return yield* retryUnavailable();
   }
   return {
-    ...(yield* resolveNinaContext(input.page, user, capturedAt, chat._id)),
+    ...(yield* resolveNinaContext(input.page, user, chat._id)),
     fileIds,
     message,
     retryOf,

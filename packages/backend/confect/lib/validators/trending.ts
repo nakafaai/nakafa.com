@@ -9,7 +9,6 @@ export const trendingSubjectValidator = Schema.Struct({
   contextKey: Schema.String,
   href: Schema.String,
   materialDomain: materialDomainValidator,
-  viewCount: Schema.Finite,
 });
 export type TrendingSubject = typeof trendingSubjectValidator.Type;
 

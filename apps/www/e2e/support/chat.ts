@@ -1,7 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { Page } from "@playwright/test";
+import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
-import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { trackChanges } from "@/e2e/support/changes";
 import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
@@ -46,7 +46,11 @@ const Answer = Schema.Union([
 ]);
 const Token = Schema.Struct({ token: Schema.String });
 const CurrentUser = Schema.Struct({
-  appUser: Schema.Struct({ _id: Schema.String }),
+  appUser: Schema.Struct({
+    _id: Schema.String,
+    authId: Schema.String,
+    username: Schema.String,
+  }),
 });
 const Receipt = Schema.Struct({
   chatId: Schema.String,
@@ -197,8 +201,12 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
         )
       );
     }),
+    /** The Better Auth id of the learner's account, which the acceptance command names. */
+    authId: appUser.authId,
     /** The id of the learner's account in the app. */
     userId: appUser._id,
+    /** The username of the learner, which their profile address names. */
+    username: appUser.username,
   };
 });
 

@@ -14,6 +14,7 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { internalActionGeneric } from "convex/server";
 import { v } from "convex/values";
@@ -47,6 +48,7 @@ describe("analytics/capture", () => {
               credits: 10,
               creditsResetAt: NOW,
               email: "analytics@example.com",
+              mascot: MASCOT_CODE,
               name: "Analytics User",
               plan: "free",
             });
@@ -105,6 +107,7 @@ describe("analytics/capture", () => {
             credits: 10,
             creditsResetAt: NOW,
             email: "analytics-scheduling-failure@example.com",
+            mascot: MASCOT_CODE,
             name: "Analytics Scheduling Failure",
             plan: "free",
           });
@@ -240,6 +243,7 @@ it.each(["missing", "deleting"] as const)(
         credits: 0,
         creditsResetAt: NOW,
         email: "eligibility@example.com",
+        mascot: MASCOT_CODE,
         name: "Eligibility",
         plan: "free",
       });
@@ -270,6 +274,7 @@ it.each([false, true])(
         credits: 0,
         creditsResetAt: NOW,
         email: "overlap@example.com",
+        mascot: MASCOT_CODE,
         name: "Overlap",
         plan: "free",
       });

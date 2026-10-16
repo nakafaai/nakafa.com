@@ -25,57 +25,55 @@ export const Deadline = Schema.Struct({
 });
 export type Deadline = typeof Deadline.Type;
 
-/**
- * How hard a purpose reasons, how long it may take, and the most one call may
- * write. `maxOutputTokens` is the AI SDK's setting for a maximum output, and
- * the model's reasoning tokens count toward it. A call that ends at the cap
- * finishes with `length`, which a chat turn reads as `response-limit`.
- */
+/** How hard a purpose reasons and how long one call of it may take. */
 const Budget = Schema.Struct({
   effort: Effort,
-  maxOutputTokens: Schema.Int,
   timeout: Deadline,
 });
 
 /**
- * Each purpose's reasoning effort, output cap, and deadlines. The chat window
- * allows slower reasoning and web-search steps within its request deadline.
- * Specialists, titles, repairs, summaries, memory, and follow-up suggestions
- * are bounded so a slow provider or a runaway answer cannot hold the chat open
- * or spend without limit.
+ * Each purpose's reasoning effort and deadlines. Its output cap is in the
+ * language model profile (`confect/gateway/model.ts`). The chat window allows
+ * the slowest measured step and the steps of the rest of a turn within its
+ * request deadline. Specialists, titles, repairs, summaries, memory, and
+ * follow-up suggestions are bounded so a slow provider or a runaway answer
+ * cannot hold the chat open or spend without limit.
  *
- * The caps stand well above what a real call wrote when they were measured on
- * Gemini 3.8 Flash through the gateway (11 October 2026, ADR 0020). A chat
- * answer the learner asked to be very long wrote 9,593 tokens, 2,055 of them
- * reasoning, and a proof reasoned for 4,366. A summary wrote 1,042 when it
- * could hold 1,200. It may now hold 2,000, and the reasoning of its call counts
- * against the same cap, so the background cap is twice that. A specialist's
- * answer is read up to 6,000 tokens, so its cap sits just above that.
+ * The step deadlines follow the output caps at 278 tokens a second, the rate of
+ * the one long answer measured at `high` (30,038 tokens in 108 s, ADR 0020):
+ * a step holds its cap with a margin.
+ *   - Chat: a full 48,000-token answer takes 48,000 / 278, about 172 s, so the
+ *     step is 180 s. The total is that step plus 330 s for the other steps of a
+ *     turn, the same allowance as before (420 s less the old 90 s step), so
+ *     180 + 330 = 510 s.
+ *   - Specialist: 11,264 tokens take about 41 s, so the step is 45 s, and four
+ *     steps make the total, as before (4 x 30 s).
+ *   - Background: 7,168 tokens take about 26 s, so the step is 30 s, and three
+ *     steps make the total, as before (3 x 15 s).
+ *   - Suggestion and presentation: their caps take a few seconds, and their
+ *     deadlines stay as they were.
+ *
+ * @see docs/adr/0020-deadlines.md
  */
 export const purposes = {
   chat: {
     effort: "interactive",
-    maxOutputTokens: 16_384,
-    timeout: { chunkMs: 45_000, stepMs: 90_000, totalMs: 420_000 },
+    timeout: { chunkMs: 45_000, stepMs: 180_000, totalMs: 510_000 },
   },
   specialist: {
     effort: "fast",
-    maxOutputTokens: 6144,
-    timeout: { stepMs: 30_000, totalMs: 120_000 },
+    timeout: { stepMs: 45_000, totalMs: 180_000 },
   },
   background: {
     effort: "fast",
-    maxOutputTokens: 4096,
-    timeout: { stepMs: 15_000, totalMs: 45_000 },
+    timeout: { stepMs: 30_000, totalMs: 90_000 },
   },
   suggestion: {
     effort: "fast",
-    maxOutputTokens: 512,
     timeout: { stepMs: 30_000, totalMs: 90_000 },
   },
   presentation: {
     effort: "fast",
-    maxOutputTokens: 512,
     timeout: { stepMs: 15_000, totalMs: 45_000 },
   },
 } satisfies Record<Purpose, typeof Budget.Type>;

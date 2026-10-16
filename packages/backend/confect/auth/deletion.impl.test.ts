@@ -1,9 +1,7 @@
-import { assert, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import {
   ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
   ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
-  ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE,
-  ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
 } from "@repo/backend/confect/auth/deletion/constants";
 import {
   accountDeletionAttemptStatus,
@@ -14,11 +12,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import {
-  seedDeletionMember,
-  seedDeletionSchool,
-  seedDeletionUser,
-} from "@repo/backend/test/deletion/seed";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 
 const NOW = Date.UTC(2026, 6, 28, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -26,7 +20,7 @@ const COMMITTED_ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0621";
 const UNKNOWN_ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0622";
 
 describe("auth/deletion", () => {
-  it("advances one authenticated preparation step", async () => {
+  it("prepares the authenticated account in one step", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -153,6 +147,7 @@ describe("auth/deletion", () => {
         creditsResetAt: NOW,
         deletionPreparedAt: NOW,
         email: "removed-auth-user@example.com",
+        mascot: MASCOT_CODE,
         name: "Removed Auth User",
         plan: "free",
       });
@@ -180,40 +175,12 @@ describe("auth/deletion", () => {
     ).resolves.not.toBeNull();
   });
 
-  it("schedules the next versioned recovery cancellation batch", async () => {
+  it("cancels the exact prepared version for recovery", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
-        suffix: "cancel-recovery-batch",
-      });
-      const successorId = await ctx.db.insert("users", {
-        authId: "cancel-recovery-successor",
-        credits: 0,
-        creditsResetAt: NOW,
-        email: "cancel-recovery-successor@example.com",
-        name: "Cancel Recovery Successor",
-        plan: "free",
-      });
-      const schoolId = await ctx.db.insert("schools", {
-        city: "Jakarta",
-        createdBy: identity.userId,
-        currentStudents: 1,
-        currentTeachers: 0,
-        email: "cancel-recovery-school@example.com",
-        name: "Cancel Recovery School",
-        province: "DKI Jakarta",
-        slug: "cancel-recovery-school",
-        type: "high-school",
-        updatedAt: NOW,
-      });
-      const membershipId = await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "student",
-        schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: successorId,
+        suffix: "cancel-recovery",
       });
       const preparationId = await ctx.db.insert("accountDeletionPreparations", {
         attemptId: ATTEMPT_ID,
@@ -226,19 +193,6 @@ describe("auth/deletion", () => {
         deletionPreparedAt: NOW,
       });
 
-      for (
-        let index = 0;
-        index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
-        index += 1
-      ) {
-        await ctx.db.insert("accountDeletionSchoolTransfers", {
-          preparationId,
-          schoolId,
-          successorMembershipId: membershipId,
-          successorUserId: successorId,
-        });
-      }
-
       return { identity, preparationId };
     });
     const expectedPreparation = {
@@ -247,39 +201,27 @@ describe("auth/deletion", () => {
       recoveryGeneration: 1,
     };
 
-    const hasMore = await t.mutation(
-      internal.auth.deletion.cancelAccountDeletion,
-      {
+    await expect(
+      t.mutation(internal.auth.deletion.cancelAccountDeletion, {
         authId: seeded.identity.authUserId,
         expectedPreparation,
-      }
-    );
+      })
+    ).resolves.toBeNull();
     const state = await t.query(async (ctx) => ({
-      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      cancellations: await ctx.db
+        .query("accountDeletionAttemptCancellations")
+        .collect(),
       preparation: await ctx.db.get(
         "accountDeletionPreparations",
         seeded.preparationId
       ),
-      transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
       user: await ctx.db.get("users", seeded.identity.userId),
     }));
 
-    expect(hasMore).toBe(true);
-    expect(state.transfers).toHaveLength(1);
-    expect(state.preparation?.cancellationStartedAt).toEqual(
-      expect.any(Number)
-    );
-    expect(state.user?.deletionPreparedAt).toBe(NOW);
-    expect(state.jobs).toEqual([
-      expect.objectContaining({
-        args: [
-          expect.objectContaining({
-            authId: seeded.identity.authUserId,
-            expectedPreparation,
-          }),
-        ],
-        name: expect.stringContaining("auth/deletion:cancelAccountDeletion"),
-      }),
+    expect(state.preparation).toBeNull();
+    expect(state.user).not.toHaveProperty("deletionPreparedAt");
+    expect(state.cancellations).toEqual([
+      expect.objectContaining({ attemptId: ATTEMPT_ID }),
     ]);
   });
 
@@ -346,110 +288,3 @@ describe("auth/deletion", () => {
     }
   );
 });
-
-it("resumes paginated successor searches across multiple owned schools", async () => {
-  const t = createConvexTestWithBetterAuth();
-  const identity = await t.mutation(async (ctx) => {
-    const owner = await seedAuthenticatedUser(ctx, {
-      now: NOW,
-      suffix: "paged-deletion",
-    });
-    const unavailable = await seedDeletionUser(ctx, "unavailable-successor", {
-      deletedAt: NOW,
-    });
-    const successor = await seedDeletionUser(ctx, "available-successor");
-    for (const suffix of ["first", "second"]) {
-      const schoolId = await seedDeletionSchool(ctx, owner.userId, suffix, NOW);
-      for (
-        let index = 0;
-        index < ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE;
-        index += 1
-      ) {
-        await seedDeletionMember(ctx, schoolId, unavailable, NOW);
-      }
-      await seedDeletionMember(ctx, schoolId, successor, NOW);
-    }
-    return owner;
-  });
-  const owner = t.withIdentity({
-    sessionId: identity.sessionId,
-    subject: identity.authUserId,
-  });
-  let outcome = await owner.mutation(
-    api.auth.deletion.prepareCurrentAccountDeletion,
-    { attemptId: ATTEMPT_ID }
-  );
-  let pages = 0;
-  while (outcome === "continue" && pages < 12) {
-    pages += 1;
-    outcome = await owner.mutation(
-      api.auth.deletion.prepareCurrentAccountDeletion,
-      { attemptId: ATTEMPT_ID }
-    );
-  }
-  expect(outcome).toBe("ready");
-  expect(pages).toBeGreaterThan(4);
-  expect(
-    await t.query((ctx) =>
-      ctx.db.query("accountDeletionSchoolTransfers").collect()
-    )
-  ).toHaveLength(2);
-});
-
-it.each(["removed", "transferred"] as const)(
-  "continues deletion when a pending school is %s",
-  async (condition) => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "changed-school",
-      });
-      const successor = await seedDeletionUser(ctx, "new-owner");
-      const schoolId = await seedDeletionSchool(
-        ctx,
-        identity.userId,
-        "changed-school",
-        NOW
-      );
-      return { identity, successor, schoolId };
-    });
-    const owner = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    expect(
-      await owner.mutation(api.auth.deletion.prepareCurrentAccountDeletion, {
-        attemptId: ATTEMPT_ID,
-      })
-    ).toBe("continue");
-    await t.mutation(async (ctx) => {
-      const preparation = await ctx.db
-        .query("accountDeletionPreparations")
-        .unique();
-      assert(preparation?.pendingSchoolId === seeded.schoolId);
-      if (condition === "removed") {
-        await ctx.db.delete("schools", seeded.schoolId);
-      } else {
-        await ctx.db.patch("schools", seeded.schoolId, {
-          createdBy: seeded.successor,
-        });
-      }
-    });
-    expect(
-      await owner.mutation(api.auth.deletion.prepareCurrentAccountDeletion, {
-        attemptId: ATTEMPT_ID,
-      })
-    ).toBe("continue");
-    expect(
-      await owner.mutation(api.auth.deletion.prepareCurrentAccountDeletion, {
-        attemptId: ATTEMPT_ID,
-      })
-    ).toBe("ready");
-    expect(
-      await t.query((ctx) =>
-        ctx.db.query("accountDeletionSchoolTransfers").collect()
-      )
-    ).toEqual([]);
-  }
-);

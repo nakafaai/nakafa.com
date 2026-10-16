@@ -4,82 +4,26 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import { cancelAccountDeletionAttemptByToken } from "@repo/backend/confect/auth/deletion/attemptCancellation";
 import {
   cancelAccountDeletion,
-  cancelAccountDeletionBatch,
   cleanupFinalizedAccountDeletion,
   sweepAccountDeletionCancellationsProgram,
 } from "@repo/backend/confect/auth/deletion/cancel";
-import {
-  ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE,
-  ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
-} from "@repo/backend/confect/auth/deletion/constants";
+import { ACCOUNT_DELETION_ATTEMPT_SWEEP_BATCH_SIZE } from "@repo/backend/confect/auth/deletion/constants";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { seedPreparedDeletionSchool } from "@repo/backend/test/deletion/seed";
+import { seedPreparedDeletion } from "@repo/backend/test/deletion/seed";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 28, 9, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 describe("auth/deletion/cancel", () => {
-  it("restores access and removes every active reservation", async () => {
+  it("restores access, removes the preparation, and records the cancellation", async () => {
     const t = convexTest(schema, convexModules);
-    const seeded = await t.mutation(async (ctx) => {
-      const ownerId = await ctx.db.insert("users", {
-        authId: "cancel-owner",
-        credits: 0,
-        creditsResetAt: 0,
-        deletionPreparedAt: NOW,
-        email: "owner@example.com",
-        name: "Cancel Owner",
-        plan: "free",
-      });
-      const successorId = await ctx.db.insert("users", {
-        authId: "cancel-successor",
-        credits: 0,
-        creditsResetAt: 0,
-        email: "successor@example.com",
-        name: "Cancel Successor",
-        plan: "free",
-      });
-      const schoolId = await ctx.db.insert("schools", {
-        city: "Jakarta",
-        createdBy: ownerId,
-        currentStudents: 1,
-        currentTeachers: 0,
-        email: "school@example.com",
-        name: "Cancel School",
-        province: "DKI Jakarta",
-        slug: "cancel-school",
-        type: "high-school",
-        updatedAt: NOW,
-      });
-      const membershipId = await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "student",
-        schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: successorId,
-      });
-      const preparationId = await ctx.db.insert("accountDeletionPreparations", {
-        attemptId: ATTEMPT_ID,
-        authId: "cancel-owner",
-        recoveryGeneration: 0,
-        userId: ownerId,
-      });
-      await ctx.db.insert("accountDeletionSchoolTransfers", {
-        preparationId,
-        schoolId,
-        successorMembershipId: membershipId,
-        successorUserId: successorId,
-      });
-      return {
-        ownerId,
-        preparationId,
-        schoolId,
-      };
-    });
+    const seeded = await t.mutation((ctx) =>
+      seedPreparedDeletion(ctx, "cancel-owner", NOW, ATTEMPT_ID)
+    );
     await t.mutation((ctx) =>
       Effect.runPromise(
         cancelAccountDeletion("cancel-owner", {
@@ -94,16 +38,18 @@ describe("auth/deletion/cancel", () => {
       )
     );
     const state = await t.query(async (ctx) => ({
-      owner: await ctx.db.get("users", seeded.ownerId),
+      cancellations: await ctx.db
+        .query("accountDeletionAttemptCancellations")
+        .collect(),
+      owner: await ctx.db.get("users", seeded.userId),
       preparations: await ctx.db.query("accountDeletionPreparations").collect(),
-      school: await ctx.db.get("schools", seeded.schoolId),
-      transfers: await ctx.db.query("accountDeletionSchoolTransfers").collect(),
     }));
     expect(state.owner).not.toHaveProperty("deletionPreparedAt");
     expect(state.owner).not.toHaveProperty("deletedAt");
-    expect(state.school?.createdBy).toBe(seeded.ownerId);
     expect(state.preparations).toHaveLength(0);
-    expect(state.transfers).toHaveLength(0);
+    expect(state.cancellations).toEqual([
+      expect.objectContaining({ attemptId: ATTEMPT_ID }),
+    ]);
   });
   it("leaves a newer preparation untouched", async () => {
     const t = convexTest(schema, convexModules);
@@ -114,6 +60,7 @@ describe("auth/deletion/cancel", () => {
         creditsResetAt: 0,
         deletionPreparedAt: NOW + 1,
         email: "newer@example.com",
+        mascot: MASCOT_CODE,
         name: "Newer Owner",
         plan: "free",
       });
@@ -157,6 +104,7 @@ describe("auth/deletion/cancel", () => {
         creditsResetAt: 0,
         deletedAt: NOW,
         email: "finalized@example.com",
+        mascot: MASCOT_CODE,
         name: "Finalized Owner",
         plan: "free",
       });
@@ -202,6 +150,7 @@ describe("auth/deletion/cancel", () => {
         deletedAt: NOW,
         deletionCleanupStartedAt: NOW,
         email: "cleanup@example.com",
+        mascot: MASCOT_CODE,
         name: "Cleanup Owner",
         plan: "free",
       });
@@ -230,82 +179,34 @@ describe("auth/deletion/cancel", () => {
     expect(removed).toBe(true);
     expect(preparationCount).toBe(0);
   });
-  it("does not let a stale cancellation delete a retried preparation", async () => {
+  it("reports nothing to remove when no preparation is left", async () => {
     const t = convexTest(schema, convexModules);
-    const seeded = await t.mutation(async (ctx) => {
-      const ownerId = await ctx.db.insert("users", {
-        authId: "retry-owner",
+    const userId = await t.mutation((ctx) =>
+      ctx.db.insert("users", {
+        authId: "no-preparation-owner",
         credits: 0,
         creditsResetAt: 0,
-        deletionPreparedAt: NOW,
-        email: "retry-owner@example.com",
-        name: "Retry Owner",
+        email: "no-preparation@example.com",
+        mascot: MASCOT_CODE,
+        name: "No Preparation Owner",
         plan: "free",
-      });
-      const successorId = await ctx.db.insert("users", {
-        authId: "retry-successor",
-        credits: 0,
-        creditsResetAt: 0,
-        email: "retry-successor@example.com",
-        name: "Retry Successor",
-        plan: "free",
-      });
-      const schoolId = await ctx.db.insert("schools", {
-        city: "Jakarta",
-        createdBy: ownerId,
-        currentStudents: 1,
-        currentTeachers: 0,
-        email: "retry-school@example.com",
-        name: "Retry School",
-        province: "DKI Jakarta",
-        slug: "retry-school",
-        type: "high-school",
-        updatedAt: NOW,
-      });
-      const membershipId = await ctx.db.insert("schoolMembers", {
-        joinedAt: NOW,
-        role: "student",
-        schoolId,
-        status: "active",
-        updatedAt: NOW,
-        userId: successorId,
-      });
-      const preparationId = await ctx.db.insert("accountDeletionPreparations", {
-        attemptId: ATTEMPT_ID,
-        authId: "retry-owner",
-        recoveryGeneration: 0,
-        userId: ownerId,
-      });
-      for (
-        let index = 0;
-        index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
-        index += 1
-      ) {
-        await ctx.db.insert("accountDeletionSchoolTransfers", {
-          preparationId,
-          schoolId,
-          successorMembershipId: membershipId,
-          successorUserId: successorId,
-        });
-      }
-      return {
-        ownerId,
-        preparationId,
-      };
-    });
-    const expectedPreparation = {
-      attemptId: ATTEMPT_ID,
-      preparationId: seeded.preparationId,
-      recoveryGeneration: 0,
-    };
-    await t.mutation((ctx) =>
+      })
+    );
+    const removed = await t.mutation((ctx) =>
       Effect.runPromise(
-        cancelAccountDeletionBatch("retry-owner", expectedPreparation).pipe(
+        cleanupFinalizedAccountDeletion(userId).pipe(
           Effect.provide(
             RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
           )
         )
       )
+    );
+    expect(removed).toBe(false);
+  });
+  it("does not let a stale cancellation delete a retried preparation", async () => {
+    const t = convexTest(schema, convexModules);
+    const seeded = await t.mutation((ctx) =>
+      seedPreparedDeletion(ctx, "retry-owner", NOW, ATTEMPT_ID)
     );
     await t.mutation((ctx) =>
       Effect.runPromise(
@@ -319,21 +220,25 @@ describe("auth/deletion/cancel", () => {
       )
     );
     const retriedPreparationId = await t.mutation(async (ctx) => {
-      await ctx.db.patch("users", seeded.ownerId, {
+      await ctx.db.patch("users", seeded.userId, {
         deletionPreparedAt: NOW + 1,
       });
       return await ctx.db.insert("accountDeletionPreparations", {
         attemptId: ATTEMPT_ID,
         authId: "retry-owner",
         recoveryGeneration: 0,
-        userId: seeded.ownerId,
+        userId: seeded.userId,
       });
     });
     const canceled = await t.mutation(
       internal.auth.deletion.cancelAccountDeletion,
       {
         authId: "retry-owner",
-        expectedPreparation,
+        expectedPreparation: {
+          attemptId: ATTEMPT_ID,
+          preparationId: seeded.preparationId,
+          recoveryGeneration: 0,
+        },
       }
     );
     const remaining = await t.query(async (ctx) => ({
@@ -341,9 +246,9 @@ describe("auth/deletion/cancel", () => {
         "accountDeletionPreparations",
         retriedPreparationId
       ),
-      user: await ctx.db.get("users", seeded.ownerId),
+      user: await ctx.db.get("users", seeded.userId),
     }));
-    expect(canceled).toBe(false);
+    expect(canceled).toBeNull();
     expect(remaining.preparation?._id).toBe(retriedPreparationId);
     expect(remaining.user?.deletionPreparedAt).toBe(NOW + 1);
   });
@@ -401,16 +306,16 @@ describe("auth/deletion/cancel", () => {
     async (state) => {
       const t = convexTest(schema, convexModules);
       const seeded = await t.mutation(async (ctx) => {
-        const result = await seedPreparedDeletionSchool(
+        const result = await seedPreparedDeletion(
           ctx,
           "detached-owner",
           NOW,
           ATTEMPT_ID
         );
         if (state === "missing") {
-          await ctx.db.delete("users", result.ownerId);
+          await ctx.db.delete("users", result.userId);
         } else {
-          await ctx.db.patch("users", result.ownerId, {
+          await ctx.db.patch("users", result.userId, {
             deletionPreparedAt: undefined,
           });
         }
@@ -430,10 +335,10 @@ describe("auth/deletion/cancel", () => {
       };
       await expect(
         t.mutation(internal.auth.deletion.cancelAccountDeletion, args)
-      ).resolves.toBe(false);
+      ).resolves.toBeNull();
       await expect(
         t.mutation(internal.auth.deletion.cancelAccountDeletion, args)
-      ).resolves.toBe(false);
+      ).resolves.toBeNull();
       await expect(
         t.query((ctx) => ctx.db.query("accountDeletionPreparations").collect())
       ).resolves.toEqual([]);
@@ -447,11 +352,6 @@ describe("auth/deletion/cancel", () => {
           canceledAt: NOW,
         }),
       ]);
-      await expect(
-        t.query((ctx) => ctx.db.get("schools", seeded.schoolId))
-      ).resolves.toMatchObject({
-        createdBy: seeded.ownerId,
-      });
     }
   );
 });

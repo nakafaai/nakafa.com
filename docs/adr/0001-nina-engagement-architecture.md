@@ -43,6 +43,10 @@ React uses Confect hooks for application functions and the official Agent
 optimistic update contract. There is no Next.js AI transport route or separate AI
 backend package.
 
+A stored turn holds only what something reads. Its page holds the locale, the
+slug, whether the page needs a signed read, and the context pack: the learning
+page, its placement, the question focus, and the evidence the model is told of.
+
 A public chat is shared by link, and the link holds a share token, not only the
 chat id. Turning sharing on draws 32 random bytes and stores their SHA-256 hash,
 which readers check without any key, and the token sealed for the owner, so the
@@ -72,6 +76,26 @@ visibility, and it takes a chat that names no owner as not its own, so
 the chat had, so an older page decodes the owner's chat as it always did, and an
 older page is never a reader of a link, because only a page that sends the token
 reads by one.
+
+What a reader can cost the deployment has a bound and no rate limit, because a
+read cannot have one. A page of messages and a page of turns hold
+`NINA_MESSAGES_PAGE_SIZE` rows at most, however many the caller asks for, and a
+call with a wrong token reads the chat and its share and stops, so the large
+read needs the token. A limiter spends its token in a mutation or an action
+(`RateLimiter.limit` takes no query context), and a query can only check a
+limit, which spends nothing. Convex documents no limit per client either
+(docs.convex.dev/production/state/limits). A grant that a mutation issues in
+exchange for the token would bound how many readers there are and not how often
+one reads, and the token is already a secret that no one can guess, so it would
+add a second secret and no limit. An owner whose link is abused turns sharing
+off, which deletes the token and ends every link to the chat at once. One bound
+does not hold for a call that names an `endCursor`: Convex serves the rows
+between two cursors of a query in one call, whatever page size was asked, and
+enforces neither `maximumRowsRead` nor `maximumBytesRead` for it
+(`read_page_from_query` and `index_range.rs` in get-convex/convex-backend). Only
+the server issues a cursor, and it works for the query it came from, so a reader
+of a chat can read that chat's rows in one call, at most what one Convex
+function may read.
 
 The conversation is not a fact of the account, with one exception: what Nina
 looked for in the owner's memory is. A search of memory tells a reader what Nina
@@ -263,8 +287,12 @@ query, so question text and answer keys never come from the client. The official
 explanation is the source of truth for the answer.
 
 Provider input keeps whole turns that the conversation summary does not
-cover, newest first, within 32,000 tokens, and the current turn's evidence
-within 16,000 tokens. The turns come from the chat's turn records, by turn
+cover, newest first, within the history budget of 32,610 tokens: what a call
+leaves for its history after the reserved parts at their budgets (30,000
+tokens) and the current turn's evidence (28,000 tokens). The budget of a call
+whose current turn costs more is smaller, and the history budget is the most a
+call takes (`assembleContext`). The turns
+come from the chat's turn records, by turn
 order, not from the last messages of the thread: a cancelled or failed turn
 leaves no messages in it, and a question the learner asked again appears once,
 in its newest asking, whichever of its askings the learner retried. A retry
@@ -275,45 +303,56 @@ tab that sends no page, keeps that turn's own context, with its placement and
 question focus. Older evidence shortens with a visible note before a turn is
 dropped, and no budget fails a turn. Earlier turns keep their images, while
 their PDF and text attachments, whose cost grows with size, leave provider
-history as a note naming the file. An image counts 1,120 tokens whatever its
-size, what Gemini 3 bills at its default media resolution, which Nina leaves
-unset, so a few images fill the history budget. A stored message keeps neither
-the size nor the page count of a file, so the rule reads the media type alone.
-The learner's own message and its attachments are not evidence and do not count
-against the evidence budget.
+history as a note naming the file. An image counts 4,784 tokens whatever its
+size, the most the high-resolution tier bills for one image (Anthropic's vision
+guide), so a few images fill the history budget. A document counts 3,300 tokens
+a page. A stored message keeps neither the size nor the page count of a file, so
+the rule reads the media type alone and counts one page. The learner's own
+message and its attachments are not evidence and do not count against the
+evidence budget, but the send counts them against the message budget below.
 
-One call carries at most `NINA_CALL_LIMIT` tokens by design, the sum of the
-budgets in `confect/nina/budget.ts` that a call holds at once. The budgets are
-counted with OpenAI's tokenizer, and the model is Gemini, so the number is close
-to what the provider bills and not the same. Measured on 12 October 2026 through
-the gateway on five stored sections, the provider counted between 8.2% fewer
-tokens (Arabic verses with their translation) and 13.6% more (a lesson full of
-formulas) than the budget's count, and within 6% for German, English and
-Indonesian prose. A message adds no tokens around its content, and a tool call
-with its result costs what the budget counts for them. The model accepts
-far more, 1,048,576 input tokens. Nina stays below because every call bills
-every token it carries, a larger call takes longer to start, and the provider
-keeps a cached prefix for only about five minutes. Three things lie outside the
-number: the learner's own message and files, which admission checks, a question
-focus, which has no budget, and the words of the newest earlier turn. That turn
-is kept whatever it costs and only its tool results are shortened, never the
-words of the learner or of Nina, so one very long message or answer in it takes
-the history above its part.
+One call carries at most `NINA_CALL_LIMIT` tokens by design: 90,610, which is
+the context limit of the language model profile, 100,000, less a margin of 9,390
+tokens for the estimator's error. The margin is the 95th percentile of the
+estimator's undercount on 120 texts measured through the gateway on 14 October
+2026, 9.39% (`tokens.undercount`). The budgets are counted by the estimator of
+`confect/nina/budget.ts`, whose costs live in the profile, and it is 13.1% off a
+text on average and 4% above the provider over those texts. Every message adds 8
+tokens around its content, the overhead measured on a user message, and a tool
+call with its result costs what the budget counts for them. A call holds its
+reserved parts at their budgets, 30,000 tokens (instructions 12,500, page
+10,500, account 1,000, portrait 1,000, recall 1,500, summary 3,500), then its
+current turn as it is sent: the newest learner message and its files, counted at
+the profile's costs, and the evidence, within 28,000. The learner's message may
+cost at most 32,610 tokens, the room the call leaves after the reserved parts and
+the evidence, and the send refuses a longer one (`NINA_MESSAGE_SIZE`), so the
+message and the evidence fit the call limit together. The history gets what is
+left, at most 32,610. Nina stays below the price step at 100,000 tokens, because
+the provider bills a call above it at five times the input price (measured on
+calls of 94,423 and 104,573 prompt tokens). Three things can still take a call
+past the limit. The newest earlier turn is kept whatever it costs, and only its
+tool results are shortened, never the words of the learner or of Nina, so one
+very long answer in it can take a call past the limit. A question focus has no
+budget of its own. A document counts one page however long it is, since the send
+bounds the bytes of a message's documents (10 MiB) and not their pages, so a
+long PDF can take a call past the limit, and no measured page cost bounds it yet.
 
 The size of the history starts a fold of the conversation summary. After a
 completed turn, the follow-up action counts the complete turns the summary does
 not cover in model tokens, as the history would send them. A chat whose turns
-fit in the 32,000 token history budget, and that holds at most 64 of them, is
+fit in the 32,610 token history budget, and that holds at most 64 of them, is
 never folded. The count is a second, much wider bound: a turn also costs
 documents to read before the call, which no token counts, so very short turns
 would otherwise let the history grow to thousands of messages. Past 64 turns one fold covers the oldest 16, and the
 next waits for 16 new ones. When the turns cost more than the budget, one fold
 summarizes the oldest of them with a fast
-model, as many as it takes for the rest to cost at most 16,000 tokens, half the
+model, as many as it takes for the rest to cost at most 16,305 tokens, half the
 budget, so the next fold waits for about half a budget of new turns and the
 cached prefix holds in between. The newest complete turn is never folded, a
-fold covers at most 16 turns, and a longer backlog advances one bounded batch
-per completed turn. When the count reached the oldest of the turns, the fold
+fold covers at most 16 turns, and its transcript stays within the fold budget,
+which is what the call limit leaves after the previous summary and the writer's
+instructions. A fold stops at the newest turn that fits, and the next fold covers
+the rest. A longer backlog advances one bounded batch per completed turn. When the count reached the oldest of the turns, the fold
 summarizes from the messages it read. Otherwise it reads back from its last
 folded turn alone. The fold leaves out what the history would: a cancelled or
 failed turn, and an answer that a later retry replaced.
@@ -339,7 +378,7 @@ messages and at most 32 replaced askings. A stored total would avoid that read,
 at the price of a field on every turn that must stay right through retries,
 failures and folds, and Nina has none.
 
-The summary, at most 2,000 tokens, stays in the language of the conversation,
+The summary, at most 3,500 tokens, stays in the language of the conversation,
 adds no fact the turns did not state, sits in the system prompt context and is
 deleted with its chat. Its
 refreshes are chat upkeep, so their provider usage accumulates on the summary
@@ -453,15 +492,29 @@ the chat is free:
   turn that was claimed or settled alone.
 - The sweep, every five minutes, settles a turn that stays open past its
   deadline. No live run is open that long, so the run was lost to a crash or a
-  deploy, and the turn is stored as interrupted, never as a timeout.
+  deploy, and the turn is stored as interrupted, never as a timeout. Such a run
+  has no live action to report it, so the settlement does, once, when a turn
+  ends without an answer after its deadline (`closeTurn`), whichever status it
+  stores, as when the learner deletes the chat in the meantime: the log names
+  the turn, the reason it was stored with and how long it was open, and error
+  tracking gets the reason and the place, with no turn, no account and no word
+  of the conversation. A turn the learner stopped or that holds an answer is not
+  a loss. A run that ends its own turn reports its own failure, however late it
+  fails, so the settlement leaves that one to it.
 - The sweep also schedules the end of that settlement for three of its own runs
   later. A settlement that failed in every try, as when the Agent journal cannot
   be read or cut off, ends then without the journal it could not use: the turn
   fails, or is cancelled when the learner had stopped it, an answer the journal
-  does hold still completes it, and the chat can be deleted. A hold that cannot
-  be paid back is the one thing that ending never drops. When the credit state
-  cannot be read, the ending fails as a whole and changes nothing, and the next
-  sweep tries again.
+  does hold still completes it, and the chat is free. Deleting a chat does not
+  wait for it: when the journal fails the settlement of the chat's open turn,
+  the delete ends the turn the same way, in the transaction of the delete, and
+  goes on, so a journal that cannot settle the turn never keeps a learner from
+  deleting their chat. A hold that cannot be paid back is the one thing that
+  ending never drops. When the credit state cannot be read, the ending fails as
+  a whole and changes nothing, and the next sweep tries again. A delete of that
+  chat fails the same way, because the learner's credits are not dropped to free
+  it. So does a delete whose journal cannot be deleted: it commits nothing, so a
+  deleted chat never leaves its words behind, and the learner tries again.
 - The failed turn stores `unknown`, which the learner reads as a response Nina
   could not finish, with a way to try again and to ask for help. A reason of its
   own would be a new value of the stored failure reason. Every web build reads
@@ -507,13 +560,13 @@ deleted.
 
 A capability is one definition in its own folder and one entry in the registry.
 The tools Nina is offered, the policy of each call and the tool section of her
-prompt follow from them, and all three follow `offered`: a turn whose page does
-not allow a capability, or whose learner paused it, is offered neither its tool
-nor its entry and rules in the prompt, so that turn's prompt prefix differs from
-the others, as its tool list does. Every page allows every capability today, so
-only a pause changes it. A few other places still name a capability or its
-Agent, and they are the steps below, in order, with what the compiler enforces
-at each and what it leaves to the author.
+prompt follow from them, and all three follow `offered`: a turn for which a
+capability's `offered` says no, such as the memory capability of a learner who
+paused it, is offered neither its tool nor its entry and rules in the prompt, so
+that turn's prompt prefix differs from the others, as its tool list does. No
+page refuses a capability, so only a pause changes it today. A few other places
+still name a capability or its Agent, and they are the steps below, in order,
+with what the compiler enforces at each and what it leaves to the author.
 
 1. Write the run, an Effect program in the capability's own folder. It takes its
    input and the facts of the turn, publishes its cards through `publish`, and
@@ -536,10 +589,8 @@ at each and what it leaves to the author.
    tool policy (`entry`, `field` when its input has a field of its own,
    `section`), the `continuation` that tells the model how to ask for what a
    truncation omitted, `offered`, and `run`. Add `note` when its answer must
-   stay out of the conversation, and `textOnly` when it publishes no card: its
-   answer is the text, so a run that ends without a card is not read as empty,
-   and keeps the outcome it states, or none. Enforced: `offered` and `run` have
-   no default, so nothing is allowed by omission; the Schema types the input of
+   stay out of the conversation. Enforced: `offered` and `run` have no default,
+   so nothing is allowed by omission; the Schema types the input of
    `run`; the typed errors of `run` end as `CapabilityDenied` or `failed`, so
    none stays unhandled. Left to the author: a defect of `run` is not caught,
    and its message reaches Nina, the stored thread and the transcript as the
@@ -549,6 +600,10 @@ at each and what it leaves to the author.
    ends as `MemoryReadError`, and a defect anywhere else in its run ends the
    same way.
 4. Add its name to `LearningCapabilityNameSchema` in `capability/spec.ts`, and
+   pick it in `TextOnlyCapabilitySchema` beside it when it publishes no card:
+   its answer is the text, so a run that ends without a card is not read as
+   empty, in the result it stores or on the page that shows it
+   (`client/nina/outcome.ts`), and keeps the outcome it states, or none. Add
    its definition to the end of the record in `capability/registry.ts`. The
    order is the order of the tool list and of the tool policy, so it is part of
    the prompt prefix that the provider caches. Enforced: the record is
@@ -569,8 +624,8 @@ Left to the author, because the compiler cannot judge them: the routing prose
 that combines capabilities in `policy/tool.ts`, `step.ts` when the capability
 should open a turn that names a source (the first step forces only a capability
 the turn offers, because the SDK lists no other tool in it), and the tests. No
-stored flag is added for a capability: `offered` reads the turn's context, and
-the allow flags of a turn page stay as they are.
+stored flag is added for a capability: `offered` reads the turn's context, which
+holds only whether the learner's memory is on.
 
 ## Verification
 

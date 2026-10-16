@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type comments from "@repo/backend/confect/_generated/refs/comments";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { Animal } from "@repo/design-system/components/ui/animal";
 import {
   Avatar,
   AvatarFallback,
@@ -14,14 +15,12 @@ import {
 } from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "cn";
-import { formatDistanceToNow } from "date-fns";
 import { Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, type ReactNode, useState } from "react";
@@ -33,9 +32,8 @@ import {
   useCommentActions,
 } from "@/components/comments/actions";
 import { CommentsAdd } from "@/components/comments/add";
-import { getLocale } from "@/lib/i18n/date";
+import { formatAge } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/identity/initials";
 
 export type CommentWithUser = Ref.Returns<
   typeof comments.queries.getCommentsBySlug
@@ -97,7 +95,6 @@ export function CommentContent({
   const t = useTranslations("Common");
   const locale = useLocale();
   const user = useViewer((s) => s.account);
-  const userId = comment.user?._id;
   const userName = comment.user?.name ?? t("anonymous");
   const userImage = comment.user?.image ?? "";
   const isReplyToMe = user && comment.replyToUser?._id === user.appUser._id;
@@ -111,31 +108,21 @@ export function CommentContent({
     >
       <Avatar className="size-10">
         <AvatarImage alt={userName} src={userImage} />
-        <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
+        <AvatarFallback>
+          <Animal mascot={comment.user?.mascot} />
+        </AvatarFallback>
       </Avatar>
       <div className="grid min-w-0 flex-1 gap-2">
         <div className="grid gap-1">
           <div className="flex min-w-0 items-center gap-2">
-            {userId ? (
-              <NavigationLink
-                className="min-w-0 max-w-36 truncate font-medium text-sm transition-colors ease-out hover:text-primary"
-                href={`/user/${userId}`}
-                rel="noopener noreferrer"
-                target="_blank"
-                title={userName}
-              >
-                {userName}
-              </NavigationLink>
-            ) : (
-              <span className="min-w-0 truncate font-medium text-sm">
-                {userName}
-              </span>
-            )}
+            <span
+              className="min-w-0 max-w-36 truncate font-medium text-sm"
+              title={userName}
+            >
+              {userName}
+            </span>
             <time className="min-w-0 truncate text-muted-foreground text-xs tracking-tight">
-              {formatDistanceToNow(comment._creationTime, {
-                locale: getLocale(locale),
-                addSuffix: true,
-              })}
+              {formatAge(comment._creationTime, locale)}
             </time>
           </div>
 

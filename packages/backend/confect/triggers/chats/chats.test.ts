@@ -1,21 +1,44 @@
 import { Ref } from "@confect/core";
-import { createThread, saveMessage } from "@convex-dev/agent";
+import {
+  abortStream,
+  createThread,
+  listMessages,
+  saveMessage,
+} from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
+import { CreditStateError } from "@repo/backend/confect/credits/spec";
+import { resolveEffectiveCreditState } from "@repo/backend/confect/credits/state";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { contextFor } from "@repo/backend/test/nina/admission";
 import { sealedSummary } from "@repo/backend/test/seal";
-import { Array as Arr, DateTime, Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
+vi.mock("@repo/backend/confect/credits/state", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/credits/state")>();
+  return {
+    ...actual,
+    resolveEffectiveCreditState: vi.fn(actual.resolveEffectiveCreditState),
+  };
+});
+vi.mock("@convex-dev/agent", async (load) => {
+  const actual = await load<typeof import("@convex-dev/agent")>();
+  return {
+    ...actual,
+    abortStream: vi.fn(actual.abortStream),
+    listMessages: vi.fn(actual.listMessages),
+  };
+});
 const NOW = Date.UTC(2026, 8, 27, 12);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const save = Ref.getFunctionReference(refs.public.nina.uploads.save);
@@ -34,33 +57,12 @@ const cleanup = Ref.getFunctionReference(
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
-  vi.mocked(resolveNinaContext).mockReturnValue(
-    openNinaLearningSession({
-      capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-      source: "current-page",
-      learning: {
-        locale: "en",
-        slug: "home",
-        url: "https://nakafa.com/en/home",
-        verified: false,
-      },
-    }).pipe(
-      Effect.orDie,
-      Effect.map((session) => ({
-        page: {
-          locale: "en" as const,
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-          needsFetch: false,
-          nina: session.context,
-        },
-        user: {},
-      }))
-    )
-  );
+  vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
 });
 afterEach(() => {
+  vi.mocked(listMessages).mockReset();
+  vi.mocked(abortStream).mockReset();
+  vi.mocked(resolveEffectiveCreditState).mockReset();
   vi.clearAllMocks();
   vi.useRealTimers();
 });
@@ -97,7 +99,15 @@ async function fixture() {
       },
     })
   );
-  return { t, owner, identity, receipt, fileId: grant.state.fileId };
+  /** What a delete leaves of the chat, its first turn, the learner's credits and the ledger. */
+  const read = () =>
+    t.query(async (ctx) => ({
+      chat: await ctx.db.get("chats", receipt.chatId),
+      turn: await ctx.db.get("ninaTurns", receipt.turnId),
+      user: await ctx.db.get("users", identity.userId),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+    }));
+  return { t, owner, identity, receipt, fileId: grant.state.fileId, read };
 }
 
 describe("native Nina deletion lifecycle", () => {
@@ -269,19 +279,13 @@ describe("native Nina deletion lifecycle", () => {
   });
 
   it("settles a running turn at once when its chat is deleted, and tells its run to halt", async () => {
-    const { t, owner, identity, receipt } = await fixture();
+    const { t, owner, receipt, read } = await fixture();
     await t.mutation(claim, { turnId: receipt.turnId });
     await owner.mutation(remove, { chatId: receipt.chatId });
 
     // The turn settles in the deleting transaction: the hold comes back without
     // waiting for the run to exit, and the run's next check finds its turn
     // settled.
-    const read = () =>
-      t.query(async (ctx) => ({
-        turn: await ctx.db.get("ninaTurns", receipt.turnId),
-        user: await ctx.db.get("users", identity.userId),
-        ledger: await ctx.db.query("creditTransactions").collect(),
-      }));
     const settled = await read();
     expect(settled.turn?.state.status).toBe("cancelled");
     expect(settled.user?.credits).toBe(10);
@@ -295,6 +299,90 @@ describe("native Nina deletion lifecycle", () => {
     expect(cleaned.turn).toBeNull();
     expect(cleaned.user?.credits).toBe(10);
     expect(await t.query(halted, { turnId: receipt.turnId })).toBe(true);
+  });
+
+  it.each([
+    { failure: "read", journal: vi.mocked(listMessages) },
+    { failure: "cut off", journal: vi.mocked(abortStream) },
+  ])(
+    "deletes a chat whose open turn cannot be settled because its journal cannot be $failure, and ends the turn once",
+    async ({ journal }) => {
+      const { t, owner, receipt, read } = await fixture();
+      await t.mutation(claim, { turnId: receipt.turnId });
+      journal.mockRejectedValue(new Error("Private component failure"));
+
+      await owner.mutation(remove, { chatId: receipt.chatId });
+
+      // The delete committed, and the turn ended in its transaction without the
+      // journal: the hold came back once.
+      const ended = await read();
+      expect(ended.chat).toBeNull();
+      expect(ended.turn).toMatchObject({
+        phase: "settled",
+        state: { status: "failed", reason: "unknown" },
+      });
+      expect(ended.user?.credits).toBe(10);
+      expect(
+        Arr.filter(ended.ledger, (row) => row.type === "refund")
+      ).toHaveLength(1);
+      expect(await t.query(halted, { turnId: receipt.turnId })).toBe(true);
+
+      await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+      const cleaned = await read();
+      expect(cleaned.turn).toBeNull();
+      expect(cleaned.user?.credits).toBe(10);
+      expect(
+        Arr.filter(cleaned.ledger, (row) => row.type === "refund")
+      ).toHaveLength(1);
+    }
+  );
+
+  it("keeps the chat when the hold of its open turn cannot be paid back, so no credit is dropped to free it", async () => {
+    const { t, owner, receipt, read } = await fixture();
+    await t.mutation(claim, { turnId: receipt.turnId });
+    vi.mocked(listMessages).mockRejectedValue(
+      new Error("Private component failure")
+    );
+    vi.mocked(resolveEffectiveCreditState).mockImplementation(() =>
+      Effect.fail(
+        new CreditStateError({
+          code: "CREDIT_STATE_FAILED",
+          message: "Unable to read or update the credit reset period.",
+        })
+      )
+    );
+
+    await expect(
+      owner.mutation(remove, { chatId: receipt.chatId })
+    ).rejects.toThrow();
+
+    // The delete rolled back as a whole: the chat, the open turn and the hold
+    // stay as they were.
+    const kept = await read();
+    expect(kept.chat?.activeTurnId).toBe(receipt.turnId);
+    expect(kept.turn).toMatchObject({ phase: "active" });
+    expect(kept.user?.credits).toBe(5);
+  });
+
+  it("keeps the chat, its open turn and the hold when the Agent journal cannot be deleted, so a deleted chat never leaves its words behind", async () => {
+    const { t, owner, receipt, read } = await fixture();
+    await t.mutation(claim, { turnId: receipt.turnId });
+    // The chat names a thread that the Agent component cannot delete, while the
+    // open turn still names the real one, so its settlement works.
+    await t.mutation((ctx) =>
+      ctx.db.patch("chats", receipt.chatId, { threadId: "fixture-thread" })
+    );
+
+    await expect(
+      owner.mutation(remove, { chatId: receipt.chatId })
+    ).rejects.toThrow();
+
+    // Nothing of the delete committed, the end it had made of the open turn
+    // included. The learner can try again once the journal can be deleted.
+    const kept = await read();
+    expect(kept.chat?.activeTurnId).toBe(receipt.turnId);
+    expect(kept.turn).toMatchObject({ phase: "active" });
+    expect(kept.user?.credits).toBe(5);
   });
 
   it("account cleanup removes owned pending grants and Agent threads while preserving another owner's journal", async () => {

@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import {
+  foldCanWait,
+  foldWithin,
   HISTORY_TURNS,
+  historyCost,
   nextSummaryTarget,
 } from "@repo/backend/confect/nina/fold";
 import { sentTurn } from "@repo/backend/confect/nina/history";
@@ -203,6 +206,78 @@ describe("Nina summary fold", () => {
     );
     expect(failures).toEqual([]);
   });
+
+  it("counts what the history held: its tokens, its turns, and the highest order the read left out", () => {
+    expect(historyCost([], nothing)).toEqual({ tokens: 0, turns: 0 });
+    expect(historyCost(costs(3, 5, 40), Option.some(2))).toEqual({
+      tokens: 120,
+      turns: 3,
+      unread: 2,
+    });
+  });
+
+  it.each([
+    // Six turns of 10 cost 60, and 40 more reach the budget itself.
+    ["the budget is not passed", costs(0, 5, 10), nothing, 40, true],
+    [
+      "the turn that settled passes the budget",
+      costs(0, 5, 10),
+      nothing,
+      41,
+      false,
+    ],
+    ["the read left a turn out", costs(40, 41, 1), Option.some(39), 0, false],
+    [
+      "the turns make room for the turn that settled",
+      costs(0, HISTORY_TURNS - 3, 1),
+      nothing,
+      1,
+      true,
+    ],
+    [
+      "the turns and the turn that settled are as many as the history takes",
+      costs(0, HISTORY_TURNS - 2, 1),
+      nothing,
+      1,
+      false,
+    ],
+  ])(
+    "lets the fold wait only when %s",
+    (_case, turns, unread, own, expected) => {
+      expect(foldCanWait(historyCost(turns, unread), own, budget)).toBe(
+        expected
+      );
+    }
+  );
+
+  it("lets the fold wait exactly when the turns fit the budget, and then finds nothing to fold, for every arrangement of costs", () => {
+    // The fold waits on the cost the prompt stored for every turn but the newest, and on the newest's own cost.
+    function waits(list: readonly number[]) {
+      const turns = Arr.map(list, (tokens, order) => ({ order, tokens }));
+      return foldCanWait(
+        historyCost(Arr.dropRight(turns, 1), nothing),
+        sum(Arr.takeRight(list, 1)),
+        budget
+      );
+    }
+    const lists = Arr.flatMap(Arr.range(1, 4), (length) =>
+      arrangements([10, 30, 60, 120], length)
+    );
+    const fits = (list: readonly number[]) => sum(list) <= budget;
+    const disagree = Arr.filter(lists, (list) => waits(list) !== fits(list));
+    const folds = Arr.filter(Arr.filter(lists, waits), (list) =>
+      Option.isSome(
+        nextSummaryTarget(
+          null,
+          Arr.map(list, (tokens, order) => ({ order, tokens })),
+          budget,
+          nothing
+        )
+      )
+    );
+    expect(disagree).toEqual([]);
+    expect(folds).toEqual([]);
+  });
 });
 
 describe("Nina fold by size", () => {
@@ -359,5 +434,33 @@ describe("Nina fold by size", () => {
     expect(await f.summary()).toEqual([
       expect.objectContaining({ throughOrder: 0 }),
     ]);
+  });
+});
+
+describe("Nina summary fold within its transcript budget", () => {
+  it("covers the target when every turn fits the transcript budget", () => {
+    expect(foldWithin(costs(0, 3, 10), 40, 3)).toBe(3);
+  });
+
+  it("stops at the newest turn that fits, and the next fold covers the rest", () => {
+    // Four turns of ten tokens fit twenty-five tokens as two turns, not three.
+    expect(foldWithin(costs(0, 3, 10), 25, 3)).toBe(1);
+  });
+
+  it("still folds its first turn when that turn alone outgrows the budget", () => {
+    expect(
+      foldWithin(
+        [
+          { order: 4, tokens: 90 },
+          { order: 5, tokens: 5 },
+        ],
+        50,
+        5
+      )
+    ).toBe(4);
+  });
+
+  it("covers the target when no turn is left to fold", () => {
+    expect(foldWithin([], 50, 7)).toBe(7);
   });
 });

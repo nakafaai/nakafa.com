@@ -2,7 +2,6 @@ import { Ref } from "@confect/core";
 import { QueryRunner } from "@confect/server";
 import { listMessages } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { PostHog } from "@posthog/convex";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -10,6 +9,7 @@ import { turnHalted, watchHalt } from "@repo/backend/confect/nina/halt";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
+import { stubReport } from "@repo/backend/test/nina/report";
 import { createSilentTest, hasAnswer } from "@repo/backend/test/nina/silent";
 import { encodeJsonText } from "@repo/utilities/json";
 import {
@@ -85,12 +85,10 @@ describe("A running Nina turn that the learner stops", () => {
     }
   }, 30_000);
 
-  // The run asks about its turn once a second, so these tests wait in real time
-  // and get a longer limit than the default.
+  // The run asks about its turn every two seconds (`HALT_POLL` in `halt.ts`), so
+  // these tests wait in real time and get a longer limit than the default.
   it("stops a silent provider call when the learner cancels, and pays back only after the run exits", async () => {
-    const report = vi
-      .spyOn(PostHog.prototype, "captureException")
-      .mockResolvedValue(undefined);
+    const report = stubReport();
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
     const f = await createSilentTest();
     try {
@@ -139,9 +137,7 @@ describe("A running Nina turn that the learner stops", () => {
   }, 15_000);
 
   it("does not report a stop that Agent noticed before the watch did", async () => {
-    const report = vi
-      .spyOn(PostHog.prototype, "captureException")
-      .mockResolvedValue(undefined);
+    const report = stubReport();
     const f = await createSilentTest();
     try {
       const running = f.t.action(run, { turnId: f.turnId });
@@ -162,9 +158,7 @@ describe("A running Nina turn that the learner stops", () => {
   }, 15_000);
 
   it("reports a settlement that failed after the learner stopped the turn", async () => {
-    const report = vi
-      .spyOn(PostHog.prototype, "captureException")
-      .mockResolvedValue(undefined);
+    const report = stubReport();
     const f = await createSilentTest();
     const actual =
       await vi.importActual<typeof import("@convex-dev/agent")>(
@@ -239,6 +233,22 @@ describe("A tool-call repair of a turn that the learner stops", () => {
 describe("The halt watch of a running turn", () => {
   const turnId = Schema.decodeUnknownSync(Id("ninaTurns"))("turn");
   const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
+  const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+  const recover = Ref.getFunctionReference(
+    refs.internal.nina.lifecycle.recover
+  );
+
+  it("tells a run to halt once its turn was stopped, settled or removed", async () => {
+    const f = await createNinaTest();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(false);
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+    await f.t.mutation(recover, { turnId: f.turnId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+    await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+  });
 
   it.effect(
     "keeps asking after one check fails, and aborts the run once a check finds its turn halted",
@@ -255,10 +265,10 @@ describe("The halt watch of a running turn", () => {
           Effect.provide(QueryRunner.layer(runQuery))
         );
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("2 seconds");
         expect(halt.aborted).toBe(false);
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("2 seconds");
         expect(halt.aborted).toBe(true);
         expect(runQuery).toHaveBeenCalledTimes(3);
         expect(runQuery).toHaveBeenLastCalledWith(halted, { turnId });

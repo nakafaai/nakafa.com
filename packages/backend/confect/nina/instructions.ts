@@ -3,7 +3,6 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { registry } from "@repo/backend/confect/nina/capability/registry";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
-import { readSaid } from "@repo/backend/confect/nina/memory/said";
 import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
 import { readPageContext } from "@repo/backend/confect/nina/page";
 import { offeredCapabilities } from "@repo/backend/confect/nina/policy/capability";
@@ -31,17 +30,22 @@ const readFocus = Effect.fn("nina.instructions.focus")(
 );
 
 /**
- * Reads what a turn knows about its learner: the account facts, the portrait,
- * and the memories that the learner's own words and the open page call up. The
- * words are read from the turn's message, one document beside the thread read
- * that builds the input.
+ * Reads the brief of a turn (`nina/brief`): what the turn knows about its
+ * learner (the account facts, the portrait, and the memories that the learner's
+ * own words and the open page call up), the chat's summary, and the turns the
+ * summary does not cover. One query reads the learner's words beside the rest.
  */
-const readLearner = Effect.fn("nina.instructions.learner")(function* (
-  turn: Pick<NinaTurnsDoc, "page" | "promptMessageId" | "userId">
+const readBrief = Effect.fn("nina.instructions.brief")(function* (
+  turn: Pick<
+    NinaTurnsDoc,
+    "chatId" | "order" | "page" | "promptMessageId" | "userId"
+  >
 ) {
-  return yield* (yield* QueryRunner).runQuery(refs.internal.nina.memory.read, {
+  return yield* (yield* QueryRunner).runQuery(refs.internal.nina.brief.read, {
+    chatId: turn.chatId,
     now: yield* Clock.currentTimeMillis,
-    said: yield* readSaid(turn),
+    order: turn.order,
+    promptMessageId: turn.promptMessageId,
     topics: topicsOf(turn.page),
     userId: turn.userId,
   });
@@ -52,42 +56,38 @@ const readLearner = Effect.fn("nina.instructions.learner")(function* (
  * account facts and portrait, the current page, and the conversation summary)
  * concurrently and assembles Nina's instructions. It also returns what the
  * prompt must not carry: the summary, since history omits the turns it covers;
- * the memories the learner's words call up, which belong with their message and
- * not in the prompt, whose bytes the provider caches; and whether the learner
- * paused memory. The turn reads the pause here once. The capabilities Nina is
- * offered follow from it and from what the turn's page allows
- * (`capabilities`): the prompt describes exactly those, and the turn offers
- * exactly those to the model. Every page allows all of them today
- * (`resolveNinaToolContext`), so only the pause changes the prompt.
+ * the turns it does not cover, which the history is built from; the memories
+ * the learner's words call up, which belong with their message and not in the
+ * prompt, whose bytes the provider caches; and whether the learner paused
+ * memory. The turn reads the pause here once. The capabilities Nina is offered
+ * follow from it (`capabilities`): the prompt describes exactly those, and the
+ * turn offers exactly those to the model. Only the memory capability has a rule
+ * that can leave it out, so only the pause changes the prompt.
  */
 export const readInstructions = Effect.fn("nina.instructions")(function* (
   turn: Pick<
     Extract<NinaTurnsDoc, { phase: "active" }>,
-    "_id" | "chatId" | "page" | "promptMessageId" | "user" | "userId"
+    "_id" | "chatId" | "order" | "page" | "promptMessageId" | "user" | "userId"
   >,
   url: string
 ) {
-  const { runQuery: query } = yield* QueryRunner;
-  const { focus, learner, pageContent, summary } = yield* Effect.all(
+  const { brief, focus, pageContent } = yield* Effect.all(
     {
+      brief: readBrief(turn),
       focus: turn.page.nina.focus ? readFocus(turn._id) : Effect.undefined,
-      learner: readLearner(turn),
       pageContent: turn.page.needsFetch
         ? readPageContext(url)
         : Effect.undefined,
-      summary: query(refs.internal.nina.summaries.read, {
-        chatId: turn.chatId,
-      }).pipe(Effect.orDie),
     },
     { concurrency: "unbounded" }
   );
+  const { learner, summary, uncovered } = brief;
   const facts = formatLearnerPrompt({
     portrait: learner.portrait,
     profile: learner.profile,
   });
   const capabilities = offeredCapabilities(registry, {
     memory: !learner.paused,
-    nina: turn.page.nina,
   });
   return {
     capabilities,
@@ -102,5 +102,6 @@ export const readInstructions = Effect.fn("nina.instructions")(function* (
     memories: formatRecalled(learner.recalled),
     paused: learner.paused,
     summary,
+    uncovered,
   };
 });

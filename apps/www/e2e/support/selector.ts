@@ -4,6 +4,15 @@ import type { Page } from "@playwright/test";
 export const CARD = '[data-slot="card"]';
 /** A message bubble, which holds the words of a prompt or of an answer. */
 export const BUBBLE = '[data-slot="bubble"]';
+/** The box inside a bubble that holds its words. */
+export const BUBBLE_CONTENT = '[data-slot="bubble-content"]';
+/** A row of a chat transcript: one for each message, and the alert of a failed turn. */
+export const TRANSCRIPT_ROW = '[data-slot="message-scroller-item"]';
+/**
+ * What Markdown makes of text: emphasis, code, links, lists and headings. The
+ * words of a learner, shown as they wrote them, make none of these.
+ */
+export const MARKDOWN_MARKUP = "em, strong, code, pre, a, ul, ol, h1, h2, h3";
 /**
  * The list that holds the toasts. They stack over the page and move on their
  * own, so a toast moving is not the page moving.

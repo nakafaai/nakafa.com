@@ -3,7 +3,9 @@
 ## Status
 
 Accepted. Supersedes ADR 0010, which kept memory off until a learner turned it
-on.
+on. Amended on 13 October 2026: a Nina thread of a class neither reads nor
+writes personal memory (K3) and reads no learner profile, and the Memory page is
+never shown inside a school (Memory In A School Thread).
 
 ## Context
 
@@ -31,12 +33,13 @@ prompt, whatever the learner asked, and Nina had no way to look for more.
 
 ## Decision
 
-Memory is on for everyone. The learner reads, adds, edits and deletes memories,
-pauses memory, and deletes all of it on one page, Settings, AI, Memory. Pausing
-sets `ninaMemoryPaused` on the learner's learning preference and keeps every
-row. While paused, Nina saves nothing and reads nothing. Resuming removes the
-mark, so a learner who never paused has no mark. Deleting all of it sets
-`ninaMemoryClearedAt` on the same row (see Implementation Contract).
+Memory is on for everyone, in the personal space. A Nina thread of a class does
+not use it (see Memory In A School Thread). The learner reads, adds, edits and
+deletes memories, pauses memory, and deletes all of it on one page, Settings, AI,
+Memory. Pausing sets `ninaMemoryPaused` on the learner's learning preference and
+keeps every row. While paused, Nina saves nothing and reads nothing. Resuming
+removes the mark, so a learner who never paused has no mark. Deleting all of it
+sets `ninaMemoryClearedAt` on the same row (see Implementation Contract).
 
 A memory is one row. It holds a title, words, or both. The words are at most
 2000 characters and may hold Markdown, whose formatting counts toward the limit;
@@ -89,9 +92,9 @@ the learner can read, edit and delete every one. After a complete turn:
    call reads the learner's message and the at most 12 memories that match the
    message and the open page best, found by search. They are listed best first,
    each with its place on the list (`- [1] (level) Kelas 12.`) and at most its
-   first 240 characters, and the list stays within a token budget, so a list
-   that does not fit loses its last memories, which the model cannot name. A
-   candidate that restates one of them names it by its place, as a whole
+   first 240 characters. The list never holds more than those 12 memories, and
+   no budget cuts it, so the model can name every memory it shows. A candidate
+   that restates one of them names it by its place, as a whole
    number; a candidate that is new, or that corrects a memory, names none. Its
    usage is recorded as agent `memory` in the turn's ledger.
 3. The check turns each claim of the capture model into a candidate, and keeps
@@ -175,10 +178,10 @@ below. A memory is one line wherever a prompt carries it. Its whitespace is
 collapsed, so the Markdown of a memory can never open a new section of the
 prompt, and its angle brackets are written as `&lt;` and `&gt;`, so a memory can
 never close the block it sits in. The capture call reads each memory with its
-id, as `- [id] (kind) Title: words`, but only the first 240 characters of the
-title and words together, counted by code point so that a cut never leaves half
-of an emoji, followed by `...` when they are longer, so its prompt stays small
-whatever a learner keeps.
+place on the list, counted from 1, as `- [1] (kind) Title: words`, but only the
+first 240 characters of the title and words together, counted by code point so
+that a cut never leaves half of an emoji, followed by `...` when they are
+longer, so its prompt stays small whatever a learner keeps.
 
 ## Three Ways To Read Memory
 
@@ -189,21 +192,24 @@ of the first calls a model, in the background:
 
 | Way | Where it sits | Tokens at its bound | Typical learner | Documents it reads | Model calls |
 | --- | --- | --- | --- | --- | --- |
-| Portrait | The Learner section of the system prompt, after the account facts | 300, and 348 with its block | 154 to 171 | 2 | None in the turn |
-| Recall | A list in the text part in front of the learner's message | 700, and 757 with its block | 110 to 144 | 435 at most | None |
-| Memory capability | The answer to a tool call Nina makes, only when she makes it | 1,500, and 1,555 with its block | 89 to 142 a call | 405 at most for one call | None |
+| Portrait | The Learner section of the system prompt, after the account facts | 1,000, plus its block | 154 to 171 (former tokenizer) | 2 | None in the turn |
+| Recall | A list in the text part in front of the learner's message | 1,500, plus its block | 110 to 144 (former tokenizer) | 435 at most | None |
+| Memory capability | The answer to a tool call Nina makes, only when she makes it | 3,000, plus its block | 89 to 142 a call (former tokenizer) | 405 at most for one call | None |
 
-The tokens are counted with the tokenizer behind every Nina budget
-(`gpt-tokenizer`). A bound cuts the memories' text, and the block around it,
-which is a heading, one sentence that names it as data and its tags, adds 48,
-57 and 55 tokens. A typical learner is a portrait of 500 characters and three
-to five one-sentence memories, measured on 12 October 2026 in Indonesian and
-English. A portrait of 1,200 characters, the most the build may write, measures
-249 to 292 tokens, so the character limit and the token bound agree for
-ordinary text, and the cut only guards against odd text. Offering the tool costs
-416 tokens in every turn while memory is on, whether or not Nina calls it: 191
-for its paragraphs of the tool policy and 225 for its definition. The other
-three tools cost 388, 392 and 362 tokens as definitions.
+The bounds are counted by the estimator of `confect/nina/budget.ts`, whose costs
+live in the language model profile. The figures without a current count were
+measured with the former tokenizer (`gpt-tokenizer`), before the model change of
+14 October 2026, and they have not been counted again. A bound cuts the
+memories' text, and the block around it, which is a heading, one sentence that
+names it as data and its tags, adds 48, 57 and 55 tokens. A typical learner is a portrait of 500 characters
+and three to five one-sentence memories, measured on 12 October 2026 in
+Indonesian and English. A portrait of 1,200 characters, the most the build may
+write, measured 249 to 292 tokens with the former tokenizer, so the character
+limit and the token bound agree for ordinary text, and the cut only guards
+against odd text. Offering the tool cost 416 tokens in every turn while memory
+was on, whether or not Nina called it: 191 for its paragraphs of the tool policy
+and 225 for its definition, with the former tokenizer. The other three tools cost
+388, 392 and 362 tokens as definitions, with the former tokenizer.
 
 The documents of the portrait are its row and the learner's key. Recall is one
 search (410 at most: one memory to know there is one, the key, 16 keys of 24
@@ -369,11 +375,54 @@ deletes its key rows with it:
 - A daily job deletes the situations whose end day has passed, 25 per call, and
   schedules itself again while a call is full.
 - Account deletion removes the learner's memories in bounded batches, and
-  their portrait, before the learner's vault key goes. Every pass looks for
-  memories and the portrait first, so a capture still running when the deletion
+  their portrait and the records that keep a deleted memory for its Undo,
+  before the learner's vault key goes. Every pass looks for memories, the
+  portrait and the records first, so a capture still running when the deletion
   starts is swept by the next pass, and one that lands after the key is gone
   seals nothing, because a deleted account gets no new key. The capture write
   needs no check of its own for a deleted account.
+
+## Memory In A School Thread
+
+A Nina thread that belongs to a class (ADR 0025) neither reads nor writes
+personal memory (K3). Memory stays on in the personal space as this ADR decides,
+and a school thread does not open it. The change is planned for program wave B
+(ADR 0013 describes the waves), and no school thread exists yet.
+
+- No read. A turn of a school thread calls none of the memory reads of
+  `nina/memory/turn.ts` (`read`, `lookup`, and `known`). It reads no portrait and
+  no recalled memory, and it is not offered the memory capability (the offered
+  capabilities in `nina/instructions.ts`). The kind of the thread decides, and
+  the learner's memory state is not read at all. A paused memory is not the model
+  for this: the turn of a paused learner still reads the learner profile,
+  because `read` returns `profile` before it looks at the pause.
+- No profile. The learner profile is not memory. It is the account facts that
+  `readLearnerProfile` returns (`nina/memory/profile.ts`): the onboarding focus
+  and region, the preferred try-out country, and the latest finished try-out by
+  section. K3 names memory only, and a reply of Nina in a class is read by the
+  whole class. So a school thread reads the profile no more than it reads memory,
+  which is the separation that ADR 0015 draws for connections. This ADR takes the
+  stricter reading of K3.
+- No write. No capture is scheduled after a turn of a school thread. The
+  learner's message in a class goes to no memory model, and no memory, no key
+  row, and no portrait request follows from it.
+- The pause is the learner's. A learner who paused memory keeps it paused, and a
+  school thread does not depend on it, because it never reads memory.
+- A message in a class is school data, sealed with the school key (ADR 0030), and
+  not memory. No job copies it into memory.
+- The Memory page stays in the personal space. The account menu of the school
+  shell links to it (`nakafa.com/id/user/settings/memory`, ADR 0026), and a shell
+  of a cell other than `us` shows no such link, because personal Nina memory
+  exists only in the `us` cell. The page is never shown inside the shell, so a
+  learner never edits or deletes personal memory from within a school. The
+  account menu has no entry for a profile, because a school member has no public
+  profile (K15).
+- The test, with a learner who has memories and a profile: the turn of a school
+  thread carries no portrait, no recalled memory, and no profile fact, its
+  capability list lacks `memory`, and no capture runs. It plants a string in a
+  memory, one in the onboarding focus, and one in a class message. The prompt of
+  the school thread holds neither of the first two, and no memory table holds
+  the third.
 
 ## Index And Search
 
@@ -436,7 +485,8 @@ with it in the same transaction, the time included: `add`, `edit`, and the
 capture write (a new memory, and a confirmed memory, which gives its keys the
 time of the confirmation and its new words and topics). Every path that deletes
 a memory deletes its keys: `remove`, `clear`, the daily expiry, and account
-deletion.
+deletion. `remove` hands the keys it deletes to the restore record, and
+`restore` inserts the same rows again (see Implementation Contract).
 
 One function searches: `searchMemories` takes the learner, the text, the
 topics, a limit and the moment the learner last deleted all of it, if ever. It
@@ -613,20 +663,22 @@ nobody tries them again without a new reason.
   replaces the document with a `facts` array, and `ninaMemoryKeys` (index by
   user, key and confirmation time, index by memory) is its index. No table ties
   a memory to a chat, and the chats trigger touches no memory.
-- `nina/memory:list`, `state`, `add`, `edit`, `remove`, `pause` and `clear` are
-  public, pass the session middleware, and act only on the signed-in learner.
+- `nina/memory:list`, `state`, `add`, `edit`, `remove`, `restore`, `pause` and
+  `clear` are public, pass the session middleware, and act only on the
+  signed-in learner.
   `list` is paginated, the most recently confirmed memory first, and holds at
   most 50 memories to a page; a visitor gets an empty page. `state` tells
   whether memory is paused. `add` and `edit` fail with `NinaMemoryRejected` for
   `empty` and `missing`. `empty` means the write holds neither a title nor
   words, and it is checked first, before the memory is read. A title of more
   than 80 characters, or of only spaces, never reaches the function: its
-  arguments refuse it. `read`, `paused`, `known`, `lookup`, `capture`, `drain`
-  and `expire` are internal. `paused` tells whether the learner paused memory,
-  and the capture asks it once, before it sends the learner's message to any
-  model and before it reads a memory. `known` reads the learner's memory state
-  once more for the moment of the last Delete all, and the write reads it again
-  as the authority.
+  arguments refuse it. `restore` fails with `NinaMemoryRejected` and `missing`
+  (see the restore record below). `read`, `paused`, `known`, `lookup`,
+  `capture`, `drain`, `expire` and `purge` are internal. `paused` tells whether
+  the learner paused memory, and the capture asks it once, before it sends the
+  learner's message to any model and before it reads a memory. `known` reads
+  the learner's memory state once more for the moment of the last Delete all,
+  and the write reads it again as the authority.
 - `ninaMemoryPortraits` (index by user) holds one row for a learner who has
   asked for a portrait: its sealed `text`, absent until a build has written
   one and after a memory was deleted or rewritten; `through`, the newest
@@ -763,14 +815,17 @@ nobody tries them again without a new reason.
   and in the list. A new memory that was never given a word creates nothing. A
   new memory that the learner deletes or empties while its first save is on its
   way has a row from the moment that save goes out, so it is deleted when the
-  server has stored it, with the same Undo. The Undo writes the title and the
-  words back as the learner's own memory with `add`, which takes no kind and no
-  end date, so a situation that is undone no longer ends. To give it back its
-  end date, `add` would have to take one; that is left for a decision. A paste
-  that would take the Markdown past 2,000 characters is refused as a whole, and
-  the page says so. The panel beside the page never takes the room
-  the list needs: the list keeps a card of 20rem between its padding, whatever
-  width the learner dragged the panel to and whatever the window is, and its
+  server has stored it, with the same Undo. The Undo asks the server to put
+  the memory back (`restore`, below), so it gives back what the learner saw:
+  a situation keeps its end day and a memory Nina saved keeps Nina as its
+  author. Words that an open editor held and had not saved when the learner
+  deleted the memory were never part of it, so the Undo does not bring them
+  back. They open in the editor again only when the server does not delete the
+  memory. A paste that would take the Markdown past 2,000 characters is
+  refused as a whole, and the page says so. The panel beside the page never
+  takes the room the list needs: the list keeps a card of 20rem between its
+  padding, whatever width the learner dragged the panel to and whatever the
+  window is, and its
   resizer says the width the panel has and the widths it can have. A drag of
   its edge measures from where the page ends and not from the window, so a
   scrollbar never leaves the edge beside the pointer. Nina's sheet, which is
@@ -798,7 +853,62 @@ nobody tries them again without a new reason.
   the browser draws the field from (`e2e/support/placeholder.ts`).
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
-  because the browser has no page of its own to change until then.
+  because the browser has no page of its own to change until then. The Undo
+  shows the memory again at once, as the learner saw it, in the one page that
+  holds its place (`pageForRestored`): the first page whose last memory was
+  confirmed at or before it. Until the server answers it carries an id the
+  server has not stored, like a memory that is being added, because the id the
+  memory had is gone and Convex gives the restored memory another. When the
+  server cannot put it back, the row goes and a toast says that the Undo
+  failed, whether the server refused or broke. If it broke the learner can try
+  again, so the memory's words open in the editor as a new memory and nothing
+  they wrote is lost. A refusal means there is nothing left to put back, so no
+  editor opens.
+- `remove` keeps what it deletes for the length of the Undo, and `restore` gives
+  it back as it was. The table `ninaMemoryRestores` (index by user and the id
+  the memory had, index by user and confirmation time) holds one record for each
+  memory the learner deleted whose Undo has not ended. A record holds every
+  stored field of the memory, sealed as stored and never opened (author,
+  confirmation time, kind, topics, end day, words and title), the id the memory
+  had (`memoryId`), the keys it had in the memory index, and the moment its Undo
+  ends (`expiresAt`). `remove` writes it in the transaction that deletes the
+  memory and its keys, and schedules the internal `purge` for that moment, which
+  deletes the record if it is still there. The window is `MEMORY_UNDO`, 5
+  seconds, in `memory.spec`, which the Memory page reads for its toast too, so
+  one number owns both. A toast waits while the pointer rests on it or the tab
+  is hidden, so the page closes it when the window ends and offers no Undo after
+  the server stopped keeping the memory. The page's window starts when the toast
+  shows and the server's when it has deleted the memory, so the page's ends
+  first, but an Undo that travels slower than the delete did can still arrive
+  late: the server then answers `missing` and the page says that the Undo
+  failed. `restore({ id })` takes the id the memory had. It fails with
+  `NinaMemoryRejected` and `missing` when the learner has no record under it:
+  the id is another learner's, the window ended, the memory was put back
+  already, or "Delete all" took the memory (it was confirmed at or before the
+  moment the learner last deleted every memory, which every reader would hide
+  and no batch might delete). A "Delete all" counts the newest record in its
+  moment as it counts the newest memory, so a memory deleted before the learner
+  asked is refused even when the clock had not moved on since the memory was
+  written. Otherwise it inserts the stored fields back as they were, so a
+  situation keeps its end day, a memory Nina saved keeps Nina as its author, and
+  the memory keeps its confirmation time and so its place in the list. It
+  inserts the same key rows, deletes the record, asks for a build of the
+  portrait from scratch (the memory returns with a confirmation time older than
+  the moment a build reads on from, which such a build would never meet), and
+  returns the memory as the Memory page shows it. Only what Convex gives a
+  document differs: a new id and a new creation time. Nothing is sealed or
+  computed again, and a record is used once. A situation whose end day passed
+  meanwhile is put back and then ends as any ended situation does (`hasEnded`):
+  the daily job deletes it. No other deletion is taken back: "Delete all", the
+  daily expiry and account deletion keep no record, and account deletion deletes
+  the learner's records with their memories, before the key goes. A deleted
+  memory's words therefore stay on the server, sealed for the learner, for the
+  window and until the job that deletes the record at its end has run, and only
+  for a memory the learner deleted one at a time (`restore` refuses the record
+  from the end of the window, whether or not the job has run). The words stay
+  because `add` cannot give a memory back: it takes no kind, no end day and no
+  author, so a situation that was undone no longer ended and a memory Nina saved
+  came back as one the learner wrote.
 - `read` gives a turn the account profile, the portrait when the learner has
   one, and the at most 8 memories that the learner's words and the topics of
   the open page recall. `known` gives the capture call the account profile and
