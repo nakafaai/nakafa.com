@@ -109,6 +109,40 @@ secret first in `BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old
 value, and keep each older version listed while anything is still sealed with
 it.
 
+## The Shared Session Cookie
+
+Nakafa and every school host of the `us` cell share one session cookie. Better
+Auth sets it with a `Domain` attribute that is the host of `SITE_URL`
+(`advanced.crossSubDomainCookies`, Better Auth 1.6.33, `cookies/index.mjs`). The
+name stays `better-auth.session_token`, with the `__Secure-` prefix on HTTPS,
+because the app sets no cookie name or prefix of its own, and ADR 0026 rejects a
+session cookie named for each cell.
+
+Before school hosts, the cookie had no `Domain` attribute. A browser that still
+holds that older host-only cookie sends it next to the shared one under the same
+name, and the two readers pick different values:
+
+- The identity route (`get-session` and `sign-out`) reads the first value of a
+  name (better-call `parseCookies`, which skips a name it already has). The
+  browser sends the older cookie first (RFC 6265 section 5.4), so the identity
+  route reads the older host-only cookie.
+- The presence check of the app (`getSessionCookie` in `cookies/index.mjs`,
+  which parses with `cookie-utils.mjs`) reads the last value.
+
+Every response from the main site that sets or clears the shared cookie also
+expires the older host-only cookie (`packages/backend/confect/auth/host.ts`), so
+the pair does not form there. A response from a school host cannot expire the
+main site's host-only cookie, because the expiry has no `Domain` attribute. The
+pair would form if a school host wrote the shared cookie while an older
+host-only cookie existed. No flow of this change does that, since the Google
+callback runs on the main site. The school sign-in lane must keep that rule.
+
+A session that exists only as the older cookie keeps working on the main site
+until its next refresh or sign-in, and it shows as signed out on a school host
+until then. A rollback to the build before this change has one known effect: a
+sign-out in that build clears only its own host-only cookie, so the shared
+cookie can still identify a valid session until that session expires.
+
 ## School Sign-In
 
 Program wave A, the first delivery wave of the School program, changes how

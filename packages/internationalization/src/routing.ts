@@ -43,3 +43,28 @@ export const previewRouting = defineRouting({
   defaultLocale,
   pathnames,
 });
+
+/**
+ * The language cookie of a school host. next-intl reads it under this name, and
+ * the account menu writes it with the same name, path and SameSite, so both
+ * read one value. `defineRouting` returns its input unchanged, so the routing
+ * object carries the cookie itself rather than a default filled in later.
+ */
+export const schoolLocaleCookie = {
+  name: "NEXT_LOCALE",
+  path: "/",
+  sameSite: "lax",
+} satisfies NonNullable<Parameters<typeof defineRouting>[0]["localeCookie"]>;
+
+/**
+ * Locale routing for school hosts, whose addresses carry no locale. next-intl
+ * reads the `NEXT_LOCALE` cookie, then `Accept-Language`, then the default
+ * locale, and rewrites the request to `/[locale]/...` without a redirect.
+ */
+export const schoolRouting = defineRouting({
+  alternateLinks: false,
+  defaultLocale,
+  locales: ACTIVE_APP_LOCALE_CODES,
+  localeCookie: schoolLocaleCookie,
+  localePrefix: "never",
+});

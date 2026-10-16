@@ -250,6 +250,36 @@ describe("auth/runtime", () => {
       }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
   it.effect(
+    "sets every sign-in cookie on the site's domain, so each school host under it shares the session",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("SITE_URL", "https://local.nakafa.com");
+        vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
+        vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
+        const test = createConvexTestWithBetterAuth();
+        const signInBody = yield* Schema.encodeEffect(JsonTextSchema)({
+          callbackURL: "/en/onboarding",
+          errorCallbackURL: "/en/auth/error",
+          provider: "google",
+        });
+        const signInResponse = yield* Effect.promise(() =>
+          test.fetch("/api/auth/sign-in/social", {
+            body: signInBody,
+            headers: {
+              "content-type": "application/json",
+              origin: "https://local.nakafa.com",
+            },
+            method: "POST",
+          })
+        );
+        const cookies = signInResponse.headers.getSetCookie();
+        expect(cookies).not.toHaveLength(0);
+        for (const cookie of cookies) {
+          expect(cookie).toContain("Domain=local.nakafa.com");
+        }
+      }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
+  );
+  it.effect(
     "never looks a Google ID token up, so a copied one cannot sign anyone in",
     () =>
       Effect.gen(function* () {

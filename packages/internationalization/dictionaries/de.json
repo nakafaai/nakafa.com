@@ -1,4 +1,29 @@
 {
+  "School": {
+    "account-settings": "Kontoeinstellungen",
+    "back-to-learning": "Zu Nakafa Lernen wechseln",
+    "for-you": "Für dich",
+    "home": "Startseite",
+    "language": "Sprache",
+    "nina-memory": "Nina-Gedächtnis",
+    "role": {
+      "admin": "Admin",
+      "auditor": "Prüfer:in",
+      "counselor": "Beratungslehrkraft",
+      "deputy": "Stellvertretende Schulleitung",
+      "guardian": "Erziehungsberechtigte Person",
+      "integration": "Integration",
+      "owner": "Inhaber:in",
+      "principal": "Schulleitung",
+      "proctor": "Aufsicht",
+      "staff": "Personal",
+      "student": "Schüler:in",
+      "teacher": "Lehrkraft"
+    },
+    "sign-in-title": "Anmelden bei {school}",
+    "signed-in-as": "Du bist als {role} bei {school} angemeldet.",
+    "signed-in-to": "Du bist bei {school} angemeldet."
+  },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
     "description": "Lerne auf Nakafa Mathematik, Naturwissenschaften, Informatik, KI und bereite dich auf Prüfungen vor. Kostenlose Lerninhalte von der Grundschule bis zur Universität mit Übungsaufgaben und Erklärungen.",

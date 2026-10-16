@@ -4,16 +4,17 @@
 
 Accepted on 13 October 2026 with owner decisions K5, K11, and K15. The owner
 approved decisions K1 to K20 on that day. The host rewrite for school subdomains
-and the URL tree are planned. The eu data cell is planned, and it is created when
-the first school in the European Union signs (K5). The routes of the old School
-are deleted from the web app (#1051, K11) and get no redirect. Amended on 14
-October 2026: ADR 0027 decides what an email may hold (Data cells).
+and the root of the URL tree are live, and the rest of the URL tree is planned.
+The eu data cell is planned, and it is created when the first school in the
+European Union signs (K5). The routes of the old School are deleted from the web
+app (#1051, K11) and get no redirect. Amended on 14 October 2026: ADR 0027
+decides what an email may hold (Data cells).
 
 ## Context
 
 The first School lived under the locale path `/[locale]/school/[slug]`. #1051
 deleted its routes and its sign-in redirect from the web app (ADR 0011,
-Retirement), and the proxy in `apps/www/proxy.ts` does not route school hosts.
+Retirement), and the proxy in `apps/www/proxy.ts` did not route school hosts.
 
 A school needs an address that a member can open in any language, that keeps its
 data in one place, and that never carries a person's name. ADR 0011 makes the
@@ -44,7 +45,7 @@ finds the right data.
 
 ### URL tree of the school workspace
 
-Every address below is planned.
+Every address below is planned, except the root of a school host, which is live.
 
 | Address | Purpose |
 | --- | --- |
@@ -218,7 +219,9 @@ A move runs in this order:
 | Part | Status |
 | --- | --- |
 | The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 (K11). Its backend stays until the observation of ADR 0011 passes |
-| Host rewrite for school subdomains | Planned |
-| School URL tree | Planned |
+| Host rewrite for school subdomains | Live |
+| Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
+| School URL tree, root (`/`, Beranda) | Live |
+| School URL tree, every other address | Planned |
 | `us` data cell | Live |
 | `eu` data cell, with its own `www` project and Convex deployment | Planned, created by K5 |

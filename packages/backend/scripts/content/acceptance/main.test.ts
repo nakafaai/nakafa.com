@@ -32,6 +32,8 @@ const mocks = vi.hoisted(() => {
     run: vi.fn(),
     clean: vi.fn(),
     learner: vi.fn(),
+    school: vi.fn(),
+    owner: vi.fn(),
     profile: vi.fn(),
     rows: vi.fn(),
     getEntry: () => entry,
@@ -52,6 +54,12 @@ vi.mock("@repo/backend/scripts/content/acceptance/local", () => ({
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/learner", () => ({
   createAcceptanceLearner: mocks.learner,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/school", () => ({
+  createAcceptanceSchool: mocks.school,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/owner", () => ({
+  createAcceptanceOwner: mocks.owner,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/import", () => ({
   importAcceptanceRows: mocks.rows,
@@ -87,6 +95,8 @@ describe("isolated acceptance CLI", () => {
       mocks.run,
       mocks.clean,
       mocks.learner,
+      mocks.school,
+      mocks.owner,
       mocks.profile,
       mocks.rows,
     ]) {
@@ -118,7 +128,7 @@ describe("isolated acceptance CLI", () => {
           stderrPath: outputPath,
         }).pipe(Effect.flip);
         expect(yield* fs.readFileString(outputPath)).toContain(
-          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
         );
       }).pipe(Effect.provide(nodeServicesLayer))
   );
@@ -311,6 +321,33 @@ finally:
     })
   );
 
+  it.live("opens a school into the file that the school mode names", () =>
+    Effect.gen(function* () {
+      yield* execute("school", ["/out/school.json"]);
+
+      expect(mocks.school).toHaveBeenCalledExactlyOnceWith(
+        expect.any(String),
+        "/out/school.json"
+      );
+      expect(mocks.learner).not.toHaveBeenCalled();
+    })
+  );
+
+  it.live(
+    "signs the Owner of the school it names in, into the file it names",
+    () =>
+      Effect.gen(function* () {
+        yield* execute("owner", ["acc-1a2b3c4d", "/out/owner.json"]);
+
+        expect(mocks.owner).toHaveBeenCalledExactlyOnceWith(
+          expect.any(String),
+          "acc-1a2b3c4d",
+          "/out/owner.json"
+        );
+        expect(mocks.school).not.toHaveBeenCalled();
+      })
+  );
+
   it.live("updates the profile of the account and the file it names", () =>
     Effect.gen(function* () {
       yield* execute("profile", ["user-1", "/rows/profile.json"]);
@@ -330,6 +367,8 @@ finally:
     [undefined, []],
     ["unsupported", []],
     ["learner", []],
+    ["school", []],
+    ["owner", ["acc-1a2b3c4d"]],
     ["import", []],
     ["import", ["chats"]],
     ["profile", []],
@@ -348,6 +387,8 @@ finally:
           expect(mocks.run).not.toHaveBeenCalled();
           expect(mocks.clean).not.toHaveBeenCalled();
           expect(mocks.learner).not.toHaveBeenCalled();
+          expect(mocks.school).not.toHaveBeenCalled();
+          expect(mocks.owner).not.toHaveBeenCalled();
           expect(mocks.profile).not.toHaveBeenCalled();
           expect(mocks.rows).not.toHaveBeenCalled();
         })
