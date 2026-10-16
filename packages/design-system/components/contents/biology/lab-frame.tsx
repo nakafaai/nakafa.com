@@ -41,24 +41,24 @@ export interface BiologyLabCalloutProps {
 
 export interface BiologyLabItemProps {
   callouts?: readonly BiologyLabCalloutProps[];
-  caption: ReactNode;
-  focus: ReactNode;
+  caption?: ReactNode;
+  focus?: ReactNode;
   tab: string;
-  takeaway: ReactNode;
+  takeaway?: ReactNode;
 }
 
 export interface BiologyLabProps<
   Item extends BiologyLabItemProps = BiologyLabItemProps,
 > {
-  description: ReactNode;
+  description?: ReactNode;
   labels: {
     chooseMode: string;
-    focusLabel: string;
+    focusLabel?: string;
     items: readonly [Item, ...Item[]];
-    takeawayLabel: string;
+    takeawayLabel?: string;
     viewLabel: string;
   };
-  title: ReactNode;
+  title?: ReactNode;
 }
 
 export interface BiologySceneProps<
@@ -87,6 +87,8 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   const colors = getBiologySceneColors(resolvedTheme);
   const selectedItem = labels.items[selectedIndex];
   const hasMultipleItems = labels.items.length > 1;
+  const hasFacts =
+    selectedItem.focus !== undefined || selectedItem.takeaway !== undefined;
 
   /**
    * Keeps one tab active when ToggleGroup emits an empty value.
@@ -162,17 +164,30 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
           </ThreeCanvas>
         </VisualCardScene>
 
-        <p className="text-muted-foreground text-sm">{selectedItem.caption}</p>
+        {selectedItem.caption === undefined ? null : (
+          <p className="text-muted-foreground text-sm">
+            {selectedItem.caption}
+          </p>
+        )}
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact label={labels.focusLabel} value={selectedItem.focus} />
-          <VisualFact
-            label={labels.takeawayLabel}
-            value={selectedItem.takeaway}
-          />
-        </dl>
+        {hasFacts ? (
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            {selectedItem.focus === undefined ? null : (
+              <VisualFact
+                label={labels.focusLabel}
+                value={selectedItem.focus}
+              />
+            )}
+            {selectedItem.takeaway === undefined ? null : (
+              <VisualFact
+                label={labels.takeawayLabel}
+                value={selectedItem.takeaway}
+              />
+            )}
+          </dl>
+        ) : null}
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

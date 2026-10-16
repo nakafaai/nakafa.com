@@ -39,7 +39,7 @@ import { type ReactNode, Suspense, useMemo, useState } from "react";
 
 interface ParabolicMovementLabProps {
   decimalSeparator?: DecimalSeparator;
-  description: ReactNode;
+  description?: ReactNode;
   labels: {
     chooseLaunch: string;
     factLabels: {
@@ -50,7 +50,7 @@ interface ParabolicMovementLabProps {
     };
     viewLabel: string;
   };
-  title: ReactNode;
+  title?: ReactNode;
 }
 
 export function ParabolicMovementLab({

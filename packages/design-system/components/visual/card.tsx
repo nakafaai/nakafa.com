@@ -133,14 +133,21 @@ function VisualCard({ className, ref, ...props }: ComponentProps<typeof Card>) {
   );
 }
 
-/** The visual's title and, when it has one, its description. */
+/**
+ * The visual's title and, when it has one, its description. A visual without a
+ * title draws no header, because the page around it already names the visual.
+ */
 function VisualCardHeader({
   description,
   title,
 }: {
   description?: ReactNode;
-  title: ReactNode;
+  title?: ReactNode;
 }) {
+  if (title === undefined) {
+    return null;
+  }
+
   return (
     <CardHeader>
       <CardTitle>{title}</CardTitle>

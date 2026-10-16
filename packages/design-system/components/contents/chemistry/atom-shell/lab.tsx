@@ -28,7 +28,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 interface AtomShellLabProps {
-  description: ReactNode;
+  description?: ReactNode;
   labels: {
     atomicNumber: string;
     chooseAtom: string;
@@ -39,13 +39,13 @@ interface AtomShellLabProps {
     samples: Record<
       AtomShellSampleId,
       {
-        name: string;
-        note: ReactNode;
+        name?: string;
+        note?: ReactNode;
         tab: string;
       }
     >;
   };
-  title: ReactNode;
+  title?: ReactNode;
 }
 
 /** Renders a 3D Bohr shell reader for neutral atoms up to calcium. */
@@ -113,15 +113,17 @@ export function AtomShellLab({
         </ToggleGroup>
 
         <ShellModelCanvas
-          aria-label={`${selectedLabels.name}, ${labels.electronTotal} ${selectedSample.atomicNumber}`}
+          aria-label={`${selectedLabels.name ?? selectedSample.symbol}, ${labels.electronTotal} ${selectedSample.atomicNumber}`}
           outerShellKey={outerShell.key}
           sample={selectedSample}
           shells={shellConfiguration}
         />
 
-        <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
-          {selectedLabels.note}
-        </p>
+        {selectedLabels.note === undefined ? null : (
+          <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
+            {selectedLabels.note}
+          </p>
+        )}
       </VisualCardBody>
 
       <VisualCardFooter>
