@@ -71,7 +71,7 @@ export function useNinaSubmission(
   const uploadOf = useAi((state) => state.uploadOf);
   const inFlight = useRef(false);
   const uncertain = useRef<Ref.Args<Start> | null>(null);
-  const t = useTranslations("Ai");
+  const tToast = useTranslations("Toast");
 
   /**
    * Admits one message or retry as one Effect, started now. It settles with
@@ -170,13 +170,15 @@ export function useNinaSubmission(
               uncertain.current = null;
             }
             onFailure?.(result.failure);
-            const report = reportNinaFailure(
-              result.failure,
-              t(
-                `failures.${ninaFailureFeedback[result.failure.code].message}`,
+            const feedbackKey =
+              ninaFailureFeedback[result.failure.code].message;
+            const report = reportNinaFailure(result.failure, {
+              description: tToast(
+                `failure-${feedbackKey}.description`,
                 ninaFailureLimits
-              )
-            ).pipe(Effect.as(undefined));
+              ),
+              title: tToast(`failure-${feedbackKey}.title`, ninaFailureLimits),
+            }).pipe(Effect.as(undefined));
             if (
               result.failure._tag === "NinaUploadError" &&
               result.failure.code === "NINA_UPLOAD_INVALID"

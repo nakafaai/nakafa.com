@@ -25,12 +25,11 @@ const LONGEST = Duration.seconds(3);
  * that fails tells the learner and is tried again with the next change. When
  * the editor is closed by then, it opens again with what they wrote. A save
  * that finds the memory gone closes the editor. A stored memory the learner
- * emptied is deleted when the editor closes, with an Undo.
+ * emptied is deleted when the editor closes.
  *
  * `restored` is the words of a save that failed, when the editor opens again
  * with them, and `starting` is the words the editor opens with. `change` takes
- * what the editor holds now. `discard` stops the saving and deletes the memory,
- * with an Undo.
+ * what the editor holds now. `discard` stops the saving and deletes the memory.
  */
 export function useAutosave(
   memory: Memory | null,

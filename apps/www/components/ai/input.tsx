@@ -25,27 +25,15 @@ import {
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
-import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import { randomUuid } from "@repo/utilities/uuid";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useOptimistic, useTransition } from "react";
-import { toast } from "sonner";
-import {
-  NinaAttach,
-  NinaAttachments,
-  RejectedFiles,
-} from "@/components/ai/attachment";
-import { rejectionNotice } from "@/components/ai/attachments";
-import { REJECTION_NOTICE, useAi } from "@/components/ai/context";
-import {
-  NINA_NOTICE_POSITION,
-  promptRefusal,
-  reportNinaFailure,
-} from "@/components/ai/feedback";
+import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
+import { useAi } from "@/components/ai/context";
+import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
 
 interface Props {
   autoFocus?: boolean;
@@ -66,6 +54,7 @@ export function NinaInput({
   status,
 }: Props) {
   const t = useTranslations("Ai");
+  const tToast = useTranslations("Toast");
   const composerKey = useAi((state) => state.composerKey);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
@@ -81,7 +70,10 @@ export function NinaInput({
     const refusal = promptRefusal(message.text, answering);
     if (Option.isSome(refusal)) {
       Effect.runFork(
-        reportNinaFailure(refusal.value, t("failures.message-size"))
+        reportNinaFailure(refusal.value, {
+          description: tToast("failure-message-size.description"),
+          title: tToast("failure-message-size.title"),
+        })
       );
       return false;
     }
@@ -89,46 +81,13 @@ export function NinaInput({
     if (admission === false) {
       return false;
     }
+    // The submitted files stay hidden until the send is admitted, so they do
+    // not reappear in the tray while the server answers.
     startTransition(async () => {
       hideSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
-      // Once the message is sent, the notice about the files an earlier pick
-      // did not attach has done its work.
-      if (await admission) {
-        toast.dismiss(REJECTION_NOTICE);
-      }
+      await admission;
     });
     return admission;
-  }
-
-  /**
-   * Says why a pick was not attached in full: one notice for the pick, naming
-   * the files it dropped and the reason of each. Two notices would stack, and
-   * the one in front would hide the other, so the notice has one id, and a new
-   * pick replaces it. A learner needs time to read a list of names, and a list
-   * that scrolls cannot be used in a notice that is about to leave, so it stays
-   * until the learner closes it, picks again, or sends the message. A pick that
-   * attached every file takes the notice away, since its names are no longer a
-   * problem.
-   */
-  function handlePick(rejections: readonly PromptInputFileConstraintError[]) {
-    if (!Arr.isReadonlyArrayNonEmpty(rejections)) {
-      toast.dismiss(REJECTION_NOTICE);
-      return;
-    }
-    const notice = rejectionNotice(rejections, t);
-    toast.error(notice.title, {
-      // A new pick is a new list. With a key of its own it starts at its top,
-      // not where the list it replaces was scrolled to.
-      description: (
-        <RejectedFiles
-          key={Effect.runSync(randomUuid)}
-          reasons={notice.reasons}
-        />
-      ),
-      duration: Number.POSITIVE_INFINITY,
-      id: REJECTION_NOTICE,
-      position: NINA_NOTICE_POSITION,
-    });
   }
 
   // The files of a composer live in the state of its PromptInput, and a new key
@@ -143,7 +102,6 @@ export function NinaInput({
       maxFileSize={NINA_FILE_SIZE}
       maxFiles={NINA_FILE_COUNT}
       multiple
-      onPick={handlePick}
       onSubmit={handleSubmit}
     >
       {children}

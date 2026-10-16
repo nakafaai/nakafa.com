@@ -34,7 +34,7 @@ export function TryoutCountrySelector({
   options: readonly TryoutCountrySelectorOption[];
 }) {
   const locale = useLocale();
-  const tTryouts = useTranslations("Tryouts");
+  const tToast = useTranslations("Toast");
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredTryout = useSetPreferredTryoutMutation(options);
@@ -73,7 +73,9 @@ export function TryoutCountrySelector({
     await Effect.runPromise(
       saveTryoutPreference({
         countryKey: selectedOption.value.countryKey,
-        errorMessage: tTryouts("preference-save-error"),
+        errorMessage: {
+          title: tToast("tryout-preference-error.title"),
+        },
         locale,
         setPreferredTryout,
         source: "tryout-country-selector",

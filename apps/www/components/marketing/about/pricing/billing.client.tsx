@@ -6,10 +6,10 @@ import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import { products } from "@repo/backend/confect/customers/polar/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,
@@ -25,7 +25,7 @@ import { useViewer } from "@/lib/identity/client";
 export function BillingButton() {
   const locale = useLocale();
   const t = useTranslations("Pricing");
-  const tAuth = useTranslations("Auth");
+  const tToast = useTranslations("Toast");
   const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
   const errorCallbackURL = getPostAuthProviderErrorHref("/pricing", locale);
   const currentUser = useViewer((state) => state.account);
@@ -67,7 +67,9 @@ export function BillingButton() {
           )
         );
         if (!started) {
-          toast.error(tAuth("provider-error"));
+          toast.error(tToast("provider-error.title"), {
+            description: tToast("provider-error.description"),
+          });
         }
       });
       return;

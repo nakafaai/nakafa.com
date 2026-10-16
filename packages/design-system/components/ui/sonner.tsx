@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Schema } from "effect";
 import { useTheme } from "next-themes";
@@ -86,10 +87,10 @@ function Toaster({ ...props }: ToasterProps) {
       theme={appearance}
       toastOptions={{
         classNames: {
-          actionButton:
-            "focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
-          cancelButton:
-            "bg-secondary! text-secondary-foreground! focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
+          // The toast buttons take the design system's button recipe, so their
+          // size and radius match every other button of the product.
+          actionButton: buttonVariants({ size: "sm" }),
+          cancelButton: buttonVariants({ size: "sm", variant: "secondary" }),
           closeButton:
             "transition-colors! ease-out! hover:border-current! hover:bg-accent! hover:text-accent-foreground! focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
           description: "text-muted-foreground!",

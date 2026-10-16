@@ -3,9 +3,9 @@
 import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Clock, Effect, Option, Result } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import {
   applyOptimisticTryoutResponse,
   nextTryoutResponseVersion,
@@ -39,7 +39,42 @@ export function useTryoutResponseSubmit() {
       selectedAt
     );
   });
-  const tTryouts = useTranslations("Tryouts");
+  const tToast = useTranslations("Toast");
+  /** Reports a failed answer: an ended attempt tells the learner to start again, a stale write is not reported, and any other failure is reported. */
+  function handleSubmitError(
+    error: unknown,
+    errorCode?: Ref.Error<typeof tryouts.mutations.responses.save>["code"]
+  ) {
+    const failure = tryoutSubmitFailureOf(errorCode);
+    if (failure === "stale") {
+      return Effect.void;
+    }
+    if (failure === "ended") {
+      return Effect.sync(() => {
+        toast.info(tToast("tryout-attempt-not-in-progress.title"), {
+          description: tToast("tryout-attempt-not-in-progress.description"),
+          position: "bottom-center",
+        });
+      });
+    }
+    return reportClientException(error, {
+      ...(errorCode
+        ? {
+            convex_error_code: errorCode,
+          }
+        : {}),
+      source: "tryout-submit-answer",
+    }).pipe(
+      Effect.andThen(
+        Effect.sync(() => {
+          toast.error(tToast("tryout-submit-answer-error.title"), {
+            description: tToast("tryout-submit-answer-error.description"),
+            position: "bottom-center",
+          });
+        })
+      )
+    );
+  }
   return (
     question: TryoutRuntimeQuestion,
     selection: TryoutResponseSelection | null
@@ -56,13 +91,10 @@ export function useTryoutResponseSubmit() {
         Effect.flatMap((result) =>
           Result.match(result, {
             onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              handleSubmitError(error, tTryouts, error.code),
+            onFailure: (error) => handleSubmitError(error, error.code),
           })
         ),
-        Effect.catchTag("UnknownError", ({ cause }) =>
-          handleSubmitError(cause, tTryouts)
-        )
+        Effect.catchTag("UnknownError", ({ cause }) => handleSubmitError(cause))
       )
     );
   };
@@ -104,37 +136,4 @@ function updateRuntimeQueries<
       );
     }
   }
-}
-function handleSubmitError(
-  error: unknown,
-  tTryouts: ReturnType<typeof useTranslations>,
-  errorCode?: Ref.Error<typeof tryouts.mutations.responses.save>["code"]
-) {
-  const failure = tryoutSubmitFailureOf(errorCode);
-  if (failure === "stale") {
-    return Effect.void;
-  }
-  if (failure === "ended") {
-    return Effect.sync(() => {
-      toast.info(tTryouts("attempt-not-in-progress"), {
-        position: "bottom-center",
-      });
-    });
-  }
-  return reportClientException(error, {
-    ...(errorCode
-      ? {
-          convex_error_code: errorCode,
-        }
-      : {}),
-    source: "tryout-submit-answer",
-  }).pipe(
-    Effect.andThen(
-      Effect.sync(() => {
-        toast.error(tTryouts("submit-answer-error"), {
-          position: "bottom-center",
-        });
-      })
-    )
-  );
 }

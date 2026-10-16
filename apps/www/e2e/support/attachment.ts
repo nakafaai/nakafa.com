@@ -19,17 +19,6 @@ const UploadSchema = Schema.Struct({
 });
 type Upload = typeof UploadSchema.Type;
 
-/** The title of the notice that names the files a pick did not attach. */
-export const NOT_ATTACHED = en.Ai["attachment-rejections"].title;
-
-/**
- * The box a long list of that notice scrolls in: the viewport of its scroll
- * area, with the reasons and the names inside it. A function that Playwright
- * sends to the page cannot reach a constant of its module, so such a function
- * takes this selector as its argument.
- */
-export const NOTICE_LIST = '[data-slot="scroll-area-viewport"]';
-
 /** The media type of a Word file, which Nina does not read. */
 export const WORD_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -148,6 +137,14 @@ export const runPage = <E>(page: Page, program: Effect.Effect<void, E>) =>
 /** The chips a composer or a message shows for its attachments. */
 export function chipsIn(scope: Locator) {
   return scope.locator('[data-slot="attachment"]');
+}
+
+/**
+ * The chips in a composer for the files that a pick did not attach. Each one
+ * names its file and gives its reason, in the refused state, and never uploads.
+ */
+export function refusedChipsIn(scope: Locator) {
+  return scope.locator('[data-slot="attachment"][data-state="error"]');
 }
 
 /** The chips of the messages on the page, which are not the chips of the composer. */

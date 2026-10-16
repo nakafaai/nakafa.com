@@ -4,10 +4,10 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
 import { decodePlayerMode } from "@/components/player/mode";
 import { usePlayer } from "@/components/player/provider";
 import { rememberPlayerMode } from "@/components/player/remember.client";
@@ -19,6 +19,7 @@ import { rememberPlayerMode } from "@/components/player/remember.client";
  */
 export function PlayerModeToggle() {
   const t = useTranslations("Player");
+  const tToast = useTranslations("Toast");
   const mode = usePlayer((state) => state.mode);
   const choose = usePlayer((state) => state.choose);
   const [, startTransition] = useTransition();
@@ -34,7 +35,10 @@ export function PlayerModeToggle() {
         choose(next.value, rememberPlayerMode(next.value))
       );
       if (choice === "reverted") {
-        toast.error(t("mode-error"), { position: "bottom-center" });
+        toast.error(tToast("mode-error.title"), {
+          description: tToast("mode-error.description"),
+          position: "bottom-center",
+        });
       }
     });
   }

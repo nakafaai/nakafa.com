@@ -14,11 +14,11 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Array as Arr, Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   CardSection,
   CardSectionFooter,
@@ -29,7 +29,7 @@ import type { CurrentUser } from "@/lib/identity/client";
 
 /** Renders the bio card: one line about the account, with its count of characters. */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
+  const tToast = useTranslations("Toast");
   const t = useTranslations("Auth");
   const updateBio = useUpdateBioMutation();
   const current = user.appUser.bio ?? "";
@@ -51,7 +51,9 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error(tToast("action-error.title"), {
+                    description: tToast("action-error.description"),
+                  });
                 })
               )
             ),

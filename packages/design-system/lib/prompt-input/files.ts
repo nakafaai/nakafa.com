@@ -68,6 +68,19 @@ const ValidatePromptInputFilesOptionsSchema = Schema.Struct({
 /** Inputs used to validate one picker, paste, or drop operation. */
 type ValidatePromptInputFilesOptions =
   typeof ValidatePromptInputFilesOptionsSchema.Type;
+/**
+ * A file that a pick refused: its name, the reason, and the id of its chip. A
+ * refused file is never attached, so it never uploads and it never blocks the
+ * files that were attached.
+ */
+const PromptInputRefusalSchema = Schema.Struct({
+  code: PromptInputFileConstraintCode,
+  id: Schema.String,
+  name: Schema.String,
+});
+/** A refused file a composer shows until its learner removes it, picks again, or sends. */
+export type PromptInputRefusal = typeof PromptInputRefusalSchema.Type;
+
 const PromptInputFileSelectionSchema = Schema.Struct({
   files: Schema.Array(Schema.instanceOf(File)),
   rejections: Schema.Array(PromptInputFileConstraintError),
@@ -153,3 +166,16 @@ export const validatePromptInputFiles = Effect.fn(
     ],
   } satisfies PromptInputFileSelection;
 });
+
+/**
+ * The refused files of one pick: one entry for each file that a reason dropped,
+ * in the order of the reasons, with the reason of that file. The entries have
+ * no id yet, because the composer gives each chip one when it shows it.
+ */
+export function refusedFiles(
+  rejections: readonly PromptInputFileConstraintError[]
+) {
+  return Arr.flatMap(rejections, (rejection) =>
+    Arr.map(rejection.files, (name) => ({ code: rejection.code, name }))
+  );
+}

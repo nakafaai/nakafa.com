@@ -7,11 +7,11 @@ import {
 } from "@confect/react";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, DateTime, Effect, Schema, Struct } from "effect";
 import { useTranslations } from "next-intl";
 import { useOptimistic } from "react";
-import { toast } from "sonner";
 import { CommentsAdd } from "@/components/comments/add";
 import {
   CommentContent,
@@ -33,7 +33,7 @@ const noDrafts: Draft[] = [];
 /** Owns the comment feed and pending submissions without inventing database IDs. */
 export function CommentsList({ slug }: { slug: string }) {
   const user = useViewer((state) => state.account);
-  const actionError = useTranslations("Common")("action-error");
+  const tToast = useTranslations("Toast");
   const pagination = usePaginatedQuery(
     comments.queries.getCommentsBySlug,
     { slug },
@@ -81,7 +81,13 @@ export function CommentsList({ slug }: { slug: string }) {
         Effect.as(true),
         Effect.catchTag("CommentCreateError", (error) =>
           reportClientException(error, { source: "comment-create" }).pipe(
-            Effect.andThen(Effect.sync(() => toast.error(actionError))),
+            Effect.andThen(
+              Effect.sync(() =>
+                toast.error(tToast("action-error.title"), {
+                  description: tToast("action-error.description"),
+                })
+              )
+            ),
             Effect.as(false)
           )
         )

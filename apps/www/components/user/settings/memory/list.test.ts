@@ -14,8 +14,6 @@ import {
   type MemoryPage,
   memoryName,
   pageCleared,
-  pageForRestored,
-  pageRestored,
   pageWith,
   pageWithout,
   pendingId,
@@ -181,91 +179,6 @@ describe("memory list", () => {
         memoryId("b"),
       ]);
       expect(pageWithout(other, memoryId("a"))).toBe(other);
-    });
-
-    it("puts a memory that comes back before the first memory confirmed at or before it, and last when none was", () => {
-      const page = pageOf([
-        stored("a", { confirmedAt: 900 }),
-        stored("b", { confirmedAt: 800 }),
-        stored("c", { confirmedAt: 700 }),
-      ]);
-      const back = (confirmedAt: number) =>
-        ids(pageRestored(page, stored("back", { confirmedAt })).page);
-
-      expect(back(750)).toEqual(
-        ids([stored("a"), stored("b"), stored("back"), stored("c")])
-      );
-      // At one moment the server lists the memory that came back first, as the newest.
-      expect(back(800)).toEqual(
-        ids([stored("a"), stored("back"), stored("b"), stored("c")])
-      );
-      expect(back(950)).toEqual(
-        ids([stored("back"), stored("a"), stored("b"), stored("c")])
-      );
-      expect(back(100)).toEqual(
-        ids([stored("a"), stored("b"), stored("c"), stored("back")])
-      );
-      expect(
-        pageRestored(page, stored("back", { confirmedAt: 750 }))
-      ).toMatchObject({
-        continueCursor: "next",
-        isDone: false,
-      });
-    });
-
-    it("puts a memory that comes back into a page with no memory", () => {
-      expect(ids(pageRestored(pageOf([]), stored("back")).page)).toEqual([
-        memoryId("back"),
-      ]);
-    });
-
-    describe("the page a memory that comes back goes in", () => {
-      const first = pageOf([
-        stored("a", { confirmedAt: 900 }),
-        stored("b", { confirmedAt: 800 }),
-      ]);
-      const second = pageOf([
-        stored("c", { confirmedAt: 700 }),
-        stored("d", { confirmedAt: 600 }),
-      ]);
-      const last = {
-        ...pageOf([stored("e", { confirmedAt: 500 })]),
-        isDone: true,
-      };
-      const at = (pages: MemoryPage[], confirmedAt: number) =>
-        pageForRestored(pages, stored("back", { confirmedAt }));
-
-      it("is the first page whose last memory was confirmed at or before it, wherever the pages stand in the list", () => {
-        const pages = [first, second, last];
-
-        // Between two pages it goes in the page after the gap.
-        expect(at(pages, 750)).toEqual(Option.some(1));
-        expect(at(pages, 850)).toEqual(Option.some(0));
-        expect(at(pages, 800)).toEqual(Option.some(0));
-        expect(at(pages, 950)).toEqual(Option.some(0));
-        expect(at(pages, 650)).toEqual(Option.some(1));
-        expect(at(pages, 550)).toEqual(Option.some(2));
-        expect(at([last, first, second], 750)).toEqual(Option.some(2));
-      });
-
-      it("is the page that ends the list when the memory is older than every memory loaded", () => {
-        expect(at([first, second, last], 100)).toEqual(Option.some(2));
-        expect(at([first, { ...pageOf([]), isDone: true }], 100)).toEqual(
-          Option.some(1)
-        );
-      });
-
-      it("is the only page of an empty list", () => {
-        expect(at([{ ...pageOf([]), isDone: true }], 100)).toEqual(
-          Option.some(0)
-        );
-      });
-
-      it("is none when the memory belongs beyond the pages that are loaded, and a page with no memory takes no place before one that has", () => {
-        expect(at([first, second], 100)).toEqual(Option.none());
-        expect(at([first, pageOf([])], 100)).toEqual(Option.none());
-        expect(at([], 100)).toEqual(Option.none());
-      });
     });
 
     it("empties a page and ends the list there when every memory is deleted, and leaves a page that is already empty", () => {

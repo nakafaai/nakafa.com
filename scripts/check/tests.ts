@@ -39,6 +39,7 @@ import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 import { inspectModuleSize } from "#scripts/check/size";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
+import { inspectToastSource } from "#scripts/check/toasts";
 import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
@@ -92,6 +93,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
     Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
       Arr.flatten([
         inspectGatewaySource(file, sourceFile),
+        inspectToastSource(file, sourceFile),
         inspectReactSource(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),

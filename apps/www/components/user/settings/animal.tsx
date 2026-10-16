@@ -12,12 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { candidates } from "@repo/mascot/candidates";
 import type { Mascot } from "@repo/mascot/code";
 import { Array as Arr, Effect, Random } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   CardSection,
   CardSectionFooter,
@@ -34,7 +34,7 @@ const OFFERED_COUNT = 4;
  * and a button that offers four more. A pick takes effect at once.
  */
 export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
+  const tToast = useTranslations("Toast");
   const t = useTranslations("Auth");
   const animals = useTranslations("Animals");
   const updateMascot = useUpdateMascotMutation();
@@ -59,7 +59,9 @@ export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error(tToast("action-error.title"), {
+                    description: tToast("action-error.description"),
+                  });
                 })
               )
             ),

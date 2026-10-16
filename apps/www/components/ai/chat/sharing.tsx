@@ -17,10 +17,10 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { useChange } from "@/components/ai/chat/change.client";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
@@ -101,7 +101,7 @@ function ChatSharingDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("Ai");
-  const actionErrorMessage = useTranslations("Common")("action-error");
+  const tToast = useTranslations("Toast");
   const { change, isPending } = useChange();
   const clipboard = useClipboard({ timeout: 500 });
   const updateChatVisibility = useUpdateChatVisibilityMutation();
@@ -134,7 +134,9 @@ function ChatSharingDialog({
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(actionErrorMessage);
+                    toast.error(tToast("action-error.title"), {
+                      description: tToast("action-error.description"),
+                    });
                   })
                 )
               ),
@@ -149,7 +151,7 @@ function ChatSharingDialog({
       return;
     }
     clipboard.copy(shareLink(chat._id, token));
-    toast.success(t("link-copied"), {
+    toast.success(tToast("link-copied.title"), {
       position: "bottom-center",
     });
   };

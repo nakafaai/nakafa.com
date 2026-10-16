@@ -7,8 +7,8 @@ import type {
   StartAttemptResult,
 } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Data, Effect } from "effect";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** Expected client transport failure for a try-out action. */
@@ -30,7 +30,7 @@ type StartAttemptSuccess = (result: StartAttemptResult) => Effect.Effect<void>;
 export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
   (input: {
     readonly args: StartAttemptArgs;
-    readonly failureMessage: string;
+    readonly failureMessage: ToastCopy;
     readonly mutation: StartAttemptMutation;
     readonly onSuccess: StartAttemptSuccess;
   }) =>
@@ -55,13 +55,13 @@ export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
 export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
   (input: {
     readonly attemptId: Id<"tryoutAttempts">;
-    readonly failureMessage: string;
+    readonly failureMessage: ToastCopy;
     readonly mutation: (args: {
       attemptId: Id<"tryoutAttempts">;
       sectionKey: string;
     }) => InvokeReturn<typeof tryouts.mutations.sections.start>;
     readonly sectionKey: string;
-    readonly successMessage: string;
+    readonly successMessage: ToastCopy;
   }) =>
     Effect.tryPromise({
       try: () =>
@@ -89,19 +89,29 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
 );
 
 /** Reports one unexpected request failure and shows the localized fallback. */
-function reportRequestFailure(error: unknown, source: string, message: string) {
+function reportRequestFailure(
+  error: unknown,
+  source: string,
+  message: ToastCopy
+) {
   return reportClientException(error, { source }).pipe(
     Effect.tap(() =>
       Effect.sync(() => {
-        toast.error(message, { position: "bottom-center" });
+        toast.error(message.title, {
+          description: message.description,
+          position: "bottom-center",
+        });
       })
     )
   );
 }
 
 /** Shows one successful try-out action at the established screen position. */
-function showSuccess(message: string) {
+function showSuccess(message: ToastCopy) {
   return Effect.sync(() => {
-    toast.success(message, { position: "bottom-center" });
+    toast.success(message.title, {
+      description: message.description,
+      position: "bottom-center",
+    });
   });
 }

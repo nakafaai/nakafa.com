@@ -176,9 +176,10 @@ async function CachedSurahShell({
 }) {
   "use cache";
 
-  const [t, tCommon, result] = await Promise.all([
+  const [t, tCommon, tToast, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
     getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Toast" }),
     getPublishedQuranView(locale, surahNumber),
   ]);
 
@@ -276,10 +277,18 @@ async function CachedSurahShell({
                 {tafsirAccess.kind === "embedded" ? (
                   <QuranInterpretationControls
                     appLocale={tafsirAccess.appLocale}
-                    errorMessage={t("interpretation-error")}
+                    errorMessage={{
+                      description: tToast("interpretation-error.description"),
+                      title: tToast("interpretation-error.title"),
+                    }}
                     label={interpretationLabel}
                     recoverSnapshot={recoverSnapshot}
-                    refreshingMessage={t("interpretation-refreshing")}
+                    refreshingMessage={{
+                      description: tToast(
+                        "interpretation-refreshing.description"
+                      ),
+                      title: tToast("interpretation-refreshing.title"),
+                    }}
                     snapshotId={result.snapshotId}
                     surahNumber={surahData.number}
                   >

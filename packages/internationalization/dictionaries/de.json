@@ -9,7 +9,6 @@
   },
   "Common": {
     "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
-    "action-error": "Diese Aktion konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
     "copyright": "Copyright © {year} {companyName}. Alle Rechte vorbehalten.",
     "made-with-love": "Mit Liebe gemacht",
     "version": "Version {version}",
@@ -85,7 +84,6 @@
     "decrease-angle": "Winkel verkleinern",
     "number-field": "Zahlenfeld",
     "share": "Teilen",
-    "share-copied": "Link kopiert!",
     "contributor": "Mitwirkende Person",
     "search": "Suchen",
     "select": "Auswählen",
@@ -97,8 +95,6 @@
     "copy-content": "Inhalt kopieren",
     "content-actions": "Aktionen zum Inhalt",
     "copy": "Kopieren",
-    "copy-success": "Kopiert!",
-    "copy-error": "Kopieren nicht möglich",
     "open": "Öffnen",
     "open-in": "Öffnen in",
     "open-in-github": "In GitHub öffnen",
@@ -136,7 +132,6 @@
     "curriculum-index-title": "Schullehrpläne",
     "curriculum-index-action": "Stufe auswählen",
     "curriculum-route-action": "Optionen anzeigen",
-    "preference-save-error": "Deine Lehrplaneinstellung konnte nicht gespeichert werden.",
     "onboarding": {
       "progress": "Frage {current} von {total}",
       "role-title": "Wer bist du?",
@@ -190,10 +185,7 @@
       "back": "Zurück",
       "continue": "Weiter",
       "finish": "Fertig",
-      "required-error": "Wähle eine Antwort.",
-      "invalid-selection": "Beantworte jede Frage.",
-      "save-error": "Deine Antwort wurde nicht gespeichert. Versuch es erneut.",
-      "finish-error": "Das Onboarding wurde nicht abgeschlossen. Versuch es erneut."
+      "required-error": "Wähle eine Antwort."
     },
     "kind": {
       "school-curriculum": "Lehrplan"
@@ -251,8 +243,6 @@
     "verse": "Vers",
     "verse-count": "Vers {count}",
     "interpretation": "Tafsir",
-    "interpretation-error": "Der Tafsir zu diesem Vers konnte nicht geladen werden. Versuche es erneut.",
-    "interpretation-refreshing": "Der Koran wurde aktualisiert. Die Seite wird neu geladen...",
     "meaning": "Namensbedeutung",
     "revelation": "Offenbarungsort",
     "revelation-place": "{place, select, Meccan {mekkanisch} Medinan {medinensisch} other {unbekannt}}",
@@ -274,7 +264,6 @@
     "open-exam-cta": "Optionen anzeigen",
     "open-set-cta": "Aufgabensätze anzeigen",
     "list-empty": "Zurzeit werden keine Probetests angezeigt.",
-    "preference-save-error": "Deine Probetest-Einstellung konnte noch nicht gespeichert werden.",
     "start-cta": "Starten",
     "restart-cta": "Wiederholen",
     "free-cta": "Kostenlos starten",
@@ -289,14 +278,11 @@
     "restart-dialog-title": "Diesen Probetest von vorn beginnen?",
     "restart-dialog-description": "Du beginnst von vorn. Dein vorheriges Ergebnis bleibt gespeichert.",
     "restart-entry-dialog-description": "Du beginnst von vorn und der Timer dieses Aufgabensatzes startet sofort. Dein vorheriges Ergebnis bleibt gespeichert.",
-    "start-success": "Der Probetest wurde gestartet. Du kannst wählen, welchen Abschnitt du zuerst bearbeitest.",
     "start-entry-dialog-description": "Der Timer dieses Aufgabensatzes startet, sobald du beginnst.",
-    "start-entry-success": "Der Probetest wurde gestartet. Der Timer läuft jetzt.",
     "paywall-title": "{count, plural, one {Lösung zu dieser Aufgabe ansehen} other {Lösungen zu allen # Aufgaben ansehen}}",
     "paywall-description": "Verstehe die Schritte und Gründe hinter jeder Antwort und frag Nina, wenn etwas unklar bleibt.",
     "paywall-compare": "Tarife vergleichen",
     "ask-nina-prompt": "Hilf mir, Aufgabe {number} zu verstehen.",
-    "start-error": "Der Probetest konnte noch nicht gestartet werden. Versuche es erneut.",
     "score-label-irt": "IRT-Punktzahl",
     "score-label-standard": "Punktzahl",
     "correct-answers-label": "Richtige Antworten",
@@ -331,13 +317,9 @@
     "time-minutes-short": "Min.",
     "time-seconds-short": "Sek.",
     "start-part-cta": "Starten",
-    "start-part-success": "Der Abschnitt wurde gestartet. Der Timer läuft jetzt.",
-    "start-part-error": "Dieser Abschnitt konnte noch nicht gestartet werden. Versuche es erneut.",
     "complete-part-cta": "Beenden",
     "complete-part-title": "Diesen Abschnitt beenden?",
     "complete-part-description": "Wenn du jetzt abschließt, werden die Antworten in diesem Abschnitt gesperrt.",
-    "complete-part-success": "Der Abschnitt ist beendet. Du kannst einen anderen Abschnitt auswählen oder zum Aufgabensatz zurückkehren.",
-    "complete-part-error": "Dieser Abschnitt konnte noch nicht beendet werden. Versuche es erneut.",
     "back-to-set-cta": "Zurück",
     "set-column-duration": "Dauer",
     "set-duration-minutes": "{minutes, number} Min.",
@@ -352,9 +334,7 @@
     "incorrect": "Falsch",
     "reset": "Zurücksetzen",
     "explanation": "Lösungserklärung",
-    "number-count": "Nummer {count}",
-    "attempt-not-in-progress": "Starte eine neue Sitzung, um weiterzuüben.",
-    "submit-answer-error": "Deine Antwort konnte nicht gespeichert werden. Versuche es erneut."
+    "number-count": "Nummer {count}"
   },
   "Player": {
     "navigator": "Aufgaben",
@@ -365,7 +345,6 @@
     "mode": "Ansicht",
     "mode-list": "Liste",
     "mode-single": "Eine Aufgabe",
-    "mode-error": "Deine Ansicht konnte nicht gespeichert werden. Versuche es erneut.",
     "cell": "{state, select, answered {Aufgabe {number}, beantwortet} other {Aufgabe {number}, offen}}",
     "unanswered": "Noch offen",
     "time-left": "Noch {hours, plural, =0 {} one {# Stunde } other {# Stunden }}{minutes, plural, one {# Minute} other {# Minuten}} {seconds, plural, one {# Sekunde} other {# Sekunden}}",
@@ -448,8 +427,6 @@
     "subscriptions-description": "Verwalte Nakafa Pro, 3.000 monatliche KI-Credits und dein Zahlungsportal.",
     "get-pro": "Pro holen",
     "manage": "Verwalten",
-    "checkout-error": "Der Pro-Checkout konnte nicht geöffnet werden. Versuche es erneut.",
-    "portal-error": "Das Abo-Portal konnte nicht geöffnet werden. Versuche es erneut.",
     "plan-free": "Kostenlos",
     "plan-pro": "Pro",
     "name": "Name",
@@ -542,20 +519,176 @@
     "no-result": "Keine Erinnerung gefunden",
     "edit": "Erinnerung bearbeiten",
     "delete": "Erinnerung löschen",
-    "deleted": "Erinnerung gelöscht",
-    "undo": "Rückgängig",
-    "undo-failed": "Rückgängig machen fehlgeschlagen",
+    "delete-title": "Diese Erinnerung löschen?",
+    "delete-description": "Nina wird sie nicht mehr verwenden.",
     "written-by-you": "Von dir {time} geschrieben",
     "saved-by-nina": "Von Nina {time} gespeichert",
     "ends": "Endet {date}",
     "text": "Text der Erinnerung",
     "placeholder": "Schreib, was Nina sich merken soll",
-    "missing": "Diese Erinnerung gibt es nicht mehr",
-    "limit": "Warte kurz, bevor du erneut speicherst",
-    "too-long": "Dieser Text ist zu lang für eine Erinnerung",
     "title": "Titel",
     "untitled": "Ohne Titel",
     "count": "{count, number} / {limit, number}"
+  },
+  "Toast": {
+    "action-error": {
+      "title": "Aktion nicht abgeschlossen.",
+      "description": "Bitte versuche es erneut."
+    },
+    "copy-error": { "title": "Kopieren nicht möglich" },
+    "copy-success": { "title": "Kopiert!" },
+    "curriculum-preference-error": {
+      "title": "Lehrplanwahl nicht gespeichert.",
+      "description": "Versuche es erneut."
+    },
+    "onboarding-finish-error": {
+      "title": "Onboarding nicht abgeschlossen.",
+      "description": "Versuch es erneut."
+    },
+    "onboarding-invalid-selection": { "title": "Beantworte jede Frage." },
+    "onboarding-save-error": {
+      "title": "Antwort nicht gespeichert.",
+      "description": "Versuch es erneut."
+    },
+    "link-copied": { "title": "Link kopiert!" },
+    "provider-error": {
+      "title": "Mit Google nicht fortgefahren.",
+      "description": "Bitte versuche es erneut."
+    },
+    "checkout-error": {
+      "title": "Pro-Checkout nicht geöffnet.",
+      "description": "Versuche es erneut."
+    },
+    "portal-error": {
+      "title": "Abo-Portal nicht geöffnet.",
+      "description": "Versuche es erneut."
+    },
+    "mode-error": {
+      "title": "Ansicht nicht gespeichert.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-attempt-not-in-progress": {
+      "title": "Diese Sitzung ist beendet.",
+      "description": "Starte eine neue Sitzung, um weiterzuüben."
+    },
+    "tryout-complete-part-error": {
+      "title": "Abschnitt nicht beendet.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-complete-part-success": {
+      "title": "Abschnitt beendet.",
+      "description": "Wähle einen anderen Abschnitt oder kehre zum Set zurück."
+    },
+    "tryout-preference-error": {
+      "title": "Probetest-Wahl nicht gespeichert."
+    },
+    "tryout-start-entry-success": {
+      "title": "Probetest gestartet.",
+      "description": "Der Timer läuft jetzt."
+    },
+    "tryout-start-error": {
+      "title": "Probetest nicht gestartet.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-start-part-error": {
+      "title": "Abschnitt nicht gestartet.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-start-part-success": {
+      "title": "Abschnitt gestartet.",
+      "description": "Der Timer läuft jetzt."
+    },
+    "tryout-start-success": {
+      "title": "Probetest gestartet.",
+      "description": "Du kannst wählen, welchen Abschnitt du zuerst bearbeitest."
+    },
+    "tryout-submit-answer-error": {
+      "title": "Antwort nicht gespeichert.",
+      "description": "Versuche es erneut."
+    },
+    "memory-limit": { "title": "Warte kurz, dann speichere erneut." },
+    "memory-missing": { "title": "Erinnerung nicht mehr vorhanden." },
+    "memory-too-long": { "title": "Text zu lang für eine Erinnerung." },
+    "interpretation-error": {
+      "title": "Tafsir konnte nicht geladen werden.",
+      "description": "Versuche es erneut."
+    },
+    "interpretation-refreshing": {
+      "title": "Der Koran wurde aktualisiert.",
+      "description": "Die Seite wird neu geladen..."
+    },
+    "failure-account": {
+      "title": "Dieses Konto kann Nina nicht nutzen.",
+      "description": "Melde dich erneut an oder kontaktiere den Nakafa-Support."
+    },
+    "failure-admission": {
+      "title": "Anfrage nicht gespeichert.",
+      "description": "Bitte versuche es erneut."
+    },
+    "failure-attachment-failed": {
+      "title": "Anhang nicht gespeichert.",
+      "description": "Bitte lade ihn erneut hoch."
+    },
+    "failure-attachment-invalid": {
+      "title": "Ein Anhang ist ungültig.",
+      "description": "Wähle ihn erneut aus und prüfe Dateityp und Größe."
+    },
+    "failure-attachment-limit": {
+      "title": "Anhang-Limit erreicht.",
+      "description": "Sende die hochgeladenen Dateien oder warte kurz."
+    },
+    "failure-attachment-size": {
+      "title": "Dokumente sind zu groß.",
+      "description": "Zusammen höchstens {size, number} MiB pro Nachricht."
+    },
+    "failure-authentication": {
+      "title": "Sitzung konnte nicht geprüft werden.",
+      "description": "Bitte versuche es erneut."
+    },
+    "failure-busy": {
+      "title": "Nina antwortet hier noch.",
+      "description": "Warte auf die Antwort oder stoppe sie vor dem Senden."
+    },
+    "failure-chat-access": {
+      "title": "Keine Berechtigung zum Senden hier.",
+      "description": "Starte einen eigenen Chat, um fortzufahren."
+    },
+    "failure-connection": {
+      "title": "Anfrage nicht bestätigt.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
+    },
+    "failure-context": {
+      "title": "Lernmaterial nicht geladen.",
+      "description": "Nina konnte es hier nicht laden. Versuche es erneut."
+    },
+    "failure-credits": {
+      "title": "Nicht genug Credits.",
+      "description": "Prüfe dein Kontingent und den Reset in den Einstellungen."
+    },
+    "failure-message-size": {
+      "title": "Zu lang für Nina in einem Durchgang.",
+      "description": "Kürze sie oder sende den Rest als neue Nachricht."
+    },
+    "failure-missing-chat": {
+      "title": "Chat nicht mehr verfügbar.",
+      "description": "Du kannst einen neuen Chat starten."
+    },
+    "failure-rate-limit": {
+      "title": "Nachrichtenlimit erreicht.",
+      "description": "Warte kurz und sende deine Nachricht dann erneut."
+    },
+    "failure-request-conflict": {
+      "title": "Diese Anfrage wurde schon verwendet.",
+      "description": "Sie gehörte zu einer anderen Nachricht. Sende die Frage neu."
+    },
+    "failure-retry-unavailable": {
+      "title": "Nachricht nicht wiederholbar.",
+      "description": "Sende deine Frage als neue Nachricht."
+    },
+    "failure-session": {
+      "title": "Deine Sitzung ist abgelaufen.",
+      "description": "Melde dich erneut an, um fortzufahren."
+    }
   },
   "Ai": {
     "attachment": "Anhang",
@@ -569,11 +702,10 @@
     "attach-files": "Dateien anhängen",
     "remove-attachment": "{filename} entfernen",
     "attachment-rejections": {
-      "title": "Dateien nicht angehängt",
-      "type": "Nur PNG-, JPEG-, WebP-, GIF-, PDF- und Textdateien",
+      "type": "Dateityp nicht unterstützt",
       "empty": "Leere Datei",
-      "size": "Größer als {size, number}\u00a0MiB",
-      "count": "Höchstens {count, number}\u00a0Dateien pro Nachricht"
+      "size": "Über der Größenbegrenzung",
+      "count": "Über dem Limit von {count, number} Dateien"
     },
     "ask-nina": "Nina fragen",
     "text-placeholder": "Frag Nina etwas...",
@@ -733,7 +865,6 @@
     "public-description": "Alle mit dem Link können den Chat sehen.",
     "create-link": "Link erstellen",
     "copy-link": "Link kopieren",
-    "link-copied": "Link kopiert!",
     "share-link-error": "Der Link konnte nicht geladen werden",
     "private-chat-error": "Zugriff verweigert",
     "private-chat-error-description": "Dieser Chat gehört dir nicht. Bitte die besitzende Person um Zugriff.",

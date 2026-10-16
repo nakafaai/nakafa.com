@@ -8,6 +8,8 @@ import { BUBBLE, SHEET_POPUP } from "@/e2e/support/selector";
 
 /** What the pages tell the learner when a prompt could not be confirmed. */
 export const UNCONFIRMED = en.Ai.failures.connection;
+/** The title of the toast that a send the server did not confirm shows. */
+export const UNCONFIRMED_TOAST = en.Toast["failure-connection"].title;
 /** What a chat says when Nina's answer failed, which the local backend cannot avoid. */
 export const UNAVAILABLE = en.Ai.failures["service-configuration"];
 

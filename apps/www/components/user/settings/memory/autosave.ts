@@ -41,8 +41,8 @@ type Send = Pick<
  * Delete button deletes it, because the server would otherwise keep the last
  * words the learner no longer sees. The row of a new memory shows from the
  * moment its first save goes out, so a memory the learner deleted or emptied
- * while that save was on its way is deleted when the server has stored it, with
- * the same Undo. A write that failed is sent again with the next one. When it
+ * while that save was on its way is deleted when the server has stored it. A
+ * write that failed is sent again with the next one. When it
  * was the newest, the words the editor holds now come back in the editor if
  * the learner closed it, though they may be newer than the words that failed,
  * because the server may never have been handed them. After an older write
@@ -157,7 +157,7 @@ export function createAutosave(
 
         // The learner deleted the memory while the server was storing it. Its
         // row showed from the moment the save went out, so it goes as any
-        // memory the learner sees goes, with an Undo.
+        // memory the learner sees goes.
         if (MutableRef.get(state).stopped) {
           discard(send, added);
           return;
@@ -174,8 +174,7 @@ export function createAutosave(
   /**
    * Stops the saving and deletes the memory. `shown` is the memory the editor
    * shows, or none while the first save of a new memory is on its way. The
-   * learner sees the memory in its row, so its deletion offers an Undo, which
-   * puts the memory back as the server stored it. The words the editor held
+   * learner has confirmed the deletion. The words the editor held
    * come back in the editor only when the server does not delete the memory,
    * or the words of the memory when the editor held none. A new memory that no
    * save has sent has no row, and nothing is deleted for it.
@@ -199,7 +198,7 @@ export function createAutosave(
     /**
      * The editor closes. What the server was not handed goes out as `write`
      * sends it. A memory the learner emptied, title and words, is deleted as
-     * the Delete button deletes it, with the same Undo: nothing written for it
+     * the Delete button deletes it: nothing written for it
      * would leave its last words on the server and in the list, though the
      * editor showed none. A new memory that was never given a word, and is not
      * on its way, creates nothing.

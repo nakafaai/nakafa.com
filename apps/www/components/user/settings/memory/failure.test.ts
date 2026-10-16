@@ -1,21 +1,26 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { captureException } from "@repo/analytics/posthog/browser";
 import { NinaMemoryRejected } from "@repo/backend/confect/nina/memory.spec";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
-import { toast } from "sonner";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
 
 vi.mock("@repo/analytics/posthog/browser", () => ({
   captureException: vi.fn(),
 }));
-vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+vi.mock("@repo/design-system/lib/toast/notify", () => ({
+  toast: { error: vi.fn() },
+}));
 
 afterEach(() => vi.clearAllMocks());
 
-const messages = {
-  limit: "Wait a moment before saving again.",
-  missing: "This memory no longer exists.",
-  other: "We could not complete this action.",
+const messages: Record<"limit" | "missing" | "other", ToastCopy> = {
+  limit: { title: "Wait a moment before saving again." },
+  missing: { title: "This memory no longer exists." },
+  other: {
+    description: "Please try again.",
+    title: "We could not complete this action.",
+  },
 };
 
 describe("memory failure", () => {
@@ -26,7 +31,10 @@ describe("memory failure", () => {
         messages
       );
 
-      expect(toast.error).toHaveBeenCalledExactlyOnceWith(messages.missing);
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+        messages.missing.title,
+        { description: messages.missing.description }
+      );
       expect(captureException).not.toHaveBeenCalled();
       expect(again).toBe(false);
     })
@@ -41,7 +49,10 @@ describe("memory failure", () => {
           messages
         );
 
-        expect(toast.error).toHaveBeenCalledExactlyOnceWith(messages.limit);
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+          messages.limit.title,
+          { description: messages.limit.description }
+        );
         expect(captureException).not.toHaveBeenCalled();
         expect(again).toBe(true);
       })
@@ -57,7 +68,10 @@ describe("memory failure", () => {
         expect(captureException).toHaveBeenCalledExactlyOnceWith(error, {
           source: "components/user/settings/memory",
         });
-        expect(toast.error).toHaveBeenCalledExactlyOnceWith(messages.other);
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+          messages.other.title,
+          { description: messages.other.description }
+        );
         expect(again).toBe(true);
       })
   );
@@ -72,7 +86,10 @@ describe("memory failure", () => {
         expect(captureException).toHaveBeenCalledExactlyOnceWith(error, {
           source: "components/user/settings/memory",
         });
-        expect(toast.error).toHaveBeenCalledExactlyOnceWith(messages.other);
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+          messages.other.title,
+          { description: messages.other.description }
+        );
         expect(again).toBe(true);
       })
   );

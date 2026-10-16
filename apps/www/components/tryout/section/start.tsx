@@ -6,11 +6,11 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 interface StartSectionButtonProps {
@@ -26,6 +26,7 @@ export function StartSectionButton({
   const startSection = useMutation(tryouts.mutations.sections.start);
   const convex = useConvex();
   const tTryouts = useTranslations("Tryouts");
+  const tToast = useTranslations("Toast");
   const [isPending, startTransition] = useTransition();
 
   /** Starts this section timer and lets the Convex runtime subscription update. */
@@ -47,7 +48,10 @@ export function StartSectionButton({
               Effect.flatMap(Effect.fromResult),
               Effect.tap(() =>
                 Effect.sync(() => {
-                  toast.success(tTryouts("start-part-success"), {
+                  toast.success(tToast("tryout-start-part-success.title"), {
+                    description: tToast(
+                      "tryout-start-part-success.description"
+                    ),
                     position: "bottom-center",
                   });
                 })
@@ -56,7 +60,8 @@ export function StartSectionButton({
           ),
           Effect.catch(() =>
             Effect.sync(() => {
-              toast.error(tTryouts("start-part-error"), {
+              toast.error(tToast("tryout-start-part-error.title"), {
+                description: tToast("tryout-start-part-error.description"),
                 position: "bottom-center",
               });
             })

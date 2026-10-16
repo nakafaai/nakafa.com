@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   PromptInputFileConstraintError,
   PromptInputFileSchema,
+  refusedFiles,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
 import { Effect, Schema } from "effect";
@@ -194,4 +195,29 @@ describe("prompt input file schema", () => {
       expect(error).toBeInstanceOf(Schema.SchemaError);
     })
   );
+});
+
+describe("refused files", () => {
+  it("names each refused file once, with the reason that refused it, in the order of the reasons", () => {
+    expect(
+      refusedFiles([
+        new PromptInputFileConstraintError({
+          code: "accept",
+          files: ["essay.docx", "essay.docx"],
+        }),
+        new PromptInputFileConstraintError({
+          code: "max_files",
+          files: ["photo-11.png"],
+        }),
+      ])
+    ).toEqual([
+      { code: "accept", name: "essay.docx" },
+      { code: "accept", name: "essay.docx" },
+      { code: "max_files", name: "photo-11.png" },
+    ]);
+  });
+
+  it("refuses nothing when the pick refused nothing", () => {
+    expect(refusedFiles([])).toEqual([]);
+  });
 });

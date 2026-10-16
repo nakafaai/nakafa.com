@@ -8,13 +8,13 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
 import { useConvexAuth } from "@/components/providers/convex";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
@@ -69,6 +69,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const startSection = useMutation(tryouts.mutations.sections.start);
   const convex = useConvex();
   const t = useTranslations("Tryouts");
+  const tToast = useTranslations("Toast");
   const now = useTryoutClock(false);
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, dialog] = useDisclosure(false);
@@ -121,15 +122,22 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
             Effect.andThen(
               startEntrySectionProgram({
                 attemptId: attempt.attemptId,
-                failureMessage: t("start-part-error"),
+                failureMessage: {
+                  description: tToast("tryout-start-part-error.description"),
+                  title: tToast("tryout-start-part-error.title"),
+                },
                 mutation: startSection,
                 sectionKey,
-                successMessage: t("start-entry-success"),
+                successMessage: {
+                  description: tToast("tryout-start-entry-success.description"),
+                  title: tToast("tryout-start-entry-success.title"),
+                },
               })
             ),
             Effect.catchTag("ConvexOfflineError", () =>
               Effect.sync(() => {
-                toast.error(t("start-part-error"), {
+                toast.error(tToast("tryout-start-part-error.title"), {
+                  description: tToast("tryout-start-part-error.description"),
                   position: "bottom-center",
                 });
               })
@@ -147,6 +155,15 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     if (busy) {
       return;
     }
+    const startedCopy = directEntry
+      ? {
+          description: tToast("tryout-start-entry-success.description"),
+          title: tToast("tryout-start-entry-success.title"),
+        }
+      : {
+          description: tToast("tryout-start-success.description"),
+          title: tToast("tryout-start-success.title"),
+        };
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
@@ -165,17 +182,18 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         setKey: request.setKey,
         trackKey: request.trackKey,
       },
-      failureMessage: t("start-error"),
+      failureMessage: {
+        description: tToast("tryout-start-error.description"),
+        title: tToast("tryout-start-error.title"),
+      },
       mutation: startAttempt,
       onSuccess: (result) =>
         Effect.sync(() => {
           dialog.close();
-          toast.success(
-            directEntry ? t("start-entry-success") : t("start-success"),
-            {
-              position: "bottom-center",
-            }
-          );
+          toast.success(startedCopy.title, {
+            description: startedCopy.description,
+            position: "bottom-center",
+          });
           const href = getTryoutAttemptHref(
             result.navigation.publicPath,
             result.attemptId
@@ -193,7 +211,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
           Effect.andThen(program),
           Effect.catchTag("ConvexOfflineError", () =>
             Effect.sync(() => {
-              toast.error(t("start-error"), {
+              toast.error(tToast("tryout-start-error.title"), {
+                description: tToast("tryout-start-error.description"),
                 position: "bottom-center",
               });
             })

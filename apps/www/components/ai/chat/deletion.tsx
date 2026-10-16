@@ -5,11 +5,11 @@ import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { useChange } from "@/components/ai/chat/change.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { useChatStore } from "@/components/ai/chat/store.client";
@@ -34,7 +34,7 @@ export function ChatDeletion({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("Ai");
-  const actionErrorMessage = useTranslations("Common")("action-error");
+  const tToast = useTranslations("Toast");
   const router = useRouter();
   const user = useViewer((s) => s.account);
   const { change, isPending } = useChange();
@@ -75,7 +75,9 @@ export function ChatDeletion({
             onFailure: () =>
               Effect.sync(() => {
                 stay();
-                toast.error(actionErrorMessage);
+                toast.error(tToast("action-error.title"), {
+                  description: tToast("action-error.description"),
+                });
               }),
           })
         )

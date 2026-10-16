@@ -7,13 +7,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { getAppUrl } from "@repo/next-config/app";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 
 export function ShareButton() {
   const t = useTranslations("Common");
+  const tToast = useTranslations("Toast");
 
   // use pathname hook from nextjs to get the locale
   const pathname = usePathname();
@@ -23,7 +24,7 @@ export function ShareButton() {
   function handleShare() {
     const url = `${getAppUrl()}${pathname}`;
     clipboard.copy(url);
-    toast.success(t("share-copied"), {
+    toast.success(tToast("link-copied.title"), {
       description: url,
       position: "bottom-center",
     });

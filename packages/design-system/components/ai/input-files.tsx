@@ -2,7 +2,8 @@
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import {
   type PromptInputFile,
-  type PromptInputFileConstraintError,
+  type PromptInputRefusal,
+  refusedFiles,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
 import { randomUuid } from "@repo/utilities/uuid";
@@ -29,27 +30,23 @@ const PromptInputFilesLimitsSchema = Schema.Struct({
   maxFiles: Schema.optional(Schema.Finite),
 });
 type PromptInputFilesLimits = typeof PromptInputFilesLimitsSchema.Type;
-/**
- * Reports every pick, once it is made: the reasons the pick did not attach its
- * files in full, each naming its files, and an empty list when it attached all
- * of them.
- */
-type OnPromptInputPick = (
-  rejections: readonly PromptInputFileConstraintError[]
-) => void;
 
-/** Owns selected files and the lifetime of their browser preview URLs. */
+/**
+ * Owns selected files, the lifetime of their browser preview URLs, and the files
+ * that the last pick refused. Each pick replaces the refused files of the pick
+ * before it, so a refused file shows until its learner removes it, picks again,
+ * or the composer's message goes.
+ */
 export function usePromptInputFiles({
   accept,
   inputRef,
   maxFiles,
   maxFileSize,
-  onPick,
 }: PromptInputFilesLimits & {
   inputRef: RefObject<HTMLInputElement | null>;
-  onPick?: OnPromptInputPick | undefined;
 }) {
   const [items, setItems] = useState<PromptInputFile[]>([]);
+  const [refusals, setRefusals] = useState<readonly PromptInputRefusal[]>([]);
   const localItemsRef = useRef<PromptInputFile[]>([]);
   const localUrls = useStableMutableValue(() =>
     MutableHashMap.empty<string, string>()
@@ -122,14 +119,19 @@ export function usePromptInputFiles({
           maxFiles,
         })
       );
-      onPick?.(selection.rejections);
+      setRefusals(
+        Arr.map(refusedFiles(selection.rejections), (refusal) => ({
+          ...refusal,
+          id: Effect.runSync(randomUuid),
+        }))
+      );
       if (selection.files.length === 0) {
         return;
       }
       addLocal(selection.files);
       fileCountRef.current += selection.files.length;
     },
-    [accept, addLocal, maxFileSize, maxFiles, onPick]
+    [accept, addLocal, maxFileSize, maxFiles]
   );
   const remove = useCallback(
     (id: string) => {
@@ -138,13 +140,18 @@ export function usePromptInputFiles({
         fileCountRef.current = Math.max(0, fileCountRef.current - 1);
       }
       removeLocal(id);
+      setRefusals((current) =>
+        Arr.filter(current, (refusal) => refusal.id !== id)
+      );
     },
     [removeLocal]
   );
+  const clearRefusals = useCallback(() => setRefusals([]), []);
   const clear = useCallback(() => {
     fileCountRef.current = 0;
     fileIdsRef.current = HashSet.empty();
     clearLocal();
+    setRefusals([]);
   }, [clearLocal]);
   const openFileDialog = openFileDialogLocal;
   useLayoutEffect(() => {
@@ -174,13 +181,24 @@ export function usePromptInputFiles({
   const attachments = useMemo(
     () => ({
       files,
+      refusals,
       add,
+      clearRefusals,
       remove,
       clear,
       openFileDialog,
       fileInputRef: inputRef,
     }),
-    [files, add, remove, clear, openFileDialog, inputRef]
+    [
+      files,
+      refusals,
+      add,
+      clearRefusals,
+      remove,
+      clear,
+      openFileDialog,
+      inputRef,
+    ]
   );
   return { attachments, files };
 }

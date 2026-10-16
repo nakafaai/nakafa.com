@@ -2,12 +2,12 @@
 
 import { useAction } from "@confect/react";
 import customers from "@repo/backend/confect/_generated/refs/customers";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   type BillingDestination,
@@ -24,7 +24,7 @@ type BillingSource = typeof BillingSourceSchema.Type;
 
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
-  const t = useTranslations("Auth");
+  const tToast = useTranslations("Toast");
   const [isPending, startTransition] = useTransition();
   const convex = useConvex();
   const createCheckout = useAction(
@@ -36,7 +36,7 @@ export function useBillingNavigation() {
 
   function runBillingRequest<E>(
     request: Effect.Effect<BillingDestination, E>,
-    failure: BillingSource & { readonly message: string }
+    failure: BillingSource & { readonly copy: ToastCopy }
   ) {
     startTransition(() =>
       Effect.runPromise(
@@ -46,7 +46,10 @@ export function useBillingNavigation() {
           },
           onFailure: () =>
             Effect.sync(() => {
-              toast.error(failure.message, { position: "bottom-center" });
+              toast.error(failure.copy.title, {
+                description: failure.copy.description,
+                position: "bottom-center",
+              });
             }),
           request: requireConvexOnline(convex).pipe(
             Effect.andThen(
@@ -75,7 +78,13 @@ export function useBillingNavigation() {
             successUrl: checkoutReturnUrl(window.location.href),
           })
         ).pipe(Effect.flatMap(Effect.fromResult)),
-        { ...failure, message: t("checkout-error") }
+        {
+          ...failure,
+          copy: {
+            description: tToast("checkout-error.description"),
+            title: tToast("checkout-error.title"),
+          },
+        }
       ),
     openPortal: (source: BillingSource) =>
       runBillingRequest(
@@ -84,7 +93,10 @@ export function useBillingNavigation() {
         ),
         {
           ...source,
-          message: t("portal-error"),
+          copy: {
+            description: tToast("portal-error.description"),
+            title: tToast("portal-error.title"),
+          },
         }
       ),
   };

@@ -20,26 +20,33 @@ import {
 } from "@repo/design-system/components/ui/attachment";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
-import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
+import type {
+  PromptInputFile,
+  PromptInputRefusal,
+} from "@repo/design-system/lib/prompt-input/files";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "cn";
 import { Array as Arr, Effect, HashSet } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import {
-  type rejectionNotice,
-  splitFileName,
-} from "@/components/ai/attachments";
+import { refusalReason, splitFileName } from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";
 import { releaseUploads } from "@/components/ai/uploads";
 
+// A chip in the composer sits inside the composer's own border, so it draws no
+// frame: no border and no background of its own. The `preview` variant keeps
+// the size of the chip, and its state shows in the icon tile and the text.
 const imageVariants = cva("", {
-  variants: { variant: { message: "w-48", preview: "w-24" } },
+  variants: {
+    variant: {
+      message: "w-48",
+      preview:
+        "w-24 border-transparent bg-transparent p-0 has-data-[slot=attachment-media]:p-0 has-[>a,>button]:hover:bg-transparent data-[state=error]:border-transparent",
+    },
+  },
   defaultVariants: { variant: "message" },
 });
 
@@ -54,7 +61,22 @@ const documentVariants = cva("", {
     variant: {
       message: "max-w-64",
       preview:
-        "min-w-[min(100%,--spacing(40))] max-w-[min(100%,--spacing(64))]",
+        "min-w-[min(100%,--spacing(40))] max-w-[min(100%,--spacing(64))] border-transparent bg-transparent has-[>a,>button]:hover:bg-transparent data-[state=error]:border-transparent",
+    },
+  },
+  defaultVariants: { variant: "message" },
+});
+
+/**
+ * The picture of an image chip in the composer is the chip itself: it takes
+ * the chip's corners and shows no backdrop, so no white square sits inside the
+ * chip's frame.
+ */
+const imageMediaVariants = cva("", {
+  variants: {
+    variant: {
+      message: "aspect-3/2",
+      preview: "rounded-md bg-transparent dark:bg-transparent",
     },
   },
   defaultVariants: { variant: "message" },
@@ -119,19 +141,14 @@ export function NinaAttachment({
     ) ?? "done";
   return (
     <Attachment
-      // A chip in the composer sits inside the border of the composer, so it
-      // draws none of its own: a box with a border inside a box with a border
-      // reads as a card in a card. A failed upload keeps the border that
-      // marks it. A transparent border keeps the size of the chip.
-      className={cn(
-        isImage ? imageVariants({ variant }) : documentVariants({ variant }),
-        variant === "preview" && "border-transparent"
-      )}
+      className={
+        isImage ? imageVariants({ variant }) : documentVariants({ variant })
+      }
       orientation={isImage ? "vertical" : "horizontal"}
       state={state}
     >
       <AttachmentMedia
-        className={isImage && variant === "message" ? "aspect-3/2" : undefined}
+        className={isImage ? imageMediaVariants({ variant }) : undefined}
         variant={isImage ? "image" : "icon"}
       >
         {isImage ? (
@@ -169,57 +186,50 @@ export function NinaAttachment({
 }
 
 /**
- * The files one pick did not attach, grouped by the reason that dropped them.
- * Each reason heads its group in the quiet color of a description, and every
- * dropped file is named on a line of its own with its end in view.
- *
- * The list scrolls inside itself past ten lines, or seven on a screen at most
- * 34rem tall, so a pick of many files never makes the notice taller than the
- * page. While it scrolls, the reason of the group in view stays at the top of
- * the list, on the error background the toaster gives the notice, so that no
- * name shows through it. Every line is as tall as the height counts it, and the
- * list snaps to them, so it comes to rest with whole names under the reason,
- * never half of one.
- *
- * The end of the list fades while more follows, which tells the learner that
- * the list goes on without a count. Its start does not fade, because the
- * reason that stays there would fade with it.
+ * A file that a pick refused, in the tray and in its refused state: its name,
+ * and the reason in the text under it. It never uploads, and its own remove
+ * button takes it out of the tray.
  */
-export function RejectedFiles({
-  reasons,
+function NinaRefusedAttachment({
+  onRemove,
+  refusal,
 }: {
-  reasons: ReturnType<typeof rejectionNotice>["reasons"];
+  onRemove: () => void;
+  refusal: PromptInputRefusal;
 }) {
+  const t = useTranslations("Ai");
   return (
-    <ScrollArea
-      scrollFade="end"
-      viewportClassName="max-h-[10lh] snap-y snap-mandatory leading-4.5 [@media(max-height:34rem)]:max-h-[7lh]"
+    <Attachment
+      className={documentVariants({ variant: "preview" })}
+      state="error"
     >
-      {/* Names are the only other places to rest, and the first of them rests
-          under the first reason, so this empty line lets the list return to its top. */}
-      <div aria-hidden="true" className="snap-start" />
-      <dl>
-        {Arr.map(reasons, (entry) => (
-          <div key={entry.reason}>
-            <dt className="sticky top-0 bg-(--error-bg)">{entry.reason}</dt>
-            {Arr.map(entry.names, (name) => (
-              <dd
-                className="flex snap-start text-popover-foreground"
-                dir="auto"
-                key={name}
-                title={name}
-              >
-                <FileNameParts name={name} />
-              </dd>
-            ))}
-          </div>
-        ))}
-      </dl>
-    </ScrollArea>
+      <AttachmentMedia variant="icon">
+        <HugeIcons icon={FileIcon} />
+      </AttachmentMedia>
+      <AttachmentContent>
+        <NinaFileName name={refusal.name} />
+        <AttachmentDescription>
+          {refusalReason(refusal.code, t)}
+        </AttachmentDescription>
+      </AttachmentContent>
+      <AttachmentActions>
+        <AttachmentAction
+          aria-label={t("remove-attachment", { filename: refusal.name })}
+          onClick={onRemove}
+          type="button"
+          variant="secondary"
+        >
+          <HugeIcons icon={Cancel01Icon} />
+        </AttachmentAction>
+      </AttachmentActions>
+    </Attachment>
   );
 }
 
-/** Selected files remain editable when upload or message admission fails. */
+/**
+ * The files of a composer's tray: the files it attached, which upload and stay
+ * until the message goes, and the files the last pick refused.
+ */
 export function NinaAttachments({
   submittedFiles,
 }: {
@@ -227,6 +237,9 @@ export function NinaAttachments({
 }) {
   const attachedFiles = usePromptInputAttachments(
     (attachments) => attachments.files
+  );
+  const refusals = usePromptInputAttachments(
+    (attachments) => attachments.refusals
   );
   const removeAttachment = usePromptInputAttachments(
     (attachments) => attachments.remove
@@ -241,7 +254,7 @@ export function NinaAttachments({
     attachedFiles,
     (file) => !HashSet.has(submitted, file.id)
   );
-  if (files.length === 0) {
+  if (files.length === 0 && refusals.length === 0) {
     return null;
   }
   return (
@@ -271,6 +284,13 @@ export function NinaAttachments({
             </AttachmentAction>
           </AttachmentActions>
         </NinaAttachment>
+      ))}
+      {Arr.map(refusals, (refusal) => (
+        <NinaRefusedAttachment
+          key={refusal.id}
+          onRemove={() => removeAttachment(refusal.id)}
+          refusal={refusal}
+        />
       ))}
     </AttachmentGroup>
   );

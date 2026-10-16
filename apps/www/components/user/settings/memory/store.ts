@@ -49,7 +49,7 @@ const MemoryStateSchema = Schema.Struct({
    * id of the memory. The editor does not save them. They come back in an
    * editor when the server does not delete the memory, and each deletion keeps
    * its own. They go when the server has deleted the memory, because from then
-   * on the server keeps the memory for the Undo and the words were never part
+   * on the server keeps the memory for `MEMORY_UNDO` and the words were never part
    * of it, or when an editor opens on the memory again.
    */
   withheld: Schema.Record(Schema.String, DraftSchema),

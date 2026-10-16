@@ -4,9 +4,9 @@ import { captureException } from "@repo/analytics/posthog/browser";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Fiber, Option, Record as Rec } from "effect";
 import { TestClock } from "effect/testing";
-import { toast } from "sonner";
 import {
   NinaConnectionError,
   ninaFailureFeedback,
@@ -20,14 +20,16 @@ import { aiTranslator, NO_BREAK } from "@/test/ai";
 vi.mock("@repo/analytics/posthog/browser", () => ({
   captureException: vi.fn(),
 }));
-vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+vi.mock("@repo/design-system/lib/toast/notify", () => ({
+  toast: { error: vi.fn() },
+}));
 
 afterEach(() => vi.clearAllMocks());
 
 const copy = {
-  fallbackMessage: "Something went wrong.",
-  insufficientCreditsMessage: "You need more credits.",
-  rateLimitMessage: "Please wait before trying again.",
+  fallbackMessage: { title: "Something went wrong." },
+  insufficientCreditsMessage: { title: "You need more credits." },
+  rateLimitMessage: { title: "Please wait before trying again." },
 };
 
 describe("chat runtime feedback", () => {
@@ -45,7 +47,8 @@ describe("chat runtime feedback", () => {
           message
         );
 
-        expect(toast.error).toHaveBeenCalledExactlyOnceWith(message, {
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(message.title, {
+          description: undefined,
           id: expect.any(String),
           position: "top-center",
         });
@@ -65,8 +68,12 @@ describe("chat runtime feedback", () => {
       );
 
       expect(toast.error).toHaveBeenCalledExactlyOnceWith(
-        copy.fallbackMessage,
-        { id: expect.any(String), position: "top-center" }
+        copy.fallbackMessage.title,
+        {
+          description: undefined,
+          id: expect.any(String),
+          position: "top-center",
+        }
       );
       expect(captureException).not.toHaveBeenCalled();
     })
@@ -120,8 +127,9 @@ describe("chat runtime feedback", () => {
         source: "nina-admission",
       });
       expect(toast.error).toHaveBeenCalledExactlyOnceWith(
-        copy.fallbackMessage,
+        copy.fallbackMessage.title,
         {
+          description: undefined,
           id: expect.any(String),
           position: "top-center",
         }

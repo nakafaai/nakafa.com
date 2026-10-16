@@ -29,6 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import {
@@ -39,7 +40,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
 import { useChange } from "@/components/ai/chat/change.client";
 import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
@@ -60,7 +60,7 @@ export function AiChatHeader() {
 /** Render title, visibility, sharing, and deletion controls for one chat. */
 function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const tCommon = useTranslations("Common");
-  const actionErrorMessage = tCommon("action-error");
+  const tToast = useTranslations("Toast");
   const t = useTranslations("Ai");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
@@ -112,7 +112,9 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                   Effect.sync(() => {
                     // The box comes back with the words the learner wrote.
                     setIsEditing(true);
-                    toast.error(actionErrorMessage);
+                    toast.error(tToast("action-error.title"), {
+                      description: tToast("action-error.description"),
+                    });
                   })
                 )
               ),

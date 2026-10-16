@@ -9,7 +9,6 @@
   },
   "Common": {
     "load-error": "We could not load this data. Please try again.",
-    "action-error": "We could not complete this action. Please try again.",
     "copyright": "Copyright © {year} {companyName}. All rights reserved.",
     "made-with-love": "Made with love",
     "version": "Version {version}",
@@ -85,7 +84,6 @@
     "decrease-angle": "Decrease angle",
     "number-field": "Number field",
     "share": "Share",
-    "share-copied": "Link copied!",
     "contributor": "Contributor",
     "search": "Search",
     "select": "Select",
@@ -97,8 +95,6 @@
     "copy-content": "Copy Content",
     "content-actions": "Content actions",
     "copy": "Copy",
-    "copy-success": "Copied!",
-    "copy-error": "Couldn't copy",
     "open": "Open",
     "open-in": "Open in",
     "open-in-github": "Open in GitHub",
@@ -136,7 +132,6 @@
     "curriculum-index-title": "School curricula",
     "curriculum-index-action": "Choose a level",
     "curriculum-route-action": "View options",
-    "preference-save-error": "We could not save your curriculum preference.",
     "onboarding": {
       "progress": "Question {current} of {total}",
       "role-title": "Who are you?",
@@ -190,10 +185,7 @@
       "back": "Back",
       "continue": "Continue",
       "finish": "Finish",
-      "required-error": "Choose one answer.",
-      "invalid-selection": "Answer every question.",
-      "save-error": "Your answer was not saved. Try again.",
-      "finish-error": "Onboarding did not finish. Try again."
+      "required-error": "Choose one answer."
     },
     "kind": {
       "school-curriculum": "Curriculum"
@@ -251,8 +243,6 @@
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
-    "interpretation-error": "This verse's interpretation could not be loaded. Try again.",
-    "interpretation-refreshing": "The Quran has been updated. Refreshing this page...",
     "meaning": "Meaning",
     "revelation": "Revelation place",
     "revelation-place": "{place, select, Meccan {Meccan} Medinan {Medinan} other {Unknown}}",
@@ -274,7 +264,6 @@
     "open-exam-cta": "View options",
     "open-set-cta": "View sets",
     "list-empty": "There are no tryouts showing right now.",
-    "preference-save-error": "We could not save your tryout preference yet.",
     "start-cta": "Start",
     "restart-cta": "Restart",
     "free-cta": "Start free",
@@ -289,14 +278,11 @@
     "restart-dialog-title": "Start this tryout from the beginning?",
     "restart-dialog-description": "You will start over. Your previous result stays saved.",
     "restart-entry-dialog-description": "You will start over, and this set's timer starts immediately. Your previous result stays saved.",
-    "start-success": "Tryout started. You can choose which section to work on first.",
     "start-entry-dialog-description": "This set's timer starts as soon as you begin.",
-    "start-entry-success": "Tryout started. The timer is now running.",
     "paywall-title": "{count, plural, one {See the solution to this question} other {See the solutions to all # questions}}",
     "paywall-description": "Learn the steps and reasoning behind every answer, and ask Nina whenever something is unclear.",
     "paywall-compare": "Compare plans",
     "ask-nina-prompt": "Help me understand question {number}.",
-    "start-error": "We could not start the tryout yet. Please try again.",
     "score-label-irt": "IRT score",
     "score-label-standard": "Score",
     "correct-answers-label": "Correct answers",
@@ -331,13 +317,9 @@
     "time-minutes-short": "min",
     "time-seconds-short": "sec",
     "start-part-cta": "Start",
-    "start-part-success": "Section started. The timer is now running.",
-    "start-part-error": "We could not start this section yet. Please try again.",
     "complete-part-cta": "Finish",
     "complete-part-title": "Finish this section?",
     "complete-part-description": "If you finish now, the answers in this section will be locked.",
-    "complete-part-success": "Section finished. You can choose another section or go back to the set.",
-    "complete-part-error": "We could not finish this section yet. Please try again.",
     "back-to-set-cta": "Back",
     "set-column-duration": "Duration",
     "set-duration-minutes": "{minutes, number} min",
@@ -352,9 +334,7 @@
     "incorrect": "Incorrect",
     "reset": "Reset",
     "explanation": "Explanation",
-    "number-count": "Number {count}",
-    "attempt-not-in-progress": "Please start a new session to continue practicing.",
-    "submit-answer-error": "We couldn't save your answer. Please try again."
+    "number-count": "Number {count}"
   },
   "Player": {
     "navigator": "Questions",
@@ -365,7 +345,6 @@
     "mode": "View",
     "mode-list": "List",
     "mode-single": "One question",
-    "mode-error": "We couldn't save your view. Please try again.",
     "cell": "{state, select, answered {Question {number}, answered} other {Question {number}, unanswered}}",
     "unanswered": "Unanswered",
     "time-left": "{hours, plural, =0 {} one {# hour } other {# hours }}{minutes, plural, one {# minute} other {# minutes}} {seconds, plural, one {# second} other {# seconds}} left",
@@ -448,8 +427,6 @@
     "subscriptions-description": "Manage Nakafa Pro, 3,000 monthly AI credits, and your payment portal.",
     "get-pro": "Get Pro",
     "manage": "Manage",
-    "checkout-error": "We could not open Pro checkout. Please try again.",
-    "portal-error": "We could not open the subscription portal. Please try again.",
     "plan-free": "Free",
     "plan-pro": "Pro",
     "name": "Name",
@@ -542,20 +519,176 @@
     "no-result": "No memory found",
     "edit": "Edit memory",
     "delete": "Delete memory",
-    "deleted": "Memory deleted",
-    "undo": "Undo",
-    "undo-failed": "Undo failed",
+    "delete-title": "Delete this memory?",
+    "delete-description": "Nina will no longer remember it.",
     "written-by-you": "Written by you {time}",
     "saved-by-nina": "Saved by Nina {time}",
     "ends": "Ends {date}",
     "text": "Memory text",
     "placeholder": "Write what Nina should remember",
-    "missing": "This memory no longer exists",
-    "limit": "Wait a moment before saving again",
-    "too-long": "That text is too long for one memory",
     "title": "Title",
     "untitled": "Untitled",
     "count": "{count, number} / {limit, number}"
+  },
+  "Toast": {
+    "action-error": {
+      "title": "We could not complete this action.",
+      "description": "Please try again."
+    },
+    "copy-error": { "title": "Couldn't copy" },
+    "copy-success": { "title": "Copied!" },
+    "curriculum-preference-error": {
+      "title": "Curriculum preference not saved.",
+      "description": "Please try again."
+    },
+    "onboarding-finish-error": {
+      "title": "Onboarding did not finish.",
+      "description": "Try again."
+    },
+    "onboarding-invalid-selection": { "title": "Answer every question." },
+    "onboarding-save-error": {
+      "title": "Your answer was not saved.",
+      "description": "Try again."
+    },
+    "link-copied": { "title": "Link copied!" },
+    "provider-error": {
+      "title": "We couldn't continue with Google.",
+      "description": "Please try again."
+    },
+    "checkout-error": {
+      "title": "We could not open Pro checkout.",
+      "description": "Please try again."
+    },
+    "portal-error": {
+      "title": "Subscription portal did not open.",
+      "description": "Please try again."
+    },
+    "mode-error": {
+      "title": "We couldn't save your view.",
+      "description": "Please try again."
+    },
+    "tryout-attempt-not-in-progress": {
+      "title": "This session has ended.",
+      "description": "Please start a new session to continue practicing."
+    },
+    "tryout-complete-part-error": {
+      "title": "Could not finish this section yet.",
+      "description": "Please try again."
+    },
+    "tryout-complete-part-success": {
+      "title": "Section finished.",
+      "description": "You can choose another section or go back to the set."
+    },
+    "tryout-preference-error": {
+      "title": "Tryout preference not saved yet."
+    },
+    "tryout-start-entry-success": {
+      "title": "Tryout started.",
+      "description": "The timer is now running."
+    },
+    "tryout-start-error": {
+      "title": "We could not start the tryout yet.",
+      "description": "Please try again."
+    },
+    "tryout-start-part-error": {
+      "title": "We could not start this section yet.",
+      "description": "Please try again."
+    },
+    "tryout-start-part-success": {
+      "title": "Section started.",
+      "description": "The timer is now running."
+    },
+    "tryout-start-success": {
+      "title": "Tryout started.",
+      "description": "You can choose which section to work on first."
+    },
+    "tryout-submit-answer-error": {
+      "title": "We couldn't save your answer.",
+      "description": "Please try again."
+    },
+    "memory-limit": { "title": "Wait a moment before saving again." },
+    "memory-missing": { "title": "This memory no longer exists." },
+    "memory-too-long": { "title": "That text is too long for a memory." },
+    "interpretation-error": {
+      "title": "Could not load this interpretation.",
+      "description": "Try again."
+    },
+    "interpretation-refreshing": {
+      "title": "The Quran has been updated.",
+      "description": "Refreshing this page..."
+    },
+    "failure-account": {
+      "title": "This account cannot use Nina.",
+      "description": "Sign in again or contact Nakafa support if it continues."
+    },
+    "failure-admission": {
+      "title": "Nina could not save this request.",
+      "description": "Please try again."
+    },
+    "failure-attachment-failed": {
+      "title": "Nina could not save the attachment.",
+      "description": "Please try uploading it again."
+    },
+    "failure-attachment-invalid": {
+      "title": "An attachment is no longer valid.",
+      "description": "Choose it again and check its file type and size."
+    },
+    "failure-attachment-limit": {
+      "title": "Attachment limit reached.",
+      "description": "Send the uploaded files or wait before uploading more."
+    },
+    "failure-attachment-size": {
+      "title": "Documents are too large.",
+      "description": "Documents in one message can total at most {size, number} MiB."
+    },
+    "failure-authentication": {
+      "title": "We could not verify your session.",
+      "description": "Please try again."
+    },
+    "failure-busy": {
+      "title": "Nina is still answering.",
+      "description": "Wait for the answer or stop it before you send again."
+    },
+    "failure-chat-access": {
+      "title": "No permission to send in this chat.",
+      "description": "Start your own chat to continue."
+    },
+    "failure-connection": {
+      "title": "We could not confirm the request.",
+      "description": "Check your connection and try again."
+    },
+    "failure-context": {
+      "title": "Learning material did not load.",
+      "description": "Nina could not load it for this chat. Please try again."
+    },
+    "failure-credits": {
+      "title": "You do not have enough credits.",
+      "description": "Check your allowance and next reset in subscription settings."
+    },
+    "failure-message-size": {
+      "title": "Too long for Nina in one turn.",
+      "description": "Shorten it, or send the rest in a new message."
+    },
+    "failure-missing-chat": {
+      "title": "This chat is no longer available.",
+      "description": "You can start a new chat."
+    },
+    "failure-rate-limit": {
+      "title": "You have reached the message limit.",
+      "description": "Wait a moment, then send your message again."
+    },
+    "failure-request-conflict": {
+      "title": "This request is already used.",
+      "description": "It was used for another message. Send your question again."
+    },
+    "failure-retry-unavailable": {
+      "title": "This message cannot be retried.",
+      "description": "Send your question as a new message."
+    },
+    "failure-session": {
+      "title": "Your session has expired.",
+      "description": "Sign in again to continue."
+    }
   },
   "Ai": {
     "attachment": "Attachment",
@@ -569,11 +702,10 @@
     "attach-files": "Attach files",
     "remove-attachment": "Remove {filename}",
     "attachment-rejections": {
-      "title": "Files not attached",
-      "type": "Only PNG, JPEG, WebP, GIF, PDF, and text files",
+      "type": "Not a supported file",
       "empty": "Empty file",
-      "size": "Larger than {size, number}\u00a0MiB",
-      "count": "At most {count, number}\u00a0files per message"
+      "size": "Over the size limit",
+      "count": "Over the {count, number} file limit"
     },
     "ask-nina": "Ask Nina",
     "text-placeholder": "Ask Nina anything...",
@@ -733,7 +865,6 @@
     "public-description": "Anyone with the link can view the chat.",
     "create-link": "Create link",
     "copy-link": "Copy link",
-    "link-copied": "Link copied!",
     "share-link-error": "We could not load the link",
     "private-chat-error": "Access denied",
     "private-chat-error-description": "This isn't your chat. Ask the owner for access.",

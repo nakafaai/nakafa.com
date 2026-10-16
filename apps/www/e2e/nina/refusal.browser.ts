@@ -1,5 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect, Schema } from "effect";
 import {
   composerOf,
@@ -11,13 +14,13 @@ import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForSlide } from "@/e2e/support/layout";
 import { SHEET_POPUP } from "@/e2e/support/selector";
-import { UNCONFIRMED } from "@/e2e/support/sheet";
+import { UNCONFIRMED_TOAST } from "@/e2e/support/sheet";
 
 /**
  * The English notice of a prompt over the limit. It says what the turn budget
  * says, and names no number that a shorter prompt could still be over.
  */
-const LIMIT = "This message is too long for Nina to read in one turn";
+const LIMIT = en.Toast["failure-message-size"].title;
 /** The failures the server names, as the page receives them. */
 const TOO_LONG = {
   _tag: "NinaPromptError",
@@ -110,7 +113,7 @@ test.describe("A prompt over the limit at 390px", () => {
         yield* Effect.promise(async () => {
           await composerOf(composer).press("Enter");
           await expect(noticeWith(page, LIMIT)).toBeVisible();
-          await expect(noticeWith(page, UNCONFIRMED)).toHaveCount(0);
+          await expect(noticeWith(page, UNCONFIRMED_TOAST)).toHaveCount(0);
           await expect(composerOf(composer)).toHaveValue(
             "A question the server finds too long"
           );

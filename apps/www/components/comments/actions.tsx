@@ -15,11 +15,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useTransition } from "react";
-import { toast } from "sonner";
 import {
   useDeleteCommentMutation,
   useVoteCommentMutation,
@@ -57,7 +57,7 @@ export function CommentActionsProvider({
 
 /** Builds one comment's actions and their shared pending state from its mutations. */
 function useCommentActionsValue(comment: ActionComment) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
+  const tToast = useTranslations("Toast");
   const viewer = useViewer((state) => state.account);
   const [isPending, startTransition] = useTransition();
   const voteOnComment = useVoteCommentMutation();
@@ -79,7 +79,9 @@ function useCommentActionsValue(comment: ActionComment) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(actionErrorMessage);
+                    toast.error(tToast("action-error.title"), {
+                      description: tToast("action-error.description"),
+                    });
                   })
                 )
               ),

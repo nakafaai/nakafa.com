@@ -2,18 +2,10 @@
 
 import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import { MEMORY_UNDO } from "@repo/backend/confect/nina/memory.spec";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
-import {
-  DateTime,
-  Duration,
-  Effect,
-  Option,
-  Record as Rec,
-  type Result,
-} from "effect";
+import { DateTime, Effect, Option, Record as Rec, type Result } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
 import {
   draftArgs,
@@ -29,28 +21,30 @@ import {
   editInList,
   pauseState,
   removeFromList,
-  restoreInList,
 } from "@/components/user/settings/memory/optimistic";
 import {
   useMemoryLatest,
   useMemoryPage,
 } from "@/components/user/settings/memory/provider";
-import { createUndo } from "@/components/user/settings/memory/undo";
 
 /**
  * The changes the learner makes on the Memory page. Each one shows at once on
  * every page the browser holds, and a failure shows a toast while the page
  * rolls back: Convex runs the optimistic change again until the server
  * answers, then drops it. A new or rewritten memory that fails comes back in
- * its editor with what the learner wrote.
+ * its editor with what the learner wrote. A delete waits for the learner to
+ * confirm it, and then shows at once in the same way.
  *
  * An action reads what the learner is doing when it runs and subscribes to
  * none of it, so a component that only acts, such as a row, renders again for
  * none of it.
  */
 export function useMemoryActions() {
-  const t = useTranslations("Memory");
-  const other = useTranslations("Common")("action-error");
+  const tToast = useTranslations("Toast");
+  const other: ToastCopy = {
+    description: tToast("action-error.description"),
+    title: tToast("action-error.title"),
+  };
 
   const latest = useMemoryLatest();
   const forget = useMemoryPage((state) => state.forget);
@@ -67,14 +61,17 @@ export function useMemoryActions() {
   const removeById = useMutation(nina.memory.remove).withOptimisticUpdate(
     (store, { id }) => removeFromList(store, id)
   );
-  const restoreById = useMutation(nina.memory.restore);
   const pauseTo = useMutation(nina.memory.pause).withOptimisticUpdate(
     (store, { paused }) => pauseState(store, paused)
   );
   const clearAll = useMutation(nina.memory.clear).withOptimisticUpdate(
     (store) => clearList(store)
   );
-  const messages = { limit: t("limit"), missing: t("missing"), other };
+  const messages = {
+    limit: { title: tToast("memory-limit.title") },
+    missing: { title: tToast("memory-missing.title") },
+    other,
+  };
 
   /**
    * Sends one change from an event. `done` gets what the server answered. When
@@ -161,63 +158,15 @@ export function useMemoryActions() {
   }
 
   /**
-   * Puts a memory the learner deleted back, in its place. The row comes back
-   * at once, the memory as the learner saw it, under an id the server has not
-   * stored yet until it answers with the memory it stored: the one it deleted,
-   * with every field it had. When the server cannot, the row goes again and
-   * the learner is told that the Undo failed, whether the server refused it or
-   * broke. If they can try again, the memory's words open in the editor as a
-   * new memory, so nothing they wrote is lost.
-   */
-  function restore(memory: Memory) {
-    const { session } = latest();
-    const shown = { ...memory, id: pendingId(Effect.runSync(randomUuid)) };
-    const undoFailed = t("undo-failed");
-
-    settle(
-      () =>
-        restoreById.withOptimisticUpdate((store) =>
-          restoreInList(store, shown)
-        )({ id: memory.id }),
-      {
-        failed: (again) => {
-          if (again) {
-            reopen(session, draftOf(memory), null);
-          }
-        },
-        told: { limit: t("limit"), missing: undoFailed, other: undoFailed },
-      }
-    );
-  }
-
-  /**
-   * Closes the toast of a deleted memory when its Undo ends. A toast waits for
-   * as long as the pointer rests on it and the tab is hidden, but the server
-   * keeps the memory for `MEMORY_UNDO` after it deleted it and not longer, so
-   * an Undo shown after that could only fail.
-   */
-  function closeWhenUndoEnds(shown: ReturnType<typeof toast>) {
-    Effect.runFork(
-      Effect.sleep(MEMORY_UNDO).pipe(
-        Effect.andThen(Effect.sync(() => toast.dismiss(shown)))
-      )
-    );
-  }
-
-  /**
    * Deletes a memory at once, on the page and on the server, so that closing
-   * the page can never leave it stored. The toast offers an Undo, which asks
-   * the server to put the memory back as it was (`restore`): the kind, the end
-   * date and the author it had come back with it. Words that an open editor on
-   * it had not saved yet were never part of the memory, and the Undo does not
-   * bring them back.
+   * the page can never leave it stored. The learner has confirmed the delete
+   * before it reaches here.
    *
    * When the server does not delete the memory, everything the deletion took
    * comes back: the memory in the list, and the editor that was on it with
    * `words`, what the editor still held when the deletion closed it, or the
-   * words of the memory when the editor held nothing more. The Undo goes,
-   * because nothing is left to undo. The page store keeps those words only
-   * until the server answers.
+   * words of the memory when the editor held nothing more. The page store keeps
+   * those words only until the server answers.
    *
    * A memory the learner deleted already is not deleted again. That is the case
    * of the editor on a memory whose words the learner removed, when the
@@ -232,22 +181,11 @@ export function useMemoryActions() {
     }
 
     const editing = before.open && before.target?.id === memory.id;
-    const undo = createUndo(
-      () => restore(memory),
-      () => release(memory.id)
-    );
 
     forget(memory.id);
 
     const { session } = latest();
-    const shown = toast(t("deleted"), {
-      action: { label: t("undo"), onClick: () => undo.press() },
-      duration: Duration.toMillis(MEMORY_UNDO),
-    });
-
-    closeWhenUndoEnds(shown);
     settle(() => removeById({ id: memory.id }), {
-      done: undo.deleted,
       failed: () => {
         const held = Option.getOrElse(
           Rec.get(latest().withheld, memory.id),
@@ -255,8 +193,6 @@ export function useMemoryActions() {
         );
 
         release(memory.id);
-        undo.kept();
-        toast.dismiss(shown);
         recall(memory.id);
         if (editing) {
           reopen(session, held, memory);

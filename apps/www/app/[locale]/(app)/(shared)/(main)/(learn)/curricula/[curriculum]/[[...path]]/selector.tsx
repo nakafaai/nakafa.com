@@ -11,12 +11,12 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";
@@ -52,7 +52,7 @@ export function CurriculumSelector({
 }) {
   const locale = useLocale();
   const router = useRouter();
-  const t = useTranslations("LearningPrograms");
+  const tToast = useTranslations("Toast");
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(
@@ -99,7 +99,10 @@ export function CurriculumSelector({
     }
     await Effect.runPromise(
       saveCurriculumPreference({
-        errorMessage: t("preference-save-error"),
+        errorMessage: {
+          description: tToast("curriculum-preference-error.description"),
+          title: tToast("curriculum-preference-error.title"),
+        },
         locale,
         programKey: selectedOption.value.programKey,
         setPreferredCurriculum,
@@ -152,7 +155,7 @@ function saveCurriculumPreference({
   programKey,
   setPreferredCurriculum,
 }: {
-  errorMessage: string;
+  errorMessage: ToastCopy;
   locale: PublicAppLocale;
   programKey: string;
   setPreferredCurriculum: SavePreferredCurriculum;
@@ -177,7 +180,10 @@ function saveCurriculumPreference({
       }).pipe(
         Effect.andThen(
           Effect.sync(() => {
-            toast.error(errorMessage, { position: "bottom-center" });
+            toast.error(errorMessage.title, {
+              description: errorMessage.description,
+              position: "bottom-center",
+            });
           })
         )
       )
