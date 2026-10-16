@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { sealMessage } from "@repo/backend/confect/nina/sealed";
-import { openRows } from "@repo/backend/confect/nina/sealed/open";
+import { openRow, openRows } from "@repo/backend/confect/nina/sealed/open";
 import {
   ensureLearnerKeys,
   readLearnerKeys,
@@ -92,6 +92,39 @@ describe("opening a read of rows", () => {
           const stranger = yield* learner("stranger");
           const failure = yield* Effect.flip(openRows(stranger, [sealed]));
           expect(failure.reason).toBe("key");
+        })
+      )
+  );
+
+  it.effect("reads no key for one plain row, which is returned as it is", () =>
+    scenario(
+      Effect.gen(function* () {
+        const owner = yield* learner("owner");
+        const plain = storedRow(
+          { message: { content: "Biasa.", role: "system" } },
+          IDENTITY
+        );
+        expect(yield* openRow(owner, plain)).toEqual(plain);
+        expect(readLearnerKeys).not.toHaveBeenCalled();
+      })
+    )
+  );
+
+  it.effect(
+    "reads the owner's key for one sealed row and opens it under its own place",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* learner("owner");
+          const keys = yield* ensureLearnerKeys(owner);
+          const sealed = storedRow(
+            yield* sealMessage(keys, IDENTITY, answer),
+            IDENTITY
+          );
+          expect(yield* openRow(owner, sealed)).toEqual(
+            storedRow(answer, IDENTITY)
+          );
+          expect(readLearnerKeys).toHaveBeenCalledTimes(1);
         })
       )
   );

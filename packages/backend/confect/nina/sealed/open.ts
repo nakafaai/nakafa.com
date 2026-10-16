@@ -11,6 +11,22 @@ import { Array as Arr, Effect } from "effect";
 type LearnerId = Docs["users"]["_id"];
 
 /**
+ * Opens one row of a read for the learner who owns its thread. A plain row is
+ * returned as it is and reads no key. A sealed row reads the owner's key and
+ * opens under its own place (ADR 0024).
+ */
+export const openRow = Effect.fn("nina.sealed.row")(function* (
+  owner: LearnerId,
+  row: MessageDoc
+) {
+  if (!isSealed(row)) {
+    return row;
+  }
+  const keys = yield* readLearnerKeys(owner);
+  return yield* openMessage(keys, identityOf(row), row);
+});
+
+/**
  * Opens the rows of one read for the learner who owns their thread, and returns
  * them in the same order. A read of plain rows reads no key and returns them as
  * they are. A read with a sealed row reads the owner's key once, for the whole

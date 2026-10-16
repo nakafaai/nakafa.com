@@ -4,9 +4,9 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
-import { openRows } from "@repo/backend/confect/nina/sealed/open";
+import { openRow } from "@repo/backend/confect/nina/sealed/open";
 import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect } from "effect";
 
 type LearnerId = Docs["users"]["_id"];
 
@@ -29,5 +29,5 @@ export const readMessage = Effect.fn("nina.sealed.message")(function* (
   if (!stored) {
     return null;
   }
-  return Option.getOrNull(Arr.head(yield* openRows(owner, [stored])));
+  return yield* openRow(owner, stored);
 });
