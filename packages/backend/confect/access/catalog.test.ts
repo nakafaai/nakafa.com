@@ -10,7 +10,53 @@ import {
 } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { Rule } from "@repo/backend/confect/access/schema";
+import { person } from "@repo/backend/confect/tenancy/kinds";
 import { Array as Arr, Option, Order, pipe, Record, Schema } from "effect";
+
+/**
+ * The most changes one kind may hold, and the most kinds that may hold any.
+ * Confect 10.3.0 fails with TS2589 above about 40 union members in a stored
+ * document, and the journal stores the union of one kind's changes.
+ */
+const LIMIT = 40;
+
+/** Why a kind past the limit fails the test, and the two ways to fix it. */
+const LIMIT_MESSAGE = `Confect 10.3.0 fails with TS2589 above about ${LIMIT} union members in a stored document. Split the kind, or group kinds by domain one level higher.`;
+
+/** The two facts of a catalog entry that the limit reads: its kind and the changes it adds. */
+const CountedEntry = Schema.Struct({
+  changes: Schema.Array(Schema.Unknown),
+  kind: Schema.String,
+});
+
+/** The changes a kind holds across its declaration and every extension. */
+const countOf = (
+  catalog: readonly (typeof CountedEntry.Type)[],
+  kind: string
+) =>
+  Arr.reduce(catalog, 0, (total, entry) =>
+    entry.kind === kind ? total + Arr.length(entry.changes) : total
+  );
+
+/** Each kind that holds more changes than the limit, with its count. */
+const overLimit = (catalog: readonly (typeof CountedEntry.Type)[]) =>
+  Arr.flatMap(ObjectRef.discriminants, (kind) => {
+    const count = countOf(catalog, kind);
+    return count > LIMIT ? [{ count, kind }] : [];
+  });
+
+/** The kinds that hold at least one change. */
+const holding = (catalog: readonly (typeof CountedEntry.Type)[]) =>
+  Arr.filter(ObjectRef.discriminants, (kind) => countOf(catalog, kind) > 0);
+
+/** A fixture: one change more than the limit on the person kind. */
+const overfull = Kind.extend(person, {
+  actions: {},
+  changes: Arr.makeBy(LIMIT + 1, (index) =>
+    Schema.Struct({ type: Schema.Literal(`person.overfull${index}`) })
+  ),
+  published: [],
+});
 
 describe("access/catalog", () => {
   it("derives one object reference per declared kind", () => {
@@ -180,5 +226,21 @@ describe("access/catalog", () => {
     expect(Schema.encodeSync(TenantCapabilities)(capabilities)).toEqual([
       "tenant.view",
     ]);
+  });
+
+  it("keeps every kind within the stored union limit", () => {
+    expect(overLimit(entries), LIMIT_MESSAGE).toEqual([]);
+  });
+
+  it("keeps the kinds that hold changes within the stored union limit", () => {
+    expect(Arr.length(holding(entries)), LIMIT_MESSAGE).toBeLessThanOrEqual(
+      LIMIT
+    );
+  });
+
+  it("names a kind that holds more changes than the limit", () => {
+    expect(
+      Arr.map(overLimit([...entries, overfull]), (over) => over.kind)
+    ).toEqual(["person"]);
   });
 });
