@@ -4,8 +4,8 @@ import {
   cleanLocalRuntime,
   discardSignedResponses,
   initializeLocalRuntime,
-  leaseLocalRuntime,
   LocalRuntimeJson,
+  leaseLocalRuntime,
   localApplicationEnvironment,
   readLocalRuntime,
   releaseLocalRuntime,
@@ -394,25 +394,25 @@ describe("owned signed acceptance runtime", () => {
         if (change === "database") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeRuntime({ ...runtime,databaseInode: -1n })
+            yield* encodeRuntime({ ...runtime, databaseInode: -1n })
           );
         }
         if (change === "directory") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeRuntime({ ...runtime,directory: "foreign" })
+            yield* encodeRuntime({ ...runtime, directory: "foreign" })
           );
         }
         if (change === "foreign-backend") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeRuntime({ ...runtime,backend: "foreign" })
+            yield* encodeRuntime({ ...runtime, backend: "foreign" })
           );
         }
         if (change === "foreign-inode") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeRuntime({ ...runtime,directoryInode: -1n })
+            yield* encodeRuntime({ ...runtime, directoryInode: -1n })
           );
         }
         if (change === "environment-link" || change === "database-link") {

@@ -318,9 +318,7 @@ export const readLocalRuntime = Effect.fn("contentAcceptance.readLocalRuntime")(
       return;
     }
     const runtime = yield* fs.readFileString(`${directory}/manifest.json`).pipe(
-      Effect.flatMap(
-        Schema.decodeEffect(LocalRuntimeJson)
-      ),
+      Effect.flatMap(Schema.decodeEffect(LocalRuntimeJson)),
       Effect.mapError(() =>
         acceptanceRuntimeError(
           "The build runtime manifest is missing or invalid; existing state is preserved. Stop its services, delete .cache/acceptance, and run pnpm acceptance:prepare."
