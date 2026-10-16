@@ -43,15 +43,15 @@ describe("editor/node attributes", () => {
   it.effect("accepts attributes nested exactly MAX_DOCUMENT_DEPTH levels", () =>
     Effect.gen(function* () {
       const attrs = nestedAttrs(MAX_DOCUMENT_DEPTH);
-      expect(
-        yield* Schema.decodeUnknownEffect(AttributesSchema)(attrs)
-      ).toEqual(attrs);
+      expect(yield* Schema.decodeEffect(AttributesSchema)(attrs)).toEqual(
+        attrs
+      );
     })
   );
 
   it.effect("refuses attributes nested one level deeper than the bound", () =>
     Effect.gen(function* () {
-      const failure = yield* Schema.decodeUnknownEffect(AttributesSchema)(
+      const failure = yield* Schema.decodeEffect(AttributesSchema)(
         nestedAttrs(MAX_DOCUMENT_DEPTH + 1)
       ).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
@@ -66,10 +66,10 @@ describe("editor/node attributes", () => {
     () =>
       Effect.gen(function* () {
         const value = nestedArray(MAX_DOCUMENT_DEPTH);
-        expect(
-          yield* Schema.decodeUnknownEffect(AttributeValueSchema)(value)
-        ).toEqual(value);
-        const failure = yield* Schema.decodeUnknownEffect(AttributeValueSchema)(
+        expect(yield* Schema.decodeEffect(AttributeValueSchema)(value)).toEqual(
+          value
+        );
+        const failure = yield* Schema.decodeEffect(AttributeValueSchema)(
           nestedArray(MAX_DOCUMENT_DEPTH + 1)
         ).pipe(Effect.flip);
         expect(failure._tag).toBe("SchemaError");
@@ -78,7 +78,7 @@ describe("editor/node attributes", () => {
 
   it.effect("refuses an attribute value one level deeper than the bound", () =>
     Effect.gen(function* () {
-      const failure = yield* Schema.decodeUnknownEffect(AttributeValueSchema)(
+      const failure = yield* Schema.decodeEffect(AttributeValueSchema)(
         nestedAttrs(MAX_DOCUMENT_DEPTH + 1)
       ).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
@@ -89,7 +89,7 @@ describe("editor/node attributes", () => {
     "refuses attributes nested 100,000 levels without a stack overflow",
     () =>
       Effect.gen(function* () {
-        const failure = yield* Schema.decodeUnknownEffect(AttributesSchema)(
+        const failure = yield* Schema.decodeEffect(AttributesSchema)(
           nestedAttrs(100_000)
         ).pipe(Effect.flip);
         expect(failure._tag).toBe("SchemaError");
