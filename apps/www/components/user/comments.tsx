@@ -41,6 +41,9 @@ import {
 import { DataFailure } from "@/components/shared/failure";
 import { getCleanHref } from "@/lib/routing/href";
 
+/** How many comments a page of the profile holds, the first one and each one after it. */
+const PAGE_SIZE = 25;
+
 /** Render the incrementally loaded comments for one user profile. */
 export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
@@ -53,7 +56,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
       userId,
     },
     {
-      initialNumItems: 25,
+      initialNumItems: PAGE_SIZE,
     }
   );
   const { results } = pagination;
@@ -91,6 +94,16 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
           />
         ))}
       </div>
+      {PaginatedQueryResult.isCanLoadMore(pagination) && (
+        <div className="flex justify-center">
+          <Button
+            onClick={() => pagination.loadMore(PAGE_SIZE)}
+            variant="outline"
+          >
+            {t("load-more")}
+          </Button>
+        </div>
+      )}
     </>
   );
 }
