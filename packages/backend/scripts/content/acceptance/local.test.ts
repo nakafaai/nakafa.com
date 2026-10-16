@@ -1,10 +1,10 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
   cleanLocalRuntime,
   discardSignedResponses,
   initializeLocalRuntime,
-  leaseLocalRuntime,
   localApplicationEnvironment,
   readLocalRuntime,
   releaseLocalRuntime,

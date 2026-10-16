@@ -1,9 +1,9 @@
 import { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/analytics";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
   discardSignedResponses,
   initializeLocalRuntime,
-  leaseLocalRuntime,
   localApplicationEnvironment,
   readLocalRuntime,
   releaseLocalRuntime,

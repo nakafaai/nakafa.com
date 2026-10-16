@@ -12,6 +12,7 @@ import {
   acceptanceRuntimeError,
   retryVersionServiceStart,
 } from "@repo/backend/scripts/content/acceptance/error";
+import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
   assertLocalPortsFree,
   localConvexEnvironment,
@@ -354,26 +355,6 @@ export const readLocalRuntime = Effect.fn("contentAcceptance.readLocalRuntime")(
     return runtime;
   }
 );
-
-/** Excludes cleanup or another start while this caller owns the retained runtime. */
-export const leaseLocalRuntime = Effect.fn(
-  "contentAcceptance.leaseLocalRuntime"
-)(function* (root: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const lock = `${root}/.cache/acceptance/using`;
-  yield* Effect.acquireRelease(
-    fs
-      .writeFileString(lock, String(process.pid), { mode: 0o600, flag: "wx" })
-      .pipe(
-        Effect.mapError(() =>
-          acceptanceRuntimeError(
-            "The local build runtime is in use; existing state is preserved."
-          )
-        )
-      ),
-    () => fs.remove(lock, { force: true }).pipe(Effect.orDie)
-  );
-});
 
 /** Deletes a stopped runtime only after its recorded filesystem ownership still matches. */
 export const cleanLocalRuntime = Effect.fn(

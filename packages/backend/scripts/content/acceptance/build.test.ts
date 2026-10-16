@@ -36,10 +36,12 @@ vi.mock("@repo/backend/scripts/content/acceptance/local", async (load) => ({
   >()),
   discardSignedResponses: mocks.discard,
   initializeLocalRuntime: mocks.initialize,
-  leaseLocalRuntime: mocks.lease,
   readLocalRuntime: mocks.read,
   releaseLocalRuntime: mocks.release,
   reserveLocalRuntime: mocks.reserve,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/lease", () => ({
+  leaseLocalRuntime: mocks.lease,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/process", async (load) => ({
   ...(await load<
