@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { denied, nf, otherSchoolTeacher } from "@repo/backend/test/editor";
-import { examRows, LANGUAGE } from "@repo/backend/test/exams";
+import { archiveUnit, examRows, LANGUAGE } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -11,6 +10,9 @@ const { create, list, open, rename } = refs.public.exams.exams;
 
 /** One minute, so two exams made in turn have different creation times. */
 const LATER = TENANCY_NOW + 60_000;
+
+/** Two minutes, so the newest exam of a test is made after the others. */
+const LATEST = TENANCY_NOW + 120_000;
 
 describe("exams/exams", () => {
   beforeEach(() => {
@@ -45,16 +47,17 @@ describe("exams/exams", () => {
           revision: 0,
           template: "choice",
         });
+        const emptyLabel = { content: [{ type: "paragraph" }], type: "doc" };
         const [choice] = question.answers;
         expect(choice).toMatchObject({
           kind: "choice",
           maxChoices: 1,
           minChoices: 1,
           options: [
-            { id: "option-1" },
-            { id: "option-2" },
-            { id: "option-3" },
-            { id: "option-4" },
+            { id: "option-1", label: emptyLabel },
+            { id: "option-2", label: emptyLabel },
+            { id: "option-3", label: emptyLabel },
+            { id: "option-4", label: emptyLabel },
           ],
           shuffle: false,
         });
@@ -116,8 +119,16 @@ describe("exams/exams", () => {
           slug: nf,
           title: "Kelas SMP",
         });
+        vi.setSystemTime(LATEST);
+        yield* fixture.as("admin").mutation(create, {
+          language: LANGUAGE,
+          scope: { kind: "unit", unitId: fixture.units.sma },
+          slug: nf,
+          title: "Kelas SMA",
+        });
         const admin = yield* fixture.as("admin").query(list, page);
         expect(Arr.map(admin.page, (exam) => exam.title)).toEqual([
+          "Kelas SMA",
           "Kelas SMP",
           "Seluruh sekolah",
         ]);
@@ -131,29 +142,72 @@ describe("exams/exams", () => {
   );
 
   it.effect(
-    "opens an exam to the teachers whose grant covers it, and refuses a student and another school",
+    "opens an exam to an Admin of the school, and to a Teacher whose grant covers its unit",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const made = yield* fixture.as("admin").mutation(create, {
+        const school = yield* fixture.as("admin").mutation(create, {
           language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "Seluruh sekolah",
         });
+        const unit = yield* fixture.as("teacher").mutation(create, {
+          language: LANGUAGE,
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "Kelas SMP",
+        });
+        const admin = yield* fixture.as("admin").query(open, {
+          examId: school.id,
+          slug: nf,
+        });
+        expect(admin).toMatchObject({ title: "Seluruh sekolah" });
+        const teacher = yield* fixture.as("teacher").query(open, {
+          examId: unit.id,
+          slug: nf,
+        });
+        expect(teacher).toMatchObject({ title: "Kelas SMP" });
+      })
+  );
+
+  it.effect(
+    "refuses a student, a teacher whose grant does not cover the exam, and another school",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const school = yield* fixture.as("admin").mutation(create, {
+          language: LANGUAGE,
+          scope: { kind: "tenant" },
+          slug: nf,
+          title: "Seluruh sekolah",
+        });
+        const outside = yield* fixture.as("admin").mutation(create, {
+          language: LANGUAGE,
+          scope: { kind: "unit", unitId: fixture.units.sma },
+          slug: nf,
+          title: "Kelas SMA",
+        });
         const teacher = yield* fixture
           .as("teacher")
-          .query(open, { examId: made.id, slug: nf })
+          .query(open, { examId: school.id, slug: nf })
+          .pipe(Effect.flip);
+        const teacherOutside = yield* fixture
+          .as("teacher")
+          .query(open, { examId: outside.id, slug: nf })
           .pipe(Effect.flip);
         const student = yield* fixture
           .as("student")
-          .query(open, { examId: made.id, slug: nf })
+          .query(open, { examId: school.id, slug: nf })
           .pipe(Effect.flip);
         const foreign = yield* (yield* otherSchoolTeacher(fixture))
-          .query(open, { examId: made.id, slug: nf })
+          .query(open, { examId: school.id, slug: nf })
           .pipe(Effect.flip);
-        expect(teacher).toMatchObject(denied("role"));
-        expect(student).toMatchObject(denied("role"));
+        expect([teacher, teacherOutside, student]).toMatchObject([
+          denied("role"),
+          denied("role"),
+          denied("role"),
+        ]);
         expect(foreign).toMatchObject({
           _tag: "NotMember",
           code: "NOT_MEMBER",
@@ -179,13 +233,7 @@ describe("exams/exams", () => {
           title: "Ulangan harian",
         });
         expect(renamed).toMatchObject({ id: made.id, title: "Ulangan harian" });
-        yield* fixture.run(
-          Effect.flatMap(DatabaseWriter, (writer) =>
-            writer
-              .table("tenantUnits")
-              .patch(fixture.units.smp, { status: "archived" })
-          )
-        );
+        yield* fixture.run(archiveUnit(fixture.units.smp));
         const archived = yield* teacher
           .mutation(rename, { examId: made.id, slug: nf, title: "Terkunci" })
           .pipe(Effect.flip);

@@ -19,4 +19,10 @@ describe("exams/exam ExamTitle", () => {
     expect(accepts("PTS\nMatematika")).toBe(false);
     expect(accepts(" PTS Matematika")).toBe(false);
   });
+
+  it("counts a character as a code point, so an emoji counts once though it takes two UTF-16 units", () => {
+    const emoji = "😀".repeat(EXAM_TITLE_MAX_LENGTH);
+    expect(accepts(emoji)).toBe(true);
+    expect(accepts(`${emoji}😀`)).toBe(false);
+  });
 });

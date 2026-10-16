@@ -106,7 +106,7 @@ describe("exams/questions/answer", () => {
   );
 
   it.effect(
-    "refuses answers that are not single-answer choices, and writes nothing",
+    "refuses an interaction that is not a choice, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -134,6 +134,59 @@ describe("exams/questions/answer", () => {
         });
         const rows = yield* fixture.run(questionRows);
         expect(Arr.map(rows, (row) => row.revision)).toEqual([0]);
+      })
+  );
+
+  it.effect(
+    "refuses a choice that takes more than one answer, though its key would fit it, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Dua jawaban");
+        const [question] = exam.questions;
+        const twoChoices = yield* Schema.decodeEffect(InteractionSchema)({
+          id: "choice",
+          kind: "choice",
+          label: "Answer",
+          maxChoices: 2,
+          minChoices: 1,
+          options: [
+            {
+              id: "option-1",
+              label: { content: [{ type: "paragraph" }], type: "doc" },
+            },
+            {
+              id: "option-2",
+              label: { content: [{ type: "paragraph" }], type: "doc" },
+            },
+          ],
+          shuffle: false,
+        }).pipe(Effect.orDie);
+        const refused = yield* teacher
+          .mutation(answer, {
+            answers: [twoChoices],
+            examId: exam.id,
+            key: [
+              {
+                correct: ["option-1", "option-2"],
+                interaction: "choice",
+                kind: "choice",
+              },
+            ],
+            questionId: question.id,
+            revision: 0,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "AnswersDoNotFit",
+          code: "ANSWERS_DO_NOT_FIT",
+        });
+        const rows = yield* fixture.run(questionRows);
+        expect(Arr.map(rows, (row) => [row.revision, row.key])).toEqual([
+          [0, null],
+        ]);
       })
   );
 

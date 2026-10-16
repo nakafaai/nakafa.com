@@ -7,16 +7,17 @@ import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
 
 /**
- * The most characters an exam's title may hold. A title is one line of the exam
- * list and of the editor's header, so the bound keeps it short enough to read there.
+ * The most characters an exam's title may hold. A character is a Unicode code point,
+ * as in `users/bio.ts`, so an emoji counts once. A title is one line of the exam list
+ * and of the editor's header, so the bound keeps it short enough to read there.
  */
 export const EXAM_TITLE_MAX_LENGTH = 120;
 
 /**
  * The most questions one exam holds. Its order is one array in its row, and Convex
- * arrays hold at most 8,192 values (`convex/_generated/ai/guidelines.md`). The
- * longest school exam the research found has about 40 questions, so 200 leaves room
- * for a long exam while the row and every read of it stay small.
+ * arrays hold at most 8,192 values (`convex/_generated/ai/guidelines.md`), so the bound
+ * keeps the row and every read of the exam small. The value is a design choice of this
+ * slice, not a measured length of school exams.
  */
 export const MAX_EXAM_QUESTIONS = 200;
 
@@ -25,7 +26,7 @@ export const ExamTitle = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
   Schema.isMinLength(1),
-  Schema.isMaxLength(EXAM_TITLE_MAX_LENGTH)
+  Schema.isMaxCodePoints(EXAM_TITLE_MAX_LENGTH)
 );
 
 /**

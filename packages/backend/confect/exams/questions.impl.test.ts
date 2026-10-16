@@ -6,13 +6,20 @@ import {
   denied,
   documentRows,
   nf,
+  snapshotRows,
   stepRows,
 } from "@repo/backend/test/editor";
-import { fillExam, questionRows, teacherExam } from "@repo/backend/test/exams";
+import {
+  archiveUnit,
+  fillExam,
+  LANGUAGE,
+  questionRows,
+  teacherExam,
+} from "@repo/backend/test/exams";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { open } = refs.public.exams.exams;
+const { create, open } = refs.public.exams.exams;
 const { add, move, remove, copy, answer } = refs.public.exams.questions;
 const { submit } = refs.public.editor.steps;
 
@@ -125,6 +132,51 @@ describe("exams/questions", () => {
       })
   );
 
+  it.effect("keeps every question once when two moves are made at once", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const teacher = fixture.as("teacher");
+      const exam = yield* teacherExam(fixture, "Serentak");
+      const [first] = exam.questions;
+      const second = yield* teacher.mutation(add, {
+        after: first.id,
+        examId: exam.id,
+        slug: nf,
+      });
+      const third = yield* teacher.mutation(add, {
+        after: second.id,
+        examId: exam.id,
+        slug: nf,
+      });
+      yield* Effect.all(
+        [
+          teacher.mutation(move, {
+            examId: exam.id,
+            index: 1,
+            questionId: first.id,
+            slug: nf,
+          }),
+          teacher.mutation(move, {
+            examId: exam.id,
+            index: 1,
+            questionId: third.id,
+            slug: nf,
+          }),
+        ],
+        { concurrency: "unbounded" }
+      );
+      const opened = yield* teacher.query(open, {
+        examId: exam.id,
+        slug: nf,
+      });
+      // Applied one after the other, the two moves give one of these two orders, and never a question lost or doubled.
+      expect([
+        [second.id, third.id, first.id],
+        [third.id, first.id, second.id],
+      ]).toContainEqual(Arr.map(opened.questions, (question) => question.id));
+    })
+  );
+
   it.effect(
     "refuses to remove the last question of an exam, and removes another with its prompt, snapshot, and steps",
     () =>
@@ -155,6 +207,10 @@ describe("exams/questions", () => {
         expect(removed.questions).toEqual([second.id]);
         const documents = yield* fixture.run(documentRows);
         expect(Arr.map(documents, (document) => document._id)).toEqual([
+          second.prompt,
+        ]);
+        const snapshots = yield* fixture.run(snapshotRows);
+        expect(Arr.map(snapshots, (snapshot) => snapshot.documentId)).toEqual([
           second.prompt,
         ]);
         const steps = yield* fixture.run(stepRows);
@@ -214,6 +270,177 @@ describe("exams/questions", () => {
           denied("resource"),
           denied("resource"),
         ]);
+      })
+  );
+
+  it.effect(
+    "lets an Admin of the school and an Admin of the unit change the questions of a teacher's exam",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const exam = yield* teacherExam(fixture, "Admin");
+        const [first] = exam.questions;
+        const added = yield* fixture.as("admin").mutation(add, {
+          after: first.id,
+          examId: exam.id,
+          slug: nf,
+        });
+        const copied = yield* fixture.as("unitAdmin").mutation(copy, {
+          examId: exam.id,
+          questionId: added.id,
+          slug: nf,
+        });
+        const opened = yield* fixture.as("admin").query(open, {
+          examId: exam.id,
+          slug: nf,
+        });
+        expect(Arr.map(opened.questions, (question) => question.id)).toEqual([
+          first.id,
+          added.id,
+          copied.id,
+        ]);
+      })
+  );
+
+  it.effect(
+    "refuses every change to an exam of an archived unit, and writes nothing, though the exam stays readable",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Arsip");
+        const [first] = exam.questions;
+        const second = yield* teacher.mutation(add, {
+          after: first.id,
+          examId: exam.id,
+          slug: nf,
+        });
+        yield* fixture.run(archiveUnit(fixture.units.smp));
+        const refusals = yield* Effect.all([
+          teacher
+            .mutation(add, { after: null, examId: exam.id, slug: nf })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(copy, { examId: exam.id, questionId: first.id, slug: nf })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(remove, {
+              examId: exam.id,
+              questionId: first.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(move, {
+              examId: exam.id,
+              index: 1,
+              questionId: first.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(answer, {
+              answers: first.answers,
+              examId: exam.id,
+              key: null,
+              questionId: first.id,
+              revision: 0,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+        ]);
+        expect(refusals).toMatchObject([
+          denied("condition"),
+          denied("condition"),
+          denied("condition"),
+          denied("condition"),
+          denied("condition"),
+        ]);
+        const opened = yield* teacher.query(open, {
+          examId: exam.id,
+          slug: nf,
+        });
+        expect(Arr.map(opened.questions, (question) => question.id)).toEqual([
+          first.id,
+          second.id,
+        ]);
+        expect(yield* fixture.run(questionRows)).toHaveLength(2);
+      })
+  );
+
+  it.effect(
+    "refuses a student who adds a question, and a teacher who changes a question of another unit, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const mine = yield* teacherExam(fixture, "Milik saya");
+        const [mineFirst] = mine.questions;
+        const outside = yield* fixture.as("admin").mutation(create, {
+          language: LANGUAGE,
+          scope: { kind: "unit", unitId: fixture.units.sma },
+          slug: nf,
+          title: "Kelas SMA",
+        });
+        const theirs = yield* fixture.as("admin").query(open, {
+          examId: outside.id,
+          slug: nf,
+        });
+        const [theirFirst] = theirs.questions;
+        const refusals = yield* Effect.all([
+          fixture
+            .as("student")
+            .mutation(add, { after: mineFirst.id, examId: mine.id, slug: nf })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(add, {
+              after: theirFirst.id,
+              examId: outside.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(copy, {
+              examId: outside.id,
+              questionId: theirFirst.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(remove, {
+              examId: outside.id,
+              questionId: theirFirst.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(move, {
+              examId: outside.id,
+              index: 0,
+              questionId: theirFirst.id,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+          teacher
+            .mutation(answer, {
+              answers: theirFirst.answers,
+              examId: outside.id,
+              key: null,
+              questionId: theirFirst.id,
+              revision: 0,
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+        ]);
+        expect(refusals).toMatchObject([
+          denied("role"),
+          denied("role"),
+          denied("role"),
+          denied("role"),
+          denied("role"),
+          denied("role"),
+        ]);
+        expect(yield* fixture.run(questionRows)).toHaveLength(2);
       })
   );
 });

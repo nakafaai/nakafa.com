@@ -45,6 +45,16 @@ export const teacherExam = Effect.fn("test.exams.teacherExam")(function* (
   return yield* teacher.query(open, { examId: made.id, slug: nf });
 });
 
+/** Archives one unit of the school, which locks the edits of the exams and documents in it. */
+export const archiveUnit = Effect.fn("test.exams.archiveUnit")(function* (
+  unitId: GenericId.GenericId<"tenantUnits">
+) {
+  yield* (yield* DatabaseWriter)
+    .table("tenantUnits")
+    .patch(unitId, { status: "archived" })
+    .pipe(Effect.orDie);
+});
+
 /**
  * Seeds an exam up to `count` questions. Each extra question is a row of its own that
  * shares the first question's prompt, so the test starts from a full exam without one

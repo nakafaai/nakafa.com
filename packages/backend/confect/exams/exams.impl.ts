@@ -7,7 +7,6 @@ import {
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { Exam } from "@repo/backend/confect/exams/access";
 import {
-  authorizeScope,
   examAccess,
   examAuthority,
 } from "@repo/backend/confect/exams/authority";
@@ -18,6 +17,7 @@ import { readQuestion } from "@repo/backend/confect/exams/questions/read";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { authorizeScope } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Clock, Effect, Layer, Struct } from "effect";
 
 /**
@@ -32,7 +32,7 @@ const create = FunctionImpl.make(
   Effect.fn("exams.create")(function* ({ language, scope, title }) {
     const { tenant } = yield* Member;
     const { appUser } = yield* requireAuth().pipe(Effect.orDie);
-    yield* authorizeScope(scope);
+    yield* authorizeScope("exam.edit", scope);
     const at = yield* Clock.currentTimeMillis;
     const examId = yield* (yield* DatabaseWriter)
       .table("exams")

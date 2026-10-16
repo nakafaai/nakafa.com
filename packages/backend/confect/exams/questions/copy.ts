@@ -18,9 +18,9 @@ import { Array as Arr, Effect } from "effect";
 type ExamCopy = Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">;
 
 /**
- * The steps of a document after one version, read in one call through the store. A
- * Convex function may call `paginate` once, so the copy takes the whole history in that
- * one read. A history that the read does not finish is refused, and writes nothing.
+ * The steps of a document after one version, read in one bounded read through the
+ * store. The copy takes the whole history in that read: a history the read does not
+ * finish is refused and writes nothing, so the copy never loops over the step log.
  */
 const historyAfter = Effect.fn("exams.question.history")(function* (
   documentId: GenericId.GenericId<"editorDocuments">,

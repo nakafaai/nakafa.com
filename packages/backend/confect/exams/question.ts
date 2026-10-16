@@ -45,11 +45,15 @@ export const questionValidator = Schema.Struct({
 
 /**
  * Whether the interactions of a question are the ones this kind takes: distinct
- * single-answer choices. A question that holds any other interaction is refused.
+ * single-answer choices, each taking at most one option. A question that holds any
+ * other interaction, or a choice that takes more than one, is refused.
  */
 export const isChoiceAnswers = (answers: readonly Interaction[]) =>
   hasUniqueIds(answers) &&
-  Arr.every(answers, (answer) => answer.kind === "choice");
+  Arr.every(
+    answers,
+    (answer) => answer.kind === "choice" && answer.maxChoices === 1
+  );
 
 /** The interactions of a question as JSON text, decoded with the contract's interaction schema. */
 const AnswersText = Schema.fromJsonString(

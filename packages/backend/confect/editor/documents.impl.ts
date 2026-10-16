@@ -1,10 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Document } from "@repo/backend/confect/editor/access";
-import {
-  authorizeScope,
-  documentAccess,
-} from "@repo/backend/confect/editor/authority";
+import { documentAccess } from "@repo/backend/confect/editor/authority";
 import { createDocument } from "@repo/backend/confect/editor/create";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import spec from "@repo/backend/confect/editor/documents.spec";
@@ -13,6 +10,7 @@ import { stepView } from "@repo/backend/confect/editor/view";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { authorizeScope } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Effect, Layer } from "effect";
 
 /**
@@ -27,7 +25,7 @@ const create = FunctionImpl.make(
   "create",
   Effect.fn("editor.documents.create")(function* ({ content, scope }) {
     const { tenant } = yield* Member;
-    yield* authorizeScope(scope);
+    yield* authorizeScope("document.edit", scope);
     const text = yield* storedDocument(content);
     const documentId = yield* createDocument({
       scope,

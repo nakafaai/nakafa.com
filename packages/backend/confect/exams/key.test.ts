@@ -12,6 +12,12 @@ const choiceKey = (first: string, ...rest: string[]): InteractionKey => ({
   kind: "choice",
 });
 
+/** An option whose label is one empty paragraph, as the options of a new question are. */
+const emptyOption = (id: string) => ({
+  id,
+  label: { content: [{ type: "paragraph" }], type: "doc" },
+});
+
 describe("exams/key keyFits", () => {
   const [choice] = newChoiceAnswers();
 
@@ -36,7 +42,7 @@ describe("exams/key keyFits", () => {
     expect(keyFits([choice], [])).toBe(false);
   });
 
-  it("refuses an answer that names no interaction of the question", () => {
+  it("refuses an interaction that no answer names", () => {
     expect(
       keyFits(
         [choice],
@@ -45,16 +51,38 @@ describe("exams/key keyFits", () => {
     ).toBe(false);
   });
 
-  it("refuses an answer of another kind than its choice", () => {
+  it("refuses an extra answer that names no interaction, beside the answer of each interaction", () => {
     expect(
       keyFits(
         [choice],
-        [{ correct: "option-1", interaction: "choice", kind: "inlineChoice" }]
+        [
+          choiceKey("option-1"),
+          { correct: ["option-1"], interaction: "other", kind: "choice" },
+        ]
       )
     ).toBe(false);
   });
 
-  it("refuses an interaction that is not a choice, because a question takes only choices", () => {
+  it("refuses an answer of another kind than its choice, though its text would fit the choice", () => {
+    // A one-letter option lets the inline answer's text pass the count check, so only its kind refuses it.
+    const letters = Schema.decodeSync(InteractionSchema)({
+      id: "choice",
+      kind: "choice",
+      label: "Answer",
+      maxChoices: 1,
+      minChoices: 1,
+      options: [emptyOption("a"), emptyOption("b")],
+      shuffle: false,
+    });
+    expect(
+      keyFits(
+        [letters],
+        [{ correct: "a", interaction: "choice", kind: "inlineChoice" }]
+      )
+    ).toBe(false);
+  });
+
+  it("refuses a text interaction, which no choice answer fits", () => {
     const text = Schema.decodeSync(InteractionSchema)({
       id: "text",
       kind: "textEntry",
@@ -68,9 +96,15 @@ describe("exams/key keyFits", () => {
     ).toBe(false);
   });
 
-  it("refuses interactions that share an identifier", () => {
+  it("refuses interactions that share an identifier, even when the key answers that identifier once", () => {
     expect(
-      keyFits([choice, choice], [choiceKey("option-1"), choiceKey("option-1")])
+      keyFits(
+        [choice, { ...choice }],
+        [
+          choiceKey("option-1"),
+          { correct: ["option-2"], interaction: "other", kind: "choice" },
+        ]
+      )
     ).toBe(false);
   });
 });
