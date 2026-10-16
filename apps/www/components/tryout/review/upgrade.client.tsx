@@ -24,7 +24,7 @@ class TryoutReviewImpressionError extends Data.TaggedError(
  * the review reloads as soon as the account's plan becomes Pro.
  */
 export function TryoutReviewCheckout() {
-  const t = useTranslations("Tryouts");
+  const t = useTranslations("Pricing");
   const locale = useLocale();
   const router = useRouter();
   const billing = useBillingNavigation();
@@ -75,7 +75,7 @@ export function TryoutReviewCheckout() {
         icon={Diamond02Icon}
         isLoading={pending}
       />
-      {t("paywall-pro")}
+      {t("pro-cta")}
     </Button>
   );
 }

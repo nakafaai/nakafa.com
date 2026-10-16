@@ -74,7 +74,7 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
     yield* Effect.sync(() => {
       expect(Arr.map(actions, ({ label }) => label)).toEqual([
         app.Tryouts["paywall-compare"],
-        app.Tryouts["paywall-pro"],
+        app.Pricing["pro-cta"],
       ]);
       for (const action of actions) {
         expect(action.inside).toBe(true);
