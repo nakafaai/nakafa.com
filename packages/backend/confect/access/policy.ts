@@ -112,7 +112,7 @@ const make = <
   });
 
   /**
-   * Denies an action on a subject outside the member's tenant. A missing
+   * Denies an action on a subject outside the caller's tenant. A missing
    * object and another tenant's object get the same denial, so an ID probe
    * reveals nothing.
    */
@@ -126,29 +126,41 @@ const make = <
   });
 
   /**
-   * Decides one action on a loaded subject. The subject's tenant comes from
-   * its data, so a row of another tenant is denied here, whichever path
-   * loaded it.
+   * The subject as a decision reads it: its tenant, taken from its data, and
+   * where it sits (at most one indexed read).
+   */
+  const subjectOf = Effect.fnUntraced(function* (row: Row) {
+    return {
+      ...(yield* implementation.place(row)),
+      tenantId: implementation.tenantOf(row),
+    };
+  });
+
+  /**
+   * Decides one action on a loaded subject. A row of another tenant is
+   * refused by `decide` whichever path loaded it, and that refusal is the
+   * denial a missing object gets.
    */
   const check = Effect.fn("access.check")(function* (
     action: typeof Action.Type,
     row: Row
   ) {
     const member = yield* Member;
-    if (implementation.tenantOf(row) !== member.tenant._id) {
-      return yield* unknownSubject(action);
-    }
     const rule = yield* Option.match(HashMap.get(rules, action), {
       onNone: () =>
         Effect.die(`Access action ${action} has no rule on kind ${name}.`),
       onSome: Effect.succeed,
     });
     const decision = yield* decide(
+      action,
       rule,
-      yield* implementation.place(row),
+      yield* subjectOf(row),
       member,
       yield* relationsOf(row, member)
     );
+    if (decision === "resource") {
+      return yield* unknownSubject(action);
+    }
     if (decision !== "allow") {
       return yield* new AccessDenied({ action, reason: decision });
     }
@@ -174,15 +186,14 @@ const make = <
   /** The actions of this kind the caller may perform on a loaded subject; none on another tenant's. */
   const allowed = Effect.fn("access.allowed")(function* (row: Row) {
     const member = yield* Member;
-    if (implementation.tenantOf(row) !== member.tenant._id) {
-      return [];
-    }
-    const placement = yield* implementation.place(row);
+    const subject = yield* subjectOf(row);
     const relations = yield* relationsOf(row, member);
-    const granted = yield* Effect.filter(HashMap.toEntries(rules), ([, rule]) =>
-      decide(rule, placement, member, relations).pipe(
-        Effect.map((decision) => decision === "allow")
-      )
+    const granted = yield* Effect.filter(
+      HashMap.toEntries(rules),
+      ([action, rule]) =>
+        decide(action, rule, subject, member, relations).pipe(
+          Effect.map((decision) => decision === "allow")
+        )
     );
     return Arr.filter(
       Arr.map(granted, ([action]) => action),

@@ -174,6 +174,8 @@ describe("access/policy authority", () => {
           [
             "audit.view",
             "grant.manage",
+            "integration.manage",
+            "integration.view",
             "invite.view",
             "owner.manage",
             "person.manage",

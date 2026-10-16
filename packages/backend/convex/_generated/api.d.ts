@@ -2552,35 +2552,133 @@ export declare const api: {
       };
     };
   };
-  identity: {
-    cards: {
-      issue: FunctionReference<
+  integrations: {
+    clients: {
+      create: FunctionReference<
         "mutation",
         "public",
-        { loginName: string; personId: Id<"tenantPeople">; slug: string },
-        { code: string; expiresAt: number; loginName: string }
+        {
+          actions: Array<
+            | "audit.view"
+            | "tenant.manage"
+            | "tenant.view"
+            | "unit.manage"
+            | "unit.view"
+            | "person.invite"
+            | "person.manage"
+            | "person.view"
+            | "period.manage"
+            | "period.view"
+            | "cohort.manage"
+            | "cohort.view"
+            | "grant.revoke"
+            | "grant.view"
+            | "integration.manage"
+            | "integration.view"
+            | "class.manage"
+            | "class.view"
+            | "visit.end"
+            | "invite.view"
+            | "person.manage"
+            | "person.view"
+            | "period.manage"
+            | "period.view"
+            | "cohort.manage"
+            | "grant.manage"
+            | "owner.manage"
+            | "grant.manage"
+            | "integration.manage"
+            | "integration.view"
+            | "integration.manage"
+            | "class.create"
+            | "class.list"
+            | "visit.approve"
+          >;
+          name: string;
+          scope:
+            { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+          slug: string;
+        },
+        { id: Id<"integrationClients">; secret: string }
       >;
-      redeem: FunctionReference<
-        "mutation",
+      list: FunctionReference<
+        "query",
         "public",
-        { code: string; deviceId: string; password: string; slug: string },
-        | { loginName: string; outcome: "redeemed" }
-        | {
-            outcome: "refused";
-            reason:
-              | "expired"
-              | "invalid"
-              | "passwordTooLong"
-              | "passwordTooShort"
-              | "rateLimited"
-              | "used";
-          }
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            actions: Array<
+              | "audit.view"
+              | "tenant.manage"
+              | "tenant.view"
+              | "unit.manage"
+              | "unit.view"
+              | "person.invite"
+              | "person.manage"
+              | "person.view"
+              | "period.manage"
+              | "period.view"
+              | "cohort.manage"
+              | "cohort.view"
+              | "grant.revoke"
+              | "grant.view"
+              | "integration.manage"
+              | "integration.view"
+              | "class.manage"
+              | "class.view"
+              | "visit.end"
+              | "invite.view"
+              | "person.manage"
+              | "person.view"
+              | "period.manage"
+              | "period.view"
+              | "cohort.manage"
+              | "grant.manage"
+              | "owner.manage"
+              | "grant.manage"
+              | "integration.manage"
+              | "integration.view"
+              | "integration.manage"
+              | "class.create"
+              | "class.list"
+              | "visit.approve"
+            >;
+            createdAt: number;
+            id: Id<"integrationClients">;
+            name: string;
+            revokedAt: number | null;
+            rotatedAt: number;
+            scope:
+              { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+            status: "active" | "revoked";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
-      reissue: FunctionReference<
+      revoke: FunctionReference<
         "mutation",
         "public",
-        { personId: Id<"tenantPeople">; slug: string },
-        { code: string; expiresAt: number; loginName: string }
+        { clientId: Id<"integrationClients">; slug: string },
+        null
+      >;
+      rotate: FunctionReference<
+        "mutation",
+        "public",
+        { clientId: Id<"integrationClients">; slug: string },
+        { id: Id<"integrationClients">; secret: string }
       >;
     };
   };
@@ -2626,7 +2724,6 @@ export declare const api: {
                   key: "emailDomains" | "nina" | "studentThreads";
                   type: "tenant.policy.set";
                 }
-              | { reason: "domain"; type: "identity.blocked" }
               | { type: "unit.created" }
               | {
                   contentLanguage: "en" | "id" | "de";
@@ -2641,10 +2738,7 @@ export declare const api: {
                   reason?: "break-glass";
                   type: "person.invited";
                 }
-              | {
-                  method: "card" | "invite" | "operator";
-                  type: "person.claimed";
-                }
+              | { method: "invite" | "operator"; type: "person.claimed" }
               | { type: "person.released" }
               | { reason?: "break-glass"; type: "person.removed" }
               | { type: "person.renamed" }
@@ -2657,15 +2751,27 @@ export declare const api: {
               | { invite: Id<"tenantInvites">; type: "invite.expired" }
               | { invite: Id<"tenantInvites">; type: "invite.resent" }
               | { invite: Id<"tenantInvites">; type: "invite.revoked" }
-              | { card: Id<"loginCards">; type: "card.issued" }
-              | { card: Id<"loginCards">; type: "card.reissued" }
-              | { card: Id<"loginCards">; type: "card.redeemed" }
               | { type: "period.created" }
               | { type: "period.opened" }
               | { type: "period.archived" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
+              | {
+                  client: Id<"integrationClients">;
+                  scope:
+                    | { kind: "tenant" }
+                    | { kind: "unit"; unitId: Id<"tenantUnits"> };
+                  type: "integration.created";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.rotated";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.revoked";
+                }
               | { type: "class.created" }
               | { type: "class.renamed" }
               | { type: "class.archived" }
@@ -2727,6 +2833,7 @@ export declare const api: {
               | { id: Id<"tenantPeriods">; kind: "period" }
               | { id: Id<"tenantCohorts">; kind: "cohort" }
               | { id: Id<"tenantGrants">; kind: "grant" }
+              | { id: Id<"integrationClients">; kind: "integration" }
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { kind: string };
