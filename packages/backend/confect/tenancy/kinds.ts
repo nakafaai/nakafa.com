@@ -350,7 +350,7 @@ export const promotion = Kind.make("promotion", "tenantPromotions", {
       access: "read",
       grantedBy: "roles",
       relations: [],
-      roles: planReaders,
+      roles: ["admin", "principal", "deputy", "staff", "auditor"],
     },
   },
   changes: [
