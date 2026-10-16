@@ -3,7 +3,10 @@
 ## Status
 
 Accepted. Amended on 13 October 2026 for the homeroom and guardian relations, the
-actions of the school roles, and the 24-hour limit on operator visits.
+actions of the school roles, and the 24-hour limit on operator visits. Amended on
+14 October 2026 for the cohort member relation, which is live, and for the
+period, cohort, people, and invite actions. Amended on 14 October 2026 for the
+operator visits and their transition access, which are live.
 
 ## Context
 
@@ -96,12 +99,29 @@ reads neither the clock nor the database except through the subject's
 memoized relation checks:
 
 1. A write in a suspended tenant, or on a locked subject (ended, archived, or
-   closed), is refused as `condition`, even for Owners.
+   closed), is refused as `condition`, even for Owners. The system transitions
+   that time or an operator starts are exempt and run in a suspended tenant,
+   because they end access, keep a deadline, or restore the tenant: a visit end,
+   a grant expiry, an invite expiry, an account release, the close and the
+   reconciliation of an attempt at its deadline (ADR 0013), the sweeps that run
+   them, and the operator's reactivation of the tenant. Member writes stay
+   refused. A decision
+   on a late record (ADR 0013) is an action on the attempt, not on the closed
+   sitting. An attempt with undecided late records is in review and not ended,
+   so this rule does not refuse the decision. A removed or suspended Person, an
+   archived period, and an archived cohort are locked subjects, and an archived
+   school locks its periods and cohorts too, so a role's write to them is
+   `condition` and never `role`.
 2. A roles rule allows an active grant whose scope covers the subject and whose
    role is Owner or listed.
 3. Otherwise the rule's relations decide, each checked at most once per
    subject.
 4. Otherwise the action is refused as `role`.
+
+A rule's `access` is `read`, `write`, or `transition`. Only a `write` is refused
+by a suspended tenant or a locked subject. A `transition` ends access or restores
+a tenant, so it runs in a suspended tenant, and a visit's end is one (see
+Operators inside tenants). Its roles and relations decide it like any other rule.
 
 A rule either grants by roles, where the listed roles, every Owner, and the
 listed relations allow it, or by relations only, where no role can allow it, so
@@ -128,8 +148,21 @@ The school roles also hold these actions:
   The Teacher releases the grades of their own tasks and exams.
 - The Principal approves report cards and promotion (kenaikan kelas). The Deputy
   holds the Principal's actions, except approving report cards and promotion,
-  reading the audit journal, and seeing the quota.
-- The Admin manages the organisation settings and the AI quota.
+  reading the audit journal, and seeing the quota. Both see the participant
+  dashboard of every exam sitting of their school and take no proctor action.
+- The Admin manages the organisation settings and the AI quota. The Admin, like
+  every Owner, takes every proctor action of every exam sitting of their school,
+  the decision on a late record included (ADR 0013). These actions do not let a
+  role read the answers, which stay with relations only.
+- The Admin creates, opens, and archives the periods of the school
+  (`period.manage`); creates, renames, and archives its cohorts, and places and
+  moves people in them (`cohort.manage`); and creates, renames, and removes its
+  people, invites them, and lists the pending invites (`person.manage`,
+  `person.invite`, `invite.view`). The Principal, Deputy, Staff, and Auditor
+  read the periods and cohorts of the school (`period.view`, `cohort.view`). A
+  student placed in a cohort reads that cohort and its members through the
+  `cohortMember` relation and nothing else. Only a student with an active
+  student grant over the cohort's unit or the whole school may be placed.
 - The Staff (Staf TU) prepares report cards and school documents and views
   people's data. The Counselor (Guru BK) views people's data and insight. The
   Auditor reads the journal, the settings, and people's data, and changes
@@ -162,22 +195,37 @@ are:
 | Homeroom teacher (wali kelas) | A teacher and one class group in one period, from the teacher's assignment to that class group | The report cards, attendance, and insight of that class group | Planned |
 | Subject teacher | A teacher and one class | The grades, tasks, and posts of that class | Planned |
 | Class member | A student and one class | The posts, tasks, and grades of that class | Planned |
-| Class group member | A student and one class group | The announcements of that class group | Planned |
+| Cohort member (`cohortMember`) | A student and the cohort they are placed in, in one period (ADR 0011) | The cohort and its members (`cohort.view`); its announcements are not built yet | Live |
 | Verified parent | A guardian and a student, once the parent relation is verified | The student's tasks, grades, report cards, and announcements, and the Insight narratives that the student shared and a teacher approved | Planned |
-| Session proctor | A proctor and one exam sitting | The token and the participant dashboard of that sitting | Planned |
-| Exam author | A teacher and their exam | Changing and grading that exam | Planned |
+| Session proctor | A proctor and one exam sitting | Every proctor action of that sitting (ADR 0013): the token and the participant dashboard, lock and unlock, add minutes, change the token, allow a second device, close the sitting, and accept or reject a late record of an attempt in it | Planned |
+| Exam author | A teacher and their exam | Changing and grading that exam, every proctor action of its sittings, and accepting or rejecting the late records of its attempts | Planned |
 | Shared practice | A student and a practice the student shared | School Insight, per topic, revocable by the student | Planned |
+| Visitor | An operator Person and its approved visit | Ending that visit (`visit.end`) | Live |
 
 ### Operators inside tenants
 
-An operator enters a tenant through a visit: a temporary admin or auditor grant
-on a Person of kind operator, active only while the grant is. The school's Owner
-or Admin approves each visit, and the grant lasts at most 24 hours. The visit's end,
-by schedule, by leaving, by an Owner revoking it, or by the operator losing
-their operator row, ends the grant and suspends that Person in the same
-transaction, so the member middleware refuses it at once. An operator Person
-never holds the `member` relation and counts only the grants an operator gave
-for a visit.
+An operator enters a tenant through a visit: a temporary Auditor grant on a
+Person of kind operator, active only while the grant is. A visit grant is always
+the Auditor role, so no visit mints an Admin and approving one never needs
+`owner.manage`. The school's Owner or Admin approves each visit, and the grant
+lasts at most 24 hours. `access/temporary` gives a temporary grant with
+`assignTemporaryRole`, and refuses an Owner or Admin role (`TEMPORARY_ROLE`), a
+Person that is not an operator (`PERSON_KIND`), and an inactive Person. The
+visit's end, by schedule, by the operator leaving, by the school ending it, or
+by the operator's account being deleted, ends the grant and suspends that Person
+in the same transaction, so the member middleware refuses it at once. Each end
+is a `transition` (see Decisions), so a suspended tenant does not refuse it. The
+grant change records the reason (`left` when the operator leaves or deletes its
+account, `revoked` when the school ends it, `expired` at its term) and the visit
+records the same reason (ADR 0016). An end writes a grant or a Person only while
+it is active, so a Person that a removal ended stays removed.
+
+An operator whose operator row is revoked is refused at once: the member
+middleware refuses its Person, so the grant stops working whatever its term.
+The grant and the Person end at the visit's own end, by its schedule or by the
+hourly sweep, because a revoke would otherwise read every tenant the operator
+is inside (ADR 0011, Operators). An operator Person never holds the `member`
+relation and counts only the grants an operator gave for a visit.
 
 ### Wire contracts
 

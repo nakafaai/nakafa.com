@@ -1,4 +1,3 @@
-import { generateKeyPairSync } from "node:crypto";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { symmetricEncrypt } from "better-auth/crypto";
@@ -27,6 +26,30 @@ const LocalJwks = Schema.fromJsonString(
   ])
 );
 
+/**
+ * The members of an RSA public key as a JWK. Web Crypto adds `alg`, `ext`, and
+ * `key_ops`; decoding drops them, so the stored key has the members that
+ * Better Auth's own `exportJWK` writes.
+ */
+const PublicJwk = Schema.Struct({
+  e: Schema.String,
+  kty: Schema.Literal("RSA"),
+  n: Schema.String,
+});
+
+/** The members of an RSA private key as a JWK, with the same members dropped. */
+const PrivateJwk = Schema.Struct({
+  d: Schema.String,
+  dp: Schema.String,
+  dq: Schema.String,
+  e: Schema.String,
+  kty: Schema.Literal("RSA"),
+  n: Schema.String,
+  p: Schema.String,
+  q: Schema.String,
+  qi: Schema.String,
+});
+
 /** A JSON Web Key as JSON text, the form Better Auth encrypts. */
 const encodeJwk = Schema.encodeEffect(JsonTextSchema);
 
@@ -36,27 +59,49 @@ const encodeJwk = Schema.encodeEffect(JsonTextSchema);
  * verifies tokens with its public half, and Better Auth decrypts its private
  * half with the runtime's secret before signing. Every runtime gets its own
  * key, so no key material is kept anywhere else. Effect's `Crypto` has no RSA
- * key generation, so Node's creates the pair.
+ * key generation, so Web Crypto creates the pair.
  *
  * @see https://labs.convex.dev/better-auth/experimental#static-jwks
  */
 export const createLocalJwks = Effect.fn("contentAcceptance.createLocalJwks")(
   function* () {
     const createdAt = yield* Clock.currentTimeMillis;
-    const crypto = yield* Crypto.Crypto;
-    const id = yield* crypto.randomUUIDv4;
-    const pair = yield* Effect.sync(() =>
-      generateKeyPairSync("rsa", { modulusLength: 2048 })
-    );
-    const privateJwk = yield* encodeJwk(
-      pair.privateKey.export({ format: "jwk" })
-    );
+    const random = yield* Crypto.Crypto;
+    const id = yield* random.randomUUIDv4;
+    const [privateJwk, publicJwk] = yield* Effect.tryPromise({
+      catch: () =>
+        acceptanceRuntimeError(
+          "The local session signing key could not be generated."
+        ),
+      try: () =>
+        crypto.subtle
+          .generateKey(
+            {
+              hash: "SHA-256",
+              modulusLength: 2048,
+              name: "RSASSA-PKCS1-v1_5",
+              publicExponent: new Uint8Array([1, 0, 1]),
+            },
+            true,
+            ["sign", "verify"]
+          )
+          .then((pair) =>
+            Promise.all([
+              crypto.subtle.exportKey("jwk", pair.privateKey),
+              crypto.subtle.exportKey("jwk", pair.publicKey),
+            ])
+          ),
+    });
+    const privateText = yield* Schema.decodeUnknownEffect(PrivateJwk)(
+      privateJwk
+    ).pipe(Effect.flatMap(encodeJwk));
     const privateKey = yield* Effect.tryPromise({
       catch: () =>
         acceptanceRuntimeError(
           "The local session signing key could not be encrypted."
         ),
-      try: () => symmetricEncrypt({ data: privateJwk, key: LOCAL_AUTH_SECRET }),
+      try: () =>
+        symmetricEncrypt({ data: privateText, key: LOCAL_AUTH_SECRET }),
     });
     return yield* Schema.encodeEffect(LocalJwks)([
       {
@@ -64,7 +109,7 @@ export const createLocalJwks = Effect.fn("contentAcceptance.createLocalJwks")(
         createdAt,
         id,
         privateKey,
-        publicKey: pair.publicKey.export({ format: "jwk" }),
+        publicKey: yield* Schema.decodeUnknownEffect(PublicJwk)(publicJwk),
       },
     ]);
   }

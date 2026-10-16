@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
-import {
-  languageModelId,
-  providerId,
-} from "@repo/backend/confect/gateway/model";
-import { purposes } from "@repo/backend/confect/gateway/purpose";
+import { languageModel, providerId } from "@repo/backend/confect/gateway/model";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { generateText } from "ai";
 import { Array as Arr, Effect, Option, Result, Schema, Stream } from "effect";
@@ -21,7 +17,7 @@ const completion = {
   id: "chatcmpl-test",
   object: "chat.completion",
   created: 0,
-  model: "google/gemini-3.7-flash",
+  model: languageModel.id,
   choices: [
     {
       index: 0,
@@ -41,7 +37,7 @@ const chunks = [
     id: "chatcmpl-test",
     object: "chat.completion.chunk",
     created: 0,
-    model: "google/gemini-3.7-flash",
+    model: languageModel.id,
     choices: [
       {
         index: 0,
@@ -54,7 +50,7 @@ const chunks = [
     id: "chatcmpl-test",
     object: "chat.completion.chunk",
     created: 0,
-    model: "google/gemini-3.7-flash",
+    model: languageModel.id,
     choices: [
       {
         index: 0,
@@ -115,8 +111,8 @@ describe("The production gateway", () => {
   );
 
   it.effect.each([
-    ["specialist", "low"],
-    ["chat", "high"],
+    ["specialist", languageModel.reasoning.fast],
+    ["chat", languageModel.reasoning.interactive],
   ] as const)(
     "sends a %s call to the Convex AI gateway with reasoning effort %s and the purpose's output cap as max_tokens",
     ([purpose, effort]) => {
@@ -127,7 +123,7 @@ describe("The production gateway", () => {
         const handle = (yield* Gateway).language(purpose);
         // Usage rows store these two ids, and the release gate reads them back.
         expect(handle.model.provider).toBe(providerId);
-        expect(handle.model.modelId).toBe(languageModelId);
+        expect(handle.model.modelId).toBe(languageModel.id);
         const result = yield* Effect.promise(() =>
           handle.model.doGenerate({ prompt })
         );
@@ -142,8 +138,8 @@ describe("The production gateway", () => {
           init?.body
         );
         expect(body).toMatchObject({
-          max_tokens: purposes[purpose].maxOutputTokens,
-          model: "google/gemini-3.8-flash",
+          max_tokens: languageModel.output[purpose],
+          model: languageModel.id,
           reasoning_effort: effort,
         });
       }).pipe(deployed);

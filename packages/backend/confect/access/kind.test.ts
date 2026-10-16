@@ -54,7 +54,13 @@ describe("access/kind declarations", () => {
         Kind.actions(entries, "unit").members,
         (member) => member.literals
       )
-    ).toEqual(["unit.view", "grant.manage"]);
+    ).toEqual([
+      "unit.manage",
+      "unit.view",
+      "period.manage",
+      "period.view",
+      "grant.manage",
+    ]);
     expect(
       Arr.map(
         Kind.changes(entries, "person").members,
@@ -66,8 +72,16 @@ describe("access/kind declarations", () => {
       "person.claimed",
       "person.released",
       "person.removed",
+      "person.renamed",
+      "person.placed",
+      "person.moved",
+      "invite.expired",
+      "invite.resent",
+      "invite.revoked",
       "grant.created",
       "grant.ended",
+      "person.reactivated",
+      "person.suspended",
     ]);
   });
 });

@@ -12,6 +12,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { getTryoutQuestionIds } from "@/components/tryout/runtime/question/id";
 
 interface TryoutQuestionShellProps {
   readonly children: ReactNode;
@@ -104,35 +105,38 @@ function TryoutQuestionArticle({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {
-  const id = `question-${questionOrder}`;
+  const ids = getTryoutQuestionIds(questionOrder);
 
   return (
-    <article aria-labelledby={`${id}-title`} id={`exercise-${id}`}>
+    <article aria-labelledby={ids.title} id={ids.article}>
       {children}
     </article>
   );
 }
 
-/** Composes the stable question anchor with a variant-owned action. */
-function TryoutQuestionHeader({
+/** Composes the stable question anchor with an optional variant-owned action. */
+export function TryoutQuestionHeader({
   children,
   questionOrder,
-}: TryoutQuestionShellProps) {
+}: {
+  readonly children?: ReactNode;
+  readonly questionOrder: number;
+}) {
   const tTryouts = useTranslations("Tryouts");
-  const id = `question-${questionOrder}`;
+  const ids = getTryoutQuestionIds(questionOrder);
 
   return (
     <div className="@container flex items-center gap-4">
       <a
         className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
-        href={`#${id}`}
-        id={id}
+        href={`#${ids.anchor}`}
+        id={ids.anchor}
       >
         <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
           <span className="font-mono text-xs tracking-tighter">
             {questionOrder}
           </span>
-          <h2 className="sr-only" id={`${id}-title`}>
+          <h2 className="sr-only" id={ids.title}>
             {tTryouts("number-count", { count: questionOrder })}
           </h2>
         </div>

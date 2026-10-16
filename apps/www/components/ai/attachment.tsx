@@ -44,6 +44,23 @@ const imageVariants = cva("", {
 });
 
 /**
+ * The width of a document chip: 10rem to 16rem. In the composer the row is as
+ * wide as the composer, and on a narrow screen both give way to it, so a chip
+ * never runs past the composer's edge. A sent message's row is as wide as its
+ * files and scrolls, so there the chip keeps its own sizes.
+ */
+const documentVariants = cva("", {
+  variants: {
+    variant: {
+      message: "max-w-64",
+      preview:
+        "min-w-[min(100%,--spacing(40))] max-w-[min(100%,--spacing(64))]",
+    },
+  },
+  defaultVariants: { variant: "message" },
+});
+
+/**
  * The two parts of a file name for a flex row: the start gives way first, so
  * the version and the extension stay in view. The end never takes more than
  * the row: where the characters at the end are wider than the row, it shortens
@@ -80,7 +97,7 @@ function NinaFileMedia({ uploading }: { uploading: boolean }) {
  * file holds the id the composer gave it, which is the key of its upload state,
  * and a prompt that is still on its way shows it with that id.
  */
-export type NinaFile = FileUIPart | PromptInputFile;
+type NinaFile = FileUIPart | PromptInputFile;
 
 /** Shadcn owns attachment composition; Nina supplies the native Agent file. */
 export function NinaAttachment({
@@ -105,12 +122,9 @@ export function NinaAttachment({
       // A chip in the composer sits inside the border of the composer, so it
       // draws none of its own: a box with a border inside a box with a border
       // reads as a card in a card. A failed upload keeps the border that
-      // marks it. A transparent border keeps the size of the chip. A document
-      // chip is 10rem to 16rem wide, and both give way to a narrower row.
+      // marks it. A transparent border keeps the size of the chip.
       className={cn(
-        isImage
-          ? imageVariants({ variant })
-          : "min-w-[min(100%,--spacing(40))] max-w-[min(100%,--spacing(64))]",
+        isImage ? imageVariants({ variant }) : documentVariants({ variant }),
         variant === "preview" && "border-transparent"
       )}
       orientation={isImage ? "vertical" : "horizontal"}

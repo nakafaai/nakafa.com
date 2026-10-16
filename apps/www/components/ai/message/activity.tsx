@@ -5,8 +5,8 @@ import {
   ArrowDown01Icon,
   BookOpen02Icon,
   BrainIcon,
-  Calculator01Icon,
   Globe02Icon,
+  MathIcon,
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
@@ -50,8 +50,8 @@ export function Activity({
       <Collapsible className="not-prose min-w-0" defaultOpen={false}>
         <ActivityTrigger />
         <CollapsibleContent className="motion-reduce:transition-none">
-          {/* The line starts under the row's icon, so the evidence reads as its children. */}
-          <div className="ms-2 mt-3 flex min-w-0 flex-col gap-3 border-s ps-4">
+          {/* The line runs under the middle of the row's icon, and the evidence starts where the row's words start (8 + 1 + 15 = 24 px), so it reads as their children. */}
+          <div className="ms-2 mt-3 flex min-w-0 flex-col gap-4 border-s ps-3.75">
             {children}
           </div>
         </CollapsibleContent>
@@ -68,8 +68,10 @@ function ActivityTrigger() {
   const capability = useActivity((invocation) => invocation.capability);
   const state = useActivity((invocation) => invocation.state);
   const problem = isProblem(state);
+  // No step of an activity draws its activity's icon: the math steps have an
+  // icon per operation, the calculator among them, so math has its own.
   const icon = {
-    math: Calculator01Icon,
+    math: MathIcon,
     memory: AiBrain01Icon,
     nakafa: BookOpen02Icon,
     deepResearch: Globe02Icon,
@@ -100,7 +102,7 @@ function ActivityTrigger() {
       aria-atomic="true"
       aria-live="polite"
       className={cn(
-        "group/activity flex min-h-6 w-fit max-w-full items-center gap-2 rounded-sm text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default",
+        "group/activity flex min-h-6 w-fit max-w-full items-start gap-2 rounded-sm py-0.5 text-start text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default",
         problem
           ? "text-destructive"
           : "text-muted-foreground hover:text-foreground"
@@ -109,17 +111,22 @@ function ActivityTrigger() {
     >
       <Spinner
         aria-hidden="true"
-        className="size-4"
+        className="mt-0.5 size-4"
         icon={problem ? Sad02Icon : icon}
         isLoading={state === "running"}
       />
-      <span className="min-w-0 truncate" title={label}>
-        {label}
+      {/* A line says one fact, so the note has its own line under the label. Either wraps in a narrow row instead of being cut. */}
+      <span className="flex min-w-0 flex-col">
+        <span data-slot="activity-label">{label}</span>
+        {note ? (
+          <span className="text-xs" data-slot="activity-note">
+            {note}
+          </span>
+        ) : null}
       </span>
-      {note ? <span className="shrink-0 text-xs">{note}</span> : null}
       {artifactCount > 0 ? (
         <HugeIcons
-          className="size-4 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
+          className="mt-0.5 size-4 shrink-0 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}
         />
       ) : null}

@@ -23,9 +23,10 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
+import { homePage } from "@repo/backend/test/nina/page";
 import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, DateTime, Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -90,9 +91,6 @@ describe("native Nina admission", () => {
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
     );
-    expect(vi.mocked(resolveNinaContext).mock.lastCall?.[2]).toBe(
-      DateTime.formatIso(DateTime.makeUnsafe(NOW))
-    );
     expect(
       Ref.decodeReturnsSync(
         refs.public.nina.turns.start,
@@ -120,6 +118,8 @@ describe("native Nina admission", () => {
       usage: [],
       state: { status: "queued" },
     });
+    // The page is stored once, as the resolver froze it.
+    expect(state.turns[0]?.page).toEqual(homePage);
     expect(
       Arr.filter(state.ledger, (row) => row.type === "usage")
     ).toHaveLength(1);
@@ -181,7 +181,7 @@ describe("native Nina admission", () => {
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
   });
 
-  it("takes a prompt of exactly the limit and refuses a longer one with its own failure, before anything is held", async () => {
+  it("refuses a prompt over the length limit before anything is held, and leaves one at the limit to the turn budget", async () => {
     const { t, owner, identity } = await fixture();
 
     await expect(
@@ -198,11 +198,10 @@ describe("native Nina admission", () => {
     expect(refused.turns).toEqual([]);
     expect(refused.ledger).toEqual([]);
 
-    const taken = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH)))
-    );
-    expect(taken.prompt.text).toHaveLength(NINA_PROMPT_LENGTH);
+    // A prompt this long passes the length limit and is over the turn budget.
+    await expect(
+      owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH)))
+    ).rejects.toMatchObject({ data: { code: "NINA_MESSAGE_SIZE" } });
   });
 
   it("counts a character once however many code units it takes", async () => {
@@ -212,14 +211,11 @@ describe("native Nina admission", () => {
     await expect(
       owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH + 1)))
     ).rejects.toMatchObject({ data: { code: "NINA_PROMPT_LENGTH" } });
-
-    const taken = Ref.decodeReturnsSync(
-      refs.public.nina.turns.start,
-      await owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH)))
-    );
-    expect(Arr.fromIterable(taken.prompt.text)).toHaveLength(
-      NINA_PROMPT_LENGTH
-    );
+    // Twice as many code units as the limit, and as many code points: the
+    // length limit takes it, and only the turn budget refuses it.
+    await expect(
+      owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH)))
+    ).rejects.toMatchObject({ data: { code: "NINA_MESSAGE_SIZE" } });
   });
 
   it("refuses a third open turn before any credit is held, and frees a place when one settles", async () => {

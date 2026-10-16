@@ -222,6 +222,23 @@ describe("Nina rolling summary", () => {
     ]);
   }, 15_000);
 
+  it("folds only the turns whose transcript fits the fold budget, and the next fold covers the rest", async () => {
+    const model = summaryModel("- Long replies, in parts.");
+    provider.languageModel.mockReturnValue(model);
+    // Each turn holds an answer and a reply of 6,000 tokens, which the fold reads
+    // at 3,000 tokens each. The history picks a fold through turn 14, but fifteen
+    // turns of that size outgrow the fold budget, so the fold stops at turn 13.
+    const f = await createSummaryTest(16, () => ({ replies: 1, tokens: 6000 }));
+    await f.refresh(15);
+    const [call] = model.doGenerateCalls;
+    const prompt = encodeJsonText(call?.prompt);
+    expect(prompt).toContain("Answer 13 ");
+    expect(prompt).not.toContain("Answer 14 ");
+    expect(await f.summary()).toEqual([
+      expect.objectContaining({ throughOrder: 13 }),
+    ]);
+  }, 30_000);
+
   it("folds the oldest turns when a long run of replaced askings hides them, though the newest turns fit", async () => {
     const model = summaryModel("- The first questions.");
     provider.languageModel.mockReturnValue(model);
@@ -278,7 +295,8 @@ describe("Nina rolling summary", () => {
 
   it.each([
     ["the provider fails", failingModel(), EARLIER_USAGE],
-    // A call that answered spent its tokens, so they count though its text is not stored.
+    // A call that answered spent its tokens, and the seeded summary counts them
+    // though its text is not stored.
     [
       "the answer is empty",
       summaryModel("   "),

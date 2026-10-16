@@ -18,10 +18,10 @@ export const NAKAFA_SEARCH_CONTENT_TOOL = {
       },
       queries: {
         type: "array",
-        items: { type: "string" },
+        items: { type: "string", maxLength: 511 },
         maxItems: 4,
         description:
-          "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Preserve exact identifiers such as names, years, labels, canonical IDs, and URLs. Use limit for requested counts. Use separate parallel search tool calls when section filters differ.",
+          "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Preserve exact identifiers such as names, years, labels, canonical IDs, and URLs. Keep each query within 16 terms, a term being a run of letters or digits. Use limit for requested counts. Use separate parallel search tool calls when section filters differ.",
       },
       section: {
         type: "string",

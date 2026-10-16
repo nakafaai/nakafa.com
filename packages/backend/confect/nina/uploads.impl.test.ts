@@ -11,13 +11,13 @@ import {
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { contextFor } from "@repo/backend/test/nina/admission";
 import type { FunctionArgs } from "convex/server";
-import { DateTime, Duration, Effect } from "effect";
+import { Duration } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -96,31 +96,7 @@ const started = async (owner: Owner, args: FunctionArgs<typeof start>) =>
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
-  vi.mocked(resolveNinaContext).mockReturnValue(
-    openNinaLearningSession({
-      capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-      source: "current-page",
-      learning: {
-        locale: "en",
-        slug: "home",
-        url: "https://nakafa.com/en/home",
-        verified: false,
-      },
-    }).pipe(
-      Effect.orDie,
-      Effect.map((session) => ({
-        page: {
-          locale: "en" as const,
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-          needsFetch: false,
-          nina: session.context,
-        },
-        user: {},
-      }))
-    )
-  );
+  vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
 });
 afterEach(() => {
   vi.clearAllMocks();

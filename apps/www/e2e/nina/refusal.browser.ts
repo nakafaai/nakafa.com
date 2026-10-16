@@ -13,8 +13,11 @@ import { waitForSlide } from "@/e2e/support/layout";
 import { SHEET_POPUP } from "@/e2e/support/selector";
 import { UNCONFIRMED } from "@/e2e/support/sheet";
 
-/** The limit of a prompt as the English notice writes it. */
-const LIMIT = `at most ${new Intl.NumberFormat("en").format(NINA_PROMPT_LENGTH)} characters`;
+/**
+ * The English notice of a prompt over the limit. It says what the turn budget
+ * says, and names no number that a shorter prompt could still be over.
+ */
+const LIMIT = "This message is too long for Nina to read in one turn";
 /** The failures the server names, as the page receives them. */
 const TOO_LONG = {
   _tag: "NinaPromptError",
@@ -191,8 +194,7 @@ const GERMAN_REFUSALS = [
   {
     failure: TOO_LONG,
     reason: "its length",
-    // German writes 100,000 as 100.000.
-    sentence: `Kürze die Nachricht auf höchstens ${new Intl.NumberFormat("de").format(NINA_PROMPT_LENGTH)} Zeichen`,
+    sentence: "Diese Nachricht ist zu lang, damit Nina sie",
   },
 ];
 

@@ -8,7 +8,7 @@ import {
   mathToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
 import { runMathAgent } from "@repo/backend/confect/nina/math/agent";
-import { ALLOWED, denied } from "@repo/backend/confect/nina/policy/capability";
+import { ALLOWED } from "@repo/backend/confect/nina/policy/capability";
 import { Effect } from "effect";
 
 /** Math's part of the tool policy: where to use it and how to fill its input. */
@@ -45,10 +45,7 @@ export const mathCapability = defineCapability({
     section: SECTION,
   },
   input: mathToolInputSchema,
-  offered: ({ nina }) =>
-    nina.tools.allowMath
-      ? ALLOWED
-      : denied("Math verification is not allowed for this context."),
+  offered: () => ALLOWED,
   run: (input, { context, locale, publish, usageHandler, userId }) =>
     runMathAgent({
       userId,

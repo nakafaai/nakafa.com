@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { languageModel } from "@repo/backend/confect/gateway/model";
 import {
   CAPABILITY_BUDGET,
   makeChatStep,
@@ -78,7 +79,7 @@ function stepInput({
     initialMessages: messages,
     instructions,
     messages,
-    model: "google/gemini-3.8-flash",
+    model: languageModel.id,
     responseMessages: [],
     runtimeContext: {},
     stepNumber,
@@ -297,38 +298,5 @@ describe("the chat steps of a real Nina run", () => {
     // The second step began later and its call took 5 seconds, so its run has
     // more left, not less, than the first run had.
     expect(second - first).toBe(35_000);
-  });
-
-  it("forces no research on a turn whose page does not allow it, although the prompt links an outside site", async () => {
-    const languageModel = ninaModel();
-    provider.languageModel.mockReturnValue(languageModel);
-    const f = await createNinaTest({
-      prompt: "Baca https://ai-sdk.dev/docs/ai-sdk-core/devtools dong.",
-    });
-    await f.t.mutation(async (ctx) => {
-      const turn = await ctx.db.get("ninaTurns", f.turnId);
-      if (turn?.phase !== "active") {
-        throw new Error("Expected one active Nina turn.");
-      }
-      await ctx.db.patch("ninaTurns", f.turnId, {
-        page: {
-          ...turn.page,
-          nina: {
-            ...turn.page.nina,
-            tools: { ...turn.page.nina.tools, allowDeepResearch: false },
-          },
-        },
-      });
-    });
-    await f.t.action(run, { turnId: f.turnId });
-    const [call] = languageModel.doStreamCalls;
-    // The SDK lists no research tool, so a call forced to it could never be made.
-    expect(Arr.map(call?.tools ?? [], (tool) => tool.name)).toEqual([
-      "nakafa",
-      "math",
-      "memory",
-    ]);
-    expect(call?.toolChoice).toEqual({ type: "auto" });
-    expect((await f.inspect()).turn?.state.status).toBe("complete");
   });
 });

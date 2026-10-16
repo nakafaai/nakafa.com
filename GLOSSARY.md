@@ -31,6 +31,8 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Outcome**: How one answer scores: correct, incorrect, partial with earned points, or pending until the grader decides. A pending answer never counts as zero and keeps its score provisional.
 - **Live-attempt gate**: The one admission check every learner write to a running try-out passes, and every School assessment write will pass. The checks run in one order: owner, open attempt, proctor lock, device session, the attempt deadline (a finish checks it before it reads the section), the running section and its integrity, the live deadline (an answer checks the earlier of the attempt and section deadlines), and then, for an answer, the question's stored answer and its version. A refused write writes nothing. `confect/assessment/gate` owns it, and each kind of attempt provides the store it loads from and writes to.
 - **Attempt refusal**: The first gate rule a write failed: missing (no such target for this learner, including another learner's), attempt closed, locked, other device, section closed, or expired; an answer whose version is not newer than the latest write of its question, a clear included, is refused last, as stale. Each product maps it onto its own error codes.
+- **Player**: The one surface a learner answers questions in while a section runs. It knows questions, answers, and time, and nothing of try-out routes or Convex functions, so a School assessment binds the same parts. `apps/www/components/player` owns it, and try-out binds it in `apps/www/components/tryout/player`.
+- **Player view**: How the player lays out a section: every question in a list, or one question at a time. The server resolves it before it sends the page: the `view` parameter first, an unknown value being a 404, then the view the learner saved in a cookie, then the list.
 - **Question worth**: The points one placed question is worth, read only through the contract's `questionPoints`: its authored points or one, and a rubric's derived total.
 - **Penalized scoring**: A set strategy that adds each section's signed marks for a correct, wrong, or blank answer, such as +4, -1, and 0, times each question's worth.
 - **Learning program**: A durable educational pathway such as a school curriculum, assessment preparation track, or institution program. Public curriculum pages present Learning programs through localized routes.
@@ -42,7 +44,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Learning focus**: The onboarding choice between opening curriculum learning or try-out discovery first. It selects the first destination without restricting later access to either surface.
 - **Material placement**: A source-owned relation connecting one canonical material asset to the exact Learning program and curriculum card group that presented it. It is interaction context, not canonical URL identity or a learner preference.
 - **Learning context**: The verified page, Material placement, and tool policy facts available for one user interaction. A direct or SEO material visit has canonical context unless the request carries a valid Material placement.
-- **NinaContextPack**: The immutable learning context snapshot built during authenticated admission and stored with the Nina turn for replay.
+- **NinaContextPack**: The immutable learning context built during authenticated admission and stored once with the Nina turn: the learning page, its placement, the question focus and the evidence the model is told of.
 - **Continue Learning**: A signed-in user read model ranked from recent learning interactions. It must not be inferred for anonymous users.
 - **Popularity**: Aggregate learning interest derived from view events and a windowed counter. The one ranking kept is the homepage's: material lessons, global scope, the last seven UTC days. Product reads use bounded read models, not raw event scans.
 - **Popularity retention**: Daily viewer keys prevent duplicate contributions only within their UTC day. Daily aggregate signals are kept for the seven-day window: the daily pass reads the one leaving it and the weekly pass reads those inside it. Expiration removes these inputs after their consumers finish; queued events remain authoritative for pending work.
@@ -68,6 +70,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Learner memory**: What a learner shared about themself, as many memories as they write. A memory holds a title, words, or both. The title is optional, up to 80 characters, and only the learner writes it. The words are up to 2000 characters and free to hold Markdown. Memory is on for everyone until the learner pauses it, and the learner reads, writes, edits and deletes memories under Settings, AI, Memory. The learner writes pure text. A memory Nina wrote is one sentence of up to 280 characters with a kind (level, goal, style, struggle, or situation), and one the learner wrote takes a kind when a later chat says it again. Nina never replaces words the learner wrote: a chat that says something else about such a memory adds a memory of Nina's and leaves the learner's as it is. The words and the title are each sealed for their learner. A memory is independent of chats, so deleting a chat deletes no memory. Only the learner, the end day of a situation Nina dated, and account deletion remove one. No function reads all the memories of a learner: Nina reads them through the Learner portrait, which is built from the memories it has not read yet, 40 at a time and the oldest first, and through Memory recall and the Memory capability, which find memories through the memory index, and every read is bounded.
 - **Memory index**: The rows that link each memory to the topics it was said at and to each word of its title and words, 104 links at most. A topic is a lesson or a path above a page, kept in plain text. A word is kept as a keyed hash, so the database matches a word again without being able to read it, and another learner's hash for the same word differs. Each row holds the time its memory was confirmed, so a lookup meets the memories confirmed last first. Every writer and every deleter of a memory keeps the index in step with it in the same transaction.
 - **Memory search**: The one function that finds a memory by words and topics through the memory index, the best match first. A lesson that is open counts most, then a path above it, then a word. It reads a bounded number of documents whatever the learner keeps.
+- **Memory restore record**: The sealed copy of a memory that the learner deleted, which the server keeps for the length of the Undo so that Undo gives the memory back exactly as it was: its kind, end day, author, confirmation time, words, title and index keys. It is never opened, it is used once, and a scheduled job deletes it when the window ends. Only the learner deleting one memory keeps a record.
 - **Learner portrait**: One sealed text of at most 1,200 characters about a learner, written in the background from their memories, and, once it exists and while memory is on, in the Learner section of the system prompt, within 300 tokens. It holds what stays true for months (who they are, what they aim for, how they like to learn, what they find hard), never anything with an end date, and changes rarely, so the cached prompt prefix survives. It is derived data and has its own word because Learner profile already names the account facts. Each build reads the next 40 memories it has not read, the oldest first, and asks for the next build while memories remain, so none is skipped. A memory the learner deletes or rewrites takes its text out at once, and a build from scratch writes it again.
 - **Memory recall**: The few memories, at most 8 and at least 3 when the learner has them, that fit one turn: the search of the memory index by the words of the learner's message and the topics of the open page, filled up to 3 with the most recently confirmed. They travel in a "Memories" list in front of the learner's message, outside the cached prompt prefix, and a turn with none has no list and no heading.
 - **Memory capability**: The read-only LearningCapability `memory`, with one input, the query. It answers with the memory search for the words of the query, at most 6 memories and 1,500 tokens, or says that nothing was found. It makes no model call, costs no credits, is not offered while memory is paused, and shows in the chat as one activity row that opens to nothing. What it finds is read in the next step of the turn and is never stored in the chat, which keeps only a note, so a public chat, a later turn and a deleted memory leave no copy of the words. A memory it returns is not thereby confirmed.
@@ -77,6 +80,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 ## AI Gateway
 
 - **Gateway handle**: A language model prepared for one purpose, with its reasoning default and deadlines. It is the only way Nakafa code reaches a model.
+- **Language model profile**: The one record of the model Nina calls and its facts; switching the model changes it alone.
 - **Purpose**: Why Nakafa calls a model, such as chat, specialist, background, suggestion, or presentation. It sets a handle's deadlines and reasoning effort.
 - **Gateway failure**: The one classification of a failed model call, carrying routing facts only and never the prompt, the answer, or a provider message.
 
@@ -85,6 +89,31 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Section**: One heading section of a lesson or article, or one signed chunk of six verses of a surah, in one language. Its place, the document and its ordinal, is the same in every language, so a question in one language can lead to the same place in another.
 - **Section index**: The derived rows of every Section of the active release, with its text for search by words and a vector for search by meaning. A build makes it from the active release, and Nina's Nakafa search trusts it only while its record names the active release and the embedding model; otherwise Nina searches by words.
 - **Section version**: What a document's Sections were made from: the section format, the embedding model, and the signed facts of the source. A build passes over a document whose version the index holds, a Section whose text its document holds is never embedded again, wherever it stands now, and an unchanged Section is not written again either.
+
+## Classroom
+
+- **Channel**: A named place in a class forum. A class has a general channel for all its members, and a teacher adds topic channels.
+- **Discussion**: A thread that starts with a titled message in a channel. Its number counts per class, like the number of an issue, and its title is the same wherever it shows.
+- **Mention**: A reference to a person inside a message. It writes one inbox row in the transaction of the message, and the journal does not record it.
+- **Class library index**: The derived rows that let Nina search the files a teacher published in a class library. It holds no text that a learner wrote.
+
+## Notifications
+
+- **Inbox**: The one list of an account's notifications across Nakafa. It is the source of truth, and push and email only point to it.
+- **Notification**: One inbox row: a recipient, a kind, the object it points to, and a time. It holds no text, and its title is read from the object when it is opened.
+- **Reminder**: A notification that the scheduler sends at a time that follows from a task or a sitting, such as the day before a deadline.
+- **Quiet hours**: The hours, 21:00 to 06:00 in the school's time zone, in which push is skipped. The inbox still holds the notification.
+
+## Collaborative Documents
+
+- **Document step**: One ProseMirror step that a client sends with the version it is based on. The server accepts it only at the current version.
+- **Document version**: The number of steps a collaborative document has accepted.
+
+## School Keys
+
+- **Key owner**: Whom a vault key belongs to: the root, a learner, a school, or a connection.
+- **School key**: The 32-byte key of a tenant that seals the free text of the school. A root key wraps it, as it wraps a learner key.
+- **Blind word**: The keyed hash of one word of a text, made with the key of its owner. The database matches the same word again without reading it.
 
 ## Evaluation
 
@@ -105,27 +134,31 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 - **Checkout admission**: The account-lifecycle revalidation performed after a checkout is created and before its link is released. Its result is Admitted or Unavailable; integration failures remain distinct.
 
-## Forum Conversation
+## Connectors And Integrations
 
-- **Forum Conversation**: The opened discussion surface for one class forum, usually shown as the right-side panel beside the forum list.
-- **Transcript**: The ordered message log rendered inside a Forum Conversation.
-- **Viewport**: The visible scroll window over a Transcript.
-- **Placement**: The intended Viewport target, such as the latest message edge or a specific post.
-- **Snapshot**: A persisted restorable Viewport state for one Forum Conversation.
-- **Navigation History**: The ordered semantic Viewport positions a user can return to inside one Forum Conversation.
-- **Latest Affinity**: The user state where a Forum Conversation Viewport is attached to the newest Transcript edge.
+- **Connector**: An adapter in `confect/connectors` that brings one external source into Nakafa, such as Google Drive, Forms, Classroom, Calendar, or Gmail, or a file such as Dapodik XLSX. It writes nothing to Google. Data that leaves Nakafa (webhooks, exports, grades sent to a learning system) is not a Connector, except the Dapodik export, which the Dapodik adapter owns.
+- **Connection**: One Connector authorized by one owner, a learner for a personal connection or a school for a school connection. Its tokens are sealed in the vault under the owner's key. It enters the reconnect state when Google refuses its token or, for a school connection, when the account of the member who made it is deleted.
+- **Integration client**: An app that calls a school's REST API or MCP server with OAuth 2.0 client credentials. It holds the Integration role over its tenant or one unit, limited to the actions on its list.
+- **Webhook**: A signed HTTP callback of one Integration client, fed from the Journal. It delivers only published changes that the client could read, and one row for each attempt records the delivery.
 
 ## Nakafa School
 
-- **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the same deployments as every other tenant. Its data is isolated by every School function, never by the client.
-- **Tenant slug**: A tenant's public address, the `slug.nakafa.com` label and the `/[locale]/school/[slug]` route segment. It names the tenant context of a request; it never grants access.
+- **Tenant**: One school or foundation (yayasan) using Nakafa School, served by the web project and the Convex deployment of its data cell. Its data is isolated by every School function, never by the client.
+- **Data cell**: One `www` project and one Convex deployment, with a registrable domain of its own. A tenant lives in one cell, and an account has one home cell. The `us` cell is live and the `eu` cell is planned.
+- **Tenant slug**: A tenant's public address, the `slug.nakafa.com` label under the domain of its data cell. It names the tenant context of a request; it never grants access.
 - **Unit**: One school level inside a tenant, such as the SD, SMP, or SMA of a foundation, with its own NPSN. An archived unit stays readable and refuses writes.
-- **Period**: One school year or semester of a tenant. Promotion archives a period and moves students into the next one.
+- **Locale settings**: The country and the contract currency that a tenant holds, and the time zone and the content language that each unit holds. The interface language is not one of them: it follows the learner's `NEXT_LOCALE` cookie.
+- **Organisation policy**: A choice an Owner makes for the whole tenant: whether students may open forum threads, whether Nina is on, and which email domains it admits. An empty list of domains admits every address; otherwise only an address on one of them may claim an invite. The first two choices are stored until the School features they switch exist.
+- **Contract**: What a school signed with Nakafa when it was opened: the plan of its licence, its modules, and the versions of its data processing agreement and content licence. The journal records it with the tenant's provisioning; the rights it grants are built later.
+- **Provisioning**: Opening a tenant with its units, its first Owner as an unclaimed Person with an invite, and its journal entries in one transaction. An Operator does it with the deployment's key, so no browser can.
+- **Period**: One school year or semester of a unit. Promotion archives a period and moves students into the next one.
 - **Cohort**: A rombel, the administrative class group that rapor, promotion, and Dapodik use. It is separate from a Classroom.
+- **Cohort placement**: One student's Cohort in one Period, for a student with a Student grant over the Cohort's unit or over the whole tenant. A student holds at most one placement per Period, and the placement opens its Cohort to them through the `cohortMember` relation.
 - **Classroom**: The learning space for one subject in one Cohort, or one per Cohort in SD.
+- **Class**: One subject taught to one Cohort in one Period, named for the subject and the cohort, such as Fisika X-1, with an address built the same way. A class without a subject is the homeroom class of an SD cohort. Its students are the Persons placed in its Cohort, and its subject teachers are the Persons assigned to it. Its Classroom is the learning space that opens from it.
 - **Person**: Someone in one tenant, separate from a User. A Person can exist before any account and is claimed later; an account holds at most one Person per tenant.
-- **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the invite address.
-- **Invite**: A pending offer of one Person to the account whose verified email equals its address.
+- **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the address of an unexpired invite, the tenant is active, and the tenant's email domains admit the address; it is the one place an account is matched by its email. The journal records the claim method.
+- **Invite**: A pending offer of one Person to the account whose verified email equals its address. It expires 14 days after it is created, and an expired invite is never claimed; a resend sends the same invite again without moving that date.
 - **Grant**: One role held by one Person over the whole tenant or one unit, standing or temporary.
 - **Built-in role**: One of the fixed roles every tenant shares: Owner, Admin, Principal, Deputy, Teacher, Counselor, Staff, Student, Guardian, Proctor, Auditor, and Integration.
 - **Owner**: The role that holds every roles-granted action and alone may appoint Owners and Admins. A tenant keeps at least one claimed Owner.
@@ -141,5 +174,5 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Journal**: The one record of audited changes for every space, written in the same transaction as the change and read by the audit log and by consumers.
 - **Journal entry**: One immutable audited change: its owner space, actor, subject, and change, holding IDs and codes only.
 - **Published change type**: A change type its kind exposes to journal consumers such as notifications, webhooks, and exports.
-- **Operator**: Nakafa staff who provision tenants. Not the school's Admin, whom Indonesian schools also call operator sekolah.
-- **Operator visit**: An operator's temporary, audited admin or auditor grant inside one tenant, ended on schedule.
+- **Operator**: Nakafa staff who open and suspend schools, and enter a school only on an approved visit. Not the school's Admin, whom Indonesian schools also call operator sekolah.
+- **Operator visit**: An operator's temporary, audited Auditor grant inside one school, requested by the operator and approved by the school's Owner or Admin. It ends when the operator leaves or deletes its account, when the school ends it, or at its term of at most 24 hours.

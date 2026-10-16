@@ -1,96 +1,117 @@
 "use client";
 
-import { Sad02Icon, Search01Icon } from "@hugeicons/core-free-icons";
+import { AlertCircleIcon, Search01Icon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import {
   Source,
   SourceContent,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import { Step } from "@/components/ai/message/evidence/step";
 
 interface Props {
   message: DataPart["web-search"];
 }
 
+/**
+ * One web search: its step, then its queries, the sites it was limited to and
+ * what it found. A search that runs shows its own icon, because the activity
+ * above it already turns.
+ */
 export function WebSearchPart({ message }: Props) {
   const t = useTranslations("Ai");
 
-  const isLoading = message.status === "loading";
-  const isError = message.status === "error";
-
-  const results = message.sources;
-
-  if (isLoading) {
+  if (message.status === "loading") {
     return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <Spinner className="size-4 text-muted-foreground" />
-          <p className="text-muted-foreground text-sm">
-            {t("web-search-loading")}
-          </p>
-        </div>
-        <WebSearchPartQueries queries={message.queries} />
-      </div>
+      <Step icon={Search01Icon} label={t("web-search-loading")}>
+        <WebSearchPartQueries queries={message.queries} sites={message.sites} />
+      </Step>
     );
   }
 
-  if (isError) {
+  if (message.status === "error") {
     return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2 text-destructive text-sm">
-          <HugeIcons className="size-4 shrink-0" icon={Sad02Icon} />
-          <span>{t("web-search-error")}</span>
-        </div>
-        <div className="ms-2 flex flex-col gap-3 border-s ps-4">
-          <WebSearchPartQueries queries={message.queries} />
-        </div>
-      </div>
+      <Step failed icon={AlertCircleIcon} label={t("web-search-error")}>
+        <WebSearchPartQueries queries={message.queries} sites={message.sites} />
+      </Step>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <HugeIcons
-          className="size-4 text-muted-foreground"
-          icon={Search01Icon}
-        />
-        <span className="text-muted-foreground text-sm">{t("web-search")}</span>
-      </div>
-      {/* The line starts under the row's icon, so the queries and sources read as its children. */}
-      <div className="ms-2 flex flex-col gap-3 border-s ps-4">
-        <WebSearchPartQueries queries={message.queries} />
-        <WebSearchPartPreview
-          emptyLabel={t("web-search-empty")}
-          results={results}
-        />
-      </div>
-    </div>
+    <Step icon={Search01Icon} label={t("web-search")}>
+      <WebSearchPartQueries queries={message.queries} sites={message.sites} />
+      <WebSearchPartPreview
+        emptyLabel={t("web-search-empty")}
+        results={message.sources}
+      />
+    </Step>
   );
 }
 WebSearchPart.displayName = "WebSearchPart";
 
-function WebSearchPartQueries({ queries }: { queries: string[] }) {
+function WebSearchPartQueries({
+  queries,
+  sites,
+}: {
+  queries: string[];
+  sites: DataPart["web-search"]["sites"];
+}) {
   if (queries.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex min-w-0 flex-col gap-1">
       {Arr.map(queries, (query) => (
         <WebSearchQueryText key={query} query={query} />
       ))}
+      <WebSearchPartSites sites={sites} />
     </div>
   );
 }
 WebSearchPartQueries.displayName = "WebSearchPartQueries";
 
+/**
+ * The sites a search was limited to, under its query, so results of one site,
+ * or none at all, read as what they are. They are plain hostnames in muted
+ * text, with no count and no badge, one line each: a hostname longer than the
+ * line ends in an ellipsis. A search that was open, and an answer stored
+ * before the field existed, have none.
+ */
+function WebSearchPartSites({
+  sites,
+}: {
+  sites: DataPart["web-search"]["sites"];
+}) {
+  if (sites === undefined || sites.length === 0) {
+    return null;
+  }
+
+  return (
+    <p
+      className="flex min-w-0 flex-wrap gap-x-2 text-muted-foreground text-xs"
+      data-slot="web-search-sites"
+    >
+      {Arr.map(Arr.dedupe(sites), (site) => (
+        <span className="min-w-0 max-w-full truncate" key={site}>
+          {site}
+        </span>
+      ))}
+    </p>
+  );
+}
+WebSearchPartSites.displayName = "WebSearchPartSites";
+
+/** A query shows two lines at most; the rest is cut with an ellipsis. */
 function WebSearchQueryText({ query }: { query: string }) {
-  return <p className="text-muted-foreground text-sm">{`"${query}"`}</p>;
+  return (
+    <p
+      className="wrap-anywhere line-clamp-2 py-0.5 text-muted-foreground text-sm"
+      dir="auto"
+    >{`"${query}"`}</p>
+  );
 }
 
 function WebSearchPartPreview({
@@ -105,11 +126,11 @@ function WebSearchPartPreview({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       {Arr.map(results, (item) => (
         <Source href={item.url} key={item.url}>
-          <SourceTrigger showFavicon />
-          <SourceContent description={item.description} title={item.title} />
+          <SourceTrigger title={item.title} />
+          <SourceContent description={item.description} />
         </Source>
       ))}
     </div>

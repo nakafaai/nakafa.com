@@ -19,14 +19,17 @@ their own retention.
 
 `journalEntries` holds one immutable entry per audited change: its owner (a
 `Space`, one account or one tenant), its actor (an account in its personal
-space, a Person in a tenant, or scheduled work), its subject (an `ObjectRef`),
-and its change. A tenant entry takes only a `TenantActor`, a Person or
-scheduled work, and tenant grants record who gave them the same way, so no
-tenant row holds an account ID. The subject kind's authority writes it with
-`record(actor, row, change)` (ADR 0012) in the caller's transaction, so a
-failed or retried mutation leaves no entry. It only inserts: no reads,
-counters, or sequence documents, so concurrent mutations never conflict on the
-journal.
+space; in a tenant, a Person, an operator, or scheduled work), its subject (an
+`ObjectRef`), and its change. A tenant entry takes only a `TenantActor`: a
+Person, an operator, or scheduled work. The operator actor holds the internal
+operator ID of Nakafa staff who act outside a visit, such as to provision or
+suspend a tenant or to replace an unclaimed Owner as break-glass, and the
+school's audit view shows it as Nakafa staff. Tenant grants record who gave them
+the same way, so no tenant actor is an account. The subject kind's authority
+writes it with `record(actor, row, change)` (ADR 0012) in the caller's
+transaction, so a failed or retried mutation leaves no entry. It only inserts:
+no reads, counters, or sequence documents, so concurrent mutations never
+conflict on the journal.
 
 `record` takes the subject as the loaded row, usually the one its kind's access
 middleware provided, and derives the entry's reference and owner from it. No
@@ -39,11 +42,19 @@ another kind does not compile.
 Privileged and record-of-truth changes: access, membership, claims, grades,
 releases, documents, deletions, connector work, and every operator action.
 High-frequency learner writes (answers, reactions, read state, presence,
-drafts) are their own record and are not journaled per write. Forum posts are not
-journaled per message either. A policy change, such as whether students may open
-forum threads, is journaled as `tenant.policy.set`. Change details
-hold IDs, enums, and reason codes only, never names, emails, or free text, so
-an entry never outlives the personal data it mentions.
+drafts) are their own record and are not journaled per write. Forum posts are
+not journaled per message either. A policy change, such as whether students may
+open forum threads, is journaled as `tenant.policy.set`, a change type declared
+on the tenant kind (ADR 0011). Change details hold IDs, enums, and reason codes
+only, never names, emails, or free text, so an entry never outlives the personal
+data it mentions.
+
+Two changes carry more than a type. A claim, `person.claimed`, holds the claim
+method and no account: the Person row names the account and the release clears
+it (ADR 0011), so no tenant entry holds an account ID that could outlive the
+account. A grant that ends, `grant.ended`, holds why it ended. For a visit grant
+the reasons are `left`, `expired`, `revoked by the school`, and `operator
+removed`.
 
 ### Object references
 
@@ -66,14 +77,26 @@ Convex before relying on a creation-time cursor.
 ### Retention
 
 Tenant entries are kept for the journal retention of their organisation. The
-retention is one period for each data type (owner decision K10), and an entry is
-not deleted before the audit period of its organisation ends. The retention and
-offboarding policy removes expired entries with a bounded scheduled sweep over
-the owner index in creation order that never passes the oldest live consumer
-cursor, and offboarding exports them with proof. Personal entries leave with
-the account: the first personal writer adds the owner index on accounts and the
-account deletion drain. Account deletion leaves tenant entries alone, because
-they hold Person IDs, not personal data. Nothing else deletes journal rows.
+retention is one period for each data type (owner decision K10), and for the
+journal it is one period for each organisation: the one that its data processing
+agreement states, stored on the tenant at provisioning (ADR 0011). A bounded
+scheduled sweep over the owner index in creation order removes an entry only
+after that period ends, and it never passes the oldest live consumer cursor.
+Offboarding is the one other end. It is the end of the organisation's data
+processing agreement, which is the agreement that states the period, so it ends
+the period for every entry, whatever its age. It exports the organisation's
+entries with proof, and then they are deleted with its other data.
+
+Personal entries leave with the account: the first personal writer adds the
+owner index on accounts and the account deletion drain.
+
+Account deletion leaves tenant entries alone. A tenant entry holds Person IDs, no
+account ID, and no name, and each ID points at a Person row, which holds personal
+data, in the same deployment. The IDs never outlive that data: offboarding
+deletes the entries with the organisation's other data, and a move to another
+cell carries the entries to the target cell and deletes the source entries with
+the source rows (ADR 0026). Retention, offboarding, and a move are the only
+things that delete tenant entries.
 
 ## Implementation Contract
 
@@ -89,8 +112,8 @@ they hold Person IDs, not personal data. Nothing else deletes journal rows.
 - One write per audited change, in the same transaction as the data.
 - A change type a lane adds is one line in its kind's declaration and reaches
   the audit log and every consumer without another table.
-- The audit log names actors and Person subjects; account identities never
-  reach a school.
+- The audit log names Person actors and Person subjects and shows an operator as
+  Nakafa staff; account identities never reach a school.
 
 ## Rejected Alternatives
 

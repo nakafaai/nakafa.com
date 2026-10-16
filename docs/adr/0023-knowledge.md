@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted.
+Accepted. Amended on 13 October 2026: a class library index for the files that a
+teacher published, and no embedding of learner text (Class Libraries).
 
 ## Context
 
@@ -11,12 +12,14 @@ the question. A question had to share words with a lesson to find it, and a
 result named the lesson, not the part of it that answers. The corpus is small
 enough to embed whole: 1,170 lesson and article documents with 9,567 sections,
 and 114 surahs with 1,085 signed chunks of six verses in three languages, 3,255
-passages. That is 12,822 rows, and the index holds and embeds only published
-lesson and Quran text. No stored learner message is ever embedded. A search
-embeds one thing from a learner: the short search phrase that the specialist
-writes from a question, which it compares with the sections and keeps nowhere.
-That request cannot carry the zero retention flags that every language model
-call sends (ADR 0019), so it relies on the statement of the gateway.
+passages. That is 12,822 rows, and the section index holds and embeds only
+published lesson and Quran text. No stored learner message is ever embedded. A
+search embeds one thing from a learner: the short search phrase that the
+specialist writes from a question, which it compares with the sections and keeps
+nowhere. That request asks for zero retention with `zdr`, the one retention flag
+an embedding request can carry (ADR 0019, Routing and retention). The class
+libraries of a school will be indexed apart from the section index, as planned
+under Class Libraries below.
 
 ## Decision
 
@@ -107,6 +110,41 @@ runs only on the dev deployment of the checkout, through the Convex CLI and
 behind the same deployment check as the release gate. It runs again when a
 model is added or retired.
 
+## Class Libraries
+
+Planned for program wave B (ADR 0013 describes the waves; ADR 0025 describes the
+class library). The class libraries of a school get a derived read model of
+their own, beside the section index and with the same property: deleting its
+rows loses nothing, because a build makes them again from the files. It is
+school data in the school's own cell.
+
+- It indexes only the files that a teacher published in a class library. It
+  indexes nothing else: no message, no submission, no draft, no answer, no exam
+  item, no Nina thread, and no file that is not published. No text that a
+  learner wrote is embedded to be stored, in a class or anywhere else. A search
+  embeds the short search phrase alone, as for the section index, and keeps it
+  nowhere.
+- Each row names its tenant and its class. A search runs for a caller that
+  `decide` allows to read that library (ADR 0012), and the tenant and the class
+  are filters that the server sets, never arguments that the client names.
+- A row exists while its file is published. Unpublishing the file, deleting it,
+  deleting the class, or switching Nina off for the class or for the school
+  deletes the rows, and turning Nina on again builds them again.
+- The model is the one of the section index: `gemini-embedding-2`, 768 numbers
+  (`gateway/model.ts`). An embedding request asks for zero retention with `zdr`
+  (ADR 0019, Routing and retention), and no Convex page states zero retention
+  for every request, so the text of a teacher's file goes to the embedding
+  provider on that request alone. Only a file that the teacher published to the
+  class is sent.
+- A vector is kept in plain form, and an embedding can be turned back into the
+  text it stands for (ADR 0022), so the index holds only text that a teacher
+  published to the class. Any other text that a row keeps is sealed with the
+  school key (ADR 0030).
+- Nina in a class answers from this index and from the section index, with
+  citations, and passes the question to the teacher when she is unsure. The
+  Agent thread of a class reads no personal memory and no learner profile
+  (ADR 0022).
+
 ## Cost
 
 The documents that a build and a search read and write are measured with Convex
@@ -124,7 +162,9 @@ of the build.
   `SECTION_FORMAT` in `draft.ts`. Otherwise the next build trusts the versions it
   stored and leaves the old sections in place until their documents change.
 - Changing `embeddingModelId` changes every version, so the next build embeds all
-  12,822 sections again, and search uses words until it finishes.
+  12,822 sections again, and search uses words until it finishes. The class
+  libraries, which are planned, will use the same model, so the same change will
+  embed their published files again.
 - A document may have 128 sections at the most. The longest lesson has 19 and the
   longest surah 48. A longer one fails the build and names itself, and so does a
   clean up that finds a stored document with more rows than that, because it

@@ -171,10 +171,6 @@ describe("the sentences of the failure table", () => {
         expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
           String(NINA_DOCUMENT_MEBIBYTES)
         );
-        // A number reads the way its language writes it: 100,000 or 100.000.
-        expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
-          new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH)
-        );
       })
   );
 
@@ -183,24 +179,17 @@ describe("the sentences of the failure table", () => {
     (locale) =>
       Effect.gen(function* () {
         const t = yield* aiTranslator(locale);
-        const length = new Intl.NumberFormat(locale).format(NINA_PROMPT_LENGTH);
         const size = new Intl.NumberFormat(locale).format(
           NINA_DOCUMENT_MEBIBYTES
         );
 
-        // The learner reads "10 MiB" and "100,000 characters" as one word each,
-        // so a line never ends between the number and what it counts.
+        // The learner reads "10 MiB" as one word, so a line never ends between
+        // the number and its unit.
         expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
           `${size}${NO_BREAK}`
         );
-        expect(t("failures.prompt-length", ninaFailureLimits)).toContain(
-          `${length}${NO_BREAK}`
-        );
         expect(t("failures.attachment-size", ninaFailureLimits)).not.toContain(
           `${size} `
-        );
-        expect(t("failures.prompt-length", ninaFailureLimits)).not.toContain(
-          `${length} `
         );
       })
   );

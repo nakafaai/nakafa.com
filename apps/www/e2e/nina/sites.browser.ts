@@ -1,0 +1,89 @@
+import { expect, test } from "@playwright/test";
+import { cutText, lines, overflow } from "@/e2e/support/transcript/measure";
+import { onChat } from "@/e2e/support/transcript/open";
+import {
+  LIMIT_SITES,
+  limited,
+  limitedLoading,
+  PUNYCODE_SITE,
+  SITE_LONG_LABEL,
+  sameHost,
+} from "@/e2e/support/transcript/web";
+
+/** The sites of a search, under its query: one box for each card that was limited. */
+const SITES = '[data-slot="web-search-sites"]';
+
+/** The hostnames inside one box of sites. */
+const HOSTS = ":scope > span";
+
+test.describe("Nina web search sites on a phone", () => {
+  test.use({ viewport: { height: 2600, width: 320 } });
+
+  test(
+    "names the sites of a finished search and of a failed one, each hostname on one line",
+    onChat(limited, { locale: "id" }, async (page) => {
+      const boxes = page.locator(SITES);
+      const done = boxes.nth(0);
+      const failed = boxes.nth(1);
+      const edge = page.viewportSize()?.width ?? 0;
+
+      // Each card that was limited names its sites, in the order they were
+      // given and as the contract holds them: a punycode name stays punycode,
+      // and a site that the failed card holds twice shows once.
+      await expect(boxes).toHaveCount(2);
+      await expect(done.locator(HOSTS)).toHaveText(LIMIT_SITES);
+      await expect(failed.locator(HOSTS)).toHaveText([
+        SITE_LONG_LABEL,
+        PUNYCODE_SITE,
+      ]);
+      for (const box of [done, failed]) {
+        // A hostname is shown on one line that lies within the page. A
+        // hostname that is not shown has no box to measure, so it is looked
+        // for before it is measured.
+        for (const host of await box.locator(HOSTS).all()) {
+          await expect(host).toBeVisible();
+          expect(await lines(host)).toBe(1);
+          const right = await host.evaluate(
+            (element) => element.getBoundingClientRect().right
+          );
+          expect(right).toBeLessThanOrEqual(edge);
+        }
+      }
+      // Every limit site is longer than the line, so each ends in an
+      // ellipsis, and a short one fits whole.
+      for (const host of await done.locator(HOSTS).all()) {
+        await expect(host).toHaveCSS("text-overflow", "ellipsis");
+        expect(await cutText(host)).not.toEqual([]);
+      }
+      expect(
+        await cutText(failed.locator(HOSTS).filter({ hasText: PUNYCODE_SITE }))
+      ).toEqual([]);
+      expect(await overflow(page)).toBe(0);
+    })
+  );
+
+  test(
+    "names the sites of a search that still runs",
+    onChat(limitedLoading, { locale: "de", running: true }, async (page) => {
+      const boxes = page.locator(SITES);
+
+      await expect(boxes).toHaveCount(1);
+      await expect(boxes.locator(HOSTS)).toHaveText(LIMIT_SITES);
+      // The text of a hostname that is hidden reads too, so each is looked for.
+      for (const host of await boxes.locator(HOSTS).all()) {
+        await expect(host).toBeVisible();
+        expect(await lines(host)).toBe(1);
+      }
+      expect(await overflow(page)).toBe(0);
+    })
+  );
+
+  test(
+    "names no site for a search that was open",
+    onChat(sameHost, { locale: "id" }, async (page) => {
+      // The query of the card shows, and no site stands under it.
+      await expect(page.getByText('"turunan fungsi"')).toBeVisible();
+      await expect(page.locator(SITES)).toHaveCount(0);
+    })
+  );
+});

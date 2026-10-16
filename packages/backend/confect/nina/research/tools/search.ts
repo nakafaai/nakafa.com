@@ -43,10 +43,11 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     queries,
   });
   // Every card of the call says which sites it was limited to, so results of
-  // one site, or no result, read as what they are.
+  // one site, or no result, read as what they are. So does the output of a
+  // search that ran, but not that of a search that failed, which tested no site.
   const named = sites ?? [];
   const limited = Arr.isReadonlyArrayNonEmpty(named)
-    ? { sites: [...named] }
+    ? { sites: Arr.copy(named) }
     : {};
 
   yield* Effect.forEach(searchQueries, (query, index) =>
@@ -138,10 +139,10 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   ) {
     const error = Arr.join(failedResults, "\n");
 
-    const output = {
+    const output: WebSearchOutput = {
       sources: [],
       error,
-    } satisfies WebSearchOutput;
+    };
 
     return {
       result: output,
@@ -153,10 +154,11 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     dedupeSources(Arr.flatMap(searchResults, (result) => result.sources))
   );
 
-  const output = {
+  const output: WebSearchOutput = {
     sources,
     error: undefined,
-  } satisfies WebSearchOutput;
+    ...limited,
+  };
 
   return {
     result: output,

@@ -6,12 +6,13 @@ import accountConsents from "./tables/accountConsents";
 import accountDeletionAttemptCancellations from "./tables/accountDeletionAttemptCancellations";
 import accountDeletionPreparations from "./tables/accountDeletionPreparations";
 import accountDeletionReceipts from "./tables/accountDeletionReceipts";
-import accountDeletionSchoolTransfers from "./tables/accountDeletionSchoolTransfers";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
+import classTeachers from "./tables/classTeachers";
+import classes from "./tables/classes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
@@ -52,35 +53,27 @@ import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
 import ninaMemoryKeys from "./tables/ninaMemoryKeys";
 import ninaMemoryPortraits from "./tables/ninaMemoryPortraits";
+import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
+import operators from "./tables/operators";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
-import schoolActivityLogs from "./tables/schoolActivityLogs";
-import schoolClassForumPendingUploads from "./tables/schoolClassForumPendingUploads";
-import schoolClassForumPostAttachments from "./tables/schoolClassForumPostAttachments";
-import schoolClassForumPostReactions from "./tables/schoolClassForumPostReactions";
-import schoolClassForumPosts from "./tables/schoolClassForumPosts";
-import schoolClassForumReactions from "./tables/schoolClassForumReactions";
-import schoolClassForumReadStates from "./tables/schoolClassForumReadStates";
-import schoolClassForums from "./tables/schoolClassForums";
-import schoolClassInviteCodes from "./tables/schoolClassInviteCodes";
-import schoolClassMaterialGroups from "./tables/schoolClassMaterialGroups";
-import schoolClassMembers from "./tables/schoolClassMembers";
-import schoolClasses from "./tables/schoolClasses";
-import schoolInviteCodes from "./tables/schoolInviteCodes";
-import schoolMembers from "./tables/schoolMembers";
-import schools from "./tables/schools";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantCohortMembers from "./tables/tenantCohortMembers";
+import tenantCohorts from "./tables/tenantCohorts";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
+import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
+import tenantPeriods from "./tables/tenantPeriods";
 import tenantUnits from "./tables/tenantUnits";
+import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
@@ -102,12 +95,13 @@ export default $defineSchema({
   accountDeletionAttemptCancellations: $Table.tableDefinition(accountDeletionAttemptCancellations),
   accountDeletionPreparations: $Table.tableDefinition(accountDeletionPreparations),
   accountDeletionReceipts: $Table.tableDefinition(accountDeletionReceipts),
-  accountDeletionSchoolTransfers: $Table.tableDefinition(accountDeletionSchoolTransfers),
   articleBuckets: $Table.tableDefinition(articleBuckets),
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
   chatShares: $Table.tableDefinition(chatShares),
   chats: $Table.tableDefinition(chats),
+  classTeachers: $Table.tableDefinition(classTeachers),
+  classes: $Table.tableDefinition(classes),
   commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),
@@ -148,35 +142,27 @@ export default $defineSchema({
   ninaMemories: $Table.tableDefinition(ninaMemories),
   ninaMemoryKeys: $Table.tableDefinition(ninaMemoryKeys),
   ninaMemoryPortraits: $Table.tableDefinition(ninaMemoryPortraits),
+  ninaMemoryRestores: $Table.tableDefinition(ninaMemoryRestores),
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),
+  operators: $Table.tableDefinition(operators),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
-  schoolActivityLogs: $Table.tableDefinition(schoolActivityLogs),
-  schoolClassForumPendingUploads: $Table.tableDefinition(schoolClassForumPendingUploads),
-  schoolClassForumPostAttachments: $Table.tableDefinition(schoolClassForumPostAttachments),
-  schoolClassForumPostReactions: $Table.tableDefinition(schoolClassForumPostReactions),
-  schoolClassForumPosts: $Table.tableDefinition(schoolClassForumPosts),
-  schoolClassForumReactions: $Table.tableDefinition(schoolClassForumReactions),
-  schoolClassForumReadStates: $Table.tableDefinition(schoolClassForumReadStates),
-  schoolClassForums: $Table.tableDefinition(schoolClassForums),
-  schoolClassInviteCodes: $Table.tableDefinition(schoolClassInviteCodes),
-  schoolClassMaterialGroups: $Table.tableDefinition(schoolClassMaterialGroups),
-  schoolClassMembers: $Table.tableDefinition(schoolClassMembers),
-  schoolClasses: $Table.tableDefinition(schoolClasses),
-  schoolInviteCodes: $Table.tableDefinition(schoolInviteCodes),
-  schoolMembers: $Table.tableDefinition(schoolMembers),
-  schools: $Table.tableDefinition(schools),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
+  tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),
+  tenantCohorts: $Table.tableDefinition(tenantCohorts),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),
+  tenantKeys: $Table.tableDefinition(tenantKeys),
   tenantPeople: $Table.tableDefinition(tenantPeople),
+  tenantPeriods: $Table.tableDefinition(tenantPeriods),
   tenantUnits: $Table.tableDefinition(tenantUnits),
+  tenantVisits: $Table.tableDefinition(tenantVisits),
   tenants: $Table.tableDefinition(tenants),
   tryoutAttemptPlacements: $Table.tableDefinition(tryoutAttemptPlacements),
   tryoutAttempts: $Table.tableDefinition(tryoutAttempts),

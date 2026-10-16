@@ -2,6 +2,7 @@ import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
+import { webSearchSitesRule } from "@repo/backend/confect/nina/research/descriptions";
 import { HostnameSchema } from "@repo/backend/confect/nina/research/domain";
 import { Schema, Struct } from "effect";
 export const webSearchMaxQueries = 4;
@@ -21,8 +22,12 @@ const webSearchMaxSites = 5;
  * The most characters one search query may have. The search provider documents
  * its `query` with `maxLength: 500` (Firecrawl search endpoint,
  * https://docs.firecrawl.dev/api-reference/endpoint/search, read on 12 October
- * 2026). The tool input states the same limit, so the model is told it and no
- * query is cut afterwards.
+ * 2026) and documents no answer to a longer one. The tool input states the
+ * same limit, so the model is told it and no query is cut afterwards. A longer
+ * query makes the call invalid, like a fifth query, and `runResearchAgent`
+ * drops an invalid call: no search is planned, so the run answers from the
+ * links the learner sent, if any, and ends partial, or it fails when there are
+ * none. A search already stored keeps whatever query it ran with.
  */
 const webSearchQueryMaxLength = 500;
 /**
@@ -91,7 +96,7 @@ const WebSearchInputSchema = Schema.Struct({
       taskContext: `
         Hostnames of the only sites the results may come from, such as bbc.com.
 
-        Use it when the task asks for results of given sites only.
+        ${webSearchSitesRule}
         Write each site as a hostname, without a protocol or a path.
         Every query of this call is then searched in those sites only.
         Name at most ${webSearchMaxSites} sites.
@@ -118,6 +123,15 @@ export const WebSearchSourceSchema = Schema.Struct({
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const WebSearchOutputSchema = Schema.Struct({
   error: Schema.optional(Schema.String),
+  /**
+   * The sites a search that ran was limited to, when the call named any. A
+   * search that failed tested none of them, so its output has none. A limited
+   * search that found nothing says so in words (`search/format.ts`), because
+   * the limit may be why it found nothing.
+   */
+  sites: Schema.optional(
+    Schema.NonEmptyArray(Schema.String).pipe(Schema.mutable)
+  ),
   sources: Schema.Array(WebSearchSourceSchema).pipe(Schema.mutable),
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))

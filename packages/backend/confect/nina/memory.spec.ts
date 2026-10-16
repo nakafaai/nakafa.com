@@ -11,8 +11,14 @@ import {
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoreStatusValidator } from "@repo/backend/confect/tryouts/score";
 import { Sealed } from "@repo/backend/confect/vault/schema";
-import { Schema, Struct } from "effect";
+import { Duration, Schema, Struct } from "effect";
 
+/**
+ * How long a deleted memory can be put back. The Memory page offers its Undo
+ * for this long, and the server keeps the memory it deleted, sealed, for the
+ * same time (`restore`), so the one number is read by both.
+ */
+export const MEMORY_UNDO = Duration.seconds(5);
 /** Characters of one memory's words, their Markdown formatting included. */
 export const MEMORY_TEXT_LIMIT = 2000;
 /** Characters of the title a learner gives a memory. */
@@ -146,8 +152,9 @@ export const NinaMemoryDraft = Schema.Struct({
 });
 
 /**
- * Why a memory could not be written. `empty`: it holds neither a title nor
- * words. `missing`: the memory was deleted meanwhile.
+ * Why a memory could not be written or put back. `empty`: it holds neither a
+ * title nor words. `missing`: the memory was deleted meanwhile, or, for
+ * `restore`, there is nothing to put back under that id for the learner.
  */
 export class NinaMemoryRejected extends Schema.TaggedError<NinaMemoryRejected>()(
   "NinaMemoryRejected",
@@ -177,9 +184,8 @@ const NinaMemoryStatement = {
  * One thing a capture call says the learner stated about themself, as the model
  * writes it: a kind, a statement, and `until`, the day a situation ends, as
  * `YYYY-MM-DD`. The model is asked for this one flat shape for every kind,
- * because a union in a structured output is not known to pass the gateway
- * (Gemini's structured output page lists no `anyOf`, read on 12 October 2026,
- * and the capture call has never sent one). A claim that fits no candidate is
+ * because a union in a structured output is not known to pass the gateway, and
+ * the capture call has never sent one. A claim that fits no candidate is
  * dropped by the check, so one claim cannot refuse the others.
  */
 export const NinaMemoryClaim = Schema.Struct({
@@ -330,12 +336,28 @@ export default GroupSpec.make()
       error: () => Schema.Union([AuthFailure, NinaMemoryRejected]),
     }).middleware(Session)
   )
+  // Deletes one memory, and keeps what it deleted, sealed as stored, for
+  // `MEMORY_UNDO` so that `restore` can give it back.
   .addFunction(
     FunctionSpec.publicMutation({
       name: "remove",
       args: () => ({ id: Id("ninaMemories") }),
       returns: () => Schema.Null,
       error: () => AuthFailure,
+    }).middleware(Session)
+  )
+  // Puts back the memory that `remove` deleted, named by the id it had, with
+  // every field it had: kind, end day, author, confirmation time, words and
+  // title. It returns the memory as the Memory page shows it, under the id
+  // Convex gives it again. `missing` answers an id with nothing to put back
+  // for the learner: the window ended, the memory was put back already,
+  // "Delete all" took it, or it is not the learner's.
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "restore",
+      args: () => ({ id: Id("ninaMemories") }),
+      returns: () => NinaMemoryView,
+      error: () => Schema.Union([AuthFailure, NinaMemoryRejected]),
     }).middleware(Session)
   )
   .addFunction(
@@ -448,5 +470,14 @@ export default GroupSpec.make()
     FunctionSpec.internalMutation({
       name: "expire",
       returns: () => Schema.Int,
+    })
+  )
+  // Deletes the restore record `id` if it is still there. `remove` schedules
+  // it for the end of the Undo window.
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "purge",
+      args: () => ({ id: Id("ninaMemoryRestores") }),
+      returns: () => Schema.Null,
     })
   );

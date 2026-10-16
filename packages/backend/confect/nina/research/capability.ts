@@ -7,7 +7,7 @@ import {
   getSpecialistToolWords,
   researchToolInputSchema,
 } from "@repo/backend/confect/nina/contract/tools";
-import { ALLOWED, denied } from "@repo/backend/confect/nina/policy/capability";
+import { ALLOWED } from "@repo/backend/confect/nina/policy/capability";
 import { runResearchAgent } from "@repo/backend/confect/nina/research/agent";
 import { getSourceReferencesFromMessages } from "@repo/backend/confect/nina/research/source";
 import { Effect } from "effect";
@@ -28,6 +28,7 @@ This applies in every user language. Do not answer those requests from memory.
 Preserve source-scoping details in request or sourceRequirements:
 - Products, APIs, libraries, features, versions, domains, URLs, source constraints, and document titles.
 - Official, primary, maintainer, vendor, standards-body, paper-author, or named-domain requirements.
+- Write a domain or URL only when the user wrote it. Never add one from memory, also not for an official source: name the source instead.
 
 Keep research inputs neutral when sources may be missing or weak:
 - Ask for direct-source verification.
@@ -49,10 +50,7 @@ export const researchCapability = defineCapability({
     section: SECTION,
   },
   input: researchToolInputSchema,
-  offered: ({ nina }) =>
-    nina.tools.allowDeepResearch
-      ? ALLOWED
-      : denied("External research is not allowed for this context."),
+  offered: () => ALLOWED,
   run: (
     input,
     { context, locale, messages, publish, toolCallId, usageHandler, userId }

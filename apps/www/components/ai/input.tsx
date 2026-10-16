@@ -43,7 +43,6 @@ import { rejectionNotice } from "@/components/ai/attachments";
 import { REJECTION_NOTICE, useAi } from "@/components/ai/context";
 import {
   NINA_NOTICE_POSITION,
-  ninaFailureLimits,
   promptRefusal,
   reportNinaFailure,
 } from "@/components/ai/feedback";
@@ -82,10 +81,7 @@ export function NinaInput({
     const refusal = promptRefusal(message.text, answering);
     if (Option.isSome(refusal)) {
       Effect.runFork(
-        reportNinaFailure(
-          refusal.value,
-          t("failures.prompt-length", ninaFailureLimits)
-        )
+        reportNinaFailure(refusal.value, t("failures.message-size"))
       );
       return false;
     }

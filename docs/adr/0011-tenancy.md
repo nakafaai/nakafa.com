@@ -4,7 +4,8 @@
 
 Accepted for the Nakafa School foundation. Amended on 13 October 2026 for the
 organisation tier, the neutral concepts, the country profile above units, and
-the account's home cell.
+the account's home cell. Amended on 14 October 2026 for periods, cohorts,
+placements, people, invites, operators, and visits as they are built.
 The school subdomains and their URL tree are in ADR 0026, and the country
 profile is in ADR 0032.
 
@@ -19,17 +20,17 @@ account. Schools control their students' data; Nakafa processes it for them.
 The first School let any signed-in user create a school through a public
 mutation, mapped roles to permissions in one static table, and kept member
 counters on the school document that every member action rewrote. It is retired
-without migration (see Retirement).
+and nothing of it is migrated (see Retirement).
 
 ## Decision
 
 ### Tenants, units, and the route slug
 
 An organisation is a tenant. It is a school or a foundation (yayasan), served by
-the same web and Convex deployments as every other tenant. The tenant's `kind` is
-`school` or `foundation`. A foundation runs several schools, each held as a unit
-(SD, SMP, SMA, and so on) with its level, an optional NPSN, and a status. An
-archived unit stays readable and refuses writes.
+the web project and the Convex deployment of its data cell (ADR 0026). The
+tenant's `kind` is `school` or `foundation`. A foundation runs several schools,
+each held as a unit (SD, SMP, SMA, and so on) with its level, an optional NPSN,
+and a status. An archived unit stays readable and refuses writes.
 
 The concepts are neutral and the same in every country: an organisation holds
 units (schools), a unit runs periods and cohorts, a person belongs to the
@@ -91,36 +92,179 @@ Person and any change reruns that caller's subscriptions. Persons of kind
 An invite names a Person and an email address. A claim binds the Person to the
 account that controls the address: an invite is claimed automatically when an
 account whose Better Auth email is verified and equal to the invite address
-exists. Claims run in a scheduled mutation after sign-up, after Better Auth
-verifies an address, and after an invite is created for an existing account,
-never inside the sign-in transaction. An account that already holds a Person in
-the tenant leaves the invite pending for the school to resolve. A tenant's
-allowed email domains, one of its policies, limit the addresses its invites may
-name. Later channels (belajar.id matches and login card codes) extend the invite
-channel and claim method values.
+exists, the tenant is active, and the tenant's allowed email domains, one of its
+policies, admit the address (an empty list admits every address). An invite claim
+is the one place where an account is matched by its verified email, and ADR 0009
+names it as the exception to its rule that a school account is never matched by
+its email address. An invite expires 14 days after it is created if nobody has
+claimed it, and an expired invite is never claimed: the school invites again.
+Claims run in a scheduled mutation after sign-up, after Better Auth verifies an
+address, and after an invite is created for an existing account, never inside
+the sign-in transaction. The claim writes `person.claimed` with the claim method
+(ADR 0016). An account that already holds a Person in the tenant, an address the
+allowed email domains do not admit, and a suspended tenant leave the invite
+pending for the school to resolve. The functions that create invites refuse an
+address outside the list too: `open` and `tenancy/invites:invite` both do, so a
+new tenant starts with an empty list and each invite is checked the same way.
+Later channels extend the invite channel and the claim method values: a
+belajar.id match, and a login card, which is an invite on the card channel with
+the claim method
+`card` (ADR 0009). A claim hands the claimant the Person's standing grants, so
+creating an invite, or printing a login card, for a Person that holds the Owner
+or Admin role needs the right to give that role, `owner.manage` (ADR 0012).
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,
-unclaimed. Deletion is never blocked by tenant ownership; an operator restores
-an Owner when needed.
+unclaimed. The release also revokes the Person's accepted invite, which then names
+no account and can never be claimed again. A released Person is claimed again
+only through a new invite or a new login card. Deletion is never blocked by
+tenant ownership; an operator of the tenant's cell restores an Owner when needed.
+
+The Admin creates, renames, and removes the Persons of a school. Removing a
+Person runs in one transaction: each standing grant ends through the access
+lane's revoke path (ADR 0012), each cohort placement ends unless it is history
+(its period or its cohort is archived, and then it stays as the record of where
+the Person was placed), the pending invite is revoked and journaled, and the
+account is released as account deletion releases it, so the account can be
+invited again. The journal records `person.released` only when the Person held an
+account, then `person.removed`, and the status becomes `removed`. A removed
+Person refuses every write as `condition` (ADR 0012), and a claimed account
+loses the school at once, because membership needs an active Person.
+
+The Admin invites a Person to an address that the school's allowed email
+domains admit, and a Person has at most one pending invite. An invite waits 14
+days from the moment it is written (`INVITE_TERM`). Its expiry is stored on the
+invite and fixed when the invite is written, so a resend never moves it. A
+scheduled mutation marks a still-pending invite `expired` at that moment and
+journals `invite.expired`, and the claim path refuses an invite whose expiry has
+passed even before that mutation runs. An hourly sweep (`tenancy/expiry:sweep`)
+ends each due invite whose scheduled mutation never ran. An invite for a Person
+whose last term
+has ended expires that invite first and then writes a new one. An account that
+already holds the address is claimed as `open` claims it, through the same
+scheduled walk. A resend sends the same invite again to the same address, as a
+new message. Each Person's resends pass a token bucket of one token that refills
+three times an hour, through the existing rate limit component, so two resends
+are at least twenty minutes apart and no hour holds more than three. A resend of
+an invite that expired or is no longer pending is refused.
+
+Every journal entry of this section holds IDs and reason codes only, never a
+name, an address, or free text (ADR 0016).
+
+### Periods, cohorts, and placements
+
+A unit runs periods (a semester or a school year) and cohorts (its class groups,
+which one period may hold several of). Both follow the unit's clock, and an
+archived unit locks both, as it locks everything else in the unit.
+
+A period has a name of one line, 1 to 80 characters, a `start` and an `end`
+written as calendar dates `YYYY-MM-DD` on the unit's time zone, and a status:
+`planned`, `active`, or `archived`. A date is read as midnight in the unit's
+zone with `DateTime.makeZoned`, then formatted back with `DateTime.formatIsoDate`,
+so a date the calendar does not have, such as 30 February, does not format back
+to itself and is refused, and so is text that is not written that way. The
+start must be before the end. A period may not share a day with another period
+of its unit. The create check reads one index: among the periods of the unit,
+the one that starts last on or before the new end is the only one that can
+overlap, because no two periods of a unit overlap. At most one period of a unit
+is `active`. A planned period opens to `active` while no other period of its
+unit is active. Only an active period archives, and an archived period stays
+readable and refuses writes, as does every cohort of it.
+
+A cohort has a name of one line, 1 to 40 characters, unique within its period
+without regard to case (`nameKey`, the lowercase name, is what the index
+compares), a grade from 1 to 13, and a status of `active` or `archived`. A
+period holds at most 200 cohorts, archived ones included, and every list of
+cohorts reads at most that many. The cohort list carries no member count,
+because a count would read every placement of the period.
+
+A placement is one Person in one cohort of one period: the `cohortMember`
+relation of ADR 0012. The Person must be a student: an active Student grant over
+the cohort's unit or over the whole school. A Person holds at most one placement
+per period, and a move keeps them in the same period. A move checks the cohort it
+leaves as well as the one it enters, so an archived cohort at either end refuses
+it as `condition`, and the placement stays where it was. The placement opens
+`cohort.view` of its cohort to the Person, through the relation and nothing
+else; the relation is
+read from the placement table for each request and never copied onto the
+Person. A Person holds at most 64 placements in all, across every period, and
+`tenancy/placement.ts` derives that limit. Removal reads at most those
+placements, and each one's period and cohort, in one transaction.
+
+### Tenant settings
+
+A tenant holds its settings on its own row: the country (the profile of ADR
+0032), the contract currency, and its `policies`, which are whether students may
+open forum threads, whether Nina is on, and the allowed email domains. Each
+school holds its time zone and its content language. Provisioning writes every
+field: the operator gives the country and the contract currency, and sets the
+two switches. Only the allowed email domains have a default, an empty list, and
+an empty list means no restriction. A tenant that sets domains keeps the claims
+of its invites, and later its Google sign-in, on them (ADR 0009). An Owner or a
+tenant-wide Admin changes the organisation's settings with `tenant.manage`, and
+a school's Admin changes that school's with `unit.manage`. Each change of a
+policy writes `tenant.policy.set`, a change type declared on the tenant kind,
+because each authority accepts only the change types of its own kind (ADR 0016).
+The change names the policy and holds no domain, because a change holds IDs,
+enums, and reason codes only.
 
 ### Operators
 
 Operators are Nakafa staff, listed in an `operators` table that only internal
-mutations write; the first operator is granted through a production operation.
-The onboarding role on `users` is a learner's self-description and never grants
-privilege; an environment allowlist would match emails instead of accounts and
-keep no history; the Better Auth admin plugin would move platform privilege into
-the auth component's schema.
+mutations write. Every cell's deployment holds its own `operators` rows (ADR
+0026). A staff member who serves two cells holds one account and one operator row
+in each, and the first operator of a cell is granted through a production
+operation on that cell's deployment. The onboarding role on `users` is a
+learner's self-description and never grants privilege; an environment allowlist
+would match emails instead of accounts and keep no history; the Better Auth admin
+plugin would move platform privilege into the auth component's schema.
 
-Operators provision tenants (the tenant, its units, and the first Owner invite
-in one mutation), replace a tenant's unclaimed Owners as an audited break-glass,
-and suspend or reactivate a tenant. A suspended tenant stays readable and
-refuses every write. Operators enter a tenant only through an audited visit: a
-temporary admin or auditor grant of at most 24 hours. The school's Owner or Admin
-approves each visit, and a scheduled mutation ends the grant (ADR 0012). The
-operator directory, tenant metadata with no personal data, is the one public
-read across tenants; everything inside a tenant needs a visit.
+Each `operators` row holds its account, its status (`active` or `revoked`), and
+the times it was granted and last changed. The journal records tenant changes
+only, and a platform entry has no space to live in (ADR 0016), so the row keeps
+its own change times and no second audit table exists. Staff grant and revoke
+access with `operators/staff:grant` and `operators/staff:revoke`, which are
+internal, so only the deployment's key runs them. A revoked operator is refused
+at once in every tenant: the member middleware refuses an operator Person whose
+operator row is not active, and every operator command refuses the account.
+
+Operators open tenants with `operators/tenants:open`, which runs the same Effect
+as the internal `tenancy/provision:open` and journals each write under the
+operator actor (ADR 0016), which a school sees as Nakafa staff. The journal
+retention that the data processing agreement states is not stored yet. The
+operator also suspends and reactivates a tenant, both idempotently. A suspended
+tenant stays readable and refuses every write except the transitions that ADR
+0012 exempts (Decisions), such as the operator's reactivation.
+`operators/tenants:replaceOwner` is the audited break-glass: it refuses a
+suspended school, refuses while a signed-in Owner holds the school, and otherwise
+removes each unclaimed Owner
+with its invite and its grant, then invites a new Owner. Its journal entries
+carry the reason `break-glass`, and the ended grant the reason `replaced`.
+
+Operators enter a tenant only through an audited visit, a temporary Auditor
+grant that ends by its length of 15 to 1,440 minutes (at most 24 hours). An
+operator requests a visit with a reason code (`support`, `onboarding`, or
+`incident`), a note of up to 500 characters that stays out of the journal, and
+a length. The school's Owner or Admin approves or declines it, through the
+tenant action `visit.approve`. Approval admits the operator's Person of kind
+`operator`, claimed by the operator's account with method `operator` and named
+`Operator Nakafa`, and gives it the Auditor role over the whole tenant for the
+length. A visit grant is always the Auditor role, so approving a visit never
+mints an Admin. An operator holds at most one open visit, requested or approved,
+to each tenant, and a suspended tenant refuses a request. The operator or the
+school's Owner or Admin ends an approved visit at any time, and a suspended
+tenant does not refuse the end (ADR 0012). A scheduled mutation ends each
+approved visit at its term, and an hourly sweep ends any whose scheduled end
+never ran. An operator whose account is deleted ends its approved visit as
+`left`, and its Person is suspended, so no account can claim that Person again.
+A request or an approval for an operator whose account is being deleted is
+refused as `NotOperator`. When a school removes an operator's Person, the visit's
+later end leaves the removed Person and its ended grant as they are.
+
+The operator directory of a cell, `operators/tenants:list`, is the one public
+read across tenants. It lists each tenant's name, slug, kind, status, unit count,
+and the calling operator's open visit, and it reads no Person and no personal
+data. Everything inside a tenant needs a visit.
 
 ### Journal
 
@@ -130,60 +274,134 @@ reads the tenant's entries newest first.
 
 ### Time
 
-Queries never read the clock. Grant expiry and every other time-driven state is
-written by a scheduled mutation, with a cron sweep as the backstop for a job
-that never ran.
+Queries never read the clock. Grant expiry, invite expiry, and every other
+time-driven state is written by a scheduled mutation, with a cron sweep as the
+backstop for a job that never ran.
 
 ### Retirement of the first School
 
 Program wave 0 deletes the first School before the new School is built (K11).
-The deletion is one reviewed change: every old School row, table, function,
-component, redirect, image, test, and dictionary key goes, and so do the forum
-viewport engine and its tests and the School branch of account deletion. It
-takes no backup and no production export, because nobody uses the old School,
-and its data is deleted, not kept (K11). A new ADR supersedes ADR 0005.
+The deletion removes every old School row, table, function, component, redirect,
+image, test, and dictionary key, together with the forum viewport engine and its
+tests and the School branch of account deletion. It takes no backup and no
+production export, because nobody uses the old School, and its data is deleted,
+not kept (K11). A new ADR supersedes ADR 0005.
 
 The removal follows the rule for public functions in
-`packages/backend/AGENTS.md`: expand, switch, observe, contract.
+`packages/backend/AGENTS.md`: expand, switch, observe, contract. Expand is done:
+the tenancy functions in `packages/backend/confect/tenancy` already exist on main
+beside the old School. Four steps followed, in this order, and all four are done:
 
-1. Expand: the tenancy functions in `packages/backend/confect/tenancy` already
-   exist on main beside the old School.
-2. Switch: an earlier release removes every School route and component that
-   calls an old function, so no new web build calls one.
-3. Observe: after the switch release is live, production function logs show
+1. Switch (merged in #1051): a release makes the web stop calling the old
+   functions. It removes every School route and component that calls an old
+   function, so no new web build calls one. The old functions stay.
+2. Observe: after the switch release is live, production function logs show
    no call to an old School function for at least 12 hours (the Vercel skew
    window, `skewProtectionMaxAge` 43,200 seconds, read from the project API on
    12 October 2026) and across at least one later production deploy, because a
    loaded or suspended tab calls Convex directly and every deploy re-runs every
    live subscription. Measured before the switch on 13 October 2026: 2,790
    production executions between 12:57 and 14:42 UTC, spanning the deploy at
-   14:36, held no call to `schools/*`, `classes/*` or the School triggers. The
-   switch release deletes the web routes and components only; the old functions
-   stay until this window has passed.
-4. Dry run: the batched deletion's dry mode counts the old rows on dev before
-   the contract release.
-5. Contract: one reviewed release deletes the old functions, every writer of the
-   old tables, and the rest of the code listed above, and adds the batched
-   deletion. The deletion then runs on dev and production until every old count
-   is zero, and a last release drops the tables and the deletion; Convex accepts
-   that schema only when no row is left, which is the proof that the rows are
-   gone.
+   14:36, held no call to `schools/*`, `classes/*` or the School triggers.
+   Measured after it: 23,655 production executions between 18:21 UTC on 13
+   October and 07:24 UTC on 14 October, spanning the deploys of #1058, #1026,
+   #1049, #1042, #1054, #1046 and #1031, held none either. This step ships
+   nothing.
+3. Contract (merged in #1037): one release removes the old functions, every writer of the old
+   tables, and the rest of the code listed above, and adds the batched erase
+   migration in the same release. It keeps the definitions of the 16 old tables
+   (the 15 `school*` tables and `accountDeletionSchoolTransfers`), because Convex
+   refuses a schema that drops a table while a row still holds it. The internal
+   migration `retire/school:erase` deletes every row of those tables, every stored
+   file their rows name, every scheduled job that would publish a class material,
+   and every forum post from the two forum aggregates, and it clears the school
+   fields of `accountDeletionPreparations` and the `schoolId` of `subscriptions`,
+   which the Polar webhook no longer writes. The `metadata` of a subscription is
+   Polar's copy and stays whole. The migration runs dry first, which counts the
+   old rows, and then for real, on dev and on production, page by page, until a
+   dry pass reports zero. Run on 14 October 2026: on dev a dry pass counted
+   nothing; on production a dry pass counted 26 rows in 13 tables and no file
+   or scheduled job, the real pass removed the 26, and a dry pass after it
+   counted 0.
+4. Drop (the release after #1037): a last release deletes the tables, those fields, the two forum
+   aggregates of `convex.config.ts`, and the migration. Convex accepts that schema
+   only when no row is left, which is the proof that the rows are gone. The
+   emptied tables and the two unmounted aggregates stay on each deployment until
+   they are deleted in the Convex dashboard.
 
 ## Implementation Contract
 
 - Tables: `tenants` (`by_slug`), `tenantUnits` (`by_tenantId_and_status`),
-  `tenantPeople` (`by_tenantId_and_account_userId`,
+  `tenantPeriods` (`by_unitId_and_start`, `by_unitId_and_status`),
+  `tenantCohorts` (`by_periodId_and_nameKey`,
+  `by_periodId_and_grade_and_nameKey`), `tenantCohortMembers`
+  (`by_periodId_and_personId`, `by_cohortId_and_personId`, `by_personId`),
+  `tenantPeople` (`by_tenantId_and_account_userId`, `by_tenantId_and_status`,
   `by_account_userId_and_kind_and_status`), `tenantInvites`
-  (`by_channel_email_and_state_status`, `by_personId_and_state_status`),
-  `tenantGrants` (ADR 0012), and `journalEntries` (ADR 0016).
+  (`by_channel_email_and_state_status`, `by_personId_and_state_status`,
+  `by_state_status_and_expiresAt` for the expiry sweep,
+  `by_tenantId_and_state_status`), `tenantGrants` (ADR 0012), and
+  `journalEntries` (ADR 0016).
 - Public: `tenancy/profile:get`, `tenancy/viewer:get` (the School shell for one
-  slug: tenant, active units, the caller's Person and grants, and the tenant
-  capabilities `can`), `tenancy/memberships:list` (the caller's own active
-  member Persons, identity scoped), `journal/audit:list`, and the grant
-  functions of ADR 0012.
-- Operators, provisioning, claims, visits, grant expiry, and the account
-  deletion release step follow as one change that extends this contract.
-- A tenant holds at most 24 units and at most 8 Owners.
+  slug: the tenant with its settings, its units with theirs, archived units
+  last, the caller's Person and grants, and the tenant capabilities `can`),
+  `tenancy/memberships:list` (the caller's own active member Persons, identity
+  scoped), `journal/audit:list`, and the grant functions of ADR 0012. The
+  period, cohort, placement, people, and invite functions are the groups
+  `tenancy/periods` (`list`, `create`, `open`, `archive`), `tenancy/cohorts`
+  (`list`, `members`, `create`, `rename`, `archive`), `tenancy/placements`
+  (`place`, `move`), `tenancy/people` (`list`, `create`, `rename`, `remove`),
+  and `tenancy/invites` (`list`, `invite`, `revoke`, `resend`). Each decides
+  through the access lane, and each returns the row its list shows.
+- Settings, public mutations that answer with the value now stored and that
+  write and record nothing for a value already stored: `tenancy/settings`
+  (`setLocale` for the country and the contract currency, `setPolicy` for one
+  policy) and `tenancy/units` (`setLocale` for a school's time zone and content
+  language, `archive`, and `unarchive`). Organisation settings, archiving, and
+  restoring are `tenant.manage`, held by Owners and tenant-wide Admins. A
+  school's own settings are `unit.manage`, so an Admin of one school changes
+  that school only and an archived school refuses them. Restoring is decided on
+  the tenant because an archived school refuses every write.
+- Internal: `tenancy/provision:open` opens an organisation (the tenant, its
+  schools, the school key that ADR 0030 gives it, its first Owner as an
+  unclaimed Person with the Owner role, the invite, and the journal) in one
+  transaction, and starts the invitation email through `emails/invite`, since
+  `emails` is the only sender. Nakafa staff run
+  it with the deployment's key. `tenancy/claims:run` claims the pending invites of one
+  account whose address Better Auth has verified and the tenant admits, a page
+  at a time. It is scheduled by the Better Auth user triggers after sign-up and
+  after verification, only when an invite waits for the address, and for an
+  account that already holds the address of a new invite by
+  `tenancy/holders:schedule`, which `open` starts and which pages through those
+  accounts, so no number of them is assumed.
+- The organisation holds `country`, `currency`, and `policies` (students may
+  open threads, Nina, and the allowed email domains; an empty list admits every
+  address, and a claim checks a longer one), and each unit holds `timeZone` and
+  `contentLanguage`. They are required fields, because no code wrote a tenant
+  before this change. Nina and student threads are stored until the School
+  features they switch exist. The country is checked for its shape only, two
+  uppercase letters: ADR 0032 moves the countries Nakafa serves to the signed
+  country profile, so no list of countries is kept in code. A tenant's, a
+  school's, and a Person's name are one line: names fill list rows, and the
+  tenant's name goes in the subject of its invitation email. `tenant.provisioned`
+  records the contract (plan, modules, data processing agreement version, and
+  content licence version); the entitlements it grants are built later.
+- Scheduled: `tenancy/expiry:invite`, one run for the moment each invite stores
+  as its expiry. It is internal, and it marks a still-pending invite expired.
+  `tenancy/expiry:sweep` runs every hour as the backstop for a run that never
+  happened: it expires each pending invite whose expiry has passed.
+- Operators and visits are built in `operators`: the tables `operators`
+  (`by_userId`) and `tenantVisits` (`by_tenantId_and_operatorId_and_state_status`,
+  `by_tenantId_and_state_status`, `by_state_status_and_state_expiresAt`), the
+  public functions of `operators/tenants` and `operators/visits`, and the
+  internal functions of `operators/staff` and `operators/expiry`. Invite expiry
+  is built in `tenancy/expiry`, and the account release in `tenancy/release.ts`,
+  which account deletion and removal both call. The removal of a Person is
+  `tenancy/remove.ts`, which the school and the operator's replacement of an
+  Owner share.
+- A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
+  email domains. A period holds at most 200 cohorts, a Person holds at most 64
+  placements, and a Person's invite is sent again at most 3 times in any hour.
 
 ## Consequences
 
@@ -191,11 +409,13 @@ The removal follows the rule for public functions in
   sign-in, and the consumer product lives in the `us` cell. A school in another
   cell is joined with an account of that cell (ADR 0026, Data cells).
 - An invite address works like a credential: whoever holds a verified account
-  with that address claims the Person, an Owner invite included. Schools invite
-  only addresses they or the invitee control, and a tenant's allowed email
-  domains keep its invites on the school's own domains.
-- A tenant whose only Owner deleted their account has no Owner until an
-  operator replaces it.
+  with that address claims the Person, an Owner invite included, until the
+  invite expires after 14 days. Schools invite only addresses they or the
+  invitee control. A tenant that sets allowed email domains keeps the claims of
+  its invites, and later its Google sign-in, on them, and a tenant with an empty
+  list has no domain restriction.
+- A tenant whose only Owner deleted their account has no Owner until an operator
+  of its cell replaces it.
 
 ## Rejected Alternatives
 
@@ -207,5 +427,6 @@ The removal follows the rule for public functions in
   schools.
 - Accepting every invite by hand, for example with an emailed one-time code,
   would add a step before each invited teacher, student, and parent reaches
-  their school; automatic matching of verified addresses, limited by the
-  tenant's allowed email domains, keeps joining a school to one sign-in.
+  their school; automatic matching of verified addresses, limited to the
+  tenant's allowed email domains when it sets any, keeps joining a school to one
+  sign-in.

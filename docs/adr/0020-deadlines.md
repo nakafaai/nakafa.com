@@ -1,5 +1,10 @@
 # ADR 0020: Outbound Requests Have A Deadline, And Convex Hook Calls Do Not
 
+## Status
+
+Accepted. Amended on 14 October 2026: the shared retry also repeats a missed
+deadline, so only a read may call it (Decision).
+
 ## Decision
 
 Every HTTP request that leaves a Nakafa process has a deadline that covers the
@@ -10,12 +15,15 @@ answer's body as well as its headers.
   milliseconds and 1 second (31.5 seconds in all), the transport failures that
   are safe to repeat, and `retryNetworkAttempt`, which runs one attempt under
   the deadline and repeats it while it fails retryably.
-- Only a failure that proves the request never reached the server is repeated,
-  plus what one caller knows to be safe for its own request, such as a 5xx
-  answer to the session token read and to the browser's read of the session
-  (`readSession` in `apps/www/lib/auth/request.ts`), which Better Auth does not
-  ask for again after a first read that failed until the learner returns to
-  the tab.
+- A failure that proves the request never reached the server is repeated, and so
+  is a missed deadline, which proves nothing about delivery
+  (`retryNetworkAttempt` and its test in `packages/backend/client`). That is safe
+  for a read, which has no effect to repeat. A write that must not repeat, such
+  as a push to a push service (ADR 0027), does not call the helper. A caller also
+  repeats what it knows to be safe for its own request, such as a 5xx answer to
+  the session token read and to the browser's read of the session (`readSession`
+  in `apps/www/lib/auth/request.ts`), which Better Auth does not ask for again
+  after a first read that failed until the learner returns to the tab.
 - A caller keeps its own status rules, its decoder, and its error type. The
   shared part is the deadline, the retry, and the unwrap.
 - A request that a person waits for can cut that budget: the content copy
@@ -77,21 +85,57 @@ of its own, and every model call has a cap on its output.
   how much time is left, and each uses the shorter of that and its own budget.
   They end a little before the run does, so a capability can still report what
   it gathered. A call outside a capability run has only its own budget.
-- Each purpose in `gateway/purpose.ts` sets the most one call may write, sent
-  to the provider as `maxOutputTokens`: chat 16,384 tokens, specialist 6,144,
-  background 4,096, suggestion 512, presentation 512. A call that ends at its
+- Each purpose's output cap is in the language model profile
+  (`gateway/model.ts`), sent to the provider as `maxOutputTokens`: chat 48,000
+  tokens, specialist 11,264, background 7,168, suggestion 1,024, presentation 512.
+  Each purpose's reasoning effort and deadlines are in `gateway/purpose.ts`. A call that ends at its
   cap finishes with `length`, which a chat turn already reads as
   `response-limit`. A specialist whose last step ends at its cap reports its
   result as `partial` and tells Nina that the answer was cut short
   (`specialistResult`), so a cut answer never reads as a whole one. So does a
   specialist whose loop ends at its step limit with a tool still called, since
   it wrote no answer.
-- The cap is shared with the model's reasoning. Google's thinking guide counts
-  thinking tokens in the output limit, and a call that reaches the limit while
-  it still thinks stops with a cut or an empty answer. So each cap stands well
-  above what a real call wrote, measured on Gemini 3.8 Flash through the
-  gateway on the dev deployment on 11 October 2026, with a short system prompt
-  and no cap:
+- The cap is shared with the model's reasoning, which counts toward
+  `maxOutputTokens`: a call that reaches the cap while it still reasons stops
+  with a cut or an empty answer. Chat measured on `anthropic/claude-haiku-5.5`
+  through the gateway on the dev deployment on 14 October 2026 (`high`, no cap):
+  a lesson the learner asked to be very long wrote 30,038 tokens (7,070 of them
+  reasoning) and stopped by itself after 108 s, which is about 278 tokens a
+  second. The same request at `xhigh` reasoned 53,370 tokens and reached a cap of
+  64,000 after 236 s, so chat stays at `high`. A functional-equation proof at
+  `xhigh` wrote 8,083 (6,387 reasoning) in 34 s, and a 16-turn summary at `low`
+  wrote 339 (94 reasoning) in 3 s. The derivation of each cap and deadline:
+
+  - Chat cap 48,000: the longest answer at `high`, 30,038, rounded up with a
+    margin of about 1.6.
+  - Chat step 180,000 ms: a full 48,000-token answer takes 48,000 / 278, about
+    172 s, so the step holds it with a margin.
+  - Chat total 510,000 ms: the step plus 330,000 ms for the other steps of a turn,
+    which keeps the allowance of 420,000 less the old 90,000 step. So 180 + 330 =
+    510 s.
+  - Chat chunk 45,000 ms, unchanged. No gap between streamed chunks was measured
+    on a long answer, so 45 s is a judgment and not a measurement: a silent gap
+    longer than it ends the call as a response timeout.
+  - The turn's deadline is 30 s to start, the chat total and 30 s to settle, so
+    570 s (was 480 s). The capabilities have the step less 10 s, 170 s (was 80 s),
+    and the turn has its total less 10 s, 500 s (was 410 s).
+  - Specialist cap 11,264: the evidence budget of 10,500 rounded up to a unit of
+    1,024, so the cap stands above what Nina reads of an answer by less than 1,024.
+    Step 45,000 ms: 11,264 / 278, about 41 s. Total 180,000 ms, four steps, as
+    before, which keeps `MATH_STEPS` at four.
+  - Background cap 7,168: a summary of 3,500 tokens, which is a little over twice,
+    since the reasoning of its call counts against the same cap. Step 30,000 ms:
+    7,168 / 278, about 26 s. Total 90,000 ms, three steps, as before.
+  - Suggestion cap 1,024 tokens, raised from 512: the schema admits five
+    suggestions of 300 characters each, which the estimator prices at 716 tokens
+    (a calculation with the profile's rules, not a Claude count), so 512 could cut
+    the longest answer the schema allows. Presentation stays at 512, which covers
+    a title of 80 characters. Their deadlines stay. On Gemini, five follow-up
+    questions wrote 85 tokens. Neither cap has a Claude measurement of its own yet,
+    so measure both before either is changed.
+
+  Earlier caps were measured on Gemini 3.8 Flash through the gateway on the dev
+  deployment on 11 October 2026, with a short system prompt and no cap:
 
   | Call | Effort | Output tokens | Of them reasoning |
   | --- | --- | --- | --- |
@@ -109,11 +153,13 @@ of its own, and every model call has a cap on its output.
   the first chat answer and the summary. A summary could hold 1,200 tokens
   (`NINA_BUDGET.summary`) when the caps were set, and Nina reads at most 6,000
   tokens of a specialist's answer (`NINA_BUDGET.evidence`), which is where the
-  background and specialist caps come from. Since 12 October 2026 a summary may
-  hold 2,000 tokens, and the reasoning of its call counts against the same cap,
-  so the background cap is 4,096. A summary that still ends at the cap is not
-  saved: the previous summary stays and the next settled turn folds again.
-  Measure again before a cap is lowered or raised, or the model changes.
+  background and specialist caps come from. On 12 October 2026 a summary could
+  hold 2,000 tokens, and the background cap was 4,096. On 14 October 2026 the
+  budgets were re-derived for Claude's tokens: a summary may hold 3,500 and
+  Nina reads 10,500 tokens of a specialist's answer, which gives the caps above.
+  A summary that still ends at the cap is not saved: the previous summary stays
+  and the next settled turn folds again. Measure again before a cap is lowered or
+  raised, or the model changes.
 - A link to Nakafa's own site goes to the Nakafa capability and never to web
   research. The capability forces the read tool, step after step, until the
   model has asked for every address the learner sent. A message with more

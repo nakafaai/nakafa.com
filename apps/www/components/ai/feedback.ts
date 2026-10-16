@@ -2,7 +2,6 @@ import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/browser";
 import {
   isPromptWithinLimit,
-  NINA_PROMPT_LENGTH,
   NINA_PROMPT_LENGTH_MESSAGE,
   NinaPromptError,
 } from "@repo/backend/client/nina/prompt";
@@ -111,6 +110,11 @@ export const ninaFailureFeedback = {
   },
   NINA_WRITE_FAILED: { message: "admission", action: "edit", report: true },
   NINA_CONTEXT_FAILED: { message: "context", action: "edit", report: true },
+  NINA_MESSAGE_SIZE: {
+    message: "message-size",
+    action: "edit",
+    report: false,
+  },
   NINA_UPLOAD_INVALID: {
     message: "attachment-invalid",
     action: "edit",
@@ -131,8 +135,10 @@ export const ninaFailureFeedback = {
     action: "edit",
     report: true,
   },
+  // A message over the length limit and a message over the turn budget are
+  // both too long for one turn, and the learner reads one sentence for them.
   NINA_PROMPT_LENGTH: {
-    message: "prompt-length",
+    message: "message-size",
     action: "edit",
     report: false,
   },
@@ -147,14 +153,13 @@ export const ninaFailureFeedback = {
  * says a limit the code does not check.
  */
 export const ninaFailureLimits = {
-  count: NINA_PROMPT_LENGTH,
   size: NINA_DOCUMENT_MEBIBYTES,
 };
 
 /**
  * The refusal of a press on the send button, or nothing. A prompt over the
- * limit stays in the composer with the limit named, and nothing is asked of
- * the server. Every composer sends the text trimmed, so the trimmed length is
+ * limit stays in the composer, the learner is told it is too long for one
+ * turn, and nothing is asked of the server. Every composer sends the text trimmed, so the trimmed length is
  * the one that counts. While a reply streams, the same press stops it and
  * sends no text, so the limit does not apply to it.
  */

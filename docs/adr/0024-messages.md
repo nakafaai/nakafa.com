@@ -262,7 +262,9 @@ changes.
    stored file is removed within two days of its chat's deletion, as
    the live policy already says (ADR 0001). The cleanup runs once a day, and it
    removes a file once no chat refers to it and 24 hours have passed since its
-   last reference changed. This plan does not seal the bytes of an upload.
+   last reference changed. This plan does not seal the bytes of an upload. A new
+   upload seals its name at upload, before the component stores the file (order
+   of work, step 2).
 
 The stages, and the key that seals each one (owner decisions K2, K3, and K10):
 
@@ -399,8 +401,8 @@ that does not exist. The token's hash, not the owner's key, decides who reads.
   next run of the query. Nothing in the sealed rows changes.
 - Deleting the owner's account deletes the chat and shreds the owner's vault
   key, so sealed copies in old backups cannot be opened once every copy of the
-  root key is destroyed. A rotation of the root key moves only the wrapped
-  learner keys and leaves every sealed row as it is.
+  root key is destroyed. A rotation of the root key moves the wrapped learner
+  keys and school keys (ADR 0030), and leaves every sealed row as it is.
 - Sealing is not end-to-end. The server holds the key, and a viewer receives
   plain text by design. The honest limit stays what the blueprint says: someone
   who holds the environment and the data can open everything.
@@ -436,16 +438,21 @@ runs a whole turn and searches every component table.
    above, suggestions and title off the Agent's fetch, the source rule. No
    behavior changes. Gate: each reader gives the same result for plain rows and
    for sealed rows.
-2. **Seal the learner's message at write.** `turns.start`, replay, retry and
-   capture. Gate: after admission the message appears in no table.
+2. **Seal the learner's message and the file name at write.** `turns.start`,
+   replay, retry and capture seal the message. The upload seals the file name
+   before `storeFile`: `nina/uploads.impl.ts` passes the plain name to `storeFile`
+   today, and the Agent forwards it unchanged to the component. Gate: after
+   admission the message appears in no table, and a test that uploads a file with
+   a planted name finds the name in no table, `files` included.
 3. **Seal the settled turn.** The `seal` mutation, the `sealedAt` marker, the
    sweep and the early deletion of deltas. Gate: after settlement and the
    deletion of the deltas no planted string appears in any table; during the
    turn they appear only in the plain rows and the deltas.
 4. **Old messages.** The migration, run dry, then run for real on dev and on
    production, then run again until it reports nothing. It also copies each
-   attachment of an old message under its sealed name (Decision, item 4). Gate:
-   no file row that a message refers to holds a plain name.
+   attachment of an old message under its sealed name (Decision, item 4). The dry
+   run counts old attachments only, because every upload since step 2 is sealed at
+   upload. Gate: no file row that a message refers to holds a plain name.
 5. **Contract.** Delete the migration and its tests. The reader rule of the Sealed
    Row section stays: a plain row of a turn that carries `sealedAt` fails the
    read, and a running turn or a settled turn without the marker keeps its plain

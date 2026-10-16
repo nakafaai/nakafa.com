@@ -9,15 +9,18 @@ const viewer = refs.public.tenancy.viewer.get;
 
 describe("tenancy/viewer", () => {
   it.effect(
-    "returns the Owner's tenant, active units, grants, and every tenant capability",
+    "returns the Owner's tenant with its settings, its units with theirs, grants, and every tenant capability",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const view = yield* fixture.as("owner").query(viewer, { slug: nf });
         expect(view.tenant).toEqual({
+          country: "ID",
+          currency: "IDR",
           id: fixture.tenants.nf,
           kind: "foundation",
           name: "Yayasan Nakafa",
+          policies: { emailDomains: [], nina: false, studentThreads: false },
           slug: "nf",
           status: "active",
         });
@@ -26,12 +29,32 @@ describe("tenancy/viewer", () => {
           kind: "member",
           name: "Owner",
         });
-        expect(
-          Arr.sort(
-            Arr.map(view.units, (unit) => unit.name),
-            Order.String
-          )
-        ).toEqual(["SMA Nakafa", "SMP Nakafa"]);
+        expect(view.units).toEqual([
+          {
+            contentLanguage: "id",
+            id: fixture.units.sma,
+            level: "sma",
+            name: "SMA Nakafa",
+            status: "active",
+            timeZone: "Asia/Jakarta",
+          },
+          {
+            contentLanguage: "id",
+            id: fixture.units.smp,
+            level: "smp",
+            name: "SMP Nakafa",
+            status: "active",
+            timeZone: "Asia/Jakarta",
+          },
+          {
+            contentLanguage: "id",
+            id: fixture.units.smk,
+            level: "smk",
+            name: "SMK Nakafa",
+            status: "archived",
+            timeZone: "Asia/Jakarta",
+          },
+        ]);
         expect(view.grants).toEqual([
           {
             id: fixture.people.owner.grantId,
@@ -43,9 +66,13 @@ describe("tenancy/viewer", () => {
         expect(Arr.sort(view.can, Order.String)).toEqual([
           "audit.view",
           "grant.manage",
+          "invite.view",
           "owner.manage",
+          "person.manage",
+          "person.view",
           "tenant.manage",
           "tenant.view",
+          "visit.approve",
         ]);
       })
   );
@@ -73,6 +100,8 @@ describe("tenancy/viewer", () => {
       const view = yield* fixture.as("owner").query(viewer, { slug: nf });
       expect(Arr.sort(view.can, Order.String)).toEqual([
         "audit.view",
+        "invite.view",
+        "person.view",
         "tenant.view",
       ]);
     })

@@ -19,13 +19,12 @@ import {
   toolCall,
 } from "@repo/backend/test/nina/capability";
 import {
-  openHomeSession,
   runSpecialist,
   specialistRequest,
 } from "@repo/backend/test/nina/specialist";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Effect, MutableRef, Record as Rec } from "effect";
+import { Effect, MutableRef, Record as Rec, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/nina/math/agent", () => ({
   runMathAgent: vi.fn(),
@@ -52,19 +51,30 @@ const toolInputs = {
   },
 };
 
+/** How a scripted run of a capability can end. */
+const RunStateSchema = Schema.Literals([
+  "allowed",
+  "cardless",
+  "failed",
+  "sourceLimit",
+]);
+/**
+ * The ends that the matrix below runs capabilities through. A `cardless` run has
+ * its own tests.
+ */
+const PolicyStateSchema = RunStateSchema.pick([
+  "allowed",
+  "failed",
+  "sourceLimit",
+]);
+
 /**
  * Runs one capability through a scripted turn in one state and returns what
  * the model's tool call produced and what the turn logged.
  */
-async function runCapability(
+function runCapability(
   capability: keyof typeof toolInputs,
-  state:
-    | "allowed"
-    | "cardless"
-    | "denied"
-    | "failed"
-    | "missing"
-    | "sourceLimit",
+  state: typeof RunStateSchema.Type,
   prompt = "Use the requested capability."
 ) {
   // A run that is allowed gathers a card and ends with its text, so it reads as
@@ -124,29 +134,12 @@ async function runCapability(
     doGenerate: [toolCall(capability, toolInputs[capability]), finalAnswer],
   });
   return runSpecialist((userId) =>
-    Effect.gen(function* () {
-      const session = yield* openHomeSession;
-      return yield* playTurn({
-        context: {
-          ...specialistRequest.context,
-          nina:
-            state === "missing"
-              ? undefined
-              : {
-                  ...session.context,
-                  tools: {
-                    ...session.context.tools,
-                    allowNakafa: state !== "denied",
-                    allowMath: state !== "denied",
-                    allowDeepResearch: state !== "denied",
-                  },
-                },
-        },
-        model,
-        prompt,
-        registry,
-        userId,
-      });
+    playTurn({
+      context: specialistRequest.context,
+      model,
+      prompt,
+      registry,
+      userId,
     })
   );
 }
@@ -163,11 +156,12 @@ describe("the registry of Nina's capabilities", () => {
 });
 
 describe("Nina capability execution policy", () => {
-  for (const capability of ["nakafa", "math", "deepResearch"] as const) {
+  for (const capability of Rec.keys(toolInputs)) {
+    // Only web research has a limit on the sources it reads.
     const states =
       capability === "deepResearch"
-        ? (["allowed", "denied", "failed", "missing", "sourceLimit"] as const)
-        : (["allowed", "denied", "failed", "missing"] as const);
+        ? PolicyStateSchema.literals
+        : PolicyStateSchema.pick(["allowed", "failed"]).literals;
     it.each(states)(
       `${capability} keeps %s execution within the authenticated turn`,
       async (state) => {
@@ -188,47 +182,37 @@ describe("Nina capability execution policy", () => {
         );
         expect(result).toHaveLength(1);
         expect(encodeJsonText(result)).not.toContain("Private provider detail");
-        if (state === "denied" || state === "missing") {
-          expect(result[0]).toMatchObject({
-            outcome: "denied",
-            text: expect.stringContaining("Status: denied"),
-          });
-          expect(runNakafaAgent).not.toHaveBeenCalled();
-          expect(runMathAgent).not.toHaveBeenCalled();
-          expect(runResearchAgent).not.toHaveBeenCalled();
+        const called = {
+          nakafa: runNakafaAgent,
+          math: runMathAgent,
+          deepResearch: runResearchAgent,
+        }[capability];
+        expect(called).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId: expect.any(String),
+            locale: "en",
+          })
+        );
+        const expectedText = {
+          allowed: "Verified",
+          failed: "failed",
+          sourceLimit: `at most ${researchMaxSources}`,
+        }[state];
+        expect(result[0]).toMatchObject({
+          text: expect.stringContaining(expectedText),
+        });
+        if (state === "sourceLimit") {
+          expect(result[0]).toHaveProperty("outcome", "limit");
+        } else if (state === "failed") {
+          expect(result[0]).toHaveProperty("outcome", "failed");
         } else {
-          const called = {
-            nakafa: runNakafaAgent,
-            math: runMathAgent,
-            deepResearch: runResearchAgent,
-          }[capability];
-          expect(called).toHaveBeenCalledWith(
-            expect.objectContaining({
-              userId: expect.any(String),
-              locale: "en",
-            })
-          );
-          const expectedText = {
-            allowed: "Verified",
-            failed: "failed",
-            sourceLimit: `at most ${researchMaxSources}`,
-          }[state];
-          expect(result[0]).toMatchObject({
-            text: expect.stringContaining(expectedText),
-          });
-          if (state === "sourceLimit") {
-            expect(result[0]).toHaveProperty("outcome", "limit");
-          } else if (state === "failed") {
-            expect(result[0]).toHaveProperty("outcome", "failed");
-          } else {
-            expect(result[0]).not.toHaveProperty("outcome");
-          }
+          expect(result[0]).not.toHaveProperty("outcome");
         }
       }
     );
   }
 
-  it.each(["nakafa", "math", "deepResearch"] as const)(
+  it.each(Rec.keys(toolInputs))(
     "reads %s as empty when its run gathers no card and states no outcome",
     async (capability) => {
       const { result } = await runCapability(capability, "cardless");
