@@ -48,6 +48,35 @@ describe("documentSchema", () => {
     ]);
   });
 
+  it("holds a link's address and an ordered list's start, and no other attribute", () => {
+    const schema = documentSchema({ ...RULES, marks: ["link"] });
+    expect(
+      schema.marks.link.create({ href: "https://nakafa.com" }).toJSON()
+    ).toEqual({ attrs: { href: "https://nakafa.com" }, type: "link" });
+    expect(schema.nodes.orderedList.create({ start: 3 }).toJSON()).toEqual({
+      attrs: { start: 3 },
+      type: "orderedList",
+    });
+  });
+
+  it("reads a pasted ordered list's start as a number, and drops its list style", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent('<ol start="3" type="a"><li><p>x</p></li></ol>');
+    expect(editor.getJSON().content?.[0]?.attrs).toEqual({ start: 3 });
+    editor.commands.setContent("<ol><li><p>x</p></li></ol>");
+    expect(editor.getJSON().content?.[0]?.attrs).toEqual({ start: 1 });
+  });
+
+  it("reads a pasted link's address, and holds no other attribute", () => {
+    const editor = openEditor(["link"]);
+    editor.commands.setContent(
+      '<p><a href="https://nakafa.com" target="_blank">x</a></p>'
+    );
+    expect(editor.getJSON().content?.[0]?.content?.[0]?.marks).toEqual([
+      { attrs: { href: "https://nakafa.com" }, type: "link" },
+    ]);
+  });
+
   it("offers no strike and no highlight, and ranks link after bold when the list gives bold first", () => {
     const schema = documentSchema({ ...RULES, marks: ["bold", "link"] });
     expect(Rec.keys(schema.marks)).toEqual(["bold", "link"]);

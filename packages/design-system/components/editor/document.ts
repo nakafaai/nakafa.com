@@ -3,6 +3,7 @@ import { Bold } from "@tiptap/extension-bold";
 import { Code } from "@tiptap/extension-code";
 import { Italic } from "@tiptap/extension-italic";
 import { Link } from "@tiptap/extension-link";
+import { OrderedList } from "@tiptap/extension-list";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
 import { Underline } from "@tiptap/extension-underline";
@@ -43,6 +44,23 @@ export interface DocumentRules {
 const TOP_PRIORITY = 1000;
 
 /**
+ * The ordered list of a document. It holds its start, which the contract names, and no
+ * other attribute: Tiptap's own `type` is a list style that the stored text drops, so an
+ * editor that held it would measure a document larger than the snapshot stores (ADR 0028).
+ */
+const DocumentOrderedList = OrderedList.extend({
+  addAttributes() {
+    return {
+      start: {
+        default: 1,
+        parseHTML: (element) =>
+          Number.parseInt(element.getAttribute("start") ?? "1", 10),
+      },
+    };
+  },
+});
+
+/**
  * The extension of each mark, given its priority and the rule of the link addresses.
  * Tiptap sorts extensions by priority, and ProseMirror ranks the marks of a text node
  * in that order, so a mark's priority sets its place. The link extension sets priority
@@ -60,7 +78,17 @@ const MARKS: Record<
   code: (priority) => Code.extend({ priority }),
   italic: (priority) => Italic.extend({ priority }),
   link: (priority, isLinkAllowed) =>
-    Link.extend({ priority }).configure({
+    Link.extend({
+      addAttributes() {
+        return {
+          href: {
+            default: null,
+            parseHTML: (element) => element.getAttribute("href"),
+          },
+        };
+      },
+      priority,
+    }).configure({
       autolink: true,
       defaultProtocol: "https",
       isAllowedUri: isLinkAllowed,
@@ -75,7 +103,8 @@ const MARKS: Record<
  * The extensions of an editor that holds a document of the given rules. StarterKit
  * supplies the blocks and the text, with the heading levels of the rules. Its own marks
  * are off, so no strike and no highlight is offered, and its horizontal rule is off,
- * because a document of this kind holds no rule (ADR 0031).
+ * because a document of this kind holds no rule (ADR 0031). Its ordered list is the
+ * document's own, and so is its link, so each holds only the attributes the contract names.
  */
 export function documentExtensions(rules: DocumentRules): AnyExtension[] {
   return [
@@ -86,9 +115,11 @@ export function documentExtensions(rules: DocumentRules): AnyExtension[] {
       horizontalRule: false,
       italic: false,
       link: false,
+      orderedList: false,
       strike: false,
       underline: false,
     }),
+    DocumentOrderedList,
     ...Arr.map(rules.marks, (mark, index) =>
       MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed)
     ),

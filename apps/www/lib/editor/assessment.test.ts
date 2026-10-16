@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import { NodeTypeSchema } from "@repo/backend/confect/editor/node";
 import { encodeJsonText } from "@repo/utilities/json";
+import { utf8Bytes } from "@repo/utilities/text";
 import { Array as Arr, Effect, Record as Rec, String as Str } from "effect";
 import {
   ASSESSMENT_MARKS,
@@ -138,6 +139,36 @@ describe("editor/assessment rules", () => {
           )
         );
         expect(ASSESSMENT_RULES.headingLevels).toEqual(accepted);
+      })
+  );
+
+  it.effect(
+    "measures a document as the snapshot stores it, so its JSON is as long as the stored text",
+    () =>
+      Effect.gen(function* () {
+        const item = (text: string) =>
+          assessmentSchema.node("listItem", null, [
+            assessmentSchema.node("paragraph", null, [run(text, [])]),
+          ]);
+        const document = assessmentSchema.node("doc", null, [
+          assessmentSchema.node("heading", { level: 2 }, [
+            run("Judul", ["link"]),
+          ]),
+          assessmentSchema.node("paragraph", null, [
+            run("Teks", ["bold", "link"]),
+          ]),
+          assessmentSchema.node("orderedList", { start: 3 }, [item("satu")]),
+          assessmentSchema.node("bulletList", null, [item("dua")]),
+          assessmentSchema.node("blockquote", null, [
+            assessmentSchema.node("paragraph", null, [run("kutipan", [])]),
+          ]),
+          assessmentSchema.node("codeBlock", { language: null }, [
+            assessmentSchema.text("kode"),
+          ]),
+        ]);
+        const editorText = encodeJsonText(document.toJSON());
+        const stored = yield* storedDocument(editorText);
+        expect(utf8Bytes(editorText)).toBe(utf8Bytes(stored));
       })
   );
 
