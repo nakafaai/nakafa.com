@@ -867,7 +867,7 @@
       },
       "quadratic": {
         "title": "Nullstellen und Scheitel",
-        "description": "Der Scheitel liegt genau in der Mitte zwischen den Nullstellen, bei x = 2."
+        "description": "Der Scheitel liegt genau in der Mitte zwischen den Nullstellen, bei x = {vertex}."
       },
       "atom": {
         "title": "Atomhüllenmodell",
@@ -940,12 +940,12 @@
     },
     "lesson-projectile": "Schiefer Wurf",
     "lesson-quadratic": "Quadratische Funktionen",
-    "lesson-mole": "Das Mol",
+    "lesson-atom": "Das Atom",
     "lesson-cell": "Die Zelle",
-    "lesson-projectile-text": "Die Kugel wird mit 40 m/s unter 60 Grad geworfen. Ihre Bahn ist eine Parabel.",
-    "lesson-quadratic-text": "Der Graph von x² − 4x + 3 schneidet die x-Achse bei x = 1 und x = 3.",
-    "lesson-mole-text": "Ein Wassermolekül ist gewinkelt. Sein Bindungswinkel beträgt 104,5 Grad.",
-    "lesson-cell-text": "Eine Zelle ist die kleinste Einheit eines Lebewesens.",
+    "lesson-projectile-text": "Die Kugel wird mit {speed} m/s unter {angle} Grad geworfen. Ihre Bahn ist eine Parabel.",
+    "lesson-quadratic-text": "Der Graph schneidet die x-Achse bei x = {left} und x = {right}.",
+    "lesson-atom-text": "{name} hat {atomicNumber} Elektronen. Seine äußere Schale {outerShell} enthält davon {electrons}.",
+    "lesson-cell-text": "Ein Bakterium ist eine einzige Zelle ohne Zellkern, und seine DNA liegt im Nukleoid.",
     "tryout-title": "Probetests mit sofortigem Ergebnis",
     "tryout-lead": "Jederzeit wiederholbar.",
     "tryout-ask": "Hab ich es schon verstanden?",

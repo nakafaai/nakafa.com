@@ -867,7 +867,7 @@
       },
       "quadratic": {
         "title": "Roots and vertex",
-        "description": "The vertex sits halfway between the roots, at x = 2."
+        "description": "The vertex sits halfway between the roots, at x = {vertex}."
       },
       "atom": {
         "title": "Atomic Shell Model",
@@ -940,12 +940,12 @@
     },
     "lesson-projectile": "Projectile motion",
     "lesson-quadratic": "Quadratic functions",
-    "lesson-mole": "The mole",
+    "lesson-atom": "The atom",
     "lesson-cell": "The cell",
-    "lesson-projectile-text": "The ball is thrown at 40 m/s and an angle of 60 degrees. Its path is a parabola.",
-    "lesson-quadratic-text": "The graph of x² − 4x + 3 crosses the x-axis at x = 1 and x = 3.",
-    "lesson-mole-text": "A water molecule is bent. Its bond angle is 104.5 degrees.",
-    "lesson-cell-text": "A cell is the smallest unit of a living thing.",
+    "lesson-projectile-text": "The ball is thrown at {speed} m/s and an angle of {angle} degrees. Its path is a parabola.",
+    "lesson-quadratic-text": "The graph crosses the x-axis at x = {left} and x = {right}.",
+    "lesson-atom-text": "{name} has {atomicNumber} electrons. Its outer shell, {outerShell}, holds {electrons} of them.",
+    "lesson-cell-text": "A bacterium is one cell with no nucleus, and its DNA lies in the nucleoid.",
     "tryout-title": "Practice tests that score you right away",
     "tryout-lead": "You can repeat them any time.",
     "tryout-ask": "Do I get it yet?",
