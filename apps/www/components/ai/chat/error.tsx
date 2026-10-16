@@ -15,6 +15,7 @@ import { useChat } from "@/components/ai/chat/context";
 import { useChatStore } from "@/components/ai/chat/store.client";
 import {
   ninaFailureFeedback,
+  ninaFailureLimits,
   ninaResponseFeedback,
 } from "@/components/ai/feedback";
 import { useMessage } from "@/components/ai/message/context";
@@ -50,6 +51,7 @@ export function AiChatError({ failed }: { failed: boolean }) {
   const retry = useChat((state) => state.retry);
   const canWrite = useChat((state) => state.canWrite);
   const busy = useChat((state) => state.busy);
+  const isLoading = useChat((state) => state.isLoading);
   if (!error && (turn?.state.status !== "failed" || failed)) {
     return null;
   }
@@ -65,10 +67,10 @@ export function AiChatError({ failed }: { failed: boolean }) {
       <Alert variant="destructive">
         <HugeIcons icon={Alert02Icon} />
         <AlertDescription>
-          <p>{t(`failures.${feedback.message}`)}</p>
+          <p>{t(`failures.${feedback.message}`, ninaFailureLimits)}</p>
           {canWrite && feedback.action === "retry" ? (
             <Button
-              disabled={busy}
+              disabled={busy || isLoading}
               onClick={() => retry()}
               size="sm"
               variant="outline"

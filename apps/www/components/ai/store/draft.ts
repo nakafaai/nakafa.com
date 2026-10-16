@@ -113,3 +113,23 @@ export const resolveAiDraftText = Effect.fn("ai.draft.resolve")(function* ({
 });
 /** Clears the current tab's Nina draft without interrupting sign-out. */
 export const clearAiDraftText = saveAiDraftText("", null);
+
+/**
+ * What a change of the signed-in learner does to what Nina holds. The first
+ * answer of a page changes nothing. After that, a new learner ends the session
+ * of the previous one in the store. The draft, its text and its files, goes
+ * too, except when the previous learner was a visitor: a visitor who signs in
+ * keeps the draft, because the account takes over what the visitor wrote and
+ * attached.
+ */
+export function resolveAiOwnerChange(
+  previousOwnerId: string | null | undefined,
+  ownerId: string | null
+) {
+  const ownerChanged =
+    previousOwnerId !== undefined && previousOwnerId !== ownerId;
+  return {
+    mustResetDraft: ownerChanged && previousOwnerId !== null,
+    ownerChanged,
+  };
+}

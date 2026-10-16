@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import {
+  NINA_FILENAME_LENGTH,
   NinaFileType,
   NinaUploadError,
 } from "@repo/backend/client/nina/uploads";
@@ -24,9 +25,19 @@ export default GroupSpec.make()
       args: () => ({
         bytes: Schema.instanceOf(ArrayBuffer),
         mediaType: NinaFileType,
-        filename: Schema.NonEmptyString.check(Schema.isMaxLength(255)),
+        filename: Schema.NonEmptyString.check(
+          Schema.isMaxCodePoints(NINA_FILENAME_LENGTH)
+        ),
       }),
       returns: () => Id("ninaUploads"),
+      error: () => Schema.Union([AuthFailure, NinaUploadError]),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "release",
+      args: () => ({ uploadId: Id("ninaUploads") }),
+      returns: () => Schema.Null,
       error: () => Schema.Union([AuthFailure, NinaUploadError]),
     }).middleware(Session)
   )

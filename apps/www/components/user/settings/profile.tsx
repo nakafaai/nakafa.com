@@ -1,9 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { UserSettingsAnimal } from "@/components/user/settings/animal";
+import { UserSettingsBio } from "@/components/user/settings/bio";
 import { UserSettingsDeleteAccount } from "@/components/user/settings/deletion";
 import { UserSettingsName } from "@/components/user/settings/name";
 import { UserSettingsRole } from "@/components/user/settings/role";
+import { UserSettingsUsername } from "@/components/user/settings/username";
 import { type CurrentUser, useViewer } from "@/lib/identity/client";
 
 export function UserSettingsProfilePage({
@@ -22,7 +25,10 @@ export function UserSettingsProfilePage({
 
   return (
     <>
+      <UserSettingsAnimal user={user} />
       <UserSettingsName user={user} />
+      <UserSettingsUsername user={user} />
+      <UserSettingsBio user={user} />
       <UserSettingsRole user={user} />
       {children}
       <UserSettingsDeleteAccount userId={user.appUser._id} />
