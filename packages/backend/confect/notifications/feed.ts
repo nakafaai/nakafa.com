@@ -75,9 +75,10 @@ const isShown = (cursor: FeedCursor | null, row: Candidate["row"]) =>
 /**
  * One page of the inbox list: the newest rows of every school the account holds,
  * merged into one order by creation time, newest first. Rows that share a creation
- * time are ordered by their ID, and the cursor keeps the rows at its time that it
- * has shown, so no row is shown twice or skipped, even when several rows share one
- * creation time.
+ * time keep the order of the index, which breaks ties by the newest insert, so every
+ * page size shows the same order. Rows that tie on both keep the order of their
+ * school. The cursor keeps the rows at its time that it has shown, so no row is
+ * shown twice or skipped, even when several rows share one creation time.
  */
 export const feedPage = Effect.fn("notifications.feed.page")(function* (
   schools: readonly HeldSchool[],
@@ -98,7 +99,10 @@ export const feedPage = Effect.fn("notifications.feed.page")(function* (
         Order.flip(Order.Number),
         (candidate: Candidate) => candidate.row.createdAt
       ),
-      Order.mapInput(Order.String, (candidate: Candidate) => candidate.row._id)
+      Order.mapInput(
+        Order.flip(Order.Number),
+        (candidate: Candidate) => candidate.row._creationTime
+      )
     )
   );
   const ahead = Arr.take(sorted, numItems + 1);

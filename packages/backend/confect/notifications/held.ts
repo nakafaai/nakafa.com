@@ -1,14 +1,15 @@
 import type { GenericId } from "@confect/core";
 import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { NotificationScopeTooLarge } from "@repo/backend/confect/notifications/errors";
 import { Effect } from "effect";
 
 /**
- * The most active member Persons one inbox request reads for its account. ADR
- * 0011 sets no limit on the tenants of an account, so this bound is the owner's
- * number to set; it is one indexed read, and a request never reads more.
+ * The most Persons one inbox request reads for its account. An account that holds
+ * more is refused, so no answer shows some of its rows and not others. ADR 0011
+ * sets no limit on the schools of an account, so this number is the owner's to set.
  */
-const HELD_SCHOOL_LIMIT = 100;
+export const HELD_SCHOOL_LIMIT = 100;
 
 /**
  * Whether the account holds this Person: an active member Person that the
@@ -25,14 +26,14 @@ export const holds = (
   person.account.userId === userId;
 
 /**
- * The active member Persons the account holds, across its schools, in one
- * indexed read. A claimed Person names its account, so the account's Persons are
- * one range of the index.
+ * The active member Persons the account holds, across its schools, in one bounded
+ * read. A claimed Person names its account, so the account's Persons are one range
+ * of the index. One read past the limit tells an account over the limit apart.
  */
 export const heldPersons = Effect.fn("notifications.held.persons")(function* (
   userId: GenericId.GenericId<"users">
 ) {
-  return yield* (yield* DatabaseReader)
+  const persons = yield* (yield* DatabaseReader)
     .table("tenantPeople")
     .index("by_account_userId_and_kind_and_status", (query) =>
       query
@@ -40,8 +41,12 @@ export const heldPersons = Effect.fn("notifications.held.persons")(function* (
         .eq("kind", "member")
         .eq("status", "active")
     )
-    .take(HELD_SCHOOL_LIMIT)
+    .take(HELD_SCHOOL_LIMIT + 1)
     .pipe(Effect.orDie);
+  if (persons.length > HELD_SCHOOL_LIMIT) {
+    return yield* new NotificationScopeTooLarge();
+  }
+  return persons;
 });
 
 /** One Person the account holds, with the school it belongs to. */

@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { HELD_SCHOOL_LIMIT } from "@repo/backend/confect/notifications/held";
 import {
   addPerson,
   claim,
+  claimedPersons,
   consumeSchool,
   insertRows,
   inviteAt,
@@ -13,7 +15,7 @@ import {
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { list, read } = refs.public.notifications.inbox;
+const { list, read, readAll } = refs.public.notifications.inbox;
 const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 
 /** Fake timers keep the clock where each test sets it. */
@@ -195,7 +197,7 @@ describe("notifications/inbox list", () => {
   );
 
   it.effect(
-    "lists every Person of an account, across more than one page of them",
+    "orders rows that share one creation time the same way at every page size",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -204,24 +206,80 @@ describe("notifications/inbox list", () => {
           "ana@harapan.example.test",
           true
         );
-        const many = yield* Effect.forEach(
-          Arr.makeBy(51, (index) => index),
-          (index) => addPerson(fixture, fixture.tenants.nf, `Orang ${index}`),
-          { concurrency: 1 }
+        const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
+        yield* inviteAt(fixture, "nf", anaNf, "ana@harapan.example.test");
+        yield* claim(fixture, anaNf, ana.userId);
+        const [entry] = yield* fixture.run(journal);
+        if (entry === undefined) {
+          return yield* Effect.die(
+            "The invite must have written a journal entry."
+          );
+        }
+        // Three rows at one creation time, inserted in this order.
+        const inserted = yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            Effect.forEach(
+              Arr.makeBy(3, (index) => index),
+              () =>
+                writer.table("notifications").insert({
+                  changeType: "person.invited",
+                  createdAt: NOW,
+                  journalEntryId: entry._id,
+                  recipientPersonId: anaNf,
+                  subject: { id: anaNf, kind: "person" },
+                  tenantId: fixture.tenants.nf,
+                })
+            )
+          )
         );
-        yield* Effect.forEach(
-          many,
-          (personId) => claim(fixture, personId, ana.userId),
-          {
-            discard: true,
-          }
+        const whole = yield* ana.client.query(list, {
+          paginationOpts: { cursor: null, numItems: 3 },
+        });
+        const first = yield* ana.client.query(list, {
+          paginationOpts: { cursor: null, numItems: 1 },
+        });
+        const second = yield* ana.client.query(list, {
+          paginationOpts: { cursor: first.continueCursor, numItems: 1 },
+        });
+        const third = yield* ana.client.query(list, {
+          paginationOpts: { cursor: second.continueCursor, numItems: 1 },
+        });
+        expect(third.isDone).toBe(true);
+        const oneByOne = Arr.flatMap(
+          [first, second, third],
+          (page) => page.page
         );
-        const last = yield* Effect.fromOption(Arr.last(many));
-        yield* insertRows(fixture, last, fixture.tenants.nf, 1);
-        const page = yield* ana.client.query(list, firstPage);
-        expect(page).toMatchObject({
-          isDone: true,
-          page: [{ subject: { id: last, kind: "person" } }],
+        expect(Arr.map(oneByOne, (item) => item.id)).toEqual(
+          Arr.map(whole.page, (item) => item.id)
+        );
+        expect(Arr.map(whole.page, (item) => item.id)).toEqual(
+          Arr.reverse(inserted)
+        );
+      })
+  );
+
+  it.effect(
+    "refuses an account that holds more Persons than one request reads, rather than showing some of its rows",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const ana = yield* fixture.account(
+          "ana",
+          "ana@harapan.example.test",
+          true
+        );
+        yield* claimedPersons(fixture, ana.userId, HELD_SCHOOL_LIMIT + 1);
+        const refusedList = yield* ana.client
+          .query(list, firstPage)
+          .pipe(Effect.flip);
+        expect(refusedList).toMatchObject({
+          _tag: "NotificationScopeTooLarge",
+        });
+        const refusedReadAll = yield* ana.client
+          .mutation(readAll, {})
+          .pipe(Effect.flip);
+        expect(refusedReadAll).toMatchObject({
+          _tag: "NotificationScopeTooLarge",
         });
       })
   );
@@ -278,7 +336,7 @@ describe("notifications/inbox list", () => {
         paginationOpts: { cursor: first.continueCursor, numItems: 10 },
       });
       expect(after).toMatchObject({ isDone: true, page: [] });
-      expect(after.continueCursor).toEqual(expect.any(String));
+      expect(after.continueCursor).toBe(first.continueCursor);
     })
   );
 });

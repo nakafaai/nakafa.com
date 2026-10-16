@@ -22,7 +22,10 @@ import spec from "@repo/backend/confect/notifications/inbox.spec";
 import { notificationView } from "@repo/backend/confect/notifications/schema";
 import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
 
-/** The most rows one list request reads for each school it holds. */
+/**
+ * The most rows one list page returns. The journal audit holds its pages to the
+ * same number (ADR 0016).
+ */
 const LIST_PAGE_LIMIT = 100;
 
 /** Marks one row read. A row of an unheld Person is refused like a missing row. */

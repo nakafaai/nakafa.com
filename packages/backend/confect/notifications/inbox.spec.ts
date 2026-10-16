@@ -8,6 +8,7 @@ import Session from "@repo/backend/confect/middleware/session.spec";
 import {
   NotificationCursorInvalid,
   NotificationNotFound,
+  NotificationScopeTooLarge,
 } from "@repo/backend/confect/notifications/errors";
 import { NotificationView } from "@repo/backend/confect/notifications/schema";
 import { Schema } from "effect";
@@ -27,6 +28,7 @@ export default GroupSpec.make()
           SessionRequired,
           AccountUnavailable,
           NotificationCursorInvalid,
+          NotificationScopeTooLarge,
         ]),
     })
   )
@@ -48,6 +50,11 @@ export default GroupSpec.make()
       name: "readAll",
       args: () => ({}),
       returns: () => Schema.Null,
-      error: () => Schema.Union([SessionRequired, AccountUnavailable]),
+      error: () =>
+        Schema.Union([
+          SessionRequired,
+          AccountUnavailable,
+          NotificationScopeTooLarge,
+        ]),
     })
   );
