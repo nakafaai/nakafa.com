@@ -36,7 +36,10 @@ export function QuranSurahHeader({
 }) {
   const tCommon = useTranslations("Common");
   return (
-    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+    <BreadcrumbHeaderFrame
+      className="h-(--surah-header-height)"
+      contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
+    >
       <div className="col-start-1 row-start-1 min-w-0 md:col-span-1">
         <BreadcrumbHeaderPath
           homeLabel={tCommon("home")}
@@ -45,7 +48,7 @@ export function QuranSurahHeader({
         />
       </div>
       <h1
-        className="col-span-2 col-start-1 row-start-2 flex min-w-0 items-baseline gap-2 truncate font-medium text-base md:col-span-1 md:col-start-2 md:row-start-1 md:justify-center md:text-center"
+        className="col-span-2 col-start-1 row-start-2 flex h-8 min-w-0 items-baseline gap-2 truncate font-medium text-base md:col-span-1 md:col-start-2 md:row-start-1 md:h-auto md:justify-center md:text-center"
         title={`${title}: ${meaning}`}
       >
         <span
