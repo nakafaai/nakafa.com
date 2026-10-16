@@ -13,10 +13,9 @@ import {
   sidebarAvatar,
 } from "@/e2e/support/avatar";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** The settings page, where the profile picture card chooses the animal or the Google photo. */
-const SETTINGS = "/en/user/settings";
 /** A picture of the site that loads, and an address that answers with no picture. */
 const LOADING_PHOTO = "/logo.png";
 const MISSING_PHOTO = "/animal-photo-that-does-not-exist.png";
@@ -105,7 +104,7 @@ test("a photo shows once the learner chooses it, and a photo that fails keeps th
         image: `${origin}${LOADING_PHOTO}`,
       });
       yield* Effect.promise(async () => {
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         await expect(pictureChoice(page)).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });

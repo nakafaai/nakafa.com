@@ -7,10 +7,8 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
 import { animalOf, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-
-/** The settings page, where the Profile cards are. */
-const SETTINGS = "/en/user/settings";
 
 /** The username field, which the form labels with the word Username. */
 function usernameField(page: Page) {
@@ -34,7 +32,7 @@ test("a learner shuffles the animal in settings, and the account button and the 
       });
 
       yield* Effect.promise(async () => {
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         await expect(shuffle).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
@@ -54,7 +52,7 @@ test("a learner shuffles the animal in settings, and the account button and the 
         // way to the server, and the reloads would never store it.
         const stored = await page.context().newPage();
         await expect(async () => {
-          await stored.goto(SETTINGS);
+          await stored.goto(appRoutes.settings);
           expect(await animalOf(sidebarAvatar(stored)).innerHTML()).toBe(
             shuffled
           );
@@ -86,7 +84,7 @@ test("a learner takes a new username in settings: a taken or invalid name says w
       const save = form.getByRole("button", { name: app.Auth.save });
 
       yield* Effect.promise(async () => {
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         await usernameField(page).fill("1abc");
         await expect(
           page.getByText(app.Auth["username-letter-first"], { exact: true })
@@ -118,7 +116,7 @@ test("a learner takes a new username in settings: a taken or invalid name says w
         const old = await page.request.get(`${origin}/en/@${learner.username}`);
         expect(old.status()).toBe(404);
 
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         const address = `${MAIN_DOMAIN}/@${renamed}`;
         await expect(
           page.getByText(
@@ -144,7 +142,7 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
       const save = form.getByRole("button", { name: app.Auth.save });
 
       yield* Effect.promise(async () => {
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         await bioField(page).fill(bio);
         await expect(
           page.getByText(`${bio.length} of ${BIO_MAX_LENGTH} characters`, {
@@ -162,7 +160,7 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
           timeout: readinessTimeoutMilliseconds,
         });
 
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         await bioField(page).fill("");
         await save.click();
 

@@ -5,6 +5,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withReader } from "@/e2e/support/reader";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The name of the synthetic learner, which the account button and the profile show. */
@@ -24,7 +25,7 @@ test("a learner opens their own profile at the username address, which keeps the
       const { learner } = yield* openChatPage(page, origin);
       const profile = new RegExp(`/en/@${learner.username}$`);
       const chat = new RegExp(`/en/@${learner.username}/chat$`);
-      yield* Effect.promise(() => page.goto("/en/user/settings"));
+      yield* Effect.promise(() => page.goto(appRoutes.settings));
 
       yield* Effect.promise(async () => {
         await page
