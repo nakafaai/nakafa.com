@@ -110,12 +110,16 @@ allowed email domains do not admit, and a suspended tenant leave the invite
 pending for the school to resolve. The functions that create invites refuse an
 address outside the list too: `open` and `tenancy/invites:invite` both do, so a
 new tenant starts with an empty list and each invite is checked the same way.
-Later channels extend the invite channel and the claim method values: a
-belajar.id match, and a login card, which is an invite on the card channel with
-the claim method
-`card` (ADR 0009). A claim hands the claimant the Person's standing grants, so
-creating an invite, or printing a login card, for a Person that holds the Owner
-or Admin role needs the right to give that role, `owner.manage` (ADR 0012).
+A later channel extends the invite channel, a belajar.id match. A login card is
+not an invite row, so this ADR's earlier plan of a card channel is withdrawn: an
+invite names an email address and a card names none, so a card cannot be matched
+to an account the way an invite is. A card is its own record, `loginCards`
+(ADR 0009), and redeeming it binds the Person with the claim method `card`. A
+claim hands the claimant the Person's standing grants, so creating an invite for
+a Person that holds the Owner or Admin role needs the right to give that role,
+`owner.manage` (ADR 0012). A login card never goes to such a Person (ADR 0009). A
+card goes only to a Person with no account or with an account that a card made, so
+an invite that claimed the Person first refuses it.
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,
@@ -451,8 +455,10 @@ beside the old School. Four steps followed, in this order, and all four are done
   `tenantPromotions` (`by_sourcePeriodId_and_state`,
   `by_targetPeriodId_and_state`), `tenantPromotionMoves`
   (`by_promotionId_and_personId`), `tenantGraduates`
-  (`by_unitId_and_personId`), `tenantGrants` (ADR 0012), and
-  `journalEntries` (ADR 0016).
+  (`by_unitId_and_personId`), `tenantGrants` (ADR 0012), `journalEntries`
+  (ADR 0016), and the school login and login card tables of ADR 0009,
+  `schoolLogins` (`by_personId`, `by_tenantId_and_name`) and `loginCards`
+  (`by_codeHash`, `by_personId`).
 - Public: `tenancy/profile:get`, `tenancy/viewer:get` (the School shell for one
   slug: the tenant with its settings, its units with theirs, archived units
   last, the caller's Person and grants, and the tenant capabilities `can`),
