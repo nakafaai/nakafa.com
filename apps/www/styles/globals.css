@@ -3,21 +3,6 @@
 @import "@repo/design-system/styles/katex.css";
 
 /*
- * Marketing pages scroll smoothly while they are shown. The marketing layout
- * sets this attribute on the document only while its page is visible, so a
- * hidden marketing page never smooths the reader's own jumps.
- */
-html[data-smooth-scroll] {
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-smooth-scroll] {
-    scroll-behavior: auto;
-  }
-}
-
-/*
  * The surah header is two rows on a phone and one row from md. One token gives
  * its height, so the header and the verse anchors that scroll past it agree:
  * on a phone 1.5rem of padding, the 2.25rem action row, the 0.5rem gap, the

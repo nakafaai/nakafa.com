@@ -1,7 +1,6 @@
 import { locale as rootLocale } from "next/root-params";
 import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
-import { MarketingScroll } from "@/components/marketing/shared/scroll";
 import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getShellPageNavigation } from "@/lib/content/page/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -19,7 +18,6 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
       className="flex min-h-screen w-full flex-1 flex-col"
       data-marketing-page
     >
-      <MarketingScroll />
       <Header />
       {children}
       <Footer
