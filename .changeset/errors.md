@@ -6,12 +6,11 @@
 ---
 
 Give every full-page state one arrangement with Nina in it. A page that cannot
-be found has her searching, with a letter and a paper plane beside her, and
-Nakafa School's own missing page has a backpack and a board. A page that broke
-has her at her keyboard with a coffee and a light bulb. Each says one sentence
-in the learner's language, without blame, and offers two ways on: back home and
-search the materials when a page is missing, and try again and back home when
-something broke. The pages no longer show a status code in type, a stack trace,
+be found has her searching, with a letter and a paper plane beside her. A page
+that broke has her at her keyboard with a coffee and a light bulb. Each says
+one sentence in the learner's language, without blame, and offers two ways on:
+back home and search the materials when a page is missing, and try again and
+back home when something broke. The pages no longer show a status code in type, a stack trace,
 or a link to GitHub; the error is reported by the page itself, as before. Her
 place has its final height before she is drawn, so nothing moves when she
 arrives, and when she cannot be drawn the words and both ways on stay.

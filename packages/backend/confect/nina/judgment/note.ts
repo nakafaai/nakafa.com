@@ -4,7 +4,7 @@
  * note (`ownNote`, `private`) read this one form, in production and in the run
  * that measures them (`judgment:measure`), so a threshold is set on the
  * question the product asks. The module imports nothing, so the measuring
- * command loads it without the gateway or the tokenizer behind `ask`.
+ * command loads it without the gateway behind `ask`.
  */
 export function noteText({
   quote,

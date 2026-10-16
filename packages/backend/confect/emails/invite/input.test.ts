@@ -85,6 +85,23 @@ describe("emails/invite/input", () => {
     })
   );
 
+  it.effect("reads nothing for an invite that has expired", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* fixture.run(signedPages);
+      const expired = yield* fixture.run(
+        invitePerson(fixture.tenants.nf, address, {
+          invite: { at: 1, status: "expired" },
+        })
+      );
+      const read = yield* fixture.internal.query(readInput, {
+        inviteId: expired.inviteId,
+        locale: "id",
+      });
+      expect(read).toBeNull();
+    })
+  );
+
   it.effect("still reads an invite that an account already accepted", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

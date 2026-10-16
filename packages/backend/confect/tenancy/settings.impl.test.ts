@@ -94,7 +94,7 @@ describe("tenancy/settings setLocale", () => {
 
 describe("tenancy/settings setPolicy", () => {
   it.effect(
-    "changes one policy at a time, leaves the others, and records the change",
+    "changes one policy at a time, leaves the others, and records which policy changed",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -135,28 +135,15 @@ describe("tenancy/settings setPolicy", () => {
         expect(entries).toMatchObject([
           {
             actor: { id: fixture.people.owner.personId, kind: "person" },
-            change: {
-              policy: { key: "studentThreads", value: true },
-              type: "tenant.policy.set",
-            },
             subject: { id: fixture.tenants.nf, kind: "tenant" },
           },
-          {
-            change: {
-              policy: { key: "nina", value: true },
-              type: "tenant.policy.set",
-            },
-          },
-          {
-            actor: { id: fixture.people.admin.personId, kind: "person" },
-            change: {
-              policy: {
-                key: "emailDomains",
-                value: ["harapan.example.test", "belajar.id"],
-              },
-              type: "tenant.policy.set",
-            },
-          },
+          { actor: { id: fixture.people.owner.personId, kind: "person" } },
+          { actor: { id: fixture.people.admin.personId, kind: "person" } },
+        ]);
+        expect(Arr.map(entries, ({ change }) => change)).toEqual([
+          { key: "studentThreads", type: "tenant.policy.set" },
+          { key: "nina", type: "tenant.policy.set" },
+          { key: "emailDomains", type: "tenant.policy.set" },
         ]);
       })
   );

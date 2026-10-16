@@ -121,7 +121,6 @@ export const continueAccountDeletionCommitProgram = Effect.fn(
       preparation._id !== expectedPreparation.preparationId ||
       preparation.recoveryGeneration !==
         expectedPreparation.recoveryGeneration ||
-      preparation.cancellationStartedAt !== undefined ||
       preparation.deletionStartedAt === undefined
     ) {
       return false;

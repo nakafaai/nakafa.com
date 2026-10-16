@@ -5,7 +5,6 @@ import {
 import { authComponent } from "@repo/backend/confect/auth/client";
 import { authDiscoveryRoutes } from "@repo/backend/confect/auth/route";
 import { createAuth } from "@repo/backend/confect/auth/runtime";
-import { attachmentRoutes } from "@repo/backend/confect/classes/forums/attachments/route";
 import { batchRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/batch";
 import { protectedRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/protected";
 import { publicRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/public";
@@ -24,7 +23,6 @@ const http = ConfectHttpRouter.make(
     agentApiRoutes,
     agentMcpRoutes,
     polarRoutes,
-    attachmentRoutes,
     publicationRoutes,
     batchRuntimeRoutes,
     publicRuntimeRoutes,

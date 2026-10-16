@@ -22,8 +22,21 @@ export const VaultKey = Schema.Struct({
 });
 
 /**
- * The stored field a sealed value belongs to. A value opens only for the
- * learner and the field it was sealed for.
+ * One key of a school, wrapped by the root key that `root` names. A school has
+ * one row for each generation, counted from 1. The newest generation seals new
+ * text (ADR 0030).
+ */
+export const TenantKey = Schema.Struct({
+  createdAt: Schema.Finite,
+  generation: Schema.Int.check(Schema.isGreaterThan(0)),
+  root: RootKeyId,
+  tenantId: Id("tenants"),
+  wrapped: Sealed,
+});
+
+/**
+ * The stored field a sealed value belongs to. A value opens only for the owner
+ * and the field it was sealed for.
  */
 export const VaultField = Schema.Struct({
   field: Schema.String,
@@ -32,9 +45,9 @@ export const VaultField = Schema.Struct({
 
 /**
  * Why the vault could not seal or open. `configuration`: `VAULT_ROOT_KEYS` is
- * missing or malformed. `key`: the learner has no key, the account is deleted,
- * or no root key in the environment opens the learner's key. `cipher`: the
- * value was not sealed for this learner and field, or it was changed.
+ * missing or malformed. `key`: the learner or the school has no key, the account
+ * is deleted, or no root key in the environment opens the stored key. `cipher`:
+ * the value was not sealed for this owner, table and field, or it was changed.
  * `runtime`: the platform could not derive a key or seal, which says nothing
  * about stored data. No reason carries key material or text.
  */

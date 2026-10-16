@@ -1,7 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { ANSWER, answerTurn, chatOf } from "@/e2e/support/prose";
+import {
+  ANSWER,
+  answerTurn,
+  chatOf,
+  DIAGRAM_DESCRIPTION,
+  DIAGRAM_TITLE,
+} from "@/e2e/support/prose";
+import { settled } from "@/e2e/support/rows";
 import { drawnRow, openServedChat } from "@/e2e/support/serve";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -39,6 +46,118 @@ const LANGUAGES = [
     title: "Diagram",
   },
 ];
+
+/**
+ * How the card draws its diagram: whether the whole drawing fits its stage
+ * without a scrollbar.
+ */
+const cardFacts = (wrapper: Element) => {
+  const svg = wrapper.querySelector("svg");
+  const drawing = svg?.getBoundingClientRect();
+  const stage = wrapper.getBoundingClientRect();
+
+  return {
+    fits: drawing
+      ? drawing.left >= stage.left - 0.5 &&
+        drawing.right <= stage.right + 0.5 &&
+        drawing.top >= stage.top - 0.5 &&
+        drawing.bottom <= stage.bottom + 0.5
+      : false,
+    scrolls:
+      wrapper.scrollWidth > wrapper.clientWidth ||
+      wrapper.scrollHeight > wrapper.clientHeight,
+  };
+};
+
+/**
+ * How the dialog draws its diagram. The label's own font size is 16 pixels in
+ * the diagram's units; drawn at its natural size, the page shows it at that
+ * size. The box scrolls when the drawing is wider than it, and centres the
+ * drawing when the drawing is smaller.
+ */
+const dialogFacts = (box: Element) => {
+  const svg = box.querySelector("svg");
+  const label = svg?.querySelector(".nodeLabel");
+  const drawing = svg?.getBoundingClientRect();
+  const frame = box.getBoundingClientRect();
+  const style = getComputedStyle(box);
+  const fontPixels = label
+    ? Number.parseFloat(getComputedStyle(label).fontSize)
+    : Number.NaN;
+
+  return {
+    // The width the drawing can fill without scrolling: the box less its padding.
+    contentWidth:
+      box.clientWidth -
+      Number.parseFloat(style.paddingLeft) -
+      Number.parseFloat(style.paddingRight),
+    centred: drawing
+      ? Math.abs(drawing.left - frame.left - (frame.right - drawing.right)) <= 1
+      : false,
+    drawingWidth: drawing?.width ?? Number.NaN,
+    fontPixels,
+    renderedPixels: fontPixels * (svg?.getScreenCTM()?.a ?? Number.NaN),
+    scrolls: box.scrollWidth > box.clientWidth,
+    viewBoxWidth: svg?.viewBox.baseVal.width ?? Number.NaN,
+  };
+};
+
+test.describe("The dialog of a diagram", () => {
+  test.describe.configure({ timeout: 240_000 });
+
+  for (const width of [390, 1440]) {
+    test(`at ${width}px shows the diagram at its natural size`, async ({
+      baseURL,
+      page,
+    }) => {
+      await page.setViewportSize({ height: 900, width });
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          yield* openServedChat(page, origin, chatOf([TITLED]));
+          yield* Effect.promise(async () => {
+            const titled = await drawnRow(page, TITLED.answer);
+            const card = titled.locator('[data-nakafa="mermaid-card"]');
+            const wrapper = card.getByRole("img", { name: DIAGRAM_TITLE });
+
+            await expect(wrapper.locator("svg")).toBeVisible({
+              timeout: revealTimeoutMilliseconds,
+            });
+            // The card keeps the whole diagram in its stage, with no scrollbar.
+            const preview = await wrapper.evaluate(cardFacts);
+            expect.soft(preview.fits).toBe(true);
+            expect.soft(preview.scrolls).toBe(false);
+
+            await card.getByRole("button").first().click();
+            const dialog = page.getByRole("dialog");
+            const box = dialog.getByRole("img", { name: DIAGRAM_TITLE });
+            await expect(box.locator("svg")).toBeVisible({
+              timeout: revealTimeoutMilliseconds,
+            });
+            // The dialog zooms in when it opens, and a drawing measured during the zoom is scaled.
+            await settled(box);
+            const facts = await box.evaluate(dialogFacts);
+
+            // A label keeps its own font size, so the drawing is not scaled.
+            expect.soft(facts.fontPixels).toBeGreaterThan(0);
+            expect
+              .soft(Math.abs(facts.renderedPixels - facts.fontPixels))
+              .toBeLessThanOrEqual(1);
+            expect
+              .soft(Math.abs(facts.drawingWidth - facts.viewBoxWidth))
+              .toBeLessThanOrEqual(1);
+            // A wider drawing scrolls in its box, and a narrower one sits in the middle.
+            expect
+              .soft(facts.scrolls)
+              .toBe(facts.drawingWidth > facts.contentWidth);
+            expect
+              .soft(facts.centred || facts.drawingWidth > facts.contentWidth)
+              .toBe(true);
+          });
+        })
+      );
+    });
+  }
+});
 
 test.describe("The words of a diagram", () => {
   test.describe.configure({ timeout: 240_000 });
@@ -105,13 +224,11 @@ test.describe("The words of a diagram", () => {
             await expect(titledCard.locator('[role="img"] svg')).toBeVisible({
               timeout: revealTimeoutMilliseconds,
             });
-            await expect
-              .soft(titledCard)
-              .toContainText("Alur pendaftaran siswa baru");
+            await expect.soft(titledCard).toContainText(DIAGRAM_TITLE);
             await titledCard.getByRole("button").first().click();
             await expect
               .soft(page.locator('[data-slot="dialog-description"]'))
-              .toHaveText("Dari pengisian formulir sampai arsip");
+              .toHaveText(DIAGRAM_DESCRIPTION);
           });
         })
       );

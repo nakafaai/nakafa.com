@@ -12,7 +12,9 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
+const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
+const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 
 /**
  * Reconciles prepared deletions even when an at-most-once recovery action
@@ -195,6 +197,30 @@ export default CronJobs.make()
       "sweep try-out expiry",
       Duration.minutes(TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES),
       internal.tryouts.mutations.expiry.sweep,
+      {}
+    )
+  )
+  .add(
+    /**
+     * Expires the pending invites whose term has passed, if the scheduled expiry
+     * of an invite never ran.
+     */
+    CronJob.make(
+      "sweep invite expiry",
+      Duration.hours(INVITE_EXPIRY_SWEEP_INTERVAL_HOURS),
+      internal.tenancy.expiry.sweep,
+      {}
+    )
+  )
+  .add(
+    /**
+     * Ends the approved operator visits whose term has passed, if the scheduled
+     * end of a visit never ran.
+     */
+    CronJob.make(
+      "sweep visit expiry",
+      Duration.hours(VISIT_EXPIRY_SWEEP_INTERVAL_HOURS),
+      internal.operators.expiry.sweep,
       {}
     )
   );

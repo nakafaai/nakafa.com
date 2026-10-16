@@ -46,7 +46,6 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
   function* (
     input: typeof NinaPageInput.Type,
     user: Docs["users"],
-    capturedAt: string,
     chatId?: Docs["chats"]["_id"]
   ) {
     const locale = input.locale;
@@ -69,11 +68,9 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
       ? yield* resolveQuestionFocus(input.focus, user._id)
       : yield* retainQuestionFocus(previous?.page?.nina.focus, user._id);
     const session = yield* openNinaLearningSession({
-      capturedAt,
       ...(focus ? { focus } : {}),
       learning: published.learning,
       ...(published.placement ? { placement: published.placement } : {}),
-      source: "current-page",
     });
     const curriculum = yield* readCurrentCurriculumProgram(locale, user._id);
     const preference = curriculum
@@ -90,8 +87,6 @@ export const resolveNinaContext = Effect.fn("nina.context.resolve")(
       page: {
         locale,
         slug,
-        url,
-        verified: published.learning.verified,
         // The active publication can change between turns. Re-read verified page
         // evidence instead of treating an old model context as current content.
         needsFetch: session.context.learning.verified,
@@ -142,7 +137,6 @@ const resolvePublishedContext = Effect.fn("nina.context.publication")(
         return {
           learning: {
             assetId: projection.graph.assetId,
-            contentId: projection.graph.assetId,
             locale: input.locale,
             materialKey: projection.materialKey,
             section: projection.kind,

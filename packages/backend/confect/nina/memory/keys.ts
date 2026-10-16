@@ -83,6 +83,26 @@ const dropKeys = Effect.fn("nina.memory.keys.drop")(function* (
 });
 
 /**
+ * Inserts key rows for a memory, each holding the time the memory was
+ * confirmed. `syncKeys` inserts the keys a memory lacks with it, and `restore`
+ * inserts the keys a deleted memory had.
+ */
+export const insertKeys = Effect.fn("nina.memory.keys.insert")(function* (
+  userId: UserId,
+  memoryId: MemoryId,
+  confirmedAt: number,
+  keys: readonly string[]
+) {
+  const writer = yield* DatabaseWriter;
+  for (const key of keys) {
+    yield* writer
+      .table("ninaMemoryKeys")
+      .insert({ confirmedAt, key, memoryId, userId })
+      .pipe(Effect.orDie);
+  }
+});
+
+/**
  * Moves key rows to the time their memory was confirmed, and leaves the rows
  * that hold that time as they are. A row is written back whole with `replace`,
  * which saves the read that a `patch` makes first. It returns how many rows it
@@ -151,26 +171,20 @@ export const syncKeys = Effect.fn("nina.memory.keys.sync")(function* (
     Arr.fromIterable(wanted),
     (key) => !HashSet.has(kept, key)
   );
-  const writer = yield* DatabaseWriter;
-  for (const key of missing) {
-    yield* writer
-      .table("ninaMemoryKeys")
-      .insert({
-        confirmedAt: content.confirmedAt,
-        key,
-        memoryId,
-        userId: keys.userId,
-      })
-      .pipe(Effect.orDie);
-  }
+  yield* insertKeys(keys.userId, memoryId, content.confirmedAt, missing);
   return Arr.length(gone) + moved + Arr.length(missing);
 }, Effect.orDie);
 
-/** Deletes every key row of a memory. Every path that deletes a memory calls it. */
+/**
+ * Deletes every key row of a memory and returns the keys it deleted, so that
+ * `remove` can keep them for an Undo. Every path that deletes a memory calls it.
+ */
 export const deleteKeys = Effect.fn("nina.memory.keys.delete")(function* (
   memoryId: MemoryId
 ) {
-  yield* dropKeys(yield* storedKeys(memoryId));
+  const rows = yield* storedKeys(memoryId);
+  yield* dropKeys(rows);
+  return Arr.map(rows, (row) => row.key);
 });
 
 /**

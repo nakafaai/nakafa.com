@@ -29,9 +29,9 @@ export const cancelAccountDeletionAttempt = Effect.fn(
       preparation.finalizedAt !== undefined ||
       preparation.attemptId !== attemptId
     ) {
-      return false;
+      return;
     }
-    return yield* cancelPreparedAccountDeletion({
+    yield* cancelPreparedAccountDeletion({
       ...preparation,
       attemptId,
     });
@@ -73,13 +73,8 @@ export const cancelAccountDeletionAttemptByToken = Effect.fn(
     if (!userStillExists) {
       return null;
     }
-    const hasMore = yield* cancelAccountDeletionAttempt(
-      preparation.authId,
-      attemptId
-    );
-    return hasMore
-      ? accountDeletionCancellationOutcome.continue
-      : accountDeletionCancellationOutcome.complete;
+    yield* cancelAccountDeletionAttempt(preparation.authId, attemptId);
+    return accountDeletionCancellationOutcome.complete;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );

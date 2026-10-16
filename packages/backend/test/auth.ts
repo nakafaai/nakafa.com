@@ -1,4 +1,6 @@
 import { assert, expect } from "@effect/vitest";
+import type { Doc } from "@repo/backend/components/betterAuth/_generated/dataModel";
+import { components } from "@repo/backend/confect/_generated/components";
 import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/deletion/constants";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -7,12 +9,16 @@ import { Array as Arr, DateTime, Effect, pipe } from "effect";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const BASE64_PADDING_PATTERN = /[=]+$/;
+/** How many account rows `storedAccounts` reads in one query. */
+const STORED_ACCOUNT_PAGE_SIZE = 100;
 
 /**
- * The one stand-in for Google's token endpoint in a test file. Each sign-in
- * resets it and sets what it issues, and the test file unstubs the global.
+ * The one stand-in for Google in a test file. Each sign-in stubs the global
+ * `fetch` with it, resets it, and sets what Google's token endpoint issues. A
+ * test that expects no request to Google resets it and checks that it was never
+ * called. The test file unstubs the global.
  */
-const tokenExchange = vi.fn<typeof fetch>();
+export const googleFetch = vi.fn<typeof fetch>();
 
 /** The Better Auth user that an account deletion hook receives. */
 export function betterAuthUser(id: string, now: number): User {
@@ -105,7 +111,7 @@ export function createGoogleIdToken(
 }
 
 /** The Cookie header that carries every cookie a response set. */
-function cookieHeader(response: Response) {
+export function cookieHeader(response: Response) {
   return pipe(
     response.headers.getSetCookie(),
     Arr.map((value) => value.split(";", 1)[0]),
@@ -124,7 +130,7 @@ export async function signInWithGoogle(
   suffix: string,
   now: number
 ) {
-  tokenExchange.mockReset().mockImplementation((input, init) => {
+  googleFetch.mockReset().mockImplementation((input, init) => {
     expect(String(input)).toBe(GOOGLE_TOKEN_ENDPOINT);
     expect(init?.method).toBe("POST");
     expect(String(init?.body)).toContain("code=synthetic-authorization-code");
@@ -139,7 +145,7 @@ export async function signInWithGoogle(
       })
     );
   });
-  vi.stubGlobal("fetch", tokenExchange);
+  vi.stubGlobal("fetch", googleFetch);
   const signInResponse = await test.fetch("/api/auth/sign-in/social", {
     body: encodeJsonText({
       callbackURL: "/en",
@@ -166,6 +172,45 @@ export async function signInWithGoogle(
       },
     }
   );
-  expect(tokenExchange).toHaveBeenCalledOnce();
+  expect(googleFetch).toHaveBeenCalledOnce();
   return response;
+}
+
+/** Every `account` row that the Better Auth component holds, oldest first. */
+export async function storedAccounts(
+  test: ReturnType<typeof createConvexTestWithBetterAuth>
+) {
+  let accounts: readonly Doc<"account">[] = [];
+  let cursor: string | null = null;
+  do {
+    const result = await test.query((ctx) =>
+      ctx.runQuery(components.betterAuth.adapter.findMany, {
+        model: "account",
+        paginationOpts: { cursor, numItems: STORED_ACCOUNT_PAGE_SIZE },
+      })
+    );
+    accounts = Arr.appendAll(accounts, result.page);
+    cursor = result.isDone ? null : result.continueCursor;
+  } while (cursor !== null);
+  return accounts;
+}
+
+/**
+ * The `account` columns that hold what Google issues at sign-in. The list is
+ * written out here and not read from the account hooks, so that a column
+ * dropped from the hooks fails the tests that use it.
+ */
+const PROVIDER_TOKEN_COLUMNS: ReadonlyArray<keyof Doc<"account">> = [
+  "accessToken",
+  "accessTokenExpiresAt",
+  "idToken",
+  "refreshToken",
+  "refreshTokenExpiresAt",
+];
+
+/** Expects that a stored `account` row holds none of the provider token columns. */
+export function expectNoProviderTokens(row: object) {
+  for (const column of PROVIDER_TOKEN_COLUMNS) {
+    expect(row).not.toHaveProperty(column);
+  }
 }

@@ -3,10 +3,8 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryNow } from "@/components/user/settings/memory/provider";
-import {
-  formatConfirmed,
-  formatEnds,
-} from "@/components/user/settings/memory/time";
+import { formatEnds } from "@/components/user/settings/memory/time";
+import { formatAge } from "@/lib/i18n/date";
 
 /** Says on which day a situation ends: "Ends October 20, 2026". */
 export function MemoryEnds({ validUntil }: { validUntil: number }) {
@@ -25,7 +23,7 @@ export function MemoryOrigin({ memory }: { memory: Memory }) {
   const t = useTranslations("Memory");
   const locale = useLocale();
   const now = useMemoryNow();
-  const time = formatConfirmed(memory.confirmedAt, now, locale);
+  const time = formatAge(memory.confirmedAt, locale, now);
 
   return memory.author === "learner"
     ? t("written-by-you", { time })

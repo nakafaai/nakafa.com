@@ -3,8 +3,8 @@
 ## Status
 
 Accepted. Amended on 13 October 2026: the assessment player and the school
-working set are two more instances of the store rule (Instances Planned For The
-School).
+working set are two more instances of the store rule (Instances Of The Store
+Rule).
 
 ## Decision
 
@@ -58,23 +58,25 @@ it.
   visible `Activity` lets the lesson hydrate, and answer presses, before the
   renderer's code arrives.
 
-## Instances Planned For The School
+## Instances Of The Store Rule
 
-Program wave B adds two instances of the first rule. Neither exists on main yet.
+### The player
 
-### The assessment player
-
-`AssessmentPlayer` is the one player for try-outs and school exams (ADR 0031).
-Its mode, its navigator, its keyboard handling, its scroll position, and its
-tools are written by its own actions and by browser events, and not by render. So
-they live in a Zustand store created once for each player instance, carried by a
-plain context and read with `useStore(store, selector)`. Two players share
-nothing. What the player receives, the attempt, the exam profile, and the items,
-comes through a plain context read with `use()`, as the second rule says. An
-answer is written optimistically in the same frame, and a failed write returns
-the screen to the server's value (ADR 0013).
+The player of a running try-out section (`apps/www/components/player`) is the
+one player for try-outs and, in program wave B, for school exams (ADR 0031). It
+follows both homes. What only the learner and the player's observers write,
+namely the current question, the view, the open overlay, and the request to
+reveal a question, lives in a store that `PlayerProvider` creates once per
+player. What the questions hold, such as their answers, travels in props from
+the binding to the parts that use it, because the signed question bodies stream
+in a Suspense boundary below the provider. A context that changed when the live
+attempt arrived would make React discard the HTML the server sent for that
+boundary, while the store never changes, so it can sit above it.
 
 ### The working set
+
+Program wave B adds the working set of the school shell. It does not exist on
+main yet.
 
 The open tabs of a member in a school, and the active tab, are one stored row for
 each member and school. The provider of the school shell creates the store once,

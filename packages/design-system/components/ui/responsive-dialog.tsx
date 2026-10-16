@@ -24,7 +24,11 @@ import type { ReactNode } from "react";
 interface Props {
   children?: ReactNode;
   description?: ReactNode;
+  /** Where focus goes on close; `false` leaves it to the caller. */
+  finalFocus?: boolean;
   footer?: ReactNode;
+  /** Runs after the open or close animation has finished. */
+  onOpenChangeComplete?: (open: boolean) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
   title: ReactNode;
@@ -36,14 +40,20 @@ export function ResponsiveDialog({
   title,
   description,
   children,
+  finalFocus,
   footer,
+  onOpenChangeComplete,
 }: Props) {
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
 
   if (isDesktop) {
     return (
-      <Dialog onOpenChange={setOpen} open={open}>
-        <DialogContent>
+      <Dialog
+        onOpenChange={setOpen}
+        onOpenChangeComplete={onOpenChangeComplete}
+        open={open}
+      >
+        <DialogContent finalFocus={finalFocus}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             {!!description && (
@@ -58,8 +68,12 @@ export function ResponsiveDialog({
   }
 
   return (
-    <Drawer onOpenChange={setOpen} open={open}>
-      <DrawerPopup showBar>
+    <Drawer
+      onOpenChange={setOpen}
+      onOpenChangeComplete={onOpenChangeComplete}
+      open={open}
+    >
+      <DrawerPopup finalFocus={finalFocus} showBar>
         <DrawerHeader className={cn("border-b", !children && "border-b-0")}>
           <DrawerTitle>{title}</DrawerTitle>
           {!!description && (

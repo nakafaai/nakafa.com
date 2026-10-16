@@ -15,12 +15,13 @@ import type {
   GrantScope,
 } from "@repo/backend/confect/access/schema";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
-import type {
-  Account,
-  Email,
-  InviteState,
-  PersonKind,
-  PersonStatus,
+import {
+  type Account,
+  type Email,
+  INVITE_TERM,
+  type InviteState,
+  type PersonKind,
+  type PersonStatus,
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
@@ -29,11 +30,20 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
+import { operatorRow } from "@repo/backend/test/operators";
 import type { FunctionReference } from "convex/server";
 import type { TestConvex } from "convex-test";
-import { Cause, DateTime, Effect, Exit, Schema, Struct } from "effect";
+import {
+  Cause,
+  DateTime,
+  Duration,
+  Effect,
+  Exit,
+  Schema,
+  Struct,
+} from "effect";
 
-const TENANCY_NOW = DateTime.toEpochMillis(
+export const TENANCY_NOW = DateTime.toEpochMillis(
   DateTime.makeUnsafe("2026-10-01T08:00:00Z")
 );
 
@@ -89,11 +99,30 @@ export const invitePerson = Effect.fn("test.tenancy.invitePerson")(function* (
   });
   const inviteId = yield* writer.table("tenantInvites").insert({
     channel: { email: address, kind: "email" },
+    expiresAt: TENANCY_NOW + Duration.toMillis(INVITE_TERM),
     personId,
     state: state.invite ?? { status: "pending" },
     tenantId,
   });
   return { inviteId, personId };
+});
+
+/** Gives one Person a standing grant of one role over a scope, as the school's roster and Admin do. */
+export const grantRole = Effect.fn("test.tenancy.grantRole")(function* (
+  tenantId: GenericId.GenericId<"tenants">,
+  personId: GenericId.GenericId<"tenantPeople">,
+  role: BuiltinRole,
+  scope: GrantScope
+) {
+  yield* (yield* DatabaseWriter).table("tenantGrants").insert({
+    grantedBy: { kind: "system" },
+    personId,
+    role: { key: role, kind: "builtin" },
+    scope,
+    status: "active",
+    tenantId,
+    term: { kind: "standing" },
+  });
 });
 
 /** Every journal entry, oldest first. */
@@ -154,6 +183,7 @@ const seed = Effect.fn("test.tenancy.seed")(function* (ctx: MutationCtx) {
   const users = yield* Effect.all({
     admin: account("admin"),
     auditor: account("auditor"),
+    counselor: account("counselor"),
     otherOwner: account("other-owner"),
     owner: account("owner"),
     principal: account("principal"),
@@ -275,6 +305,14 @@ const seed = Effect.fn("test.tenancy.seed")(function* (ctx: MutationCtx) {
       tenantWide,
       "active"
     ),
+    counselor: member(
+      nf,
+      users.counselor.userId,
+      "Counselor",
+      "counselor",
+      tenantWide,
+      "active"
+    ),
     otherOwner: member(
       other,
       users.otherOwner.userId,
@@ -332,6 +370,7 @@ const seed = Effect.fn("test.tenancy.seed")(function* (ctx: MutationCtx) {
       "active"
     ),
   });
+  yield* operatorRow(users.visitor.userId, TENANCY_NOW);
   const visitor = yield* claimed(
     nf,
     users.visitor.userId,
@@ -404,6 +443,9 @@ export const tenancyFixture = Effect.gen(function* () {
         });
       }),
     anonymous: client(t),
+    /** Runs the scheduled functions whose time has come. */
+    finishScheduled: () =>
+      Effect.promise(() => t.finishAllScheduledFunctions(vi.runAllTimers)),
     as: (account: keyof typeof seeded.users) =>
       client(
         t.withIdentity({
