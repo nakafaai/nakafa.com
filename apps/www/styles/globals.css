@@ -2,14 +2,36 @@
 @import "@repo/design-system/styles/theme.css";
 @import "@repo/design-system/styles/katex.css";
 
-/* Smooth scrolling only on marketing pages */
-html:has([data-marketing-page]) {
-  scroll-behavior: smooth;
+/*
+ * The surah header is two rows on a phone and one row from md, and it is
+ * exactly this tall, so the verse anchors that scroll past it agree with it.
+ * On a phone its rows make up the token: 1.5rem of padding, the 2.25rem action
+ * row, the 0.5rem gap, the 2rem title row, and the 1px border. The rows must
+ * fit inside it, which the landing test checks.
+ */
+:root {
+  --surah-header-height: calc(6.25rem + 1px);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html:has([data-marketing-page]) {
-    scroll-behavior: auto;
+@media (width >= 48rem) {
+  :root {
+    --surah-header-height: 4rem;
+  }
+}
+
+/*
+ * A verse anchor scrolls the sticky headers above it into view, so the verse's
+ * number row lands right under them: the app header and the surah header below
+ * lg, and the surah header alone from lg, where the app header is hidden.
+ */
+@utility quran-verse-anchor {
+  scroll-margin-top: calc(
+    var(--app-header-top, 4rem) +
+    var(--surah-header-height)
+  );
+
+  @media (width >= 64rem) {
+    scroll-margin-top: var(--surah-header-height);
   }
 }
 
