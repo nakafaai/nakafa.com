@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@confect/core": "catalog:",
-    "@confect/server": "10.1.0",
+    "@confect/server": "10.3.0",
     "@convex-dev/agent": "catalog:",
     "@convex-dev/aggregate": "^0.3.1",
     "@convex-dev/ai-sdk-provider": "catalog:",
@@ -70,8 +70,8 @@
     "unified": "catalog:"
   },
   "devDependencies": {
-    "@confect/cli": "10.1.0",
-    "@confect/test": "10.1.0",
+    "@confect/cli": "10.3.0",
+    "@confect/test": "10.3.0",
     "@edge-runtime/vm": "^5.0.0",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",

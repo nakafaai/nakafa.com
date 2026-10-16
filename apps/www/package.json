@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@confect/core": "catalog:",
-    "@confect/js": "10.1.0",
-    "@confect/react": "10.1.0",
+    "@confect/js": "10.3.0",
+    "@confect/react": "10.3.0",
     "@convex-dev/agent": "catalog:",
     "@convex-dev/better-auth": "0.12.5",
     "@hugeicons/core-free-icons": "catalog:",
