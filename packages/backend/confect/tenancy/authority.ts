@@ -1,5 +1,10 @@
 import type { GenericId } from "@confect/core";
 import { MiddlewareImpl } from "@confect/server";
+import type {
+  TenantCohortsDoc,
+  TenantPeriodsDoc,
+  TenantUnitsDoc,
+} from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Authority, activeGrants } from "@repo/backend/confect/access/policy";
@@ -118,6 +123,20 @@ export const periodAuthority = Authority.make(period, Authority.load(period), {
 });
 
 /**
+ * Whether a cohort is locked: the cohort, its period, or its unit is archived.
+ * A class of the cohort is locked by the same rule, so the classroom module
+ * calls this too.
+ */
+export const cohortLocked = (
+  cohortRow: Pick<TenantCohortsDoc, "status">,
+  periodRow: Pick<TenantPeriodsDoc, "status">,
+  unitRow: Pick<TenantUnitsDoc, "status">
+) =>
+  cohortRow.status === "archived" ||
+  periodRow.status === "archived" ||
+  unitRow.status === "archived";
+
+/**
  * A cohort is locked once it, its period, or its school is archived. A Person
  * holds the `cohortMember` relation to the cohort their placement names in the
  * cohort's period, and nothing more.
@@ -129,10 +148,7 @@ export const cohortAuthority = Authority.make(cohort, Authority.load(cohort), {
       term: readPeriod(row.periodId),
     }).pipe(
       Effect.map(({ parent, term }) => ({
-        locked:
-          row.status === "archived" ||
-          term.status === "archived" ||
-          parent.status === "archived",
+        locked: cohortLocked(row, term, parent),
         units: [row.unitId],
       }))
     ),

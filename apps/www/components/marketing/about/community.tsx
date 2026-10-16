@@ -1,11 +1,11 @@
 import { DiscordIcon } from "@hugeicons/core-free-icons";
-import { Animal } from "@repo/design-system/components/ui/animal";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import { CastAnimal } from "@/components/marketing/about/cast";
 import { CROWD_HERD } from "@/components/marketing/about/toys/herd";
 
 /** Every this many friends, one of them is typing, so a bubble of dots rises above it. */
@@ -51,7 +51,10 @@ export function Community() {
         >
           {Arr.map(CROWD_HERD, (mascot, index) => (
             <li className="relative" key={mascot.animal}>
-              <Animal className="size-14 min-[760px]:size-16" mascot={mascot} />
+              <CastAnimal
+                className="size-14 min-[760px]:size-16"
+                mascot={mascot}
+              />
               {index % TYPING_EVERY === 0 ? (
                 <span className="absolute -end-2 -top-3 rounded-full bg-card px-2 py-1 ring-1 ring-foreground/10">
                   <TypingLoader />

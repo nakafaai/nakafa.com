@@ -1,8 +1,9 @@
 // @vitest-environment node
-import { createHash } from "node:crypto";
+import { layer as nodeCryptoLayer } from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { languages } from "@repo/internationalization/data/lang";
-import { Effect } from "effect";
+import { Crypto, Effect } from "effect";
+import { Hex } from "effect/encoding";
 import { getNakafaAgentSkillIndex, getNakafaSkillText } from "@/lib/llms/skill";
 
 describe("Nakafa public agent skill", () => {
@@ -31,9 +32,14 @@ describe("Nakafa public agent skill", () => {
     () =>
       Effect.gen(function* () {
         const index = yield* getNakafaAgentSkillIndex();
-        const digest = createHash("sha256")
-          .update(getNakafaSkillText())
-          .digest("hex");
+        // The index hashes with Web Crypto, so the Node layer checks it.
+        const crypto = yield* Crypto.Crypto;
+        const digest = Hex.encode(
+          yield* crypto.digest(
+            "SHA-256",
+            new TextEncoder().encode(getNakafaSkillText())
+          )
+        );
 
         expect(index).toStrictEqual({
           $schema: "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
@@ -49,6 +55,6 @@ describe("Nakafa public agent skill", () => {
             },
           ],
         });
-      })
+      }).pipe(Effect.provide(nodeCryptoLayer))
   );
 });

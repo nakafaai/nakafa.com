@@ -6,6 +6,7 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 9, 12, 12, 0, 0);
@@ -18,6 +19,7 @@ describe("users/queries", () => {
       const userId = await ctx.db.insert("users", {
         authId: "auth_user_real_example",
         email: "nabil@example.com",
+        mascot: MASCOT_CODE,
         name: "Test Learner",
         plan: "free",
         credits: 7,
@@ -27,6 +29,7 @@ describe("users/queries", () => {
       const deletedUserId = await ctx.db.insert("users", {
         authId: "deleted_auth_user",
         email: "deleted@example.com",
+        mascot: MASCOT_CODE,
         name: "Deleted User",
         plan: "free",
         credits: 7,

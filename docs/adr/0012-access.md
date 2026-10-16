@@ -5,7 +5,11 @@
 Accepted. Amended on 13 October 2026 for the homeroom and guardian relations, the
 actions of the school roles, and the 24-hour limit on operator visits. Amended on
 14 October 2026 for the cohort member relation, which is live, and for the
-period, cohort, people, and invite actions.
+period, cohort, people, and invite actions. Amended the same day for the
+integration client: `decide` takes the subject's tenant and judges a client
+principal, and the Integration role holds the roster reads (ADR 0029). Amended
+the same day for the operator visits and their transition access, which are
+live.
 
 ## Context
 
@@ -85,10 +89,11 @@ Tenant functions take the route `slug` and attach the session middleware and
   the member's grants and returns the loaded row, or `check(action, row)` for a
   row already loaded, such as the member's tenant. `allowed(row)` lists the
   caller's actions for `can`.
-- Tenant isolation lives in `check`: it derives the row's tenant from its data
-  and denies a row of another tenant with reason `resource`, whichever path
-  loaded the row, and `allowed` lists no actions on such a row. `authorize` is
-  a load followed by `check`, so a missing object and a foreign one get the
+- Tenant isolation lives in `decide`: `check` and `allowed` take the row's
+  tenant from its data and pass it with the row, and `decide` denies a subject
+  of another tenant than the principal's with reason `resource`, whichever path
+  loaded the row. `allowed` therefore lists no actions on such a row. `authorize`
+  is a load followed by `check`, so a missing object and a foreign one get the
   same denial on every entry point.
 
 ### Decisions
@@ -97,7 +102,13 @@ For one action on one subject, decided by `decide` (an Effect program), which
 reads neither the clock nor the database except through the subject's
 memoized relation checks:
 
-1. A write in a suspended tenant, or on a locked subject (ended, archived, or
+1. A subject of another tenant than the principal's is refused as `resource`,
+   whatever its state and whoever the principal is. A client of another school
+   than the subject's is refused the same way (ADR 0029).
+2. A revoked integration client is refused as `condition`, on every action. A
+   client is decided by its own rule and action list (ADR 0029), never by a
+   Person's roles or relations.
+3. A write in a suspended tenant, or on a locked subject (ended, archived, or
    closed), is refused as `condition`, even for Owners. The system transitions
    that time or an operator starts are exempt and run in a suspended tenant,
    because they end access, keep a deadline, or restore the tenant: a visit end,
@@ -111,11 +122,16 @@ memoized relation checks:
    archived period, and an archived cohort are locked subjects, and an archived
    school locks its periods and cohorts too, so a role's write to them is
    `condition` and never `role`.
-2. A roles rule allows an active grant whose scope covers the subject and whose
+4. A roles rule allows an active grant whose scope covers the subject and whose
    role is Owner or listed.
-3. Otherwise the rule's relations decide, each checked at most once per
+5. Otherwise the rule's relations decide, each checked at most once per
    subject.
-4. Otherwise the action is refused as `role`.
+6. Otherwise the action is refused as `role`.
+
+A rule's `access` is `read`, `write`, or `transition`. Only a `write` is refused
+by a suspended tenant or a locked subject. A `transition` ends access or restores
+a tenant, so it runs in a suspended tenant, and a visit's end is one (see
+Operators inside tenants). Its roles and relations decide it like any other rule.
 
 A rule either grants by roles, where the listed roles, every Owner, and the
 listed relations allow it, or by relations only, where no role can allow it, so
@@ -163,6 +179,10 @@ The school roles also hold these actions:
   nothing.
 - The Guardian reaches a child only through a verified parent relation (see
   Relations).
+- The Integration role belongs to an integration client, never to a Person. A
+  client reads the periods, cohorts, and people of its school only for the
+  actions its action list names, and the catalog opens only the roster reads to
+  it (ADR 0029).
 
 Assigning or ending an Owner or Admin role needs `owner.manage`, which only
 Owners hold, so an Admin cannot mint Admins. The last Owner held by a claimed,
@@ -194,6 +214,7 @@ are:
 | Session proctor | A proctor and one exam sitting | Every proctor action of that sitting (ADR 0013): the token and the participant dashboard, lock and unlock, add minutes, change the token, allow a second device, close the sitting, and accept or reject a late record of an attempt in it | Planned |
 | Exam author | A teacher and their exam | Changing and grading that exam, every proctor action of its sittings, and accepting or rejecting the late records of its attempts | Planned |
 | Shared practice | A student and a practice the student shared | School Insight, per topic, revocable by the student | Planned |
+| Visitor | An operator Person and its approved visit | Ending that visit (`visit.end`) | Live |
 
 ### Operators inside tenants
 
@@ -201,13 +222,24 @@ An operator enters a tenant through a visit: a temporary Auditor grant on a
 Person of kind operator, active only while the grant is. A visit grant is always
 the Auditor role, so no visit mints an Admin and approving one never needs
 `owner.manage`. The school's Owner or Admin approves each visit, and the grant
-lasts at most 24 hours. The visit's end, by schedule, by leaving, by the school
-revoking it, or by the operator losing their operator row, ends the grant and
-suspends that Person in the same transaction, so the member middleware refuses
-it at once. These end paths run in a suspended tenant (see Decisions), and the
-grant change records which one ended the visit (ADR 0016). An operator Person
-never holds the `member` relation and counts only the grants an operator gave
-for a visit.
+lasts at most 24 hours. `access/temporary` gives a temporary grant with
+`assignTemporaryRole`, and refuses an Owner or Admin role (`TEMPORARY_ROLE`), a
+Person that is not an operator (`PERSON_KIND`), and an inactive Person. The
+visit's end, by schedule, by the operator leaving, by the school ending it, or
+by the operator's account being deleted, ends the grant and suspends that Person
+in the same transaction, so the member middleware refuses it at once. Each end
+is a `transition` (see Decisions), so a suspended tenant does not refuse it. The
+grant change records the reason (`left` when the operator leaves or deletes its
+account, `revoked` when the school ends it, `expired` at its term) and the visit
+records the same reason (ADR 0016). An end writes a grant or a Person only while
+it is active, so a Person that a removal ended stays removed.
+
+An operator whose operator row is revoked is refused at once: the member
+middleware refuses its Person, so the grant stops working whatever its term.
+The grant and the Person end at the visit's own end, by its schedule or by the
+hourly sweep, because a revoke would otherwise read every tenant the operator
+is inside (ADR 0011, Operators). An operator Person never holds the `member`
+relation and counts only the grants an operator gave for a visit.
 
 ### Wire contracts
 

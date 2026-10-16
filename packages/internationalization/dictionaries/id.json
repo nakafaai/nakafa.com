@@ -425,6 +425,8 @@
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
     "provider-error": "Kami tidak dapat melanjutkan dengan Google. Coba lagi.",
+    "sign-in-title": "Masuk ke Nakafa",
+    "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",
     "login": "Masuk",
     "login-cta-title": "Lanjutkan belajarmu",
@@ -740,6 +742,7 @@
       "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
       "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",
       "attachment-size": "Total ukuran dokumen dalam satu pesan paling banyak 10 MB. Hapus salah satu dokumen atau kirim dalam pesan terpisah.",
+      "message-size": "Pesan ini terlalu panjang untuk dibaca Nina dalam satu giliran. Persingkat, atau kirim sisanya dalam pesan baru.",
       "attachment-failed": "Nina belum bisa membaca atau menyimpan lampiran. Coba unggah lagi.",
       "provider-busy": "Layanan AI sedang menerima terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.",
       "provider-unavailable": "Layanan AI sedang mengalami gangguan sementara. Coba lagi sebentar lagi.",
@@ -1027,7 +1030,7 @@
     "terms-and-policies": "Syarat dan Kebijakan",
     "terms-of-service": "Syarat dan Ketentuan",
     "privacy-policy": "Kebijakan Privasi",
-    "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
+    "legal-description": "Dengan masuk, kamu setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> serta <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "AnalyticsConsent": {
     "title": "Data penggunaan",

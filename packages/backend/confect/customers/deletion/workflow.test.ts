@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/confect/customers/deletion/workflow";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Clock, Data, Effect } from "effect";
 
@@ -47,6 +48,7 @@ describe("customers/deletion/workflow", () => {
                   creditsResetAt: 0,
                   deletedAt,
                   email: "deleted@example.com",
+                  mascot: MASCOT_CODE,
                   name: "Deleted User",
                   plan: "free",
                 })
@@ -106,6 +108,7 @@ describe("customers/deletion/workflow", () => {
                   credits: 0,
                   creditsResetAt: 0,
                   email: "removed@example.com",
+                  mascot: MASCOT_CODE,
                   name: "Removed User",
                   plan: "free",
                 })
@@ -164,6 +167,7 @@ describe("customers/deletion/workflow", () => {
             creditsResetAt: 0,
             deletedAt,
             email: "failing@example.com",
+            mascot: MASCOT_CODE,
             name: "Failing User",
             plan: "free",
           })

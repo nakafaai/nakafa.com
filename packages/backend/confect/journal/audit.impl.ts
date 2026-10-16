@@ -90,6 +90,7 @@ const list = FunctionImpl.make(
           Effect.orDie,
           Effect.flatMap(
             TenantActor.match({
+              operator: (actor) => Effect.succeed(Struct.pick(actor, ["kind"])),
               person: (actor) =>
                 Effect.map(nameOf(actor.id), (name) =>
                   Struct.assign(actor, { name })

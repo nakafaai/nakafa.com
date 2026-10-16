@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 18, 0, 0);
@@ -36,6 +37,7 @@ describe("triggers/comments/comments", () => {
           credits: 0,
           creditsResetAt: NOW,
           email: `voter-${index}@example.com`,
+          mascot: MASCOT_CODE,
           name: `Voter ${index}`,
           plan: "free",
         });

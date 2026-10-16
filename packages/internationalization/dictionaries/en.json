@@ -425,6 +425,8 @@
     "continue-with-google": "Continue with Google",
     "opening-google": "Opening Google...",
     "provider-error": "We couldn't continue with Google. Please try again.",
+    "sign-in-title": "Sign in to Nakafa",
+    "sign-in-description": "So your progress stays saved.",
     "logout": "Logout",
     "login": "Login",
     "login-cta-title": "Continue learning",
@@ -740,6 +742,7 @@
       "attachment-invalid": "An attachment is invalid or no longer available. Choose it again and check its file type and size.",
       "attachment-limit": "You have reached the attachment limit. Send the files already uploaded or wait before uploading more.",
       "attachment-size": "The documents in one message can be at most 10 MB together. Remove a document or send them in separate messages.",
+      "message-size": "This message is too long for Nina to read in one turn. Shorten it, or send the rest in a new message.",
       "attachment-failed": "Nina could not read or save the attachment. Please try uploading it again.",
       "provider-busy": "The AI service is handling too many requests right now. Wait a moment, then try again.",
       "provider-unavailable": "The AI service is temporarily unavailable. Please try again shortly.",
@@ -1027,7 +1030,7 @@
     "terms-and-policies": "Terms and Policies",
     "terms-of-service": "Terms of Service",
     "privacy-policy": "Privacy Policy",
-    "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
+    "legal-description": "By signing in, you agree to the <terms-of-service>Terms of Service</terms-of-service> and the <privacy-policy>Privacy Policy</privacy-policy>."
   },
   "AnalyticsConsent": {
     "title": "Usage data",

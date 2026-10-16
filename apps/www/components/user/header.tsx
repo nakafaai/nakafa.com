@@ -5,6 +5,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import { Settings01Icon } from "@hugeicons/core-free-icons";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Animal } from "@repo/design-system/components/ui/animal";
 import {
   Avatar,
   AvatarFallback,
@@ -16,7 +17,6 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { useViewer } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/identity/initials";
 
 export function UserHeader({
   userId,
@@ -56,9 +56,7 @@ export function UserHeader({
               role="presentation"
               src=""
             />
-            <AvatarFallback>
-              {getInitialName(tCommon("anonymous"))}
-            </AvatarFallback>
+            <AvatarFallback />
           </Avatar>
           <div className="grid text-left">
             <span className="truncate font-semibold text-base sm:text-lg">
@@ -82,7 +80,9 @@ export function UserHeader({
             role="presentation"
             src={user.image ?? ""}
           />
-          <AvatarFallback>{getInitialName(user.name)}</AvatarFallback>
+          <AvatarFallback>
+            <Animal mascot={user.mascot} />
+          </AvatarFallback>
         </Avatar>
         <div className="grid text-left">
           <span className="truncate font-semibold text-base sm:text-lg">

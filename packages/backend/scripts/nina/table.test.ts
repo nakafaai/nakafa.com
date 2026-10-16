@@ -1,8 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  languageModelId,
-  providerId,
-} from "@repo/backend/confect/gateway/model";
+import { languageModel, providerId } from "@repo/backend/confect/gateway/model";
 import type { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
 import { renderTable } from "@repo/backend/scripts/nina/table";
 import type { ChatStep, GateTurn } from "@repo/backend/scripts/nina/verdict";
@@ -16,7 +13,7 @@ function usage(agent: Usage["agent"], fields: Partial<Usage> = {}): Usage {
     agent,
     calls: 1,
     input: 1000,
-    model: languageModelId,
+    model: languageModel.id,
     output: 100,
     provider: providerId,
     ...fields,

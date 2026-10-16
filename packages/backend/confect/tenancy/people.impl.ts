@@ -1,8 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type {
-  TenantCohortMembersDoc,
-  TenantPeopleDoc,
-} from "@repo/backend/confect/_generated/docs";
+import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -10,7 +7,6 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { revokeGrant } from "@repo/backend/confect/access/grant";
-import { activeGrants } from "@repo/backend/confect/access/policy";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -20,11 +16,9 @@ import {
   personAccess,
   personAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { replaceInviteState } from "@repo/backend/confect/tenancy/invite";
 import spec from "@repo/backend/confect/tenancy/people.spec";
-import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
-import { releaseAccount } from "@repo/backend/confect/tenancy/release";
-import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
+import { removePerson } from "@repo/backend/confect/tenancy/remove";
+import { Array as Arr, Effect, Layer, Struct } from "effect";
 
 /** One Person as the school's list shows them. */
 const view = (person: TenantPeopleDoc) => ({
@@ -113,31 +107,10 @@ const rename = FunctionImpl.make(
 );
 
 /**
- * Whether a placement is history that removal keeps: its period or its cohort is
- * archived, so it stays as the record of where the Person was placed.
- */
-const isHistory = Effect.fn("tenancy.people.history")(function* (
-  placement: TenantCohortMembersDoc
-) {
-  const reader = yield* DatabaseReader;
-  const term = yield* reader
-    .table("tenantPeriods")
-    .get(placement.periodId)
-    .pipe(Effect.orDie);
-  const cohort = yield* reader
-    .table("tenantCohorts")
-    .get(placement.cohortId)
-    .pipe(Effect.orDie);
-  return term.status === "archived" || cohort.status === "archived";
-});
-
-/**
  * Removes one Person. Each standing grant ends through the access lane's revoke
- * path, and each cohort placement ends unless it is history. The pending invite
- * is revoked, and the account is released as account deletion releases it, so
- * the account can be invited again. The Person then refuses every write, and a
- * claimed account loses the school at once, because membership needs an active
- * Person.
+ * path, and the rest of the removal is shared with the operator's replacement
+ * of an Owner. The Person then refuses every write, and a claimed account loses
+ * the school at once, because membership needs an active Person.
  */
 const remove = FunctionImpl.make(
   databaseSchema,
@@ -146,49 +119,10 @@ const remove = FunctionImpl.make(
   Effect.fn("tenancy.people.remove")(function* () {
     const { person: actor } = yield* Member;
     const person = yield* Person;
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
     const by = personActor(actor);
-    const at = yield* Clock.currentTimeMillis;
-    yield* Effect.forEach(
-      yield* activeGrants(person._id),
-      (grant) => revokeGrant(by, grant, person),
-      { discard: true }
+    return view(
+      yield* removePerson(by, person, (grant) => revokeGrant(by, grant, person))
     );
-    const placements = yield* reader
-      .table("tenantCohortMembers")
-      .index("by_personId", (query) => query.eq("personId", person._id))
-      .take(PERSON_PLACEMENT_LIMIT)
-      .pipe(Effect.orDie);
-    const ended = yield* Effect.filter(placements, (placement) =>
-      isHistory(placement).pipe(Effect.map((history) => !history))
-    );
-    yield* Effect.forEach(
-      ended,
-      (placement) =>
-        writer
-          .table("tenantCohortMembers")
-          .delete(placement._id)
-          .pipe(Effect.orDie),
-      { discard: true }
-    );
-    const pending = yield* reader
-      .table("tenantInvites")
-      .index("by_personId_and_state_status", (query) =>
-        query.eq("personId", person._id).eq("state.status", "pending")
-      )
-      .first()
-      .pipe(Effect.orDie);
-    if (Option.isSome(pending)) {
-      yield* replaceInviteState(pending.value, { at, status: "revoked" });
-      yield* personAuthority.record(by, person, {
-        invite: pending.value._id,
-        type: "invite.revoked",
-      });
-    }
-    const removed = yield* releaseAccount(person, "removed", at, by);
-    yield* personAuthority.record(by, person, { type: "person.removed" });
-    return view(removed);
   })
 );
 

@@ -10,15 +10,40 @@ import { VaultError } from "@repo/backend/confect/vault/schema";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Clock, Crypto, Effect, HashMap, Option } from "effect";
 
-const LEARNER_KEY_BYTES = 32;
+/** Bytes in every key that a root key wraps: a learner's key and a school's key. */
+const KEY_BYTES = 32;
+/** The generation of the first key that a school gets. */
+const FIRST_GENERATION = 1;
 
 type UserId = Docs["users"]["_id"];
+type TenantId = Docs["tenants"]["_id"];
 type Ring = Effect.Success<ReturnType<typeof readRing>>;
 
 /** What a wrapped learner key is bound to: it unwraps only for that learner. */
-function wrapBinding(userId: UserId) {
+export function wrapBinding(userId: UserId) {
   return encodeJsonText(["nakafa/vault/key/v1", userId]);
 }
+
+/**
+ * What a wrapped school key is bound to: one school and one generation. Its
+ * label differs from a learner's, so a key of either kind never unwraps as the
+ * other.
+ */
+export function tenantWrapBinding(tenantId: TenantId, generation: number) {
+  return encodeJsonText(["nakafa/vault/school-key/v1", tenantId, generation]);
+}
+
+/**
+ * Unwraps a stored key with the root key that its row names, for the binding it
+ * was wrapped under. Any failure, including an unknown root key, is reason `key`.
+ */
+export const unwrap = Effect.fn("vault.keys.unwrap")(
+  function* (ring: Ring, root: string, wrapped: ArrayBuffer, binding: string) {
+    const rootKey = yield* Effect.fromOption(HashMap.get(ring.keys, root));
+    return yield* open(rootKey, binding, wrapped);
+  },
+  Effect.mapError(() => new VaultError({ reason: "key" }))
+);
 
 /** Finds the stored key row of one learner. */
 const findKey = Effect.fn("vault.keys.find")(function* (userId: UserId) {
@@ -31,18 +56,24 @@ const findKey = Effect.fn("vault.keys.find")(function* (userId: UserId) {
     );
 });
 
-/** Unwraps a stored learner key with the root key that wrapped it. */
-const unwrap = Effect.fn("vault.keys.unwrap")(
-  function* (ring: Ring, row: Docs["vaultKeys"]) {
-    const root = yield* Effect.fromOption(HashMap.get(ring.keys, row.root));
-    return yield* open(root, wrapBinding(row.userId), row.wrapped);
-  },
-  Effect.mapError(() => new VaultError({ reason: "key" }))
-);
+/** Finds the newest key row of one school, the generation that seals its text. */
+const findTenantKey = Effect.fn("vault.keys.findTenant")(function* (
+  tenantId: TenantId
+) {
+  return yield* (yield* DatabaseReader)
+    .table("tenantKeys")
+    .index(
+      "by_tenantId_and_generation",
+      (query) => query.eq("tenantId", tenantId),
+      "desc"
+    )
+    .first()
+    .pipe(Effect.orDie);
+});
 
 /**
- * Reads a learner's keys to open sealed values. It fails with reason `key`
- * when the learner has no key: nothing was sealed yet, or the key was shredded.
+ * Reads a learner's keys to open sealed values. It fails with reason `key` when
+ * the learner has no key: nothing was sealed yet, or the key was shredded.
  */
 export const readLearnerKeys = Effect.fn("vault.keys.read")(function* (
   userId: UserId
@@ -51,8 +82,36 @@ export const readLearnerKeys = Effect.fn("vault.keys.read")(function* (
   if (!row) {
     return yield* new VaultError({ reason: "key" });
   }
-  const key = yield* unwrap(yield* readRing(), row);
+  const key = yield* unwrap(
+    yield* readRing(),
+    row.root,
+    row.wrapped,
+    wrapBinding(userId)
+  );
   return { ...(yield* deriveKeys(key)), userId };
+});
+
+/**
+ * Reads a school's keys to open and seal its text, from its newest generation.
+ * It fails with reason `key` when the school has no key. Provisioning writes the
+ * first key together with the school, so a school without one is a defect in
+ * its data (ADR 0030).
+ */
+export const readTenantKeys = Effect.fn("vault.keys.readTenant")(function* (
+  tenantId: TenantId
+) {
+  const row = yield* findTenantKey(tenantId);
+  if (Option.isNone(row)) {
+    return yield* new VaultError({ reason: "key" });
+  }
+  const { generation, root, wrapped } = row.value;
+  const key = yield* unwrap(
+    yield* readRing(),
+    root,
+    wrapped,
+    tenantWrapBinding(tenantId, generation)
+  );
+  return { ...(yield* deriveKeys(key)), generation, tenantId };
 });
 
 /**
@@ -66,7 +125,7 @@ export const ensureLearnerKeys = Effect.fn("vault.keys.ensure")(function* (
   const ring = yield* readRing();
   const row = yield* findKey(userId);
   if (row) {
-    const key = yield* unwrap(ring, row);
+    const key = yield* unwrap(ring, row.root, row.wrapped, wrapBinding(userId));
     return { ...(yield* deriveKeys(key)), userId };
   }
   // A write that outlives its account must not give a deleted learner a new
@@ -82,7 +141,7 @@ export const ensureLearnerKeys = Effect.fn("vault.keys.ensure")(function* (
     return yield* new VaultError({ reason: "key" });
   }
   const key = yield* (yield* Crypto.Crypto)
-    .randomBytes(LEARNER_KEY_BYTES)
+    .randomBytes(KEY_BYTES)
     .pipe(Effect.orDie);
   yield* (yield* DatabaseWriter)
     .table("vaultKeys")
@@ -94,6 +153,34 @@ export const ensureLearnerKeys = Effect.fn("vault.keys.ensure")(function* (
     })
     .pipe(Effect.orDie);
   return { ...(yield* deriveKeys(key)), userId };
+}, Effect.provide(WebCryptoLayer));
+
+/**
+ * Creates generation 1 of a school's key: 32 random bytes, stored only wrapped
+ * by the current root key. Provisioning calls it in the transaction that inserts
+ * the school, so no school exists without a key.
+ */
+export const createTenantKey = Effect.fn("vault.keys.createTenant")(function* (
+  tenantId: TenantId
+) {
+  const ring = yield* readRing();
+  const key = yield* (yield* Crypto.Crypto)
+    .randomBytes(KEY_BYTES)
+    .pipe(Effect.orDie);
+  yield* (yield* DatabaseWriter)
+    .table("tenantKeys")
+    .insert({
+      createdAt: yield* Clock.currentTimeMillis,
+      generation: FIRST_GENERATION,
+      root: ring.current.id,
+      tenantId,
+      wrapped: yield* seal(
+        ring.current.keys,
+        tenantWrapBinding(tenantId, FIRST_GENERATION),
+        key
+      ),
+    })
+    .pipe(Effect.orDie);
 }, Effect.provide(WebCryptoLayer));
 
 /**
@@ -113,55 +200,4 @@ export const shredLearnerKeys = Effect.fn("vault.keys.shred")(function* (
     .delete(row._id)
     .pipe(Effect.orDie);
   return true;
-});
-
-/**
- * Moves one page of learner keys from a retired root key to the current one.
- * Sealed values do not change: only the wrapping of each learner key does.
- * It returns how many keys it moved; zero means every learner key is wrapped
- * by the current root key, so the retired root keys can leave
- * `VAULT_ROOT_KEYS` and be destroyed. It fails with reason `key` while a
- * learner key names a root key that is not in the environment: such a key
- * cannot be moved, and reporting zero would hide it.
- */
-export const rewrapLearnerKeys = Effect.fn("vault.keys.rewrap")(function* (
-  limit: number
-) {
-  const ring = yield* readRing();
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  for (const retired of ring.retired) {
-    const rows = yield* reader
-      .table("vaultKeys")
-      .index("by_root", (query) => query.eq("root", retired))
-      .take(limit)
-      .pipe(Effect.orDie);
-    for (const row of rows) {
-      const key = yield* unwrap(ring, row);
-      yield* writer
-        .table("vaultKeys")
-        .patch(row._id, {
-          root: ring.current.id,
-          wrapped: yield* seal(ring.current.keys, wrapBinding(row.userId), key),
-        })
-        .pipe(Effect.orDie);
-    }
-    if (rows.length > 0) {
-      return rows.length;
-    }
-  }
-  const before = yield* reader
-    .table("vaultKeys")
-    .index("by_root", (query) => query.lt("root", ring.current.id))
-    .first()
-    .pipe(Effect.orDie);
-  const after = yield* reader
-    .table("vaultKeys")
-    .index("by_root", (query) => query.gt("root", ring.current.id))
-    .first()
-    .pipe(Effect.orDie);
-  if (Option.isSome(before) || Option.isSome(after)) {
-    return yield* new VaultError({ reason: "key" });
-  }
-  return 0;
 });

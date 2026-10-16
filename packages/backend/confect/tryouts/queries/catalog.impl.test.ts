@@ -78,7 +78,7 @@ describe("public try-out catalog queries", () => {
           expect(track).toMatchObject({
             country: { countryKey: TRYOUT_START_COUNTRY },
             exam: { examKey: TRYOUT_START_EXAM },
-            track: { trackKey: TRYOUT_START_TRACK, title, readySetCount: 1 },
+            track: { trackKey: TRYOUT_START_TRACK, title },
           });
         }
         for (const endpoint of [

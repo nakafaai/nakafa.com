@@ -5,6 +5,7 @@ import {
   Cancel01Icon,
   Login01Icon,
 } from "@hugeicons/core-free-icons";
+import { Animal } from "@repo/design-system/components/ui/animal";
 import {
   Avatar,
   AvatarFallback,
@@ -20,7 +21,6 @@ import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState, useTransition } from "react";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
-import { getInitialName } from "@/lib/identity/initials";
 
 interface Props {
   closeButton?: {
@@ -137,8 +137,8 @@ function UserAvatar() {
     >
       <Avatar className="size-8">
         <AvatarImage alt={user.authUser.name} src={user.authUser.image ?? ""} />
-        <AvatarFallback className="text-xs">
-          {getInitialName(user.authUser.name)}
+        <AvatarFallback>
+          <Animal mascot={user.appUser.mascot} />
         </AvatarFallback>
       </Avatar>
       <p className="max-w-36 truncate text-muted-foreground text-sm">

@@ -104,6 +104,11 @@ export const ninaFailureFeedback = {
   },
   NINA_WRITE_FAILED: { message: "admission", action: "edit", report: true },
   NINA_CONTEXT_FAILED: { message: "context", action: "edit", report: true },
+  NINA_MESSAGE_SIZE: {
+    message: "message-size",
+    action: "edit",
+    report: false,
+  },
   NINA_UPLOAD_INVALID: {
     message: "attachment-invalid",
     action: "edit",

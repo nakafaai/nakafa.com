@@ -44,9 +44,11 @@ const getCommentsBySlug = FunctionImpl.make(
         return {
           ...comment,
           viewerVote: Option.getOrNull(HashMap.get(viewerVotes, comment._id)),
-          user: user ? Struct.pick(user, ["_id", "image", "name"]) : null,
+          user: user
+            ? Struct.pick(user, ["_id", "image", "mascot", "name"])
+            : null,
           replyToUser: replyToUser
-            ? Struct.pick(replyToUser, ["_id", "image", "name"])
+            ? Struct.pick(replyToUser, ["_id", "image", "mascot", "name"])
             : null,
         };
       }),

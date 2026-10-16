@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import {
+  foldWithin,
   HISTORY_TURNS,
   nextSummaryTarget,
 } from "@repo/backend/confect/nina/fold";
@@ -359,5 +360,33 @@ describe("Nina fold by size", () => {
     expect(await f.summary()).toEqual([
       expect.objectContaining({ throughOrder: 0 }),
     ]);
+  });
+});
+
+describe("Nina summary fold within its transcript budget", () => {
+  it("covers the target when every turn fits the transcript budget", () => {
+    expect(foldWithin(costs(0, 3, 10), 40, 3)).toBe(3);
+  });
+
+  it("stops at the newest turn that fits, and the next fold covers the rest", () => {
+    // Four turns of ten tokens fit twenty-five tokens as two turns, not three.
+    expect(foldWithin(costs(0, 3, 10), 25, 3)).toBe(1);
+  });
+
+  it("still folds its first turn when that turn alone outgrows the budget", () => {
+    expect(
+      foldWithin(
+        [
+          { order: 4, tokens: 90 },
+          { order: 5, tokens: 5 },
+        ],
+        50,
+        5
+      )
+    ).toBe(4);
+  });
+
+  it("covers the target when no turn is left to fold", () => {
+    expect(foldWithin([], 50, 7)).toBe(7);
   });
 });
