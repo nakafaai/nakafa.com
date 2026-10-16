@@ -15,7 +15,7 @@ const QURAN_MAX_ENCODED_BYTES = 1_147_000;
 const QURAN_MAX_DECODED_BYTES = 3_381_000;
 
 // The sign-in page, with the animal pool that a wide screen loads: measured at
-// 515,136 encoded / 1,545,217 decoded bytes. Limits keep the ~6% margin.
+// 515,493 encoded / 1,546,566 decoded bytes. Limits keep the ~6% margin.
 const AUTH_MAX_ENCODED_BYTES = 547_000;
 const AUTH_MAX_DECODED_BYTES = 1_638_000;
 
