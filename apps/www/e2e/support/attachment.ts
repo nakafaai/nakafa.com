@@ -117,22 +117,27 @@ export const pickFiles = Effect.fn("NakafaE2E.pickFiles")(function* (
 ) {
   yield* Effect.promise(async () => {
     const chooser = scope.page().waitForEvent("filechooser");
-    await scope.getByRole("button", { name: en.Ai["attach-files"] }).click();
+    await scope.getByRole("button", { name: ENGLISH.attach }).click();
     await (await chooser).setFiles([...files]);
   });
 });
 
 /**
- * Opens the new chat page of the English site as a visitor, who can choose
- * files and write without signing in, and returns its composer.
+ * Opens a chat page as a visitor, who can choose files and write without
+ * signing in, and returns its composer. The new chat of the English site, read
+ * with the English labels, unless another page and its labels are given.
  */
 export const openComposer = Effect.fn("NakafaE2E.openComposer")(function* (
-  page: Page
+  page: Page,
+  path = CHAT_PATH,
+  labels = ENGLISH
 ) {
   yield* seedAnalyticsConsent(page, "denied");
-  yield* Effect.promise(() => page.goto(CHAT_PATH));
+  yield* Effect.promise(() => page.goto(path));
   const composer = page.locator("main");
-  yield* Effect.promise(() => expect(composerOf(composer)).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(composerOf(composer, labels)).toBeVisible()
+  );
   return composer;
 });
 

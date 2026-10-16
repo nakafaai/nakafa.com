@@ -12,8 +12,10 @@ import {
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
+/** The new chat page of a language of the site. */
+export const chatPathOf = (locale: DeclineLocale) => `/${locale}/chat`;
 /** The new chat page of the English site. */
-export const CHAT_PATH = "/en/chat";
+export const CHAT_PATH = chatPathOf("en");
 /** A lesson, where Nina's sheet opens beside the page. */
 export const LESSON_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -228,7 +230,7 @@ export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   const changes = yield* trackChanges(page, [LIST_QUERY]);
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
-  yield* Effect.promise(() => page.goto(`/${locale}/chat`));
+  yield* Effect.promise(() => page.goto(chatPathOf(locale)));
 
   // The server took the learner's choice, so the page was signed in and its
   // connection to the backend is open.

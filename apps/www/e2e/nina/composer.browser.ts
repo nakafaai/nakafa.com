@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, HashSet } from "effect";
-import { composerOf, GERMAN, runPage } from "@/e2e/support/attachment";
-import { CHAT_PATH } from "@/e2e/support/chat";
+import { GERMAN, openComposer, runPage } from "@/e2e/support/attachment";
+import { CHAT_PATH, chatPathOf } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -133,9 +133,6 @@ for (const width of [390, 1440]) {
   });
 }
 
-/** The chat page in German, where the composer's labels are German. */
-const CHAT_PATH_DE = "/de/chat";
-
 test.describe("The file picker of the composer in German", () => {
   test("is named in German, and the attach button opens it", async ({
     page,
@@ -143,12 +140,8 @@ test.describe("The file picker of the composer in German", () => {
     await runPage(
       page,
       Effect.gen(function* () {
-        yield* seedAnalyticsConsent(page, "denied");
-        yield* Effect.promise(() => page.goto(CHAT_PATH_DE));
-        const composer = page.locator("main");
-        yield* Effect.promise(() =>
-          expect(composerOf(composer, GERMAN)).toBeVisible()
-        );
+        // The new chat page in German, where the composer's labels are German.
+        const composer = yield* openComposer(page, chatPathOf("de"), GERMAN);
 
         yield* Effect.promise(async () => {
           const chooser = page.waitForEvent("filechooser");
