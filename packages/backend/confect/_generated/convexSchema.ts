@@ -11,6 +11,8 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
+import classTeachers from "./tables/classTeachers";
+import classes from "./tables/classes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
@@ -98,6 +100,8 @@ export default $defineSchema({
   articleCategories: $Table.tableDefinition(articleCategories),
   chatShares: $Table.tableDefinition(chatShares),
   chats: $Table.tableDefinition(chats),
+  classTeachers: $Table.tableDefinition(classTeachers),
+  classes: $Table.tableDefinition(classes),
   commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),

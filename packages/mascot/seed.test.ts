@@ -1,13 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
-import { decode, encode, type Mascot } from "@repo/mascot/code";
+import { encode, type Mascot, MascotCode } from "@repo/mascot/code";
 import { contrast } from "@repo/mascot/ground";
 import { cast, forSeed, gallery, reroll } from "@repo/mascot/seed";
-import { Array as Arr, Result } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** The mascot of a code that is known to be good. */
 function mascotOf(code: string) {
-  return Result.getOrThrow(decode(code));
+  return Schema.decodeSync(MascotCode)(code);
 }
 
 /** Whether the animal of a mascot stands out from its ground. */

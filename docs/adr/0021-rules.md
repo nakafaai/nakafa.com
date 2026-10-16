@@ -27,7 +27,7 @@ It never gets an allowlist, a baseline, or a suppression.
 | `strictEffectProvide` | 1,576 | The rule expects a disable comment at every real entry point. Each Convex function, route handler, script main, and test provides its layer at its own entry point (412 files), and this repository has no disable comments. `multipleEffectProvide` is an error |
 | `schemaSync` | 531 | 486 are test fixtures, where no Effect runner may run, and the rest sit in a synchronous render, a module-level constant, or a plain helper, where the Result form would only spell the same throw differently. `schemaSyncInEffect` is an error, so a synchronous codec inside an Effect is rejected |
 | `processEnv` | 89 | Next.js inlines only a literal `process.env.NAME` read into the browser bundle and defines `NEXT_RUNTIME` per compile, so the environment contract modules pass literal reads to `readEnvironment`. The source rule `env` judges every other read |
-| `nodeBuiltinImport` | 22 | Framework configuration needs a Node path, and one test server must be a Node `http.Server`. The source rule `node-module` judges the file, path, and process modules |
+| `nodeBuiltinImport` | | Framework configuration needs a Node path, a platform HTTP server needs Node's `createServer`, and a fixture that signs synchronously needs Node's Ed25519 `sign`. The source rule `node-module` judges nine Node modules and keeps those three places by construction |
 | `unstableApiUsage`, `experimentalApiUsage`, `apiStabilityLeak` | | Effect moves as one exact cohort that is reviewed at every upgrade, so an unstable Effect module in a signature is not a leak here |
 
 ### Source rules for raw TypeScript forms
@@ -102,20 +102,44 @@ function is in the page too, and a nested function with the same name is
 ordinary code. The page keeps its platform globals, native syntax, shapes, and
 throws, but `switch` statements and assertions are still reported there.
 
+### Node modules that Effect and the platform replace
+
+`node-module` reports every load of nine Node modules, with or without the
+`node:` prefix and with any subpath such as `fs/promises`, also through
+`require`, `createRequire`, a dynamic import, and `process.getBuiltinModule`.
+A module counts by its name, so `fs-extra`, `crypto-js`, and `./fs` stay.
+
+| Node module | Replacement |
+| --- | --- |
+| `fs`, `path`, `child_process` | `FileSystem`, `Path`, and `ChildProcess` from `effect`, provided by `NodeServices.layer` |
+| `crypto` | `Crypto` from `effect` for digests and random bytes; Web Crypto (`crypto.subtle`) for keys, signatures, and HMACs |
+| `buffer` | `Uint8Array`, `TextEncoder`, and `effect/encoding` |
+| `util` | `ConfigProvider.fromDotEnvContents` for the one function Nakafa used, `parseEnv` |
+| `os` | `navigator.hardwareConcurrency` for the core count, and `FileSystem.makeTempDirectoryScoped` for a temporary folder |
+| `net` | `NodeSocketServer` from `@effect/platform-node` |
+| `http` | `NodeHttpServer` from `@effect/platform-node` |
+
+The other Node modules that authored code loads (`url`, `module`, `dns`) are
+not judged yet. The rule has three constructions, each a module of one exact
+shape. Each judges every read of the name it keeps, not only its calls: a call,
+an alias, a handover to another function, and an export of the binding all read
+it. The import itself, a name in a re-export from another module, and a member
+of that name on another object, such as `factory.sign`, are no read. A read
+that is no call the shape allows, such as `const run = spawn`, keeps no import.
+
 ### A detached process service
 
-`node-module` reports every load of Node's file, path, and process modules, also
-through `require`, `createRequire`, a dynamic import, and
-`process.getBuiltinModule`. It has one construction: the import of `spawn` from
-`node:child_process` in a detached process service. All of these hold:
+The import of `spawn` from `node:child_process` stays in a detached process
+service. All of these hold:
 
 - The module imports `Context` and `Layer` from `effect`, declares a top-level
   class that extends `Context.Service<Self, Shape>()("Id")`, and builds that
   class's layer with `Layer.succeed`, `Layer.effect`, or `Layer.sync`.
 - The import declaration binds `spawn` under that name, and nothing else at run
   time.
-- The module calls `spawn`, and the last argument of every call is an object
-  literal with `detached: true`: each child leads a process group of its own.
+- Every read of `spawn` is a call, the module has at least one, and the last
+  argument of every call is an object literal with `detached: true`: each child
+  leads a process group of its own.
 
 Effect's spawner owns termination (4.0.2, `NodeChildProcessSpawner.ts`, lines
 549 to 568). When the scope closes it signals the child's process group, also
@@ -133,6 +157,51 @@ Every other load of the process module is still reported in such a module, and
 so are the file and path modules. A child that is not detached has no group to
 own, so Effect's `ChildProcess` starts it. When the spawner offers a way to own
 termination, the construction goes away.
+
+### A platform HTTP server
+
+The import of `createServer` from `node:http` stays in a module that serves
+with Effect's HTTP server for Node. `NodeHttpServer.make`, `layerServer`,
+`layer`, and `layerConfig` each take `evaluate: LazyArg<Http.Server>` as their
+first argument (4.0.2, `NodeHttpServer.ts`, lines 102, 450, 479, and 500), and
+`layerTest` builds the server with `Http.createServer` on port 0 (line 536), so
+it cannot serve on a port that was picked earlier. No layer builds the server
+without Node's constructor. All of these hold:
+
+- The import declaration binds `createServer` under that name, and nothing else
+  at run time.
+- The module imports `NodeHttpServer` from `@effect/platform-node`.
+- Every read of `createServer` is the first argument of a call of
+  `NodeHttpServer.make`, `layerServer`, `layer`, or `layerConfig`, and the
+  module has at least one. A member of that name on another object is no read.
+
+nakafa.com has two such modules: the analytics stand-in that acceptance serves
+on a saved port, and the test server of the CLI package. A free port that only
+has to be held or probed needs no server and uses `NodeSocketServer`. When a
+platform layer builds the server itself, the construction goes away.
+
+### A synchronous Ed25519 signer
+
+The imports of `generateKeyPairSync` and `sign` from `node:crypto` stay in a
+fixture that signs with Ed25519 as its module loads. Effect's `Crypto` has
+digests and random bytes and no signing (4.0.2, `Crypto.ts`), and
+`crypto.subtle.sign` returns a Promise. The technical signed artifacts,
+releases, and bundles of the backend tests come from
+`packages/backend/test/content/proof.ts`: 77 calls in 40 modules, 15 of them
+declared at the top level of a module, so signing them asynchronously would
+change every one of those modules. All of these hold:
+
+- The import declaration binds `generateKeyPairSync` and `sign`, under any local
+  names, and nothing else at run time.
+- Every read of the first is a call that makes an `ed25519` key pair, and every
+  read of the second is a call that passes `null` as its digest, which is how
+  Node signs with Ed25519.
+- The module makes at least one such call.
+
+Hashes, HMACs, random bytes, and every other key type are still reported, so
+they go to `Crypto` and Web Crypto. Two modules use the construction:
+`proof.ts` and `confect/contentRelease/ingress/stage.test.ts`. When the signed
+fixtures become Effects, the construction goes away.
 
 ### Promise syntax
 

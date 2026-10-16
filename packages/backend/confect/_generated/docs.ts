@@ -11,6 +11,8 @@ export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "arti
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
 export type ChatSharesDoc = Document.Document<typeof schemaDefinition, "chatShares">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
+export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "classTeachers">;
+export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
 export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
 export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefinition, "contentAnalyticsPartitions">;
@@ -98,6 +100,8 @@ export interface Docs {
   articleCategories: ArticleCategoriesDoc;
   chatShares: ChatSharesDoc;
   chats: ChatsDoc;
+  classTeachers: ClassTeachersDoc;
+  classes: ClassesDoc;
   commentVotes: CommentVotesDoc;
   comments: CommentsDoc;
   contentAnalyticsPartitions: ContentAnalyticsPartitionsDoc;
