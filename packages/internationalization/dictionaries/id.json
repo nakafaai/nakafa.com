@@ -865,9 +865,6 @@
         "range": "Jangkauan",
         "peak-height": "Tinggi puncak"
       },
-      "quadratic": {
-        "view": "Grafik fungsi kuadrat"
-      },
       "atom": {
         "choose": "Pilih atom netral",
         "atomic-number": "Nomor atom",

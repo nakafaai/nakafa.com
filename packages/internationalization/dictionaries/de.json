@@ -865,9 +865,6 @@
         "range": "Wurfweite",
         "peak-height": "Maximale Höhe"
       },
-      "quadratic": {
-        "view": "Graph einer quadratischen Funktion"
-      },
       "atom": {
         "choose": "Neutrales Atom auswählen",
         "atomic-number": "Ordnungszahl",

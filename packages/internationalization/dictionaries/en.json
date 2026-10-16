@@ -865,9 +865,6 @@
         "range": "Range",
         "peak-height": "Peak height"
       },
-      "quadratic": {
-        "view": "Graph of a quadratic function"
-      },
       "atom": {
         "choose": "Choose a neutral atom",
         "atomic-number": "Atomic number",
