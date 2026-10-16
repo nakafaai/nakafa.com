@@ -2552,6 +2552,38 @@ export declare const api: {
       };
     };
   };
+  identity: {
+    cards: {
+      issue: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; personId: Id<"tenantPeople">; slug: string },
+        { code: string; expiresAt: number; loginName: string }
+      >;
+      redeem: FunctionReference<
+        "mutation",
+        "public",
+        { code: string; deviceId: string; password: string; slug: string },
+        | { loginName: string; outcome: "redeemed" }
+        | {
+            outcome: "refused";
+            reason:
+              | "expired"
+              | "invalid"
+              | "passwordTooLong"
+              | "passwordTooShort"
+              | "rateLimited"
+              | "used";
+          }
+      >;
+      reissue: FunctionReference<
+        "mutation",
+        "public",
+        { personId: Id<"tenantPeople">; slug: string },
+        { code: string; expiresAt: number; loginName: string }
+      >;
+    };
+  };
   journal: {
     audit: {
       list: FunctionReference<
@@ -2594,6 +2626,7 @@ export declare const api: {
                   key: "emailDomains" | "nina" | "studentThreads";
                   type: "tenant.policy.set";
                 }
+              | { reason: "domain"; type: "identity.blocked" }
               | { type: "unit.created" }
               | {
                   contentLanguage: "en" | "id" | "de";
@@ -2608,7 +2641,10 @@ export declare const api: {
                   reason?: "break-glass";
                   type: "person.invited";
                 }
-              | { method: "invite" | "operator"; type: "person.claimed" }
+              | {
+                  method: "card" | "invite" | "operator";
+                  type: "person.claimed";
+                }
               | { type: "person.released" }
               | { reason?: "break-glass"; type: "person.removed" }
               | { type: "person.renamed" }
@@ -2621,6 +2657,9 @@ export declare const api: {
               | { invite: Id<"tenantInvites">; type: "invite.expired" }
               | { invite: Id<"tenantInvites">; type: "invite.resent" }
               | { invite: Id<"tenantInvites">; type: "invite.revoked" }
+              | { card: Id<"loginCards">; type: "card.issued" }
+              | { card: Id<"loginCards">; type: "card.reissued" }
+              | { card: Id<"loginCards">; type: "card.redeemed" }
               | { type: "period.created" }
               | { type: "period.opened" }
               | { type: "period.archived" }
