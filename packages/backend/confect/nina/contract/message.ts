@@ -1,5 +1,4 @@
 import { PaginationResult } from "@confect/core";
-import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Schema } from "effect";
 
 /**
@@ -20,8 +19,12 @@ const StreamStatus = Schema.Literals(["streaming", "finished", "aborted"]);
 /** Stream formats stored by the Agent component. */
 const StreamFormat = Schema.Literals(["UIMessageChunk", "TextStreamPart"]);
 
-/** Agent owns part decoding and delta assembly; Confect validates its envelope. */
-const AgentMessage = Schema.Struct({
+/**
+ * Agent owns part decoding and delta assembly; Confect validates its envelope.
+ * A message holds nothing of its turn: `conversation.turns` tells where a turn
+ * stands and what it cost.
+ */
+export const AgentMessage = Schema.Struct({
   id: Schema.String,
   key: Schema.String,
   order: Schema.Finite,
@@ -30,11 +33,23 @@ const AgentMessage = Schema.Struct({
   role: Schema.Literals(["user", "assistant", "system"]),
   text: Schema.String,
   parts: Schema.mutable(Schema.Array(Schema.Unknown)),
-  metadata: Schema.optional(NinaTurnSummary),
   agentName: Schema.optional(Schema.String),
   userId: Schema.optional(Schema.String),
   _creationTime: Schema.Finite,
 });
+
+/**
+ * Characters the id of a row of the Agent component holds at most. A caller
+ * names such a row, a thread or a stream, as text, because this app's schema
+ * does not hold the component's tables. A Convex document id is at most 23
+ * bytes (a table number of up to 5 bytes, 16 bytes of id and a 2 byte
+ * checksum), which its base32 writes in 37 characters (`id_v6.rs` and
+ * `base32.rs` in get-convex/convex-backend).
+ */
+export const AGENT_ID_LENGTH = 37;
+
+/** The id of a thread or a stream of the Agent component, as a caller names it. */
+export const AgentId = Schema.String.check(Schema.isMaxLength(AGENT_ID_LENGTH));
 
 export const StreamRequest = Schema.Union([
   Schema.Struct({
@@ -48,7 +63,7 @@ export const StreamRequest = Schema.Union([
     cursors: Schema.mutable(
       Schema.Array(
         Schema.Struct({
-          streamId: Schema.String,
+          streamId: AgentId,
           cursor: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
         })
       ).check(Schema.isMaxLength(100))

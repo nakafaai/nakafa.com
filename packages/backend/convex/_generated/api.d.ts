@@ -3027,6 +3027,77 @@ export declare const api: {
           } | null;
         }
       >;
+      turns: FunctionReference<
+        "query",
+        "public",
+        {
+          chatId: Id<"chats">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          shareToken?: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            credits?: number;
+            order: number;
+            promptMessageId: string;
+            promptedAt?: number;
+            remembered?: number;
+            state:
+              | { status: "queued" }
+              | { startedAt: number; status: "running" }
+              | { finishedAt: number; status: "complete" }
+              | {
+                  finishedAt: number;
+                  reason?:
+                    | "provider-busy"
+                    | "provider-unavailable"
+                    | "service-configuration"
+                    | "request-rejected"
+                    | "input-too-large"
+                    | "response-timeout"
+                    | "content-blocked"
+                    | "response-limit"
+                    | "interrupted"
+                    | "unknown";
+                  status: "failed";
+                }
+              | { finishedAt: number; status: "cancelled" };
+            suggestions?: Array<string>;
+            tokens?: { input?: number; output?: number; total?: number };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair"
+                | "memory";
+              cached?: number;
+              calls: number;
+              cost?: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+              reasoning?: number;
+            }>;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
     };
     lifecycle: {
       cancel: FunctionReference<
@@ -3187,6 +3258,73 @@ export declare const api: {
                 reasoning?: number;
               }>;
             };
+            order: number;
+            parts: Array<any>;
+            role: "user" | "assistant" | "system";
+            status: "streaming" | "pending" | "success" | "failed";
+            stepOrder: number;
+            text: string;
+            userId?: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+          streams:
+            | {
+                kind: "list";
+                messages: Array<{
+                  agentName?: string;
+                  format?: "UIMessageChunk" | "TextStreamPart";
+                  model?: string;
+                  order: number;
+                  provider?: string;
+                  providerOptions?: Record<string, Record<string, any>>;
+                  status: "streaming" | "finished" | "aborted";
+                  stepOrder: number;
+                  streamId: string;
+                  userId?: string;
+                }>;
+              }
+            | {
+                deltas: Array<{
+                  end: number;
+                  parts: Array<any>;
+                  start: number;
+                  streamId: string;
+                }>;
+                kind: "deltas";
+              };
+        }
+      >;
+      page: FunctionReference<
+        "query",
+        "public",
+        {
+          chatId: Id<"chats">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          shareToken?: string;
+          streamArgs?:
+            | { kind: "list"; startOrder?: number }
+            | {
+                cursors: Array<{ cursor: number; streamId: string }>;
+                kind: "deltas";
+              };
+          threadId: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            agentName?: string;
+            id: string;
+            key: string;
             order: number;
             parts: Array<any>;
             role: "user" | "assistant" | "system";
@@ -8847,6 +8985,60 @@ export declare const internal: {
     };
   };
   nina: {
+    brief: {
+      read: FunctionReference<
+        "query",
+        "internal",
+        {
+          chatId: Id<"chats">;
+          now: number;
+          order: number;
+          promptMessageId: string;
+          topics: Array<string>;
+          userId: Id<"users">;
+        },
+        {
+          learner: {
+            paused: boolean;
+            portrait?: string;
+            profile: {
+              focus?: "learning" | "tryout";
+              region?:
+                | "indonesia"
+                | "singapore"
+                | "united-kingdom"
+                | "germany"
+                | "united-states"
+                | "international";
+              tryout?: {
+                correct: number;
+                exam: string;
+                finishedAt: number;
+                score: number;
+                sections: Array<{
+                  correct: number;
+                  key: string;
+                  total: number;
+                }>;
+                set: string;
+                status: "provisional" | "official";
+                total: number;
+              };
+              tryoutCountry?: string;
+            };
+            recalled: Array<{
+              confirmedAt: number;
+              id: Id<"ninaMemories">;
+              kind?: "level" | "goal" | "style" | "struggle" | "situation";
+              text: string;
+              title?: string;
+            }>;
+          };
+          summary: { text: string; throughOrder: number } | null;
+          uncovered: Array<{ order: number; retryOf?: number }>;
+        }
+      >;
+    };
     focus: {
       read: FunctionReference<
         "query",
@@ -9015,6 +9207,7 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
+            history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -9105,6 +9298,7 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
+            history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9230,6 +9424,7 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
+            history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -9320,6 +9515,7 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
+            history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9436,6 +9632,7 @@ export declare const internal: {
             | "response-limit"
             | "interrupted"
             | "unknown";
+          history?: { tokens: number; turns: number; unread?: number };
           timing?: {
             claimedMs?: number;
             progressMs?: number;
@@ -9553,48 +9750,6 @@ export declare const internal: {
         "internal",
         { id: Id<"ninaMemoryRestores"> },
         null
-      >;
-      read: FunctionReference<
-        "query",
-        "internal",
-        {
-          now: number;
-          said: string;
-          topics: Array<string>;
-          userId: Id<"users">;
-        },
-        {
-          paused: boolean;
-          portrait?: string;
-          profile: {
-            focus?: "learning" | "tryout";
-            region?:
-              | "indonesia"
-              | "singapore"
-              | "united-kingdom"
-              | "germany"
-              | "united-states"
-              | "international";
-            tryout?: {
-              correct: number;
-              exam: string;
-              finishedAt: number;
-              score: number;
-              sections: Array<{ correct: number; key: string; total: number }>;
-              set: string;
-              status: "provisional" | "official";
-              total: number;
-            };
-            tryoutCountry?: string;
-          };
-          recalled: Array<{
-            confirmedAt: number;
-            id: Id<"ninaMemories">;
-            kind?: "level" | "goal" | "style" | "struggle" | "situation";
-            text: string;
-            title?: string;
-          }>;
-        }
       >;
     };
     portrait: {

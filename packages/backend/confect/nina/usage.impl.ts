@@ -15,7 +15,12 @@ function add(total: number | undefined, amount: number | undefined) {
   return (total ?? 0) + (amount ?? 0);
 }
 
-/** Agent invokes this after every model response, including repair and synthesis. */
+/**
+ * Agent invokes this after every model response, including repair and
+ * synthesis, so a run that is cut off keeps what it spent. The turn is loaded
+ * once and written back whole with `replace`: a `patch` would read the row once
+ * more.
+ */
 const record = FunctionImpl.make(
   schema,
   spec,
@@ -63,7 +68,8 @@ const record = FunctionImpl.make(
     const output = Arr.reduce(totals, 0, (total, row) => total + row.output);
     yield* (yield* DatabaseWriter)
       .table("ninaTurns")
-      .patch(turnId, {
+      .replace(turnId, {
+        ...turn,
         usage: totals,
         ...(turn.phase === "settled"
           ? { tokens: { input, output, total: input + output } }

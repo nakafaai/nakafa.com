@@ -133,6 +133,8 @@ describe("The Nina response run when generation fails", () => {
         const state = yield* Effect.promise(f.inspect);
         expect(state.turn?.state).toMatchObject({ status: "failed", reason });
         expect(state.user?.credits).toBe(10);
+        // `list` is read for the turn metadata that tabs opened before `page`
+        // still use. `page` returns no metadata, so this check goes with `list`.
         const page = yield* Effect.promise(() =>
           f.owner.query(
             Ref.getFunctionReference(refs.public.nina.messages.list),
@@ -156,6 +158,27 @@ describe("The Nina response run when generation fails", () => {
           )
         ).toBe(true);
         expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
+        // The turns that ended tell the same failure, and no private diagnostic.
+        const turns = yield* Effect.promise(() =>
+          f.owner.query(
+            Ref.getFunctionReference(refs.public.nina.conversation.turns),
+            { chatId: f.chatId, paginationOpts: { cursor: null, numItems: 20 } }
+          )
+        ).pipe(
+          Effect.flatMap((value) =>
+            Ref.decodeReturns(refs.public.nina.conversation.turns, value)
+          )
+        );
+        expect(
+          Arr.some(
+            turns.page,
+            (turn) =>
+              turn.state.status === "failed" && turn.state.reason === reason
+          )
+        ).toBe(true);
+        expect(encodeJsonText(turns)).not.toMatch(PRIVATE_DIAGNOSTIC);
+        // A run that ended badly has no history cost to keep.
+        expect(state.turn).not.toHaveProperty("history");
       })
   );
 
