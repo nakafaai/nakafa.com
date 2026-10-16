@@ -12,6 +12,7 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import customers from "@repo/backend/confect/_generated/refs/customers";
 import editor from "@repo/backend/confect/_generated/refs/editor";
+import exams from "@repo/backend/confect/_generated/refs/exams";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
@@ -99,6 +100,7 @@ const domainModules = {
   contents,
   customers,
   editor,
+  exams,
   integrations,
   journal,
   learningPreferences,

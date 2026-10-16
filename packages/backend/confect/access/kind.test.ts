@@ -62,6 +62,7 @@ describe("access/kind declarations", () => {
       "grant.manage",
       "integration.manage",
       "document.edit",
+      "exam.edit",
     ]);
     expect(
       Arr.map(

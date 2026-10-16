@@ -40,6 +40,8 @@ import customers from "./tables/customers";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
+import examQuestions from "./tables/examQuestions";
+import exams from "./tables/exams";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -133,6 +135,8 @@ export default $defineSchema({
   editorDocuments: $Table.tableDefinition(editorDocuments),
   editorSnapshots: $Table.tableDefinition(editorSnapshots),
   editorSteps: $Table.tableDefinition(editorSteps),
+  examQuestions: $Table.tableDefinition(examQuestions),
+  exams: $Table.tableDefinition(exams),
   integrationClients: $Table.tableDefinition(integrationClients),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),

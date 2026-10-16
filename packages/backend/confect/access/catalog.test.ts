@@ -25,6 +25,7 @@ describe("access/catalog", () => {
       "class",
       "visit",
       "document",
+      "exam",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
@@ -45,6 +46,15 @@ describe("access/catalog", () => {
 
   it("opens the document actions to the school's Admin and Teacher, and to no student or integration client", () => {
     for (const action of ["document.view", "document.edit"]) {
+      expect(opensTo(action, "admin")).toBe(true);
+      expect(opensTo(action, "teacher")).toBe(true);
+      expect(opensTo(action, "student")).toBe(false);
+      expect(opensTo(action, "integration")).toBe(false);
+    }
+  });
+
+  it("opens the exam actions to the school's Admin and Teacher, and to no student or integration client", () => {
+    for (const action of ["exam.view", "exam.edit"]) {
       expect(opensTo(action, "admin")).toBe(true);
       expect(opensTo(action, "teacher")).toBe(true);
       expect(opensTo(action, "student")).toBe(false);
@@ -162,6 +172,7 @@ describe("access/catalog", () => {
       "integration.view",
       "visit.approve",
       "document.edit",
+      "exam.edit",
     ]);
   });
 
