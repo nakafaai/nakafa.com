@@ -4,7 +4,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/auth/queries.spec";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Struct } from "effect";
 
 /**
  * The app user holds a copy of the Better Auth profile that auth triggers keep
@@ -48,6 +48,7 @@ const getUserById = FunctionImpl.make(
       return null;
     }
     return {
+      ...Struct.pick(user, ["mascot"]),
       ...(user.image === null || user.image === undefined
         ? {}
         : {

@@ -11,6 +11,7 @@ import {
   NinaTurnSummary,
   readerTurn,
 } from "@repo/backend/confect/nina/contract/turn";
+import { turns } from "@repo/backend/confect/nina/conversation/turns";
 import spec from "@repo/backend/confect/nina/conversation.spec";
 import { Effect, Layer, Option, Schema } from "effect";
 
@@ -64,6 +65,7 @@ const get = FunctionImpl.make(
 
 export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(get),
+  Layer.provide(turns),
   Layer.provide(session),
   GroupImpl.finalize
 );

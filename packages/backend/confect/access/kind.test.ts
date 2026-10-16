@@ -60,6 +60,7 @@ describe("access/kind declarations", () => {
       "period.manage",
       "period.view",
       "grant.manage",
+      "integration.manage",
     ]);
     expect(
       Arr.map(
@@ -75,9 +76,13 @@ describe("access/kind declarations", () => {
       "person.renamed",
       "person.placed",
       "person.moved",
+      "person.graduated",
       "invite.expired",
       "invite.resent",
       "invite.revoked",
+      "card.issued",
+      "card.reissued",
+      "card.redeemed",
       "grant.created",
       "grant.ended",
       "person.reactivated",

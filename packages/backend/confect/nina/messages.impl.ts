@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { listStreams, listUIMessages, syncStreams } from "@convex-dev/agent";
+import { listUIMessages } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
@@ -10,74 +10,21 @@ import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readChat } from "@repo/backend/confect/chats/access/read";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import type { StreamRequest } from "@repo/backend/confect/nina/contract/message";
 import {
   NinaTurnSummary,
   readerTurn,
 } from "@repo/backend/confect/nina/contract/turn";
+import { page as pageImpl } from "@repo/backend/confect/nina/messages/page";
 import spec, { NinaReadError } from "@repo/backend/confect/nina/messages.spec";
 import {
   readerMessage,
   readerStreams,
 } from "@repo/backend/confect/nina/reader";
-import {
-  Array as Arr,
-  Effect,
-  HashMap,
-  HashSet,
-  Layer,
-  MutableHashMap,
-  Option,
-  pipe,
-  Schema,
-} from "effect";
+import { readStreams } from "@repo/backend/confect/nina/streams";
+import { Array as Arr, Effect, HashMap, Layer, Option, Schema } from "effect";
 
-/** Reads active streams or their deltas for one authorized thread. */
-const readStreams = Effect.fn("nina.messages.streams")(function* (
-  threadId: string,
-  request: typeof StreamRequest.Type
-) {
-  const ctx = yield* QueryCtx;
-  let streamArgs = request;
-  if (streamArgs.kind === "deltas") {
-    // A cursor is untrusted input. Scope it to this thread before asking the
-    // SDK for deltas; expired streams intentionally produce no more chunks.
-    const available = yield* Effect.tryPromise({
-      try: () =>
-        listStreams(ctx, components.nina, {
-          threadId,
-          includeStatuses: ["streaming", "finished", "aborted"],
-        }),
-      catch: () =>
-        new NinaReadError({ message: "Unable to read Nina streams." }),
-    });
-    const allowed = HashSet.fromIterable(
-      Arr.map(available, (stream) => stream.streamId)
-    );
-    // A stream keeps its last cursor, in the order the streams first appear.
-    const latest = MutableHashMap.fromIterable(
-      pipe(
-        streamArgs.cursors,
-        Arr.filter((cursor) => HashSet.has(allowed, cursor.streamId)),
-        Arr.map((cursor) => [cursor.streamId, cursor])
-      )
-    );
-    streamArgs = {
-      kind: "deltas",
-      cursors: [...MutableHashMap.values(latest)],
-    };
-  }
-  // The SDK answers every stream request; a missing result is a read failure.
-  return yield* Effect.tryPromise(() =>
-    syncStreams(ctx, components.nina, { threadId, streamArgs })
-  ).pipe(
-    Effect.flatMap(Effect.fromNullishOr),
-    Effect.mapError(
-      () => new NinaReadError({ message: "Unable to read Nina streams." })
-    )
-  );
-});
-
+// Temporary compatibility: see `list` in `messages.spec.ts`. Its response keeps
+// the turn of each message, which `page` no longer carries.
 const list = FunctionImpl.make(
   schema,
   spec,
@@ -167,6 +114,7 @@ const list = FunctionImpl.make(
 
 export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(list),
+  Layer.provide(pageImpl),
   Layer.provide(session),
   GroupImpl.finalize
 );

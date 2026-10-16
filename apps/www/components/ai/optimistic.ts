@@ -31,7 +31,7 @@ export function optimisticPrompt(
     }
     const threadId = conversation.value.chat.threadId;
     const pages = Arr.filter(
-      store.getAllQueries(nina.messages.list),
+      store.getAllQueries(nina.messages.page),
       (page) =>
         page.args.chatId === args.chatId &&
         page.args.threadId === threadId &&
@@ -74,7 +74,7 @@ export function optimisticPrompt(
         continue;
       }
       store.setQuery(
-        nina.messages.list,
+        nina.messages.page,
         page.args,
         Option.some({
           ...page.value.value,

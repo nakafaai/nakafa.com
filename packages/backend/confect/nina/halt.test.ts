@@ -85,8 +85,8 @@ describe("A running Nina turn that the learner stops", () => {
     }
   }, 30_000);
 
-  // The run asks about its turn once a second, so these tests wait in real time
-  // and get a longer limit than the default.
+  // The run asks about its turn every two seconds (`HALT_POLL` in `halt.ts`), so
+  // these tests wait in real time and get a longer limit than the default.
   it("stops a silent provider call when the learner cancels, and pays back only after the run exits", async () => {
     const report = stubReport();
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
@@ -233,6 +233,22 @@ describe("A tool-call repair of a turn that the learner stops", () => {
 describe("The halt watch of a running turn", () => {
   const turnId = Schema.decodeUnknownSync(Id("ninaTurns"))("turn");
   const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
+  const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+  const recover = Ref.getFunctionReference(
+    refs.internal.nina.lifecycle.recover
+  );
+
+  it("tells a run to halt once its turn was stopped, settled or removed", async () => {
+    const f = await createNinaTest();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(false);
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+    await f.t.mutation(recover, { turnId: f.turnId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+    await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+  });
 
   it.effect(
     "keeps asking after one check fails, and aborts the run once a check finds its turn halted",
@@ -249,10 +265,10 @@ describe("The halt watch of a running turn", () => {
           Effect.provide(QueryRunner.layer(runQuery))
         );
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("2 seconds");
         expect(halt.aborted).toBe(false);
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("2 seconds");
         expect(halt.aborted).toBe(true);
         expect(runQuery).toHaveBeenCalledTimes(3);
         expect(runQuery).toHaveBeenLastCalledWith(halted, { turnId });

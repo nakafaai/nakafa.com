@@ -108,14 +108,17 @@ describe("access/policy authority", () => {
                   .pipe(verdict, asAdmin),
               ],
               foreign: yield* personAuthority.allowed(foreign).pipe(asAdmin),
-              own: yield* personAuthority.allowed(own).pipe(asAdmin),
+              own: Arr.sort(
+                yield* personAuthority.allowed(own).pipe(asAdmin),
+                Order.String
+              ),
             };
           }).pipe(Effect.orDie)
         );
         expect(results).toEqual({
           checks: ["resource", "resource"],
           foreign: [],
-          own: ["person.view", "person.invite", "person.manage"],
+          own: ["card.issue", "person.invite", "person.manage", "person.view"],
         });
       })
   );
@@ -171,6 +174,8 @@ describe("access/policy authority", () => {
           [
             "audit.view",
             "grant.manage",
+            "integration.manage",
+            "integration.view",
             "invite.view",
             "owner.manage",
             "person.manage",

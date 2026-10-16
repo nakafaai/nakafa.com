@@ -8,6 +8,7 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scores";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
@@ -29,6 +30,7 @@ async function insertScoreGraph(ctx: MutationCtx) {
     credits: 0,
     creditsResetAt: NOW,
     email: "tryout-score-trigger@example.com",
+    mascot: MASCOT_CODE,
     name: "Try-out Score Trigger",
     plan: "free",
   });

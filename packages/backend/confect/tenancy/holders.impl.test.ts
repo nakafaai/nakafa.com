@@ -6,6 +6,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import { Email } from "@repo/backend/confect/tenancy/schema";
+import { MASCOT } from "@repo/backend/test/mascot";
 import {
   invitePerson,
   scheduledJobs,
@@ -50,6 +51,7 @@ const bareAccount = (index: number, deleting: boolean) =>
       creditsResetAt: 0,
       ...(deleting ? { deletionPreparedAt: NOW } : {}),
       email: address,
+      mascot: MASCOT,
       name: `Bare ${index}`,
       plan: "free",
     })

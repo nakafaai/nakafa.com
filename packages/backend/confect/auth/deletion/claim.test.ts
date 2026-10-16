@@ -11,6 +11,7 @@ import { accountDeletionPreparationOutcome } from "@repo/backend/confect/auth/de
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import { seedDeletionUser } from "@repo/backend/test/deletion/seed";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -101,6 +102,7 @@ describe("auth/deletion/claim", () => {
             credits: 0,
             creditsResetAt: 0,
             email: "delivered@resend.dev",
+            mascot: MASCOT_CODE,
             name: "Claimed Owner",
             plan: "free",
           })

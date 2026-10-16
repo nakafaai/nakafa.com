@@ -7,6 +7,10 @@ import {
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
+import {
+  CHAT_LIST_PAGE_SIZE,
+  CHAT_SEARCH_LENGTH,
+} from "@repo/backend/client/chats/list";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -35,7 +39,6 @@ import { Array as Arr } from "effect";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
-import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
@@ -74,6 +77,7 @@ export function AiChatSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
             <InputGroup className="h-8 border-sidebar-border bg-background text-foreground shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-sidebar-ring has-[[data-slot=input-group-control]:focus-visible]:ring-sidebar-ring/50">
               <InputGroupInput
                 className="h-8"
+                maxLength={CHAT_SEARCH_LENGTH}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={t("search-chats")}
                 value={q}
@@ -127,7 +131,10 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
   const pagination = usePaginatedQuery(chats.queries.getOwnChats, queryArgs, {
     initialNumItems: CHAT_LIST_PAGE_SIZE,
   });
-  const { loadMore, results } = useChatList(pagination);
+  const { loadMore, results, searchFurther } = useChatList(
+    pagination,
+    searchQuery
+  );
   return (
     <>
       <SidebarMenu>
@@ -162,8 +169,20 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
         })}
       </SidebarMenu>
       {/* A search page may hold no match while older chats remain, so the list
-          keeps asking while its end is in view and another page can load. */}
+          keeps asking while its end is in view and another page can load. After
+          several pages in a row without a match it stops, and the learner asks
+          for the next one. */}
       {loadMore ? <Intersection onIntersect={loadMore} /> : null}
+      {searchFurther ? (
+        <Button
+          className="w-full"
+          onClick={searchFurther}
+          size="sm"
+          variant="ghost"
+        >
+          {t("search-older")}
+        </Button>
+      ) : null}
     </>
   );
 }

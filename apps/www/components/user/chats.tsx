@@ -8,6 +8,7 @@ import {
   MoreHorizontalIcon,
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
+import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -26,7 +27,6 @@ import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useChange } from "@/components/ai/chat/change.client";
-import { CHAT_LIST_PAGE_SIZE } from "@/components/ai/chat/history";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
