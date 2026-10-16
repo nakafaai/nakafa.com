@@ -104,8 +104,9 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   skips the entries it handled, so an entry that commits late is still read, and
   no run resumes from the end position of an earlier page. A cursor starts at the
   creation time of the entry that makes it, not at a clock reading, so an
-  invitation recorded before the inbox existed gets no row. An entry holds IDs and
-  codes, never a name or a message.
+  invitation created more than five seconds before that entry gets no row, and one
+  created within those five seconds is read whatever its commit time. An entry
+  holds IDs and codes, never a name or a message.
 - An invitation has one inbox row for each recipient Person, found by the Person
   and the invitation. A resend refreshes that row to the resend's time and marks
   it unread. Revoking the invitation deletes the row, and a revoked invitation
@@ -330,6 +331,7 @@ sitting does not show.
 | The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
 | `apps/www/app/manifest.ts` with `display: "standalone"` | Live |
 | `journalCursors`, which start at the entry that makes them and re-read a five-second commit-lag window that holds at most one page of handled entries (`JournalCursorTooLarge` past it), and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Built |
+| The burst bound of `journalCursors`: a burst of 51 to 99 invitations inside one five-second window stops that school's inbox rows until an invitation arrives more than five seconds after the burst; a burst of 100 or more stops them until someone edits the cursor by hand. No limit yet bounds how many invitations one school writes in a window | Open |
 | `notifications`, one row for each Person and invitation (`by_recipientPersonId_and_inviteId`), with the purge of a released Person's rows and of a revoked invitation's row | Built |
 | The invitation rows: `person.invited` is published, written by the invite, and refreshed by the resend; the inbox consumer writes them from the start of its cursor; an invitation revoked before its run gets no row, and a revoked invitation loses its row | Built |
 | The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |

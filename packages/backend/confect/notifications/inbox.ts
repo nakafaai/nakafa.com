@@ -204,10 +204,11 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
  * After an invitation is recorded, marks the inbox cursor of its tenant pending
  * and schedules a run. `entryId` is the journal entry that the write recorded in
  * the same transaction. The first invitation of a tenant creates its cursor at
- * that entry, so an invitation that committed before it gets no row. One that
- * committed after it, but was created inside the commit-lag window before it, still
- * gets one. The run is the normal path; the minute sweep is the backstop for a run
- * that never happened.
+ * that entry, and the first run reads the entries created inside the commit-lag
+ * window before it, whatever their commit time. So an invitation created up to five
+ * seconds before the first one gets a row, and one created earlier gets none. The
+ * run is the normal path; the minute sweep is the backstop for a run that never
+ * happened.
  */
 export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
   function* (
