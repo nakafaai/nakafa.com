@@ -48,9 +48,9 @@ export const tenantAuthority = Authority.make(tenant, Authority.load(tenant), {
 
 /**
  * Whether a unit is locked. An archived unit is locked, and every row placed in
- * it is locked with it, so the other modules call this rule too.
+ * it is locked with it, so the unit's own authority and `scopePlace` read this rule.
  */
-export const unitLocked = (row: Pick<TenantUnitsDoc, "status">) =>
+const unitLocked = (row: Pick<TenantUnitsDoc, "status">) =>
   row.status === "archived";
 
 /** An archived unit is locked; unit grants cover it. */
