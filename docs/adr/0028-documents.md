@@ -134,8 +134,9 @@ does that for the caller's bound, and it lets through a change that another
 editor's steps brought in, because the server's document is the one that counts.
 `stepSizeGuard` in `packages/design-system/components/editor/size.ts` refuses an
 edit with a step whose JSON text is over the caller's bound, which the question
-editor passes as `MAX_BATCH_BYTES`, so the editor holds no edit that no call can
-send. A queued step that no call can carry is dropped and counted by the sync
+editor passes as `MAX_STEP_BYTES` (`confect/editor/batch.ts`). That is the largest
+step text one call carries, so the editor holds no edit that no call can send. A
+queued step that no call can carry is dropped and counted by the sync
 (`dropUnsendable` in `apps/www/lib/editor/receive.ts`).
 
 ### Bounds
@@ -153,6 +154,7 @@ as the last column says.
 | A document as a whole | A node depth of at most 16, counted as `MAX_DOCUMENT_DEPTH` counts it: the `doc` node is level 1 and each node below it is one level, while its `content` array is not. The complete row stays under 1 MiB. | ADR 0031, and `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0 (`confect/editor/node.ts`) |
 | Attributes and attribute values | Each object and array of an attribute counts one level, and at most 16 levels are allowed (`AttributesSchema` and `AttributeValueSchema` in `confect/editor/node.ts`) | Target. This module reads generic ProseMirror attributes, which the contract's typed attributes do not cover, so the document's bound limits them too, and an admitted call can then be stored. |
 | Steps sent in one call | At most 128 KiB and 200 steps | Target |
+| A step that one call carries | At most `MAX_STEP_BYTES`: 128 KiB less the text that a call takes around its steps (its two ids and its version), measured at the longest ids and the largest safe version (`confect/editor/batch.ts`) | Computed by the encoder, and `batch.test.ts` pins it |
 | A client id and a batch id | At least one and at most 64 characters each (`MAX_ID_LENGTH` in `confect/editor/batch.ts`) | Target. A v4 UUID from `randomUuid` has 36 characters. Each stored step keeps its client id, and the session record keeps the batch id. |
 | Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. `STEP_READ_BYTES` in `confect/editor/store.ts` is the budget, and Convex's `maximumBytesRead` enforces it. A read stops at the row that reaches the budget, so one read may pass it by that row, which is at most one batch of 128 KiB. A read takes at most one batch of steps (`MAX_BATCH_STEPS`), and the client reads on from its last version. `steps.impl.test.ts` pins a read that stops and the reads that continue it. |
 | Snapshots | At most one every 30 seconds, and only when the editor has been idle for 30 seconds or 300 steps have gathered since the last snapshot (`SNAPSHOT_MIN_GAP`, `SNAPSHOT_IDLE_DELAY`, and `SNAPSHOT_STEP_LIMIT` in `confect/editor/snapshot.ts`) | Target. 200 KiB after 50 pauses an hour is about 10 MB for each document an hour (computed). |
@@ -165,9 +167,11 @@ the bank each refuse a document whose complete row would pass 1 MiB, before the
 write (ADR 0031). A step carries no whole document, so a draft that grows past
 the limit is refused at its next snapshot and never reaches the bank.
 
-The step log is bounded too. A cron sweep, `internal.editor.prune.sweep`, runs
-every ten minutes (`PRUNE_INTERVAL` in `confect/editor/prune.ts`). It deletes
-the steps that a snapshot covers once they are ten minutes old
+The step log is bounded too, while the snapshot of its document is saved (What
+Stays Open records the refusals that stop it). A cron sweep,
+`internal.editor.prune.sweep`, runs every ten minutes (`PRUNE_INTERVAL` in
+`confect/editor/prune.ts`). It deletes the steps that a snapshot covers once they
+are ten minutes old
 (`STEP_KEEP_DELAY`). The delay is ten minutes so that a client offline for less
 than that loads the steps it missed, and a client offline for longer opens again
 from the snapshot. The sweep reads the log in pages of 64 steps
@@ -308,11 +312,15 @@ Drive copies come through the Drive connector (ADR 0015).
   and `documents:open` are queries, which cannot write. A client mutation that
   confirms the batch would let a sweep reclaim the rows. The owner decides whether
   to add it.
-- The size guard measures the JSON text of one step against `MAX_BATCH_BYTES`. A
-  call also carries its batch around the steps (the ids and the version), so a
-  step within that surrounding text of the bound passes the guard, and no call
-  carries it. The sync drops such a step and counts it, but the editor shows the
-  edit until then. Measuring the one-step batch at input is open.
+- Submit checks the node and mark types of each step against the types the editor
+  reads, and not the attributes that the contract checks at the snapshot. A step
+  can therefore hold a link to an address that is not https, or a heading of a
+  level that the contract refuses. The snapshot that holds such a document is
+  refused, so the snapshot stays where it was and the step log is not pruned. The
+  editor logs each refusal. The owner decides whether submit checks the attributes
+  too, and whether the editor refuses a document that grows past
+  `MAX_DOCUMENT_BYTES`: it does not check that size today, so such a document is
+  refused at its snapshot in the same way.
 - A dropped step, or a step that the editor replays after it opens again, keeps
   its position in the document it is replayed on. A later step that depended on
   the dropped one can therefore land at another place, and the replay does not
@@ -364,11 +372,11 @@ Drive copies come through the Drive connector (ADR 0015).
 | The behind replay: the confirmation of the in-flight batch that landed, the replay of the other unconfirmed steps onto the snapshot, and the one `SyncDropped` count | In code, not live: `apps/www/lib/editor/receive.ts`, tested with the fake server in `apps/www/lib/editor/sync.test.ts`. |
 | The skip rule: a stored step that does not apply, or that nests the document past `MAX_DOCUMENT_DEPTH`, is skipped by every editor and logged once; an editor whose own step the server skips opens again from the snapshot | In code, not live: `apps/www/lib/editor/receive.ts`. Tested: three editors converge with a stored step that does not apply, and three editors converge within the bound when a rebased step nests past it (`receive.test.ts`). |
 | The depth filter of the editor: `depthGuard` refuses an edit that nests the document past the bound it is given | In code, not live: `packages/design-system/components/editor/depth.ts`. No editor mounts it yet, and the question editor passes `MAX_DOCUMENT_DEPTH`. |
-| The size guard of the editor: `stepSizeGuard` refuses an edit with a step over the bound it is given, and a queued step that no call can carry is dropped and counted (`dropUnsendable`) | In code, not live: `packages/design-system/components/editor/size.ts` and `apps/www/lib/editor/send.ts`. The question editor passes `MAX_BATCH_BYTES`. Tested in `size.test.ts` and `sync.test.ts`. |
-| The assessment marks: `documentSchema` takes the marks its caller gives, in their order, with no strike and no highlight (`packages/design-system/components/editor/document.ts`), and `apps/www/lib/editor/assessment.ts` gives it the contract's marks in the contract's order | In code, not live. Bold, italic, code, link, subscript, and superscript are pinned at 3.31.4 in `packages/design-system` next to underline, because the editor offers each mark of the contract. The Memory editor keeps its own marks. Tested in `document.test.ts`, and in `assessment.test.ts`, which checks that the schema holds the contract's marks in its order and that a document using every mark passes the contract at the snapshot. |
+| The size guard of the editor: `stepSizeGuard` refuses an edit with a step over the bound it is given, and a queued step that no call can carry is dropped and counted (`dropUnsendable`) | In code, not live: `packages/design-system/components/editor/size.ts` and `apps/www/lib/editor/send.ts`. The question editor passes `MAX_STEP_BYTES`, which `batch.test.ts` pins to the encoder's call. Tested in `size.test.ts`, `batch.test.ts`, and `sync.test.ts`. |
+| The assessment rules: `documentSchema` takes the rules its caller gives, the marks in their order, the heading levels, and the link rule (`packages/design-system/components/editor/document.ts`). `apps/www/lib/editor/assessment.ts` gives it the contract's marks in the contract's order (`MarkTypeSchema`), the heading levels 1 to 3, and `isHttpsUrl`, and the editor holds no horizontal rule. The server admits the node and mark types that the editor reads (`NodeTypeSchema` and `MarkTypeSchema` in `confect/editor/node.ts`), in a step and in a snapshot. | In code, not live. Tested in the design system's `document.test.ts`, at the commands of a headless editor: a heading level, a horizontal rule, and a link address. Tested in `assessment.test.ts`: the node types, the heading levels pinned to the contract's check, and the link rule. Tested on the server in `batch.test.ts` and `document.test.ts`: a step or a snapshot with a type the editor does not read is refused. |
 | The deletion of a document: its session records and its steps in pages, then its snapshot and its document row (`internal.editor.deletion.document`) | In code, not live: `confect/editor/deletion.impl.ts`, tested in convex-test. No public function deletes a document yet. |
 | The `document` access kind (`confect/editor/kinds.ts`), its authority, and its catalog entry | In code. ADR 0012 names it. |
-| The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots (`SnapshotRefused`), and the idle snapshot trigger (`snapshotDue`, read by the client) | In code, not live: `confect/editor/store.ts`, `confect/editor/prune.ts`, and the sync loop `apps/www/lib/editor/sync.ts`, which the fake-client tests drive. |
+| The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots (`SnapshotRefused` for the rule, and a logged refusal for the content), and the idle snapshot trigger (`snapshotDue`, read by the client) | In code, not live: `confect/editor/store.ts`, `confect/editor/prune.ts`, and the sync loop `apps/www/lib/editor/sync.ts` and `apps/www/lib/editor/snapshot.ts`, which the fake-client tests drive. |
 | The client engine: the `Collab` extension in `packages/design-system/components/editor/collab.ts` and the sync loop in `apps/www/lib/editor` | In code. No page mounts the editor yet. |
 | The formula node | Planned, program wave B |
 | Mermaid and content math under the forced KaTeX 0.19.0 | To be tested in program wave A |
