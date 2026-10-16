@@ -2,10 +2,10 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   createLocalSigningIdentity,
+  LocalSigningIdentitySchema,
   verifyLocalSigningIdentity,
 } from "@repo/backend/scripts/content/acceptance/signing";
-import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, FileSystem, Option } from "effect";
+import { Effect, FileSystem, Option, Schema } from "effect";
 
 const message = new TextEncoder().encode("technical acceptance message");
 /** The most Base64 characters on one line of the PEM text that OpenSSL writes. */
@@ -122,7 +122,11 @@ describe("isolated acceptance signing identity", () => {
         // its text. A body line has nothing to escape and would appear verbatim.
         const [, privateKeyBody] = privateKey.split("\n");
         expect(privateKeyBody).toBeDefined();
-        expect(encodeJsonText(first.signing)).not.toContain(privateKeyBody);
+        expect(
+          Schema.encodeSync(Schema.fromJsonString(LocalSigningIdentitySchema))(
+            first.signing
+          )
+        ).not.toContain(privateKeyBody);
         expect(first.signing.keyId).not.toBe(second.signing.keyId);
         expect(first.signing.publicKeyPem).not.toBe(
           second.signing.publicKeyPem
@@ -194,7 +198,7 @@ describe("isolated acceptance signing identity", () => {
           yield* fs.chmod(signing.privateKeyPath, 0o644);
         }
         if (change === "inode") {
-          next.privateKeyInode = -1;
+          next.privateKeyInode = -1n;
         }
         if (change === "hash") {
           next.privateKeyHash = "changed";
@@ -238,7 +242,7 @@ describe("isolated acceptance signing identity", () => {
           fs
             .stat(path)
             .pipe(
-              Effect.map((info) => ({ ...info, ino: Option.none<number>() }))
+              Effect.map((info) => ({ ...info, ino: Option.none<bigint>() }))
             ),
       };
       expect(
