@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { seedDeletionUser } from "@repo/backend/test/deletion/seed";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 6, 29, 0, 0, 0);
@@ -28,6 +29,7 @@ describe("customers/polar/target", () => {
                 credits: 0,
                 creditsResetAt: NOW,
                 email: `${suffix}@example.com`,
+                mascot: MASCOT,
                 name: `User ${suffix}`,
                 plan: "free",
               });

@@ -5,8 +5,8 @@ import { Array as Arr } from "effect";
 
 interface Props {
   /**
-   * The animal of the person. An account read before the backfill has run holds
-   * none yet, and then nothing is drawn.
+   * The animal of the person. A person whose account is gone, such as the author
+   * of a comment who deleted their account, has none, and then nothing is drawn.
    */
   mascot: typeof Mascot.Type | undefined;
 }

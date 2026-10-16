@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/confect/customers/deletion/billingState";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -19,6 +20,7 @@ it("binds an existing tombstone and refuses checkpoint identity changes", async 
       credits: 0,
       creditsResetAt: 1,
       email: "deleted@example.invalid",
+      mascot: MASCOT_CODE,
       name: "Deleted",
       plan: "free",
       deletedAt: 1,
@@ -159,6 +161,7 @@ it("preserves billing rows when the native deletion mutation rejects stored meta
       credits: 0,
       creditsResetAt: 1,
       email: "invalid-billing@example.invalid",
+      mascot: MASCOT_CODE,
       name: "Billing",
       plan: "free",
     });
