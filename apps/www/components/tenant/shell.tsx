@@ -27,10 +27,8 @@ import { TenantContext, type TenantValue } from "@/components/tenant/context";
 
 /**
  * The shell of a school: the school's name at the top of the sidebar, and the
- * sidebar groups of the signed-in viewer. A sidebar item joins its group only
- * when its page exists in the school tree and the viewer's `can` capabilities
- * allow it. Beranda needs no capability, because the school layout admits only
- * members.
+ * sidebar groups of the signed-in viewer. The school layout admits only
+ * members, so every item here is open to any member of the school.
  */
 export function TenantShell({
   children,
