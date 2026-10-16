@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
-import { decode, encode, Mascot } from "@repo/mascot/code";
+import { encode, Mascot, MascotCode } from "@repo/mascot/code";
 import { draw } from "@repo/mascot/draw";
 import { Eyes, type Layer } from "@repo/mascot/kit";
 import { Pose } from "@repo/mascot/pose";
@@ -13,6 +13,7 @@ import {
   Option,
   Record as Rec,
   Result,
+  Schema,
   String as Str,
 } from "effect";
 
@@ -31,7 +32,7 @@ const PINNED_TIMEOUT = 60_000;
 
 /** The mascot of a code that is known to be good. */
 function mascotOf(code: string) {
-  return Result.getOrThrow(decode(code));
+  return Schema.decodeSync(MascotCode)(code);
 }
 
 /** The shapes of a picture that carry a mark, also those inside a group. */

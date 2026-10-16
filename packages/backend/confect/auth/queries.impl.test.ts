@@ -38,7 +38,7 @@ describe("authenticated user query contracts", () => {
     expect(await authed.query(api.auth.queries.getCurrentUser)).toBeNull();
   });
 
-  it("exposes only public profile fields and handles absent images and users", async () => {
+  it("exposes only public profile fields and handles absent images, animals, and users", async () => {
     const t = createConvexTestWithBetterAuth();
     const user = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -53,10 +53,12 @@ describe("authenticated user query contracts", () => {
     await t.mutation((ctx) =>
       ctx.db.patch("users", user.userId, {
         image: "https://example.com/user.png",
+        mascot: "crab.1.6d4b78.left.smile",
       })
     );
     expect(await t.query(api.auth.queries.getUserById, args)).toEqual({
       image: "https://example.com/user.png",
+      mascot: "crab.1.6d4b78.left.smile",
       name: "User public-profile",
     });
     await t.mutation((ctx) => ctx.db.delete("users", user.userId));

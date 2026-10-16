@@ -1,11 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
-import { decode, encode, Mascot, MascotCodeError } from "@repo/mascot/code";
+import { encode, Mascot, MascotCode } from "@repo/mascot/code";
 import { Eyes } from "@repo/mascot/kit";
 import { Pose } from "@repo/mascot/pose";
 import { Array as Arr, Result, Schema } from "effect";
 
 const CODE = "cat.0.243e66.right.open";
+
+/** Reads a stored text the way the backend reads it: a mascot, or a failure. */
+const decodeCode = Schema.decodeUnknownResult(MascotCode);
 
 /** Every animal in every one of its palettes, in every pose and with every eyes value. */
 const EVERY = Arr.flatMap(Animal.literals, (animal) =>
@@ -20,15 +23,13 @@ const EVERY = Arr.flatMap(Animal.literals, (animal) =>
 
 describe("mascot/code", () => {
   it("reads the parts of a code", () => {
-    expect(decode(CODE)).toEqual(
-      Result.succeed({
-        animal: "cat",
-        eyes: "open",
-        ground: "243e66",
-        palette: 0,
-        pose: "right",
-      })
-    );
+    expect(Schema.decodeSync(MascotCode)(CODE)).toEqual({
+      animal: "cat",
+      eyes: "open",
+      ground: "243e66",
+      palette: 0,
+      pose: "right",
+    });
   });
 
   it("writes a mascot as animal.palette.ground.pose.eyes", () => {
@@ -46,7 +47,7 @@ describe("mascot/code", () => {
   it("reads back every mascot it writes: every animal, palette, pose, and eyes value", () => {
     expect(EVERY).toHaveLength(3672);
     const lost = Arr.filter(EVERY, (mascot) =>
-      Result.match(decode(encode(mascot)), {
+      Result.match(decodeCode(encode(mascot)), {
         onFailure: () => true,
         onSuccess: (read) => encode(read) !== encode(mascot),
       })
@@ -70,24 +71,18 @@ describe("mascot/code", () => {
     ["an extra part", "cat.0.243e66.right.open.extra"],
     ["a space before the code", " cat.0.243e66.right.open"],
     ["an empty code", ""],
-  ])("fails with a MascotCodeError for %s", (_what, code) => {
-    expect(decode(code)).toMatchObject({
-      _tag: "Failure",
-      failure: expect.any(MascotCodeError),
-    });
+  ])("fails to read %s", (_what, code) => {
+    expect(Result.isFailure(decodeCode(code))).toBe(true);
   });
 
   it("fails for a value that is not text", () => {
     for (const input of [42, null, undefined, {}, [CODE]]) {
-      expect(decode(input)).toMatchObject({
-        _tag: "Failure",
-        failure: expect.any(MascotCodeError),
-      });
+      expect(Result.isFailure(decodeCode(input))).toBe(true);
     }
   });
 
   it("says which palette an animal lacks", () => {
-    expect(decode("sheep.2.243e66.right.open")).toMatchObject({
+    expect(decodeCode("sheep.2.243e66.right.open")).toMatchObject({
       failure: { message: expect.stringContaining("sheep has no palette 2") },
     });
   });
