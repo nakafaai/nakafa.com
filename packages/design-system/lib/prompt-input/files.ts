@@ -48,14 +48,14 @@ const PromptInputFileConstraintCode = Schema.Literals([
 ]);
 /**
  * A local file constraint reported when files are not attached. `files` names
- * the files that broke it, so one pick reports each reason once.
+ * the files that broke it, so one pick reports each reason once. The words that
+ * say the reason belong to the caller, in its language, not to this module.
  */
 export class PromptInputFileConstraintError extends Schema.TaggedError<PromptInputFileConstraintError>()(
   "PromptInputFileConstraintError",
   {
     code: PromptInputFileConstraintCode,
     files: Schema.Array(Schema.String),
-    message: Schema.String,
   }
 ) {}
 const ValidatePromptInputFilesOptionsSchema = Schema.Struct({
@@ -74,12 +74,6 @@ const PromptInputFileSelectionSchema = Schema.Struct({
 });
 /** The files attached from one picker, paste, or drop, and why the others are not. */
 type PromptInputFileSelection = typeof PromptInputFileSelectionSchema.Type;
-const REJECTION_MESSAGES = {
-  accept: "Some files are not of an accepted type.",
-  empty: "Some files are empty.",
-  max_file_size: "Some files exceed the maximum size.",
-  max_files: "Too many files. Some were not added.",
-} satisfies Record<typeof PromptInputFileConstraintCode.Type, string>;
 /** Matches HTML accept syntax for extensions, exact MIME types, and MIME wildcards. */
 function matchesAccept(file: File, accept?: string) {
   if (!accept || accept.trim() === "") {
@@ -119,7 +113,6 @@ function reject(
         new PromptInputFileConstraintError({
           code,
           files: Arr.map(dropped, (file) => file.name),
-          message: REJECTION_MESSAGES[code],
         }),
       ]
     : [];

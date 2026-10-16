@@ -184,14 +184,19 @@ const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
   event.currentTarget.form?.requestSubmit();
 };
 
-/** Props for the prompt input textarea. */
-type PromptInputTextareaProps = ComponentProps<typeof InputGroupTextarea>;
+/**
+ * Props for the prompt input textarea. The placeholder is the caller's words in
+ * the caller's language, so the component has none of its own.
+ */
+type PromptInputTextareaProps = ComponentProps<typeof InputGroupTextarea> & {
+  placeholder: string;
+};
 
 /** Renders prompt text with submit-on-enter and pasted-file support. */
 export function PromptInputTextarea({
   onChange,
   className,
-  placeholder = "What would you like to know?",
+  placeholder,
   ...props
 }: PromptInputTextareaProps) {
   const addAttachments = usePromptInputAttachments(

@@ -85,7 +85,7 @@ describe("file name split", () => {
 const rejected = (
   code: PromptInputFileConstraintError["code"],
   files: readonly string[]
-) => new PromptInputFileConstraintError({ code, files, message: code });
+) => new PromptInputFileConstraintError({ code, files });
 
 // Every language of the site is read, whichever languages that is.
 describe("notice of the files that were not attached", () => {
