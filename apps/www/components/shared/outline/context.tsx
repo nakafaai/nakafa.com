@@ -32,14 +32,12 @@ const WATCH_SEPARATOR = "\n";
 
 /**
  * Tracks the headings in the reading band with one observer for the whole
- * outline and publishes them to the store only when they change. Headings a
- * virtualized list mounts later, such as the verses after a surah's leading
- * ones, join the observer when they mount and leave it when they unmount. At
- * the end of the page, the headings still in view stay active, or the last
- * heading when none is.
+ * outline and publishes them to the store only when they change. The headings
+ * are already in the page when the outline mounts, so the observer watches each
+ * one once. At the end of the page, the headings still in view stay active, or
+ * the last heading when none is.
  */
 function observeHeadings(store: TocStore, watch: readonly string[]) {
-  const watched = HashSet.fromIterable(watch);
   /**
    * The headings in the reading band, in the order they entered it. Two
    * headings can share one id, so the set holds the elements, and each element
@@ -92,34 +90,6 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
     { rootMargin: "-20px 0% -40% 0%", threshold: 1 }
   );
 
-  /** The watched headings in a mounted or unmounted subtree. */
-  function headingsWithin(node: Node) {
-    if (!(node instanceof Element)) {
-      return [];
-    }
-    return Arr.filter([node, ...node.querySelectorAll("[id]")], (element) =>
-      HashSet.has(watched, element.id)
-    );
-  }
-
-  const mounts = new MutationObserver((records) => {
-    for (const record of records) {
-      for (const node of record.addedNodes) {
-        for (const heading of headingsWithin(node)) {
-          observer.observe(heading);
-        }
-      }
-      for (const node of record.removedNodes) {
-        for (const heading of headingsWithin(node)) {
-          observer.unobserve(heading);
-          leave(heading);
-        }
-      }
-    }
-    // A heading can unmount before the observer reports it leaving the band.
-    publishVisible();
-  });
-
   function onScroll() {
     const element = document.scrollingElement;
     if (
@@ -146,12 +116,10 @@ function observeHeadings(store: TocStore, watch: readonly string[]) {
       observer.observe(heading);
     }
   }
-  mounts.observe(document.body, { childList: true, subtree: true });
   window.addEventListener("scroll", onScroll, { passive: true });
 
   return () => {
     window.removeEventListener("scroll", onScroll);
-    mounts.disconnect();
     observer.disconnect();
   };
 }

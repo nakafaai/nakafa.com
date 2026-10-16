@@ -21,12 +21,11 @@ import {
   SidebarRightPanel,
   SidebarRightProvider,
 } from "@/components/shared/outline/panel";
-import { SidebarVirtualTree } from "@/components/shared/outline/virtual";
+import { SidebarTree } from "@/components/shared/outline/tree";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranVersesProvider } from "@/components/shared/quran/verses/context";
-import { QURAN_FLOW_VERSES } from "@/components/shared/quran/verses/flow";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
@@ -41,7 +40,6 @@ import {
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import { getQuranReferences } from "@/lib/content/quran/references";
-import { VirtualProvider } from "@/lib/content/virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -206,18 +204,12 @@ async function CachedSurahShell({
       verse,
     };
   });
-  // Verses in document flow link by fragment; later ones scroll through the
-  // virtualizer, which knows them only by their index in its list.
-  const headings = Arr.map(verseItems, ({ id, label }, index) =>
-    index < QURAN_FLOW_VERSES
-      ? { label, href: `#${id}`, children: [] }
-      : {
-          label,
-          href: `/quran/${surah}#${id}`,
-          index: index - QURAN_FLOW_VERSES,
-          children: [],
-        }
-  );
+  // Every verse is in the page, so each outline entry links to it by fragment.
+  const headings = Arr.map(verseItems, ({ id, label }) => ({
+    label,
+    href: `#${id}`,
+    children: [],
+  }));
 
   const pagination = getQuranPagination({
     nextSurah: result.nextSurah,
@@ -247,82 +239,80 @@ async function CachedSurahShell({
         totalPages={surahData.numberOfVerses}
         url={`${COMPANY_IDENTITY.url}/${locale}/quran/${surah}`}
       />
-      <VirtualProvider>
-        <SidebarRightProvider>
-          <LayoutMaterialContent>
-            <QuranSurahHeader
-              arabic={surahData.name.arabic}
-              copySourceUrl={getLlmsMarkdownPath({
-                locale,
-                publicPath: `quran/${surah}`,
-              })}
-              meaning={description}
-              meaningLanguage={descriptionLanguage}
-              quranLabel={t("quran")}
-              slug={`/${locale}/quran/${surah}`}
+      <SidebarRightProvider>
+        <LayoutMaterialContent>
+          <QuranSurahHeader
+            arabic={surahData.name.arabic}
+            copySourceUrl={getLlmsMarkdownPath({
+              locale,
+              publicPath: `quran/${surah}`,
+            })}
+            meaning={description}
+            meaningLanguage={descriptionLanguage}
+            quranLabel={t("quran")}
+            slug={`/${locale}/quran/${surah}`}
+            title={title}
+          />
+          <LayoutContent className="pt-6">
+            <QuranVersesProvider
+              interpretationLabel={interpretationLabel}
+              tafsirAccess={tafsirAccess}
+              translationNotesLabel={translationNotesLabel}
+            >
+              {result.preBismillah === null ? null : (
+                <QuranBismillah
+                  bismillah={result.preBismillah}
+                  subjectLabel={title}
+                />
+              )}
+              {tafsirAccess.kind === "embedded" ? (
+                <QuranInterpretationControls
+                  appLocale={tafsirAccess.appLocale}
+                  errorMessage={{
+                    description: tToast("interpretation-error.description"),
+                    title: tToast("interpretation-error.title"),
+                  }}
+                  label={interpretationLabel}
+                  recoverSnapshot={recoverSnapshot}
+                  refreshingMessage={{
+                    description: tToast(
+                      "interpretation-refreshing.description"
+                    ),
+                    title: tToast("interpretation-refreshing.title"),
+                  }}
+                  snapshotId={result.snapshotId}
+                  surahNumber={surahData.number}
+                >
+                  <QuranVerseList items={verseItems} />
+                </QuranInterpretationControls>
+              ) : (
+                <QuranVerseList items={verseItems} />
+              )}
+            </QuranVersesProvider>
+          </LayoutContent>
+          <PaginationContent pagination={pagination} />
+          {toolbar}
+        </LayoutMaterialContent>
+        <SidebarRightPanel
+          footer={
+            <SidebarRightFooter>
+              <ReferenceButton references={references} title={title} />
+              <ReportButton />
+              <ShareButton />
+            </SidebarRightFooter>
+          }
+          header={
+            <SidebarRightHeader
+              description={description}
+              descriptionLanguage={descriptionLanguage}
+              href={`/quran/${surah}`}
               title={title}
             />
-            <LayoutContent className="pt-6">
-              <QuranVersesProvider
-                interpretationLabel={interpretationLabel}
-                tafsirAccess={tafsirAccess}
-                translationNotesLabel={translationNotesLabel}
-              >
-                {result.preBismillah === null ? null : (
-                  <QuranBismillah
-                    bismillah={result.preBismillah}
-                    subjectLabel={title}
-                  />
-                )}
-                {tafsirAccess.kind === "embedded" ? (
-                  <QuranInterpretationControls
-                    appLocale={tafsirAccess.appLocale}
-                    errorMessage={{
-                      description: tToast("interpretation-error.description"),
-                      title: tToast("interpretation-error.title"),
-                    }}
-                    label={interpretationLabel}
-                    recoverSnapshot={recoverSnapshot}
-                    refreshingMessage={{
-                      description: tToast(
-                        "interpretation-refreshing.description"
-                      ),
-                      title: tToast("interpretation-refreshing.title"),
-                    }}
-                    snapshotId={result.snapshotId}
-                    surahNumber={surahData.number}
-                  >
-                    <QuranVerseList items={verseItems} />
-                  </QuranInterpretationControls>
-                ) : (
-                  <QuranVerseList items={verseItems} />
-                )}
-              </QuranVersesProvider>
-            </LayoutContent>
-            <PaginationContent pagination={pagination} />
-            {toolbar}
-          </LayoutMaterialContent>
-          <SidebarRightPanel
-            footer={
-              <SidebarRightFooter>
-                <ReferenceButton references={references} title={title} />
-                <ReportButton />
-                <ShareButton />
-              </SidebarRightFooter>
-            }
-            header={
-              <SidebarRightHeader
-                description={description}
-                descriptionLanguage={descriptionLanguage}
-                href={`/quran/${surah}`}
-                title={title}
-              />
-            }
-          >
-            <SidebarVirtualTree data={headings} title={t("verse")} />
-          </SidebarRightPanel>
-        </SidebarRightProvider>
-      </VirtualProvider>
+          }
+        >
+          <SidebarTree data={headings} title={t("verse")} />
+        </SidebarRightPanel>
+      </SidebarRightProvider>
     </>
   );
 }

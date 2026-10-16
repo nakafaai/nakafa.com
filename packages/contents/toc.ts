@@ -104,7 +104,6 @@ export const ParsedHeadingSchema = Schema.Struct({
     Schema.suspend((): Schema.Codec<ParsedHeading> => ParsedHeadingSchema)
   ).pipe(Schema.mutable),
   href: Schema.String,
-  index: Schema.optionalKey(Schema.Finite),
   label: Schema.String,
 });
 

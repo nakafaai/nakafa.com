@@ -3,7 +3,7 @@ import { Array as Arr, Option, Schema } from "effect";
 const UserSettingsSectionSchema = Schema.Struct({
   href: Schema.String,
   /** Message key owned by the `Auth` dictionary. */
-  labelKey: Schema.Literals(["account", "billing", "memory"]),
+  labelKey: Schema.Literals(["account", "learning", "billing", "memory"]),
 });
 
 /** The message key of one settings section. */
@@ -34,6 +34,10 @@ export const userSettingsGroups: typeof UserSettingsGroupsSchema.Type = [
       {
         href: userSettingsRootHref,
         labelKey: "account",
+      },
+      {
+        href: `${userSettingsRootHref}/learning`,
+        labelKey: "learning",
       },
       {
         href: `${userSettingsRootHref}/subscriptions`,
