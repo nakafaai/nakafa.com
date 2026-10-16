@@ -29,25 +29,19 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { focusIsLost } from "@repo/design-system/lib/focus";
-import { Effect } from "effect";
+import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { useTranslations } from "next-intl";
 import {
   Activity,
   type PropsWithChildren,
   type ReactNode,
-  useEffect,
-  useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
-import { useChange } from "@/components/ai/chat/change.client";
 import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
-import { useUpdateChatTitleMutation } from "@/components/ai/chat/mutation.client";
+import { useChatRename } from "@/components/ai/chat/rename.client";
 import { ChatSharing } from "@/components/ai/chat/sharing";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
-import { reportClientException } from "@/lib/analytics/client";
 
 /** Render the current chat header or its stable empty placeholder. */
 export function AiChatHeader() {
@@ -61,100 +55,22 @@ export function AiChatHeader() {
 /** Render title, visibility, sharing, and deletion controls for one chat. */
 function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const tCommon = useTranslations("Common");
-  const actionErrorMessage = tCommon("action-error");
   const t = useTranslations("Ai");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [chatTitle, setChatTitle] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const moreActions = useRef<HTMLButtonElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  // Set when the box closes, until the focus has gone back to a control.
-  const returnFocus = useRef(false);
-  // Set when a refused rename brings the box back, until the box has the focus.
-  const reopened = useRef(false);
   const isOwner = useChat((state) => state.owner);
-  const updateChatTitle = useUpdateChatTitleMutation();
-  const { change, isPending } = useChange();
-
-  // The box takes the focus when it opens from the menu. A refused rename brings
-  // it back as soon as it can take input, because the box stays disabled while
-  // the rename is pending. When the box closes, the focus goes back to the
-  // control that opened it, or to the title when that control is gone. The
-  // control is disabled while the rename is pending, so the focus waits for it.
-  // A refusal and a close move the focus only while it is still lost, so they
-  // never take it from a control the learner has chosen meanwhile.
-  useEffect(() => {
-    if (isPending) {
-      return;
-    }
-    if (isEditing) {
-      const comingBack = reopened.current;
-      reopened.current = false;
-      returnFocus.current = false;
-      if (!comingBack || focusIsLost(inputRef.current)) {
-        inputRef.current?.focus();
-      }
-      return;
-    }
-    if (!returnFocus.current) {
-      return;
-    }
-    returnFocus.current = false;
-    if (focusIsLost(inputRef.current)) {
-      (moreActions.current ?? titleRef.current)?.focus();
-    }
-  }, [isEditing, isPending]);
-
-  /** Enter title editing with the current title selected for input. */
-  const handleEdit = () => {
-    setChatTitle(chat.title ?? "");
-    setIsEditing(true);
-  };
-
-  /** Closes the box and returns the focus to the control that opened it. */
-  const closeEditor = () => {
-    returnFocus.current = true;
-    setIsEditing(false);
-  };
-
-  /** Persist a non-empty edited chat title. */
-  const handleSave = () => {
-    const nextTitle = chatTitle.trim();
-    if (!nextTitle || isPending) {
-      return;
-    }
-    closeEditor();
-    change(() =>
-      Effect.runPromise(
-        Effect.tryPromise(() =>
-          updateChatTitle({
-            chatId: chat._id,
-            title: nextTitle,
-          })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/ai/chat/header",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    // The box comes back with the words the learner wrote.
-                    reopened.current = true;
-                    setIsEditing(true);
-                    toast.error(actionErrorMessage);
-                  })
-                )
-              ),
-          })
-        )
-      )
-    );
-  };
+  const {
+    chatTitle,
+    closeEditor,
+    handleEdit,
+    handleSave,
+    inputRef,
+    isEditing,
+    isPending,
+    moreActions,
+    setChatTitle,
+    titleRef,
+  } = useChatRename(chat);
 
   const isPrivate = chat.visibility === "private";
   return (
@@ -240,11 +156,11 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
         <Activity mode={isEditing ? "visible" : "hidden"}>
           <Input
             className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
-            disabled={isPending}
             maxLength={MAX_TITLE_LENGTH}
             onChange={(e) => setChatTitle(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              // While the learner composes a character, Enter belongs to the keyboard.
+              if (isEnterOutsideComposition(e.nativeEvent)) {
                 handleSave();
               }
               if (e.key === "Escape") {

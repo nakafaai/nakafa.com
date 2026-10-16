@@ -1,0 +1,40 @@
+import { describe, expect, it } from "@effect/vitest";
+import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
+
+describe("keyboard", () => {
+  it("reads an Enter that the learner sends outside a composed character", () => {
+    expect(
+      isEnterOutsideComposition({
+        isComposing: false,
+        key: "Enter",
+        keyCode: 13,
+      })
+    ).toBe(true);
+  });
+
+  it("does not read the Enter that confirms a composed character while it runs", () => {
+    expect(
+      isEnterOutsideComposition({
+        isComposing: true,
+        key: "Enter",
+        keyCode: 229,
+      })
+    ).toBe(false);
+  });
+
+  it("does not read the Enter that Safari sends after a composed character has ended", () => {
+    expect(
+      isEnterOutsideComposition({
+        isComposing: false,
+        key: "Enter",
+        keyCode: 229,
+      })
+    ).toBe(false);
+  });
+
+  it("does not read a key that is not Enter", () => {
+    expect(
+      isEnterOutsideComposition({ isComposing: false, key: "a", keyCode: 65 })
+    ).toBe(false);
+  });
+});
