@@ -2,6 +2,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type usersTable from "@repo/backend/confect/_generated/tables/users";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
@@ -21,7 +22,7 @@ const proPlan = "pro" satisfies UserPlan;
 const activeSubscriptionStatus = "active";
 const canceledSubscriptionStatus = "canceled";
 type SubscriptionDoc = Doc<"subscriptions">;
-type UserDoc = Doc<"users">;
+type UserDoc = typeof usersTable.Doc.Type;
 
 /** Maps thrown Convex IO failures into the subscription trigger error channel. */
 function toSubscriptionPlanSyncIoError(error: unknown) {

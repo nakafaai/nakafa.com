@@ -60,7 +60,11 @@ const Answer = Schema.Union([
 ]);
 const Token = Schema.Struct({ token: Schema.String });
 const CurrentUser = Schema.Struct({
-  appUser: Schema.Struct({ _id: Schema.String, username: Schema.String }),
+  appUser: Schema.Struct({
+    _id: Schema.String,
+    authId: Schema.String,
+    username: Schema.String,
+  }),
 });
 const Receipt = Schema.Struct({
   chatId: Schema.String,
@@ -211,6 +215,8 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
         )
       );
     }),
+    /** The Better Auth id of the learner's account, which the acceptance command names. */
+    authId: appUser.authId,
     /** The id of the learner's account in the app. */
     userId: appUser._id,
     /** The username of the learner, which their profile address names. */

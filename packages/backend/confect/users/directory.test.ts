@@ -7,7 +7,13 @@ import {
   getUserMap,
 } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, HashMap, Option } from "effect";
+import { MascotCode } from "@repo/mascot/code";
+import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
+
+/** The animal of the first account of these tests, as the code that is stored. */
+const CRAB_CODE = "crab.1.6d4b78.left.smile";
+/** The same animal, decoded the way the Confect reader returns it. */
+const CRAB = Schema.decodeSync(MascotCode)(CRAB_CODE);
 
 describe("users/directory", () => {
   it.effect(
@@ -51,6 +57,11 @@ describe("users/directory", () => {
               );
             }
             const [firstId, missingId, secondId] = ids;
+            yield* Effect.promise(() =>
+              tCtx.db.patch("users", firstId, {
+                mascot: CRAB_CODE,
+              })
+            );
             yield* Effect.promise(() => tCtx.db.delete("users", missingId));
             const get = vi.spyOn(tCtx.db, "get");
             const users = yield* getUserMap([
@@ -68,6 +79,7 @@ describe("users/directory", () => {
               _id: firstId,
               email: "first@example.com",
               image: "/avatars/first.png",
+              mascot: CRAB,
               name: "first",
             });
             expect(

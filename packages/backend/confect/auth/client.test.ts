@@ -7,9 +7,11 @@ import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/confect/auth/d
 import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import { INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
+import { accountMascot } from "@repo/backend/confect/users/mascot";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { signInWithGoogle } from "@repo/backend/test/auth";
+import { encode } from "@repo/mascot/code";
 import { getFunctionName, makeFunctionReference } from "convex/server";
 import { Array as Arr, Duration } from "effect";
 
@@ -150,6 +152,18 @@ describe("auth/client", () => {
       "syntheticlearner2",
     ]);
   });
+  it("gives a new account the animal of its auth id", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await signInWithGoogle(test, "animal", NOW);
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    if (!user) {
+      throw new Error(
+        "Expected the Better Auth lifecycle to create an app user."
+      );
+    }
+
+    expect(user.mascot).toBe(encode(accountMascot(user.authId)));
+  });
   it("projects each Better Auth profile field without scheduling unchanged writes", async () => {
     const test = createConvexTestWithBetterAuth();
     await expect(signInWithGoogle(test, "profile", NOW)).resolves.toMatchObject(
@@ -163,73 +177,22 @@ describe("auth/client", () => {
         "Expected the Better Auth lifecycle to create an app user."
       );
     }
+    const profileUpdates = [
+      { emailVerified: true },
+      { name: "Updated name" },
+      { image: "https://example.com/avatar.png" },
+      { email: "updated-profile@example.com" },
+      { image: null },
+    ];
     await test.mutation(async (ctx) => {
       const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
-      await adapter.update({
-        model: "user",
-        update: {
-          emailVerified: true,
-        },
-        where: [
-          {
-            field: "_id",
-            operator: "eq",
-            value: original.authId,
-          },
-        ],
-      });
-      await adapter.update({
-        model: "user",
-        update: {
-          name: "Updated name",
-        },
-        where: [
-          {
-            field: "_id",
-            operator: "eq",
-            value: original.authId,
-          },
-        ],
-      });
-      await adapter.update({
-        model: "user",
-        update: {
-          image: "https://example.com/avatar.png",
-        },
-        where: [
-          {
-            field: "_id",
-            operator: "eq",
-            value: original.authId,
-          },
-        ],
-      });
-      await adapter.update({
-        model: "user",
-        update: {
-          email: "updated-profile@example.com",
-        },
-        where: [
-          {
-            field: "_id",
-            operator: "eq",
-            value: original.authId,
-          },
-        ],
-      });
-      await adapter.update({
-        model: "user",
-        update: {
-          image: null,
-        },
-        where: [
-          {
-            field: "_id",
-            operator: "eq",
-            value: original.authId,
-          },
-        ],
-      });
+      for (const update of profileUpdates) {
+        await adapter.update({
+          model: "user",
+          update,
+          where: [{ field: "_id", operator: "eq", value: original.authId }],
+        });
+      }
     });
     const stored = await test.query(async (ctx) => ({
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
@@ -248,6 +211,31 @@ describe("auth/client", () => {
           getFunctionName(internal.customers.actions.internal.syncCustomer)
       )
     ).toHaveLength(5);
+  });
+  it("copies the name and the photo that the update trigger receives as the rows before and after", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await signInWithGoogle(test, "trigger", NOW);
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+    if (!user) {
+      throw new Error(
+        "Expected the Better Auth lifecycle to create an app user."
+      );
+    }
+    const row = { _id: user.authId, email: user.email, emailVerified: true };
+    await test.mutation((ctx) =>
+      ctx.runMutation(internal.auth.lifecycle.onUpdate, {
+        model: "user",
+        newDoc: { ...row, image: "https://example.com/ada.png", name: "Ada" },
+        oldDoc: { ...row, image: null, name: user.name },
+      })
+    );
+
+    expect(
+      await test.query((ctx) => ctx.db.get("users", user._id))
+    ).toMatchObject({
+      image: "https://example.com/ada.png",
+      name: "Ada",
+    });
   });
   it("ignores profile propagation after deletion preparation begins", async () => {
     const test = createConvexTestWithBetterAuth();
