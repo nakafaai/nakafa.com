@@ -20,15 +20,13 @@ import {
   openEditor,
   settle,
   silentEditor,
+  THREE_LETTERS,
   textOf,
   typeText,
 } from "@/test/sync";
 
 /** The text of two letters typed by two editors, in either order. */
 const TWO_LETTERS = /^[ab]{2}$/;
-
-/** The text of three letters typed by three editors, in any order. */
-const THREE_LETTERS = /^[abc]{3}$/;
 
 describe("editor/sync convergence", () => {
   it.effect("converges two editors on one document and loses no step", () =>

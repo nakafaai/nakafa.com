@@ -9,7 +9,7 @@ import { randomUuid } from "@repo/utilities/uuid";
 import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { sendableSteps } from "prosemirror-collab";
-import { dropUnsendable } from "@/lib/editor/receive";
+import { dropUnsendable } from "@/lib/editor/replay";
 import { nowTime, SyncFailed, type SyncSession } from "@/lib/editor/session";
 
 /** A batch as the loop encodes it: its text, and the number of steps the text holds. */

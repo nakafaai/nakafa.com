@@ -10,14 +10,16 @@ import type {
 import type {
   OpenedDocument,
   SinceReply,
+  StepView,
 } from "@repo/backend/confect/editor/view";
 import type { Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
 import {
+  Array as Arr,
   Clock,
   DateTime,
   Effect,
-  type Ref,
+  Ref,
   Schema,
   type Semaphore,
 } from "effect";
@@ -157,3 +159,18 @@ export interface SyncSession {
 
 /** The current time as a `DateTime`, read from the clock so a test can move it. */
 export const nowTime = Effect.map(Clock.currentTimeMillis, DateTime.makeUnsafe);
+
+/** An edit by another editor counts as a change, so the idle time of this editor starts over. */
+export const markChanged = Effect.fn("editor.sync.changed")(function* (
+  session: SyncSession,
+  steps: readonly (typeof StepView.Type)[]
+) {
+  const memory = yield* Ref.get(session.memory);
+  if (Arr.some(steps, (view) => view.clientId !== memory.clientId)) {
+    const now = yield* nowTime;
+    yield* Ref.update(session.memory, (current) => ({
+      ...current,
+      lastChangeAt: now,
+    }));
+  }
+});

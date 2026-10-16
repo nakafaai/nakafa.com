@@ -1,11 +1,6 @@
 import { randomUuid } from "@repo/utilities/uuid";
 import { Effect, Option, Ref, Semaphore } from "effect";
-import {
-  pull,
-  readDocument,
-  receiveOnto,
-  settleSteps,
-} from "@/lib/editor/receive";
+import { pull } from "@/lib/editor/pull";
 import { push } from "@/lib/editor/send";
 import {
   type EditorPort,
@@ -16,6 +11,7 @@ import {
   type SyncSession,
   type SyncTransport,
 } from "@/lib/editor/session";
+import { readDocument, receiveOnto, settleSteps } from "@/lib/editor/settle";
 import { snapshotIfDue } from "@/lib/editor/snapshot";
 
 /**

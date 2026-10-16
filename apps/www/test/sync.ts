@@ -270,6 +270,9 @@ export const typeText = Effect.fn("test.sync.typeText")(function* (
 /** The text of a document, which the convergence checks compare. */
 export const textOf = (doc: Node) => doc.textContent;
 
+/** The text of three letters typed by three editors, in any order. */
+export const THREE_LETTERS = /^[abc]{3}$/;
+
 /** Starts one editor on the server's document. */
 export const openEditor = Effect.fn("test.sync.open")(function* (
   transport: SyncTransport
