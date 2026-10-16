@@ -13,7 +13,7 @@ import {
   VisualCardFullscreen,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -105,9 +105,9 @@ interface ProjectileScenario {
 }
 
 interface ProjectileClientProps {
-  readonly initialScenario: ProjectileScenario;
   readonly lead: string;
-  readonly scenarios: readonly ProjectileScenario[];
+  /** Every trajectory, the default one first, so the scene opens on it. */
+  readonly scenarios: Arr.NonEmptyReadonlyArray<ProjectileScenario>;
   readonly talk: ReactNode;
   readonly title: string;
   readonly viewLabel: string;
@@ -172,7 +172,6 @@ function useProjectileSceneVisibility() {
  * screen, and the scene holds still with reduced motion.
  */
 export function ProjectileClient({
-  initialScenario,
   lead,
   scenarios,
   talk,
@@ -182,19 +181,8 @@ export function ProjectileClient({
   const { sceneFrameRef, sceneVisible } = useProjectileSceneVisibility();
   const shouldReduceMotion = useReducedMotion();
   const playing = sceneVisible && !shouldReduceMotion;
-  const [index, setIndex] = useState(() =>
-    Option.getOrElse(
-      Arr.findFirstIndex(
-        scenarios,
-        (scenario) => scenario.id === initialScenario.id
-      ),
-      () => 0
-    )
-  );
-  const active = Option.getOrElse(
-    Arr.get(scenarios, index),
-    () => initialScenario
-  );
+  const [index, setIndex] = useState(0);
+  const active = scenarios[index % scenarios.length];
 
   useEffect(() => {
     if (!playing) {
