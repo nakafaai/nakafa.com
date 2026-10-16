@@ -7,6 +7,7 @@ import type { ThingName } from "@repo/mascot/thing/name";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { CastAnimal } from "@/components/marketing/about/cast";
+import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { TOY_HERD } from "@/components/marketing/about/toys/herd";
 import { within } from "@/components/marketing/about/toys/place";
 
@@ -78,7 +79,7 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   {
     key: "lesson-gap",
     picture: animal(7),
-    place: within("lesson", { dy: -30, minWidth: 1024, x: 0.97, y: 0 }),
+    place: within(LESSON_SECTION_ID, { dy: -30, minWidth: 1024, x: 0.97, y: 0 }),
   },
   {
     key: "tryout-gap",

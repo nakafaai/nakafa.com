@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, MutableList, Schema } from "effect";
+import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { withBrowserContext } from "@/e2e/support/context";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -14,7 +15,7 @@ import {
 /** The parts of the home page, in the order of the page. */
 const HOME_PARTS = [
   "hero",
-  "lesson",
+  LESSON_SECTION_ID,
   "tryout",
   "nina",
   "scene",

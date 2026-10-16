@@ -7,6 +7,7 @@ import {
 import { Effect } from "effect";
 import { getLocale, getTranslations } from "next-intl/server";
 import { NinaPrompt } from "@/components/ai/message/prompt";
+import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { readHomeLessons } from "@/components/marketing/about/lesson/published";
 import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
 import { applyContentCache } from "@/lib/content/cache";
@@ -43,7 +44,10 @@ export async function Lesson() {
   const lessons = await readLessons(locale);
 
   return (
-    <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="lesson">
+    <section
+      className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32"
+      id={LESSON_SECTION_ID}
+    >
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
         <div className="grid min-w-0 content-center gap-8">
           <div className="grid gap-4">

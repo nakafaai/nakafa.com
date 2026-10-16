@@ -8,13 +8,11 @@ import {
 } from "@/components/shared/quran/interpretation/button";
 import { QuranText } from "@/components/shared/quran/text";
 import { useQuranVerses } from "@/components/shared/quran/verses/context";
-import { QURAN_FLOW_VERSES } from "@/components/shared/quran/verses/flow";
 import {
   QuranVerse,
   QuranVerseHeading,
 } from "@/components/shared/quran/verses/item";
 import { QuranTranslation } from "@/components/shared/quran/verses/translation";
-import { WindowVirtualized } from "@/components/shared/quran/verses/virtual";
 
 interface QuranVerseListProps {
   items: readonly {
@@ -27,35 +25,24 @@ interface QuranVerseListProps {
 type VerseItem = QuranVerseListProps["items"][number];
 
 /**
- * Renders a surah's leading verses in document flow, so the server markup has
- * its final height, and virtualizes any verses after them far below the fold.
+ * Renders every verse of a surah in document flow. Each verse is in the page
+ * from the server on, at its final height, so the page never changes height
+ * while the reader scrolls and a jump lands where the page says it will.
  * Verses arrive once as data, so the page payload carries each verse's text
  * rather than a rendered element tree for every verse.
  */
 export function QuranVerseList({ items }: QuranVerseListProps) {
   const last = Arr.last(items);
-  const tail = Arr.drop(items, QURAN_FLOW_VERSES);
 
   return (
     <div>
-      {Arr.map(Arr.take(items, QURAN_FLOW_VERSES), (item) => (
+      {Arr.map(items, (item) => (
         <QuranSurahVerse
           isLast={Option.exists(last, (value) => value === item)}
           item={item}
           key={item.verse.number.inQuran}
         />
       ))}
-      {tail.length > 0 ? (
-        <WindowVirtualized data={tail}>
-          {(item) => (
-            <QuranSurahVerse
-              isLast={Option.exists(last, (value) => value === item)}
-              item={item}
-              key={item.verse.number.inQuran}
-            />
-          )}
-        </WindowVirtualized>
-      ) : null}
     </div>
   );
 }
