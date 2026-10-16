@@ -75,10 +75,14 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
   const { appUser } = user;
   const photo = photoOf(appUser);
   const picture = appUser.picture ?? "animal";
-  const pictureItems = [
-    { label: t("picture-animal"), value: "animal" },
-    { label: t("picture-photo"), value: "photo" },
-  ];
+  const pictureLabels: Record<typeof UserPicture.Type, string> = {
+    animal: t("picture-animal"),
+    photo: t("picture-photo"),
+  };
+  const pictureItems = Arr.map(UserPicture.literals, (value) => ({
+    label: pictureLabels[value],
+    value,
+  }));
 
   /** Shows and saves another animal, never the one that shows now. */
   const shuffle = () => {
@@ -141,12 +145,7 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
               <p className="text-muted-foreground text-sm">
                 {t("picture-footer-animal")}
               </p>
-              <Button
-                onClick={shuffle}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
+              <Button onClick={shuffle} size="sm" type="button">
                 {t("animal-shuffle")}
               </Button>
             </>
