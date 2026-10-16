@@ -3,7 +3,7 @@ import { Array as Arr, Option, Schema } from "effect";
 const ThemeAppearanceSchema = Schema.Literals(["light", "dark"]);
 
 /** Concrete visual appearance used by runtime renderers and integrations. */
-export type ThemeAppearance = typeof ThemeAppearanceSchema.Type;
+type ThemeAppearance = typeof ThemeAppearanceSchema.Type;
 
 const ThemeShaderColorSchema = Schema.TemplateLiteral([
   "rgb(",
