@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { MAX_DOCUMENT_DEPTH } from "@repo/backend/confect/editor/node";
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import {
   decodeStep,
   encodeStep,
@@ -118,6 +118,7 @@ describe("editor/step storage form", () => {
   it.effect.each([
     { content: [{ text: "", type: "text" }], name: "an empty text" },
     { content: [{ type: "text" }], name: "a text node with no text" },
+    { content: [], name: "no node at all" },
   ])("refuses a slice that holds $name", ({ content }) =>
     Effect.gen(function* () {
       const failure = yield* Schema.decodeEffect(StepSchema)({
@@ -134,7 +135,7 @@ describe("editor/step storage form", () => {
     Effect.gen(function* () {
       const failure = yield* Schema.decodeEffect(StepSchema)({
         from: 0,
-        slice: { content: [], openStart: -1 },
+        slice: { content: [{ text: "a", type: "text" }], openStart: -1 },
         stepType: "replace",
         to: 0,
       }).pipe(Effect.flip);

@@ -1,14 +1,5 @@
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import { Array as Arr, Predicate, Schema } from "effect";
-
-/**
- * Deepest a document may nest. The `doc` node is level 1 and each node inside
- * it is one level deeper. A node's `content` array is not a level of its own.
- * ADR 0028 and ADR 0031 bound the node depth at 16. Convex allows 16 levels of
- * nested objects and arrays together (its limits page, read on 13 October 2026),
- * and every node is an object with a `content` array, so a node depth of 16 can
- * reach 32 Convex levels. That is why a document is stored as JSON text.
- */
-export const MAX_DOCUMENT_DEPTH = 16;
 
 /** A mark of a text node: its type, and attributes that are JSON values. */
 export const MarkSchema = Schema.Struct({
@@ -42,13 +33,13 @@ export interface DocumentNode extends NodeFields {}
  * A node of a document. A text node holds non-empty text, because ProseMirror
  * refuses an empty text node and a text node with no text.
  *
- * Aksara's assessment document (`@nakafa/aksara-contracts` 0.49.0, export
- * `assessment/document`) types every block and holds stricter rules, such as
- * heading levels 1 to 3 and typed attributes. This package pins 0.48.9, which
- * has no assessment export, and the pin is not changed here, so this
- * declaration is the generic ProseMirror shape. When the pin moves, this file
- * imports the contract's node schema in place of the declaration, and the
- * snapshot writer checks each document with the contract's Schema (ADR 0028).
+ * The pinned contract (`@nakafa/aksara-contracts` 0.49.0, export
+ * `assessment/document`) types every block of an assessment and holds stricter
+ * rules, such as heading levels 1 to 3 and typed attributes. This declaration
+ * stays the generic ProseMirror shape, because a step's slice may hold inline
+ * content, such as a bare text node, that the contract's block schema refuses.
+ * The contract's Schema checks each whole document where it is snapshotted, not
+ * here (ADR 0028).
  */
 export const DocumentNodeSchema: Schema.Codec<DocumentNode> =
   NodeFieldsSchema.check(

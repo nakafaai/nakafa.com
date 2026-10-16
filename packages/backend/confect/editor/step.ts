@@ -1,7 +1,7 @@
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import {
   DocumentNodeSchema,
   fitsSlice,
-  MAX_DOCUMENT_DEPTH,
   MarkSchema,
 } from "@repo/backend/confect/editor/node";
 import { Effect, Predicate, Schema, SchemaTransformation } from "effect";
@@ -12,9 +12,13 @@ const PositionSchema = Schema.Natural;
 /** A count of nodes or open levels, never negative. */
 const CountSchema = Schema.Natural;
 
-/** The fields of a slice as ProseMirror writes them: its nodes, and how many levels at each end are open. */
+/**
+ * The fields of a slice as ProseMirror writes them: its nodes, and how many levels at each end
+ * are open. ProseMirror writes a slice only when it holds a node: `Slice.toJSON` returns null for
+ * an empty one, and the step leaves out its `slice` key. So `content` holds at least one node.
+ */
 const SliceFieldsSchema = Schema.Struct({
-  content: Schema.Array(DocumentNodeSchema),
+  content: Schema.NonEmptyArray(DocumentNodeSchema),
   openEnd: Schema.optionalKey(CountSchema),
   openStart: Schema.optionalKey(CountSchema),
 });

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import {
   type Document,
   DocumentSchema,
   decodeDocument,
   encodeDocument,
 } from "@repo/backend/confect/editor/document";
-import { MAX_DOCUMENT_DEPTH } from "@repo/backend/confect/editor/node";
 import {
   CONVEX_DOCUMENT_LIMIT,
   MAX_DOCUMENT_BYTES,

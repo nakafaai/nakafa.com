@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  fitsDocument,
-  fitsSlice,
-  MAX_DOCUMENT_DEPTH,
-} from "@repo/backend/confect/editor/node";
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
+import { fitsDocument, fitsSlice } from "@repo/backend/confect/editor/node";
 import { nested } from "@repo/backend/test/editor/nodes";
 
 describe("editor/node depth", () => {

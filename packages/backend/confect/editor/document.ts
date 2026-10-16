@@ -1,7 +1,7 @@
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import {
   DocumentNodeSchema,
   fitsDocument,
-  MAX_DOCUMENT_DEPTH,
 } from "@repo/backend/confect/editor/node";
 import {
   MAX_DOCUMENT_BYTES,
