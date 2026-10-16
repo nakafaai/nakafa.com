@@ -3,37 +3,26 @@ import "server-only";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Lesson } from "@/components/marketing/about/lesson/id";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
+/** The locale whose published path names each home lesson. */
+const ANCHOR_LOCALE: AppLocaleCode = "en";
+
 /**
- * The published path of each home lesson in each locale. Each path names the
- * lesson section that Aksara publishes, so each tab shows that lesson's own
- * title and description and links to it.
+ * The published path of each home lesson in the anchor locale. Each path names
+ * the lesson section that Aksara publishes. The other locales come from that
+ * lesson's own alternates, so a lesson that Aksara renames can never leave a
+ * stale link here.
  */
 export const HOME_LESSON_PATHS = {
-  atom: {
-    de: "faecher/chemie/atombau/elektronenhuelle",
-    en: "subjects/chemistry/structure-matter/atom-shell",
-    id: "materi/kimia/struktur-atom/kulit-atom",
-  },
-  cell: {
-    de: "faecher/biologie/vielfalt-der-lebewesen/bakterien",
-    en: "subjects/biology/biodiversity/bacteria",
-    id: "materi/biologi/keanekaragaman-makhluk-hidup/bakteri",
-  },
-  circle: {
-    de: "faecher/mathematik/trigonometrie/sinus-kosinus-und-tangens-vergleichen",
-    en: "subjects/mathematics/trigonometry/trigonometric-comparison-three-primary",
-    id: "materi/matematika/trigonometri/tiga-serangkai-perbandingan-trigonometri",
-  },
-  projectile: {
-    de: "faecher/physik/kinematik/parabelfoermige-bewegung",
-    en: "subjects/physics/kinematics/parabolic-movement",
-    id: "materi/fisika/kinematika/gerak-parabola",
-  },
-} satisfies Record<Lesson, Record<AppLocaleCode, string>>;
+  atom: "subjects/chemistry/structure-matter/atom-shell",
+  cell: "subjects/biology/biodiversity/bacteria",
+  circle:
+    "subjects/mathematics/trigonometry/trigonometric-comparison-three-primary",
+  projectile: "subjects/physics/kinematics/parabolic-movement",
+} satisfies Record<Lesson, string>;
 
 /** The three things the window shows of one lesson, in the page's locale. */
 const HomeLessonSchema = Schema.Struct({
@@ -46,15 +35,19 @@ const HomeLessonSchema = Schema.Struct({
 export type HomeLesson = typeof HomeLessonSchema.Type;
 
 /**
- * Reads the verified model of the lesson at one public path. It resolves to
- * null when no lesson is published at that path.
+ * Reads the verified model of the lesson at one public path. Its alternates are
+ * the lesson in every active locale, the one at the path included. It resolves
+ * to null when no lesson is published at that path.
  */
 export type HomeLessonReader = (
   locale: AppLocaleCode,
   publicPath: string
 ) => Promise<{
   readonly model: {
-    readonly projection: Pick<MaterialLessonProjection, "metadata"> | null;
+    readonly alternates: readonly Pick<
+      MaterialLessonProjection,
+      "appLocale" | "metadata" | "publicPath"
+    >[];
   };
 } | null>;
 
@@ -68,37 +61,58 @@ export class HomeLessonReadError extends Schema.TaggedError<HomeLessonReadError>
   }
 ) {}
 
-/** Reads one published lesson's title, description and link for the page's locale. */
+/**
+ * Reads one home lesson's title, description and link for the page's locale.
+ * The lesson is read once, at its anchor path, and its counterpart in the page's
+ * locale gives the title, the description and the path. The errors name the
+ * page's locale and the anchor path of the lesson.
+ */
 const readHomeLesson = Effect.fn("www.home.readLesson")(function* (
   locale: AppLocaleCode,
   lesson: Lesson,
   readLesson: HomeLessonReader
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const publicPath = HOME_LESSON_PATHS[lesson][locale];
+  const anchorPath = HOME_LESSON_PATHS[lesson];
   const found = yield* Effect.tryPromise({
-    try: () => readLesson(locale, publicPath),
-    catch: (cause) => new HomeLessonReadError({ appLocale, cause, publicPath }),
+    try: () => readLesson(ANCHOR_LOCALE, anchorPath),
+    catch: (cause) =>
+      new HomeLessonReadError({ appLocale, cause, publicPath: anchorPath }),
   });
-  const projection = found?.model.projection;
-  if (!projection) {
-    return yield* new PublishedProjectionError({ appLocale, publicPath });
+  if (!found) {
+    return yield* new PublishedProjectionError({
+      appLocale,
+      publicPath: anchorPath,
+    });
   }
-  const { description, title } = projection.metadata;
+  const counterpart = Arr.findFirst(
+    found.model.alternates,
+    (alternate) => alternate.appLocale === locale
+  );
+  if (Option.isNone(counterpart)) {
+    return yield* new PublishedProjectionError({
+      appLocale,
+      publicPath: anchorPath,
+    });
+  }
+  const { description, title } = counterpart.value.metadata;
   if (description === undefined) {
-    return yield* new PublishedProjectionError({ appLocale, publicPath });
+    return yield* new PublishedProjectionError({
+      appLocale,
+      publicPath: anchorPath,
+    });
   }
 
   return {
     description,
-    href: `/${locale}/${publicPath}`,
+    href: `/${locale}/${counterpart.value.publicPath}`,
     title,
   } satisfies HomeLesson;
 });
 
 /**
- * Reads the four lessons of the home window for one locale. A lesson that is
- * not published in that locale fails with PublishedProjectionError, and a read
+ * Reads the four lessons of the home window for one locale. A lesson that has
+ * no counterpart in that locale fails with PublishedProjectionError, and a read
  * that the reader rejects fails with HomeLessonReadError, so the page cannot be
  * built with a hole where a lesson belongs.
  */

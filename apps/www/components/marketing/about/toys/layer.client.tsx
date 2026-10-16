@@ -79,7 +79,12 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   {
     key: "lesson-gap",
     picture: animal(7),
-    place: within(LESSON_SECTION_ID, { dy: -30, minWidth: 1024, x: 0.97, y: 0 }),
+    place: within(LESSON_SECTION_ID, {
+      dy: -30,
+      minWidth: 1024,
+      x: 0.97,
+      y: 0,
+    }),
   },
   {
     key: "tryout-gap",
