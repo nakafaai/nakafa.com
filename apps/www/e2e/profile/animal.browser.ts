@@ -6,10 +6,17 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-import { animalOf, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
+import {
+  animalOf,
+  drawnAnimal,
+  pictureChoice,
+  sidebarAvatar,
+} from "@/e2e/support/avatar";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
+/** The settings page, where the profile picture card chooses the animal or the Google photo. */
+const SETTINGS = "/en/user/settings";
 /** A picture of the site that loads, and an address that answers with no picture. */
 const LOADING_PHOTO = "/logo.png";
 const MISSING_PHOTO = "/animal-photo-that-does-not-exist.png";
@@ -83,7 +90,7 @@ test("a learner without a photo is drawn as an animal on the account button and 
   );
 });
 
-test("a photo that loads replaces the animal, and a photo that fails keeps the animal at the same size", async ({
+test("a photo shows once the learner chooses it, and a photo that fails keeps the animal at the same size", async ({
   baseURL,
   page,
 }) => {
@@ -98,6 +105,19 @@ test("a photo that loads replaces the animal, and a photo that fails keeps the a
         image: `${origin}${LOADING_PHOTO}`,
       });
       yield* Effect.promise(async () => {
+        await page.goto(SETTINGS);
+        await expect(pictureChoice(page)).toBeVisible({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        // The Google photo waits until the learner chooses it.
+        await expect(avatar.locator('[data-slot="avatar-image"]')).toHaveCount(
+          0
+        );
+
+        await pictureChoice(page).click();
+        await page
+          .getByRole("option", { name: app.Auth["picture-photo"] })
+          .click();
         await expect(avatar.locator('[data-slot="avatar-image"]')).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });

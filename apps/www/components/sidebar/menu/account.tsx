@@ -2,12 +2,7 @@
 
 import { Logout01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { Animal } from "@repo/design-system/components/ui/animal";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/design-system/components/ui/avatar";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   SidebarMenuButton,
   SidebarMenuDescription,
@@ -78,16 +74,10 @@ export function AccountMenu({
               className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
               size="lg"
             >
-              <Avatar>
-                <AvatarImage
-                  alt={user.authUser.name}
-                  role="presentation"
-                  src={user.authUser.image ?? ""}
-                />
-                <AvatarFallback>
-                  <Animal mascot={user.appUser.mascot} />
-                </AvatarFallback>
-              </Avatar>
+              <PersonAvatar
+                mascot={user.appUser.mascot}
+                photo={photoOf(user.appUser)}
+              />
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                 <span className="truncate">{user.authUser.name}</span>
                 <SidebarMenuDescription>{planLabel}</SidebarMenuDescription>
@@ -105,16 +95,10 @@ export function AccountMenu({
           <DropdownMenuGroup>
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar>
-                  <AvatarImage
-                    alt={user.authUser.name}
-                    role="presentation"
-                    src={user.authUser.image ?? ""}
-                  />
-                  <AvatarFallback>
-                    <Animal mascot={user.appUser.mascot} />
-                  </AvatarFallback>
-                </Avatar>
+                <PersonAvatar
+                  mascot={user.appUser.mascot}
+                  photo={photoOf(user.appUser)}
+                />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium text-foreground">
                     {user.authUser.name}

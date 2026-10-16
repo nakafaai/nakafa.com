@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { Input } from "@repo/design-system/components/ui/input";
+import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "cn";
 import { Array as Arr, Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
@@ -27,7 +27,7 @@ import { useUpdateBioMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
-/** Renders the bio card: one line about the account, with its count of characters. */
+/** Renders the bio card: a few lines about the account, with the count of its tidied characters. */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
@@ -79,7 +79,7 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             <FieldLabel className="sr-only" htmlFor="user-settings-bio">
               {t("bio")}
             </FieldLabel>
-            <Input
+            <Textarea
               aria-invalid={!fits}
               className="max-w-md"
               id="user-settings-bio"

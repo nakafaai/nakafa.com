@@ -97,6 +97,29 @@ export function useUpdateMascotMutation() {
   );
 }
 
+/** Return a picture mutation that draws the chosen picture everywhere the account shows it at once. */
+export function useUpdatePictureMutation() {
+  return useMutation(users.mutations.setPicture).withOptimisticUpdate(
+    (localStore, { picture }) => {
+      const current = Option.getOrUndefined(
+        localStore.getQuery(auth.queries.getCurrentUser, {})
+      );
+      if (!current) {
+        return;
+      }
+      localStore.setQuery(
+        auth.queries.getCurrentUser,
+        {},
+        Option.some({
+          ...current,
+          appUser: patchUser(current.appUser, { picture }),
+        })
+      );
+      patchPublicUser(localStore, current.appUser._id, { picture });
+    }
+  );
+}
+
 /** Return a username mutation that shows the new address in the current account at once. */
 export function useUpdateUsernameMutation() {
   return useMutation(users.mutations.updateUsername).withOptimisticUpdate(
