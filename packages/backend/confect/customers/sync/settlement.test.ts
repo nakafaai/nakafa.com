@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { settleCustomerSync } from "@repo/backend/confect/customers/sync/settlement";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { Effect, Schema } from "effect";
 
 /** Creates observable cleanup operations for settlement tests. */
@@ -25,6 +26,7 @@ const createSettlementIds = Effect.fn("customers.sync.test.createIds")(
           credits: 0,
           creditsResetAt: 1,
           email: "customer-settlement@example.com",
+          mascot: MASCOT,
           name: "Customer Settlement",
           plan: "free",
         });

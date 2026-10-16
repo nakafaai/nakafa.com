@@ -14,6 +14,7 @@ import { TryoutStartError } from "@repo/backend/confect/tryouts/start/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { DateTime, Effect } from "effect";
 
@@ -27,6 +28,7 @@ async function insertUser(ctx: MutationCtx) {
     credits: 10,
     creditsResetAt: NOW,
     email: "tryout-access@example.com",
+    mascot: MASCOT_CODE,
     name: "Tryout Access",
     plan: "pro",
   });

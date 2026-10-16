@@ -39,12 +39,11 @@ export const userValidator = Schema.Struct({
   // The one name of the public profile address `@username`. Every live account
   // holds one; a deleted account keeps none, which frees the name.
   username: Schema.optionalKey(Schema.String),
-  // One line about the person, shown on the public profile.
+  // One line about the person, shown on their own profile.
   bio: Schema.optionalKey(Schema.String),
-  // The animal that draws this account, stored as its code. Every account holds
-  // one once the backfill has run; the change that deletes the backfill makes it
-  // required.
-  mascot: Schema.optionalKey(MascotCode),
+  // The animal that draws this account, stored as its code. An account gets its
+  // animal when it is made (`accountMascot`), and the learner can change it.
+  mascot: MascotCode,
   role: Schema.optionalKey(userRoleOptionsValidator),
   plan: userPlanValidator,
   credits: Schema.Finite,
