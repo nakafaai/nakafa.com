@@ -8,16 +8,17 @@ import type {
   PromotionDestination,
   PromotionSource,
   PromotionTarget,
-} from "@repo/backend/confect/tenancy/promotion";
+} from "@repo/backend/confect/tenancy/promotion/schema";
 import {
   grantRole,
+  scheduledJobs,
   slugOf,
   type tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** The Confect program fixture of the tenancy tests, one seeded school per test. */
-export type Fixture = Effect.Success<typeof tenancyFixture>;
+type Fixture = Effect.Success<typeof tenancyFixture>;
 type PromotionId = GenericId.GenericId<"tenantPromotions">;
 type PersonId = GenericId.GenericId<"tenantPeople">;
 
@@ -27,10 +28,8 @@ export const cohorts = refs.public.tenancy.cohorts;
 export const placements = refs.public.tenancy.placements;
 export const people = refs.public.tenancy.people;
 export const assignments = refs.public.tenancy.assignments;
-export const promotions = refs.public.tenancy.promotions;
-export const promotionReview = refs.public.tenancy.promotionReview;
-export const promotionApply = refs.public.tenancy.promotionApply;
-export const runPromotion = refs.internal.tenancy.promotionRun.run;
+export const promotion = refs.public.tenancy.promotion;
+export const runPromotion = refs.internal.tenancy.promotion.run.run;
 
 /** The destinations the shared plan uses. */
 export const toEightA: typeof PromotionDestination.Type = {
@@ -46,9 +45,24 @@ export const toGraduate: typeof PromotionDestination.Type = {
 };
 export const toStay: typeof PromotionDestination.Type = { kind: "stay" };
 
+/** The AccessDenied that a refused action reads as, with the reason its check gave. */
+export const denied = (reason: "resource" | "role" | "condition") => ({
+  _tag: "AccessDenied",
+  code: "ACCESS_DENIED",
+  reason,
+});
+
 /** Every journal entry, oldest first, with room for one whole promotion. */
 export const allJournal = Effect.flatMap(DatabaseReader, (reader) =>
   reader.table("journalEntries").index("by_creation_time").take(1000)
+);
+
+/** The arguments of each scheduled run of a promotion, oldest first. */
+export const runJobs = Effect.map(scheduledJobs, (jobs) =>
+  Arr.map(
+    Arr.filter(jobs, (job) => job.name === "tenancy/promotion/run:run"),
+    (job) => job.args
+  )
 );
 
 /** The journal entries of one change type, oldest first. */
@@ -195,22 +209,22 @@ export const approvedPromotion = Effect.fn("test.promotion.approved")(
     s: Effect.Success<ReturnType<typeof scenario>>,
     custom?: Pick<ReturnType<typeof scenarioPlan>, "sources" | "targets">
   ) {
-    const made = yield* fixture.as("admin").mutation(promotions.create, {
+    const made = yield* fixture.as("admin").mutation(promotion.draft.create, {
       periodId: s.source.id,
       slug: nf,
       targetPeriodId: s.target.id,
     });
-    yield* fixture.as("admin").mutation(promotions.plan, {
+    yield* fixture.as("admin").mutation(promotion.draft.plan, {
       promotionId: made.id,
       slug: nf,
       ...(custom ?? scenarioPlan(s.seventh, s.ninth)),
     });
     yield* fixture
       .as("admin")
-      .mutation(promotionReview.submit, { promotionId: made.id, slug: nf });
+      .mutation(promotion.review.submit, { promotionId: made.id, slug: nf });
     yield* fixture
       .as("principal")
-      .mutation(promotionReview.approve, { promotionId: made.id, slug: nf });
+      .mutation(promotion.review.approve, { promotionId: made.id, slug: nf });
     return made.id;
   }
 );
@@ -220,6 +234,18 @@ export const readPromotion = (fixture: Fixture, promotionId: PromotionId) =>
   fixture.run(
     Effect.flatMap(DatabaseReader, (reader) =>
       reader.table("tenantPromotions").get(promotionId)
+    )
+  );
+
+/** The cohort that a promotion created for one name key of its plan. */
+export const createdFor = (
+  fixture: Fixture,
+  promotionId: PromotionId,
+  nameKey: string
+) =>
+  Effect.map(readPromotion(fixture, promotionId), (row) =>
+    Option.getOrThrow(
+      Arr.findFirst(row.created, (entry) => entry.nameKey === nameKey)
     )
   );
 
@@ -246,7 +272,7 @@ export const drain = Effect.fn("test.promotion.drain")(function* (
 export const undoOnce = (fixture: Fixture, promotionId: PromotionId) =>
   fixture
     .as("admin")
-    .mutation(promotionApply.undo, { promotionId, slug: nf })
+    .mutation(promotion.undo.undo, { promotionId, slug: nf })
     .pipe(Effect.andThen(drain(fixture, promotionId)));
 
 /**

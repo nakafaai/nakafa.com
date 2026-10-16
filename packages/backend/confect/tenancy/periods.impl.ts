@@ -26,7 +26,7 @@ import {
   parseCivilDate,
 } from "@repo/backend/confect/tenancy/period";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
-import { openTarget } from "@repo/backend/confect/tenancy/promotionOpen";
+import { openTarget } from "@repo/backend/confect/tenancy/promotion/open";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 /** One period as the wire shows it. */

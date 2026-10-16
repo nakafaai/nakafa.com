@@ -220,7 +220,7 @@ period (`opened`) ends it. The Admin cancels a draft or a submitted promotion
 Applying runs four steps in order: archive the source period, create the target
 cohorts, place each student or graduate them, and copy the homeroom teachers the
 plan names. A run does one step or one page of students and schedules the next
-(`tenancy/promotionRun:run`). A step that stops on a typed failure keeps that
+(`tenancy/promotion/run:run`). A step that stops on a typed failure keeps that
 failure, with its step and page, on the promotion, and the next apply resumes
 there. Students move in pages of 100 (`PROMOTION_PAGE_SIZE`), so no run reads or
 writes more than one page of students. The cohort and homeroom steps each run
@@ -424,11 +424,17 @@ beside the old School. Four steps followed, in this order, and all four are done
   and `tenancy/invites` (`list`, `invite`, `revoke`, `resend`). Each decides
   through the access lane, and each returns the row its list shows.
 - Homeroom and promotions: `tenancy/assignments` (`assign` and `unassign`),
-  `tenancy/promotions` (`get`, `create`, `plan`, `setMove`, `moves`),
-  `tenancy/promotionReview` (`submit`, `approve`, `returnToDraft`, `cancel`), and
-  `tenancy/promotionApply` (`apply`, `undo`). Each decides through the access
-  lane, and the actions of each are listed in ADR 0012. Confect reserves
-  `return`, so the return to draft is `returnToDraft`.
+  `tenancy/promotion/draft` (`get`, `create`, `plan`),
+  `tenancy/promotion/moves` (`setMove`, `moves`),
+  `tenancy/promotion/review` (`submit`, `approve`, `returnToDraft`, `cancel`),
+  `tenancy/promotion/apply` (`apply`), and `tenancy/promotion/undo` (`undo`).
+  Each decides through the access lane, and the actions of each are listed in
+  ADR 0012. Confect reserves `return`, so the return to draft is
+  `returnToDraft`. The modules behind them live in `tenancy/promotion/`: the
+  values in `schema`, `progress` (where a run starts and stops), `destination`
+  and `check` (whether a plan fits its school), `row` (the stored promotion),
+  `view` (its wire shape), and `find`, `schedule`, and `open`; the four steps
+  are `archive`, `cohorts`, `homeroom`, and `place`, and `run` drives them.
 - Settings, public mutations that answer with the value now stored and that
   write and record nothing for a value already stored: `tenancy/settings`
   (`setLocale` for the country and the contract currency, `setPolicy` for one
@@ -466,7 +472,7 @@ beside the old School. Four steps followed, in this order, and all four are done
   as its expiry. It is internal, and it marks a still-pending invite expired.
   `tenancy/expiry:sweep` runs every hour as the backstop for a run that never
   happened: it expires each pending invite whose expiry has passed.
-- Internal: `tenancy/promotionRun:run` runs one step or one page of a promotion
+- Internal: `tenancy/promotion/run:run` runs one step or one page of a promotion
   that is being applied or undone, and schedules the next run until the steps
   finish.
 - Operators and visits are built in `operators`: the tables `operators`

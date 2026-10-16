@@ -10,7 +10,7 @@ import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
 import {
   PromotionReturnReason,
   PromotionStep,
-} from "@repo/backend/confect/tenancy/promotion";
+} from "@repo/backend/confect/tenancy/promotion/schema";
 import {
   ClaimMethod,
   PersonReason,
