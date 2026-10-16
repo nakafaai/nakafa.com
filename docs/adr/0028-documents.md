@@ -137,7 +137,12 @@ edit with a step whose JSON text is over the caller's bound, which the question
 editor passes as `MAX_STEP_BYTES` (`confect/editor/batch.ts`). That is the largest
 step text one call carries, so the editor holds no edit that no call can send. A
 queued step that no call can carry is dropped and counted by the sync
-(`dropUnsendable` in `apps/www/lib/editor/receive.ts`).
+(`dropUnsendable` in `apps/www/lib/editor/replay.ts`). `documentSizeGuard` in
+`packages/design-system/components/editor/size.ts` refuses an edit that grows the
+document past `MAX_DOCUMENT_BYTES`, measured as the snapshot measures it: the UTF-8
+length of the document's JSON text. It measures a transaction only when the
+transaction can grow the document, so a transaction that only removes content or
+marks passes unmeasured.
 
 ### Bounds
 
@@ -312,15 +317,21 @@ Drive copies come through the Drive connector (ADR 0015).
   and `documents:open` are queries, which cannot write. A client mutation that
   confirms the batch would let a sweep reclaim the rows. The owner decides whether
   to add it.
-- Submit checks the node and mark types of each step against the types the editor
-  reads, and not the attributes that the contract checks at the snapshot. A step
-  can therefore hold a link to an address that is not https, or a heading of a
-  level that the contract refuses. The snapshot that holds such a document is
-  refused, so the snapshot stays where it was and the step log is not pruned. The
-  editor logs each refusal. The owner decides whether submit checks the attributes
-  too, and whether the editor refuses a document that grows past
-  `MAX_DOCUMENT_BYTES`: it does not check that size today, so such a document is
-  refused at its snapshot in the same way.
+- Submit reads each step's nodes and marks with the contract's own schemas
+  (`confect/editor/content.ts`), so a heading level outside 1 to 3, a link to an
+  address that is not https, and a mark that the contract does not allow are refused
+  before any write. Two kinds of step hold no node that the check reads: an attribute
+  step and a document attribute step. The editor writes neither, because Tiptap
+  replaces a node with a replace step, but a crafted attribute step can set a heading
+  level that the contract refuses. The snapshot that holds such a document is refused,
+  so the snapshot stays where it was and the step log is not pruned. The editor logs
+  each refusal. The owner decides whether submit refuses the two kinds of attribute
+  step outright.
+- A stored step that grows a document past `MAX_DOCUMENT_BYTES` is applied by every
+  editor, because the skip rule covers the depth of a document and not its bytes. The
+  editor refuses such an edit only where it is made. Skipping by bytes would measure
+  the whole document for each stored step, up to 200 steps in one reply, and the owner
+  decides whether the rule takes the bytes too.
 - A dropped step, or a step that the editor replays after it opens again, keeps
   its position in the document it is replayed on. A later step that depended on
   the dropped one can therefore land at another place, and the replay does not
@@ -369,10 +380,14 @@ Drive copies come through the Drive connector (ADR 0015).
 | The tables `editorDocuments`, `editorSnapshots`, `editorSteps`, and `editorClients` (`confect/tables/editor*.ts`) | In code, not live. The head version and the snapshot version are on the document row, and the snapshot rows, the step rows, and the session records hold the rest. |
 | The functions `editor/documents` (`create`, `open`), `editor/steps` (`since`, `submit`), and `editor/snapshots` (`save`), and the sweep `internal.editor.prune.sweep` | In code and tested in convex-test, not live: no page calls them yet. |
 | The session record and the idempotent batch: the batch id, a repeat of an accepted batch answered with its version, `ClientTaken` for another account's session, and the record that `open` and `since` answer for the caller's own session | In code, not live: `confect/editor/steps.impl.ts`, `confect/editor/documents.impl.ts`, and `confect/editor/store.ts`. Tested in convex-test. |
-| The behind replay: the confirmation of the in-flight batch that landed, the replay of the other unconfirmed steps onto the snapshot, and the one `SyncDropped` count | In code, not live: `apps/www/lib/editor/receive.ts`, tested with the fake server in `apps/www/lib/editor/sync.test.ts`. |
-| The skip rule: a stored step that does not apply, or that nests the document past `MAX_DOCUMENT_DEPTH`, is skipped by every editor and logged once; an editor whose own step the server skips opens again from the snapshot | In code, not live: `apps/www/lib/editor/receive.ts`. Tested: three editors converge with a stored step that does not apply, and three editors converge within the bound when a rebased step nests past it (`receive.test.ts`). |
+| The behind replay: the confirmation of the in-flight batch that landed, the replay of the other unconfirmed steps onto the snapshot, and the one `SyncDropped` count | In code, not live: `apps/www/lib/editor/replay.ts`, tested with the fake server in `apps/www/lib/editor/replay.test.ts` and `apps/www/lib/editor/sync.test.ts`. |
+| The skip rule: a stored step that does not apply, or that nests the document past `MAX_DOCUMENT_DEPTH`, is skipped by every editor and logged once; an editor whose own step the server skips opens again from the snapshot | In code, not live: `apps/www/lib/editor/settle.ts`. Tested: three editors converge with a stored step that does not apply, and three editors converge within the bound when a rebased step nests past it (`settle.test.ts`). |
 | The depth filter of the editor: `depthGuard` refuses an edit that nests the document past the bound it is given | In code, not live: `packages/design-system/components/editor/depth.ts`. No editor mounts it yet, and the question editor passes `MAX_DOCUMENT_DEPTH`. |
-| The size guard of the editor: `stepSizeGuard` refuses an edit with a step over the bound it is given, and a queued step that no call can carry is dropped and counted (`dropUnsendable`) | In code, not live: `packages/design-system/components/editor/size.ts` and `apps/www/lib/editor/send.ts`. The question editor passes `MAX_STEP_BYTES`, which `batch.test.ts` pins to the encoder's call. Tested in `size.test.ts`, `batch.test.ts`, and `sync.test.ts`. |
+| The size guards of the editor: `stepSizeGuard` refuses an edit with a step over the bound it is given, `documentSizeGuard` refuses an edit that grows the document past the bound it is given, and a queued step that no call can carry is dropped and counted (`dropUnsendable`) | In code, not live: `packages/design-system/components/editor/size.ts`, `apps/www/lib/editor/replay.ts`, and `apps/www/lib/editor/send.ts`. The question editor passes `MAX_STEP_BYTES`. `send.test.ts` admits a step of that size, which one call carries, and refuses one byte more. `batch.test.ts` pins the encoder's call to the same bound. Tested in `size.test.ts`, `batch.test.ts`, `send.test.ts`, and `sync.test.ts`. |
+| The content check at submit (`confect/editor/content.ts`): the contract's block, inline, and mark schemas read each step's nodes and marks, and a refusal is `BatchInvalid` with nothing written | In code, not live: `confect/editor/steps.impl.ts`. Tested in `content.test.ts` and `steps.impl.test.ts`: a heading level of 4, a link that is not https, and a link mark out of the contract's order are refused; a list item, a heading of level 2, and an https link are accepted. |
+| The stored snapshot is the contract's output (`encodeDocument` in `confect/editor/document.ts`): attributes the contract does not name, such as a link's `target` and `rel`, are not stored | In code, not live. Tested in `document.test.ts`. |
+| The sync modules: `apps/www/lib/editor/settle.ts` (settling and the skip rule), `replay.ts` (reopen, reseat, replay, and the drop), and `pull.ts` (the apply path) | In code, not live. `settle.ts` imports none of the other two, so no two modules import each other. `pull.ts` holds the apply path, which calls `reopen`. |
+| The Tiptap cohort: the dependency policy holds every Tiptap package of the design system, and `@tiptap/pm` of the web app, to `TIPTAP_COHORT_VERSION` (3.31.4) in `scripts/dependencies/policy.ts` | In code. The dependency policy test enforces it. |
 | The assessment rules: `documentSchema` takes the rules its caller gives, the marks in their order, the heading levels, and the link rule (`packages/design-system/components/editor/document.ts`). `apps/www/lib/editor/assessment.ts` gives it the contract's marks in the contract's order (`MarkTypeSchema`), the heading levels 1 to 3, and `isHttpsUrl`, and the editor holds no horizontal rule. The server admits the node and mark types that the editor reads (`NodeTypeSchema` and `MarkTypeSchema` in `confect/editor/node.ts`), in a step and in a snapshot. | In code, not live. Tested in the design system's `document.test.ts`, at the commands of a headless editor: a heading level, a horizontal rule, and a link address. Tested in `assessment.test.ts`: the node types, the heading levels pinned to the contract's check, and the link rule. Tested on the server in `batch.test.ts` and `document.test.ts`: a step or a snapshot with a type the editor does not read is refused. |
 | The deletion of a document: its session records and its steps in pages, then its snapshot and its document row (`internal.editor.deletion.document`) | In code, not live: `confect/editor/deletion.impl.ts`, tested in convex-test. No public function deletes a document yet. |
 | The `document` access kind (`confect/editor/kinds.ts`), its authority, and its catalog entry | In code. ADR 0012 names it. |
