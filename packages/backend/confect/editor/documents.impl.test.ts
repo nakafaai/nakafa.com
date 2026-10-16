@@ -4,7 +4,6 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   CONVEX_DOCUMENT_LIMIT,
   MAX_DOCUMENT_BYTES,
-  utf8Bytes,
 } from "@repo/backend/confect/editor/size";
 import {
   batchText,
@@ -24,6 +23,7 @@ import {
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
+import { utf8Bytes } from "@repo/utilities/text";
 import { Array as Arr, Effect } from "effect";
 
 const { create, open } = refs.public.editor.documents;

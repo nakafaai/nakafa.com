@@ -1,4 +1,5 @@
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
+import { MarkSchema as ContractMarkSchema } from "@nakafa/aksara-contracts/assessment/inline";
 import { Array as Arr, Predicate, Record as Rec, Schema } from "effect";
 
 /**
@@ -44,11 +45,41 @@ export const AttributeValueSchema = Schema.Json.check(
   })
 );
 
+/**
+ * The mark types that a step or a document may hold: the contract's marks, in the
+ * contract's order (ADR 0031). The contract's mark schema is a union of the plain
+ * marks and the link, so the names are read from its two members.
+ */
+const [plainMark, linkMark] = ContractMarkSchema.members;
+export const MarkTypeSchema = Schema.Literals([
+  ...plainMark.fields.type.literals,
+  linkMark.fields.type.literal,
+]);
+
 /** A mark of a text node: its type, and attributes that are JSON values. */
 export const MarkSchema = Schema.Struct({
   attrs: Schema.optionalKey(AttributesSchema),
-  type: Schema.String,
+  type: MarkTypeSchema,
 });
+
+/**
+ * The node types that the assessment editor reads (ADR 0028). Its schema holds the
+ * blocks and the text that Tiptap's StarterKit keeps, and its root is `doc`, which
+ * no step holds. A step or a snapshot with another type fails to load in every
+ * editor that opens it, and the contract allows some types that no editor reads, so
+ * the server refuses them. `assessment.test.ts` pins this list to the editor's schema.
+ */
+export const NodeTypeSchema = Schema.Literals([
+  "blockquote",
+  "bulletList",
+  "codeBlock",
+  "hardBreak",
+  "heading",
+  "listItem",
+  "orderedList",
+  "paragraph",
+  "text",
+]);
 
 /** The fields of a node as ProseMirror writes them in JSON. Its children are read by the same schema, one level down. */
 const NodeFieldsSchema = Schema.Struct({
@@ -60,7 +91,7 @@ const NodeFieldsSchema = Schema.Struct({
   ),
   marks: Schema.optionalKey(Schema.Array(MarkSchema)),
   text: Schema.optionalKey(Schema.String),
-  type: Schema.String,
+  type: NodeTypeSchema,
 });
 
 type NodeFields = typeof NodeFieldsSchema.Type;
@@ -79,10 +110,10 @@ export interface DocumentNode extends NodeFields {}
  * The pinned contract (`@nakafa/aksara-contracts` 0.49.0, export
  * `assessment/document`) types every block of an assessment and holds stricter
  * rules, such as heading levels 1 to 3 and typed attributes. This declaration
- * stays the generic ProseMirror shape, because a step's slice may hold inline
- * content, such as a bare text node, that the contract's block schema refuses.
- * The contract's Schema checks each whole document where it is snapshotted, not
- * here (ADR 0028).
+ * keeps the ProseMirror shape, because a step's slice may hold inline content,
+ * such as a bare text node, that the contract's block schema refuses. Its type
+ * names are the ones the editor reads (`NodeTypeSchema`). The contract's Schema
+ * checks each whole document where it is snapshotted, not here (ADR 0028).
  */
 export const DocumentNodeSchema: Schema.Codec<DocumentNode> =
   NodeFieldsSchema.check(

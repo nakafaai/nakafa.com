@@ -29,11 +29,3 @@ export const MAX_BATCH_STEPS = 200;
 
 /** Largest JSON text of one call's batch in UTF-8 bytes (ADR 0028 Bounds: 128 KiB in one call). */
 export const MAX_BATCH_BYTES = 128 * 1024;
-
-/**
- * The UTF-8 bytes of a text. A size bound counts bytes and not characters, so a
- * character that takes two or more bytes counts as such.
- */
-export function utf8Bytes(text: string): number {
-  return new TextEncoder().encode(text).byteLength;
-}

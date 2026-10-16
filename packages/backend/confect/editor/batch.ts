@@ -1,12 +1,14 @@
 import {
   MAX_BATCH_BYTES,
   MAX_BATCH_STEPS,
-  utf8Bytes,
 } from "@repo/backend/confect/editor/size";
 import {
+  type Step,
   StepSchema,
+  StepTextSchema,
   UncheckedStepSchema,
 } from "@repo/backend/confect/editor/step";
+import { utf8Bytes } from "@repo/utilities/text";
 import { Effect, Schema } from "effect";
 
 /**
@@ -90,6 +92,32 @@ export class VersionStale extends Schema.TaggedError<VersionStale>()(
 
 /** The JSON text of a batch: the call's body, which a client writes and the server reads. */
 const BatchTextSchema = Schema.fromJsonString(BatchSchema);
+
+/** A step that the batch schema accepts whatever the document holds, so a call can hold it. */
+const SIZING_STEP: Step = { from: 0, stepType: "replace", to: 0 };
+
+/**
+ * The UTF-8 bytes that a call takes around its steps: its batch and client ids and its
+ * version. The encoder writes the whole call and the step alone, so the difference is
+ * the call's own text. It is measured at the longest ids that `MAX_ID_LENGTH` allows,
+ * and at the largest safe integer as the version, so no call of the editor is longer.
+ */
+const CALL_ENVELOPE_BYTES =
+  utf8Bytes(
+    Schema.encodeSync(BatchTextSchema)({
+      baseVersion: Number.MAX_SAFE_INTEGER,
+      batch: "x".repeat(MAX_ID_LENGTH),
+      clientId: "x".repeat(MAX_ID_LENGTH),
+      steps: [SIZING_STEP],
+    })
+  ) - utf8Bytes(Schema.encodeSync(StepTextSchema)(SIZING_STEP));
+
+/**
+ * The largest step text, in UTF-8 bytes, that one call carries (ADR 0028 Bounds). The
+ * step's own text and the call around it fit `MAX_BATCH_BYTES`, so the editor refuses
+ * a step over this bound at input, and no edit it holds is one that no call can send.
+ */
+export const MAX_STEP_BYTES = MAX_BATCH_BYTES - CALL_ENVELOPE_BYTES;
 
 /**
  * Refuses a batch text over `MAX_BATCH_BYTES`, with the bytes it takes and the

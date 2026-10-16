@@ -39,7 +39,6 @@ beforeEach(() => {
   vi.setSystemTime(TENANCY_NOW);
 });
 
-/** Reads the steps after `version` of the session "rina", as the account reads them. */
 /**
  * The steps of a reply that carries them. A `behind` reply is a failed read, so the
  * test names the reply it did not expect instead of comparing against an empty list.
@@ -53,6 +52,7 @@ const stepsOf = Effect.fn("test.editor.steps.stepsOf")(function* (
   return reply.steps;
 });
 
+/** Reads the steps after `version` of the session "rina", as the account reads them. */
 const readSince = Effect.fn("test.editor.steps.readSince")(function* (
   fixture: Fixture,
   account: Account,

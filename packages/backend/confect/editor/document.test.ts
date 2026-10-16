@@ -1,21 +1,27 @@
 import { describe, expect, it } from "@effect/vitest";
-import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
+import {
+  AssessmentDocumentSchema,
+  MAX_DOCUMENT_DEPTH,
+} from "@nakafa/aksara-contracts/assessment/document";
 import {
   type Document,
   DocumentSchema,
-  decodeDocument,
+  DocumentTextSchema,
   encodeDocument,
+  storedDocument,
 } from "@repo/backend/confect/editor/document";
+import type { DocumentNode } from "@repo/backend/confect/editor/node";
 import {
   CONVEX_DOCUMENT_LIMIT,
   MAX_DOCUMENT_BYTES,
-  utf8Bytes,
 } from "@repo/backend/confect/editor/size";
 import {
   documentOf,
   nestedAttrs,
   paragraphOf,
 } from "@repo/backend/test/editor/nodes";
+import { encodeJsonText } from "@repo/utilities/json";
+import { utf8Bytes } from "@repo/utilities/text";
 import { getDocumentSize } from "convex/values";
 import { Effect, Schema } from "effect";
 
@@ -63,7 +69,9 @@ describe("editor/document storage form", () => {
     () =>
       Effect.gen(function* () {
         const text = yield* encodeDocument(sample);
-        expect(yield* decodeDocument(text)).toEqual(sample);
+        expect(yield* Schema.decodeEffect(DocumentTextSchema)(text)).toEqual(
+          sample
+        );
       })
   );
 
@@ -92,7 +100,7 @@ describe("editor/document storage form", () => {
 
   it.effect("refuses a text node with no text on read", () =>
     Effect.gen(function* () {
-      const failure = yield* decodeDocument(
+      const failure = yield* Schema.decodeEffect(DocumentTextSchema)(
         '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text"}]}]}'
       ).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
@@ -102,7 +110,7 @@ describe("editor/document storage form", () => {
   it.effect("stores a document exactly at the depth bound", () =>
     Effect.gen(function* () {
       const text = yield* encodeDocument(documentOf(MAX_DOCUMENT_DEPTH));
-      expect(yield* decodeDocument(text)).toEqual(
+      expect(yield* Schema.decodeEffect(DocumentTextSchema)(text)).toEqual(
         documentOf(MAX_DOCUMENT_DEPTH)
       );
     })
@@ -129,7 +137,9 @@ describe("editor/document storage form", () => {
         const open = '{"type":"blockquote","content":['.repeat(levels);
         const close = "]}".repeat(levels);
         const text = `{"type":"doc","content":[${open}{"type":"text","text":"x"}${close}]}`;
-        const failure = yield* decodeDocument(text).pipe(Effect.flip);
+        const failure = yield* Schema.decodeEffect(DocumentTextSchema)(
+          text
+        ).pipe(Effect.flip);
         expect(failure._tag).toBe("SchemaError");
         expect(failure.message).toContain(
           `at most ${MAX_DOCUMENT_DEPTH} levels deep`
@@ -164,7 +174,7 @@ describe("editor/document storage form", () => {
     () =>
       Effect.gen(function* () {
         const deep = nestedAttrs(MAX_DOCUMENT_DEPTH + 1);
-        const paragraph = {
+        const paragraph: DocumentNode = {
           content: [{ text: "x", type: "text" }],
           type: "paragraph",
         };
@@ -190,10 +200,10 @@ describe("editor/document storage form", () => {
           '{"a":'.repeat(MAX_DOCUMENT_DEPTH) +
           "{}" +
           "}".repeat(MAX_DOCUMENT_DEPTH);
-        const rootRead = yield* decodeDocument(
+        const rootRead = yield* Schema.decodeEffect(DocumentTextSchema)(
           `{"attrs":${deepText},"content":[{"content":[{"text":"x","type":"text"}],"type":"paragraph"}],"type":"doc"}`
         ).pipe(Effect.flip);
-        const nodeRead = yield* decodeDocument(
+        const nodeRead = yield* Schema.decodeEffect(DocumentTextSchema)(
           `{"content":[{"attrs":${deepText},"content":[{"text":"x","type":"text"}],"type":"paragraph"}],"type":"doc"}`
         ).pipe(Effect.flip);
         expect(rootRead._tag).toBe("SchemaError");
@@ -240,6 +250,47 @@ describe("editor/document storage form", () => {
           paragraphOf("é".repeat(Math.floor(room / 2) + 1))
         ).pipe(Effect.flip);
         expect(refused._tag).toBe("DocumentTooLarge");
+      })
+  );
+});
+
+describe("editor/document snapshot", () => {
+  it.effect(
+    "refuses a snapshot with a node the editor does not read, though the contract accepts that node",
+    () =>
+      Effect.gen(function* () {
+        const text = encodeJsonText({
+          content: [{ attrs: { latex: "x" }, type: "mathBlock" }],
+          type: "doc",
+        });
+        // The contract accepts this text, so the refusal below comes from the types the editor reads.
+        yield* Schema.decodeEffect(
+          Schema.fromJsonString(AssessmentDocumentSchema)
+        )(text);
+        const failure = yield* storedDocument(text).pipe(Effect.flip);
+        expect(failure._tag).toBe("DocumentInvalid");
+      })
+  );
+
+  it.effect(
+    "refuses a snapshot whose heading level the contract refuses, though the editor reads headings",
+    () =>
+      Effect.gen(function* () {
+        const headingAt = (level: number) =>
+          encodeJsonText({
+            content: [
+              {
+                attrs: { level },
+                content: [{ text: "x", type: "text" }],
+                type: "heading",
+              },
+            ],
+            type: "doc",
+          });
+        // The level-2 heading is stored, so the refusal of level 4 comes from the contract's own level check.
+        yield* storedDocument(headingAt(2));
+        const failure = yield* storedDocument(headingAt(4)).pipe(Effect.flip);
+        expect(failure._tag).toBe("DocumentInvalid");
       })
   );
 });
