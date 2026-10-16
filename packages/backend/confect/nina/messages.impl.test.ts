@@ -18,6 +18,7 @@ import {
   MEMORY_TURN,
   SEARCH,
   SEARCHING_TURN,
+  startStream,
 } from "@repo/backend/test/nina/thread";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { FunctionArgs } from "convex/server";
@@ -63,26 +64,6 @@ async function shareChat(
   const shareToken = await owner.query(token, { chatId });
   assert(shareToken !== null);
   return shareToken;
-}
-
-/** Starts a stream on the thread of the chat, as a running turn does, and writes "Live" to it. */
-function startStream(f: Fixture) {
-  return f.t.mutation(async (ctx) => {
-    const streamId = await ctx.runMutation(components.nina.streams.create, {
-      threadId: f.identity.threadId,
-      userId: f.identity.userId,
-      order: 1,
-      stepOrder: 0,
-      format: "UIMessageChunk",
-    });
-    await ctx.runMutation(components.nina.streams.addDelta, {
-      streamId,
-      start: 0,
-      end: 1,
-      parts: [{ type: "text-delta", id: "text-1", delta: "Live" }],
-    });
-    return streamId;
-  });
 }
 
 /** What a reader is told by one call of the query, as the page decodes it. */
@@ -167,6 +148,26 @@ describe("Nina message boundary", () => {
     expect(
       Arr.some(page.page, (message) => message.text === "Explain a limit.")
     ).toBe(true);
+  });
+
+  it("dates the learner's message by the moment its turn was asked, not by the moment its row was written", async () => {
+    const f = await createNinaTest();
+    const asked = Date.UTC(2026, 9, 1, 9);
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", f.turnId, { promptedAt: asked })
+    );
+    const page = Ref.decodeReturnsSync(
+      refs.public.nina.messages.list,
+      await f.owner.query(query, {
+        chatId: f.chatId,
+        threadId: f.threadId,
+        paginationOpts: { cursor: null, numItems: 20 },
+      })
+    );
+    const prompt = Option.getOrThrow(
+      Arr.findFirst(page.page, ({ role }) => role === "user")
+    );
+    expect(prompt._creationTime).toBe(asked);
   });
 
   it("allows an anonymous reader with the share token and denies every other reader before touching the component", async () => {

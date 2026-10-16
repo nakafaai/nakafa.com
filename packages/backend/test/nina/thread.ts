@@ -123,3 +123,23 @@ export async function createThreadTest(turn: Turn = MATH_TURN) {
     },
   };
 }
+
+/** Starts a stream on the thread of the chat, as a running turn does, and writes "Live" to it. */
+export function startStream(f: Awaited<ReturnType<typeof createThreadTest>>) {
+  return f.t.mutation(async (ctx) => {
+    const streamId = await ctx.runMutation(components.nina.streams.create, {
+      threadId: f.identity.threadId,
+      userId: f.identity.userId,
+      order: 1,
+      stepOrder: 0,
+      format: "UIMessageChunk",
+    });
+    await ctx.runMutation(components.nina.streams.addDelta, {
+      streamId,
+      start: 0,
+      end: 1,
+      parts: [{ type: "text-delta", id: "text-1", delta: "Live" }],
+    });
+    return streamId;
+  });
+}

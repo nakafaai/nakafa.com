@@ -215,6 +215,30 @@ describe("Nina turns after the summary", () => {
     const { turns } = await read(f, [{ order: 6, retryOf: 3 }]);
     expect(Arr.map(turns, ({ order }) => order)).toEqual([0, 1, 2, 4, 5]);
   });
+
+  it("fails with its own error when the turns of the summary cannot be listed for the order it reads before", async () => {
+    const f = await createNinaTest({ history: 3 });
+    // An order is never negative, so the query of the turns refuses the argument.
+    const failure = await f.t.action((ctx) =>
+      Effect.runPromise(
+        readUncovered(
+          {
+            ...f,
+            promptMessageId: f.promptMessageId,
+            userId: f.identity.userId,
+          },
+          -1,
+          null,
+          []
+        ).pipe(
+          Effect.flip,
+          Effect.map((error) => error._tag),
+          Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
+        )
+      )
+    );
+    expect(failure).toBe("NinaUncoveredError");
+  });
 });
 
 describe("Nina fold wait from the cost its prompt stored", () => {
