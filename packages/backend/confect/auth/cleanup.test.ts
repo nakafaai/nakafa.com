@@ -15,6 +15,7 @@ import {
   seedAnalyticsConsent,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect, Layer } from "effect";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
@@ -44,6 +45,7 @@ describe("auth/cleanup", () => {
             credits: 10,
             creditsResetAt: NOW,
             email: "bounded@example.com",
+            mascot: MASCOT_CODE,
             name: "Bounded User",
             plan: "free",
           });
@@ -57,6 +59,7 @@ describe("auth/cleanup", () => {
             credits: 10,
             creditsResetAt: NOW,
             email: "reader@example.com",
+            mascot: MASCOT_CODE,
             name: "Reader",
             plan: "free",
           });
@@ -120,6 +123,7 @@ describe("auth/cleanup", () => {
               credits: 10,
               creditsResetAt: NOW,
               email: "deleted@example.com",
+              mascot: MASCOT_CODE,
               name: "Deleted User",
               plan: "free",
             });
@@ -133,6 +137,7 @@ describe("auth/cleanup", () => {
               credits: 10,
               creditsResetAt: NOW,
               email: "retained@example.com",
+              mascot: MASCOT_CODE,
               name: "Retained User",
               plan: "free",
             });

@@ -9,6 +9,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { DateTime, Effect } from "effect";
 
@@ -26,6 +27,7 @@ export function insertUser(
       creditsResetAt: NOW,
       ...(deletionPreparedAt === undefined ? {} : { deletionPreparedAt }),
       email: `${suffix}@example.com`,
+      mascot: MASCOT_CODE,
       name: `User ${suffix}`,
       plan: "free",
     })
@@ -209,6 +211,7 @@ export const insertReconciliationUser = Effect.fn(
       credits: 10,
       creditsResetAt: 1,
       email: `${suffix}@example.com`,
+      mascot: MASCOT_CODE,
       name: suffix,
       plan: "free",
     })

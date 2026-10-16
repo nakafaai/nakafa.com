@@ -10,6 +10,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { DateTime } from "effect";
 
@@ -87,6 +88,7 @@ async function insertBillingUser(
     credits,
     creditsResetAt: NOW,
     email: `${suffix}@example.com`,
+    mascot: MASCOT_CODE,
     name: `User ${suffix}`,
     plan,
   });

@@ -8,6 +8,7 @@ import {
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
+import usersTable from "@repo/backend/confect/_generated/tables/users";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import {
@@ -19,13 +20,17 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, DateTime, Effect, Schema } from "effect";
 
+/** Reads a raw account the way Confect reads it, so its animal is decoded. */
+const decodeUser = Schema.decodeUnknownSync(usersTable.Doc);
+
 /**
- * Text that costs `tokens` model tokens by the shared estimator, one word per
- * token, so a test sizes a turn by what the budgets count.
+ * Text that costs `tokens` model tokens by the shared estimator, one letter per
+ * token (a single Latin letter costs one token, and a single space none), so a
+ * test sizes a turn by what the budgets count.
  */
 export function filler(tokens: number) {
   return Arr.join(
-    Arr.makeBy(tokens, () => "word"),
+    Arr.makeBy(tokens, () => "a"),
     " "
   );
 }
@@ -164,6 +169,7 @@ async function seedEarlierTurn(
 /** What a test says about one earlier turn: it was cancelled, asks again the question that the turn `retryOf` first asked, took `steps` tool steps, or has an answer of `tokens` more tokens. */
 export const EarlierTurn = Schema.Struct({
   cancelled: Schema.optionalKey(Schema.Boolean),
+  replies: Schema.optionalKey(Schema.Int),
   retryOf: Schema.optionalKey(Schema.Int),
   steps: Schema.optionalKey(Schema.Int),
   tokens: Schema.optionalKey(Schema.Int),
@@ -198,7 +204,7 @@ async function queueTurn(
     return Promise.reject(new Error("Fixture user missing"));
   }
   const reservation = await Effect.runPromise(
-    reserveCredits(user).pipe(
+    reserveCredits(decodeUser(user)).pipe(
       Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
     )
   );

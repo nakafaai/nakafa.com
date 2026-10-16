@@ -12,7 +12,7 @@ const NOW = Date.UTC(2026, 9, 12, 12, 0, 0);
 
 describe("auth/deletion/tombstone", () => {
   it.effect(
-    "leaves no username and no bio on the deleted account, which frees the username",
+    "leaves no username and no bio on the deleted account, and keeps its animal",
     () =>
       Effect.gen(function* () {
         const t = yield* Confect.pipe(Effect.provide(confectLayer));
@@ -28,6 +28,7 @@ describe("auth/deletion/tombstone", () => {
                 creditsResetAt: 0,
                 email: "leaving@example.com",
                 image: "https://example.com/leaving.png",
+                mascot: "cat.0.243e66.right.open",
                 name: "Leaving",
                 plan: "free",
                 username: "leaving_one",
@@ -47,6 +48,7 @@ describe("auth/deletion/tombstone", () => {
             );
             expect(user).toMatchObject({
               deletedAt: NOW,
+              mascot: "cat.0.243e66.right.open",
               name: "Deleted user",
             });
             expect(user).not.toHaveProperty("username");

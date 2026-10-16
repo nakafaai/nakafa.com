@@ -78,10 +78,11 @@ describe("The Nina response run when the AI SDK ends a call at one of its deadli
 
   it("stores a response timeout when a call that never goes quiet outlasts the step deadline", async () => {
     const { chunkMs, stepMs } = purposes.chat.timeout;
-    // A word arrives every half chunk deadline, so no gap between chunks is
-    // long enough to fire the chunk timer, and the step timer is the one that
-    // fires once the words have taken the whole step.
-    const pace = chunkMs / 2;
+    // A word arrives every quarter chunk deadline, so the chunk timer does not
+    // fire, and the step timer is the one that fires once the words have taken
+    // the whole step. At half the chunk deadline, the chunk timer fired first
+    // with the step deadline of 180 seconds, at 157.5 seconds of words.
+    const pace = chunkMs / 4;
     let streamedMs = 0;
     provider.languageModel.mockReturnValue(
       new MockLanguageModelV4({

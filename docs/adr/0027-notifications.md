@@ -10,6 +10,13 @@ welcome email (`packages/backend/confect/emails/welcome/internal.ts`) and the
 invitation email (`packages/backend/confect/emails/invite`), which the invite
 mutation starts (ADR 0011).
 
+Amended on 16 October 2026 after review: a reminder keeps its anchor and Timing
+rather than its send instant, a notice rule holds one route for each relation, a
+Chosen time belongs to email only, the guardian's exam reminder is the earlier of
+06:30 and 30 minutes before the sitting opens, a reminder is sent only before its
+anchor, quiet hours hold a push back until they end except for an exam start,
+and quiet hours cover every student account while no age is stored.
+
 ## Context
 
 A school produces notifications from many sources: a mention or a reply in a
@@ -157,7 +164,7 @@ final times.
 | A released grade | Grades | Yes | Yes | For a guardian, a link only |
 | A late task, for a guardian | Tasks | Yes | Yes | A link only |
 | An exam starts | Exams | Yes | 15 minutes before | Yes, a link only |
-| An exam reminder, for a guardian | Exams | Yes | No | At 06:30 on the day of the exam, a link only |
+| An exam reminder, for a guardian | Exams | Yes | No | At the earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens, a link only |
 | An invitation or the account | Invitations | Yes, after sign-in | No | Yes, always, a link only |
 
 A guardian gets no forum mention. A guardian's push is for grades and late tasks
@@ -179,13 +186,25 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | Deadline, the day before | A task is published or its deadline changes. Journal cursor. | 16:00 on the day before the deadline (proposal) | Push, inbox |
 | Deadline, one hour before | The same trigger | One hour before the deadline | Push, inbox |
 | Exam starts | A sitting is scheduled. Journal cursor. | 15 minutes before the sitting opens | Push, inbox, email |
-| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | 06:30 on the day of the exam | Inbox, email |
+| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | The earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens | Inbox, email |
 | Daily digest | Email that is not sent yet. A cursor for each recipient. | 17:00 every day (proposal) | Email |
+
+A reminder is sent only while its anchor, the deadline or the opening it is
+about, is still ahead. The sweep sends a due reminder when it reads it before
+the anchor, and at once when its send instant had already passed when the row
+was made, such as the day-before reminder of a task published after 16:00 on
+that day. Once the anchor has passed, the reminder is dropped and writes
+nothing, because a reminder after the fact tells nothing the task or the
+sitting does not show.
 
 ### Push
 
 - Web Push is best effort, and its payload is what ADR 0026 allows. Quiet hours
-  skip it, and the inbox still holds the notification.
+  hold a push back until they end (`confect/notifications/clock.ts` gives that
+  instant), and the inbox holds the notification at once. An exam start is the
+  one push that quiet hours do not hold, because it is about a sitting that
+  opens in 15 minutes. A held push whose anchor has passed when quiet hours end
+  is dropped, as a late reminder is (Reminders).
 - On iPhone and iPad, push needs three things (WebKit, "Web Push for Web Apps on
   iOS and iPadOS", `webkit.org/blog/13878`, read on 13 October 2026). The site is
   a web app on the Home Screen, opened from its icon, whose manifest sets
@@ -210,13 +229,26 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 
 ### Quiet hours and time zones
 
-- Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on by
-  default for an account under 18, and a school can relax them only as its data
-  protection impact assessment (DPIA) allows.
+- Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on for
+  every student account. The Indonesian profile puts them on for an account
+  under 18 (ADR 0032), and no birth date is stored, so they cover every student
+  until the country profile stores an age. A school can relax them only as its
+  data protection impact assessment (DPIA) allows.
 - Quiet hours, reminders, and digests use the IANA time zone of the school the
   notification is about (ADR 0032). Instants are stored in UTC.
-- The tests run in Asia/Jakarta and Europe/Berlin, and they include a change of
-  daylight saving time.
+- A reminder stores its anchor and its Timing, not its send instant. The anchor
+  is the real instant the reminder is about, such as a deadline or the opening of
+  a sitting. The send instant is derived when the reminder is read, from the
+  anchor, the Timing, and the zone of the school at that moment (`deliveryInstant`
+  in `confect/notifications/delivery.ts`), so a change of zone moves every pending
+  reminder with it. An instant stored when the reminder is scheduled keeps the
+  zone it was made in. For example, a Jakarta reminder for 16:00 on the day before
+  is stored as 09:00Z. Once the school's zone is Asia/Makassar, that instant fires
+  at 17:00 WITA, while the rule fires at 16:00 WITA, which is 08:00Z.
+- An archived unit sends no reminder and no digest. Its inbox rows stay readable,
+  as ADR 0011 keeps an archived unit readable.
+- The tests run in Asia/Jakarta, Asia/Makassar, and Europe/Berlin, and they
+  include a change of daylight saving time.
 
 ### Email
 
@@ -269,7 +301,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 - Push as the main channel. It is best effort, and iOS needs steps that not every
   person takes.
 - Skipping the inbox in quiet hours. The inbox is the source of truth, and quiet
-  hours stop only the push.
+  hours hold back only the push.
 - A name, a grade, or a message text in a push or an email. A lock screen and a
   mailbox show them to people who are not the recipient.
 - An outbox copy of the journal for notifications. ADR 0016 rejects it.
@@ -286,6 +318,8 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | `notifications`, `notificationPreferences`, `notificationReminders`, `pushSubscriptions`, and `journalCursors` | Planned, program wave B |
 | The notify consumer, and the published list with `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |
+| The notification rules and the zone of a notice, `confect/notifications/rules.ts`, `confect/notifications/delivery.ts`, and `confect/notifications/zone.ts`: the channel table as data, recipients by relation, the sends of a notice as rules whose instants are derived from the zone at send time, and the zone that carries a notice | Built as pure functions, not called yet (program wave B) |
+| The zone clock, `confect/notifications/clock.ts`: quiet hours, the 17:00 digest, and local send times in an IANA zone | Built as pure functions, not called yet (program wave B) |
 | A service worker and Web Push | Planned, program wave B |
 | The inbox panel and `nakafa.com/id/notifications` | Planned, program wave B |
 | WhatsApp | Planned, after the first channels |

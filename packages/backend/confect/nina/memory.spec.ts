@@ -184,9 +184,8 @@ const NinaMemoryStatement = {
  * One thing a capture call says the learner stated about themself, as the model
  * writes it: a kind, a statement, and `until`, the day a situation ends, as
  * `YYYY-MM-DD`. The model is asked for this one flat shape for every kind,
- * because a union in a structured output is not known to pass the gateway
- * (Gemini's structured output page lists no `anyOf`, read on 12 October 2026,
- * and the capture call has never sent one). A claim that fits no candidate is
+ * because a union in a structured output is not known to pass the gateway, and
+ * the capture call has never sent one. A claim that fits no candidate is
  * dropped by the check, so one claim cannot refuse the others.
  */
 export const NinaMemoryClaim = Schema.Struct({

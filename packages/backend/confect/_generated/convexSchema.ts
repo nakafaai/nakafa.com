@@ -11,6 +11,8 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
+import classTeachers from "./tables/classTeachers";
+import classes from "./tables/classes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
@@ -35,6 +37,7 @@ import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
 import customerDeletionTombstones from "./tables/customerDeletionTombstones";
 import customers from "./tables/customers";
+import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
@@ -56,6 +59,7 @@ import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
+import operators from "./tables/operators";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
@@ -66,9 +70,11 @@ import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
+import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
 import tenantPeriods from "./tables/tenantPeriods";
 import tenantUnits from "./tables/tenantUnits";
+import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
@@ -95,6 +101,8 @@ export default $defineSchema({
   articleCategories: $Table.tableDefinition(articleCategories),
   chatShares: $Table.tableDefinition(chatShares),
   chats: $Table.tableDefinition(chats),
+  classTeachers: $Table.tableDefinition(classTeachers),
+  classes: $Table.tableDefinition(classes),
   commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),
@@ -119,6 +127,7 @@ export default $defineSchema({
   curriculumRoutes: $Table.tableDefinition(curriculumRoutes),
   customerDeletionTombstones: $Table.tableDefinition(customerDeletionTombstones),
   customers: $Table.tableDefinition(customers),
+  integrationClients: $Table.tableDefinition(integrationClients),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
@@ -140,6 +149,7 @@ export default $defineSchema({
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),
+  operators: $Table.tableDefinition(operators),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
@@ -150,9 +160,11 @@ export default $defineSchema({
   tenantCohorts: $Table.tableDefinition(tenantCohorts),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),
+  tenantKeys: $Table.tableDefinition(tenantKeys),
   tenantPeople: $Table.tableDefinition(tenantPeople),
   tenantPeriods: $Table.tableDefinition(tenantPeriods),
   tenantUnits: $Table.tableDefinition(tenantUnits),
+  tenantVisits: $Table.tableDefinition(tenantVisits),
   tenants: $Table.tableDefinition(tenants),
   tryoutAttemptPlacements: $Table.tableDefinition(tryoutAttemptPlacements),
   tryoutAttempts: $Table.tableDefinition(tryoutAttempts),

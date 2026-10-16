@@ -19,6 +19,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { insertTestPage } from "@repo/backend/test/content/page";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import type { FunctionArgs } from "convex/server";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
@@ -59,6 +60,7 @@ async function createActivatedIntent(
       credits: 0,
       creditsResetAt: 0,
       email: "delivered@resend.dev",
+      mascot: MASCOT_CODE,
       name: "Synthetic Test Learner",
       plan: "free",
     });
@@ -302,6 +304,7 @@ describe("emails/welcome/delivery", () => {
         credits: 0,
         creditsResetAt: 0,
         email: "delivered@resend.dev",
+        mascot: MASCOT_CODE,
         name: "Synthetic Awaiting Learner",
         plan: "free",
       })

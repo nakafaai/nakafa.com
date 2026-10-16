@@ -13,6 +13,7 @@ import {
   stopSharing,
 } from "@repo/backend/confect/chats/share";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { showsText } from "@repo/backend/test/seal";
 import { Effect, Option, Schema } from "effect";
 
@@ -34,6 +35,7 @@ const chatOf = Effect.fn("test.chats.share.chat")(function* (name: string) {
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,
+    mascot: MASCOT,
     name,
     plan: "free",
   });

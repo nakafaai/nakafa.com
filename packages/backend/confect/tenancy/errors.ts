@@ -1,7 +1,10 @@
 import { Effect, Schema } from "effect";
 
 /** A stable code and a message a screen may show, each with its default. */
-const refusal = <const Code extends string>(code: Code, message: string) => ({
+export const refusal = <const Code extends string>(
+  code: Code,
+  message: string
+) => ({
   code: Schema.Literal(code).pipe(
     Schema.withConstructorDefault(Effect.succeed(code))
   ),

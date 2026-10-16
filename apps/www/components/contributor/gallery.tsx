@@ -7,9 +7,13 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useMounted } from "@mantine/hooks";
 import type { Contributor } from "@repo/contents/contributor";
+import { Animal } from "@repo/design-system/components/ui/animal";
+import {
+  Avatar,
+  AvatarFallback,
+} from "@repo/design-system/components/ui/avatar";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Character } from "@repo/design-system/components/ui/character";
 import {
   Drawer,
   DrawerCreateHandle,
@@ -26,8 +30,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { cast, forSeed } from "@repo/mascot/seed";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -55,6 +60,27 @@ const avatarVariants = cva("shadow-sm", {
   },
 });
 
+/** The seed of the one cast that every contributor gallery draws its animals from. */
+const GALLERY_SEED = "contributors";
+
+/**
+ * The contributors with their animals, taken in order from one cast, so no two
+ * of them share an animal. Past the last animal of the cast no unique animal is
+ * left, and a contributor there takes the animal of their own name and username.
+ */
+function galleryEntries(contributors: readonly Contributor[]) {
+  const animals = cast(GALLERY_SEED, contributors.length);
+  return Arr.map(contributors, (contributor, place) => ({
+    contributor,
+    mascot: Option.getOrElse(Arr.get(animals, place), () =>
+      forSeed(`${contributor.name} - ${contributor.username}`)
+    ),
+  }));
+}
+
+/** One contributor of the gallery with the animal the gallery and its drawer show. */
+type Entry = ReturnType<typeof galleryEntries>[number];
+
 type ContributorGalleryProps = VariantProps<typeof galleryVariants> & {
   contributors: readonly Contributor[];
 };
@@ -64,34 +90,35 @@ export function ContributorGallery({
   variant,
 }: ContributorGalleryProps) {
   const t = useTranslations("Common");
-  const [contributorDrawer] = useState(() => DrawerCreateHandle<Contributor>());
+  const [contributorDrawer] = useState(() => DrawerCreateHandle<Entry>());
   const isMounted = useMounted();
 
   return (
     <>
       <div className={galleryVariants({ variant })} data-contributor-gallery="">
-        {Arr.map(contributors, (contributor) => (
-          <Tooltip key={contributor.username}>
+        {Arr.map(galleryEntries(contributors), (entry) => (
+          <Tooltip key={entry.contributor.username}>
             <TooltipTrigger
               render={
                 <DrawerTrigger
-                  aria-label={`${t("open")} ${contributor.name}`}
+                  aria-label={`${t("open")} ${entry.contributor.name}`}
                   className="cursor-pointer disabled:cursor-default"
-                  data-contributor-username={contributor.username}
+                  data-contributor-username={entry.contributor.username}
                   disabled={!isMounted}
                   handle={contributorDrawer}
-                  payload={contributor}
-                  title={contributor.name}
+                  payload={entry}
+                  title={entry.contributor.name}
                 >
-                  <Character
-                    className={avatarVariants({ variant })}
-                    name={`${contributor.name} - ${contributor.username}`}
-                  />
+                  <Avatar className={avatarVariants({ variant })}>
+                    <AvatarFallback>
+                      <Animal mascot={entry.mascot} />
+                    </AvatarFallback>
+                  </Avatar>
                 </DrawerTrigger>
               }
             />
             <TooltipContent>
-              <p>{contributor.name}</p>
+              <p>{entry.contributor.name}</p>
             </TooltipContent>
           </Tooltip>
         ))}
@@ -103,14 +130,19 @@ export function ContributorGallery({
             return null;
           }
 
-          return <ContributorDrawer contributor={payload} />;
+          return (
+            <ContributorDrawer
+              contributor={payload.contributor}
+              mascot={payload.mascot}
+            />
+          );
         }}
       </Drawer>
     </>
   );
 }
 
-function ContributorDrawer({ contributor }: { contributor: Contributor }) {
+function ContributorDrawer({ contributor, mascot }: Entry) {
   const t = useTranslations("Common");
 
   return (
@@ -121,10 +153,11 @@ function ContributorDrawer({ contributor }: { contributor: Contributor }) {
       showBar
     >
       <DrawerHeader className="items-center">
-        <Character
-          className="size-16 shadow-sm"
-          name={`${contributor.name} - ${contributor.username}`}
-        />
+        <Avatar className="size-16 shadow-sm">
+          <AvatarFallback>
+            <Animal mascot={mascot} />
+          </AvatarFallback>
+        </Avatar>
         <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
         <DrawerDescription className="text-center">
           <Badge>{t(contributor.type)}</Badge>

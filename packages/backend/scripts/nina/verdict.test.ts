@@ -1,9 +1,6 @@
 import type { MessageDoc } from "@convex-dev/agent";
 import { describe, expect, it } from "@effect/vitest";
-import {
-  languageModelId,
-  providerId,
-} from "@repo/backend/confect/gateway/model";
+import { languageModel, providerId } from "@repo/backend/confect/gateway/model";
 import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
@@ -29,7 +26,7 @@ function usage(agent: Usage["agent"], fields: Partial<Usage> = {}): Usage {
     agent,
     calls: 1,
     input: 1000,
-    model: languageModelId,
+    model: languageModel.id,
     output: 100,
     provider: providerId,
     ...fields,
@@ -131,7 +128,7 @@ describe("the chat steps of the release gate", () => {
       agentName: "nina",
       finishReason: "stop",
       message: { content: "Done.", role: "assistant" },
-      model: languageModelId,
+      model: languageModel.id,
       order: 0,
       provider: providerId,
       status: "success",
@@ -212,8 +209,8 @@ describe("release gate verdict", () => {
     expect(
       judgeTurn(withUsage([nina, wrongProvider, wrongModel]), steps)
     ).toEqual([
-      `The title calls ran on ${languageModelId} through gateway, not on ${languageModelId} through ${providerId}.`,
-      `The suggestions calls ran on google/other through ${providerId}, not on ${languageModelId} through ${providerId}.`,
+      `The title calls ran on ${languageModel.id} through gateway, not on ${languageModel.id} through ${providerId}.`,
+      `The suggestions calls ran on google/other through ${providerId}, not on ${languageModel.id} through ${providerId}.`,
     ]);
   });
 
@@ -255,7 +252,7 @@ describe("release gate verdict", () => {
   });
 
   it("fails a chat step that ended at its output cap, by the finish reason or by the tokens", () => {
-    const cap = purposes.chat.maxOutputTokens;
+    const cap = languageModel.output.chat;
     const capped = chatSteps([
       stored({ finishReason: "length" }, { cached: 0, output: 50 }),
       stored({}, { cached: 500, output: cap }),
@@ -269,14 +266,14 @@ describe("release gate verdict", () => {
   });
 
   it.each([
-    ["nakafa", purposes.specialist.maxOutputTokens],
-    ["research", purposes.specialist.maxOutputTokens],
-    ["math", purposes.specialist.maxOutputTokens],
-    ["math-repair", purposes.background.maxOutputTokens],
-    ["memory", purposes.background.maxOutputTokens],
-    ["nina-repair", purposes.background.maxOutputTokens],
-    ["suggestions", purposes.suggestion.maxOutputTokens],
-    ["title", purposes.presentation.maxOutputTokens],
+    ["nakafa", languageModel.output.specialist],
+    ["research", languageModel.output.specialist],
+    ["math", languageModel.output.specialist],
+    ["math-repair", languageModel.output.background],
+    ["memory", languageModel.output.background],
+    ["nina-repair", languageModel.output.background],
+    ["suggestions", languageModel.output.suggestion],
+    ["title", languageModel.output.presentation],
   ] as const)(
     "holds the %s agent to a cap of %i tokens a step",
     (agent, cap) => {
@@ -296,7 +293,7 @@ describe("release gate verdict", () => {
     const heavy = usage("nina", {
       cached: 1,
       calls: 2,
-      output: 2 * purposes.chat.maxOutputTokens,
+      output: 2 * languageModel.output.chat,
     });
 
     expect(judgeTurn(withUsage([heavy, nakafa]), steps)).toEqual([]);

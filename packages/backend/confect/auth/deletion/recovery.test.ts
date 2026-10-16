@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/auth/deletion/recovery";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";
 
@@ -108,6 +109,7 @@ describe("auth/deletion/recovery", () => {
             credits: 0,
             creditsResetAt: 0,
             email: "due-recovery-owner@example.com",
+            mascot: MASCOT_CODE,
             name: "Due Recovery Owner",
             plan: "free",
           });
@@ -204,6 +206,7 @@ describe("auth/deletion/recovery", () => {
             credits: 0,
             creditsResetAt: 0,
             email: "finalized-recovery-owner@example.com",
+            mascot: MASCOT_CODE,
             name: "Finalized Recovery Owner",
             plan: "free",
           });
@@ -261,6 +264,7 @@ describe("auth/deletion/recovery", () => {
             credits: 0,
             creditsResetAt: 0,
             email: "failed-schedule-owner@example.com",
+            mascot: MASCOT_CODE,
             name: "Failed Schedule Owner",
             plan: "free",
           });
@@ -320,6 +324,7 @@ describe("auth/deletion/recovery", () => {
               credits: 0,
               creditsResetAt: 0,
               email: `batch-recovery-owner-${index}@example.com`,
+              mascot: MASCOT_CODE,
               name: `Batch Recovery Owner ${index}`,
               plan: "free",
             });

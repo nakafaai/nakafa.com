@@ -60,6 +60,7 @@ describe("access/kind declarations", () => {
       "period.manage",
       "period.view",
       "grant.manage",
+      "integration.manage",
     ]);
     expect(
       Arr.map(
@@ -80,6 +81,8 @@ describe("access/kind declarations", () => {
       "invite.revoked",
       "grant.created",
       "grant.ended",
+      "person.reactivated",
+      "person.suspended",
     ]);
   });
 });
