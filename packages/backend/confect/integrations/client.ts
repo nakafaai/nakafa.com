@@ -12,13 +12,13 @@ import type {
   ClientActions,
   IntegrationName,
 } from "@repo/backend/confect/integrations/schema";
-import { issueSecret } from "@repo/backend/confect/integrations/secret";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   tenantAuthority,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { issueToken } from "@repo/utilities/token";
 import { Array as Arr, Clock, Effect, Struct } from "effect";
 
 /** One integration client as the school's list shows it. Its secret hash never leaves the server. */
@@ -71,7 +71,7 @@ export const register = Effect.fn("integrations.client.register")(function* (
     scope: GrantScope;
   }
 ) {
-  const { hash, secret } = yield* issueSecret();
+  const { hash, token: secret } = yield* issueToken().pipe(Effect.orDie);
   const at = yield* Clock.currentTimeMillis;
   const clientId = yield* (yield* DatabaseWriter)
     .table("integrationClients")
@@ -106,7 +106,7 @@ export const rotateSecret = Effect.fn("integrations.client.rotate")(function* (
   actor: typeof TenantActor.Type,
   client: IntegrationClientsDoc
 ) {
-  const { hash, secret } = yield* issueSecret();
+  const { hash, token: secret } = yield* issueToken().pipe(Effect.orDie);
   const at = yield* Clock.currentTimeMillis;
   yield* (yield* DatabaseWriter)
     .table("integrationClients")

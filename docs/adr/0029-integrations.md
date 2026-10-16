@@ -524,9 +524,11 @@ first. The token endpoint, the bearer middleware, and the routes come later.
 - The token endpoint, the bearer middleware that turns a token into a client
   principal, and the HTTP routes. Until then no code builds a `ClientPrincipal`
   outside the tests.
-- `matchesClientSecret` (`confect/integrations/secret.ts`) compares a presented
-  secret with its stored digest in constant time. The token endpoint is its first
-  caller. The registry slice tests it, and no production code calls it yet.
+- The check of a presented secret. A client secret is a bearer token drawn by
+  `issueToken` in `@repo/utilities/token`, the one owner of Nakafa's bearer
+  tokens that the chat share link uses too, and the token endpoint checks a
+  presented secret with its `matchesToken`, which compares digests in constant
+  time.
 - Ending the webhooks of a revoked client. Webhooks do not exist yet.
 
 ## References
