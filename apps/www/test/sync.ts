@@ -220,22 +220,29 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
   };
 });
 
-/** One editor's port over the state it holds, as a Tiptap editor's view would hold it. */
-const makePort = Effect.fn("test.sync.port")(function* () {
+/**
+ * One editor's port over the state it holds, as a Tiptap editor's view would hold it.
+ * A change applies only while the editor still holds the state it was built from, as
+ * the view's own dispatch does, so a test can move the editor between two steps.
+ */
+export const makePort = Effect.fn("test.sync.port")(function* () {
   const state = yield* Ref.make(EditorState.create({ doc: emptyDoc() }));
   const port: EditorPort = {
+    dispatch: (from, transaction) =>
+      Ref.modify(state, (current) =>
+        current === from ? [true, current.apply(transaction)] : [false, current]
+      ),
+    fresh: ({ clientId, doc, version }) =>
+      EditorState.create({
+        doc,
+        plugins: [collab({ clientID: clientId, version })],
+      }),
+    replace: (from, next) =>
+      Ref.modify(state, (current) =>
+        current === from ? [true, next] : [false, current]
+      ),
     schema: proseSchema,
     state: Ref.get(state),
-    dispatch: (transaction) =>
-      Ref.update(state, (current) => current.apply(transaction)),
-    replace: ({ clientId, doc, version }) =>
-      Ref.set(
-        state,
-        EditorState.create({
-          doc,
-          plugins: [collab({ clientID: clientId, version })],
-        })
-      ),
   };
   return { port, state };
 });

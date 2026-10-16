@@ -3,12 +3,13 @@ import { encodeBatch } from "@repo/backend/confect/editor/batch";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Ref } from "effect";
 import { TestClock } from "effect/testing";
-import { getVersion } from "prosemirror-collab";
+import { getVersion, sendableSteps } from "prosemirror-collab";
 import type { SyncSession } from "@/lib/editor/session";
-import { tick } from "@/lib/editor/sync";
+import { startSync, tick } from "@/lib/editor/sync";
 import {
   EMPTY_DOCUMENT,
   IDLE,
+  makePort,
   makeServer,
   openEditor,
   settle,
@@ -226,6 +227,78 @@ describe("editor/sync reopening from a snapshot", () => {
         expect(yield* tick(stale.session).pipe(Effect.map(Option.isNone))).toBe(
           true
         );
+      })
+  );
+});
+
+describe("editor/sync edits that land while a change is applied", () => {
+  it.effect(
+    "builds a received change again when an edit lands before it applies, and keeps both edits",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const writer = yield* openEditor(server.transport);
+        const { port, state } = yield* makePort();
+        const reader = yield* startSync(port, server.transport);
+        const raced = yield* Ref.make(false);
+        const racing: SyncSession = {
+          ...reader,
+          port: {
+            ...port,
+            dispatch: (from, transaction) =>
+              Effect.gen(function* () {
+                if (!(yield* Ref.getAndSet(raced, true))) {
+                  yield* typeText(state, "b");
+                }
+                return yield* port.dispatch(from, transaction);
+              }),
+          },
+        };
+        yield* typeText(writer.state, "a");
+        yield* tick(writer.session);
+        yield* tick(racing);
+        const readerState = yield* Ref.get(state);
+        expect(["ab", "ba"]).toContain(textOf(readerState.doc));
+        expect(getVersion(readerState)).toBe(1);
+      })
+  );
+
+  it.effect(
+    "builds a reopened state again when an edit lands before it replaces the state, and keeps the edit",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const writer = yield* openEditor(server.transport);
+        const { port, state } = yield* makePort();
+        const reader = yield* startSync(port, server.transport);
+        yield* typeText(writer.state, "a");
+        yield* tick(writer.session);
+        yield* tick(writer.session);
+        yield* TestClock.adjust(IDLE);
+        yield* tick(writer.session);
+        yield* typeText(writer.state, "b");
+        yield* tick(writer.session);
+        yield* tick(writer.session);
+        yield* server.prune(1);
+        const raced = yield* Ref.make(false);
+        const racing: SyncSession = {
+          ...reader,
+          port: {
+            ...port,
+            replace: (from, next) =>
+              Effect.gen(function* () {
+                if (!(yield* Ref.getAndSet(raced, true))) {
+                  yield* typeText(state, "c");
+                }
+                return yield* port.replace(from, next);
+              }),
+          },
+        };
+        yield* tick(racing);
+        const readerState = yield* Ref.get(state);
+        expect(textOf(readerState.doc)).toMatch(THREE_LETTERS);
+        expect(getVersion(readerState)).toBe(2);
+        expect(sendableSteps(readerState)).not.toBeNull();
       })
   );
 });
