@@ -4,10 +4,15 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Ref } from "effect";
 import { TestClock } from "effect/testing";
 import { getVersion, sendableSteps } from "prosemirror-collab";
-import { SyncFailed, type SyncSession } from "@/lib/editor/session";
-import { tick } from "@/lib/editor/sync";
+import {
+  SyncFailed,
+  type SyncSession,
+  type SyncTransport,
+} from "@/lib/editor/session";
+import { startSync, tick } from "@/lib/editor/sync";
 import {
   IDLE,
+  makePort,
   makeServer,
   nestedQuote,
   openEditor,
@@ -371,6 +376,25 @@ describe("editor/sync failures", () => {
           { _tag: "SyncFailed" },
         ]);
         expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
+      })
+  );
+
+  it.effect(
+    "refuses to start when an edit lands while the document opens, so the edit is not lost",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const { port, state } = yield* makePort();
+        const racing: SyncTransport = {
+          ...server.transport,
+          open: (clientId) =>
+            typeText(state, "a").pipe(
+              Effect.andThen(server.transport.open(clientId))
+            ),
+        };
+        const failure = yield* startSync(port, racing).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "SyncFailed" });
+        expect(textOf((yield* Ref.get(state)).doc)).toBe("a");
       })
   );
 });

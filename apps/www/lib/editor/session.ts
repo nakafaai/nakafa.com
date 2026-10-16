@@ -24,10 +24,22 @@ export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
 }) {}
 
 /**
+ * A step that does not apply to a document: ProseMirror refused it, or it threw while
+ * it applied the step, such as a position outside the document. The reason is the
+ * text ProseMirror gave. The loop skips or drops the step, and logs the reason.
+ */
+export class StepRejected extends Schema.TaggedError<StepRejected>()(
+  "StepRejected",
+  {
+    reason: Schema.String,
+  }
+) {}
+
+/**
  * Steps of this editor that the document no longer takes, because another editor
  * changed the same text while this one was away. The loop reports the count once,
- * when it opens the document again from its snapshot, so the editor can tell its
- * user once.
+ * from the first round that completes after the document opened again, so the
+ * editor can tell its user once.
  */
 export class SyncDropped extends Schema.TaggedClass<SyncDropped>()(
   "SyncDropped",
@@ -60,16 +72,32 @@ export interface SyncTransport {
   >;
 }
 
-/** The editor the loop reads and changes. The caller builds it over a Tiptap editor, or over a plain state in a test. */
+/**
+ * The editor the loop reads and changes. The caller builds it over a Tiptap editor, or
+ * over a plain state in a test. The loop never changes the editor's state in two steps:
+ * it reads the state, builds the change from that state, and writes the change only
+ * when the editor still holds the state it was built from. An edit that landed in
+ * between is not lost; the loop reads again and builds the change anew.
+ */
 export interface EditorPort {
-  readonly dispatch: (transaction: Transaction) => Effect.Effect<void>;
-  /** Replaces the document with a fresh state at this version, under this client ID. */
-  readonly replace: (input: {
+  /** Applies the transaction when the editor still holds `from`, which the transaction was built from. Says whether it applied. */
+  readonly dispatch: (
+    from: EditorState,
+    transaction: Transaction
+  ) => Effect.Effect<boolean>;
+  /** A state of the editor for this document at this version under this client ID, with the editor's own plugins. */
+  readonly fresh: (input: {
     readonly clientId: string;
     readonly doc: Node;
     readonly version: number;
-  }) => Effect.Effect<void>;
+  }) => EditorState;
+  /** Replaces the editor's state with `next` when the editor still holds `from`. Says whether it replaced it. */
+  readonly replace: (
+    from: EditorState,
+    next: EditorState
+  ) => Effect.Effect<boolean>;
   readonly schema: ProseSchema;
+  /** The state the editor holds now. A state is immutable, so a read keeps the state it returned. */
   readonly state: Effect.Effect<EditorState>;
 }
 
@@ -89,12 +117,14 @@ const PendingBatch = Schema.Struct({
 
 /**
  * What the loop remembers between rounds. `batch` is the batch in flight, refused,
- * or failed. `lastChangeAt` is the last time an edit of this document was seen, from
- * this editor or another, and the snapshot rule reads it as the idle time.
+ * or failed. `dropped` counts the steps this editor lost while it opened again, which
+ * no round has reported yet. `lastChangeAt` is the last time an edit of this document
+ * was seen, from this editor or another, and the snapshot rule reads it as the idle time.
  */
 export const Memory = Schema.Struct({
   batch: Schema.Option(PendingBatch),
   clientId: Schema.String,
+  dropped: Schema.Natural,
   head: Schema.Natural,
   lastChangeAt: Schema.DateTimeUtc,
   snapshotAt: Schema.Option(Schema.DateTimeUtc),
