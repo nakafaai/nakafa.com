@@ -32,6 +32,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { convexToJson } from "convex/values";
 import { validate } from "convex-helpers/validators";
 import { Effect } from "effect";
+import { Base64 } from "effect/encoding";
 
 const IDENTITY = MESSAGE_IDENTITY;
 
@@ -313,7 +314,9 @@ describe("sealed message", () => {
           ]);
           expect(readers).toContain("PLANT-TEXT");
           expect(readers).not.toContain("nakafa");
-          expect(readers).not.toContain(sealedBytes);
+          expect(readers).not.toContain(
+            Base64.encode(new Uint8Array(sealedBytes))
+          );
         })
       )
   );
