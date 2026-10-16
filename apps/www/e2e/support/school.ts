@@ -6,6 +6,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { addSessionCookie } from "@/e2e/support/context";
 
 /**
  * Opens a new school in the running local acceptance runtime and reads its
@@ -63,17 +64,7 @@ export const signInOwner = Effect.fn("NakafaE2E.signInOwner")(function* (
   address: string
 ) {
   const cookie = yield* createOwnerCookie(slug);
-  yield* Effect.promise(() =>
-    context.addCookies([
-      {
-        httpOnly: true,
-        name: cookie.name,
-        sameSite: "Lax",
-        url: address,
-        value: cookie.value,
-      },
-    ])
-  );
+  yield* addSessionCookie(context, cookie, address);
 });
 
 /** The address of a path on a host under the same server as the test's base address. */

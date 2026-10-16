@@ -3,6 +3,7 @@ import type { BrowserContext } from "@playwright/test";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { addSessionCookie } from "@/e2e/support/context";
 
 /**
  * Signs a new synthetic learner into one browser context. The running local
@@ -32,17 +33,7 @@ export const signInLearner = Effect.fn("NakafaE2E.signInLearner")(
     const cookie = yield* fs
       .readFileString(output)
       .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
-    yield* Effect.promise(() =>
-      context.addCookies([
-        {
-          httpOnly: true,
-          name: cookie.name,
-          sameSite: "Lax",
-          url: baseURL,
-          value: cookie.value,
-        },
-      ])
-    );
+    yield* addSessionCookie(context, cookie, baseURL);
   },
   Effect.scoped,
   Effect.provide(nodeServicesLayer)
