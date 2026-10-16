@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import id from "@repo/internationalization/dictionaries/id.json" with {
+  type: "json",
+};
 import en from "@repo/internationalization/dictionaries/standalone/en.json" with {
   type: "json",
 };
@@ -56,6 +59,15 @@ test("home page defers the projectile scene until the reader scrolls to it", asy
               const scene = page.locator("#scene");
 
               yield* Effect.promise(() => expect(scene).toHaveCount(1));
+              // The scene is a named landmark, so landmark navigation finds it.
+              yield* Effect.promise(() =>
+                expect(
+                  page.getByRole("region", {
+                    exact: true,
+                    name: id.Landing["scene-label"],
+                  })
+                ).toHaveAttribute("id", "scene")
+              );
               yield* Effect.promise(() =>
                 expect(scene.locator("canvas")).toHaveCount(0)
               );

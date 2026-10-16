@@ -199,6 +199,7 @@ export function ProjectileClient({
       aria-label={viewLabel}
       className="relative isolate h-svh max-h-230 min-h-120 overflow-hidden rounded-none border-0 bg-background py-0 shadow-none ring-0"
       id="scene"
+      role="region"
     >
       <VisualCardScene className="absolute inset-0">
         <div className="size-full" ref={sceneFrameRef}>
