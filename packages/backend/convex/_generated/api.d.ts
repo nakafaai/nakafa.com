@@ -3455,6 +3455,12 @@ export declare const api: {
       >;
     };
     uploads: {
+      release: FunctionReference<
+        "mutation",
+        "public",
+        { uploadId: Id<"ninaUploads"> },
+        null
+      >;
       save: FunctionReference<
         "action",
         "public",
@@ -10540,6 +10546,34 @@ export declare const internal: {
         "internal",
         { turnId: Id<"ninaTurns"> },
         null
+      >;
+    };
+    sealed: {
+      message: FunctionReference<
+        "query",
+        "internal",
+        { messageId: string; owner: Id<"users"> },
+        any | null
+      >;
+      thread: FunctionReference<
+        "query",
+        "internal",
+        {
+          excludeToolMessages?: boolean;
+          owner: Id<"users">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          statuses?: Array<"failed" | "pending" | "success">;
+          threadId: string;
+          upToAndIncludingMessageId?: string;
+        },
+        { continueCursor: string; isDone: boolean; page: Array<any> }
       >;
     };
     summaries: {

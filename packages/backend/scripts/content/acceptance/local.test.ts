@@ -1,10 +1,10 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
   cleanLocalRuntime,
   discardSignedResponses,
   initializeLocalRuntime,
-  leaseLocalRuntime,
   localApplicationEnvironment,
   readLocalRuntime,
   releaseLocalRuntime,
@@ -14,6 +14,7 @@ import {
   anonymousConvexCommand,
   fixture,
   isPortOccupied,
+  leaseClaims,
   occupyPort,
   ticking,
   versionServiceError,
@@ -196,7 +197,7 @@ describe("owned signed acceptance runtime", () => {
   );
 
   it.live(
-    "refuses duplicate preparation and cleanup during an active lease",
+    "refuses duplicate preparation and cleanup during an active lease, with or without a manifest",
     () =>
       Effect.gen(function* () {
         initialize();
@@ -216,6 +217,13 @@ describe("owned signed acceptance runtime", () => {
           });
         }).pipe(Effect.scoped);
         yield* cleanLocalRuntime(root);
+        // A reservation whose run has not recorded its manifest yet is still held.
+        yield* reserveLocalRuntime(root);
+        yield* leaseLocalRuntime(root);
+        expect(yield* cleanLocalRuntime(root).pipe(Effect.flip)).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message: expect.stringContaining("in use"),
+        });
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 
@@ -231,10 +239,9 @@ describe("owned signed acceptance runtime", () => {
               `:${port}`
             )
           );
-          const { fs, root } = yield* fixture;
+          const { root } = yield* fixture;
           yield* reserveLocalRuntime(root);
           const runtime = yield* initializeLocalRuntime(root);
-          expect(yield* fs.exists(`${runtime.directory}/using`)).toBe(false);
           expect(
             yield* cleanLocalRuntime(root).pipe(Effect.scoped, Effect.flip)
           ).toMatchObject({
@@ -243,7 +250,7 @@ describe("owned signed acceptance runtime", () => {
           });
           expect(yield* isPortOccupied(port)).toBe(true);
           expect(yield* readLocalRuntime(root)).toEqual(runtime);
-          expect(yield* fs.exists(`${runtime.directory}/using`)).toBe(false);
+          expect(yield* leaseClaims(runtime.directory)).toEqual([]);
         }).pipe(Effect.provide(nodeServicesLayer))
     );
   }

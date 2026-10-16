@@ -1,11 +1,12 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { animalOf, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -24,36 +25,11 @@ const OTHER_SCRIPT = "Наталья Петровна Иванова";
  */
 const AUTHOR_AVATAR = ':scope > div > [data-slot="avatar"]';
 
-/** The avatar of the account button in the sidebar footer, which holds the animal until a photo loads. */
-function sidebarAvatar(page: Page) {
-  return page.locator('[data-sidebar="footer"] [data-slot="avatar"]');
-}
-
 /** The name the sidebar footer shows for the account. */
 function sidebarName(page: Page, name: string) {
   return page
     .locator('[data-sidebar="footer"]')
     .getByText(name, { exact: true });
-}
-
-/** The animal that an avatar draws in its fallback. */
-function animalOf(avatar: Locator) {
-  return avatar.locator('[data-slot="avatar-fallback"] svg');
-}
-
-/**
- * The animal that an avatar draws, as the markup inside its picture, and the box
- * the avatar takes on the page. The same animal has the same markup wherever it
- * is drawn, so two avatars of one learner must give equal markup.
- */
-async function drawnAnimal(avatar: Locator) {
-  await expect(animalOf(avatar)).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
-  return {
-    box: await avatar.boundingBox(),
-    markup: await animalOf(avatar).innerHTML(),
-  };
 }
 
 /**
