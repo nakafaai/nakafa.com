@@ -1,19 +1,15 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { UserSettingsBio } from "@/components/user/settings/bio";
 import { UserSettingsDeleteAccount } from "@/components/user/settings/deletion";
 import { UserSettingsName } from "@/components/user/settings/name";
 import { UserSettingsPicture } from "@/components/user/settings/picture";
-import { UserSettingsRole } from "@/components/user/settings/role";
 import { UserSettingsUsername } from "@/components/user/settings/username";
 import { type CurrentUser, useViewer } from "@/lib/identity/client";
 
 export function UserSettingsProfilePage({
-  children,
   initialAccount,
 }: {
-  children: ReactNode;
   initialAccount: CurrentUser;
 }) {
   const identity = useViewer((state) => state);
@@ -29,8 +25,6 @@ export function UserSettingsProfilePage({
       <UserSettingsName user={user} />
       <UserSettingsUsername user={user} />
       <UserSettingsBio user={user} />
-      <UserSettingsRole user={user} />
-      {children}
       <UserSettingsDeleteAccount userId={user.appUser._id} />
     </>
   );

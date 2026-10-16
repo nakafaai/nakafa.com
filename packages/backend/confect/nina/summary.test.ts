@@ -24,6 +24,35 @@ afterEach(() => {
   provider.languageModel.mockReset();
 });
 
+/**
+ * The writer's model input and the summary that one fold leaves, over the same
+ * nine turns, with the chat plain or with every row sealed in place (ADR 0024).
+ */
+async function foldOf(sealed: boolean) {
+  const model = summaryModel("- A tidy fold.");
+  provider.languageModel.mockReturnValue(model);
+  // Order 2 was cancelled after it wrote some text, and order 3 asks the question of order 1 again.
+  const f = await createSummaryTest(
+    9,
+    (order) => {
+      if (order === 2) {
+        return { ...BIG, cancelled: true };
+      }
+      return order === 3 ? { ...BIG, retryOf: 1 } : BIG;
+    },
+    { sealed }
+  );
+  await f.refresh(8);
+  return {
+    prompt: model.doGenerateCalls[0]?.prompt,
+    summary: Arr.map(await f.summary(), ({ throughOrder, usage }) => ({
+      throughOrder,
+      usage,
+    })),
+    text: await f.text(),
+  };
+}
+
 describe("Nina rolling summary", () => {
   it("keeps the previous summary when the fold fails, and the next model input stays inside the history budget", async () => {
     provider.languageModel.mockReturnValue(failingModel());
@@ -377,5 +406,17 @@ describe("Nina rolling summary", () => {
     await f.seed(EARLIER_THROUGH, EARLIER);
     await f.refresh(8, { threadId: "missing-thread" });
     await expectEarlier(f);
+  });
+
+  it("folds a sealed thread into the same writer input and summary as a plain one", async () => {
+    const plain = await foldOf(false);
+    const sealed = await foldOf(true);
+    expect(sealed).toEqual(plain);
+    expect(sealed.text).toBe("- A tidy fold.");
+    expect(sealed.summary).toEqual([
+      expect.objectContaining({ throughOrder: 6 }),
+    ]);
+    expect(encodeJsonText(sealed.prompt)).toContain("Nina: Answer 6");
+    expect(encodeJsonText(sealed.prompt)).toContain("Learner: Question 0");
   });
 });

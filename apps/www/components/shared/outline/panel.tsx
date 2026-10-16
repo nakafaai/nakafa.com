@@ -1,6 +1,7 @@
 import { Menu02Icon } from "@hugeicons/core-free-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
+  SidebarContent,
   SidebarFooter,
   SidebarHeader,
 } from "@repo/design-system/components/ui/sidebar-content";
@@ -16,7 +17,6 @@ import {
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
 import type { ComponentProps, ReactNode } from "react";
-import { OutlineContent } from "@/components/shared/outline/scroll";
 
 /** The outline panel: its heading slot, the outline, and the page's actions. */
 type SidebarRightProps = {
@@ -111,7 +111,7 @@ export function SidebarRightPanel({
     <aside>
       <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
         {header}
-        <OutlineContent>{children}</OutlineContent>
+        <SidebarContent>{children}</SidebarContent>
         {footer}
       </Sidebar>
     </aside>
