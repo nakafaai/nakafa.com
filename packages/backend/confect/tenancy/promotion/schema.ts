@@ -116,13 +116,15 @@ export const PromotionCreated = Schema.Struct({
 /**
  * Where applying or undoing stands. A step that stops keeps its step and cursor,
  * so the next run resumes at the page that stopped. `done` lists the steps that
- * completed, in order.
+ * completed, in order. `movedAt` is the time, in epoch milliseconds, of the last
+ * write of a run, so a run that stops without a failure can be told apart.
  */
 export const PromotionProgress = Schema.Struct({
   cursor: Schema.NullOr(Schema.String),
   direction: Schema.NullOr(Schema.Literals(["apply", "undo"])),
   done: Schema.Array(PromotionStep),
   failure: Schema.NullOr(PromotionFailure),
+  movedAt: Schema.Finite,
   running: Schema.Boolean,
   step: Schema.NullOr(PromotionStep),
 });

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { placementOf } from "@repo/backend/confect/tenancy/authority";
+import { PROMOTION_RUN_LEASE } from "@repo/backend/confect/tenancy/promotion/progress";
 import {
   approvedPromotion,
   cohort,
@@ -18,7 +19,7 @@ import {
   undoOnce,
 } from "@repo/backend/test/promotion";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Duration, Effect, Option } from "effect";
 
 const { create } = promotion.draft;
 const { apply } = promotion.apply;
@@ -29,6 +30,96 @@ const NOW = Date.UTC(2026, 9, 14, 9, 0, 0);
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
+});
+
+describe("tenancy/promotion run lease", () => {
+  it.effect(
+    "resumes an apply that stopped without a failure and has not moved for the lease, and finishes it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        vi.setSystemTime(NOW + Duration.toMillis(PROMOTION_RUN_LEASE));
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress).toMatchObject({
+          failure: null,
+          running: false,
+        });
+        expect(finished.progress.done).toEqual([
+          "archive",
+          "cohorts",
+          "place",
+          "homeroom",
+        ]);
+      })
+  );
+
+  it.effect("refuses to apply or undo a run that moved within the lease", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const s = yield* scenario(fixture);
+      const promotionId = yield* approvedPromotion(fixture, s);
+      yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+      yield* fixture.internal.mutation(runPromotion, {
+        actorId: fixture.people.admin.personId,
+        promotionId,
+      });
+      yield* fixture.internal.mutation(runPromotion, {
+        actorId: fixture.people.admin.personId,
+        promotionId,
+      });
+      vi.setSystemTime(NOW + 1000);
+      const applied = yield* fixture
+        .as("admin")
+        .mutation(apply, { promotionId, slug: nf })
+        .pipe(Effect.flip);
+      const undone = yield* fixture
+        .as("admin")
+        .mutation(undo, { promotionId, slug: nf })
+        .pipe(Effect.flip);
+      expect(applied).toMatchObject({ _tag: "PromotionState" });
+      expect(undone).toMatchObject({ _tag: "PromotionState" });
+    })
+  );
+
+  it.effect(
+    "backs out a stalled apply through undo, one finished step at a time",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        vi.setSystemTime(NOW + Duration.toMillis(PROMOTION_RUN_LEASE));
+        const backedOut = yield* undoOnce(fixture, promotionId);
+        expect(backedOut.progress).toMatchObject({
+          failure: null,
+          running: false,
+        });
+        expect(backedOut.progress.done).toEqual(["archive"]);
+        const reverted = yield* undoOnce(fixture, promotionId);
+        expect(reverted.state).toBe("approved");
+      })
+  );
 });
 
 describe("tenancy/promotion apply refusals", () => {

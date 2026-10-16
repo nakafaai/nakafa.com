@@ -27,6 +27,7 @@ const idle = {
   direction: null,
   done: [],
   failure: null,
+  movedAt: 0,
   running: false,
   step: null,
 };

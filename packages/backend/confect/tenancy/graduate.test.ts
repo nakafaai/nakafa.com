@@ -41,6 +41,7 @@ describe("tenancy/graduate placement", () => {
                     direction: null,
                     done: [],
                     failure: null,
+                    movedAt: 0,
                     running: false,
                     step: null,
                   },

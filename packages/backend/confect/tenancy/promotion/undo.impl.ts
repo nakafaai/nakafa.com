@@ -12,6 +12,7 @@ import {
 import { PromotionState } from "@repo/backend/confect/tenancy/errors";
 import {
   IDLE_PROGRESS,
+  isStalled,
   resumePoint,
   stoppedBeforeAnyStep,
 } from "@repo/backend/confect/tenancy/promotion/progress";
@@ -19,7 +20,7 @@ import { update } from "@repo/backend/confect/tenancy/promotion/row";
 import { scheduleRun } from "@repo/backend/confect/tenancy/promotion/schedule";
 import spec from "@repo/backend/confect/tenancy/promotion/undo.spec";
 import { view } from "@repo/backend/confect/tenancy/promotion/view";
-import { Effect, Layer, Option } from "effect";
+import { Clock, Effect, Layer, Option } from "effect";
 
 /**
  * Undoes the last step an applied promotion finished, or resumes a stopped undo. An
@@ -37,7 +38,9 @@ const undo = FunctionImpl.make(
     if (promotion.state !== "applied") {
       return yield* new PromotionState();
     }
-    const stopped = stoppedBeforeAnyStep(promotion.progress);
+    const now = yield* Clock.currentTimeMillis;
+    const stalled = isStalled(promotion.progress, now);
+    const stopped = stoppedBeforeAnyStep(promotion.progress, stalled);
     if (Option.isSome(stopped)) {
       const next = yield* update(promotion, {
         progress: IDLE_PROGRESS,
@@ -49,7 +52,7 @@ const undo = FunctionImpl.make(
       });
       return view(next);
     }
-    const point = resumePoint(promotion.progress, "undo");
+    const point = resumePoint(promotion.progress, "undo", stalled);
     if (Option.isNone(point)) {
       return yield* new PromotionState();
     }
@@ -60,6 +63,7 @@ const undo = FunctionImpl.make(
         direction: "undo",
         done: point.value.done,
         failure: null,
+        movedAt: now,
         running: true,
         step: point.value.step,
       },

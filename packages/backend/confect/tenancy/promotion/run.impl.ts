@@ -37,7 +37,7 @@ import type {
   PromotionStep,
   PromotionStepFailure,
 } from "@repo/backend/confect/tenancy/promotion/schema";
-import { Array as Arr, Effect, Layer, Option, Result } from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Result } from "effect";
 
 /** One page or step of work: it reads the promotion and its cursor, and says whether more pages follow. */
 type StepRun = (
@@ -78,21 +78,29 @@ const finishStep = Effect.fn("tenancy.promotion.run.finish")(function* (
   promotion: TenantPromotionsDoc,
   actorId: GenericId.GenericId<"tenantPeople">,
   direction: "apply" | "undo",
-  step: typeof PromotionStep.Type
+  step: typeof PromotionStep.Type,
+  now: number
 ) {
   if (direction === "undo") {
     const done = Arr.dropRight(promotion.progress.done, 1);
     if (done.length > 0) {
-      yield* update(promotion, { progress: { ...IDLE_PROGRESS, done } });
+      yield* update(promotion, {
+        progress: { ...IDLE_PROGRESS, done, movedAt: now },
+      });
       return;
     }
-    yield* update(promotion, { progress: IDLE_PROGRESS, state: "approved" });
+    yield* update(promotion, {
+      progress: { ...IDLE_PROGRESS, movedAt: now },
+      state: "approved",
+    });
     return;
   }
   const done = Arr.append(promotion.progress.done, step);
   const next = nextStepOf(step);
   if (Option.isNone(next)) {
-    yield* update(promotion, { progress: { ...IDLE_PROGRESS, done } });
+    yield* update(promotion, {
+      progress: { ...IDLE_PROGRESS, done, movedAt: now },
+    });
     return;
   }
   yield* update(promotion, {
@@ -100,6 +108,7 @@ const finishStep = Effect.fn("tenancy.promotion.run.finish")(function* (
       ...IDLE_PROGRESS,
       direction,
       done,
+      movedAt: now,
       running: true,
       step: next.value,
     },
@@ -111,6 +120,8 @@ const finishStep = Effect.fn("tenancy.promotion.run.finish")(function* (
  * Runs one page or one step of the promotion's run, the one its progress names. A
  * typed failure stops the run and keeps its step and page, so it resumes there. A
  * page that is not the last schedules the next page, and a finished step moves on.
+ * Every write records the time, so a run that stops without a failure can be seen
+ * to have stalled.
  */
 const run = FunctionImpl.make(
   databaseSchema,
@@ -125,6 +136,7 @@ const run = FunctionImpl.make(
     if (!running || direction === null || step === null) {
       return null;
     }
+    const now = yield* Clock.currentTimeMillis;
     // A school archived or a tenant suspended during the run refuses writes, as every
     // public write does. The run stops at this step and resumes once the lock lifts.
     if (yield* promotionLocked(promotion)) {
@@ -136,6 +148,7 @@ const run = FunctionImpl.make(
         progress: {
           ...promotion.progress,
           failure: denial._tag,
+          movedAt: now,
           running: false,
         },
       });
@@ -150,6 +163,7 @@ const run = FunctionImpl.make(
         progress: {
           ...promotion.progress,
           failure: attempt.failure._tag,
+          movedAt: now,
           running: false,
         },
       });
@@ -157,12 +171,16 @@ const run = FunctionImpl.make(
     }
     if (!attempt.success.complete) {
       yield* update(promotion, {
-        progress: { ...promotion.progress, cursor: attempt.success.cursor },
+        progress: {
+          ...promotion.progress,
+          cursor: attempt.success.cursor,
+          movedAt: now,
+        },
       });
       yield* scheduleRun(actorId, promotionId);
       return null;
     }
-    yield* finishStep(promotion, actorId, direction, step);
+    yield* finishStep(promotion, actorId, direction, step, now);
     return null;
   })
 );

@@ -82,6 +82,7 @@ describe("tenancy/promotion run", () => {
           direction: null,
           done: ["archive", "cohorts", "place", "homeroom"],
           failure: null,
+          movedAt: expect.any(Number),
           running: false,
           step: null,
         });

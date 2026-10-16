@@ -19,12 +19,13 @@ import spec from "@repo/backend/confect/tenancy/promotion/apply.spec";
 import { checkPlan } from "@repo/backend/confect/tenancy/promotion/check";
 import {
   IDLE_PROGRESS,
+  isStalled,
   resumePoint,
 } from "@repo/backend/confect/tenancy/promotion/progress";
 import { planOf, update } from "@repo/backend/confect/tenancy/promotion/row";
 import { scheduleRun } from "@repo/backend/confect/tenancy/promotion/schedule";
 import { view } from "@repo/backend/confect/tenancy/promotion/view";
-import { Effect, Layer, Option } from "effect";
+import { Clock, Effect, Layer, Option } from "effect";
 
 /**
  * Checks what applying needs before the first step: the source period is still
@@ -55,12 +56,14 @@ const apply = FunctionImpl.make(
   Effect.fn("tenancy.promotion.apply.apply")(function* () {
     const { person } = yield* Member;
     const promotion = yield* Promotion;
+    const now = yield* Clock.currentTimeMillis;
     if (promotion.state === "approved") {
       yield* checkStart(promotion);
       const next = yield* update(promotion, {
         progress: {
           ...IDLE_PROGRESS,
           direction: "apply",
+          movedAt: now,
           running: true,
           step: "archive",
         },
@@ -75,7 +78,11 @@ const apply = FunctionImpl.make(
     if (promotion.state !== "applied") {
       return yield* new PromotionState();
     }
-    const point = resumePoint(promotion.progress, "apply");
+    const point = resumePoint(
+      promotion.progress,
+      "apply",
+      isStalled(promotion.progress, now)
+    );
     if (Option.isNone(point)) {
       return yield* new PromotionState();
     }
@@ -85,6 +92,7 @@ const apply = FunctionImpl.make(
         cursor: point.value.cursor,
         direction: "apply",
         failure: null,
+        movedAt: now,
         running: true,
         step: point.value.step,
       },
