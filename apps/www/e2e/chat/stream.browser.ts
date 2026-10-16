@@ -48,27 +48,29 @@ const keepsSettledRows = Effect.fn("NakafaE2E.streamKeepsSettledRows")(
     yield* Effect.promise(() => watchRenders(page));
     yield* showChat(page, shown, "en", SETTLED);
 
-    for (const [index, words] of PIECES.entries()) {
-      const before = yield* Effect.promise(() => commitCount(page));
-      yield* stream(streaming(words));
+    yield* Effect.forEach(PIECES, (words, index) =>
+      Effect.gen(function* () {
+        const before = yield* Effect.promise(() => commitCount(page));
+        yield* stream(streaming(words));
 
-      yield* Effect.promise(async () => {
-        await expect(page.getByText(words, { exact: true })).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
+        yield* Effect.promise(async () => {
+          await expect(page.getByText(words, { exact: true })).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect
+            .poll(async () => (await commitsAfter(page, before)).length)
+            .toBeGreaterThan(0);
         });
-        await expect
-          .poll(async () => (await commitsAfter(page, before)).length)
-          .toBeGreaterThan(0);
-      });
 
-      const commits = yield* Effect.promise(() => commitsAfter(page, before));
-      const rows = Arr.reduce(commits, 0, (sum, commit) => sum + commit.rows);
-      // The first update adds two rows and re-renders the settled answer before them.
-      const most = index === 0 ? 3 : 1;
+        const commits = yield* Effect.promise(() => commitsAfter(page, before));
+        const rows = Arr.reduce(commits, 0, (sum, commit) => sum + commit.rows);
+        // The first update adds two rows and re-renders the settled answer before them.
+        const most = index === 0 ? 3 : 1;
 
-      expect(rows).toBeGreaterThan(0);
-      expect(rows).toBeLessThanOrEqual(most);
-    }
+        expect(rows).toBeGreaterThan(0);
+        expect(rows).toBeLessThanOrEqual(most);
+      })
+    );
   }
 );
 

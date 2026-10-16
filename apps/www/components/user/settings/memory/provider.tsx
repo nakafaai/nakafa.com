@@ -66,7 +66,10 @@ function MemoryReader({
   now: number;
   paused: boolean;
 }) {
-  const reading = useMemoryReading(first, paused, now);
+  // The learner's own choice stands in for what the page read, until the state
+  // is read: the reading uses the state once Convex answers with it.
+  const choice = useMemoryPage((state) => state.paused);
+  const reading = useMemoryReading(first, choice ?? paused, now);
 
   return <ReadingContext value={reading}>{children}</ReadingContext>;
 }

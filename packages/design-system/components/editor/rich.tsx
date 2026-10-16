@@ -10,7 +10,7 @@ import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import type { ComponentProps } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface RichEditorProps {
   /**
@@ -94,7 +94,6 @@ export function RichEditor({
   );
   const editor = useEditor({
     ...options,
-    autofocus: autoFocus ? "end" : false,
     content,
     contentType: "markdown",
     editorProps,
@@ -102,6 +101,15 @@ export function RichEditor({
     onUpdate: ({ editor: current }) => change(current.getMarkdown()),
   });
   const context = useMemo(() => ({ editor }), [editor]);
+
+  // Tiptap's own autofocus starts its timer when the view is made, and this view
+  // is made while React renders, so the timer can fire before React attaches the
+  // view to the page. The caret goes to the end here, once the view is in place.
+  useEffect(() => {
+    if (autoFocus) {
+      editor?.commands.focus("end");
+    }
+  }, [autoFocus, editor]);
 
   return (
     <EditorContext value={context}>

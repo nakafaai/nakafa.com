@@ -38,6 +38,12 @@ const MemoryStateSchema = Schema.Struct({
   opener: Schema.NullOr(Id("ninaMemories")),
   /** Whether the editor panel is open. */
   open: Schema.Boolean,
+  /**
+   * Whether the learner paused memory last, which the switch shows while the
+   * page has not read the state, because the state is not subscribed yet. None
+   * when the switch shows what the page read.
+   */
+  paused: Schema.NullOr(Schema.Boolean),
   /** The words the learner typed to search. */
   query: Schema.String,
   /** Counts the openings of the editor, so each one starts with fresh words. */
@@ -122,6 +128,11 @@ interface MemoryActions {
   /** Sets the words the learner searches for. */
   search: (query: string) => void;
   /**
+   * Sets the learner's pause choice for the switch, or none to show what the
+   * page read again, as a refused change does.
+   */
+  setPaused: (paused: boolean | null) => void;
+  /**
    * Keeps the words the editor on the deleted memory `id` still held, in case
    * the server does not delete it.
    */
@@ -190,6 +201,7 @@ export function createMemoryStore() {
         target: null,
       })),
     opener: null,
+    paused: null,
     query: "",
     reopen: (session, draft, memory) =>
       set((state) =>
@@ -218,6 +230,7 @@ export function createMemoryStore() {
           : state
       ),
     search: (query) => set({ query }),
+    setPaused: (paused) => set({ paused }),
     session: 0,
     target: null,
     withheld: {},

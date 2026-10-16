@@ -57,6 +57,7 @@ export function useMemoryActions() {
   const forgetAll = useMemoryPage((state) => state.forgetAll);
   const recall = useMemoryPage((state) => state.recall);
   const recallAll = useMemoryPage((state) => state.recallAll);
+  const setPaused = useMemoryPage((state) => state.setPaused);
   const withhold = useMemoryPage((state) => state.withhold);
   const release = useMemoryPage((state) => state.release);
   const reopen = useMemoryPage((state) => state.reopen);
@@ -265,9 +266,14 @@ export function useMemoryActions() {
     });
   }
 
-  /** Pauses memory, or resumes it. Nothing is deleted either way. */
+  /**
+   * Pauses memory, or resumes it. Nothing is deleted either way. The switch
+   * shows the choice at once, also before the page has read the state, and a
+   * refused change takes the choice back.
+   */
   function pause(paused: boolean) {
-    settle(() => pauseTo({ paused }));
+    setPaused(paused);
+    settle(() => pauseTo({ paused }), { failed: () => setPaused(null) });
   }
 
   /**
