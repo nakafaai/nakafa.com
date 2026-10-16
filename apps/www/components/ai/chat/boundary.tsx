@@ -16,10 +16,11 @@ const ChatFailure = dynamic(
 
 /**
  * The boundary of every chat surface. A failure shows the failure card in
- * place of the surface, never an empty one, and the card's retry runs the read
- * again. The boundary also tries again when the route changes or one of
- * `resetKeys` changes, so a card does not stay over a page the learner has
- * moved to.
+ * place of the surface, and the card's retry runs the read again. The card's
+ * code loads when the first failure of a page needs it, so that first failure
+ * can show an empty surface until the code arrives. The boundary also tries
+ * again when the route changes or one of `resetKeys` changes, so a card does
+ * not stay over a page the learner has moved to.
  */
 export function ChatBoundary({
   children,
