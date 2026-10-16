@@ -5,6 +5,7 @@ import { requireAuth } from "@repo/backend/confect/auth/session";
 import { Document } from "@repo/backend/confect/editor/access";
 import { documentAccess } from "@repo/backend/confect/editor/authority";
 import { admitBatch, decodeBatch } from "@repo/backend/confect/editor/batch";
+import { checkContent } from "@repo/backend/confect/editor/content";
 import { BatchInvalid, ClientTaken } from "@repo/backend/confect/editor/errors";
 import { encodeStoredStep } from "@repo/backend/confect/editor/log";
 import spec from "@repo/backend/confect/editor/steps.spec";
@@ -72,8 +73,9 @@ const since = FunctionImpl.make(
  * Accepts a batch of steps made on the document's head. A batch the session has
  * had accepted before is answered with the version it produced, and writes nothing,
  * so a retried batch is idempotent. A session id that belongs to another author is
- * refused with `ClientTaken`. Any other batch is checked against the bounds and the
- * head, then each step is written as one row at the version it produces, the head
+ * refused with `ClientTaken`. Any other batch is checked against the bounds, the
+ * content the contract accepts, and the head, then each step is written as one row at
+ * the version it produces, the head
  * moves by the number of steps, and the session's record takes the batch. All of it
  * is one transaction, so two clients never win one version: a stale batch writes
  * nothing and fails with `VersionStale`.
@@ -88,6 +90,7 @@ const submit = FunctionImpl.make(
     const batch = yield* decodeBatch(text).pipe(
       Effect.catchTag("SchemaError", () => Effect.fail(new BatchInvalid()))
     );
+    yield* checkContent(batch.steps);
     const record = yield* clientRecordOf(document._id, batch.clientId);
     if (Option.isSome(record) && record.value.author !== appUser._id) {
       return yield* new ClientTaken();
