@@ -45,9 +45,10 @@ export class StepRejected extends Schema.TaggedError<StepRejected>()(
 /**
  * Steps of this editor that the document no longer takes: another editor changed the
  * same text while this one was away, the server skipped one of its steps because it
- * nests the document past the bound, or one step is larger than a call may send. The
- * loop reports the count once, from the first round that completes after the change,
- * so the editor can tell its user once.
+ * nests the document past the bound, or one step no call can carry, because it is
+ * larger than a call may send or the contract refuses it. The loop reports the count
+ * once, from the first round that completes after the change, so the editor can tell
+ * its user once.
  */
 export class SyncDropped extends Schema.TaggedClass<SyncDropped>()(
   "SyncDropped",

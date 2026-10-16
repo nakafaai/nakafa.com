@@ -10,8 +10,10 @@ import { stepSizePlugin } from "@repo/design-system/components/editor/size";
 import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";
 import { EditorState } from "@tiptap/pm/state";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Ref, Schema } from "effect";
 import { assessmentSchema } from "@/lib/editor/assessment";
+import { startSync, tick } from "@/lib/editor/sync";
+import { makePort, makeServer, textOf, typeText } from "@/test/sync";
 
 /**
  * A state of one empty paragraph of the assessment document. Its plugins are the step
@@ -56,6 +58,42 @@ describe("editor/send step bound", () => {
         });
         const text = yield* encodeBatch(batch);
         expect(utf8Bytes(text)).toBe(MAX_BATCH_BYTES);
+      })
+  );
+});
+
+describe("editor/send steps the contract refuses", () => {
+  it.effect(
+    "drops a queued step that the contract refuses, counts it, and never sends it",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const { port, state } = yield* makePort(
+          assessmentSchema,
+          assessmentSchema.node("doc", null, [
+            assessmentSchema.node("paragraph"),
+          ])
+        );
+        const session = yield* startSync(port, server.transport);
+        // An ordered list that starts at 0: the editor writes it, and the contract refuses the start.
+        const list = assessmentSchema.node("orderedList", { start: 0 }, [
+          assessmentSchema.node("listItem", null, [
+            assessmentSchema.node("paragraph"),
+          ]),
+        ]);
+        yield* Ref.update(state, (current) =>
+          current.apply(current.tr.replaceWith(0, 2, list))
+        );
+        const dropped = yield* tick(session);
+        expect(Option.getOrNull(dropped)).toMatchObject({
+          _tag: "SyncDropped",
+          count: 1,
+        });
+        expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
+        yield* typeText(state, "b");
+        yield* tick(session);
+        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        expect(textOf((yield* Ref.get(state)).doc)).toBe("b");
       })
   );
 });

@@ -3,7 +3,11 @@ import {
   type BatchTooLarge,
   encodeBatch,
 } from "@repo/backend/confect/editor/batch";
-import type { ClientTaken } from "@repo/backend/confect/editor/errors";
+import { checkContent } from "@repo/backend/confect/editor/content";
+import type {
+  BatchInvalid,
+  ClientTaken,
+} from "@repo/backend/confect/editor/errors";
 import { MAX_BATCH_STEPS } from "@repo/backend/confect/editor/size";
 import { randomUuid } from "@repo/utilities/uuid";
 import type { Step } from "@tiptap/pm/transform";
@@ -20,10 +24,11 @@ const FittedBatch = Schema.Struct({
 
 /**
  * Encodes the longest prefix of the steps that one call may send: at most `count`
- * steps, and under the byte bound. A prefix that is too large halves, until it fits.
- * One step too large for one call fails with `BatchTooLarge`, because no prefix of it
- * can be sent, and the loop drops that step. A step the batch schema refuses, such as
- * one nested deeper than the bound, is a failure too, so the editor can show it. The
+ * steps, under the byte bound, and with content the contract accepts. A prefix that is
+ * too large, or that holds a step the contract refuses, halves until it fits. One step
+ * that no call can carry fails with its refusal, and the loop drops that step, so a step
+ * the server would refuse is never sent (ADR 0028). A step the batch schema refuses, such
+ * as one nested deeper than the bound, is a failure too, so the editor can show it. The
  * result names the batch's text and the number of steps it holds.
  */
 const fittingBatch = Effect.fn("editor.sync.batch")(function* (
@@ -32,7 +37,10 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
   clientId: string,
   steps: readonly Step[],
   count: number
-): Effect.fn.Return<typeof FittedBatch.Type, SyncFailed | BatchTooLarge> {
+): Effect.fn.Return<
+  typeof FittedBatch.Type,
+  SyncFailed | BatchTooLarge | BatchInvalid
+> {
   const batch = yield* Schema.decodeUnknownEffect(BatchSchema)({
     baseVersion,
     batch: batchId,
@@ -46,21 +54,24 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
         })
     )
   );
-  return yield* encodeBatch(batch).pipe(
+  const halve = (refusal: BatchTooLarge | BatchInvalid) =>
+    count > 1
+      ? fittingBatch(
+          batchId,
+          baseVersion,
+          clientId,
+          steps,
+          Math.floor(count / 2)
+        )
+      : Effect.fail(refusal);
+  return yield* checkContent(batch.steps).pipe(
+    Effect.andThen(encodeBatch(batch)),
     Effect.map((text) => ({ count: batch.steps.length, text })),
     Effect.catchTags({
       // The batch was decoded just above, so the encoder cannot refuse its shape.
       SchemaError: Effect.die,
-      BatchTooLarge: (tooLarge) =>
-        count > 1
-          ? fittingBatch(
-              batchId,
-              baseVersion,
-              clientId,
-              steps,
-              Math.floor(count / 2)
-            )
-          : Effect.fail(tooLarge),
+      BatchInvalid: halve,
+      BatchTooLarge: halve,
     })
   );
 });
@@ -72,8 +83,9 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
  * and its steps, and the next round sends the same batch, so the server answers a
  * repeat of a batch it has taken without writing it again. A batch on a version the
  * editor has moved past is replaced by a new one with a new id. A first step that no
- * call can carry is dropped and counted, and the steps after it are sent in the same
- * round, so one oversized step never blocks the later batches.
+ * call can carry, because it is too large or the contract refuses it, is dropped and
+ * counted, and the steps after it are sent in the same round, so one such step never
+ * blocks the later batches.
  */
 export const push = Effect.fn("editor.sync.push")(function* (
   session: SyncSession
@@ -110,7 +122,12 @@ export const push = Effect.fn("editor.sync.push")(function* (
     String(sendable.clientID),
     sendable.steps,
     count
-  ).pipe(Effect.catchTag("BatchTooLarge", () => Effect.succeed(null)));
+  ).pipe(
+    Effect.catchTags({
+      BatchInvalid: () => Effect.succeed(null),
+      BatchTooLarge: () => Effect.succeed(null),
+    })
+  );
   if (fitted === null) {
     yield* dropUnsendable(session);
     return yield* push(session);

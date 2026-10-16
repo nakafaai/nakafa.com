@@ -235,8 +235,11 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
  * A change applies only while the editor still holds the state it was built from, as
  * the view's own dispatch does, so a test can move the editor between two steps.
  */
-export const makePort = Effect.fn("test.sync.port")(function* () {
-  const state = yield* Ref.make(EditorState.create({ doc: emptyDoc() }));
+export const makePort = Effect.fn("test.sync.port")(function* (
+  schema: ProseSchema = proseSchema,
+  doc: Node = emptyDoc()
+) {
+  const state = yield* Ref.make(EditorState.create({ doc }));
   const port: EditorPort = {
     dispatch: (from, transaction) =>
       Ref.modify(state, (current) =>
@@ -251,7 +254,7 @@ export const makePort = Effect.fn("test.sync.port")(function* () {
       Ref.modify(state, (current) =>
         current === from ? [true, next] : [false, current]
       ),
-    schema: proseSchema,
+    schema,
     state: Ref.get(state),
   };
   return { port, state };

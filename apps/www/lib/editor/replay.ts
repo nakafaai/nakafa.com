@@ -162,8 +162,8 @@ export const reopen = Effect.fn("editor.sync.reopen")(function* (
 });
 
 /**
- * Drops the first unconfirmed step of this editor, which is larger than one call may send,
- * so no call can carry it (ADR 0028 Bounds). The editor is rebuilt on the server's document,
+ * Drops the first unconfirmed step of this editor, which no call can carry: it is larger
+ * than one call may send, or the contract refuses it (ADR 0028 Bounds). The editor is rebuilt on the server's document,
  * which is the document at its confirmed version, and its other unconfirmed steps are
  * replayed in order. A step that no longer applies is dropped too. The count goes into
  * the next report, and the batch is cleared, so the next round sends the steps that fit.
@@ -175,7 +175,7 @@ export const dropUnsendable = Effect.fn("editor.sync.drop")(function* (
   const state = yield* session.port.state;
   const server = yield* Ref.get(session.server);
   yield* Effect.logWarning(
-    "A step of this editor is larger than one call may send, so it is dropped."
+    "A step of this editor that no call can carry is dropped: it is too large, or the contract refuses it."
   );
   const replaced = yield* reseat(session, {
     clientId: memory.clientId,
