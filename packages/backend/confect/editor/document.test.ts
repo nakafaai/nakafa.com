@@ -11,7 +11,11 @@ import {
   MAX_DOCUMENT_BYTES,
   utf8Bytes,
 } from "@repo/backend/confect/editor/size";
-import { documentOf, paragraphOf } from "@repo/backend/test/editor/nodes";
+import {
+  documentOf,
+  nestedAttrs,
+  paragraphOf,
+} from "@repo/backend/test/editor/nodes";
 import { getDocumentSize } from "convex/values";
 import { Effect, Schema } from "effect";
 
@@ -152,6 +156,48 @@ describe("editor/document storage form", () => {
           Effect.flip
         );
         expect(failure._tag).toBe("SchemaError");
+      })
+  );
+
+  it.effect(
+    "refuses attributes of the document or of a node nested deeper than the bound",
+    () =>
+      Effect.gen(function* () {
+        const deep = nestedAttrs(MAX_DOCUMENT_DEPTH + 1);
+        const paragraph = {
+          content: [{ text: "x", type: "text" }],
+          type: "paragraph",
+        };
+        const rootAttrs: Document = {
+          attrs: deep,
+          content: [paragraph],
+          type: "doc",
+        };
+        const nodeAttrs: Document = {
+          content: [{ ...paragraph, attrs: deep }],
+          type: "doc",
+        };
+        const rootWrite = yield* encodeDocument(rootAttrs).pipe(Effect.flip);
+        const nodeWrite = yield* encodeDocument(nodeAttrs).pipe(Effect.flip);
+        expect(rootWrite.message).toContain(
+          `at most ${MAX_DOCUMENT_DEPTH} levels deep`
+        );
+        expect(nodeWrite.message).toContain(
+          `at most ${MAX_DOCUMENT_DEPTH} levels deep`
+        );
+
+        const deepText =
+          '{"a":'.repeat(MAX_DOCUMENT_DEPTH) +
+          "{}" +
+          "}".repeat(MAX_DOCUMENT_DEPTH);
+        const rootRead = yield* decodeDocument(
+          `{"attrs":${deepText},"content":[{"content":[{"text":"x","type":"text"}],"type":"paragraph"}],"type":"doc"}`
+        ).pipe(Effect.flip);
+        const nodeRead = yield* decodeDocument(
+          `{"content":[{"attrs":${deepText},"content":[{"text":"x","type":"text"}],"type":"paragraph"}],"type":"doc"}`
+        ).pipe(Effect.flip);
+        expect(rootRead._tag).toBe("SchemaError");
+        expect(nodeRead._tag).toBe("SchemaError");
       })
   );
 

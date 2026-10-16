@@ -6,7 +6,7 @@ import {
   type Step,
   StepSchema,
 } from "@repo/backend/confect/editor/step";
-import { nested } from "@repo/backend/test/editor/nodes";
+import { nested, nestedAttrs } from "@repo/backend/test/editor/nodes";
 import { Effect, Schema } from "effect";
 
 /** One step of each of the eight kinds, as ProseMirror's `toJSON` writes it. */
@@ -167,6 +167,41 @@ describe("editor/step storage form", () => {
         expect(failure.message).toContain(
           `at most ${MAX_DOCUMENT_DEPTH} levels deep`
         );
+      })
+  );
+
+  it.effect(
+    "holds the attributes of a step to the depth bound on read and on write",
+    () =>
+      Effect.gen(function* () {
+        const atBound: Step = {
+          mark: { attrs: nestedAttrs(MAX_DOCUMENT_DEPTH), type: "link" },
+          pos: 0,
+          stepType: "addNodeMark",
+        };
+        const text = yield* encodeStep(atBound);
+        expect(yield* decodeStep(text)).toEqual(atBound);
+
+        const beyond: Step = {
+          attr: "level",
+          pos: 0,
+          stepType: "attr",
+          value: nestedAttrs(MAX_DOCUMENT_DEPTH + 1),
+        };
+        const failure = yield* encodeStep(beyond).pipe(Effect.flip);
+        expect(failure._tag).toBe("SchemaError");
+        expect(failure.message).toContain(
+          `at most ${MAX_DOCUMENT_DEPTH} levels deep`
+        );
+
+        const deepValue =
+          '{"a":'.repeat(MAX_DOCUMENT_DEPTH) +
+          "{}" +
+          "}".repeat(MAX_DOCUMENT_DEPTH);
+        const unread = yield* decodeStep(
+          `{"attr":"level","pos":0,"stepType":"attr","value":${deepValue}}`
+        ).pipe(Effect.flip);
+        expect(unread._tag).toBe("SchemaError");
       })
   );
 

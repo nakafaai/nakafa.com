@@ -1,5 +1,6 @@
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import {
+  AttributesSchema,
   DocumentNodeSchema,
   fitsDocument,
 } from "@repo/backend/confect/editor/node";
@@ -16,7 +17,7 @@ import { Effect, Schema, SchemaTransformation } from "effect";
  * schema does not name the node types.
  */
 const DocumentRootSchema = Schema.Struct({
-  attrs: Schema.optionalKey(Schema.JsonObject),
+  attrs: Schema.optionalKey(AttributesSchema),
   content: Schema.NonEmptyArray(DocumentNodeSchema),
   type: Schema.Literal("doc"),
 });

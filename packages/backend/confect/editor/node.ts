@@ -1,15 +1,58 @@
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
-import { Array as Arr, Predicate, Schema } from "effect";
+import { Array as Arr, Predicate, Record as Rec, Schema } from "effect";
+
+/**
+ * Whether a JSON value, read as unchecked input, nests objects and arrays at
+ * most `levels` deep. A scalar nests none, and an object or an array takes one
+ * level. It never calls itself more than `levels` times in a row, whatever the
+ * input, so a deep input cannot overflow the stack.
+ */
+function fitsJson(value: unknown, levels: number): boolean {
+  if (Arr.isArray(value)) {
+    return (
+      levels >= 1 && Arr.every(value, (member) => fitsJson(member, levels - 1))
+    );
+  }
+  if (Predicate.isObject(value)) {
+    return (
+      levels >= 1 &&
+      Arr.every(Rec.values(value), (member) => fitsJson(member, levels - 1))
+    );
+  }
+  return true;
+}
+
+/**
+ * The attributes of a node, a mark, or the document: a JSON object nested at
+ * most `MAX_DOCUMENT_DEPTH` levels. ProseMirror writes attributes as JSON, and
+ * the storage form writes them with `JSON.stringify`, which fails on a value
+ * nested too deep. The bound keeps an admitted call storable (ADR 0028).
+ */
+export const AttributesSchema = Schema.JsonObject.check(
+  Schema.makeFilter((attrs) => fitsJson(attrs, MAX_DOCUMENT_DEPTH), {
+    message: `Expected attributes at most ${MAX_DOCUMENT_DEPTH} levels deep.`,
+  })
+);
+
+/**
+ * The value of an attribute step: one JSON value, nested at most as deep as the
+ * attributes.
+ */
+export const AttributeValueSchema = Schema.Json.check(
+  Schema.makeFilter((value) => fitsJson(value, MAX_DOCUMENT_DEPTH), {
+    message: `Expected a value at most ${MAX_DOCUMENT_DEPTH} levels deep.`,
+  })
+);
 
 /** A mark of a text node: its type, and attributes that are JSON values. */
 export const MarkSchema = Schema.Struct({
-  attrs: Schema.optionalKey(Schema.JsonObject),
+  attrs: Schema.optionalKey(AttributesSchema),
   type: Schema.String,
 });
 
 /** The fields of a node as ProseMirror writes them in JSON. Its children are read by the same schema, one level down. */
 const NodeFieldsSchema = Schema.Struct({
-  attrs: Schema.optionalKey(Schema.JsonObject),
+  attrs: Schema.optionalKey(AttributesSchema),
   content: Schema.optionalKey(
     Schema.Array(
       Schema.suspend((): Schema.Codec<DocumentNode> => DocumentNodeSchema)

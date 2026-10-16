@@ -1,7 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
-import { fitsDocument, fitsSlice } from "@repo/backend/confect/editor/node";
-import { nested } from "@repo/backend/test/editor/nodes";
+import {
+  AttributesSchema,
+  AttributeValueSchema,
+  fitsDocument,
+  fitsSlice,
+} from "@repo/backend/confect/editor/node";
+import {
+  nested,
+  nestedArray,
+  nestedAttrs,
+} from "@repo/backend/test/editor/nodes";
+import { Effect, Schema } from "effect";
 
 describe("editor/node depth", () => {
   it("accepts a document exactly MAX_DOCUMENT_DEPTH node levels deep", () => {
@@ -27,4 +37,62 @@ describe("editor/node depth", () => {
     expect(fitsDocument(7)).toBe(true);
     expect(fitsDocument({ content: "not a list", type: "doc" })).toBe(true);
   });
+});
+
+describe("editor/node attributes", () => {
+  it.effect("accepts attributes nested exactly MAX_DOCUMENT_DEPTH levels", () =>
+    Effect.gen(function* () {
+      const attrs = nestedAttrs(MAX_DOCUMENT_DEPTH);
+      expect(
+        yield* Schema.decodeUnknownEffect(AttributesSchema)(attrs)
+      ).toEqual(attrs);
+    })
+  );
+
+  it.effect("refuses attributes nested one level deeper than the bound", () =>
+    Effect.gen(function* () {
+      const failure = yield* Schema.decodeUnknownEffect(AttributesSchema)(
+        nestedAttrs(MAX_DOCUMENT_DEPTH + 1)
+      ).pipe(Effect.flip);
+      expect(failure._tag).toBe("SchemaError");
+      expect(failure.message).toContain(
+        `at most ${MAX_DOCUMENT_DEPTH} levels deep`
+      );
+    })
+  );
+
+  it.effect(
+    "counts each array of an attribute as a level, as each object",
+    () =>
+      Effect.gen(function* () {
+        const value = nestedArray(MAX_DOCUMENT_DEPTH);
+        expect(
+          yield* Schema.decodeUnknownEffect(AttributeValueSchema)(value)
+        ).toEqual(value);
+        const failure = yield* Schema.decodeUnknownEffect(AttributeValueSchema)(
+          nestedArray(MAX_DOCUMENT_DEPTH + 1)
+        ).pipe(Effect.flip);
+        expect(failure._tag).toBe("SchemaError");
+      })
+  );
+
+  it.effect("refuses an attribute value one level deeper than the bound", () =>
+    Effect.gen(function* () {
+      const failure = yield* Schema.decodeUnknownEffect(AttributeValueSchema)(
+        nestedAttrs(MAX_DOCUMENT_DEPTH + 1)
+      ).pipe(Effect.flip);
+      expect(failure._tag).toBe("SchemaError");
+    })
+  );
+
+  it.effect(
+    "refuses attributes nested 100,000 levels without a stack overflow",
+    () =>
+      Effect.gen(function* () {
+        const failure = yield* Schema.decodeUnknownEffect(AttributesSchema)(
+          nestedAttrs(100_000)
+        ).pipe(Effect.flip);
+        expect(failure._tag).toBe("SchemaError");
+      })
+  );
 });

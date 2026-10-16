@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import {
   admitBatch,
   type Batch,
@@ -234,6 +235,23 @@ describe("editor/batch call body", () => {
         });
         expect(failure).toHaveProperty("bytes", utf8Bytes(text));
         expect(utf8Bytes(text)).toBeGreaterThan(MAX_BATCH_BYTES);
+      })
+  );
+
+  it.effect(
+    "refuses a call whose attributes nest past the bound, so no admitted call is unstorable",
+    () =>
+      Effect.gen(function* () {
+        // The call is well within MAX_BATCH_BYTES, and its attributes nest 20,000 objects deep.
+        const depth = 20_000;
+        const attrs = `${'{"a":'.repeat(depth)}{}${"}".repeat(depth)}`;
+        const text = `{"baseVersion":40,"clientId":"rina","steps":[{"mark":{"type":"bold","attrs":${attrs}},"pos":0,"stepType":"addNodeMark"}]}`;
+        expect(utf8Bytes(text)).toBeLessThan(MAX_BATCH_BYTES);
+        const failure = yield* admitBatch(40, text).pipe(Effect.flip);
+        expect(failure._tag).toBe("SchemaError");
+        expect(failure.message).toContain(
+          `at most ${MAX_DOCUMENT_DEPTH} levels deep`
+        );
       })
   );
 

@@ -1,5 +1,6 @@
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import {
+  AttributeValueSchema,
   DocumentNodeSchema,
   fitsSlice,
   MarkSchema,
@@ -118,14 +119,14 @@ const AttrStepSchema = Schema.Struct({
   attr: Schema.String,
   pos: PositionSchema,
   stepType: Schema.Literal("attr"),
-  value: Schema.Json,
+  value: AttributeValueSchema,
 });
 
 /** The step that sets one attribute of the document. */
 const DocAttrStepSchema = Schema.Struct({
   attr: Schema.String,
   stepType: Schema.Literal("docAttr"),
-  value: Schema.Json,
+  value: AttributeValueSchema,
 });
 
 /**
