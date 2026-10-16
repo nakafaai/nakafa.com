@@ -3,13 +3,17 @@ import type {
   MessagePage,
 } from "@repo/backend/confect/nina/contract/message";
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
-import { Array as Arr, MutableHashMap, Option, Schema } from "effect";
+import { Array as Arr, MutableHashMap, Option, Schema, Struct } from "effect";
 import type { SentSchema } from "@/e2e/support/frames";
 
 /** The Convex name of `nina.messages.page`, the query that reads the messages of a chat. */
 const MESSAGES = "nina/messages:page";
 /** The Convex name of `nina.conversation.turns`, the query that reads the turns that ended. */
 const TURNS = "nina/conversation:turns";
+/** The Convex name of `nina.conversation.get`, the query that reads a chat with its latest turn. */
+export const CONVERSATION = "nina/conversation:get";
+/** The stream that carries the answer being written. */
+const STREAM_ID = "prose-stream";
 
 /** One message as the query that reads a chat's messages returns it. */
 export type StoredMessage = (typeof MessagePage.Type)["page"][number];
@@ -151,7 +155,7 @@ export const noticeQueries = (
  * Pages items the way Agent's list does: the newest first, `numItems` at a time,
  * and a cursor that names where the next page starts.
  */
-export const cutPage = <Item>(
+const cutPage = <Item>(
   items: readonly Item[],
   cursor: string | null,
   numItems: number
@@ -168,7 +172,7 @@ export const cutPage = <Item>(
 };
 
 /** Pages the messages of a chat, as the query that reads them does. */
-export const pageOf = (
+const pageOf = (
   messages: readonly StoredMessage[],
   cursor: string | null,
   numItems: number
@@ -176,3 +180,77 @@ export const pageOf = (
   ...cutPage(messages, cursor, numItems),
   streams: { kind: "list", messages: [] },
 });
+
+/** What the page is writing: the order of the message whose answer streams, and the chunks written so far. */
+const WritingSchema = Schema.Struct({
+  chunks: Schema.Array(Schema.Unknown),
+  order: Schema.NullOr(Schema.Finite),
+});
+export type Writing = typeof WritingSchema.Type;
+
+/**
+ * The value one query of a page is given, from the messages the chat holds and
+ * the answer being written. A page of messages is cut from them the way the
+ * server cuts it, and a page of turns from the turns the messages carry. A
+ * stream gives the chunks of the answer from the cursor the page asks for.
+ */
+export const answerTo = (
+  asked: typeof Asked.Type,
+  messages: readonly ServedMessage[],
+  writing: Writing
+) => {
+  if (asked.kind === "page") {
+    return pageOf(
+      Arr.map(messages, Struct.omit(["metadata"])),
+      asked.cursor,
+      asked.numItems
+    );
+  }
+  if (asked.kind === "turns") {
+    return cutPage(
+      Arr.flatMap(messages, (message) =>
+        message.metadata === undefined ? [] : [message.metadata]
+      ),
+      asked.cursor,
+      asked.numItems
+    );
+  }
+  const base = { continueCursor: "", isDone: true, page: [] };
+  if (asked.kind === "list") {
+    return {
+      ...base,
+      streams: {
+        kind: "list",
+        messages:
+          writing.order === null
+            ? []
+            : [
+                {
+                  format: "UIMessageChunk",
+                  order: writing.order,
+                  status: "streaming",
+                  stepOrder: 1,
+                  streamId: STREAM_ID,
+                },
+              ],
+      },
+    };
+  }
+  const parts = Arr.drop(writing.chunks, asked.cursor);
+  return {
+    ...base,
+    streams: {
+      deltas: Arr.isReadonlyArrayNonEmpty(parts)
+        ? [
+            {
+              end: writing.chunks.length,
+              parts,
+              start: asked.cursor,
+              streamId: STREAM_ID,
+            },
+          ]
+        : [],
+      kind: "deltas",
+    },
+  };
+};

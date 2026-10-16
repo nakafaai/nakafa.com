@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { RegisteredFunction } from "@confect/server";
 import { createThread, saveMessages } from "@convex-dev/agent";
+import { expect } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -18,7 +19,7 @@ import { providerStep } from "@repo/backend/test/nina/specialist";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Predicate } from "effect";
 
 const NOW = Date.UTC(2026, 8, 27, 12);
 const read = Ref.getFunctionReference(refs.internal.nina.summaries.read);
@@ -250,4 +251,46 @@ export async function createSummaryTest(
     t,
     text,
   };
+}
+
+/** A turn whose answer costs about 6,000 tokens, so six of them outweigh the history budget. */
+export const BIG = { tokens: 6000 } as const;
+/** The summary that a failed fold must leave as it was, covering the turns through order 1. */
+export const EARLIER = "- Earlier study.";
+export const EARLIER_THROUGH = 1;
+
+type SummaryTest = Awaited<ReturnType<typeof createSummaryTest>>;
+
+/** Sorts the queries of a refresh by what they read, from the shape of their arguments. */
+export function readsOf(queries: readonly unknown[]) {
+  const having = (key: string) =>
+    Arr.filter(queries, (args) => Predicate.hasProperty(args, key));
+  const pages = having("paginationOpts");
+  return {
+    anchors: Arr.filter(
+      having("order"),
+      (args) =>
+        Predicate.hasProperty(args, "order") && Predicate.isNumber(args.order)
+    ),
+    asked: having("questions"),
+    pages,
+    uncovered: having("through"),
+    window: Arr.filter(
+      pages,
+      (args) =>
+        Predicate.hasProperty(args, "excludeToolMessages") &&
+        args.excludeToolMessages === true
+    ),
+  };
+}
+
+/** What the summary that `seed` stores has cost. */
+export const EARLIER_USAGE = { calls: 1, input: 900, output: 120 };
+
+/** The summary stays as `seed` stored it: its text and what it covers, and it has cost `usage`. */
+export async function expectEarlier(f: SummaryTest, usage = EARLIER_USAGE) {
+  expect(await f.text()).toBe(EARLIER);
+  expect(await f.summary()).toEqual([
+    expect.objectContaining({ throughOrder: EARLIER_THROUGH, usage }),
+  ]);
 }

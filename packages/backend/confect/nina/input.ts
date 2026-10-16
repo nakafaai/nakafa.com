@@ -1,10 +1,8 @@
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
+import type { Asking } from "@repo/backend/confect/nina/asking";
 import { NinaGenerationError } from "@repo/backend/confect/nina/failure";
 import { historyCost } from "@repo/backend/confect/nina/fold";
-import {
-  type Asking,
-  assembleContext,
-} from "@repo/backend/confect/nina/history";
+import { assembleContext } from "@repo/backend/confect/nina/history";
 import { withTurnContext } from "@repo/backend/confect/nina/prompt/user";
 import {
   readUncovered,

@@ -15,7 +15,7 @@ import {
   summaryModel,
 } from "@repo/backend/test/nina/summary";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Option, Predicate } from "effect";
+import { Array as Arr, Option } from "effect";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -435,67 +435,6 @@ describe("Nina fold by size", () => {
       expect.objectContaining({ throughOrder: 0 }),
     ]);
   });
-});
-
-describe("Nina fold from the cost its prompt stored", () => {
-  /** Whether a query of a refresh asks for the turns that a summary does not cover. */
-  const asksTurns = (args: unknown) => Predicate.hasProperty(args, "through");
-
-  it.each([
-    [
-      "the turn that settled outweighs the budget with its history",
-      // Four turns of 7,000 tokens fit the budget of 32,000, and a fifth of 6,000 does not.
-      5,
-      (order: number) => ({ tokens: order === 4 ? 6000 : 7000 }),
-    ],
-    [
-      "the read behind the cost left the oldest turns out",
-      // The read of forty turns of 1,000 tokens stops after the page that outweighs the budget.
-      40,
-      () => ({ tokens: 1000 }),
-    ],
-  ])(
-    "reads the turns and folds as it does without the cost when %s",
-    async (_case, turns, shape) => {
-      provider.languageModel.mockReturnValue(summaryModel("- A fold."));
-      const settled = turns - 1;
-      const stored = await createSummaryTest(turns, shape);
-      const history = await stored.history(settled);
-      const full = await createSummaryTest(turns, shape);
-      await full.refresh(settled);
-      const refreshed = await stored.measure(settled, { history });
-      const throughs = async (f: typeof stored) =>
-        Arr.map(await f.summary(), ({ throughOrder }) => throughOrder);
-      expect(await throughs(full)).toHaveLength(1);
-      expect(await throughs(stored)).toEqual(await throughs(full));
-      expect(Arr.some(refreshed.queries, asksTurns)).toBe(true);
-    },
-    30_000
-  );
-
-  it("folds at the same turns as the full read after every turn of a chat, and reads the turns for only some of them", async () => {
-    provider.languageModel.mockReturnValue(summaryModel("- A study session."));
-    // Each turn costs about 9,000 tokens: a fold comes every four or so.
-    const shape = () => ({ tokens: 9000 });
-    const full = await createSummaryTest(14, shape);
-    const stored = await createSummaryTest(14, shape);
-    let reads: readonly boolean[] = [];
-    for (const settled of Arr.range(0, 12)) {
-      await full.refresh(settled);
-      const { queries } = await stored.measure(settled, {
-        history: await stored.history(settled),
-      });
-      reads = Arr.append(reads, Arr.some(queries, asksTurns));
-      expect((await stored.stored())?.throughOrder).toBe(
-        (await full.stored())?.throughOrder
-      );
-      expect(await stored.lost(settled)).toEqual([]);
-    }
-    // The summary folded more than once, and the turns that fit never read the chat.
-    expect((await stored.stored())?.throughOrder).toBeGreaterThan(2);
-    expect(Arr.filter(reads, (read) => !read).length).toBeGreaterThan(3);
-    expect(Arr.filter(reads, (read) => read).length).toBeGreaterThan(1);
-  }, 60_000);
 });
 
 describe("Nina summary fold within its transcript budget", () => {

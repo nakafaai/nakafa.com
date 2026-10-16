@@ -6,7 +6,6 @@ import {
   MutableList,
   Option,
   Result,
-  Struct,
 } from "effect";
 import { openChatPage } from "@/e2e/support/chat";
 import {
@@ -18,17 +17,13 @@ import {
 import {
   type Asked,
   type AskedQueries,
-  cutPage,
+  answerTo,
   noticeQueries,
-  pageOf,
   type ServedMessage,
   type StoredMessage,
 } from "@/e2e/support/query";
 import { BUBBLE_CONTENT, TRANSCRIPT_ROW } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-
-/** The stream that carries the answer being written. */
-const STREAM_ID = "prose-stream";
 
 /** A frame in which the server moves the page to a new view of the database. */
 type Transition = Option.Option.Value<ReturnType<typeof decodeTransition>>;
@@ -50,11 +45,6 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
   page: Page,
   messages: readonly ServedMessage[]
 ) {
-  /** The messages as the page reads them, which tell nothing of a turn, and the facts of the turns that ended. */
-  const pages = Arr.map(messages, Struct.omit(["metadata"]));
-  const turns = Arr.flatMap(messages, (message) =>
-    message.metadata === undefined ? [] : [message.metadata]
-  );
   /** The chunks of the answer being written, and the turn it answers. */
   const chunks = MutableList.make<unknown>();
   let order: number | null = null;
@@ -67,62 +57,16 @@ const serveMessages = Effect.fn("NakafaE2E.serveMessages")(function* (
     view: Option.Option<Transition>;
   }>();
 
-  /** The value one query is given, from the messages and the answer being written. */
-  const answerTo = (asked: typeof Asked.Type) => {
-    if (asked.kind === "page") {
-      return pageOf(pages, asked.cursor, asked.numItems);
-    }
-    if (asked.kind === "turns") {
-      return cutPage(turns, asked.cursor, asked.numItems);
-    }
-    const base = { continueCursor: "", isDone: true, page: [] };
-    if (asked.kind === "list") {
-      return {
-        ...base,
-        streams: {
-          kind: "list",
-          messages:
-            order === null
-              ? []
-              : [
-                  {
-                    format: "UIMessageChunk",
-                    order,
-                    status: "streaming",
-                    stepOrder: 1,
-                    streamId: STREAM_ID,
-                  },
-                ],
-        },
-      };
-    }
-    const all = MutableList.toArray(chunks);
-    const parts = Arr.drop(all, asked.cursor);
-    return {
-      ...base,
-      streams: {
-        deltas: Arr.isReadonlyArrayNonEmpty(parts)
-          ? [
-              {
-                end: all.length,
-                parts,
-                start: asked.cursor,
-                streamId: STREAM_ID,
-              },
-            ]
-          : [],
-        kind: "deltas",
-      },
-    };
-  };
-
   /** The change that gives a query the value it asks for. */
   const updateOf = (queryId: number, asked: typeof Asked.Type) => ({
     journal: null,
     logLines: [],
     queryId,
     type: "QueryUpdated",
-    value: answerTo(asked),
+    value: answerTo(asked, messages, {
+      chunks: MutableList.toArray(chunks),
+      order,
+    }),
   });
 
   /** Gives every connection the new value of the queries a change moves. */
