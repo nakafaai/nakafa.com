@@ -1,4 +1,5 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 
 /** Inserts one app user with optional deletion state. */
 export function seedDeletionUser(
@@ -14,6 +15,7 @@ export function seedDeletionUser(
     credits: 0,
     creditsResetAt: 0,
     email: `${authId}@example.com`,
+    mascot: MASCOT_CODE,
     name: authId,
     plan: "free",
     ...state,

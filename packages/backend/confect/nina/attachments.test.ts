@@ -115,7 +115,7 @@ describe("Nina attachment document limit", () => {
 
     const fileIds = await t.run((ctx) =>
       Effect.runPromise(
-        consumeAttachments(userId, uploadIds).pipe(
+        consumeAttachments(userId, uploadIds, "Read these.").pipe(
           Effect.map((consumed) => consumed.fileIds),
           Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
         )
@@ -135,7 +135,7 @@ describe("Nina attachment document limit", () => {
 
     const failure = await t.run((ctx) =>
       Effect.runPromise(
-        consumeAttachments(userId, uploadIds).pipe(
+        consumeAttachments(userId, uploadIds, "Read these.").pipe(
           Effect.flip,
           Effect.map((error) => ({ tag: error._tag, code: error.code })),
           Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
@@ -162,7 +162,7 @@ describe("Nina attachment document limit", () => {
 
     const partTypes = await t.run((ctx) =>
       Effect.runPromise(
-        consumeAttachments(userId, uploadIds).pipe(
+        consumeAttachments(userId, uploadIds, "Read these.").pipe(
           Effect.map((consumed) =>
             Arr.map(consumed.parts, (part) => part.type)
           ),
@@ -174,6 +174,32 @@ describe("Nina attachment document limit", () => {
     expect(partTypes).toEqual(["image", "file"]);
     expect(await grantsKept(t, uploadIds)).toEqual([false, false]);
   });
+
+  it("refuses a message that costs more than one turn carries, and keeps every grant", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { userId, uploadIds } = await seedUploads(t, [
+      { mediaType: "application/pdf", size: MiB },
+    ]);
+
+    // Eighty thousand letters cost more than a turn carries at any letter rate
+    // the profile could hold, so the refusal does not depend on the profile.
+    const failure = await t.run((ctx) =>
+      Effect.runPromise(
+        consumeAttachments(userId, uploadIds, "a".repeat(80_000)).pipe(
+          Effect.flip,
+          Effect.map((error) => ({ tag: error._tag, code: error.code })),
+          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+        )
+      )
+    );
+
+    expect(failure).toEqual({
+      tag: "NinaTurnError",
+      code: "NINA_MESSAGE_SIZE",
+    });
+    expect(await grantsKept(t, uploadIds)).toEqual([true]);
+  });
+
   it("refuses a stored message whose documents total 10.1 MiB before a retry sends it", async () => {
     const t = createConvexTestWithBetterAuth();
     const { uploadIds } = await seedUploads(t, [

@@ -11,7 +11,10 @@ import {
   PromotionReturnReason,
   PromotionStep,
 } from "@repo/backend/confect/tenancy/promotion";
-import { ClaimMethod } from "@repo/backend/confect/tenancy/schema";
+import {
+  ClaimMethod,
+  PersonReason,
+} from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
 /** The school roles that read the periods and cohorts of their school. */
@@ -124,6 +127,7 @@ export const person = Kind.make("person", "tenantPeople", {
     Schema.Struct({ type: Schema.Literal("person.created") }),
     Schema.Struct({
       invite: Id("tenantInvites"),
+      reason: Schema.optionalKey(PersonReason),
       type: Schema.Literal("person.invited"),
     }),
     Schema.Struct({
@@ -131,7 +135,10 @@ export const person = Kind.make("person", "tenantPeople", {
       type: Schema.Literal("person.claimed"),
     }),
     Schema.Struct({ type: Schema.Literal("person.released") }),
-    Schema.Struct({ type: Schema.Literal("person.removed") }),
+    Schema.Struct({
+      reason: Schema.optionalKey(PersonReason),
+      type: Schema.Literal("person.removed"),
+    }),
     Schema.Struct({ type: Schema.Literal("person.renamed") }),
     Schema.Struct({
       cohort: Id("tenantCohorts"),

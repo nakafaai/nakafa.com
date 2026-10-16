@@ -9,6 +9,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Array as Arr } from "effect";
 
 const NOW = Date.UTC(2026, 8, 1);
@@ -33,6 +34,7 @@ it.each([true, false])(
             authUserId: "deleted-auth-user",
             userId: await ctx.db.insert("users", {
               authId: "deleted-auth-user",
+              mascot: MASCOT_CODE,
               name: "Deleted account",
               email: "deleted@example.com",
               plan: "free",
