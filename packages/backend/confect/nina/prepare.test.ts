@@ -9,9 +9,8 @@ import { Array as Arr, Effect, Predicate } from "effect";
 
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 
-/** The name of the Agent component's query that lists the messages of a thread. */
-const THREAD_PAGE =
-  "_reference/childComponent/nina/messages/listMessagesByThreadId";
+/** The internal query of the sealed module that lists one page of a thread, opened for its owner. */
+const THREAD_PAGE = "nina/sealed:thread";
 
 /**
  * Prepares the queued turn of a fixture for the model in an action, and

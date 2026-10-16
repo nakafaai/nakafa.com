@@ -12,6 +12,7 @@ import {
   acceptanceRuntimeError,
   retryVersionServiceStart,
 } from "@repo/backend/scripts/content/acceptance/error";
+import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
   assertLocalPortsFree,
   localConvexEnvironment,
@@ -307,83 +308,86 @@ export const initializeLocalRuntime = Effect.fn(
   return runtime;
 });
 
-/** Reopens only the unchanged local selection and database created by a successful build. */
+/**
+ * Reopens only the unchanged local selection and database created by a successful
+ * build. The caller holds the runtime's lease, so no live run still prepares it.
+ */
+const readReservedLocalRuntime = Effect.fn(
+  "contentAcceptance.readReservedLocalRuntime"
+)(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const directory = `${root}/.cache/acceptance`;
+  const runtime = yield* fs.readFileString(`${directory}/manifest.json`).pipe(
+    Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(RuntimeManifest))),
+    Effect.mapError(() =>
+      acceptanceRuntimeError(
+        "The build runtime manifest is missing or invalid; existing state is preserved. Stop its services, delete .cache/acceptance, and run pnpm acceptance:prepare."
+      )
+    )
+  );
+  const backend = `${directory}/backend`;
+  const actual = yield* directoryIdentity(directory);
+  const source = yield* fs.readFileString(`${backend}/.env.local`);
+  const database = yield* fs.stat(`${backend}/.convex`);
+  if (
+    runtime.backend !== backend ||
+    runtime.directory !== directory ||
+    runtime.directoryInode !== actual.directoryInode ||
+    (yield* fs.realPath(`${backend}/.convex`)) !== `${backend}/.convex` ||
+    (yield* fs.realPath(`${backend}/.env.local`)) !== `${backend}/.env.local` ||
+    Option.isNone(database.ino) ||
+    runtime.databaseInode !== database.ino.value ||
+    runtime.configurationHash !==
+      (yield* sha256Hex(
+        yield* fs.readFileString(`${backend}/.convex/local/default/config.json`)
+      )) ||
+    runtime.environmentHash !== (yield* sha256Hex(source))
+  ) {
+    return yield* acceptanceRuntimeError(
+      "The local build runtime changed ownership; existing state is preserved."
+    );
+  }
+  yield* verifyLocalSigningIdentity(directory, runtime.signing);
+  return runtime;
+});
+
+/** Reopens the local runtime of this checkout, or returns nothing when none is reserved. */
 export const readLocalRuntime = Effect.fn("contentAcceptance.readLocalRuntime")(
   function* (root: string) {
     const fs = yield* FileSystem.FileSystem;
-    const directory = `${root}/.cache/acceptance`;
-    if (!(yield* fs.exists(directory))) {
+    if (!(yield* fs.exists(`${root}/.cache/acceptance`))) {
       return;
     }
-    const runtime = yield* fs.readFileString(`${directory}/manifest.json`).pipe(
-      Effect.flatMap(
-        Schema.decodeEffect(Schema.fromJsonString(RuntimeManifest))
-      ),
-      Effect.mapError(() =>
-        acceptanceRuntimeError(
-          "The build runtime manifest is missing or invalid; existing state is preserved. Stop its services, delete .cache/acceptance, and run pnpm acceptance:prepare."
-        )
-      )
-    );
-    const backend = `${directory}/backend`;
-    const actual = yield* directoryIdentity(directory);
-    const source = yield* fs.readFileString(`${backend}/.env.local`);
-    const database = yield* fs.stat(`${backend}/.convex`);
-    if (
-      runtime.backend !== backend ||
-      runtime.directory !== directory ||
-      runtime.directoryInode !== actual.directoryInode ||
-      (yield* fs.realPath(`${backend}/.convex`)) !== `${backend}/.convex` ||
-      (yield* fs.realPath(`${backend}/.env.local`)) !==
-        `${backend}/.env.local` ||
-      Option.isNone(database.ino) ||
-      runtime.databaseInode !== database.ino.value ||
-      runtime.configurationHash !==
-        (yield* sha256Hex(
-          yield* fs.readFileString(
-            `${backend}/.convex/local/default/config.json`
-          )
-        )) ||
-      runtime.environmentHash !== (yield* sha256Hex(source))
-    ) {
-      return yield* acceptanceRuntimeError(
-        "The local build runtime changed ownership; existing state is preserved."
-      );
-    }
-    yield* verifyLocalSigningIdentity(directory, runtime.signing);
-    return runtime;
+    return yield* readReservedLocalRuntime(root);
   }
 );
 
-/** Excludes cleanup or another start while this caller owns the retained runtime. */
-export const leaseLocalRuntime = Effect.fn(
-  "contentAcceptance.leaseLocalRuntime"
+/**
+ * Holds the lease of the reserved runtime and reads its manifest. The lease comes
+ * first, so a runtime that a live run still prepares is refused as in use instead
+ * of being reported as a broken manifest. Returns nothing when no runtime is
+ * reserved. The lease lasts for the caller's scope.
+ */
+export const leaseReservedLocalRuntime = Effect.fn(
+  "contentAcceptance.leaseReservedLocalRuntime"
 )(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
-  const lock = `${root}/.cache/acceptance/using`;
-  yield* Effect.acquireRelease(
-    fs
-      .writeFileString(lock, String(process.pid), { mode: 0o600, flag: "wx" })
-      .pipe(
-        Effect.mapError(() =>
-          acceptanceRuntimeError(
-            "The local build runtime is in use; existing state is preserved."
-          )
-        )
-      ),
-    () => fs.remove(lock, { force: true }).pipe(Effect.orDie)
-  );
+  if (!(yield* fs.exists(`${root}/.cache/acceptance`))) {
+    return Option.none<LocalRuntime>();
+  }
+  yield* leaseLocalRuntime(root);
+  return Option.some(yield* readReservedLocalRuntime(root));
 });
 
 /** Deletes a stopped runtime only after its recorded filesystem ownership still matches. */
 export const cleanLocalRuntime = Effect.fn(
   "contentAcceptance.cleanLocalRuntime"
 )(function* (root: string) {
-  const runtime = yield* readLocalRuntime(root);
-  if (!runtime) {
+  const reserved = yield* leaseReservedLocalRuntime(root);
+  if (Option.isNone(reserved)) {
     return;
   }
-  yield* leaseLocalRuntime(root);
+  const runtime = reserved.value;
   yield* assertLocalPortsFree(runtime);
   // A failed cache removal leaves the runtime in place for a clean retry.
   yield* discardSignedResponses(root);

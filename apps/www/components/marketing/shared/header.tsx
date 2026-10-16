@@ -3,6 +3,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useLocale, useTranslations } from "next-intl";
 import { HeaderContainer } from "@/components/marketing/shared/header/container";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header/cta";
+import { HeaderFeaturesLink } from "@/components/marketing/shared/header/features";
 import { Language } from "@/components/marketing/shared/language";
 
 export function Header() {
@@ -22,11 +23,7 @@ export function Header() {
           />
           <Button
             nativeButton={false}
-            render={
-              <NavigationLink href={{ pathname: "/", hash: "features" }}>
-                {t("features")}
-              </NavigationLink>
-            }
+            render={<HeaderFeaturesLink>{t("features")}</HeaderFeaturesLink>}
             variant="ghost"
           />
           <Button
