@@ -3479,6 +3479,84 @@ export declare const api: {
       >;
     };
   };
+  notifications: {
+    inbox: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            changeType: "person.invited";
+            createdAt: number;
+            id: Id<"notifications">;
+            readAt?: number;
+            subject:
+              | { id: Id<"tenants">; kind: "tenant" }
+              | { id: Id<"tenantUnits">; kind: "unit" }
+              | { id: Id<"tenantPeople">; kind: "person" }
+              | { id: Id<"tenantPeriods">; kind: "period" }
+              | { id: Id<"tenantCohorts">; kind: "cohort" }
+              | { id: Id<"tenantPromotions">; kind: "promotion" }
+              | { id: Id<"tenantGrants">; kind: "grant" }
+              | { id: Id<"integrationClients">; kind: "integration" }
+              | { id: Id<"classes">; kind: "class" }
+              | { id: Id<"tenantVisits">; kind: "visit" }
+              | { kind: string };
+            tenant: {
+              kind: "school" | "foundation";
+              name: string;
+              slug: string;
+              status: "active" | "suspended";
+            };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      read: FunctionReference<
+        "mutation",
+        "public",
+        { notificationId: Id<"notifications"> },
+        {
+          changeType: "person.invited";
+          createdAt: number;
+          id: Id<"notifications">;
+          readAt?: number;
+          subject:
+            | { id: Id<"tenants">; kind: "tenant" }
+            | { id: Id<"tenantUnits">; kind: "unit" }
+            | { id: Id<"tenantPeople">; kind: "person" }
+            | { id: Id<"tenantPeriods">; kind: "period" }
+            | { id: Id<"tenantCohorts">; kind: "cohort" }
+            | { id: Id<"tenantPromotions">; kind: "promotion" }
+            | { id: Id<"tenantGrants">; kind: "grant" }
+            | { id: Id<"integrationClients">; kind: "integration" }
+            | { id: Id<"classes">; kind: "class" }
+            | { id: Id<"tenantVisits">; kind: "visit" }
+            | { kind: string };
+          tenant: {
+            kind: "school" | "foundation";
+            name: string;
+            slug: string;
+            status: "active" | "suspended";
+          };
+        }
+      >;
+      readAll: FunctionReference<"mutation", "public", {}, null>;
+    };
+  };
   onboarding: {
     mutations: {
       admit: FunctionReference<
@@ -10575,6 +10653,33 @@ export declare const internal: {
             turns: number;
           }>;
         }
+      >;
+    };
+  };
+  notifications: {
+    consume: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { tenantId: Id<"tenants"> },
+        null
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+    purge: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { personId: Id<"tenantPeople"> },
+        null
+      >;
+    };
+    read: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; personId: Id<"tenantPeople">; readAt: number },
+        null
       >;
     };
   };
