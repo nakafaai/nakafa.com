@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { NINA_FILENAME_LENGTH } from "@repo/backend/client/nina/uploads";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import {
   chipsIn,
   chipsOfMessages,
@@ -162,32 +162,35 @@ const readOverhang = (chip: HTMLElement) => {
   return chip.getBoundingClientRect().right - inner;
 };
 
-// A chip keeps its 16rem cap, so on a narrow screen it can be wider than the
-// row it sits in.
-test.describe("Document chips inside their row at 300px", () => {
-  test.use({ viewport: { height: 900, width: 300 } });
+// A document chip stays inside its row at every width. Its 16rem cap and its
+// 10rem minimum both give way to a row narrower than they are, and 200px is
+// narrower than any phone, where the minimum is the one that would overhang.
+for (const width of [300, 200]) {
+  test.describe(`Document chips inside their row at ${width}px`, () => {
+    test.use({ viewport: { height: 900, width } });
 
-  for (const { label, name } of LONG_NAMES) {
-    test(`keep ${label} inside the end of the row`, async ({ page }) => {
-      await runPage(
-        page,
-        Effect.gen(function* () {
-          const composer = yield* openComposer(page);
-          yield* pickFiles(composer, [fileOf(name, "text/plain", 8)]);
-          const chip = chipsIn(composer).first();
-          yield* Effect.promise(() => expect(chip).toBeVisible());
-          const overhang = yield* Effect.promise(() =>
-            chip.evaluate(readOverhang)
-          );
+    for (const { label, name } of LONG_NAMES) {
+      test(`keep ${label} inside the end of the row`, async ({ page }) => {
+        await runPage(
+          page,
+          Effect.gen(function* () {
+            const composer = yield* openComposer(page);
+            yield* pickFiles(composer, [fileOf(name, "text/plain", 8)]);
+            const chip = chipsIn(composer).first();
+            yield* Effect.promise(() => expect(chip).toBeVisible());
+            const overhang = yield* Effect.promise(() =>
+              chip.evaluate(readOverhang)
+            );
 
-          yield* Effect.sync(() => {
-            expect(overhang).toBeLessThanOrEqual(0.5);
-          });
-        })
-      );
-    });
-  }
-});
+            yield* Effect.sync(() => {
+              expect(overhang).toBeLessThanOrEqual(0.5);
+            });
+          })
+        );
+      });
+    }
+  });
+}
 
 test.describe("Names on the files of a sent message at 320px", () => {
   test.use({ viewport: { height: 900, width: 320 } });
@@ -223,4 +226,60 @@ test.describe("Names on the files of a sent message at 320px", () => {
       );
     });
   }
+});
+
+/**
+ * Where the first chip of a row starts, measured from the start edge of the
+ * row's content, in pixels. A negative value is a chip cut off at the start.
+ */
+const readStartGap = (chip: HTMLElement) => {
+  const row = chip.closest('[data-slot="attachment-group"]');
+  if (!(row instanceof HTMLElement)) {
+    return null;
+  }
+  const style = getComputedStyle(row);
+  const inner =
+    row.getBoundingClientRect().left +
+    Number.parseFloat(style.paddingLeft) +
+    Number.parseFloat(style.borderLeftWidth);
+  return chip.getBoundingClientRect().left - inner;
+};
+
+// Two long documents are wider than the message column of a phone, so their
+// row scrolls. The first file must start at the start of the row, where the
+// scroll reaches it, and not run past the start edge of the page.
+test.describe("The first of two files of a sent message at 320px", () => {
+  test.use({ viewport: { height: 900, width: 320 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("starts at the start of the row", async ({ baseURL, page }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes } = yield* openChatPage(page, origin);
+        const composer = onThePage(page);
+        yield* pickFiles(
+          composer,
+          Arr.map(Arr.take(LONG_NAMES, 2), ({ name }) =>
+            fileOf(name, "text/plain", 8)
+          )
+        );
+        yield* write(composer, "Read these files");
+
+        // The server's answers are held back, so the page keeps the message
+        // it showed at once, with both of its files in it.
+        changes.hold();
+        yield* Effect.promise(async () => {
+          await composerOf(composer).press("Enter");
+          await expect(chipsOfMessages(page)).toHaveCount(2);
+        });
+        const gap = yield* Effect.promise(() =>
+          chipsOfMessages(page).first().evaluate(readStartGap)
+        );
+
+        yield* Effect.sync(() => {
+          expect(gap).toBeGreaterThanOrEqual(-0.5);
+        });
+      })
+    );
+  });
 });

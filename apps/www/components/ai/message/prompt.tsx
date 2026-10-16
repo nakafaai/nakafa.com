@@ -27,7 +27,9 @@ export function NinaPrompt({
   return (
     <MessageContent>
       {files.length > 0 ? (
-        <AttachmentGroup className="max-w-full justify-end">
+        // Files that fit sit at the end of the row, beside the bubble; files
+        // wider than the row start at its start, where its scroll reaches them.
+        <AttachmentGroup className="justify-end-safe max-w-full">
           {Arr.map(files, (file) => (
             <NinaAttachment file={file} key={file.url} />
           ))}
