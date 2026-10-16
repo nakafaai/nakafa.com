@@ -75,10 +75,10 @@ const entryOf = <
   change: C
 ) =>
   Schema.Struct({
+    subject: kind.ref,
     actor: Actor,
     change,
     owner: Space,
-    subject: kind.ref,
   });
 
 /**
