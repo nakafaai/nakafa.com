@@ -37,7 +37,7 @@ export function QuranSurahHeader({
   const tCommon = useTranslations("Common");
   return (
     <BreadcrumbHeaderFrame
-      className="min-h-(--surah-header-height)"
+      className="h-(--surah-header-height)"
       contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
     >
       <div className="col-start-1 row-start-1 min-w-0 md:col-span-1">

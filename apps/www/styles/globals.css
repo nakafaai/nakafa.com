@@ -3,10 +3,11 @@
 @import "@repo/design-system/styles/katex.css";
 
 /*
- * The surah header is two rows on a phone and one row from md. One token gives
- * its height, so the header and the verse anchors that scroll past it agree:
- * on a phone 1.5rem of padding, the 2.25rem action row, the 0.5rem gap, the
- * 2rem title row, and the 1px border.
+ * The surah header is two rows on a phone and one row from md, and it is
+ * exactly this tall, so the verse anchors that scroll past it agree with it.
+ * On a phone its rows make up the token: 1.5rem of padding, the 2.25rem action
+ * row, the 0.5rem gap, the 2rem title row, and the 1px border. The rows must
+ * fit inside it, which the landing test checks.
  */
 :root {
   --surah-header-height: calc(6.25rem + 1px);

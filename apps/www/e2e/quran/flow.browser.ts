@@ -31,6 +31,29 @@ type FlingFrames = typeof FlingFramesSchema.Type;
  * it uses no import.
  */
 function sampleFlingFrames() {
+  /**
+   * The verse nearest the middle of the screen: the verse whose box holds the
+   * middle, or else the one closest to it. The space between two verses is not
+   * a verse, so a middle that falls there reads as the verse beside it.
+   */
+  function verseNearMiddle() {
+    const middle = window.innerHeight / 2;
+    let nearest: Element | null = null;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    for (const verse of Array.from(
+      document.querySelectorAll("[data-quran-verse]")
+    )) {
+      const box = verse.getBoundingClientRect();
+      const distance =
+        middle < box.top ? box.top - middle : Math.max(0, middle - box.bottom);
+      if (distance < nearestDistance) {
+        nearest = verse;
+        nearestDistance = distance;
+      }
+    }
+    return nearest;
+  }
+
   return new Promise<FlingFrames>((resolve) => {
     const startedAt = performance.now();
     let frames = 0;
@@ -49,13 +72,7 @@ function sampleFlingFrames() {
       lastHeight = height;
       frames += 1;
 
-      const middle = document.elementFromPoint(
-        window.innerWidth / 2,
-        window.innerHeight / 2
-      );
-      const arabic = middle
-        ?.closest("[data-quran-verse]")
-        ?.querySelector("[data-quran-arabic]");
+      const arabic = verseNearMiddle()?.querySelector("[data-quran-arabic]");
       if (
         !(arabic instanceof HTMLElement) ||
         arabic.getBoundingClientRect().height === 0

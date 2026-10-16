@@ -28,6 +28,31 @@ function readVerseGap(id: string) {
   return anchor.getBoundingClientRect().top - stackBottom;
 }
 
+/**
+ * How many pixels the surah header's content reaches below the inside of its
+ * box. Zero when every row ends inside the box. A visible overflow does not
+ * change scroll height, so each element is measured against the box edge.
+ */
+function readHeaderOverflow() {
+  const header = document
+    .querySelector('[data-slot="surah-header-actions"]')
+    ?.closest("header");
+  if (!header) {
+    return Number.NaN;
+  }
+  const inside =
+    header.getBoundingClientRect().bottom -
+    Number.parseFloat(getComputedStyle(header).borderBottomWidth);
+  let overflow = 0;
+  for (const element of Array.from(header.querySelectorAll("*"))) {
+    overflow = Math.max(
+      overflow,
+      element.getBoundingClientRect().bottom - inside
+    );
+  }
+  return overflow;
+}
+
 /** The outline of the surah page on the right, whether it is the panel or the sheet of a phone. */
 function outlineLinks(page: Page, sheet: boolean) {
   return sheet
@@ -72,6 +97,20 @@ const expectLanded = Effect.fn("NakafaE2E.expectLanded")(function* (
 });
 
 /**
+ * Checks that the surah header's rows end inside its height. The verse anchors
+ * scroll past that height, so a row that reached below it would spill over the
+ * verses under the header while the landing check still passed.
+ */
+const expectHeaderFits = Effect.fn("NakafaE2E.expectHeaderFits")(function* (
+  page: Page
+) {
+  const overflow = yield* Effect.promise(() =>
+    page.evaluate(readHeaderOverflow)
+  );
+  yield* Effect.sync(() => expect(overflow).toBeLessThanOrEqual(1));
+});
+
+/**
  * Chooses a verse in the outline. Below the desktop width the outline is a
  * sheet that opens first and closes when a verse is chosen.
  */
@@ -100,6 +139,7 @@ const chooseVerse = Effect.fn("NakafaE2E.chooseVerse")(function* (
 const verifyOutlineLandings = Effect.fn("NakafaE2E.verifyOutlineLandings")(
   function* (page: Page, sheet: boolean) {
     yield* openSurah(page, appRoutes.quranSurah);
+    yield* expectHeaderFits(page);
     for (const number of [5, 81, 250]) {
       yield* chooseVerse(page, `Verse ${number}`, sheet);
       yield* expectLanded(page, `verse-${number}`);
@@ -111,6 +151,7 @@ const verifyOutlineLandings = Effect.fn("NakafaE2E.verifyOutlineLandings")(
 const verifyDirectLanding = Effect.fn("NakafaE2E.verifyDirectLanding")(
   function* (page: Page) {
     yield* openSurah(page, `${appRoutes.quranSurah}#verse-200`);
+    yield* expectHeaderFits(page);
     yield* expectLanded(page, "verse-200");
   }
 );

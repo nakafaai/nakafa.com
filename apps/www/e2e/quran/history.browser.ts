@@ -60,13 +60,13 @@ const expectPathname = Effect.fn("NakafaE2E.expectPathname")(function* (
 });
 
 /**
- * Scrolls the outline to verse 200 and reads the verse, then leaves the surah
- * for the Quran index with a client navigation. Back returns to the surah,
- * where the outline and the reading position must be the same as before, and
- * Forward and Back again must show the same once more.
+ * Chooses a verse in the outline and reads it, then leaves the surah for the
+ * Quran index with a client navigation. Back returns to the surah, where the
+ * outline and the reading position must be the same as before, and Forward and
+ * Back again must show the same once more.
  */
 const verifyOutlineHistory = Effect.fn("NakafaE2E.verifyOutlineHistory")(
-  function* (page: Page) {
+  function* (page: Page, number: number) {
     yield* seedAnalyticsConsent(page, "denied");
     yield* Effect.promise(() => page.goto(appRoutes.quranSurah));
     yield* waitForCommittedAppRouter(
@@ -79,7 +79,9 @@ const verifyOutlineHistory = Effect.fn("NakafaE2E.verifyOutlineHistory")(
       '[data-side="right"] [data-slot="sidebar-content"]'
     );
     yield* Effect.promise(() =>
-      outline.getByRole("link", { exact: true, name: "Verse 200" }).click()
+      outline
+        .getByRole("link", { exact: true, name: `Verse ${number}` })
+        .click()
     );
     yield* Effect.sleep(Duration.seconds(1));
     const readingY = yield* Effect.promise(() =>
@@ -112,11 +114,14 @@ const verifyOutlineHistory = Effect.fn("NakafaE2E.verifyOutlineHistory")(
 test.describe("Desktop surah history", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
 
-  test("shows the outline and the reading position after Back and Forward", async ({
-    page,
-  }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyOutlineHistory(page))
-    );
-  });
+  // Verse 5 is near the top of the outline and verse 200 far down it.
+  for (const number of [5, 200]) {
+    test(`shows the outline and the reading position after Back and Forward from verse ${number}`, async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(page, verifyOutlineHistory(page, number))
+      );
+    });
+  }
 });

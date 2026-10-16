@@ -23,7 +23,7 @@ import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import type { ReactElement, ReactNode } from "react";
+import type { MouseEvent, ReactElement, ReactNode } from "react";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
 
 interface Props {
@@ -89,8 +89,39 @@ function useActiveHeading({ label }: Pick<ParsedHeading, "label">) {
 }
 
 /**
- * Links a heading in the document. Native fragment navigation reaches it, so
- * an existing hash never enters the route prefetch cache.
+ * Jumps to a heading of the page on screen, which stays the same page. The
+ * jump writes a history entry that carries the router's own state, copied from
+ * the entry the reader leaves, so Back and Forward restore this page through the
+ * router. A plain fragment entry carries no router state, and the router ignores
+ * it on Back, which left the page the reader had moved away from on screen.
+ * A modified click keeps the browser's own handling, such as a new tab.
+ */
+function jumpToHeading(event: MouseEvent<HTMLAnchorElement>) {
+  if (
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  ) {
+    return;
+  }
+  event.preventDefault();
+  const link = event.currentTarget;
+  // A fragment the page is already on replaces its entry, as the browser does.
+  if (link.href === window.location.href) {
+    window.history.replaceState(window.history.state, "", link.href);
+  } else {
+    window.history.pushState(window.history.state, "", link.href);
+  }
+  document
+    .getElementById(decodeURIComponent(link.hash.slice(1)))
+    ?.scrollIntoView();
+}
+
+/**
+ * Links a heading in the document. The anchor keeps the heading's href, so the
+ * link works before the page hydrates; the page's own jump takes over after.
  */
 function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
   const isActive = useActiveHeading(heading);
@@ -105,7 +136,10 @@ function SidebarTreeLink({ heading }: { heading: ParsedHeading }) {
         render={
           <a
             href={heading.href}
-            onClick={() => setOpenMobile(false)}
+            onClick={(event) => {
+              setOpenMobile(false);
+              jumpToHeading(event);
+            }}
             title={heading.label}
           >
             <SidebarTreeLabel label={heading.label} />
