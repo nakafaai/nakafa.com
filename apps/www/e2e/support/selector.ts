@@ -6,6 +6,8 @@ export const CARD = '[data-slot="card"]';
 export const BUBBLE = '[data-slot="bubble"]';
 /** The box inside a bubble that holds its words. */
 export const BUBBLE_CONTENT = '[data-slot="bubble-content"]';
+/** A row of a chat transcript: one for each message, and the alert of a failed turn. */
+export const TRANSCRIPT_ROW = '[data-slot="message-scroller-item"]';
 /**
  * What Markdown makes of text: emphasis, code, links, lists and headings. The
  * words of a learner, shown as they wrote them, make none of these.

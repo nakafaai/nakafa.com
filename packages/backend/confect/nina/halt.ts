@@ -3,13 +3,20 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { Duration, Effect, Exit, Schedule, Scope } from "effect";
 
-/** How often a running generation asks whether its turn must stop. */
-const HALT_POLL = Duration.seconds(1);
+/**
+ * How often a running generation asks whether its turn must stop. Each ask is a
+ * function call, so a run of 60 seconds makes 30 of them and not 60. The page
+ * shows the turn as stopped from the moment of the stop and the learner's next
+ * prompt does not wait for the run, so the run ends its provider call at most
+ * two seconds late instead of one, and the refund of a stopped turn comes that
+ * much later.
+ */
+const HALT_POLL = Duration.seconds(2);
 
 /**
  * Whether the turn was stopped, settled elsewhere or removed, so that its run
  * has no reason to go on. A read that fails counts as "not halted" and is
- * logged with the turn id and nothing else. The next check, a second later,
+ * logged with the turn id and nothing else. The next check, two seconds later,
  * decides, so one failed read never ends the watch: a stop that the watch
  * missed would leave the provider call running after the page shows the turn as
  * stopped. The run asks the same question when its generation fails, and a read

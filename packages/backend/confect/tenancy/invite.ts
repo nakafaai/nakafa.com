@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import { noteInvite } from "@repo/backend/confect/notifications/inbox";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { claimAfterInvite } from "@repo/backend/confect/tenancy/claims";
@@ -127,13 +128,14 @@ export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
     refs.internal.tenancy.expiry.invite,
     { inviteId }
   );
-  yield* personAuthority.record(
+  const entryId = yield* personAuthority.record(
     actor,
     person,
     reason === undefined
       ? { invite: inviteId, type: "person.invited" }
       : { invite: inviteId, reason, type: "person.invited" }
   );
+  yield* noteInvite(person.tenantId, entryId);
   yield* startInviteEmail(inviteId, locale, requestedAt);
   yield* claimAfterInvite(email);
   return invite;

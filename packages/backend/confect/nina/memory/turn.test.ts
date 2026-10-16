@@ -2,13 +2,13 @@ import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { NinaMemoryNote } from "@repo/backend/confect/nina/memory.spec";
-import { createMemoryTest } from "@repo/backend/test/nina/memory";
+import { createMemoryTest, readLearner } from "@repo/backend/test/nina/memory";
 import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr } from "effect";
 
 const memory = refs.public.nina.memory;
 const pause = Ref.getFunctionReference(memory.pause);
-const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
+const brief = Ref.getFunctionReference(refs.internal.nina.brief.read);
 const lookup = Ref.getFunctionReference(refs.internal.nina.memory.lookup);
 const known = Ref.getFunctionReference(refs.internal.nina.memory.known);
 const paused = Ref.getFunctionReference(refs.internal.nina.memory.paused);
@@ -43,6 +43,34 @@ describe("Nina memory for a turn", () => {
     expect(await f.t.query(paused, { userId })).toBe(false);
   });
 
+  it("reads the learner's preferences once for the profile and the pause, in a turn and in a capture", async () => {
+    const f = await createMemoryTest();
+    const userId = f.identity.userId;
+    const turn = {
+      chatId: f.chatId,
+      now: NOW,
+      order: 0,
+      promptMessageId: f.promptMessageId,
+      topics: [],
+      userId,
+    };
+    const capture = { message: "", now: NOW, topics: [], userId };
+    const documentsRead = (call: typeof brief | typeof known) =>
+      f.t.query(async (ctx) => {
+        await ctx.runQuery(call, call === brief ? turn : capture);
+        return (await ctx.meta.getTransactionMetrics()).documentsRead.used;
+      });
+    const before = [await documentsRead(brief), await documentsRead(known)];
+    await f.t.mutation((ctx) =>
+      ctx.db.insert("learningPreferences", { updatedAt: 1, userId })
+    );
+    // The row is one document more. Read for the profile and again for the
+    // pause, it was two.
+    expect([await documentsRead(brief), await documentsRead(known)]).toEqual(
+      Arr.map(before, (count) => count + 1)
+    );
+  });
+
   it("tells a turn the memories that fit the learner's words and the open page first, then fills up to three with the most recent", async () => {
     const f = await createMemoryTest();
     const userId = f.identity.userId;
@@ -52,7 +80,7 @@ describe("Nina memory for a turn", () => {
       text: "About the lesson",
       topics: [LESSON],
     });
-    const open = await f.t.query(read, {
+    const open = await readLearner(f, {
       now: NOW,
       said: "",
       topics: [LESSON],
@@ -74,7 +102,7 @@ describe("Nina memory for a turn", () => {
     });
     expect(
       words(
-        (await f.t.query(read, { now: NOW, said: "", topics: [], userId }))
+        (await readLearner(f, { now: NOW, said: "", topics: [], userId }))
           .recalled
       )
     ).toEqual(["Memory 9", "Memory 8", "Memory 7"]);
@@ -85,7 +113,7 @@ describe("Nina memory for a turn", () => {
     const userId = f.identity.userId;
     await f.fill(12, { text: "Aku suka limit" });
     await f.seed({ confirmedAt: 99, text: "Hobi main gitar" });
-    const turn = await f.t.query(read, {
+    const turn = await readLearner(f, {
       now: NOW,
       said: "Jelaskan limit",
       topics: [],
@@ -105,7 +133,7 @@ describe("Nina memory for a turn", () => {
       })
     );
     await f.seedPortrait({ text: "Duduk di kelas 12 dan suka contoh soal." });
-    const turn = await f.t.query(read, {
+    const turn = await readLearner(f, {
       now: NOW,
       said: "",
       topics: [],
@@ -135,7 +163,7 @@ describe("Nina memory for a turn", () => {
     });
     await f.seed({ confirmedAt: 1, text: "Ikut SNBT 2027" });
     const userId = f.identity.userId;
-    const learner = await f.t.query(read, {
+    const learner = await readLearner(f, {
       now: NOW,
       said: "",
       topics: [],
@@ -195,7 +223,7 @@ describe("Nina memory for a turn", () => {
     await f.seedPortrait({ text: "Kept in the portrait." });
     await f.owner.mutation(pause, { paused: true });
     expect(
-      await f.t.query(read, {
+      await readLearner(f, {
         now: NOW,
         said: "kept",
         topics: [LESSON],
@@ -215,7 +243,7 @@ describe("Nina memory for a turn", () => {
       })
     ).toEqual({ known: [], profile: { focus: "tryout" } });
     await f.owner.mutation(pause, { paused: false });
-    const resumed = await f.t.query(read, {
+    const resumed = await readLearner(f, {
       now: NOW,
       said: "",
       topics: [],
@@ -269,7 +297,7 @@ describe("Nina memory for a turn", () => {
     expect(
       words(
         (
-          await f.t.query(read, {
+          await readLearner(f, {
             now: NOW,
             said: "memory",
             topics: [LESSON],
@@ -296,7 +324,7 @@ describe("Nina memory for a turn after Delete all", () => {
     await f.fill(3, { topics: [LESSON] });
     await f.markCleared(3);
     expect(
-      await f.t.query(read, {
+      await readLearner(f, {
         now: NOW,
         said: "memory",
         topics: [LESSON],
@@ -332,7 +360,7 @@ describe("Nina memory for a turn after Delete all", () => {
     expect(
       words(
         (
-          await f.t.query(read, {
+          await readLearner(f, {
             now: NOW,
             said: "memory",
             topics: [LESSON],

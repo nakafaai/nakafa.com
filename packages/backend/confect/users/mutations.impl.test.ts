@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { authComponent } from "@repo/backend/confect/auth/client";
+import { createAuthOptions } from "@repo/backend/confect/auth/runtime";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
@@ -188,6 +190,7 @@ describe("users/mutations", () => {
           subject: identity.authUserId,
           sessionId: identity.sessionId,
         }),
+        authUserId: identity.authUserId,
         userId: identity.userId,
       };
     }
@@ -264,6 +267,57 @@ describe("users/mutations", () => {
       await expect(
         t.mutation(api.users.mutations.updateUsername, { username: "alpha" })
       ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    });
+
+    /** The Better Auth username of one account, or null when it holds none. */
+    function authUsernameOf(
+      t: ReturnType<typeof createConvexTestWithBetterAuth>,
+      authUserId: string
+    ) {
+      return t.mutation(async (ctx) => {
+        const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
+        const account = await adapter.findOne<{ username?: string | null }>({
+          model: "user",
+          where: [{ field: "_id", operator: "eq", value: authUserId }],
+        });
+        return account?.username ?? null;
+      });
+    }
+
+    it("renames a school account's Better Auth username with it, so both hold one value", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const school = await seedAccount(t, "school", "alpha");
+      await t.mutation(async (ctx) => {
+        const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
+        await adapter.update({
+          model: "user",
+          update: { displayUsername: "alpha", username: "alpha" },
+          where: [{ field: "_id", operator: "eq", value: school.authUserId }],
+        });
+      });
+
+      await school.as.mutation(api.users.mutations.updateUsername, {
+        username: "bravo",
+      });
+
+      expect(await authUsernameOf(t, school.authUserId)).toBe("bravo");
+      expect(
+        await t.query((ctx) => ctx.db.get("users", school.userId))
+      ).toMatchObject({ username: "bravo" });
+    });
+
+    it("renames a Google account without giving it a Better Auth username", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const google = await seedAccount(t, "google", "alpha");
+
+      await google.as.mutation(api.users.mutations.updateUsername, {
+        username: "bravo",
+      });
+
+      expect(await authUsernameOf(t, google.authUserId)).toBeNull();
+      expect(
+        await t.query((ctx) => ctx.db.get("users", google.userId))
+      ).toMatchObject({ username: "bravo" });
     });
   });
 
