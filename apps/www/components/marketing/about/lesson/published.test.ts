@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
 import {
@@ -26,7 +27,7 @@ function counterpart(
       description,
       title,
     },
-    publicPath,
+    publicPath: PublicPathSchema.make(publicPath),
   };
 }
 

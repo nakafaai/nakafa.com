@@ -1,34 +1,23 @@
 "use client";
 
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
-import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Tabs,
   TabsList,
-  TabsPanel,
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
+import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
-import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   type Lesson,
   LessonSchema,
 } from "@/components/marketing/about/lesson/id";
 import type { HomeLesson } from "@/components/marketing/about/lesson/published";
-
-/** The product's visual of the open lesson. Its code loads when the window nears the screen. */
-const LessonVisual = dynamic(
-  () =>
-    import("@/components/marketing/about/lesson/visual.client").then(
-      ({ LessonVisual }) => LessonVisual
-    ),
-  { loading: ScenePlaceholder }
-);
+import { LessonVisual } from "@/components/marketing/about/lesson/visual.client";
 
 interface LessonWindowProps {
   /** The decimal separator of the page's locale, which the physics visual writes its numbers with. */
@@ -39,44 +28,85 @@ interface LessonWindowProps {
   readonly openLabel: string;
 }
 
+/** The DOM id of one lesson's tab, which names its panel for assistive technology. */
+function tabId(windowId: string, lesson: Lesson) {
+  return `${windowId}-tab-${lesson}`;
+}
+
+/** The DOM id of one lesson's panel, which its tab controls. */
+function panelId(windowId: string, lesson: Lesson) {
+  return `${windowId}-panel-${lesson}`;
+}
+
 /**
- * The visual of one lesson. A frame of the same shape holds its place until the
- * window is revealed. The visual then stays mounted for good, so a control with
- * focus is never removed, and each lab rests on its own while it is out of view.
+ * One lesson's panel: its description and its link, above its visual. All four
+ * panels share one grid cell, so the window is as tall as its tallest panel and
+ * a tab change moves nothing below it. A panel that is not open is hidden by
+ * visibility and made inert, so it leaves the accessibility tree and takes no
+ * pointer or focus. The cards of the panels are never skipped by
+ * content-visibility: a skipped card takes a fallback height until it is first
+ * drawn, so the window would change height when the reader reaches it.
  */
-function LessonScene({
+function LessonPanel({
   decimalSeparator,
+  id,
+  labelledBy,
   lesson,
-  published,
-  revealed,
+  lessonContent,
+  live,
+  open,
+  openLabel,
 }: {
   readonly decimalSeparator: DecimalSeparator;
+  readonly id: string;
+  readonly labelledBy: string;
   readonly lesson: Lesson;
-  readonly published: HomeLesson;
-  readonly revealed: boolean;
+  readonly lessonContent: HomeLesson;
+  readonly live: boolean;
+  readonly open: boolean;
+  readonly openLabel: string;
 }) {
   return (
-    <div className="grid">
-      {revealed ? (
-        <LessonVisual
-          decimalSeparator={decimalSeparator}
-          lesson={lesson}
-          published={published}
-        />
-      ) : (
-        <div aria-hidden="true" className={threeSceneFrameVariants()} />
+    <div
+      aria-labelledby={labelledBy}
+      className={cn(
+        "col-start-1 row-start-1 grid content-start gap-6 [&_.content-auto-card]:[content-visibility:visible]!",
+        !open && "invisible"
       )}
+      id={id}
+      inert={!open}
+      role="tabpanel"
+      tabIndex={open ? 0 : -1}
+    >
+      <div className="grid justify-items-start gap-4">
+        <p className="text-pretty text-base">{lessonContent.description}</p>
+        <Button
+          nativeButton={false}
+          render={
+            <NavigationLink href={lessonContent.href}>
+              {openLabel}
+            </NavigationLink>
+          }
+          size="sm"
+          variant="outline"
+        />
+      </div>
+      <LessonVisual
+        decimalSeparator={decimalSeparator}
+        lesson={lesson}
+        live={live}
+      />
     </div>
   );
 }
 
 /**
  * The lesson window: four published lessons on tabs. Each tab is named by its
- * lesson, its text is the lesson's description, and a link opens the lesson.
- * The window turns only when the reader picks a tab, never by itself. It is
- * revealed once it comes within one screen height of the viewport, so the
- * visual of the open lesson is drawn before the reader reaches it, and it stays
- * mounted after that.
+ * lesson, its panel holds the lesson's description and a link that opens the
+ * lesson, and the panel's visual is the product's own. The window turns only
+ * when the reader picks a tab, never by itself. It is revealed once it comes
+ * within one screen height of the viewport, and the open lesson's scene mounts
+ * then, so the visual is drawn before the reader reaches it.
  */
 export function LessonWindow({
   decimalSeparator,
@@ -86,6 +116,7 @@ export function LessonWindow({
 }: LessonWindowProps) {
   const [lesson, setLesson] = useState<Lesson>("projectile");
   const [revealed, setRevealed] = useState(false);
+  const windowId = useId();
 
   /** Opens the lesson that the tab names. Any other value leaves the window as it is. */
   function handleChange(value: unknown) {
@@ -108,34 +139,31 @@ export function LessonWindow({
           className="w-full flex-nowrap overflow-x-auto"
         >
           {Arr.map(LessonSchema.literals, (id) => (
-            <TabsTab key={id} value={id}>
+            <TabsTab
+              aria-controls={panelId(windowId, id)}
+              id={tabId(windowId, id)}
+              key={id}
+              value={id}
+            >
               {lessons[id].title}
             </TabsTab>
           ))}
         </TabsList>
-        {Arr.map(LessonSchema.literals, (id) => (
-          <TabsPanel className="grid gap-6" key={id} value={id}>
-            <div className="grid justify-items-start gap-4">
-              <p className="text-pretty text-base">{lessons[id].description}</p>
-              <Button
-                nativeButton={false}
-                render={
-                  <NavigationLink href={lessons[id].href}>
-                    {openLabel}
-                  </NavigationLink>
-                }
-                size="sm"
-                variant="outline"
-              />
-            </div>
-            <LessonScene
+        <div className="grid">
+          {Arr.map(LessonSchema.literals, (id) => (
+            <LessonPanel
               decimalSeparator={decimalSeparator}
+              id={panelId(windowId, id)}
+              key={id}
+              labelledBy={tabId(windowId, id)}
               lesson={id}
-              published={lessons[id]}
-              revealed={revealed}
+              lessonContent={lessons[id]}
+              live={revealed && id === lesson}
+              open={id === lesson}
+              openLabel={openLabel}
             />
-          </TabsPanel>
-        ))}
+          ))}
+        </div>
       </Tabs>
     </Intersection>
   );

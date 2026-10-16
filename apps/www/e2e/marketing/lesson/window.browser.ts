@@ -4,6 +4,7 @@ import { withBrowserContext } from "@/e2e/support/context";
 import {
   LESSON_WAIT_MS,
   lessonPanel,
+  lessonSection,
   lessonVisual,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -42,7 +43,7 @@ test("home lesson window turns only when the reader picks a lesson", async ({
             page,
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
-              const lesson = page.locator("#lesson");
+              const lesson = lessonSection(page);
               const cell = lesson.getByRole("tab", {
                 exact: true,
                 name: CELL_TAB,
@@ -59,7 +60,9 @@ test("home lesson window turns only when the reader picks a lesson", async ({
                 })
               );
               yield* Effect.promise(() =>
-                expect(lessonVisual(page, CELL_VIEW)).toBeAttached({
+                expect(
+                  lessonVisual(page, CELL_VIEW).locator("canvas")
+                ).toBeAttached({
                   timeout: readinessTimeoutMilliseconds,
                 })
               );
@@ -71,7 +74,9 @@ test("home lesson window turns only when the reader picks a lesson", async ({
                 )
               );
               yield* Effect.promise(() =>
-                expect(lessonVisual(page, CELL_VIEW)).toBeAttached()
+                expect(
+                  lessonVisual(page, CELL_VIEW).locator("canvas")
+                ).toBeAttached()
               );
             })
           );
@@ -101,7 +106,7 @@ test("home lesson window keeps a focused control on the page while the window is
             page,
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
-              const lesson = page.locator("#lesson");
+              const lesson = lessonSection(page);
               const control = lessonPanel(page).locator("button").first();
               const probe = page.locator(`[${FOCUS_PROBE}]`);
 
