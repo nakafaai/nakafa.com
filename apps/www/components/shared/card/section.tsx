@@ -82,10 +82,11 @@ export function CardSectionFooter({
   ...props
 }: Omit<ComponentProps<typeof CardFooter>, "className"> &
   VariantProps<typeof cardSectionFooterVariants>) {
+  // The layout class comes after the spread, so no prop can replace it.
   return (
     <CardFooter
-      className={cardSectionFooterVariants({ bottomSheet })}
       {...props}
+      className={cardSectionFooterVariants({ bottomSheet })}
     />
   );
 }
@@ -100,7 +101,8 @@ export function CardSectionHint({
   ...props
 }: Omit<ComponentProps<"p">, "className"> &
   VariantProps<typeof cardSectionHintVariants>) {
-  return <p className={cardSectionHintVariants({ tone })} {...props} />;
+  // The text class comes after the spread, so no prop can replace it.
+  return <p {...props} className={cardSectionHintVariants({ tone })} />;
 }
 
 /**
@@ -114,5 +116,6 @@ export function CardSectionActions({
   ...props
 }: Omit<ComponentProps<"div">, "className"> &
   VariantProps<typeof cardSectionActionsVariants>) {
-  return <div className={cardSectionActionsVariants({ share })} {...props} />;
+  // The row class comes after the spread, so no prop can replace it.
+  return <div {...props} className={cardSectionActionsVariants({ share })} />;
 }
