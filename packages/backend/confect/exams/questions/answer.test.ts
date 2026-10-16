@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import refs from "@repo/backend/confect/_generated/refs";
+import { CONVEX_DOCUMENT_LIMIT } from "@repo/backend/confect/editor/size";
 import { nf, otherSchoolTeacher } from "@repo/backend/test/editor";
 import { questionRows, teacherExam } from "@repo/backend/test/exams";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
@@ -182,6 +183,112 @@ describe("exams/questions/answer", () => {
         expect(refused).toMatchObject({
           _tag: "AnswersDoNotFit",
           code: "ANSWERS_DO_NOT_FIT",
+        });
+        const rows = yield* fixture.run(questionRows);
+        expect(Arr.map(rows, (row) => [row.revision, row.key])).toEqual([
+          [0, null],
+        ]);
+      })
+  );
+
+  it.effect(
+    "refuses a choice that may take no option, though its key would fit it, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Boleh kosong");
+        const [question] = exam.questions;
+        const optional = yield* Schema.decodeEffect(InteractionSchema)({
+          id: "choice",
+          kind: "choice",
+          label: "Answer",
+          maxChoices: 1,
+          minChoices: 0,
+          options: [
+            {
+              id: "option-1",
+              label: { content: [{ type: "paragraph" }], type: "doc" },
+            },
+            {
+              id: "option-2",
+              label: { content: [{ type: "paragraph" }], type: "doc" },
+            },
+          ],
+          shuffle: false,
+        }).pipe(Effect.orDie);
+        const refused = yield* teacher
+          .mutation(answer, {
+            answers: [optional],
+            examId: exam.id,
+            key: [
+              { correct: ["option-2"], interaction: "choice", kind: "choice" },
+            ],
+            questionId: question.id,
+            revision: 0,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "AnswersDoNotFit",
+          code: "ANSWERS_DO_NOT_FIT",
+        });
+        const rows = yield* fixture.run(questionRows);
+        expect(Arr.map(rows, (row) => [row.revision, row.key])).toEqual([
+          [0, null],
+        ]);
+      })
+  );
+
+  it.effect(
+    "refuses an answer whose row would reach the limit of one stored document, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Terlalu besar");
+        const [question] = exam.questions;
+        const oversized = yield* Schema.decodeEffect(InteractionSchema)({
+          id: "choice",
+          kind: "choice",
+          label: "Answer",
+          maxChoices: 1,
+          minChoices: 1,
+          options: [
+            {
+              id: "option-1",
+              label: {
+                content: [
+                  {
+                    content: [
+                      { text: "a".repeat(CONVEX_DOCUMENT_LIMIT), type: "text" },
+                    ],
+                    type: "paragraph",
+                  },
+                ],
+                type: "doc",
+              },
+            },
+            {
+              id: "option-2",
+              label: { content: [{ type: "paragraph" }], type: "doc" },
+            },
+          ],
+          shuffle: false,
+        }).pipe(Effect.orDie);
+        const refused = yield* teacher
+          .mutation(answer, {
+            answers: [oversized],
+            examId: exam.id,
+            key: null,
+            questionId: question.id,
+            revision: 0,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "DocumentTooLarge",
+          limit: CONVEX_DOCUMENT_LIMIT,
         });
         const rows = yield* fixture.run(questionRows);
         expect(Arr.map(rows, (row) => [row.revision, row.key])).toEqual([

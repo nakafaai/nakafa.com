@@ -103,6 +103,7 @@ export default GroupSpec.make()
         Schema.Union([
           AccessDenied,
           AnswersDoNotFit,
+          DocumentTooLarge,
           KeyDoesNotFit,
           RevisionStale,
         ]),

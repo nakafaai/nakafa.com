@@ -45,14 +45,18 @@ export const questionValidator = Schema.Struct({
 
 /**
  * Whether the interactions of a question are the ones this kind takes: distinct
- * single-answer choices, each taking at most one option. A question that holds any
- * other interaction, or a choice that takes more than one, is refused.
+ * single-answer choices, each with a minimum and a maximum of one option. A question
+ * that holds any other interaction, or a choice that may take no option or more than
+ * one, is refused.
  */
 export const isChoiceAnswers = (answers: readonly Interaction[]) =>
   hasUniqueIds(answers) &&
   Arr.every(
     answers,
-    (answer) => answer.kind === "choice" && answer.maxChoices === 1
+    (answer) =>
+      answer.kind === "choice" &&
+      answer.minChoices === 1 &&
+      answer.maxChoices === 1
   );
 
 /** The interactions of a question as JSON text, decoded with the contract's interaction schema. */
@@ -134,9 +138,10 @@ const emptyLabel: typeof ContentDocumentSchema.Type = {
 };
 
 /**
- * The name of a new choice for screen readers. The contract refuses an empty label, and
- * this slice has no field for a teacher to name the choice, so it takes the name the
- * contract's own examples give a response.
+ * The name of a new choice, read by screen readers. The contract refuses an empty label,
+ * and the editor of this slice has no field for a teacher to name a choice yet, so a new
+ * choice takes this placeholder. The answers mutation accepts any label the contract
+ * accepts.
  */
 const NEW_CHOICE_LABEL = "Answer";
 
