@@ -21,8 +21,8 @@
       "teacher": "Teacher"
     },
     "sign-in-title": "Sign in to {school}",
-    "signed-in-as": "You are signed in as {role} at {school}.",
-    "signed-in-to": "You are signed in to {school}."
+    "signed-in": "You are signed in.",
+    "signed-in-as": "You are signed in as {role}."
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",

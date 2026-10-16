@@ -135,7 +135,7 @@ the pair does not form there. A response from a school host cannot expire the
 main site's host-only cookie, because the expiry has no `Domain` attribute. The
 pair would form if a school host wrote the shared cookie while an older
 host-only cookie existed. No flow of this change does that, since the Google
-callback runs on the main site. The school sign-in lane must keep that rule.
+callback runs on the main site. A school sign-in endpoint must keep that rule.
 
 A session that exists only as the older cookie keeps working on the main site
 until its next refresh or sign-in, and it shows as signed out on a school host

@@ -21,8 +21,8 @@
       "teacher": "Lehrkraft"
     },
     "sign-in-title": "Anmelden bei {school}",
-    "signed-in-as": "Du bist als {role} bei {school} angemeldet.",
-    "signed-in-to": "Du bist bei {school} angemeldet."
+    "signed-in": "Du bist angemeldet.",
+    "signed-in-as": "Du bist als {role} angemeldet."
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",

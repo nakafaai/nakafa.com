@@ -21,8 +21,8 @@
       "teacher": "Guru"
     },
     "sign-in-title": "Masuk ke {school}",
-    "signed-in-as": "Kamu masuk sebagai {role} di {school}.",
-    "signed-in-to": "Kamu masuk ke {school}."
+    "signed-in": "Kamu sudah masuk.",
+    "signed-in-as": "Kamu masuk sebagai {role}."
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
