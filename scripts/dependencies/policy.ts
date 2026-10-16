@@ -26,7 +26,7 @@ export const PACKAGE_MANAGER = "pnpm@11.28.5";
  * release and the workflow checks compare it with this value.
  */
 export const NODE_RUNTIME_VERSION = "24.21.0";
-const CONTRACT_PACKAGE_VERSION = "0.48.9";
+const CONTRACT_PACKAGE_VERSION = "0.49.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.0.2";
 /**
@@ -326,12 +326,21 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
   },
 ];
 
-export const FORBIDDEN_EFFECT_DEPENDENCIES = [
-  "@effect/cluster",
-  "@effect/experimental",
-  "@effect/language-service",
-  "@effect/platform",
-  "@effect/rpc",
-  "@effect/sql",
-  "@effect/workflow",
-];
+const IN_EFFECT = "the matching module of effect";
+
+/**
+ * Packages whose job Effect or the platform now does, each with what to use
+ * instead. No first-party manifest declares one, so one cannot come back.
+ */
+export const OBSOLETE_DEPENDENCIES = {
+  "@effect/cluster": IN_EFFECT,
+  "@effect/experimental": IN_EFFECT,
+  "@effect/language-service": "@effect/tsgo, which patches the native compiler",
+  "@effect/platform": IN_EFFECT,
+  "@effect/rpc": IN_EFFECT,
+  "@effect/sql": IN_EFFECT,
+  "@effect/workflow": IN_EFFECT,
+  "date-fns":
+    "Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/lib/i18n/date.ts does",
+  nanoid: "randomUuid from @repo/utilities/uuid",
+};
