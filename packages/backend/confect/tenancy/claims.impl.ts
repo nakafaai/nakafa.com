@@ -16,13 +16,14 @@ import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/st
 import { authReader } from "@repo/backend/confect/auth/reader";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
+import {
+  bindPerson,
+  type ClaimedAccount,
+} from "@repo/backend/confect/tenancy/claim";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import spec from "@repo/backend/confect/tenancy/claims.spec";
 import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
-import type {
-  Account,
-  InviteState,
-} from "@repo/backend/confect/tenancy/schema";
+import type { InviteState } from "@repo/backend/confect/tenancy/schema";
 import { Clock, Duration, Effect, Layer, Option, Struct } from "effect";
 
 /**
@@ -82,20 +83,14 @@ const claim = Effect.fn("tenancy.claims.claim")(function* (
   ) {
     return;
   }
-  const account: typeof Account.Type = {
+  const account: ClaimedAccount = {
     claimedAt: at,
     method: "invite",
     state: "claimed",
     userId,
   };
   const state: typeof InviteState.Type = { at, status: "accepted", userId };
-  yield* writer
-    .table("tenantPeople")
-    .replace(
-      person._id,
-      Struct.assign(Struct.omit(person, ["_creationTime", "_id"]), { account })
-    )
-    .pipe(Effect.orDie);
+  yield* bindPerson(person, account);
   yield* writer
     .table("tenantInvites")
     .replace(

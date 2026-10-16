@@ -6,6 +6,7 @@ import Session from "@repo/backend/confect/middleware/session.spec";
 import { CohortAccess } from "@repo/backend/confect/tenancy/access";
 import {
   PersonAlreadyPlaced,
+  PersonGraduated,
   PersonNotPlaced,
   PersonNotStudent,
   PersonPlacementLimit,
@@ -42,6 +43,7 @@ export default GroupSpec.make()
         Schema.Union([
           AccessDenied,
           PersonAlreadyPlaced,
+          PersonGraduated,
           PersonNotStudent,
           PersonPlacementLimit,
         ]),
