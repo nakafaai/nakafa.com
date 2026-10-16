@@ -12,8 +12,7 @@ import {
   ensureAccountDeletionReady,
 } from "@repo/backend/confect/auth/deletion/readiness";
 import {
-  hostOnlySessionCookiePlugin,
-  readHostOnlySessionCookieName,
+  hostOnlySessionCookieHandler,
   readSchoolTrustedOrigins,
 } from "@repo/backend/confect/auth/host";
 import { sanitizeProviderErrorRedirectResponse } from "@repo/backend/confect/auth/redirect";
@@ -166,7 +165,7 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
   const google = yield* readGoogleAuthConfig();
   return yield* Effect.sync(() => {
     const options = createAuthOptions(ctx);
-    return betterAuth({
+    const auth = betterAuth({
       ...options,
       advanced: {
         // The cookie domain is the host of `SITE_URL`, so every school host
@@ -200,9 +199,13 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
             );
           },
         },
-        hostOnlySessionCookiePlugin(readHostOnlySessionCookieName(siteUrl)),
       ],
     });
+    // The host rule reads the request, which no plugin hook receives (ADR 0009).
+    return {
+      ...auth,
+      handler: hostOnlySessionCookieHandler(auth.handler, siteUrl),
+    };
   });
 });
 
