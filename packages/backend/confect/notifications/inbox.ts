@@ -1,4 +1,5 @@
 import type { GenericId } from "@confect/core";
+import type { JournalEntriesDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -12,7 +13,7 @@ import {
   cursorOf,
   markPending,
   pendingOf,
-  positionAfter,
+  planRun,
   readAfter,
 } from "@repo/backend/confect/journal/cursor";
 import type {
@@ -20,7 +21,7 @@ import type {
   JournalConsumer,
 } from "@repo/backend/confect/journal/schema";
 import { deliveriesOf } from "@repo/backend/confect/notifications/delivery";
-import { Array as Arr, Duration, Effect, Option, Schema } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Option, Schema } from "effect";
 
 /** The consumer that writes the inbox rows of invitations. */
 const CONSUMER: typeof JournalConsumer.Type = "inbox";
@@ -39,11 +40,12 @@ const InvitedChange = Schema.Struct({ invite: Id("tenantInvites") });
 export const INBOX_PAGE_SIZE = 50;
 
 /**
- * Handled entries that one cursor may keep, so the window of a run holds at most this
- * many. A run reads a page of new entries beside them, so one page of handled entries
- * bounds the read at two pages of the journal, the 100 entries of a list page (ADR
- * 0016), plus one entry to know whether the run is done. A window over this bound
- * fails the run before it writes.
+ * Unsettled entries that one cursor may hold handled at once (see `planRun`). It is
+ * the page size, so the handled entries of one cursor never outgrow one page, and a
+ * run reads at most two pages of the journal: one page of new entries beside the
+ * handled ones, plus one entry to know whether entries remain. A burst longer than
+ * this drains over several runs, which `consumeInboxPage` schedules, and nothing is
+ * refused.
  */
 const HANDLED_LIMIT = INBOX_PAGE_SIZE;
 
@@ -61,15 +63,13 @@ export const invitedInboxSends = Arr.filter(
   (send) => send.channel === "inbox"
 );
 
-/** One journal entry as a read of the journal returns it. */
-type Entry = Effect.Success<ReturnType<typeof readAfter>>["entries"][number];
-
-/** Schedules one run of the inbox consumer for a tenant. The run starts only if the calling transaction commits. */
+/** Schedules one run of the inbox consumer for a tenant after `delay`. The run starts only if the calling transaction commits. */
 const scheduleRun = Effect.fn("notifications.inbox.scheduleRun")(function* (
-  tenantId: GenericId.GenericId<"tenants">
+  tenantId: GenericId.GenericId<"tenants">,
+  delay: Duration.Duration
 ) {
   yield* (yield* Scheduler).runAfter(
-    Duration.zero,
+    delay,
     refs.internal.notifications.consume.run,
     { tenantId }
   );
@@ -86,7 +86,7 @@ const scheduleRun = Effect.fn("notifications.inbox.scheduleRun")(function* (
  */
 const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
   tenantId: GenericId.GenericId<"tenants">,
-  entry: Entry,
+  entry: JournalEntriesDoc,
   personId: GenericId.GenericId<"tenantPeople">
 ) {
   const reader = yield* DatabaseReader;
@@ -156,11 +156,11 @@ const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
 });
 
 /**
- * Runs the inbox consumer for one tenant. It reads one page of the tenant's
- * journal entries of invitations in the cursor's window, writes their rows, and
- * moves the cursor past the page in the same transaction, so a run that fails
- * writes nothing. A window over `HANDLED_LIMIT` fails the run before the first
- * write. A page that is not the last one schedules the next run.
+ * Runs the inbox consumer for one tenant. It reads one page of the tenant's journal
+ * entries after the cursor, writes the rows of the invitations it handles, and moves
+ * the cursor in the same transaction, so a run that fails writes nothing. When entries
+ * are left unread, it schedules the next run for the time `planRun` gives, so a burst
+ * drains without the minute sweep.
  */
 export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
   function* (tenantId: GenericId.GenericId<"tenants">, numItems: number) {
@@ -168,14 +168,11 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
     if (Option.isNone(cursor)) {
       return;
     }
+    const now = yield* Clock.currentTimeMillis;
     const page = yield* readAfter(tenantId, CHANGE, cursor.value, numItems);
-    const next = yield* positionAfter(
-      cursor.value,
-      page.entries,
-      HANDLED_LIMIT
-    );
+    const plan = planRun(now, cursor.value, page, numItems, HANDLED_LIMIT);
     yield* Effect.forEach(
-      page.entries,
+      plan.handle,
       (entry) =>
         ObjectRef.matchOrElse(
           entry.subject,
@@ -193,9 +190,10 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
         ),
       { discard: true }
     );
-    yield* advance(cursor.value._id, next, !page.isDone);
-    if (!page.isDone) {
-      yield* scheduleRun(tenantId);
+    const { nextRunAt } = plan;
+    yield* advance(cursor.value._id, plan.position, nextRunAt !== undefined);
+    if (nextRunAt !== undefined) {
+      yield* scheduleRun(tenantId, Duration.millis(nextRunAt - now));
     }
   }
 );
@@ -203,12 +201,11 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
 /**
  * After an invitation is recorded, marks the inbox cursor of its tenant pending
  * and schedules a run. `entryId` is the journal entry that the write recorded in
- * the same transaction. The first invitation of a tenant creates its cursor at
- * that entry, and the first run reads the entries created inside the commit-lag
- * window before it, whatever their commit time. So an invitation created up to five
- * seconds before the first one gets a row, and one created earlier gets none. The
- * run is the normal path; the minute sweep is the backstop for a run that never
- * happened.
+ * the same transaction. The first invitation of a tenant creates its cursor five
+ * seconds before that entry, so the first run reads the invitations created in that
+ * window before it, whatever their commit time, and an invitation created earlier gets
+ * no row. The run is the normal path; the minute sweep is the backstop for a run that
+ * never happened.
  */
 export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
   function* (
@@ -216,7 +213,7 @@ export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
     entryId: GenericId.GenericId<"journalEntries">
   ) {
     yield* markPending(CONSUMER, tenantId, CHANGE, entryId);
-    yield* scheduleRun(tenantId);
+    yield* scheduleRun(tenantId, Duration.zero);
   }
 );
 
@@ -228,8 +225,10 @@ export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
 export const scheduleDueRuns = Effect.fn("notifications.inbox.scheduleDue")(
   function* () {
     const pending = yield* pendingOf(CONSUMER, DUE_BATCH_SIZE);
-    yield* Effect.forEach(pending, (cursor) => scheduleRun(cursor.tenantId), {
-      discard: true,
-    });
+    yield* Effect.forEach(
+      pending,
+      (cursor) => scheduleRun(cursor.tenantId, Duration.zero),
+      { discard: true }
+    );
   }
 );

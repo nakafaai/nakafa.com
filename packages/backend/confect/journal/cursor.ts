@@ -1,9 +1,9 @@
 import type { GenericId } from "@confect/core";
+import type { JournalEntriesDoc } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { JournalCursorTooLarge } from "@repo/backend/confect/journal/errors";
 import type {
   ConsumedChangeType,
   JournalConsumer,
@@ -12,21 +12,20 @@ import type {
 import { Array as Arr, Duration, Effect, Option } from "effect";
 
 /**
- * How far behind a cursor's `since` a run reads. Convex limits a query or a mutation
- * to one second of user code (https://docs.convex.dev/production/state/limits, read
- * on 16 October 2026). An entry takes its creation time while its mutation runs and
- * becomes visible when the mutation commits, so it can commit after a run has moved
- * `since` past its creation time. Five seconds covers that second of user code with a
- * margin for retries and the commit, and a run that reads this window again finds such
- * an entry.
+ * How far behind the clock a run settles the journal. An entry takes its creation time
+ * while its mutation runs, and it becomes visible only when the mutation commits, so an
+ * entry can commit after a run has read past its creation time. Convex limits a mutation's
+ * user code to one second (the limits page, read on 16 October 2026, which does not count
+ * database operations). Five seconds leaves a margin for that database work and the commit.
+ * An entry created at or before the settled time is treated as committed, so a run may pass it.
  */
-const JOURNAL_COMMIT_LAG = Duration.toMillis(Duration.seconds(5));
+export const JOURNAL_COMMIT_LAG = Duration.toMillis(Duration.seconds(5));
 
-/** Where a cursor's next run reads from: the newest entry handled, and the entries handled in the window behind it. */
+/** Where a cursor's next run reads from: `since`, and the handled entries at or after it. */
 type Position = Pick<typeof JournalCursor.Type, "handled" | "since">;
 
-/** One journal entry as a read of the journal returns it. */
-type Entry = Effect.Success<ReturnType<typeof readAfter>>["entries"][number];
+/** The part of a journal entry that a cursor needs: its ID and its creation time. */
+type EntryRef = Pick<JournalEntriesDoc, "_creationTime" | "_id">;
 
 /** The cursor of one consumer for one tenant and change type, once a change has reached it. */
 export const cursorOf = Effect.fn("journal.cursor.of")(function* (
@@ -50,16 +49,14 @@ export const cursorOf = Effect.fn("journal.cursor.of")(function* (
 });
 
 /**
- * Marks one consumer's cursor pending, and creates the cursor when no change of
- * that type has reached the tenant before. `entryId` is the journal entry whose
- * write marks the cursor, recorded in the same transaction. A new cursor starts at
- * that entry's own creation time, read from the stored entry, and holds no handled
- * entry, so the first run reads that entry. The start is the entry and not a clock
- * reading, because a clock read at another moment could start after the entry that
- * made the cursor and skip it. An entry created before the start is read only inside
- * the commit-lag window, which holds the entries that committed late. Two writers that
- * both find no cursor conflict on the index range they read, so only one cursor is
- * created.
+ * Marks one consumer's cursor pending, and creates the cursor when no change of that type
+ * has reached the tenant before. `entryId` is the journal entry whose write marks the
+ * cursor, recorded in the same transaction. A new cursor starts `JOURNAL_COMMIT_LAG`
+ * before that entry's own creation time, read from the stored entry, so the first run reads
+ * the entries created in that window before the entry, whatever their commit time, and
+ * nothing older. The start is the entry and not a clock reading, because a clock read at
+ * another moment could start after the entry that made the cursor and skip it. Two writers
+ * that both find no cursor conflict on the index range they read, so only one cursor is created.
  */
 export const markPending = Effect.fn("journal.cursor.markPending")(function* (
   consumer: typeof JournalConsumer.Type,
@@ -82,7 +79,7 @@ export const markPending = Effect.fn("journal.cursor.markPending")(function* (
         consumer,
         handled: [],
         pending: true,
-        since: entry._creationTime,
+        since: entry._creationTime - JOURNAL_COMMIT_LAG,
         tenantId,
       })
       .pipe(Effect.orDie);
@@ -100,12 +97,81 @@ const isHandled = (
   entryId: GenericId.GenericId<"journalEntries">
 ) => Arr.some(position.handled, (handled) => handled.entryId === entryId);
 
+/** The handled-list record of one journal entry: its creation time and its ID. */
+const handledOf = (entry: EntryRef) => ({
+  createdAt: entry._creationTime,
+  entryId: entry._id,
+});
+
 /**
- * Reads the next page of the journal entries of one change type in one tenant: the
- * entries created at or after the commit-lag window behind the position's `since`,
- * in creation order, without the ones the position has handled. It reads one entry
- * past the page, so `isDone` is known without a second read. The read is one indexed
- * `take` of the page, the handled entries, and one more, so it stays bounded.
+ * Plans one run from its position and one page of the journal, read from `since` in
+ * creation order. The page may hold entries the position already handled, and those are
+ * skipped. Settled entries lead the page, and the run handles each one, so `since` moves to
+ * the newest and the settled entries stay out of `handled`, except those that share the
+ * new `since` time, which the next read would otherwise handle again. Behind them the run
+ * handles unsettled entries early, while `handled` would hold fewer than `handledLimit` ids,
+ * and it keeps each one in `handled`, because `since` may not pass an entry that is not yet
+ * settled. The run stops at `pageSize` handled entries, or at the bound, and leaves the rest
+ * unread. `nextRunAt` is the time of the next run: now when the page size stopped the run,
+ * the moment the oldest unread entry settles when the bound did, and undefined when no entry
+ * is left unread. Handled entries before the new `since` are dropped, so the position keeps
+ * only what a later read may still need.
+ */
+export const planRun = <Entry extends EntryRef>(
+  now: number,
+  position: Position,
+  page: readonly Entry[],
+  pageSize: number,
+  handledLimit: number
+) => {
+  const settled = now - JOURNAL_COMMIT_LAG;
+  const fresh = Arr.filter(
+    page,
+    (entry) =>
+      entry._creationTime >= position.since && !isHandled(position, entry._id)
+  );
+  const settledRun = Arr.takeWhile(
+    fresh,
+    (entry) => entry._creationTime <= settled
+  );
+  const lead = Arr.take(settledRun, pageSize);
+  const rest = Arr.drop(fresh, lead.length);
+  const since = Option.match(Arr.last(lead), {
+    onNone: () => position.since,
+    onSome: (entry) => entry._creationTime,
+  });
+  const kept = Arr.filter(
+    Arr.appendAll(position.handled, Arr.map(lead, handledOf)),
+    (handled) => handled.createdAt >= since
+  );
+  const room = Math.max(
+    0,
+    Math.min(pageSize - lead.length, handledLimit - kept.length)
+  );
+  const early = Arr.take(rest, room);
+  const handle = Arr.appendAll(lead, early);
+  const nextRunAt = Option.match(Arr.head(Arr.drop(rest, room)), {
+    onNone: () => undefined,
+    onSome: (entry) =>
+      handle.length >= pageSize
+        ? now
+        : Math.ceil(entry._creationTime + JOURNAL_COMMIT_LAG),
+  });
+  return {
+    handle,
+    nextRunAt,
+    position: {
+      handled: Arr.appendAll(kept, Arr.map(early, handledOf)),
+      since,
+    },
+  };
+};
+
+/**
+ * Reads the journal entries of one change type in one tenant that a run may need: those
+ * created at or after `since`, in creation order. The read takes one page of the page size,
+ * the handled entries, and one more entry, so it stays bounded and knows whether entries
+ * remain. `planRun` skips the handled entries that it returns.
  */
 export const readAfter = Effect.fn("journal.cursor.readAfter")(function* (
   tenantId: GenericId.GenericId<"tenants">,
@@ -113,56 +179,17 @@ export const readAfter = Effect.fn("journal.cursor.readAfter")(function* (
   position: Position,
   numItems: number
 ) {
-  const rows = yield* (yield* DatabaseReader)
+  return yield* (yield* DatabaseReader)
     .table("journalEntries")
     .index("by_owner_tenantId_and_change_type", (query) =>
       query
         .eq("owner.tenantId", tenantId)
         .eq("change.type", changeType)
-        .gte("_creationTime", position.since - JOURNAL_COMMIT_LAG)
+        .gte("_creationTime", position.since)
     )
     .take(numItems + position.handled.length + 1)
     .pipe(Effect.orDie);
-  const fresh = Arr.filter(rows, (entry) => !isHandled(position, entry._id));
-  return {
-    entries: Arr.take(fresh, numItems),
-    isDone: fresh.length <= numItems,
-  };
 });
-
-/**
- * The position that a run leaves for the next one. `since` moves to the creation time
- * of the newest entry the run read, and the entries the run handled join the handled
- * list. The list keeps only the entries whose creation time lies inside the window
- * behind the new `since`, so an entry leaves the list exactly when no run reads it
- * again. A list longer than `limit` fails with `JournalCursorTooLarge`, so the caller
- * stops before it writes a row that grows without a bound.
- */
-export const positionAfter = Effect.fn("journal.cursor.positionAfter")(
-  function* (position: Position, entries: readonly Entry[], limit: number) {
-    const since = Arr.reduce(entries, position.since, (latest, entry) =>
-      Math.max(latest, entry._creationTime)
-    );
-    const floor = since - JOURNAL_COMMIT_LAG;
-    const handled = Arr.filter(
-      Arr.appendAll(
-        position.handled,
-        Arr.map(entries, (entry) => ({
-          createdAt: entry._creationTime,
-          entryId: entry._id,
-        }))
-      ),
-      (entry) => entry.createdAt >= floor
-    );
-    if (handled.length > limit) {
-      return yield* new JournalCursorTooLarge({
-        entries: handled.length,
-        limit,
-      });
-    }
-    return { handled, since };
-  }
-);
 
 /** Saves where one run stopped, and whether a further run is owed. */
 export const advance = Effect.fn("journal.cursor.advance")(function* (

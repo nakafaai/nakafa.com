@@ -1,231 +1,343 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { Id } from "@repo/backend/confect/_generated/id";
 import {
-  INBOX_PAGE_SIZE,
-  noteInvite,
-} from "@repo/backend/confect/notifications/inbox";
-import { Email } from "@repo/backend/confect/tenancy/schema";
-import {
-  addPerson,
-  consumeSchool,
-  cursors,
-  type Fixture,
-  inviteAt,
-  NOW,
-  storedRows,
-} from "@repo/backend/test/inbox";
-import {
-  invitePerson,
-  journal,
-  tenancyFixture,
-} from "@repo/backend/test/tenancy";
+  JOURNAL_COMMIT_LAG,
+  markPending,
+  planRun,
+  readAfter,
+} from "@repo/backend/confect/journal/cursor";
+import { cursors, invitedEntry, NOW } from "@repo/backend/test/inbox";
+import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Schema } from "effect";
 
-const GURU = "guru@harapan.example.test";
-const LAIN = "lain@lain.example.test";
+/** The ID of a journal entry, as a test names it. */
+const entryId = (name: string) =>
+  Schema.decodeUnknownSync(Id("journalEntries"))(name);
 
-/** Fake timers keep every scheduled run from starting before the test looks at it. */
-beforeEach(() => {
-  vi.useFakeTimers();
-  vi.setSystemTime(NOW);
+/** One journal entry of a page: the two fields that a run reads. */
+const entry = (name: string, createdAt: number) => ({
+  _creationTime: createdAt,
+  _id: entryId(name),
 });
 
-/**
- * Moves every journal cursor's `since` forward, as a run that had read to that time
- * would leave it. convex-test never gives a row an earlier creation time than a row
- * already written, so a late entry cannot be inserted behind a real one: these tests
- * move the cursor past the time of the late entry, then insert that entry.
- */
-const moveSince = (fixture: Fixture, since: number) =>
-  Effect.gen(function* () {
-    const found = yield* cursors(fixture);
-    yield* fixture.run(
-      Effect.flatMap(DatabaseWriter, (writer) =>
-        Effect.forEach(
-          found,
-          (cursor) =>
-            writer.table("journalCursors").patch(cursor._id, { since }),
-          { discard: true }
-        )
-      )
+/** One handled record, as a cursor keeps it. */
+const handled = (name: string, createdAt: number) => ({
+  createdAt,
+  entryId: entryId(name),
+});
+
+describe("journal/cursor planRun", () => {
+  it("hands a settled entry to the run and moves since to it", () => {
+    const plan = planRun(
+      10_000,
+      { handled: [], since: 0 },
+      [entry("a", 1000)],
+      50,
+      50
     );
+    expect(plan.handle).toEqual([entry("a", 1000)]);
+    expect(plan.position).toEqual({
+      handled: [handled("a", 1000)],
+      since: 1000,
+    });
+    expect(plan.nextRunAt).toBeUndefined();
   });
 
-/**
- * Invites a new Person to the school `nf` and writes the journal entry of that
- * invitation, as the invite mutation does. Returns the entry's ID.
- */
-const invitedEntry = (fixture: Fixture, index: number) =>
-  Effect.gen(function* () {
-    const address = yield* Schema.decodeEffect(Email)(
-      `orang${index}@harapan.example.test`
+  it("skips the entries its position already handled", () => {
+    const plan = planRun(
+      10_000,
+      { handled: [handled("a", 1000)], since: 1000 },
+      [entry("a", 1000), entry("b", 2000)],
+      50,
+      50
     );
-    const { inviteId, personId } = yield* invitePerson(
-      fixture.tenants.nf,
-      address
+    expect(plan.handle).toEqual([entry("b", 2000)]);
+    expect(plan.position).toEqual({
+      handled: [handled("b", 2000)],
+      since: 2000,
+    });
+    expect(plan.nextRunAt).toBeUndefined();
+  });
+
+  it("keeps the entries that share the time of since, and reads a later one with that time", () => {
+    // Two entries share one creation time, and the cursor cannot tell them apart by time.
+    const first = planRun(
+      10_000,
+      { handled: [], since: 0 },
+      [entry("a", 1000), entry("b", 1000)],
+      50,
+      50
     );
-    return yield* (yield* DatabaseWriter).table("journalEntries").insert({
-      actor: { kind: "system" },
-      change: { invite: inviteId, type: "person.invited" },
-      owner: { kind: "tenant", tenantId: fixture.tenants.nf },
-      subject: { id: personId, kind: "person" },
+    expect(first.handle).toEqual([entry("a", 1000), entry("b", 1000)]);
+    expect(first.position).toEqual({
+      handled: [handled("a", 1000), handled("b", 1000)],
+      since: 1000,
+    });
+    // A third entry with the same time commits later, and the next read must not skip it.
+    const second = planRun(
+      10_000,
+      first.position,
+      [entry("a", 1000), entry("b", 1000), entry("c", 1000)],
+      50,
+      50
+    );
+    expect(second.handle).toEqual([entry("c", 1000)]);
+    expect(second.position).toEqual({
+      handled: [handled("a", 1000), handled("b", 1000), handled("c", 1000)],
+      since: 1000,
     });
   });
 
-/**
- * Writes `count` invitations of the school inside one window. The first one creates
- * the school's cursor, as the invite mutation does, and the rest follow it.
- */
-const burstOf = (fixture: Fixture, count: number) =>
-  fixture.run(
-    Effect.gen(function* () {
-      const first = yield* invitedEntry(fixture, 0);
-      yield* noteInvite(fixture.tenants.nf, first);
-      yield* Effect.forEach(
-        Arr.makeBy(count - 1, (index) => index + 1),
-        (index) => invitedEntry(fixture, index),
-        { discard: true }
-      );
-    })
-  );
+  it("hands an unsettled entry early and leaves since behind it", () => {
+    const plan = planRun(
+      4000,
+      { handled: [], since: 0 },
+      [entry("u", 1000)],
+      50,
+      50
+    );
+    expect(plan.handle).toEqual([entry("u", 1000)]);
+    expect(plan.position).toEqual({ handled: [handled("u", 1000)], since: 0 });
+    expect(plan.nextRunAt).toBeUndefined();
+  });
 
-describe("journal/cursor window", () => {
+  it("reads an entry that commits late even when it is older than an unsettled entry the run handled", () => {
+    const first = planRun(
+      4000,
+      { handled: [], since: 0 },
+      [entry("u", 1000)],
+      50,
+      50
+    );
+    // The late entry was created at 500, before the unsettled one, and commits now.
+    const later = planRun(
+      7000,
+      first.position,
+      [entry("late", 500), entry("u", 1000)],
+      50,
+      50
+    );
+    expect(later.handle).toEqual([entry("late", 500)]);
+    expect(later.position).toEqual({
+      handled: [handled("u", 1000), handled("late", 500)],
+      since: 500,
+    });
+    expect(later.nextRunAt).toBeUndefined();
+  });
+
+  it("stops at the handled limit, and asks for the next run when the oldest entry it left settles", () => {
+    const page = [
+      entry("u1", 6000),
+      entry("u2", 6500),
+      entry("u3", 7000),
+      entry("u4", 7500),
+    ];
+    const plan = planRun(10_000, { handled: [], since: 0 }, page, 10, 2);
+    expect(plan.handle).toEqual([entry("u1", 6000), entry("u2", 6500)]);
+    expect(plan.position).toEqual({
+      handled: [handled("u1", 6000), handled("u2", 6500)],
+      since: 0,
+    });
+    // u3 settles at 7000 plus the lag, and by then every handled entry has settled too.
+    expect(plan.nextRunAt).toBe(7000 + JOURNAL_COMMIT_LAG);
+  });
+
+  it("hands no unsettled entry while its position already holds the limit", () => {
+    const plan = planRun(
+      10_000,
+      { handled: [handled("h1", 6000), handled("h2", 6500)], since: 6000 },
+      [entry("h1", 6000), entry("h2", 6500), entry("u3", 7000)],
+      10,
+      2
+    );
+    expect(plan.handle).toEqual([]);
+    expect(plan.position).toEqual({
+      handled: [handled("h1", 6000), handled("h2", 6500)],
+      since: 6000,
+    });
+    expect(plan.nextRunAt).toBe(7000 + JOURNAL_COMMIT_LAG);
+  });
+
+  it("asks for the next run at once when a full page stopped the run", () => {
+    const plan = planRun(
+      10_000,
+      { handled: [], since: 0 },
+      [entry("a", 1000), entry("b", 2000), entry("c", 3000)],
+      2,
+      50
+    );
+    expect(plan.handle).toEqual([entry("a", 1000), entry("b", 2000)]);
+    expect(plan.position).toEqual({
+      handled: [handled("b", 2000)],
+      since: 2000,
+    });
+    expect(plan.nextRunAt).toBe(10_000);
+  });
+
+  it("has no next run when the page held every entry left", () => {
+    const plan = planRun(
+      10_000,
+      { handled: [], since: 0 },
+      [entry("a", 1000), entry("b", 2000)],
+      2,
+      50
+    );
+    expect(plan.handle).toEqual([entry("a", 1000), entry("b", 2000)]);
+    expect(plan.position).toEqual({
+      handled: [handled("b", 2000)],
+      since: 2000,
+    });
+    expect(plan.nextRunAt).toBeUndefined();
+  });
+
+  it("does not read an entry created before its since", () => {
+    const plan = planRun(
+      20_000,
+      { handled: [], since: 5000 },
+      [entry("old", 1000)],
+      50,
+      50
+    );
+    expect(plan.handle).toEqual([]);
+    expect(plan.position).toEqual({ handled: [], since: 5000 });
+    expect(plan.nextRunAt).toBeUndefined();
+  });
+
+  it("hands the settled entries and the unsettled ones that fit a full page, and asks for a run at once", () => {
+    const page = [
+      entry("s1", 1000),
+      entry("s2", 2000),
+      entry("u1", 6000),
+      entry("u2", 7000),
+    ];
+    const plan = planRun(10_000, { handled: [], since: 0 }, page, 3, 5);
+    expect(plan.handle).toEqual([
+      entry("s1", 1000),
+      entry("s2", 2000),
+      entry("u1", 6000),
+    ]);
+    expect(plan.position).toEqual({
+      handled: [handled("s2", 2000), handled("u1", 6000)],
+      since: 2000,
+    });
+    expect(plan.nextRunAt).toBe(10_000);
+  });
+
+  it("drains the entries it left once they settle, in the next run", () => {
+    const page = [
+      entry("u1", 6000),
+      entry("u2", 6500),
+      entry("u3", 7000),
+      entry("u4", 7500),
+    ];
+    const first = planRun(10_000, { handled: [], since: 0 }, page, 10, 2);
+    const settleOfU3 = 7000 + JOURNAL_COMMIT_LAG;
+    expect(first.nextRunAt).toBe(settleOfU3);
+    const second = planRun(settleOfU3, first.position, page, 10, 2);
+    expect(second.handle).toEqual([entry("u3", 7000), entry("u4", 7500)]);
+    expect(second.position).toEqual({
+      handled: [handled("u3", 7000), handled("u4", 7500)],
+      since: 7000,
+    });
+    expect(second.nextRunAt).toBeUndefined();
+  });
+});
+
+describe("journal/cursor store", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+
   it.effect(
-    "reads an invitation that committed after a run passed its creation time, inside the window",
+    "starts a new cursor five seconds before the entry that makes it",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const early = yield* addPerson(fixture, fixture.tenants.nf, "Satu");
-        const late = yield* addPerson(fixture, fixture.tenants.nf, "Dua");
-        yield* inviteAt(fixture, "nf", early, GURU);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        // A run has read to three seconds after the first invitation.
-        yield* moveSince(fixture, NOW + 3000);
-        // The late invitation was created one second after the first, and commits now.
-        vi.setSystemTime(NOW + 1000);
-        yield* inviteAt(fixture, "nf", late, LAIN);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        expect(
-          Arr.map(yield* storedRows(fixture), (row) => row.recipientPersonId)
-        ).toEqual([early, late]);
-      })
-  );
-
-  it.effect(
-    "reads an invitation created inside the window before the entry that starts its cursor",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        // An invitation recorded before the cursor exists, created three seconds before
-        // the entry that starts it.
-        const earlier = yield* fixture.run(invitedEntry(fixture, 0));
-        vi.setSystemTime(NOW + 3000);
-        const first = yield* fixture.run(
-          Effect.gen(function* () {
-            const entry = yield* invitedEntry(fixture, 1);
-            yield* noteInvite(fixture.tenants.nf, entry);
-            return entry;
-          })
-        );
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        expect(
-          Arr.map(yield* storedRows(fixture), (row) => row.journalEntryId)
-        ).toEqual([earlier, first]);
-      })
-  );
-
-  // This test passes with the window removed, because an invitation older than the
-  // position is not read either way. The tests above fail then. This one guards
-  // against a window that reaches back further than the commit lag.
-  it.effect(
-    "does not read an invitation created before the window behind its cursor",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const early = yield* addPerson(fixture, fixture.tenants.nf, "Satu");
-        const old = yield* addPerson(fixture, fixture.tenants.nf, "Dua");
-        yield* inviteAt(fixture, "nf", early, GURU);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        // A run has read to ten seconds after the first invitation, so the window
-        // starts five seconds after it, and the second invitation falls before that.
-        yield* moveSince(fixture, NOW + 10_000);
-        vi.setSystemTime(NOW + 1000);
-        yield* inviteAt(fixture, "nf", old, LAIN);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        expect(
-          Arr.map(yield* storedRows(fixture), (row) => row.recipientPersonId)
-        ).toEqual([early]);
-      })
-  );
-
-  it.effect(
-    "keeps in its handled list only the entries inside the window behind its position",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const first = yield* addPerson(fixture, fixture.tenants.nf, "Satu");
-        const second = yield* addPerson(fixture, fixture.tenants.nf, "Dua");
-        yield* inviteAt(fixture, "nf", first, GURU);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
         vi.setSystemTime(NOW + 10_000);
-        const invite = yield* inviteAt(fixture, "nf", second, LAIN);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        const entries = Arr.filter(
-          yield* fixture.run(journal),
-          (entry) =>
-            entry.change.type === "person.invited" &&
-            entry.change.invite === invite.id
+        const id = yield* invitedEntry(fixture, 0);
+        yield* fixture.run(
+          markPending("inbox", fixture.tenants.nf, "person.invited", id)
         );
+        const [entry] = yield* fixture.run(journal);
+        if (entry === undefined) {
+          return yield* Effect.die(
+            "The invite must have written a journal entry."
+          );
+        }
         expect(yield* cursors(fixture)).toMatchObject([
           {
-            handled: Arr.map(entries, (entry) => ({
-              createdAt: entry._creationTime,
-              entryId: entry._id,
-            })),
+            handled: [],
+            pending: true,
+            since: entry._creationTime - JOURNAL_COMMIT_LAG,
           },
         ]);
       })
   );
 
   it.effect(
-    "fails with its typed error, and writes no row, when its window holds more than a page of handled entries",
+    "keeps the start of a cursor that already exists, and marks it pending again",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        // One more invitation than a run may keep, all written inside one window.
-        yield* burstOf(fixture, INBOX_PAGE_SIZE + 1);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        expect(yield* storedRows(fixture)).toHaveLength(INBOX_PAGE_SIZE);
-        const before = yield* cursors(fixture);
-        const failure = yield* consumeSchool(fixture, fixture.tenants.nf).pipe(
-          Effect.flip
+        vi.setSystemTime(NOW + 10_000);
+        const first = yield* invitedEntry(fixture, 0);
+        yield* fixture.run(
+          markPending("inbox", fixture.tenants.nf, "person.invited", first)
         );
-        expect(failure).toMatchObject({
-          _tag: "JournalCursorTooLarge",
-          entries: INBOX_PAGE_SIZE + 1,
-          limit: INBOX_PAGE_SIZE,
-        });
-        expect(yield* storedRows(fixture)).toHaveLength(INBOX_PAGE_SIZE);
-        expect(yield* cursors(fixture)).toEqual(before);
+        const [entry] = yield* fixture.run(journal);
+        if (entry === undefined) {
+          return yield* Effect.die(
+            "The invite must have written a journal entry."
+          );
+        }
+        const start = entry._creationTime - JOURNAL_COMMIT_LAG;
+        vi.setSystemTime(NOW + 20_000);
+        const second = yield* invitedEntry(fixture, 1);
+        yield* fixture.run(
+          markPending("inbox", fixture.tenants.nf, "person.invited", second)
+        );
+        expect(yield* cursors(fixture)).toMatchObject([
+          { pending: true, since: start },
+        ]);
       })
   );
 
   it.effect(
-    "resumes once a later invitation falls past the window of the burst that held it",
+    "reads from its position inclusive, and never an entry created before it",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        yield* burstOf(fixture, INBOX_PAGE_SIZE + 1);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        yield* consumeSchool(fixture, fixture.tenants.nf).pipe(Effect.flip);
-        // A later invitation, ten seconds after the burst, moves the window past it,
-        // so the next run reads the burst's last entry and the new one.
-        vi.setSystemTime(NOW + 10_000);
-        const later = yield* addPerson(fixture, fixture.tenants.nf, "Lain");
-        yield* inviteAt(fixture, "nf", later, LAIN);
-        yield* consumeSchool(fixture, fixture.tenants.nf);
-        expect(yield* storedRows(fixture)).toHaveLength(INBOX_PAGE_SIZE + 2);
-        expect(yield* cursors(fixture)).toMatchObject([{ pending: false }]);
+        vi.setSystemTime(NOW + 1000);
+        yield* invitedEntry(fixture, 0);
+        vi.setSystemTime(NOW + 2000);
+        yield* invitedEntry(fixture, 1);
+        vi.setSystemTime(NOW + 3000);
+        yield* invitedEntry(fixture, 2);
+        const [, second, third] = yield* fixture.run(journal);
+        if (second === undefined || third === undefined) {
+          return yield* Effect.die(
+            "The invites must have written three journal entries."
+          );
+        }
+        const read = yield* fixture.run(
+          readAfter(
+            fixture.tenants.nf,
+            "person.invited",
+            {
+              handled: [
+                { createdAt: second._creationTime, entryId: second._id },
+              ],
+              since: second._creationTime,
+            },
+            10
+          )
+        );
+        // The entry at since is read again, so the run can skip it by ID; the older one is not read.
+        expect(Arr.map(read, (row) => row._id)).toEqual([
+          second._id,
+          third._id,
+        ]);
       })
   );
 });

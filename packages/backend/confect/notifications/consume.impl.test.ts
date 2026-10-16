@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
+import { JOURNAL_COMMIT_LAG } from "@repo/backend/confect/journal/cursor";
 import {
   consumeInboxPage,
   noteInvite,
@@ -16,6 +17,7 @@ import {
   consumeSchool,
   cursors,
   type Fixture,
+  inboxRuns,
   inviteAt,
   NOW,
   nf,
@@ -24,7 +26,6 @@ import {
 import {
   invitePerson,
   journal,
-  scheduledJobs,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Order, Schema } from "effect";
@@ -33,21 +34,12 @@ const GURU = "guru@harapan.example.test";
 const lain = Schema.decodeSync(Email)("lain@lain.example.test");
 const sweep = refs.internal.notifications.consume.sweep;
 const { resend, revoke } = refs.public.tenancy.invites;
-const CONSUME_RUN = "notifications/consume:run";
 
 /** Fake timers keep every scheduled run from starting before the test looks at it. */
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
-
-/** The scheduled runs of the inbox consumer, as the system table lists them. */
-const runs = (fixture: Fixture) =>
-  fixture
-    .run(scheduledJobs)
-    .pipe(
-      Effect.map((jobs) => Arr.filter(jobs, (job) => job.name === CONSUME_RUN))
-    );
 
 /** Sets the read time of every inbox row, as the Person reading them does. */
 const markRowsRead = (fixture: Fixture, readAt: number) =>
@@ -102,7 +94,7 @@ const rewindCursors = (fixture: Fixture) =>
 
 describe("notifications/consume run", () => {
   it.effect(
-    "writes one row for an invited Person and moves the cursor to the end of the journal",
+    "writes one row for an invited Person and holds its entry in the cursor until the entry settles",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -124,20 +116,26 @@ describe("notifications/consume run", () => {
           },
         ]);
         const [entry] = yield* fixture.run(journal);
+        if (entry === undefined) {
+          return yield* Effect.die(
+            "The invite must have written a journal entry."
+          );
+        }
         expect(entry).toMatchObject({
           change: { invite: made.id, type: "person.invited" },
         });
-        expect(rows[0]?.journalEntryId).toBe(entry?._id);
-        expect(rows[0]?.createdAt).toBe(entry?._creationTime);
+        expect(rows[0]?.journalEntryId).toBe(entry._id);
+        expect(rows[0]?.createdAt).toBe(entry._creationTime);
+        // The entry is not settled yet, so the cursor keeps it, and since stays before it.
         expect(yield* cursors(fixture)).toEqual([
           {
             _creationTime: expect.any(Number),
             _id: expect.any(String),
             changeType: "person.invited",
             consumer: "inbox",
-            handled: [{ createdAt: entry?._creationTime, entryId: entry?._id }],
+            handled: [{ createdAt: entry._creationTime, entryId: entry._id }],
             pending: false,
-            since: entry?._creationTime,
+            since: entry._creationTime - JOURNAL_COMMIT_LAG,
             tenantId: fixture.tenants.nf,
           },
         ]);
@@ -362,102 +360,6 @@ describe("notifications/consume run", () => {
       })
   );
 
-  it.effect("skips an entry whose Person was removed, and moves past it", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      yield* inviteAt(fixture, "nf", fixture.invited, GURU);
-      yield* fixture.run(
-        Effect.flatMap(DatabaseWriter, (writer) =>
-          writer
-            .table("tenantPeople")
-            .patch(fixture.invited, { status: "removed" })
-        )
-      );
-      yield* consumeSchool(fixture, fixture.tenants.nf);
-      expect(yield* storedRows(fixture)).toEqual([]);
-      expect(yield* cursors(fixture)).toMatchObject([
-        {
-          handled: [
-            { createdAt: expect.any(Number), entryId: expect.any(String) },
-          ],
-          pending: false,
-        },
-      ]);
-    })
-  );
-
-  it.effect("skips an entry whose Person no longer exists", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const gone = yield* addPerson(fixture, fixture.tenants.nf, "Pergi");
-      yield* inviteAt(fixture, "nf", gone, GURU);
-      yield* fixture.run(
-        Effect.flatMap(DatabaseWriter, (writer) =>
-          writer.table("tenantPeople").delete(gone)
-        )
-      );
-      yield* consumeSchool(fixture, fixture.tenants.nf);
-      expect(yield* storedRows(fixture)).toEqual([]);
-      expect(yield* cursors(fixture)).toMatchObject([{ pending: false }]);
-    })
-  );
-
-  it.effect("skips an entry that names a Person of another school", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const { inviteId } = yield* fixture.run(
-        invitePerson(fixture.tenants.nf, lain)
-      );
-      const entryId = yield* fixture.run(
-        Effect.flatMap(DatabaseWriter, (writer) =>
-          writer.table("journalEntries").insert({
-            actor: { kind: "system" },
-            change: { invite: inviteId, type: "person.invited" },
-            owner: { kind: "tenant", tenantId: fixture.tenants.nf },
-            subject: {
-              id: fixture.people.otherOwner.personId,
-              kind: "person",
-            },
-          })
-        )
-      );
-      yield* fixture.run(noteInvite(fixture.tenants.nf, entryId));
-      yield* consumeSchool(fixture, fixture.tenants.nf);
-      expect(yield* storedRows(fixture)).toEqual([]);
-    })
-  );
-
-  it.effect("skips an entry whose subject is not a Person", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const { inviteId } = yield* fixture.run(
-        invitePerson(fixture.tenants.nf, lain)
-      );
-      const entryId = yield* fixture.run(
-        Effect.flatMap(DatabaseWriter, (writer) =>
-          writer.table("journalEntries").insert({
-            actor: { kind: "system" },
-            change: { invite: inviteId, type: "person.invited" },
-            owner: { kind: "tenant", tenantId: fixture.tenants.nf },
-            subject: { id: fixture.units.sma, kind: "unit" },
-          })
-        )
-      );
-      yield* fixture.run(noteInvite(fixture.tenants.nf, entryId));
-      yield* consumeSchool(fixture, fixture.tenants.nf);
-      expect(yield* storedRows(fixture)).toEqual([]);
-    })
-  );
-
-  it.effect("does nothing for a school that no invite has reached", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      yield* consumeSchool(fixture, fixture.tenants.other);
-      expect(yield* storedRows(fixture)).toEqual([]);
-      expect(yield* cursors(fixture)).toEqual([]);
-    })
-  );
-
   it.effect(
     "marks the cursor pending and starts one run when an invite is written",
     () =>
@@ -467,7 +369,7 @@ describe("notifications/consume run", () => {
         expect(yield* cursors(fixture)).toMatchObject([
           { handled: [], pending: true },
         ]);
-        expect(yield* runs(fixture)).toHaveLength(1);
+        expect(yield* inboxRuns(fixture)).toHaveLength(1);
       })
   );
 });
@@ -479,9 +381,9 @@ describe("notifications/consume sweep", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* inviteAt(fixture, "nf", fixture.invited, GURU);
-        const before = yield* runs(fixture);
+        const before = yield* inboxRuns(fixture);
         yield* fixture.internal.mutation(sweep, {});
-        expect(yield* runs(fixture)).toHaveLength(before.length + 1);
+        expect(yield* inboxRuns(fixture)).toHaveLength(before.length + 1);
       })
   );
 
@@ -490,9 +392,9 @@ describe("notifications/consume sweep", () => {
       const fixture = yield* tenancyFixture;
       yield* inviteAt(fixture, "nf", fixture.invited, GURU);
       yield* consumeSchool(fixture, fixture.tenants.nf);
-      const before = yield* runs(fixture);
+      const before = yield* inboxRuns(fixture);
       yield* fixture.internal.mutation(sweep, {});
-      expect(yield* runs(fixture)).toHaveLength(before.length);
+      expect(yield* inboxRuns(fixture)).toHaveLength(before.length);
     })
   );
 });

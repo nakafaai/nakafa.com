@@ -69,9 +69,8 @@ export const JournalConsumer = Schema.Literals(["inbox"]);
 export const ConsumedChangeType = Schema.Literals(["person.invited"]);
 
 /**
- * One entry that a cursor has handled, with its creation time. The creation time
- * decides when the cursor drops the entry: once `since` has moved on past the
- * commit-lag window, no run reads the entry again.
+ * One entry that a cursor has handled, with its creation time. The cursor drops the
+ * entry once `since` moves past that creation time, so no later read returns it again.
  */
 const HandledEntry = Schema.Struct({
   createdAt: Schema.Finite,
@@ -79,15 +78,15 @@ const HandledEntry = Schema.Struct({
 });
 
 /**
- * One consumer's place in the journal for one tenant and one change type. `since`
- * is the creation time of the newest entry the cursor handled. It starts at the
- * creation time of the entry that made the cursor, and that entry is the first one
- * read. `handled` holds the entries the cursor handled whose creation time lies within
- * the commit-lag window behind `since`. A run reads that window again and skips them,
- * so an entry that commits after a run has passed its creation time is still read,
- * and no run resumes from the end position of an earlier page. `pending` says a run
- * is owed: a change sets it, and a run that reads to the end clears it, so the sweep
- * can find the cursors whose run never happened.
+ * One consumer's place in the journal for one tenant and one change type. Every entry
+ * created before `since` is handled. `since` starts five seconds before the entry that
+ * made the cursor, and it moves to the newest settled entry that a run handled, so it
+ * never passes an entry that may still commit. `handled` holds the entries that a run
+ * handled at or after `since` and that `since` has not passed: unsettled entries handled
+ * early, and entries that share the creation time of `since`. A run skips them when it
+ * reads again. `pending` says a run is owed: a change sets it, a run that leaves an entry
+ * unread keeps it set, and a run that reads to the end clears it, so the sweep can find
+ * the cursors whose run never happened.
  */
 export const JournalCursor = Schema.Struct({
   changeType: ConsumedChangeType,

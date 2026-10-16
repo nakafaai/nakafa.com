@@ -7,7 +7,9 @@ import {
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
+  invitePerson,
   journal,
+  scheduledJobs,
   slugOf,
   type tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -166,6 +168,43 @@ export const cursors = Effect.fn("test.inbox.cursors")((fixture: Fixture) =>
       reader.table("journalCursors").index("by_creation_time").take(50)
     )
   )
+);
+
+/** The name of the inbox consumer's run, as the scheduler lists it. */
+const CONSUME_RUN = "notifications/consume:run";
+
+/** The scheduled runs of the inbox consumer, as the system table lists them, oldest first. */
+export const inboxRuns = Effect.fn("test.inbox.inboxRuns")((fixture: Fixture) =>
+  fixture
+    .run(scheduledJobs)
+    .pipe(
+      Effect.map((jobs) => Arr.filter(jobs, (job) => job.name === CONSUME_RUN))
+    )
+);
+
+/**
+ * Writes one invitation of the school, with its journal entry, as the invite mutation
+ * does, and returns the entry's ID. The entry is written without a cursor run.
+ */
+export const invitedEntry = Effect.fn("test.inbox.invitedEntry")(
+  (fixture: Fixture, index: number) =>
+    fixture.run(
+      Effect.gen(function* () {
+        const mail = yield* Schema.decodeEffect(Email)(
+          `orang${index}@harapan.example.test`
+        );
+        const { inviteId, personId } = yield* invitePerson(
+          fixture.tenants.nf,
+          mail
+        );
+        return yield* (yield* DatabaseWriter).table("journalEntries").insert({
+          actor: { kind: "system" },
+          change: { invite: inviteId, type: "person.invited" },
+          owner: { kind: "tenant", tenantId: fixture.tenants.nf },
+          subject: { id: personId, kind: "person" },
+        });
+      })
+    )
 );
 
 /**
