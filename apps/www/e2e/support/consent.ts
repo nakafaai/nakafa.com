@@ -1,17 +1,24 @@
-import { expect, type Page } from "@playwright/test";
 import {
+  type BrowserContextOptions,
+  expect,
+  type Page,
+} from "@playwright/test";
+import {
+  ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
+  ANALYTICS_CONSENT_ROOT_ATTRIBUTE,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   type AnalyticsConsentDecision,
   createAnonymousAnalyticsConsent,
   encodeAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
-import { Effect, pipe, Schema, String as Str } from "effect";
+import { Effect, MutableList, pipe, Schema, String as Str } from "effect";
 import {
   ANSWER_MILLISECONDS,
   type Changes,
   saved,
 } from "@/e2e/support/changes";
 import { activate, activateUntilVisible } from "@/e2e/support/input";
+import { NEXT_CHUNK_PATH } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
@@ -70,9 +77,26 @@ const describePage = Effect.fn("NakafaE2E.describeUsageDataPage")(function* (
   return `Page ${page.url()}, signed in ${changes.signedIn}, learner read ${changes.hasAnswered(CURRENT_USER)}, choice read ${changes.hasAnswered(CURRENT_CHOICE)}, text "${pipe(text, Str.replaceAll(/\s+/gu, " "), Str.trim, Str.slice(0, 300))}".`;
 });
 
+/** A button of the usage-data prompt, by its name. */
+const promptButton = (page: Page, name: "Allow" | "Decline") =>
+  page.getByRole("button", { exact: true, name });
+
 /** The Decline button of the usage-data prompt. */
-const declineButton = (page: Page) =>
-  page.getByRole("button", { exact: true, name: "Decline" });
+const declineButton = (page: Page) => promptButton(page, "Decline");
+
+/** Presses one button of the usage-data prompt and waits until the prompt is gone. */
+const pressPromptButton = Effect.fn("NakafaE2E.pressPromptButton")(function* (
+  page: Page,
+  name: "Allow" | "Decline",
+  hasTouch: boolean
+) {
+  const button = promptButton(page, name);
+
+  yield* activate(button, hasTouch);
+  yield* Effect.promise(() =>
+    expect(button).toBeHidden({ timeout: readinessTimeoutMilliseconds })
+  );
+});
 
 /**
  * Presses Decline on the usage-data prompt of a signed-in learner and waits
@@ -86,12 +110,19 @@ export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  const decline = declineButton(page);
+  yield* pressPromptButton(page, "Decline", hasTouch);
+});
 
-  yield* activate(decline, hasTouch);
-  yield* Effect.promise(() =>
-    expect(decline).toBeHidden({ timeout: readinessTimeoutMilliseconds })
-  );
+/**
+ * Presses Allow on the usage-data prompt of a signed-in learner and waits until
+ * the prompt is gone. An Allow stores only the account's choice, so the browser
+ * keeps no anonymous record that a later visitor of the browser would read.
+ */
+export const pressAllow = Effect.fn("NakafaE2E.pressAllow")(function* (
+  page: Page,
+  hasTouch: boolean
+) {
+  yield* pressPromptButton(page, "Allow", hasTouch);
 });
 
 /**
@@ -163,3 +194,68 @@ export const openConsentPreferences = Effect.fn(
 
   return { popup, trigger };
 });
+
+/** The first words of the usage-data prompt's description in English. */
+export const PROMPT_DESCRIPTION = "Allow Nakafa to see which features you use";
+
+/** A phone, where the prompt covers the lower part of the lesson. */
+export const compactContext: BrowserContextOptions = {
+  hasTouch: true,
+  serviceWorkers: "block",
+  viewport: { height: 844, width: 390 },
+};
+
+/** React reports a hydration mismatch as a console error that names it. */
+const HYDRATION_ERROR = /hydrat|#41[89]|#42[35]/iu;
+
+/**
+ * Stops every app chunk from loading, so the page stays as the server sent it
+ * and only the inline bootstrap script and the stylesheet can act.
+ */
+export async function stopAppCode(page: Page) {
+  await page.route(NEXT_CHUNK_PATH, (route) => route.abort());
+}
+
+/** Collects the hydration errors that the page reports while it runs. */
+export function observeHydrationErrors(page: Page) {
+  const errors = MutableList.make<string>();
+  page.on("console", (message) => {
+    if (message.type() === "error" && HYDRATION_ERROR.test(message.text())) {
+      MutableList.append(errors, message.text());
+    }
+  });
+  return errors;
+}
+
+/** Stores a raw record under the key the consent store reads, before the page loads. */
+export function seedRawStorage(page: Page, key: string, value: string) {
+  return page.addInitScript(
+    ({ key, value }) => localStorage.setItem(key, value),
+    { key, value }
+  );
+}
+
+/**
+ * Asserts that the server sent the prompt. A check that the prompt is hidden
+ * proves nothing when the prompt is absent, and the copy alone does not prove
+ * it either, because the page also carries the copy in its serialized messages.
+ */
+export function expectPromptRendered(page: Page) {
+  return expect(page.getByText(PROMPT_DESCRIPTION)).toBeAttached();
+}
+
+/** The account marker that this browser holds, or null when it holds none. */
+export function storedAccountMarker(page: Page) {
+  return page.evaluate(
+    (key) => localStorage.getItem(key),
+    ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY
+  );
+}
+
+/** Whether the document root carries the mark that the bootstrap writes before paint. */
+export function isRootMarked(page: Page) {
+  return page.evaluate(
+    (name) => document.documentElement.hasAttribute(name),
+    ANALYTICS_CONSENT_ROOT_ATTRIBUTE
+  );
+}
