@@ -49,6 +49,7 @@ export const NAKAFA_SEARCH_CONTENT_TOOL = {
             type: "integer",
             minimum: 0,
             description: "Number of returned results.",
+            maximum: Number.MAX_SAFE_INTEGER,
           },
           has_more: {
             type: "boolean",
@@ -116,16 +117,19 @@ export const NAKAFA_SEARCH_CONTENT_TOOL = {
             type: "integer",
             exclusiveMinimum: 0,
             description: "Requested page size.",
+            maximum: Number.MAX_SAFE_INTEGER,
           },
           next_offset: {
             type: "integer",
             minimum: 0,
             description: "Next page offset when another page is available.",
+            maximum: Number.MAX_SAFE_INTEGER,
           },
           offset: {
             type: "integer",
             minimum: 0,
             description: "Current result offset.",
+            maximum: Number.MAX_SAFE_INTEGER,
           },
         },
         required: ["count", "has_more", "items", "limit", "offset"],

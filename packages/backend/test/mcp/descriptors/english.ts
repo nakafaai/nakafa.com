@@ -34,8 +34,16 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
                   items: {
                     type: "object",
                     properties: {
-                      number: { type: "integer", exclusiveMinimum: 0 },
-                      referenceOffset: { type: "integer", minimum: 0 },
+                      number: {
+                        type: "integer",
+                        exclusiveMinimum: 0,
+                        maximum: Number.MAX_SAFE_INTEGER,
+                      },
+                      referenceOffset: {
+                        type: "integer",
+                        minimum: 0,
+                        maximum: Number.MAX_SAFE_INTEGER,
+                      },
                       text: { type: "string" },
                     },
                     required: ["number", "referenceOffset", "text"],
@@ -50,7 +58,11 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
                         type: "object",
                         properties: {
                           kind: { type: "string", enum: ["text"] },
-                          offset: { type: "integer", minimum: 0 },
+                          offset: {
+                            type: "integer",
+                            minimum: 0,
+                            maximum: Number.MAX_SAFE_INTEGER,
+                          },
                           value: { type: "string" },
                         },
                         required: ["kind", "offset", "value"],
@@ -60,8 +72,16 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
                         type: "object",
                         properties: {
                           kind: { type: "string", enum: ["note"] },
-                          number: { type: "integer", exclusiveMinimum: 0 },
-                          offset: { type: "integer", minimum: 0 },
+                          number: {
+                            type: "integer",
+                            exclusiveMinimum: 0,
+                            maximum: Number.MAX_SAFE_INTEGER,
+                          },
+                          offset: {
+                            type: "integer",
+                            minimum: 0,
+                            maximum: Number.MAX_SAFE_INTEGER,
+                          },
                         },
                         required: ["kind", "number", "offset"],
                         additionalProperties: true,
@@ -99,6 +119,7 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
             type: "integer",
             exclusiveMinimum: 0,
             description: "Verse number inside the surah.",
+            maximum: Number.MAX_SAFE_INTEGER,
           },
           tafsir: {
             anyOf: [
@@ -118,8 +139,16 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
                 items: {
                   type: "object",
                   properties: {
-                    number: { type: "integer", exclusiveMinimum: 0 },
-                    referenceOffset: { type: "integer", minimum: 0 },
+                    number: {
+                      type: "integer",
+                      exclusiveMinimum: 0,
+                      maximum: Number.MAX_SAFE_INTEGER,
+                    },
+                    referenceOffset: {
+                      type: "integer",
+                      minimum: 0,
+                      maximum: Number.MAX_SAFE_INTEGER,
+                    },
                     text: { type: "string" },
                   },
                   required: ["number", "referenceOffset", "text"],
@@ -134,7 +163,11 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
                       type: "object",
                       properties: {
                         kind: { type: "string", enum: ["text"] },
-                        offset: { type: "integer", minimum: 0 },
+                        offset: {
+                          type: "integer",
+                          minimum: 0,
+                          maximum: Number.MAX_SAFE_INTEGER,
+                        },
                         value: { type: "string" },
                       },
                       required: ["kind", "offset", "value"],
@@ -144,8 +177,16 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
                       type: "object",
                       properties: {
                         kind: { type: "string", enum: ["note"] },
-                        number: { type: "integer", exclusiveMinimum: 0 },
-                        offset: { type: "integer", minimum: 0 },
+                        number: {
+                          type: "integer",
+                          exclusiveMinimum: 0,
+                          maximum: Number.MAX_SAFE_INTEGER,
+                        },
+                        offset: {
+                          type: "integer",
+                          minimum: 0,
+                          maximum: Number.MAX_SAFE_INTEGER,
+                        },
                       },
                       required: ["kind", "number", "offset"],
                       additionalProperties: true,
@@ -185,9 +226,17 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
             artifact: {
               type: "object",
               properties: {
-                byte_count: { type: "integer", exclusiveMinimum: 0 },
+                byte_count: {
+                  type: "integer",
+                  exclusiveMinimum: 0,
+                  maximum: Number.MAX_SAFE_INTEGER,
+                },
                 digest: { type: "string" },
-                file_count: { type: "integer", exclusiveMinimum: 0 },
+                file_count: {
+                  type: "integer",
+                  exclusiveMinimum: 0,
+                  maximum: Number.MAX_SAFE_INTEGER,
+                },
               },
               required: ["byte_count", "digest", "file_count"],
               additionalProperties: true,
@@ -220,9 +269,17 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
                 artifact: {
                   type: "object",
                   properties: {
-                    byte_count: { type: "integer", exclusiveMinimum: 0 },
+                    byte_count: {
+                      type: "integer",
+                      exclusiveMinimum: 0,
+                      maximum: Number.MAX_SAFE_INTEGER,
+                    },
                     digest: { type: "string" },
-                    file_count: { type: "integer", exclusiveMinimum: 0 },
+                    file_count: {
+                      type: "integer",
+                      exclusiveMinimum: 0,
+                      maximum: Number.MAX_SAFE_INTEGER,
+                    },
                   },
                   required: ["byte_count", "digest", "file_count"],
                   additionalProperties: true,
@@ -260,9 +317,17 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
             artifact: {
               type: "object",
               properties: {
-                byte_count: { type: "integer", exclusiveMinimum: 0 },
+                byte_count: {
+                  type: "integer",
+                  exclusiveMinimum: 0,
+                  maximum: Number.MAX_SAFE_INTEGER,
+                },
                 digest: { type: "string" },
-                file_count: { type: "integer", exclusiveMinimum: 0 },
+                file_count: {
+                  type: "integer",
+                  exclusiveMinimum: 0,
+                  maximum: Number.MAX_SAFE_INTEGER,
+                },
               },
               required: ["byte_count", "digest", "file_count"],
               additionalProperties: true,
@@ -295,9 +360,17 @@ export const QURAN_REFERENCE_ENGLISH_OUTPUT = {
                 artifact: {
                   type: "object",
                   properties: {
-                    byte_count: { type: "integer", exclusiveMinimum: 0 },
+                    byte_count: {
+                      type: "integer",
+                      exclusiveMinimum: 0,
+                      maximum: Number.MAX_SAFE_INTEGER,
+                    },
                     digest: { type: "string" },
-                    file_count: { type: "integer", exclusiveMinimum: 0 },
+                    file_count: {
+                      type: "integer",
+                      exclusiveMinimum: 0,
+                      maximum: Number.MAX_SAFE_INTEGER,
+                    },
                   },
                   required: ["byte_count", "digest", "file_count"],
                   additionalProperties: true,

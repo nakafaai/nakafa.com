@@ -12,7 +12,14 @@ export const NAKAFA_GET_QURAN_REFERENCE_TOOL = {
     $defs: {},
     properties: {
       from_verse: {
-        anyOf: [{ type: "integer", exclusiveMinimum: 0 }, { type: "null" }],
+        anyOf: [
+          {
+            type: "integer",
+            exclusiveMinimum: 0,
+            maximum: Number.MAX_SAFE_INTEGER,
+          },
+          { type: "null" },
+        ],
       },
       include_tafsir: { anyOf: [{ type: "boolean" }, { type: "null" }] },
       locale: {
@@ -28,6 +35,7 @@ export const NAKAFA_GET_QURAN_REFERENCE_TOOL = {
         type: "integer",
         exclusiveMinimum: 0,
         description: "Last verse number to include; defaults to from_verse.",
+        maximum: Number.MAX_SAFE_INTEGER,
       },
     },
     required: ["surah"],
