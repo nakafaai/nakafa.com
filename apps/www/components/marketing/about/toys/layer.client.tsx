@@ -11,7 +11,7 @@ import { TOY_HERD } from "@/components/marketing/about/toys/herd";
 import { within } from "@/components/marketing/about/toys/place";
 
 /** One toy: its place beside a part of the page, and the picture it is drawn as. */
-interface ToyPlacement {
+export interface ToyPlacement {
   readonly key: string;
   readonly picture: ReactNode;
   readonly place: Place;
@@ -171,16 +171,22 @@ const PLACEMENTS: readonly ToyPlacement[] = [
 ];
 
 /**
- * The layer of toys over the whole home page. The page sits inside `Toys`, so a
- * toy can be carried from the hero to the footer, and `Scatter` puts each toy
- * where its place says at the current width of the page.
+ * A layer of toys over a whole page. The page sits inside `Toys`, so a toy can
+ * be carried from the top of the page to the footer, and `Scatter` puts each
+ * toy where its place says at the current width of the page.
  */
-export function HomeToys({ children }: { children: ReactNode }) {
+export function ToyLayer({
+  children,
+  placements,
+}: {
+  children: ReactNode;
+  placements: readonly ToyPlacement[];
+}) {
   return (
     <Toys>
       {children}
       <Scatter>
-        {Arr.map(PLACEMENTS, (toy) => (
+        {Arr.map(placements, (toy) => (
           <Toy key={toy.key} place={toy.place}>
             {toy.picture}
           </Toy>
@@ -188,4 +194,9 @@ export function HomeToys({ children }: { children: ReactNode }) {
       </Scatter>
     </Toys>
   );
+}
+
+/** The layer of toys over the whole home page. */
+export function HomeToys({ children }: { children: ReactNode }) {
+  return <ToyLayer placements={PLACEMENTS}>{children}</ToyLayer>;
 }

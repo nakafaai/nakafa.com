@@ -36,7 +36,7 @@ export function Pricing() {
         </h2>
       </div>
 
-      <div className="mx-auto mt-12 w-full max-w-7xl border-y bg-card text-card-foreground">
+      <div className="px-6 lg:px-10">
         <PricingCards headingLevel="h3" Price={AnimatedPrice} />
       </div>
     </section>

@@ -2,16 +2,17 @@ import { Mail01Icon } from "@hugeicons/core-free-icons";
 import { Animal } from "@repo/design-system/components/ui/animal";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { Mascot } from "@repo/mascot/code";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
 
 /**
  * The school part: a dark band with rounded corners, the words for a whole
- * school, a mail link, and one class of different animals in a row.
+ * school, a mail link, and one class of different animals in a row. The page
+ * gives the class, a slice of its own cast, so no animal appears twice.
  */
-export function Schools() {
+export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
   const t = useTranslations("Landing");
 
   return (
@@ -47,7 +48,7 @@ export function Schools() {
             aria-label={t("school-class")}
             className="flex flex-wrap items-end justify-center gap-2"
           >
-            {Arr.map(CLASS_HERD, (mascot) => (
+            {Arr.map(herd, (mascot) => (
               <li key={mascot.animal}>
                 <Animal className="size-16" mascot={mascot} />
               </li>

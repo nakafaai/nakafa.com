@@ -1,3 +1,4 @@
+import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
@@ -21,6 +22,7 @@ import { Pricing } from "@/components/marketing/about/pricing/landing";
 import { Privacy } from "@/components/marketing/about/privacy";
 import { ProjectileStage } from "@/components/marketing/about/projectile/stage";
 import { Schools } from "@/components/marketing/about/schools";
+import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { Tryout } from "@/components/marketing/about/tryout";
 import {
   getSubjectMenuHref,
@@ -143,7 +145,10 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
       question: tHome("faq-languages-question"),
     },
     { answer: tHome("faq-nina-answer"), question: tHome("faq-nina-question") },
-    { answer: tPricing("a9"), question: tPricing("q9") },
+    {
+      answer: tPricing("a9", { cost: NINA_RESPONSE_CREDITS }),
+      question: tPricing("q9"),
+    },
     { answer: tPricing("a12"), question: tPricing("q12") },
     {
       answer: tHome("faq-memory-answer"),
@@ -188,7 +193,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
           <Letter />
           <Medals />
           <Pricing />
-          <Schools />
+          <Schools herd={CLASS_HERD} />
           <Faq faqs={faqItems} />
           <Community />
           <Closing />

@@ -1,14 +1,19 @@
+import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import { Array as Arr } from "effect";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { locale as rootLocale } from "next/root-params";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { PricingPageFaq } from "@/components/marketing/about/faq/pricing";
+import { Faq } from "@/components/marketing/about/faq/landing";
+import { PricingComparison } from "@/components/marketing/about/pricing/comparison";
+import { PRICING_CLASS_HERD } from "@/components/marketing/about/pricing/herd";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import { StaticPrice } from "@/components/marketing/about/pricing/price";
+import { Schools } from "@/components/marketing/about/schools";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -16,35 +21,34 @@ import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/seo/social";
 
-/** Owns the dedicated pricing introduction and shared plan comparison. */
+/**
+ * The toys of the page load after the page renders, so their drag code is not
+ * part of the first JavaScript of the pricing page.
+ */
+const PricingToys = dynamic(() =>
+  import("@/components/marketing/about/pricing/toys.client").then(
+    (module) => module.PricingToys
+  )
+);
+
+/** The first part of the page: the headline above the two plans. */
 function PricingPagePlans() {
-  const t = useTranslations("PricingPage");
+  const t = useTranslations("Landing");
 
   return (
-    <section aria-labelledby="pricing-heading" className="border-b">
+    <section
+      aria-labelledby="pricing-heading"
+      className="scroll-mt-28 px-6 pt-32 pb-20 lg:px-10 lg:pt-40 lg:pb-32"
+      id="plans"
+    >
       <div className="mx-auto w-full max-w-7xl">
-        <div
-          className="scroll-mt-28 px-6 py-24 sm:py-28 lg:px-10 lg:py-32"
-          id="pricing"
+        <h1
+          className="text-balance text-center text-3xl tracking-tight sm:text-4xl"
+          id="pricing-heading"
         >
-          <h1
-            className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
-            id="pricing-heading"
-          >
-            {t.rich("headline", {
-              mark: (chunks) => <mark>{chunks}</mark>,
-            })}
-          </h1>
-          <p className="mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
-            {t("description")}
-          </p>
-        </div>
-      </div>
-
-      <div className="border-t bg-card text-card-foreground">
-        <div className="mx-auto w-full max-w-7xl border-x">
-          <PricingCards headingLevel="h2" Price={StaticPrice} />
-        </div>
+          {t("prices-title")}
+        </h1>
+        <PricingCards headingLevel="h2" Price={StaticPrice} />
       </div>
     </section>
   );
@@ -86,7 +90,7 @@ export default async function Page() {
     getTranslations({ locale, namespace: "PricingPage" }),
   ]);
   const faqItems: MarketingFaqItem[] = Arr.map(pricingFaqNumbers, (number) => ({
-    answer: tPricingPage(`a${number}`),
+    answer: tPricingPage(`a${number}`, { cost: NINA_RESPONSE_CREDITS }),
     question: tPricingPage(`q${number}`),
   }));
   const url = `${COMPANY_IDENTITY.url}/${locale}/pricing`;
@@ -110,10 +114,14 @@ export default async function Page() {
         }))}
         url={url}
       />
-      <div className="relative grid">
-        <PricingPagePlans />
-        <PricingPageFaq faqs={faqItems} />
-      </div>
+      <PricingToys>
+        <div className="relative grid">
+          <PricingPagePlans />
+          <PricingComparison />
+          <Schools herd={PRICING_CLASS_HERD} />
+          <Faq faqs={faqItems} />
+        </div>
+      </PricingToys>
     </>
   );
 }

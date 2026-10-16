@@ -92,7 +92,7 @@ const usdPricing = {
 };
 
 /** Selects the Polar catalog price for the request country. */
-function getProMonthlyPricing(countryCode: string | null) {
+export function getProMonthlyPricing(countryCode: string | null) {
   const normalizedCountryCode = countryCode?.toUpperCase();
 
   if (normalizedCountryCode === "ID") {

@@ -1,14 +1,18 @@
-import {
-  ArrowUpRight01Icon,
-  Rocket01Icon,
-  Tick01Icon,
-} from "@hugeicons/core-free-icons";
+import { ArrowUpRight01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import type { ComponentProps, ComponentType } from "react";
+import type { ComponentType } from "react";
 import { PricingButton } from "@/components/marketing/about/pricing/button.client";
 import {
   type PriceProps,
@@ -16,58 +20,51 @@ import {
 } from "@/components/marketing/about/pricing/price";
 import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
 
-interface PricingFeatureProps {
-  icon?: ComponentProps<typeof HugeIcons>["icon"];
-  text: string;
-}
-
 interface PricingPlanCardsProps {
   headingLevel: "h2" | "h3";
   Price: ComponentType<PriceProps>;
 }
 
-/** Renders one pricing card feature row with a stable icon slot. */
-function PricingFeature({ text, icon }: PricingFeatureProps) {
+/** One line of a plan: a tick and its text. */
+function PricingFeature({ text }: { text: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <HugeIcons className="mt-0.5 size-4" icon={icon || Tick01Icon} />
-      <span className="text-sm leading-relaxed">{text}</span>
-    </div>
+    <li className="flex items-start gap-3 text-base leading-6">
+      <HugeIcons className="mt-1 size-4 shrink-0" icon={Tick01Icon} />
+      <span>{text}</span>
+    </li>
   );
 }
 
-/** Renders stable plan cards around request-localized price slots. */
+/**
+ * The two plan cards. Pro stands out with the brand ring, and Nina looks over
+ * its top edge. The prices come from the slots of each plan.
+ */
 export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
   const PlanHeading = headingLevel;
-  const freeFeatures = Arr.map(freePlanFeatures, (key) => t(key));
-  const proFeatures = Arr.map(proPlanFeatures, (key) => t(key));
+  const credits = getPlanCreditConfig("pro").amount;
 
   return (
-    <div className="grid lg:grid-cols-2 lg:divide-x">
-      <div
-        className="flex flex-col gap-6 px-6 py-12 lg:px-10"
-        data-pricing-plan="free"
-      >
-        <div className="grid gap-2">
-          <PlanHeading className="text-balance font-semibold text-3xl">
+    <div className="mx-auto mt-20 grid w-full max-w-4xl gap-x-4 gap-y-18 md:grid-cols-2">
+      <Card data-pricing-plan="free">
+        <CardHeader>
+          <PlanHeading className="font-medium text-xl tracking-tight">
             {t("free-title")}
           </PlanHeading>
-          <p className="text-pretty text-muted-foreground">
-            {t("free-description")}
-          </p>
-          <div className="pt-2">
+          <p className="text-muted-foreground">{t("free-description")}</p>
+        </CardHeader>
+        <CardContent className="grid gap-6">
+          <div className="grid gap-1">
             <PricingPrice Price={Price} plan="free" />
+            <p className="text-muted-foreground text-sm">{t("free-worth")}</p>
           </div>
-        </div>
-
-        <div className="grid gap-3">
-          {Arr.map(freeFeatures, (feature) => (
-            <PricingFeature key={feature} text={feature} />
-          ))}
-        </div>
-
-        <div className="mt-auto pt-4">
+          <ul className="grid gap-3">
+            {Arr.map(freePlanFeatures, (key) => (
+              <PricingFeature key={key} text={t(key)} />
+            ))}
+          </ul>
+        </CardContent>
+        <CardFooter>
           <Button
             className="w-full"
             nativeButton={false}
@@ -83,37 +80,38 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
             }
             variant="outline"
           />
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
 
-      <div
-        className="flex flex-col gap-6 px-6 py-12 lg:px-10"
-        data-pricing-plan="pro"
-      >
-        <div className="grid gap-2">
-          <PlanHeading className="text-balance font-semibold text-3xl">
-            {t("pro-title")}
-          </PlanHeading>
-          <p className="text-pretty text-muted-foreground">
-            {t("pro-description")}
-          </p>
-          <div className="pt-2">
+      <div className="relative grid">
+        <span className="absolute right-6 bottom-full">
+          <Nina
+            fidget={["greeting"]}
+            label=""
+            lean="peek"
+            mood="winking"
+            size={72}
+          />
+        </span>
+        <Card className="ring-2 ring-primary" data-pricing-plan="pro">
+          <CardHeader>
+            <PlanHeading className="font-medium text-xl tracking-tight">
+              {t("pro-title")}
+            </PlanHeading>
+            <p className="text-muted-foreground">{t("pro-description")}</p>
+          </CardHeader>
+          <CardContent className="grid gap-6">
             <PricingPrice Price={Price} period={t("pro-period")} plan="pro" />
-          </div>
-        </div>
-
-        <div className="grid gap-3">
-          <PricingFeature icon={Rocket01Icon} text={proFeatures[0]} />
-          <div className="grid gap-3 border-t pt-3">
-            {Arr.map(Arr.drop(proFeatures, 1), (feature) => (
-              <PricingFeature key={feature} text={feature} />
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-auto pt-4">
-          <PricingButton />
-        </div>
+            <ul className="grid gap-3">
+              {Arr.map(proPlanFeatures, (key) => (
+                <PricingFeature key={key} text={t(key, { credits })} />
+              ))}
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <PricingButton />
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

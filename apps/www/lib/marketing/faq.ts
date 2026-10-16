@@ -7,7 +7,10 @@ const MarketingFaqItemSchema = Schema.Struct({
 });
 export type MarketingFaqItem = typeof MarketingFaqItemSchema.Type;
 
-/** Pricing FAQ numbers rendered on the dedicated pricing surface. */
+/**
+ * Pricing FAQ numbers rendered on the dedicated pricing surface, in the order
+ * of the design: the credits first, then Pro, then the free plan.
+ */
 export const pricingFaqNumbers = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+  9, 10, 11, 12, 13, 14, 15, 16, 17, 6,
 ] as const;
