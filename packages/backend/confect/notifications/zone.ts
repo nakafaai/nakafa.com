@@ -34,15 +34,22 @@ class NoticeZoneUnresolved extends Schema.TaggedError<NoticeZoneUnresolved>()(
   }
 ) {}
 
+/**
+ * Units by the moment they were created, and then by their id. The id breaks a
+ * tie, so two units created in one moment never depend on the order of the list.
+ */
+const byCreationThenId = Order.combine(
+  Order.mapInput(Order.Number, (unit: UnitZone) => unit._creationTime),
+  Order.mapInput(Order.String, (unit: UnitZone) => unit._id)
+);
+
 /** The active unit that was created first, whatever order the units are listed in. */
 const oldestActiveUnit = (
   units: readonly UnitZone[]
 ): Option.Option<UnitZone> =>
   Arr.head(
-    Arr.sortWith(
-      Arr.filter(units, (unit) => unit.status === "active"),
-      (unit) => unit._creationTime,
-      Order.Number
+    Arr.sort(byCreationThenId)(
+      Arr.filter(units, (unit) => unit.status === "active")
     )
   );
 

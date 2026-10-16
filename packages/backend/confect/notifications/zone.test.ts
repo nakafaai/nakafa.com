@@ -58,6 +58,35 @@ describe("notifications/zone zoneOfNotice", () => {
   );
 
   it.effect(
+    "gives a tenant-level notice the same zone whatever order units created in one moment are listed in, and the smaller id wins the tie",
+    () =>
+      Effect.gen(function* () {
+        const jakartaUnit = unit({
+          created: 4,
+          id: "unit-b",
+          status: "active",
+          timeZone: "Asia/Jakarta",
+        });
+        const berlinUnit = unit({
+          created: 4,
+          id: "unit-a",
+          status: "active",
+          timeZone: "Europe/Berlin",
+        });
+        const listedJakartaFirst = yield* zoneOfNotice(Option.none(), [
+          jakartaUnit,
+          berlinUnit,
+        ]);
+        const listedBerlinFirst = yield* zoneOfNotice(Option.none(), [
+          berlinUnit,
+          jakartaUnit,
+        ]);
+        expect(listedJakartaFirst.id).toBe("Europe/Berlin");
+        expect(listedBerlinFirst.id).toBe("Europe/Berlin");
+      })
+  );
+
+  it.effect(
     "fails when the unit of a notice is not among the units given",
     () =>
       Effect.gen(function* () {
