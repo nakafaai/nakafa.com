@@ -19,8 +19,8 @@ const mocks = vi.hoisted(() => ({
   discard: vi.fn(),
   initialize: vi.fn(),
   lease: vi.fn(),
-  read: vi.fn(),
   release: vi.fn(),
+  reservedRuntime: vi.fn(),
   reserve: vi.fn(),
   backend: vi.fn<typeof withLocalBackend<void, AcceptanceError, never>>(),
   command: vi.fn(),
@@ -36,10 +36,12 @@ vi.mock("@repo/backend/scripts/content/acceptance/local", async (load) => ({
   >()),
   discardSignedResponses: mocks.discard,
   initializeLocalRuntime: mocks.initialize,
-  leaseLocalRuntime: mocks.lease,
-  readLocalRuntime: mocks.read,
+  leaseReservedLocalRuntime: mocks.reservedRuntime,
   releaseLocalRuntime: mocks.release,
   reserveLocalRuntime: mocks.reserve,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/lease", () => ({
+  leaseLocalRuntime: mocks.lease,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/process", async (load) => ({
   ...(await load<
@@ -82,7 +84,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
   beforeEach(() => {
     mocks.reserve.mockReturnValue(Effect.succeed(reservation));
     mocks.initialize.mockReturnValue(Effect.succeed(runtime));
-    mocks.read.mockReturnValue(Effect.succeed(runtime));
+    mocks.reservedRuntime.mockReturnValue(Effect.succeedSome(runtime));
     for (const mock of [
       mocks.discard,
       mocks.lease,
@@ -215,7 +217,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
 
   it.effect("refuses an unprepared acceptance build", () =>
     Effect.gen(function* () {
-      mocks.read.mockReturnValue(Effect.void);
+      mocks.reservedRuntime.mockReturnValue(Effect.succeedNone);
       expect(
         yield* runAcceptance("/test", "build", []).pipe(Effect.flip)
       ).toMatchObject({

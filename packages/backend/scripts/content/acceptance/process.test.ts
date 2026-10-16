@@ -199,6 +199,7 @@ describe("application process ownership", () => {
                 ...localConvexEnvironment,
                 AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
                 AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
+                DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
                 FUNRUN_ISOLATE_ACTIVE_THREADS: String(
                   navigator.hardwareConcurrency
                 ),
