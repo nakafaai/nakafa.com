@@ -5,6 +5,7 @@ import type { Rule, RuleRole } from "@repo/backend/confect/access/schema";
 import {
   defectOf,
   principal,
+  suspend,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Effect, HashMap } from "effect";
@@ -155,5 +156,30 @@ describe("access/decision", () => {
       );
       expect(defect).toContain("undeclared relation guardian");
     })
+  );
+
+  it.effect(
+    "lets a transition end access in a suspended tenant, where a write is refused",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const transition: Rule = {
+          access: "transition",
+          grantedBy: "roles",
+          relations: [],
+          roles: ["admin"],
+        };
+        const verdicts = yield* fixture.run(
+          Effect.gen(function* () {
+            yield* suspend(fixture.tenants.nf);
+            const owner = yield* principal(fixture.people.owner.personId);
+            return [
+              yield* decide(write, tenantLevel, owner, related(false)),
+              yield* decide(transition, tenantLevel, owner, related(false)),
+            ];
+          })
+        );
+        expect(verdicts).toEqual(["condition", "allow"]);
+      })
   );
 });

@@ -1,9 +1,4 @@
-import { Buffer } from "node:buffer";
-import {
-  createHash,
-  generateKeyPairSync,
-  sign as signBytes,
-} from "node:crypto";
+import { generateKeyPairSync, sign as signBytes } from "node:crypto";
 import { assert } from "@effect/vitest";
 import { hashCompiledContentPayload } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
@@ -76,9 +71,11 @@ import {
   testPublicationScope,
   testRollbackJson,
   testRouteJson,
+  testTextHash,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
 import { Array as Arr, Effect, Order, Schema, Stream } from "effect";
+import { Base64Url } from "effect/encoding";
 
 const keys = generateKeyPairSync("ed25519");
 const digest = Schema.decodeSync(Sha256HashSchema)(TEST_DIGEST);
@@ -87,6 +84,19 @@ export const TEST_KEY_ID = SigningKeyIdSchema.make("test-key");
 export const TEST_PUBLIC_KEY = keys.publicKey
   .export({ format: "pem", type: "spki" })
   .toString();
+
+/**
+ * Signs one canonical message with the technical test key. Web Crypto signs
+ * only asynchronously and Effect's `Crypto` has no signing, so Node's
+ * synchronous Ed25519 signs, which the fixtures built at module load need.
+ */
+function signTestMessage(message: string) {
+  return Ed25519SignatureSchema.make(
+    Base64Url.encode(
+      signBytes(null, new TextEncoder().encode(message), keys.privateKey)
+    )
+  );
+}
 /** Creates one authenticated renderer snapshot for proof tests. */
 export function testProofRenderer(
   componentName = "p",
@@ -101,11 +111,7 @@ export function testProofRenderer(
     })),
     publishedDomains: Arr.sort(publishedDomains, Order.String),
   };
-  const hash = Sha256HashSchema.make(
-    `sha256:${createHash("sha256")
-      .update(canonicalizeRendererManifestContract(contract))
-      .digest("hex")}`
-  );
+  const hash = testTextHash(canonicalizeRendererManifestContract(contract));
   return RendererManifestEnvelopeSchema.make({
     ...contract,
     format: RENDERER_MANIFEST_FORMAT,
@@ -229,7 +235,7 @@ export function testSignedArtifact(
   const compiledCode = options?.compiledCode ?? "return {};";
   const payload = CompiledContentPayloadSchema.make({
     artifactLocale: ArtifactLocaleSchema.make(options?.artifactLocale ?? "en"),
-    byteLength: Buffer.byteLength(compiledCode, "utf8"),
+    byteLength: new TextEncoder().encode(compiledCode).byteLength,
     compiledCode,
     compilerConfigHash: digest,
     compilerVersion: "0.1.0",
@@ -240,24 +246,15 @@ export function testSignedArtifact(
     rawMdx,
     rendererDomain,
     requiredComponents: [],
-    sourceHash: Sha256HashSchema.make(
-      `sha256:${createHash("sha256").update(rawMdx).digest("hex")}`
-    ),
+    sourceHash: testTextHash(rawMdx),
   });
   const artifactHash = hashCompiledContentPayload(payload);
   return SignedContentArtifactSchema.make({
     artifactHash,
     keyId: TEST_KEY_ID,
     payload,
-    signature: Ed25519SignatureSchema.make(
-      signBytes(
-        null,
-        Buffer.from(
-          canonicalizeContentArtifactSigningInput(artifactHash, payload),
-          "utf8"
-        ),
-        keys.privateKey
-      ).toString("base64url")
+    signature: signTestMessage(
+      canonicalizeContentArtifactSigningInput(artifactHash, payload)
     ),
   });
 }
@@ -268,15 +265,8 @@ export function testSignedRelease(manifest: ContentReleaseManifest) {
     keyId: TEST_KEY_ID,
     manifest,
     manifestHash,
-    signature: Ed25519SignatureSchema.make(
-      signBytes(
-        null,
-        Buffer.from(
-          canonicalizeContentReleaseSigningInput(manifestHash, manifest),
-          "utf8"
-        ),
-        keys.privateKey
-      ).toString("base64url")
+    signature: signTestMessage(
+      canonicalizeContentReleaseSigningInput(manifestHash, manifest)
     ),
   });
 }
@@ -299,24 +289,15 @@ export function testSignedTryoutRuntimeBundle(input: {
     sourceManifestHash: input.release.manifestHash,
     sourceReleaseId: input.release.manifest.releaseId,
   } as const;
-  const bundleHash = Sha256HashSchema.make(
-    `sha256:${createHash("sha256")
-      .update(canonicalizeTryoutRuntimeBundlePayload(payload))
-      .digest("hex")}`
+  const bundleHash = testTextHash(
+    canonicalizeTryoutRuntimeBundlePayload(payload)
   );
   return SignedTryoutRuntimeBundleSchema.make({
     bundleHash,
     keyId: TEST_KEY_ID,
     payload,
-    signature: Ed25519SignatureSchema.make(
-      signBytes(
-        null,
-        Buffer.from(
-          canonicalizeTryoutRuntimeBundleSigningInput(bundleHash, payload),
-          "utf8"
-        ),
-        keys.privateKey
-      ).toString("base64url")
+    signature: signTestMessage(
+      canonicalizeTryoutRuntimeBundleSigningInput(bundleHash, payload)
     ),
   });
 }

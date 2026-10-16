@@ -1,4 +1,3 @@
-import { createServer } from "node:net";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
@@ -14,6 +13,8 @@ import {
 import {
   anonymousConvexCommand,
   fixture,
+  isPortOccupied,
+  occupyPort,
   ticking,
   versionServiceError,
 } from "@repo/backend/test/acceptance";
@@ -223,24 +224,11 @@ describe("owned signed acceptance runtime", () => {
       `preserves an unleased runtime with an active ${occupied} port`,
       () =>
         Effect.gen(function* () {
-          const listener = yield* Effect.acquireRelease(
-            Effect.sync(() => createServer()),
-            (server) =>
-              Effect.callback<void>((resume) => {
-                server.close(() => resume(Effect.void));
-              })
-          );
-          yield* Effect.callback<void>((resume) => {
-            listener.listen(0, "127.0.0.1", () => resume(Effect.void));
-          });
-          const address = listener.address();
-          if (address === null || typeof address === "string") {
-            return yield* Effect.die("Listener did not acquire an IP port");
-          }
+          const port = yield* occupyPort(0);
           initialize(
             environment.replace(
               occupied === "query" ? ":43120" : ":43121",
-              `:${address.port}`
+              `:${port}`
             )
           );
           const { fs, root } = yield* fixture;
@@ -253,7 +241,7 @@ describe("owned signed acceptance runtime", () => {
             _tag: "AcceptanceRuntimeError",
             message: expect.stringContaining("occupied"),
           });
-          expect(listener.listening).toBe(true);
+          expect(yield* isPortOccupied(port)).toBe(true);
           expect(yield* readLocalRuntime(root)).toEqual(runtime);
           expect(yield* fs.exists(`${runtime.directory}/using`)).toBe(false);
         }).pipe(Effect.provide(nodeServicesLayer))

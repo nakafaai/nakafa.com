@@ -27,14 +27,13 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
-import { format } from "date-fns";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
-import { getLocale } from "@/lib/i18n/date";
+import { formatMoment } from "@/lib/i18n/date";
 
 type HistoryQuery = typeof tryouts.queries.history.bySet;
 type HistoryIdentity = Omit<Ref.Args<HistoryQuery>, "paginationOpts">;
@@ -118,9 +117,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
     label: tTryouts("attempt-select-label", {
       number: attempt.attemptNumber,
     }),
-    subtitle: format(attempt.startedAt, "PPp", {
-      locale: getLocale(value.locale),
-    }),
+    subtitle: formatMoment(attempt.startedAt, value.locale),
   }));
   const attemptGroups = [
     {

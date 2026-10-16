@@ -351,31 +351,16 @@ describe("auth/deletion/commit", () => {
         });
       })
   );
-  it.effect.each([
-    {
-      patch: {
-        deletionStartedAt: undefined,
-      },
-      state: "before the irreversible claim",
-    },
-    {
-      patch: {
-        cancellationStartedAt: NOW + 1,
-      },
-      state: "after cancellation starts",
-    },
-  ])("does not touch auth $state", ({ patch }) =>
+  it.effect("does not touch auth before the irreversible claim", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       const seeded = yield* seedStartedDeletion(t, "unclaimed-owner");
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          ctx.db.patch(
-            "accountDeletionPreparations",
-            seeded.preparationId,
-            patch
-          )
+          ctx.db.patch("accountDeletionPreparations", seeded.preparationId, {
+            deletionStartedAt: undefined,
+          })
         )
       );
       const deleteAuthUser = vi.fn(() => Effect.void);

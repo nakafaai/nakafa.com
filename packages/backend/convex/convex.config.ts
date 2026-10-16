@@ -31,8 +31,9 @@ const app = defineApp({
     POSTHOG_HOST: v.string(),
     POSTHOG_PROJECT_ID: v.string(),
     POSTHOG_PROJECT_TOKEN: v.string(),
-    // Root keys that wrap each learner's vault key. Convex refuses a push to a
-    // deployment that lacks them, because nothing sealed could be read there.
+    // Root keys that wrap each learner's vault key and each school's key.
+    // Convex refuses a push to a deployment that lacks them, because nothing
+    // sealed could be read there.
     VAULT_ROOT_KEYS: v.string(),
   },
 });
@@ -49,8 +50,6 @@ app.use(posthog, {
 });
 
 app.use(aggregate, { name: "globalLeaderboard" });
-app.use(aggregate, { name: "forumPostsBySequence" });
-app.use(aggregate, { name: "forumPostsByAuthorSequence" });
 app.use(aggregate, { name: "learningPopularityRankings" });
 
 export default app;

@@ -5,12 +5,13 @@ import accountConsents from "./tables/accountConsents";
 import accountDeletionAttemptCancellations from "./tables/accountDeletionAttemptCancellations";
 import accountDeletionPreparations from "./tables/accountDeletionPreparations";
 import accountDeletionReceipts from "./tables/accountDeletionReceipts";
-import accountDeletionSchoolTransfers from "./tables/accountDeletionSchoolTransfers";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
+import classTeachers from "./tables/classTeachers";
+import classes from "./tables/classes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
@@ -56,31 +57,22 @@ import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
 import onboardingProfiles from "./tables/onboardingProfiles";
+import operators from "./tables/operators";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
-import schoolActivityLogs from "./tables/schoolActivityLogs";
-import schoolClassForumPendingUploads from "./tables/schoolClassForumPendingUploads";
-import schoolClassForumPostAttachments from "./tables/schoolClassForumPostAttachments";
-import schoolClassForumPostReactions from "./tables/schoolClassForumPostReactions";
-import schoolClassForumPosts from "./tables/schoolClassForumPosts";
-import schoolClassForumReactions from "./tables/schoolClassForumReactions";
-import schoolClassForumReadStates from "./tables/schoolClassForumReadStates";
-import schoolClassForums from "./tables/schoolClassForums";
-import schoolClassInviteCodes from "./tables/schoolClassInviteCodes";
-import schoolClassMaterialGroups from "./tables/schoolClassMaterialGroups";
-import schoolClassMembers from "./tables/schoolClassMembers";
-import schoolClasses from "./tables/schoolClasses";
-import schoolInviteCodes from "./tables/schoolInviteCodes";
-import schoolMembers from "./tables/schoolMembers";
-import schools from "./tables/schools";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantCohortMembers from "./tables/tenantCohortMembers";
+import tenantCohorts from "./tables/tenantCohorts";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
+import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
+import tenantPeriods from "./tables/tenantPeriods";
 import tenantUnits from "./tables/tenantUnits";
+import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
 import tryoutAttemptPlacements from "./tables/tryoutAttemptPlacements";
 import tryoutAttempts from "./tables/tryoutAttempts";
@@ -102,12 +94,13 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly accountDeletionAttemptCancellations: typeof accountDeletionAttemptCancellations;
   readonly accountDeletionPreparations: typeof accountDeletionPreparations;
   readonly accountDeletionReceipts: typeof accountDeletionReceipts;
-  readonly accountDeletionSchoolTransfers: typeof accountDeletionSchoolTransfers;
   readonly articleBuckets: typeof articleBuckets;
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
   readonly chatShares: typeof chatShares;
   readonly chats: typeof chats;
+  readonly classTeachers: typeof classTeachers;
+  readonly classes: typeof classes;
   readonly commentVotes: typeof commentVotes;
   readonly comments: typeof comments;
   readonly contentAnalyticsPartitions: typeof contentAnalyticsPartitions;
@@ -153,31 +146,22 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
   readonly onboardingProfiles: typeof onboardingProfiles;
+  readonly operators: typeof operators;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
   readonly quranRows: typeof quranRows;
   readonly quranSearch: typeof quranSearch;
-  readonly schoolActivityLogs: typeof schoolActivityLogs;
-  readonly schoolClassForumPendingUploads: typeof schoolClassForumPendingUploads;
-  readonly schoolClassForumPostAttachments: typeof schoolClassForumPostAttachments;
-  readonly schoolClassForumPostReactions: typeof schoolClassForumPostReactions;
-  readonly schoolClassForumPosts: typeof schoolClassForumPosts;
-  readonly schoolClassForumReactions: typeof schoolClassForumReactions;
-  readonly schoolClassForumReadStates: typeof schoolClassForumReadStates;
-  readonly schoolClassForums: typeof schoolClassForums;
-  readonly schoolClassInviteCodes: typeof schoolClassInviteCodes;
-  readonly schoolClassMaterialGroups: typeof schoolClassMaterialGroups;
-  readonly schoolClassMembers: typeof schoolClassMembers;
-  readonly schoolClasses: typeof schoolClasses;
-  readonly schoolInviteCodes: typeof schoolInviteCodes;
-  readonly schoolMembers: typeof schoolMembers;
-  readonly schools: typeof schools;
   readonly snapshotBatches: typeof snapshotBatches;
   readonly subscriptions: typeof subscriptions;
+  readonly tenantCohortMembers: typeof tenantCohortMembers;
+  readonly tenantCohorts: typeof tenantCohorts;
   readonly tenantGrants: typeof tenantGrants;
   readonly tenantInvites: typeof tenantInvites;
+  readonly tenantKeys: typeof tenantKeys;
   readonly tenantPeople: typeof tenantPeople;
+  readonly tenantPeriods: typeof tenantPeriods;
   readonly tenantUnits: typeof tenantUnits;
+  readonly tenantVisits: typeof tenantVisits;
   readonly tenants: typeof tenants;
   readonly tryoutAttemptPlacements: typeof tryoutAttemptPlacements;
   readonly tryoutAttempts: typeof tryoutAttempts;
@@ -198,12 +182,13 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   accountDeletionAttemptCancellations,
   accountDeletionPreparations,
   accountDeletionReceipts,
-  accountDeletionSchoolTransfers,
   articleBuckets,
   articleCatalog,
   articleCategories,
   chatShares,
   chats,
+  classTeachers,
+  classes,
   commentVotes,
   comments,
   contentAnalyticsPartitions,
@@ -249,31 +234,22 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   ninaTurns,
   ninaUploads,
   onboardingProfiles,
+  operators,
   programBuckets,
   programCatalog,
   quranRows,
   quranSearch,
-  schoolActivityLogs,
-  schoolClassForumPendingUploads,
-  schoolClassForumPostAttachments,
-  schoolClassForumPostReactions,
-  schoolClassForumPosts,
-  schoolClassForumReactions,
-  schoolClassForumReadStates,
-  schoolClassForums,
-  schoolClassInviteCodes,
-  schoolClassMaterialGroups,
-  schoolClassMembers,
-  schoolClasses,
-  schoolInviteCodes,
-  schoolMembers,
-  schools,
   snapshotBatches,
   subscriptions,
+  tenantCohortMembers,
+  tenantCohorts,
   tenantGrants,
   tenantInvites,
+  tenantKeys,
   tenantPeople,
+  tenantPeriods,
   tenantUnits,
+  tenantVisits,
   tenants,
   tryoutAttemptPlacements,
   tryoutAttempts,

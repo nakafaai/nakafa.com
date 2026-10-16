@@ -4,7 +4,6 @@ import { countTextTokens } from "@repo/backend/confect/nina/budget";
 import type { NinaContextPack } from "@repo/backend/confect/nina/contract/pack";
 import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
 import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
-import { oldPage } from "@repo/backend/test/nina/legacy";
 import { Array as Arr } from "effect";
 
 const url = "https://nakafa.com/id/materi/matematika/integral/jumlahan-riemann";
@@ -49,18 +48,6 @@ describe("formatTurnContext", () => {
     expect(
       Arr.every(context.split("\n"), (line) => !line.startsWith("      "))
     ).toBe(true);
-  });
-
-  it("reads the page of a turn stored in the old shape as it reads the page of a turn written now", () => {
-    for (const pinned of [false, true]) {
-      expect(
-        formatTurnContext({
-          page: oldPage(page, { pinned }),
-          runtime,
-          user: {},
-        })
-      ).toBe(formatTurnContext({ page, runtime, user: {} }));
-    }
   });
 
   it("names the page once, in the context pack, and not again as the current page", () => {
@@ -121,8 +108,10 @@ describe("formatTurnContext", () => {
       },
     });
 
-    // This block weighs 265 tokens by the shared tokenizer, and it travels with every learner message.
-    expect(countTextTokens(context)).toBeLessThan(300);
+    // This block weighs 489 tokens by the estimator of 14 October 2026 (265 by the
+    // old tokenizer), and it travels with every learner message: the bound is the
+    // next 500.
+    expect(countTextTokens(context)).toBeLessThanOrEqual(500);
   });
 
   it("follows the runtime facts with the memories the turn recalls, and adds nothing without them", () => {

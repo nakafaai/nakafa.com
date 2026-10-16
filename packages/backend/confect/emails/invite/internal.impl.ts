@@ -22,9 +22,10 @@ const enqueueRendered = FunctionImpl.make(
   "enqueueRendered",
   Effect.fn("emails.invite.internal.enqueueRendered")(function* ({
     inviteId,
+    requestedAt,
     ...message
   }) {
-    return yield* enqueueRenderedInviteProgram(inviteId, message);
+    return yield* enqueueRenderedInviteProgram(inviteId, requestedAt, message);
   })
 );
 

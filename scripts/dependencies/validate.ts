@@ -10,8 +10,8 @@ import {
   DEPENDENCY_HOLDS,
   EFFECT_COHORT_OVERRIDES,
   EFFECT_COHORT_VERSION,
-  FORBIDDEN_EFFECT_DEPENDENCIES,
   NODE_RUNTIME_VERSION,
+  OBSOLETE_DEPENDENCIES,
   PACKAGE_MANAGER,
   SCRIPT_DEPENDENCY_HOLDS,
   VITEST_COHORT_VERSION,
@@ -144,12 +144,14 @@ export function validateDependencyPolicy({
   );
   return Arr.flatten([
     declarationProblems(manifests),
-    Arr.flatMap(FORBIDDEN_EFFECT_DEPENDENCIES, (dependency) =>
-      Arr.map(
-        dependencyDeclarations(manifests, dependency),
-        (declaration) =>
-          `${declaration.manifestPath} retains obsolete Effect dependency ${dependency}.`
-      )
+    Arr.flatMap(
+      Rec.toEntries(OBSOLETE_DEPENDENCIES),
+      ([dependency, replacement]) =>
+        Arr.map(
+          dependencyDeclarations(manifests, dependency),
+          (declaration) =>
+            `${declaration.manifestPath} declares the obsolete dependency ${dependency}; use ${replacement}.`
+        )
     ),
     Arr.flatMap(SCRIPT_DEPENDENCY_HOLDS, (hold) => {
       const manifest = Option.getOrUndefined(

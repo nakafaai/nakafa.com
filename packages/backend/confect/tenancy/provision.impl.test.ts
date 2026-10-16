@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -8,6 +8,8 @@ import {
 import type { Contract } from "@repo/backend/confect/tenancy/contract";
 import type { UnitDraft } from "@repo/backend/confect/tenancy/provision.spec";
 import { Email, Npsn, UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
+import { readTenantKeys } from "@repo/backend/confect/vault/keys";
+import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { workflow } from "@repo/backend/confect/workflow";
 import { open as registeredOpen } from "@repo/backend/convex/tenancy/provision";
 import {
@@ -15,7 +17,7 @@ import {
   slugOf,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Exit, Schema } from "effect";
 
 const open = refs.internal.tenancy.provision.open;
 const holdersSchedule = refs.internal.tenancy.holders.schedule;
@@ -29,6 +31,7 @@ const contract: typeof Contract.Type = {
 };
 const address = Schema.decodeSync(Email)("kepala@harapan.example.test");
 const stranger = Schema.decodeSync(Email)("lain@harapan.example.test");
+const nameField = { field: "name", table: "tenantPeople" };
 const sma: typeof UnitDraft.Type = {
   contentLanguage: "id",
   level: "sma",
@@ -70,6 +73,10 @@ const counts = Effect.gen(function* () {
       .table("tenantInvites")
       .index("by_creation_time")
       .take(500)).length,
+    keys: (yield* reader
+      .table("tenantKeys")
+      .index("by_creation_time")
+      .take(500)).length,
     people: (yield* reader
       .table("tenantPeople")
       .index("by_creation_time")
@@ -88,6 +95,10 @@ const counts = Effect.gen(function* () {
 /** Fake timers keep the claim run and the invitation workflow from starting before the test looks at them. */
 beforeEach(() => {
   vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("tenancy/provision open", () => {
@@ -222,6 +233,41 @@ describe("tenancy/provision open", () => {
             subject: owner,
           },
         ]);
+      })
+  );
+
+  it.effect(
+    "gives the school a key of its own, written in the same transaction",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const opened = yield* fixture.internal.mutation(
+          open,
+          request("harapan", [sma, smp])
+        );
+        const text = yield* fixture.run(
+          Effect.gen(function* () {
+            const keys = yield* readTenantKeys(opened.tenant);
+            const sealed = yield* sealText(keys, nameField, "Kepala Yayasan");
+            return yield* openText(keys, nameField, sealed);
+          })
+        );
+        expect(text).toBe("Kepala Yayasan");
+      })
+  );
+
+  it.effect(
+    "opens no school and writes no key while the root keys are missing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const before = yield* fixture.run(counts);
+        vi.stubEnv("VAULT_ROOT_KEYS", "");
+        const exit = yield* Effect.exit(
+          fixture.internal.mutation(open, request("harapan", [sma]))
+        );
+        expect(Exit.hasDies(exit)).toBe(true);
+        expect(yield* fixture.run(counts)).toEqual(before);
       })
   );
 

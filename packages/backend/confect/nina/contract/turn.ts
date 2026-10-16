@@ -3,76 +3,24 @@ import {
   type AgentContext,
   AgentCurriculumPreferenceSchema,
 } from "@repo/backend/confect/nina/contract/agent";
-import {
-  NinaContextPackSchema,
-  NinaLearningContextSchema,
-  NinaToolContextSchema,
-} from "@repo/backend/confect/nina/contract/pack";
+import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";
 import { cleanSlug } from "@repo/utilities/slug";
-import { Effect, Schema, Struct } from "effect";
+import { Schema, Struct } from "effect";
 
 /**
  * Verified learning page state consumed by one Nina turn. Its address and signed
  * state are `nina.learning.url` and `nina.learning.verified`, and nowhere else.
  */
-const NinaPageSchema = Schema.Struct({
+export const NinaPageSchema = Schema.Struct({
   locale: LocaleSchema,
   needsFetch: Schema.Boolean,
   nina: NinaContextPackSchema,
   slug: Schema.String,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-/**
- * What turns stored before the change hold beside the shape a turn is written
- * with now: a copy of their context (`snapshot`) and a marker of a switch of
- * context (`transition`), in their pack and, for the oldest turns, on the turn
- * itself. Each is an object whose members nothing reads, and no turn is written
- * with one, so the members stay untyped. Confect 10.1.0 gives the table no
- * validator type for a field typed `unknown`, nor for a copy typed in full: it
- * has the shape of a pack, so the check for recursive schemas reads the pack as
- * a cycle.
- */
-const NinaLegacyField = Schema.optionalKey(
-  Schema.Record(Schema.String, Schema.Any)
-);
-/**
- * The pack as the table admits it: the pack of a turn written now, and beside
- * it the fields that older packs hold.
- */
-const NinaStoredPackSchema = NinaContextPackSchema.mapFields((fields) => ({
-  ...fields,
-  learning: Schema.mutableKey(
-    NinaLearningContextSchema.mapFields((learning) => ({
-      ...learning,
-      contentId: Schema.optionalKey(Schema.String),
-    }))
-  ),
-  snapshot: NinaLegacyField,
-  tools: Schema.mutableKey(
-    NinaToolContextSchema.mapFields((tools) => ({
-      ...tools,
-      allowDeepResearch: Schema.optionalKey(Schema.Boolean),
-      allowMath: Schema.optionalKey(Schema.Boolean),
-      allowNakafa: Schema.optionalKey(Schema.Boolean),
-    }))
-  ),
-  transition: NinaLegacyField,
-}));
-/**
- * The page as the table admits it: the page of a turn written now, and beside
- * it the fields that older pages hold. It is step one of the change that stores
- * only what a turn's readers use, and ADR 0001 owns the list of those fields,
- * the rollout, the exit and the cleanup.
- */
-export const NinaStoredPageSchema = NinaPageSchema.mapFields((fields) => ({
-  ...fields,
-  nina: Schema.mutableKey(NinaStoredPackSchema),
-  url: Schema.optionalKey(Schema.String),
-  verified: Schema.optionalKey(Schema.Boolean),
-}));
 /** Runtime facts that are stable for one Nina turn. */
 const NinaRuntimeSchema = Schema.Struct({
   currentDate: Schema.String,
@@ -186,11 +134,8 @@ export const NinaTurnFacts = Schema.Struct({
   requestId: Schema.optionalKey(NinaRequestId),
   fingerprint: Schema.optionalKey(Schema.String),
   transactionId: Schema.optionalKey(Id("creditTransactions")),
-  page: Schema.optionalKey(NinaStoredPageSchema),
+  page: Schema.optionalKey(NinaPageSchema),
   user: Schema.optionalKey(NinaUserSchema),
-  /** The oldest turns hold these two beside their page. See `NinaLegacyField`. */
-  snapshot: NinaLegacyField,
-  transition: NinaLegacyField,
   tokens: Schema.optionalKey(
     Schema.Struct({
       input: Schema.optionalKey(Schema.Finite),
@@ -239,17 +184,6 @@ export function readerTurn(
 export type NinaPage = typeof NinaPageSchema.Type;
 export type NinaRuntime = typeof NinaRuntimeSchema.Type;
 export type NinaUser = typeof NinaUserSchema.Type;
-/**
- * The page of a stored turn as a turn is written now: decoding leaves out the
- * keys the page schema does not declare. A retry copies the page of the turn it
- * asks again through this, so a new turn never holds what only older turns do,
- * and the rewrite takes every stored page through it. Step two deletes it.
- */
-export const dropLegacyPage = Effect.fn("nina.turn.dropLegacyPage")(function* (
-  page: typeof NinaStoredPageSchema.Type
-) {
-  return yield* Schema.decodeEffect(NinaPageSchema)(page).pipe(Effect.orDie);
-});
 /** Returns the immutable learning page that should drive one Nina turn. */
 export function readNinaLearningPage(page: NinaPage) {
   const learning = page.nina.learning;

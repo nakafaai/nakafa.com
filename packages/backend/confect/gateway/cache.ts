@@ -1,3 +1,4 @@
+import { languageModel } from "@repo/backend/confect/gateway/model";
 import type { LanguageModelMiddleware } from "ai";
 import { Array as Arr, Option } from "effect";
 
@@ -7,10 +8,11 @@ type Prompt = Parameters<
 type Message = Prompt[number];
 
 /**
- * The marker the gateway reads. Its adapter spreads `openaiCompatible` options
- * onto the request message or content part that carries them.
+ * The marker the gateway reads, from the language model profile. Its adapter
+ * spreads `openaiCompatible` options onto the request message or content part
+ * that carries them.
  */
-const marker = { cache_control: { type: "ephemeral" } };
+const marker = languageModel.cache.marker;
 
 /** Adds the marker to whatever provider options a message or part already has. */
 function marked<Options extends Message["providerOptions"]>(options: Options) {
@@ -67,11 +69,9 @@ function markCachedPrefix(prompt: Prompt): Prompt {
 }
 
 /**
- * Asks the gateway to cache the prompt prefix. The Convex AI gateway caches
- * nothing without a marker: measured on 10 October 2026, a repeated prefix of
- * 53,624 tokens read zero cached tokens, and one marker made a repeat of 5,904
- * tokens read 5,894 from the cache. The provider keeps a prefix for about five
- * minutes and ignores one below about 4,000 tokens.
+ * Asks the gateway to cache the prompt prefix. The gateway caches nothing
+ * without the marker, and the measurements behind the marker and the smallest
+ * cached prefix are in the language model profile.
  */
 export const cachedPrefix: LanguageModelMiddleware = {
   specificationVersion: "v4",

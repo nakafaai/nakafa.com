@@ -28,8 +28,10 @@ export class AccessDenied extends Schema.TaggedError<AccessDenied>()(
  * A grant the caller may manage but the tenant's invariants refuse:
  * `GRANT_ROLE` a role no person may assign, `GRANT_SCOPE` an Owner outside
  * tenant scope, `GRANT_LIMIT` too many grants, `PERSON_INACTIVE` an ended
- * Person, `PERSON_KIND` an operator Person (visits are the only operator
- * grants), `LAST_OWNER` removing the tenant's last claimed Owner.
+ * Person, `PERSON_KIND` a Person of the wrong kind for the grant's term (an
+ * operator holds only temporary visit grants), `TEMPORARY_ROLE` an Owner or
+ * Admin role on a temporary grant, `LAST_OWNER` removing the tenant's last
+ * claimed Owner.
  */
 export class GrantRejected extends Schema.TaggedError<GrantRejected>()(
   "GrantRejected",
@@ -40,8 +42,23 @@ export class GrantRejected extends Schema.TaggedError<GrantRejected>()(
       "GRANT_LIMIT",
       "PERSON_INACTIVE",
       "PERSON_KIND",
+      "TEMPORARY_ROLE",
       "LAST_OWNER",
     ]),
     message: Schema.String,
   }
 ) {}
+
+/** A Person that is not active, refused the same way by a standing and a temporary grant. */
+export const inactivePerson = () =>
+  new GrantRejected({
+    code: "PERSON_INACTIVE",
+    message: "This person is not active.",
+  });
+
+/** An integration is not a person, so no Person holds the integration role. */
+export const integrationRole = () =>
+  new GrantRejected({
+    code: "GRANT_ROLE",
+    message: "Integrations are not people.",
+  });

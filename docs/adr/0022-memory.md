@@ -92,9 +92,9 @@ the learner can read, edit and delete every one. After a complete turn:
    call reads the learner's message and the at most 12 memories that match the
    message and the open page best, found by search. They are listed best first,
    each with its place on the list (`- [1] (level) Kelas 12.`) and at most its
-   first 240 characters, and the list stays within a token budget, so a list
-   that does not fit loses its last memories, which the model cannot name. A
-   candidate that restates one of them names it by its place, as a whole
+   first 240 characters. The list never holds more than those 12 memories, and
+   no budget cuts it, so the model can name every memory it shows. A candidate
+   that restates one of them names it by its place, as a whole
    number; a candidate that is new, or that corrects a memory, names none. Its
    usage is recorded as agent `memory` in the turn's ledger.
 3. The check turns each claim of the capture model into a candidate, and keeps
@@ -178,10 +178,10 @@ below. A memory is one line wherever a prompt carries it. Its whitespace is
 collapsed, so the Markdown of a memory can never open a new section of the
 prompt, and its angle brackets are written as `&lt;` and `&gt;`, so a memory can
 never close the block it sits in. The capture call reads each memory with its
-id, as `- [id] (kind) Title: words`, but only the first 240 characters of the
-title and words together, counted by code point so that a cut never leaves half
-of an emoji, followed by `...` when they are longer, so its prompt stays small
-whatever a learner keeps.
+place on the list, counted from 1, as `- [1] (kind) Title: words`, but only the
+first 240 characters of the title and words together, counted by code point so
+that a cut never leaves half of an emoji, followed by `...` when they are
+longer, so its prompt stays small whatever a learner keeps.
 
 ## Three Ways To Read Memory
 
@@ -192,21 +192,24 @@ of the first calls a model, in the background:
 
 | Way | Where it sits | Tokens at its bound | Typical learner | Documents it reads | Model calls |
 | --- | --- | --- | --- | --- | --- |
-| Portrait | The Learner section of the system prompt, after the account facts | 300, and 348 with its block | 154 to 171 | 2 | None in the turn |
-| Recall | A list in the text part in front of the learner's message | 700, and 757 with its block | 110 to 144 | 435 at most | None |
-| Memory capability | The answer to a tool call Nina makes, only when she makes it | 1,500, and 1,555 with its block | 89 to 142 a call | 405 at most for one call | None |
+| Portrait | The Learner section of the system prompt, after the account facts | 1,000, plus its block | 154 to 171 (former tokenizer) | 2 | None in the turn |
+| Recall | A list in the text part in front of the learner's message | 1,500, plus its block | 110 to 144 (former tokenizer) | 435 at most | None |
+| Memory capability | The answer to a tool call Nina makes, only when she makes it | 3,000, plus its block | 89 to 142 a call (former tokenizer) | 405 at most for one call | None |
 
-The tokens are counted with the tokenizer behind every Nina budget
-(`gpt-tokenizer`). A bound cuts the memories' text, and the block around it,
-which is a heading, one sentence that names it as data and its tags, adds 48,
-57 and 55 tokens. A typical learner is a portrait of 500 characters and three
-to five one-sentence memories, measured on 12 October 2026 in Indonesian and
-English. A portrait of 1,200 characters, the most the build may write, measures
-249 to 292 tokens, so the character limit and the token bound agree for
-ordinary text, and the cut only guards against odd text. Offering the tool costs
-416 tokens in every turn while memory is on, whether or not Nina calls it: 191
-for its paragraphs of the tool policy and 225 for its definition. The other
-three tools cost 388, 392 and 362 tokens as definitions.
+The bounds are counted by the estimator of `confect/nina/budget.ts`, whose costs
+live in the language model profile. The figures without a current count were
+measured with the former tokenizer (`gpt-tokenizer`), before the model change of
+14 October 2026, and they have not been counted again. A bound cuts the
+memories' text, and the block around it, which is a heading, one sentence that
+names it as data and its tags, adds 48, 57 and 55 tokens. A typical learner is a portrait of 500 characters
+and three to five one-sentence memories, measured on 12 October 2026 in
+Indonesian and English. A portrait of 1,200 characters, the most the build may
+write, measured 249 to 292 tokens with the former tokenizer, so the character
+limit and the token bound agree for ordinary text, and the cut only guards
+against odd text. Offering the tool cost 416 tokens in every turn while memory
+was on, whether or not Nina called it: 191 for its paragraphs of the tool policy
+and 225 for its definition, with the former tokenizer. The other three tools cost
+388, 392 and 362 tokens as definitions, with the former tokenizer.
 
 The documents of the portrait are its row and the learner's key. Recall is one
 search (410 at most: one memory to know there is one, the key, 16 keys of 24

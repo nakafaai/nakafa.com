@@ -3,6 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
 import {
+  type PlayerModeParam,
+  readPlayerModeParam,
+} from "@/components/player/mode";
+import { readPlayerMode } from "@/components/player/server";
+import {
   createRetainedTryoutMetadata,
   generateTryoutRouteMetadata,
 } from "@/components/tryout/catalog/metadata";
@@ -75,8 +80,12 @@ export async function generateMetadata({
   searchParams,
 }: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
-  const capability = readTryoutRouteAttemptCapability(await searchParams);
-  if (capability.kind === "invalid") {
+  const query = await searchParams;
+  const capability = readTryoutRouteAttemptCapability(query);
+  if (
+    capability.kind === "invalid" ||
+    readPlayerModeParam(query).kind === "invalid"
+  ) {
     notFound();
   }
   const locale = getLocaleOrThrow(localeParam);
@@ -125,8 +134,10 @@ export default async function Page({
   searchParams,
 }: TryoutSetPageProps) {
   const { country, exam, locale: localeParam, set, track } = await params;
-  const capability = readTryoutRouteAttemptCapability(await searchParams);
-  if (capability.kind === "invalid") {
+  const query = await searchParams;
+  const capability = readTryoutRouteAttemptCapability(query);
+  const view = readPlayerModeParam(query);
+  if (capability.kind === "invalid" || view.kind === "invalid") {
     notFound();
   }
   const route = {
@@ -143,6 +154,7 @@ export default async function Page({
         attemptId={capability.attemptId}
         route={route}
         setPath={setPath}
+        view={view}
       />
     );
   }
@@ -157,7 +169,7 @@ export default async function Page({
 
   return (
     <Suspense fallback={<TryoutSetPending locale={route.locale} page={page} />}>
-      <CurrentTryoutSet page={page} route={route} />
+      <CurrentTryoutSet page={page} route={route} view={view} />
     </Suspense>
   );
 }
@@ -171,9 +183,11 @@ export default async function Page({
 async function CurrentTryoutSet({
   page,
   route,
+  view,
 }: {
   page: SetPage;
   route: TryoutSetRoute;
+  view: PlayerModeParam;
 }) {
   const token = await getToken();
   const attemptPage = token
@@ -194,6 +208,7 @@ async function CurrentTryoutSet({
         page={attemptPage.page}
         restartTarget={attemptPage.restartTarget}
         route={route}
+        view={view}
       />
     );
   }
@@ -208,6 +223,7 @@ async function CurrentTryoutSet({
           : createTryoutSetRestartTarget(page)
       }
       route={route}
+      view={view}
     />
   );
 }
@@ -217,10 +233,12 @@ async function RetainedTryoutSet({
   attemptId,
   route,
   setPath,
+  view,
 }: {
   attemptId: string;
   route: TryoutSetRoute;
   setPath: string;
+  view: PlayerModeParam;
 }) {
   const retained = await readRetainedSetPage(route.locale, setPath, attemptId);
   if (Option.isNone(retained)) {
@@ -237,6 +255,7 @@ async function RetainedTryoutSet({
       page={attemptPage.page}
       restartTarget={attemptPage.restartTarget}
       route={route}
+      view={view}
     />
   );
 }
@@ -247,11 +266,13 @@ async function ResolvedTryoutSet({
   page,
   restartTarget,
   route,
+  view,
 }: {
   attemptPage: SetAttemptPage;
   page: SetPage;
   restartTarget: TryoutSetRestartTarget | null;
   route: TryoutSetRoute;
+  view: PlayerModeParam;
 }) {
   const initialNow = await Effect.runPromise(Clock.currentTimeMillis);
 
@@ -267,19 +288,19 @@ async function ResolvedTryoutSet({
     attemptPage.initialState.attempt.status !== "in-progress"
       ? attemptPage.initialState.runtime
       : null;
+  const binding = attemptPage
+    ? {
+        attemptId: attemptPage.attemptId,
+        initialState: attemptPage.initialState,
+        mode: await readPlayerMode(view),
+        sectionRoutes: attemptPage.page.sections,
+      }
+    : null;
 
   return (
     <TryoutClockProvider initialNow={initialNow}>
       <TryoutSetPageClient
-        binding={
-          attemptPage
-            ? {
-                attemptId: attemptPage.attemptId,
-                initialState: attemptPage.initialState,
-                sectionRoutes: attemptPage.page.sections,
-              }
-            : null
-        }
+        binding={binding}
         content={reviewRuntime ? null : signedContent}
         page={page}
         restartTarget={restartTarget}

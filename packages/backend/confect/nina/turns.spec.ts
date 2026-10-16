@@ -14,10 +14,10 @@ import {
   NinaCancelledState,
   NinaCompleteState,
   NinaFailedState,
+  NinaPageSchema,
   NinaQueuedState,
   NinaRequestId,
   NinaRunningState,
-  NinaStoredPageSchema,
   NinaTurnFacts,
   NinaUserSchema,
 } from "@repo/backend/confect/nina/contract/turn";
@@ -70,7 +70,7 @@ const NinaActiveTurn = Schema.Struct({
   phase: Schema.Literal("active"),
   requestId: NinaRequestId,
   fingerprint: Schema.String,
-  page: NinaStoredPageSchema,
+  page: NinaPageSchema,
   user: NinaUserSchema,
   state: Schema.Union([NinaQueuedState, NinaRunningState]),
   cancelRequestedAt: Schema.optionalKey(Schema.Finite),
@@ -93,6 +93,7 @@ export class NinaTurnError extends Schema.TaggedError<NinaTurnError>()(
       "NINA_REQUEST_CONFLICT",
       "NINA_WRITE_FAILED",
       "NINA_CONTEXT_FAILED",
+      "NINA_MESSAGE_SIZE",
     ]),
     message: Schema.String,
   }

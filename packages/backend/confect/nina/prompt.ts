@@ -7,13 +7,11 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   consumeAttachments,
+  requirePromptLimit,
   requireStoredDocumentLimit,
 } from "@repo/backend/confect/nina/attachments";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import {
-  dropLegacyPage,
-  type NinaPage,
-} from "@repo/backend/confect/nina/contract/turn";
+import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
 import {
   type NinaInput,
   type NinaPageInput,
@@ -51,7 +49,8 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     const context = yield* resolveNinaContext(input.page, user, chat?._id);
     const attachments = yield* consumeAttachments(
       user._id,
-      input.prompt.uploadIds ?? []
+      input.prompt.uploadIds ?? [],
+      input.prompt.text
     );
     return {
       ...context,
@@ -106,12 +105,12 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
   });
   const fileIds = stored.fileIds ?? [];
   yield* requireStoredDocumentLimit(fileIds);
+  // A message stored before the limit existed can cost more than a turn carries.
+  yield* requirePromptLimit(message);
   const retryOf = original.retryOf ?? original.order;
-  // A turn stored before the shape change holds fields that no new turn does, so
-  // the page is copied through `dropLegacyPage`, whichever shape it was stored in.
   const asked =
     original.page && original.user
-      ? { page: yield* dropLegacyPage(original.page), user: original.user }
+      ? { page: original.page, user: original.user }
       : undefined;
   if (asked && (!input.page || isAskedPage(asked.page, input.page))) {
     return { ...asked, fileIds, message, retryOf };
