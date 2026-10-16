@@ -9,14 +9,12 @@ import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   arrive,
+  LOCKED_SHELL,
   onPath,
   openHub,
   openTrack,
   setHref,
 } from "@/e2e/support/tryout";
-
-/** The shell's lock attribute, which the lock store sets once a page hydrates. */
-const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
 
 /** The article of every question the player has mounted, shown or not. */
 const ARTICLE = "article[data-player-key]";
@@ -191,6 +189,31 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     );
     // Late streamed content would still move the page, so let it settle.
     yield* Effect.sleep("750 millis");
+  }
+);
+
+/**
+ * Finishes the running section, then waits until the attempt's set shows again,
+ * still locked, so the server has stored the finish before the page moves on.
+ */
+export const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(
+  function* (page: Page, hasTouch: boolean) {
+    yield* activate(
+      page.getByRole("button", { exact: true, name: "Finish" }),
+      hasTouch
+    );
+    yield* activate(
+      page
+        .getByRole("dialog")
+        .getByRole("button", { exact: true, name: "Finish" }),
+      hasTouch
+    );
+    yield* arrive(
+      page,
+      (url) => onPath(setHref)(url) && url.searchParams.has("attemptId"),
+      page.locator(LOCKED_SHELL),
+      "attached"
+    );
   }
 );
 

@@ -5,6 +5,7 @@ import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate, visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { finishSection } from "@/e2e/support/player";
 import {
   expectStillShell,
   observeShell,
@@ -14,6 +15,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   arrive,
+  LOCKED_SHELL,
   onPath,
   openHub,
   openTrack,
@@ -21,9 +23,6 @@ import {
   trackHref,
 } from "@/e2e/support/tryout";
 import { tryoutViewports } from "@/e2e/support/viewport";
-
-/** The shell's lock attribute, which the lock store sets once a page hydrates. */
-const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
 
 /** Whether a pathname is the walked set. */
 const isSet = (pathname: string) => pathname === setHref;
@@ -140,20 +139,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   });
 
   // Finishing the section returns to the attempt's set, still locked.
-  yield* observeStep(
-    page,
-    [true],
-    Effect.gen(function* () {
-      yield* activate(finish, hasTouch);
-      yield* activate(
-        page
-          .getByRole("dialog")
-          .getByRole("button", { exact: true, name: "Finish" }),
-        hasTouch
-      );
-      yield* arriveLocked(page, isSet);
-    })
-  );
+  yield* observeStep(page, [true], finishSection(page, hasTouch));
 
   // The finished section links back to its own attempt's set, so going
   // there and back never passes the public set.

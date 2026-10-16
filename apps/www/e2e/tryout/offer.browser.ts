@@ -3,69 +3,38 @@ import app from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
 import { Array as Arr, Effect } from "effect";
-import { activate } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { runFirstSection } from "@/e2e/support/player";
+import { finishSection, runFirstSection } from "@/e2e/support/player";
+import { CARD } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { arrive, onPath, setHref } from "@/e2e/support/tryout";
 import { compactViewport } from "@/e2e/support/viewport";
-
-/** The shell's lock attribute, which the lock store sets once a page hydrates. */
-const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
 
 /** The English route prefix that the walked set's addresses start with. */
 const ENGLISH_PREFIX = /^\/en\//;
 
 /** The Pro offer's card: the card that holds the offer's heading. */
 const offerCard = (page: Page) =>
-  page
-    .locator('[data-slot="card"]')
-    .filter({ has: page.locator("#tryout-review-offer") });
-
-/**
- * Finishes the running section, then waits until the attempt's set shows again,
- * still locked, so the server has stored the finish before the page moves on.
- */
-const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(function* (
-  page: Page
-) {
-  yield* activate(
-    page.getByRole("button", { exact: true, name: "Finish" }),
-    false
-  );
-  yield* activate(
-    page
-      .getByRole("dialog")
-      .getByRole("button", { exact: true, name: "Finish" }),
-    false
-  );
-  yield* arrive(
-    page,
-    (url) => onPath(setHref)(url) && url.searchParams.has("attemptId"),
-    page.locator(LOCKED_SHELL),
-    "attached"
-  );
-});
+  page.locator(CARD).filter({ has: page.locator("#tryout-review-offer") });
 
 /** Measures each action of the offer's footer against its card and its own box. */
 const measureOfferActions = (page: Page) =>
   offerCard(page)
     .locator('[data-slot="card-footer"] a, [data-slot="card-footer"] button')
-    .evaluateAll((elements) =>
-      elements.map((element) => {
-        const card = element
-          .closest('[data-slot="card"]')
-          ?.getBoundingClientRect();
-        const box = element.getBoundingClientRect();
-        return {
-          clipped: element.scrollWidth > element.clientWidth,
-          inside:
-            card !== undefined &&
-            box.left >= card.left &&
-            box.right <= card.right,
-          label: element.textContent?.trim() ?? "",
-        };
-      })
+    .evaluateAll(
+      (elements, cardSelector) =>
+        elements.map((element) => {
+          const card = element.closest(cardSelector)?.getBoundingClientRect();
+          const box = element.getBoundingClientRect();
+          return {
+            clipped: element.scrollWidth > element.clientWidth,
+            inside:
+              card !== undefined &&
+              box.left >= card.left &&
+              box.right <= card.right,
+            label: element.textContent?.trim() ?? "",
+          };
+        }),
+      CARD
     );
 
 /**
@@ -77,7 +46,7 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
   function* (page: Page, baseURL: string) {
     yield* runFirstSection(page, false, baseURL);
     const section = new URL(page.url());
-    yield* finishSection(page);
+    yield* finishSection(page, false);
 
     section.pathname = section.pathname.replace(ENGLISH_PREFIX, "/id/");
     yield* Effect.promise(() =>
@@ -105,7 +74,7 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
     yield* Effect.sync(() => {
       expect(Arr.map(actions, ({ label }) => label)).toEqual([
         app.Tryouts["paywall-compare"],
-        app.Pricing["pro-cta"],
+        app.Tryouts["paywall-pro"],
       ]);
       for (const action of actions) {
         expect(action.inside).toBe(true);

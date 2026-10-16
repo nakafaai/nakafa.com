@@ -13,6 +13,9 @@ export const setHref = `${trackHref}/set-1`;
 const SECTION_HREF_PATTERN =
   /^\/en\/try-out\/indonesia\/snbt\/2027\/set-1\/[^/?]+(\?attemptId=[^&]+)?$/;
 
+/** The shell's lock attribute, which the lock store sets once a page hydrates. */
+export const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
+
 /** The first section link that the current set page shows. */
 export function sectionLink(page: Page) {
   return page

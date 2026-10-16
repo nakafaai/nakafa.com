@@ -295,6 +295,7 @@
     "paywall-title": "{count, plural, one {See the solution to this question} other {See the solutions to all # questions}}",
     "paywall-description": "Learn the steps and reasoning behind every answer, and ask Nina whenever something is unclear.",
     "paywall-compare": "Compare plans",
+    "paywall-pro": "Get Pro",
     "ask-nina-prompt": "Help me understand question {number}.",
     "start-error": "We could not start the tryout yet. Please try again.",
     "score-label-irt": "IRT score",
