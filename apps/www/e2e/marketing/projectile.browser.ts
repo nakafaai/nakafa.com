@@ -1,8 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import en from "@repo/internationalization/dictionaries/standalone/en.json" with {
+  type: "json",
+};
+import { Effect, MutableList } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { NEXT_CHUNK_PATH, openRoute } from "@/e2e/support/route";
+import {
+  abortChunkHolding,
+  NEXT_CHUNK_PATH,
+  openRoute,
+} from "@/e2e/support/route";
 import {
   readinessTimeoutMilliseconds,
   revealTimeoutMilliseconds,
@@ -18,6 +25,12 @@ const RETRY_NAME = "Retry";
 
 /** Matches an accessible name with text, so an empty live region does not count. */
 const NAMED_STATUS = /\S/;
+
+/**
+ * Text that only the particle field's code holds: the field paints its dots in
+ * these two colours. The field loads while the hero hydrates.
+ */
+const PARTICLES_MARKER = "oklch(0.985 0 0 / ";
 
 test("home page defers the projectile scene until the reader scrolls to it", async ({
   baseURL,
@@ -86,13 +99,35 @@ test("home page recovers the projectile scene after a failed load", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
+              // The particle field's code fails while the page hydrates. The hero must stay, and no error page may replace it.
+              const abortedParticles = yield* abortChunkHolding(
+                page,
+                PARTICLES_MARKER
+              );
               yield* openRoute(page, "/en", "denied");
               const scene = page.locator("#scene");
               const error = scene.getByRole("alert");
               const retry = error.getByRole("button", { name: RETRY_NAME });
 
-              // The page's own chunks load while it hydrates, so the failure starts once they are in.
+              // The page's own chunks load while it hydrates, so the scene's failure starts once they are in.
               yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+              yield* Effect.sync(() =>
+                expect(MutableList.toArray(abortedParticles)).not.toEqual([])
+              );
+              yield* Effect.promise(() =>
+                expect(
+                  page.getByRole("heading", { level: 1, name: en.Error.title })
+                ).toHaveCount(0)
+              );
+              yield* Effect.promise(() =>
+                expect(
+                  page.locator("#hero").getByRole("heading", { level: 1 })
+                ).toBeVisible()
+              );
+              yield* Effect.promise(() =>
+                expect(page.locator("#hero canvas")).toHaveCount(0)
+              );
+
               yield* Effect.promise(() =>
                 page.route(NEXT_CHUNK_PATH, (route) => route.abort("failed"))
               );
