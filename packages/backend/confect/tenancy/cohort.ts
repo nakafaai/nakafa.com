@@ -5,12 +5,15 @@ import { Schema } from "effect";
 /** Cohorts one period may hold, archived ones included. Every list of cohorts reads at most this many. */
 export const COHORT_LIMIT = 200;
 
+/** The most characters a cohort's name may have. */
+export const COHORT_NAME_MAX_LENGTH = 40;
+
 /** A cohort's name, one line, unique within its period without regard to case. */
 export const CohortName = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
   Schema.isMinLength(1),
-  Schema.isMaxLength(40)
+  Schema.isMaxLength(COHORT_NAME_MAX_LENGTH)
 );
 
 /** A cohort is active until it is archived, and an archived cohort stays readable. */

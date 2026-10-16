@@ -1,4 +1,3 @@
-import { parseEnv } from "node:util";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   callCustomerIntegrityQuery,
@@ -20,10 +19,6 @@ import {
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 
-vi.mock("node:util", async (original) => {
-  const actual = await original<typeof import("node:util")>();
-  return { ...actual, parseEnv: vi.fn(actual.parseEnv) };
-});
 vi.mock("convex/server", async (original) => {
   const actual = await original<typeof import("convex/server")>();
   return { ...actual, getFunctionName: vi.fn(actual.getFunctionName) };
@@ -180,28 +175,39 @@ describe("customer audit configuration", () => {
       )
   );
 
-  it.effect.each([new Error("invalid env"), "invalid env"])(
-    "reports an env parser failure as a configuration error: %s",
-    (failure) =>
-      Effect.gen(function* () {
-        vi.mocked(parseEnv).mockImplementationOnce(() => {
-          throw failure;
-        });
-        expect(
-          yield* loadCustomerEnvProvider().pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "CustomerConvexConfigError",
-          message: "invalid env",
-        });
-      }).pipe(
-        Effect.provide(
-          scriptedFiles({
-            exists: () => Effect.succeed(true),
-            readFile: () =>
-              Effect.succeed(fileBytes("CONVEX_URL=https://example.com")),
-          })
-        )
+  it.effect("reads the backend env file the way the Convex CLI writes it", () =>
+    Effect.gen(function* () {
+      for (const name of [
+        "CONVEX_DEPLOY_KEY",
+        "CONVEX_PROD_URL",
+        "CONVEX_URL",
+      ]) {
+        vi.stubEnv(name, "");
+      }
+      const provider = yield* loadCustomerEnvProvider();
+      const values = yield* Effect.all([
+        Config.String("CONVEX_DEPLOY_KEY"),
+        Config.String("CONVEX_PROD_URL"),
+        Config.String("CONVEX_URL"),
+      ]).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
+      expect(values).toEqual([
+        "dev-key",
+        "https://prod.example",
+        "https://dev.example",
+      ]);
+    }).pipe(
+      Effect.provide(
+        scriptedFiles({
+          exists: () => Effect.succeed(true),
+          readFile: () =>
+            Effect.succeed(
+              fileBytes(
+                "# Deployment used by `npx convex dev`\nCONVEX_DEPLOYMENT=dev:name # team: nakafa, project: web\nexport CONVEX_DEPLOY_KEY=\"dev-key\"\nCONVEX_PROD_URL='https://prod.example'\nCONVEX_URL=https://dev.example\n"
+              )
+            ),
+        })
       )
+    )
   );
 
   it.effect.each([false, true])(

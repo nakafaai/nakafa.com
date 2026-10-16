@@ -1,4 +1,3 @@
-import { parseEnv } from "node:util";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { FetchClient } from "@repo/utilities/http/client";
@@ -82,17 +81,12 @@ const readBackendEnv = Effect.fn("customers.readBackendEnv")(function* () {
     .exists(backendEnvPath)
     .pipe(Effect.orElseSucceed(() => false));
   if (!exists) {
-    return {};
+    return ConfigProvider.fromEnvRecord({});
   }
   const bytes = yield* fileSystem
     .readFile(backendEnvPath)
     .pipe(Effect.mapError(toConfigError));
-  const content = decodeUtf8(bytes);
-  const parsed = yield* Effect.try({
-    try: () => parseEnv(content),
-    catch: toConfigError,
-  });
-  return parsed;
+  return ConfigProvider.fromDotEnvContents(decodeUtf8(bytes));
 });
 /** Loads backend-local Convex configuration with shell variables taking priority. */
 export const loadCustomerEnvProvider = Effect.fn(
@@ -100,7 +94,7 @@ export const loadCustomerEnvProvider = Effect.fn(
 )(function* () {
   const shell = ConfigProvider.fromEnv();
   const backend = yield* readBackendEnv();
-  return ConfigProvider.orElse(shell, ConfigProvider.fromEnvRecord(backend));
+  return ConfigProvider.orElse(shell, backend);
 });
 const getConvexUrl = Effect.fn("customers.getConvexUrl")(function* (
   prod: boolean

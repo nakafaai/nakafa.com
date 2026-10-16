@@ -33,7 +33,8 @@ interface Props {
 
 /**
  * Shows a diagram in a frame whose size never depends on the diagram: the
- * preview scales the diagram to fit, and the dialog shows it at full width.
+ * preview scales the diagram to fit, and the dialog shows it at its natural
+ * size, so its labels keep the size the diagram gives them.
  */
 export function MermaidMdx({
   chart,
@@ -87,9 +88,9 @@ export function MermaidMdx({
         <DialogPanel>
           <Mermaid
             chart={renderableChart}
-            className="h-[60dvh] rounded-lg border bg-muted/40 p-4 text-base"
+            className="h-[60dvh] rounded-lg bg-muted/40 p-4 text-base"
             config={config}
-            fit="width"
+            fit="natural"
             label={title}
           />
         </DialogPanel>
