@@ -2,7 +2,9 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
+import { CONVERSATION } from "@/e2e/support/query";
 import { sidebarRows } from "@/e2e/support/rows";
+import { ACCESS_TITLE, UNAVAILABLE_COPY } from "@/e2e/support/share";
 import {
   inTheSheet,
   openFromHistory,
@@ -13,16 +15,12 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";
-/** The Convex name of the query that reads one chat, for the page and the sheet. */
-const CONVERSATION = "nina/conversation:get";
 /** The typed failure the server sends when the viewer may not read the chat. */
 const FORBIDDEN = {
   _tag: "ChatAccessError",
   code: "FORBIDDEN",
   message: "This chat is not available.",
 };
-const ACCESS_TITLE = "Access denied";
-const ACCESS_COPY = "This chat is not available to you";
 const FAILED_TITLE = "Something went wrong";
 const FAILED_COPY = "Nakafa could not load this chat";
 const RETRY = "Retry";
@@ -60,7 +58,7 @@ test.describe("A chat that cannot be read, at 1440px", () => {
         yield* Effect.promise(() => page.goto(address));
         yield* Effect.promise(async () => {
           await showsCard(page, ACCESS_TITLE);
-          await expect(page.getByText(ACCESS_COPY)).toBeVisible();
+          await expect(page.getByText(UNAVAILABLE_COPY)).toBeVisible();
           await expect(page.getByRole("button", { name: RETRY })).toHaveCount(
             0
           );
@@ -106,7 +104,7 @@ test.describe("A chat that cannot be read, at 1440px", () => {
               const visitor = await context.newPage();
               await visitor.goto(address);
               await showsCard(visitor, ACCESS_TITLE);
-              await expect(visitor.getByText(ACCESS_COPY)).toBeVisible();
+              await expect(visitor.getByText(UNAVAILABLE_COPY)).toBeVisible();
               await expect(
                 visitor.getByRole("button", { name: GOOGLE_SIGN_IN })
               ).toBeVisible();

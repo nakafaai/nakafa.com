@@ -2,11 +2,9 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { live, reloadUntil, saved } from "@/e2e/support/changes";
 import { DELETE, FAILED, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { ACCESS_TITLE } from "@/e2e/support/share";
 import { shownTexts, watchTexts } from "@/e2e/support/shown";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-
-/** What a chat page says of a chat that is not the viewer's. */
-const NOT_YOURS = "Access denied";
 
 /** A chat's row on the learner's chats page, which holds a link over the whole row. */
 const rowOf = (page: Page, chatId: string) =>
@@ -149,7 +147,7 @@ const movesOnWhenDeleted = Effect.fn("NakafaE2E.deleteMovesOn")(function* (
   );
   const before = changes.sent;
 
-  yield* Effect.promise(() => watchTexts(page, [NOT_YOURS]));
+  yield* Effect.promise(() => watchTexts(page, [ACCESS_TITLE]));
   changes.hold();
   yield* confirmDelete();
   yield* Effect.promise(async () => {

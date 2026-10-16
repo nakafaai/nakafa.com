@@ -4,7 +4,12 @@ import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { notAvailable, promptOf, SHARE_TOKEN } from "@/e2e/support/share";
+import {
+  notAvailable,
+  promptOf,
+  SHARE_TOKEN,
+  UNAVAILABLE_COPY,
+} from "@/e2e/support/share";
 import {
   composerOf,
   inTheSheet,
@@ -20,8 +25,6 @@ const OWN_PROMPT = "What is the slope of a line?";
 const OWN_TITLE = "The slope of a line";
 /** What the sheet says when it holds no chat, in place of a conversation. */
 const NEW_CHAT = "What do you want to learn?";
-/** What the card of a chat the viewer may not read says, on the page and in the sheet. */
-const UNAVAILABLE_COPY = "This chat is not available to you";
 const VIEWPORT = { height: 900, width: 1440 };
 
 /** What the sheet writes to the browser to remember the chat it has open. */

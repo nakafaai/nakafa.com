@@ -17,6 +17,10 @@ import { SHARE_ENTRY } from "@/lib/share/fragment";
 
 /** The shape of a share token: 32 random bytes in URL-safe Base64, 43 characters. */
 export const SHARE_TOKEN = /^[A-Za-z0-9_-]{43}$/u;
+/** The title of the card a chat the viewer may not read shows, on the page and in the sheet. */
+export const ACCESS_TITLE = "Access denied";
+/** The description of that card, which says the chat is not available to this viewer. */
+export const UNAVAILABLE_COPY = "This chat is not available to you";
 /** The path of the proxy that forwards a page's analytics to the runtime's stand-in. */
 const ANALYTICS_PATH = "/_nakafa/";
 
@@ -46,7 +50,7 @@ const retryButtons = (page: Page) =>
 
 /** What a chat page or sheet shows in place of a chat the reader cannot open. */
 export const notAvailable = (scope: Page | Locator) =>
-  scope.locator('[data-slot="empty"]').filter({ hasText: "Access denied" });
+  scope.locator('[data-slot="empty"]').filter({ hasText: ACCESS_TITLE });
 
 /** The link the dialog copied, read apart. */
 export function readLink(link: string) {

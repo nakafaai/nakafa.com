@@ -2,6 +2,7 @@ import { expect, type Locator, test } from "@playwright/test";
 import { Clock, Effect, Schema } from "effect";
 import type { Changes } from "@/e2e/support/changes";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { CONVERSATION } from "@/e2e/support/query";
 import {
   composerOf,
   inTheSheet,
@@ -14,8 +15,6 @@ const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";
 /** What the learner types while Nina answers, which Enter must keep. */
 const FOLLOW_UP = "And what about the tangent?";
-/** The Convex name of the query that reads a chat's latest turn. */
-const CONVERSATION = "nina/conversation:get";
 /** The Convex name of the mutation that stops a turn. */
 const CANCEL = "nina/lifecycle:cancel";
 const STOP = "Stop response";
