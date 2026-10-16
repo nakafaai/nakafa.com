@@ -1,0 +1,368 @@
+import { docsToModelMessages, isTool, toUIMessages } from "@convex-dev/agent";
+import {
+  type Message,
+  type MessageDoc,
+  type MessageWithMetadata,
+  vMessageWithMetadataInternal,
+} from "@convex-dev/agent/validators";
+import { describe, expect, it } from "@effect/vitest";
+import {
+  type MessageIdentity,
+  openMessage,
+  sealMessage,
+} from "@repo/backend/confect/nina/sealed";
+import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
+import { sealText } from "@repo/backend/confect/vault/text";
+import {
+  answer,
+  expectedOpened,
+  learnerTurn,
+  MESSAGE_IDENTITY,
+  plantedAnswer,
+  storedRow,
+  systemTurn,
+  toolTurn,
+} from "@repo/backend/test/nina/message";
+import { learner, scenario } from "@repo/backend/test/owner";
+import { encodeJsonText } from "@repo/utilities/json";
+import { validate } from "convex-helpers/validators";
+import { Effect, Result } from "effect";
+import { Base64Url } from "effect/encoding";
+
+const IDENTITY = MESSAGE_IDENTITY;
+
+/** The planted values start with `PLANT-`, so one search finds any of them. */
+const PLANT = "PLANT-";
+
+/** The sealed bytes of a message, as Base64Url text. */
+function sealedOf(message: Message) {
+  return String(message.providerOptions?.nakafa?.sealed);
+}
+
+/** The same sealed bytes with their last byte changed. */
+function tampered(sealed: string) {
+  const bytes = new Uint8Array(Result.getOrThrow(Base64Url.decode(sealed)));
+  const last = bytes.length - 1;
+  bytes.set([((bytes[last] ?? 0) + 1) % 256], last);
+  return Base64Url.encode(bytes);
+}
+
+/** A row whose message carries `sealed` as its sealed content, under `identity`. */
+function rowWith(message: Message, sealed: unknown, identity: MessageIdentity) {
+  return storedRow(
+    { message: { ...message, providerOptions: { nakafa: { sealed } } } },
+    identity
+  );
+}
+
+/** Seals `text` under the field of one message, as a foreign writer would. */
+const sealRaw = Effect.fn("test.nina.sealed.raw")(function* (
+  keys: Parameters<typeof sealText>[0],
+  identity: MessageIdentity,
+  text: string
+) {
+  const sealed = yield* sealText(
+    keys,
+    {
+      field: "message",
+      row: [identity.threadId, identity.order, identity.stepOrder],
+      table: "ninaMessages",
+    },
+    text
+  );
+  return Base64Url.encode(new Uint8Array(sealed));
+});
+
+describe("sealed message", () => {
+  it.effect("opens every part kind of every role as it was written", () =>
+    scenario(
+      Effect.gen(function* () {
+        const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+        for (const message of [learnerTurn, answer, toolTurn, systemTurn]) {
+          const sealed = yield* sealMessage(owner, IDENTITY, message);
+          const row = storedRow(sealed, IDENTITY);
+          expect(row.tool).toBe(isTool(message.message));
+          expect(yield* openMessage(owner, IDENTITY, row)).toEqual(
+            expectedOpened(message)
+          );
+        }
+      })
+    )
+  );
+
+  it.effect(
+    "keeps the type, the tool names and ids, and the file references of each part, and nothing it says",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+          const sealedAnswer = yield* sealMessage(owner, IDENTITY, answer);
+          expect(sealedAnswer.message.content).toEqual([
+            { text: "", type: "text" },
+            { text: "", type: "reasoning" },
+            {
+              mediaType: "image/png",
+              type: "reasoning-file",
+              url: "https://files.example.com/sketsa.png",
+            },
+            { mediaType: "image/png", type: "reasoning-file", url: "" },
+            { data: "", type: "redacted-reasoning" },
+            { kind: "provider-note", type: "custom" },
+            {
+              input: {},
+              toolCallId: "call-1",
+              toolName: "search",
+              type: "tool-call",
+            },
+            { id: "src-1", sourceType: "url", type: "source", url: "" },
+            {
+              id: "src-2",
+              mediaType: "application/pdf",
+              sourceType: "document",
+              title: "",
+              type: "source",
+            },
+            {
+              approvalId: "approval-1",
+              toolCallId: "call-2",
+              type: "tool-approval-request",
+            },
+          ]);
+          const sealedLearner = yield* sealMessage(
+            owner,
+            IDENTITY,
+            learnerTurn
+          );
+          expect(sealedLearner.message.content).toEqual([
+            { text: "", type: "text" },
+            {
+              image: "https://files.example.com/soal.png",
+              mediaType: "image/png",
+              type: "image",
+            },
+            {
+              image: { reference: { openai: "file-abc" }, type: "reference" },
+              mediaType: undefined,
+              type: "image",
+            },
+            { data: "", mediaType: "text/plain", type: "file" },
+            { data: "", mediaType: "application/pdf", type: "file" },
+            {
+              data: "https://files.example.com/modul.pdf",
+              mediaType: "application/pdf",
+              type: "file",
+            },
+          ]);
+          const sealedTool = yield* sealMessage(owner, IDENTITY, toolTurn);
+          expect(sealedTool.message.content).toEqual([
+            { toolCallId: "call-1", toolName: "search", type: "tool-result" },
+            {
+              approvalId: "approval-1",
+              approved: false,
+              type: "tool-approval-response",
+            },
+          ]);
+        })
+      )
+  );
+
+  it.effect(
+    "gives a row that the component's own addMessages validator accepts",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+          for (const message of [learnerTurn, answer, toolTurn, systemTurn]) {
+            const sealed = yield* sealMessage(owner, IDENTITY, message);
+            expect(validate(vMessageWithMetadataInternal, sealed)).toBe(true);
+          }
+        })
+      )
+  );
+
+  it.effect(
+    "leaves no planted string in the stored row, and opens the planted text back",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+          for (const message of [learnerTurn, plantedAnswer, toolTurn]) {
+            const sealed = yield* sealMessage(owner, IDENTITY, message);
+            const row = storedRow(sealed, IDENTITY);
+            expect(encodeJsonText([sealed, row])).not.toContain(PLANT);
+          }
+          const row = storedRow(
+            yield* sealMessage(owner, IDENTITY, plantedAnswer),
+            IDENTITY
+          );
+          expect(
+            encodeJsonText(yield* openMessage(owner, IDENTITY, row))
+          ).toContain("PLANT-TEXT");
+        })
+      )
+  );
+
+  it.effect("opens a plain row as itself", () =>
+    scenario(
+      Effect.gen(function* () {
+        const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+        const plain = storedRow(
+          {
+            message: {
+              content: [{ text: "Biasa.", type: "text" }],
+              role: "assistant",
+            },
+          },
+          IDENTITY
+        );
+        expect(yield* openMessage(owner, IDENTITY, plain)).toBe(plain);
+        const withoutMessage = { ...plain, message: undefined };
+        expect(yield* openMessage(owner, IDENTITY, withoutMessage)).toBe(
+          withoutMessage
+        );
+      })
+    )
+  );
+
+  it.effect(
+    "opens a sealed message only for its own thread, order, step and learner",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+          const other = yield* ensureLearnerKeys(yield* learner("other"));
+          const sealed = yield* sealMessage(owner, IDENTITY, answer);
+          const row = storedRow(sealed, IDENTITY);
+          const reason = (
+            keys: Parameters<typeof openMessage>[0],
+            identity: MessageIdentity,
+            stored: MessageDoc
+          ) =>
+            Effect.flip(openMessage(keys, identity, stored)).pipe(
+              Effect.map((failure) => failure.reason)
+            );
+          expect(
+            yield* reason(owner, { ...IDENTITY, threadId: "thread-b" }, row)
+          ).toBe("cipher");
+          expect(yield* reason(owner, { ...IDENTITY, order: 5 }, row)).toBe(
+            "cipher"
+          );
+          expect(yield* reason(owner, { ...IDENTITY, stepOrder: 3 }, row)).toBe(
+            "cipher"
+          );
+          expect(yield* reason(other, IDENTITY, row)).toBe("cipher");
+          // The same sealed content, copied into another row or another thread.
+          const copiedToRow = storedRow(sealed, { ...IDENTITY, order: 9 });
+          expect(
+            yield* reason(owner, { ...IDENTITY, order: 9 }, copiedToRow)
+          ).toBe("cipher");
+          const copiedToThread = storedRow(sealed, {
+            ...IDENTITY,
+            threadId: "thread-b",
+          });
+          expect(
+            yield* reason(
+              owner,
+              { ...IDENTITY, threadId: "thread-b" },
+              copiedToThread
+            )
+          ).toBe("cipher");
+          expect(yield* openMessage(owner, IDENTITY, row)).toMatchObject({
+            text: "Jawabannya 12.",
+          });
+        })
+      )
+  );
+
+  it.effect(
+    "gives the component's readers an opened row with neither the payload nor the nakafa key",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+          const sealed = yield* sealMessage(owner, IDENTITY, plantedAnswer);
+          const sealedBytes = sealedOf(sealed.message);
+          const opened = yield* openMessage(
+            owner,
+            IDENTITY,
+            storedRow(sealed, IDENTITY)
+          );
+          const readers = encodeJsonText([
+            docsToModelMessages([opened]),
+            toUIMessages([opened]),
+          ]);
+          expect(readers).toContain("PLANT-TEXT");
+          expect(readers).not.toContain("nakafa");
+          expect(readers).not.toContain(sealedBytes);
+        })
+      )
+  );
+
+  it.effect(
+    "removes a nakafa provider option that the message itself carries, on open",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+          const own: MessageWithMetadata = {
+            message: {
+              content: [{ text: "Dengan opsi sendiri.", type: "text" }],
+              providerOptions: { nakafa: { own: true }, other: { kept: 1 } },
+              role: "assistant",
+            },
+          };
+          const opened = yield* openMessage(
+            owner,
+            IDENTITY,
+            storedRow(yield* sealMessage(owner, IDENTITY, own), IDENTITY)
+          );
+          expect(opened.message?.providerOptions).toEqual({
+            other: { kept: 1 },
+          });
+        })
+      )
+  );
+
+  it.effect(
+    "fails with a cipher error for damaged or foreign sealed content, never with an empty message",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+          const skeleton = (yield* sealMessage(owner, IDENTITY, answer))
+            .message;
+          const damaged = [
+            rowWith(skeleton, "!!!", IDENTITY),
+            rowWith(skeleton, 7, IDENTITY),
+            rowWith(skeleton, tampered(sealedOf(skeleton)), IDENTITY),
+            rowWith(
+              skeleton,
+              yield* sealRaw(owner, IDENTITY, "bukan json"),
+              IDENTITY
+            ),
+            rowWith(
+              skeleton,
+              yield* sealRaw(owner, IDENTITY, encodeJsonText({ note: "x" })),
+              IDENTITY
+            ),
+            rowWith(
+              skeleton,
+              yield* sealRaw(
+                owner,
+                IDENTITY,
+                encodeJsonText({ $integer: "!" })
+              ),
+              IDENTITY
+            ),
+          ];
+          for (const row of damaged) {
+            const failure = yield* Effect.flip(
+              openMessage(owner, IDENTITY, row)
+            );
+            expect(failure._tag).toBe("VaultError");
+            expect(failure.reason).toBe("cipher");
+          }
+        })
+      )
+  );
+});
