@@ -10,6 +10,7 @@ import {
 } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
+import { signInLearner } from "@/e2e/support/learner";
 import {
   formatRequestFailure,
   NEXT_ROUTER_PREFETCH_HEADER,
@@ -249,7 +250,9 @@ const readSettledJavascriptRun = Effect.fn(
  * Measures one route in three isolated, uncached Chromium contexts. A route
  * whose visible links prefetch waits for one successful prefetch first. A route
  * with no such link, such as the sign-in page, has none to wait for, so it
- * measures its own page once the JavaScript stops arriving.
+ * measures its own page once the JavaScript stops arriving. With `signedIn`,
+ * each context signs a new learner in before it opens the route, so a route
+ * that needs a session measures its own page and not the redirect to sign-in.
  */
 export const measureRouteJavascript = Effect.fn(
   "NakafaE2E.measureRouteJavascript"
@@ -257,7 +260,8 @@ export const measureRouteJavascript = Effect.fn(
   browser: Browser,
   baseURL: string,
   href: string,
-  awaitsPrefetch: boolean
+  awaitsPrefetch: boolean,
+  options: { readonly signedIn?: boolean } = {}
 ) {
   const runs = MutableList.make<JavascriptRun>();
 
@@ -271,6 +275,9 @@ export const measureRouteJavascript = Effect.fn(
       },
       (context) =>
         Effect.gen(function* () {
+          if (options.signedIn) {
+            yield* signInLearner(context, baseURL);
+          }
           const page = yield* Effect.promise(() => context.newPage());
           yield* seedAnalyticsConsent(page, "denied");
           const applicationOrigin = new URL(baseURL).origin;
