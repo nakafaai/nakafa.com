@@ -40,9 +40,6 @@ export const loginCardValidator = Schema.Struct({
   tenantId: Id("tenants"),
 });
 
-/** Why a Google sign-in on a school host was refused. The sign-in page shows the reason. */
-export const IdentityBlockReason = Schema.Literal("domain");
-
 /** One issued card as the school's Admin sees it: the plain code, shown once, with its login name and expiry. */
 export const IssuedCard = Schema.Struct({
   code: Schema.String,

@@ -34,7 +34,6 @@ describe("access/catalog", () => {
       "tenant.provisioned",
       "tenant.locale.set",
       "tenant.policy.set",
-      "identity.blocked",
       "unit.created",
       "unit.locale.set",
       "unit.archived",

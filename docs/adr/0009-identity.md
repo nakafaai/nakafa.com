@@ -179,9 +179,9 @@ Workspace account.
 ### As built: login cards and the password store
 
 `confect/identity` builds the login card, the school login, the password store,
-the placeholder address, and the Workspace domain check. The school host, its
-sign-in endpoint, and its card page are not built yet, so the username sign-in
-stays closed on every host.
+and the placeholder address. The school host, its sign-in endpoint with the
+Workspace domain check, and its card page are not built yet, so the username
+sign-in stays closed on every host.
 
 - **Password store.** `emailAndPassword` is enabled only as the store of school
   passwords, with `disableSignUp`, so Better Auth refuses a public sign-up even
@@ -252,12 +252,6 @@ stays closed on every host.
   no payment customer is made for it, on creation or on a profile change, and an
   invitation to it sends nothing. The address is an internal key, not personal
   data, and RFC 2606 keeps mail from ever reaching it.
-- **Workspace domain check.** `identity/domain` decides a Google sign-in on a
-  school host. An empty list of allowed domains allows every account. Otherwise
-  the hosted domain claim must be one of them. A refusal is journaled as the
-  system with `identity.blocked`, and the check returns its reason rather than
-  throwing, so the entry commits with the refusal. The sign-in path that calls
-  it is the next lane.
 
 ## Usernames And Profiles
 

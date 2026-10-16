@@ -3,7 +3,6 @@ import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
-import { IdentityBlockReason } from "@repo/backend/confect/identity/schema";
 import { Contract } from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
@@ -61,10 +60,6 @@ export const tenant = Kind.make("tenant", "tenants", {
     Schema.Struct({
       key: PolicyKey,
       type: Schema.Literal("tenant.policy.set"),
-    }),
-    Schema.Struct({
-      reason: IdentityBlockReason,
-      type: Schema.Literal("identity.blocked"),
     }),
   ],
   published: [],
