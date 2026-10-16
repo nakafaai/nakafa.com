@@ -8,6 +8,7 @@ import {
 import {
   batchText,
   denied,
+  documentRowOf,
   IDLE,
   jsonValue,
   nf,
@@ -52,11 +53,15 @@ describe("editor/snapshots save", () => {
           version: 3,
         });
         const opened = yield* teacher.query(refs.public.editor.documents.open, {
+          clientId: "rina",
           documentId: made.id,
           slug: nf,
         });
         expect(saved).toEqual({ version: 3 });
         expect(yield* fixture.run(snapshotRows)).toHaveLength(1);
+        expect(
+          (yield* fixture.run(documentRowOf(made.id))).snapshotVersion
+        ).toBe(3);
         expect(opened.snapshot.version).toBe(3);
         expect(jsonValue(opened.snapshot.content)).toEqual(
           jsonValue(paragraphText("Soal yang diperbarui"))

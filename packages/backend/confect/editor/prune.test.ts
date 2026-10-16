@@ -11,7 +11,7 @@ describe("editor/prune rule", () => {
   it("prunes a step that a snapshot covers once it is at least the keep delay old", () => {
     expect(
       isPrunable({
-        createdAt: 0,
+        at: 0,
         now: KEEP_DELAY_MILLIS,
         snapshotVersion: 5,
         version: 5,
@@ -22,7 +22,7 @@ describe("editor/prune rule", () => {
   it("keeps a covered step one millisecond younger than the keep delay", () => {
     expect(
       isPrunable({
-        createdAt: 1,
+        at: 1,
         now: KEEP_DELAY_MILLIS,
         snapshotVersion: 5,
         version: 5,
@@ -33,7 +33,7 @@ describe("editor/prune rule", () => {
   it("keeps a step the snapshot does not cover, however old it is", () => {
     expect(
       isPrunable({
-        createdAt: 0,
+        at: 0,
         now: KEEP_DELAY_MILLIS * 100,
         snapshotVersion: 5,
         version: 6,

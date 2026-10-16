@@ -1,4 +1,5 @@
 import type { GenericId } from "@confect/core";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -44,6 +45,20 @@ export const LONG_AGO = Duration.toMillis(
 export const jsonValue = Schema.decodeUnknownSync(JsonTextSchema);
 
 /** A document of one paragraph of one text, as the contract reads it. */
+/** Creates a document in the SMP unit, as its teacher, and returns its ID. */
+export const newDocument = Effect.fn("test.editor.newDocument")(function* (
+  fixture: Fixture
+) {
+  const made = yield* fixture
+    .as("teacher")
+    .mutation(refs.public.editor.documents.create, {
+      content: paragraphText("Soal"),
+      scope: { kind: "unit", unitId: fixture.units.smp },
+      slug: nf,
+    });
+  return made.id;
+});
+
 export const paragraphText = (text: string) =>
   encodeJsonText(paragraphOf(text));
 
@@ -60,7 +75,9 @@ export const insertStep = (text: string): Step => ({
 
 /**
  * The JSON text of one batch of `count` steps made on `baseVersion`, each of
- * `text` characters. A test that needs a large batch passes a long text.
+ * `text` characters. A test that needs a large batch passes a long text. The batch
+ * id is derived from the arguments, so the same arguments make the same batch, and
+ * a test that sends a batch again sends the same id.
  */
 export const batchText = Effect.fn("test.editor.batchText")(function* (
   baseVersion: number,
@@ -70,6 +87,7 @@ export const batchText = Effect.fn("test.editor.batchText")(function* (
 ) {
   const batch: Batch = {
     baseVersion,
+    batch: `${clientId}-${baseVersion}-${count}-${text.length}`,
     clientId,
     steps: Arr.makeBy(count, () => insertStep(text)),
   };
@@ -94,6 +112,11 @@ export const documentRows = Effect.flatMap(DatabaseReader, (reader) =>
 /** Every snapshot row, for a test that counts them. */
 export const snapshotRows = Effect.flatMap(DatabaseReader, (reader) =>
   reader.table("editorSnapshots").index("by_creation_time").take(100)
+);
+
+/** Every editor-session record, for a test that counts them. */
+export const clientRows = Effect.flatMap(DatabaseReader, (reader) =>
+  reader.table("editorClients").index("by_creation_time").take(100)
 );
 
 /** Every step row, for a test that counts them. */

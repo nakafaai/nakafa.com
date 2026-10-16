@@ -17,32 +17,45 @@ export const VersionSchema = Schema.Natural;
 type Version = typeof VersionSchema.Type;
 
 /**
- * Most characters in a client id. A v4 UUID from `randomUuid` (`@repo/utilities/uuid`)
- * has 36, so 64 leaves room for a prefix. Each stored step keeps its client id, so
- * the bound also caps that id in every stored row. It is a target (ADR 0028
- * Bounds), not a Convex limit.
+ * Most characters in a client or batch id. A v4 UUID from `randomUuid`
+ * (`@repo/utilities/uuid`) has 36, so 64 leaves room for a prefix. Each stored
+ * step keeps its client id, so the bound also caps that id in every stored row.
+ * It is a target (ADR 0028 Bounds), not a Convex limit.
  */
-export const MAX_CLIENT_ID_LENGTH = 64;
+export const MAX_ID_LENGTH = 64;
 
 /**
- * The id of the editor instance that made a batch. A client keeps its own id, so
+ * The id of the editor session that made a batch. A client keeps its own id, so
  * it can tell its steps from the others' when the server returns them, and every
  * stored step keeps the id.
  */
 export const ClientIdSchema = Schema.String.check(
   Schema.isNonEmpty(),
-  Schema.isMaxLength(MAX_CLIENT_ID_LENGTH, {
-    message: `Expected a client id of at most ${MAX_CLIENT_ID_LENGTH} characters.`,
+  Schema.isMaxLength(MAX_ID_LENGTH, {
+    message: `Expected a client id of at most ${MAX_ID_LENGTH} characters.`,
   })
 );
 
 /**
- * The steps one call sends: the client that made them, the version they were
- * made on, and between one and `MAX_BATCH_STEPS` steps. A call with no step
- * moves nothing, so it is refused.
+ * The id of one batch, which the client makes with `randomUuid` for each batch
+ * and keeps when it sends the batch again. The server answers a repeat of an
+ * accepted batch with its version, and writes nothing (ADR 0028).
+ */
+export const BatchIdSchema = Schema.String.check(
+  Schema.isNonEmpty(),
+  Schema.isMaxLength(MAX_ID_LENGTH, {
+    message: `Expected a batch id of at most ${MAX_ID_LENGTH} characters.`,
+  })
+);
+
+/**
+ * The steps one call sends: the batch and the client that made them, the version
+ * they were made on, and between one and `MAX_BATCH_STEPS` steps. A call with no
+ * step moves nothing, so it is refused.
  */
 export const BatchSchema = Schema.Struct({
   baseVersion: VersionSchema,
+  batch: BatchIdSchema,
   clientId: ClientIdSchema,
   steps: Schema.NonEmptyArray(StepSchema).check(
     Schema.isMaxLength(MAX_BATCH_STEPS, {
@@ -120,18 +133,16 @@ export const decodeBatch = Effect.fn("editor.batch.decode")(function* (
 });
 
 /**
- * Checks a call that sends a batch, and returns the batch with the version after
- * its steps. `decodeBatch` reads the call's text and checks its bytes and the
- * bounds of the batch. The batch must then name the document's head: a batch
- * applies only on the version it names, so any other version refuses it with
- * `VersionStale`. It applies nothing. The caller stores the steps it gets back,
- * and the version counts up by the number of steps.
+ * Checks that a decoded batch names the document's head, and returns the batch
+ * with the version after its steps. A batch applies only on the version it names,
+ * so any other version refuses it with `VersionStale`. It applies nothing: the
+ * caller writes the steps it gets back, and the version counts up by the number
+ * of steps.
  */
 export const admitBatch = Effect.fn("editor.batch.admit")(function* (
   head: Version,
-  text: string
+  batch: Batch
 ) {
-  const batch = yield* decodeBatch(text);
   if (batch.baseVersion !== head) {
     return yield* new VersionStale({ baseVersion: batch.baseVersion, head });
   }

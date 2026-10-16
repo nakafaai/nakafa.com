@@ -4,10 +4,11 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { DocumentAccess } from "@repo/backend/confect/editor/access";
 import {
   BatchTooLarge,
+  ClientIdSchema,
   VersionSchema,
   VersionStale,
 } from "@repo/backend/confect/editor/batch";
-import { BatchInvalid } from "@repo/backend/confect/editor/errors";
+import { BatchInvalid, ClientTaken } from "@repo/backend/confect/editor/errors";
 import { SinceReply } from "@repo/backend/confect/editor/view";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -25,6 +26,7 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "since",
       args: () => ({
+        clientId: ClientIdSchema,
         documentId: Id("editorDocuments"),
         slug: TenantSlug,
         version: VersionSchema,
@@ -46,7 +48,13 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Struct({ head: VersionSchema }),
       error: () =>
-        Schema.Union([AccessDenied, BatchInvalid, BatchTooLarge, VersionStale]),
+        Schema.Union([
+          AccessDenied,
+          BatchInvalid,
+          BatchTooLarge,
+          ClientTaken,
+          VersionStale,
+        ]),
     }).middleware(DocumentAccess, {
       action: "document.edit",
       arg: "documentId",

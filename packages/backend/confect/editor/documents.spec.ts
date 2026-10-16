@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { GrantScope } from "@repo/backend/confect/access/schema";
 import { DocumentAccess } from "@repo/backend/confect/editor/access";
+import { ClientIdSchema } from "@repo/backend/confect/editor/batch";
 import {
   DocumentInvalid,
   DocumentTooLarge,
@@ -36,7 +37,11 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "open",
-      args: () => ({ documentId: Id("editorDocuments"), slug: TenantSlug }),
+      args: () => ({
+        clientId: ClientIdSchema,
+        documentId: Id("editorDocuments"),
+        slug: TenantSlug,
+      }),
       returns: () => OpenedDocument,
       error: () => AccessDenied,
     }).middleware(DocumentAccess, {

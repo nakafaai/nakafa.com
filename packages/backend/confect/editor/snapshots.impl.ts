@@ -19,8 +19,9 @@ import { Clock, DateTime, Effect, Layer, Option } from "effect";
  * Saves the document at a version the client has confirmed. The version must be
  * newer than the stored snapshot and no newer than the head. The snapshot rule
  * must allow a snapshot now, the content must pass the contract's Schema, and the
- * complete row must stay under one document's limit. Any refusal writes nothing,
- * and an accepted snapshot replaces the stored one.
+ * complete row must stay under one document's limit. Any refusal writes nothing.
+ * An accepted snapshot replaces the stored one, and it moves the document's snapshot
+ * version in the same transaction, so the sweep reads the version and never the row.
  */
 const save = FunctionImpl.make(
   databaseSchema,
@@ -54,9 +55,14 @@ const save = FunctionImpl.make(
       version,
     };
     yield* ensureRowSize(snapshot);
-    yield* (yield* DatabaseWriter)
+    const writer = yield* DatabaseWriter;
+    yield* writer
       .table("editorSnapshots")
       .replace(stored._id, snapshot)
+      .pipe(Effect.orDie);
+    yield* writer
+      .table("editorDocuments")
+      .patch(document._id, { snapshotVersion: version })
       .pipe(Effect.orDie);
     return { version };
   })

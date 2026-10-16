@@ -6,7 +6,7 @@ import {
   BatchSchema,
   decodeBatch,
   encodeBatch,
-  MAX_CLIENT_ID_LENGTH,
+  MAX_ID_LENGTH,
 } from "@repo/backend/confect/editor/batch";
 import { MAX_BATCH_BYTES, utf8Bytes } from "@repo/backend/confect/editor/size";
 import type { Step } from "@repo/backend/confect/editor/step";
@@ -21,9 +21,14 @@ const oneStep: Step = {
   stepType: "addNodeMark",
 };
 
-/** A batch of `count` steps that `clientId` made on `baseVersion`. */
+/** A batch of `count` steps that `clientId` made on `baseVersion`, under a batch id of its own. */
 function batchOf(clientId: string, baseVersion: number, count: number): Batch {
-  return { baseVersion, clientId, steps: Arr.makeBy(count, () => oneStep) };
+  return {
+    baseVersion,
+    batch: `${clientId}-${baseVersion}-${count}`,
+    clientId,
+    steps: Arr.makeBy(count, () => oneStep),
+  };
 }
 
 /**
@@ -33,6 +38,7 @@ function batchOf(clientId: string, baseVersion: number, count: number): Batch {
 function batchWithText(text: string): Batch {
   return {
     baseVersion: 0,
+    batch: "rina-text",
     clientId: "rina",
     steps: [{ attr: "title", stepType: "docAttr", value: text }],
   };
@@ -45,14 +51,14 @@ describe("editor/batch version rule", () => {
       Effect.gen(function* () {
         const rina = yield* admitBatch(
           0,
-          yield* encodeBatch(batchOf("rina", 0, 2))
+          yield* decodeBatch(yield* encodeBatch(batchOf("rina", 0, 2)))
         );
         expect(rina.version).toBe(2);
         expect(rina.batch).toEqual(batchOf("rina", 0, 2));
 
         const hendra = yield* admitBatch(
           40,
-          yield* encodeBatch(batchOf("hendra", 40, 3))
+          yield* decodeBatch(yield* encodeBatch(batchOf("hendra", 40, 3)))
         );
         expect(hendra.version).toBe(43);
       })
@@ -65,8 +71,8 @@ describe("editor/batch version rule", () => {
     "refuses a batch made on version $baseVersion when the document is at $head",
     ({ baseVersion, head }) =>
       Effect.gen(function* () {
-        const text = yield* encodeBatch(batchOf("rina", baseVersion, 1));
-        const failure = yield* admitBatch(head, text).pipe(Effect.flip);
+        const batch = batchOf("rina", baseVersion, 1);
+        const failure = yield* admitBatch(head, batch).pipe(Effect.flip);
         expect(failure).toMatchObject({
           _tag: "VersionStale",
           baseVersion,
@@ -83,8 +89,8 @@ describe("editor/batch version rule", () => {
         Arr.makeBy(201, () => step),
         ","
       );
-      const text = `{"baseVersion":40,"clientId":"rina","steps":[${steps}]}`;
-      const failure = yield* admitBatch(40, text).pipe(Effect.flip);
+      const text = `{"baseVersion":40,"batch":"rina-40","clientId":"rina","steps":[${steps}]}`;
+      const failure = yield* decodeBatch(text).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
       expect(failure.message).toContain("at most 200 steps");
     })
@@ -107,6 +113,7 @@ describe("editor/batch limits", () => {
       Effect.gen(function* () {
         const none = yield* Schema.decodeUnknownEffect(BatchSchema)({
           baseVersion: 0,
+          batch: "rina-0",
           clientId: "rina",
           steps: [],
         }).pipe(Effect.flip);
@@ -123,6 +130,7 @@ describe("editor/batch limits", () => {
     Effect.gen(function* () {
       const failure = yield* Schema.decodeEffect(BatchSchema)({
         baseVersion: -1,
+        batch: "rina-0",
         clientId: "rina",
         steps: [oneStep],
       }).pipe(Effect.flip);
@@ -134,6 +142,7 @@ describe("editor/batch limits", () => {
     Effect.gen(function* () {
       const failure = yield* Schema.decodeEffect(BatchSchema)({
         baseVersion: 0,
+        batch: "rina-0",
         clientId: "",
         steps: [oneStep],
       }).pipe(Effect.flip);
@@ -141,25 +150,46 @@ describe("editor/batch limits", () => {
     })
   );
 
-  it.effect("refuses a client id longer than MAX_CLIENT_ID_LENGTH", () =>
+  it.effect("refuses a client id longer than MAX_ID_LENGTH", () =>
     Effect.gen(function* () {
       const failure = yield* Schema.decodeEffect(BatchSchema)({
         baseVersion: 0,
-        clientId: "x".repeat(MAX_CLIENT_ID_LENGTH + 1),
+        batch: "rina-0",
+        clientId: "x".repeat(MAX_ID_LENGTH + 1),
         steps: [oneStep],
       }).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
-      expect(failure.message).toContain(
-        `at most ${MAX_CLIENT_ID_LENGTH} characters`
-      );
+      expect(failure.message).toContain(`at most ${MAX_ID_LENGTH} characters`);
     })
   );
 
-  it.effect("accepts the client id that randomUuid makes", () =>
+  it.effect(
+    "refuses a batch without a batch id, and one id longer than the bound",
+    () =>
+      Effect.gen(function* () {
+        const missing = yield* Schema.decodeUnknownEffect(BatchSchema)({
+          baseVersion: 0,
+          clientId: "rina",
+          steps: [oneStep],
+        }).pipe(Effect.flip);
+        expect(missing._tag).toBe("SchemaError");
+        const long = yield* Schema.decodeEffect(BatchSchema)({
+          baseVersion: 0,
+          batch: "b".repeat(MAX_ID_LENGTH + 1),
+          clientId: "rina",
+          steps: [oneStep],
+        }).pipe(Effect.flip);
+        expect(long.message).toContain(`at most ${MAX_ID_LENGTH} characters`);
+      })
+  );
+
+  it.effect("accepts the client and batch ids that randomUuid makes", () =>
     Effect.gen(function* () {
       const clientId = yield* randomUuid;
+      const batch = yield* randomUuid;
       yield* Schema.decodeEffect(BatchSchema)({
         baseVersion: 0,
+        batch,
         clientId,
         steps: [oneStep],
       });
@@ -191,6 +221,7 @@ describe("editor/batch limits", () => {
       Effect.gen(function* () {
         const failure = yield* encodeBatch({
           baseVersion: 0,
+          batch: "rina-0",
           clientId: "rina",
           steps: [
             {
@@ -223,7 +254,7 @@ describe("editor/batch call body", () => {
       Effect.gen(function* () {
         // The padding is an undeclared key, so a read of the text would refuse it as a schema issue.
         const padding = "x".repeat(MAX_BATCH_BYTES);
-        const text = `{"baseVersion":0,"clientId":"rina","pad":"${padding}","steps":[{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}]}`;
+        const text = `{"baseVersion":0,"batch":"rina-0","clientId":"rina","pad":"${padding}","steps":[{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}]}`;
         const failure = yield* decodeBatch(text).pipe(Effect.flip);
         expect(failure).toMatchObject({
           _tag: "BatchTooLarge",
@@ -241,9 +272,9 @@ describe("editor/batch call body", () => {
         // The call is well within MAX_BATCH_BYTES, and its attributes nest 20,000 objects deep.
         const depth = 20_000;
         const attrs = `${'{"a":'.repeat(depth)}{}${"}".repeat(depth)}`;
-        const text = `{"baseVersion":40,"clientId":"rina","steps":[{"mark":{"type":"bold","attrs":${attrs}},"pos":0,"stepType":"addNodeMark"}]}`;
+        const text = `{"baseVersion":40,"batch":"rina-40","clientId":"rina","steps":[{"mark":{"type":"bold","attrs":${attrs}},"pos":0,"stepType":"addNodeMark"}]}`;
         expect(utf8Bytes(text)).toBeLessThan(MAX_BATCH_BYTES);
-        const failure = yield* admitBatch(40, text).pipe(Effect.flip);
+        const failure = yield* decodeBatch(text).pipe(Effect.flip);
         expect(failure._tag).toBe("SchemaError");
         expect(failure.message).toContain(
           `at most ${MAX_DOCUMENT_DEPTH} levels deep`
@@ -254,7 +285,7 @@ describe("editor/batch call body", () => {
   it.effect("refuses an undeclared key in a call rather than dropping it", () =>
     Effect.gen(function* () {
       const failure = yield* decodeBatch(
-        '{"baseVersion":0,"clientId":"rina","extra":1,"steps":[{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}]}'
+        '{"baseVersion":0,"batch":"rina-0","clientId":"rina","extra":1,"steps":[{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}]}'
       ).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
     })

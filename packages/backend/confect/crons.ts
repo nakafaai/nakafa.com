@@ -236,4 +236,16 @@ export default CronJobs.make()
       internal.editor.prune.sweep,
       { cursor: null }
     )
+  )
+  .add(
+    /**
+     * Deletes the editor-session records that a snapshot covers, once they were last
+     * submitted more than the keep delay ago.
+     */
+    CronJob.make(
+      "prune covered editor sessions",
+      PRUNE_INTERVAL,
+      internal.editor.prune.sweepClients,
+      { cursor: null }
+    )
   );

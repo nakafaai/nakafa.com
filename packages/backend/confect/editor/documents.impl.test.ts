@@ -9,6 +9,7 @@ import {
 import {
   batchText,
   denied,
+  documentRowOf,
   documentRows,
   IDLE,
   jsonValue,
@@ -38,7 +39,7 @@ describe("editor/documents open from a snapshot", () => {
   });
 
   it.effect(
-    "opens the snapshot with only the steps after it, and the head of the log",
+    "opens the snapshot with only the steps after it, the head of the log, and the session's record",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -66,12 +67,45 @@ describe("editor/documents open from a snapshot", () => {
           slug: nf,
         });
         const opened = yield* teacher.query(open, {
+          clientId: "rina",
           documentId: made.id,
           slug: nf,
         });
         expect(opened.head).toBe(3);
         expect(opened.snapshot.version).toBe(2);
         expect(Arr.map(opened.steps, (step) => step.version)).toEqual([3]);
+        expect(opened.client).toEqual({ batch: "rina-2-1-1", version: 3 });
+      })
+  );
+
+  it.effect(
+    "answers no session record to a session the caller did not make, and none before the first batch",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(create, {
+          content: paragraphText("Soal"),
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+        });
+        yield* teacher.mutation(submit, {
+          batch: yield* batchText(0, "rina", 1),
+          documentId: made.id,
+          slug: nf,
+        });
+        const fresh = yield* teacher.query(open, {
+          clientId: "hendra",
+          documentId: made.id,
+          slug: nf,
+        });
+        const theirs = yield* fixture.as("admin").query(open, {
+          clientId: "rina",
+          documentId: made.id,
+          slug: nf,
+        });
+        expect(fresh.client).toBeNull();
+        expect(theirs.client).toBeNull();
       })
   );
 });
@@ -106,7 +140,7 @@ describe("editor/documents create", () => {
         });
         const opened = yield* fixture
           .as("teacher")
-          .query(open, { documentId: made.id, slug: nf });
+          .query(open, { clientId: "rina", documentId: made.id, slug: nf });
         expect(jsonValue(opened.snapshot.content)).toEqual(jsonValue(content));
         expect(opened).toMatchObject({ head: 0, snapshot: { version: 0 } });
       })
@@ -174,6 +208,21 @@ describe("editor/documents create", () => {
         });
         expect(yield* fixture.run(documentRows)).toEqual([]);
         expect(yield* fixture.run(snapshotRows)).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "starts a document at head 0, with snapshot version 0 on the row the sweep reads",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* fixture.as("teacher").mutation(create, {
+          content: paragraphText("Soal"),
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+        });
+        const row = yield* fixture.run(documentRowOf(made.id));
+        expect(row).toMatchObject({ head: 0, snapshotVersion: 0 });
       })
   );
 
@@ -264,10 +313,10 @@ describe("editor/documents open", () => {
         });
         const opened = yield* fixture
           .as("teacher")
-          .query(open, { documentId: made.id, slug: nf });
+          .query(open, { clientId: "rina", documentId: made.id, slug: nf });
         const student = yield* fixture
           .as("student")
-          .query(open, { documentId: made.id, slug: nf })
+          .query(open, { clientId: "rina", documentId: made.id, slug: nf })
           .pipe(Effect.flip);
         expect(opened.steps).toEqual([]);
         expect(student).toMatchObject(denied("role"));
@@ -286,7 +335,7 @@ describe("editor/documents open", () => {
         });
         const teacher = yield* otherSchoolTeacher(fixture);
         const refused = yield* teacher
-          .query(open, { documentId: made.id, slug: other })
+          .query(open, { clientId: "rina", documentId: made.id, slug: other })
           .pipe(Effect.flip);
         expect(refused).toMatchObject(denied("resource"));
       })
