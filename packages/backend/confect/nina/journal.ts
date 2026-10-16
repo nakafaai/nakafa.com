@@ -1,7 +1,8 @@
-import { abortStream, listMessages } from "@convex-dev/agent";
+import { abortStream } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { Array as Arr, Effect } from "effect";
 
@@ -11,19 +12,19 @@ const settlementFailure = () =>
     message: "Unable to settle this Nina response.",
   });
 
-/** True once the Agent journal holds this turn's final answer. */
+/**
+ * True once the Agent journal holds this turn's final answer. The newest row is
+ * read opened, because the text of a sealed answer is in its sealed content.
+ */
 export const answered = Effect.fn("nina.journal.answered")(function* (
   turn: NinaTurnsDoc
 ) {
   const ctx = yield* MutationCtx;
-  const messages = yield* Effect.tryPromise({
-    try: () =>
-      listMessages(ctx, components.nina, {
-        threadId: turn.threadId,
-        paginationOpts: { cursor: null, numItems: 1 },
-      }),
-    catch: settlementFailure,
-  });
+  const messages = yield* readThread(ctx, {
+    owner: turn.userId,
+    paginationOpts: { cursor: null, numItems: 1 },
+    threadId: turn.threadId,
+  }).pipe(Effect.mapError(settlementFailure));
   const final = messages.page[0];
   return (
     final?.order === turn.order &&

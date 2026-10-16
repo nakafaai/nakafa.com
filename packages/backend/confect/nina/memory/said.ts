@@ -1,8 +1,7 @@
 import type { MessageDoc } from "@convex-dev/agent";
-import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
-import { ActionCtx } from "@repo/backend/confect/_generated/services";
 import { NinaMemoryError } from "@repo/backend/confect/nina/memory/failure";
+import { readMessageFromAction } from "@repo/backend/confect/nina/sealed/action";
 import { Effect, Option } from "effect";
 
 /**
@@ -19,20 +18,20 @@ export function saidOf(prompt: MessageDoc | null | undefined) {
 }
 
 /**
- * Reads the learner's own words of a turn (`saidOf`) from an action. A message
- * the Agent component cannot read fails with the typed error of a background
- * memory call.
+ * Reads the learner's own words of a turn (`saidOf`) from an action, opened for
+ * the learner who owns the turn. A message the Agent component cannot read fails
+ * with the typed error of a background memory call.
  */
 export const readSaid = Effect.fn("nina.memory.said")(function* (
-  turn: Pick<NinaTurnsDoc, "promptMessageId">
+  turn: Pick<NinaTurnsDoc, "promptMessageId" | "userId">
 ) {
-  const ctx = yield* ActionCtx;
-  const [prompt] = yield* Effect.tryPromise({
-    try: () =>
-      ctx.runQuery(components.nina.messages.getMessagesByIds, {
-        messageIds: [turn.promptMessageId],
-      }),
-    catch: () => new NinaMemoryError({ operation: "read", rejected: false }),
-  });
+  const prompt = yield* readMessageFromAction(
+    turn.userId,
+    turn.promptMessageId
+  ).pipe(
+    Effect.mapError(
+      () => new NinaMemoryError({ operation: "read", rejected: false })
+    )
+  );
   return saidOf(prompt);
 });
