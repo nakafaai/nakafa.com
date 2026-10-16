@@ -58,13 +58,15 @@ const decideForClient = (
 /**
  * Decides one action for one principal on one subject, a Person through
  * `Member` or an integration client. The subject's tenant comes first, so a
- * principal of another tenant is refused whatever the subject's state. A
- * revoked client is refused as `condition` on every action. A write in a
- * suspended tenant or on a locked subject is refused as `condition` too, even
- * for Owners, because only a `write` rule is refused that way and a `transition`
- * is not (ADR 0012). Then a client is decided by its action list, and a Person
- * by roles and, where roles leave it open, relations. Relations are checked
- * last, and they are the only reads a decision makes. No rule reads the clock.
+ * principal of another tenant is refused whatever the subject's state. A client
+ * of another school than the subject's is refused the same way, even when its
+ * pair was built without decoding it. A revoked client is refused as
+ * `condition` on every action. A write in a suspended tenant or on a locked
+ * subject is refused as `condition` too, even for Owners, because only a
+ * `write` rule is refused that way and a `transition` is not (ADR 0012). Then a
+ * client is decided by its action list, and a Person by roles and, where roles
+ * leave it open, relations. Relations are checked last, and they are the only
+ * reads a decision makes. No rule reads the clock.
  */
 export const decide = Effect.fn("access.decide")(function* (
   action: string,
@@ -77,6 +79,9 @@ export const decide = Effect.fn("access.decide")(function* (
   >
 ): Effect.fn.Return<typeof Decision.Type, never, DatabaseReader> {
   if (principal.tenant._id !== subject.tenantId) {
+    return "resource";
+  }
+  if ("client" in principal && principal.client.tenantId !== subject.tenantId) {
     return "resource";
   }
   const revoked =

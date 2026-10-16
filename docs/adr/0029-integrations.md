@@ -510,7 +510,9 @@ first. The token endpoint, the bearer middleware, and the routes come later.
   entries that declare no action, because Confect cannot compile an empty union
   into a validator.
 - `decide` takes the subject's tenant with the subject, so a principal of another
-  tenant is refused as `resource`, whichever principal it is. A client is decided
+  tenant is refused as `resource`, whichever principal it is. A client of another
+  school than the subject's is refused as `resource` too, because a
+  `ClientPrincipal` checks its pair only when it is decoded. A client is decided
   by three things: the rule must open the action to the Integration role, the
   action list must name the action, and the scope must cover the subject. The
   usual conditions come first, so a revoked client, a write in a suspended

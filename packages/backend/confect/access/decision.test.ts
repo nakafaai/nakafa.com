@@ -239,6 +239,50 @@ describe("access/decision", () => {
     })
   );
 
+  it.effect(
+    "refuses a client whose school is not the subject's, though the tenant matches",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const verdicts = yield* fixture.run(
+          Effect.gen(function* () {
+            const foreign = yield* clientPrincipal(fixture.tenants.other, {
+              actions: ["person.view"],
+              scope: { kind: "tenant" },
+              status: "active",
+            });
+            const ours = yield* clientPrincipal(fixture.tenants.nf, {
+              actions: ["person.view"],
+              scope: { kind: "tenant" },
+              status: "active",
+            });
+            const nfTenant = (yield* principal(fixture.people.owner.personId))
+              .tenant;
+            const otherTenant = (yield* principal(
+              fixture.people.otherOwner.personId
+            )).tenant;
+            return [
+              yield* decide(
+                "person.view",
+                read(["integration"]),
+                tenantLevel(fixture.tenants.nf),
+                { client: foreign.client, tenant: nfTenant },
+                related(false)
+              ),
+              yield* decide(
+                "person.view",
+                read(["integration"]),
+                tenantLevel(fixture.tenants.other),
+                { client: ours.client, tenant: otherTenant },
+                related(false)
+              ),
+            ];
+          })
+        );
+        expect(verdicts).toEqual(["resource", "resource"]);
+      })
+  );
+
   it.effect("refuses a revoked client on every action, reads included", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

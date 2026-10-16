@@ -6,9 +6,9 @@ import { Schema } from "effect";
 /**
  * An integration client that a school API request verified, with its tenant.
  * Only the HTTP layer builds one, and it passes one to internal functions only.
- * A client belongs to one school, so a pair with another school's tenant is
- * refused when it is built, and `decide` never sees such a pair. `decide` never
- * reads the client's secret digest.
+ * A client belongs to one school, so decoding refuses a pair with another
+ * school's tenant. The type does not carry that check, so `decide` refuses such
+ * a pair too. `decide` never reads the client's secret digest.
  */
 export const ClientPrincipal = Schema.Struct({
   client: integrationClients.Doc,

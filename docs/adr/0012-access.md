@@ -103,7 +103,8 @@ reads neither the clock nor the database except through the subject's
 memoized relation checks:
 
 1. A subject of another tenant than the principal's is refused as `resource`,
-   whatever its state and whoever the principal is.
+   whatever its state and whoever the principal is. A client of another school
+   than the subject's is refused the same way (ADR 0029).
 2. A revoked integration client is refused as `condition`, on every action. A
    client is decided by its own rule and action list (ADR 0029), never by a
    Person's roles or relations.
