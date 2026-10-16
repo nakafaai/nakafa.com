@@ -29,10 +29,3 @@ export const encodeStoredStep = Effect.fn("editor.log.encode")(function* (
   yield* Schema.decodeEffect(UncheckedStepSchema)(stored.step);
   return yield* Schema.encodeEffect(StoredStepSchema)(stored);
 });
-
-/** Reads a stored row back into a checked stored step. */
-export const decodeStoredStep = Effect.fn("editor.log.decode")(function* (
-  row: unknown
-) {
-  return yield* Schema.decodeUnknownEffect(StoredStepSchema)(row);
-});

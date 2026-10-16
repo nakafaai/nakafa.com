@@ -10,6 +10,7 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   tenantAuthority,
   unitAuthority,
+  unitLocked,
 } from "@repo/backend/confect/tenancy/authority";
 import { Effect } from "effect";
 
@@ -38,7 +39,7 @@ const documentAuthority = Authority.make(
         unit: ({ unitId }) =>
           readUnit(unitId).pipe(
             Effect.map((unit) => ({
-              locked: unit.status === "archived",
+              locked: unitLocked(unit),
               units: [unitId],
             }))
           ),

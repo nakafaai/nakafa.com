@@ -135,7 +135,10 @@ from the snapshot. The sweep reads the log in pages of 64 steps
 (`PRUNE_PAGE_STEPS`): a step is at most one batch of 128 KiB, so a page reads at
 most 8 MiB, under the 16 MiB that a transaction may read. A client whose version
 is older than the oldest step that is kept gets `behind` from `steps:since`, and
-it opens again from the snapshot.
+it opens again from the snapshot. A page decides a document's steps against the
+snapshot it reads on that page, so a snapshot saved between two pages can leave
+a gap in the kept log until the next sweep. `steps:since` returns only the steps
+that follow its version without a gap, and a read at the gap gets `behind`.
 
 Acceptance: in `convex-test`, a submit at a stale version is refused, a document
 at the node depth bound of 16 is stored and read back, and a snapshot whose

@@ -10,7 +10,7 @@ import {
   batchText,
   denied,
   documentRows,
-  encodeJson,
+  IDLE,
   jsonValue,
   nf,
   otherSchoolTeacher,
@@ -22,7 +22,8 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect } from "effect";
 
 const { create, open } = refs.public.editor.documents;
 const other = slugOf("other");
@@ -30,8 +31,6 @@ const other = slugOf("other");
 describe("editor/documents open from a snapshot", () => {
   const { submit } = refs.public.editor.steps;
   const { save } = refs.public.editor.snapshots;
-  /** Past the snapshot rule's idle delay, so a snapshot is due at once. */
-  const IDLE = Duration.toMillis(Duration.seconds(31));
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -88,7 +87,7 @@ const nestBlockquotes = (count: number, inner: unknown): unknown =>
  * paragraph at the bottom. The paragraph is the deepest node.
  */
 const documentLevels = (levels: number) =>
-  encodeJson({
+  encodeJsonText({
     content: [nestBlockquotes(levels - 2, { type: "paragraph" })],
     type: "doc",
   });
@@ -142,7 +141,7 @@ describe("editor/documents create", () => {
         const failure = yield* fixture
           .as("admin")
           .mutation(create, {
-            content: encodeJson({
+            content: encodeJsonText({
               content: [{ type: "notABlock" }],
               type: "doc",
             }),

@@ -2,22 +2,19 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   batchText,
+  IDLE,
+  LONG_AGO,
   nf,
   paragraphText,
   stepRows,
 } from "@repo/backend/test/editor";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const documents = refs.public.editor.documents;
 const steps = refs.public.editor.steps;
 const snapshots = refs.public.editor.snapshots;
 const prune = refs.internal.editor.prune;
-
-/** Past the idle delay, so a snapshot is due after the last step. */
-const IDLE = Duration.toMillis(Duration.seconds(31));
-/** Past the step keep delay, so every covered step is old enough to prune. */
-const LONG_AGO = Duration.toMillis(Duration.minutes(11));
 
 beforeEach(() => {
   vi.useFakeTimers();

@@ -5,31 +5,28 @@ import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
 import {
   batchText,
   denied,
-  encodeJson,
+  documentRowOf,
+  IDLE,
   insertStep,
+  LONG_AGO,
   nf,
   otherSchoolTeacher,
   paragraphText,
   stepRows,
-  storedDocument,
 } from "@repo/backend/test/editor";
 import {
   slugOf,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect } from "effect";
 
 const documents = refs.public.editor.documents;
 const { since, submit } = refs.public.editor.steps;
 const snapshots = refs.public.editor.snapshots;
 const prune = refs.internal.editor.prune;
 const other = slugOf("other");
-
-/** One minute after the snapshot rule's idle delay, so a snapshot is due at once. */
-const IDLE = Duration.toMillis(Duration.seconds(31));
-/** Past the step keep delay, so every covered step is old enough to prune. */
-const LONG_AGO = Duration.toMillis(Duration.minutes(11));
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -61,7 +58,7 @@ describe("editor/steps submit", () => {
           .mutation(submit, { batch: text, documentId, slug: nf });
         const rows = yield* fixture.run(stepRows);
         expect(submitted).toEqual({ head: 3 });
-        expect((yield* fixture.run(storedDocument(documentId))).head).toBe(3);
+        expect((yield* fixture.run(documentRowOf(documentId))).head).toBe(3);
         expect(Arr.map(rows, (row) => row.version)).toEqual([1, 2, 3]);
         expect(Arr.map(rows, (row) => row.clientId)).toEqual([
           "rina",
@@ -192,7 +189,7 @@ describe("editor/steps submit", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const documentId = yield* newDocument(fixture);
-        const text = encodeJson({
+        const text = encodeJsonText({
           baseVersion: 0,
           clientId: "rina",
           steps: [insertStep("x".repeat(MAX_BATCH_BYTES))],
@@ -360,6 +357,51 @@ describe("editor/steps since", () => {
           ...Arr.map(read, (step) => step.version),
           ...Arr.map(restSteps, (step) => step.version),
         ]).toEqual([1, 2, 3, 4, 5, 6]);
+      })
+  );
+
+  it.effect(
+    "returns the steps up to a gap the log holds, and says behind at the gap",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        const teacher = fixture.as("teacher");
+        yield* teacher.mutation(submit, {
+          batch: yield* batchText(0, "rina", 5),
+          documentId,
+          slug: nf,
+        });
+        // A sweep of two pages can keep a step below one it deleted, so the log
+        // holds a gap at version 3 while the head is at 5.
+        const rows = yield* fixture.run(stepRows);
+        const dropped = yield* Effect.fromOption(
+          Arr.findFirst(rows, (row) => row.version === 3)
+        );
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("editorSteps").delete(dropped._id)
+          )
+        );
+        const beforeGap = yield* teacher.query(since, {
+          documentId,
+          slug: nf,
+          version: 0,
+        });
+        const atGap = yield* teacher.query(since, {
+          documentId,
+          slug: nf,
+          version: 2,
+        });
+        expect(beforeGap).toEqual({
+          _tag: "steps",
+          head: 5,
+          steps: [
+            { clientId: "rina", step: expect.any(String), version: 1 },
+            { clientId: "rina", step: expect.any(String), version: 2 },
+          ],
+        });
+        expect(atGap).toEqual({ _tag: "behind", head: 5 });
       })
   );
 });

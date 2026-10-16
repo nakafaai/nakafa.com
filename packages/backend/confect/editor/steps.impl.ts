@@ -16,7 +16,7 @@ import {
 } from "@repo/backend/confect/editor/view";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { Array as Arr, Effect, Layer, Option } from "effect";
+import { Array as Arr, Effect, Layer } from "effect";
 
 /** The reply that carries the head and the steps the log still keeps after the version. */
 const stepsReply = (
@@ -35,7 +35,9 @@ const behindReply = (head: number): typeof SinceReply.Type => ({
  * after the snapshot and prunes the covered steps after a delay. So the first step
  * after the version is the next one only while the log still keeps it. When it is
  * missing, or when the version is behind the head with no step after it, the client
- * opens again from the snapshot.
+ * opens again from the snapshot. A sweep can also leave a gap further on, so the
+ * reply stops at the first step that does not follow the one before it, and the
+ * next read from there says `behind`.
  */
 const since = FunctionImpl.make(
   databaseSchema,
@@ -47,14 +49,14 @@ const since = FunctionImpl.make(
       return stepsReply(document.head, []);
     }
     const rows = yield* stepsAfter(document._id, version);
-    const kept = Option.match(Arr.head(rows), {
-      onNone: () => false,
-      onSome: (first) => first.version === version + 1,
-    });
-    if (!kept) {
+    const run = Arr.takeWhile(
+      rows,
+      (row, index) => row.version === version + index + 1
+    );
+    if (run.length === 0) {
       return behindReply(document.head);
     }
-    return stepsReply(document.head, Arr.map(rows, stepView));
+    return stepsReply(document.head, Arr.map(run, stepView));
   })
 );
 
