@@ -39,6 +39,18 @@ const cardSectionHintVariants = cva("min-w-0 flex-1 text-sm", {
   },
 });
 
+const cardSectionActionsVariants = cva("flex items-center gap-2", {
+  defaultVariants: {
+    share: false,
+  },
+  variants: {
+    share: {
+      false: "shrink-0",
+      true: "min-w-0 flex-1 *:min-w-0 *:flex-1",
+    },
+  },
+});
+
 /**
  * A titled card that frames one self-contained section. Compose the design
  * system's card header, title, description, and content inside it, then end
@@ -93,10 +105,14 @@ export function CardSectionHint({
 
 /**
  * Holds a section's actions on the right of its footer, side by side at their
- * full size, so a footer with only actions keeps them on the right too.
+ * full size, so a footer with only actions keeps them on the right too. A
+ * footer with no sentence passes `share`: its actions split the row equally,
+ * and each one keeps its label on one line within its share.
  */
-export function CardSectionActions(
-  props: Omit<ComponentProps<"div">, "className">
-) {
-  return <div className="flex shrink-0 items-center gap-2" {...props} />;
+export function CardSectionActions({
+  share,
+  ...props
+}: Omit<ComponentProps<"div">, "className"> &
+  VariantProps<typeof cardSectionActionsVariants>) {
+  return <div className={cardSectionActionsVariants({ share })} {...props} />;
 }

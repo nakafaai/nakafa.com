@@ -163,7 +163,7 @@ function TryoutReviewOffer({
         <PricingPrice Price={StaticPrice} period={period} plan="pro" />
       </CardContent>
       <CardSectionFooter bottomSheet>
-        <CardSectionActions>
+        <CardSectionActions share>
           <IntentLink
             className={buttonVariants({ variant: "outline" })}
             href="/pricing"

@@ -294,7 +294,7 @@
     "start-entry-success": "Try out dimulai. Waktu sudah berjalan.",
     "paywall-title": "Lihat pembahasan {count} soal ini",
     "paywall-description": "Pahami langkah dan alasan di balik setiap jawaban, lalu tanya Nina kalau masih bingung.",
-    "paywall-compare": "Bandingkan paket",
+    "paywall-compare": "Lihat paket",
     "ask-nina-prompt": "Bantu aku pahami soal nomor {number} ini.",
     "start-error": "Try out belum bisa dimulai. Coba lagi ya.",
     "score-label-irt": "Nilai IRT",
@@ -814,7 +814,7 @@
     "pro-feature-2": "3.000 kredit AI setiap bulan untuk Nina",
     "pro-feature-3": "Pembahasan lengkap untuk semua try out, termasuk percobaan sebelumnya",
     "pro-feature-5": "Bantuan prioritas saat kamu butuh arahan",
-    "pro-cta": "Dapatkan Pro"
+    "pro-cta": "Pilih Pro"
   },
   "PricingPage": {
     "metadata-title": "Harga Nakafa: Gratis dan Pro",
