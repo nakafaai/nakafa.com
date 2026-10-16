@@ -16,8 +16,10 @@ import { decimalSeparators } from "@/lib/marketing/decimal";
 
 /**
  * Reads the window's four lessons for one locale through the cached material
- * reader. The `use cache` boundary keeps the Effect runtime inside the static
- * render, so the page still prerenders with its lessons.
+ * reader. The `use cache` function is the framework's Promise boundary, so the
+ * page still prerenders with its lessons. Trace timing stays off, because a span
+ * reads the clock when it starts and Cache Components reject implicit clock access
+ * during prerendering. https://nextjs.org/docs/messages/next-prerender-current-time
  */
 async function readLessons(locale: AppLocaleCode) {
   "use cache";
@@ -33,8 +35,8 @@ async function readLessons(locale: AppLocaleCode) {
 /**
  * The lessons row: a short chat with Nina on one side and the lesson window on
  * the other. The chat uses the product's own bubbles, and the window holds four
- * published lessons, each named and described by the lesson itself, so no copy
- * of a lesson lives in the page.
+ * published lessons, each named and described by the lesson itself. The quadratic
+ * visual is the exception: it draws its own scene (see quadratic.ts).
  */
 export async function Lesson() {
   const locale = getLocaleOrThrow(await getLocale());

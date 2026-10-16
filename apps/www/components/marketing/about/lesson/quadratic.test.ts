@@ -7,7 +7,7 @@ import {
 } from "@/components/marketing/about/lesson/quadratic";
 
 describe("the quadratic lesson", () => {
-  it("crosses the axis at the roots 1 and 3 that the lesson names", () => {
+  it("crosses the axis at the roots 1 and 3 of the curve it draws", () => {
     expect(QUADRATIC_POINTS.left.x).toBe(1);
     expect(QUADRATIC_POINTS.right.x).toBe(3);
     expect(quadratic(QUADRATIC_POINTS.left.x)).toBe(0);

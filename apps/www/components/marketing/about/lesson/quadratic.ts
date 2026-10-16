@@ -1,6 +1,10 @@
 import type { MathVisual } from "@nakafa/aksara-contracts/math/visual";
 
-/** The coefficients of the quadratic x squared minus four x plus three. */
+/**
+ * The coefficients of the quadratic x squared minus four x plus three. This is a
+ * copy of the scene that Aksara does not publish: the linked lesson draws x squared
+ * minus two x minus three, with its vertex at (1,-4), so the two curves differ.
+ */
 const CURVE = { a: 1, b: -4, c: 3 };
 
 /** The height of the curve at `x`. */
