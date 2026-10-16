@@ -77,6 +77,26 @@ the chat had, so an older page decodes the owner's chat as it always did, and an
 older page is never a reader of a link, because only a page that sends the token
 reads by one.
 
+What a reader can cost the deployment has a bound and no rate limit, because a
+read cannot have one. A page of messages and a page of turns hold
+`NINA_MESSAGES_PAGE_SIZE` rows at most, however many the caller asks for, and a
+call with a wrong token reads the chat and its share and stops, so the large
+read needs the token. A limiter spends its token in a mutation or an action
+(`RateLimiter.limit` takes no query context), and a query can only check a
+limit, which spends nothing. Convex documents no limit per client either
+(docs.convex.dev/production/state/limits). A grant that a mutation issues in
+exchange for the token would bound how many readers there are and not how often
+one reads, and the token is already a secret that no one can guess, so it would
+add a second secret and no limit. An owner whose link is abused turns sharing
+off, which deletes the token and ends every link to the chat at once. One bound
+does not hold for a call that names an `endCursor`: Convex serves the rows
+between two cursors of a query in one call, whatever page size was asked, and
+enforces neither `maximumRowsRead` nor `maximumBytesRead` for it
+(`read_page_from_query` and `index_range.rs` in get-convex/convex-backend). Only
+the server issues a cursor, and it works for the query it came from, so a reader
+of a chat can read that chat's rows in one call, at most what one Convex
+function may read.
+
 The conversation is not a fact of the account, with one exception: what Nina
 looked for in the owner's memory is. A search of memory tells a reader what Nina
 looked for (the stored call holds the query, in the owner's words), whether

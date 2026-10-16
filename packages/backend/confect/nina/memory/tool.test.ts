@@ -33,7 +33,7 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 
-const list = Ref.getFunctionReference(refs.public.nina.messages.list);
+const messagesPage = Ref.getFunctionReference(refs.public.nina.messages.page);
 const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
 const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
@@ -328,7 +328,7 @@ describe("a turn in which Nina searches what the learner told her", () => {
     const shareToken = await f.owner.query(token, { chatId: f.chatId });
     assert(shareToken !== null);
     const readThrough = (reader: typeof f.owner, access: object) =>
-      reader.query(list, {
+      reader.query(messagesPage, {
         chatId: f.chatId,
         paginationOpts: { cursor: null, numItems: 20 },
         threadId: f.threadId,

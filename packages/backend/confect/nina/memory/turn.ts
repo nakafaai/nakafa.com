@@ -1,10 +1,15 @@
 import { FunctionImpl } from "@confect/server";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
+import { readLearningPreferenceByUserId } from "@repo/backend/confect/learningPreferences/impl";
 import { readLearnerProfile } from "@repo/backend/confect/nina/memory/profile";
 import { recallMemories } from "@repo/backend/confect/nina/memory/recall";
 import { toNote } from "@repo/backend/confect/nina/memory/seal";
 import { searchMemories } from "@repo/backend/confect/nina/memory/search";
-import { readMemoryState } from "@repo/backend/confect/nina/memory/store";
+import {
+  memoryStateOf,
+  readMemoryState,
+} from "@repo/backend/confect/nina/memory/store";
 import spec, {
   MEMORY_KNOWN_LIMIT,
   MEMORY_LOOKUP_LIMIT,
@@ -14,33 +19,42 @@ import { Array as Arr, Effect } from "effect";
 
 /**
  * What a turn knows about the learner: the account profile, the portrait when
- * they have one (`readPortrait`), and the memories that their message and the
- * open page call up (`recallMemories`). While memory is paused neither the
- * portrait nor a memory is read, and a memory that "Delete all" took is never
- * read.
+ * they have one (`readPortrait`), and the memories that their message (`said`)
+ * and the open page (`topics`) call up (`recallMemories`) as they are at `now`.
+ * While memory is paused neither the portrait nor a memory is read, and a
+ * memory that "Delete all" took is never read. The turn's brief reads it with
+ * the rest of what a run needs before the model (`nina/brief`).
  */
-export const read = FunctionImpl.make(
-  schema,
-  spec,
-  "read",
-  Effect.fn("nina.memory.read")(function* ({ now, said, topics, userId }) {
-    const profile = yield* readLearnerProfile(userId);
-    const { clearedAt, paused } = yield* readMemoryState(userId);
-    if (paused) {
-      return { paused: true, profile, recalled: [] };
-    }
-    const portrait = yield* readPortrait(userId);
-    return {
-      paused: false,
-      ...(portrait === undefined ? {} : { portrait }),
-      profile,
-      recalled: Arr.map(
-        yield* recallMemories({ clearedAt, now, said, topics, userId }),
-        toNote
-      ),
-    };
-  })
-);
+export const recallLearner = Effect.fn("nina.memory.learner")(function* ({
+  now,
+  said,
+  topics,
+  userId,
+}: {
+  readonly now: number;
+  readonly said: string;
+  readonly topics: readonly string[];
+  readonly userId: Docs["users"]["_id"];
+}) {
+  const preference = yield* readLearningPreferenceByUserId(userId).pipe(
+    Effect.orDie
+  );
+  const profile = yield* readLearnerProfile(userId, preference);
+  const { clearedAt, paused } = memoryStateOf(preference);
+  if (paused) {
+    return { paused: true, profile, recalled: [] };
+  }
+  const portrait = yield* readPortrait(userId);
+  return {
+    paused: false,
+    ...(portrait === undefined ? {} : { portrait }),
+    profile,
+    recalled: Arr.map(
+      yield* recallMemories({ clearedAt, now, said, topics, userId }),
+      toNote
+    ),
+  };
+});
 
 /**
  * Whether the learner paused memory. The capture asks it once, before it sends
@@ -100,8 +114,11 @@ export const known = FunctionImpl.make(
   spec,
   "known",
   Effect.fn("nina.memory.known")(function* ({ message, now, topics, userId }) {
-    const profile = yield* readLearnerProfile(userId);
-    const { clearedAt, paused } = yield* readMemoryState(userId);
+    const preference = yield* readLearningPreferenceByUserId(userId).pipe(
+      Effect.orDie
+    );
+    const profile = yield* readLearnerProfile(userId, preference);
+    const { clearedAt, paused } = memoryStateOf(preference);
     if (paused) {
       return { known: [], profile };
     }

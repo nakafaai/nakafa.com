@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -16,9 +16,10 @@ import {
   useTransition,
 } from "react";
 import { useStore } from "zustand";
-import { readChatAccess, readChatArgs } from "@/components/ai/chat/access";
+import { readChatAccess } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
 import { optimisticCancel } from "@/components/ai/chat/cancel";
+import { useConversation } from "@/components/ai/chat/conversation.client";
 import { draftMessage } from "@/components/ai/chat/messages";
 import {
   type ChatStoreApi,
@@ -28,35 +29,9 @@ import {
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
-import { useConvexAuth } from "@/components/providers/convex";
 import { useViewer } from "@/lib/identity/client";
 
 const ChatContext = createContext<ChatContextValue | null>(null);
-
-/**
- * Reads the authorized facts of one conversation: its chat and latest turn. A
- * reader who is not the owner proves access with the share token of the link.
- * A chat its learner is deleting is not read: the server is about to delete
- * it, and a read that finds it gone fails the page.
- */
-function useConversation(
-  chatId: Id<"chats">,
-  shareToken: string | undefined,
-  leaving: boolean
-) {
-  const authenticating = useConvexAuth((auth) => auth.isLoading);
-  const result = useQuery(
-    nina.conversation.get,
-    authenticating || leaving ? "skip" : readChatArgs(chatId, shareToken)
-  );
-  if (QueryResult.isFailure(result)) {
-    throw result.error;
-  }
-  return {
-    chat: QueryResult.isSuccess(result) ? result.value.chat : undefined,
-    turn: QueryResult.isSuccess(result) ? result.value.turn : null,
-  };
-}
 
 /**
  * Owns one conversation's state and actions. It never reads the streamed
@@ -70,7 +45,8 @@ function useChatState(
   store: ChatStoreApi
 ) {
   const leaving = useStore(store, (state) => state.leaving);
-  const { chat, turn } = useConversation(chatId, shareToken, leaving);
+  const { chat, loadMoreTurns, turn, turnAt, turnsLoading, turnsStatus } =
+    useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
@@ -223,11 +199,15 @@ function useChatState(
     draft,
     isLoading: loading,
     isPending,
+    loadMoreTurns,
     owner,
     retry: actions.retry,
     send: actions.send,
     shareToken,
     turn,
+    turnAt,
+    turnsLoading,
+    turnsStatus,
   };
 }
 
