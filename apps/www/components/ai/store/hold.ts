@@ -57,12 +57,15 @@ export function refuseHolds(
 }
 
 /**
- * The files outside a send whose uploads the send has to give back, or none
- * when the send fits. The server counts every upload it has not dropped,
- * whichever composer holds its file, and refuses an upload beyond its limit. A
- * composer that is gone takes its files with it, and the places held for them
- * stay counted until the server drops them. A file of the send that holds an
- * upload needs no new place, and one whose upload the server dropped does.
+ * The files whose uploads a send gives back before it reserves new places, or
+ * none when every file of the send holds a place it can reuse. The server counts
+ * every upload it has not dropped, whichever composer holds its file, and
+ * refuses an upload beyond its limit. A hold the page no longer trusts may still
+ * be counted, because the page starts its clock before the server reserves, so
+ * a send that needs a place gives every such hold back, its own files included.
+ * When the places the page trusts and the new ones pass the limit, it also gives
+ * back the trusted holds of files outside the send: a composer that is gone took
+ * its files with it, and their places stay counted until the server drops them.
  */
 export function strayFiles(
   held: Held,
@@ -71,8 +74,18 @@ export function strayFiles(
 ) {
   const counted = Rec.filter(held, (hold) => isKept(hold, now));
   const needing = Arr.filter(fileIds, (fileId) => !Rec.has(counted, fileId));
-  if (Rec.size(counted) + needing.length <= NINA_FILE_COUNT) {
+  if (Arr.isReadonlyArrayEmpty(needing)) {
     return [];
   }
-  return Arr.filter(Rec.keys(held), (fileId) => !Arr.contains(fileIds, fileId));
+  const untrusted = Arr.filter(
+    Rec.keys(held),
+    (fileId) => !Rec.has(counted, fileId)
+  );
+  if (Rec.size(counted) + needing.length <= NINA_FILE_COUNT) {
+    return untrusted;
+  }
+  return Arr.filter(
+    Rec.keys(held),
+    (fileId) => !(Rec.has(counted, fileId) && Arr.contains(fileIds, fileId))
+  );
 }

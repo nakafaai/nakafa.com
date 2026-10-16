@@ -143,6 +143,8 @@ const holdAttachment = Effect.fn("nina.upload.hold")(function* (
   if (Option.isSome(cached)) {
     return cached.value;
   }
+  // A file the browser cannot read shows as failed, so the learner sees which
+  // one blocks the send.
   const bytes = yield* Effect.tryPromise({
     try: () => attachment.file.arrayBuffer(),
     catch: () =>
@@ -150,10 +152,14 @@ const holdAttachment = Effect.fn("nina.upload.hold")(function* (
         code: "NINA_UPLOAD_FAILED",
         message: "Unable to read this attachment.",
       }),
-  });
+  }).pipe(
+    Effect.tapError(() =>
+      Effect.sync(() => status.markUpload(attachment.id, "error"))
+    )
+  );
   yield* requireNinaConnection(convex);
   // The file shows as uploading from the moment its bytes go, and as failed if
-  // the upload does not finish. A refusal before that moment is not an upload.
+  // the upload does not finish. A refusal while offline is no fault of the file.
   // Both are kept under the id of the file: its preview address changes when a
   // hidden composer shows again, so a failure written under the address of
   // this send would never be found by the chip.

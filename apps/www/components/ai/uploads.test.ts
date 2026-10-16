@@ -408,7 +408,10 @@ describe("the uploads of one send", () => {
         message: "Unable to read this attachment.",
       });
       expect(h.upload).not.toHaveBeenCalled();
-      expect(h.status.markUpload).not.toHaveBeenCalled();
+      expect(h.status.markUpload).toHaveBeenCalledExactlyOnceWith(
+        "notes",
+        "error"
+      );
     })
   );
 

@@ -117,6 +117,16 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
     previousDraftOwnerIdRef.current = ownerId;
   }, [ownerId, store]);
 
+  // The notice names files picked into this provider's composers, which go when
+  // it unmounts, as when the learner leaves for the sign-in page. The toaster
+  // outlives the provider, so the notice is taken down here.
+  useEffect(
+    () => () => {
+      toast.dismiss(REJECTION_NOTICE);
+    },
+    []
+  );
+
   return <AiContext value={store}>{children}</AiContext>;
 }
 

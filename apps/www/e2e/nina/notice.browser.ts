@@ -19,6 +19,8 @@ import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
 import { UNCONFIRMED } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
+/** The address of the sign-in page, in any language. */
+const SIGN_IN_PAGE = /\/auth/u;
 /** How long Sonner keeps a notice that sets no lifetime of its own. */
 const DEFAULT_LIFETIME_MILLISECONDS = 4000;
 
@@ -154,6 +156,35 @@ test.describe("The notice of the files not attached at 390px", () => {
         yield* Effect.promise(async () => {
           await expect(notice).toHaveCount(0);
           await expect(chipsIn(composer)).toHaveCount(1);
+        });
+      })
+    );
+  });
+});
+
+test.describe("The notice of the files not attached at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("goes when the learner leaves for the sign-in page, which drops the composer it names files of", async ({
+    page,
+  }) => {
+    await runPage(
+      page,
+      Effect.gen(function* () {
+        const composer = yield* openComposer(page);
+        yield* pickFiles(composer, [fileOf("essay.docx", WORD_TYPE, 20)]);
+        const notice = noticeWith(page, NOT_ATTACHED);
+        yield* Effect.promise(() => expect(notice).toBeVisible());
+
+        // The sidebar's sign-in link moves without a reload, so the toaster of
+        // the root layout stays while the composer and its files go.
+        yield* Effect.promise(async () => {
+          await page.getByRole("link", { name: "Log in" }).click();
+          await expect(page).toHaveURL(SIGN_IN_PAGE, {
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(notice).toHaveCount(0);
         });
       })
     );

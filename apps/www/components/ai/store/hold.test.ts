@@ -95,14 +95,21 @@ describe("the files a send gives back to make room", () => {
     expect(strayFiles(held, kept, NOW)).toEqual([]);
   });
 
-  it("do not count an upload the server has dropped", () => {
-    expect(strayFiles(holding(strays, NOW), ["new"], NOW)).toEqual([]);
+  it("give back every hold the page no longer trusts when the send needs a place, because the server may still count it", () => {
+    expect(strayFiles(holding(strays, NOW), ["new"], NOW)).toEqual(strays);
   });
 
-  it("count a file whose upload is gone as one that needs a place of its own", () => {
+  it("give back the untrusted hold of a file of the send before it takes a new place, though the send fits", () => {
+    const kept = Arr.makeBy(NINA_FILE_COUNT - 1, (index) => `kept-${index}`);
+    const held = { ...holding(kept), ...holding(["old"], NOW) };
+
+    expect(strayFiles(held, ["old"], NOW)).toEqual(["old"]);
+  });
+
+  it("count a file whose upload is gone as one that needs a place of its own, and give its old upload back too", () => {
     const held = { ...holding(strays), ...holding(["old"], NOW) };
 
-    expect(strayFiles(held, ["old"], NOW)).toEqual(strays);
+    expect(strayFiles(held, ["old"], NOW)).toEqual([...strays, "old"]);
   });
 });
 
