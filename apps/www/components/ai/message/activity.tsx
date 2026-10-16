@@ -21,6 +21,7 @@ import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use } from "react";
 import type { Invocation } from "@/components/ai/message/invocation";
+import { readLimitCopy } from "@/components/ai/message/limit";
 import { isProblem } from "@/components/ai/message/state";
 
 const ActivityContext = createContext<Invocation | null>(null);
@@ -77,12 +78,16 @@ function ActivityTrigger() {
     deepResearch: Globe02Icon,
     unknown: BrainIcon,
   }[capability];
+  const limitCopy = readLimitCopy(capability);
   const label = {
     denied: t("activity.denied"),
     done: t(`activity.${capability}`),
     empty: t(`activity.${capability}`),
     failed: t(`tool-failures.${capability}`),
-    limit: t("activity.source-limit", { count: researchMaxSources }),
+    limit:
+      limitCopy === null
+        ? t(`activity.${capability}`)
+        : t(limitCopy, { count: researchMaxSources }),
     partial: t(`activity.${capability}`),
     running: t(`activity.${capability}`),
     stopped: t(`activity.${capability}`),
