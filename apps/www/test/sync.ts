@@ -4,33 +4,42 @@ import {
   VersionStale,
 } from "@repo/backend/confect/editor/batch";
 import { SnapshotRefused } from "@repo/backend/confect/editor/errors";
+import { SNAPSHOT_IDLE_DELAY } from "@repo/backend/confect/editor/snapshot";
 import { encodeStep } from "@repo/backend/confect/editor/step";
 import type { SinceReply } from "@repo/backend/confect/editor/view";
+import { encodeJsonText } from "@repo/utilities/json";
 import { type Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
-import { Array as Arr, Effect, Ref, Schema } from "effect";
+import { Array as Arr, Duration, Effect, Ref, Schema } from "effect";
 import { collab } from "prosemirror-collab";
-import {
-  type EditorPort,
-  type SyncSession,
-  type SyncTransport,
-  startSync,
-  tick,
-} from "@/lib/editor/sync";
+import type {
+  EditorPort,
+  SyncSession,
+  SyncTransport,
+} from "@/lib/editor/session";
+import { startSync, tick } from "@/lib/editor/sync";
 
-/** The schema of the tests: paragraphs of text, which a text step lands in. */
+/** The schema of the tests: paragraphs of text, which a text step lands in, and quotes that nest them. */
 const proseSchema = new ProseSchema({
   nodes: {
-    doc: { content: "paragraph+" },
+    doc: { content: "(paragraph | quote)+" },
     paragraph: { content: "text*", group: "block" },
+    quote: { content: "(paragraph | quote)+", group: "block" },
     text: { group: "inline", inline: true },
   },
 });
 
-/** Writes a value as its JSON text, the form a snapshot takes on the wire. */
-export const encodeJson = Schema.encodeSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+/** A paragraph inside `levels - 1` quotes, so the top node is `levels` levels deep. */
+export const nestedQuote = (levels: number): Node => {
+  let node = proseSchema.node("paragraph", null, [proseSchema.text("x")]);
+  for (let level = 1; level < levels; level += 1) {
+    node = proseSchema.node("quote", null, [node]);
+  }
+  return node;
+};
+
+/** Past the snapshot rule's idle delay by one second, so a snapshot is due at once. */
+export const IDLE = Duration.sum(SNAPSHOT_IDLE_DELAY, Duration.seconds(1));
 
 /** One empty document, where every test starts. */
 const emptyDoc = () =>
@@ -60,7 +69,7 @@ const FakeLog = Schema.Struct({
  * the client that sent it.
  */
 export const makeServer = Effect.fn("test.sync.server")(function* (
-  initialContent = encodeJson(emptyDoc().toJSON())
+  initialContent = encodeJsonText(emptyDoc().toJSON())
 ) {
   const log = yield* Ref.make<typeof FakeLog.Type>({
     firstKept: 1,
@@ -191,8 +200,14 @@ const makePort = Effect.fn("test.sync.port")(function* () {
 });
 
 /** Types text at the start of the document, as one local edit of an editor. */
-export const typeText = (state: Ref.Ref<EditorState>, text: string) =>
-  Ref.update(state, (current) => current.apply(current.tr.insertText(text, 1)));
+export const typeText = Effect.fn("test.sync.typeText")(function* (
+  state: Ref.Ref<EditorState>,
+  text: string
+) {
+  yield* Ref.update(state, (current) =>
+    current.apply(current.tr.insertText(text, 1))
+  );
+});
 
 /** The text of a document, which the convergence checks compare. */
 export const textOf = (doc: Node) => doc.textContent;
