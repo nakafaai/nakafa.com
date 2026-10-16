@@ -35,8 +35,8 @@ const view = (assignment: TenantAssignmentsDoc) =>
 
 /**
  * Makes an active teacher of the unit the homeroom teacher of a cohort. A cohort
- * holds one homeroom teacher, and a teacher is the homeroom teacher of one cohort
- * per period, so both checks are one indexed read each.
+ * holds one homeroom teacher, unless that teacher was removed, and a teacher is the
+ * homeroom teacher of one cohort per period, so each check is one indexed read.
  */
 const assign = FunctionImpl.make(
   databaseSchema,
@@ -52,14 +52,33 @@ const assign = FunctionImpl.make(
     ) {
       return yield* new PersonNotTeacher();
     }
-    if (Option.isSome(yield* homeroomOf(cohort._id))) {
-      return yield* new CohortHasHomeroom();
-    }
     if (Option.isSome(yield* homeroomOfPerson(cohort.periodId, person._id))) {
       return yield* new TeacherHasHomeroom();
     }
     const reader = yield* DatabaseReader;
-    const assignmentId = yield* (yield* DatabaseWriter)
+    const writer = yield* DatabaseWriter;
+    const holder = yield* homeroomOf(cohort._id);
+    if (Option.isSome(holder)) {
+      // Removing a Person keeps their homeroom row, so a removed teacher holds no slot
+      // and this assignment replaces their row. A teacher who still works keeps the slot.
+      const teacher = yield* reader
+        .table("tenantPeople")
+        .get(holder.value.personId)
+        .pipe(Effect.orDie);
+      if (teacher.status !== "removed") {
+        return yield* new CohortHasHomeroom();
+      }
+      yield* writer
+        .table("tenantAssignments")
+        .delete(holder.value._id)
+        .pipe(Effect.orDie);
+      yield* cohortAuthority.record(personActor(actor), cohort, {
+        assignment: "homeroom",
+        person: holder.value.personId,
+        type: "assignment.removed",
+      });
+    }
+    const assignmentId = yield* writer
       .table("tenantAssignments")
       .insert({
         cohortId: cohort._id,

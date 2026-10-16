@@ -130,7 +130,11 @@ account is released as account deletion releases it, so the account can be
 invited again. The journal records `person.released` only when the Person held an
 account, then `person.removed`, and the status becomes `removed`. A removed
 Person refuses every write as `condition` (ADR 0012), and a claimed account
-loses the school at once, because membership needs an active Person.
+loses the school at once, because membership needs an active Person. Removal
+keeps a homeroom row, so a removed teacher holds no slot: `assign` replaces their
+row and journals `assignment.removed`, and a promotion copies no homeroom teacher
+who was removed. A promotion that runs past a student's removal neither moves nor
+graduates that student, who keeps the placement the removal left as history.
 
 The Admin invites a Person to an address that the school's allowed email
 domains admit, and a Person has at most one pending invite. An invite waits 14
@@ -222,7 +226,9 @@ cohorts, place each student or graduate them, and copy the homeroom teachers the
 plan names. A run does one step or one page of students and schedules the next
 (`tenancy/promotion/run:run`). A step that stops on a typed failure keeps that
 failure, with its step and page, on the promotion, and the next apply resumes
-there. Students move in pages of 100 (`PROMOTION_PAGE_SIZE`), so no run reads or
+there. A run that finds its school archived or its tenant suspended stops with
+`AccessDenied`, as a public write would be refused, and resumes once the lock
+lifts. Students move in pages of 100 (`PROMOTION_PAGE_SIZE`), so no run reads or
 writes more than one page of students. The cohort and homeroom steps each run
 once, and the 200-cohort limit of a period bounds them.
 
@@ -231,7 +237,9 @@ sources, and the cohorts (`created`) and homeroom assignments (`copies`) that un
 removes exactly. A student's own destination is a row of `tenantPromotionMoves`.
 A student whose destination is `graduate` gets a row of `tenantGraduates` (unit
 and Person), and the Person document is unchanged, so `placements.place` refuses
-a graduate with `PersonGraduated`. A graduation fits only the last grade of the
+a graduate with `PersonGraduated`. The place step refuses a Person who already
+graduated from the unit the same way, so a graduate never gets a second row or a
+new placement. A graduation fits only the last grade of the
 unit's level: grade 6 for SD and MI, 9 for SMP and MTs, and 12 for SMA, MA, and
 SMK (`LAST_GRADE`). The other levels have no last grade. A homeroom teacher is
 copied only to a cohort destination, because a graduating cohort has no class to
@@ -239,15 +247,18 @@ lead.
 
 Undo runs the steps of an applied promotion back from the last one, one step per
 request, while the target period is still planned. Each undo is the inverse of its
-step: the homeroom copies, the target placements and graduate rows of the source
-students (paged), the created cohorts, and last the source period, which becomes
-active again. A created cohort that still holds a student or a homeroom teacher is
-refused (`PromotionCohortOccupied`), and the source period is refused while another
-period of the unit is active (`PeriodActive`). A stopped apply can be undone: its
-finished steps are undone, and a stopped place step that had finished a page first
-removes the placements of those pages. Undoing the first step returns the promotion
-to `approved`, so it can be applied again. Undo is refused once the target period
-is open.
+step: the homeroom copies, the target placements and graduate rows that apply wrote
+for the source students (paged), the created cohorts, and last the source period,
+which becomes active again. A placement counts as written by apply when it sits in
+a cohort the promotion created, and a graduate row when it names this promotion, so
+a placement made by hand in another cohort of the target period stays. A created
+cohort that still holds a student, a homeroom teacher, or a class is refused
+(`PromotionCohortOccupied`), and the source period is refused while another period
+of the unit is active (`PeriodActive`). A stopped apply can be undone: its finished
+steps are undone, and a stopped place step that had written a page first removes the
+placements that apply wrote, on every page of the source period. Undoing the first
+step returns the promotion to `approved`, so it can be applied again. Undo is refused
+once the target period is open.
 
 Every write is journaled in the transaction that makes it: `promotion.created`,
 `promotion.planned`, `promotion.studentPlanned`, `promotion.submitted`,
@@ -503,8 +514,10 @@ beside the old School. Four steps followed, in this order, and all four are done
 - A tenant whose only Owner deleted their account has no Owner until an operator
   of its cell replaces it.
 - Nothing locks the target period of an applied promotion yet, so a placement that
-  someone makes by hand in it meanwhile is removed by the undo of the place step,
-  together with the placements apply wrote.
+  someone makes by hand in one of the cohorts the promotion created meanwhile is
+  removed by the undo of the place step, together with the placements apply wrote.
+  A placement made by hand in any other cohort of the target period stays, because
+  apply never wrote it.
 - A run that stops on an error that is not a typed failure, such as a database
   defect, rolls back its transaction and leaves the promotion marked running with
   no run scheduled. Apply and undo refuse a running promotion, and no recovery

@@ -29,6 +29,7 @@ import { Array as Arr, Effect, Option } from "effect";
 /**
  * Plans the copy of one source cohort's homeroom teacher to the cohort their
  * students join. A source cohort without a homeroom teacher plans nothing. A teacher
+ * removed during the run is not copied, because the removal ended them. A teacher
  * who is no longer an active teacher of the unit stops the copy, as assigning one would.
  */
 const planCopy = Effect.fn("tenancy.promotion.homeroom.planCopy")(function* (
@@ -48,6 +49,9 @@ const planCopy = Effect.fn("tenancy.promotion.homeroom.planCopy")(function* (
     .table("tenantPeople")
     .get(assignment.value.personId)
     .pipe(Effect.orDie);
+  if (teacher.status === "removed") {
+    return [];
+  }
   if (
     teacher.status !== "active" ||
     !(yield* teacherOf(teacher._id, source.unitId))

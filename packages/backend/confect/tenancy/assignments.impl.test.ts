@@ -106,6 +106,48 @@ describe("tenancy/assignments assign", () => {
   );
 
   it.effect(
+    "replaces the homeroom teacher of a cohort who was removed, and journals the removal and the new assignment",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* smpPeriod(fixture);
+        const made = yield* cohort(fixture, period.id, "7A");
+        const second = yield* fixture
+          .as("admin")
+          .mutation(people.create, { name: "Guru Kedua", slug: nf });
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, second.id, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.smp,
+          })
+        );
+        yield* fixture.as("admin").mutation(assign, {
+          cohortId: made.id,
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        yield* fixture.as("admin").mutation(people.remove, {
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        const replaced = yield* fixture.as("admin").mutation(assign, {
+          cohortId: made.id,
+          personId: second.id,
+          slug: nf,
+        });
+        expect(replaced).toMatchObject({
+          kind: "homeroom",
+          personId: second.id,
+        });
+        const entries = yield* fixture.run(journal);
+        const ofType = (type: string) =>
+          Arr.filter(entries, (entry) => entry.change.type === type);
+        expect(ofType("assignment.removed")).toHaveLength(1);
+        expect(ofType("assignment.created")).toHaveLength(2);
+      })
+  );
+
+  it.effect(
     "refuses a teacher who already leads another cohort of the period",
     () =>
       Effect.gen(function* () {

@@ -149,6 +149,42 @@ describe("tenancy/promotion homeroom step", () => {
       })
   );
 
+  it.effect(
+    "copies nobody for a homeroom teacher removed while the source period is archived, and the promotion finishes",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        // Only the archive step runs here, so the source period is archived when the teacher leaves.
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        yield* fixture.as("admin").mutation(people.remove, {
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress).toMatchObject({
+          failure: null,
+          running: false,
+        });
+        expect(finished.progress.done).toEqual([
+          "archive",
+          "cohorts",
+          "place",
+          "homeroom",
+        ]);
+        expect(finished.copies).toEqual([]);
+        const state = yield* snapshot(fixture);
+        expect(
+          Arr.filter(state.assignments, (row) => row.periodId === s.target.id)
+        ).toEqual([]);
+      })
+  );
+
   it.effect("refuses to copy two homeroom teachers into one cohort", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
