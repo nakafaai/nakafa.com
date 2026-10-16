@@ -56,8 +56,9 @@ export const AI_SDK_COHORT = {
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
  * each manifest pins it exactly. Every Tiptap package that the design system
- * declares, and the web app's `@tiptap/pm`, is held to this one version (ADR 0028),
- * so one line changes them all and the policy test finds any manifest left behind.
+ * declares, and the web app's `@tiptap/pm`, is held to this one version (ADR 0028).
+ * A bump changes this line and then every manifest that pins the cohort: the policy
+ * test reports each declaration that still holds the old version, so none is missed.
  */
 const TIPTAP_COHORT_VERSION = "3.31.4";
 /** The Tiptap packages the design system declares. The web app also declares `@tiptap/pm`. */
