@@ -6,6 +6,10 @@ import {
   MAX_ALLOCATION_TRIES,
   UsernameExhausted,
 } from "@repo/backend/confect/users/allocation";
+import {
+  isReservedUsername,
+  RESERVED_USERNAMES,
+} from "@repo/backend/confect/users/reserved";
 import { USERNAME_MAX_LENGTH } from "@repo/backend/confect/users/username";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import {
@@ -170,14 +174,44 @@ describe("users/allocation", () => {
     })
   );
 
-  it.effect("passes over a candidate that is too short or reserved", () =>
+  it.effect("passes over a candidate that is too short", () =>
     Effect.gen(function* () {
-      const [jo, j, ...reserved] = usernamesOf(
-        yield* allocate(["Jo", "J", "Admin", "Nina", "School", "Pricing"])
-      );
+      const [jo, j] = usernamesOf(yield* allocate(["Jo", "J"]));
       expect(jo).toBe("jo2");
       expect(j).toMatch(SINGLE_LETTER_RANDOM);
-      expect(reserved).toEqual(["admin2", "nina2", "school2", "pricing2"]);
+    })
+  );
+
+  it.effect(
+    "starts a reserved name from the fallback, never from the name",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          usernamesOf(
+            yield* allocate([
+              "Nakafa",
+              "Admin",
+              "Nina",
+              "School",
+              "Pricing",
+              "Nakafa",
+            ])
+          )
+        ).toEqual(["teman", "teman2", "teman3", "teman4", "teman5", "teman6"]);
+      })
+  );
+
+  it.effect("builds no handle on any reserved name", () =>
+    Effect.gen(function* () {
+      const names = Arr.fromIterable(RESERVED_USERNAMES);
+      const usernames = usernamesOf(yield* allocate(names));
+      expect(usernames).toHaveLength(names.length);
+      expect(
+        Arr.every(usernames, (username) => username.startsWith("teman"))
+      ).toBe(true);
+      expect(
+        Arr.some(usernames, (username) => isReservedUsername(username))
+      ).toBe(false);
     })
   );
 

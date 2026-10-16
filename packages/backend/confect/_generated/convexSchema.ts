@@ -49,6 +49,7 @@ import learningPopularitySignals from "./tables/learningPopularitySignals";
 import learningPopularityViewerSignals from "./tables/learningPopularityViewerSignals";
 import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
+import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
@@ -64,15 +65,20 @@ import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
+import tenantGraduates from "./tables/tenantGraduates";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
 import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
 import tenantPeriods from "./tables/tenantPeriods";
+import tenantPromotionMoves from "./tables/tenantPromotionMoves";
+import tenantPromotions from "./tables/tenantPromotions";
 import tenantUnits from "./tables/tenantUnits";
 import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
@@ -139,6 +145,7 @@ export default $defineSchema({
   learningPopularityViewerSignals: $Table.tableDefinition(learningPopularityViewerSignals),
   learningPreferences: $Table.tableDefinition(learningPreferences),
   learningViews: $Table.tableDefinition(learningViews),
+  loginCards: $Table.tableDefinition(loginCards),
   materialBuckets: $Table.tableDefinition(materialBuckets),
   materialCatalog: $Table.tableDefinition(materialCatalog),
   ninaMemories: $Table.tableDefinition(ninaMemories),
@@ -154,15 +161,20 @@ export default $defineSchema({
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
+  schoolLogins: $Table.tableDefinition(schoolLogins),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
+  tenantAssignments: $Table.tableDefinition(tenantAssignments),
   tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),
   tenantCohorts: $Table.tableDefinition(tenantCohorts),
+  tenantGraduates: $Table.tableDefinition(tenantGraduates),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),
   tenantKeys: $Table.tableDefinition(tenantKeys),
   tenantPeople: $Table.tableDefinition(tenantPeople),
   tenantPeriods: $Table.tableDefinition(tenantPeriods),
+  tenantPromotionMoves: $Table.tableDefinition(tenantPromotionMoves),
+  tenantPromotions: $Table.tableDefinition(tenantPromotions),
   tenantUnits: $Table.tableDefinition(tenantUnits),
   tenantVisits: $Table.tableDefinition(tenantVisits),
   tenants: $Table.tableDefinition(tenants),
