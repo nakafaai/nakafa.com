@@ -174,6 +174,6 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Journal**: The one record of audited changes for every space, written in the same transaction as the change and read by the audit log and by consumers.
 - **Journal entry**: One immutable audited change: its owner space, actor, subject, and change, holding IDs and codes only.
 - **Published change type**: A change type its kind exposes to journal consumers such as notifications, webhooks, and exports.
-- **Journal cursor**: One consumer's place in the journal for one school and one change type: the pagination position after the entries it read, and whether a run is still owed. A change marks it pending, and the minute sweep starts a run for each pending cursor.
+- **Journal cursor**: One consumer's place in the journal for one school and one change type: the creation time of the last entry it read, with the IDs of the entries read at that time, and whether a run is still owed. A change marks it pending, and the minute sweep starts a run for each pending cursor.
 - **Operator**: Nakafa staff who open and suspend schools, and enter a school only on an approved visit. Not the school's Admin, whom Indonesian schools also call operator sekolah.
 - **Operator visit**: An operator's temporary, audited Auditor grant inside one school, requested by the operator and approved by the school's Owner or Admin. It ends when the operator leaves or deletes its account, when the school ends it, or at its term of at most 24 hours.
