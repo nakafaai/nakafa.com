@@ -2552,6 +2552,136 @@ export declare const api: {
       };
     };
   };
+  integrations: {
+    clients: {
+      create: FunctionReference<
+        "mutation",
+        "public",
+        {
+          actions: Array<
+            | "audit.view"
+            | "tenant.manage"
+            | "tenant.view"
+            | "unit.manage"
+            | "unit.view"
+            | "person.invite"
+            | "person.manage"
+            | "person.view"
+            | "period.manage"
+            | "period.view"
+            | "cohort.manage"
+            | "cohort.view"
+            | "grant.revoke"
+            | "grant.view"
+            | "integration.manage"
+            | "integration.view"
+            | "class.manage"
+            | "class.view"
+            | "visit.end"
+            | "invite.view"
+            | "person.manage"
+            | "person.view"
+            | "period.manage"
+            | "period.view"
+            | "cohort.manage"
+            | "grant.manage"
+            | "owner.manage"
+            | "grant.manage"
+            | "integration.manage"
+            | "integration.view"
+            | "integration.manage"
+            | "class.create"
+            | "class.list"
+            | "visit.approve"
+          >;
+          name: string;
+          scope:
+            { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+          slug: string;
+        },
+        { id: Id<"integrationClients">; secret: string }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            actions: Array<
+              | "audit.view"
+              | "tenant.manage"
+              | "tenant.view"
+              | "unit.manage"
+              | "unit.view"
+              | "person.invite"
+              | "person.manage"
+              | "person.view"
+              | "period.manage"
+              | "period.view"
+              | "cohort.manage"
+              | "cohort.view"
+              | "grant.revoke"
+              | "grant.view"
+              | "integration.manage"
+              | "integration.view"
+              | "class.manage"
+              | "class.view"
+              | "visit.end"
+              | "invite.view"
+              | "person.manage"
+              | "person.view"
+              | "period.manage"
+              | "period.view"
+              | "cohort.manage"
+              | "grant.manage"
+              | "owner.manage"
+              | "grant.manage"
+              | "integration.manage"
+              | "integration.view"
+              | "integration.manage"
+              | "class.create"
+              | "class.list"
+              | "visit.approve"
+            >;
+            createdAt: number;
+            id: Id<"integrationClients">;
+            name: string;
+            revokedAt: number | null;
+            rotatedAt: number;
+            scope:
+              { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+            status: "active" | "revoked";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      revoke: FunctionReference<
+        "mutation",
+        "public",
+        { clientId: Id<"integrationClients">; slug: string },
+        null
+      >;
+      rotate: FunctionReference<
+        "mutation",
+        "public",
+        { clientId: Id<"integrationClients">; slug: string },
+        { id: Id<"integrationClients">; secret: string }
+      >;
+    };
+  };
   journal: {
     audit: {
       list: FunctionReference<
@@ -2627,6 +2757,21 @@ export declare const api: {
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
+              | {
+                  client: Id<"integrationClients">;
+                  scope:
+                    | { kind: "tenant" }
+                    | { kind: "unit"; unitId: Id<"tenantUnits"> };
+                  type: "integration.created";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.rotated";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.revoked";
+                }
               | { type: "class.created" }
               | { type: "class.renamed" }
               | { type: "class.archived" }
@@ -2688,6 +2833,7 @@ export declare const api: {
               | { id: Id<"tenantPeriods">; kind: "period" }
               | { id: Id<"tenantCohorts">; kind: "cohort" }
               | { id: Id<"tenantGrants">; kind: "grant" }
+              | { id: Id<"integrationClients">; kind: "integration" }
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { kind: string };
