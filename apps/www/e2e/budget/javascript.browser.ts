@@ -20,9 +20,10 @@ const QURAN_MAX_DECODED_BYTES = 3_381_000;
 const AUTH_MAX_ENCODED_BYTES = 547_000;
 const AUTH_MAX_DECODED_BYTES = 1_638_000;
 
-// The Memory page, signed in: measured by the orchestrator.
-const MEMORY_MAX_ENCODED_BYTES = 0;
-const MEMORY_MAX_DECODED_BYTES = 0;
+// The Memory page, signed in: measured at 954,412 encoded / 2,810,521 decoded
+// bytes. Limits keep the ~6% margin.
+const MEMORY_MAX_ENCODED_BYTES = 1_012_000;
+const MEMORY_MAX_DECODED_BYTES = 2_980_000;
 
 const routeBudgets = [
   {
