@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { inspectUsername } from "@repo/backend/confect/users/availability";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect, Result } from "effect";
 
 /** Seeds one account that holds `username`, and returns its id. */
@@ -13,6 +14,7 @@ const seedHolder = Effect.fn("test.seedHolder")(function* (username: string) {
       credits: 100,
       creditsResetAt: 0,
       email: `${username}@example.com`,
+      mascot: MASCOT_CODE,
       name: username,
       plan: "free",
       username,

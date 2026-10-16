@@ -17,6 +17,7 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest, type TestConvex } from "convex-test";
 
 const betterAuthModules = import.meta.glob([
@@ -131,6 +132,7 @@ export async function seedAuthenticatedUser(
     credits,
     creditsResetAt,
     email: authUser.email,
+    mascot: MASCOT_CODE,
     name: authUser.name,
     plan,
     ...(role

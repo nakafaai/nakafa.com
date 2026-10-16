@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 7, 31, 12, 0, 0);
@@ -71,6 +72,7 @@ describe("onboarding/queries", () => {
             credits: 0,
             creditsResetAt: NOW,
             email: "duplicate-query-linkage@example.com",
+            mascot: MASCOT_CODE,
             name: "Duplicate Query Linkage",
             plan: "free",
           })

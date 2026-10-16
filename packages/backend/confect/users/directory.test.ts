@@ -7,6 +7,7 @@ import {
   getUserMap,
 } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { MascotCode } from "@repo/mascot/code";
 import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
 
@@ -50,6 +51,7 @@ describe("users/directory", () => {
                     creditsResetAt: 0,
                     email: `${suffix}@example.com`,
                     image: `/avatars/${suffix}.png`,
+                    mascot: MASCOT_CODE,
                     name: suffix,
                     plan: "free",
                   })
@@ -104,6 +106,7 @@ describe("users/directory", () => {
                 credits: 100,
                 creditsResetAt: 0,
                 email: "known@example.com",
+                mascot: MASCOT_CODE,
                 name: "Known user",
                 plan: "free",
               })
@@ -131,6 +134,7 @@ describe("users/directory", () => {
                 credits: 100,
                 creditsResetAt: 0,
                 email: "handle@example.com",
+                mascot: MASCOT_CODE,
                 name: "Handle user",
                 plan: "free",
                 username: "handle",
