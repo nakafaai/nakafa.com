@@ -2,7 +2,7 @@ import { Animal, DESIGNS } from "@repo/mascot/animal";
 import { Ground } from "@repo/mascot/ground";
 import { Eyes } from "@repo/mascot/kit";
 import { Pose } from "@repo/mascot/pose";
-import { Result, Schema, SchemaTransformation } from "effect";
+import { Schema, SchemaParser, SchemaTransformation } from "effect";
 
 /**
  * One mascot: which animal, in which of its palettes, on which ground, in which
@@ -34,11 +34,10 @@ const PaletteDigits = Schema.String.check(
 );
 
 /**
- * A mascot as the text that is stored, `animal.palette.ground.pose.eyes`, for
- * example `cat.0.243e66.right.open`. Decoding text that names no mascot fails;
- * nothing is guessed.
+ * The text of a mascot read by its parts: the template literal of the code,
+ * decoded into a `Mascot`. A text that names no part of a mascot fails.
  */
-const Code = Schema.TemplateLiteralParser([
+const MascotText = Schema.TemplateLiteralParser([
   Animal,
   ".",
   PaletteDigits,
@@ -65,25 +64,25 @@ const Code = Schema.TemplateLiteralParser([
   )
 );
 
-/** Raised when a stored value is not the code of a mascot. */
-export class MascotCodeError extends Schema.TaggedError<MascotCodeError>()(
-  "MascotCodeError",
-  {
-    message: Schema.String,
-  }
-) {}
+/**
+ * A mascot as the text that is stored, `animal.palette.ground.pose.eyes`, for
+ * example `cat.0.243e66.right.open`. Decoded, it is a `Mascot`; encoded, it is
+ * that text as a plain string, which is what the database stores. Decoding text
+ * that names no mascot fails; nothing is guessed.
+ */
+export const MascotCode = Schema.String.pipe(
+  Schema.decodeTo(
+    Mascot,
+    SchemaTransformation.transformEffect({
+      decode: (text, options) =>
+        SchemaParser.decodeUnknownEffect(MascotText)(text, options),
+      encode: (mascot, options) =>
+        SchemaParser.encodeEffect(MascotText)(mascot, options),
+    })
+  )
+);
 
-const decodeCode = Schema.decodeUnknownResult(Code);
-
-/** Reads the mascot that a code names, or fails with a `MascotCodeError`. */
-export function decode(input: unknown) {
-  return Result.mapError(
-    decodeCode(input),
-    (error) => new MascotCodeError({ message: error.message })
-  );
-}
-
-const encodeCode = Schema.encodeSync(Code);
+const encodeCode = Schema.encodeSync(MascotCode);
 
 /** Writes the code of a mascot, the form that is stored. */
 export function encode(mascot: typeof Mascot.Type) {

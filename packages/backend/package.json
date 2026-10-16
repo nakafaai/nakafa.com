@@ -48,6 +48,7 @@
     "@repo/analytics": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/email": "workspace:*",
+    "@repo/mascot": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
