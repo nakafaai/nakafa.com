@@ -221,7 +221,7 @@ describe("the lessons of the home page window", () => {
   );
 
   it.effect(
-    "fails with the projection error of the lesson that is not published in the anchor locale",
+    "fails the window of every locale when a lesson is not published in the anchor locale",
     () =>
       Effect.gen(function* () {
         const withoutCell = {
@@ -229,43 +229,52 @@ describe("the lessons of the home page window", () => {
           [HOME_LESSON_PATHS.cell]: undefined,
         };
 
-        const error = yield* readHomeLessons("id", readerOf(withoutCell)).pipe(
+        const indonesian = yield* readHomeLessons(
+          "id",
+          readerOf(withoutCell)
+        ).pipe(Effect.flip);
+        const german = yield* readHomeLessons("de", readerOf(withoutCell)).pipe(
+          Effect.flip
+        );
+
+        expect(indonesian).toBeInstanceOf(PublishedProjectionError);
+        expect(indonesian.appLocale).toBe("id");
+        expect(indonesian.publicPath).toBe(HOME_LESSON_PATHS.cell);
+        expect(german).toBeInstanceOf(PublishedProjectionError);
+        expect(german.appLocale).toBe("de");
+        expect(german.publicPath).toBe(HOME_LESSON_PATHS.cell);
+      })
+  );
+
+  it.effect(
+    "fails the whole window with the projection error of the lesson that has no description",
+    () =>
+      Effect.gen(function* () {
+        const undescribed = {
+          ...LESSONS,
+          [HOME_LESSON_PATHS.projectile]: lessonRoute(
+            counterpart(
+              "en",
+              HOME_LESSON_PATHS.projectile,
+              "Parabolic Movement",
+              "Parabolic movement combines two motions."
+            ),
+            counterpart(
+              "id",
+              "materi/fisika/kinematika/gerak-parabola",
+              "Gerak Parabola",
+              undefined
+            )
+          ),
+        };
+
+        const error = yield* readHomeLessons("id", readerOf(undescribed)).pipe(
           Effect.flip
         );
 
         expect(error).toBeInstanceOf(PublishedProjectionError);
-        expect(error.appLocale).toBe("id");
-        expect(error.publicPath).toBe(HOME_LESSON_PATHS.cell);
+        expect(error.publicPath).toBe(HOME_LESSON_PATHS.projectile);
       })
-  );
-
-  it.effect("does not show a lesson that has no description", () =>
-    Effect.gen(function* () {
-      const undescribed = {
-        ...LESSONS,
-        [HOME_LESSON_PATHS.projectile]: lessonRoute(
-          counterpart(
-            "en",
-            HOME_LESSON_PATHS.projectile,
-            "Parabolic Movement",
-            "Parabolic movement combines two motions."
-          ),
-          counterpart(
-            "id",
-            "materi/fisika/kinematika/gerak-parabola",
-            "Gerak Parabola",
-            undefined
-          )
-        ),
-      };
-
-      const error = yield* readHomeLessons("id", readerOf(undescribed)).pipe(
-        Effect.flip
-      );
-
-      expect(error).toBeInstanceOf(PublishedProjectionError);
-      expect(error.publicPath).toBe(HOME_LESSON_PATHS.projectile);
-    })
   );
 
   it.effect(

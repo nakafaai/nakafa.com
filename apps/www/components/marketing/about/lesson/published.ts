@@ -11,10 +11,13 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 const ANCHOR_LOCALE: AppLocaleCode = "en";
 
 /**
- * The published path of each home lesson in the anchor locale. Each path names
- * the lesson section that Aksara publishes. The other locales come from that
- * lesson's own alternates, so a lesson that Aksara renames can never leave a
- * stale link here.
+ * The published path of each home lesson in the anchor locale. These four paths
+ * are the only ones written by hand. The other locales come from each lesson's
+ * own alternates, so a renamed Indonesian or German lesson can never leave a
+ * stale link here. An English rename is the exception: change its path here in
+ * the same change. Until then, every locale's window fails with
+ * PublishedProjectionError, which names that path, because every locale reads
+ * its lessons through these paths.
  */
 export const HOME_LESSON_PATHS = {
   atom: "subjects/chemistry/structure-matter/atom-shell",
