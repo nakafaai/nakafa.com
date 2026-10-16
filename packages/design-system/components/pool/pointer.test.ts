@@ -27,20 +27,37 @@ describe("the push of the pointer", () => {
   });
 
   it("pushes a ball away from the pointer, with the spring of its reach", () => {
-    // The ball is 40 pixels from the pointer, and its reach is 64: (64 - 40) * 110.
+    // The ball is 40 pixels from the pointer, and its reach is 64: (64 - 40) * 80.
     expect(
       pointerPush(overBox(560, 300), ballAt({ x: 600 }), UNIT_STEP, UNIT_FRAME)
     ).toEqual({
-      vx: 2640,
+      vx: 1920,
       vy: 0,
     });
+  });
+
+  it("pushes a nearer ball harder than a farther one, so the push falls off with distance", () => {
+    const near = pointerPush(
+      overBox(590, 300),
+      ballAt({ x: 600 }),
+      UNIT_STEP,
+      UNIT_FRAME
+    ).vx;
+    const far = pointerPush(
+      overBox(560, 300),
+      ballAt({ x: 600 }),
+      UNIT_STEP,
+      UNIT_FRAME
+    ).vx;
+    expect(near).toBeGreaterThan(far);
+    expect(far).toBeGreaterThan(0);
   });
 
   it("passes on the pointer's own speed, clamped to 28 pixels per second and halved", () => {
     const fast = { ...overBox(560, 300), vx: 500 };
     expect(
       pointerPush(fast, ballAt({ x: 600 }), UNIT_STEP, UNIT_FRAME).vx
-    ).toBe(2640 + 14);
+    ).toBe(1920 + 14);
   });
 
   it("pushes nothing when the pointer lies exactly on the center of a ball", () => {

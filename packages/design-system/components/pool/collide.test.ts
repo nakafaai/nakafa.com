@@ -54,4 +54,13 @@ describe("the balls that touch", () => {
     expect(second.x).toBe(630);
     expect(first.x).toBeLessThan(600);
   });
+
+  it("leaves the balls it is given as they were, and returns copies", () => {
+    const given = [ballAt({ vx: 300, x: 590 }), ballAt({ vx: -300, x: 615 })];
+    const pushed = pushApart(given, null);
+    expect(given[0].x).toBe(590);
+    expect(given[0].vx).toBe(300);
+    expect(given[1].x).toBe(615);
+    expect(pushed[0]).not.toBe(given[0]);
+  });
 });

@@ -15,42 +15,48 @@ const IMPULSE = 0.62;
 /** The distance that two balls on the very same point are treated as apart, in pixels. */
 const SAME_POINT_DISTANCE = 0.01;
 
+/** A copy of a ball that `pushApart` changes in place while it works. */
+type WorkingBall = { -readonly [Key in keyof Ball]: Ball[Key] };
+
 /**
  * Pushes every pair of balls apart and gives back the speed of their collisions,
- * over two passes. The held ball is never moved by the others.
+ * over two passes. The held ball is never moved by the others. The balls are
+ * copied first, so the balls that come in stay as they were.
  */
 export function pushApart(balls: readonly Ball[], held: number | null): Ball[] {
-  const working = Arr.map(balls, (ball) => ball);
+  const working: WorkingBall[] = Arr.map(balls, (ball) => ({ ...ball }));
   for (let pass = 0; pass < PASSES; pass += 1) {
     for (let first = 0; first < working.length; first += 1) {
       for (let second = first + 1; second < working.length; second += 1) {
-        const [a, b] = collidePair(
+        collidePair(
           working[first],
           working[second],
           first === held,
           second === held
         );
-        working[first] = a;
-        working[second] = b;
       }
     }
   }
   return working;
 }
 
-/** Pushes two balls apart if they overlap, and turns them back if they approach. */
+/**
+ * Pushes two balls apart if they overlap, and turns them back if they approach. The
+ * two balls are copies that `pushApart` owns, so they change in place, and a pair
+ * that lies apart is left alone.
+ */
 function collidePair(
-  first: Ball,
-  second: Ball,
+  first: WorkingBall,
+  second: WorkingBall,
   firstHeld: boolean,
   secondHeld: boolean
-): readonly [Ball, Ball] {
+) {
   const reach = first.r + second.r;
   const dx = second.x - first.x;
   const dy = second.y - first.y;
   const near = dx * dx + dy * dy;
   if (near >= reach * reach) {
-    return [first, second];
+    return;
   }
   // Two balls on the very same point are pushed apart sideways.
   const samePoint = near === 0;
@@ -61,27 +67,21 @@ function collidePair(
   const overlap = Math.min(PUSH_LIMIT, (reach - distance) / 2);
   const shiftX = nx * overlap;
   const shiftY = ny * overlap;
-  const pushedFirst = firstHeld
-    ? first
-    : { ...first, x: first.x - shiftX, y: first.y - shiftY };
-  const pushedSecond = secondHeld
-    ? second
-    : { ...second, x: second.x + shiftX, y: second.y + shiftY };
+  if (!firstHeld) {
+    first.x -= shiftX;
+    first.y -= shiftY;
+  }
+  if (!secondHeld) {
+    second.x += shiftX;
+    second.y += shiftY;
+  }
   const relative = (second.vx - first.vx) * nx + (second.vy - first.vy) * ny;
   if (relative >= 0) {
-    return [pushedFirst, pushedSecond];
+    return;
   }
   const impulse = relative * IMPULSE;
-  return [
-    {
-      ...pushedFirst,
-      vx: first.vx + nx * impulse,
-      vy: first.vy + ny * impulse,
-    },
-    {
-      ...pushedSecond,
-      vx: second.vx - nx * impulse,
-      vy: second.vy - ny * impulse,
-    },
-  ];
+  first.vx += nx * impulse;
+  first.vy += ny * impulse;
+  second.vx -= nx * impulse;
+  second.vy -= ny * impulse;
 }

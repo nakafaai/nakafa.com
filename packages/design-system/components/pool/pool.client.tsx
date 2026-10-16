@@ -1,10 +1,11 @@
 "use client";
 
 import { useInViewport, useMergedRef, useReducedMotion } from "@mantine/hooks";
+import { coverOf } from "@repo/design-system/components/pool/cover";
 import {
-  POOL_MEMBERS,
   type PoolMember,
-  poolWorld,
+  poolMembers,
+  poolStarts,
 } from "@repo/design-system/components/pool/member";
 import {
   hop,
@@ -12,33 +13,29 @@ import {
   leave,
   move,
   press,
+  REST_FRAMES,
   release,
   resize,
-  STEP,
   settle,
   tick,
   type World,
 } from "@repo/design-system/components/pool/physics";
+import { createWorld, fit } from "@repo/design-system/components/pool/place";
 import { Animal } from "@repo/design-system/components/ui/animal";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
-import { useEffect, useEffectEvent, useRef } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 /** The time of a frame that has none before it, in seconds. */
 const FIRST_FRAME = 0.016;
-/** The loop sleeps once the pile has rested for this many frames, with nobody holding or pointing. */
-const REST_FRAMES = 20;
-/**
- * Reduced motion settles the pile for this many seconds of the pool's time. Measured
- * at 60 frames a second on the 30 members in 20 box sizes: after four seconds some
- * piles still move quickly, and after eight seconds the next frame moves no ball
- * faster than the rest speed in 18 of them.
- */
-const SETTLE_SECONDS = 8;
-/** The same settle in steps of the fixed step, so the seconds above stay the only count. */
-const SETTLE_STEPS = Math.round(SETTLE_SECONDS / STEP);
 /**
  * Reduced motion settles a box again once it has been still this many
  * milliseconds. The search and the chat sidebar wait 500 milliseconds before they
@@ -81,64 +78,19 @@ function Member({ member }: { member: PoolMember }) {
 }
 
 /**
- * The animal pool of the sign-in page: animals and things that fall, pile up,
- * and move away from the pointer. React draws each member once. A frame writes
- * only where each member is and how it leans, straight onto its element. The
- * loop sleeps while the pile rests, and wakes for the pointer, a resize, a hop,
- * or a view of the box. With reduced motion there is no loop and no pointer.
- */
-export function Pool() {
-  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
-  const { inViewport, ref: watch } = useInViewport<HTMLDivElement>();
-  const box = useRef<HTMLDivElement>(null);
-  const place = useMergedRef(box, watch);
-  const drive = useRef<Drive | undefined>(undefined);
-  const viewing = useEffectEvent(() => inViewport);
-
-  useEffect(() => {
-    if (!box.current) {
-      return;
-    }
-    const created = createDrive(box.current, calm);
-    drive.current = created;
-    created.setVisible(viewing());
-    return () => {
-      drive.current = undefined;
-      created.destroy();
-    };
-  }, [calm]);
-
-  useEffect(() => {
-    drive.current?.setVisible(inViewport);
-  }, [inViewport]);
-
-  return (
-    <div
-      aria-hidden
-      className="absolute inset-0 overflow-hidden"
-      data-slot="pool"
-      ref={place}
-    >
-      {Arr.map(POOL_MEMBERS, (member) => (
-        <Member key={member.key} member={member} />
-      ))}
-    </div>
-  );
-}
-
-type Drive = ReturnType<typeof createDrive>;
-
-/**
  * Drives the pool of one box: its world, its frame loop, its pointer, its hops,
  * and its size. It writes to the elements that React drew, and never draws with
- * React itself.
+ * React itself. Each time the box takes a new count of animals, `onAnimals` hears
+ * it, and React draws the members of that count; `sync` then gives each member its
+ * size and place.
  */
-function createDrive(element: HTMLDivElement, calm: boolean) {
-  const members = Arr.filter(
-    Arr.fromIterable(element.children),
-    (node): node is HTMLElement => node instanceof HTMLElement
-  );
+function createDrive(
+  element: HTMLDivElement,
+  calm: boolean,
+  onAnimals: (animals: number) => void
+) {
   const pointers = new AbortController();
+  let members: readonly HTMLElement[] = [];
   let world: World | undefined;
   let visible = false;
   let running = false;
@@ -153,15 +105,36 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
     });
   }
 
-  /** Gives each member its size, and places the pool on the first real size of the box. With reduced motion, the resize observer calls it again after a resize, once the box has been still for a while. */
-  function start(width: number, height: number) {
-    const first = poolWorld(width, height);
-    Arr.forEach(Arr.zip(members, first.balls), ([node, ball]) => {
+  /** Reads the members that React drew, and gives each its size and its place. */
+  function sync() {
+    members = Arr.filter(
+      Arr.fromIterable(element.children),
+      (node): node is HTMLElement => node instanceof HTMLElement
+    );
+    if (world === undefined) {
+      return;
+    }
+    Arr.forEach(Arr.zip(members, world.balls), ([node, ball]) => {
       node.style.width = `${ball.r * 2}px`;
       node.style.height = `${ball.r * 2}px`;
     });
-    world = calm ? settle(first, SETTLE_STEPS) : first;
     paint(world);
+  }
+
+  /**
+   * Makes the world match a box of this size: its walls, and its animals. The
+   * animals that stay keep their place. With reduced motion the pile settles again.
+   */
+  function update(width: number, height: number) {
+    const cover = coverOf(width, height);
+    const starts = poolStarts(cover);
+    const next =
+      world === undefined
+        ? createWorld(width, height, starts)
+        : fit(resize(world, width, height), starts);
+    world = calm ? settle(next) : next;
+    onAnimals(cover.animals);
+    sync();
     wake();
   }
 
@@ -189,7 +162,7 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
     world = tick(world, delta / 1000 || FIRST_FRAME);
     paint(world);
     still = isResting(world) ? still + 1 : 0;
-    if (still >= REST_FRAMES && world.held === null && !world.pointer.active) {
+    if (still >= REST_FRAMES && world.held === null) {
       sleep();
     }
   }
@@ -232,6 +205,7 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
       return;
     }
     world = release(world);
+    wake();
   }
 
   /** Waits, then throws one member up if the box is in view, the pile is still, and nothing is held. */
@@ -267,20 +241,15 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
     if (width === 0 || height === 0) {
       return;
     }
-    if (world === undefined) {
-      start(width, height);
+    if (world === undefined || !calm) {
+      update(width, height);
       return;
     }
-    if (calm) {
-      window.clearTimeout(quiet);
-      quiet = window.setTimeout(
-        () => start(element.clientWidth, element.clientHeight),
-        RESIZE_QUIET
-      );
-      return;
-    }
-    world = resize(world, width, height);
-    wake();
+    window.clearTimeout(quiet);
+    quiet = window.setTimeout(
+      () => update(element.clientWidth, element.clientHeight),
+      RESIZE_QUIET
+    );
   });
   resizing.observe(element);
 
@@ -306,5 +275,65 @@ function createDrive(element: HTMLDivElement, calm: boolean) {
       sleep();
     },
     setVisible,
+    sync,
   };
+}
+
+/** The driver of one pool. */
+type Drive = ReturnType<typeof createDrive>;
+
+/**
+ * The animal pool of the sign-in page: animals and things that fall, pile up,
+ * and move away from the pointer. The animals cover about half of the box, so the
+ * box sets how many of them React draws. Each frame writes only where each member
+ * is and how it leans, straight onto its element. The loop sleeps while the pile
+ * rests, and wakes for the pointer, a resize, a hop, or a view of the box. With
+ * reduced motion there is no loop and no pointer.
+ */
+export function Pool() {
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
+  const { inViewport, ref: watch } = useInViewport<HTMLDivElement>();
+  const box = useRef<HTMLDivElement>(null);
+  const place = useMergedRef(box, watch);
+  const drive = useRef<Drive | undefined>(undefined);
+  const [animals, setAnimals] = useState(0);
+  const viewing = useEffectEvent(() => inViewport);
+
+  useEffect(() => {
+    if (!box.current) {
+      return;
+    }
+    const created = createDrive(box.current, calm, setAnimals);
+    drive.current = created;
+    created.setVisible(viewing());
+    return () => {
+      drive.current = undefined;
+      created.destroy();
+    };
+  }, [calm]);
+
+  // After each render React may have drawn a new count of members, so the drive gives every member its size and place before the paint.
+  useLayoutEffect(() => {
+    drive.current?.sync();
+  });
+
+  useEffect(() => {
+    drive.current?.setVisible(inViewport);
+  }, [inViewport]);
+
+  // Nothing is drawn until the box has been measured: a count of zero stands for that.
+  const members = animals === 0 ? [] : poolMembers(animals);
+
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0 overflow-hidden"
+      data-slot="pool"
+      ref={place}
+    >
+      {Arr.map(members, (member) => (
+        <Member key={member.key} member={member} />
+      ))}
+    </div>
+  );
 }

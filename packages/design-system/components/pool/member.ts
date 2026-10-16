@@ -1,24 +1,26 @@
 import {
-  createWorld,
-  type Start,
-  type World,
-} from "@repo/design-system/components/pool/physics";
+  ANIMAL_RADII,
+  type Cover,
+} from "@repo/design-system/components/pool/cover";
+import type { Start } from "@repo/design-system/components/pool/place";
 import { Mascot } from "@repo/mascot/code";
 import { cast } from "@repo/mascot/seed";
 import { type ThingName, ThingNameSchema } from "@repo/mascot/thing/name";
 import { Array as Arr, Hash, Schema } from "effect";
 
-/** One member of the pool: an animal of the cast, or one of Nina's things. */
+/** One member of the pool: an animal of the cast, or one of Nina's things, with its radius before any growth. */
 const PoolMemberSchema = Schema.Union([
   Schema.Struct({
     key: Schema.String,
     kind: Schema.Literal("animal"),
     mascot: Mascot,
+    radius: Schema.Finite,
   }),
   Schema.Struct({
     key: Schema.String,
     kind: Schema.Literal("thing"),
     name: ThingNameSchema,
+    radius: Schema.Finite,
   }),
 ]);
 
@@ -27,8 +29,6 @@ export type PoolMember = typeof PoolMemberSchema.Type;
 
 /** The seed of the cast, so that the same animals come up on every visit. */
 const SEED = "masuk";
-/** How many animals the pool holds, and no animal appears twice. */
-const ANIMAL_COUNT = 22;
 /** Nina's things, in the order in which they lie among the animals. */
 const THING_NAMES: readonly ThingName[] = [
   "book",
@@ -43,27 +43,26 @@ const THING_NAMES: readonly ThingName[] = [
 /** The first thing lies at this place in the pool, and each next one lies this many places further on. */
 const THING_FIRST = 2;
 const THING_STEP = 4;
-/** The radius of each animal in turn, by its place in the pool: animals come in six sizes. */
-const ANIMAL_RADII: readonly number[] = [30, 38, 38, 46, 46, 56];
 /** The radius of each thing. */
 const THING_RADIUS = 27;
-/** A box narrower than this, in pixels, draws every member smaller. */
-const NARROW_WIDTH = 420;
-/** The share of its size that a member keeps in a narrow box. */
-const NARROW_SHARE = 0.72;
 /** A hashed text becomes a fraction from zero up to one, in this many steps. */
 const FRACTION_STEPS = 10_000;
 /** The first sideways speed of a member spreads over this many pixels per second, around zero. */
 const SPEED_SPREAD = 120;
 
-/** An animal of the pool, keyed by its name. */
-function animalMember(mascot: typeof Mascot.Type): PoolMember {
-  return { key: `animal:${mascot.animal}`, kind: "animal", mascot };
+/** An animal of the pool, keyed by its name, with the radius of its place among the animals. */
+function animalMember(mascot: typeof Mascot.Type, radius: number): PoolMember {
+  return { key: `animal:${mascot.animal}`, kind: "animal", mascot, radius };
 }
 
 /** One of Nina's things, keyed by its name. */
 function thingMember(name: ThingName): PoolMember {
-  return { key: `thing:${name}`, kind: "thing", name };
+  return {
+    key: `thing:${name}`,
+    kind: "thing",
+    name,
+    radius: THING_RADIUS,
+  };
 }
 
 /**
@@ -83,12 +82,23 @@ function placeThing(
   );
 }
 
-/** Every member of the pool, in the order that they lie: the animals of the cast, with Nina's things among them. */
-export const POOL_MEMBERS: readonly PoolMember[] = Arr.reduce(
-  THING_NAMES,
-  Arr.map(cast(SEED, ANIMAL_COUNT), animalMember),
-  (members, name, index) => placeThing(members, thingMember(name), index)
-);
+/**
+ * Every member of a pool with this many animals, in the order that they lie: the
+ * animals of the cast, with Nina's things among them. An animal takes one of six
+ * sizes by its place among the animals. From 23 animals up, the things keep their
+ * places, so a bigger pool only adds members at its end.
+ */
+export function poolMembers(animals: number): readonly PoolMember[] {
+  const animalMembers = Arr.map(cast(SEED, animals), (mascot, place) =>
+    animalMember(
+      mascot,
+      Arr.getUnsafe(ANIMAL_RADII, place % ANIMAL_RADII.length)
+    )
+  );
+  return Arr.reduce(THING_NAMES, animalMembers, (members, name, index) =>
+    placeThing(members, thingMember(name), index)
+  );
+}
 
 /** A text as a fraction from zero up to one, the same on every visit. */
 function fractionOf(text: string) {
@@ -105,21 +115,14 @@ function startOf(member: PoolMember, radius: number): Start {
   };
 }
 
-/** The radius of a member at its place: an animal takes one of six sizes, and a thing takes its own. */
-function radiusOf(member: PoolMember, index: number) {
-  return member.kind === "thing"
-    ? THING_RADIUS
-    : Arr.getUnsafe(ANIMAL_RADII, index % ANIMAL_RADII.length);
+/** The radius of a member in a pool with this scale: an animal grows with it, and a thing keeps its own radius. */
+function radiusOf(member: PoolMember, scale: number) {
+  return member.kind === "animal" ? member.radius * scale : member.radius;
 }
 
-/** The pool as it starts in a box of this size: every member above the box, at its radius. */
-export function poolWorld(width: number, height: number): World {
-  const share = width < NARROW_WIDTH ? NARROW_SHARE : 1;
-  return createWorld(
-    width,
-    height,
-    Arr.map(POOL_MEMBERS, (member, index) =>
-      startOf(member, radiusOf(member, index) * share)
-    )
+/** Where every member of a pool with this cover starts: above the box, at its radius. */
+export function poolStarts(cover: Cover): readonly Start[] {
+  return Arr.map(poolMembers(cover.animals), (member) =>
+    startOf(member, radiusOf(member, cover.scale))
   );
 }

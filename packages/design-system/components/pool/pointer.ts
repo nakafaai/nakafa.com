@@ -8,8 +8,12 @@ import { Number as Num, Schema } from "effect";
 
 /** How far beyond its radius a ball feels the pointer, in pixels. */
 const POINTER_REACH = 44;
-/** How hard the pointer pushes a ball, per pixel that the ball is inside its reach. */
-const POINTER_PUSH = 110;
+/**
+ * How hard the pointer pushes a ball, per pixel that the ball is inside its reach.
+ * Measured with sweeps at 300 to 1200 pixels a second over a settled pile of 63 to
+ * 65 animals: at 80 the fastest ball reached 196 pixels a second at most.
+ */
+const POINTER_PUSH = 80;
 /** The pointer's own speed that a ball takes over, in pixels per second, before it is clamped. */
 const POINTER_SPEED_LIMIT = 28;
 /** The share of the pointer's own speed that a ball takes over in each half frame. */

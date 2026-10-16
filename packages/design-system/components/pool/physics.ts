@@ -9,7 +9,6 @@ import {
 import { pushApart } from "@repo/design-system/components/pool/collide";
 import {
   fadePointer,
-  idlePointer,
   locate,
   type Point,
   PointerSchema,
@@ -27,25 +26,30 @@ import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 /** Gravity, in pixels per second squared. */
 const GRAVITY = 1500;
-/** How much speed a free ball keeps each second: its speed is multiplied by `exp(-DAMPING * dt)`. */
-const DAMPING = 0.95;
+/**
+ * How much speed a free ball keeps each second: its speed is multiplied by `exp(-DAMPING * dt)`.
+ * Measured with pointer sweeps over a settled pile: at 3 the pile rests within 55
+ * frames, about a second, of the pointer stopping.
+ */
+const DAMPING = 3;
 /** A held ball sits on its target at once. This share of its speed over half a frame is what it carries into a collision, its release, and its lean. */
 const HOLD_SHARE = 0.35;
 /** The pile is at rest while no ball moves faster than this, in pixels per second, counting each axis. This is 0.05 pixels in one step at the fixed step, written per second so that a step of another length keeps the same rule. */
 const REST_SPEED = 24;
 /**
  * The fixed step of the pool, in seconds: 480 steps make a second, and a frame at
- * 60 frames a second runs eight of them. Measured at 60 frames a second with the
- * 30 members in 20 box sizes from 390 to 1463 wide and from 500 to 1440 high: the
- * loop sleeps after 154 to 426 frames, and after 185 frames in a box of 1200 by
- * 640. A pile can still creep for seconds after the loop sleeps, so the rest
- * speed is a threshold, not a proof of rest.
+ * 60 frames a second runs eight of them. A pile can still creep after the loop
+ * sleeps, so the rest speed is a threshold, not a proof of rest.
  */
 export const STEP = 1 / 480;
 /** The most time one frame may move the pool, in seconds: a slow frame moves it in small steps, not in one jump. */
 export const LONGEST_FRAME = 0.032;
-/** How far above the box a ball may start, in box heights. */
-const DROP_SPAN = 1.2;
+/** The loop sleeps once the pile has rested for this many frames in a row, with nobody holding a ball. */
+export const REST_FRAMES = 20;
+/** The length of a settle's frame, in seconds: a frame at 60 frames a second. */
+const SETTLE_FRAME = 1 / 60;
+/** The most frames that a settle runs, so that a pile which never rests still ends: 30 seconds at 60 frames a second. */
+const SETTLE_FRAMES = 60 * 30;
 /** The upward speed that a hop adds, in pixels per second, before its draw. */
 const HOP_LIFT = 260;
 /** The extra upward speed that a hop adds at the top of its draw, in pixels per second. */
@@ -67,43 +71,6 @@ const WorldSchema = Schema.Struct({
 
 /** The state of the pool. */
 export type World = typeof WorldSchema.Type;
-
-/** Where a ball starts: its radius, its place as fractions of the box, and its first sideways speed. */
-const StartSchema = Schema.Struct({
-  fx: Schema.Finite,
-  fy: Schema.Finite,
-  r: Schema.Finite,
-  vx: Schema.Finite,
-});
-
-/** How one ball starts. */
-export type Start = typeof StartSchema.Type;
-
-/** The pool before anything moves: every ball waits above the box, spread across it. */
-export function createWorld(
-  width: number,
-  height: number,
-  starts: readonly Start[]
-): World {
-  return {
-    balls: Arr.map(starts, (start) => ({
-      inside: false,
-      r: start.r,
-      tilt: 0,
-      vx: start.vx,
-      vy: 0,
-      x: start.r + start.fx * Math.max(1, width - start.r * 2),
-      y: -start.r - start.fy * height * DROP_SPAN,
-    })),
-    carry: 0,
-    grip: { x: 0, y: 0 },
-    height,
-    held: null,
-    moved: 0,
-    pointer: idlePointer(),
-    width,
-  };
-}
 
 /**
  * Moves the pool for one frame that took `seconds`. The frame runs as many whole
@@ -157,14 +124,17 @@ export function step(world: World, dt: number, frame: number): World {
 }
 
 /**
- * Moves the pool `steps` times at the fixed step, then stops the sideways speed and
- * the lean of every ball, so the pile stands still on its first paint. A settle
- * has no pointer and no held ball, so each of its steps stands for its own frame.
+ * Moves the pool a frame at a time until the pile has rested for `REST_FRAMES`
+ * frames, or until the limit runs out, then stops the sideways speed and the lean of
+ * every ball, so the pile stands still on its first paint. A settle has no pointer
+ * and no held ball.
  */
-export function settle(world: World, steps: number): World {
+export function settle(world: World): World {
   let walked = world;
-  for (let count = 0; count < steps; count += 1) {
-    walked = step(walked, STEP, STEP);
+  let calm = 0;
+  for (let frame = 0; frame < SETTLE_FRAMES && calm < REST_FRAMES; frame += 1) {
+    walked = tick(walked, SETTLE_FRAME);
+    calm = isResting(walked) ? calm + 1 : 0;
   }
   return {
     ...walked,

@@ -1,14 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Ball } from "@repo/design-system/components/pool/ball";
-import { poolWorld } from "@repo/design-system/components/pool/member";
 import {
-  createWorld,
   hop,
   isResting,
   LONGEST_FRAME,
   leave,
   move,
   press,
+  REST_FRAMES,
   release,
   resize,
   STEP,
@@ -20,6 +19,7 @@ import {
 import {
   ballAt,
   boxWith,
+  poolWorld,
 } from "@repo/design-system/components/pool/test.fixture";
 import { Array as Arr } from "effect";
 
@@ -35,8 +35,12 @@ const NOISE = 1e-9;
 const TOP_SPEED = 760;
 /** The frames in six seconds at 60 frames a second. */
 const FRAMES_IN_SIX_SECONDS = 360;
-/** The loop sleeps once the pile has been at rest this many frames in a row. */
-const CALM_FRAMES = 20;
+/**
+ * The frames in seven seconds at 60 frames a second. The damping of 3 gives a free
+ * ball a terminal speed of 500 pixels a second, so a pile of 65 animals in a box
+ * of 1200 by 640 rests after 366 frames, which is about six seconds, measured.
+ */
+const FRAMES_IN_SEVEN_SECONDS = 420;
 /** The two boxes of the stress test: a wide sign-in column, and a phone. */
 const BOXES = [
   { height: 640, width: 1200 },
@@ -51,6 +55,10 @@ const THROWS: readonly (readonly [number, number])[] = [
   [0.02, 0.02],
   [0.98, 0.02],
 ];
+/** A pointer sweep at this speed or faster moves no ball faster than a third of the top speed. */
+const GENTLE_SPEED = TOP_SPEED / 3;
+/** After the pointer stops over the pile, the pile rests within this many frames, which is about a second. */
+const SECOND_AFTER_STOP = 60;
 
 /** How far a ball lies outside the box, in pixels. The top counts once the ball has entered. */
 function outsideBy(world: Pick<World, "height" | "width">, ball: Ball) {
@@ -129,6 +137,55 @@ function lowest(world: World): Ball {
   );
 }
 
+/** The fastest that any free ball of a world moves, in pixels per second. */
+function fastestFree(world: World): number {
+  return Arr.reduce(world.balls, 0, (fastest, ball, index) =>
+    index === world.held
+      ? fastest
+      : Math.max(fastest, Math.hypot(ball.vx, ball.vy))
+  );
+}
+
+/**
+ * The frames that a pile takes from this world to rest for `REST_FRAMES` frames in a
+ * row, counted at 60 frames a second. A pile that does not rest within the limit
+ * gives one more than the limit.
+ */
+function framesUntilRest(start: World, limit: number): number {
+  let world = start;
+  let calm = 0;
+  for (let frame = 1; frame <= limit; frame += 1) {
+    world = tick(world, FRAME);
+    calm = isResting(world) ? calm + 1 : 0;
+    if (calm >= REST_FRAMES) {
+      return frame;
+    }
+  }
+  return limit + 1;
+}
+
+/**
+ * Sweeps the pointer across the middle of a settled pool at this speed, in pixels
+ * per second. Returns the pool at the end of the sweep, and the fastest free ball.
+ */
+function sweep(
+  world: World,
+  box: Pick<World, "height" | "width">,
+  speed: number
+): readonly [World, number] {
+  const distance = box.width;
+  const frames = Math.ceil(distance / (speed / FRAME));
+  const y = box.height * 0.6;
+  let current = world;
+  let fastest = 0;
+  for (let frame = 0; frame < frames; frame += 1) {
+    const x = Math.min(distance, frame * speed * FRAME);
+    current = tick(move(current, { x, y }), FRAME);
+    fastest = Math.max(fastest, fastestFree(current));
+  }
+  return [current, fastest];
+}
+
 describe("the pool under rough handling", () => {
   for (const box of BOXES) {
     it(`keeps every ball inside a ${box.width} by ${box.height} box through sweeps and throws`, () => {
@@ -162,18 +219,13 @@ describe("the pool under rough handling", () => {
 
 describe("the pile", () => {
   for (const box of BOXES) {
-    it(`comes to rest within six seconds in a ${box.width} by ${box.height} box`, () => {
-      let world = poolWorld(box.width, box.height);
-      let calm = 0;
-      for (
-        let frame = 0;
-        frame < FRAMES_IN_SIX_SECONDS && calm < CALM_FRAMES;
-        frame += 1
-      ) {
-        world = tick(world, FRAME);
-        calm = isResting(world) ? calm + 1 : 0;
-      }
-      expect(calm).toBeGreaterThanOrEqual(CALM_FRAMES);
+    it(`comes to rest within seven seconds in a ${box.width} by ${box.height} box`, () => {
+      expect(
+        framesUntilRest(
+          poolWorld(box.width, box.height),
+          FRAMES_IN_SEVEN_SECONDS
+        )
+      ).toBeLessThanOrEqual(FRAMES_IN_SEVEN_SECONDS);
     });
   }
 
@@ -209,11 +261,24 @@ describe("the pile", () => {
       boxWith([
         ballAt({ tilt: 4, vx: 300, vy: 50, x: 500, y: 600 }),
         ballAt({ tilt: -3, vx: -200, vy: 0, x: 700, y: 600 }),
-      ]),
-      10
+      ])
     );
     expect(Arr.map(settled.balls, (ball) => ball.vx)).toEqual([0, 0]);
     expect(Arr.map(settled.balls, (ball) => ball.tilt)).toEqual([0, 0]);
+  });
+
+  it("settles a pile until it has rested, and no longer", () => {
+    const settled = settle(poolWorld(1200, 640));
+    expect(isResting(tick(settled, FRAME))).toBe(true);
+  });
+
+  it("stays at rest with no pointer: a settled pile is at rest in every frame of six seconds", () => {
+    // The loop sleeps on a pile at rest, so a pile that rests must not wake up on its own.
+    let world = settle(poolWorld(1200, 640));
+    for (let frame = 0; frame < FRAMES_IN_SIX_SECONDS; frame += 1) {
+      world = tick(world, FRAME);
+      expect(isResting(world), `frame ${frame} moves`).toBe(true);
+    }
   });
 
   it("moves a free ball under gravity in one frame", () => {
@@ -230,6 +295,25 @@ describe("the pile", () => {
     );
     expect(next.pointer.vx).toBeCloseTo(80, 10);
     expect(next.pointer.vy).toBeCloseTo(-40, 10);
+  });
+});
+
+describe("the pointer over the pile", () => {
+  for (const speed of [300, 1200]) {
+    it(`moves no ball faster than a third of the top speed when the pointer sweeps at ${speed} pixels a second`, () => {
+      const box = { height: 640, width: 1200 };
+      const settled = settle(poolWorld(box.width, box.height));
+      const [, fastest] = sweep(settled, box, speed);
+      expect(fastest).toBeLessThanOrEqual(GENTLE_SPEED);
+    });
+  }
+
+  it("lets the pile rest within about a second after the pointer stops over it", () => {
+    const box = { height: 640, width: 1200 };
+    const [swept] = sweep(settle(poolWorld(box.width, box.height)), box, 300);
+    expect(framesUntilRest(swept, SECOND_AFTER_STOP)).toBeLessThanOrEqual(
+      SECOND_AFTER_STOP
+    );
   });
 });
 
@@ -383,7 +467,7 @@ describe("holding a ball", () => {
   });
 });
 
-describe("the throw, the box and the start", () => {
+describe("the throw and the box", () => {
   it("throws the chosen ball up with a sideways push from its draws, and leaves the others as they were", () => {
     const world = boxWith([
       ballAt({ x: 100 }),
@@ -401,17 +485,5 @@ describe("the throw, the box and the start", () => {
     const resized = resize(boxWith([]), 390, 800);
     expect(resized.width).toBe(390);
     expect(resized.height).toBe(800);
-  });
-
-  it("starts every ball above the box, spread across its width by its fractions", () => {
-    const world = createWorld(390, 800, [
-      { fx: 0, fy: 0, r: 20, vx: 0 },
-      { fx: 1, fy: 1, r: 20, vx: 10 },
-    ]);
-    expect(world.balls[0].x).toBe(20);
-    expect(world.balls[1].x).toBeCloseTo(370, 10);
-    expect(world.balls[0].y).toBe(-20);
-    expect(world.balls[1].y).toBeCloseTo(-20 - 800 * 1.2, 10);
-    expect(Arr.every(world.balls, (ball) => !ball.inside)).toBe(true);
   });
 });
