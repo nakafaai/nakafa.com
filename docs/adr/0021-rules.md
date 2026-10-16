@@ -254,6 +254,30 @@ reference, a type that Next.js generates. A new Schema is for a real contract:
 an exported shape, a shape that two places use, or the row type of an authored
 table. A browser module never gains a run-time import only to name a type.
 
+### Sealed message readers
+
+`sealed` reports each read of stored Nina messages and files that a backend
+module makes outside the sealed module, which owns the form and every read of
+those rows (ADR 0024). It judges backend product code: a module under
+`packages/backend/` that is not a test, not a helper under
+`packages/backend/test/` (which reads the stored form on purpose), and not
+`confect/nina/sealed.ts` or the `confect/nina/sealed/` folder. A type-only
+import reads nothing. Two constructions break it:
+
+- an import, a re-export, or an `export *` of `listMessages`,
+  `listUIMessages`, `docsToModelMessages`, or `getFile` from
+  `@convex-dev/agent`, under any local name, and a member of a namespace import
+  of that package that reads one, such as `agent.getFile`;
+- a reference to `messages.listMessagesByThreadId` or
+  `messages.getMessagesByIds`, the Agent component's reads that return sealed
+  rows as they are, through a receiver named `messages`, as in
+  `components.nina.messages.getMessagesByIds`.
+
+The rule names its fix: read through the sealed module's thread, message, file,
+and model reads, which open each row for its owner. It does not judge a command
+string, such as the `messages:listMessagesByThreadId` that the CLI gate sends to
+`convex run`: that gate reads only plain fields, which ADR 0024 records.
+
 ### Module size
 
 A hand-written module has at most 500 lines. The check reports a longer one
