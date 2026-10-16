@@ -44,6 +44,29 @@ describe("auth/redirect", () => {
     ).toBeUndefined();
     expect(response.headers.get("location")).toBe(location);
   });
+  it.each([
+    [
+      "a response that is not a redirect",
+      new Response(null, {
+        headers: {
+          location: "http://localhost:3000/en/auth/error?error=private",
+        },
+        status: 200,
+      }),
+    ],
+    [
+      "a redirect without a location",
+      new Response(null, {
+        status: 302,
+      }),
+    ],
+  ])("does not rewrite %s", (_label, response) => {
+    const location = response.headers.get("location");
+    expect(
+      sanitizeProviderErrorRedirectResponse(response, SITE_URL)
+    ).toBeUndefined();
+    expect(response.headers.get("location")).toBe(location);
+  });
   it("removes every provider value when no continuation intent exists", () => {
     const response = Response.redirect(
       "http://localhost:3000/de/auth/error?error=access_denied#error-fragment",
