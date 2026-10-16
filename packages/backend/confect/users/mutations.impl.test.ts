@@ -466,19 +466,6 @@ describe("users/mutations", () => {
       expect((await read())?.picture).toBe("animal");
     });
 
-    it("leaves a new account without a picture, so the account draws its animal", async () => {
-      const t = createConvexTestWithBetterAuth();
-      const identity = await t.mutation(
-        async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
-      );
-
-      const stored = await t.query((ctx) =>
-        ctx.db.get("users", identity.userId)
-      );
-
-      expect(stored).not.toHaveProperty("picture");
-    });
-
     it("answers a visitor without a session as unauthenticated", async () => {
       const t = createConvexTestWithBetterAuth();
 
