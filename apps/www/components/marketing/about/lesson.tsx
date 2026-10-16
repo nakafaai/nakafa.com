@@ -3,17 +3,21 @@ import {
   Message,
   MessageContent,
 } from "@repo/design-system/components/ui/message";
-import { useTranslations } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import { NinaPrompt } from "@/components/ai/message/prompt";
 import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { decimalSeparators } from "@/lib/marketing/decimal";
 
 /**
  * The lessons row: a short chat with Nina on one side and the lesson window on
  * the other. The chat uses the product's own bubbles, and the window holds the
- * lessons, each with its text above its picture.
+ * lessons, each with its text above its picture. The server reads the locale,
+ * so the window's client code never needs it.
  */
-export function Lesson() {
-  const t = useTranslations("Landing");
+export async function Lesson() {
+  const locale = getLocaleOrThrow(await getLocale());
+  const t = await getTranslations({ locale, namespace: "Landing" });
 
   return (
     <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="lesson">
@@ -42,6 +46,7 @@ export function Lesson() {
         </div>
         <div className="min-w-0">
           <LessonWindow
+            decimalSeparator={decimalSeparators[locale]}
             label={t("lesson-tabs")}
             lessons={{
               cell: { tab: t("lesson-cell"), text: t("lesson-cell-text") },
