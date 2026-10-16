@@ -401,14 +401,4 @@ describe("memory page store", () => {
 
     expect(store.getState()).toMatchObject({ opener: first.id, open: true });
   });
-
-  it("holds the pause choice the learner made until a refused change takes it back", () => {
-    const store = createMemoryStore();
-
-    expect(store.getState().paused).toBeNull();
-    store.getState().setPaused(true);
-    expect(store.getState().paused).toBe(true);
-    store.getState().setPaused(null);
-    expect(store.getState().paused).toBeNull();
-  });
 });

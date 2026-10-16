@@ -31,6 +31,7 @@ import {
   removeFromList,
   restoreInList,
 } from "@/components/user/settings/memory/optimistic";
+import { revertRefusedPause } from "@/components/user/settings/memory/pause";
 import {
   useMemoryLatest,
   useMemoryPage,
@@ -273,7 +274,15 @@ export function useMemoryActions() {
    */
   function pause(paused: boolean) {
     setPaused(paused);
-    settle(() => pauseTo({ paused }), { failed: () => setPaused(null) });
+    Effect.runFork(
+      revertRefusedPause(
+        setPaused,
+        Effect.tryPromise(() => pauseTo({ paused })).pipe(
+          Effect.flatMap(Effect.fromResult)
+        ),
+        (error) => reportMemoryFailure(error, messages)
+      )
+    );
   }
 
   /**
