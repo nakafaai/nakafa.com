@@ -1,9 +1,9 @@
-import { createHmac } from "node:crypto";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
+import { makeSignature } from "better-auth/crypto";
 import {
   Array as Arr,
   Effect,
@@ -17,6 +17,10 @@ const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
   runAcceptanceCommand: mocks.command,
 }));
+vi.mock("better-auth/crypto", async (importOriginal) => {
+  const original = await importOriginal<typeof import("better-auth/crypto")>();
+  return { ...original, makeSignature: vi.fn(original.makeSignature) };
+});
 vi.mock(
   "@repo/backend/scripts/content/acceptance/local",
   async (importOriginal) => ({
@@ -126,9 +130,22 @@ describe("synthetic acceptance learner", () => {
         const cookie = yield* fs
           .readFileString(`${root}/first.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(Cookie)));
-        const signature = createHmac("sha256", LOCAL_AUTH_SECRET)
-          .update(token)
-          .digest("base64");
+        // Node's Buffer encodes the HMAC bytes, so no Effect code vouches for itself.
+        const signature = Buffer.from(
+          yield* Effect.promise(() =>
+            crypto.subtle
+              .importKey(
+                "raw",
+                new TextEncoder().encode(LOCAL_AUTH_SECRET),
+                { hash: "SHA-256", name: "HMAC" },
+                false,
+                ["sign"]
+              )
+              .then((key) =>
+                crypto.subtle.sign("HMAC", key, new TextEncoder().encode(token))
+              )
+          )
+        ).toString("base64");
         expect(cookie).toEqual({
           name: "better-auth.session_token",
           value: encodeURIComponent(`${token}.${signature}`),
@@ -137,6 +154,27 @@ describe("synthetic acceptance learner", () => {
           0o600
         );
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect("writes no cookie when the session cannot be signed", () =>
+    Effect.gen(function* () {
+      const { fs, root } = yield* fixture;
+      answerCommands();
+      vi.mocked(makeSignature).mockRejectedValueOnce(
+        new Error("Web Crypto is unavailable")
+      );
+
+      const error = yield* createAcceptanceLearner(
+        root,
+        `${root}/cookie.json`
+      ).pipe(Effect.flip);
+
+      expect(error).toMatchObject({
+        _tag: "AcceptanceRuntimeError",
+        message: "The session cookie could not be signed.",
+      });
+      expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
   it.effect("requires a prepared and running local runtime", () =>

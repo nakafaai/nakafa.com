@@ -1,9 +1,9 @@
-import { createHmac } from "node:crypto";
 import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import { makeSignature } from "better-auth/crypto";
 import { Duration, Effect, FileSystem, Schema } from "effect";
 
 /** Better Auth's session cookie under its default name on plain HTTP. */
@@ -39,10 +39,12 @@ export const createAcceptanceLearner = Effect.fn(
     SESSION_LIFETIME
   );
   // Better Auth signs its cookie with HMAC-SHA256, which Effect's Crypto does
-  // not provide, so Node's signs it.
-  const signature = createHmac("sha256", LOCAL_AUTH_SECRET)
-    .update(token)
-    .digest("base64");
+  // not provide, so Better Auth's own signature function signs it.
+  const signature = yield* Effect.tryPromise({
+    catch: () =>
+      acceptanceRuntimeError("The session cookie could not be signed."),
+    try: () => makeSignature(token, LOCAL_AUTH_SECRET),
+  });
   const cookie = yield* Schema.encodeEffect(SessionCookie)({
     name: SESSION_COOKIE,
     value: encodeURIComponent(`${token}.${signature}`),
