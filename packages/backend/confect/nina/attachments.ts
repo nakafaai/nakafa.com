@@ -1,10 +1,8 @@
-import { getFile } from "@convex-dev/agent";
 import {
   NINA_DOCUMENT_SIZE,
   NINA_DOCUMENT_SIZE_MESSAGE,
   NinaUploadError,
 } from "@repo/backend/client/nina/uploads";
-import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -15,6 +13,7 @@ import {
   countMessageTokens,
   NINA_BUDGET,
 } from "@repo/backend/confect/nina/budget";
+import { readFile } from "@repo/backend/confect/nina/sealed/file";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import type { ModelMessage } from "ai";
 import { Array as Arr, Clock, Effect } from "effect";
@@ -24,14 +23,15 @@ const readAttachment = Effect.fn("nina.attachments.read")(function* (
   fileId: string
 ) {
   const ctx = yield* MutationCtx;
-  const saved = yield* Effect.tryPromise({
-    try: () => getFile(ctx, components.nina, fileId),
-    catch: () =>
-      new NinaUploadError({
-        code: "NINA_UPLOAD_FAILED",
-        message: "Unable to read this attachment.",
-      }),
-  });
+  const saved = yield* readFile(ctx, fileId).pipe(
+    Effect.mapError(
+      () =>
+        new NinaUploadError({
+          code: "NINA_UPLOAD_FAILED",
+          message: "Unable to read this attachment.",
+        })
+    )
+  );
   return {
     fileId,
     part: saved.imagePart ?? saved.filePart,

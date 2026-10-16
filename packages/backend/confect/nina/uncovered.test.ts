@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/confect/nina/uncovered";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest } from "@repo/backend/test/nina";
+import { sealThreadIn, withoutRowIds } from "@repo/backend/test/nina/seal";
 import {
   BIG,
   createSummaryTest,
@@ -45,9 +46,16 @@ async function read(
   return nina.t.action(async (ctx) => {
     const runQuery = vi.spyOn(ctx, "runQuery");
     const result = await Effect.runPromise(
-      readUncovered(nina, active?.order ?? 0, null, later).pipe(
-        Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
-      )
+      readUncovered(
+        {
+          ...nina,
+          promptMessageId: active?.promptMessageId ?? nina.promptMessageId,
+          userId: nina.identity.userId,
+        },
+        active?.order ?? 0,
+        null,
+        later
+      ).pipe(Effect.provide(RegisteredFunction.actionLayer(schema, ctx)))
     );
     const queries = Arr.map(runQuery.mock.calls, ([, args]) => args);
     return {
@@ -357,4 +365,13 @@ describe("Nina fold wait from the cost its prompt stored", () => {
       expect.objectContaining({ throughOrder: SUMMARY_FOLD_LIMIT - 1 }),
     ]);
   }, 60_000);
+
+  it("reads the same turns and messages from a sealed thread as from a plain one", async () => {
+    const nina = await createNinaTest({ history: 3 });
+    const plain = await read(nina);
+    await sealThreadIn(nina.t, nina.threadId, nina.identity.userId);
+    const sealed = await read(nina);
+    expect(plain.turns.length).toBeGreaterThan(0);
+    expect(withoutRowIds(sealed)).toEqual(withoutRowIds(plain));
+  });
 });

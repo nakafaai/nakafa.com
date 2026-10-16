@@ -1,10 +1,12 @@
 import { Ref } from "@confect/core";
-import { listMessages, saveMessages } from "@convex-dev/agent";
+import { saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { languageModel } from "@repo/backend/confect/gateway/model";
 import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
 import { stubReport } from "@repo/backend/test/nina/report";
@@ -13,12 +15,17 @@ import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { Duration, Effect } from "effect";
 
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual, listMessages: vi.fn(actual.listMessages) };
+  return { ...actual };
 });
 
 const NOW = Date.UTC(2026, 8, 27, 12);
@@ -31,7 +38,7 @@ const remove = Ref.getFunctionReference(refs.public.chats.mutations.deleteChat);
 
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.mocked(listMessages).mockReset();
+  vi.mocked(readThread).mockReset();
   provider.languageModel.mockReset();
 });
 
@@ -251,8 +258,8 @@ describe("The report of a turn whose run was lost", () => {
       const f = await createNinaTest({ now: NOW });
       await f.t.mutation(claim, { turnId: f.turnId });
       if (unreadable) {
-        vi.mocked(listMessages).mockRejectedValue(
-          new Error("Private component failure")
+        vi.mocked(readThread).mockReturnValue(
+          Effect.fail(new SealedReadError())
         );
       }
       vi.setSystemTime(NOW + DEADLINE + 1);

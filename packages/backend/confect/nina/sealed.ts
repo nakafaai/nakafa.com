@@ -85,6 +85,20 @@ const fieldsBesideMessage = Arr.filter(
   (field) => field !== "message"
 );
 
+/** Whether a stored row holds sealed content. A plain row holds none and reads as it is. */
+export function isSealed(stored: MessageDoc) {
+  return stored.message?.providerOptions?.[SEALED_KEY] !== undefined;
+}
+
+/** The place of a stored row, which is the identity its sealed content opens for. */
+export function identityOf(stored: MessageDoc): MessageIdentity {
+  return {
+    order: stored.order,
+    stepOrder: stored.stepOrder,
+    threadId: stored.threadId,
+  };
+}
+
 /** The failure of sealed content that does not open. It reveals nothing about it. */
 const cipherError = () => new VaultError({ reason: "cipher" });
 

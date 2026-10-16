@@ -1,20 +1,27 @@
 import { Ref } from "@confect/core";
-import { listMessages, saveMessages } from "@convex-dev/agent";
+import { saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { STOP_GRACE } from "@repo/backend/confect/nina/settlement";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { contextFor } from "@repo/backend/test/nina/admission";
-import { Array as Arr, Duration } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
 vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual, listMessages: vi.fn(actual.listMessages) };
+  return { ...actual };
 });
 
 const NOW = Date.UTC(2026, 8, 27, 12);
@@ -56,7 +63,7 @@ describe("native Nina stop and resend", () => {
     vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
   });
   afterEach(() => {
-    vi.mocked(listMessages).mockReset();
+    vi.mocked(readThread).mockReset();
     vi.clearAllMocks();
     vi.useRealTimers();
   });
@@ -263,10 +270,9 @@ describe("native Nina stop and resend", () => {
   });
 
   it("admits a prompt in a new chat while a stopped turn's journal cannot be read, and settles that turn once it can", async () => {
-    const actual =
-      await vi.importActual<typeof import("@convex-dev/agent")>(
-        "@convex-dev/agent"
-      );
+    const actual = await vi.importActual<
+      typeof import("@repo/backend/confect/nina/sealed/thread")
+    >("@repo/backend/confect/nina/sealed/thread");
     const f = await fixture();
     await f.setCredits(10);
     const other = Ref.decodeReturnsSync(
@@ -280,10 +286,10 @@ describe("native Nina stop and resend", () => {
 
     // The journal of the first chat's thread stops answering, so its stopped
     // turn cannot settle. The other chat's stopped turn still can.
-    vi.mocked(listMessages).mockImplementation((ctx, component, query) =>
-      query.threadId === f.threadId
-        ? Promise.reject(new Error("Private component failure"))
-        : actual.listMessages(ctx, component, query)
+    vi.mocked(readThread).mockImplementation((ctx, read) =>
+      read.threadId === f.threadId
+        ? Effect.fail(new SealedReadError())
+        : actual.readThread(ctx, read)
     );
     const next = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
@@ -313,7 +319,7 @@ describe("native Nina stop and resend", () => {
 
     // Once the journal can be read, the next prompt settles the turn at the
     // time of the stop, pays its hold back once and takes the chat.
-    vi.mocked(listMessages).mockImplementation(actual.listMessages);
+    vi.mocked(readThread).mockImplementation(actual.readThread);
     const again = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await f.owner.mutation(start, {
