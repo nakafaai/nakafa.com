@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
+import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Ref } from "effect";
 import { TestClock } from "effect/testing";
@@ -162,20 +163,6 @@ describe("editor/sync refusals and waiting", () => {
         expect(yield* server.counts).toMatchObject({ head: 2, submits: 2 });
       })
   );
-
-  it.effect(
-    "fails a step that one call cannot send, and keeps the step unconfirmed",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "x".repeat(200_000));
-        const failure = yield* tick(editor.session).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "SyncFailed" });
-        expect(sendableSteps(yield* Ref.get(editor.state))).not.toBeNull();
-        expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
-      })
-  );
 });
 
 describe("editor/sync snapshots", () => {
@@ -283,6 +270,33 @@ describe("editor/sync snapshots", () => {
           saveAttempts: 1,
           saves: 0,
         });
+      })
+  );
+});
+
+describe("editor/sync steps no call can carry", () => {
+  it.effect(
+    "drops a queued step that is larger than one call may send, counts it, and sends the next batch",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const editor = yield* openEditor(server.transport);
+        // A run of letters of one call's bound: its step is over the bound once it is encoded.
+        yield* typeText(editor.state, "x".repeat(MAX_BATCH_BYTES));
+        const dropped = yield* tick(editor.session);
+        expect(Option.getOrNull(dropped)).toMatchObject({
+          _tag: "SyncDropped",
+          count: 1,
+        });
+        expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
+        yield* typeText(editor.state, "b");
+        yield* tick(editor.session);
+        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        // The next round takes the server's steps, which confirm the batch.
+        yield* tick(editor.session);
+        const state = yield* Ref.get(editor.state);
+        expect(textOf(state.doc)).toBe("b");
+        expect(sendableSteps(state)).toBeNull();
       })
   );
 });

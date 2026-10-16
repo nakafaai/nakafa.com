@@ -1,8 +1,10 @@
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import { decodeStep } from "@repo/backend/confect/editor/step";
 import type {
   ClientRecordView,
   StepView,
 } from "@repo/backend/confect/editor/view";
+import { nodeDepth } from "@repo/design-system/components/editor/depth";
 import { JsonTextSchema } from "@repo/utilities/json";
 import type { Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { Slice } from "@tiptap/pm/model";
@@ -90,21 +92,31 @@ const stepOutcome = Effect.fn("editor.sync.outcome")(function* (
 /**
  * The document after one stored step, or the reason the step does not apply. ProseMirror
  * gives a document for every step that does not fail, so a missing document is a defect.
+ * A document that nests past the bound of the contract is refused the same way: every
+ * editor refuses it, so no editor holds a document that no snapshot can save (ADR 0028).
  */
 const applyStep = Effect.fn("editor.sync.applyStep")(function* (
   doc: Node,
   step: Step
 ) {
   const result = yield* stepOutcome(() => step.apply(doc));
-  return yield* Effect.fromNullishOr(result.doc).pipe(Effect.orDie);
+  const next = yield* Effect.fromNullishOr(result.doc).pipe(Effect.orDie);
+  const depth = nodeDepth(next);
+  if (depth > MAX_DOCUMENT_DEPTH) {
+    return yield* new StepRejected({
+      reason: `The document it makes would nest ${depth} levels, past the ${MAX_DOCUMENT_DEPTH} the contract allows.`,
+    });
+  }
+  return next;
 });
 
 /**
  * The server's document after the steps, and the steps the collab plugin receives in
- * their place. A step that does not apply to the server's document is skipped for
- * every editor, so they all keep the same document, and the skip is logged with its
- * reason. The skipped step stays in the list as a step that changes nothing, so the
- * version counts it.
+ * their place. A step that does not apply to the server's document, or that nests it
+ * past the bound, is skipped for every editor, so they all keep the same document, and
+ * the skip is logged with its reason. The skipped step stays in the list as a step that
+ * changes nothing, so the version counts it. `skipped` names the skipped steps, so the
+ * caller can tell when the server skipped one of its own steps.
  */
 const settle = Effect.fn("editor.sync.settle")(function* (
   server: Node,
@@ -112,20 +124,26 @@ const settle = Effect.fn("editor.sync.settle")(function* (
 ) {
   return yield* Effect.reduce(
     steps,
-    () => ({ doc: server, received: Arr.empty<Step>() }),
+    () => ({
+      doc: server,
+      received: Arr.empty<Step>(),
+      skipped: Arr.empty<typeof StepView.Type>(),
+    }),
     (settled, [step, view]) =>
       applyStep(settled.doc, step).pipe(
         Effect.map((doc) => ({
           doc,
           received: Arr.append(settled.received, step),
+          skipped: settled.skipped,
         })),
         Effect.catchTag("StepRejected", (refusal) =>
           Effect.logWarning(
-            `The stored step at version ${view.version} does not apply to the document, so every editor skips it: ${refusal.reason}`
+            `The stored step at version ${view.version} is skipped by every editor: ${refusal.reason}`
           ).pipe(
             Effect.as({
               doc: settled.doc,
               received: Arr.append(settled.received, SKIPPED),
+              skipped: Arr.append(settled.skipped, view),
             })
           )
         )
@@ -226,6 +244,14 @@ const applySteps = Effect.fn("editor.sync.apply")(function* (
   }
   const server = yield* Ref.get(session.server);
   const settled = yield* settleSteps(session.port.schema, server, steps);
+  const memory = yield* Ref.get(session.memory);
+  if (Arr.some(settled.skipped, (view) => view.clientId === memory.clientId)) {
+    // The server skipped a step of this editor, so the document the editors share does
+    // not hold its effect, but this editor's state still does, and the collab plugin
+    // would confirm the step without applying it again. The editor opens again from
+    // the snapshot instead, where its landed batch is dropped and the loss is counted.
+    return yield* reopen(session);
+  }
   yield* dispatchReceived(
     session,
     settled.received,
@@ -285,23 +311,24 @@ const landedCount = (
 /**
  * Replaces the editor's state with a fresh one on the snapshot. That state holds the
  * steps the editor held, replayed on it, and then the server's steps after the
- * snapshot, rebased over them. The editor's state is read and replaced as one change,
- * so an edit that lands while the snapshot is read is among the steps replayed. When
- * an edit lands before the replacement, the replacement is built again on the state
- * the editor holds now.
+ * snapshot, rebased over them. `confirmed` counts the leading unconfirmed steps that
+ * are not replayed: the batch the server took, or a step that no call can carry. The
+ * editor's state is read and replaced as one change, so an edit that lands while the
+ * snapshot is read is among the steps replayed. When an edit lands before the
+ * replacement, the replacement is built again on the state the editor holds now.
  */
 const reseat = Effect.fn("editor.sync.reseat")(function* (
   session: SyncSession,
   snapshot: {
     readonly clientId: string;
+    readonly confirmed: number;
     readonly doc: Node;
-    readonly landed: number;
     readonly received: readonly Step[];
     readonly version: number;
   }
 ): Effect.fn.Return<typeof Replacement.Type, never> {
   const from = yield* session.port.state;
-  const held = Arr.drop(sendableSteps(from)?.steps ?? [], snapshot.landed);
+  const held = Arr.drop(sendableSteps(from)?.steps ?? [], snapshot.confirmed);
   const replayed = yield* replayOnto(
     session.port.fresh({
       clientId: snapshot.clientId,
@@ -321,12 +348,24 @@ const reseat = Effect.fn("editor.sync.reseat")(function* (
   };
 });
 
+/** Logs each step of this editor that a replay refused, with the reason, as the editor drops it. */
+const logRefused = (refused: readonly StepRejected[]) =>
+  Effect.forEach(
+    refused,
+    (refusal) =>
+      Effect.logWarning(
+        `A step of this editor does not apply to the document it opened again from, so it is dropped: ${refusal.reason}`
+      ),
+    { discard: true }
+  );
+
 /**
  * Opens the document again from its snapshot, when the log no longer keeps the steps
  * this editor needs. The editor's batch is confirmed and dropped when the server says
  * it landed. The rest of the editor's unconfirmed steps are replayed on the snapshot,
- * and the server's steps after it rebase them. The steps that did not survive are
- * counted for the next report, and each refused step is logged with its reason.
+ * and the server's steps after it rebase them. The steps that did not survive, and this
+ * editor's own steps that the server skipped, are counted for the next report, and each
+ * refused step is logged with its reason.
  */
 const reopen = Effect.fn("editor.sync.reopen")(function* (
   session: SyncSession
@@ -337,30 +376,64 @@ const reopen = Effect.fn("editor.sync.reopen")(function* (
   const settled = yield* settleSteps(session.port.schema, doc, opened.steps);
   const replaced = yield* reseat(session, {
     clientId: memory.clientId,
+    confirmed: landedCount(memory, opened.client),
     doc,
-    landed: landedCount(memory, opened.client),
     received: settled.received,
     version: opened.snapshot.version,
   });
-  yield* Effect.forEach(
-    replaced.refused,
-    (refusal) =>
-      Effect.logWarning(
-        `A step of this editor does not apply to the document it opened again from, so it is dropped: ${refusal.reason}`
-      ),
-    { discard: true }
+  yield* logRefused(replaced.refused);
+  // This editor's own steps that the server skipped are not in the document, and their
+  // batch is dropped as landed, so they are lost and counted here.
+  const ownSkipped = Arr.filter(
+    settled.skipped,
+    (view) => view.clientId === memory.clientId
   );
   const now = yield* nowTime;
   yield* Ref.set(session.server, settled.doc);
   yield* Ref.update(session.memory, (current) => ({
     ...current,
     batch: Option.none(),
-    dropped: current.dropped + replaced.refused.length + replaced.rebaseDropped,
+    dropped:
+      current.dropped +
+      replaced.refused.length +
+      replaced.rebaseDropped +
+      ownSkipped.length,
     head: opened.head,
     snapshotAt: Option.some(now),
     snapshotVersion: opened.snapshot.version,
   }));
   yield* markChanged(session, opened.steps);
+});
+
+/**
+ * Drops the first unconfirmed step of this editor, which is larger than one call may send,
+ * so no call can carry it (ADR 0028 Bounds). The editor is rebuilt on the server's document,
+ * which is the document at its confirmed version, and its other unconfirmed steps are
+ * replayed in order. A step that no longer applies is dropped too. The count goes into
+ * the next report, and the batch is cleared, so the next round sends the steps that fit.
+ */
+export const dropUnsendable = Effect.fn("editor.sync.drop")(function* (
+  session: SyncSession
+) {
+  const memory = yield* Ref.get(session.memory);
+  const state = yield* session.port.state;
+  const server = yield* Ref.get(session.server);
+  yield* Effect.logWarning(
+    "A step of this editor is larger than one call may send, so it is dropped."
+  );
+  const replaced = yield* reseat(session, {
+    clientId: memory.clientId,
+    confirmed: 1,
+    doc: server,
+    received: [],
+    version: getVersion(state),
+  });
+  yield* logRefused(replaced.refused);
+  yield* Ref.update(session.memory, (current) => ({
+    ...current,
+    batch: Option.none(),
+    dropped: current.dropped + 1 + replaced.refused.length,
+  }));
 });
 
 /**

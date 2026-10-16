@@ -28,9 +28,10 @@ export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
 }) {}
 
 /**
- * A step that does not apply to a document: ProseMirror refused it, or it threw while
- * it applied the step, such as a position outside the document. The reason is the
- * text ProseMirror gave. The loop skips or drops the step, and logs the reason.
+ * A step that does not apply to a document: ProseMirror refused it, it threw while
+ * it applied the step, such as a position outside the document, or the document it
+ * makes nests past the bound of the contract. The reason is the text ProseMirror gave,
+ * or the bound it passes. The loop skips or drops the step, and logs the reason.
  */
 export class StepRejected extends Schema.TaggedError<StepRejected>()(
   "StepRejected",
@@ -40,10 +41,11 @@ export class StepRejected extends Schema.TaggedError<StepRejected>()(
 ) {}
 
 /**
- * Steps of this editor that the document no longer takes, because another editor
- * changed the same text while this one was away. The loop reports the count once,
- * from the first round that completes after the document opened again, so the
- * editor can tell its user once.
+ * Steps of this editor that the document no longer takes: another editor changed the
+ * same text while this one was away, the server skipped one of its steps because it
+ * nests the document past the bound, or one step is larger than a call may send. The
+ * loop reports the count once, from the first round that completes after the change,
+ * so the editor can tell its user once.
  */
 export class SyncDropped extends Schema.TaggedClass<SyncDropped>()(
   "SyncDropped",

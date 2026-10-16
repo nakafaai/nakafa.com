@@ -1,9 +1,15 @@
-import { BatchSchema, encodeBatch } from "@repo/backend/confect/editor/batch";
+import {
+  BatchSchema,
+  type BatchTooLarge,
+  encodeBatch,
+} from "@repo/backend/confect/editor/batch";
+import type { ClientTaken } from "@repo/backend/confect/editor/errors";
 import { MAX_BATCH_STEPS } from "@repo/backend/confect/editor/size";
 import { randomUuid } from "@repo/utilities/uuid";
 import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { sendableSteps } from "prosemirror-collab";
+import { dropUnsendable } from "@/lib/editor/receive";
 import { nowTime, SyncFailed, type SyncSession } from "@/lib/editor/session";
 
 /** A batch as the loop encodes it: its text, and the number of steps the text holds. */
@@ -15,10 +21,10 @@ const FittedBatch = Schema.Struct({
 /**
  * Encodes the longest prefix of the steps that one call may send: at most `count`
  * steps, and under the byte bound. A prefix that is too large halves, until it fits.
- * One step too large for one call is a failure, because no prefix of it can be sent.
- * A step the batch schema refuses, such as one nested deeper than the bound, is a
- * failure too, so the editor can show it. The result names the batch's text and the
- * number of steps it holds.
+ * One step too large for one call fails with `BatchTooLarge`, because no prefix of it
+ * can be sent, and the loop drops that step. A step the batch schema refuses, such as
+ * one nested deeper than the bound, is a failure too, so the editor can show it. The
+ * result names the batch's text and the number of steps it holds.
  */
 const fittingBatch = Effect.fn("editor.sync.batch")(function* (
   batchId: string,
@@ -26,7 +32,7 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
   clientId: string,
   steps: readonly Step[],
   count: number
-): Effect.fn.Return<typeof FittedBatch.Type, SyncFailed> {
+): Effect.fn.Return<typeof FittedBatch.Type, SyncFailed | BatchTooLarge> {
   const batch = yield* Schema.decodeUnknownEffect(BatchSchema)({
     baseVersion,
     batch: batchId,
@@ -54,11 +60,7 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
               steps,
               Math.floor(count / 2)
             )
-          : Effect.fail(
-              new SyncFailed({
-                reason: `One step takes ${tooLarge.bytes} bytes, more than one call may send.`,
-              })
-            ),
+          : Effect.fail(tooLarge),
     })
   );
 });
@@ -69,11 +71,13 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
  * next round sends nothing on that version. A batch whose call failed keeps its id
  * and its steps, and the next round sends the same batch, so the server answers a
  * repeat of a batch it has taken without writing it again. A batch on a version the
- * editor has moved past is replaced by a new one with a new id.
+ * editor has moved past is replaced by a new one with a new id. A first step that no
+ * call can carry is dropped and counted, and the steps after it are sent in the same
+ * round, so one oversized step never blocks the later batches.
  */
 export const push = Effect.fn("editor.sync.push")(function* (
   session: SyncSession
-) {
+): Effect.fn.Return<void, SyncFailed | ClientTaken> {
   const state = yield* session.port.state;
   const sendable = sendableSteps(state);
   if (sendable === null) {
@@ -106,7 +110,11 @@ export const push = Effect.fn("editor.sync.push")(function* (
     String(sendable.clientID),
     sendable.steps,
     count
-  );
+  ).pipe(Effect.catchTag("BatchTooLarge", () => Effect.succeed(null)));
+  if (fitted === null) {
+    yield* dropUnsendable(session);
+    return yield* push(session);
+  }
   yield* Ref.update(session.memory, (current) => ({
     ...current,
     batch: Option.some({

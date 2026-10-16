@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
+import { nodeDepth } from "@repo/design-system/components/editor/depth";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Option, Ref } from "effect";
+import type { Node } from "@tiptap/pm/model";
+import type { EditorState } from "@tiptap/pm/state";
+import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { TestClock } from "effect/testing";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import type { SyncSession } from "@/lib/editor/session";
@@ -11,6 +15,7 @@ import {
   IDLE,
   makePort,
   makeServer,
+  nestedQuote,
   openEditor,
   settle,
   silentEditor,
@@ -107,6 +112,87 @@ describe("editor/sync stored steps that do not apply", () => {
         const readerState = yield* Ref.get(reader.state);
         expect(textOf(readerState.doc)).toBe("");
         expect(getVersion(readerState)).toBe(0);
+      })
+  );
+});
+
+/** A document nested to the bound less one: a paragraph in twelve quotes, held by the `doc` node. */
+const DEEP_DOCUMENT = encodeJsonText({
+  content: [nestedQuote(13).toJSON()],
+  type: "doc",
+});
+
+/** The start and the end of the paragraph that holds the text, which each test document holds once. */
+const Bounds = Schema.Struct({ from: Schema.Natural, to: Schema.Natural });
+
+function paragraphBounds(doc: Node): typeof Bounds.Type | null {
+  let found: typeof Bounds.Type | null = null;
+  doc.descendants((node, pos) => {
+    if (node.type.name === "paragraph") {
+      found = { from: pos, to: pos + node.nodeSize };
+    }
+    return true;
+  });
+  return found;
+}
+
+/** Wraps every block of the document in one quote, as one local edit of an editor does. */
+const wrapDocument = (state: EditorState) => {
+  const { doc, schema, tr } = state;
+  const range = doc.resolve(0).blockRange(doc.resolve(doc.content.size));
+  return range === null
+    ? state
+    : state.apply(tr.wrap(range, [{ type: schema.nodes.quote }]));
+};
+
+/** Wraps the paragraph that holds the text in one quote, as one local edit of an editor does. */
+const wrapParagraph = (state: EditorState) => {
+  const { doc, schema, tr } = state;
+  const bounds = paragraphBounds(doc);
+  const range =
+    bounds === null
+      ? null
+      : doc.resolve(bounds.from).blockRange(doc.resolve(bounds.to));
+  return range === null
+    ? state
+    : state.apply(tr.wrap(range, [{ type: schema.nodes.quote }]));
+};
+
+describe("editor/sync document bounds", () => {
+  it.effect(
+    "converges three editors on one document within the bound when a rebased step nests it past the bound, and the editor that made that step opens again",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer(DEEP_DOCUMENT);
+        const writer = yield* openEditor(server.transport);
+        const rebased = yield* openEditor(server.transport);
+        const observer = yield* openEditor(server.transport);
+        // The writer nests the document to the bound, and the second editor nests the
+        // paragraph one level deeper on the version before the writer's step: once the
+        // writer's step lands, the second editor's step, rebased, is past the bound.
+        yield* Ref.update(writer.state, wrapDocument);
+        yield* Ref.update(rebased.state, wrapParagraph);
+        yield* tick(writer.session);
+        yield* tick(rebased.session);
+        yield* tick(observer.session);
+        yield* tick(writer.session);
+        // The second editor sees its own step skipped, and opens again from the snapshot.
+        const dropped = yield* tick(rebased.session);
+        const writerState = yield* Ref.get(writer.state);
+        const rebasedState = yield* Ref.get(rebased.state);
+        const observerState = yield* Ref.get(observer.state);
+        expect(rebasedState.doc.toJSON()).toEqual(writerState.doc.toJSON());
+        expect(observerState.doc.toJSON()).toEqual(writerState.doc.toJSON());
+        // The writer's step alone takes the document to the bound, and the rebased step is skipped.
+        expect(nodeDepth(writerState.doc)).toBe(MAX_DOCUMENT_DEPTH);
+        expect(getVersion(writerState)).toBe(2);
+        expect(getVersion(rebasedState)).toBe(2);
+        expect(getVersion(observerState)).toBe(2);
+        expect(Option.getOrNull(dropped)).toMatchObject({
+          _tag: "SyncDropped",
+          count: 1,
+        });
+        expect(yield* server.counts).toMatchObject({ head: 2, submits: 2 });
       })
   );
 });
