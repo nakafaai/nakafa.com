@@ -38,6 +38,35 @@ describe("notifications/rules channel table", () => {
     });
     expect(Exit.isFailure(decoded)).toBe(true);
   });
+
+  it("refuses a Chosen time in the inbox or push, because only email depends on the poster's choice", () => {
+    const inboxChosen = Schema.decodeExit(NoticeRules)({
+      ...NOTICE_RULES,
+      classAnnouncement: {
+        routes: [
+          {
+            relation: "student",
+            inbox: [{ _tag: "Chosen" }],
+            push: [{ _tag: "Now" }],
+          },
+        ],
+      },
+    });
+    const pushChosen = Schema.decodeExit(NoticeRules)({
+      ...NOTICE_RULES,
+      classAnnouncement: {
+        routes: [
+          {
+            relation: "student",
+            inbox: [{ _tag: "Now" }],
+            push: [{ _tag: "Chosen" }],
+          },
+        ],
+      },
+    });
+    expect(Exit.isFailure(inboxChosen)).toBe(true);
+    expect(Exit.isFailure(pushChosen)).toBe(true);
+  });
 });
 
 describe("notifications/rules Timing", () => {

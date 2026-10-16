@@ -63,7 +63,7 @@ export const deliveryInstant = (
  * The sends that a notice of `kind` makes to a person of `relation`, each with
  * its channel and its Timing, in the order of the channel table: inbox, push,
  * then email. A relation with no route gets none. `emailChosen` says whether the
- * poster chose email for the notice, and only a `Chosen` send depends on it.
+ * poster chose email for the notice, and only a `Chosen` email depends on it.
  */
 export const deliveriesOf = (
   kind: typeof NoticeKind.Type,
@@ -73,18 +73,20 @@ export const deliveriesOf = (
   const sendsOn = (
     channel: typeof Channel.Type,
     timings: readonly (typeof Timing.Type)[]
-  ) =>
-    Arr.map(
-      Arr.filter(timings, (timing) => timing._tag !== "Chosen" || emailChosen),
-      (timing) => ({ channel, timing })
-    );
+  ) => Arr.map(timings, (timing) => ({ channel, timing }));
   return Option.match(routeOf(kind, relation), {
     onNone: () => [],
     onSome: (route) =>
       Arr.flatten([
         sendsOn("inbox", route.inbox),
         sendsOn("push", route.push ?? []),
-        sendsOn("email", route.email ?? []),
+        sendsOn(
+          "email",
+          Arr.filter(
+            route.email ?? [],
+            (timing) => timing._tag !== "Chosen" || emailChosen
+          )
+        ),
       ]),
   });
 };

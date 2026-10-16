@@ -60,6 +60,7 @@ export const Timing = Schema.Union([
 /**
  * What one relation receives for a kind: the channels, each with the times it
  * sends. The inbox always has at least one time, because a row is never skipped.
+ * Only email may hold a Chosen time, because the inbox and push always send.
  */
 const Route = Schema.Struct({
   email: Schema.optionalKey(Schema.NonEmptyArray(Timing)),
@@ -80,6 +81,19 @@ const hasOneRoutePerRelation = (
 };
 
 /**
+ * Whether a Chosen time sits in email alone. The inbox and push send at their
+ * own times whatever the poster chose, so a Chosen time there means nothing, and
+ * the Schema of a rule refuses it.
+ */
+const chosenOnlyInEmail = (routes: readonly (typeof Route.Type)[]): boolean =>
+  Arr.every(routes, (route) =>
+    Arr.every(
+      [...route.inbox, ...(route.push ?? [])],
+      (timing) => timing._tag !== "Chosen"
+    )
+  );
+
+/**
  * The rule of one kind: the routes it has, one for each relation it reaches,
  * and the channels that stay on, because no preference can switch them off.
  */
@@ -88,6 +102,9 @@ const NoticeRule = Schema.Struct({
   routes: Schema.Array(Route).check(
     Schema.makeFilter(hasOneRoutePerRelation, {
       message: "A kind holds one route for each relation.",
+    }),
+    Schema.makeFilter(chosenOnlyInEmail, {
+      message: "A Chosen time sends by email only.",
     })
   ),
 });
