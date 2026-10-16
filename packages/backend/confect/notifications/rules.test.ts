@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   canSwitchOff,
   deliveriesOf,
+  deliveryInstant,
   NOTICE_RULES,
   type NoticeKind,
   NoticeRules,
@@ -13,6 +14,9 @@ import { Array as Arr, DateTime, Exit, Schema } from "effect";
 
 const jakarta = Schema.decodeSync(Schema.TimeZoneNamedFromString)(
   "Asia/Jakarta"
+);
+const makassar = Schema.decodeSync(Schema.TimeZoneNamedFromString)(
+  "Asia/Makassar"
 );
 const berlin = Schema.decodeSync(Schema.TimeZoneNamedFromString)(
   "Europe/Berlin"
@@ -40,8 +44,9 @@ const sendsOf = (
   emailChosen = false
 ) =>
   Arr.map(
-    deliveriesOf(kind, relation, anchor, zone, emailChosen),
-    (send) => `${send.channel} ${show(send.instant, zone)}`
+    deliveriesOf(kind, relation, emailChosen),
+    (send) =>
+      `${send.channel} ${show(deliveryInstant(anchor, send.timing, zone), zone)}`
   );
 
 const Member = Schema.Struct({ name: Schema.String, relation: Relation });
@@ -277,5 +282,22 @@ describe("notifications/rules deliveriesOf", () => {
       "inbox 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
       "email 2026-10-14T09:15:00.000+07:00[Asia/Jakarta]",
     ]);
+  });
+});
+
+describe("notifications/rules deliveryInstant", () => {
+  it("derives a reminder's instant from its anchor, its rule and the zone at send time, so a change of zone moves it", () => {
+    const anchor = anchorAt("2026-10-15T00:30:00.000", jakarta);
+    const [deadlineReminder] = deliveriesOf("taskDeadline", "student", false);
+    expect(
+      DateTime.formatIso(
+        deliveryInstant(anchor, deadlineReminder.timing, jakarta)
+      )
+    ).toBe("2026-10-14T09:00:00.000Z");
+    expect(
+      DateTime.formatIso(
+        deliveryInstant(anchor, deadlineReminder.timing, makassar)
+      )
+    ).toBe("2026-10-14T08:00:00.000Z");
   });
 });

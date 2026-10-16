@@ -227,20 +227,24 @@ export const canSwitchOff = (
 
 /**
  * One send that a notice makes to a person: the channel it goes out on, and the
- * instant it is due.
+ * Timing that says when. It holds no instant: `deliveryInstant` derives the
+ * instant when the send is read, so a pending send keeps its rule.
  */
 const Delivery = Schema.Struct({
   channel: Channel,
-  instant: Schema.DateTimeUtc,
+  timing: Timing,
 });
 
 /**
- * The instant a timing sends for a notice, given its anchor and the zone of the
- * notice. A `Clock` time and a `Digest` read the calendar on the clock of `zone`.
+ * The instant at which a send of a notice is due. It is the one function that
+ * turns a Timing into an instant. It takes the anchor of the notice, the Timing,
+ * and the zone of the school at the moment the send is read. A `Clock` time and
+ * a `Digest` read the calendar on the clock of `zone`, so a pending send moves
+ * with the zone of its school (ADR 0027).
  */
-const deliveryInstant = (
-  timing: typeof Timing.Type,
+export const deliveryInstant = (
   anchor: DateTime.Utc,
+  timing: typeof Timing.Type,
   zone: DateTime.TimeZone.Named
 ): DateTime.Utc =>
   Match.value(timing).pipe(
@@ -256,15 +260,13 @@ const deliveryInstant = (
 
 /**
  * The sends that a notice of `kind` makes to a person of `relation`, each with
- * its channel and its instant, in the order of the channel table: inbox, push,
+ * its channel and its Timing, in the order of the channel table: inbox, push,
  * then email. A relation with no route gets none. `emailChosen` says whether the
  * poster chose email for the notice, and only a `Chosen` send depends on it.
  */
 export const deliveriesOf = (
   kind: typeof NoticeKind.Type,
   relation: typeof Relation.Type,
-  anchor: DateTime.Utc,
-  zone: DateTime.TimeZone.Named,
   emailChosen: boolean
 ): readonly (typeof Delivery.Type)[] => {
   const sendsOn = (
@@ -273,7 +275,7 @@ export const deliveriesOf = (
   ) =>
     Arr.map(
       Arr.filter(timings, (timing) => timing._tag !== "Chosen" || emailChosen),
-      (timing) => ({ channel, instant: deliveryInstant(timing, anchor, zone) })
+      (timing) => ({ channel, timing })
     );
   return Option.match(routeOf(kind, relation), {
     onNone: () => [],

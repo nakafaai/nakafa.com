@@ -215,6 +215,17 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   protection impact assessment (DPIA) allows.
 - Quiet hours, reminders, and digests use the IANA time zone of the school the
   notification is about (ADR 0032). Instants are stored in UTC.
+- A reminder stores its anchor and its Timing, not its send instant. The anchor
+  is the real instant the reminder is about, such as a deadline or the opening of
+  a sitting. The send instant is derived when the reminder is read, from the
+  anchor, the Timing, and the zone of the school at that moment (`deliveryInstant`
+  in `confect/notifications/rules.ts`), so a change of zone moves every pending
+  reminder with it. An instant stored when the reminder is scheduled keeps the
+  zone it was made in. For example, a Jakarta reminder for 16:00 on the day before
+  is stored as 09:00Z. Once the school's zone is Asia/Makassar, that instant fires
+  at 17:00 WITA, while the rule fires at 16:00 WITA, which is 08:00Z.
+- An archived unit sends no reminder and no digest. Its inbox rows stay readable,
+  as ADR 0011 keeps an archived unit readable.
 - The tests run in Asia/Jakarta and Europe/Berlin, and they include a change of
   daylight saving time.
 
@@ -301,7 +312,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | `notifications`, `notificationPreferences`, `notificationReminders`, `pushSubscriptions`, and `journalCursors` | Planned, program wave B |
 | The notify consumer, and the published list with `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |
-| The notification rules and the zone of a notice, `confect/notifications/rules.ts` and `confect/notifications/zone.ts`: the channel table as data, recipients by relation, the sends of a notice with their instants, and the zone that carries a notice | Built as pure functions, not called yet (program wave B) |
+| The notification rules and the zone of a notice, `confect/notifications/rules.ts` and `confect/notifications/zone.ts`: the channel table as data, recipients by relation, the sends of a notice as rules whose instants are derived from the zone at send time, and the zone that carries a notice | Built as pure functions, not called yet (program wave B) |
 | The zone clock, `confect/notifications/clock.ts`: quiet hours, the 17:00 digest, and local send times in an IANA zone | Built as pure functions, not called yet (program wave B) |
 | A service worker and Web Push | Planned, program wave B |
 | The inbox panel and `nakafa.com/id/notifications` | Planned, program wave B |
