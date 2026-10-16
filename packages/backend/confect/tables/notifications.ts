@@ -5,7 +5,7 @@ export default Table.make(() => Notification)
     "recipientPersonId",
     "createdAt",
   ])
-  .index("by_journalEntryId_and_recipientPersonId", [
-    "journalEntryId",
+  .index("by_recipientPersonId_and_inviteId", [
     "recipientPersonId",
+    "inviteId",
   ]);

@@ -12,6 +12,7 @@ import {
   cursorOf,
   markPending,
   pendingOf,
+  positionAfter,
   readAfter,
 } from "@repo/backend/confect/journal/cursor";
 import type {
@@ -31,9 +32,9 @@ const CHANGE: typeof ConsumedChangeType.Type = "person.invited";
 const InvitedChange = Schema.Struct({ invite: Id("tenantInvites") });
 
 /**
- * Journal entries one run reads. A run reads and writes at most this many
- * entries and rows, far inside the transaction limits of Convex (4,096 index
- * ranges and 32,000 documents scanned per query or mutation).
+ * Journal entries one run reads and writes. It is half of the 100 entries that
+ * one page of a list may hold (ADR 0016), so a run stays far inside one Convex
+ * transaction.
  */
 export const INBOX_PAGE_SIZE = 50;
 
@@ -41,18 +42,18 @@ export const INBOX_PAGE_SIZE = 50;
 const DUE_BATCH_SIZE = 50;
 
 /**
- * The sends of the rules that reach the inbox of an invitee. The rules own who
- * receives what (ADR 0027), so this consumer writes a row for each of them and
- * names no channel of its own. The invitation's inbox send is `Now`: it is due at
- * the change, which is the creation time of the journal entry.
+ * The inbox sends that the rules give an invitee, which decide whether the
+ * invitee gets an inbox row (ADR 0027). The consumer names no channel of its own,
+ * and email stays with `emails/invite`. The invitation's inbox send is `Now`, so
+ * its row is due at the change, the creation time of the journal entry.
  */
-const inboxSends = Arr.filter(
+export const invitedInboxSends = Arr.filter(
   deliveriesOf("invitation", "invitee", false),
   (send) => send.channel === "inbox"
 );
 
-/** One journal entry as a page of the journal returns it. */
-type Entry = Effect.Success<ReturnType<typeof readAfter>>["page"][number];
+/** One journal entry as a read of the journal returns it. */
+type Entry = Effect.Success<ReturnType<typeof readAfter>>["entries"][number];
 
 /** Schedules one run of the inbox consumer for a tenant. The run starts only if the calling transaction commits. */
 const scheduleRun = Effect.fn("notifications.inbox.scheduleRun")(function* (
@@ -66,11 +67,13 @@ const scheduleRun = Effect.fn("notifications.inbox.scheduleRun")(function* (
 });
 
 /**
- * Writes the inbox row of the invitation that one journal entry records. A
- * Person that is missing, removed, or in another school gets no row, and neither
- * does an invitation that is revoked by the time its run reads it, such as the
- * one a release revokes. A row that exists already is kept, so a run that reads
- * an entry again writes nothing new.
+ * Writes the inbox row of the invitation that one journal entry records. A Person
+ * that is missing, removed, or in another school gets no row, and neither does an
+ * invitation that is revoked by the time its run reads it. A Person has one row for
+ * each invitation, found by the Person and the invitation. An entry that resends
+ * the invitation refreshes that row: the row takes the entry's time and is unread
+ * again. An entry no newer than the row writes nothing, so a run that reads the
+ * same entries again changes nothing.
  */
 const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
   tenantId: GenericId.GenericId<"tenants">,
@@ -78,6 +81,7 @@ const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
   personId: GenericId.GenericId<"tenantPeople">
 ) {
   const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const person = yield* reader
     .table("tenantPeople")
     .get(personId)
@@ -105,34 +109,48 @@ const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
   }
   const existing = yield* reader
     .table("notifications")
-    .get("by_journalEntryId_and_recipientPersonId", entry._id, personId)
+    .get("by_recipientPersonId_and_inviteId", personId, invite)
     .pipe(
       Effect.asSome,
       Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
       Effect.orDie
     );
-  if (Option.isSome(existing)) {
+  if (Option.isNone(existing)) {
+    yield* writer
+      .table("notifications")
+      .insert({
+        changeType: CHANGE,
+        createdAt: entry._creationTime,
+        inviteId: invite,
+        journalEntryId: entry._id,
+        recipientPersonId: personId,
+        subject: entry.subject,
+        tenantId,
+      })
+      .pipe(Effect.orDie);
     return;
   }
-  yield* (yield* DatabaseWriter)
+  // A row takes the creation time of the entry that wrote it, so a row at or after
+  // this entry's time already reflects this entry or a later one.
+  const row = existing.value;
+  if (row.createdAt >= entry._creationTime) {
+    return;
+  }
+  yield* writer
     .table("notifications")
-    .insert({
-      changeType: CHANGE,
+    .patch(row._id, {
       createdAt: entry._creationTime,
       journalEntryId: entry._id,
-      recipientPersonId: personId,
-      subject: entry.subject,
-      tenantId,
+      readAt: undefined,
     })
     .pipe(Effect.orDie);
 });
 
 /**
  * Runs the inbox consumer for one tenant. It reads one page of the tenant's
- * invitations recorded since the cursor started, after the cursor's position,
- * writes their rows, and moves the cursor to the end of the page in the same
- * transaction, so a run that fails writes nothing. A page that is not the last
- * one schedules the next run.
+ * journal entries of invitations after the cursor's place, writes their rows, and
+ * moves the cursor past the page in the same transaction, so a run that fails
+ * writes nothing. A page that is not the last one schedules the next run.
  */
 export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
   function* (tenantId: GenericId.GenericId<"tenants">, numItems: number) {
@@ -140,22 +158,18 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
     if (Option.isNone(cursor)) {
       return;
     }
-    const page = yield* readAfter(
-      tenantId,
-      CHANGE,
-      cursor.value.since,
-      cursor.value.position,
-      numItems
-    );
+    const page = yield* readAfter(tenantId, CHANGE, cursor.value, numItems);
     yield* Effect.forEach(
-      page.page,
+      page.entries,
       (entry) =>
         ObjectRef.matchOrElse(
           entry.subject,
           {
+            // Every inbox send of the invitation shows in the one row of the
+            // invitation, so the row is written once whatever the number of sends.
             person: (subject) =>
               Effect.forEach(
-                inboxSends,
+                invitedInboxSends,
                 () => writeRow(tenantId, entry, subject.id),
                 { discard: true }
               ),
@@ -164,7 +178,11 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
         ),
       { discard: true }
     );
-    yield* advance(cursor.value._id, page.continueCursor, !page.isDone);
+    yield* advance(
+      cursor.value._id,
+      positionAfter(cursor.value, page.entries),
+      !page.isDone
+    );
     if (!page.isDone) {
       yield* scheduleRun(tenantId);
     }
@@ -173,14 +191,17 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
 
 /**
  * After an invitation is recorded, marks the inbox cursor of its tenant pending
- * and schedules a run. The first invitation of a tenant creates its cursor, which
- * starts at that moment, so only the invitations recorded from then on get rows.
- * The run is the normal path; the minute sweep is the backstop for a run that
- * never happened.
+ * and schedules a run. `entryId` is the journal entry that the write recorded in
+ * the same transaction. The first invitation of a tenant creates its cursor at
+ * that entry, so only the invitations recorded from then on get rows. The run is
+ * the normal path; the minute sweep is the backstop for a run that never happened.
  */
 export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
-  function* (tenantId: GenericId.GenericId<"tenants">) {
-    yield* markPending(CONSUMER, tenantId, CHANGE);
+  function* (
+    tenantId: GenericId.GenericId<"tenants">,
+    entryId: GenericId.GenericId<"journalEntries">
+  ) {
+    yield* markPending(CONSUMER, tenantId, CHANGE, entryId);
     yield* scheduleRun(tenantId);
   }
 );

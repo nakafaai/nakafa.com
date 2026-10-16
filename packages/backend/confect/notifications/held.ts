@@ -5,9 +5,12 @@ import { NotificationScopeTooLarge } from "@repo/backend/confect/notifications/e
 import { Effect } from "effect";
 
 /**
- * The most Persons one inbox request reads for its account. An account that holds
- * more is refused, so no answer shows some of its rows and not others. ADR 0011
- * sets no limit on the schools of an account, so this number is the owner's to set.
+ * The most Persons, and so the most schools, that one inbox request reads for its
+ * account. An account holds at most one Person in a school: claiming a Person
+ * refuses an account that already holds one there (`confect/tenancy/claims.impl.ts`).
+ * So this bound is the number of schools one request reads, and each read of them
+ * is one indexed `take`. An account over the bound is refused, so no answer shows
+ * some of its rows and not others.
  */
 export const HELD_SCHOOL_LIMIT = 100;
 

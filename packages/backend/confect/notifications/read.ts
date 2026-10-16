@@ -7,7 +7,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { Array as Arr, Duration, Effect } from "effect";
 
-/** Inbox rows one read-all page reads, and marks, inside one transaction. */
+/**
+ * Inbox rows one read-all page reads, and marks, inside one transaction. It is
+ * half of the 100 entries that one page of a list may hold (ADR 0016).
+ */
 const READ_PAGE_SIZE = 50;
 
 /**

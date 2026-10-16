@@ -128,14 +128,14 @@ export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
     refs.internal.tenancy.expiry.invite,
     { inviteId }
   );
-  yield* personAuthority.record(
+  const entryId = yield* personAuthority.record(
     actor,
     person,
     reason === undefined
       ? { invite: inviteId, type: "person.invited" }
       : { invite: inviteId, reason, type: "person.invited" }
   );
-  yield* noteInvite(person.tenantId);
+  yield* noteInvite(person.tenantId, entryId);
   yield* startInviteEmail(inviteId, locale, requestedAt);
   yield* claimAfterInvite(email);
   return invite;

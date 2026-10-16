@@ -6,8 +6,15 @@ import {
 import type {
   ConsumedChangeType,
   JournalConsumer,
+  JournalCursor,
 } from "@repo/backend/confect/journal/schema";
-import { Clock, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
+
+/** Where a cursor's next run reads from: a creation time, and the entries already read at it. */
+type Position = Pick<typeof JournalCursor.Type, "read" | "since">;
+
+/** One journal entry as a read of the journal returns it. */
+type Entry = Effect.Success<ReturnType<typeof readAfter>>["entries"][number];
 
 /** The cursor of one consumer for one tenant and change type, once a change has reached it. */
 export const cursorOf = Effect.fn("journal.cursor.of")(function* (
@@ -32,29 +39,37 @@ export const cursorOf = Effect.fn("journal.cursor.of")(function* (
 
 /**
  * Marks one consumer's cursor pending, and creates the cursor when no change of
- * that type has reached the tenant before. A new cursor starts at the current
- * time, so the entries recorded before it are never read. The change that creates
- * it is written in the same transaction, so its entry is not before the start.
- * Two writers that both find no cursor conflict on the index range they read, so
- * only one cursor is created.
+ * that type has reached the tenant before. `entryId` is the journal entry whose
+ * write marks the cursor, recorded in the same transaction. A new cursor starts at
+ * that entry's own creation time, read from the stored entry, so the entries
+ * recorded before it are never read and no backfill happens. The start is the
+ * entry and not a clock reading, because a clock read at another moment could
+ * start after the entry that made the cursor and skip it. Two writers that both
+ * find no cursor conflict on the index range they read, so only one cursor is
+ * created.
  */
 export const markPending = Effect.fn("journal.cursor.markPending")(function* (
   consumer: typeof JournalConsumer.Type,
   tenantId: GenericId.GenericId<"tenants">,
-  changeType: typeof ConsumedChangeType.Type
+  changeType: typeof ConsumedChangeType.Type,
+  entryId: GenericId.GenericId<"journalEntries">
 ) {
+  const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const cursor = yield* cursorOf(consumer, tenantId, changeType);
   if (Option.isNone(cursor)) {
-    const since = yield* Clock.currentTimeMillis;
+    const entry = yield* reader
+      .table("journalEntries")
+      .get(entryId)
+      .pipe(Effect.orDie);
     yield* writer
       .table("journalCursors")
       .insert({
         changeType,
         consumer,
         pending: true,
-        position: null,
-        since,
+        read: [],
+        since: entry._creationTime,
         tenantId,
       })
       .pipe(Effect.orDie);
@@ -67,39 +82,71 @@ export const markPending = Effect.fn("journal.cursor.markPending")(function* (
 });
 
 /**
- * Reads one page of the journal entries of one change type in one tenant, after
- * a cursor position. Creation time is the last column of the index, so the range
- * from `since` holds the entries created at or after it, in creation order, and
- * each page holds the next of them.
+ * Reads the next page of the journal entries of one change type in one tenant: the
+ * entries created at or after the position's `since`, in creation order, without
+ * the ones the position already read. It reads one entry past the page, so `isDone`
+ * is known without a second read, and the read is one indexed `take`.
  */
 export const readAfter = Effect.fn("journal.cursor.readAfter")(function* (
   tenantId: GenericId.GenericId<"tenants">,
   changeType: typeof ConsumedChangeType.Type,
-  since: number,
-  position: string | null,
+  position: Position,
   numItems: number
 ) {
-  return yield* (yield* DatabaseReader)
+  const rows = yield* (yield* DatabaseReader)
     .table("journalEntries")
     .index("by_owner_tenantId_and_change_type", (query) =>
       query
         .eq("owner.tenantId", tenantId)
         .eq("change.type", changeType)
-        .gte("_creationTime", since)
+        .gte("_creationTime", position.since)
     )
-    .paginate({ cursor: position, numItems })
+    .take(numItems + position.read.length + 1)
     .pipe(Effect.orDie);
+  const fresh = Arr.filter(
+    rows,
+    (entry) => !Arr.contains(position.read, entry._id)
+  );
+  return {
+    entries: Arr.take(fresh, numItems),
+    isDone: fresh.length <= numItems,
+  };
 });
+
+/**
+ * The position that a run leaves for the next one: the creation time of the last
+ * entry the run read, and the IDs of every entry it read at that time, so the next
+ * run starts after all of them. A run that read no entry keeps its position.
+ */
+export const positionAfter = (
+  position: Position,
+  entries: readonly Entry[]
+): Position =>
+  Option.match(Arr.last(entries), {
+    onNone: () => position,
+    onSome: (last) => {
+      const at = last._creationTime;
+      const readAt = Arr.map(
+        Arr.filter(entries, (entry) => entry._creationTime === at),
+        (entry) => entry._id
+      );
+      return {
+        read:
+          at === position.since ? Arr.appendAll(position.read, readAt) : readAt,
+        since: at,
+      };
+    },
+  });
 
 /** Saves where one run stopped, and whether a further run is owed. */
 export const advance = Effect.fn("journal.cursor.advance")(function* (
   cursorId: GenericId.GenericId<"journalCursors">,
-  position: string,
+  position: Position,
   pending: boolean
 ) {
   yield* (yield* DatabaseWriter)
     .table("journalCursors")
-    .patch(cursorId, { pending, position })
+    .patch(cursorId, { pending, read: position.read, since: position.since })
     .pipe(Effect.orDie);
 });
 

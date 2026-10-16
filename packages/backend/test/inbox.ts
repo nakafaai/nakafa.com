@@ -133,7 +133,7 @@ export const insertRows = (
   count: number
 ) =>
   Effect.gen(function* () {
-    yield* inviteAt(
+    const made = yield* inviteAt(
       fixture,
       "nf",
       fixture.invited,
@@ -151,6 +151,7 @@ export const insertRows = (
             writer.table("notifications").insert({
               changeType: "person.invited",
               createdAt: NOW - index,
+              inviteId: made.id,
               journalEntryId: entry._id,
               recipientPersonId: personId,
               subject: { id: personId, kind: "person" },

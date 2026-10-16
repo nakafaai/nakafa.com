@@ -15,6 +15,7 @@ import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { noteInvite } from "@repo/backend/confect/notifications/inbox";
+import { purgeInvite } from "@repo/backend/confect/notifications/purge";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
@@ -174,6 +175,7 @@ const revoke = FunctionImpl.make(
         at: yield* Clock.currentTimeMillis,
         status: "revoked",
       });
+      yield* purgeInvite(stored.personId, stored._id);
       yield* personAuthority.record(personActor(actor), person, {
         invite: stored._id,
         type: "invite.revoked",
@@ -221,11 +223,11 @@ const resend = FunctionImpl.make(
       invite: stored._id,
       type: "invite.resent",
     });
-    yield* personAuthority.record(personActor(actor), person, {
+    const entryId = yield* personAuthority.record(personActor(actor), person, {
       invite: stored._id,
       type: "person.invited",
     });
-    yield* noteInvite(person.tenantId);
+    yield* noteInvite(person.tenantId, entryId);
     return viewOf(stored, person.name);
   })
 );

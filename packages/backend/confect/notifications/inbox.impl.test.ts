@@ -17,6 +17,7 @@ import { Array as Arr, Effect } from "effect";
 
 const { list, read, readAll } = refs.public.notifications.inbox;
 const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
+const ANA = "ana@harapan.example.test";
 
 /** Fake timers keep the clock where each test sets it. */
 beforeEach(() => {
@@ -137,7 +138,7 @@ describe("notifications/inbox list", () => {
         );
         yield* claim(fixture, anaNf, ana.userId);
         yield* claim(fixture, anaOther, ana.userId);
-        yield* inviteAt(
+        const made = yield* inviteAt(
           fixture,
           "nf",
           fixture.invited,
@@ -155,6 +156,7 @@ describe("notifications/inbox list", () => {
               writer.table("notifications").insert({
                 changeType: "person.invited",
                 createdAt: NOW,
+                inviteId: made.id,
                 journalEntryId: entry._id,
                 recipientPersonId: anaNf,
                 subject: { id: anaNf, kind: "person" },
@@ -163,6 +165,7 @@ describe("notifications/inbox list", () => {
               writer.table("notifications").insert({
                 changeType: "person.invited",
                 createdAt: NOW,
+                inviteId: made.id,
                 journalEntryId: entry._id,
                 recipientPersonId: anaOther,
                 subject: { id: anaOther, kind: "person" },
@@ -207,7 +210,7 @@ describe("notifications/inbox list", () => {
           true
         );
         const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
-        yield* inviteAt(fixture, "nf", anaNf, "ana@harapan.example.test");
+        const made = yield* inviteAt(fixture, "nf", anaNf, ANA);
         yield* claim(fixture, anaNf, ana.userId);
         const [entry] = yield* fixture.run(journal);
         if (entry === undefined) {
@@ -224,6 +227,7 @@ describe("notifications/inbox list", () => {
                 writer.table("notifications").insert({
                   changeType: "person.invited",
                   createdAt: NOW,
+                  inviteId: made.id,
                   journalEntryId: entry._id,
                   recipientPersonId: anaNf,
                   subject: { id: anaNf, kind: "person" },

@@ -5,9 +5,12 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { Array as Arr, Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect, Option } from "effect";
 
-/** Inbox rows one purge page deletes, inside one transaction. */
+/**
+ * Inbox rows one purge page deletes, inside one transaction. It is half of the 100
+ * entries that one page of a list may hold (ADR 0016).
+ */
 const PURGE_PAGE_SIZE = 50;
 
 /**
@@ -49,5 +52,28 @@ export const purgeInbox = Effect.fn("notifications.purge.inbox")(function* (
       refs.internal.notifications.purge.run,
       { personId }
     );
+  }
+});
+
+/**
+ * Deletes the inbox row of one invitation when the invitation is revoked, in the
+ * caller's transaction, so no row points at a revoked invitation. A Person has one
+ * row for each invitation, so the lookup is one indexed read. An invitation with no
+ * row yet has nothing to delete.
+ */
+export const purgeInvite = Effect.fn("notifications.purge.invite")(function* (
+  personId: GenericId.GenericId<"tenantPeople">,
+  inviteId: GenericId.GenericId<"tenantInvites">
+) {
+  const row = yield* (yield* DatabaseReader)
+    .table("notifications")
+    .get("by_recipientPersonId_and_inviteId", personId, inviteId)
+    .pipe(
+      Effect.asSome,
+      Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
+      Effect.orDie
+    );
+  if (Option.isSome(row)) {
+    yield* (yield* DatabaseWriter).table("notifications").delete(row.value._id);
   }
 });

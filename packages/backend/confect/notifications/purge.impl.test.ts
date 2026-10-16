@@ -25,6 +25,7 @@ import { Array as Arr, Effect } from "effect";
 const nf = slugOf("nf");
 const GURU = "guru@harapan.example.test";
 const { remove } = refs.public.tenancy.people;
+const { revoke } = refs.public.tenancy.invites;
 const purge = refs.internal.notifications.purge.run;
 const PURGE_RUN = "notifications/purge:run";
 
@@ -64,6 +65,22 @@ const invitee = (fixture: Fixture) =>
   );
 
 describe("notifications/purge", () => {
+  it.effect(
+    "deletes the row of an invitation when the invitation is revoked",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* inviteAt(fixture, "nf", fixture.invited, GURU);
+        yield* consumeSchool(fixture, fixture.tenants.nf);
+        expect(yield* storedRows(fixture)).toHaveLength(1);
+        yield* fixture.as("admin").mutation(revoke, {
+          inviteId: made.id,
+          slug: nf,
+        });
+        expect(yield* storedRows(fixture)).toEqual([]);
+      })
+  );
+
   it.effect(
     "account deletion releases the Person, deletes its inbox rows, and keeps the Person",
     () =>
@@ -109,7 +126,7 @@ describe("notifications/purge", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        yield* inviteAt(fixture, "nf", fixture.invited, GURU);
+        const made = yield* inviteAt(fixture, "nf", fixture.invited, GURU);
         const [entry] = yield* fixture.run(journal);
         if (entry === undefined) {
           return yield* Effect.die(
@@ -125,6 +142,7 @@ describe("notifications/purge", () => {
                 writer.table("notifications").insert({
                   changeType: "person.invited",
                   createdAt: NOW + index,
+                  inviteId: made.id,
                   journalEntryId: entry._id,
                   recipientPersonId: fixture.invited,
                   subject: { id: fixture.invited, kind: "person" },

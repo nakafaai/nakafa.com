@@ -13,13 +13,15 @@ import {
 import { Schema } from "effect";
 
 /**
- * One inbox row: one recipient Person and one journal entry, written once. It
- * holds IDs and codes only, and its text is read from its subject when it is
- * opened.
+ * One inbox row: one recipient Person and one invitation. A resend refreshes the
+ * row of its invitation rather than adding one, so the row shows the latest entry
+ * that sent the invitation. It holds IDs and codes only, and its text is read from
+ * its subject when it is opened.
  */
 export const Notification = Schema.Struct({
   changeType: ConsumedChangeType,
   createdAt: Schema.Finite,
+  inviteId: Id("tenantInvites"),
   journalEntryId: Id("journalEntries"),
   readAt: Schema.optionalKey(Schema.Finite),
   recipientPersonId: Id("tenantPeople"),

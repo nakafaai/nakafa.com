@@ -69,20 +69,22 @@ export const JournalConsumer = Schema.Literals(["inbox"]);
 export const ConsumedChangeType = Schema.Literals(["person.invited"]);
 
 /**
- * One consumer's place in the journal for one tenant and one change type.
- * `since` is the creation time of the cursor: the consumer reads only the entries
- * created at or after it, so the entries recorded before the consumer existed
- * are never replayed. `position` is the pagination cursor that the consumer's
- * last read ended on, so its next read starts exactly after the entries already
- * read, including entries that share a creation millisecond. `pending` says a
- * run is owed: a change sets it, and a run that reads to the end clears it, so
- * the sweep can find the cursors whose run never happened.
+ * One consumer's place in the journal for one tenant and one change type. `since`
+ * is the creation time from which the next run reads. It starts at the creation
+ * time of the entry that made the cursor, so the entries recorded before the cursor
+ * are never replayed, and afterwards it is the creation time of the last entry read.
+ * `read` holds the IDs of the entries read at `since`, so the next run skips them and
+ * still reads the entries that share their creation millisecond. No pagination
+ * cursor is kept, so no run resumes from the end position of an earlier page: the
+ * Convex proof of ADR 0027 covers the creation-time order. `pending` says a run is
+ * owed: a change sets it, and a run that reads to the end clears it, so the sweep
+ * can find the cursors whose run never happened.
  */
 export const JournalCursor = Schema.Struct({
   changeType: ConsumedChangeType,
   consumer: JournalConsumer,
   pending: Schema.Boolean,
-  position: Schema.NullOr(Schema.String),
+  read: Schema.Array(Id("journalEntries")),
   since: Schema.Finite,
   tenantId: Id("tenants"),
 });
