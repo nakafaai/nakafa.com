@@ -23,7 +23,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { formatDistanceToNow } from "date-fns";
 import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -31,7 +30,7 @@ import { useChange } from "@/components/ai/chat/change.client";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
-import { getLocale } from "@/lib/i18n/date";
+import { formatAge } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
 
 /**
@@ -141,10 +140,7 @@ function ChatList({
 
               <div className="flex shrink-0 items-center justify-between gap-2">
                 <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground">
-                  {formatDistanceToNow(chat.updatedAt, {
-                    locale: getLocale(locale),
-                    addSuffix: true,
-                  })}
+                  {formatAge(chat.updatedAt, locale)}
                 </time>
                 {canDelete ? <UserChatsListActions chat={chat} /> : null}
               </div>

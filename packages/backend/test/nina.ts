@@ -20,12 +20,13 @@ import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, DateTime, Effect, Schema } from "effect";
 
 /**
- * Text that costs `tokens` model tokens by the shared tokenizer, one word per
- * token, so a test sizes a turn by what the budgets count.
+ * Text that costs `tokens` model tokens by the shared estimator, one letter per
+ * token (a single Latin letter costs one token, and a single space none), so a
+ * test sizes a turn by what the budgets count.
  */
 export function filler(tokens: number) {
   return Arr.join(
-    Arr.makeBy(tokens, () => "word"),
+    Arr.makeBy(tokens, () => "a"),
     " "
   );
 }
@@ -164,6 +165,7 @@ async function seedEarlierTurn(
 /** What a test says about one earlier turn: it was cancelled, asks again the question that the turn `retryOf` first asked, took `steps` tool steps, or has an answer of `tokens` more tokens. */
 export const EarlierTurn = Schema.Struct({
   cancelled: Schema.optionalKey(Schema.Boolean),
+  replies: Schema.optionalKey(Schema.Int),
   retryOf: Schema.optionalKey(Schema.Int),
   steps: Schema.optionalKey(Schema.Int),
   tokens: Schema.optionalKey(Schema.Int),
@@ -180,7 +182,6 @@ async function queueTurn(
   {
     chatId,
     needsFetch = false,
-    now,
     slug = "home",
     text,
     threadId,
@@ -188,7 +189,6 @@ async function queueTurn(
   }: {
     chatId: Docs["chats"]["_id"];
     needsFetch?: boolean;
-    now: number;
     slug?: string;
     text: string;
     threadId: string;
@@ -208,12 +208,14 @@ async function queueTurn(
     threadId,
     prompt: text,
   });
-  const url = `https://nakafa.com/en/${slug}`;
   const session = await Effect.runPromise(
     openNinaLearningSession({
-      capturedAt: DateTime.formatIso(DateTime.makeUnsafe(now)),
-      learning: { locale: "en", slug, url, verified: false },
-      source: "current-page",
+      learning: {
+        locale: "en",
+        slug,
+        url: `https://nakafa.com/en/${slug}`,
+        verified: false,
+      },
     })
   );
   const turnId = await ctx.db.insert("ninaTurns", {
@@ -230,8 +232,6 @@ async function queueTurn(
     page: {
       locale: "en",
       slug,
-      url,
-      verified: false,
       needsFetch,
       nina: session.context,
     },
@@ -288,7 +288,6 @@ export async function createNinaTest({
     const turn = await queueTurn(ctx, {
       chatId,
       needsFetch,
-      now,
       text,
       threadId,
       userId: identity.userId,
@@ -327,7 +326,6 @@ export function appendNinaTurn(
   return nina.t.mutation((ctx) =>
     queueTurn(ctx, {
       chatId: nina.chatId,
-      now: DateTime.toEpochMillis(DateTime.nowUnsafe()),
       text: prompt,
       threadId: nina.threadId,
       userId: nina.identity.userId,

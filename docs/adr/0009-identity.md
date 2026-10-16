@@ -43,25 +43,71 @@ current in the same transaction as the Better Auth write.
 
 ## Stored Secrets
 
-Better Auth seals the provider access and refresh tokens in `account`
-(`account.encryptOAuthTokens`) and the private half of each signing key in
-`jwks`, also in the static `JWKS` value, with the Better Auth secret. It stores
-the Google ID token and the session token as issued. The ID token signs no one
-in, because Google ID token sign-in is off (`disableIdTokenSignIn`). The session
-token does: the bearer hook that the Convex plugin installs accepts it in an
-`Authorization` header, and Better Auth has no option to seal it. Rotating the
-secret signs every learner out. List the new secret first in
-`BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old value, and keep each
-older version listed while anything is still sealed with it. Keep
-`encryptOAuthTokens` on, because with it off Better Auth hands out the cipher
-text.
+### Provider tokens
 
-Planned for program wave A: sign-in stops storing Google tokens on the account.
-The rows that hold them are counted on dev first, then cleared in the same
-release that stops storing them. Connector tokens never sit on the account. They
-are sealed in the vault (`confect/vault`) under the key of the connection's
-owner: the learner's key for a personal connection, and the school's key for a
-school connection.
+Nakafa stores no token that Google issues at sign-in. Nothing reads one after
+sign-in (the Search Console scripts use their own service account), and a token
+that nothing reads only widens what a leaked database or a leaked secret
+exposes. A connector token never sits on the account either. It is sealed in
+the vault (`confect/vault`) under the key of the connection's owner: the
+learner's key for a personal connection, and the school's key for a school
+connection.
+
+- Sign-in sends `prompt=select_account`, so a learner with several Google
+  accounts still picks one. It sends no `access_type`, which Google reads as
+  `online` and answers with no refresh token. It no longer sends the `consent`
+  prompt, which showed Google's consent screen at every sign-in. Google still
+  returns an access token and an ID token at the code exchange, and Better Auth
+  reads the profile from the ID token.
+- Two Better Auth database hooks (`confect/auth/tokens.ts`) set the access,
+  refresh and ID tokens and their expiry times to `undefined` before every
+  write to `account`. Better Auth merges what a hook returns over the data it
+  writes, so a column left out of the result would still be written. The
+  adapter leaves an `undefined` column out of the write. Sign-up, an implicit
+  link, a link through the callback, the update at each sign-in and a token
+  refresh all write through Better Auth's internal adapter, which runs the
+  hooks, so one rule covers every path. The one place outside the table that
+  could hold the tokens, the account cookie, is off, because Better Auth turns
+  it on only when no database is configured.
+- `/get-access-token`, `/account-info` and `/refresh-token`, the routes that
+  read or refresh a stored token (`confect/auth/routes.ts`), answer 404 like the
+  retired credential routes, and the API reference leaves them out. Better Auth
+  checks `disabledPaths` in the HTTP router only, and `auth.api` runs an
+  endpoint without that check. A server call that sends no headers and names a
+  `userId` is taken to speak for that learner, so a before hook of a plugin
+  refuses the same three routes with 404 for server code too. Without it, such
+  a call would return a token that an older sign-in stored, until the clearing
+  below has run.
+- `disableIdTokenSignIn` stays on. With it off, Better Auth would accept any
+  Google ID token that was issued to Nakafa in the last hour as a credential, to
+  sign a learner in and to link an account. Only the redirect flow signs a
+  learner in.
+- `account.encryptOAuthTokens` stays on, so that a token that a later plugin
+  writes is sealed.
+
+### Clearing the tokens already stored
+
+The hooks never touch a row they do not write, so every account written before
+them held the tokens, sealed except for the ID token. A temporary internal
+mutation of the Better Auth component (#1052) removed the five columns from
+those rows, one page of accounts a call, and left every other row and column
+alone. On 14 October 2026, after the release with the hooks was live, it found
+1 account holding a token on dev and 734 of 734 on production, cleared them,
+and a dry pass after it found none on either. The cleanup change deleted the
+mutation and its test. Clearing removed Nakafa's copy; a refresh token that
+Google issued earlier is not revoked by it. The columns stay in the schema,
+because Better Auth generates the table, and stay unset.
+
+### Signing keys and the session token
+
+Better Auth seals the private half of each signing key in `jwks`, also in the
+static `JWKS` value, with the Better Auth secret. It stores the session token as
+issued. The session token signs a learner in: the bearer hook that the Convex
+plugin installs accepts it in an `Authorization` header, and Better Auth has no
+option to seal it. Rotating the secret signs every learner out. List the new
+secret first in `BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old
+value, and keep each older version listed while anything is still sealed with
+it.
 
 ## School Sign-In
 
@@ -230,6 +276,14 @@ Confirming a write through `safeGetAuthUser` gives the same answer as
 `session.live` for a token Better Auth issued, at the cost above. It also does
 not compare the session's user with the token's, which `session.live` does.
 
+Turning off `account.updateAccountOnSignIn` stops the update at each sign-in,
+but not the writes at sign-up and at a link, and it stops the granted scopes
+from following Google. The hooks cover every write with one rule.
+
+Clearing the stored tokens from the app through the component's `updateOne`
+would write `null` instead of removing the columns, and would cost one
+component call for each row.
+
 A public query of a profile by username, closed by a rule, was rejected until an
 age is stored. With no age, the rule would answer not found for every account
 but the caller's own, which `getCurrentUser` already gives, so the query would
@@ -253,6 +307,49 @@ repeat it.
   the cookie signature that a rotation invalidates.
 - `better-auth` `plugins/bearer` and `@convex-dev/better-auth` `plugins/convex`:
   the hook that accepts a session token in an `Authorization` header.
+- `better-auth` 1.6.33, `dist/db/with-hooks` (`createWithHooks` line 7,
+  `updateWithHooks` line 44): a hook's `data` is merged over the data to write.
+  `dist/db/internal-adapter` (`createOAuthUser` 75, `createAccount` 102,
+  `linkAccount` 509, `updateAccount` 577) runs the hooks for every account
+  write. Its callers are `oauth2/link-account` (lines 31, 64, 97),
+  `api/routes/callback` (114, 115) and `api/routes/account` (185, 315, 456).
+  `dist/context/create-context` reads the hooks from `options.databaseHooks`
+  (line 198) and turns `storeAccountCookie` on only without a database (line
+  54).
+- `@better-auth/core` 1.6.33, `dist/db/adapter/factory` (`transformInput`, lines
+  115 and 141): the adapter leaves an `undefined` column out of the write.
+- `better-auth` `dist/api/routes/account`: the routes that read a stored token,
+  `/get-access-token` (line 344), `/refresh-token` (381) and `/account-info`
+  (484), and `getValidAccessToken` (284) that two of them share.
+  `resolveUserId` (265 to 274) takes the `userId` of the call when it carries no
+  headers and no session. `dist/api/index` (lines 166 to 168) answers a disabled
+  path with 404, and `dist/plugins/open-api/generator` (lines 426 and 474)
+  leaves it out of the API reference.
+- `better-auth` 1.6.33, `dist/auth/base` (line 9) and `dist/api/index` (line
+  114): `auth.api` and the router are built from the same endpoints, and
+  `dist/api/to-auth-endpoints` (line 34) wraps each one in the hook pipeline of
+  `dist/api/dispatch`. `getHooks` (line 137) collects the before hooks of every
+  plugin, `dispatchAuthEndpoint` (186 and 210) runs them for a router request
+  and for an `auth.api` call alike, and a hook that rejects ends the call. Only
+  the router checks `disabledPaths`.
+- `convex` 1.46.0, `browser/http_client` (`setAdminAuth`, line 167) and the CLI
+  `run` command (`runFunctionAndLog`, line 121210 of `dist/cli.bundle.cjs`): the
+  admin key may call internal queries, mutations and actions, and `run` sends it
+  with the component path of `--component`.
+- https://docs.convex.dev/components/authoring: a component exposes only its
+  public functions to the app, and `npx convex run` and the dashboard run public
+  and internal functions alike.
+- `@better-auth/core` 1.6.33, `dist/social-providers/google` (lines 45 to 73)
+  and `dist/oauth2/create-authorization-url` (lines 15 and 17): `prompt` and
+  `access_type` reach Google only when set. `getUserInfo` (line 105) reads the
+  profile from the ID token of the code exchange, and `verifyIdToken` (line 95)
+  refuses every ID token when `disableIdTokenSignIn` is set.
+- https://developers.google.com/identity/protocols/oauth2/web-server: the
+  default `access_type` is `online`, `prompt=consent` asks for consent and
+  `prompt=select_account` shows the account chooser, and a request without
+  `prompt` asks the learner only the first time.
+- https://developers.google.com/identity/openid-connect/openid-connect: the
+  token response holds a `refresh_token` only when `access_type` is `offline`.
 - `better-auth` `plugins/username`: the sign-in endpoint takes a username and a
   password, finds the user by username among every user of the deployment, and
   has no host check. The same plugin keeps a username unique within one

@@ -10,8 +10,8 @@ const CostedTurn = Schema.Struct({ order: Schema.Int, tokens: Schema.Int });
  * token budget bounds what a call costs, but each turn also costs documents to
  * read before the call, which no token counts. A chat of very short turns
  * would otherwise grow to thousands of messages before it reached the budget.
- * The messages themselves add no tokens beyond their content (see
- * `countTextTokens`), so this cap is about reads, not about the prompt.
+ * A message adds only the provider's overhead beyond its content (see
+ * `history.ts`), so this cap is about reads, not about the prompt.
  */
 export const HISTORY_TURNS = 4 * SUMMARY_FOLD_LIMIT;
 
@@ -104,4 +104,30 @@ export function nextSummaryTarget(
     Option.map(([{ order }]) => Math.min(order, limit)),
     Option.orElse(() => hidden)
   );
+}
+
+/**
+ * The order a fold covers through, when its transcript may carry at most `budget`
+ * tokens. `target` when every turn fits. Otherwise the fold covers the oldest turns
+ * up to the newest one that still fits, and the next fold covers the rest. The
+ * first turn always folds, so a summary advances even when that turn alone
+ * outgrows the budget.
+ */
+export function foldWithin(
+  turns: readonly (typeof CostedTurn.Type)[],
+  budget: number,
+  target: number
+) {
+  const [, totals] = Arr.mapAccum(turns, 0, (sum, { tokens }) => [
+    sum + tokens,
+    sum + tokens,
+  ]);
+  const count = Math.max(
+    1,
+    Arr.takeWhile(totals, (total) => total <= budget).length
+  );
+  if (count >= turns.length) {
+    return target;
+  }
+  return Arr.reduce(Arr.take(turns, count), target, (_, { order }) => order);
 }

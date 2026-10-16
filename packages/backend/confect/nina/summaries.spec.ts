@@ -92,7 +92,8 @@ export default GroupSpec.make()
         ...NinaSummary.mapFields(Struct.pick(["chatId", "throughOrder"]))
           .fields,
         // The caller sends plain text and the mutation seals it. A refresh whose
-        // answer was rejected sends none, and only its tokens count.
+        // answer was rejected sends none, and its tokens count only when the chat
+        // already has a summary row.
         text: Schema.optionalKey(Schema.String),
         usage: NinaUpkeepCall,
       }),

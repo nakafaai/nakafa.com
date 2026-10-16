@@ -12,9 +12,9 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { toAnchorSlug } from "@repo/utilities/slug";
-import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
+import { formatPublished } from "@/lib/i18n/date";
 
 interface Props {
   readonly article: Pick<
@@ -48,7 +48,7 @@ export function CardArticle({ article }: Props) {
             className="text-muted-foreground text-sm"
             dateTime={article.datePublished}
           >
-            {format(article.datePublished, "d MMM, yyyy")}
+            {formatPublished(article.datePublished)}
           </time>
           <Tooltip>
             <TooltipTrigger

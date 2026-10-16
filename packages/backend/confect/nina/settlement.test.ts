@@ -4,10 +4,10 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
-import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
 import { STOP_GRACE } from "@repo/backend/confect/nina/settlement";
 import { createNinaTest } from "@repo/backend/test/nina";
-import { Array as Arr, DateTime, Duration, Effect } from "effect";
+import { contextFor } from "@repo/backend/test/nina/admission";
+import { Array as Arr, Duration } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -53,31 +53,7 @@ describe("native Nina stop and resend", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
-    vi.mocked(resolveNinaContext).mockReturnValue(
-      openNinaLearningSession({
-        capturedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-        source: "current-page",
-        learning: {
-          locale: "en",
-          slug: "home",
-          url: "https://nakafa.com/en/home",
-          verified: false,
-        },
-      }).pipe(
-        Effect.orDie,
-        Effect.map((session) => ({
-          page: {
-            locale: "en" as const,
-            slug: "home",
-            url: "https://nakafa.com/en/home",
-            verified: false,
-            needsFetch: false,
-            nina: session.context,
-          },
-          user: {},
-        }))
-      )
-    );
+    vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
   });
   afterEach(() => {
     vi.mocked(listMessages).mockReset();

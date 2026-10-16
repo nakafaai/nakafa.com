@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { languageModel } from "@repo/backend/confect/gateway/model";
 import { createNinaTest } from "@repo/backend/test/nina";
 
 const record = Ref.getFunctionReference(refs.internal.nina.usage.record);
@@ -9,7 +10,7 @@ const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
 /** One answer call's usage, before any gateway cost is attached. */
 const call = {
   agent: "nina" as const,
-  model: "google/gemini-3.7-flash",
+  model: languageModel.id,
   provider: "convexGateway.chat",
   input: 12,
   output: 4,

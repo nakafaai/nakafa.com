@@ -1,15 +1,14 @@
 "use client";
 
-import { BookOpen02Icon, Sad02Icon } from "@hugeicons/core-free-icons";
+import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Match } from "effect";
 import { useTranslations } from "next-intl";
-
 import { ContentPart } from "@/components/ai/message/evidence/nakafa/content";
+import { nakafaIcons } from "@/components/ai/message/evidence/nakafa/icons";
 import { QuranPart } from "@/components/ai/message/evidence/nakafa/quran";
 import { SearchPart } from "@/components/ai/message/evidence/nakafa/search";
+import { Step } from "@/components/ai/message/evidence/step";
 
 interface Props {
   message: NakafaDataPart;
@@ -21,33 +20,26 @@ export function NakafaPart({ message }: Props) {
 
   const kind = getKindLabel(message.kind, t);
 
+  // A step that runs shows its own icon, because the activity above it already turns.
   if (message.status === "loading") {
     return (
-      <div className="flex items-center gap-2">
-        <Spinner className="size-4 text-muted-foreground" />
-        <p className="text-muted-foreground text-sm">
-          {t("nakafa-loading", { kind })}
-        </p>
-      </div>
+      <Step
+        icon={nakafaIcons[message.kind]}
+        label={t("nakafa-loading", { kind })}
+      />
     );
   }
 
   if (message.status === "error") {
     return (
-      <div className="flex items-center gap-2 text-destructive text-sm">
-        <HugeIcons className="size-4 shrink-0" icon={Sad02Icon} />
-        <span>{t("nakafa-error", { kind })}</span>
-      </div>
+      <Step failed icon={AlertCircleIcon} label={t("nakafa-error", { kind })} />
     );
   }
 
   return Match.value(message).pipe(
     Match.discriminators("kind")({
       taxonomy: () => (
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <HugeIcons className="size-4 shrink-0" icon={BookOpen02Icon} />
-          <span>{t("nakafa-taxonomy")}</span>
-        </div>
+        <Step icon={nakafaIcons.taxonomy} label={t("nakafa-taxonomy")} />
       ),
       search: (data) => <SearchPart message={data} />,
       content: (data) => <ContentPart message={data} />,

@@ -11,8 +11,10 @@ describe("groupPathOf", () => {
       ]);
       expect(yield* groupPathOf("../storage.spec")).toEqual(["storage"]);
       expect(
-        yield* groupPathOf("../classes/forums/mutations/posts.spec")
-      ).toEqual(["classes", "forums", "mutations", "posts"]);
+        yield* groupPathOf(
+          "../contentRelease/runtime/publication/internal.spec"
+        )
+      ).toEqual(["contentRelease", "runtime", "publication", "internal"]);
     })
   );
 

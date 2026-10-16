@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import {
-  languageModelId,
-  providerId,
-} from "@repo/backend/confect/gateway/model";
+import { languageModel, providerId } from "@repo/backend/confect/gateway/model";
 import {
   getNakafaReferencesFromMessages,
   getSourceReferencesFromMessages,
@@ -53,7 +50,7 @@ const chatRow = {
   calls: 2,
   cost: 0.01,
   input: 9000,
-  model: languageModelId,
+  model: languageModel.id,
   output: 300,
   provider: providerId,
 } satisfies GateTurn["usage"][number];
@@ -63,7 +60,7 @@ const titleRow = {
   agent: "title",
   calls: 1,
   input: 800,
-  model: languageModelId,
+  model: languageModel.id,
   output: 8,
   provider: providerId,
 } satisfies GateTurn["usage"][number];

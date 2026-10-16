@@ -20,7 +20,6 @@ import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import {
   type CapabilityDecision,
   type CapabilityDenied,
-  decideCapability,
   deniedCapabilityResult,
   type OfferContext,
 } from "@repo/backend/confect/nina/policy/capability";
@@ -174,7 +173,7 @@ function settle<Input, Requirements extends RunServices>(
 ) {
   return Effect.gen(function* () {
     const { held, ...turn } = yield* CapabilityTurn;
-    const decision = decideCapability(spec, turn.context);
+    const decision = spec.offered(turn.context);
     if (decision.state === "denied") {
       return deniedCapabilityResult({
         capability: name,

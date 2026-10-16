@@ -401,8 +401,8 @@ that does not exist. The token's hash, not the owner's key, decides who reads.
   next run of the query. Nothing in the sealed rows changes.
 - Deleting the owner's account deletes the chat and shreds the owner's vault
   key, so sealed copies in old backups cannot be opened once every copy of the
-  root key is destroyed. A rotation of the root key moves only the wrapped
-  learner keys and leaves every sealed row as it is.
+  root key is destroyed. A rotation of the root key moves the wrapped learner
+  keys and school keys (ADR 0030), and leaves every sealed row as it is.
 - Sealing is not end-to-end. The server holds the key, and a viewer receives
   plain text by design. The honest limit stays what the blueprint says: someone
   who holds the environment and the data can open everything.

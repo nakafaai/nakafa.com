@@ -25,8 +25,13 @@ const ActionSchema = Schema.Struct({
   type: Schema.Literal("Action"),
 });
 
-/** The answer of a server that could not take a change, as the protocol words it. */
+/**
+ * The answer of a server that could not take a change, as the protocol words
+ * it. `errorData` is the typed failure a function throws on purpose, which the
+ * page decodes; a server that broke sends none.
+ */
 const RefusalSchema = Schema.Struct({
+  errorData: Schema.optionalKey(Schema.Unknown),
   logLines: Schema.Array(Schema.String),
   requestId: Schema.Finite,
   result: Schema.String,
@@ -48,6 +53,7 @@ export const SentSchema = Schema.Union([
   Schema.Struct({
     modifications: Schema.Array(
       Schema.Struct({
+        /** What an added query is called with: one record of arguments. */
         args: Schema.optionalKey(Schema.Array(Schema.Unknown)),
         queryId: Schema.Finite,
         type: Schema.String,
@@ -141,6 +147,39 @@ export const encodeTransition = Schema.encodeSync(
   Schema.fromJsonString(WholeTransitionSchema)
 );
 
+/** What a transition says about one query, with every field the server wrote. */
+type Update = (typeof WholeTransitionSchema.Type)["modifications"][number];
+
+/**
+ * The transition `text` with each update that `replace` gives another one put
+ * in its place, and every other field kept as the server wrote it. None when
+ * `replace` gives none, and for a frame that is no transition.
+ */
+const replaceUpdatesIn = (
+  text: string,
+  replace: (update: Update) => Option.Option<Update>
+) =>
+  decodeTransition(text).pipe(
+    Option.flatMap((transition) => {
+      const replacements = Arr.map(transition.modifications, (update) =>
+        replace(update)
+      );
+      if (!Arr.some(replacements, Option.isSome)) {
+        return Option.none();
+      }
+      return Option.some(
+        encodeTransition({
+          ...transition,
+          modifications: Arr.zipWith(
+            transition.modifications,
+            replacements,
+            (update, replacement) => Option.getOrElse(replacement, () => update)
+          ),
+        })
+      );
+    })
+  );
+
 /**
  * The transition `text` with the answers to the queries `queryIds` turned into
  * the failure a server sends when the function throws: `data` is what the page
@@ -151,30 +190,53 @@ export const failQueriesIn = (
   text: string,
   queryIds: readonly number[],
   data: unknown
-) => {
-  const answersQuery = (update: { queryId: number; type: string }) =>
-    update.type === "QueryUpdated" && Arr.contains(queryIds, update.queryId);
-
-  return decodeTransition(text).pipe(
-    Option.filter((transition) =>
-      Arr.some(transition.modifications, answersQuery)
-    ),
-    Option.map((transition) =>
-      encodeTransition({
-        ...transition,
-        modifications: Arr.map(transition.modifications, (update) =>
-          answersQuery(update)
-            ? {
-                errorData: data,
-                errorMessage: "Refused by the test",
-                journal: update.journal,
-                logLines: [],
-                queryId: update.queryId,
-                type: "QueryFailed",
-              }
-            : update
-        ),
-      })
-    )
+) =>
+  replaceUpdatesIn(text, (update) =>
+    update.type === "QueryUpdated" && Arr.contains(queryIds, update.queryId)
+      ? Option.some({
+          errorData: data,
+          errorMessage: "Refused by the test",
+          journal: update.journal,
+          logLines: [],
+          queryId: update.queryId,
+          type: "QueryFailed",
+        })
+      : Option.none()
   );
-};
+
+/**
+ * The transition `text` with the value that each of the queries `queryIds`
+ * answers changed by `change`, the way a backend that held other data would
+ * answer, and the rest of each update as the server wrote it. None when the
+ * transition updates none of those queries.
+ */
+export const changeAnswersIn = (
+  text: string,
+  queryIds: readonly number[],
+  change: (value: unknown) => unknown
+) =>
+  replaceUpdatesIn(text, (update) =>
+    update.type === "QueryUpdated" && Arr.contains(queryIds, update.queryId)
+      ? Option.some({ ...update, value: change(update.value) })
+      : Option.none()
+  );
+
+/**
+ * The transition `text` with what the server said of each query that
+ * `valueFor` knows turned into the update of a function that returned that
+ * value, whatever the server said. None when the transition says nothing of
+ * those queries.
+ */
+export const answerQueriesIn = (
+  text: string,
+  valueFor: (queryId: number) => Option.Option<unknown>
+) =>
+  replaceUpdatesIn(text, (update) =>
+    Option.map(valueFor(update.queryId), (value) => ({
+      journal: null,
+      logLines: [],
+      queryId: update.queryId,
+      type: "QueryUpdated",
+      value,
+    }))
+  );

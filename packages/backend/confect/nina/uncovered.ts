@@ -10,13 +10,10 @@ import {
   ActionCtx,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { type Asking, newestAskings } from "@repo/backend/confect/nina/asking";
 import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { foldCanWait, HISTORY_TURNS } from "@repo/backend/confect/nina/fold";
-import {
-  type Asking,
-  newestAskings,
-  sentTurn,
-} from "@repo/backend/confect/nina/history";
+import { sentTurn } from "@repo/backend/confect/nina/history";
 import { SUMMARY_FOLD_LIMIT } from "@repo/backend/confect/nina/summaries.spec";
 import {
   Array as Arr,

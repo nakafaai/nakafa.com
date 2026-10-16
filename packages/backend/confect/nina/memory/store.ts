@@ -11,7 +11,7 @@ import {
 } from "@repo/backend/confect/learningPreferences/impl";
 import { deleteKeys } from "@repo/backend/confect/nina/memory/keys";
 import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
-import { Array as Arr, Duration, Effect, Option } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
 type UserId = Docs["users"]["_id"];
 type MemoryId = Docs["ninaMemories"]["_id"];
@@ -159,15 +159,19 @@ export const readKeptMemory = Effect.fn("nina.memory.store.kept")(function* (
   return memory === null || isCleared(memory, clearedAt) ? null : memory;
 });
 
-/** Deletes one memory and its key rows. */
+/**
+ * Deletes one memory and its key rows, and returns the keys the memory had.
+ * Only `remove` keeps them, for an Undo.
+ */
 export const deleteMemory = Effect.fn("nina.memory.store.delete")(function* (
   memoryId: MemoryId
 ) {
-  yield* deleteKeys(memoryId);
+  const keys = yield* deleteKeys(memoryId);
   yield* (yield* DatabaseWriter)
     .table("ninaMemories")
     .delete(memoryId)
     .pipe(Effect.orDie);
+  return keys;
 });
 
 /**
@@ -217,6 +221,26 @@ export const drainMemories = Effect.fn("nina.memory.store.drain")(function* (
 });
 
 /**
+ * Reads a learner's newest record of a deleted memory (see `keepRestore`), the
+ * one confirmed last, as a list of at most that one. A record holds the
+ * confirmation time its memory had, and the Undo is refused when that is at or
+ * before the moment of a "Delete all" (see `clearMemories`).
+ */
+const readNewestRestore = Effect.fn("nina.memory.store.newestRestore")(
+  function* (userId: UserId) {
+    return yield* (yield* DatabaseReader)
+      .table("ninaMemoryRestores")
+      .index(
+        "by_userId_and_confirmedAt",
+        (query) => query.eq("userId", userId),
+        "desc"
+      )
+      .take(1)
+      .pipe(Effect.orDie);
+  }
+);
+
+/**
  * Deletes every memory the learner has, which is what "Delete all" asks. The
  * batches of `drainMemories` run one after another, so the learner's memory
  * state first keeps the moment (`readMemoryState`). From that transaction on,
@@ -224,10 +248,13 @@ export const drainMemories = Effect.fn("nina.memory.store.drain")(function* (
  * until the batches have deleted them.
  *
  * The moment kept is `now`, or the confirmation of the learner's newest memory
- * when that is later. A memory written after an earlier "Delete all" is
- * confirmed after that request even when the clock had not moved on
+ * when that is later, or that of the newest memory they deleted and can still
+ * put back (`readNewestRestore`). A memory written after an earlier "Delete
+ * all" is confirmed after that request even when the clock had not moved on
  * (`confirmedAfterClear`), so `now` alone could be earlier than a memory that
- * exists, and this request would leave it.
+ * exists, and this request would leave it. It could be earlier than the record
+ * of a memory deleted since, and the Undo would then put back a memory the
+ * learner deleted before asking to delete everything.
  *
  * The learner's portrait goes in the same transaction: it is derived from the
  * memories and says nothing once they are deleted. A memory written afterwards
@@ -238,11 +265,13 @@ export const clearMemories = Effect.fn("nina.memory.store.clear")(function* (
   now: number
 ) {
   const { clearedAt } = yield* readMemoryState(userId);
-  const newest = Arr.head(yield* readNewest(userId, 1, clearedAt));
-  const through = Option.match(newest, {
-    onNone: () => now,
-    onSome: (memory) => Math.max(now, memory.confirmedAt),
-  });
+  const newest = yield* readNewest(userId, 1, clearedAt);
+  const restorable = yield* readNewestRestore(userId);
+  const through = Arr.reduce(
+    Arr.appendAll(newest, restorable),
+    now,
+    (moment, memory) => Math.max(moment, memory.confirmedAt)
+  );
   yield* setNinaMemoryCleared({ now: through, userId });
   yield* dropPortrait(userId);
   return yield* drainMemories(userId, through);

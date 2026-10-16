@@ -1,8 +1,4 @@
-import {
-  languageModelId,
-  providerId,
-} from "@repo/backend/confect/gateway/model";
-import { purposes } from "@repo/backend/confect/gateway/purpose";
+import { languageModel, providerId } from "@repo/backend/confect/gateway/model";
 import {
   NinaUsageTotal,
   purposeOf,
@@ -116,7 +112,7 @@ export function hasFollowUp({ order, suggestions, usage }: GateTurn) {
  * new agent has a cap the moment the ledger accepts it.
  */
 function capOf(agent: Usage["agent"]) {
-  return purposes[purposeOf(agent)].maxOutputTokens;
+  return languageModel.output[purposeOf(agent)];
 }
 
 /** Milliseconds from the admission of the turn to its end, when both are recorded. */
@@ -147,10 +143,10 @@ function judgeGateway({ usage }: GateTurn) {
   return Arr.map(
     Arr.filter(
       usage,
-      (row) => row.provider !== providerId || row.model !== languageModelId
+      (row) => row.provider !== providerId || row.model !== languageModel.id
     ),
     (row) =>
-      `The ${row.agent} calls ran on ${row.model} through ${row.provider}, not on ${languageModelId} through ${providerId}.`
+      `The ${row.agent} calls ran on ${row.model} through ${row.provider}, not on ${languageModel.id} through ${providerId}.`
   );
 }
 

@@ -249,3 +249,5 @@ describe("access/grant ensureOwnerRemains", () => {
     })
   );
 });
+
+/** Inserts one Person of the school, of the given kind and status, and reads it back. */

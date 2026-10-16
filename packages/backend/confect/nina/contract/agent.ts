@@ -1,6 +1,5 @@
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { SourceReferenceSchema } from "@repo/backend/confect/nina/contract/source";
 import { PromptUserRoleSchema } from "@repo/backend/confect/users/role";
 import { LocaleSchema } from "@repo/contents/content";
@@ -23,7 +22,6 @@ const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
   curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
   memory: Schema.optional(Schema.Boolean),
-  nina: Schema.optional(NinaContextPackSchema),
   slug: Schema.String,
   url: Schema.String,
   userRole: Schema.optional(PromptUserRoleSchema),

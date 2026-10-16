@@ -5,7 +5,7 @@ import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { TenantPolicies } from "@repo/backend/confect/tenancy/policy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { isSingleLine } from "@repo/utilities/line";
-import { Schema, Struct } from "effect";
+import { Duration, Schema, Struct } from "effect";
 
 /** A normalized address: forms trim and lowercase before sending it. */
 export const Email = Schema.String.check(
@@ -28,7 +28,7 @@ export const TenantName = Schema.String.check(
 );
 export const TenantKind = Schema.Literals(["school", "foundation"]);
 /** A suspended tenant stays readable and refuses every write. */
-const TenantStatus = Schema.Literals(["active", "suspended"]);
+export const TenantStatus = Schema.Literals(["active", "suspended"]);
 
 export const UnitName = Schema.String.check(
   Schema.isTrimmed(),
@@ -68,6 +68,11 @@ export const PersonKind = Schema.Literals(["member", "operator"]);
 /** Operator Persons are suspended between visits; replaced pending Owners are removed. */
 export const PersonStatus = Schema.Literals(["active", "suspended", "removed"]);
 export const ClaimMethod = Schema.Literals(["invite", "operator"]);
+/**
+ * Why an operator changed a Person without the school's own action.
+ * `break-glass` removes an unclaimed Owner and invites a replacement.
+ */
+export const PersonReason = Schema.Literals(["break-glass"]);
 
 /** Binds a Person to at most one Nakafa account. */
 export const Account = Schema.Union([
@@ -84,6 +89,10 @@ const InviteChannel = Schema.Struct({
   email: Email,
   kind: Schema.Literal("email"),
 });
+/**
+ * An invite waits until it is claimed, revoked, or expired. When its account is
+ * deleted, its accepted invite is revoked, so no invite names a deleted account.
+ */
 export const InviteState = Schema.Union([
   Schema.Struct({ status: Schema.Literal("pending") }),
   Schema.Struct({
@@ -91,6 +100,7 @@ export const InviteState = Schema.Union([
     status: Schema.Literal("accepted"),
     userId: Id("users"),
   }),
+  Schema.Struct({ at: Schema.Finite, status: Schema.Literal("expired") }),
   Schema.Struct({ at: Schema.Finite, status: Schema.Literal("revoked") }),
 ]);
 
@@ -156,8 +166,16 @@ export const tenantPersonValidator = Schema.Struct({
   status: PersonStatus,
   tenantId: Id("tenants"),
 });
+/** How long an invite waits to be claimed, counted from the moment it is written. */
+export const INVITE_TERM = Duration.days(14);
+
+/**
+ * An invite names a Person and an address. `expiresAt` is fixed when the
+ * invite is written: a resend sends the same invite again and never moves it.
+ */
 export const tenantInviteValidator = Schema.Struct({
   channel: InviteChannel,
+  expiresAt: Schema.Finite,
   personId: Id("tenantPeople"),
   state: InviteState,
   tenantId: Id("tenants"),

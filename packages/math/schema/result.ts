@@ -10,6 +10,13 @@ import {
   MathStepStatusSchema,
 } from "@repo/math/schema/status";
 import { Schema, Struct } from "effect";
+/**
+ * A result of the CAS. Its lists have no row limit: the CAS bounds a whole
+ * result by its size, 256 KiB of JSON, and refuses a larger one
+ * (`MAX_RESPONSE_BYTES` in apps/cas/cas/compute.py). A result can therefore
+ * hold more rows than a request may carry, and a view shows the first rows of
+ * a list and the rest behind a button.
+ */
 export const MathResultSchema = Schema.Struct({
   conditions: Schema.Array(MathExpressionSchema).pipe(Schema.mutable),
   input: MathRequestSchema,

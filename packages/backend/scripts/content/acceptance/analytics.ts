@@ -1,11 +1,8 @@
 import { createServer } from "node:http";
-import { NodeHttpServer } from "@effect/platform-node";
+import { NodeHttpServer, NodeSocketServer } from "@effect/platform-node";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { Effect } from "effect";
 import { HttpServer, HttpServerResponse } from "effect/http";
-
-const listen = (port: number) =>
-  NodeHttpServer.make(createServer, { host: "127.0.0.1", port });
 
 /**
  * Picks a free loopback origin for the analytics stand-in. The build bakes the
@@ -15,7 +12,7 @@ const listen = (port: number) =>
 export const reserveAnalyticsOrigin = Effect.fn(
   "contentAcceptance.reserveAnalyticsOrigin"
 )(function* () {
-  const server = yield* listen(0);
+  const server = yield* NodeSocketServer.make({ host: "127.0.0.1", port: 0 });
   return HttpServer.formatAddress(server.address);
 }, Effect.scoped);
 
@@ -29,7 +26,10 @@ export const reserveAnalyticsOrigin = Effect.fn(
 export const withAnalyticsSink = Effect.fn(
   "contentAcceptance.withAnalyticsSink"
 )(function* <A, E, R>(origin: string, program: Effect.Effect<A, E, R>) {
-  const server = yield* listen(Number(new URL(origin).port)).pipe(
+  const server = yield* NodeHttpServer.make(createServer, {
+    host: "127.0.0.1",
+    port: Number(new URL(origin).port),
+  }).pipe(
     Effect.catchTag("ServeError", () =>
       acceptanceRuntimeError(
         `The saved analytics stand-in port at ${origin} is occupied; its process is preserved.`

@@ -147,6 +147,10 @@ const LONG_CODE_LINE = `const className = "${Arr.join(
   " "
 )} px-2 py-4";`;
 
+/** The title and the description that the diagram of `ANSWER.diagram` gives itself. */
+export const DIAGRAM_TITLE = "Alur pendaftaran siswa baru";
+export const DIAGRAM_DESCRIPTION = "Dari pengisian formulir sampai arsip";
+
 /** Nina's answers, in Markdown, as each place of a page reads them. */
 export const ANSWER = {
   arabic:
@@ -156,7 +160,7 @@ export const ANSWER = {
   arabicLoose:
     "الخطوات:\n\n1. حدد الدالة المطلوبة.\n\n2. طبق قاعدة القوة.\n\n3. بسّط النتيجة.",
   code: `Berikut contoh komponennya.\n\n\`\`\`javascriptreactjsx\n${LONG_CODE_LINE}\nexport const Kartu = () => <div className={className}>Halo</div>;\n\`\`\``,
-  diagram: `Alurnya seperti ini.\n\n\`\`\`mermaid title="Alur pendaftaran siswa baru" description="Dari pengisian formulir sampai arsip"\nflowchart TD\n  A[Mulai] --> B[Isi formulir pendaftaran]\n  B --> C{Data lengkap?}\n  C -- Tidak --> B\n  C -- Ya --> D[Unggah dokumen]\n  D --> E[Bayar biaya pendaftaran]\n  E --> F{Pembayaran valid?}\n  F -- Tidak --> E\n  F -- Ya --> G[Verifikasi panitia]\n  G --> H[Tes seleksi]\n  H --> I[Pengumuman hasil]\n  I --> J[Daftar ulang]\n  J --> K[Selesai]\n  K --> L[Arsip]\n\`\`\``,
+  diagram: `Alurnya seperti ini.\n\n\`\`\`mermaid title="${DIAGRAM_TITLE}" description="${DIAGRAM_DESCRIPTION}"\nflowchart TD\n  A[Mulai] --> B[Isi formulir pendaftaran]\n  B --> C{Data lengkap?}\n  C -- Tidak --> B\n  C -- Ya --> D[Unggah dokumen]\n  D --> E[Bayar biaya pendaftaran]\n  E --> F{Pembayaran valid?}\n  F -- Tidak --> E\n  F -- Ya --> G[Verifikasi panitia]\n  G --> H[Tes seleksi]\n  H --> I[Pengumuman hasil]\n  I --> J[Daftar ulang]\n  J --> K[Selesai]\n  K --> L[Arsip]\n\`\`\``,
   diagramPlain:
     "Alurnya seperti ini.\n\n```mermaid\nflowchart TD\n  A[Mulai] --> B[Selesai]\n```",
   diagramBroken: `Alurnya seperti ini.\n\n\`\`\`mermaid title="Diagram yang salah"\nflowchart TD\n  A[Mulai] -->\n  --> B[Selesai\n\`\`\``,

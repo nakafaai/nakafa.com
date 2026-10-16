@@ -7,6 +7,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
 import ninaTurns from "@repo/backend/confect/_generated/tables/ninaTurns";
+import { languageModel } from "@repo/backend/confect/gateway/model";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
 import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
@@ -283,8 +284,8 @@ function newestOf<Message>(prompt: readonly Message[]) {
   return Option.getOrThrow(Arr.last(prompt));
 }
 
-const CACHE_MARKER =
-  ',"providerOptions":{"openaiCompatible":{"cache_control":{"type":"ephemeral"}}}';
+/** The cache marker as the request body carries it, from the language model profile. */
+const CACHE_MARKER = `,"providerOptions":${encodeJsonText({ openaiCompatible: languageModel.cache.marker })}`;
 
 /**
  * Messages as text without the cache marker. The marker only says where the

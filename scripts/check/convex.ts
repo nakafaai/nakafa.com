@@ -123,22 +123,6 @@ const factories = HashMap.fromIterable<string, Origin>([
     ]),
   ],
   [
-    "@repo/backend/test/forum/upload:createPendingUpload",
-    HashMap.fromIterable<string, Origin>([
-      ["t", "client"],
-      ["owner", "client"],
-    ]),
-  ],
-  [
-    "@repo/backend/test/classes:createClassFixture",
-    HashMap.fromIterable<string, Origin>([
-      ["t", "client"],
-      ["admin", "client"],
-      ["student", "client"],
-      ["outsider", "client"],
-    ]),
-  ],
-  [
     "@repo/backend/test/onboarding:createOnboardingTest",
     HashMap.fromIterable<string, Origin>([
       ["test", "client"],

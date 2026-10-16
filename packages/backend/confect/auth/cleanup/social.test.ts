@@ -13,6 +13,8 @@ import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr } from "effect";
 
 const capture = Ref.getFunctionReference(refs.internal.nina.memory.capture);
+const pause = Ref.getFunctionReference(refs.public.nina.memory.pause);
+const remove = Ref.getFunctionReference(refs.public.nina.memory.remove);
 
 afterEach(() => vi.useRealTimers());
 
@@ -204,6 +206,44 @@ it("deletes the learner's portrait with their memories, also one that a capture 
   expect(await owners()).toEqual([other.userId]);
   await f.t.finishAllScheduledFunctions(vi.runAllTimers);
   expect(await owners()).toEqual([other.userId]);
+});
+
+it("deletes the records that keep a deleted memory for its Undo with the learner's memories, and keeps another learner's", async () => {
+  vi.useFakeTimers();
+  const now = Date.UTC(2026, 9, 10, 12);
+  vi.setSystemTime(now);
+  const f = await createMemoryTest();
+  const userId = f.identity.userId;
+  const other = await f.stranger();
+  // Memory is paused for both, so a deletion asks for no portrait and the
+  // records are the only rows left to delete.
+  await f.owner.mutation(pause, { paused: true });
+  await other.owner.mutation(pause, { paused: true });
+  const mine = await f.seed({ author: "learner", text: "Mine" });
+  const theirs = await f.seed({
+    author: "learner",
+    text: "Theirs",
+    userId: other.userId,
+  });
+  await f.owner.mutation(remove, { id: mine });
+  await other.owner.mutation(remove, { id: theirs });
+  await f.t.mutation((ctx) =>
+    ctx.db.patch(userId, createDeletedUserTombstone(userId, now))
+  );
+  const owners = async () => Arr.map(await f.restores(), (row) => row.userId);
+  expect(await owners()).toEqual([userId, other.userId]);
+  await expect(
+    f.t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId })
+  ).resolves.toBe(true);
+  expect(await owners()).toEqual([other.userId]);
+  while (
+    await f.t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId })
+  ) {
+    // Each pass deletes one batch of what is left.
+  }
+  expect(await owners()).toEqual([other.userId]);
+  await f.t.finishAllScheduledFunctions(vi.runAllTimers);
+  expect(await f.restores()).toEqual([]);
 });
 
 it("deletes both directions of comment votes before their owning comment while keeping shared counters accurate", async () => {

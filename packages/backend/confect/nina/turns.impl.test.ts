@@ -23,10 +23,11 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
+import { homePage } from "@repo/backend/test/nina/page";
 import { showsText } from "@repo/backend/test/seal";
 import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, DateTime, Duration, Effect } from "effect";
+import { Array as Arr, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/capacity", async (load) => {
   const actual =
@@ -92,9 +93,6 @@ describe("native Nina admission", () => {
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
     );
-    expect(vi.mocked(resolveNinaContext).mock.lastCall?.[2]).toBe(
-      DateTime.formatIso(DateTime.makeUnsafe(NOW))
-    );
     expect(
       Ref.decodeReturnsSync(
         refs.public.nina.turns.start,
@@ -122,6 +120,8 @@ describe("native Nina admission", () => {
       usage: [],
       state: { status: "queued" },
     });
+    // The page is stored once, as the resolver froze it.
+    expect(state.turns[0]?.page).toEqual(homePage);
     expect(
       Arr.filter(state.ledger, (row) => row.type === "usage")
     ).toHaveLength(1);

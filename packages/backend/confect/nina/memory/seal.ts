@@ -20,7 +20,7 @@ export const TITLE_FIELD = {
 } satisfies typeof VaultField.Type;
 
 /** Opens the text of one stored memory, and its title when it has one. */
-const openMemory = Effect.fn("nina.memory.openMemory")(function* (
+export const openMemory = Effect.fn("nina.memory.openMemory")(function* (
   keys: LearnerKeys,
   memory: Memory
 ) {

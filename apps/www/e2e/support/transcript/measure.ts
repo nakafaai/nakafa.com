@@ -1,0 +1,151 @@
+import type { Locator, Page } from "@playwright/test";
+
+/**
+ * The text of every element in `scope`, itself included, that holds more width
+ * than it shows: text that is cut off. A box meant to scroll sideways is not
+ * text that is cut, so an element that scrolls on its own is left out.
+ */
+export function cutText(scope: Locator) {
+  return scope.evaluate((root) =>
+    [root, ...root.querySelectorAll("*")]
+      .filter(
+        (element) =>
+          element.scrollWidth > element.clientWidth &&
+          !["auto", "scroll"].includes(getComputedStyle(element).overflowX)
+      )
+      .map((element) => element.textContent?.trim() ?? "")
+  );
+}
+
+/** The row of evidence that carries `label`: the nearest box around it that holds math. */
+export function rowOf(label: Locator) {
+  return label.locator(
+    "xpath=ancestor::div[.//*[contains(@class, 'katex')]][1]"
+  );
+}
+
+/**
+ * Whether every formula in `row` can be read: it lies within the row, or in a
+ * box that scrolls on its own, so a reader reaches the rest of it.
+ */
+export function reachable(row: Locator) {
+  return row.evaluate((root) => {
+    const edge = root.getBoundingClientRect().right;
+    return [...root.querySelectorAll(".katex")].every(
+      (formula) =>
+        formula.getBoundingClientRect().right <= edge + 0.5 ||
+        formula.closest('[data-slot="scroll-area-viewport"]') !== null
+    );
+  });
+}
+
+/**
+ * How far the page can be scrolled sideways, in pixels: zero for a page that
+ * fits its viewport. It asks the page to scroll as far as it goes and reads
+ * where it stopped. The scroll width less the client width says the same only
+ * where the root keeps no gutters: with them, a page that fits read -20 in CI.
+ */
+export function overflow(page: Page) {
+  return page.evaluate(() => {
+    const root = document.scrollingElement ?? document.documentElement;
+    root.scrollLeft = root.scrollWidth;
+    const reach = root.scrollLeft;
+    root.scrollLeft = 0;
+    return reach;
+  });
+}
+
+/**
+ * How many lines of text an element shows, from the height of its content box
+ * and its line height. A clamped text keeps a little padding for tall marks,
+ * which holds no line.
+ */
+export function lines(locator: Locator) {
+  return locator.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const content =
+      element.getBoundingClientRect().height -
+      Number.parseFloat(style.paddingTop) -
+      Number.parseFloat(style.paddingBottom);
+    return Math.round(content / Number.parseFloat(style.lineHeight));
+  });
+}
+
+/**
+ * Whether an element holds more text than its box shows: the text that a line
+ * clamp cuts below its last line. `lines` reads the height of the box, which
+ * is the same for a title that fits in two lines and for one that is cut there.
+ */
+export function clamped(locator: Locator) {
+  return locator.evaluate(
+    (element) => element.scrollHeight > element.clientHeight
+  );
+}
+
+/**
+ * Whether `lower` has lines of its own under `upper`: its top is at or below
+ * the bottom of `upper`, so the two never share a line of text. A box that is
+ * not rendered has no place to measure, and is not under anything.
+ */
+export function startsUnder(lower: Locator, upper: Locator) {
+  return Promise.all([lower.boundingBox(), upper.boundingBox()]).then(
+    ([under, over]) =>
+      under !== null && over !== null && under.y >= over.y + over.height - 0.5
+  );
+}
+
+/**
+ * How many pixels of its text an element of one line clips above and below its
+ * own box. The ink of the text is measured on a canvas in the element's font,
+ * from its baseline, and set against the box that clips it. The baseline is
+ * where the layout put it: an ascent below the top of the line the page drew.
+ * An element that cannot be measured fails the test: it says nothing about
+ * clipping, and zero would say that nothing is clipped.
+ */
+export function clippedInk(locator: Locator) {
+  return locator.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const context = document.createElement("canvas").getContext("2d");
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const line = range.getClientRects().item(0);
+    if (!context) {
+      throw new Error("The page gave no 2D canvas to measure the ink on.");
+    }
+    if (!line) {
+      throw new Error("The element shows no line of text to measure.");
+    }
+    context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const text = context.measureText(element.textContent ?? "");
+    const box = element.getBoundingClientRect();
+    const baseline = line.top - box.top + text.fontBoundingBoxAscent;
+    return {
+      above: Math.max(0, text.actualBoundingBoxAscent - baseline),
+      below: Math.max(
+        0,
+        text.actualBoundingBoxDescent - (box.height - baseline)
+      ),
+    };
+  });
+}
+
+/**
+ * How far the replies of a chat reach past the right edge of the page, in
+ * pixels. What a box that scrolls on its own holds is left out, since a reader
+ * reaches it there, and so are the parts of an icon, which turns as it opens.
+ */
+export function replyOverflow(page: Page) {
+  return page.evaluate(() => {
+    const edge = document.documentElement.clientWidth;
+    const reach = [
+      ...document.querySelectorAll(
+        '[data-slot="message-activity"] *, [data-slot="message-response"] *'
+      ),
+    ]
+      .filter(
+        (element) => !element.closest('[data-slot="scroll-area-viewport"], svg')
+      )
+      .map((element) => element.getBoundingClientRect().right - edge);
+    return Math.max(0, ...reach);
+  });
+}
