@@ -181,6 +181,15 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     ],
     dependency: "prosemirror-collab",
   },
+  // The sortable strip of a school exam's questions (the school blueprint,
+  // K22). It is MIT and peers React 18 or 19. It is pinned at 0.5.0, the
+  // release of 11 June 2026 on the 0.5 line. The 0.5.1 release of 15 October
+  // 2026 is newer, and it is not adopted until it has been used.
+  {
+    approved: "0.5.0",
+    declarationPaths: ["apps/www/package.json"],
+    dependency: "@dnd-kit/react",
+  },
 ];
 
 export const REGISTRY_REVIEWS = [

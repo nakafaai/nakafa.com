@@ -16,6 +16,7 @@ update:
     - '@biomejs/biome'
     - '@convex-dev/ai-sdk-provider'
     - '@convex-dev/better-auth'
+    - '@dnd-kit/react'
     - '@effect/platform-browser'
     - '@effect/platform-node'
     - '@effect/tsgo'

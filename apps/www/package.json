@@ -27,6 +27,7 @@
     "@confect/react": "10.1.0",
     "@convex-dev/agent": "catalog:",
     "@convex-dev/better-auth": "0.12.5",
+    "@dnd-kit/react": "0.5.0",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "catalog:",
     "@mantine/hooks": "catalog:",
