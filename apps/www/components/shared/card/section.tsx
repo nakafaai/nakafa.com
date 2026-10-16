@@ -27,6 +27,18 @@ const cardSectionFooterVariants = cva(
   }
 );
 
+const cardSectionHintVariants = cva("min-w-0 flex-1 text-sm", {
+  defaultVariants: {
+    tone: "muted",
+  },
+  variants: {
+    tone: {
+      destructive: "text-destructive",
+      muted: "text-muted-foreground",
+    },
+  },
+});
+
 /**
  * A titled card that frames one self-contained section. Compose the design
  * system's card header, title, description, and content inside it, then end
@@ -67,16 +79,16 @@ export function CardSectionFooter({
 }
 
 /**
- * The one sentence that says what a section's actions do. It takes the free
- * width on the left of its footer. A caller may change only its text color.
+ * The one sentence that says what a section's actions do, or what stops them.
+ * It takes the free width on the left of its footer. Its tone is the only
+ * styling a caller chooses, so the sentence cannot break the row.
  */
-export function CardSectionHint({ className, ...props }: ComponentProps<"p">) {
-  return (
-    <p
-      className={cn("min-w-0 flex-1 text-muted-foreground text-sm", className)}
-      {...props}
-    />
-  );
+export function CardSectionHint({
+  tone,
+  ...props
+}: Omit<ComponentProps<"p">, "className"> &
+  VariantProps<typeof cardSectionHintVariants>) {
+  return <p className={cardSectionHintVariants({ tone })} {...props} />;
 }
 
 /**

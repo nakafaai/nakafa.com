@@ -173,15 +173,20 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
 
       yield* Effect.promise(async () => {
         await page.goto(SETTINGS);
+        // A bio over the limit says why in the footer, and cannot be saved.
+        await bioField(page).fill("a".repeat(BIO_MAX_LENGTH + 1));
+        await expect(
+          page.getByText(app.Auth["bio-too-long"], { exact: true })
+        ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        await expect(save).toBeDisabled();
+
         await bioField(page).fill(bio);
         await expect(
-          page.getByText(
-            `You have used ${bio.length} of ${BIO_MAX_LENGTH} characters.`,
-            {
-              exact: true,
-            }
-          )
-        ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+          page.getByText(app.Auth["bio-too-long"], { exact: true })
+        ).toHaveCount(0);
+        await expect(save).toBeEnabled({
+          timeout: readinessTimeoutMilliseconds,
+        });
         await save.click();
 
         await expect(async () => {

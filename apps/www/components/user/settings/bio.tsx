@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  BIO_MAX_LENGTH,
-  readBio,
-  tidyBio,
-} from "@repo/backend/confect/users/bio";
+import { readBio, tidyBio } from "@repo/backend/confect/users/bio";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -14,7 +10,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Array as Arr, Effect, Result } from "effect";
+import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -28,7 +24,7 @@ import { useUpdateBioMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
-/** Renders the bio card: one line about the account, with its count of characters. */
+/** Renders the bio card: one line about the account. */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
@@ -36,7 +32,6 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
   const current = user.appUser.bio ?? "";
   const [typed, setTyped] = useState(current);
   const text = tidyBio(typed);
-  const count = Arr.fromIterable(text).length;
   const fits = Result.isSuccess(readBio(typed));
   const canSave = fits && text !== current;
 
@@ -92,9 +87,11 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
           </Field>
         </CardContent>
         <CardSectionFooter>
-          <CardSectionHint className={fits ? undefined : "text-destructive"}>
-            {t("bio-count", { count, max: BIO_MAX_LENGTH })}
-          </CardSectionHint>
+          {fits ? null : (
+            <CardSectionHint tone="destructive">
+              {t("bio-too-long")}
+            </CardSectionHint>
+          )}
           <CardSectionActions>
             <Button disabled={!canSave} size="sm" type="submit">
               {t("save")}
