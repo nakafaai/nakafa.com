@@ -5,9 +5,9 @@
 Accepted on 13 October 2026 with owner decision K10. The owner approved decisions
 K1 to K20 on that day. Notifications are planned for program wave B
 (ADR 0013 describes the waves). The invitation rows, the journal cursor, and its
-sweep of Implementation Status are built and wait for the Convex ordering proof
-that this ADR owes, so they are not live until it is recorded, and the rest of
-the notification system is not live either. The repository has no push code and
+sweep are built. The cursor re-reads a commit-lag window and so needs no Convex
+ordering proof (ADR 0016), and the rest of the notification system is not live
+either. The repository has no push code and
 no service worker. It sends two emails: the welcome email
 (`packages/backend/confect/emails/welcome/internal.ts`) and the
 invitation email (`packages/backend/confect/emails/invite`), which the invite
@@ -96,15 +96,15 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
 
 - The consumer follows ADR 0016. It adds an index on the owner and the change
   type to `journalEntries`, reads in creation order with its own cursor
-  (`journalCursors`), checks permission again when it loads the
-  subject, and proves its ordering assumption on Convex before it relies on a
-  creation-time cursor. The cursor holds the creation time of the last entry read
-  and the IDs of the entries read at that time, so entries that share a creation
-  millisecond are read in order and none is skipped, and no run resumes from the
-  end position of an earlier page. A cursor starts at the creation time of the entry that
-  makes it, not at a clock reading, so an invitation recorded before the inbox
-  existed gets no row. The Convex proof is still owed, so the cursor is not live
-  until it is recorded. An entry holds IDs and
+  (`journalCursors`), and checks permission again when it loads the subject. A
+  mutation takes its entry's creation time while it runs, and the entry becomes
+  visible at its commit, so the cursor does not rely on a proof of that order. It
+  holds the creation time of the newest entry it handled and the entries it handled
+  within the five seconds before that time. Each run reads that window again and
+  skips the entries it handled, so an entry that commits late is still read, and
+  no run resumes from the end position of an earlier page. A cursor starts at the
+  creation time of the entry that makes it, not at a clock reading, so an
+  invitation recorded before the inbox existed gets no row. An entry holds IDs and
   codes, never a name or a message.
 - An invitation has one inbox row for each recipient Person, found by the Person
   and the invitation. A resend refreshes that row to the resend's time and marks
@@ -329,11 +329,11 @@ sitting does not show.
 | The welcome email through `confect/emails` and the Resend component | Live |
 | The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
 | `apps/www/app/manifest.ts` with `display: "standalone"` | Live |
-| `journalCursors`, which start at the entry that makes them, and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Built, live once the Convex ordering proof is recorded |
-| `notifications`, one row for each Person and invitation (`by_recipientPersonId_and_inviteId`), with the purge of a released Person's rows and of a revoked invitation's row | Built, live once the Convex ordering proof is recorded |
-| The invitation rows: `person.invited` is published, written by the invite, and refreshed by the resend; the inbox consumer writes them from the start of its cursor; an invitation revoked before its run gets no row, and a revoked invitation loses its row | Built, live once the Convex ordering proof is recorded |
+| `journalCursors`, which start at the entry that makes them and re-read a five-second commit-lag window that holds at most one page of handled entries (`JournalCursorTooLarge` past it), and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Built |
+| `notifications`, one row for each Person and invitation (`by_recipientPersonId_and_inviteId`), with the purge of a released Person's rows and of a revoked invitation's row | Built |
+| The invitation rows: `person.invited` is published, written by the invite, and refreshed by the resend; the inbox consumer writes them from the start of its cursor; an invitation revoked before its run gets no row, and a revoked invitation loses its row | Built |
 | The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
-| The minute sweep that starts a run for each pending journal cursor | Built, live once the Convex ordering proof is recorded |
+| The minute sweep that starts a run for each pending journal cursor | Built |
 | `notificationPreferences`, `notificationReminders`, and `pushSubscriptions` | Planned, program wave B |
 | The notify consumer for the change types other than `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |

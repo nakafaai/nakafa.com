@@ -3,7 +3,9 @@
 ## Status
 
 Accepted. Amended on 13 October 2026: forum posts are not journaled per message,
-and journal retention is set per organisation.
+and journal retention is set per organisation. Amended on 16 October 2026: a
+creation-time consumer re-reads a commit-lag window instead of proving the order
+of the journal.
 
 ## Context
 
@@ -70,9 +72,14 @@ removing a kind that rows reference is a stored-data migration.
 Consumers read published change types from the journal itself; there is no
 outbox copy and no dispatcher. A kind's declaration lists which of its change
 types are published. The first consumer adds an index on the owner and change
-type, reads in creation order with its own cursor per subscription, re-checks
-permission when it loads the subject, and proves its ordering assumption on
-Convex before relying on a creation-time cursor.
+type, reads in creation order with its own cursor per subscription, and re-checks
+permission when it loads the subject. A creation-time cursor does not rely on a
+proof of ordering. A mutation takes its entry's creation time while it runs, and
+the entry becomes visible only when the mutation commits, so no proof can show
+that an entry never commits after a later one was read. Instead the cursor
+re-reads a commit-lag window of five seconds behind its position, which covers
+the one second of user code that a Convex mutation may run (the limits page,
+read on 16 October 2026), and it skips the entries it has already handled.
 
 ### Retention
 
