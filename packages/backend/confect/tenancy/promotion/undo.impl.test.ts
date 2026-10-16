@@ -255,6 +255,69 @@ describe("tenancy/promotion undo", () => {
   );
 
   it.effect(
+    "undoes the placements of every page a stopped place step wrote, not only the first",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        yield* crowd(fixture, s.seventh.id, s.source.id, 250);
+        // Apply reads the source students in Person ID order, 100 to a page, so the
+        // last 53 of the 253 students are on the third page. They lose their student
+        // grant, so the place step writes two pages and stops on the third.
+        const sourceRows = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("tenantCohortMembers")
+              .index("by_periodId_and_personId", (query) =>
+                query.eq("periodId", s.source.id)
+              )
+              .take(1000)
+          )
+        );
+        yield* flipGrants(
+          fixture,
+          Arr.map(Arr.drop(sourceRows, 200), (row) => row.personId),
+          "active",
+          "revoked"
+        );
+        const placedIn = (periodId: typeof s.target.id) =>
+          fixture.run(
+            Effect.flatMap(DatabaseReader, (reader) =>
+              reader
+                .table("tenantCohortMembers")
+                .index("by_periodId_and_personId", (query) =>
+                  query.eq("periodId", periodId)
+                )
+                .take(1000)
+            )
+          );
+        const before = yield* snapshot(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const stopped = yield* drain(fixture, promotionId);
+        expect(stopped.progress).toMatchObject({
+          failure: "PersonNotStudent",
+          running: false,
+          step: "place",
+        });
+        expect((yield* placedIn(s.target.id)).length).toBeGreaterThan(150);
+        const undonePlace = yield* undoOnce(fixture, promotionId);
+        expect(undonePlace.progress).toMatchObject({
+          done: ["archive", "cohorts"],
+          failure: null,
+        });
+        expect(yield* placedIn(s.target.id)).toEqual([]);
+        yield* undoOnce(fixture, promotionId);
+        const reverted = yield* undoOnce(fixture, promotionId);
+        expect(reverted).toMatchObject({
+          progress: { done: [] },
+          state: "approved",
+        });
+        expect(yield* snapshot(fixture)).toEqual(before);
+      })
+  );
+
+  it.effect(
     "undoes a stopped apply: the steps it finished come back first",
     () =>
       Effect.gen(function* () {
