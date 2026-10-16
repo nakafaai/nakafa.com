@@ -42,6 +42,13 @@ export const ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY =
 export const ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY =
   "nakafa-analytics-consent-account";
 
+/**
+ * The attribute the inline script sets on the document root while the usage-data
+ * prompt must wait, before paint. The consent provider removes it once the store
+ * knows the choice, or knows that it cannot load it.
+ */
+export const ANALYTICS_CONSENT_ROOT_ATTRIBUTE = "data-analytics-consent";
+
 /** The decision that grants analytics. */
 export const ANALYTICS_CONSENT_GRANTED = "granted";
 
@@ -75,7 +82,7 @@ export const AnonymousAnalyticsConsentRecordSchema = Schema.Union([
   }),
   Schema.Struct({
     ...anonymousConsentFields,
-    decision: Schema.Literal("denied"),
+    decision: Schema.Literal(ANALYTICS_CONSENT_DENIED),
     mechanism: Schema.Literal(ANALYTICS_BROWSER_SIGNAL_MECHANISM),
   }),
 ]);
@@ -136,7 +143,7 @@ export function createAnonymousAnalyticsBrowserSignalDenial(
   return {
     category: "analytics",
     decidedAt,
-    decision: "denied",
+    decision: ANALYTICS_CONSENT_DENIED,
     mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
     noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
   };
@@ -234,7 +241,7 @@ export function resolveAnalyticsConsentState({
   return Option.match(anonymousConsent, {
     onNone: () => ({ scope: "anonymous", status: "prompt" }),
     onSome: (record) => {
-      if (record.decision === "denied") {
+      if (record.decision === ANALYTICS_CONSENT_DENIED) {
         return { scope: "anonymous", status: "denied" };
       }
 
