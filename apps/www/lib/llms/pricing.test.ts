@@ -13,6 +13,18 @@ describe("pricing Markdown", () => {
     expect(isPricingLlmsRoute("about")).toBe(false);
   });
 
+  it.effect(
+    "writes the checkout line in German and Indonesian, not in English",
+    () =>
+      Effect.gen(function* () {
+        const german = yield* getPricingLlmsText("de");
+        const indonesian = yield* getPricingLlmsText("id");
+
+        expect(german).not.toContain("Current price and checkout");
+        expect(indonesian).not.toContain("Current price and checkout");
+      })
+  );
+
   it.effect.each(["de", "en", "id"] as const)(
     "renders localized plans and all questions for %s",
     (locale) =>
@@ -37,6 +49,9 @@ describe("pricing Markdown", () => {
       expect(text).toContain("- 3,000 credits every month to ask Nina");
       expect(text).toContain("## Frequently asked");
       expect(text).toContain("One answer uses 5 credits.");
+      expect(text).toContain(
+        `Current price and checkout: ${BASE_URL}/en/pricing`
+      );
     })
   );
 });

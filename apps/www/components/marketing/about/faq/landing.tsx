@@ -3,9 +3,9 @@ import { FaqAccordion } from "@/components/marketing/about/faq/accordion.client"
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 
 /**
- * The questions of the home page as a plain list. Each question is one line
- * with a rule under it, and the first one is open. The questions are the ones
- * that no other part of the page answers.
+ * The questions of a marketing page as a plain list, on the home page and the
+ * pricing page. Each question is one line with a rule under it, and the first
+ * one is open. The questions are the ones that no other part of the page answers.
  */
 export function Faq({ faqs }: { faqs: readonly MarketingFaqItem[] }) {
   const t = useTranslations("Landing");

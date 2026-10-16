@@ -1,11 +1,12 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
-import { Array as Arr, Option } from "effect";
 import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Suspense, use } from "react";
 import {
+  currencySymbol,
+  drinkKey,
   getProMonthlyPricing,
   pricingCountryHeaderName,
 } from "@/components/marketing/about/pricing/display";
@@ -46,31 +47,6 @@ function PriceCoin({ symbol }: { symbol: string }) {
   );
 }
 
-/** The key of the drink that a monthly price buys in its own currency. */
-function drinkKey(currency: string): "drink-eur" | "drink-idr" | "drink-usd" {
-  if (currency === "IDR") {
-    return "drink-idr";
-  }
-  if (currency === "EUR") {
-    return "drink-eur";
-  }
-  return "drink-usd";
-}
-
-/** The currency symbol of a price, as the price's own locale writes it. */
-function currencySymbol(formatter: Intl.NumberFormat, currency: string) {
-  return Option.match(
-    Arr.findFirst(
-      formatter.formatToParts(0),
-      (part) => part.type === "currency"
-    ),
-    {
-      onNone: () => currency,
-      onSome: (part) => part.value,
-    }
-  );
-}
-
 /**
  * The comparisons under the price of the visitor's region. Each sum comes from
  * that price and from the credits of the plans, and each sentence has an
@@ -100,14 +76,12 @@ function ResolvedComparison() {
           picture={<Thing name="coffee" size={24} />}
           title={t("drink-title", {
             count: sums.drinks,
-            item: t(drinkKey(price.currency)),
+            item: t(drinkKey(price.currency), { count: sums.drinks }),
           })}
         />
         <Comparison
           note={perDayNote}
-          picture={
-            <PriceCoin symbol={currencySymbol(formatter, price.currency)} />
-          }
+          picture={<PriceCoin symbol={currencySymbol(formatter)} />}
           title={t("per-day-title", {
             price: formatter.format(sums.pricePerDay),
           })}

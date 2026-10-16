@@ -56,7 +56,12 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
         <CardContent className="grid gap-6">
           <div className="grid gap-1">
             <PricingPrice Price={Price} plan="free" />
-            <p className="text-muted-foreground text-sm">{t("free-worth")}</p>
+            <p className="text-muted-foreground text-sm">
+              {t("free-worth-card")}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {t("free-worth-trial")}
+            </p>
           </div>
           <ul className="grid gap-3">
             {Arr.map(freePlanFeatures, (key) => (

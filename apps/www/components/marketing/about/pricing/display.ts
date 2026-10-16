@@ -1,5 +1,5 @@
 import { products } from "@repo/backend/confect/customers/polar/products";
-import { HashSet } from "effect";
+import { Array as Arr, HashSet } from "effect";
 
 export const pricingCountryHeaderName = "x-vercel-ip-country";
 
@@ -107,6 +107,34 @@ export function getProMonthlyPricing(countryCode: string | null) {
   }
 
   return usdPricing;
+}
+
+/** The key of the drink that a monthly price buys in its own currency. */
+export function drinkKey(
+  currency: string
+): "drink-eur" | "drink-idr" | "drink-usd" {
+  if (currency === "IDR") {
+    return "drink-idr";
+  }
+  if (currency === "EUR") {
+    return "drink-eur";
+  }
+  return "drink-usd";
+}
+
+/**
+ * The currency symbol of a price, as its locale writes it. A zero in a currency
+ * format always has exactly one currency part, so the symbol is that part.
+ */
+export function currencySymbol(formatter: Intl.NumberFormat) {
+  const currencyParts = Arr.filter(
+    formatter.formatToParts(0),
+    (part) => part.type === "currency"
+  );
+  return Arr.join(
+    Arr.map(currencyParts, (part) => part.value),
+    ""
+  );
 }
 
 /**

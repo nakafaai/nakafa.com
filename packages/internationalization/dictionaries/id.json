@@ -769,7 +769,8 @@
   "Pricing": {
     "free-title": "Gratis",
     "free-description": "Buat belajar sehari-hari.",
-    "free-worth": "Tanpa kartu. Tanpa masa percobaan.",
+    "free-worth-card": "Tanpa kartu.",
+    "free-worth-trial": "Tanpa masa percobaan.",
     "free-feature-1": "Ratusan materi belajar",
     "free-feature-2": "Latihan dan pembahasan di dalam materi",
     "free-feature-3": "Kredit harian untuk tanya Nina",
@@ -789,6 +790,7 @@
     "metadata-title": "Harga Nakafa: Gratis dan Pro",
     "metadata-description": "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan Tryout online.",
     "breadcrumb": "Harga",
+    "checkout-line": "Harga saat ini dan pembayaran: {url}",
     "comparison-title": "{price} itu segini",
     "drink-title": "Kira-kira {count} {item}",
     "drink-note": "Bedanya, yang ini kepakai sebulan penuh.",

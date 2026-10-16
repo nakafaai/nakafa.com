@@ -10,13 +10,23 @@ import { getProMonthlyPricing } from "@/components/marketing/about/pricing/displ
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
 
 describe("marketing/about/pricing-sums", () => {
-  it("counts the iced coffees, the price per day and the answers of the Rupiah price", () => {
-    const sums = pricingSums(getProMonthlyPricing("ID").price);
+  it("counts only the whole iced coffees that a Rupiah price buys", () => {
+    const rupiah = getProMonthlyPricing("ID").price;
+    const drinksAt = (amount: number) =>
+      pricingSums({ ...rupiah, amount }).drinks;
 
-    expect(sums.drinks).toBe(
-      Math.floor(products.pro.monthlyPrices.IDR.amount / 23_000)
-    );
+    expect(drinksAt(22_999)).toBe(0);
+    expect(drinksAt(23_000)).toBe(1);
+    expect(drinksAt(45_999)).toBe(1);
+    expect(drinksAt(46_000)).toBe(2);
+  });
+
+  it("divides the Rupiah price and the answers of the Pro credits by the days of the month", () => {
+    const rupiah = getProMonthlyPricing("ID").price;
+    const sums = pricingSums(rupiah);
+
     expect(sums.pricePerDay).toBe(products.pro.monthlyPrices.IDR.amount / 30);
+    expect(pricingSums({ ...rupiah, amount: 300 }).pricePerDay).toBe(10);
     expect(sums.answersPerMonth).toBe(
       getPlanCreditConfig("pro").amount / NINA_RESPONSE_CREDITS
     );
