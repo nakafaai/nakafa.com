@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  useFocusWithin,
-  useHover,
-  useIntersection,
-  useInViewport,
-  useMergedRef,
-  useReducedMotion,
-} from "@mantine/hooks";
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Tabs,
   TabsList,
@@ -19,13 +12,13 @@ import {
 } from "@repo/design-system/components/ui/tabs";
 import { Array as Arr, Schema } from "effect";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   type Lesson,
   LessonSchema,
 } from "@/components/marketing/about/lesson/id";
 
-/** The product's visual of the open lesson. Its code loads when the window comes into view. */
+/** The product's visual of the open lesson. Its code loads when the window nears the screen. */
 const LessonVisual = dynamic(
   () =>
     import("@/components/marketing/about/lesson/visual.client").then(
@@ -33,17 +26,6 @@ const LessonVisual = dynamic(
     ),
   { loading: ScenePlaceholder }
 );
-
-/** The lesson that opens after each one. The window goes round and starts again. */
-const NEXT: Record<Lesson, Lesson> = {
-  cell: "projectile",
-  mole: "cell",
-  projectile: "quadratic",
-  quadratic: "mole",
-};
-
-/** How long a lesson stays open before the next one opens by itself. */
-const OPEN_FOR_MS = 6000;
 
 const LessonCopySchema = Schema.Struct({
   tab: Schema.String,
@@ -61,26 +43,22 @@ interface LessonWindowProps {
 }
 
 /**
- * The visual of one lesson. It mounts while the window is in the viewport and
- * stays mounted while the reader has focus inside it, so a control that has
- * focus is never removed: some browsers send no focus event for a removed
- * control, and the window would keep waiting for a reader who has left. Out of
- * view the frame stays still, with no spinner turning.
+ * The visual of one lesson. A frame of the same shape holds its place until the
+ * window is revealed. The visual then stays mounted for good, so a control with
+ * focus is never removed, and each lab rests on its own while it is out of view.
  */
 function LessonScene({
   decimalSeparator,
-  inViewport,
   lesson,
+  revealed,
 }: {
   readonly decimalSeparator: DecimalSeparator;
-  readonly inViewport: boolean;
   readonly lesson: Lesson;
+  readonly revealed: boolean;
 }) {
-  const { focused, ref } = useFocusWithin();
-
   return (
-    <div className="grid" ref={ref}>
-      {inViewport || focused ? (
+    <div className="grid">
+      {revealed ? (
         <LessonVisual decimalSeparator={decimalSeparator} lesson={lesson} />
       ) : (
         <div aria-hidden="true" className={threeSceneFrameVariants()} />
@@ -91,37 +69,18 @@ function LessonScene({
 
 /**
  * The lesson window: four lessons on tabs, each with its text at the top and
- * the product's own visual below it. It opens the next lesson by itself while it
- * is on screen. It waits while the reader points at it or has focus in it, starts
- * the count again when the reader picks a lesson, and holds still with reduced
- * motion. Only the open lesson's visual is mounted, and only while the window is
- * in the viewport or the reader has focus inside it.
+ * the product's own visual below it. The window turns only when the reader picks
+ * a tab, never by itself. It is revealed once it comes within one screen height
+ * of the viewport, so the visual of the open lesson is drawn before the reader
+ * reaches it, and it stays mounted after that.
  */
 export function LessonWindow({
   decimalSeparator,
   label,
   lessons,
 }: LessonWindowProps) {
-  const { entry, ref: viewRef } = useIntersection({ threshold: 0.5 });
-  const { inViewport, ref: viewportRef } = useInViewport();
-  const { hovered, ref: hoverRef } = useHover();
-  const { focused, ref: focusRef } = useFocusWithin();
-  const ref = useMergedRef(viewRef, viewportRef, hoverRef, focusRef);
-  const shouldReduceMotion = useReducedMotion();
   const [lesson, setLesson] = useState<Lesson>("projectile");
-  const reading = hovered || focused;
-  const playing =
-    (entry?.isIntersecting ?? false) && !shouldReduceMotion && !reading;
-
-  useEffect(() => {
-    if (!playing) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setLesson(NEXT[lesson]);
-    }, OPEN_FOR_MS);
-    return () => window.clearTimeout(timer);
-  }, [lesson, playing]);
+  const [revealed, setRevealed] = useState(false);
 
   /** Opens the lesson that the tab names. Any other value leaves the window as it is. */
   function handleChange(value: unknown) {
@@ -131,7 +90,13 @@ export function LessonWindow({
   }
 
   return (
-    <div className="grid gap-6" ref={ref}>
+    <Intersection
+      className="grid gap-6"
+      once
+      onIntersect={() => setRevealed(true)}
+      rootMargin="100% 0px"
+      threshold={0}
+    >
       <Tabs onValueChange={handleChange} value={lesson}>
         <TabsList
           aria-label={label}
@@ -148,12 +113,12 @@ export function LessonWindow({
             <p className="text-pretty text-base">{lessons[id].text}</p>
             <LessonScene
               decimalSeparator={decimalSeparator}
-              inViewport={inViewport}
               lesson={id}
+              revealed={revealed}
             />
           </TabsPanel>
         ))}
       </Tabs>
-    </div>
+    </Intersection>
   );
 }

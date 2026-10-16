@@ -1,10 +1,10 @@
 import { Schema } from "effect";
 
-/** The four lessons of the home page window, in the order they open. */
+/** The four lessons of the home page window, in the order of its tabs. */
 export const LessonSchema = Schema.Literals([
   "projectile",
   "quadratic",
-  "mole",
+  "atom",
   "cell",
 ]);
 

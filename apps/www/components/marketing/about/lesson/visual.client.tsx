@@ -66,7 +66,9 @@ function QuadraticVisual() {
 
   return (
     <MathVisual
-      description={t("lab.quadratic.description")}
+      description={t("lab.quadratic.description", {
+        vertex: QUADRATIC_POINTS.vertex.x,
+      })}
       labels={{
         left: <InlineMath math={pointMath(QUADRATIC_POINTS.left)} />,
         right: <InlineMath math={pointMath(QUADRATIC_POINTS.right)} />,
@@ -185,15 +187,15 @@ function BacteriaVisual() {
 
 /** The product's own visual of each lesson, as a lesson page renders it. */
 const VISUALS: Record<Lesson, ComponentType<LessonVisualProps>> = {
+  atom: AtomVisual,
   cell: BacteriaVisual,
-  mole: AtomVisual,
   projectile: ProjectileVisual,
   quadratic: QuadraticVisual,
 };
 
 /**
  * The visual of one lesson of the home page window. The window loads this module
- * only when it comes into view, so the labs stay out of the first JavaScript.
+ * only when it nears the screen, so the labs stay out of the first JavaScript.
  * The locale is read on the server, so this client module imports no server code.
  */
 export function LessonVisual({
