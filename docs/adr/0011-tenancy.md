@@ -7,9 +7,9 @@ organisation tier, the neutral concepts, the country profile above units, and
 the account's home cell. Amended on 14 October 2026 for periods, cohorts,
 placements, people, invites, homeroom assignments, promotions, operators, and
 visits as they are built. Amended on 16 October 2026 for the rule of a removed
-homeroom teacher, the write modules that own each cohort, period, and homeroom
-write, the move check on submit, and the lease that makes a stalled promotion run
-resumable.
+homeroom teacher, the write modules that own the cohort, period, and homeroom writes
+that a promotion repeats, the move limit and the move check on submit, and the lease
+that makes a stalled promotion run resumable.
 The school subdomains and their URL tree are in ADR 0026, and the country
 profile is in ADR 0032.
 
@@ -208,6 +208,11 @@ must be an active Teacher of the cohort's unit, and the assignment opens that
 cohort to them through the `homeroom` relation of ADR 0012. Assigning and ending
 one write `assignment.created` and `assignment.removed` in the same transaction.
 
+When `assign` refuses, the cohort is checked first: a cohort that holds an active
+homeroom teacher refuses with `CohortHasHomeroom`, before a teacher who already leads
+another cohort of the period is refused with `TeacherHasHomeroom`. A promotion copy
+runs the same check in the same order.
+
 A removed teacher holds no slot. Removing a Person keeps their homeroom row as the
 record, and every reader of a cohort's homeroom treats that row as no homeroom
 teacher. `unassign` answers `null` and keeps the row, a promotion copy skips a
@@ -215,8 +220,9 @@ removed source teacher, and the undo of a created cohort does not count the row 
 a holder. The writes that need the slot replace the row first and journal
 `assignment.removed`: `assign` replaces it, a promotion copy replaces it in a cohort
 that holds it, and the undo of a created cohort clears it together with the cohort.
-The `homeroom` relation names the holder of the cohort, and a removed teacher cannot
-be its caller, because only an active member reaches a relation.
+The `homeroom` relation names the active holder of the cohort (`activeHomeroomOf`), so
+a removed teacher opens nothing, even if a caller of a removed Person ever reached it:
+the member gate admits active Persons only.
 
 ### Promotions
 
@@ -244,12 +250,14 @@ failure, with its step and page, on the promotion, and the next apply resumes
 there. A run that finds its school archived or its tenant suspended stops with
 `AccessDenied`, as a public write would be refused, and resumes once the lock
 lifts. Every write of a run records `movedAt`, the time it last moved. A run that
-has not moved for `PROMOTION_RUN_LEASE`, two minutes, counts as stopped. A page is
-one mutation that takes far under a second, so a run that quiet has stopped without
-a failure, such as a database defect that rolled its transaction back. Apply resumes
-such a run at its step and page, and undo backs it out through the paths of a stopped
-apply. A run that moved within the lease is refused with `PromotionState`. Students
-move in pages of 100 (`PROMOTION_PAGE_SIZE`), so no run reads or writes more than one
+has not moved for `PROMOTION_RUN_LEASE`, two minutes, counts as stopped. Each page is
+one mutation that writes `movedAt` and schedules the next page, so a live run's silence
+is one page plus the scheduler's dispatch. Two minutes is a judgment, not a measurement:
+it leaves room for a slow page or a late dispatch. A run silent for longer has stopped
+without a failure, such as a database defect that rolled its transaction back. Apply
+resumes such a run at its step and page, and undo backs it out through the paths of a
+stopped apply. A run that moved within the lease is refused with `PromotionState`. Students move in pages of 100 (`PROMOTION_PAGE_SIZE`), so no run reads
+or writes more than one
 page of students. The cohort and homeroom steps each run once, and the 200-cohort
 limit of a period bounds them.
 
@@ -508,19 +516,28 @@ beside the old School. Four steps followed, in this order, and all four are done
 - Internal: `tenancy/promotion/run:run` runs one step or one page of a promotion
   that is being applied or undone, and schedules the next run until the steps
   finish.
-- Writes: each write of a cohort, a homeroom assignment, or a period status is
-  owned by one module of `tenancy/write/`, with its rule checks and its journal
-  record. `cohort` holds `checkCohorts` and `insertCohort`, `assignment` holds
-  `checkHomeroom`, `insertHomeroom`, `removeHomeroom`, and `clearRemovedHomeroom`,
-  and `period` holds `archivePeriod` and `reactivatePeriod`. The public functions
-  and the promotion steps both call them. The folder sits outside the modules that
-  the table definitions import (`tenancy/cohort`, `tenancy/assignment`, and
-  `tenancy/period`): a write needs `authority.ts`, which imports the generated
-  schema, and that schema imports every table, so a write placed in one of those
-  modules would import itself through the table.
+- Writes: each write that a promotion step repeats is owned by one module of
+  `tenancy/write/`, with its rule checks and its journal record. `cohort` holds
+  `checkCohorts` and `insertCohort`, which `create` of `tenancy/cohorts` and the
+  cohorts step call. `assignment` holds `checkHomeroom`, `insertHomeroom`, and
+  `removeHomeroom`, which `assign` and `unassign` and the homeroom step call, and
+  `clearRemovedHomeroom`, which only the undo of a created cohort calls. `period`
+  holds `archivePeriod`, which `archive` of `tenancy/periods` and the archive step
+  call, and `reactivatePeriod`, which only the undo of the archive step calls. The
+  other writes of a cohort or a period status stay in their public module, because no
+  promotion step repeats them: a cohort's rename and archive and a period's opening
+  (`tenancy/cohorts` and `tenancy/periods`), and the undo's delete of a created cohort
+  (`tenancy/promotion/cohorts`). The folder sits outside the modules that the table
+  definitions import (`tenancy/cohort`, `tenancy/assignment`, and `tenancy/period`):
+  a write needs `authority.ts`, which imports the generated schema, and that schema
+  imports every table, so a write placed in one of those modules would import itself
+  through the table.
 - The submit check of a promotion, `checkMoves` in `tenancy/promotion/check`, reads
   the moves through `by_promotionId_and_personId` a page at a time, and checks each
-  move against the cohort its student is in through `placementOf`.
+  move against the cohort its student is in through `placementOf`. A promotion holds
+  at most `PROMOTION_MOVE_LIMIT` moves: `setMove` refuses a new one past that with
+  `PromotionPlanInvalid` and the reason `moves`. So the check reads at most that many
+  moves, two database calls each, about 400 of the 4,096 that one mutation may make.
 - Operators and visits are built in `operators`: the tables `operators`
   (`by_userId`) and `tenantVisits` (`by_tenantId_and_operatorId_and_state_status`,
   `by_tenantId_and_state_status`, `by_state_status_and_state_expiresAt`), the

@@ -18,16 +18,20 @@ export const finished: typeof StepOutcome.Type = {
 
 /**
  * Each step reads and writes one page of students, so one transaction stays small.
- * The chain runs one page after another until the last student is placed, and the
- * submit check reads the moves at the same size.
+ * The chain runs one page after another until the last student is placed. The submit
+ * check reads the moves at the same size, and a promotion holds at most
+ * PROMOTION_MOVE_LIMIT of them, so that check reads a bounded set too.
  */
 export const PROMOTION_PAGE_SIZE = 100;
 
 /**
- * How long a run may go without a write before it counts as stopped. A run is one
- * page in one mutation, which takes far under a second, so a run that has not moved
- * for two minutes has stopped without recording a failure, such as a database defect
- * that rolled its transaction back.
+ * How long a run may go without a write before it counts as stopped. Each page is one
+ * mutation that writes `movedAt` and schedules the next page, so a live run's silence
+ * between two writes is one page plus the scheduler's dispatch. Two minutes is a
+ * judgment, not a measurement: it leaves room for a slow page or a late dispatch. A run
+ * silent for longer has stopped without recording a failure, such as a database defect
+ * that rolled its transaction back. Convex's one-second limit covers user code only, not
+ * database time, so it does not bound a page.
  */
 export const PROMOTION_RUN_LEASE = Duration.minutes(2);
 
