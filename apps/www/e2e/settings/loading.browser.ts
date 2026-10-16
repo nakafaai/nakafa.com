@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Deferred, Effect } from "effect";
+import { Effect } from "effect";
 import { reloadUntil, saved } from "@/e2e/support/changes";
 import { writeMemory } from "@/e2e/support/list";
 import {
@@ -10,7 +10,7 @@ import {
   panelOf,
   runMemory,
 } from "@/e2e/support/memory";
-import { NEXT_CHUNK_PATH } from "@/e2e/support/route";
+import { holdChunks } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const PLAIN = "Prefers worked examples before the formula";
@@ -18,6 +18,10 @@ const PLAIN = "Prefers worked examples before the formula";
 const FORMATTED = "## Plan\n- Milk\n**Bread**";
 /** The words of the heading in `FORMATTED`, which name its row. */
 const PLAN = "Plan";
+/** A memory with one task that is not done, typed with the Markdown shortcut of a task. */
+const TASK = "[ ] Milk";
+/** The words of the task in `TASK`, which name its row. */
+const MILK = "Milk";
 
 type Box = Awaited<ReturnType<Locator["boundingBox"]>>;
 
@@ -61,20 +65,17 @@ const showsSavedWordsWhileLoading = Effect.fn(
   const before = changes.sent;
   yield* writeMemory(page, PLAIN);
 
-  // The editor's code is the chunk that loads on the press, and it waits here.
-  const gate = yield* Deferred.make<void>();
-  const services = yield* Effect.context<never>();
-
   yield* Effect.promise(async () => {
     await saved(changes, before);
     await reloadUntil(page, () =>
       expect(memoryRow(page, PLAIN)).toBeVisible({ timeout: 3000 })
     );
+  });
 
-    await page.route(NEXT_CHUNK_PATH, async (route) => {
-      await Effect.runPromiseWith(services)(Deferred.await(gate));
-      await route.continue();
-    });
+  // The editor's code is the chunk that loads on the press, and it waits here.
+  const release = yield* holdChunks(page);
+
+  yield* Effect.promise(async () => {
     await nameOf(page, PLAIN).click();
 
     const words = panelOf(page).getByText(PLAIN, { exact: true });
@@ -82,7 +83,7 @@ const showsSavedWordsWhileLoading = Effect.fn(
     await expect(editorOf(page)).toHaveCount(0);
     const placed = await words.boundingBox();
 
-    await Effect.runPromiseWith(services)(Deferred.succeed(gate, undefined));
+    await release();
     await expect(editorOf(page)).toHaveText(PLAIN, {
       timeout: readinessTimeoutMilliseconds,
     });
@@ -105,20 +106,17 @@ const keepsFormattedWords = Effect.fn("NakafaE2E.memoryKeepsFormattedWords")(
     const before = changes.sent;
     yield* writeMemory(page, FORMATTED);
 
-    // The editor's code is the chunk that loads on the press, and it waits here.
-    const gate = yield* Deferred.make<void>();
-    const services = yield* Effect.context<never>();
-
     yield* Effect.promise(async () => {
       await saved(changes, before);
       await reloadUntil(page, () =>
         expect(memoryRow(page, PLAN)).toBeVisible({ timeout: 3000 })
       );
+    });
 
-      await page.route(NEXT_CHUNK_PATH, async (route) => {
-        await Effect.runPromiseWith(services)(Deferred.await(gate));
-        await route.continue();
-      });
+    // The editor's code is the chunk that loads on the press, and it waits here.
+    const release = yield* holdChunks(page);
+
+    yield* Effect.promise(async () => {
       await nameOf(page, PLAN).click();
 
       const placed = formattedWordsOf(page);
@@ -128,7 +126,7 @@ const keepsFormattedWords = Effect.fn("NakafaE2E.memoryKeepsFormattedWords")(
       await expect(editorOf(page)).toHaveCount(0);
       const placedAt = await placesOf(placed);
 
-      await Effect.runPromiseWith(services)(Deferred.succeed(gate, undefined));
+      await release();
       await expect(editorOf(page).locator("strong")).toHaveText("Bread", {
         timeout: readinessTimeoutMilliseconds,
       });
@@ -137,6 +135,45 @@ const keepsFormattedWords = Effect.fn("NakafaE2E.memoryKeepsFormattedWords")(
       expectSamePlace(settledAt.bold, placedAt.bold);
       expectSamePlace(settledAt.heading, placedAt.heading);
       expectSamePlace(settledAt.item, placedAt.item);
+    });
+  }
+);
+
+/**
+ * A task box that the learner clicks while the editor's code loads keeps its
+ * check: the saved box takes no change, and the editor shows the same check
+ * when it arrives.
+ */
+const keepsTheTaskCheck = Effect.fn("NakafaE2E.memoryKeepsTaskCheck")(
+  function* (page: Page, baseURL: string) {
+    const changes = yield* openMemoryPage(page, baseURL);
+    const before = changes.sent;
+    yield* writeMemory(page, TASK);
+
+    yield* Effect.promise(async () => {
+      await saved(changes, before);
+      await reloadUntil(page, () =>
+        expect(memoryRow(page, MILK)).toBeVisible({ timeout: 3000 })
+      );
+    });
+
+    // The editor's code is the chunk that loads on the press, and it waits here.
+    const release = yield* holdChunks(page);
+
+    yield* Effect.promise(async () => {
+      await nameOf(page, MILK).click();
+
+      const box = panelOf(page).getByRole("checkbox");
+      await expect(box).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+      await expect(box).not.toBeChecked();
+      // The label wraps the box, so a click on the label is a click on the box.
+      await panelOf(page).locator('[data-type="taskItem"] label').click();
+      await expect(box).not.toBeChecked();
+
+      await release();
+      await expect(panelOf(page).getByRole("checkbox")).not.toBeChecked({
+        timeout: readinessTimeoutMilliseconds,
+      });
     });
   }
 );
@@ -206,6 +243,13 @@ test.describe("Memory editor's saved words at 1440px", () => {
     page,
   }) => {
     await runMemory(page, baseURL, keepsFormattedWords);
+  });
+
+  test("keeps the check of a task that is clicked while the editor's code loads", async ({
+    baseURL,
+    page,
+  }) => {
+    await runMemory(page, baseURL, keepsTheTaskCheck);
   });
 });
 

@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
-import { Effect } from "effect";
+import { Deferred, Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -44,6 +44,29 @@ export const waitForCachedRoute = Effect.fn("NakafaE2E.waitForCachedRoute")(
  */
 export const NEXT_CHUNK_PATH =
   /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
+
+/**
+ * Holds every JavaScript chunk of the app that the page asks for, until the
+ * `release` it returns runs. A step holds the editor's code this way, so the
+ * page shows what it draws while the code is on its way. Call it once the page
+ * has loaded: a chunk that the page loads with it would wait for the release.
+ */
+export const holdChunks = Effect.fn("NakafaE2E.holdChunks")(function* (
+  page: Page
+) {
+  const gate = yield* Deferred.make<void>();
+  const services = yield* Effect.context<never>();
+
+  yield* Effect.promise(() =>
+    page.route(NEXT_CHUNK_PATH, async (route) => {
+      await Effect.runPromiseWith(services)(Deferred.await(gate));
+      await route.continue();
+    })
+  );
+
+  return () =>
+    Effect.runPromiseWith(services)(Deferred.succeed(gate, undefined));
+});
 
 /**
  * Seeds one consent decision before the first navigation, then opens `href`

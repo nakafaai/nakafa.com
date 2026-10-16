@@ -218,8 +218,13 @@ const pausesBeforeTheAnswer = Effect.fn("NakafaE2E.memoryPausesBeforeAnswer")(
       const before = changes.sent;
 
       await expect(remember).toBeChecked();
-      // The page shows the switch before its code runs, and a press in that
-      // moment is lost, so the press is repeated until the switch moves.
+      // A press before the page signs in is refused by the server, so the test
+      // waits for the sign-in first. The page also shows the switch before its
+      // code runs, and a press in that moment is lost, so the press is repeated
+      // until the switch moves.
+      await expect
+        .poll(() => changes.signedIn, { timeout: ANSWER_MILLISECONDS })
+        .toBe(true);
       await expect(async () => {
         if (await remember.isChecked()) {
           await remember.click();
