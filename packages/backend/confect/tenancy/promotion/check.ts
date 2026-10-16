@@ -1,6 +1,11 @@
 import type { GenericId } from "@confect/core";
-import type { TenantCohortsDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  TenantCohortsDoc,
+  TenantPromotionMovesDoc,
+  TenantPromotionsDoc,
+} from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { placementOf } from "@repo/backend/confect/tenancy/authority";
 import {
   COHORT_LIMIT,
   cohortNameKey,
@@ -14,6 +19,7 @@ import {
   destinationIssue,
   lastGradeOf,
 } from "@repo/backend/confect/tenancy/promotion/destination";
+import { PROMOTION_PAGE_SIZE } from "@repo/backend/confect/tenancy/promotion/progress";
 import type {
   PromotionSource,
   PromotionTarget,
@@ -95,3 +101,78 @@ export const checkPlan = Effect.fn("tenancy.promotion.check.plan")(
     );
   }
 );
+
+/**
+ * Checks one student's move as `setMove` checks it, against the student's cohort in
+ * the source period. A student with no placement there holds no move to a cohort, so
+ * the check skips them.
+ */
+const checkMove = Effect.fn("tenancy.promotion.check.move")(function* (
+  promotion: TenantPromotionsDoc,
+  lastGrade: Option.Option<number>,
+  move: Pick<TenantPromotionMovesDoc, "personId" | "to">
+) {
+  const placed = yield* placementOf(promotion.sourcePeriodId, move.personId);
+  if (Option.isNone(placed)) {
+    return;
+  }
+  const cohort = yield* (yield* DatabaseReader)
+    .table("tenantCohorts")
+    .get(placed.value.cohortId)
+    .pipe(Effect.orDie);
+  if (
+    Option.isSome(
+      destinationIssue(promotion.targets, cohort, move.to, lastGrade)
+    )
+  ) {
+    return yield* new PromotionPlanInvalid({ reason: "moves" });
+  }
+});
+
+/** Checks every move of the promotion, one page at a time through the moves index. */
+const checkMovesOf = Effect.fn("tenancy.promotion.check.movesOf")(function* (
+  promotion: TenantPromotionsDoc,
+  lastGrade: Option.Option<number>
+) {
+  let cursor: string | null = null;
+  let done = false;
+  yield* Effect.whileLoop({
+    while: () => !done,
+    body: () =>
+      Effect.gen(function* () {
+        const page = yield* (yield* DatabaseReader)
+          .table("tenantPromotionMoves")
+          .index("by_promotionId_and_personId", (query) =>
+            query.eq("promotionId", promotion._id)
+          )
+          .paginate({ cursor, numItems: PROMOTION_PAGE_SIZE })
+          .pipe(Effect.orDie);
+        yield* Effect.forEach(
+          page.page,
+          (move) => checkMove(promotion, lastGrade, move),
+          { discard: true }
+        );
+        return page;
+      }),
+    step: (page) => {
+      cursor = page.continueCursor;
+      done = page.isDone;
+    },
+  });
+});
+
+/**
+ * Refuses a plan that holds a student's move to a target the plan no longer has, with
+ * the reason `moves`. A plan edit that removes a target leaves its moves as they are,
+ * so the learner fixes them before the plan is submitted. Each move is checked with
+ * the cohort it starts from, so its check reads one placement and one cohort.
+ */
+export const checkMoves = Effect.fn("tenancy.promotion.check.moves")(function* (
+  promotion: TenantPromotionsDoc
+) {
+  const unit = yield* (yield* DatabaseReader)
+    .table("tenantUnits")
+    .get(promotion.unitId)
+    .pipe(Effect.orDie);
+  yield* checkMovesOf(promotion, lastGradeOf(unit.level));
+});

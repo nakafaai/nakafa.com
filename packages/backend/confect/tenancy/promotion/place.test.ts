@@ -200,60 +200,6 @@ describe("tenancy/promotion place refusals", () => {
   );
 
   it.effect(
-    "stops the place step at a move to a cohort the plan no longer creates",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const s = yield* scenario(fixture);
-        const made = yield* fixture.as("admin").mutation(create, {
-          periodId: s.source.id,
-          slug: nf,
-          targetPeriodId: s.target.id,
-        });
-        const sources = [
-          { cohortId: s.seventh.id, homeroom: true, to: toEightA },
-          { cohortId: s.ninth.id, homeroom: false, to: toGraduate },
-        ];
-        yield* fixture.as("admin").mutation(plan, {
-          promotionId: made.id,
-          slug: nf,
-          sources,
-          targets: [
-            { grade: 8, name: "8A" },
-            { grade: 8, name: "8B" },
-          ],
-        });
-        yield* fixture.as("admin").mutation(setMove, {
-          personId: s.second,
-          promotionId: made.id,
-          slug: nf,
-          to: toEightB,
-        });
-        yield* fixture.as("admin").mutation(plan, {
-          promotionId: made.id,
-          slug: nf,
-          sources,
-          targets: [{ grade: 8, name: "8A" }],
-        });
-        yield* fixture
-          .as("admin")
-          .mutation(submit, { promotionId: made.id, slug: nf });
-        yield* fixture
-          .as("principal")
-          .mutation(approve, { promotionId: made.id, slug: nf });
-        yield* fixture
-          .as("admin")
-          .mutation(apply, { promotionId: made.id, slug: nf });
-        const finished = yield* drain(fixture, made.id);
-        expect(finished.progress).toMatchObject({
-          failure: "PromotionPlanInvalid",
-          running: false,
-          step: "place",
-        });
-      })
-  );
-
-  it.effect(
     "stops the place step at a graduate who already holds a placement in the target period, and graduates nobody",
     () =>
       Effect.gen(function* () {
@@ -311,17 +257,17 @@ describe("tenancy/promotion place refusals", () => {
           slug: nf,
           to: toGraduate,
         });
-        yield* fixture.as("admin").mutation(placements.move, {
-          cohortId: s.seventh.id,
-          personId: s.third,
-          slug: nf,
-        });
         yield* fixture
           .as("admin")
           .mutation(submit, { promotionId: made.id, slug: nf });
         yield* fixture
           .as("principal")
           .mutation(approve, { promotionId: made.id, slug: nf });
+        yield* fixture.as("admin").mutation(placements.move, {
+          cohortId: s.seventh.id,
+          personId: s.third,
+          slug: nf,
+        });
         yield* fixture
           .as("admin")
           .mutation(apply, { promotionId: made.id, slug: nf });

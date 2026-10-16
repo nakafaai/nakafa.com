@@ -10,7 +10,10 @@ import {
   promotionAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { PromotionState } from "@repo/backend/confect/tenancy/errors";
-import { checkPlan } from "@repo/backend/confect/tenancy/promotion/check";
+import {
+  checkMoves,
+  checkPlan,
+} from "@repo/backend/confect/tenancy/promotion/check";
 import spec from "@repo/backend/confect/tenancy/promotion/review.spec";
 import { planOf, update } from "@repo/backend/confect/tenancy/promotion/row";
 import { view } from "@repo/backend/confect/tenancy/promotion/view";
@@ -28,6 +31,7 @@ const submit = FunctionImpl.make(
       return yield* new PromotionState();
     }
     yield* checkPlan(planOf(promotion));
+    yield* checkMoves(promotion);
     const next = yield* update(promotion, { state: "submitted" });
     yield* promotionAuthority.record(personActor(person), promotion, {
       type: "promotion.submitted",

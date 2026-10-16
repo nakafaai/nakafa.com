@@ -31,13 +31,8 @@ import {
   lastGradeOf,
   targetNameOf,
 } from "@repo/backend/confect/tenancy/promotion/destination";
+import { PROMOTION_PAGE_SIZE } from "@repo/backend/confect/tenancy/promotion/progress";
 import { Array as Arr, Effect, Option } from "effect";
-
-/**
- * Each step reads and writes one page of students, so one transaction stays small.
- * The chain runs one page after another until the last student is placed.
- */
-const PROMOTION_PAGE_SIZE = 100;
 
 /** One page of the source period's placements, read in placement order. */
 const sourcePage = Effect.fn("tenancy.promotion.place.sourcePage")(function* (

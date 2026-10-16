@@ -4,9 +4,11 @@ import {
   denied,
   entriesOf,
   nf,
+  people,
   promotion,
   scenario,
   scenarioPlan,
+  toEightB,
   toGraduate,
 } from "@repo/backend/test/promotion";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
@@ -17,6 +19,120 @@ const { setMove } = promotion.moves;
 const { approve, cancel, returnToDraft, submit } = promotion.review;
 
 describe("tenancy/promotion review", () => {
+  it.effect(
+    "refuses to submit a student's move to a target that the plan no longer has, for the reason moves",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const made = yield* fixture.as("admin").mutation(create, {
+          periodId: s.source.id,
+          slug: nf,
+          targetPeriodId: s.target.id,
+        });
+        const { sources } = scenarioPlan(s.seventh, s.ninth);
+        yield* fixture.as("admin").mutation(plan, {
+          promotionId: made.id,
+          slug: nf,
+          sources,
+          targets: [
+            { grade: 8, name: "8A" },
+            { grade: 8, name: "8B" },
+          ],
+        });
+        yield* fixture.as("admin").mutation(setMove, {
+          personId: s.first,
+          promotionId: made.id,
+          slug: nf,
+          to: toEightB,
+        });
+        yield* fixture.as("admin").mutation(plan, {
+          promotionId: made.id,
+          slug: nf,
+          sources,
+          targets: [{ grade: 8, name: "8A" }],
+        });
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(submit, { promotionId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "PromotionPlanInvalid",
+          reason: "moves",
+        });
+      })
+  );
+
+  it.effect("submits a plan whose student moves all fit its targets", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const s = yield* scenario(fixture);
+      const made = yield* fixture.as("admin").mutation(create, {
+        periodId: s.source.id,
+        slug: nf,
+        targetPeriodId: s.target.id,
+      });
+      const { sources } = scenarioPlan(s.seventh, s.ninth);
+      yield* fixture.as("admin").mutation(plan, {
+        promotionId: made.id,
+        slug: nf,
+        sources,
+        targets: [
+          { grade: 8, name: "8A" },
+          { grade: 8, name: "8B" },
+        ],
+      });
+      yield* fixture.as("admin").mutation(setMove, {
+        personId: s.first,
+        promotionId: made.id,
+        slug: nf,
+        to: toEightB,
+      });
+      const submitted = yield* fixture
+        .as("admin")
+        .mutation(submit, { promotionId: made.id, slug: nf });
+      expect(submitted.state).toBe("submitted");
+    })
+  );
+
+  it.effect(
+    "submits a plan whose move belongs to a student removed since, who holds no cohort to move from",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const made = yield* fixture.as("admin").mutation(create, {
+          periodId: s.source.id,
+          slug: nf,
+          targetPeriodId: s.target.id,
+        });
+        const { sources } = scenarioPlan(s.seventh, s.ninth);
+        yield* fixture.as("admin").mutation(plan, {
+          promotionId: made.id,
+          slug: nf,
+          sources,
+          targets: [
+            { grade: 8, name: "8A" },
+            { grade: 8, name: "8B" },
+          ],
+        });
+        yield* fixture.as("admin").mutation(setMove, {
+          personId: s.first,
+          promotionId: made.id,
+          slug: nf,
+          to: toEightB,
+        });
+        yield* fixture.as("admin").mutation(people.remove, {
+          personId: s.first,
+          slug: nf,
+        });
+        const submitted = yield* fixture
+          .as("admin")
+          .mutation(submit, { promotionId: made.id, slug: nf });
+        expect(submitted.state).toBe("submitted");
+      })
+  );
+
   it.effect(
     "submits a draft once, and refuses a plan that a new cohort of the source period outgrew",
     () =>

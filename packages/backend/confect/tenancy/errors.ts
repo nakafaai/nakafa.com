@@ -252,6 +252,7 @@ export const PromotionPlanIssue = Schema.Literals([
   "stay",
   "graduate",
   "homeroom",
+  "moves",
 ]);
 
 /** A plan that does not fit the school, for the reason its `reason` names. */
