@@ -55,6 +55,63 @@ describe("tenancy/promotion homeroom step", () => {
   );
 
   it.effect(
+    "copies a homeroom teacher over the row of a removed teacher in the cohort, and journals the removal",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        const eightA = yield* createdFor(fixture, promotionId, "8a");
+        const second = yield* fixture.as("admin").mutation(people.create, {
+          name: "Guru Kedua",
+          slug: nf,
+        });
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, second.id, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.smp,
+          })
+        );
+        yield* fixture.as("admin").mutation(assignments.assign, {
+          cohortId: eightA.cohortId,
+          personId: second.id,
+          slug: nf,
+        });
+        yield* fixture.as("admin").mutation(people.remove, {
+          personId: second.id,
+          slug: nf,
+        });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress).toMatchObject({
+          failure: null,
+          running: false,
+        });
+        const state = yield* snapshot(fixture);
+        expect(
+          Arr.filter(
+            state.assignments,
+            (row) => row.cohortId === eightA.cohortId
+          )
+        ).toMatchObject([{ personId: fixture.people.teacher.personId }]);
+        expect(
+          Arr.map(
+            yield* entriesOf(fixture, "assignment.removed"),
+            (entry) => entry.change
+          )
+        ).toMatchObject([{ assignment: "homeroom", person: second.id }]);
+      })
+  );
+
+  it.effect(
     "stops the homeroom step at a cohort that already has a homeroom teacher",
     () =>
       Effect.gen(function* () {

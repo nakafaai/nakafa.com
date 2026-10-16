@@ -1,6 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   grantRole,
   journal,
@@ -277,6 +278,42 @@ describe("tenancy/assignments unassign", () => {
         ]);
       })
   );
+
+  it.effect(
+    "answers null for a removed teacher's row and keeps that row until an assignment replaces it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* smpPeriod(fixture);
+        const made = yield* cohort(fixture, period.id, "7A");
+        yield* fixture.as("admin").mutation(assign, {
+          cohortId: made.id,
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        yield* fixture.as("admin").mutation(people.remove, {
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        const answer = yield* fixture
+          .as("admin")
+          .mutation(unassign, { cohortId: made.id, slug: nf });
+        const rows = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("tenantAssignments")
+              .index("by_cohortId_and_kind", (query) =>
+                query.eq("cohortId", made.id).eq("kind", "homeroom")
+              )
+              .take(5)
+          )
+        );
+        expect(answer).toBeNull();
+        expect(rows).toMatchObject([
+          { personId: fixture.people.teacher.personId },
+        ]);
+      })
+  );
 });
 
 describe("tenancy/assignments relation", () => {
@@ -333,6 +370,31 @@ describe("tenancy/assignments relation", () => {
           .query(cohorts.members, { cohortId: made.id, slug: nf, ...page })
           .pipe(Effect.flip);
         expect(after).toMatchObject(denied("role"));
+      })
+  );
+
+  it.effect(
+    "reads no cohort once its homeroom teacher is removed, because a removed Person is not a member",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* smpPeriod(fixture);
+        const made = yield* cohort(fixture, period.id, "7A");
+        const page = { paginationOpts: { cursor: null, numItems: 10 } };
+        yield* fixture.as("admin").mutation(assign, {
+          cohortId: made.id,
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        yield* fixture.as("admin").mutation(people.remove, {
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        const after = yield* fixture
+          .as("teacher")
+          .query(cohorts.members, { cohortId: made.id, slug: nf, ...page })
+          .pipe(Effect.flip);
+        expect(after).toMatchObject({ _tag: "NotMember" });
       })
   );
 });

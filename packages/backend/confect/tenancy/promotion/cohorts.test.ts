@@ -7,6 +7,7 @@ import { COHORT_LIMIT } from "@repo/backend/confect/tenancy/cohort";
 import { classOf } from "@repo/backend/test/classroom";
 import {
   approvedPromotion,
+  assignments,
   cohort,
   createdFor,
   drain,
@@ -18,7 +19,7 @@ import {
   snapshot,
   undoOnce,
 } from "@repo/backend/test/promotion";
-import { tenancyFixture } from "@repo/backend/test/tenancy";
+import { grantRole, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { apply } = promotion.apply;
@@ -82,6 +83,93 @@ describe("tenancy/promotion cohorts step", () => {
           running: false,
           step: "cohorts",
         });
+      })
+  );
+
+  it.effect(
+    "undoes a created cohort that names a removed homeroom teacher, and clears that row with the cohort",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        yield* drain(fixture, promotionId);
+        yield* undoOnce(fixture, promotionId);
+        yield* undoOnce(fixture, promotionId);
+        const eightA = yield* createdFor(fixture, promotionId, "8a");
+        const second = yield* fixture.as("admin").mutation(people.create, {
+          name: "Guru Kedua",
+          slug: nf,
+        });
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, second.id, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.smp,
+          })
+        );
+        yield* fixture.as("admin").mutation(assignments.assign, {
+          cohortId: eightA.cohortId,
+          personId: second.id,
+          slug: nf,
+        });
+        yield* fixture.as("admin").mutation(people.remove, {
+          personId: second.id,
+          slug: nf,
+        });
+        const undone = yield* undoOnce(fixture, promotionId);
+        expect(undone.progress.failure).toBeNull();
+        const state = yield* snapshot(fixture);
+        expect(
+          Arr.some(state.cohorts, (row) => row._id === eightA.cohortId)
+        ).toBe(false);
+        expect(
+          Arr.some(state.assignments, (row) => row.cohortId === eightA.cohortId)
+        ).toBe(false);
+      })
+  );
+
+  it.effect(
+    "refuses to undo a created cohort that an active homeroom teacher holds, and keeps the cohort and the row",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        yield* drain(fixture, promotionId);
+        yield* undoOnce(fixture, promotionId);
+        yield* undoOnce(fixture, promotionId);
+        const eightA = yield* createdFor(fixture, promotionId, "8a");
+        const second = yield* fixture.as("admin").mutation(people.create, {
+          name: "Guru Kedua",
+          slug: nf,
+        });
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, second.id, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.smp,
+          })
+        );
+        yield* fixture.as("admin").mutation(assignments.assign, {
+          cohortId: eightA.cohortId,
+          personId: second.id,
+          slug: nf,
+        });
+        const stopped = yield* undoOnce(fixture, promotionId);
+        expect(stopped.progress).toMatchObject({
+          direction: "undo",
+          failure: "PromotionCohortOccupied",
+          running: false,
+          step: "cohorts",
+        });
+        const state = yield* snapshot(fixture);
+        expect(
+          Arr.some(state.cohorts, (row) => row._id === eightA.cohortId)
+        ).toBe(true);
+        expect(
+          Arr.some(state.assignments, (row) => row.cohortId === eightA.cohortId)
+        ).toBe(true);
       })
   );
 
