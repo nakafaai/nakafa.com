@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  CONVEX_DOCUMENT_LIMIT,
-  MAX_DOCUMENT_BYTES,
-} from "@repo/backend/confect/editor/size";
+import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import {
   batchText,
   denied,
@@ -188,8 +185,21 @@ describe("editor/documents create", () => {
       })
   );
 
+  it.effect("stores the largest document whose row stays under one MiB", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const overhead = utf8Bytes(paragraphText(""));
+      yield* fixture.as("admin").mutation(create, {
+        content: paragraphText("a".repeat(MAX_DOCUMENT_BYTES - overhead)),
+        scope: { kind: "tenant" },
+        slug: nf,
+      });
+      expect(yield* fixture.run(documentRows)).toHaveLength(1);
+    })
+  );
+
   it.effect(
-    "refuses a document whose complete row reaches one MiB, though its text fits, and writes nothing",
+    "refuses a document one byte past the largest text its row holds, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -197,14 +207,16 @@ describe("editor/documents create", () => {
         const failure = yield* fixture
           .as("admin")
           .mutation(create, {
-            content: paragraphText("a".repeat(MAX_DOCUMENT_BYTES - overhead)),
+            content: paragraphText(
+              "a".repeat(MAX_DOCUMENT_BYTES - overhead + 1)
+            ),
             scope: { kind: "tenant" },
             slug: nf,
           })
           .pipe(Effect.flip);
         expect(failure).toMatchObject({
           _tag: "DocumentTooLarge",
-          limit: CONVEX_DOCUMENT_LIMIT,
+          limit: MAX_DOCUMENT_BYTES,
         });
         expect(yield* fixture.run(documentRows)).toEqual([]);
         expect(yield* fixture.run(snapshotRows)).toEqual([]);

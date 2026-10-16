@@ -8,11 +8,13 @@ import {
   DocumentSchema,
   DocumentTextSchema,
   encodeDocument,
+  ensureRowSize,
   storedDocument,
 } from "@repo/backend/confect/editor/document";
 import type { DocumentNode } from "@repo/backend/confect/editor/node";
 import {
   CONVEX_DOCUMENT_LIMIT,
+  DOCUMENT_ID_LENGTH,
   MAX_DOCUMENT_BYTES,
 } from "@repo/backend/confect/editor/size";
 import {
@@ -22,7 +24,6 @@ import {
 } from "@repo/backend/test/editor/nodes";
 import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";
-import { getDocumentSize } from "convex/values";
 import { Effect, Schema } from "effect";
 
 /** A document of the kinds the editor writes: a heading, marked text, a bullet list and a code block. */
@@ -212,19 +213,28 @@ describe("editor/document storage form", () => {
   );
 
   it.effect(
-    "stores the largest text whose row stays under the Convex limit and refuses one byte more",
+    "stores the largest text whose snapshot row stays under the Convex limit, and refuses one byte more",
     () =>
       Effect.gen(function* () {
         const base = utf8Bytes(yield* encodeDocument(paragraphOf("x"))) - 1;
         const room = MAX_DOCUMENT_BYTES - base;
         const stored = yield* encodeDocument(paragraphOf("x".repeat(room)));
         expect(utf8Bytes(stored)).toBe(MAX_DOCUMENT_BYTES);
-        expect(getDocumentSize({ text: stored })).toBeLessThan(
-          CONVEX_DOCUMENT_LIMIT
-        );
-        expect(getDocumentSize({ text: `${stored} ` })).toBe(
-          CONVEX_DOCUMENT_LIMIT
-        );
+        const snapshotRow = (content: string) => ({
+          at: 0,
+          content,
+          documentId: "x".repeat(DOCUMENT_ID_LENGTH),
+          version: 0,
+        });
+        yield* ensureRowSize(snapshotRow(stored));
+        const rowTooLarge = yield* ensureRowSize(
+          snapshotRow(`${stored} `)
+        ).pipe(Effect.flip);
+        expect(rowTooLarge).toMatchObject({
+          _tag: "DocumentTooLarge",
+          bytes: CONVEX_DOCUMENT_LIMIT,
+          limit: CONVEX_DOCUMENT_LIMIT,
+        });
         const refused = yield* encodeDocument(
           paragraphOf("x".repeat(room + 1))
         ).pipe(Effect.flip);

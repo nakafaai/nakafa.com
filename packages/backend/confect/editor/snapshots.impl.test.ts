@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  CONVEX_DOCUMENT_LIMIT,
-  MAX_DOCUMENT_BYTES,
-} from "@repo/backend/confect/editor/size";
+import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import {
   batchText,
   denied,
@@ -242,7 +239,38 @@ describe("editor/snapshots save", () => {
   );
 
   it.effect(
-    "refuses a snapshot whose complete row reaches one MiB though its text fits, and keeps the stored snapshot",
+    "saves the largest text whose snapshot row stays under one MiB",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(documents.create, {
+          content: paragraphText("Soal"),
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+        });
+        yield* teacher.mutation(steps.submit, {
+          batch: yield* batchText(0, "rina", 3),
+          documentId: made.id,
+          slug: nf,
+        });
+        vi.setSystemTime(TENANCY_NOW + IDLE);
+        const overhead = utf8Bytes(paragraphText(""));
+        const saved = yield* teacher.mutation(snapshots.save, {
+          content: paragraphText("a".repeat(MAX_DOCUMENT_BYTES - overhead)),
+          documentId: made.id,
+          slug: nf,
+          version: 3,
+        });
+        expect(saved).toEqual({ version: 3 });
+        expect(
+          Arr.map(yield* fixture.run(snapshotRows), (row) => row.version)
+        ).toEqual([3]);
+      })
+  );
+
+  it.effect(
+    "refuses a snapshot one byte past the largest text its row holds, and keeps the stored snapshot",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -261,7 +289,9 @@ describe("editor/snapshots save", () => {
         const overhead = utf8Bytes(paragraphText(""));
         const tooLarge = yield* teacher
           .mutation(snapshots.save, {
-            content: paragraphText("a".repeat(MAX_DOCUMENT_BYTES - overhead)),
+            content: paragraphText(
+              "a".repeat(MAX_DOCUMENT_BYTES - overhead + 1)
+            ),
             documentId: made.id,
             slug: nf,
             version: 3,
@@ -269,7 +299,7 @@ describe("editor/snapshots save", () => {
           .pipe(Effect.flip);
         expect(tooLarge).toMatchObject({
           _tag: "DocumentTooLarge",
-          limit: CONVEX_DOCUMENT_LIMIT,
+          limit: MAX_DOCUMENT_BYTES,
         });
         expect(
           Arr.map(yield* fixture.run(snapshotRows), (row) => row.version)

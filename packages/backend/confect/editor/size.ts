@@ -10,19 +10,32 @@ import { getDocumentSize } from "convex/values";
 export const CONVEX_DOCUMENT_LIMIT = 1024 * 1024;
 
 /**
- * Largest JSON text of one document, in UTF-8 bytes (ADR 0028 Bounds). The text
- * is the one string field of its row. The installed `convex` package (1.46.0,
- * `getConvexSize` in `values/size.js`) costs a string at its UTF-8 bytes plus
- * two, and `getDocumentSize` counts the system fields of a stored row (`_id` and
- * `_creationTime`) when they are absent, as the types page says. So every byte of
- * text adds exactly one byte to the row, and the largest text is the limit, less
- * one byte because the row must stay below it, less the row of an empty text. This
- * bound covers the text alone. A snapshot row also holds its version, its time, and
- * its document ID, so `ensureRowSize` in `confect/editor/document.ts` checks the
- * complete row before the write (ADR 0028 and ADR 0031).
+ * The length of a Convex document ID. The installed `convex` package estimates the
+ * `_id` of a stored row at 38 bytes (`SYSTEM_FIELD_ID_ESTIMATE` in `values/size.js`):
+ * the key `_id`, its separator, and a string of 32 characters.
+ */
+export const DOCUMENT_ID_LENGTH = 32;
+
+/**
+ * Largest JSON text of one document, in UTF-8 bytes (ADR 0028 Bounds). The text is the
+ * one string field of a snapshot row, and the row must stay below `CONVEX_DOCUMENT_LIMIT`.
+ * The installed `convex` package (1.46.0, `getConvexSize` in `values/size.js`) costs a
+ * string at its UTF-8 bytes plus two, so every byte of text adds one byte to the row. The
+ * row also holds its time, its version, and its document ID, and `getDocumentSize` counts
+ * the system fields of a row that has no `_id` or `_creationTime`, as a snapshot row has
+ * when `ensureRowSize` checks it (`confect/editor/document.ts`). So the bound is the limit,
+ * less one byte because the row must stay below it, less the snapshot row of an empty
+ * text. The largest text that the editor admits is then one that the snapshot stores.
  */
 export const MAX_DOCUMENT_BYTES =
-  CONVEX_DOCUMENT_LIMIT - 1 - getDocumentSize({ text: "" });
+  CONVEX_DOCUMENT_LIMIT -
+  1 -
+  getDocumentSize({
+    at: 0,
+    content: "",
+    documentId: "x".repeat(DOCUMENT_ID_LENGTH),
+    version: 0,
+  });
 
 /** Most steps one call may send (ADR 0028 Bounds: 200 steps in one call). */
 export const MAX_BATCH_STEPS = 200;
