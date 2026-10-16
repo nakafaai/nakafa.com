@@ -1,6 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { SchoolFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
 import {
   Array as Arr,
@@ -37,9 +38,6 @@ const ProvisionArgs = Schema.fromJsonString(
     name: Schema.String,
     slug: Schema.String,
   })
-);
-const SchoolFile = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, slug: Schema.String })
 );
 
 /** A runtime whose backend folder sits under the test's own temporary root. */
@@ -81,7 +79,7 @@ describe("acceptance school", () => {
         expect(args.kind).toBe("school");
         const school = yield* fs
           .readFileString(`${root}/school.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(SchoolFile)));
+          .pipe(Effect.flatMap(Schema.decodeEffect(SchoolFixture)));
         expect(school).toEqual({ name: args.name, slug: args.slug });
         expect(school.slug).toMatch(SCHOOL_SLUG);
         expect((yield* fs.stat(`${root}/school.json`)).mode % 0o1000).toBe(

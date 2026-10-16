@@ -1,14 +1,11 @@
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { SchoolFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Crypto, Effect, FileSystem, Schema } from "effect";
 import { Hex } from "effect/encoding";
 
-/** The school that a browser test opens: its address and its name. */
-const SchoolFixture = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, slug: Schema.String })
-);
 /** One Convex function's arguments as the CLI takes them, JSON text. */
 const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 

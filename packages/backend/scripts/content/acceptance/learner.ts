@@ -5,6 +5,7 @@ import {
   acceptanceRuntimeError,
   retryFunctionTimeout,
 } from "@repo/backend/scripts/content/acceptance/error";
+import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { makeSignature } from "better-auth/crypto";
 import { Duration, Effect, FileSystem, Schema } from "effect";
@@ -13,10 +14,6 @@ import { Duration, Effect, FileSystem, Schema } from "effect";
 const SESSION_COOKIE = "better-auth.session_token";
 /** Outlives any browser suite run; the whole runtime is discarded after. */
 export const SESSION_LIFETIME = Duration.hours(24);
-/** The cookie file a browser test reads back before it signs in. */
-const SessionCookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
-);
 
 /**
  * Writes the session cookie of one session token, mode 600, for a browser test

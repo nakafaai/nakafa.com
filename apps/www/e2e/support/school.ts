@@ -1,16 +1,11 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { BrowserContext } from "@playwright/test";
+import {
+  SchoolFixture,
+  SessionCookie,
+} from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-
-/** A school that the local acceptance runtime opened for one browser test. */
-const SchoolFixture = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, slug: Schema.String })
-);
-/** The session cookie of an account that the local acceptance runtime signed in. */
-const SessionCookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
-);
 
 /**
  * Opens a new school in the running local acceptance runtime and reads its

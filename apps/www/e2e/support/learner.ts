@@ -1,11 +1,8 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { BrowserContext } from "@playwright/test";
+import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-
-const SessionCookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
-);
 
 /**
  * Signs a new synthetic learner into one browser context. The running local
