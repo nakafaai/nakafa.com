@@ -5,6 +5,15 @@ import {
   createAnonymousAnalyticsConsent,
   encodeAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
+import de from "@repo/internationalization/dictionaries/de.json" with {
+  type: "json",
+};
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
+import id from "@repo/internationalization/dictionaries/id.json" with {
+  type: "json",
+};
 import { Effect, pipe, Schema, String as Str } from "effect";
 import {
   ANSWER_MILLISECONDS,
@@ -70,9 +79,19 @@ const describePage = Effect.fn("NakafaE2E.describeUsageDataPage")(function* (
   return `Page ${page.url()}, signed in ${changes.signedIn}, learner read ${changes.hasAnswered(CURRENT_USER)}, choice read ${changes.hasAnswered(CURRENT_CHOICE)}, text "${pipe(text, Str.replaceAll(/\s+/gu, " "), Str.trim, Str.slice(0, 300))}".`;
 });
 
-/** The Decline button of the usage-data prompt. */
-const declineButton = (page: Page) =>
-  page.getByRole("button", { exact: true, name: "Decline" });
+/** What the usage-data prompt calls its Decline button, in each language of the site. */
+const DECLINE_LABELS = {
+  de: de.AnalyticsConsent.decline,
+  en: en.AnalyticsConsent.decline,
+  id: id.AnalyticsConsent.decline,
+};
+
+/** A language of the site whose usage-data prompt a test can decline. */
+export type DeclineLocale = keyof typeof DECLINE_LABELS;
+
+/** The Decline button of the usage-data prompt, in the language of the page. */
+const declineButton = (page: Page, locale: DeclineLocale) =>
+  page.getByRole("button", { exact: true, name: DECLINE_LABELS[locale] });
 
 /**
  * Presses Decline on the usage-data prompt of a signed-in learner and waits
@@ -80,13 +99,15 @@ const declineButton = (page: Page) =>
  * so the denial a suite seeds in the browser is not the choice the prompt
  * reads, and the first page of each learner shows it. The prompt hides at once,
  * before the server has the choice: a test that loads another page next waits
- * for the server with `declineUsageData`.
+ * for the server with `declineUsageData`. The page is the English one unless
+ * `locale` names another language of the site.
  */
 export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
   page: Page,
-  hasTouch: boolean
+  hasTouch: boolean,
+  locale: DeclineLocale = "en"
 ) {
-  const decline = declineButton(page);
+  const decline = declineButton(page, locale);
 
   yield* activate(decline, hasTouch);
   yield* Effect.promise(() =>
@@ -104,12 +125,13 @@ export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
  * the prompt would cover what the test presses at a phone's width.
  *
  * The prompt must show within the readiness bound of the suite, or the helper
- * fails with what the page showed.
+ * fails with what the page showed. The page is the English one unless `locale`
+ * names another language of the site.
  */
 export const declineUsageData = Effect.fn("NakafaE2E.declineUsageData")(
-  function* (page: Page, changes: Changes) {
+  function* (page: Page, changes: Changes, locale: DeclineLocale = "en") {
     yield* Effect.tryPromise(() =>
-      expect(declineButton(page)).toBeVisible({
+      expect(declineButton(page, locale)).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       })
     ).pipe(
@@ -120,7 +142,7 @@ export const declineUsageData = Effect.fn("NakafaE2E.declineUsageData")(
       )
     );
     const before = changes.sent;
-    yield* pressDecline(page, false);
+    yield* pressDecline(page, false, locale);
     yield* Effect.promise(async () => {
       await expect
         .poll(() => changes.took(SAVE_CHOICE), {

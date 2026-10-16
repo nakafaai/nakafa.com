@@ -1,10 +1,11 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { LEARNER_TEXT, PASTED } from "@/e2e/support/prose";
 import { MARKDOWN_MARKUP, NINA_SECTION } from "@/e2e/support/selector";
-import { composerOf, promptWith } from "@/e2e/support/sheet";
+import { promptWith } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** What a learner writes first: lines that Markdown would read as markup, then a pasted set of exercises. */

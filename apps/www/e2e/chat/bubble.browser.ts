@@ -89,6 +89,8 @@ const scrollsFilesFromTheFirst = async (page: Page) => {
     (await drawnRow(page, message)).evaluate((row) => {
       const group = row.querySelector('[data-slot="attachment-group"]');
       const title = row.querySelector('[data-slot="attachment-title"]');
+      // A title holds the start of the name, which gives way first, and its end.
+      const start = title?.firstElementChild;
       const cards = () =>
         Array.from(row.querySelectorAll('[data-slot="attachment"]'), (card) =>
           card.getBoundingClientRect()
@@ -104,8 +106,9 @@ const scrollsFilesFromTheFirst = async (page: Page) => {
         ),
         firstLeft: (cards().at(0)?.left ?? 0) - box.left,
         scrolls: group.scrollWidth > group.clientWidth,
-        // The name of a document is cut inside its card, never past it.
-        titleCut: title ? title.scrollWidth > title.clientWidth : null,
+        // The name of a document is cut at its start, inside its card, never
+        // past it.
+        titleCut: start ? start.scrollWidth > start.clientWidth : null,
         titlePast: title
           ? title.getBoundingClientRect().right - (cards().at(-1)?.right ?? 0)
           : null,

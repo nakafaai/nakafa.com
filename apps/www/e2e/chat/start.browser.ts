@@ -1,15 +1,16 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
+import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import {
   LESSON_PATH,
+  onThePage,
   openChatPage,
   runOnPage,
   START,
 } from "@/e2e/support/chat";
 import { BUBBLE } from "@/e2e/support/selector";
 import {
-  composerOf,
   inTheSheet,
   openSheet,
   promptWith,
@@ -82,15 +83,6 @@ const givesBackWhenRefused = (page: Page, scope: Locator, changes: Changes) =>
     await expect(composerOf(scope)).toHaveValue(PROMPT);
     await expect(page).not.toHaveURL(OPENED_CHAT);
   });
-
-/**
- * The part of a chat page that holds the conversation, beside the sidebar. The
- * new chat page and the page of the chat it opens share it, and the page the
- * learner left stays in it, hidden, until React renders that page again.
- * `promptWith` counts only the bubbles a reader can see, so the left page
- * never counts.
- */
-const onThePage = (page: Page) => page.locator("main main");
 
 /** Waits until the page of the chat that the new chat page moved to holds the prompt. */
 const pageOpensChat = (page: Page) => async () => {

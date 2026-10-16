@@ -47,11 +47,7 @@ async function UserLayoutContent(
     <ErrorBoundary fallback={null}>
       <main className="relative mx-auto min-h-[calc(100svh-4rem)] max-w-3xl px-6 py-10 sm:py-20 lg:min-h-svh">
         <div className="flex flex-col gap-6">
-          <UserHeader
-            initialOwnerEmail={account.authUser.email}
-            initialProfile={account.appUser}
-            userId={account.appUser._id}
-          />
+          <UserHeader initialAccount={account} username={username} />
           <UserTabs username={username} />
           {children}
         </div>
