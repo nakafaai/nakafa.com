@@ -2,6 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   PromptInputFileConstraintError,
   PromptInputFileSchema,
+  type PromptInputRefusal,
+  refusalsAfterSend,
   refusedFiles,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
@@ -219,5 +221,26 @@ describe("refused files", () => {
 
   it("refuses nothing when the pick refused nothing", () => {
     expect(refusedFiles([])).toEqual([]);
+  });
+});
+
+describe("refusals after a send", () => {
+  function refusal(id: string): PromptInputRefusal {
+    return { code: "accept", id, name: `${id}.docx` };
+  }
+
+  it("takes the refusals the send was picked with and keeps one picked while it was admitted", () => {
+    expect(
+      refusalsAfterSend(
+        [refusal("sent"), refusal("picked-later")],
+        [refusal("sent")]
+      )
+    ).toEqual([refusal("picked-later")]);
+  });
+
+  it("keeps every refusal when the send was picked with none", () => {
+    expect(refusalsAfterSend([refusal("picked-later")], [])).toEqual([
+      refusal("picked-later"),
+    ]);
   });
 });

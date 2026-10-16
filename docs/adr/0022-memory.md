@@ -810,18 +810,17 @@ nobody tries them again without a new reason.
   save that failed the editor opens again with the words the server never took,
   and the next close writes them, whatever the memory on the page shows. When
   the learner removes the title and every word of a stored memory and closes
-  the editor, the memory is deleted as the Delete button deletes it, with the
-  same Undo, because nothing written would leave the last words on the server
-  and in the list. A new memory that was never given a word creates nothing. A
-  new memory that the learner deletes or empties while its first save is on its
-  way has a row from the moment that save goes out, so it is deleted when the
-  server has stored it, with the same Undo. The Undo asks the server to put
-  the memory back (`restore`, below), so it gives back what the learner saw:
-  a situation keeps its end day and a memory Nina saved keeps Nina as its
-  author. Words that an open editor held and had not saved when the learner
-  deleted the memory were never part of it, so the Undo does not bring them
-  back. They open in the editor again only when the server does not delete the
-  memory. A paste that would take the Markdown past 2,000 characters is
+  the editor, nothing is written, because the server keeps the last words it was
+  handed: only a confirmed delete removes a memory. A new memory that was never
+  given a word creates nothing. A new memory that the learner deletes while its
+  first save is on its way has a row from the moment that save goes out, so it
+  is deleted when the server has stored it. No page offers an Undo: a delete
+  asks first, with the design system's `ResponsiveDialog`. The `restore`
+  mutation below stays only for an older web build that still calls it during
+  the deploy skew window, and it gives back what that build deleted. Words that
+  an open editor held and had not saved when the learner deleted the memory were
+  never part of it. They open in the editor again only when the server does not
+  delete the memory. A paste that would take the Markdown past 2,000 characters is
   refused as a whole, and the page says so. The panel beside the page never
   takes the room the list needs: the list keeps a card of 20rem between its
   padding, whatever width the learner dragged the panel to and whatever the

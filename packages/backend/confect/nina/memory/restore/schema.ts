@@ -3,8 +3,8 @@ import { NinaMemory } from "@repo/backend/confect/nina/memory.spec";
 import { Schema } from "effect";
 
 /**
- * A memory the learner just deleted, kept for the length of its Undo
- * (`MEMORY_UNDO`) so that `restore` gives back exactly what was deleted. It
+ * A memory the learner just deleted, kept for the length of the `restore`
+ * window (`MEMORY_UNDO`) so that `restore` gives back exactly what was deleted. It
  * holds every stored field of the memory as it was, sealed and never opened
  * (kind, end day, author, confirmation time, topics, words and title), so
  * nothing is computed again. `memoryId` is the id the memory had, which names

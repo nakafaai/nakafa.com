@@ -41,13 +41,12 @@ describe("toast", () => {
     expect(sonner.error).not.toHaveBeenCalled();
   });
 
-  it("returns the id of a plain toast, so that its action can close it later", () => {
-    const action = { label: "Undo", onClick: () => undefined };
+  it("passes a toast's action on, so the Toaster can show it as a button", () => {
+    const action = { label: "Retry", onClick: () => undefined };
 
-    const id = toast.message("Deleted.", { action, duration: 5000 });
+    toast.error("Could not save.", { action, duration: 5000 });
 
-    expect(id).toBe("shown");
-    expect(sonner).toHaveBeenCalledExactlyOnceWith("Deleted.", {
+    expect(sonner.error).toHaveBeenCalledExactlyOnceWith("Could not save.", {
       action,
       duration: 5000,
     });

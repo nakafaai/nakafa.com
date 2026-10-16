@@ -1,7 +1,7 @@
-import { Array as Arr, Record as Rec, Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema, String as Str } from "effect";
 
 /**
- * How many characters a toast title holds on one line at 320px.
+ * How many characters one line of a toast title holds at 320px.
  *
  * Sonner 2.0.8 (`dist/index.mjs`, `dist/styles.css`) sets the toast to the
  * viewport less `--mobile-offset`, which is 16px on each side below 600px. The
@@ -13,17 +13,21 @@ import { Array as Arr, Record as Rec, Schema } from "effect";
  * (`next/dist/server/capsize-font-metrics.json`, `xWidthAvg` over 2048 units):
  * 988 at weight 500, the title, and 978 at weight 400, the description. A
  * character is 13 × 988 / 2048 ≈ 6.27px in a title and 13 × 978 / 2048 ≈ 6.21px
- * in a description, so one line holds 231 / 6.27 ≈ 36.8 characters of a title.
+ * in a description. A title line holds 231 / 6.27 ≈ 36.8 characters, so 36
+ * whole characters, and a description line holds 231 / 6.21 ≈ 37.2, so 37.
+ *
+ * These are averages over the font, not a measured width, so a line of one
+ * text may break a little earlier than its count says. The copy test measures
+ * each message by whole words on these lines, which keeps that margin in the
+ * measure rather than in the copy.
  */
-export const TOAST_TITLE_CHARACTERS = 36;
-
-/**
- * How many characters a toast description holds in two lines at 320px: 231px
- * over 6.21px is 37.2 characters a line, so two lines hold 74. Word wrapping
- * moves a word that does not fit to the next line and can leave up to 12
- * characters empty, so the description keeps 12 characters back: 74 less 12.
- */
-export const TOAST_DESCRIPTION_CHARACTERS = 62;
+export const TOAST_TITLE_LINE_CHARACTERS = 36;
+/** How many characters one line of a toast description holds at 320px. See `TOAST_TITLE_LINE_CHARACTERS`. */
+export const TOAST_DESCRIPTION_LINE_CHARACTERS = 37;
+/** How many lines a toast title takes at most: one. */
+export const TOAST_TITLE_LINES = 1;
+/** How many lines a toast description takes at most: two, which the Toaster clamps. */
+export const TOAST_DESCRIPTION_LINES = 2;
 
 /** The copy of one toast as the dictionary holds it: a title, and a description when it has one. */
 const ToastCopyTextSchema = Schema.Struct({
@@ -31,11 +35,11 @@ const ToastCopyTextSchema = Schema.Struct({
   title: Schema.String,
 });
 
-/** One part of a toast copy that is longer than its line allows. */
+/** One part of a toast copy that takes more lines than the Toaster shows. */
 const OverlongToastPartSchema = Schema.Struct({
-  budget: Schema.Finite,
-  characters: Schema.Finite,
   key: Schema.optional(Schema.String),
+  limit: Schema.Finite,
+  lines: Schema.Finite,
   part: Schema.Literals(["description", "title"]),
 });
 type OverlongToastPart = typeof OverlongToastPartSchema.Type;
@@ -51,11 +55,35 @@ export function characterCount(text: string) {
   return Arr.fromIterable(graphemes.segment(text)).length;
 }
 
-/** The parts of one toast copy that its title or description line cannot hold. */
+/**
+ * How many lines a text takes when each line holds `width` characters and a
+ * word that does not fit moves to the next line. A word longer than a line
+ * breaks across lines of its own, and the word after it starts a new line.
+ */
+export function lineCount(text: string, width: number) {
+  // Only a plain space ends a word: a no-break space keeps a number and its unit on one line.
+  const words = Arr.filter(Str.split(text, " "), (word) => word !== "");
+  const layout = Arr.reduce(words, { filled: 0, lines: 0 }, (state, word) => {
+    const length = characterCount(word);
+    if (length > width) {
+      return { filled: width, lines: state.lines + Math.ceil(length / width) };
+    }
+    if (state.lines === 0) {
+      return { filled: length, lines: 1 };
+    }
+    if (state.filled + 1 + length <= width) {
+      return { filled: state.filled + 1 + length, lines: state.lines };
+    }
+    return { filled: length, lines: state.lines + 1 };
+  });
+  return layout.lines;
+}
+
+/** The parts of one toast copy that take more lines than the Toaster shows. */
 export function overlongToastParts(copy: typeof ToastCopyTextSchema.Type) {
   const title: OverlongToastPart = {
-    budget: TOAST_TITLE_CHARACTERS,
-    characters: characterCount(copy.title),
+    limit: TOAST_TITLE_LINES,
+    lines: lineCount(copy.title, TOAST_TITLE_LINE_CHARACTERS),
     part: "title",
   };
   const description: readonly OverlongToastPart[] =
@@ -63,18 +91,18 @@ export function overlongToastParts(copy: typeof ToastCopyTextSchema.Type) {
       ? []
       : [
           {
-            budget: TOAST_DESCRIPTION_CHARACTERS,
-            characters: characterCount(copy.description),
+            limit: TOAST_DESCRIPTION_LINES,
+            lines: lineCount(
+              copy.description,
+              TOAST_DESCRIPTION_LINE_CHARACTERS
+            ),
             part: "description",
           },
         ];
-  return Arr.filter(
-    [title, ...description],
-    (part) => part.characters > part.budget
-  );
+  return Arr.filter([title, ...description], (part) => part.lines > part.limit);
 }
 
-/** Every part of a toast namespace that a line cannot hold, named by the key of its copy. */
+/** Every part of a toast namespace that takes too many lines, named by the key of its copy. */
 export function overlongToastCopy(
   copies: Readonly<Record<string, typeof ToastCopyTextSchema.Type>>
 ) {

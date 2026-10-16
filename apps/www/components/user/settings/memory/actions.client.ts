@@ -75,16 +75,14 @@ export function useMemoryActions() {
 
   /**
    * Sends one change from an event. `done` gets what the server answered. When
-   * the change fails, the learner is told, in the words of the page unless the
-   * change brings its own `told`, and `failed` runs with whether they can try
-   * the change again.
+   * the change fails, the learner is told in the words of the page, and `failed`
+   * runs with whether they can try the change again.
    */
   function settle<A, E>(
     send: () => Promise<Result.Result<A, E>>,
     after: {
       done?: (answer: A) => void;
       failed?: (again: boolean) => void;
-      told?: typeof messages;
     } = {}
   ) {
     Effect.runFork(
@@ -92,9 +90,8 @@ export function useMemoryActions() {
         Effect.flatMap(Effect.fromResult),
         Effect.matchEffect({
           onFailure: (error) =>
-            Effect.flatMap(
-              reportMemoryFailure(error, after.told ?? messages),
-              (again) => Effect.sync(() => after.failed?.(again))
+            Effect.flatMap(reportMemoryFailure(error, messages), (again) =>
+              Effect.sync(() => after.failed?.(again))
             ),
           onSuccess: (answer) => Effect.sync(() => after.done?.(answer)),
         })

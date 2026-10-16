@@ -618,7 +618,7 @@
       "description": "Refreshing this page..."
     },
     "failure-account": {
-      "title": "This account cannot use Nina.",
+      "title": "This account cannot use Nina yet.",
       "description": "Sign in again or contact Nakafa support if it continues."
     },
     "failure-admission": {
@@ -626,8 +626,8 @@
       "description": "Please try again."
     },
     "failure-attachment-failed": {
-      "title": "Nina could not save the attachment.",
-      "description": "Please try uploading it again."
+      "title": "Nina could not read or save it.",
+      "description": "Please try uploading the attachment again."
     },
     "failure-attachment-invalid": {
       "title": "An attachment is no longer valid.",
@@ -639,14 +639,14 @@
     },
     "failure-attachment-size": {
       "title": "Documents are too large.",
-      "description": "Documents in one message can total at most {size, number} MiB."
+      "description": "Documents in one message can total at most {size, number} MiB."
     },
     "failure-authentication": {
       "title": "We could not verify your session.",
       "description": "Please try again."
     },
     "failure-busy": {
-      "title": "Nina is still answering.",
+      "title": "Nina is still replying in this chat.",
       "description": "Wait for the answer or stop it before you send again."
     },
     "failure-chat-access": {
@@ -662,7 +662,7 @@
       "description": "Nina could not load it for this chat. Please try again."
     },
     "failure-credits": {
-      "title": "You do not have enough credits.",
+      "title": "Not enough credits for this answer.",
       "description": "Check your allowance and next reset in subscription settings."
     },
     "failure-message-size": {
@@ -674,7 +674,7 @@
       "description": "You can start a new chat."
     },
     "failure-rate-limit": {
-      "title": "You have reached the message limit.",
+      "title": "Short-term message limit reached.",
       "description": "Wait a moment, then send your message again."
     },
     "failure-request-conflict": {
@@ -885,24 +885,6 @@
     "review-credits": "View credits",
     "sign-in-again": "Sign in again",
     "failures": {
-      "connection": "We could not confirm the request. Check your connection and try again.",
-      "credits": "You do not have enough credits for this response. Check your allowance and next reset in your subscription settings.",
-      "rate-limit": "You have reached the short-term message limit. Wait a moment, then send your message again.",
-      "session": "Your session has expired. Sign in again to continue.",
-      "account": "This account cannot use Nina right now. Sign in again or contact Nakafa support if the problem continues.",
-      "authentication": "We could not verify your session. Please try again.",
-      "missing-chat": "This chat is no longer available. You can start a new chat.",
-      "chat-access": "You do not have permission to send messages in this chat. Start your own chat to continue.",
-      "admission": "Nina could not save this request. Please try again.",
-      "busy": "Nina is still answering in this chat. Wait for the response or stop it before sending another message.",
-      "retry-unavailable": "This message can no longer be retried. Send your question as a new message.",
-      "request-conflict": "This submission has already been used for a different message. Send your question again as a new message.",
-      "context": "Nina could not load the learning material for this conversation. Please try again.",
-      "attachment-invalid": "An attachment is invalid or no longer available. Choose it again and check its file type and size.",
-      "attachment-limit": "You have reached the attachment limit. Send the files already uploaded or wait before uploading more.",
-      "attachment-size": "Documents in one message can total at most {size, number}\u00a0MiB",
-      "message-size": "This message is too long for Nina to read in one turn. Shorten it, or send the rest in a new message.",
-      "attachment-failed": "Nina could not read or save the attachment. Please try uploading it again.",
       "provider-busy": "The AI service is handling too many requests right now. Wait a moment, then try again.",
       "provider-unavailable": "The AI service is temporarily unavailable. Please try again shortly.",
       "service-configuration": "Nina cannot access the AI service right now. Please try again later. If this continues, contact Nakafa support.",

@@ -38,12 +38,94 @@ export function AiChatPersistedError() {
 }
 
 /**
+ * The title and the description of a send failure: the copy of its toast, so
+ * the sentence the learner reads in the chat is the one the toast shows.
+ */
+function ToastCopyText({
+  message,
+}: {
+  message: (typeof ninaFailureFeedback)[keyof typeof ninaFailureFeedback]["message"];
+}) {
+  const tToast = useTranslations("Toast");
+  return (
+    <>
+      <p className="font-medium">
+        {tToast(`failure-${message}.title`, ninaFailureLimits)}
+      </p>
+      <p>{tToast(`failure-${message}.description`, ninaFailureLimits)}</p>
+    </>
+  );
+}
+
+/**
+ * The way out of a failure that the learner can take: retry it, review credits,
+ * sign in again, or start a new chat. Retry needs a chat the learner can write to.
+ */
+function FailureActions({
+  action,
+  canWrite,
+  disabled,
+  retry,
+}: {
+  action: string;
+  canWrite: boolean;
+  disabled: boolean;
+  retry: () => void;
+}) {
+  const t = useTranslations("Ai");
+  const authNavigation = useCurrentAuthNavigation();
+  return (
+    <>
+      {canWrite && action === "retry" ? (
+        <Button
+          disabled={disabled}
+          onClick={() => retry()}
+          size="sm"
+          variant="outline"
+        >
+          {t("retry")}
+        </Button>
+      ) : null}
+      {action === "credits" ? (
+        <Button
+          nativeButton={false}
+          render={<NavigationLink href="/user/settings/subscriptions" />}
+          size="sm"
+          variant="outline"
+        >
+          {t("review-credits")}
+        </Button>
+      ) : null}
+      {action === "sign-in" ? (
+        <Button
+          nativeButton={false}
+          render={<NavigationLink {...authNavigation.linkProps} />}
+          size="sm"
+          variant="outline"
+        >
+          {t("sign-in-again")}
+        </Button>
+      ) : null}
+      {action === "new-chat" ? (
+        <Button
+          nativeButton={false}
+          render={<NavigationLink href="/chat" />}
+          size="sm"
+          variant="outline"
+        >
+          {t("new-chat")}
+        </Button>
+      ) : null}
+    </>
+  );
+}
+
+/**
  * Admission failures and failed turns without an Agent assistant message.
  * The transcript says whether the failed turn already shows its own error.
  */
 export function AiChatError({ failed }: { failed: boolean }) {
   const t = useTranslations("Ai");
-  const authNavigation = useCurrentAuthNavigation();
   const submissionFailure = useChatStore((state) => state.submissionFailure);
   const stopFailure = useChatStore((state) => state.stopFailure);
   const turn = useChat((state) => state.turn);
@@ -55,59 +137,33 @@ export function AiChatError({ failed }: { failed: boolean }) {
   if (!error && (turn?.state.status !== "failed" || failed)) {
     return null;
   }
-  const feedback = error
-    ? ninaFailureFeedback[error.code]
-    : ninaResponseFeedback[
-        turn?.state.status === "failed"
-          ? (turn.state.reason ?? "unknown")
-          : "unknown"
-      ];
+  // A send failure and a persisted response failure have their own tables, so
+  // each message key is read only from the table that holds it.
+  const admission = error ? ninaFailureFeedback[error.code] : null;
+  const response =
+    ninaResponseFeedback[
+      turn?.state.status === "failed"
+        ? (turn.state.reason ?? "unknown")
+        : "unknown"
+    ];
+  const feedback = admission ?? response;
   return (
     <MessageScrollerItem messageId="failure">
       <Alert variant="destructive">
         <HugeIcons icon={Alert02Icon} />
         <AlertDescription>
-          <p>{t(`failures.${feedback.message}`, ninaFailureLimits)}</p>
-          {canWrite && feedback.action === "retry" ? (
-            <Button
-              disabled={busy || isLoading}
-              onClick={() => retry()}
-              size="sm"
-              variant="outline"
-            >
-              {t("retry")}
-            </Button>
-          ) : null}
-          {feedback.action === "credits" ? (
-            <Button
-              nativeButton={false}
-              render={<NavigationLink href="/user/settings/subscriptions" />}
-              size="sm"
-              variant="outline"
-            >
-              {t("review-credits")}
-            </Button>
-          ) : null}
-          {feedback.action === "sign-in" ? (
-            <Button
-              nativeButton={false}
-              render={<NavigationLink {...authNavigation.linkProps} />}
-              size="sm"
-              variant="outline"
-            >
-              {t("sign-in-again")}
-            </Button>
-          ) : null}
-          {feedback.action === "new-chat" ? (
-            <Button
-              nativeButton={false}
-              render={<NavigationLink href="/chat" />}
-              size="sm"
-              variant="outline"
-            >
-              {t("new-chat")}
-            </Button>
-          ) : null}
+          {/* A failed send shows the same title and description as its toast, one owner of the copy. */}
+          {admission ? (
+            <ToastCopyText message={admission.message} />
+          ) : (
+            <p>{t(`failures.${response.message}`)}</p>
+          )}
+          <FailureActions
+            action={feedback.action}
+            canWrite={canWrite}
+            disabled={busy || isLoading}
+            retry={retry}
+          />
         </AlertDescription>
       </Alert>
     </MessageScrollerItem>

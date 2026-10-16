@@ -626,7 +626,7 @@
       "description": "Coba lagi."
     },
     "failure-attachment-failed": {
-      "title": "Nina belum bisa menyimpan lampiran.",
+      "title": "Lampiran belum bisa diproses.",
       "description": "Coba unggah lagi."
     },
     "failure-attachment-invalid": {
@@ -639,7 +639,7 @@
     },
     "failure-attachment-size": {
       "title": "Dokumen terlalu besar.",
-      "description": "Dokumen dalam satu pesan total maksimal {size, number} MiB."
+      "description": "Dokumen dalam satu pesan total maksimal {size, number} MiB."
     },
     "failure-authentication": {
       "title": "Sesimu belum bisa diverifikasi.",
@@ -662,7 +662,7 @@
       "description": "Nina belum bisa memuat materinya untuk chat ini. Coba lagi."
     },
     "failure-credits": {
-      "title": "Kredit belum cukup.",
+      "title": "Kredit belum cukup untuk jawaban.",
       "description": "Cek jatah dan reset berikutnya di pengaturan langganan."
     },
     "failure-message-size": {
@@ -885,24 +885,6 @@
     "review-credits": "Lihat kredit",
     "sign-in-again": "Masuk kembali",
     "failures": {
-      "connection": "Permintaan belum bisa dikonfirmasi. Periksa koneksimu, lalu coba lagi.",
-      "credits": "Kreditmu belum cukup untuk jawaban ini. Lihat sisa kredit dan jadwal reset di pengaturan langganan.",
-      "rate-limit": "Batas pengiriman pesan sementara sudah tercapai. Tunggu sebentar, lalu kirim lagi.",
-      "session": "Sesi masukmu sudah berakhir. Masuk kembali untuk melanjutkan.",
-      "account": "Akun ini belum bisa menggunakan Nina. Masuk kembali atau hubungi dukungan Nakafa jika masalah berlanjut.",
-      "authentication": "Sesi masukmu belum bisa diverifikasi. Silakan coba lagi.",
-      "missing-chat": "Chat ini sudah tidak tersedia. Kamu bisa memulai chat baru.",
-      "chat-access": "Kamu tidak punya akses untuk mengirim pesan di chat ini. Mulai chat milikmu sendiri untuk melanjutkan.",
-      "admission": "Nina belum bisa menyimpan permintaan ini. Silakan coba lagi.",
-      "busy": "Nina masih menjawab di chat ini. Tunggu jawabannya selesai atau hentikan sebelum mengirim pesan berikutnya.",
-      "retry-unavailable": "Pesan ini sudah tidak bisa dicoba ulang. Kirim pertanyaanmu sebagai pesan baru.",
-      "request-conflict": "Pengiriman ini sudah digunakan untuk pesan lain. Kirim pertanyaanmu lagi sebagai pesan baru.",
-      "context": "Nina belum bisa memuat materi belajar untuk percakapan ini. Silakan coba lagi.",
-      "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
-      "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",
-      "attachment-size": "Total ukuran dokumen dalam satu pesan paling banyak {size, number}\u00a0MiB",
-      "message-size": "Pesan ini terlalu panjang untuk dibaca Nina dalam satu giliran. Persingkat, atau kirim sisanya dalam pesan baru.",
-      "attachment-failed": "Nina belum bisa membaca atau menyimpan lampiran. Coba unggah lagi.",
       "provider-busy": "Layanan AI sedang menerima terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.",
       "provider-unavailable": "Layanan AI sedang mengalami gangguan sementara. Coba lagi sebentar lagi.",
       "service-configuration": "Nina belum bisa mengakses layanan AI. Coba lagi nanti. Jika masalah berlanjut, hubungi dukungan Nakafa.",

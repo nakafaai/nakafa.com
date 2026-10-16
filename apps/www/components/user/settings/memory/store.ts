@@ -48,9 +48,9 @@ const MemoryStateSchema = Schema.Struct({
    * The words an editor still held when the learner deleted its memory, by the
    * id of the memory. The editor does not save them. They come back in an
    * editor when the server does not delete the memory, and each deletion keeps
-   * its own. They go when the server has deleted the memory, because from then
-   * on the server keeps the memory for `MEMORY_UNDO` and the words were never part
-   * of it, or when an editor opens on the memory again.
+   * its own. They go once the server has deleted the memory, because the words
+   * were never part of what the server stores, or when an editor opens on the
+   * memory again.
    */
   withheld: Schema.Record(Schema.String, DraftSchema),
 });

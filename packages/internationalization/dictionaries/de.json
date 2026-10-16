@@ -618,7 +618,7 @@
       "description": "Die Seite wird neu geladen..."
     },
     "failure-account": {
-      "title": "Dieses Konto kann Nina nicht nutzen.",
+      "title": "Konto kann Nina gerade nicht nutzen.",
       "description": "Melde dich erneut an oder kontaktiere den Nakafa-Support."
     },
     "failure-admission": {
@@ -626,27 +626,27 @@
       "description": "Bitte versuche es erneut."
     },
     "failure-attachment-failed": {
-      "title": "Anhang nicht gespeichert.",
+      "title": "Anhang nicht lesen oder speichern.",
       "description": "Bitte lade ihn erneut hoch."
     },
     "failure-attachment-invalid": {
-      "title": "Ein Anhang ist ungültig.",
+      "title": "Ein Anhang ist ungültig oder fehlt.",
       "description": "Wähle ihn erneut aus und prüfe Dateityp und Größe."
     },
     "failure-attachment-limit": {
       "title": "Anhang-Limit erreicht.",
-      "description": "Sende die hochgeladenen Dateien oder warte kurz."
+      "description": "Sende die hochgeladenen Dateien oder warte, bevor du mehr hochlädst."
     },
     "failure-attachment-size": {
       "title": "Dokumente sind zu groß.",
-      "description": "Zusammen höchstens {size, number} MiB pro Nachricht."
+      "description": "Zusammen höchstens {size, number} MiB pro Nachricht."
     },
     "failure-authentication": {
       "title": "Sitzung konnte nicht geprüft werden.",
       "description": "Bitte versuche es erneut."
     },
     "failure-busy": {
-      "title": "Nina antwortet hier noch.",
+      "title": "Nina antwortet noch in diesem Chat.",
       "description": "Warte auf die Antwort oder stoppe sie vor dem Senden."
     },
     "failure-chat-access": {
@@ -662,8 +662,8 @@
       "description": "Nina konnte es hier nicht laden. Versuche es erneut."
     },
     "failure-credits": {
-      "title": "Nicht genug Credits.",
-      "description": "Prüfe dein Kontingent und den Reset in den Einstellungen."
+      "title": "Nicht genug Credits für die Antwort.",
+      "description": "Prüfe dein Kontingent und den Reset in den Abo-Einstellungen."
     },
     "failure-message-size": {
       "title": "Zu lang für Nina in einem Durchgang.",
@@ -674,7 +674,7 @@
       "description": "Du kannst einen neuen Chat starten."
     },
     "failure-rate-limit": {
-      "title": "Nachrichtenlimit erreicht.",
+      "title": "Kurzes Nachrichtenlimit erreicht.",
       "description": "Warte kurz und sende deine Nachricht dann erneut."
     },
     "failure-request-conflict": {
@@ -885,24 +885,6 @@
     "review-credits": "Credits ansehen",
     "sign-in-again": "Erneut anmelden",
     "failures": {
-      "connection": "Die Anfrage konnte nicht bestätigt werden. Prüfe deine Verbindung und versuche es erneut.",
-      "credits": "Deine Credits reichen für diese Antwort nicht aus. In deinen Abonnement-Einstellungen siehst du dein Guthaben und den nächsten Rücksetztermin.",
-      "rate-limit": "Du hast das vorübergehende Nachrichtenlimit erreicht. Warte kurz und sende deine Nachricht dann erneut.",
-      "session": "Deine Sitzung ist abgelaufen. Melde dich erneut an, um fortzufahren.",
-      "account": "Dieses Konto kann Nina gerade nicht nutzen. Melde dich erneut an oder kontaktiere den Nakafa-Support, falls das Problem bestehen bleibt.",
-      "authentication": "Deine Sitzung konnte nicht überprüft werden. Bitte versuche es erneut.",
-      "missing-chat": "Dieser Chat ist nicht mehr verfügbar. Du kannst einen neuen Chat starten.",
-      "chat-access": "Du hast keine Berechtigung, in diesem Chat Nachrichten zu senden. Starte einen eigenen Chat, um fortzufahren.",
-      "admission": "Nina konnte diese Anfrage nicht speichern. Bitte versuche es erneut.",
-      "busy": "Nina antwortet noch in diesem Chat. Warte auf die Antwort oder stoppe sie, bevor du eine weitere Nachricht sendest.",
-      "retry-unavailable": "Diese Nachricht kann nicht erneut verarbeitet werden. Sende deine Frage als neue Nachricht.",
-      "request-conflict": "Diese Übermittlung wurde bereits für eine andere Nachricht verwendet. Sende deine Frage als neue Nachricht.",
-      "context": "Nina konnte das Lernmaterial für dieses Gespräch nicht laden. Bitte versuche es erneut.",
-      "attachment-invalid": "Ein Anhang ist ungültig oder nicht mehr verfügbar. Wähle die Datei erneut aus und prüfe ihren Typ und ihre Größe.",
-      "attachment-limit": "Du hast das Limit für Anhänge erreicht. Sende die bereits hochgeladenen Dateien oder warte, bevor du weitere hochlädst.",
-      "attachment-size": "Die Dokumente einer Nachricht dürfen zusammen höchstens {size, number}\u00a0MiB groß sein",
-      "message-size": "Diese Nachricht ist zu lang, damit Nina sie in einem Durchgang lesen kann. Kürze sie oder sende den Rest in einer neuen Nachricht.",
-      "attachment-failed": "Nina konnte den Anhang nicht lesen oder speichern. Lade ihn bitte erneut hoch.",
       "provider-busy": "Der KI-Dienst erhält gerade zu viele Anfragen. Warte kurz und versuche es dann erneut.",
       "provider-unavailable": "Der KI-Dienst ist vorübergehend nicht verfügbar. Versuche es in Kürze erneut.",
       "service-configuration": "Nina kann gerade nicht auf den KI-Dienst zugreifen. Versuche es später erneut. Falls das Problem bestehen bleibt, kontaktiere den Nakafa-Support.",

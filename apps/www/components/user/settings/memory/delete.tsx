@@ -1,27 +1,23 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@repo/design-system/components/ui/alert-dialog";
+import { Button } from "@repo/design-system/components/ui/button";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useTranslations } from "next-intl";
+import type { ComponentProps } from "react";
 
 /**
  * Asks the learner to confirm that a memory goes. Only the confirmation reaches
  * `onConfirm`, which removes the memory at once; the dialog only closes itself
- * when the learner cancels or confirms.
+ * when the learner cancels or confirms. It is the one confirm pattern of the
+ * app's deletions: a dialog on desktop and a drawer on a phone.
  */
 export function MemoryDeleteDialog({
+  finalFocus,
   onConfirm,
   onOpenChange,
   open,
 }: {
+  finalFocus?: ComponentProps<typeof ResponsiveDialog>["finalFocus"];
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;
   open: boolean;
@@ -29,21 +25,22 @@ export function MemoryDeleteDialog({
   const t = useTranslations("Memory");
   const common = useTranslations("Common");
   return (
-    <AlertDialog onOpenChange={onOpenChange} open={open}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("delete-title")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("delete-description")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{common("cancel")}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} variant="destructive">
+    <ResponsiveDialog
+      description={t("delete-description")}
+      finalFocus={finalFocus}
+      footer={
+        <>
+          <Button onClick={() => onOpenChange(false)} variant="outline">
+            {common("cancel")}
+          </Button>
+          <Button onClick={onConfirm} variant="destructive">
             {t("delete")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </>
+      }
+      open={open}
+      setOpen={onOpenChange}
+      title={t("delete-title")}
+    />
   );
 }

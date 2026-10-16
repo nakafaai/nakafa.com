@@ -1,5 +1,5 @@
 import type { JSONValue } from "ai";
-import { Array as Arr, Effect, Result, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Result, Schema } from "effect";
 
 /** JSON value typed exactly as the AI SDK's `JSONValue`. */
 const JsonValueSchema: Schema.Codec<JSONValue> = Schema.suspend(() =>
@@ -178,4 +178,17 @@ export function refusedFiles(
   return Arr.flatMap(rejections, (rejection) =>
     Arr.map(rejection.files, (name) => ({ code: rejection.code, name }))
   );
+}
+
+/**
+ * The refused files a composer keeps when a send takes `sent`: every refusal
+ * except the ones the send was picked with. A refusal picked while the send was
+ * admitted belongs to the next message, so it stays until that message is sent.
+ */
+export function refusalsAfterSend(
+  refusals: readonly PromptInputRefusal[],
+  sent: readonly PromptInputRefusal[]
+) {
+  const sentIds = HashSet.fromIterable(Arr.map(sent, (refusal) => refusal.id));
+  return Arr.filter(refusals, (refusal) => !HashSet.has(sentIds, refusal.id));
 }

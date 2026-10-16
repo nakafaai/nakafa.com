@@ -3,6 +3,7 @@ import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-muta
 import {
   type PromptInputFile,
   type PromptInputRefusal,
+  refusalsAfterSend,
   refusedFiles,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
@@ -146,7 +147,11 @@ export function usePromptInputFiles({
     },
     [removeLocal]
   );
-  const clearRefusals = useCallback(() => setRefusals([]), []);
+  const dismissRefusals = useCallback(
+    (sent: readonly PromptInputRefusal[]) =>
+      setRefusals((current) => refusalsAfterSend(current, sent)),
+    []
+  );
   const clear = useCallback(() => {
     fileCountRef.current = 0;
     fileIdsRef.current = HashSet.empty();
@@ -183,7 +188,7 @@ export function usePromptInputFiles({
       files,
       refusals,
       add,
-      clearRefusals,
+      dismissRefusals,
       remove,
       clear,
       openFileDialog,
@@ -193,7 +198,7 @@ export function usePromptInputFiles({
       files,
       refusals,
       add,
-      clearRefusals,
+      dismissRefusals,
       remove,
       clear,
       openFileDialog,

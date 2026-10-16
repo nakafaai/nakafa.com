@@ -9,7 +9,6 @@ import {
   memoryRow,
   opened,
   openMemoryPage,
-  RESTORE_MUTATION,
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -64,7 +63,7 @@ const editsBeforeTheAnswer = (page: Page, changes: Changes) =>
     }
   );
 
-/** A deleted memory leaves the list at once. */
+/** A memory the learner confirms the deletion of leaves the list at once. */
 const removesBeforeTheAnswer = (page: Page, changes: Changes) =>
   beforeTheAnswer(
     changes,
@@ -73,6 +72,10 @@ const removesBeforeTheAnswer = (page: Page, changes: Changes) =>
 
       await row.hover();
       await row.getByRole("button", { name: "Delete memory" }).click();
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { exact: true, name: "Delete" })
+        .click();
     }),
     async () => {
       await expect(memoryRow(page, REWRITTEN)).toHaveCount(0);
@@ -150,8 +153,7 @@ test.describe("Memory changes at 1440px", () => {
  * With the editor open beside the list, the learner writes a letter and
  * deletes the memory from its row before the editor has saved it. The editor
  * closes, the deletion is the only change sent, and nothing says the memory no
- * longer exists. An Undo then puts the memory back as the server stored it,
- * which never held the letter.
+ * longer exists. The letter the editor had not saved is never written.
  */
 const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
   function* (page: Page, baseURL: string) {
@@ -176,6 +178,10 @@ const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
       const remove = row.getByRole("button", { name: "Delete memory" });
       await page.keyboard.type("!");
       await remove.click();
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { exact: true, name: "Delete" })
+        .click();
       await expect(editorOf(page)).toHaveCount(0);
       await expect(row).toHaveCount(0);
       await saved(changes, before);
@@ -183,18 +189,6 @@ const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
       expect(changes.sent - before).toBe(1);
       await expect(page.getByText(MISSING)).toHaveCount(0);
       await expect(page.getByText(EMPTY)).toBeVisible();
-
-      // Undo puts back the words the server had stored, and not the letter the
-      // editor had not saved. The count starts again here, so the wait is for
-      // the Undo's own change and not for the deletion before it.
-      const undone = changes.sent;
-      await page
-        .locator("[data-sonner-toast]")
-        .getByRole("button", { name: "Undo" })
-        .click();
-      await expect(row).toBeVisible();
-      await saved(changes, undone);
-      expect(changes.argumentsOf(RESTORE_MUTATION)).toHaveLength(1);
       await expect(memoryRow(page, "!")).toHaveCount(0);
     });
   }

@@ -22,9 +22,10 @@ export type ToastCopy = typeof ToastCopySchema.Type;
 
 /**
  * The one way the app shows a toast. Its title takes one line and its
- * description at most two, which the Toaster clamps, and every word of it is a
- * dictionary message: the source check rejects literal text, and the copy test
- * measures every message of the `Toast` namespace.
+ * description at most two: the Toaster clamps both to those lines (see
+ * `components/ui/sonner.tsx`). Every word of a toast is a dictionary message,
+ * which the source check enforces, and the copy test measures every message
+ * of the `Toast` namespace at 320px.
  */
 export const toast = {
   /** Shows a toast that reports a failure. */
@@ -32,8 +33,6 @@ export const toast = {
     sonner.error(title, options),
   /** Shows a toast that reports information. */
   info: (title: string, options?: ToastOptions) => sonner.info(title, options),
-  /** Shows a plain toast, such as one that offers an action. Returns its id. */
-  message: (title: string, options?: ToastOptions) => sonner(title, options),
   /** Shows a toast that reports success. */
   success: (title: string, options?: ToastOptions) =>
     sonner.success(title, options),

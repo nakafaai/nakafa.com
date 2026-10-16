@@ -155,7 +155,8 @@ const edit = FunctionImpl.make(
 
 /**
  * Deletes one memory of the learner, with its keys, and keeps what it deleted
- * for the length of the Undo (`keepRestore`). The learner's portrait may hold a
+ * for the window in which `restore` can give it back (`keepRestore`). The
+ * learner's portrait may hold a
  * sentence that came from it, so the portrait loses its text at once and is
  * built again from scratch (`requestPortrait`).
  */
@@ -267,7 +268,7 @@ const expire = FunctionImpl.make(
   })
 );
 
-/** Deletes the restore record whose Undo ended, if it is still there. */
+/** Deletes the restore record whose window ended, if it is still there. */
 const purge = FunctionImpl.make(
   schema,
   spec,

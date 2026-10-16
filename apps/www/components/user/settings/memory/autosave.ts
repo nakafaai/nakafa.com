@@ -37,11 +37,11 @@ type Send = Pick<
  * new memory is alone on its way, because every later write names the memory
  * it stored. Nothing is written for a draft that says nothing, for one the
  * server was already handed, or after the learner deleted the memory. When the
- * editor closes on a memory the learner emptied, the memory is deleted as the
- * Delete button deletes it, because the server would otherwise keep the last
- * words the learner no longer sees. The row of a new memory shows from the
- * moment its first save goes out, so a memory the learner deleted or emptied
- * while that save was on its way is deleted when the server has stored it. A
+ * editor closes on a memory the learner emptied, nothing is written, so the
+ * server keeps the words it was last handed: only a confirmed delete removes a
+ * memory. The row of a new memory shows from the moment its first save goes
+ * out, so a memory the learner deleted while that save was on its way is
+ * deleted when the server has stored it. A
  * write that failed is sent again with the next one. When it
  * was the newest, the words the editor holds now come back in the editor if
  * the learner closed it, though they may be newer than the words that failed,
@@ -197,20 +197,12 @@ export function createAutosave(
     },
     /**
      * The editor closes. What the server was not handed goes out as `write`
-     * sends it. A memory the learner emptied, title and words, is deleted as
-     * the Delete button deletes it: nothing written for it
-     * would leave its last words on the server and in the list, though the
-     * editor showed none. A new memory that was never given a word, and is not
-     * on its way, creates nothing.
+     * sends it. A draft that says nothing is never written, so a memory the
+     * learner emptied keeps the words the server holds: the Delete button is
+     * the only way to remove a memory, and it asks first. A new memory that was
+     * never given a word, and is not on its way, creates nothing.
      */
-    close(send: Send, shown: Memory | null) {
-      const { adding, memory: stored, stopped, wanted } = MutableRef.get(state);
-
-      if (isBlank(wanted) && !stopped && (adding || stored !== null)) {
-        discard(send, shown);
-        return;
-      }
-
+    close(send: Send) {
       write(send);
     },
     discard,

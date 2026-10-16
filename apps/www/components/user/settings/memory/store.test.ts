@@ -231,7 +231,7 @@ describe("memory page store", () => {
     expect(fresh.getState()).toMatchObject({ deleted: first.id, open: true });
   });
 
-  it("keeps the words an editor held for each deleted memory, so deleting another memory takes nothing from an Undo still offered", () => {
+  it("keeps the words an editor held for each deleted memory, so deleting another memory takes nothing from a delete the server may refuse", () => {
     const store = createMemoryStore();
 
     store.getState().openEdit(first);
@@ -241,7 +241,7 @@ describe("memory page store", () => {
     expect(store.getState().withheld).toEqual({ [first.id]: grade });
   });
 
-  it("lets go of the words kept for one memory when its Undo took them or its offer ended, and keeps the others", () => {
+  it("lets go of the words kept for one memory when the server deleted it, and keeps the others", () => {
     const store = createMemoryStore();
 
     store.getState().withhold(first.id, grade);
@@ -342,8 +342,8 @@ describe("memory page store", () => {
       session: 2,
     });
 
-    // An Undo pressed after the deletion writes a new memory in the opening
-    // that the deletion left.
+    // A failed save given back after the deletion opens a new memory in the
+    // opening that the deletion left.
     store.getState().reopen(2, plan, null);
     expect(store.getState()).toMatchObject({
       draft: plan,

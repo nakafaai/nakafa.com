@@ -15,7 +15,7 @@ import {
   reportNinaFailure,
   requireNinaConnection,
 } from "@/components/ai/feedback";
-import { aiTranslator, NO_BREAK } from "@/test/ai";
+import { NO_BREAK, toastTranslator } from "@/test/ai";
 
 vi.mock("@repo/analytics/posthog/browser", () => ({
   captureException: vi.fn(),
@@ -170,17 +170,18 @@ describe("the sentences of the failure table", () => {
     (locale) =>
       Effect.gen(function* () {
         const onError = vi.fn();
-        const t = yield* aiTranslator(locale, onError);
+        const t = yield* toastTranslator(locale, onError);
 
         for (const { message } of Rec.values(ninaFailureFeedback)) {
           // A sentence that needs a number nobody passed fails to format.
-          t(`failures.${message}`, ninaFailureLimits);
+          t(`failure-${message}.title`, ninaFailureLimits);
+          t(`failure-${message}.description`, ninaFailureLimits);
         }
 
         expect(onError).not.toHaveBeenCalled();
-        expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
-          String(NINA_DOCUMENT_MEBIBYTES)
-        );
+        expect(
+          t("failure-attachment-size.description", ninaFailureLimits)
+        ).toContain(String(NINA_DOCUMENT_MEBIBYTES));
       })
   );
 
@@ -188,19 +189,19 @@ describe("the sentences of the failure table", () => {
     "keeps each number with its unit or its noun on one line, in %s",
     (locale) =>
       Effect.gen(function* () {
-        const t = yield* aiTranslator(locale);
+        const t = yield* toastTranslator(locale);
         const size = new Intl.NumberFormat(locale).format(
           NINA_DOCUMENT_MEBIBYTES
+        );
+        const sentence = t(
+          "failure-attachment-size.description",
+          ninaFailureLimits
         );
 
         // The learner reads "10 MiB" as one word, so a line never ends between
         // the number and its unit.
-        expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
-          `${size}${NO_BREAK}`
-        );
-        expect(t("failures.attachment-size", ninaFailureLimits)).not.toContain(
-          `${size} `
-        );
+        expect(sentence).toContain(`${size}${NO_BREAK}`);
+        expect(sentence).not.toContain(`${size} `);
       })
   );
 });

@@ -164,9 +164,10 @@ export const ninaFailureFeedback = {
 >;
 
 /**
- * The numbers the sentences of `Ai.failures` name, from the limits the code
- * checks. Every place that words a failure passes them, so a sentence never
- * says a limit the code does not check.
+ * The numbers the copy of a failure names, from the limits the code checks.
+ * Every place that words a failure passes them, so a sentence never says a
+ * limit the code does not check. An admission failure's copy is the toast copy
+ * of `Toast.failure-*`, and a persisted response failure reads `Ai.failures`.
  */
 export const ninaFailureLimits = {
   size: NINA_DOCUMENT_MEBIBYTES,

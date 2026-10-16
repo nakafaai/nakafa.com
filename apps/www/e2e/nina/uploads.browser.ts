@@ -33,7 +33,7 @@ import {
 } from "@/e2e/support/upload";
 
 /** What the pages tell the learner when the server calls an upload invalid. */
-const INVALID = en.Ai.failures["attachment-invalid"];
+const INVALID = en.Toast["failure-attachment-invalid"].title;
 /** The failure the server names when an upload is gone or is not the learner's. */
 const INVALID_UPLOAD = {
   _tag: "NinaUploadError",

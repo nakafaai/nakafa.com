@@ -116,6 +116,7 @@ export function PromptInput({
     const form = event.currentTarget;
     const text = readPromptInputText(form);
     const submittedFiles = [...files];
+    const submittedRefusals = attachments.refusals;
 
     // Admission may commit after Activity hides this form. Let settlement clear
     // accepted files so returning to the draft cannot resend old attachments.
@@ -131,8 +132,9 @@ export function PromptInput({
           for (const file of submittedFiles) {
             attachments.remove(file.id);
           }
-          // The refused files of the last pick leave with the message they were picked for.
-          attachments.clearRefusals();
+          // Only the refusals this message was picked with leave with it. A file
+          // picked while the send was admitted is refused for the next message.
+          attachments.dismissRefusals(submittedRefusals);
         },
         text,
       })

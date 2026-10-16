@@ -37,7 +37,7 @@ import { useTranslations } from "next-intl";
 export function reportFailure(message: string, detail: string) {
   const tToast = useTranslations("Toast");
   toast.error(message, { description: detail });
-  toast.message(tToast("deleted.title"), {
+  toast.info(tToast("deleted.title"), {
     action: { label: tToast("undo.title"), onClick: () => undefined },
     duration: 5000,
   });
@@ -84,7 +84,7 @@ toast.error(...args);`),
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useTranslations } from "next-intl";
 const tToast = useTranslations("Toast");
-toast.message(tToast("deleted.title"), {
+toast.info(tToast("deleted.title"), {
   action: { label: "Undo", onClick: () => undefined },
   description: "Try again.",
 });`),
@@ -103,6 +103,19 @@ const t = useTranslations("Ai");
 toast.error(t("failures.connection"));
 toast.error(useTranslations("Common")("action-error.title"));`),
         [`${COMPONENT}: ${NAMESPACE_RULE}.`, `${COMPONENT}: ${NAMESPACE_RULE}.`]
+      );
+    })
+  );
+
+  it.effect("rejects a key that a translator of another namespace picks", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect(`
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { useTranslations } from "next-intl";
+const t = useTranslations("Ai");
+toast.error(t(code));`),
+        [`${COMPONENT}: ${NAMESPACE_RULE}.`]
       );
     })
   );
@@ -132,7 +145,7 @@ toast.error(useTranslations("Common")("action-error.title"));`),
   );
 
   it.effect(
-    "judges a translator by its namespace, awaited or not, and leaves plain values alone",
+    "judges a translator by its namespace, awaited or not, and a written value by its text",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -146,7 +159,7 @@ toast.error(tToast("a.title"));
 toast.error(label);
 toast.error(tUnnamed("a.title"));
 toast.error();`),
-          [`${COMPONENT}: ${NAMESPACE_RULE}.`]
+          [`${COMPONENT}: ${COPY_RULE}.`, `${COMPONENT}: ${NAMESPACE_RULE}.`]
         );
       })
   );
@@ -166,7 +179,75 @@ toast.error(("Could not save."));`),
   );
 
   it.effect(
-    "accepts a fallback, a shorthand option, a computed option, and a spread option",
+    "rejects literal text behind a type assertion, satisfies, a non-null assertion, or a method call",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+import { toast } from "@repo/design-system/lib/toast/notify";
+toast.error("Saved." as string);
+toast.error("Saved." satisfies string);
+toast.error("Saved."!);
+toast.error("Saved.".trim());`),
+          [
+            `${COMPONENT}: ${COPY_RULE}.`,
+            `${COMPONENT}: ${COPY_RULE}.`,
+            `${COMPONENT}: ${COPY_RULE}.`,
+            `${COMPONENT}: ${COPY_RULE}.`,
+          ]
+        );
+      })
+  );
+
+  it.effect(
+    "rejects a variable that holds literal text, and a shorthand option that does",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { useTranslations } from "next-intl";
+const tToast = useTranslations("Toast");
+const label = "Could not save.";
+const description = "Try again.";
+toast.error(label);
+toast.error(tToast("a.title"), { description });
+toast.error(label.trim());`),
+          [
+            `${COMPONENT}: ${COPY_RULE}.`,
+            `${COMPONENT}: ${COPY_RULE}.`,
+            `${COMPONENT}: ${COPY_RULE}.`,
+          ]
+        );
+      })
+  );
+
+  it.effect(
+    "judges a translator bound to two namespaces in one module as untrusted",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { useTranslations } from "next-intl";
+function saved() {
+  const tToast = useTranslations("Toast");
+  toast.success(tToast("saved.title"));
+}
+function failed() {
+  const tToast = useTranslations("Ai");
+  toast.error(tToast("failures.connection"));
+}`),
+          [
+            `${COMPONENT}: ${NAMESPACE_RULE}.`,
+            `${COMPONENT}: ${NAMESPACE_RULE}.`,
+          ]
+        );
+      })
+  );
+
+  it.effect(
+    "accepts a fallback, a shorthand option that is a value, a computed option, and a spread option",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -180,6 +261,81 @@ toast.error(message ?? tToast("a.title"), {
   ...rest,
 });`),
           []
+        );
+      })
+  );
+
+  it.effect(
+    "rejects a copy object that a caller passes on with written text",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { useTranslations } from "next-intl";
+const tToast = useTranslations("Toast");
+reportFailure(error, { title: "Could not save." });
+reportFailure(error, { title: tToast("failure.title"), description: tToast("failure.description") });`),
+          [`${COMPONENT}: ${COPY_RULE}.`]
+        );
+      })
+  );
+
+  it.effect(
+    "leaves a title and a description that a module handling no copy passes on, such as a schema annotation, alone",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+const schema = Schema.String.annotations({ title: "Equation", description: "Solves an equation." });`),
+          []
+        );
+      })
+  );
+
+  it.effect("rejects a copy object typed ToastCopy with written text", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* inspect(`
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+const copy: ToastCopy = { title: "Saved." };
+const other = { title: "Saved." } satisfies ToastCopy;`),
+        [`${COMPONENT}: ${COPY_RULE}.`, `${COMPONENT}: ${COPY_RULE}.`]
+      );
+    })
+  );
+
+  it.effect(
+    "reads the copy of each branch of a condition, and the copy object a ToastCopy annotation gives",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { useTranslations } from "next-intl";
+const tToast = useTranslations("Toast");
+const tAi = useTranslations("Ai");
+toast.success(done ? tToast("saved.title") : tAi("failures.connection"));
+toast.success(done ? tToast("saved.title") : "Saved.");`),
+          [`${COMPONENT}: ${NAMESPACE_RULE}.`, `${COMPONENT}: ${COPY_RULE}.`]
+        );
+      })
+  );
+
+  it.effect(
+    "judges a ToastCopy value only where it is an object of copy, and reads a spread as no copy",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+let unset: ToastCopy;
+const made: ToastCopy = copyFor(error);
+const merged: ToastCopy = { ...base, title: "Saved." };
+const other: ToastCopy = { detail: "Saved." };
+const computed: ToastCopy = { [key]: "Saved." };
+const asserted = copyFor(error) as ToastCopy;`),
+          [`${COMPONENT}: ${COPY_RULE}.`]
         );
       })
   );

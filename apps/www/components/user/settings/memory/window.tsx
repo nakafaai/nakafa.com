@@ -4,7 +4,7 @@ import { useCallbackRef } from "@mantine/hooks";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   type CustomContainerComponentProps,
   type CustomItemComponentProps,
@@ -44,8 +44,14 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   const { remove } = useMemoryActions();
   // The memory a row asked to delete, until the learner confirms or cancels.
   const [pending, setPending] = useState<Memory | null>(null);
+  const frame = useRef<HTMLDivElement>(null);
   // One function for every row, so a row renders again only when its memory changes.
   const askRow = useCallbackRef((memory: Memory) => setPending(memory));
+  // The row the learner deleted leaves the page while the question closes, and
+  // the focus was in the question, so the question hands the focus to the list.
+  const focusList = useCallbackRef(
+    () => frame.current?.querySelector("ul") ?? null
+  );
 
   /** Removes the memory the learner confirmed, and closes the question. */
   function confirmDelete() {
@@ -56,7 +62,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   }
 
   return (
-    <>
+    <div ref={frame}>
       {Arr.length(memories) < MEMORY_PAGE ? (
         <MemoryItems>
           {Arr.map(memories, (memory, index) => (
@@ -79,6 +85,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
         </WindowVirtualizer>
       )}
       <MemoryDeleteDialog
+        finalFocus={focusList}
         onConfirm={confirmDelete}
         onOpenChange={(open) => {
           if (!open) {
@@ -87,7 +94,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
         }}
         open={pending !== null}
       />
-    </>
+    </div>
   );
 }
 

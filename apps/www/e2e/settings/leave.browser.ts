@@ -31,10 +31,10 @@ const startsEmpty = (page: Page, changes: Changes) =>
 
 /**
  * The learner removes every word and the title of a stored memory and closes
- * the editor. The memory goes as the Delete button sends it, with the same
- * toast and its Undo, which brings the words and the title back. A new memory
- * that was never given a word creates nothing, and a memory the learner emptied
- * and then deleted from its row is deleted once.
+ * the editor. Nothing is written for the emptied draft, so the memory keeps the
+ * words the server holds: only a confirmed delete removes it. A new memory that
+ * was never given a word creates nothing, and a memory the learner empties and
+ * then deletes from its row is deleted once, after the question.
  */
 const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
   page: Page,
@@ -46,7 +46,6 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
   yield* writeWorst(page, changes, { text: WORDS, title: TITLE });
   yield* Effect.promise(async () => {
     const row = memoryRow(page, TITLE);
-    const toast = page.locator(TOAST);
 
     await row.getByText(TITLE).click();
     await opened(page, WORDS);
@@ -58,16 +57,10 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
     await page.getByRole("button", { exact: true, name: "Close" }).click();
 
     await expect(editorOf(page)).toHaveCount(0);
-    await expect(row).toHaveCount(0);
-    await expect(page.getByText(EMPTY)).toBeVisible();
-    await expect(toast.getByText("Memory deleted")).toBeVisible();
-    await saved(changes, before);
-
-    const undone = changes.sent;
-
-    await toast.getByRole("button", { name: "Undo" }).click();
+    // The emptied draft is not written, so the row keeps the saved memory.
     await expect(row).toBeVisible();
-    await saved(changes, undone);
+    await page.waitForTimeout(1500);
+    expect(changes.sent).toBe(before);
     await reloadUntil(page, () => expect(row).toBeVisible({ timeout: 3000 }));
 
     // A new memory that was never given a word is never stored.
@@ -93,12 +86,15 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
     await titleOf(page).fill("");
     await row.hover();
     await row.getByRole("button", { name: "Delete memory" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { exact: true, name: "Delete" })
+      .click();
     await expect(editorOf(page)).toHaveCount(0);
     await expect(row).toHaveCount(0);
     await saved(changes, once);
     await page.waitForTimeout(1500);
     expect(changes.sent - once).toBe(1);
-    await expect(toast.getByText("Memory deleted")).toHaveCount(1);
     await expect(page.getByText(MISSING)).toHaveCount(0);
   });
 });
@@ -106,7 +102,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
 test.describe("Memory editor closed on a memory the learner emptied", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
 
-  test("deletes the memory with an Undo, and creates nothing for a memory with no word", async ({
+  test("keeps the memory the learner emptied, and creates nothing for a memory with no word", async ({
     baseURL,
     page,
   }) => {
@@ -124,7 +120,8 @@ test.describe("Memory editor closed on a memory the learner emptied", () => {
 /**
  * The learner types a first word and deletes the new memory while the server is
  * still storing it. Its row showed from the moment the save went out, so it is
- * deleted as a stored memory is: a toast, and an Undo that brings it back.
+ * deleted as a stored memory is, once the server has stored it and the learner
+ * has confirmed the delete.
  */
 const verifyFirstSave = Effect.fn("NakafaE2E.verifyFirstSave")(function* (
   page: Page,
@@ -135,7 +132,6 @@ const verifyFirstSave = Effect.fn("NakafaE2E.verifyFirstSave")(function* (
   yield* startsEmpty(page, changes);
   yield* Effect.promise(async () => {
     const row = memoryRow(page, WORDS);
-    const toast = page.locator(TOAST);
 
     await page.getByRole("button", { name: "Add memory" }).click();
     await opened(page, "");
@@ -148,27 +144,25 @@ const verifyFirstSave = Effect.fn("NakafaE2E.verifyFirstSave")(function* (
     await expect.poll(() => changes.sent).toBeGreaterThan(before);
     await expect(row).toBeVisible();
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { exact: true, name: "Delete" })
+      .click();
     await expect(editorOf(page)).toHaveCount(0);
-    await expect(toast.getByText("Memory deleted")).toHaveCount(0);
 
     changes.release();
-    await expect(toast.getByText("Memory deleted")).toBeVisible();
     await expect(row).toHaveCount(0);
     await expect(page.getByText(EMPTY)).toBeVisible();
-
-    const undone = changes.sent;
-
-    await toast.getByRole("button", { name: "Undo" }).click();
-    await expect(row).toBeVisible();
-    await saved(changes, undone);
-    await reloadUntil(page, () => expect(row).toBeVisible({ timeout: 3000 }));
+    await reloadUntil(page, () =>
+      expect(page.getByText(EMPTY)).toBeVisible({ timeout: 3000 })
+    );
   });
 });
 
 test.describe("Memory deleted while its first save is on its way", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
 
-  test("is deleted with an Undo, as a stored memory is", async ({
+  test("is deleted once the server stores it, after the learner confirms the delete", async ({
     baseURL,
     page,
   }) => {

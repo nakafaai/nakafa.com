@@ -24,10 +24,9 @@ export function ShareButton() {
   function handleShare() {
     const url = `${getAppUrl()}${pathname}`;
     clipboard.copy(url);
-    toast.success(tToast("link-copied.title"), {
-      description: url,
-      position: "bottom-center",
-    });
+    // The link is on the clipboard, so the toast says only that it was copied:
+    // a URL is not a dictionary message, and a long one takes more than two lines.
+    toast.success(tToast("link-copied.title"), { position: "bottom-center" });
   }
 
   return (

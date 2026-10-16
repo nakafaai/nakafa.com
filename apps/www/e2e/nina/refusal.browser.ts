@@ -1,5 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
+import de from "@repo/internationalization/dictionaries/de.json" with {
+  type: "json",
+};
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
@@ -193,11 +196,15 @@ const readCover = (notice: HTMLElement, names: readonly string[]) => {
 
 /** The refusals whose German sentence the sheet places, as the server names them. */
 const GERMAN_REFUSALS = [
-  { failure: NO_CREDITS, reason: "credits", sentence: "Deine Credits reichen" },
+  {
+    failure: NO_CREDITS,
+    reason: "credits",
+    sentence: de.Toast["failure-credits"].title,
+  },
   {
     failure: TOO_LONG,
     reason: "its length",
-    sentence: "Diese Nachricht ist zu lang, damit Nina sie",
+    sentence: de.Toast["failure-message-size"].title,
   },
 ];
 
