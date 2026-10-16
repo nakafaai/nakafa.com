@@ -1,3 +1,4 @@
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Array as Arr, Schema } from "effect";
 // @vitest-environment node
 
@@ -65,6 +66,7 @@ it("drains all four deletion workflows and their delayed reconciliation before r
       credits: 0,
       creditsResetAt: NOW,
       email: "removed@example.com",
+      mascot: MASCOT_CODE,
       name: "Removed user",
       plan: "free",
     });

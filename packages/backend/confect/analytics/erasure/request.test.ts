@@ -8,6 +8,7 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { getFunctionName } from "convex/server";
 import { convexTest } from "convex-test";
 import { Data, Effect } from "effect";
@@ -33,6 +34,7 @@ describe("analytics erasure request", () => {
             credits: 0,
             creditsResetAt: 0,
             email: "erasure-request@example.com",
+            mascot: MASCOT_CODE,
             name: "Erasure Request",
             plan: "free",
           })
@@ -63,6 +65,7 @@ describe("analytics erasure request", () => {
             credits: 0,
             creditsResetAt: 0,
             email: "durable-erasure-request@example.com",
+            mascot: MASCOT_CODE,
             name: "Durable Erasure Request",
             plan: "free",
           })
@@ -106,6 +109,7 @@ describe("analytics erasure request", () => {
             credits: 0,
             creditsResetAt: 0,
             email: "failed-erasure-request@example.com",
+            mascot: MASCOT_CODE,
             name: "Failed Erasure Request",
             plan: "free",
           })

@@ -10,6 +10,7 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Effect, Layer } from "effect";
@@ -35,6 +36,7 @@ async function setup(linked = false) {
       credits: 0,
       creditsResetAt: 0,
       email: "sync@example.com",
+      mascot: MASCOT_CODE,
       name: "Sync User",
       plan: "free",
     });

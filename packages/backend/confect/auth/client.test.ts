@@ -11,6 +11,7 @@ import { accountMascot } from "@repo/backend/confect/users/mascot";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { signInWithGoogle } from "@repo/backend/test/auth";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { encode } from "@repo/mascot/code";
 import { getFunctionName, makeFunctionReference } from "convex/server";
 import { Array as Arr, Duration } from "effect";
@@ -138,6 +139,7 @@ describe("auth/client", () => {
         credits: 0,
         creditsResetAt: 0,
         email: "holder@example.com",
+        mascot: MASCOT_CODE,
         name: "Holder",
         plan: "free",
         username: "syntheticlearner",
