@@ -2,7 +2,12 @@ import { expect, type Locator, test } from "@playwright/test";
 import { Clock, Effect, Schema } from "effect";
 import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
-import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
+import {
+  LESSON_PATH,
+  onThePage,
+  openChatPage,
+  runOnPage,
+} from "@/e2e/support/chat";
 import { CONVERSATION } from "@/e2e/support/query";
 import { inTheSheet, openFromHistory, openSheet } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -83,7 +88,7 @@ test.describe("Enter while Nina answers, at 1440px", () => {
         changes.rewrite(CONVERSATION, running(now));
 
         yield* Effect.promise(() => page.goto(`/en/chat/${started.chatId}`));
-        yield* enterKeepsTheWords(page.locator("main main"), changes);
+        yield* enterKeepsTheWords(onThePage(page), changes);
 
         yield* Effect.promise(() => page.goto(LESSON_PATH));
         yield* openSheet(page);

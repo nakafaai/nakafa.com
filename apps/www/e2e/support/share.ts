@@ -14,7 +14,7 @@ import {
   live,
   saved,
 } from "@/e2e/support/changes";
-import { openChatPage } from "@/e2e/support/chat";
+import { onThePage, openChatPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 
@@ -39,9 +39,7 @@ const chatMenu = (page: Page) =>
 
 /** The box where the learner writes to Nina, which only the owner has. */
 const composer = (page: Page) =>
-  page
-    .locator("main main")
-    .getByRole("textbox", { name: "Ask Nina anything..." });
+  onThePage(page).getByRole("textbox", { name: "Ask Nina anything..." });
 
 /** The prompt a chat shows as a message. */
 export const promptOf = (page: Page, text: string) =>

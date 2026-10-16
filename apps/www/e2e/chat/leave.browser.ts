@@ -5,7 +5,13 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect } from "effect";
 import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
-import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import {
+  OPENED_CHAT,
+  onThePage,
+  openChatPage,
+  runOnPage,
+  START,
+} from "@/e2e/support/chat";
 import { sidebarRows } from "@/e2e/support/rows";
 import {
   inTheSheet,
@@ -25,13 +31,8 @@ const FIRST = {
 };
 /** What the learner adds to a chat that has answered. */
 const FOLLOW_UP = "And what about the tangent?";
-/** The page of a chat, where the new chat opens once the learner asks for it. */
-const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 const NOTICE = en.Ai["admitted-elsewhere"];
 const OPEN = en.Ai["open-chat"];
-
-/** The page of the new chat: the chat page holds its conversation in the main pane. */
-const onThePage = (page: Page) => page.locator("main main");
 
 /**
  * Writes the prompt in the new chat and presses Enter. The server holds the

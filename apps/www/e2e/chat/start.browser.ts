@@ -5,6 +5,7 @@ import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import {
   LESSON_PATH,
+  OPENED_CHAT,
   onThePage,
   openChatPage,
   runOnPage,
@@ -37,8 +38,6 @@ const PROMPT = "Why is the derivative of sine the cosine?";
 const CONTEXT = "high-school~functions";
 /** The Convex name of `nina.messages.page`, the query that reads the messages of a chat. */
 const MESSAGES = "nina/messages:page";
-/** The address of a chat that the page moves to once its first prompt is admitted. */
-const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 
 /** The prompt a surface shows as a message: the composer holds the same words as text. */
 const promptIn = (scope: Locator) => promptWith(scope, PROMPT);
@@ -272,7 +271,10 @@ const refusesTheChatDraft = Effect.fn("NakafaE2E.refusesTheChatDraft")(
       await composerOf(scope).press("Enter");
 
       await expect(promptIn(scope)).toHaveCount(0);
-      await expect(composerOf(scope)).toBeEnabled();
+      // The composer is never disabled. The send button holds the next send back.
+      await expect(
+        scope.getByRole("button", { name: "Send message" })
+      ).toBeEnabled();
       await expect(page).not.toHaveURL(OPENED_CHAT);
 
       await page.evaluate(() => {

@@ -3,7 +3,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { onThePage, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { CONVERSATION } from "@/e2e/support/query";
 import { sidebarRows } from "@/e2e/support/rows";
@@ -78,9 +78,9 @@ test.describe("A chat that cannot be read, at 1440px", () => {
         changes.recoverQuery();
         yield* Effect.promise(async () => {
           await page.getByRole("button", { name: RETRY }).click();
-          await expect(
-            promptWith(page.locator("main main"), PROMPT)
-          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+          await expect(promptWith(onThePage(page), PROMPT)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
           await expect(page.getByText(FAILED_TITLE)).toHaveCount(0);
         });
       })
@@ -177,9 +177,9 @@ test.describe("A chat that cannot be read, at 1440px", () => {
             new RegExp(`/en/chat/${started.chatId}$`),
             { timeout: readinessTimeoutMilliseconds }
           );
-          await expect(
-            promptWith(page.locator("main main"), PROMPT)
-          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+          await expect(promptWith(onThePage(page), PROMPT)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
           await expect(page.getByText(FAILED_TITLE)).toHaveCount(0);
         });
       })
