@@ -16,8 +16,13 @@ import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** A picture of the site that loads, and an address that answers with no picture. */
+/** A picture of the site that loads, and an address that holds no picture. */
 const LOADING_PHOTO = "/logo.png";
+/**
+ * An address that holds no picture. The site answers any `.png` address with
+ * its social image (`apps/www/lib/og/route.ts`), so the photo test answers this
+ * one with a 404 itself, as a real missing image answers.
+ */
 const MISSING_PHOTO = "/animal-photo-that-does-not-exist.png";
 /** The names an account can hold from its provider: sixty letters with no space, one letter, and another script. */
 const SIXTY_LETTERS = "Maria".repeat(12);
@@ -123,6 +128,11 @@ test("a photo shows once the learner chooses it, and a photo that fails keeps th
         await expect(animalOf(avatar)).toHaveCount(0);
       });
 
+      yield* Effect.promise(() =>
+        page.route(`**${MISSING_PHOTO}`, (route) =>
+          route.fulfill({ status: 404 })
+        )
+      );
       yield* setProfile(learner.authId, {
         image: `${origin}${MISSING_PHOTO}`,
       });
@@ -141,11 +151,12 @@ test("a comment by a learner without a photo shows the animal of the learner", a
   baseURL,
   page,
 }) => {
-  const text = "Pertanyaan tentang fungsi invers.";
   const placeholder = app.Comments["add-comment-placeholder"];
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      yield* openChatPage(page, origin);
+      const { learner } = yield* openChatPage(page, origin);
+      // The text names the learner, so no comment of another learner on the same lesson has it.
+      const text = `Pertanyaan tentang fungsi invers dari ${learner.username}.`;
       // The account button holds the animal of the learner before the lesson opens.
       const account = yield* Effect.promise(() =>
         drawnAnimal(sidebarAvatar(page))
@@ -166,8 +177,7 @@ test("a comment by a learner without a photo shows the animal of the learner", a
 
         const comment = page
           .locator("div[id]")
-          .filter({ has: page.getByText(text, { exact: true }) })
-          .last();
+          .filter({ has: page.getByText(text, { exact: true }) });
         const drawn = await drawnAnimal(comment.locator(AUTHOR_AVATAR));
         expect(drawn.markup).toBe(account.markup);
       });
