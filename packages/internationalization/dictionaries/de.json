@@ -453,6 +453,7 @@
     "sign-in-title": "Bei Nakafa anmelden",
     "sign-in-description": "Damit dein Fortschritt gespeichert bleibt.",
     "logout": "Abmelden",
+    "logout-error": "Abmelden ist fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
     "login": "Anmelden",
     "login-cta-title": "Weiterlernen",
     "login-cta-description": "Melde dich an, um deinen Fortschritt in Lerninhalten und Probetests zu speichern.",

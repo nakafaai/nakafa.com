@@ -453,6 +453,7 @@
     "sign-in-title": "Masuk ke Nakafa",
     "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",
+    "logout-error": "Kamu belum bisa keluar. Periksa koneksimu, lalu coba lagi.",
     "login": "Masuk",
     "login-cta-title": "Lanjutkan belajarmu",
     "login-cta-description": "Masuk untuk menyimpan progres materi dan try out.",

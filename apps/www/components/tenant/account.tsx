@@ -13,20 +13,27 @@ import {
 import { SidebarMenuButton } from "@repo/design-system/components/ui/sidebar-menu";
 import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr, Effect, Result } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition } from "react";
+import { signOutSchoolAccount } from "@/components/tenant/account.client";
 import { changeSchoolLanguage } from "@/components/tenant/language.client";
-import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 
-/** Signs out, then returns to the school address, which shows the sign-in surface. */
-const signOut = Effect.gen(function* () {
-  const result = yield* Effect.result(signOutAccountBrowserIdentity());
-  if (Result.isSuccess(result)) {
-    window.location.assign("/");
-  }
-});
+/**
+ * Signs out, then returns to the school address, which shows the sign-in
+ * surface. A failed sign-out shows its message and keeps the page.
+ */
+function signOut(failureMessage: string) {
+  Effect.runFork(
+    Effect.gen(function* () {
+      const destination = yield* signOutSchoolAccount(failureMessage);
+      if (destination === "home") {
+        window.location.assign("/");
+      }
+    })
+  );
+}
 
 /**
  * The account menu of a school. Its links open the pages of the Nakafa account
@@ -99,7 +106,7 @@ export function TenantAccountMenu() {
               </a>
             }
           />
-          <DropdownMenuItem onClick={() => Effect.runFork(signOut)}>
+          <DropdownMenuItem onClick={() => signOut(t("Auth.logout-error"))}>
             {t("Auth.logout")}
           </DropdownMenuItem>
         </DropdownMenuGroup>

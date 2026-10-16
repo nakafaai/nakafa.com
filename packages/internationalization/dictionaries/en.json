@@ -453,6 +453,7 @@
     "sign-in-title": "Sign in to Nakafa",
     "sign-in-description": "So your progress stays saved.",
     "logout": "Logout",
+    "logout-error": "We could not sign you out. Check your connection, then try again.",
     "login": "Login",
     "login-cta-title": "Continue learning",
     "login-cta-description": "Log in to save progress in materials and tryouts.",
