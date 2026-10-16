@@ -34,9 +34,9 @@ import {
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
 const UnitCircleStage = dynamic(
   () =>
-    import(
-      "@repo/design-system/components/contents/mathematics/unit-circle/stage"
-    ).then(({ UnitCircleStage }) => UnitCircleStage),
+    import("@repo/design-system/components/three/unit-circle").then(
+      ({ UnitCircleStage }) => UnitCircleStage
+    ),
   { loading: ScenePlaceholder }
 );
 
