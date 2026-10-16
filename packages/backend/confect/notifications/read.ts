@@ -16,8 +16,10 @@ const READ_PAGE_SIZE = 50;
 /**
  * Marks the unread rows of one Person on one page, with the moment of the read,
  * and schedules a run for the rest when rows follow. A read row keeps its first
- * moment, so a repeated page writes nothing new. A read-all request marks no rows
- * itself: every page, the first included, is a scheduled run.
+ * moment, so a repeated page writes nothing new. A row created at or after the
+ * moment of the request, such as an invitation written after it or a resend, stays
+ * unread: the request marks only the rows that existed when it was made. A read-all
+ * request marks no rows itself: every page, the first included, is a scheduled run.
  */
 export const markPersonRead = Effect.fn("notifications.read.person")(function* (
   personId: GenericId.GenericId<"tenantPeople">,
@@ -33,7 +35,10 @@ export const markPersonRead = Effect.fn("notifications.read.person")(function* (
     .pipe(Effect.orDie);
   const writer = yield* DatabaseWriter;
   yield* Effect.forEach(
-    Arr.filter(page.page, (row) => row.readAt === undefined),
+    Arr.filter(
+      page.page,
+      (row) => row.readAt === undefined && row.createdAt < readAt
+    ),
     (row) =>
       writer
         .table("notifications")

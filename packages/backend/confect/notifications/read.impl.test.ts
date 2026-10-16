@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
 import {
   addPerson,
   claim,
@@ -139,6 +141,48 @@ describe("notifications/inbox readAll", () => {
         expect(Arr.every(afterRest, (row) => row.readAt === NOW + 4000)).toBe(
           true
         );
+      })
+  );
+
+  it.effect(
+    "leaves unread a row that a later invitation writes, when the request's run runs after it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const ana = yield* fixture.account(
+          "ana",
+          "ana@harapan.example.test",
+          true
+        );
+        yield* inviteAt(
+          fixture,
+          "nf",
+          fixture.invited,
+          "ana@harapan.example.test"
+        );
+        yield* consumeSchool(fixture, fixture.tenants.nf);
+        yield* claim(fixture, fixture.invited, ana.userId);
+        vi.setSystemTime(NOW + 4000);
+        yield* ana.client.mutation(readAll, {});
+        const user = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("users").get(ana.userId).pipe(Effect.orDie)
+          )
+        );
+        yield* fixture.run(releaseTenantPeople(user, NOW + 5000));
+        vi.setSystemTime(NOW + 6000);
+        yield* inviteAt(
+          fixture,
+          "nf",
+          fixture.invited,
+          "satu@harapan.example.test"
+        );
+        yield* consumeSchool(fixture, fixture.tenants.nf);
+        yield* runReadRuns(fixture);
+        const rows = yield* storedRows(fixture);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.createdAt).toBeGreaterThan(NOW + 4000);
+        expect(rows[0]?.readAt).toBeUndefined();
       })
   );
 
