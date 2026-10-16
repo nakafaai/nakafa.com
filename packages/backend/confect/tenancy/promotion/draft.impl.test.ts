@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { COHORT_LIMIT } from "@repo/backend/confect/tenancy/cohort";
 import type { PromotionDestination } from "@repo/backend/confect/tenancy/promotion/schema";
 import {
   approvedPromotion,
@@ -441,7 +442,10 @@ describe("tenancy/promotion draft plan", () => {
           attempt([...base.targets, { grade: 8, name: "8a" }]),
           attempt([{ grade: 8, name: "8c" }], sourcesToTakenName),
           attempt(
-            Arr.makeBy(201, (index) => ({ grade: 1, name: `Kelas ${index}` }))
+            Arr.makeBy(COHORT_LIMIT + 1, (index) => ({
+              grade: 1,
+              name: `Kelas ${index}`,
+            }))
           ),
         ]);
         expect(refusals).toMatchObject([

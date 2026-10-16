@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { placementOf } from "@repo/backend/confect/tenancy/authority";
+import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
 import {
   approvedPromotion,
   cohort,
@@ -109,10 +110,11 @@ describe("tenancy/promotion place refusals", () => {
         const fixture = yield* tenancyFixture;
         const s = yield* scenario(fixture);
         const promotionId = yield* approvedPromotion(fixture, s);
+        // The scenario places the second student once, so these archived placements reach the limit exactly.
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
             Effect.forEach(
-              Arr.range(1, 63),
+              Arr.range(1, PERSON_PLACEMENT_LIMIT - 1),
               (index) =>
                 Effect.gen(function* () {
                   const periodId = yield* writer.table("tenantPeriods").insert({
