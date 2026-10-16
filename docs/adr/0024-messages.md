@@ -312,7 +312,9 @@ skeleton of `message` that is valid for the component:
   a tool-result part keeps both with no `output`, because the Agent's validator
   rejects `null`, so the `tool` flag, the pairing of calls with results
   (`filterOutOrphanedToolMessages`) and `excludeToolMessages` keep working;
-- the sealed bytes sit in `message.providerOptions.nakafa.sealed`.
+- the sealed bytes sit in `message.providerOptions.nakafa.sealed` as bytes,
+  which the component's options validator (`v.any()`) holds, so a sealed row
+  stays about as long as the plain row.
 
 `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and `error` are
 not passed to `addMessages`, so the row has none. A field of that list that a row

@@ -19,15 +19,7 @@ import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexToJson, type JSONValue, jsonToConvex, v } from "convex/values";
 import { parse } from "convex-helpers/validators";
-import {
-  Array as Arr,
-  Effect,
-  Predicate,
-  Record,
-  Schema,
-  Struct,
-} from "effect";
-import { Base64Url } from "effect/encoding";
+import { Array as Arr, Effect, Record, Schema, Struct } from "effect";
 
 /**
  * A message's place in its thread: the thread, and the order and the step of the
@@ -130,10 +122,7 @@ export const sealMessage = Effect.fn("nina.sealed.seal")(function* (
       "usage",
       "warnings",
     ]),
-    message: skeletonMessage(
-      row.message,
-      Base64Url.encode(new Uint8Array(sealed))
-    ),
+    message: skeletonMessage(row.message, sealed),
   };
 });
 
@@ -141,16 +130,9 @@ export const sealMessage = Effect.fn("nina.sealed.seal")(function* (
 const openContent = Effect.fn("nina.sealed.openContent")(function* (
   keys: LearnerKeys,
   identity: MessageIdentity,
-  sealed: string
+  sealed: ArrayBuffer
 ) {
-  const bytes = yield* Effect.fromResult(Base64Url.decode(sealed)).pipe(
-    Effect.mapError(cipherError)
-  );
-  const text = yield* openText(
-    keys,
-    messageField(identity),
-    new Uint8Array(bytes).buffer
-  );
+  const text = yield* openText(keys, messageField(identity), sealed);
   const json = yield* Schema.decodeEffect(Schema.fromJsonString(JsonValue))(
     text
   ).pipe(Effect.mapError(cipherError));
@@ -184,7 +166,7 @@ export const openMessage = Effect.fn("nina.sealed.open")(function* (
     return stored;
   }
   const sealed: unknown = sealedOptions.sealed;
-  if (!Predicate.isString(sealed)) {
+  if (!(sealed instanceof ArrayBuffer)) {
     return yield* cipherError();
   }
   const content = yield* openContent(keys, identity, sealed);

@@ -31,8 +31,7 @@ import { bytes, GOLDEN_WRAPPED, goldenUser } from "@repo/backend/test/vault";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexToJson } from "convex/values";
 import { validate } from "convex-helpers/validators";
-import { Effect, Result } from "effect";
-import { Base64Url } from "effect/encoding";
+import { Effect } from "effect";
 
 const IDENTITY = MESSAGE_IDENTITY;
 
@@ -49,19 +48,19 @@ const goldenRow: MessageWithMetadata = {
 };
 /** `goldenRow` sealed at `IDENTITY` for the golden learner, as this module wrote it. */
 const GOLDEN_SEALED_MESSAGE =
-  "ATWlYyXt5hYkbCa6n9xT2rCAA-FcRCpBf0buRHmVqgjON4Ymwd41yPL6fhM1wUYAHEvlTDPptBntCte3UmTyGYPc-ZEd898VTQJDmTUQiFoJm57YWVj1xbr6vpe3nkP9eYYZKZqjPlQLcsVzIpoEAV9Im_6tEGFJNUgNBE7Ado9QtG_hYDXieDttnsNc-JLtFir5Lq32qw";
+  "0135a56325ede616246c26ba9fdc53dab08003e15c442a417f46ee447995aa08ce378626c1de35c8f2fa7e1335c146001c4be54c33e9b419ed0ad7b75264f21983dcf9911df3df154d0243993510885a099b9ed85958f5c5bafabe97b79e43fd798619299aa33e540b72c573229a04015f489bfead10614935480d044ec0768f50b46fe16035e2783b6d9ec35cf892ed162af92eadf6ab";
 
-/** The sealed bytes of a message, as Base64Url text. */
-function sealedOf(message: Message) {
-  return String(message.providerOptions?.nakafa?.sealed);
+/** The sealed bytes of a message. */
+function sealedOf(message: Message): ArrayBuffer {
+  return message.providerOptions?.nakafa?.sealed;
 }
 
 /** The same sealed bytes with their last byte changed. */
-function tampered(sealed: string) {
-  const bytes = new Uint8Array(Result.getOrThrow(Base64Url.decode(sealed)));
+function tampered(sealed: ArrayBuffer) {
+  const bytes = new Uint8Array(sealed.slice(0));
   const last = bytes.length - 1;
   bytes.set([((bytes[last] ?? 0) + 1) % 256], last);
-  return Base64Url.encode(bytes);
+  return bytes.buffer;
 }
 
 /** A row whose message carries `sealed` as its sealed content, under `identity`. */
@@ -81,7 +80,7 @@ const sealRaw = Effect.fn("test.nina.sealed.raw")(function* (
   identity: MessageIdentity,
   text: string
 ) {
-  const sealed = yield* sealText(
+  return yield* sealText(
     keys,
     {
       field: "message",
@@ -90,7 +89,6 @@ const sealRaw = Effect.fn("test.nina.sealed.raw")(function* (
     },
     text
   );
-  return Base64Url.encode(new Uint8Array(sealed));
 });
 
 describe("sealed message", () => {
@@ -354,7 +352,7 @@ describe("sealed message", () => {
           const skeleton = (yield* sealMessage(owner, IDENTITY, answer))
             .message;
           const damaged = [
-            rowWith(skeleton, "!!!", IDENTITY),
+            rowWith(skeleton, "ATWlYyXt", IDENTITY),
             rowWith(skeleton, 7, IDENTITY),
             rowWith(skeleton, tampered(sealedOf(skeleton)), IDENTITY),
             rowWith(
@@ -468,7 +466,9 @@ describe("sealed message stored form", () => {
           {
             message: {
               content: "",
-              providerOptions: { nakafa: { sealed: GOLDEN_SEALED_MESSAGE } },
+              providerOptions: {
+                nakafa: { sealed: bytes(GOLDEN_SEALED_MESSAGE) },
+              },
               role: "assistant",
             },
           },

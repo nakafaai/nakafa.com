@@ -104,7 +104,10 @@ const skeletonContent = (content: string | readonly Part[]) =>
  * role, the skeleton of the content, and the sealed bytes in the provider options.
  * The Agent's own validator checks it, so the component accepts the row.
  */
-export function skeletonMessage(message: Message, sealed: string): Message {
+export function skeletonMessage(
+  message: Message,
+  sealed: ArrayBuffer
+): Message {
   return parse(vMessage, {
     content: skeletonContent(message.content),
     providerOptions: { [SEALED_KEY]: { sealed } },
