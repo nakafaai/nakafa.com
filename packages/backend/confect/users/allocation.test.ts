@@ -7,6 +7,7 @@ import {
   UsernameExhausted,
 } from "@repo/backend/confect/users/allocation";
 import { USERNAME_MAX_LENGTH } from "@repo/backend/confect/users/username";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import {
   Array as Arr,
   Cause,
@@ -51,6 +52,7 @@ const insertAccount = Effect.fn("test.insertAccount")(function* (
       credits: 100,
       creditsResetAt: 0,
       email: `account-${index}@example.com`,
+      mascot: MASCOT_CODE,
       name,
       plan: "free",
       username,

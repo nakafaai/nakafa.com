@@ -1,11 +1,14 @@
 import type { GenericId } from "@confect/core";
 import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { Array as Arr, Effect } from "effect";
+import { Effect } from "effect";
 
-
-/** The active member Persons of one account read per page, so no number of schools is assumed. */
-const HELD_PAGE_SIZE = 50;
+/**
+ * The most active member Persons one inbox request reads for its account. ADR
+ * 0011 sets no limit on the tenants of an account, so this bound is the owner's
+ * number to set; it is one indexed read, and a request never reads more.
+ */
+const HELD_SCHOOL_LIMIT = 100;
 
 /**
  * Whether the account holds this Person: an active member Person that the
@@ -22,37 +25,23 @@ export const holds = (
   person.account.userId === userId;
 
 /**
- * Every active member Person the account holds, across its schools. A claimed
- * Person names its account, so the account's Persons are one indexed range, read
- * a page at a time until it ends.
+ * The active member Persons the account holds, across its schools, in one
+ * indexed read. A claimed Person names its account, so the account's Persons are
+ * one range of the index.
  */
 export const heldPersons = Effect.fn("notifications.held.persons")(function* (
   userId: GenericId.GenericId<"users">
 ) {
-  const reader = yield* DatabaseReader;
-  const pageAt = (
-    cursor: string | null
-  ): Effect.Effect<readonly TenantPeopleDoc[]> =>
-    reader
-      .table("tenantPeople")
-      .index("by_account_userId_and_kind_and_status", (query) =>
-        query
-          .eq("account.userId", userId)
-          .eq("kind", "member")
-          .eq("status", "active")
-      )
-      .paginate({ cursor, numItems: HELD_PAGE_SIZE })
-      .pipe(
-        Effect.orDie,
-        Effect.flatMap((page) =>
-          page.isDone
-            ? Effect.succeed(page.page)
-            : Effect.map(pageAt(page.continueCursor), (rest) =>
-                Arr.appendAll(page.page, rest)
-              )
-        )
-      );
-  return yield* pageAt(null);
+  return yield* (yield* DatabaseReader)
+    .table("tenantPeople")
+    .index("by_account_userId_and_kind_and_status", (query) =>
+      query
+        .eq("account.userId", userId)
+        .eq("kind", "member")
+        .eq("status", "active")
+    )
+    .take(HELD_SCHOOL_LIMIT)
+    .pipe(Effect.orDie);
 });
 
 /** One Person the account holds, with the school it belongs to. */

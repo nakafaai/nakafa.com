@@ -36,7 +36,11 @@ export default GroupSpec.make()
       args: () => ({ notificationId: Id("notifications") }),
       returns: () => NotificationView,
       error: () =>
-        Schema.Union([SessionRequired, AccountUnavailable, NotificationNotFound]),
+        Schema.Union([
+          SessionRequired,
+          AccountUnavailable,
+          NotificationNotFound,
+        ]),
     })
   )
   .addFunction(

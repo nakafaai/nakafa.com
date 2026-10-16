@@ -10,8 +10,8 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
-import { noteInvite } from "@repo/backend/confect/notifications/inbox";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import { noteInvite } from "@repo/backend/confect/notifications/inbox";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { claimAfterInvite } from "@repo/backend/confect/tenancy/claims";
@@ -19,6 +19,7 @@ import {
   type Email,
   INVITE_TERM,
   type InviteState,
+  type PersonReason,
 } from "@repo/backend/confect/tenancy/schema";
 import { Clock, DateTime, Duration, Effect, Struct } from "effect";
 
@@ -96,13 +97,15 @@ export const expireDueInvites = Effect.fn("tenancy.invite.expireDue")(
  * Writes the pending invite of one unclaimed Person, then starts what it implies
  * in the caller's transaction, so the invite and its email exist together or not
  * at all: the expiry at a fixed moment, the journal entry, the invitation email
- * in `locale`, and the claim of an account that already holds the address.
+ * in `locale`, and the claim of an account that already holds the address. A
+ * `reason` is journaled with the invite when an operator writes it.
  */
 export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
   actor: typeof TenantActor.Type,
   person: TenantPeopleDoc,
   email: typeof Email.Type,
-  locale: ActiveAppLocaleCode
+  locale: ActiveAppLocaleCode,
+  reason?: typeof PersonReason.Type
 ) {
   const requestedAt = yield* Clock.currentTimeMillis;
   const expiresAt = requestedAt + Duration.toMillis(INVITE_TERM);
@@ -125,10 +128,13 @@ export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
     refs.internal.tenancy.expiry.invite,
     { inviteId }
   );
-  yield* personAuthority.record(actor, person, {
-    invite: inviteId,
-    type: "person.invited",
-  });
+  yield* personAuthority.record(
+    actor,
+    person,
+    reason === undefined
+      ? { invite: inviteId, type: "person.invited" }
+      : { invite: inviteId, reason, type: "person.invited" }
+  );
   yield* noteInvite(person.tenantId);
   yield* startInviteEmail(inviteId, locale, requestedAt);
   yield* claimAfterInvite(email);

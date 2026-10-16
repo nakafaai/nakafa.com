@@ -67,8 +67,8 @@ function deriveMac(base: CryptoKey, label: string) {
  * Derives the three keys that one 32-byte key makes: an AES-256-GCM key that
  * seals, an HMAC key that makes each nonce, and an HMAC key that blinds a word
  * (`blindHash`). Each has its own info label, so none can stand for another.
- * Neither can be exported again. A root key only wraps learner keys, so it
- * uses the first two.
+ * Neither can be exported again. A root key wraps learner keys and school keys,
+ * so it uses the first two.
  */
 export const deriveKeys = Effect.fn("vault.cipher.deriveKeys")(function* (
   key: Uint8Array

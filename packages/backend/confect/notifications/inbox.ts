@@ -1,11 +1,11 @@
 import type { GenericId } from "@confect/core";
-import { ObjectRef } from "@repo/backend/confect/access/catalog";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { ObjectRef } from "@repo/backend/confect/access/catalog";
 import {
   advance,
   cursorOf,
@@ -13,11 +13,12 @@ import {
   pendingOf,
   readAfter,
 } from "@repo/backend/confect/journal/cursor";
-import {
+import type {
   ConsumedChangeType,
   JournalConsumer,
 } from "@repo/backend/confect/journal/schema";
-import { Duration, Effect, Option } from "effect";
+import { deliveriesOf } from "@repo/backend/confect/notifications/delivery";
+import { Array as Arr, Duration, Effect, Option } from "effect";
 
 /** The consumer that writes the inbox rows of invitations. */
 const CONSUMER: typeof JournalConsumer.Type = "inbox";
@@ -35,19 +36,30 @@ export const INBOX_PAGE_SIZE = 50;
 /** Cursors one sweep starts, so a long backlog drains over several sweeps. */
 const DUE_BATCH_SIZE = 50;
 
+/**
+ * The sends of the rules that reach the inbox of an invitee. The rules own who
+ * receives what (ADR 0027), so this consumer writes a row for each of them and
+ * names no channel of its own. The invitation's inbox send is `Now`: it is due at
+ * the change, which is the creation time of the journal entry.
+ */
+const inboxSends = Arr.filter(
+  deliveriesOf("invitation", "invitee", false),
+  (send) => send.channel === "inbox"
+);
+
 /** One journal entry as a page of the journal returns it. */
 type Entry = Effect.Success<ReturnType<typeof readAfter>>["page"][number];
 
 /** Schedules one run of the inbox consumer for a tenant. The run starts only if the calling transaction commits. */
-export const scheduleRun = Effect.fn("notifications.inbox.scheduleRun")(
-  function* (tenantId: GenericId.GenericId<"tenants">) {
-    yield* (yield* Scheduler).runAfter(
-      Duration.zero,
-      refs.internal.notifications.consume.run,
-      { tenantId }
-    );
-  }
-);
+const scheduleRun = Effect.fn("notifications.inbox.scheduleRun")(function* (
+  tenantId: GenericId.GenericId<"tenants">
+) {
+  yield* (yield* Scheduler).runAfter(
+    Duration.zero,
+    refs.internal.notifications.consume.run,
+    { tenantId }
+  );
+});
 
 /**
  * Writes the inbox row of the invitation that one journal entry records. A
@@ -123,7 +135,12 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
         ObjectRef.matchOrElse(
           entry.subject,
           {
-            person: (subject) => writeRow(tenantId, entry, subject.id),
+            person: (subject) =>
+              Effect.forEach(
+                inboxSends,
+                () => writeRow(tenantId, entry, subject.id),
+                { discard: true }
+              ),
           },
           () => Effect.void
         ),
@@ -141,12 +158,12 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
  * and schedules a run. The run is the normal path; the minute sweep is the
  * backstop for a run that never happened.
  */
-export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(function* (
-  tenantId: GenericId.GenericId<"tenants">
-) {
-  yield* markPending(CONSUMER, tenantId, CHANGE);
-  yield* scheduleRun(tenantId);
-});
+export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
+  function* (tenantId: GenericId.GenericId<"tenants">) {
+    yield* markPending(CONSUMER, tenantId, CHANGE);
+    yield* scheduleRun(tenantId);
+  }
+);
 
 /**
  * Starts a run for each inbox cursor that a change left pending, a batch at a

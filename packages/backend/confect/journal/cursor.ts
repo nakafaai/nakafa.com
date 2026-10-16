@@ -1,12 +1,12 @@
 import type { GenericId } from "@confect/core";
 import {
-  ConsumedChangeType,
-  JournalConsumer,
-} from "@repo/backend/confect/journal/schema";
-import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type {
+  ConsumedChangeType,
+  JournalConsumer,
+} from "@repo/backend/confect/journal/schema";
 import { Effect, Option } from "effect";
 
 /** The cursor of one consumer for one tenant and change type, once a change has reached it. */

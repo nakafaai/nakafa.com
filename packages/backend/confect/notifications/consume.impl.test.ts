@@ -168,17 +168,15 @@ describe("notifications/consume run", () => {
           addPerson(fixture, "Dua"),
           addPerson(fixture, "Tiga"),
         ]);
+        // The three invitations share one creation time, so the order of the
+        // pages rests on the index tie-break, and the cursor must resume inside it.
         yield* Effect.forEach(
           people,
           (personId, index) =>
-            Effect.sync(() => vi.setSystemTime(NOW + index * 1000)).pipe(
-              Effect.andThen(
-                inviteInNf(
-                  fixture,
-                  personId,
-                  Schema.decodeSync(Email)(`orang${index}@harapan.example.test`)
-                )
-              )
+            inviteInNf(
+              fixture,
+              personId,
+              Schema.decodeSync(Email)(`orang${index}@harapan.example.test`)
             ),
           { discard: true }
         );

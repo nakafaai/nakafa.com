@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
 import { purgeInbox } from "@repo/backend/confect/notifications/purge";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
@@ -44,7 +44,9 @@ const notifications = (fixture: Fixture) =>
 const purgeRuns = (fixture: Fixture) =>
   fixture
     .run(scheduledJobs)
-    .pipe(Effect.map((jobs) => Arr.filter(jobs, (job) => job.name === PURGE_RUN)));
+    .pipe(
+      Effect.map((jobs) => Arr.filter(jobs, (job) => job.name === PURGE_RUN))
+    );
 
 /**
  * Invites the fixture's unclaimed Person and runs the inbox once, so the Person

@@ -1,84 +1,31 @@
-import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { NotificationNotFound } from "@repo/backend/confect/notifications/errors";
-import { decodeFeedCursor, feedPage } from "@repo/backend/confect/notifications/feed";
-import { heldPersons, heldSchools, holds } from "@repo/backend/confect/notifications/held";
+import {
+  decodeFeedCursor,
+  feedPage,
+} from "@repo/backend/confect/notifications/feed";
+import {
+  heldPersons,
+  heldSchools,
+  holds,
+} from "@repo/backend/confect/notifications/held";
 import spec from "@repo/backend/confect/notifications/inbox.spec";
 import { notificationView } from "@repo/backend/confect/notifications/schema";
-import { Array as Arr, Clock, Effect, Layer, Number as Num } from "effect";
+import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
 
 /** The most rows one list request reads for each school it holds. */
 const LIST_PAGE_LIMIT = 100;
 
-/** Rows one read-all page reads and marks, inside one transaction. */
-const READ_ALL_PAGE_SIZE = 50;
-
-/**
- * Marks every unread row of one Person that the account holds, a page at a time,
- * and leaves the read rows as they are, so a repeated call writes nothing new.
- */
-const markAllRead = Effect.fn("notifications.inbox.markAllRead")(function* (
-  personId: GenericId.GenericId<"tenantPeople">,
-  readAt: number
-) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const pageAt = (cursor: string | null): Effect.Effect<void> =>
-    reader
-      .table("notifications")
-      .index("by_recipientPersonId_and_createdAt", (query) =>
-        query.eq("recipientPersonId", personId)
-      )
-      .paginate({ cursor, numItems: READ_ALL_PAGE_SIZE })
-      .pipe(
-        Effect.orDie,
-        Effect.flatMap((page) =>
-          Effect.forEach(
-            Arr.filter(page.page, (row) => row.readAt === undefined),
-            (row) =>
-              writer
-                .table("notifications")
-                .patch(row._id, { readAt })
-                .pipe(Effect.orDie),
-            { discard: true }
-          ).pipe(
-            Effect.flatMap(() =>
-              page.isDone ? Effect.void : pageAt(page.continueCursor)
-            )
-          )
-        )
-      );
-  yield* pageAt(null);
-});
-
-/** The rows of the signed-in account's schools, newest first, one page at a time. */
-const list = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "list",
-  Effect.fn("notifications.inbox.list")(function* ({ paginationOpts }) {
-    const { appUser } = yield* requireAuth();
-    const cursor = yield* decodeFeedCursor(paginationOpts.cursor);
-    const schools = yield* heldSchools(appUser._id);
-    return yield* feedPage(
-      schools,
-      cursor,
-      Num.min(paginationOpts.numItems, LIST_PAGE_LIMIT)
-    );
-  })
-);
-
-/**
- * Marks one row read. A row the account does not hold gets the same answer as a
- * row that does not exist. Reading a row that is read already changes nothing.
- */
+/** Marks one row read. A row of an unheld Person is refused like a missing row. */
 const read = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -118,7 +65,33 @@ const read = FunctionImpl.make(
   })
 );
 
-/** Marks every unread row of the account's Persons read. */
+/**
+ * The rows of the signed-in account's schools, newest first, one page at a time.
+ * Only the Persons the account holds are read, so a row of another Person never
+ * shows.
+ */
+const list = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "list",
+  Effect.fn("notifications.inbox.list")(function* ({ paginationOpts }) {
+    const { appUser } = yield* requireAuth();
+    const cursor = yield* decodeFeedCursor(paginationOpts.cursor);
+    const schools = yield* heldSchools(appUser._id);
+    return yield* feedPage(
+      schools,
+      cursor,
+      Num.min(paginationOpts.numItems, LIST_PAGE_LIMIT)
+    );
+  })
+);
+
+/**
+ * Marks the unread rows of every Person the account holds. Each Person's rows
+ * are marked by a scheduled run that reads one page, so a request reads no rows
+ * itself and no run reads more than one page. The rows of a read request share
+ * one moment, the request's.
+ */
 const readAll = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -127,9 +100,19 @@ const readAll = FunctionImpl.make(
     const { appUser } = yield* requireAuth();
     const readAt = yield* Clock.currentTimeMillis;
     const persons = yield* heldPersons(appUser._id);
+    const scheduler = yield* Scheduler;
     yield* Effect.forEach(
       persons,
-      (person) => markAllRead(person._id, readAt),
+      (person) =>
+        scheduler.runAfter(
+          Duration.zero,
+          refs.internal.notifications.read.run,
+          {
+            cursor: null,
+            personId: person._id,
+            readAt,
+          }
+        ),
       { discard: true }
     );
     return null;

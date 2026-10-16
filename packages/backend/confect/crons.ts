@@ -15,6 +15,7 @@ const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const INBOX_SWEEP_INTERVAL_MINUTES = 1;
 const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
+const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 
 /**
  * Reconciles prepared deletions even when an at-most-once recovery action
@@ -209,6 +210,18 @@ export default CronJobs.make()
       "sweep invite expiry",
       Duration.hours(INVITE_EXPIRY_SWEEP_INTERVAL_HOURS),
       internal.tenancy.expiry.sweep,
+      {}
+    )
+  )
+  .add(
+    /**
+     * Ends the approved operator visits whose term has passed, if the scheduled
+     * end of a visit never ran.
+     */
+    CronJob.make(
+      "sweep visit expiry",
+      Duration.hours(VISIT_EXPIRY_SWEEP_INTERVAL_HOURS),
+      internal.operators.expiry.sweep,
       {}
     )
   )

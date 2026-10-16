@@ -11,6 +11,8 @@ export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "arti
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
 export type ChatSharesDoc = Document.Document<typeof schemaDefinition, "chatShares">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
+export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "classTeachers">;
+export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
 export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
 export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefinition, "contentAnalyticsPartitions">;
@@ -58,6 +60,7 @@ export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
 export type NotificationsDoc = Document.Document<typeof schemaDefinition, "notifications">;
 export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "onboardingProfiles">;
+export type OperatorsDoc = Document.Document<typeof schemaDefinition, "operators">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
@@ -68,9 +71,11 @@ export type TenantCohortMembersDoc = Document.Document<typeof schemaDefinition, 
 export type TenantCohortsDoc = Document.Document<typeof schemaDefinition, "tenantCohorts">;
 export type TenantGrantsDoc = Document.Document<typeof schemaDefinition, "tenantGrants">;
 export type TenantInvitesDoc = Document.Document<typeof schemaDefinition, "tenantInvites">;
+export type TenantKeysDoc = Document.Document<typeof schemaDefinition, "tenantKeys">;
 export type TenantPeopleDoc = Document.Document<typeof schemaDefinition, "tenantPeople">;
 export type TenantPeriodsDoc = Document.Document<typeof schemaDefinition, "tenantPeriods">;
 export type TenantUnitsDoc = Document.Document<typeof schemaDefinition, "tenantUnits">;
+export type TenantVisitsDoc = Document.Document<typeof schemaDefinition, "tenantVisits">;
 export type TenantsDoc = Document.Document<typeof schemaDefinition, "tenants">;
 export type TryoutAttemptPlacementsDoc = Document.Document<typeof schemaDefinition, "tryoutAttemptPlacements">;
 export type TryoutAttemptsDoc = Document.Document<typeof schemaDefinition, "tryoutAttempts">;
@@ -97,6 +102,8 @@ export interface Docs {
   articleCategories: ArticleCategoriesDoc;
   chatShares: ChatSharesDoc;
   chats: ChatsDoc;
+  classTeachers: ClassTeachersDoc;
+  classes: ClassesDoc;
   commentVotes: CommentVotesDoc;
   comments: CommentsDoc;
   contentAnalyticsPartitions: ContentAnalyticsPartitionsDoc;
@@ -144,6 +151,7 @@ export interface Docs {
   ninaUploads: NinaUploadsDoc;
   notifications: NotificationsDoc;
   onboardingProfiles: OnboardingProfilesDoc;
+  operators: OperatorsDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;
   quranRows: QuranRowsDoc;
@@ -154,9 +162,11 @@ export interface Docs {
   tenantCohorts: TenantCohortsDoc;
   tenantGrants: TenantGrantsDoc;
   tenantInvites: TenantInvitesDoc;
+  tenantKeys: TenantKeysDoc;
   tenantPeople: TenantPeopleDoc;
   tenantPeriods: TenantPeriodsDoc;
   tenantUnits: TenantUnitsDoc;
+  tenantVisits: TenantVisitsDoc;
   tenants: TenantsDoc;
   tryoutAttemptPlacements: TryoutAttemptPlacementsDoc;
   tryoutAttempts: TryoutAttemptsDoc;

@@ -8,7 +8,7 @@ import {
 import { Array as Arr, Duration, Effect } from "effect";
 
 /** Inbox rows one purge page deletes, inside one transaction. */
-export const PURGE_PAGE_SIZE = 50;
+const PURGE_PAGE_SIZE = 50;
 
 /**
  * Deletes up to one page of a Person's inbox rows, and reports whether rows

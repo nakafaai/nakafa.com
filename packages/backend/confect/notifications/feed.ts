@@ -3,14 +3,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { NotificationCursorInvalid } from "@repo/backend/confect/notifications/errors";
 import type { HeldSchool } from "@repo/backend/confect/notifications/held";
 import { notificationView } from "@repo/backend/confect/notifications/schema";
-import {
-  Array as Arr,
-  Effect,
-  Option,
-  Order,
-  pipe,
-  Schema,
-} from "effect";
+import { Array as Arr, Effect, Option, Order, pipe, Schema } from "effect";
 
 /**
  * Where one page of the inbox list ends: the creation time of its last row, and
@@ -51,18 +44,22 @@ const streamOf = Effect.fn("notifications.feed.stream")(function* (
 ) {
   return yield* (yield* DatabaseReader)
     .table("notifications")
-    .index("by_recipientPersonId_and_createdAt", (query) =>
-      cursor === null
-        ? query.eq("recipientPersonId", school.person._id)
-        : query
-            .eq("recipientPersonId", school.person._id)
-            .lte("createdAt", cursor.at),
+    .index(
+      "by_recipientPersonId_and_createdAt",
+      (query) =>
+        cursor === null
+          ? query.eq("recipientPersonId", school.person._id)
+          : query
+              .eq("recipientPersonId", school.person._id)
+              .lte("createdAt", cursor.at),
       "desc"
     )
     .take(readAhead)
     .pipe(
       Effect.orDie,
-      Effect.map((rows) => Arr.map(rows, (row) => ({ row, school: school.tenant })))
+      Effect.map((rows) =>
+        Arr.map(rows, (row) => ({ row, school: school.tenant }))
+      )
     );
 });
 
@@ -101,10 +98,7 @@ export const feedPage = Effect.fn("notifications.feed.page")(function* (
         Order.flip(Order.Number),
         (candidate: Candidate) => candidate.row.createdAt
       ),
-      Order.mapInput(
-        Order.String,
-        (candidate: Candidate) => candidate.row._id
-      )
+      Order.mapInput(Order.String, (candidate: Candidate) => candidate.row._id)
     )
   );
   const ahead = Arr.take(sorted, numItems + 1);

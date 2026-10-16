@@ -10,6 +10,7 @@ import type { acceptanceRuntimeError } from "@repo/backend/scripts/content/accep
 import type { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/import";
 import type { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import type { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import type { updateAcceptanceProfile } from "@repo/backend/scripts/content/acceptance/profile";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem, Schema } from "effect";
 
@@ -20,6 +21,7 @@ type EntryError =
   | Effect.Error<ReturnType<typeof cleanLocalRuntime>>
   | Effect.Error<ReturnType<typeof createAcceptanceLearner>>
   | Effect.Error<ReturnType<typeof importAcceptanceRows>>
+  | Effect.Error<ReturnType<typeof updateAcceptanceProfile>>
   | ReturnType<typeof acceptanceRuntimeError>
   | Effect.Error<ReturnType<FileSystem.FileSystem["realPath"]>>;
 
@@ -30,6 +32,7 @@ const mocks = vi.hoisted(() => {
     run: vi.fn(),
     clean: vi.fn(),
     learner: vi.fn(),
+    profile: vi.fn(),
     rows: vi.fn(),
     getEntry: () => entry,
     runMain: vi.fn((program: Effect.Effect<void, EntryError>) => {
@@ -52,6 +55,9 @@ vi.mock("@repo/backend/scripts/content/acceptance/learner", () => ({
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/import", () => ({
   importAcceptanceRows: mocks.rows,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/profile", () => ({
+  updateAcceptanceProfile: mocks.profile,
 }));
 
 const originalArgv = process.argv;
@@ -81,6 +87,7 @@ describe("isolated acceptance CLI", () => {
       mocks.run,
       mocks.clean,
       mocks.learner,
+      mocks.profile,
       mocks.rows,
     ]) {
       mock.mockReturnValue(Effect.void);
@@ -111,7 +118,7 @@ describe("isolated acceptance CLI", () => {
           stderrPath: outputPath,
         }).pipe(Effect.flip);
         expect(yield* fs.readFileString(outputPath)).toContain(
-          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|import <table> <rows-file>>"
+          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
         );
       }).pipe(Effect.provide(nodeServicesLayer))
   );
@@ -304,12 +311,29 @@ finally:
     })
   );
 
+  it.live("updates the profile of the account and the file it names", () =>
+    Effect.gen(function* () {
+      yield* execute("profile", ["user-1", "/rows/profile.json"]);
+
+      expect(mocks.profile).toHaveBeenCalledOnce();
+      expect(mocks.profile).toHaveBeenCalledWith(
+        expect.any(String),
+        "user-1",
+        "/rows/profile.json"
+      );
+      expect(mocks.learner).not.toHaveBeenCalled();
+      expect(mocks.rows).not.toHaveBeenCalled();
+    })
+  );
+
   const rejected: readonly (readonly [string | undefined, string[]])[] = [
     [undefined, []],
     ["unsupported", []],
     ["learner", []],
     ["import", []],
     ["import", ["chats"]],
+    ["profile", []],
+    ["profile", ["user-1"]],
   ];
   for (const [mode, args] of rejected) {
     it.live(
@@ -324,6 +348,7 @@ finally:
           expect(mocks.run).not.toHaveBeenCalled();
           expect(mocks.clean).not.toHaveBeenCalled();
           expect(mocks.learner).not.toHaveBeenCalled();
+          expect(mocks.profile).not.toHaveBeenCalled();
           expect(mocks.rows).not.toHaveBeenCalled();
         })
     );

@@ -14,6 +14,7 @@ import { accountDeletionAttemptStatus } from "@repo/backend/confect/auth/deletio
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -29,6 +30,7 @@ function insertUser(ctx: MutationCtx, authId: string) {
       credits: 0,
       creditsResetAt: 0,
       email: `${authId}@example.com`,
+      mascot: MASCOT_CODE,
       name: authId,
       plan: "free",
     })

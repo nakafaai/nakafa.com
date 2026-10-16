@@ -15,6 +15,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { Animal } from "@repo/design-system/components/ui/animal";
 import {
   Avatar,
   AvatarFallback,
@@ -38,7 +39,6 @@ import {
   CommentVotes,
 } from "@/components/comments/actions";
 import { DataFailure } from "@/components/shared/failure";
-import { getInitialName } from "@/lib/identity/initials";
 import { getCleanHref } from "@/lib/routing/href";
 
 /** Render the incrementally loaded comments for one user profile. */
@@ -113,7 +113,9 @@ function CommentThread({
     <div className="flex items-start gap-3 p-4 text-left">
       <Avatar className="size-10">
         <AvatarImage alt={userName} role="presentation" src={userImage} />
-        <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
+        <AvatarFallback>
+          <Animal mascot={user?.mascot} />
+        </AvatarFallback>
       </Avatar>
       <div className="grid w-full gap-2">
         <div className="grid gap-1">

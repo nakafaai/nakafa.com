@@ -3,10 +3,11 @@
 ## Status
 
 Accepted on 13 October 2026 with owner decisions K3, K5, and K10. The owner
-approved decisions K1 to K20 on that day. The school key is planned for program
+approved decisions K1 to K20 on that day. The school key is built in program
 wave B (ADR 0013 describes the waves). The learner vault in
-`packages/backend/confect/vault` is live and works as it does today. The
-repository holds no `tenantKeys` table, no school key, and no connector secret.
+`packages/backend/confect/vault` is live and works as it does today. Every
+tenant gets its school key when it is opened, and the repository holds no
+connector secret yet.
 
 ## Context
 
@@ -39,7 +40,7 @@ Each key has one owner, and the key above it wraps it.
 | --- | --- | --- | --- | --- |
 | Root | `VAULT_ROOT_KEYS` in the Convex environment | Nothing. A rotation rewraps the keys it wrapped. | The environment | Live |
 | Learner | 32 random bytes for each learner | A root key | `vaultKeys` | Live |
-| School | 32 random bytes for each tenant | A root key | `tenantKeys` | Planned |
+| School | 32 random bytes for each tenant | A root key | `tenantKeys` | Built, wave B |
 | Connection | The secret of a connector | The learner's key for a personal connection, the school's key for a school connection | `connectorSecrets` | Planned |
 
 The vault is one module for all of them. A connection has no vault of its own.
@@ -53,12 +54,12 @@ learner's key.
   apart.
 - It is stored only wrapped by the current root key, in `tenantKeys`, and it is
   created when the tenant is created. The provisioning mutation of ADR 0011
-  (`tenancy/provision:open`, live today and writing no key) gains the creation
-  and runs it in the same transaction as the tenant, in the data cell that holds
-  the school (ADR 0026, K5). A learner's key is created on first use, because a
-  learner exists before anything is sealed for them. A school's key exists from
-  the first day, so no read or write has to create it. A tenant without a key is
-  a defect, and a reader fails with `VaultError` reason `key`.
+  (`tenancy/provision:open`) creates it in the same transaction as the tenant,
+  in the data cell that holds the school (ADR 0026, K5). A learner's key is
+  created on first use, because a learner exists before anything is sealed for
+  them. A school's key exists from the first day, so no read or write has to
+  create it. A tenant without a key is a defect, and a reader fails with
+  `VaultError` reason `key`.
 - The key never leaves its cell. `VAULT_ROOT_KEYS` is a value of one
   deployment's environment, and Convex refuses a push to a deployment without it
   (`packages/backend/convex/convex.config.ts`). Each cell has its own deployment
@@ -77,12 +78,13 @@ keys it derives (`vault/cipher.ts`), so a school key derives the same three keys
 as a learner key: an AES-256-GCM key that seals, an HMAC key that makes each
 nonce, and an HMAC key that blinds a word.
 
-| Part of `confect/vault` | Today | With the school key |
+| Part of `confect/vault` | On main at `6dbc43b76c` | With the school key |
 | --- | --- | --- |
 | `cipher.ts` | Seals, opens, and blinds with the keys that any 32-byte key derives | No change |
 | `ring.ts` | Reads the root keys from `VAULT_ROOT_KEYS` | No change |
-| `keys.ts` | Learner keys: `ensureLearnerKeys`, `readLearnerKeys`, `shredLearnerKeys`, and `rewrapLearnerKeys` | Gains the readers of a school key, its creation (called by provisioning), and its deletion. The wrapped key is bound to the tenant with a label of its own, so a wrapped learner key never opens as a school key. The rewrap (`vault/keys:rewrap`) covers both tables. |
-| `text.ts` | `sealText`, `openText`, and `blindText` bind a text to a learner, a table, and a field | They take the keys of an owner, a learner or a tenant, and bind a text to that owner, the table, and the field. A text opens only for that school and that field. |
+| `keys.ts` | Learner keys: `ensureLearnerKeys`, `readLearnerKeys`, `shredLearnerKeys`, and `rewrapLearnerKeys` | The learner keys stay as they are. Gains the reader and the creation of a school key (`readTenantKeys`, and `createTenantKey`, which provisioning calls). The wrapped key is bound to the school and its generation with a label of its own, so a wrapped learner key never opens as a school key. Shredding a school key is planned with the school deletion (Implementation Status). |
+| `rewrap.ts` | Does not exist. The rewrap is `rewrapLearnerKeys` in `keys.ts`. | New. `rewrapKeys` moves one page a call: the learner keys still on a retired root key, then the school keys. It returns zero only when both tables use the current root key, and it fails while a stored key names a root key that the environment lacks. `vault/keys:rewrap` runs it. |
+| `text.ts` | `sealText`, `openText`, and `blindText` bind a text to a learner, a table, and a field | They take the keys of an owner, a learner or a school, and bind a text to that owner, the table, and the field. A school's text opens only for that school, its generation, and that field. |
 | `schema.ts` | `VaultKey`, `VaultField`, and `VaultError` | Gains the row of `tenantKeys` (the tenant, the generation, the root key, the wrapped key, and the time of creation) |
 
 ### What the school key seals
@@ -169,12 +171,13 @@ never silently working.
 The root key rotates by rewrap. Put the new root key first in `VAULT_ROOT_KEYS`,
 run `vault/keys:rewrap` until it returns zero, remove the old root key, and
 destroy every copy of it (`vault/keys.spec.ts`). Sealed values do not change,
-only the wrapping of the keys. `rewrapLearnerKeys` moves `vaultKeys` alone
-today, so this ADR extends it to `tenantKeys` before any school key exists.
-Otherwise a retired root key could leave the environment while it still wraps a
-school key, and the school's text would be lost. The rewrap reports zero only
-when both tables are on the current root key. Its test: with a retired root key,
-the rewrap reports a count until it has moved both tables.
+only the wrapping of the keys. `rewrapKeys` in `vault/rewrap.ts` moves one page
+a call: first the learner keys still on a retired root key, then the school
+keys. Removing a retired root key while it still wraps a school key would lose
+that school's text, so the rewrap reports zero only when both tables use the
+current root key and no stored key names a root key that the environment lacks.
+Its test: with a retired root key, the rewrap reports a count until it has moved
+both tables.
 
 The school key itself is replaced only when a leak is suspected. A replacement
 is a migration, run the way ADR 0024 runs the migration of old messages.
@@ -243,8 +246,7 @@ does another job.
 - Replacing a school key re-seals the whole school. It is rare and costs one
   pass over every sealed field.
 - The comment on `VAULT_ROOT_KEYS` in `packages/backend/convex/convex.config.ts`
-  says the keys wrap each learner's vault key. The change that builds the school
-  key makes it say learners and schools.
+  says the keys wrap each learner's vault key and each school's key.
 
 ## Rejected Alternatives
 
@@ -264,8 +266,8 @@ does another job.
 | --- | --- |
 | `packages/backend/confect/vault`: learner keys, seal, open, blind hash, and `rewrap` for `vaultKeys` | Live |
 | `VAULT_ROOT_KEYS` in `packages/backend/convex/convex.config.ts` | Live |
-| `tenantKeys`, the school key readers, and the owner argument of `vault/text.ts` | Planned, program wave B |
-| `rewrap` for `tenantKeys` | Planned, with the school key |
+| The school key: `tenantKeys`, its creation in `tenancy/provision:open`, `readTenantKeys`, the owner argument of `vault/text.ts`, and `rewrap` for `tenantKeys` | Built, program wave B |
 | `wordsOf` moved into `confect/vault`, and the forum index | Planned, with the forum (ADR 0025) |
-| The job that replaces a school key | Planned, in the wave of the first table that seals under the school key |
+| Shredding a school key, with the deletion of its school | Planned, with the school deletion lane |
+| Replacing a school key by a new generation, on a suspected leak | Planned, as a migration (Rotation and replacement) |
 | `connectorSecrets` | Planned (ADR 0015) |
