@@ -122,11 +122,10 @@ describe("isolated acceptance signing identity", () => {
         // its text. A body line has nothing to escape and would appear verbatim.
         const [, privateKeyBody] = privateKey.split("\n");
         expect(privateKeyBody).toBeDefined();
-        expect(
-          Schema.encodeSync(Schema.fromJsonString(LocalSigningIdentitySchema))(
-            first.signing
-          )
-        ).not.toContain(privateKeyBody);
+        const identityJson = yield* Schema.encodeEffect(
+          Schema.fromJsonString(LocalSigningIdentitySchema)
+        )(first.signing);
+        expect(identityJson).not.toContain(privateKeyBody);
         expect(first.signing.keyId).not.toBe(second.signing.keyId);
         expect(first.signing.publicKeyPem).not.toBe(
           second.signing.publicKeyPem
