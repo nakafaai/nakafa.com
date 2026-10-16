@@ -1,6 +1,8 @@
 ---
 "www": patch
+"@repo/backend": patch
 "@repo/design-system": patch
+"@repo/internationalization": patch
 ---
 
-Nina's chats and composer now hold up under real use: a document chip stays inside its row, a notice names every file a pick did not attach and why, a refused prompt says why it was not sent, and a chat list loads its next page as the learner reaches its end. A stop or a retry of a reply starts when the learner presses its button, a renamed chat title is limited to 80 characters, and the composer takes the direction of the text typed in it, with its file picker named in the learner's language.
+Nina's composer now holds up under worst-case data. A document chip keeps a long name inside its row with the end of the name in view, one notice names every file a pick did not attach and why, and a prompt over the limit stays in the composer with the reason, which the server also refuses before it holds credits. The composer takes the direction of the text typed in it and names its file picker in the learner's language. A send gives back the upload places it does not need, signing out or switching accounts forgets the previous learner's uploads, a reopened sheet keeps the chat's last answer in view while it reads the chat again, and the weather card keeps its place when its request fails.
