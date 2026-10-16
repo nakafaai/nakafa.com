@@ -6,6 +6,7 @@ import {
   MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { renameAuthUsername } from "@repo/backend/confect/auth/username";
 import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
@@ -16,7 +17,7 @@ import { inspectUsername } from "@repo/backend/confect/users/availability";
 import { readBio } from "@repo/backend/confect/users/bio";
 import spec from "@repo/backend/confect/users/mutations.spec";
 import { UsernameRejected } from "@repo/backend/confect/users/username";
-import { Clock, Effect, Layer, Result } from "effect";
+import { Clock, Effect, Layer, Result, Struct } from "effect";
 
 const updateUserRole = FunctionImpl.make(
   databaseSchema,
@@ -65,19 +66,22 @@ const updateUserName = FunctionImpl.make(
 /**
  * Renames the caller's profile address. The old username is free the moment the
  * new one is stored, in the same transaction that checks the new one, so two
- * accounts that ask for the same name at once cannot both win.
+ * accounts that ask for the same name at once cannot both win. A school
+ * account's Better Auth username changes with it, so the two stay one value.
  */
 const updateUsername = FunctionImpl.make(
   databaseSchema,
   spec,
   "updateUsername",
   Effect.fn("users.mutations.updateUsername")(function* (args) {
+    const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
     const user = yield* requireAuth();
     const inspected = yield* inspectUsername(args.username, user.appUser._id);
     if (Result.isFailure(inspected)) {
       return yield* new UsernameRejected({ reason: inspected.failure });
     }
+    yield* renameAuthUsername(ctx, user.authId, inspected.success);
     yield* writer
       .table("users")
       .patch(user.appUser._id, { username: inspected.success })
@@ -100,6 +104,29 @@ const updateBio = FunctionImpl.make(
       .patch(user.appUser._id, { bio: bio === "" ? undefined : bio })
       .pipe(Effect.orDie);
     return null;
+  })
+);
+
+/**
+ * Stores the caller's animal and answers the animal it stored. The row that the
+ * session loaded is replaced, not patched, because a patch reads the whole row
+ * again before it writes.
+ */
+const setMascot = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "setMascot",
+  Effect.fn("users.mutations.setMascot")(function* (args) {
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAuth();
+    yield* writer
+      .table("users")
+      .replace(user.appUser._id, {
+        ...Struct.omit(user.appUser, ["_id", "_creationTime"]),
+        mascot: args.mascot,
+      })
+      .pipe(Effect.orDie);
+    return { mascot: args.mascot };
   })
 );
 const syncUserInfoForChat = FunctionImpl.make(
@@ -150,6 +177,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(updateUserName),
   Layer.provide(updateUsername),
   Layer.provide(updateBio),
+  Layer.provide(setMascot),
   Layer.provide(syncUserInfoForChat),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),

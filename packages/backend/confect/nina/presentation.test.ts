@@ -120,6 +120,21 @@ describe("Nina presentation after an answer", () => {
     ).toEqual(["How does this relate to continuity?"]);
   });
 
+  it("gives the follow-up suggestions the latest exchanges of a long chat and no older one", async () => {
+    const f = await createNinaTest({ history: 30 });
+    const model = ninaModel();
+    provider.languageModel.mockReturnValue(model);
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    const prompt = model.doGenerateCalls[0]?.prompt ?? [];
+    // Sixteen messages are eight exchanges, the one just answered included,
+    // and the request for suggestions is one more message of the learner. The
+    // call read all 50 messages it was allowed before, which made 26.
+    expect(Arr.filter(prompt, ({ role }) => role === "user")).toHaveLength(9);
+    expect(encodeJsonText(prompt)).toContain("Earlier question 23");
+    expect(encodeJsonText(prompt)).not.toContain("Earlier question 22");
+  });
+
   it("releases the chat before metadata, anchors its context and accounts for late usage", async () => {
     const f = await createNinaTest();
     const model = ninaModel();
@@ -259,6 +274,30 @@ describe("Nina presentation after an answer", () => {
     expect(
       await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
     ).toMatchObject({ suggestions: ["A relevant follow-up?"] });
+  });
+
+  it("saves follow-up suggestions with the turn and the chat read once and the turn read once more to write it", async () => {
+    const f = await createNinaTest();
+    const metrics = await f.t.mutation(async (ctx) => {
+      await ctx.runMutation(save, {
+        turnId: f.turnId,
+        suggestions: ["A relevant follow-up?"],
+      });
+      return ctx.meta.getTransactionMetrics();
+    });
+    // A `patch` of the turn read it once more, which made four.
+    expect(metrics.documentsRead.used).toBe(3);
+  });
+
+  it("saves a generated title with the chat read once more to write it", async () => {
+    const f = await createNinaTest();
+    const metrics = await f.t.mutation(async (ctx) => {
+      await ctx.runMutation(save, { turnId: f.turnId, title: "Generated" });
+      return ctx.meta.getTransactionMetrics();
+    });
+    // The turn, the chat, the learner's key, and the chat again to write it. A
+    // `patch` of the chat read it once more, which made five.
+    expect(metrics.documentsRead.used).toBe(4);
   });
 
   it("keeps a title the learner chose before the generated one arrives", async () => {

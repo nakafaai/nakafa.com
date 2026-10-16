@@ -14,6 +14,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Data, Effect } from "effect";
 
@@ -39,6 +40,7 @@ const insertDeletedUser = Effect.fn(
       creditsResetAt: 1,
       deletedAt: 1,
       email: `deleted-${suffix}@example.invalid`,
+      mascot: MASCOT_CODE,
       name: "Deleted User",
       plan: "free",
     })

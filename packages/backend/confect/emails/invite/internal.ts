@@ -3,7 +3,8 @@ import {
   DatabaseReader,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import { EMAIL_FROM, resend } from "@repo/backend/confect/emails/client";
+import { EMAIL_FROM, sendMail } from "@repo/backend/confect/emails/client";
+import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { Clock, Effect } from "effect";
 
 /**
@@ -11,8 +12,8 @@ import { Clock, Effect } from "effect";
  * invite. The invite id and the moment of the send are the idempotency key, so
  * a retried step or a repeated run of one send sends one message, while a
  * resend, which has its own moment, sends again. An invite that was revoked
- * since it was rendered, or whose term ended while the workflow waited, sends
- * nothing.
+ * since it was rendered, whose term ended while the workflow waited, or whose
+ * address is a school login's placeholder sends nothing.
  */
 export const enqueueRenderedInviteProgram = Effect.fn("emails.invite.enqueue")(
   function* (
@@ -30,17 +31,19 @@ export const enqueueRenderedInviteProgram = Effect.fn("emails.invite.enqueue")(
       .get(inviteId)
       .pipe(Effect.orDie);
     const now = yield* Clock.currentTimeMillis;
-    if (invite.state.status === "revoked" || invite.expiresAt <= now) {
+    if (
+      invite.state.status === "revoked" ||
+      invite.expiresAt <= now ||
+      isLoginAddress(invite.channel.email)
+    ) {
       return null;
     }
-    yield* Effect.promise(() =>
-      resend.sendEmail(ctx, {
-        ...message,
-        from: EMAIL_FROM,
-        idempotencyKey: `invite-email/${inviteId}/${requestedAt}`,
-        to: invite.channel.email,
-      })
-    );
+    yield* sendMail(ctx, {
+      ...message,
+      from: EMAIL_FROM,
+      idempotencyKey: `invite-email/${inviteId}/${requestedAt}`,
+      to: invite.channel.email,
+    }).pipe(Effect.orDie);
     return null;
   }
 );

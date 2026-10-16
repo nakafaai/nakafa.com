@@ -13,6 +13,7 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
 
@@ -33,6 +34,7 @@ async function insertUser(test: TestConvex<typeof schema>, suffix: string) {
       credits: 0,
       creditsResetAt: 0,
       email: `${suffix}@example.com`,
+      mascot: MASCOT_CODE,
       name: `Synthetic ${suffix}`,
       plan: "free",
     })

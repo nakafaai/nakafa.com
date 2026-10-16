@@ -9,6 +9,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
@@ -202,6 +203,7 @@ describe("auth/deletion/verification", () => {
               credits: 0,
               creditsResetAt: NOW,
               email: "verification-owner@example.com",
+              mascot: MASCOT_CODE,
               name: "Verification owner",
               plan: "free",
             });

@@ -9,6 +9,7 @@ import {
   PeriodDatesInvalid,
   PeriodNotActive,
   PeriodOverlaps,
+  PromotionState,
 } from "@repo/backend/confect/tenancy/errors";
 import { PeriodName, PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -59,7 +60,7 @@ export default GroupSpec.make()
       name: "open",
       args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
       returns: () => PeriodView,
-      error: () => Schema.Union([AccessDenied, PeriodActive]),
+      error: () => Schema.Union([AccessDenied, PeriodActive, PromotionState]),
     }).middleware(PeriodAccess, { action: "period.manage", arg: "periodId" })
   )
   .addFunction(

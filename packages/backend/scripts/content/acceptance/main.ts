@@ -9,6 +9,7 @@ import { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/i
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
+import { updateAcceptanceProfile } from "@repo/backend/scripts/content/acceptance/profile";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
@@ -33,8 +34,11 @@ const main = Effect.gen(function* () {
   if (mode === "import" && first !== undefined && second !== undefined) {
     return yield* importAcceptanceRows(root, first, second);
   }
+  if (mode === "profile" && first !== undefined && second !== undefined) {
+    return yield* updateAcceptanceProfile(root, first, second);
+  }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|import <table> <rows-file>>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
   );
 });
 

@@ -4,11 +4,21 @@
 
 Accepted on 13 October 2026 with owner decision K10. The owner approved decisions
 K1 to K20 on that day. Notifications are planned for program wave B
-(ADR 0013 describes the waves). Nothing in this ADR is live. The repository has
-no inbox table, no push code, and no service worker. It sends two emails: the
-welcome email (`packages/backend/confect/emails/welcome/internal.ts`) and the
+(ADR 0013 describes the waves). The invitation rows, the journal cursor, and its
+sweep are built. The cursor passes only settled entries behind a commit-lag
+window, so it needs no Convex ordering proof (ADR 0016), and the rest of the
+notification system is not live either. The repository has no push code and
+no service worker. It sends two emails: the welcome email
+(`packages/backend/confect/emails/welcome/internal.ts`) and the
 invitation email (`packages/backend/confect/emails/invite`), which the invite
 mutation starts (ADR 0011).
+
+Amended on 16 October 2026 after review: a reminder keeps its anchor and Timing
+rather than its send instant, a notice rule holds one route for each relation, a
+Chosen time belongs to email only, the guardian's exam reminder is the earlier of
+06:30 and 30 minutes before the sitting opens, a reminder is sent only before its
+anchor, quiet hours hold a push back until they end except for an exam start,
+and quiet hours cover every student account while no age is stored.
 
 ## Context
 
@@ -86,9 +96,25 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
 
 - The consumer follows ADR 0016. It adds an index on the owner and the change
   type to `journalEntries`, reads in creation order with its own cursor
-  (`journalCursors`, planned), checks permission again when it loads the
-  subject, and proves its ordering assumption on Convex before it relies on a
-  creation-time cursor. An entry holds IDs and codes, never a name or a message.
+  (`journalCursors`), and checks permission again when it loads the subject. A
+  mutation takes its entry's creation time while it runs, and the entry becomes
+  visible at its commit, so the cursor does not rely on a proof of that order. It
+  passes an entry only once the entry has settled, five seconds behind the clock,
+  so an entry that commits late is still read. It holds each unsettled entry it
+  handles early, at most one page of them with one slot kept free, until its
+  position passes that entry, and it skips them when it reads again. A run that
+  leaves entries unread schedules the next run: at once when the next entry has
+  settled or the list has room for it, and for the moment the oldest unread entry
+  settles otherwise. So a burst drains without the minute sweep. An invitation
+  schedules a run only when its cursor is not pending already, so a burst starts
+  one chain of runs. A cursor with nothing left to read is not pending. A cursor
+  starts five seconds before the entry that makes it, not at a clock reading, so an
+  invitation created up to that long before the entry gets a row, and an earlier
+  one gets none. An entry holds IDs and codes, never a name or a message.
+- An invitation has one inbox row for each recipient Person, found by the Person
+  and the invitation. A resend refreshes that row to the resend's time and marks
+  it unread. Revoking the invitation deletes the row, and a revoked invitation
+  that a run reads later gets none.
 - Preferences are kept for each kind and each channel (`notificationPreferences`,
   planned). The email for an invitation and for the account is always sent.
 - The fan-out is never one transaction. A workpool (`@convex-dev/workpool`, a
@@ -157,7 +183,7 @@ final times.
 | A released grade | Grades | Yes | Yes | For a guardian, a link only |
 | A late task, for a guardian | Tasks | Yes | Yes | A link only |
 | An exam starts | Exams | Yes | 15 minutes before | Yes, a link only |
-| An exam reminder, for a guardian | Exams | Yes | No | At 06:30 on the day of the exam, a link only |
+| An exam reminder, for a guardian | Exams | Yes | No | At the earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens, a link only |
 | An invitation or the account | Invitations | Yes, after sign-in | No | Yes, always, a link only |
 
 A guardian gets no forum mention. A guardian's push is for grades and late tasks
@@ -179,13 +205,25 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | Deadline, the day before | A task is published or its deadline changes. Journal cursor. | 16:00 on the day before the deadline (proposal) | Push, inbox |
 | Deadline, one hour before | The same trigger | One hour before the deadline | Push, inbox |
 | Exam starts | A sitting is scheduled. Journal cursor. | 15 minutes before the sitting opens | Push, inbox, email |
-| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | 06:30 on the day of the exam | Inbox, email |
+| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | The earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens | Inbox, email |
 | Daily digest | Email that is not sent yet. A cursor for each recipient. | 17:00 every day (proposal) | Email |
+
+A reminder is sent only while its anchor, the deadline or the opening it is
+about, is still ahead. The sweep sends a due reminder when it reads it before
+the anchor, and at once when its send instant had already passed when the row
+was made, such as the day-before reminder of a task published after 16:00 on
+that day. Once the anchor has passed, the reminder is dropped and writes
+nothing, because a reminder after the fact tells nothing the task or the
+sitting does not show.
 
 ### Push
 
 - Web Push is best effort, and its payload is what ADR 0026 allows. Quiet hours
-  skip it, and the inbox still holds the notification.
+  hold a push back until they end (`confect/notifications/clock.ts` gives that
+  instant), and the inbox holds the notification at once. An exam start is the
+  one push that quiet hours do not hold, because it is about a sitting that
+  opens in 15 minutes. A held push whose anchor has passed when quiet hours end
+  is dropped, as a late reminder is (Reminders).
 - On iPhone and iPad, push needs three things (WebKit, "Web Push for Web Apps on
   iOS and iPadOS", `webkit.org/blog/13878`, read on 13 October 2026). The site is
   a web app on the Home Screen, opened from its icon, whose manifest sets
@@ -210,13 +248,26 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 
 ### Quiet hours and time zones
 
-- Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on by
-  default for an account under 18, and a school can relax them only as its data
-  protection impact assessment (DPIA) allows.
+- Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on for
+  every student account. The Indonesian profile puts them on for an account
+  under 18 (ADR 0032), and no birth date is stored, so they cover every student
+  until the country profile stores an age. A school can relax them only as its
+  data protection impact assessment (DPIA) allows.
 - Quiet hours, reminders, and digests use the IANA time zone of the school the
   notification is about (ADR 0032). Instants are stored in UTC.
-- The tests run in Asia/Jakarta and Europe/Berlin, and they include a change of
-  daylight saving time.
+- A reminder stores its anchor and its Timing, not its send instant. The anchor
+  is the real instant the reminder is about, such as a deadline or the opening of
+  a sitting. The send instant is derived when the reminder is read, from the
+  anchor, the Timing, and the zone of the school at that moment (`deliveryInstant`
+  in `confect/notifications/delivery.ts`), so a change of zone moves every pending
+  reminder with it. An instant stored when the reminder is scheduled keeps the
+  zone it was made in. For example, a Jakarta reminder for 16:00 on the day before
+  is stored as 09:00Z. Once the school's zone is Asia/Makassar, that instant fires
+  at 17:00 WITA, while the rule fires at 16:00 WITA, which is 08:00Z.
+- An archived unit sends no reminder and no digest. Its inbox rows stay readable,
+  as ADR 0011 keeps an archived unit readable.
+- The tests run in Asia/Jakarta, Asia/Makassar, and Europe/Berlin, and they
+  include a change of daylight saving time.
 
 ### Email
 
@@ -269,7 +320,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 - Push as the main channel. It is best effort, and iOS needs steps that not every
   person takes.
 - Skipping the inbox in quiet hours. The inbox is the source of truth, and quiet
-  hours stop only the push.
+  hours hold back only the push.
 - A name, a grade, or a message text in a push or an email. A lock screen and a
   mailbox show them to people who are not the recipient.
 - An outbox copy of the journal for notifications. ADR 0016 rejects it.
@@ -283,9 +334,18 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | The welcome email through `confect/emails` and the Resend component | Live |
 | The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
 | `apps/www/app/manifest.ts` with `display: "standalone"` | Live |
-| `notifications`, `notificationPreferences`, `notificationReminders`, `pushSubscriptions`, and `journalCursors` | Planned, program wave B |
-| The notify consumer, and the published list with `person.invited` | Planned, program wave B |
+| `journalCursors`, which start five seconds before the entry that makes them, pass only settled entries, hold at most one page of handled ids with one slot kept free, and schedule their next run when a run leaves entries unread; and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Built |
+| `notifications`, one row for each Person and invitation (`by_recipientPersonId_and_inviteId`), with the purge of a released Person's rows and of a revoked invitation's row | Built |
+| The invitation rows: `person.invited` is published, written by the invite, and refreshed by the resend; the inbox consumer writes them from the start of its cursor; an invitation revoked before its run gets no row, and a revoked invitation loses its row | Built |
+| The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
+| The minute sweep that starts a run for each pending journal cursor | Built |
+| `notificationPreferences`, `notificationReminders`, and `pushSubscriptions` | Planned, program wave B |
+| The notify consumer for the change types other than `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |
+| The channel table as data, `confect/notifications/rules.ts`: the routes of each kind and relation | Called: the inbox consumer asks `deliveriesOf`, which reads `routeOf`, for the invitee's inbox row. `recipientsOf` and `canSwitchOff` wait for the preferences (program wave B) |
+| The sends of a notice, `confect/notifications/delivery.ts`: `deliveriesOf` and `deliveryInstant` | `deliveriesOf` is called by the inbox consumer. `deliveryInstant` waits for the reminders, which need the zone of their school (program wave B) |
+| The zone that carries a notice, `confect/notifications/zone.ts` | Built as pure functions, not called yet (program wave B) |
+| The zone clock, `confect/notifications/clock.ts`: quiet hours, the 17:00 digest, and local send times in an IANA zone | Built as pure functions, not called yet (program wave B) |
 | A service worker and Web Push | Planned, program wave B |
-| The inbox panel and `nakafa.com/id/notifications` | Planned, program wave B |
+| The inbox panel and `nakafa.com/id/notifications`, the next reader of `notifications:list`, `notifications:read`, and `notifications:readAll` | Planned, program wave B |
 | WhatsApp | Planned, after the first channels |

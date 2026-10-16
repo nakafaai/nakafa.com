@@ -13,6 +13,7 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -30,6 +31,7 @@ function seedStartedDeletion(t: ReturnType<typeof convexTest>, authId: string) {
               creditsResetAt: 0,
               deletionPreparedAt: NOW,
               email: `${authId}@example.com`,
+              mascot: MASCOT_CODE,
               name: authId,
               plan: "free",
             })

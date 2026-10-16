@@ -10,6 +10,7 @@ import {
   userRoleValidator,
 } from "@repo/backend/confect/users/schema";
 import { UsernameRejected } from "@repo/backend/confect/users/username";
+import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
 /**
  * Update the app user's role.
@@ -59,6 +60,18 @@ export default GroupSpec.make()
       }),
       returns: () => Schema.Null,
       error: () => Schema.Union([AuthFailure, BioTooLong]),
+    })
+      .middleware(Session)
+      .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "setMascot",
+      args: () => ({
+        mascot: MascotCode,
+      }),
+      returns: () => Schema.Struct({ mascot: MascotCode }),
+      error: () => AuthFailure,
     })
       .middleware(Session)
       .middleware(Atomic)

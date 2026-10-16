@@ -75,7 +75,7 @@ export function useMemoryActions() {
   const clearAll = useMutation(nina.memory.clear).withOptimisticUpdate(
     (store) => clearList(store)
   );
-  const messages = { missing: t("missing"), other };
+  const messages = { limit: t("limit"), missing: t("missing"), other };
 
   /**
    * Sends one change from an event. `done` gets what the server answered. When
@@ -186,7 +186,7 @@ export function useMemoryActions() {
             reopen(session, draftOf(memory), null);
           }
         },
-        told: { missing: undoFailed, other: undoFailed },
+        told: { limit: t("limit"), missing: undoFailed, other: undoFailed },
       }
     );
   }

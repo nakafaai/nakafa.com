@@ -1,4 +1,4 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { Docs, NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
@@ -38,15 +38,15 @@ export const activeTurns = Effect.fn("nina.capacity.active")(function* (
  * the Agent journal after `SETTLE_GRACE` (`abandonTurn`), which frees the chat
  * and pays the hold back. Only a hold that cannot be paid back, because the
  * credit state itself cannot be read, keeps the chat busy until it can.
+ *
+ * `newest` is what `activeTurns` read, which admission already holds from
+ * `settleStopped`, so the learner's turns are read once.
  */
 export const requireOpenCapacity = Effect.fn("nina.capacity.require")(
-  function* (userId: Docs["users"]["_id"]) {
+  function* (newest: readonly NinaTurnsDoc[]) {
     const since =
       (yield* Clock.currentTimeMillis) - Duration.toMillis(TURN_DEADLINE);
-    const open = Arr.filter(
-      yield* activeTurns(userId),
-      (turn) => turn._creationTime >= since
-    );
+    const open = Arr.filter(newest, (turn) => turn._creationTime >= since);
     if (open.length >= OPEN_TURN_LIMIT) {
       return yield* new NinaCreditError({
         code: "RATE_LIMITED",

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { isReservedUsername } from "@repo/backend/confect/users/reserved";
+import {
+  isMisleadingName,
+  isReservedUsername,
+} from "@repo/backend/confect/users/reserved";
 import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { Array as Arr, Record as Rec } from "effect";
@@ -9,15 +12,27 @@ describe("users/reserved", () => {
     "nakafa",
     "nina",
     "admin",
+    "administrator",
     "support",
     "help",
     "official",
+    "operator",
+    "root",
+    "system",
+    "login",
+    "dev",
+    "test",
     "school",
     "sekolah",
     "settings",
     "api",
   ])("reserves the name %s that could pass for Nakafa", (name) => {
     expect(isReservedUsername(name)).toBe(true);
+    expect(isMisleadingName(name)).toBe(true);
+  });
+
+  it("leaves a route word to a school login, which is never a URL", () => {
+    expect(isMisleadingName("materi")).toBe(false);
   });
 
   it.each(["about", "community", "discord", "sitemap"])(

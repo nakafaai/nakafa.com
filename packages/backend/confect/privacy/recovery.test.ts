@@ -1,5 +1,6 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 // @vitest-environment node
 
 import {
@@ -74,6 +75,7 @@ async function admit() {
       credits: 0,
       creditsResetAt: NOW,
       email: "privacy-recovery@example.invalid",
+      mascot: MASCOT_CODE,
       name: "Privacy recovery",
       plan: "free",
     })

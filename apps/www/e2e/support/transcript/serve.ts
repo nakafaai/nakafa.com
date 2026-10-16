@@ -1,12 +1,11 @@
 import type { Page } from "@playwright/test";
 import type { chatViewValidator } from "@repo/backend/confect/chats/view";
-import type { MessagePage } from "@repo/backend/confect/nina/contract/message";
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
-import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import {
   Array as Arr,
   Effect,
   MutableHashMap,
+  MutableHashSet,
   MutableRef,
   Option,
   Schema,
@@ -17,12 +16,17 @@ import {
   decodeSent,
   decodeTransition,
   encodeTransition,
+  type SentSchema,
 } from "@/e2e/support/frames";
+import {
+  type AskedQueries,
+  answerTo,
+  CONVERSATION,
+  noticeQueries,
+  type ServedMessage,
+  type Writing,
+} from "@/e2e/support/query";
 import { THREAD } from "@/e2e/support/transcript/message";
-
-/** The Convex names of the two queries that give a chat its messages. */
-const CONVERSATION = "nina/conversation:get";
-const MESSAGES = "nina/messages:list";
 
 /** The socket of the page's realtime connection, as Playwright routes it. */
 type Socket = Parameters<Parameters<Page["routeWebSocket"]>[1]>[0];
@@ -35,15 +39,12 @@ class NoConnection extends Schema.TaggedError<NoConnection>()("NoConnection", {
 /** The id of the fixture chat. The page takes any string for the id of a chat. */
 export const CHAT = "e2e-evidence-chat";
 
-/**
- * What the page calls the queries of a chat with: the chat, and for the
- * messages the stream it asks for, which only a request of the stream carries.
- */
+/** The fixture writes no answer while the page watches, so a stream is empty. */
+const NOTHING_WRITTEN: Writing = { chunks: [], order: null };
+
+/** What the page calls the conversation with: the chat it reads. */
 const decodeChatArgs = Schema.decodeUnknownOption(
-  Schema.Struct({
-    chatId: Schema.String,
-    streamArgs: Schema.optionalKey(Schema.Unknown),
-  })
+  Schema.Struct({ chatId: Schema.String })
 );
 
 /** The fields of a chat as readers receive it. */
@@ -65,11 +66,12 @@ type Conversation = Schema.Struct<{
   readonly turn: Schema.NullOr<typeof NinaTurnSummary>;
 }>["Encoded"];
 
-/** What `nina.messages.list` returns, as the wire holds it. */
-type Messages = typeof MessagePage.Encoded;
-
-/** The conversation of the fixture chat: its chat, and the turn that ran last. */
-function conversationOf(messages: readonly NinaMessage[]): Conversation {
+/**
+ * The conversation of the fixture chat: its chat, and the turn that ran last.
+ * The turn comes from the messages that answer it, whose facts the messages
+ * query does not tell.
+ */
+function conversationOf(messages: readonly ServedMessage[]): Conversation {
   const last = Arr.findLast(
     messages,
     (message) => message.role === "assistant"
@@ -91,110 +93,95 @@ function conversationOf(messages: readonly NinaMessage[]): Conversation {
   };
 }
 
-/** The transcript of the fixture chat, with no stream beside it. */
-function transcriptOf(messages: readonly NinaMessage[]): Messages {
-  return {
-    continueCursor: "end",
-    isDone: true,
-    page: [...messages],
-    streams: { kind: "list", messages: [] },
-  };
-}
-
-/** What the page reads next to the transcript: the streams of a chat, and none is live. */
-const STREAMS: Messages = {
-  continueCursor: "",
-  isDone: true,
-  page: [],
-  streams: { kind: "list", messages: [] },
-};
-
-/** The queries of one connection that read the fixture chat, by id, with the answer each gets. */
-type Served = MutableHashMap.MutableHashMap<number, unknown>;
-
 /**
- * Remembers which queries a change of the page's query set adds for the
- * fixture chat, and forgets the ones it drops. A query for any other chat, or
- * for anything else, is left to the server.
+ * Remembers which conversation queries a change of the page's query set adds
+ * for the fixture chat, and forgets the ones it drops. A conversation of any
+ * other chat is left to the server.
  */
-function noticeChange(
-  served: Served,
-  shown: MutableRef.MutableRef<readonly NinaMessage[]>,
-  transcript: MutableRef.MutableRef<Option.Option<number>>,
-  text: string
+function noticeConversations(
+  conversations: MutableHashSet.MutableHashSet<number>,
+  frame: typeof SentSchema.Type
 ) {
-  const frame = decodeSent(text);
-  if (Option.isNone(frame) || frame.value.type !== "ModifyQuerySet") {
+  if (frame.type !== "ModifyQuerySet") {
     return;
   }
-  for (const modification of frame.value.modifications) {
+  for (const modification of frame.modifications) {
     if (modification.type === "Remove") {
-      MutableHashMap.remove(served, modification.queryId);
+      MutableHashSet.remove(conversations, modification.queryId);
       continue;
     }
-    const args = Option.fromNullishOr(modification.args).pipe(
+    if (modification.udfPath !== CONVERSATION) {
+      continue;
+    }
+    const chat = Option.fromNullishOr(modification.args).pipe(
       Option.flatMap(Arr.head),
       Option.flatMap(decodeChatArgs)
     );
-    if (Option.isNone(args) || args.value.chatId !== CHAT) {
-      continue;
-    }
-    if (modification.udfPath === CONVERSATION) {
-      MutableHashMap.set(
-        served,
-        modification.queryId,
-        conversationOf(shown.current)
-      );
-    }
-    if (modification.udfPath === MESSAGES) {
-      if (args.value.streamArgs === undefined) {
-        MutableRef.set(transcript, Option.some(modification.queryId));
-      }
-      MutableHashMap.set(
-        served,
-        modification.queryId,
-        args.value.streamArgs === undefined
-          ? transcriptOf(shown.current)
-          : STREAMS
-      );
+    if (Option.isSome(chat) && chat.value.chatId === CHAT) {
+      MutableHashSet.add(conversations, modification.queryId);
     }
   }
 }
 
-/**
- * Puts the answer of the fixture chat in place of every result the server
- * sends for one of its queries. A frame that is no transition, and a result
- * of any other query, pass through as they are.
- */
-function replaceResults(served: Served, text: string) {
-  return Option.getOrElse(
-    answerQueriesIn(text, (queryId) => MutableHashMap.get(served, queryId)),
-    () => text
+/** Whether the page has read a page of messages, which a stream must update. */
+const readsMessages = (asked: AskedQueries) =>
+  Arr.some(
+    Arr.fromIterable(MutableHashMap.values(asked)),
+    (query) => query.kind === "page"
   );
-}
 
 /**
  * Serves the conversation that `shown` holds to a page. The page reads a chat
- * through two queries, the conversation and its messages, and both come back
- * from the server as failures, because the chat is not stored. So the page's
- * own realtime frames are the door: the answers the server sends for those
- * queries are replaced with the conversation, and every other frame passes
- * through. A page that opens after `shown` changed reads the new conversation.
+ * through its conversation and its messages, and the server answers both as
+ * failures, because the chat is not stored. So the page's own realtime frames
+ * are the door: the answers the server sends for those queries are replaced
+ * with what the fixture holds, the way the messages server answers them, and
+ * every other frame passes through. A page that opens after `shown` changed
+ * reads the new conversation. The `stream` it returns puts new messages in
+ * front of a page that is open.
  */
 export const serveConversation = Effect.fn("NakafaE2E.serveConversation")(
-  function* (page: Page, shown: MutableRef.MutableRef<readonly NinaMessage[]>) {
+  function* (
+    page: Page,
+    shown: MutableRef.MutableRef<readonly ServedMessage[]>
+  ) {
+    /** The socket of the latest connection of the page, which a stream writes to. */
     const socket = MutableRef.make<Option.Option<Socket>>(Option.none());
+    /** What the queries of that connection ask for, as `noticeQueries` records it. */
+    const asked = MutableRef.make<Option.Option<AskedQueries>>(Option.none());
+    /** The version that the server sent last on that connection. A stream answers with it. */
     const version = MutableRef.make<Option.Option<unknown>>(Option.none());
-    const transcript = MutableRef.make<Option.Option<number>>(Option.none());
 
     yield* Effect.promise(() =>
       page.routeWebSocket(CONVEX_SOCKET, (route) => {
         const server = route.connectToServer();
-        const served: Served = MutableHashMap.empty();
-
+        /** What each message and turn query of this connection asks for, and the conversation queries. */
+        const queries: AskedQueries = MutableHashMap.empty();
+        const conversations = MutableHashSet.empty<number>();
         MutableRef.set(socket, Option.some(route));
+        MutableRef.set(asked, Option.some(queries));
+        MutableRef.set(version, Option.none());
+
+        /** The answer to a query of this connection that the fixture serves, and none for any other. */
+        const answerOf = (queryId: number): Option.Option<unknown> => {
+          const query = MutableHashMap.get(queries, queryId);
+          if (Option.isSome(query)) {
+            return Option.some(
+              answerTo(query.value, shown.current, NOTHING_WRITTEN)
+            );
+          }
+          if (MutableHashSet.has(conversations, queryId)) {
+            return Option.some(conversationOf(shown.current));
+          }
+          return Option.none();
+        };
+
         route.onMessage((message) => {
-          noticeChange(served, shown, transcript, message.toString());
+          const sent = decodeSent(message.toString());
+          if (Option.isSome(sent)) {
+            noticeQueries(queries, sent.value);
+            noticeConversations(conversations, sent.value);
+          }
           server.send(message);
         });
         server.onMessage((message) => {
@@ -203,47 +190,52 @@ export const serveConversation = Effect.fn("NakafaE2E.serveConversation")(
           if (Option.isSome(transition)) {
             MutableRef.set(version, Option.some(transition.value.endVersion));
           }
-          route.send(replaceResults(served, text));
+          route.send(
+            Option.getOrElse(answerQueriesIn(text, answerOf), () => text)
+          );
         });
       })
     );
 
     return {
       /**
-       * Puts `messages` in front of the page as a new answer of the transcript,
-       * the way Agent does while a turn streams. The connection keeps the version
-       * it holds, so the page reads the answer as one more update of the same
-       * query. It fails until the page's connection has read the transcript.
+       * Puts `messages` in front of the page as the new answer of its chat, the
+       * way Agent does while a turn streams. Every query the page asked of its
+       * messages takes the new answer, with the version the connection holds, so
+       * the page reads the change as one more update of the same queries. It
+       * fails until the page's connection has read the messages of the chat.
        */
       stream: Effect.fn("NakafaE2E.streamChat")(function* (
-        messages: readonly NinaMessage[]
+        messages: readonly ServedMessage[]
       ) {
-        const open = MutableRef.get(socket);
-        const current = MutableRef.get(version);
-        const query = MutableRef.get(transcript);
-        if (
-          Option.isNone(open) ||
-          Option.isNone(current) ||
-          Option.isNone(query)
-        ) {
+        const live = Option.all({
+          asked: MutableRef.get(asked),
+          socket: MutableRef.get(socket),
+          version: MutableRef.get(version),
+        });
+        if (Option.isNone(live) || !readsMessages(live.value.asked)) {
           return yield* new NoConnection({
             message: "The page has not read the chat yet.",
           });
         }
+        const { asked: queries, socket: open, version: current } = live.value;
         MutableRef.set(shown, messages);
-        open.value.send(
+        const modifications = Arr.getSomes(
+          Arr.map(Arr.fromIterable(MutableHashMap.keys(queries)), (queryId) =>
+            Option.map(MutableHashMap.get(queries, queryId), (query) => ({
+              journal: null,
+              logLines: [],
+              queryId,
+              type: "QueryUpdated",
+              value: answerTo(query, messages, NOTHING_WRITTEN),
+            }))
+          )
+        );
+        open.send(
           encodeTransition({
-            endVersion: current.value,
-            modifications: [
-              {
-                journal: null,
-                logLines: [],
-                queryId: query.value,
-                type: "QueryUpdated",
-                value: transcriptOf(messages),
-              },
-            ],
-            startVersion: current.value,
+            endVersion: current,
+            modifications,
+            startVersion: current,
             type: "Transition",
           })
         );

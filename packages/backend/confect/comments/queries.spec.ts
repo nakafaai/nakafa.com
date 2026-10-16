@@ -10,6 +10,7 @@ import { Schema } from "effect";
 const publicCommentUserValidator = Schema.Struct({
   _id: userDataValidator.fields._id,
   image: userDataValidator.fields.image,
+  mascot: userDataValidator.fields.mascot,
   name: userDataValidator.fields.name,
 });
 const commentWithViewerVoteValidator = Schema.Struct({
