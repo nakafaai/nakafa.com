@@ -6,12 +6,18 @@ import { Schema } from "effect";
 /**
  * An integration client that a school API request verified, with its tenant.
  * Only the HTTP layer builds one, and it passes one to internal functions only.
- * `decide` never reads the client's secret digest.
+ * A client belongs to one school, so a pair with another school's tenant is
+ * refused when it is built, and `decide` never sees such a pair. `decide` never
+ * reads the client's secret digest.
  */
 export const ClientPrincipal = Schema.Struct({
   client: integrationClients.Doc,
   tenant: tenants.Doc,
-});
+}).check(
+  Schema.makeFilter(({ client, tenant }) => client.tenantId === tenant._id, {
+    message: "A client decides only for the school it belongs to.",
+  })
+);
 
 /**
  * The caller a decision is about: a Person through `Member`, or an integration

@@ -1,11 +1,15 @@
 import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   journal,
   slugOf,
   suspend,
+  TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { sha256Hex } from "@repo/utilities/digest";
@@ -25,6 +29,23 @@ const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 const stored = (clientId: GenericId.GenericId<"integrationClients">) =>
   Effect.flatMap(DatabaseReader, (reader) =>
     reader.table("integrationClients").get(clientId).pipe(Effect.orDie)
+  );
+
+/** Stores `count` active clients of the school directly, so a list has more rows than one page. */
+const seedClients = (tenantId: GenericId.GenericId<"tenants">, count: number) =>
+  Effect.flatMap(DatabaseWriter, (writer) =>
+    Effect.forEach(Arr.range(1, count), () =>
+      writer.table("integrationClients").insert({
+        actions: ["person.view"],
+        name: "Sinkron Harapan",
+        revokedAt: null,
+        rotatedAt: TENANCY_NOW,
+        scope: { kind: "tenant" },
+        secretHash: "0".repeat(64),
+        status: "active",
+        tenantId,
+      })
+    )
   );
 
 describe("integrations/clients create", () => {
@@ -200,6 +221,25 @@ describe("integrations/clients list", () => {
       ]);
       expect(listed.page[0]).not.toHaveProperty("secretHash");
     })
+  );
+
+  it.effect(
+    "clamps a page size below one, or above 100 rows, into that range",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.run(seedClients(fixture.tenants.nf, 101));
+        const sizes = yield* Effect.forEach([0, -3, 500], (numItems) =>
+          fixture
+            .as("admin")
+            .query(list, {
+              paginationOpts: { cursor: null, numItems },
+              slug: nf,
+            })
+            .pipe(Effect.map((listed) => listed.page.length))
+        );
+        expect(sizes).toEqual([1, 1, 100]);
+      })
   );
 
   it.effect("refuses the list to a teacher and to another school's Owner", () =>

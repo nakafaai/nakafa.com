@@ -1,28 +1,16 @@
 import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { decide } from "@repo/backend/confect/access/decision";
-import { ClientPrincipal } from "@repo/backend/confect/access/principal";
-import type {
-  GrantScope,
-  Rule,
-  RuleRole,
-} from "@repo/backend/confect/access/schema";
-import type {
-  ClientActions,
-  IntegrationStatus,
-} from "@repo/backend/confect/integrations/schema";
+import type { Rule, RuleRole } from "@repo/backend/confect/access/schema";
+import { clientPrincipal } from "@repo/backend/test/integrations";
 import {
   defectOf,
   principal,
   suspend,
-  TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Effect, HashMap, Schema } from "effect";
+import { Effect, HashMap } from "effect";
 
 const read = (roles: readonly (typeof RuleRole.Type)[]): Rule => ({
   access: "read",
@@ -52,40 +40,6 @@ const related = (holds: boolean) =>
     ["member", Effect.succeed(holds)],
     ["guardian", Effect.succeed(holds)]
   );
-
-/**
- * Inserts one integration client of a tenant and returns it as the school API
- * principal holds it: the client and its tenant.
- */
-const clientOf = Effect.fn("test.decision.client")(function* (
-  tenantId: GenericId.GenericId<"tenants">,
-  fields: {
-    actions: typeof ClientActions.Type;
-    scope: GrantScope;
-    status: typeof IntegrationStatus.Type;
-  }
-) {
-  const clientId = yield* (yield* DatabaseWriter)
-    .table("integrationClients")
-    .insert({
-      actions: fields.actions,
-      name: "Sinkron Harapan",
-      revokedAt: fields.status === "revoked" ? TENANCY_NOW : null,
-      rotatedAt: TENANCY_NOW,
-      scope: fields.scope,
-      secretHash: fields.status === "active" ? "0".repeat(64) : null,
-      status: fields.status,
-      tenantId,
-    });
-  const reader = yield* DatabaseReader;
-  return yield* Schema.decodeEffect(ClientPrincipal)({
-    client: yield* reader
-      .table("integrationClients")
-      .get(clientId)
-      .pipe(Effect.orDie),
-    tenant: yield* reader.table("tenants").get(tenantId).pipe(Effect.orDie),
-  }).pipe(Effect.orDie);
-});
 
 describe("access/decision", () => {
   it.effect("allows listed roles and every Owner, then relations", () =>
@@ -257,7 +211,7 @@ describe("access/decision", () => {
       const fixture = yield* tenancyFixture;
       const verdicts = yield* fixture.run(
         Effect.gen(function* () {
-          const ours = yield* clientOf(fixture.tenants.nf, {
+          const ours = yield* clientPrincipal(fixture.tenants.nf, {
             actions: ["person.view", "person.manage"],
             scope: { kind: "tenant" },
             status: "active",
@@ -290,7 +244,7 @@ describe("access/decision", () => {
       const fixture = yield* tenancyFixture;
       const verdicts = yield* fixture.run(
         Effect.gen(function* () {
-          const revoked = yield* clientOf(fixture.tenants.nf, {
+          const revoked = yield* clientPrincipal(fixture.tenants.nf, {
             actions: ["person.view", "person.manage"],
             scope: { kind: "tenant" },
             status: "revoked",
@@ -317,7 +271,7 @@ describe("access/decision", () => {
       const fixture = yield* tenancyFixture;
       const verdicts = yield* fixture.run(
         Effect.gen(function* () {
-          const roster = yield* clientOf(fixture.tenants.nf, {
+          const roster = yield* clientPrincipal(fixture.tenants.nf, {
             actions: ["person.view"],
             scope: { kind: "tenant" },
             status: "active",
@@ -350,7 +304,7 @@ describe("access/decision", () => {
       const fixture = yield* tenancyFixture;
       const verdicts = yield* fixture.run(
         Effect.gen(function* () {
-          const roster = yield* clientOf(fixture.tenants.nf, {
+          const roster = yield* clientPrincipal(fixture.tenants.nf, {
             actions: ["person.view", "person.manage"],
             scope: { kind: "tenant" },
             status: "active",
@@ -385,7 +339,7 @@ describe("access/decision", () => {
       const { sma, smp } = fixture.units;
       const verdicts = yield* fixture.run(
         Effect.gen(function* () {
-          const unitRoster = yield* clientOf(fixture.tenants.nf, {
+          const unitRoster = yield* clientPrincipal(fixture.tenants.nf, {
             actions: ["person.view"],
             scope: { kind: "unit", unitId: sma },
             status: "active",
@@ -418,7 +372,7 @@ describe("access/decision", () => {
         };
         const verdicts = yield* fixture.run(
           Effect.gen(function* () {
-            const roster = yield* clientOf(fixture.tenants.nf, {
+            const roster = yield* clientPrincipal(fixture.tenants.nf, {
               actions: ["person.manage"],
               scope: { kind: "tenant" },
               status: "active",
@@ -441,7 +395,7 @@ describe("access/decision", () => {
             yield* (yield* DatabaseWriter)
               .table("tenants")
               .patch(fixture.tenants.nf, { status: "suspended" });
-            const inSuspended = yield* clientOf(fixture.tenants.nf, {
+            const inSuspended = yield* clientPrincipal(fixture.tenants.nf, {
               actions: ["person.manage"],
               scope: { kind: "tenant" },
               status: "active",

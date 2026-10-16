@@ -10,7 +10,7 @@ import {
 } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { Rule } from "@repo/backend/confect/access/schema";
-import { Array as Arr, Option, pipe, Record, Schema } from "effect";
+import { Array as Arr, Option, Order, pipe, Record, Schema } from "effect";
 
 describe("access/catalog", () => {
   it("derives one object reference per declared kind", () => {
@@ -29,15 +29,17 @@ describe("access/catalog", () => {
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
   });
 
-  it("opens only the roster reads of a school to the integration role", () => {
-    expect([
-      opensTo("person.view", "integration"),
-      opensTo("period.view", "integration"),
-      opensTo("cohort.view", "integration"),
-      opensTo("person.manage", "integration"),
-      opensTo("integration.manage", "integration"),
-      opensTo("grant.manage", "integration"),
-    ]).toEqual([true, true, true, false, false, false]);
+  it("opens exactly the roster reads of a school to the integration role", () => {
+    const opened = Arr.flatMap(entries, (entry) =>
+      Arr.filter(Record.keys<string, Rule>(entry.actions), (action) =>
+        opensTo(action, "integration")
+      )
+    );
+    expect(Arr.sort(Arr.dedupe(opened), Order.String)).toEqual([
+      "cohort.view",
+      "period.view",
+      "person.view",
+    ]);
   });
 
   it("derives every change of every kind and extension", () => {

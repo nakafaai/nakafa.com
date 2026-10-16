@@ -19,12 +19,13 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { Array as Arr, Effect, Layer, Number as Num, Struct } from "effect";
 
-/** The largest page one request reads. */
+/** The most rows one page reads. A request asks for at least one. */
 const PAGE_LIMIT = 100;
 
 /**
  * The clients of the member's school, newest first, a page at a time, read on
- * the school index. A school holds few clients, and every page is bounded.
+ * the school index. A school holds few clients, and every page is bounded: a
+ * requested size outside one to `PAGE_LIMIT` is clamped into that range.
  */
 const list = FunctionImpl.make(
   databaseSchema,
@@ -37,7 +38,10 @@ const list = FunctionImpl.make(
       .index("by_tenantId", (query) => query.eq("tenantId", tenant._id), "desc")
       .paginate(
         Struct.assign(paginationOpts, {
-          numItems: Num.min(paginationOpts.numItems, PAGE_LIMIT),
+          numItems: Num.clamp(paginationOpts.numItems, {
+            maximum: PAGE_LIMIT,
+            minimum: 1,
+          }),
         })
       )
       .pipe(Effect.orDie);

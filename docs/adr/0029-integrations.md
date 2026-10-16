@@ -79,7 +79,7 @@ import, and the Dapodik export itself stays with `confect/connectors`
 
 ### REST: one `HttpApi`
 
-One `HttpApi` definition in `confect/integration` declares the groups, endpoints,
+One `HttpApi` definition in `confect/integrations` declares the groups, endpoints,
 and schemas of the school API. Everything else comes from it.
 
 - `HttpApiBuilder.layer` mounts the routes on the Confect router beside the
@@ -441,7 +441,7 @@ The 19 files that import `convex-helpers`:
 | `@nakafa/cli` 0.1.1 | Live, public and read only |
 | `effect/http-api` in Nakafa code | Not used yet |
 | `integrationClients` and the client registry (the amendment of 14 October 2026) | Built, with no route yet |
-| `confect/integration` (the `HttpApi` definition), `integrationDeliveries` | Planned, program wave C |
+| `confect/integrations` (the `HttpApi` definition), `integrationDeliveries` | Planned, program wave C |
 | School REST, school MCP, and the CLI login | Planned, program wave C |
 | Webhooks and exports | Planned, program wave C |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |

@@ -25,6 +25,17 @@ const planReaders: (typeof RuleRole.Type)[] = [
   "integration",
 ];
 
+/** The school roles and integration clients that read the people of their school. */
+const personReaders: (typeof RuleRole.Type)[] = [
+  "admin",
+  "principal",
+  "deputy",
+  "counselor",
+  "staff",
+  "auditor",
+  "integration",
+];
+
 /**
  * The tenant itself. Every active member Person reaches the School shell
  * through the `member` relation; operator Persons act only through their
@@ -119,15 +130,7 @@ export const person = Kind.make("person", "tenantPeople", {
       access: "read",
       grantedBy: "roles",
       relations: ["self"],
-      roles: [
-        "admin",
-        "principal",
-        "deputy",
-        "counselor",
-        "staff",
-        "auditor",
-        "integration",
-      ],
+      roles: personReaders,
     },
   },
   changes: [
@@ -254,15 +257,7 @@ const tenantPeople = Kind.extend(tenant, {
       access: "read",
       grantedBy: "roles",
       relations: [],
-      roles: [
-        "admin",
-        "principal",
-        "deputy",
-        "counselor",
-        "staff",
-        "auditor",
-        "integration",
-      ],
+      roles: personReaders,
     },
   },
   changes: [],
