@@ -105,10 +105,10 @@ describe("mascot/candidates", () => {
     "gives mascots whose stored codes read back as the same mascot",
     () =>
       Effect.gen(function* () {
-        const decode = Schema.decodeSync(MascotCode);
         const sets = yield* Effect.forEach(SEEDS, (seed) => draw(seed, 4));
         for (const mascot of Arr.flatten(sets)) {
-          expect(decode(encode(mascot))).toEqual(mascot);
+          const read = yield* Schema.decodeEffect(MascotCode)(encode(mascot));
+          expect(read).toEqual(mascot);
         }
       })
   );

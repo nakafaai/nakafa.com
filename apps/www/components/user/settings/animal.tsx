@@ -43,7 +43,7 @@ export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
   // the seed.
   const [seed, setSeed] = useState(0);
   const offered = Effect.runSync(
-    candidates(OFFERED_COUNT, current?.animal).pipe(Random.withSeed(seed))
+    candidates(OFFERED_COUNT, current.animal).pipe(Random.withSeed(seed))
   );
 
   const pick = (mascot: typeof Mascot.Type) =>
