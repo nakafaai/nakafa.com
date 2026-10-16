@@ -37,9 +37,10 @@ const streaming = (words: string) =>
 const PIECES = ["Ratio", "Ratio of", "Ratio of two"];
 
 /**
- * An answer that streams keeps the settled turns where they are. Each update
- * renders the answer's own row, and at most the row before it, which stops being
- * the newest. The rest keep the props their memo compared, so they do not render.
+ * An answer that streams keeps the settled turns where they are. The first
+ * update adds the question and the answer, and the settled answer before them
+ * stops being the newest, so three rows render. Each later update renders the
+ * answer's own row alone: the rest keep the props their memo compared.
  */
 const keepsSettledRows = Effect.fn("NakafaE2E.streamKeepsSettledRows")(
   function* (page: Page, baseURL: string) {
@@ -47,7 +48,7 @@ const keepsSettledRows = Effect.fn("NakafaE2E.streamKeepsSettledRows")(
     yield* Effect.promise(() => watchRenders(page));
     yield* showChat(page, shown, "en", SETTLED);
 
-    for (const words of PIECES) {
+    for (const [index, words] of PIECES.entries()) {
       const before = yield* Effect.promise(() => commitCount(page));
       yield* stream(streaming(words));
 
@@ -62,9 +63,11 @@ const keepsSettledRows = Effect.fn("NakafaE2E.streamKeepsSettledRows")(
 
       const commits = yield* Effect.promise(() => commitsAfter(page, before));
       const rows = Arr.reduce(commits, 0, (sum, commit) => sum + commit.rows);
+      // The first update adds two rows and re-renders the settled answer before them.
+      const most = index === 0 ? 3 : 1;
 
       expect(rows).toBeGreaterThan(0);
-      expect(rows).toBeLessThanOrEqual(2);
+      expect(rows).toBeLessThanOrEqual(most);
     }
   }
 );
