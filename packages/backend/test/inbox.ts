@@ -4,6 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { noteInvite } from "@repo/backend/confect/notifications/inbox";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
@@ -206,6 +207,25 @@ export const invitedEntry = Effect.fn("test.inbox.invitedEntry")(
       })
     )
 );
+
+/**
+ * Writes `count` invitations of the school as their invite mutations do: each entry, then its
+ * cursor mark and its run. All of them fall inside one window.
+ */
+export const burstOf = Effect.fn("test.inbox.burstOf")(function* (
+  fixture: Fixture,
+  count: number
+) {
+  yield* Effect.forEach(
+    Arr.makeBy(count, (index) => index),
+    (index) =>
+      Effect.gen(function* () {
+        const entry = yield* invitedEntry(fixture, index);
+        yield* fixture.run(noteInvite(fixture.tenants.nf, entry));
+      }),
+    { discard: true }
+  );
+});
 
 /**
  * Inserts inbox rows for one Person straight into the table. An invite of the

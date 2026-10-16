@@ -1,14 +1,10 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import {
   JOURNAL_COMMIT_LAG,
-  markPending,
   planRun,
-  readAfter,
 } from "@repo/backend/confect/journal/cursor";
-import { cursors, invitedEntry, NOW } from "@repo/backend/test/inbox";
-import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Schema } from "effect";
 
 /** The ID of a journal entry, as a test names it. */
 const entryId = (name: string) =>
@@ -125,20 +121,56 @@ describe("journal/cursor planRun", () => {
     expect(later.nextRunAt).toBeUndefined();
   });
 
-  it("stops at the handled limit, and asks for the next run when the oldest entry it left settles", () => {
+  it("stops at the handled limit, which keeps one slot free, and asks for the next run when the oldest entry it left settles", () => {
     const page = [
       entry("u1", 6000),
       entry("u2", 6500),
       entry("u3", 7000),
       entry("u4", 7500),
     ];
-    const plan = planRun(10_000, { handled: [], since: 0 }, page, 10, 2);
+    const plan = planRun(10_000, { handled: [], since: 0 }, page, 10, 3);
     expect(plan.handle).toEqual([entry("u1", 6000), entry("u2", 6500)]);
     expect(plan.position).toEqual({
       handled: [handled("u1", 6000), handled("u2", 6500)],
       since: 0,
     });
     // u3 settles at 7000 plus the lag, and by then every handled entry has settled too.
+    expect(plan.nextRunAt).toBe(7000 + JOURNAL_COMMIT_LAG);
+  });
+
+  it("keeps a late settled entry within the limit, beside the unsettled entries it handled", () => {
+    const unsettled = [entry("u1", 6000), entry("u2", 6010), entry("u3", 6020)];
+    // Two unsettled entries are handled early, and one slot of the three stays free.
+    const first = planRun(6050, { handled: [], since: 0 }, unsettled, 10, 3);
+    expect(first.position.handled).toEqual([
+      handled("u1", 6000),
+      handled("u2", 6010),
+    ]);
+    // A late entry, created at 5500 before them, commits now and settles at 10500.
+    const late = planRun(
+      10_500,
+      first.position,
+      [entry("late", 5500), ...unsettled],
+      10,
+      3
+    );
+    expect(late.handle).toEqual([entry("late", 5500)]);
+    expect(late.position).toEqual({
+      handled: [
+        handled("u1", 6000),
+        handled("u2", 6010),
+        handled("late", 5500),
+      ],
+      since: 5500,
+    });
+    expect(late.nextRunAt).toBe(Math.ceil(6020 + JOURNAL_COMMIT_LAG));
+  });
+
+  it("waits for the oldest unread entry when the bound stopped a run that filled its page", () => {
+    const page = [entry("u1", 6000), entry("u2", 6500), entry("u3", 7000)];
+    // The page holds two entries and the limit three, so the next run would have no room.
+    const plan = planRun(10_000, { handled: [], since: 0 }, page, 2, 3);
+    expect(plan.handle).toEqual([entry("u1", 6000), entry("u2", 6500)]);
     expect(plan.nextRunAt).toBe(7000 + JOURNAL_COMMIT_LAG);
   });
 
@@ -171,6 +203,18 @@ describe("journal/cursor planRun", () => {
       handled: [handled("b", 2000)],
       since: 2000,
     });
+    expect(plan.nextRunAt).toBe(10_000);
+  });
+
+  it("asks for the next run at once while the limit leaves room for an unsettled entry", () => {
+    const page = [
+      entry("u1", 6000),
+      entry("u2", 6500),
+      entry("u3", 7000),
+      entry("u4", 7500),
+    ];
+    const plan = planRun(10_000, { handled: [], since: 0 }, page, 2, 5);
+    expect(plan.handle).toEqual([entry("u1", 6000), entry("u2", 6500)]);
     expect(plan.nextRunAt).toBe(10_000);
   });
 
@@ -230,10 +274,10 @@ describe("journal/cursor planRun", () => {
       entry("u3", 7000),
       entry("u4", 7500),
     ];
-    const first = planRun(10_000, { handled: [], since: 0 }, page, 10, 2);
+    const first = planRun(10_000, { handled: [], since: 0 }, page, 10, 3);
     const settleOfU3 = 7000 + JOURNAL_COMMIT_LAG;
     expect(first.nextRunAt).toBe(settleOfU3);
-    const second = planRun(settleOfU3, first.position, page, 10, 2);
+    const second = planRun(settleOfU3, first.position, page, 10, 3);
     expect(second.handle).toEqual([entry("u3", 7000), entry("u4", 7500)]);
     expect(second.position).toEqual({
       handled: [handled("u3", 7000), handled("u4", 7500)],
@@ -241,103 +285,4 @@ describe("journal/cursor planRun", () => {
     });
     expect(second.nextRunAt).toBeUndefined();
   });
-});
-
-describe("journal/cursor store", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(NOW);
-  });
-
-  it.effect(
-    "starts a new cursor five seconds before the entry that makes it",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        vi.setSystemTime(NOW + 10_000);
-        const id = yield* invitedEntry(fixture, 0);
-        yield* fixture.run(
-          markPending("inbox", fixture.tenants.nf, "person.invited", id)
-        );
-        const [entry] = yield* fixture.run(journal);
-        if (entry === undefined) {
-          return yield* Effect.die(
-            "The invite must have written a journal entry."
-          );
-        }
-        expect(yield* cursors(fixture)).toMatchObject([
-          {
-            handled: [],
-            pending: true,
-            since: entry._creationTime - JOURNAL_COMMIT_LAG,
-          },
-        ]);
-      })
-  );
-
-  it.effect(
-    "keeps the start of a cursor that already exists, and marks it pending again",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        vi.setSystemTime(NOW + 10_000);
-        const first = yield* invitedEntry(fixture, 0);
-        yield* fixture.run(
-          markPending("inbox", fixture.tenants.nf, "person.invited", first)
-        );
-        const [entry] = yield* fixture.run(journal);
-        if (entry === undefined) {
-          return yield* Effect.die(
-            "The invite must have written a journal entry."
-          );
-        }
-        const start = entry._creationTime - JOURNAL_COMMIT_LAG;
-        vi.setSystemTime(NOW + 20_000);
-        const second = yield* invitedEntry(fixture, 1);
-        yield* fixture.run(
-          markPending("inbox", fixture.tenants.nf, "person.invited", second)
-        );
-        expect(yield* cursors(fixture)).toMatchObject([
-          { pending: true, since: start },
-        ]);
-      })
-  );
-
-  it.effect(
-    "reads from its position inclusive, and never an entry created before it",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        vi.setSystemTime(NOW + 1000);
-        yield* invitedEntry(fixture, 0);
-        vi.setSystemTime(NOW + 2000);
-        yield* invitedEntry(fixture, 1);
-        vi.setSystemTime(NOW + 3000);
-        yield* invitedEntry(fixture, 2);
-        const [, second, third] = yield* fixture.run(journal);
-        if (second === undefined || third === undefined) {
-          return yield* Effect.die(
-            "The invites must have written three journal entries."
-          );
-        }
-        const read = yield* fixture.run(
-          readAfter(
-            fixture.tenants.nf,
-            "person.invited",
-            {
-              handled: [
-                { createdAt: second._creationTime, entryId: second._id },
-              ],
-              since: second._creationTime,
-            },
-            10
-          )
-        );
-        // The entry at since is read again, so the run can skip it by ID; the older one is not read.
-        expect(Arr.map(read, (row) => row._id)).toEqual([
-          second._id,
-          third._id,
-        ]);
-      })
-  );
 });

@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { JOURNAL_COMMIT_LAG } from "@repo/backend/confect/journal/cursor";
 import {
   consumeInboxPage,
@@ -13,6 +10,7 @@ import {
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
   addPerson,
+  burstOf,
   consumeSchool,
   cursors,
   type Fixture,
@@ -22,7 +20,11 @@ import {
   NOW,
   storedRows,
 } from "@repo/backend/test/inbox";
-import { invitePerson, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  invitePerson,
+  journal,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const GURU = "guru@harapan.example.test";
@@ -42,63 +44,26 @@ describe("notifications/inbox invitedInboxSends", () => {
   });
 });
 
-/** The journal entries of the school's invitations, oldest first. */
-const invitedEntries = (fixture: Fixture) =>
-  fixture
-    .run(
-      Effect.flatMap(DatabaseReader, (reader) =>
-        reader.table("journalEntries").index("by_creation_time").take(200)
-      )
-    )
-    .pipe(
-      Effect.map((entries) =>
-        Arr.filter(entries, (entry) => entry.change.type === "person.invited")
-      )
-    );
-
-/**
- * Writes `count` invitations of the school, each as its own invite mutation would. The
- * first one starts the school's cursor, and every one falls inside one window.
- */
-const burstOf = (fixture: Fixture, count: number) =>
-  Effect.gen(function* () {
-    const first = yield* invitedEntry(fixture, 0);
-    yield* fixture.run(noteInvite(fixture.tenants.nf, first));
-    yield* Effect.forEach(
-      Arr.makeBy(count - 1, (index) => index + 1),
-      (index) => invitedEntry(fixture, index),
-      { discard: true }
-    );
-  });
-
-/** The run that was scheduled last, the one a scheduler starts next. */
-const newestRun = (fixture: Fixture) =>
-  Effect.map(inboxRuns(fixture), Arr.last);
-
-/** Where a drain stands between two of its runs: how many runs it made, and when the next one is due. */
+/** Where a drain stands between two runs: how many runs it made, and when the next is due. */
 const DrainState = Schema.Struct({
   made: Schema.Finite,
   pending: Schema.Boolean,
   runAt: Schema.Finite,
 });
 
-/**
- * Runs the inbox of the school at `state.runAt`, and reads the time of the run that the
- * cursor schedules next. After the run, the handled list holds no more than one page of
- * entries.
- */
+/** Runs the inbox at `state.runAt`, and reads when the run that the cursor scheduled last is due. */
 const drainRun = (fixture: Fixture, state: typeof DrainState.Type) =>
   Effect.gen(function* () {
     vi.setSystemTime(state.runAt);
     yield* consumeSchool(fixture, fixture.tenants.nf);
     const [cursor] = yield* cursors(fixture);
     expect(cursor).toBeDefined();
-    expect(cursor?.handled.length ?? 0).toBeLessThanOrEqual(INBOX_PAGE_SIZE);
+    expect(cursor.handled.length).toBeLessThanOrEqual(INBOX_PAGE_SIZE);
     const made = state.made + 1;
-    if (cursor === undefined || !cursor.pending) {
+    if (!cursor.pending) {
       return { made, pending: false, runAt: state.runAt };
     }
-    const next = yield* newestRun(fixture);
+    const next = yield* Effect.map(inboxRuns(fixture), Arr.last);
     if (Option.isNone(next)) {
       return yield* Effect.die("A pending cursor must have a scheduled run.");
     }
@@ -106,10 +71,8 @@ const drainRun = (fixture: Fixture, state: typeof DrainState.Type) =>
   });
 
 /**
- * Runs the inbox of the school at the time of each run that the last one scheduled, as the
- * scheduler starts them, until the cursor is not pending, and returns how many runs it made.
- * A burst of `BURST` entries must drain in fewer runs than it has entries. The runs are a
- * bounded sequence, so a cursor that is still pending at its end fails the test.
+ * Runs the inbox at each run time that the last run scheduled, until the cursor is not
+ * pending, and returns how many runs it made. A cursor still pending at the end fails.
  */
 const drain = (fixture: Fixture, start: number) =>
   Effect.reduce(
@@ -178,6 +141,14 @@ describe("notifications/inbox run", () => {
       })
   );
 
+  it.effect("starts one run for a burst, not one for each invitation", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* burstOf(fixture, BURST);
+      expect(yield* inboxRuns(fixture)).toHaveLength(1);
+    })
+  );
+
   it.effect(
     "drains a burst of invitations larger than one run may hold, with one row each and no refusal",
     () =>
@@ -201,24 +172,19 @@ describe("notifications/inbox run", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* burstOf(fixture, INBOX_PAGE_SIZE + 10);
-        // A page larger than the handled limit stops this run at the limit.
+        // The run stops at the handled limit, which keeps one slot free.
         yield* fixture.run(
           consumeInboxPage(fixture.tenants.nf, INBOX_PAGE_SIZE + 10)
         );
-        expect(yield* storedRows(fixture)).toHaveLength(INBOX_PAGE_SIZE);
+        expect(yield* storedRows(fixture)).toHaveLength(INBOX_PAGE_SIZE - 1);
         const [cursor] = yield* cursors(fixture);
         expect(cursor).toMatchObject({ pending: true });
-        expect(cursor?.handled).toHaveLength(INBOX_PAGE_SIZE);
-        const invited = yield* invitedEntries(fixture);
-        const left = Arr.get(invited, INBOX_PAGE_SIZE);
-        if (Option.isNone(left)) {
-          return yield* Effect.die("The burst must leave an entry unread.");
-        }
-        const next = yield* newestRun(fixture);
-        if (Option.isNone(next)) {
-          return yield* Effect.die(
-            "The run that stopped must schedule the next one."
-          );
+        expect(cursor.handled).toHaveLength(INBOX_PAGE_SIZE - 1);
+        // The first unread entry comes right after the handled ones.
+        const left = Arr.get(yield* fixture.run(journal), INBOX_PAGE_SIZE - 1);
+        const next = yield* Effect.map(inboxRuns(fixture), Arr.last);
+        if (Option.isNone(left) || Option.isNone(next)) {
+          return yield* Effect.die("The burst must leave an entry, and a run.");
         }
         expect(next.value.scheduledTime).toBeCloseTo(
           Math.ceil(left.value._creationTime + JOURNAL_COMMIT_LAG),

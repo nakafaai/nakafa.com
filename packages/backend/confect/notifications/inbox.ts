@@ -8,18 +8,18 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { ObjectRef } from "@repo/backend/confect/access/catalog";
+import { planRun } from "@repo/backend/confect/journal/cursor";
+import type {
+  ConsumedChangeType,
+  JournalConsumer,
+} from "@repo/backend/confect/journal/schema";
 import {
   advance,
   cursorOf,
   markPending,
   pendingOf,
-  planRun,
   readAfter,
-} from "@repo/backend/confect/journal/cursor";
-import type {
-  ConsumedChangeType,
-  JournalConsumer,
-} from "@repo/backend/confect/journal/schema";
+} from "@repo/backend/confect/journal/store";
 import { deliveriesOf } from "@repo/backend/confect/notifications/delivery";
 import { Array as Arr, Clock, Duration, Effect, Option, Schema } from "effect";
 
@@ -40,12 +40,11 @@ const InvitedChange = Schema.Struct({ invite: Id("tenantInvites") });
 export const INBOX_PAGE_SIZE = 50;
 
 /**
- * Unsettled entries that one cursor may hold handled at once (see `planRun`). It is
- * the page size, so the handled entries of one cursor never outgrow one page, and a
- * run reads at most two pages of the journal: one page of new entries beside the
- * handled ones, plus one entry to know whether entries remain. A burst longer than
- * this drains over several runs, which `consumeInboxPage` schedules, and nothing is
- * refused.
+ * The most ids one cursor keeps handled (see `planRun`). It is the page size, so the
+ * ids of one cursor never outgrow one page, and a run reads at most two pages of the
+ * journal: one page of new entries beside the handled ones, plus one entry to know
+ * whether entries remain. A burst longer than this drains over several runs, which
+ * `consumeInboxPage` schedules, and nothing is refused.
  */
 const HANDLED_LIMIT = INBOX_PAGE_SIZE;
 
@@ -199,20 +198,25 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
 );
 
 /**
- * After an invitation is recorded, marks the inbox cursor of its tenant pending
- * and schedules a run. `entryId` is the journal entry that the write recorded in
- * the same transaction. The first invitation of a tenant creates its cursor five
- * seconds before that entry, so the first run reads the invitations created in that
- * window before it, whatever their commit time, and an invitation created earlier gets
- * no row. The run is the normal path; the minute sweep is the backstop for a run that
- * never happened.
+ * After an invitation is recorded, marks the inbox cursor of its tenant pending. A run
+ * is scheduled only when none is owed already: a pending cursor has one, and that run
+ * reads this entry too, or schedules the run that does. So a burst of invitations starts
+ * one chain of runs, not one run for each invitation. `entryId` is the journal entry that
+ * the write recorded in the same transaction. The first invitation of a tenant creates
+ * its cursor five seconds before that entry, so the first run reads the invitations
+ * created in that window before it, whatever their commit time, and an invitation created
+ * earlier gets no row. The minute sweep is the backstop for a run that failed or never
+ * happened.
  */
 export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
   function* (
     tenantId: GenericId.GenericId<"tenants">,
     entryId: GenericId.GenericId<"journalEntries">
   ) {
-    yield* markPending(CONSUMER, tenantId, CHANGE, entryId);
+    const owed = yield* markPending(CONSUMER, tenantId, CHANGE, entryId);
+    if (owed) {
+      return;
+    }
     yield* scheduleRun(tenantId, Duration.zero);
   }
 );
