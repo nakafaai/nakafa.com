@@ -12,17 +12,16 @@ import {
   type Fixture,
   inviteAt,
   NOW,
+  nf,
   storedRows,
 } from "@repo/backend/test/inbox";
 import {
   journal,
   scheduledJobs,
-  slugOf,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const nf = slugOf("nf");
 const GURU = "guru@harapan.example.test";
 const { remove } = refs.public.tenancy.people;
 const { revoke } = refs.public.tenancy.invites;
