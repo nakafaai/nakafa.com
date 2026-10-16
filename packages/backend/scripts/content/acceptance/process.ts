@@ -125,10 +125,17 @@ export const assertLocalPortsFree = Effect.fn(
  * local backend leaves that cap unlimited, so a prerender burst runs dozens of
  * isolates on a few cores and queries exhaust their one-second user time while
  * waiting for CPU. Waiting for an isolate permit does not count as user time.
+ *
+ * The cap covers only this backend's own isolates. On a machine that also runs
+ * other builds and browsers, a query still waits for CPU while it holds its
+ * permit, so the local user time limit of queries and mutations is five
+ * seconds instead of the one second a cloud deployment gives them.
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/concurrency_limiter.rs
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/timeout.rs
+ * @see https://github.com/get-convex/convex-backend/blob/main/crates/common/src/knobs.rs
  */
 const localBackendEnvironment = {
+  DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
   FUNRUN_ISOLATE_ACTIVE_THREADS: String(navigator.hardwareConcurrency),
 };
 

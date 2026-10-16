@@ -1,6 +1,6 @@
 import { NodeSocketServer } from "@effect/platform-node";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { Effect, Fiber, FileSystem, MutableList } from "effect";
+import { Array as Arr, Effect, Fiber, FileSystem, MutableList } from "effect";
 import { HttpServer } from "effect/http";
 import { TestClock } from "effect/testing";
 
@@ -43,6 +43,16 @@ export const fixture = Effect.gen(function* () {
   );
   yield* fs.makeDirectory(`${root}/packages/backend/.convex`);
   return { fs, root };
+});
+
+/** The lease claim files that a runtime directory holds. */
+export const leaseClaims = Effect.fn("AcceptanceTest.leaseClaims")(function* (
+  directory: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  return Arr.filter(yield* fs.readDirectory(directory), (name) =>
+    name.startsWith("using.")
+  );
 });
 
 /** The text the Convex CLI prints when version.convex.dev answers with an error status. */
