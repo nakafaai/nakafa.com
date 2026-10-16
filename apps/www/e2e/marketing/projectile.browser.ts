@@ -16,6 +16,9 @@ import {
 /** The name of the retry button that the projectile scene offers after a failed load. */
 const RETRY_NAME = "Retry";
 
+/** Matches an accessible name with text, so an empty live region does not count. */
+const NAMED_STATUS = /\S/;
+
 test("home page defers the projectile scene until the reader scrolls to it", async ({
   baseURL,
   browser,
@@ -45,7 +48,9 @@ test("home page defers the projectile scene until the reader scrolls to it", asy
               );
               // The fullscreen control keeps an empty live region, so only the named loading status counts.
               yield* Effect.promise(() =>
-                expect(scene.getByRole("status", { name: /\S/ })).toHaveCount(0)
+                expect(
+                  scene.getByRole("status", { name: NAMED_STATUS })
+                ).toHaveCount(0)
               );
 
               yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
