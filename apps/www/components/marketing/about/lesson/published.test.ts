@@ -81,14 +81,12 @@ describe("the lessons of the home page window", () => {
         });
         expect(lessons.cell.title).toBe("Bakteri");
         expect(lessons.projectile.href).toBe(
-          "/id/materi/fisika/kinematika/gerak-parabola"
+          `/id/${HOME_LESSON_PATHS.projectile.id}`
         );
         expect(lessons.circle.title).toBe(
           "Tiga Perbandingan Trigonometri Dasar"
         );
-        expect(lessons.circle.href).toBe(
-          "/id/materi/matematika/trigonometri/tiga-serangkai-perbandingan-trigonometri"
-        );
+        expect(lessons.circle.href).toBe(`/id/${HOME_LESSON_PATHS.circle.id}`);
       })
   );
 
