@@ -9,6 +9,7 @@ import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { STOP_GRACE } from "@repo/backend/confect/nina/settlement";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { contextFor } from "@repo/backend/test/nina/admission";
+import { sealThreadIn } from "@repo/backend/test/nina/seal";
 import { Array as Arr, Duration, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
@@ -433,5 +434,32 @@ describe("native Nina stop and resend", () => {
       history,
       state: { status: "complete" },
     });
+  });
+
+  it("settles a turn whose answer is sealed as one whose answer is plain, with the same history", async () => {
+    const history = { tokens: 4200, turns: 3 };
+    /** Recovers a turn whose answer is in the journal, plain or sealed in place, and returns what settlement wrote. */
+    const settle = async (sealed: boolean) => {
+      const f = await fixture();
+      await f.t.mutation(claim, { turnId: f.turnId });
+      await f.t.mutation((ctx) =>
+        saveMessages(ctx, components.nina, {
+          messages: [{ role: "assistant", content: "A limit is a value." }],
+          metadata: [{ finishReason: "stop" }],
+          promptMessageId: f.promptMessageId,
+          threadId: f.threadId,
+        })
+      );
+      if (sealed) {
+        await sealThreadIn(f.t, f.threadId, f.identity.userId);
+      }
+      await f.t.mutation(recover, { history, turnId: f.turnId });
+      const turn = (await f.inspect()).turns[0];
+      return { history: turn?.history, phase: turn?.phase, state: turn?.state };
+    };
+    const plain = await settle(false);
+    const sealed = await settle(true);
+    expect(sealed).toEqual(plain);
+    expect(sealed).toMatchObject({ history, state: { status: "complete" } });
   });
 });

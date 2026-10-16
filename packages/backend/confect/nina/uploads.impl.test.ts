@@ -13,6 +13,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { contextFor } from "@repo/backend/test/nina/admission";
+import { sealThreadIn } from "@repo/backend/test/nina/seal";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -298,6 +299,46 @@ describe("native Nina attachment ownership", () => {
       })
     ).rejects.toMatchObject({ data: { code: "NINA_RETRY_UNAVAILABLE" } });
   });
+  it("retries a sealed prompt with its attachment as a plain prompt does", async () => {
+    /** The retry of a prompt with an image, with the chat plain, or sealed in place once the prompt is asked. */
+    const retried = async (sealed: boolean) => {
+      const { t, owner, identity } = await fixture();
+      const uploadId = Ref.decodeReturnsSync(
+        refs.public.nina.uploads.save,
+        await owner.action(save, attachment)
+      );
+      const first = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await owner.mutation(start, {
+          ...admission,
+          input: {
+            ...admission.input,
+            prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
+          },
+        })
+      );
+      await owner.mutation(cancel, { chatId: first.chatId });
+      if (sealed) {
+        await sealThreadIn(t, first.threadId, identity.userId);
+      }
+      const second = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await owner.mutation(start, {
+          requestId: "retry",
+          chatId: first.chatId,
+          input: { kind: "retry", order: first.order },
+        })
+      );
+      return { order: second.order, prompt: second.prompt };
+    };
+    const plain = await retried(false);
+    const sealed = await retried(true);
+    expect(sealed).toEqual(plain);
+    expect(sealed.prompt.files).toEqual([
+      expect.objectContaining({ type: "file", mediaType: "image/png" }),
+    ]);
+  });
+
   it("limits repeated discarded uploads without counting them as pending files", async () => {
     const f = await fixture();
     for (let i = 0; i < NINA_FILE_COUNT; i += 1) {
