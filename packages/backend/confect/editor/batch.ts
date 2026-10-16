@@ -1,4 +1,3 @@
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
   MAX_BATCH_BYTES,
   MAX_BATCH_STEPS,
@@ -6,7 +5,6 @@ import {
 } from "@repo/backend/confect/editor/size";
 import {
   StepSchema,
-  StepTextSchema,
   UncheckedStepSchema,
 } from "@repo/backend/confect/editor/step";
 import { Effect, Schema } from "effect";
@@ -31,7 +29,7 @@ export const MAX_CLIENT_ID_LENGTH = 64;
  * it can tell its steps from the others' when the server returns them, and every
  * stored step keeps the id.
  */
-const ClientIdSchema = Schema.String.check(
+export const ClientIdSchema = Schema.String.check(
   Schema.isNonEmpty(),
   Schema.isMaxLength(MAX_CLIENT_ID_LENGTH, {
     message: `Expected a client id of at most ${MAX_CLIENT_ID_LENGTH} characters.`,
@@ -53,19 +51,6 @@ export const BatchSchema = Schema.Struct({
   ),
 });
 export type Batch = typeof BatchSchema.Type;
-
-/**
- * One step as the step log keeps it: the account that sent it (ADR 0028), the
- * client that made it, and the step's JSON text in one string field. The step is
- * text for the reason a document is: a nested Convex object cannot hold a slice
- * this deep.
- */
-const StoredStepSchema = Schema.Struct({
-  author: IdSchema("users"),
-  clientId: ClientIdSchema,
-  step: StepTextSchema,
-});
-type StoredStep = typeof StoredStepSchema.Type;
 
 /** A call whose batch is larger than one call may send. */
 export class BatchTooLarge extends Schema.TaggedError<BatchTooLarge>()(
@@ -148,21 +133,3 @@ export const admitBatch = Effect.fn("editor.batch.admit")(function* (
   }
   return { batch, version: version + batch.steps.length };
 });
-
-/**
- * Writes a stored step as the row the step log keeps. The depth of its slice is
- * checked on the typed step before the encoder walks it, as `encodeStep` does.
- */
-export const encodeStoredStep = Effect.fn("editor.batch.storedStep.encode")(
-  function* (stored: StoredStep) {
-    yield* Schema.decodeEffect(UncheckedStepSchema)(stored.step);
-    return yield* Schema.encodeEffect(StoredStepSchema)(stored);
-  }
-);
-
-/** Reads a stored row back into a checked stored step. */
-export const decodeStoredStep = Effect.fn("editor.batch.storedStep.decode")(
-  function* (row: unknown) {
-    return yield* Schema.decodeUnknownEffect(StoredStepSchema)(row);
-  }
-);
