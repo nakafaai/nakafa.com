@@ -26,6 +26,9 @@ const app = defineApp({
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: v.string(),
     [NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT]: v.optional(v.string()),
     [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: v.string(),
+    // The key of the hash that stores each login card code. Convex refuses a
+    // push to a deployment that lacks it, because no card could be read there.
+    LOGIN_CARD_SECRET: v.string(),
     // Dedicated least-privilege key for permanent analytics erasure.
     POSTHOG_ERASURE_API_KEY: v.string(),
     POSTHOG_HOST: v.string(),

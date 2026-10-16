@@ -8,6 +8,7 @@ import {
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { EMAIL_FROM, resend } from "@repo/backend/confect/emails/client";
+import { loginAddress } from "@repo/backend/confect/identity/address";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
   invitePerson,
@@ -17,6 +18,7 @@ import {
 import { Array as Arr, Duration, Effect, Schema } from "effect";
 
 const address = Schema.decodeSync(Email)("kepala@harapan.example.test");
+const placeholder = Schema.decodeSync(Email)(loginAddress("kepala"));
 const enqueueRendered = refs.internal.emails.invite.internal.enqueueRendered;
 const message = { html: "<p>Sign in</p>", subject: "Invited", text: "Sign in" };
 const requestedAt = Date.UTC(2026, 9, 13, 9, 0, 0);
@@ -85,6 +87,22 @@ describe("emails/invite/internal", () => {
           to: [address],
         });
       })
+  );
+
+  it.effect("sends nothing to the placeholder address of a school login", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const { inviteId } = yield* fixture.run(
+        invitePerson(fixture.tenants.nf, placeholder)
+      );
+      const send = vi.spyOn(resend, "sendEmail");
+      yield* fixture.internal.mutation(enqueueRendered, {
+        inviteId,
+        requestedAt,
+        ...message,
+      });
+      expect(send).not.toHaveBeenCalled();
+    })
   );
 
   it.effect(

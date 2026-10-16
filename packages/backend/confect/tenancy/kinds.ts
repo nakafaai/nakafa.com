@@ -119,6 +119,12 @@ export const unit = Kind.make("unit", "tenantUnits", {
 /** A Person: the school's record of someone, claimed by at most one account. */
 export const person = Kind.make("person", "tenantPeople", {
   actions: {
+    "card.issue": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
     "person.invite": {
       access: "write",
       grantedBy: "roles",
@@ -180,6 +186,18 @@ export const person = Kind.make("person", "tenantPeople", {
       invite: Id("tenantInvites"),
       type: Schema.Literal("invite.revoked"),
     }),
+    Schema.Struct({
+      card: Id("loginCards"),
+      type: Schema.Literal("card.issued"),
+    }),
+    Schema.Struct({
+      card: Id("loginCards"),
+      type: Schema.Literal("card.reissued"),
+    }),
+    Schema.Struct({
+      card: Id("loginCards"),
+      type: Schema.Literal("card.redeemed"),
+    }),
   ],
   published: [
     "person.created",
@@ -187,6 +205,7 @@ export const person = Kind.make("person", "tenantPeople", {
     "person.claimed",
     "person.released",
     "person.removed",
+    "card.redeemed",
   ],
   relations: ["self"],
 });
