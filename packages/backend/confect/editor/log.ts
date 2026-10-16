@@ -12,7 +12,7 @@ import { Effect, Schema } from "effect";
  * text for the reason a document is: a nested Convex object cannot hold a slice
  * this deep.
  */
-const StoredStepSchema = Schema.Struct({
+export const StoredStepSchema = Schema.Struct({
   author: IdSchema("users"),
   clientId: ClientIdSchema,
   step: StepTextSchema,

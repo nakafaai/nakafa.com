@@ -1,13 +1,19 @@
-import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
+import {
+  AssessmentDocumentSchema,
+  MAX_DOCUMENT_DEPTH,
+} from "@nakafa/aksara-contracts/assessment/document";
 import {
   AttributesSchema,
   DocumentNodeSchema,
   fitsDocument,
 } from "@repo/backend/confect/editor/node";
 import {
+  CONVEX_DOCUMENT_LIMIT,
   MAX_DOCUMENT_BYTES,
   utf8Bytes,
 } from "@repo/backend/confect/editor/size";
+import { refusal } from "@repo/backend/confect/tenancy/errors";
+import { getDocumentSize, type Value } from "convex/values";
 import { Effect, Schema, SchemaTransformation } from "effect";
 
 /**
@@ -46,7 +52,23 @@ export type Document = typeof DocumentSchema.Type;
 /** The JSON text of a document: the one string field a document is stored in (ADR 0028). */
 const DocumentTextSchema = Schema.fromJsonString(DocumentSchema);
 
-/** A document whose stored JSON text is larger than one document may hold. */
+/**
+ * A document's JSON text as the contract reads it: the assessment document of ADR
+ * 0031. Its Schema checks the node types, the typed attributes, and the depth
+ * before any node is read.
+ */
+const AssessmentTextSchema = Schema.fromJsonString(AssessmentDocumentSchema);
+
+/**
+ * A text that the contract refuses as a document, or that is not JSON. It names
+ * no part of the text, so a learner's content never reaches an error message.
+ */
+export class DocumentInvalid extends Schema.TaggedError<DocumentInvalid>()(
+  "DocumentInvalid",
+  refusal("DOCUMENT_INVALID", "This is not a document the editor accepts.")
+) {}
+
+/** A stored row whose complete size would reach one document's limit. */
 export class DocumentTooLarge extends Schema.TaggedError<DocumentTooLarge>()(
   "DocumentTooLarge",
   {
@@ -71,6 +93,43 @@ export const encodeDocument = Effect.fn("editor.document.encode")(function* (
     return yield* new DocumentTooLarge({ bytes, limit: MAX_DOCUMENT_BYTES });
   }
   return text;
+});
+
+/**
+ * The text a document is stored as, from the text a client sent. The contract's
+ * Schema reads the client's text first, so every stored document is one the
+ * contract accepts (ADR 0028, ADR 0031). A text the contract refuses fails with
+ * `DocumentInvalid`, and a stored text over the bound with `DocumentTooLarge`. A
+ * typed document that the contract has just accepted cannot fail to encode, so
+ * an encoding failure is a defect.
+ */
+export const storedDocument = Effect.fn("editor.document.stored")(function* (
+  text: string
+) {
+  const document = yield* Schema.decodeEffect(AssessmentTextSchema)(text).pipe(
+    Effect.mapError(() => new DocumentInvalid())
+  );
+  return yield* encodeDocument(document).pipe(
+    Effect.catchTag("SchemaError", Effect.die)
+  );
+});
+
+/**
+ * Refuses a row whose complete size reaches one document's limit, as Convex's own
+ * size function counts it: its system fields and every field, not only the text
+ * (ADR 0028 Bounds, ADR 0031). A row under the limit is stored, and a row at the
+ * limit or above it writes nothing.
+ */
+export const ensureRowSize = Effect.fn("editor.document.row")(function* (
+  row: Record<string, Value>
+) {
+  const bytes = getDocumentSize(row);
+  if (bytes >= CONVEX_DOCUMENT_LIMIT) {
+    return yield* new DocumentTooLarge({
+      bytes,
+      limit: CONVEX_DOCUMENT_LIMIT,
+    });
+  }
 });
 
 /**

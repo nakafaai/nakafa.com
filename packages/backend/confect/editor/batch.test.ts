@@ -8,11 +8,7 @@ import {
   encodeBatch,
   MAX_CLIENT_ID_LENGTH,
 } from "@repo/backend/confect/editor/batch";
-import {
-  MAX_BATCH_BYTES,
-  MAX_BATCH_STEPS,
-  utf8Bytes,
-} from "@repo/backend/confect/editor/size";
+import { MAX_BATCH_BYTES, utf8Bytes } from "@repo/backend/confect/editor/size";
 import type { Step } from "@repo/backend/confect/editor/step";
 import { nested } from "@repo/backend/test/editor/nodes";
 import { randomUuid } from "@repo/utilities/uuid";
@@ -63,46 +59,46 @@ describe("editor/batch version rule", () => {
   );
 
   it.effect.each([
-    { baseVersion: 39, version: 40 },
-    { baseVersion: 41, version: 40 },
+    { baseVersion: 39, head: 40 },
+    { baseVersion: 41, head: 40 },
   ])(
-    "refuses a batch made on version $baseVersion when the document is at $version",
-    ({ baseVersion, version }) =>
+    "refuses a batch made on version $baseVersion when the document is at $head",
+    ({ baseVersion, head }) =>
       Effect.gen(function* () {
         const text = yield* encodeBatch(batchOf("rina", baseVersion, 1));
-        const failure = yield* admitBatch(version, text).pipe(Effect.flip);
+        const failure = yield* admitBatch(head, text).pipe(Effect.flip);
         expect(failure).toMatchObject({
-          _tag: "StaleBatch",
+          _tag: "VersionStale",
           baseVersion,
-          version,
+          head,
         });
       })
   );
 
   it.effect("refuses a call over the step bound on the version it names", () =>
     Effect.gen(function* () {
-      // One step more than the bound, on the version the document is at, so only the bound refuses it.
+      // One step more than the 200-step bound of ADR 0028, on the version the document is at, so only the bound refuses it.
       const step = '{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}';
       const steps = Arr.join(
-        Arr.makeBy(MAX_BATCH_STEPS + 1, () => step),
+        Arr.makeBy(201, () => step),
         ","
       );
       const text = `{"baseVersion":40,"clientId":"rina","steps":[${steps}]}`;
       const failure = yield* admitBatch(40, text).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
-      expect(failure.message).toContain(`at most ${MAX_BATCH_STEPS} steps`);
+      expect(failure.message).toContain("at most 200 steps");
     })
   );
 });
 
 describe("editor/batch limits", () => {
-  it.effect("reads a batch of one step up to MAX_BATCH_STEPS steps", () =>
-    Effect.gen(function* () {
-      yield* Schema.decodeEffect(BatchSchema)(batchOf("rina", 0, 1));
-      yield* Schema.decodeEffect(BatchSchema)(
-        batchOf("rina", 0, MAX_BATCH_STEPS)
-      );
-    })
+  it.effect(
+    "reads a batch of one step, and a batch of 200 steps, the bound of ADR 0028",
+    () =>
+      Effect.gen(function* () {
+        yield* Schema.decodeEffect(BatchSchema)(batchOf("rina", 0, 1));
+        yield* Schema.decodeEffect(BatchSchema)(batchOf("rina", 0, 200));
+      })
   );
 
   it.effect(
@@ -117,9 +113,9 @@ describe("editor/batch limits", () => {
         expect(none._tag).toBe("SchemaError");
 
         const more = yield* Schema.decodeEffect(BatchSchema)(
-          batchOf("rina", 0, MAX_BATCH_STEPS + 1)
+          batchOf("rina", 0, 201)
         ).pipe(Effect.flip);
-        expect(more.message).toContain(`at most ${MAX_BATCH_STEPS} steps`);
+        expect(more.message).toContain("at most 200 steps");
       })
   );
 

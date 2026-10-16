@@ -37,6 +37,9 @@ export type CreditTransactionsDoc = Document.Document<typeof schemaDefinition, "
 export type CurriculumRoutesDoc = Document.Document<typeof schemaDefinition, "curriculumRoutes">;
 export type CustomerDeletionTombstonesDoc = Document.Document<typeof schemaDefinition, "customerDeletionTombstones">;
 export type CustomersDoc = Document.Document<typeof schemaDefinition, "customers">;
+export type EditorDocumentsDoc = Document.Document<typeof schemaDefinition, "editorDocuments">;
+export type EditorSnapshotsDoc = Document.Document<typeof schemaDefinition, "editorSnapshots">;
+export type EditorStepsDoc = Document.Document<typeof schemaDefinition, "editorSteps">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
@@ -127,6 +130,9 @@ export interface Docs {
   curriculumRoutes: CurriculumRoutesDoc;
   customerDeletionTombstones: CustomerDeletionTombstonesDoc;
   customers: CustomersDoc;
+  editorDocuments: EditorDocumentsDoc;
+  editorSnapshots: EditorSnapshotsDoc;
+  editorSteps: EditorStepsDoc;
   integrationClients: IntegrationClientsDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;

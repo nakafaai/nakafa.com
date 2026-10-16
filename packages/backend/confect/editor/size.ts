@@ -16,9 +16,10 @@ export const CONVEX_DOCUMENT_LIMIT = 1024 * 1024;
  * two, and `getDocumentSize` counts the system fields of a stored row (`_id` and
  * `_creationTime`) when they are absent, as the types page says. So every byte of
  * text adds exactly one byte to the row, and the largest text is the limit, less
- * one byte because the row must stay below it, less the row of an empty text. The
- * sync slice that ADR 0028 plans will check the complete row before it writes
- * (ADR 0031). Until then, this bound covers the text alone.
+ * one byte because the row must stay below it, less the row of an empty text. This
+ * bound covers the text alone. A snapshot row also holds its version, its time, and
+ * its document ID, so `ensureRowSize` in `confect/editor/document.ts` checks the
+ * complete row before the write (ADR 0028 and ADR 0031).
  */
 export const MAX_DOCUMENT_BYTES =
   CONVEX_DOCUMENT_LIMIT - 1 - getDocumentSize({ text: "" });

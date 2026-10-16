@@ -36,6 +36,9 @@ import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
 import customerDeletionTombstones from "./tables/customerDeletionTombstones";
 import customers from "./tables/customers";
+import editorDocuments from "./tables/editorDocuments";
+import editorSnapshots from "./tables/editorSnapshots";
+import editorSteps from "./tables/editorSteps";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -126,6 +129,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly curriculumRoutes: typeof curriculumRoutes;
   readonly customerDeletionTombstones: typeof customerDeletionTombstones;
   readonly customers: typeof customers;
+  readonly editorDocuments: typeof editorDocuments;
+  readonly editorSnapshots: typeof editorSnapshots;
+  readonly editorSteps: typeof editorSteps;
   readonly integrationClients: typeof integrationClients;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
@@ -215,6 +221,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   curriculumRoutes,
   customerDeletionTombstones,
   customers,
+  editorDocuments,
+  editorSnapshots,
+  editorSteps,
   integrationClients,
   irtCalibrationRuns,
   irtScaleItems,

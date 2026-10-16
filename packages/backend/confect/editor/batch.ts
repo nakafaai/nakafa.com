@@ -13,7 +13,7 @@ import { Effect, Schema } from "effect";
  * The version of a document: the number of steps applied to it. A new document
  * is at version 0, and each batch moves it up by the number of its steps.
  */
-const VersionSchema = Schema.Natural;
+export const VersionSchema = Schema.Natural;
 type Version = typeof VersionSchema.Type;
 
 /**
@@ -62,13 +62,17 @@ export class BatchTooLarge extends Schema.TaggedError<BatchTooLarge>()(
 ) {}
 
 /**
- * The batch names a version other than the document's current one. Its steps
- * were made on another version, so the client rebases them and sends again.
+ * The batch names a version other than the document's head. Its steps were made
+ * on another version, so the client waits for the steps it is missing, rebases
+ * its own, and sends again. The head is the version the document is at now.
  */
-export class StaleBatch extends Schema.TaggedError<StaleBatch>()("StaleBatch", {
-  baseVersion: VersionSchema,
-  version: VersionSchema,
-}) {}
+export class VersionStale extends Schema.TaggedError<VersionStale>()(
+  "VersionStale",
+  {
+    baseVersion: VersionSchema,
+    head: VersionSchema,
+  }
+) {}
 
 /** The JSON text of a batch: the call's body, which a client writes and the server reads. */
 const BatchTextSchema = Schema.fromJsonString(BatchSchema);
@@ -118,18 +122,18 @@ export const decodeBatch = Effect.fn("editor.batch.decode")(function* (
 /**
  * Checks a call that sends a batch, and returns the batch with the version after
  * its steps. `decodeBatch` reads the call's text and checks its bytes and the
- * bounds of the batch. The batch must then name the document's version: a batch
- * applies only on the version it names, so any other version refuses it as stale.
- * It applies nothing. The caller stores the steps it gets back, and the version
- * counts up by the number of steps.
+ * bounds of the batch. The batch must then name the document's head: a batch
+ * applies only on the version it names, so any other version refuses it with
+ * `VersionStale`. It applies nothing. The caller stores the steps it gets back,
+ * and the version counts up by the number of steps.
  */
 export const admitBatch = Effect.fn("editor.batch.admit")(function* (
-  version: Version,
+  head: Version,
   text: string
 ) {
   const batch = yield* decodeBatch(text);
-  if (batch.baseVersion !== version) {
-    return yield* new StaleBatch({ baseVersion: batch.baseVersion, version });
+  if (batch.baseVersion !== head) {
+    return yield* new VersionStale({ baseVersion: batch.baseVersion, head });
   }
-  return { batch, version: version + batch.steps.length };
+  return { batch, version: head + batch.steps.length };
 });
