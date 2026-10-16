@@ -5,8 +5,9 @@ import { Array as Arr } from "effect";
 
 interface Props {
   /**
-   * The animal of the person. A person whose account is gone, such as the author
-   * of a comment who deleted their account, has none, and then nothing is drawn.
+   * The animal of the person. A reader that finds no account row, such as the
+   * author of a comment whose row no longer exists, has none, and then nothing is
+   * drawn. A deleted account keeps its animal on its tombstone.
    */
   mascot: typeof Mascot.Type | undefined;
 }
