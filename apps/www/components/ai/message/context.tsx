@@ -1,5 +1,6 @@
 "use client";
 
+import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { createContext, type PropsWithChildren, use } from "react";
 
@@ -10,7 +11,7 @@ import { createContext, type PropsWithChildren, use } from "react";
 interface MessageProviderProps {
   last: boolean;
   message: NinaMessage;
-  turn?: NinaMessage["metadata"];
+  turn?: typeof NinaTurnSummary.Type | undefined;
 }
 
 type MessageContextValue = Pick<
@@ -27,7 +28,7 @@ export function MessageProvider({
   turn,
   children,
 }: PropsWithChildren<MessageProviderProps>) {
-  const value = { last, message, turn: turn ?? message.metadata };
+  const value = { last, message, turn };
 
   return <MessageContext value={value}>{children}</MessageContext>;
 }

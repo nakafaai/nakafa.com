@@ -1,9 +1,11 @@
 import { Ref } from "@confect/core";
 import { RegisteredFunction } from "@confect/server";
 import { createThread, saveMessages } from "@convex-dev/agent";
+import { expect } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
+import type { NinaHistoryCost } from "@repo/backend/confect/nina/contract/turn";
 import { readInput } from "@repo/backend/confect/nina/input";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import {
@@ -11,12 +13,13 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { GatewayTest } from "@repo/backend/test/gateway";
+import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
 import { type EarlierTurn, filler } from "@repo/backend/test/nina";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Predicate } from "effect";
 
 const NOW = Date.UTC(2026, 8, 27, 12);
 const read = Ref.getFunctionReference(refs.internal.nina.summaries.read);
@@ -154,21 +157,45 @@ export async function createSummaryTest(
     order,
     promptMessageId: setup.prompts[order] ?? "",
   });
-  // Refreshes the summary as the turn at `order` settles, optionally reading
-  // another thread, and returns the arguments of the queries the refresh made.
-  const refresh = (order: number, threadId = setup.threadId) =>
+  // Refreshes the summary as the turn at `order` settles, with the cost its
+  // prompt stored (`history`) and optionally reading another thread. Every
+  // query and mutation of the refresh runs as a transaction of its own, as the
+  // deployment runs them. Returns the arguments of the queries and what all of
+  // them read and wrote.
+  const measure = (
+    order: number,
+    options: {
+      readonly history?: typeof NinaHistoryCost.Type;
+      readonly threadId?: string;
+    } = {}
+  ) =>
     t.action(async (ctx) => {
-      const runQuery = vi.spyOn(ctx, "runQuery");
+      let samples: readonly Sample[] = [];
+      const counted = measured(t, ctx, (sample) => {
+        samples = Arr.append(samples, sample);
+      });
+      const runQuery = vi.spyOn(counted, "runQuery");
       await Effect.runPromise(
-        refreshSummary({ ...settled(order), threadId }).pipe(
+        refreshSummary({
+          ...settled(order),
+          threadId: options.threadId ?? setup.threadId,
+          ...(options.history ? { history: options.history } : {}),
+        }).pipe(
           Effect.provide([
             GatewayTest,
-            RegisteredFunction.actionLayer(schema, ctx),
+            RegisteredFunction.actionLayer(schema, counted),
           ])
         )
       );
-      return Arr.map(runQuery.mock.calls, ([, args]) => args);
+      return {
+        queries: Arr.map(runQuery.mock.calls, ([, args]) => args),
+        read: totalOf(samples),
+      };
     });
+  const refresh = async (
+    order: number,
+    options?: Parameters<typeof measure>[1]
+  ) => (await measure(order, options)).queries;
   const summary = () =>
     t.query((ctx) => ctx.db.query("ninaSummaries").collect());
   // Stores the summary an earlier fold left, which covers the turns through
@@ -187,8 +214,9 @@ export async function createSummaryTest(
   const stored = () => t.query(read, { chatId: setup.chatId });
   const text = async () => (await stored())?.text;
   // What the model receives for the turn at `order`, whose question the chat
-  // holds, through the summary as it stands.
-  const input = async (order: number) => {
+  // holds, through the summary as it stands, and what the history of its
+  // prompt costs, which the turn stores when its run ends well.
+  const readFor = async (order: number) => {
     const through = (await stored())?.throughOrder ?? null;
     return t.action((ctx) =>
       Effect.runPromise(
@@ -198,6 +226,8 @@ export async function createSummaryTest(
       )
     );
   };
+  const input = async (order: number) => (await readFor(order)).input;
+  const history = async (order: number) => (await readFor(order)).history;
   // The turns up to `settled` that are in neither the summary nor the model
   // input of the turn after it, whose questions are told by their text.
   const lost = async (settled: number) => {
@@ -210,8 +240,10 @@ export async function createSummaryTest(
   };
   return {
     ...setup,
+    history,
     input,
     lost,
+    measure,
     refresh,
     seed,
     stored,
@@ -219,4 +251,46 @@ export async function createSummaryTest(
     t,
     text,
   };
+}
+
+/** A turn whose answer costs about 6,000 tokens, so six of them outweigh the history budget. */
+export const BIG = { tokens: 6000 } as const;
+/** The summary that a failed fold must leave as it was, covering the turns through order 1. */
+export const EARLIER = "- Earlier study.";
+export const EARLIER_THROUGH = 1;
+
+type SummaryTest = Awaited<ReturnType<typeof createSummaryTest>>;
+
+/** Sorts the queries of a refresh by what they read, from the shape of their arguments. */
+export function readsOf(queries: readonly unknown[]) {
+  const having = (key: string) =>
+    Arr.filter(queries, (args) => Predicate.hasProperty(args, key));
+  const pages = having("paginationOpts");
+  return {
+    anchors: Arr.filter(
+      having("order"),
+      (args) =>
+        Predicate.hasProperty(args, "order") && Predicate.isNumber(args.order)
+    ),
+    asked: having("questions"),
+    pages,
+    uncovered: having("through"),
+    window: Arr.filter(
+      pages,
+      (args) =>
+        Predicate.hasProperty(args, "excludeToolMessages") &&
+        args.excludeToolMessages === true
+    ),
+  };
+}
+
+/** What the summary that `seed` stores has cost. */
+export const EARLIER_USAGE = { calls: 1, input: 900, output: 120 };
+
+/** The summary stays as `seed` stored it: its text and what it covers, and it has cost `usage`. */
+export async function expectEarlier(f: SummaryTest, usage = EARLIER_USAGE) {
+  expect(await f.text()).toBe(EARLIER);
+  expect(await f.summary()).toEqual([
+    expect.objectContaining({ throughOrder: EARLIER_THROUGH, usage }),
+  ]);
 }

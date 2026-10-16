@@ -35,9 +35,11 @@ describe("tenancy/people list and create", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const active = yield* fixture
-          .as("admin")
-          .query(list, { ...firstPage, slug: nf, status: "active" });
+        const active = yield* fixture.as("admin").query(list, {
+          paginationOpts: { cursor: null, numItems: 20 },
+          slug: nf,
+          status: "active",
+        });
         const [owner] = Arr.filter(
           active.page,
           (person) => person.id === fixture.people.owner.personId

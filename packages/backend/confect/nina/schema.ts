@@ -1,4 +1,4 @@
 import type { UIMessage } from "@convex-dev/agent/react";
-import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 
-export type NinaMessage = UIMessage<typeof NinaTurnSummary.Type>;
+/** A message of a Nina chat as Agent lists it. The turn it belongs to is told apart. */
+export type NinaMessage = UIMessage;

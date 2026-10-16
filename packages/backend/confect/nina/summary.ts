@@ -22,7 +22,7 @@ import {
   foldedTurns,
   transcriptOf,
 } from "@repo/backend/confect/nina/transcript";
-import { readUncovered } from "@repo/backend/confect/nina/uncovered";
+import { foldWaits, readUncovered } from "@repo/backend/confect/nina/uncovered";
 import {
   Array as Arr,
   Effect,
@@ -182,14 +182,25 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
  * the chat's summary row. A chat with no summary yet has no row, because a row
  * holds text, so an empty or cut first fold records no usage. Generation still
  * bounds its history.
+ * The turns are counted from the cost its prompt stored and the cost of the turn
+ * itself while that decides (`foldWaits`), and read only when a fold may be due.
  */
 export const refreshSummary = Effect.fn("nina.summary.refresh")(
   function* (
     turn: Pick<
       NinaTurnsDoc,
-      "chatId" | "order" | "promptMessageId" | "threadId" | "userId"
+      "chatId" | "history" | "order" | "promptMessageId" | "threadId" | "userId"
     >
   ) {
+    // Whether the fold can wait does not depend on the summary, so the common
+    // refresh reads the turn alone and not even the summary row.
+    if (
+      yield* foldWaits(turn).pipe(
+        Effect.mapError(() => new NinaSummaryError({ operation: "read" }))
+      )
+    ) {
+      return;
+    }
     const { runQuery: query } = yield* QueryRunner;
     const current = yield* query(refs.internal.nina.summaries.read, {
       chatId: turn.chatId,
