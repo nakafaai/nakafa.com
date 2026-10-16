@@ -70,8 +70,9 @@ const READ_RECORD_SCRIPT = `function (text) {
 /**
  * Resolves the mark the inline script writes on the document root before paint,
  * from the raw values this browser holds. It is "decided" when the viewer has
- * already decided for the current notice, "signing-in" while a sign-in is on its
- * way, and null when the prompt may show.
+ * already decided for the current notice, "pending" while the store has no answer
+ * yet for a sign-in on its way or for a signed-in session, and null when the
+ * prompt may show.
  *
  * The inline script is built from this function's source text, so it refers to
  * nothing outside its body: every value arrives as an argument, and so does the
@@ -80,8 +81,9 @@ const READ_RECORD_SCRIPT = `function (text) {
  * page's own reader through the real script. This runs before any import, the
  * same exception AGENTS.md names for code that Playwright serializes into the
  * page. It mirrors `resolveAnalyticsConsentState` in the consent store: "decided"
- * exactly when the store's status is neither prompt nor pending, and
- * "signing-in" only while that status is pending.
+ * exactly when the store's status is neither prompt nor pending once it answers.
+ * Every other signed-in session is "pending", because the store waits for Better
+ * Auth, Convex, and the account's choice before it knows the status.
  */
 export function resolveAnalyticsConsentMark({
   accountMarker,
@@ -103,7 +105,7 @@ export function resolveAnalyticsConsentMark({
     text: string
   ) => Readonly<Record<string, unknown>> | undefined;
   readonly vocabulary: BootstrapVocabulary;
-}): "decided" | "signing-in" | null {
+}): "decided" | "pending" | null {
   // A browser privacy signal is a decision of its own, as the store reads it.
   if (
     globalPrivacyControl === true ||
@@ -115,11 +117,15 @@ export function resolveAnalyticsConsentMark({
 
   // A sign-in on its way holds the prompt until Better Auth names its session.
   if (knownSession === vocabulary.expectedSession) {
-    return "signing-in";
+    return "pending";
   }
 
-  // A signed-in session decides only through the account marker it names. A
-  // denial decides under any notice, and a grant under the current one only.
+  // A signed-in session holds the prompt until the store knows the account's
+  // choice, since the first paint cannot tell whether the account has one. A
+  // marker that names the session and decides the choice marks the page as
+  // decided. Either way the mark stays until the store has the answer, so the
+  // prompt cannot show before then. A denial decides under any notice, and a
+  // grant under the current one only.
   if (knownSession !== null) {
     const marker =
       accountMarker === null ? undefined : readRecord(accountMarker);
@@ -130,7 +136,7 @@ export function resolveAnalyticsConsentMark({
       typeof granted === "boolean" &&
       typeof markerNotice === "string" &&
       (!granted || markerNotice === noticeVersion);
-    return isMarkerDecided ? "decided" : null;
+    return isMarkerDecided ? "decided" : "pending";
   }
 
   // Without a signed-in session, the anonymous record decides, under the same

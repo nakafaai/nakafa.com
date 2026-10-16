@@ -42,10 +42,10 @@ const HIDE_PROMPT_WITHOUT_SCRIPTS = `[${PROMPT_ATTRIBUTE}]{display:none}`;
  * Renders the non-blocking first decision and permanent preferences dialog.
  *
  * The server renders the prompt while the choice is pending, so the text is in
- * the first HTML. The bootstrap script marks the root before paint for a visitor
- * whose choice this browser keeps, or whose sign-in is on its way, and the store
- * removes the mark once it knows the choice. Without scripts the prompt stays
- * hidden.
+ * the first HTML. The bootstrap script marks the root before paint for a signed-in
+ * visitor, and for a visitor whose choice this browser keeps. The store removes the
+ * mark once it knows the choice, so a signed-in visitor never sees the prompt
+ * before the account is known. Without scripts the prompt stays hidden.
  *
  * The consent state is derived once here and handed to the decision and
  * detail parts, which render in both the prompt and the dialog.

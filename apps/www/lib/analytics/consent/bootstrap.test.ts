@@ -53,7 +53,8 @@ function marker(overrides: Readonly<Record<string, unknown>> = {}) {
 
 /**
  * One case: the stored values and browser signal, and what the page must do with
- * them. `decided` and `signingIn` name the mark the decision writes on the root.
+ * them. `decided` names the decided mark. A known session that is not decided is
+ * pending, because the store waits for that session's answer.
  */
 const BootstrapCaseSchema = Schema.Struct({
   accountMarker: Schema.optionalKey(Schema.String),
@@ -63,7 +64,6 @@ const BootstrapCaseSchema = Schema.Struct({
   globalPrivacyControl: Schema.optionalKey(Schema.Unknown),
   knownSession: Schema.optionalKey(Schema.String),
   name: Schema.String,
-  signingIn: Schema.optionalKey(Schema.Boolean),
 });
 
 type BootstrapCase = typeof BootstrapCaseSchema.Type;
@@ -155,8 +155,8 @@ function expectedMarkOf(bootstrapCase: BootstrapCase) {
   if (bootstrapCase.decided) {
     return "decided";
   }
-  if (bootstrapCase.signingIn) {
-    return "signing-in";
+  if (bootstrapCase.knownSession !== undefined) {
+    return "pending";
   }
   return null;
 }
@@ -281,21 +281,18 @@ const cases: readonly BootstrapCase[] = [
     decided: false,
     knownSession: EXPECTED_SESSION,
     name: "a sign-in on its way decides nothing, even with an anonymous denial",
-    signingIn: true,
   },
   {
     anonymousRecord: anonymous(),
     decided: false,
     knownSession: EXPECTED_SESSION,
     name: "a sign-in on its way decides nothing, even with an anonymous grant",
-    signingIn: true,
   },
   {
     accountMarker: marker({ sessionId: EXPECTED_SESSION }),
     decided: false,
     knownSession: EXPECTED_SESSION,
     name: "a marker that names the expected session does not decide",
-    signingIn: true,
   },
   {
     decided: true,
@@ -390,10 +387,6 @@ describe("analytics consent bootstrap decision", () => {
       expect(storeStatus !== "prompt" && storeStatus !== "pending").toBe(
         mark === "decided"
       );
-      // The mark for a sign-in on its way lasts only while the store is pending.
-      if (mark === "signing-in") {
-        expect(storeStatus).toBe("pending");
-      }
     });
   }
 
