@@ -48,7 +48,7 @@ const getUserById = FunctionImpl.make(
       return null;
     }
     return {
-      ...Struct.pick(user, ["mascot"]),
+      ...Struct.pick(user, ["mascot", "picture"]),
       ...(user.image === null || user.image === undefined
         ? {}
         : {

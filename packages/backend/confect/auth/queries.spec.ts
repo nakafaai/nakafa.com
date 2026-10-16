@@ -25,7 +25,8 @@ export default GroupSpec.make()
       returns: () =>
         Schema.NullOr(
           Schema.Struct({
-            ...users.Doc.mapFields(Struct.pick(["mascot", "name"])).fields,
+            ...users.Doc.mapFields(Struct.pick(["mascot", "name", "picture"]))
+              .fields,
             ...{
               image: Schema.optionalKey(Schema.String),
             },

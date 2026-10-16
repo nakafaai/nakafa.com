@@ -1,4 +1,5 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { UserPicture } from "@repo/backend/confect/users/picture";
 import { userRoles } from "@repo/backend/confect/users/role";
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import { MascotCode } from "@repo/mascot/code";
@@ -44,6 +45,9 @@ export const userValidator = Schema.Struct({
   // The animal that draws this account, stored as its code. An account gets its
   // animal when it is made (`accountMascot`), and the learner can change it.
   mascot: MascotCode,
+  // The picture that draws the account: its animal, or the photo of its Google
+  // account. An account without the field draws its animal.
+  picture: Schema.optionalKey(UserPicture),
   role: Schema.optionalKey(userRoleOptionsValidator),
   plan: userPlanValidator,
   credits: Schema.Finite,
