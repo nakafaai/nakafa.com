@@ -24,6 +24,7 @@ test("a member sees the school with the viewer's role in it", async ({
   await expect(
     page.getByText(`You are signed in as Owner at ${school.name}.`)
   ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Home" })).toBeVisible();
   await context.close();
 });
 
