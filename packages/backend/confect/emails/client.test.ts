@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/confect/emails/client";
 import { loginAddress } from "@repo/backend/confect/identity/address";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const message = { html: "<p>Hi</p>", subject: "Hi", text: "Hi" };
 
@@ -116,6 +116,36 @@ describe("emails/client sendMail", () => {
       expect(refused).toBe("LoginAddressRefused");
       expect(send).not.toHaveBeenCalled();
     })
+  );
+
+  it.effect(
+    "refuses a login address however it is written in a recipient field",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const send = vi.spyOn(resend, "sendEmail");
+        const forms = [
+          "RAKA@LOGIN.NAKAFA.INVALID",
+          "<raka@login.nakafa.invalid>",
+          "Raka <raka@login.nakafa.invalid>",
+          "raka@login.nakafa.invalid.",
+        ];
+        const refused = yield* fixture.run(
+          Effect.gen(function* () {
+            const ctx = yield* MutationCtx;
+            return yield* Effect.forEach(forms, (to) =>
+              sendMail(ctx, { ...message, from: EMAIL_FROM, to }).pipe(
+                Effect.flip,
+                Effect.map((error) => error._tag)
+              )
+            );
+          })
+        );
+        expect(refused).toEqual(
+          Arr.replicate("LoginAddressRefused", forms.length)
+        );
+        expect(send).not.toHaveBeenCalled();
+      })
   );
 
   it.effect("hands a message to an ordinary address to the provider", () =>
