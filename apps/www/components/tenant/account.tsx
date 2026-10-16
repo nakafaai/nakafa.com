@@ -68,23 +68,25 @@ export function TenantAccountMenu() {
                 href={
                   new URL(`/${locale}/user/settings/memory`, SITE_ORIGIN).href
                 }
-              />
+              >
+                {t("School.nina-memory")}
+              </a>
             }
-          >
-            {t("School.nina-memory")}
-          </DropdownMenuItem>
+          />
           <DropdownMenuItem
             render={
-              <a href={new URL(`/${locale}/user/settings`, SITE_ORIGIN).href} />
+              <a href={new URL(`/${locale}/user/settings`, SITE_ORIGIN).href}>
+                {t("School.account-settings")}
+              </a>
             }
-          >
-            {t("School.account-settings")}
-          </DropdownMenuItem>
+          />
           <DropdownMenuItem
-            render={<a href={new URL(`/${locale}`, SITE_ORIGIN).href} />}
-          >
-            {t("School.back-to-learning")}
-          </DropdownMenuItem>
+            render={
+              <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+                {t("School.back-to-learning")}
+              </a>
+            }
+          />
           <DropdownMenuItem onClick={() => Effect.runFork(signOut)}>
             {t("Auth.logout")}
           </DropdownMenuItem>
