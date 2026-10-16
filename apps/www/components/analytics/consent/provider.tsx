@@ -70,8 +70,7 @@ function AnalyticsConsentController({
     (state) => state.setHasStorageError
   );
   const { online: isOnline } = useNetwork();
-  const { durableStatus, hasLoadError, interruptDepartedSave, promptIdentity } =
-    consent;
+  const { durableStatus, interruptDepartedSave, promptIdentity } = consent;
   const sessionId = useAuthSession((session) => session.sessionId);
 
   useBrowserConsentSync({
@@ -92,18 +91,16 @@ function AnalyticsConsentController({
     sessionId,
   });
 
-  // The bootstrap marks the root before the app loads, so the prompt waits until
-  // the store knows the choice, or knows that it cannot load it. Then only the
-  // prompt's own state decides, and the mark goes, so a later sign-out or a soft
-  // navigation shows the prompt. A load error must not stay hidden, because the
-  // prompt is where it shows. This keeps the DOM in step with the store, so it is
-  // an effect.
+  // The bootstrap marks the root before the app loads, so the prompt is hidden
+  // until the store knows the choice. Once it does, only the prompt's own state
+  // decides, and the mark goes, so a later sign-out or a soft navigation shows
+  // the prompt. This keeps the DOM in step with the store, so it is an effect.
   useEffect(() => {
-    if (durableStatus === "pending" && !hasLoadError) {
+    if (durableStatus === "pending") {
       return;
     }
     document.documentElement.removeAttribute(ANALYTICS_CONSENT_ROOT_ATTRIBUTE);
-  }, [durableStatus, hasLoadError]);
+  }, [durableStatus]);
 
   // The content-view identifier exists only under a durable grant; reading the
   // durable status keeps it while a repeated choice is still saving.
