@@ -2,15 +2,33 @@ import { getCookies } from "better-auth/cookies";
 import { Array as Arr, Effect } from "effect";
 
 /**
+ * Whether a host name is a loopback name, which only this machine can serve: a
+ * local run uses `localhost`, a `*.localhost` name, or an IP loopback address.
+ */
+export function isLoopbackHostname(hostname: string) {
+  return (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]"
+  );
+}
+
+/**
  * The origins that a site trusts for its sign-in: each school host of the site,
  * such as `https://*.nakafa.com`, so that a school host may post to the shared
- * sign-in (ADR 0009). A site with a port also trusts its own host on any port,
- * because a local run serves on a port that `SITE_URL` does not name.
+ * sign-in (ADR 0009). A local site with a port also trusts its own host on any
+ * port, because a local run serves on a port that `SITE_URL` does not name. Any
+ * other site with a port trusts its school hosts on that port alone. The site's
+ * own origin is already trusted as the base URL.
  */
 export function readSchoolTrustedOrigins(siteUrl: URL) {
   const { hostname, port, protocol } = siteUrl;
   if (port === "") {
     return [`${protocol}//*.${hostname}`];
+  }
+  if (!isLoopbackHostname(hostname)) {
+    return [`${protocol}//*.${hostname}:${port}`];
   }
   return [`${protocol}//*.${hostname}:*`, `${protocol}//${hostname}:*`];
 }

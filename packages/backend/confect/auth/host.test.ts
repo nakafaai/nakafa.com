@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   expireHostOnlySessionCookie,
   hostOnlySessionCookieHandler,
+  isLoopbackHostname,
   readHostOnlySessionCookieName,
   readSchoolTrustedOrigins,
   sharedCookieReaches,
@@ -22,6 +23,26 @@ describe("school trusted origins", () => {
       "http://*.localhost:*",
       "http://localhost:*",
     ]);
+  });
+
+  it("admits only the school hosts on the site's own port when the site is not local", () => {
+    expect(
+      readSchoolTrustedOrigins(new URL("https://nakafa.com:8443"))
+    ).toEqual(["https://*.nakafa.com:8443"]);
+  });
+});
+
+describe("loopback hostname", () => {
+  it("names localhost, its subdomains and the loopback addresses", () => {
+    expect(isLoopbackHostname("localhost")).toBe(true);
+    expect(isLoopbackHostname("harapan.localhost")).toBe(true);
+    expect(isLoopbackHostname("127.0.0.1")).toBe(true);
+    expect(isLoopbackHostname("[::1]")).toBe(true);
+  });
+
+  it("does not name a host that merely ends with localhost", () => {
+    expect(isLoopbackHostname("nakafa.com")).toBe(false);
+    expect(isLoopbackHostname("evillocalhost")).toBe(false);
   });
 });
 
