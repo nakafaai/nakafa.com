@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** The exact specs one reviewed dependency may declare. */
 const ApprovedSpecsSchema = Schema.Union([
@@ -53,6 +53,34 @@ export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
   ai: "7.0.136",
 } as const;
+/**
+ * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
+ * each manifest pins it exactly. Every Tiptap package that the design system
+ * declares, and the web app's `@tiptap/pm`, is held to this one version (ADR 0028),
+ * so one line changes them all and the policy test finds any manifest left behind.
+ */
+const TIPTAP_COHORT_VERSION = "3.31.4";
+/** The Tiptap packages the design system declares. The web app also declares `@tiptap/pm`. */
+const TIPTAP_PACKAGES = [
+  "@tiptap/core",
+  "@tiptap/extension-bold",
+  "@tiptap/extension-code",
+  "@tiptap/extension-document",
+  "@tiptap/extension-highlight",
+  "@tiptap/extension-italic",
+  "@tiptap/extension-link",
+  "@tiptap/extension-list",
+  "@tiptap/extension-paragraph",
+  "@tiptap/extension-subscript",
+  "@tiptap/extension-superscript",
+  "@tiptap/extension-text",
+  "@tiptap/extension-underline",
+  "@tiptap/extensions",
+  "@tiptap/markdown",
+  "@tiptap/pm",
+  "@tiptap/react",
+  "@tiptap/starter-kit",
+];
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "19.3.0", dependency: "react", minimumDeclarations: 1 },
@@ -181,6 +209,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     ],
     dependency: "prosemirror-collab",
   },
+  ...Arr.map(TIPTAP_PACKAGES, (dependency) => ({
+    approved: TIPTAP_COHORT_VERSION,
+    declarationPaths:
+      dependency === "@tiptap/pm"
+        ? ["apps/www/package.json", "packages/design-system/package.json"]
+        : ["packages/design-system/package.json"],
+    dependency,
+  })),
 ];
 
 export const REGISTRY_REVIEWS = [
