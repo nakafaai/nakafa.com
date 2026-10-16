@@ -22,10 +22,11 @@ several questions share, and rubrics. Announcements are composed in the same
 editor. The preview uses the renderer that students see (ADR 0018).
 
 Convex sets the bounds (`docs.convex.dev/production/state/limits`, read on 13
-October 2026). A document holds 1 MiB and nests 16 levels. A transaction reads
-at most 16 MiB and scans at most 32,000 documents. ProseMirror JSON can nest
-deeper than 16 levels, because every node adds two: the node and its `content`
-array (ADR 0031).
+October 2026). A document holds 1 MiB and nests 16 levels, and a ProseMirror
+node takes two of them: the node and its `content` array (ADR 0031). A
+transaction reads at most 16 MiB and scans at most 32,000 documents. A document
+16 nodes deep is therefore deeper than Convex allows as nested values, so it is
+stored as JSON text (see Bounds).
 
 Files have two owners today. Nina's uploads are in
 `packages/backend/confect/nina/uploads.*` and the `ninaUploads` table, and the
@@ -106,7 +107,8 @@ as the last column says.
 | --- | --- | --- |
 | A Convex document | 1 MiB, nested 16 levels | Convex limits page, read on 13 October 2026 |
 | The content of a document | JSON text in one string field, not an object. Its UTF-8 bytes are checked before the write, and at most `MAX_DOCUMENT_BYTES` (`confect/editor/size.ts`). | The largest text whose row stays below 1 MiB by Convex's size function (`getDocumentSize`). ProseMirror can nest deeper than Convex allows. |
-| A document as a whole | A node depth of at most 16, and the complete row under 1 MiB | ADR 0031 |
+| A document as a whole | A node depth of at most 16, counted as `MAX_DOCUMENT_DEPTH` counts it: the `doc` node is level 1 and each node below it is one level, while its `content` array is not. The complete row stays under 1 MiB. | ADR 0031, and `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0 (`confect/editor/node.ts`) |
+| Attributes and attribute values | Each object and array of an attribute counts one level, and at most 16 levels are allowed (`AttributesSchema` and `AttributeValueSchema` in `confect/editor/node.ts`) | Target. This module reads generic ProseMirror attributes, which the contract's typed attributes do not cover, so the document's bound limits them too, and an admitted call can then be stored. |
 | Steps sent in one call | At most 128 KiB and 200 steps | Target |
 | A client id | At least one and at most 64 characters (`MAX_CLIENT_ID_LENGTH` in `confect/editor/batch.ts`) | Target. A v4 UUID from `randomUuid` has 36 characters, and each stored step keeps the id. |
 | Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. No code yet: the sync slice adds this bound with its test. |
@@ -126,10 +128,10 @@ that is behind the oldest step that is kept loads the snapshot and continues
 from it.
 
 Acceptance: in `convex-test`, a submit at a stale version is refused, a document
-nested 20 levels deep is stored and read back, and a snapshot whose complete row
-would pass 1 MiB is refused and writes nothing. In Playwright, three editors work
-on one question and no step is lost, and the one renderer of ADR 0018 draws a
-Nakafa question and a school question.
+at the node depth bound of 16 is stored and read back, and a snapshot whose
+complete row would pass 1 MiB is refused and writes nothing. In Playwright,
+three editors work on one question and no step is lost, and the one renderer of
+ADR 0018 draws a Nakafa question and a school question.
 
 ### The formula node
 
@@ -272,7 +274,7 @@ Drive copies come through the Drive connector (ADR 0015).
 | The Memory page editor in `packages/design-system/components/editor` (Markdown, one author) | Live |
 | Tiptap 3.31.4 and KaTeX 0.19.0 | Live |
 | `prosemirror-collab`, `mathlive`, and `@convex-dev/presence` | Not installed. Planned for program wave B. |
-| `confect/editor` pure core: the document, step, batch, and stored-step schemas, the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code, with no function and no table. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds. The read bound of 512 KiB has no code yet. |
+| `confect/editor` pure core: the document, step, batch, attribute, and stored-step schemas (the stored step is in `confect/editor/log.ts`), the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code, with no function and no table. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds. The read bound of 512 KiB has no code yet. |
 | The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots, and the idle snapshot trigger | Planned, program wave B, with the tables |
 | The tables `editorDocuments`, `editorSteps`, and `editorSnapshots` | Planned, program wave B |
 | The formula node | Planned, program wave B |
