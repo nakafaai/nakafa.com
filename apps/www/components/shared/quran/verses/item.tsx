@@ -14,7 +14,7 @@ export function QuranVerse({
   return (
     <div
       className={cn(
-        "mb-6 space-y-6 border-b pb-6 content-auto-quran-verse",
+        "mb-6 space-y-6 border-b pb-6",
         isLast && "mb-0 border-b-0 pb-0"
       )}
       data-quran-verse={number}
@@ -42,7 +42,7 @@ export function QuranVerseHeading({
   return (
     <div className="flex items-center gap-4">
       <a
-        className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
+        className="quran-verse-anchor flex w-full flex-1 shrink-0 outline-none ring-0"
         href={`#${id}`}
         id={id}
       >
