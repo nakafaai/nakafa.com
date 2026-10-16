@@ -5,6 +5,7 @@ import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { Option } from "effect";
 import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
+import { plainTextAnswer } from "@/lib/routing/answer";
 import { isLocaleBypassPath } from "@/lib/routing/bypass";
 import { isRefusedSchoolHost, readSchoolSlug } from "@/lib/routing/school/host";
 import { isSchoolTreePath, SCHOOL_SEGMENT } from "@/lib/routing/school/tree";
@@ -48,17 +49,6 @@ function redirectToMainSite(request: NextRequest) {
   return NextResponse.redirect(redirectUrl, 307);
 }
 
-/** Answers a school tree path on a host outside the school tree in plain text that search engines must not index. */
-function schoolTreeNotFound() {
-  return new Response("Not Found\n", {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Robots-Tag": "noindex",
-    },
-    status: 404,
-  });
-}
-
 /**
  * Answers a request that belongs to the school hosts before the public routes
  * see it, or returns nothing so that the public routes answer it. A school host
@@ -77,7 +67,7 @@ export function routeSchoolRequest(request: NextRequest) {
     return redirectToMainSite(request);
   }
   if (isSchoolTreePath(pathname)) {
-    return schoolTreeNotFound();
+    return plainTextAnswer(404, "Not Found\n");
   }
   return null;
 }

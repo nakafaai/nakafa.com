@@ -68,13 +68,20 @@ describe("school requests", () => {
   it.each([
     "https://nakafa.com/school/harapan",
     "https://nakafa.com/id/school/harapan",
-  ])("answers the school tree with 404 on the main host: %s", (address) => {
-    const response = routeSchoolRequest(new NextRequest(address));
+  ])(
+    "answers the school tree with a plain 404 on the main host: %s",
+    async (address) => {
+      const response = routeSchoolRequest(new NextRequest(address));
 
-    expect(response?.status).toBe(404);
-    expect(response?.headers.get("x-robots-tag")).toBe("noindex");
-    expect(mockSchool.middleware).not.toHaveBeenCalled();
-  });
+      expect(response?.status).toBe(404);
+      expect(response?.headers.get("content-type")).toBe(
+        "text/plain; charset=utf-8"
+      );
+      expect(response?.headers.get("x-robots-tag")).toBe("noindex");
+      expect(await response?.text()).toBe("Not Found\n");
+      expect(mockSchool.middleware).not.toHaveBeenCalled();
+    }
+  );
 
   it("answers an encoded school path with 404 on the main host", () => {
     const response = routeSchoolRequest(

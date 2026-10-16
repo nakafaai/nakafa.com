@@ -27,6 +27,7 @@ import {
   readLlmsMarkdownPathname,
 } from "@/lib/llms/routes";
 import { isOgRouteAliasPathname, readOgRouteAliasLocale } from "@/lib/og/route";
+import { plainTextAnswer } from "@/lib/routing/answer";
 import {
   isLocaleBypassPath,
   isUnsupportedSystemPath,
@@ -238,17 +239,6 @@ function redirectTrailingSlash(request: NextRequest) {
   redirectUrl.pathname = pathname.replace(TRAILING_SLASH_PATTERN, "");
 
   return NextResponse.redirect(redirectUrl, 308);
-}
-
-/** Answers a retired or unknown resource in plain text that search engines must not index. */
-function plainTextAnswer(status: 404 | 410, body: string) {
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Robots-Tag": "noindex",
-    },
-    status,
-  });
 }
 
 /** Returns a hard 406 when neither public page representation is acceptable. */
