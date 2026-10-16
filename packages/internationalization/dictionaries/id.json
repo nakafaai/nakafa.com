@@ -858,8 +858,6 @@
     "lesson-tabs": "Pelajaran",
     "lab": {
       "projectile": {
-        "title": "Lintasan Bola Lontar",
-        "description": "Ubah sudut lontar. Bola tetap bergerak mendatar, sementara gravitasi mengubah ketinggiannya.",
         "choose": "Pilih sudut lontar",
         "view": "Visual lintasan bola lontar",
         "initial-speed": "Kelajuan awal",
@@ -868,86 +866,31 @@
         "peak-height": "Tinggi puncak"
       },
       "quadratic": {
-        "title": "Akar dan puncak",
-        "description": "Puncak berada tepat di tengah kedua akar, pada x = {vertex}."
+        "view": "Grafik fungsi kuadrat"
       },
       "atom": {
-        "title": "Model Kulit Atom",
-        "description": "Diagram ini memakai model kulit sederhana untuk unsur netral sampai kalsium. Fokusnya adalah membaca kulit terluar dan membedakan isi kulit dari kapasitas maksimum <math>2n^2</math>.",
         "choose": "Pilih atom netral",
         "atomic-number": "Nomor atom",
         "configuration": "Konfigurasi",
         "electron-total": "Jumlah elektron",
         "capacity": "kapasitas",
-        "outer-shell": "Kulit terluar",
-        "samples": {
-          "neon": {
-            "name": "Neon",
-            "note": "Konfigurasinya <math>2, 8</math>. Kulit <math>\\mathrm L</math> menjadi kulit terluar."
-          },
-          "magnesium": {
-            "name": "Magnesium",
-            "note": "Setelah kulit <math>\\mathrm K</math> dan <math>\\mathrm L</math> terisi, sisa <math>2</math> elektron masuk kulit <math>\\mathrm M</math>."
-          },
-          "chlorine": {
-            "name": "Klorin",
-            "note": "Kulit terluarnya berisi <math>7</math> elektron pada model kulit sederhana."
-          },
-          "argon": {
-            "name": "Argon",
-            "note": "Pola awalnya <math>2, 8, 8</math>, sehingga kulit <math>\\mathrm M</math> berisi <math>8</math> elektron."
-          },
-          "potassium": {
-            "name": "Kalium",
-            "note": "Kalium adalah unsur dengan simbol <math>\\mathrm K</math>. Itu berbeda dari nama kulit <math>\\mathrm K</math>. Setelah <math>2, 8, 8</math>, sisa <math>1</math> elektron masuk kulit <math>\\mathrm N</math>."
-          },
-          "calcium": {
-            "name": "Kalsium",
-            "note": "Kalsium memiliki <math>20</math> elektron, sehingga pola kulit sederhananya <math>2, 8, 8, 2</math>."
-          }
-        }
+        "outer-shell": "Kulit terluar"
       },
       "bacteria": {
-        "title": "Membandingkan bentuk, isi sel, dan dinding bakteri",
-        "description": "Model membedakan bentuk luar, isi sel prokariotik, dan lapisan dinding sel. Putar model untuk melihat susunan setiap bagian dari sisi yang berbeda.",
         "choose": "Pilih tampilan bakteri",
-        "focus": "Bagian yang diamati",
-        "takeaway": "Fungsi bagian",
         "view": "Model struktur bakteri",
         "shape": {
-          "tab": "Bentuk",
-          "coccus": "Kokus",
-          "bacillus": "Basilus",
-          "spiral": "Spiral",
-          "caption": "Pada tampilan awal, bentuk kiri ke kanan menunjukkan kokus, basilus, dan spiral sebagai petunjuk pengenalan awal.",
-          "focus": "Bentuk memberi petunjuk awal tentang morfologi bakteri. Identifikasi lengkap memerlukan bukti lain.",
-          "takeaway": "Bentuk memberi petunjuk awal, tetapi identifikasi jenis bakteri memerlukan ciri lain."
+          "tab": "Bentuk"
         },
         "inside": {
-          "tab": "Isi sel",
-          "nucleoid-dna": "DNA nukleoid",
-          "caption": "Nukleoid berisi DNA bakteri, sementara ribosom tersebar di sitoplasma untuk membuat protein.",
-          "focus": "Tidak ada inti bermembran, tetapi DNA dan ribosom tetap ada.",
-          "takeaway": "Bakteri tetap hidup karena membran, sitoplasma, DNA, ribosom, dan metabolismenya bekerja bersama."
+          "tab": "Isi sel"
         },
         "wall": {
-          "tab": "Dinding",
-          "gram-positive": "Gram positif",
-          "gram-negative": "Gram negatif",
-          "caption": "Pada tampilan awal, tumpukan kiri menunjukkan Gram positif yang lebih tebal, sedangkan tumpukan kanan menunjukkan Gram negatif dengan membran luar.",
-          "focus": "Bandingkan ketebalan peptidoglikan dan keberadaan membran luar.",
-          "takeaway": "Struktur selubung sel memengaruhi bentuk, perlindungan, pewarnaan Gram, dan kepekaan terhadap antibiotik tertentu."
+          "tab": "Dinding"
         }
       }
     },
-    "lesson-projectile": "Gerak parabola",
-    "lesson-quadratic": "Fungsi kuadrat",
-    "lesson-atom": "Atom",
-    "lesson-cell": "Sel",
-    "lesson-projectile-text": "Bola dilempar dengan kecepatan {speed} m/s pada sudut {angle} derajat. Lintasannya berbentuk parabola.",
-    "lesson-quadratic-text": "Grafik memotong sumbu x di x = {left} dan x = {right}.",
-    "lesson-atom-text": "{name} memiliki {atomicNumber} elektron. Kulit terluarnya, {outerShell}, berisi {electrons} elektron.",
-    "lesson-cell-text": "Bakteri adalah satu sel tanpa inti, dan DNA-nya terletak di nukleoid.",
+    "lesson-open": "Baca materinya",
     "tryout-title": "Skor try out langsung keluar",
     "tryout-lead": "Mau ulang? Tinggal ulang.",
     "tryout-ask": "Aku udah paham belum, ya?",

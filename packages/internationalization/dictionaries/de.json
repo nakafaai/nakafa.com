@@ -858,8 +858,6 @@
     "lesson-tabs": "Lektionen",
     "lab": {
       "projectile": {
-        "title": "Flugbahn eines geworfenen Balls",
-        "description": "Verändere den Abwurfwinkel. Der Ball bewegt sich horizontal weiter, während die Schwerkraft seine Höhe verändert.",
         "choose": "Abwurfwinkel wählen",
         "view": "Visualisierung der Flugbahn eines geworfenen Balls",
         "initial-speed": "Anfangsgeschwindigkeitsbetrag",
@@ -868,86 +866,31 @@
         "peak-height": "Maximale Höhe"
       },
       "quadratic": {
-        "title": "Nullstellen und Scheitel",
-        "description": "Der Scheitel liegt genau in der Mitte zwischen den Nullstellen, bei x = {vertex}."
+        "view": "Graph einer quadratischen Funktion"
       },
       "atom": {
-        "title": "Atomhüllenmodell",
-        "description": "Das Diagramm zeigt das vereinfachte Schalenmodell für neutrale Atome bis Calcium. Unterscheide dabei die tatsächliche Belegung einer Schale von ihrer maximalen Kapazität nach <math>2n^2</math>.",
         "choose": "Neutrales Atom auswählen",
         "atomic-number": "Ordnungszahl",
         "configuration": "Konfiguration",
         "electron-total": "Anzahl der Elektronen",
         "capacity": "Kapazität",
-        "outer-shell": "Äußerste Schale",
-        "samples": {
-          "neon": {
-            "name": "Neon",
-            "note": "Die Konfiguration lautet <math>2, 8</math>. Die Schale <math>\\mathrm L</math> ist die äußerste Schale."
-          },
-          "magnesium": {
-            "name": "Magnesium",
-            "note": "Nach dem Füllen der Schalen <math>\\mathrm K</math> und <math>\\mathrm L</math> kommen die verbleibenden <math>2</math> Elektronen in die Schale <math>\\mathrm M</math>."
-          },
-          "chlorine": {
-            "name": "Chlor",
-            "note": "Im vereinfachten Schalenmodell enthält die äußerste Schale <math>7</math> Elektronen."
-          },
-          "argon": {
-            "name": "Argon",
-            "note": "Das einführende Muster lautet <math>2, 8, 8</math>. Die Schale <math>\\mathrm M</math> enthält also <math>8</math> Elektronen."
-          },
-          "potassium": {
-            "name": "Kalium",
-            "note": "Kalium besitzt das Elementsymbol <math>\\mathrm K</math>. Das ist nicht dasselbe wie der Schalenname <math>\\mathrm K</math>. Nach <math>2, 8, 8</math> kommt das verbleibende <math>1</math> Elektron in die Schale <math>\\mathrm N</math>."
-          },
-          "calcium": {
-            "name": "Calcium",
-            "note": "Calcium besitzt <math>20</math> Elektronen. Sein vereinfachtes Schalenmuster lautet daher <math>2, 8, 8, 2</math>."
-          }
-        }
+        "outer-shell": "Äußerste Schale"
       },
       "bacteria": {
-        "title": "Bakterien von der äußeren Form bis zur Zellwand untersuchen",
-        "description": "Das Modell trennt die äußere Form, den Inhalt der prokaryotischen Zelle und die Schichten der Zellwand. Drehe das Modell, um die Anordnung jedes Teils von verschiedenen Seiten zu sehen.",
         "choose": "Ansicht auswählen",
-        "focus": "Beobachteter Bereich",
-        "takeaway": "Funktion der Teile",
         "view": "Modell einer Bakterienzelle",
         "shape": {
-          "tab": "Form",
-          "coccus": "Kokken",
-          "bacillus": "Stäbchen",
-          "spiral": "Spiralform",
-          "caption": "Von links nach rechts sind Kokken, Stäbchen und spiralförmige Bakterien als erste Erkennungsmerkmale zu sehen.",
-          "focus": "Die Form beschreibt die Morphologie, aber nicht die gesamte Identität eines Bakteriums.",
-          "takeaway": "Für eine sichere Bestimmung werden neben der äußeren Form weitere Merkmale benötigt."
+          "tab": "Form"
         },
         "inside": {
-          "tab": "Zellinneres",
-          "nucleoid-dna": "Nukleoid-DNA",
-          "caption": "Im Nukleoid liegt die bakterielle DNA. Ribosomen sind im Zytoplasma verteilt und stellen Proteine her.",
-          "focus": "Ein membranumhüllter Zellkern fehlt, DNA und Ribosomen sind jedoch vorhanden.",
-          "takeaway": "Eine Bakterienzelle bleibt nur lebensfähig, weil Membran, Zytoplasma, DNA, Ribosomen und Stoffwechsel zusammenwirken."
+          "tab": "Zellinneres"
         },
         "wall": {
-          "tab": "Wand",
-          "gram-positive": "grampositiv",
-          "gram-negative": "gramnegativ",
-          "caption": "Links ist die dickere Zellwand grampositiver Bakterien zu sehen, rechts die dünnere Zellwand gramnegativer Bakterien mit Außenmembran.",
-          "focus": "Vergleiche die Dicke der Peptidoglykan-Schicht und das Vorhandensein einer Außenmembran.",
-          "takeaway": "Der Aufbau der Zellhülle beeinflusst Form, Schutz, Gramfärbung und Empfindlichkeit gegenüber bestimmten Antibiotika."
+          "tab": "Wand"
         }
       }
     },
-    "lesson-projectile": "Schiefer Wurf",
-    "lesson-quadratic": "Quadratische Funktionen",
-    "lesson-atom": "Das Atom",
-    "lesson-cell": "Die Zelle",
-    "lesson-projectile-text": "Die Kugel wird mit {speed} m/s unter {angle} Grad geworfen. Ihre Bahn ist eine Parabel.",
-    "lesson-quadratic-text": "Der Graph schneidet die x-Achse bei x = {left} und x = {right}.",
-    "lesson-atom-text": "{name} hat {atomicNumber} Elektronen. Seine äußere Schale {outerShell} enthält davon {electrons}.",
-    "lesson-cell-text": "Ein Bakterium ist eine einzige Zelle ohne Zellkern, und seine DNA liegt im Nukleoid.",
+    "lesson-open": "Lernmaterial lesen",
     "tryout-title": "Probetests mit sofortigem Ergebnis",
     "tryout-lead": "Jederzeit wiederholbar.",
     "tryout-ask": "Hab ich es schon verstanden?",

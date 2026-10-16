@@ -25,13 +25,16 @@ const LOADING_HOLD_MS = 8000;
 const FOCUS_PROBE = "data-focus-probe";
 
 /** A translation key that only the lesson visual's code names, so its chunk is the one held. */
-const LESSON_VISUAL_MARKER = "lab.quadratic.description";
+const LESSON_VISUAL_MARKER = "lab.quadratic.view";
 
 /** The first lesson's tab, and the view its visual names, in Indonesian. */
 const PROJECTILE_VIEW = "Visual lintasan bola lontar";
 
-/** The cell lesson's tab, and the view its visual names, in Indonesian. */
-const CELL_TAB = "Sel";
+/**
+ * The cell lesson's tab, named by its published lesson's title, and the view its
+ * visual names, in Indonesian.
+ */
+const CELL_TAB = "Bakteri";
 const CELL_VIEW = "Model struktur bakteri";
 
 /** The open lesson's panel of the home page's lesson window. */

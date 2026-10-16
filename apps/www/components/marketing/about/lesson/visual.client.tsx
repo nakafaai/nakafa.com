@@ -5,7 +5,7 @@ import type { DecimalSeparator } from "@repo/design-system/components/contents/p
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType } from "react";
 import type { Lesson } from "@/components/marketing/about/lesson/id";
 import {
   QUADRATIC_POINTS,
@@ -20,11 +20,6 @@ interface LessonVisualProps {
   readonly decimalSeparator: DecimalSeparator;
 }
 
-/** Turns the text between the math tags of a translated sentence into a formula. */
-const MATH_TAG = {
-  math: (chunks: ReactNode) => <InlineMath math={String(chunks)} />,
-};
-
 /** The math visual of the product, loaded when its lesson opens. */
 const MathVisual = dynamic(() =>
   import("@/lib/content/renderer/client/base/visual/math").then(
@@ -32,14 +27,16 @@ const MathVisual = dynamic(() =>
   )
 );
 
-/** The projectile lesson: a ball thrown at a chosen angle, in three dimensions. */
+/**
+ * The projectile lesson's visual: a ball thrown at a chosen angle, in three
+ * dimensions. It gets interface labels only; its numbers come from its own data.
+ */
 function ProjectileVisual({ decimalSeparator }: LessonVisualProps) {
   const t = useTranslations("Landing");
 
   return (
     <ParabolicMovementLab
       decimalSeparator={decimalSeparator}
-      description={t("lab.projectile.description")}
       labels={{
         chooseLaunch: t("lab.projectile.choose"),
         factLabels: {
@@ -50,7 +47,6 @@ function ProjectileVisual({ decimalSeparator }: LessonVisualProps) {
         },
         viewLabel: t("lab.projectile.view"),
       }}
-      title={t("lab.projectile.title")}
     />
   );
 }
@@ -60,33 +56,29 @@ function pointMath(point: { readonly x: number; readonly y: number }) {
   return `(${point.x},${point.y})`;
 }
 
-/** The quadratic lesson: the curve x squared minus four x plus three, with its roots and vertex. */
+/** The quadratic lesson's visual: a parabola with its two roots and its vertex. */
 function QuadraticVisual() {
   const t = useTranslations("Landing");
 
   return (
     <MathVisual
-      description={t("lab.quadratic.description", {
-        vertex: QUADRATIC_POINTS.vertex.x,
-      })}
       labels={{
         left: <InlineMath math={pointMath(QUADRATIC_POINTS.left)} />,
         right: <InlineMath math={pointMath(QUADRATIC_POINTS.right)} />,
         vertex: <InlineMath math={pointMath(QUADRATIC_POINTS.vertex)} />,
       }}
       scene={QUADRATIC_SCENE}
-      title={t("lab.quadratic.title")}
+      viewLabel={t("lab.quadratic.view")}
     />
   );
 }
 
-/** The atom lesson: the shells of a neutral atom, one sample at a time. */
+/** The atom lesson's visual: the shells of a neutral atom, one sample at a time. */
 function AtomVisual() {
   const t = useTranslations("Landing");
 
   return (
     <AtomShellLab
-      description={t.rich("lab.atom.description", MATH_TAG)}
       labels={{
         atomicNumber: t("lab.atom.atomic-number"),
         chooseAtom: t("lab.atom.choose"),
@@ -95,92 +87,42 @@ function AtomVisual() {
         maximumCapacity: t("lab.atom.capacity"),
         outerShell: t("lab.atom.outer-shell"),
         samples: {
-          argon: {
-            name: t("lab.atom.samples.argon.name"),
-            note: t.rich("lab.atom.samples.argon.note", MATH_TAG),
-            tab: ATOM_SHELL_SAMPLES.argon.symbol,
-          },
-          calcium: {
-            name: t("lab.atom.samples.calcium.name"),
-            note: t.rich("lab.atom.samples.calcium.note", MATH_TAG),
-            tab: ATOM_SHELL_SAMPLES.calcium.symbol,
-          },
-          chlorine: {
-            name: t("lab.atom.samples.chlorine.name"),
-            note: t.rich("lab.atom.samples.chlorine.note", MATH_TAG),
-            tab: ATOM_SHELL_SAMPLES.chlorine.symbol,
-          },
-          magnesium: {
-            name: t("lab.atom.samples.magnesium.name"),
-            note: t.rich("lab.atom.samples.magnesium.note", MATH_TAG),
-            tab: ATOM_SHELL_SAMPLES.magnesium.symbol,
-          },
-          neon: {
-            name: t("lab.atom.samples.neon.name"),
-            note: t.rich("lab.atom.samples.neon.note", MATH_TAG),
-            tab: ATOM_SHELL_SAMPLES.neon.symbol,
-          },
-          potassium: {
-            name: t("lab.atom.samples.potassium.name"),
-            note: t.rich("lab.atom.samples.potassium.note", MATH_TAG),
-            tab: ATOM_SHELL_SAMPLES.potassium.symbol,
-          },
+          argon: { tab: ATOM_SHELL_SAMPLES.argon.symbol },
+          calcium: { tab: ATOM_SHELL_SAMPLES.calcium.symbol },
+          chlorine: { tab: ATOM_SHELL_SAMPLES.chlorine.symbol },
+          magnesium: { tab: ATOM_SHELL_SAMPLES.magnesium.symbol },
+          neon: { tab: ATOM_SHELL_SAMPLES.neon.symbol },
+          potassium: { tab: ATOM_SHELL_SAMPLES.potassium.symbol },
         },
       }}
-      title={t("lab.atom.title")}
     />
   );
 }
 
-/** The cell lesson: the shape, the inside and the wall of a bacterium. */
+/** The cell lesson's visual: the shape, the inside and the wall of a bacterium. */
 function BacteriaVisual() {
   const t = useTranslations("Landing");
 
   return (
     <BacteriaStructureLab
-      description={t("lab.bacteria.description")}
       labels={{
         chooseMode: t("lab.bacteria.choose"),
-        focusLabel: t("lab.bacteria.focus"),
         items: [
           {
-            caption: t("lab.bacteria.shape.caption"),
-            focus: t("lab.bacteria.shape.focus"),
-            scene: {
-              bacillusLabel: t("lab.bacteria.shape.bacillus"),
-              coccusLabel: t("lab.bacteria.shape.coccus"),
-              kind: "shape",
-              spiralLabel: t("lab.bacteria.shape.spiral"),
-            },
+            scene: { kind: "shape" },
             tab: t("lab.bacteria.shape.tab"),
-            takeaway: t("lab.bacteria.shape.takeaway"),
           },
           {
-            caption: t("lab.bacteria.inside.caption"),
-            focus: t("lab.bacteria.inside.focus"),
-            scene: {
-              kind: "structure",
-              nucleoidDnaLabel: t("lab.bacteria.inside.nucleoid-dna"),
-            },
+            scene: { kind: "structure" },
             tab: t("lab.bacteria.inside.tab"),
-            takeaway: t("lab.bacteria.inside.takeaway"),
           },
           {
-            caption: t("lab.bacteria.wall.caption"),
-            focus: t("lab.bacteria.wall.focus"),
-            scene: {
-              gramNegativeLabel: t("lab.bacteria.wall.gram-negative"),
-              gramPositiveLabel: t("lab.bacteria.wall.gram-positive"),
-              kind: "wall",
-            },
+            scene: { kind: "wall" },
             tab: t("lab.bacteria.wall.tab"),
-            takeaway: t("lab.bacteria.wall.takeaway"),
           },
         ],
-        takeawayLabel: t("lab.bacteria.takeaway"),
         viewLabel: t("lab.bacteria.view"),
       }}
-      title={t("lab.bacteria.title")}
     />
   );
 }
@@ -196,7 +138,8 @@ const VISUALS: Record<Lesson, ComponentType<LessonVisualProps>> = {
 /**
  * The visual of one lesson of the home page window. The window loads this module
  * only when it nears the screen, so the labs stay out of the first JavaScript.
- * The locale is read on the server, so this client module imports no server code.
+ * The visual gets interface labels only: the lesson's own words stay in its
+ * published page, so the window never copies them.
  */
 export function LessonVisual({
   decimalSeparator,

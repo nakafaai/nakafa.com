@@ -1,41 +1,45 @@
-import {
-  ATOM_SHELL_SAMPLES,
-  CALCIUM_ID,
-  getEarlyElementShellConfiguration,
-  getOuterOccupiedShell,
-} from "@repo/design-system/components/contents/chemistry/atom-shell/data";
-import {
-  DEFAULT_PARABOLIC_LAUNCH_ID,
-  getParabolicMotionState,
-} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Message,
   MessageContent,
 } from "@repo/design-system/components/ui/message";
-import { Result } from "effect";
+import { Effect } from "effect";
 import { getLocale, getTranslations } from "next-intl/server";
 import { NinaPrompt } from "@/components/ai/message/prompt";
-import { QUADRATIC_POINTS } from "@/components/marketing/about/lesson/quadratic";
+import { readHomeLessons } from "@/components/marketing/about/lesson/published";
 import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
+import { applyContentCache } from "@/lib/content/cache";
+import { getMaterialModel } from "@/lib/content/material/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { decimalSeparators } from "@/lib/marketing/decimal";
 
 /**
+ * Reads the window's four lessons for one locale through the cached material
+ * reader. The `use cache` boundary keeps the Effect runtime inside the static
+ * render, so the page still prerenders with its lessons.
+ */
+async function readLessons(locale: AppLocaleCode) {
+  "use cache";
+
+  applyContentCache("material");
+  return await Effect.runPromise(
+    readHomeLessons(locale, getMaterialModel).pipe(
+      Effect.withTracerTiming(false)
+    )
+  );
+}
+
+/**
  * The lessons row: a short chat with Nina on one side and the lesson window on
- * the other. The chat uses the product's own bubbles, and the window holds the
- * lessons, each with its text above its picture. The server reads the locale,
- * so the window's client code never needs it. Each lesson's numbers come from
- * the data its visual draws, so the text and the picture always agree.
+ * the other. The chat uses the product's own bubbles, and the window holds four
+ * published lessons, each named and described by the lesson itself, so no copy
+ * of a lesson lives in the page.
  */
 export async function Lesson() {
   const locale = getLocaleOrThrow(await getLocale());
   const t = await getTranslations({ locale, namespace: "Landing" });
-  const launch = getParabolicMotionState(DEFAULT_PARABOLIC_LAUNCH_ID).scenario;
-  const calcium = ATOM_SHELL_SAMPLES[CALCIUM_ID];
-  const outerShell = getOuterOccupiedShell(
-    Result.getOrThrow(getEarlyElementShellConfiguration(calcium.atomicNumber))
-  );
+  const lessons = await readLessons(locale);
 
   return (
     <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="lesson">
@@ -66,32 +70,8 @@ export async function Lesson() {
           <LessonWindow
             decimalSeparator={decimalSeparators[locale]}
             label={t("lesson-tabs")}
-            lessons={{
-              atom: {
-                tab: t("lesson-atom"),
-                text: t("lesson-atom-text", {
-                  atomicNumber: calcium.atomicNumber,
-                  electrons: outerShell.electronCount,
-                  name: t(`lab.atom.samples.${CALCIUM_ID}.name`),
-                  outerShell: outerShell.key,
-                }),
-              },
-              cell: { tab: t("lesson-cell"), text: t("lesson-cell-text") },
-              projectile: {
-                tab: t("lesson-projectile"),
-                text: t("lesson-projectile-text", {
-                  angle: launch.angleDegrees,
-                  speed: launch.initialSpeed,
-                }),
-              },
-              quadratic: {
-                tab: t("lesson-quadratic"),
-                text: t("lesson-quadratic-text", {
-                  left: QUADRATIC_POINTS.left.x,
-                  right: QUADRATIC_POINTS.right.x,
-                }),
-              },
-            }}
+            lessons={lessons}
+            openLabel={t("lesson-open")}
           />
         </div>
       </div>

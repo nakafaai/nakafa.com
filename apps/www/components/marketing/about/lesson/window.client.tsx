@@ -3,7 +3,9 @@
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { Button } from "@repo/design-system/components/ui/button";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   Tabs,
   TabsList,
@@ -17,6 +19,7 @@ import {
   type Lesson,
   LessonSchema,
 } from "@/components/marketing/about/lesson/id";
+import type { HomeLesson } from "@/components/marketing/about/lesson/published";
 
 /** The product's visual of the open lesson. Its code loads when the window nears the screen. */
 const LessonVisual = dynamic(
@@ -27,19 +30,13 @@ const LessonVisual = dynamic(
   { loading: ScenePlaceholder }
 );
 
-const LessonCopySchema = Schema.Struct({
-  tab: Schema.String,
-  text: Schema.String,
-});
-
-/** The title and the text of one lesson, as the page words them. */
-type LessonCopy = typeof LessonCopySchema.Type;
-
 interface LessonWindowProps {
   /** The decimal separator of the page's locale, which the physics visual writes its numbers with. */
   readonly decimalSeparator: DecimalSeparator;
   readonly label: string;
-  readonly lessons: Record<Lesson, LessonCopy>;
+  readonly lessons: Record<Lesson, HomeLesson>;
+  /** The link's text, which names the lesson's page for the reader. */
+  readonly openLabel: string;
 }
 
 /**
@@ -68,16 +65,18 @@ function LessonScene({
 }
 
 /**
- * The lesson window: four lessons on tabs, each with its text at the top and
- * the product's own visual below it. The window turns only when the reader picks
- * a tab, never by itself. It is revealed once it comes within one screen height
- * of the viewport, so the visual of the open lesson is drawn before the reader
- * reaches it, and it stays mounted after that.
+ * The lesson window: four published lessons on tabs. Each tab is named by its
+ * lesson, its text is the lesson's description, and a link opens the lesson.
+ * The window turns only when the reader picks a tab, never by itself. It is
+ * revealed once it comes within one screen height of the viewport, so the
+ * visual of the open lesson is drawn before the reader reaches it, and it stays
+ * mounted after that.
  */
 export function LessonWindow({
   decimalSeparator,
   label,
   lessons,
+  openLabel,
 }: LessonWindowProps) {
   const [lesson, setLesson] = useState<Lesson>("projectile");
   const [revealed, setRevealed] = useState(false);
@@ -104,13 +103,25 @@ export function LessonWindow({
         >
           {Arr.map(LessonSchema.literals, (id) => (
             <TabsTab key={id} value={id}>
-              {lessons[id].tab}
+              {lessons[id].title}
             </TabsTab>
           ))}
         </TabsList>
         {Arr.map(LessonSchema.literals, (id) => (
           <TabsPanel className="grid gap-6" key={id} value={id}>
-            <p className="text-pretty text-base">{lessons[id].text}</p>
+            <div className="grid justify-items-start gap-4">
+              <p className="text-pretty text-base">{lessons[id].description}</p>
+              <Button
+                nativeButton={false}
+                render={
+                  <NavigationLink href={lessons[id].href}>
+                    {openLabel}
+                  </NavigationLink>
+                }
+                size="sm"
+                variant="outline"
+              />
+            </div>
             <LessonScene
               decimalSeparator={decimalSeparator}
               lesson={id}

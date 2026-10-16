@@ -858,8 +858,6 @@
     "lesson-tabs": "Lessons",
     "lab": {
       "projectile": {
-        "title": "Projectile Ball Path",
-        "description": "Change the launch angle. The ball keeps moving horizontally while gravity changes its height.",
         "choose": "Choose launch angle",
         "view": "Projectile ball path visual",
         "initial-speed": "Initial speed",
@@ -868,86 +866,31 @@
         "peak-height": "Peak height"
       },
       "quadratic": {
-        "title": "Roots and vertex",
-        "description": "The vertex sits halfway between the roots, at x = {vertex}."
+        "view": "Graph of a quadratic function"
       },
       "atom": {
-        "title": "Atomic Shell Model",
-        "description": "This diagram uses the simple shell model for neutral atoms up to calcium. It focuses on reading the outer shell and separating the shell content from the maximum <math>2n^2</math> capacity.",
         "choose": "Choose a neutral atom",
         "atomic-number": "Atomic number",
         "configuration": "Configuration",
         "electron-total": "Electron count",
         "capacity": "capacity",
-        "outer-shell": "Outer shell",
-        "samples": {
-          "neon": {
-            "name": "Neon",
-            "note": "Its configuration is <math>2, 8</math>. Shell <math>\\mathrm L</math> is the outer shell."
-          },
-          "magnesium": {
-            "name": "Magnesium",
-            "note": "After shells <math>\\mathrm K</math> and <math>\\mathrm L</math> are filled, the remaining <math>2</math> electrons enter shell <math>\\mathrm M</math>."
-          },
-          "chlorine": {
-            "name": "Chlorine",
-            "note": "Its outer shell contains <math>7</math> electrons in this simple shell model."
-          },
-          "argon": {
-            "name": "Argon",
-            "note": "The introductory pattern is <math>2, 8, 8</math>, so shell <math>\\mathrm M</math> contains <math>8</math> electrons."
-          },
-          "potassium": {
-            "name": "Potassium",
-            "note": "Potassium has the element symbol <math>\\mathrm K</math>. That is different from shell <math>\\mathrm K</math>. After <math>2, 8, 8</math>, the remaining <math>1</math> electron enters shell <math>\\mathrm N</math>."
-          },
-          "calcium": {
-            "name": "Calcium",
-            "note": "Calcium has <math>20</math> electrons, so its simple shell pattern is <math>2, 8, 8, 2</math>."
-          }
-        }
+        "outer-shell": "Outer shell"
       },
       "bacteria": {
-        "title": "Comparing bacterial shape, cell contents, and cell wall",
-        "description": "The model separates outer shape, prokaryotic contents, and cell-wall layers. Rotate the model to see the arrangement of each part from different sides.",
         "choose": "Choose a bacterial view",
-        "focus": "Part to observe",
-        "takeaway": "Function of each part",
         "view": "Bacterial structure model",
         "shape": {
-          "tab": "Shape",
-          "coccus": "Coccus",
-          "bacillus": "Bacillus",
-          "spiral": "Spiral",
-          "caption": "In the starting view, the forms from left to right show coccus, bacillus, and spiral bacteria as early recognition clues.",
-          "focus": "Shape gives the first clue about bacterial morphology. Other evidence completes the identification.",
-          "takeaway": "Strong identification uses outer form together with other traits."
+          "tab": "Shape"
         },
         "inside": {
-          "tab": "Inside",
-          "nucleoid-dna": "Nucleoid DNA",
-          "caption": "The nucleoid contains bacterial DNA, while ribosomes are spread through the cytoplasm to make proteins.",
-          "focus": "There is no membrane-bound nucleus, but DNA and ribosomes are still present.",
-          "takeaway": "A bacterium stays alive because its membrane, cytoplasm, DNA, ribosomes, and metabolism work together."
+          "tab": "Inside"
         },
         "wall": {
-          "tab": "Wall",
-          "gram-positive": "Gram-positive",
-          "gram-negative": "Gram-negative",
-          "caption": "In the starting view, the left stack shows a thicker Gram-positive wall, while the right stack shows a Gram-negative wall with an outer membrane.",
-          "focus": "Compare peptidoglycan thickness and the presence of an outer membrane.",
-          "takeaway": "Cell-envelope structure affects shape, protection, Gram staining, and sensitivity to some antibiotics."
+          "tab": "Wall"
         }
       }
     },
-    "lesson-projectile": "Projectile motion",
-    "lesson-quadratic": "Quadratic functions",
-    "lesson-atom": "The atom",
-    "lesson-cell": "The cell",
-    "lesson-projectile-text": "The ball is thrown at {speed} m/s and an angle of {angle} degrees. Its path is a parabola.",
-    "lesson-quadratic-text": "The graph crosses the x-axis at x = {left} and x = {right}.",
-    "lesson-atom-text": "{name} has {atomicNumber} electrons. Its outer shell, {outerShell}, holds {electrons} of them.",
-    "lesson-cell-text": "A bacterium is one cell with no nucleus, and its DNA lies in the nucleoid.",
+    "lesson-open": "Read the lesson",
     "tryout-title": "Practice tests that score you right away",
     "tryout-lead": "You can repeat them any time.",
     "tryout-ask": "Do I get it yet?",
