@@ -67,6 +67,15 @@ export const classSlugOf = (name: string) =>
     .replace(/^-|-$/g, "");
 
 /**
+ * A class's address in its period: the form `classSlugOf` gives a name, with a
+ * number after a hyphen when another class of the period holds the address
+ * first. A string of any other shape names no class.
+ */
+export const ClassAddress = Schema.String.check(
+  Schema.isPattern(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u)
+);
+
+/**
  * A class of one cohort: one subject taught to one cohort in one period. The
  * tenant, unit, period, and cohort are copied from the cohort at creation, for
  * indexing and for the locks of its containers. `nameKey` is the lowercase name,
