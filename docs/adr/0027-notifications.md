@@ -10,6 +10,14 @@ welcome email (`packages/backend/confect/emails/welcome/internal.ts`) and the
 invitation email (`packages/backend/confect/emails/invite`), which the invite
 mutation starts (ADR 0011).
 
+Amended on 16 October 2026 after review. These rules are not among the owner's
+decisions K1 to K28, so the owner confirms or changes them before the scheduler
+is built (see What Stays Open): a reminder keeps its anchor and Timing rather
+than its send instant, a notice rule holds one route for each relation, a Chosen
+time belongs to email only, and the guardian's exam reminder is the earlier of
+06:30 and 30 minutes before the sitting opens, and it is not sent once that
+instant has passed.
+
 ## Context
 
 A school produces notifications from many sources: a mention or a reply in a
@@ -179,7 +187,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | Deadline, the day before | A task is published or its deadline changes. Journal cursor. | 16:00 on the day before the deadline (proposal) | Push, inbox |
 | Deadline, one hour before | The same trigger | One hour before the deadline | Push, inbox |
 | Exam starts | A sitting is scheduled. Journal cursor. | 15 minutes before the sitting opens | Push, inbox, email |
-| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | The earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens | Inbox, email |
+| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | The earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens. Not sent if that instant has passed when the sweep reads the row. | Inbox, email |
 | Daily digest | Email that is not sent yet. A cursor for each recipient. | 17:00 every day (proposal) | Email |
 
 ### Push
@@ -272,7 +280,11 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   deadline would arrive at 06:00. A reminder whose send instant has already
   passed when its task is published, such as the deadline reminder for a task
   published after 16:00 on the day before the deadline, raises the same
-  question. No rule says whether such a send is dropped or sent at once.
+  question. The guardian's exam reminder is dropped once its instant has passed
+  (Reminders). No other rule says whether such a send is dropped or sent at once.
+- The guardian's exam reminder and its drop rule. They come from the review of
+  16 October 2026 and are not among the owner's decisions K1 to K28. The owner
+  confirms them, or sets other times, before the scheduler is built.
 - Quiet hours by age. The Indonesian profile uses under 18 (ADR 0032), but no
   birth date or age is stored yet. Until the country profile and a DPIA exist,
   the rule must name the accounts it covers.
