@@ -40,7 +40,7 @@ export const createSchool = Effect.fn("NakafaE2E.createSchool")(
  * is a member. The command runs once: a second run would try to open the same
  * Owner account again.
  */
-export const createOwnerCookie = Effect.fn("NakafaE2E.createOwnerCookie")(
+const createOwnerCookie = Effect.fn("NakafaE2E.createOwnerCookie")(
   function* (slug: string) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({

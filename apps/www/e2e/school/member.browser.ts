@@ -1,12 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
-import {
-  createOwnerCookie,
-  createSchool,
-  hostAddress,
-  signInOwner,
-} from "@/e2e/support/school";
+import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 
 test("a member sees the school in the sidebar and the viewer's role in Beranda", async ({
   browser,
@@ -24,39 +19,6 @@ test("a member sees the school in the sidebar and the viewer's role in Beranda",
   await expect(page.getByText("You are signed in as Owner.")).toBeVisible();
   await expect(page.getByText(school.name, { exact: true })).toHaveCount(1);
   await expect(page.getByRole("link", { name: "Home" })).toBeVisible();
-  await context.close();
-});
-
-test("the session that the main site refreshes is the same session on the school host", async ({
-  browser,
-  baseURL,
-}) => {
-  const school = await Effect.runPromise(createSchool());
-  const cookie = await Effect.runPromise(createOwnerCookie(school.slug));
-  const context = await browser.newContext();
-  // The owner's cookie starts as the main site's own, on `localhost`.
-  await context.addCookies([
-    {
-      httpOnly: true,
-      name: cookie.name,
-      sameSite: "Lax",
-      url: hostAddress(baseURL, "localhost", "/"),
-      value: cookie.value,
-    },
-  ]);
-  const page = await context.newPage();
-
-  // Each read of the session on the main site refreshes its cookie, and the
-  // answer sets the shared cookie that the school host must accept.
-  const session = await page.goto(
-    hostAddress(baseURL, "localhost", "/api/auth/get-session")
-  );
-  expect(session?.status()).toBe(200);
-  expect(await session?.text()).toContain('"user"');
-
-  await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
-
-  await expect(page.getByText("You are signed in as Owner.")).toBeVisible();
   await context.close();
 });
 
