@@ -36,10 +36,15 @@ export const TenantKey = Schema.Struct({
 
 /**
  * The stored field a sealed value belongs to. A value opens only for the owner
- * and the field it was sealed for.
+ * and the field it was sealed for. When the field belongs to one row, `row` holds
+ * the values that name that row, in a fixed order (ADR 0024), so a value copied
+ * to another row never opens.
  */
 export const VaultField = Schema.Struct({
   field: Schema.String,
+  row: Schema.optionalKey(
+    Schema.Array(Schema.Union([Schema.String, Schema.Finite]))
+  ),
   table: Schema.String,
 });
 

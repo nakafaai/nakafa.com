@@ -65,6 +65,28 @@ describe("vault learner text", () => {
       )
   );
 
+  it.effect("opens a text only for the row it was sealed for", () =>
+    scenario(
+      Effect.gen(function* () {
+        const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+        const inRow = { ...memory, row: ["thread-a", 2, 1] };
+        const sealed = yield* sealText(owner, inRow, fact);
+        expect(yield* openText(owner, inRow, sealed)).toBe(fact);
+        for (const field of [
+          memory,
+          { ...memory, row: ["thread-b", 2, 1] },
+          { ...memory, row: ["thread-a", 3, 1] },
+          { ...memory, row: ["thread-a", 2, 2] },
+          { ...memory, row: ["thread-a", "2", 1] },
+        ]) {
+          expect(
+            (yield* Effect.flip(openText(owner, field, sealed))).reason
+          ).toBe("cipher");
+        }
+      })
+    )
+  );
+
   it.effect(
     "blinds a word for one learner and one field, the same way every time",
     () =>
