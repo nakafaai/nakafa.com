@@ -14,7 +14,9 @@ import { SidebarMenuButton } from "@repo/design-system/components/ui/sidebar-men
 import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Result } from "effect";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { startTransition } from "react";
 import { changeSchoolLanguage } from "@/components/tenant/language.client";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 
@@ -33,6 +35,7 @@ const signOut = Effect.gen(function* () {
 export function TenantAccountMenu() {
   const t = useTranslations();
   const locale = useLocale();
+  const router = useRouter();
 
   return (
     <DropdownMenu>
@@ -52,9 +55,18 @@ export function TenantAccountMenu() {
                 {Arr.map(languages, (language) => (
                   <DropdownMenuItem
                     key={language.value}
-                    onClick={() =>
-                      Effect.runFork(changeSchoolLanguage(language.value))
-                    }
+                    onClick={() => {
+                      startTransition(async () => {
+                        const render = await Effect.runPromise(
+                          changeSchoolLanguage(language.value)
+                        );
+                        if (render === "reload") {
+                          window.location.reload();
+                          return;
+                        }
+                        router.refresh();
+                      });
+                    }}
                   >
                     {language.label}
                   </DropdownMenuItem>

@@ -32,44 +32,53 @@ describe("changeSchoolLanguage", () => {
     vi.unstubAllGlobals();
   });
 
-  it.effect("saves the chosen language and then reloads the page", () =>
-    Effect.gen(function* () {
-      doubles.save.mockResolvedValue(undefined);
+  it.effect(
+    "saves the chosen language and renders the page again in place",
+    () =>
+      Effect.gen(function* () {
+        doubles.save.mockResolvedValue(undefined);
 
-      yield* changeSchoolLanguage("id");
+        const render = yield* changeSchoolLanguage("id");
 
-      expect(doubles.save).toHaveBeenCalledExactlyOnceWith("id");
-      expect(doubles.reload).toHaveBeenCalledOnce();
-      expect(doubles.report).not.toHaveBeenCalled();
-    })
+        expect(render).toBe("refresh");
+        expect(doubles.save).toHaveBeenCalledExactlyOnceWith("id");
+        expect(doubles.reload).not.toHaveBeenCalled();
+        expect(doubles.report).not.toHaveBeenCalled();
+      })
   );
 
-  it.effect("reports a failed save and still reloads the page", () =>
-    Effect.gen(function* () {
-      const failure = new Error("network");
-      doubles.save.mockRejectedValue(failure);
-      doubles.isStaleAction.mockReturnValue(false);
+  it.effect(
+    "reports a failed save and still renders the page again in place",
+    () =>
+      Effect.gen(function* () {
+        const failure = new Error("network");
+        doubles.save.mockRejectedValue(failure);
+        doubles.isStaleAction.mockReturnValue(false);
 
-      yield* changeSchoolLanguage("de");
+        const render = yield* changeSchoolLanguage("de");
 
-      expect(doubles.report).toHaveBeenCalledExactlyOnceWith(failure, {
-        source: "school-language",
-      });
-      expect(doubles.reload).toHaveBeenCalledOnce();
-    })
+        expect(render).toBe("refresh");
+        expect(doubles.report).toHaveBeenCalledExactlyOnceWith(failure, {
+          source: "school-language",
+        });
+        expect(doubles.reload).not.toHaveBeenCalled();
+      })
   );
 
-  it.effect("reloads a tab that runs an old build without reporting it", () =>
-    Effect.gen(function* () {
-      const stale = new Error("Failed to find Server Action");
-      doubles.save.mockRejectedValue(stale);
-      doubles.isStaleAction.mockReturnValue(true);
+  it.effect(
+    "asks for a reload for a tab that runs an old build, without reporting it",
+    () =>
+      Effect.gen(function* () {
+        const stale = new Error("Failed to find Server Action");
+        doubles.save.mockRejectedValue(stale);
+        doubles.isStaleAction.mockReturnValue(true);
 
-      yield* changeSchoolLanguage("de");
+        const render = yield* changeSchoolLanguage("de");
 
-      expect(doubles.isStaleAction).toHaveBeenCalledExactlyOnceWith(stale);
-      expect(doubles.report).not.toHaveBeenCalled();
-      expect(doubles.reload).toHaveBeenCalledOnce();
-    })
+        expect(render).toBe("reload");
+        expect(doubles.isStaleAction).toHaveBeenCalledExactlyOnceWith(stale);
+        expect(doubles.report).not.toHaveBeenCalled();
+        expect(doubles.reload).not.toHaveBeenCalled();
+      })
   );
 });
