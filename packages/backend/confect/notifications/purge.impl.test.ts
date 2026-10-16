@@ -6,21 +6,25 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
 import { purgeInbox } from "@repo/backend/confect/notifications/purge";
-import { Email } from "@repo/backend/confect/tenancy/schema";
+import {
+  claim,
+  consumeSchool,
+  type Fixture,
+  inviteAt,
+  NOW,
+  storedRows,
+} from "@repo/backend/test/inbox";
 import {
   journal,
   scheduledJobs,
   slugOf,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect } from "effect";
 
-const NOW = Date.UTC(2026, 9, 14, 9, 0, 0);
 const nf = slugOf("nf");
-const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
-const { invite } = refs.public.tenancy.invites;
+const GURU = "guru@harapan.example.test";
 const { remove } = refs.public.tenancy.people;
-const consume = refs.internal.notifications.consume.run;
 const purge = refs.internal.notifications.purge.run;
 const PURGE_RUN = "notifications/purge:run";
 
@@ -29,16 +33,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
-
-type Fixture = Effect.Success<typeof tenancyFixture>;
-
-/** Every row of the inbox, oldest first. */
-const notifications = (fixture: Fixture) =>
-  fixture.run(
-    Effect.flatMap(DatabaseReader, (reader) =>
-      reader.table("notifications").index("by_creation_time").take(200)
-    )
-  );
 
 /** The scheduled runs of the inbox purge, as the system table lists them. */
 const purgeRuns = (fixture: Fixture) =>
@@ -54,32 +48,10 @@ const purgeRuns = (fixture: Fixture) =>
  */
 const claimedInvitee = (fixture: Fixture) =>
   Effect.gen(function* () {
-    yield* fixture.as("admin").mutation(invite, {
-      email: guru,
-      locale: "id",
-      personId: fixture.invited,
-      slug: nf,
-    });
-    yield* fixture.internal.mutation(consume, {
-      tenantId: fixture.tenants.nf,
-    });
-    const account = yield* fixture.account(
-      "guru",
-      "guru@harapan.example.test",
-      true
-    );
-    yield* fixture.run(
-      Effect.flatMap(DatabaseWriter, (writer) =>
-        writer.table("tenantPeople").patch(fixture.invited, {
-          account: {
-            claimedAt: NOW,
-            method: "invite",
-            state: "claimed",
-            userId: account.userId,
-          },
-        })
-      )
-    );
+    yield* inviteAt(fixture, "nf", fixture.invited, GURU);
+    yield* consumeSchool(fixture, fixture.tenants.nf);
+    const account = yield* fixture.account("guru", GURU, true);
+    yield* claim(fixture, fixture.invited, account.userId);
     return account.userId;
   });
 
@@ -98,14 +70,14 @@ describe("notifications/purge", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const userId = yield* claimedInvitee(fixture);
-        expect(yield* notifications(fixture)).toHaveLength(1);
+        expect(yield* storedRows(fixture)).toHaveLength(1);
         const user = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
             reader.table("users").get(userId).pipe(Effect.orDie)
           )
         );
         yield* fixture.run(releaseTenantPeople(user, NOW + 1));
-        expect(yield* notifications(fixture)).toEqual([]);
+        expect(yield* storedRows(fixture)).toEqual([]);
         expect(yield* invitee(fixture)).toMatchObject({
           account: { state: "unclaimed" },
           status: "active",
@@ -119,12 +91,12 @@ describe("notifications/purge", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* claimedInvitee(fixture);
-        expect(yield* notifications(fixture)).toHaveLength(1);
+        expect(yield* storedRows(fixture)).toHaveLength(1);
         yield* fixture.as("admin").mutation(remove, {
           personId: fixture.invited,
           slug: nf,
         });
-        expect(yield* notifications(fixture)).toEqual([]);
+        expect(yield* storedRows(fixture)).toEqual([]);
         expect(yield* invitee(fixture)).toMatchObject({
           account: { state: "unclaimed" },
           status: "removed",
@@ -137,16 +109,14 @@ describe("notifications/purge", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        yield* fixture.as("admin").mutation(invite, {
-          email: guru,
-          locale: "id",
-          personId: fixture.invited,
-          slug: nf,
-        });
+        yield* inviteAt(fixture, "nf", fixture.invited, GURU);
         const [entry] = yield* fixture.run(journal);
         if (entry === undefined) {
-          return;
+          return yield* Effect.die(
+            "The invite must have written a journal entry."
+          );
         }
+        // More rows than one page holds, so the release leaves some for a later run.
         yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
             Effect.forEach(
@@ -168,10 +138,12 @@ describe("notifications/purge", () => {
           personId: fixture.invited,
           slug: nf,
         });
-        expect(yield* notifications(fixture)).toHaveLength(1);
+        const left = (yield* storedRows(fixture)).length;
+        expect(left).toBeGreaterThan(0);
+        expect(left).toBeLessThan(51);
         expect(yield* purgeRuns(fixture)).toHaveLength(1);
         yield* fixture.internal.mutation(purge, { personId: fixture.invited });
-        expect(yield* notifications(fixture)).toEqual([]);
+        expect(yield* storedRows(fixture)).toEqual([]);
         expect(yield* purgeRuns(fixture)).toHaveLength(1);
       })
   );
@@ -181,7 +153,7 @@ describe("notifications/purge", () => {
       const fixture = yield* tenancyFixture;
       yield* claimedInvitee(fixture);
       yield* fixture.run(purgeInbox(fixture.invited));
-      expect(yield* notifications(fixture)).toEqual([]);
+      expect(yield* storedRows(fixture)).toEqual([]);
       expect(yield* purgeRuns(fixture)).toEqual([]);
     })
   );

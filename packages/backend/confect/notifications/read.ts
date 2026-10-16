@@ -13,8 +13,8 @@ const READ_PAGE_SIZE = 50;
 /**
  * Marks the unread rows of one Person on one page, with the moment of the read,
  * and schedules a run for the rest when rows follow. A read row keeps its first
- * moment, so a repeated page writes nothing new. The first page of a request runs
- * in the request's own transaction; each later page is its own scheduled run.
+ * moment, so a repeated page writes nothing new. A read-all request marks no rows
+ * itself: every page, the first included, is a scheduled run.
  */
 export const markPersonRead = Effect.fn("notifications.read.person")(function* (
   personId: GenericId.GenericId<"tenantPeople">,
