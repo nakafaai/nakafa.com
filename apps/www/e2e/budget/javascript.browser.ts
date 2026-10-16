@@ -38,6 +38,7 @@ const routeBudgets = [
     encodedBodySize: PRICING_MAX_ENCODED_BYTES,
     href: "/en/pricing",
     name: "English pricing no-scroll graph",
+    prefetches: true,
   },
   {
     decodedBodySize: QURAN_MAX_DECODED_BYTES,
