@@ -1,6 +1,10 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { openRoute } from "@/e2e/support/route";
+import { MARKETING_PAGE } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const MarketingSurfaceSchema = Schema.Literals(["community"]);
 
@@ -25,6 +29,29 @@ class MarketingSurfaceMissing extends Schema.TaggedError<MarketingSurfaceMissing
 }
 
 /** Reads the required first contributor without inventing fixture data. */
+/** Opens one marketing page and waits until its visible route boundary is on screen. */
+export const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(
+  function* (page: Page, href: string) {
+    yield* openRoute(page, href, "denied");
+    yield* waitForCommittedAppRouter(
+      page,
+      href,
+      href,
+      readinessTimeoutMilliseconds
+    );
+    /**
+     * Next.js may commit App Router history before React reveals a streamed route.
+     * Keep the existing readiness budget attached to the visible route boundary.
+     * @see https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
+     */
+    yield* Effect.promise(() =>
+      expect(
+        page.locator(MARKETING_PAGE).filter({ visible: true })
+      ).toHaveCount(1, { timeout: readinessTimeoutMilliseconds })
+    );
+  }
+);
+
 export const readFirstContributor = Effect.fn(
   "NakafaE2E.readFirstMarketingContributor"
 )(function* (values: readonly Contributor[]) {
