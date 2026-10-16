@@ -73,12 +73,27 @@ const Route = Schema.Struct({
 });
 
 /**
+ * Whether each relation has at most one route. A second route for a relation
+ * would never be read, so the Schema of a rule refuses it.
+ */
+const hasOneRoutePerRelation = (
+  routes: readonly (typeof Route.Type)[]
+): boolean => {
+  const relations = Arr.map(routes, (route) => route.relation);
+  return Arr.dedupe(relations).length === relations.length;
+};
+
+/**
  * The rule of one kind: the routes it has, one for each relation it reaches,
  * and the channels that stay on, because no preference can switch them off.
  */
 const NoticeRule = Schema.Struct({
   alwaysSent: Schema.optionalKey(Schema.Array(Channel)),
-  routes: Schema.Array(Route),
+  routes: Schema.Array(Route).check(
+    Schema.makeFilter(hasOneRoutePerRelation, {
+      message: "A kind holds one route for each relation.",
+    })
+  ),
 });
 
 /** One rule for every kind: a kind without a row does not compile. */

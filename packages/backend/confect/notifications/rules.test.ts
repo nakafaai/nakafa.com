@@ -61,6 +61,18 @@ describe("notifications/rules channel table", () => {
     const decoded = Schema.decodeExit(NoticeRules)(NOTICE_RULES);
     expect(Exit.isSuccess(decoded)).toBe(true);
   });
+
+  it("refuses a kind with two routes for one relation, so no route is silently ignored", () => {
+    const invitation = NOTICE_RULES.invitation;
+    const decoded = Schema.decodeExit(NoticeRules)({
+      ...NOTICE_RULES,
+      invitation: {
+        ...invitation,
+        routes: [...invitation.routes, ...invitation.routes],
+      },
+    });
+    expect(Exit.isFailure(decoded)).toBe(true);
+  });
 });
 
 describe("notifications/rules Timing", () => {
