@@ -15,7 +15,7 @@ export const CODE_PATTERN = /^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/;
 /** A device the sign-in page keeps, as a UUID. */
 export const DEVICE = "0f8fad5b-d9cb-4691-a165-8c45a5d2a1e1";
 export const PASSWORD = "correct horse battery";
-/** A code no card holds, with the dash the page sends. Its prefix is ABCDE. */
+/** A code no card holds, with the dash the page sends. */
 export const UNKNOWN_CODE = "ABCDE-FGHJK";
 export const { issue, redeem, reissue } = refs.public.identity.cards;
 export const nf = slugOf("nf");

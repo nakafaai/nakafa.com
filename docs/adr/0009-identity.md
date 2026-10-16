@@ -216,18 +216,18 @@ stays closed on every host.
   Person with no account or with an account a card made. Issuing for any other
   Person answers `PersonClaimed`, the refusal an invite gives, and redeeming a card
   for one reads as `invalid`.
-- **Redeem.** `cards:redeem` is one mutation, in this order: it refuses a request
-  that carries a signed-in identity as `invalid` before any limit is spent, counts
-  the attempt against the device limit, reads the code, reads the Person and
-  refuses one that is removed or that the card rule refuses (the Owner or Admin
-  role, or an account that a card did not make) as `invalid` whatever the card
-  says, opens the card on the school's host (`used`, then `expired`), refuses a
-  password outside Better Auth's length before any write, creates the account if
-  the Person has none (the global username from `users/allocation`, the
-  placeholder address named by a random key, no Google link), binds the Person
-  with method `card`, stores the password through Better Auth's reset endpoint,
-  marks the card used, and journals `card.redeemed`. A refusal is a value, so the
-  attempt still counts.
+- **Redeem.** `identity/cards:redeem` is one mutation, in this order: it
+  refuses a request that carries a signed-in identity as `invalid` before any
+  limit is spent, counts the attempt against the device limit, reads the code,
+  reads the Person and refuses one that is removed or that the card rule
+  refuses (the Owner or Admin role, or an account that a card did not make) as
+  `invalid` whatever the card says, opens the card on the school's host (`used`,
+  then `expired`), refuses a password outside Better Auth's length before any
+  write, creates the account if the Person has none (the global username from
+  `users/allocation`, the placeholder address named by a random key, no Google
+  link), binds the Person with method `card`, stores the password through Better
+  Auth's reset endpoint, marks the card used, and journals `card.redeemed`. A
+  refusal is a value, so the attempt still counts.
   A failure that throws rolls back the whole mutation, so an account, a claim,
   or a redemption never survives without the others. A card whose Person has no
   school login cannot exist: issuing writes the login first and nothing deletes
@@ -245,10 +245,10 @@ stays closed on every host.
   id itself, so the id is not known before the write. The handle is allocated from
   the Person's name, as it is for every account. `identity/address` owns the domain.
   `emails/client` refuses a message to it before the provider is called, in any
-  recipient field. No welcome intent and no payment customer is made for it, on
-  creation or on a profile change, and an invitation to it sends nothing. The
-  address is an internal key, not personal data, and RFC 2606 keeps mail from
-  ever reaching it.
+  recipient field and in any written form of the address. No welcome intent and
+  no payment customer is made for it, on creation or on a profile change, and an
+  invitation to it sends nothing. The address is an internal key, not personal
+  data, and RFC 2606 keeps mail from ever reaching it.
 - **Workspace domain check.** `identity/domain` decides a Google sign-in on a
   school host. An empty list of allowed domains allows every account. Otherwise
   the hosted domain claim must be one of them. A refusal is journaled as the
@@ -285,11 +285,12 @@ never a second one.
 - A new account gets its username in the transaction that makes the row: the
   letters and digits of its name, then the name with 2 up to 9, then the name
   with a random number from `Random` that has two digits and gains a digit
-  after two collisions, up to eight digits. A name with no Latin letter becomes
-  `teman`. Each try is one indexed read, and the write follows inside one
-  Convex transaction, so two accounts that ask for the same name cannot both
-  win. The tries are a fixed list, so one allocation reads at most
-  `MAX_ALLOCATION_TRIES` rows however many accounts share a name. An
+  after two collisions, up to eight digits. A name with no Latin letter to start
+  from, or a reserved one such as `nakafa` or `admin`, becomes `teman`, so no
+  handle is built on a reserved base. Each try is one indexed read, and the
+  write follows inside one Convex transaction, so two accounts that ask for the
+  same name cannot both win. The tries are a fixed list, so one allocation reads
+  at most `MAX_ALLOCATION_TRIES` rows however many accounts share a name. An
   allocation that finds every try taken dies with `UsernameExhausted`. A rename
   uses the same check, and the same check answers while a person types.
 - A folder named `@username` would be a parallel route slot and not an address,
