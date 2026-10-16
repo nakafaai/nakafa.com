@@ -123,7 +123,7 @@ describe("chat/messages", () => {
       expect(first).toMatchObject({ key: "thread_1-0-0", order: 0 });
     });
 
-    it("shows each attachment by its preview and its original name", () => {
+    it("shows each attachment by its preview and its original name, and keeps the id of its file", () => {
       const file = new File(["bytes"], "graph.png", { type: "image/png" });
 
       const withFile = draftMessage({
@@ -149,6 +149,7 @@ describe("chat/messages", () => {
         { text: "Check this", type: "text" },
         {
           filename: "graph.png",
+          id: "file_1",
           mediaType: "image/png",
           type: "file",
           url: "blob:graph",

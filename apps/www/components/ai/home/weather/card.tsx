@@ -15,17 +15,25 @@ export function WeatherCardHeader({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * The cell of weather that cannot be read. It keeps the box of the card and
+ * shows nothing, so the other card of the grid stays in its own column.
+ */
+export function WeatherGap() {
+  return <div aria-hidden="true" className="aspect-square" />;
+}
+
 /** The loading state, drawn in the same box as the loaded widget. */
 export function WeatherSkeleton() {
   return (
     <WeatherCard>
-      <WeatherCardHeader>
-        <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
+        <WeatherCardHeader>
           <Skeleton className="h-6 w-16" />
-          <Skeleton className="h-3 w-20" />
-        </div>
-        <Skeleton className="size-8" />
-      </WeatherCardHeader>
+          <Skeleton className="size-6" />
+        </WeatherCardHeader>
+        <Skeleton className="h-3 w-20" />
+      </div>
 
       <Skeleton className="h-3 w-24" />
     </WeatherCard>
