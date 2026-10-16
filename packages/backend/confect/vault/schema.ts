@@ -52,9 +52,11 @@ export const VaultField = Schema.Struct({
  * Why the vault could not seal or open. `configuration`: `VAULT_ROOT_KEYS` is
  * missing or malformed. `key`: the learner or the school has no key, the account
  * is deleted, or no root key in the environment opens the stored key. `cipher`:
- * the value was not sealed for this owner, table and field, or it was changed.
- * `runtime`: the platform could not derive a key or seal, which says nothing
- * about stored data. No reason carries key material or text.
+ * the value does not open for this owner, table, field and row, or it was
+ * changed. It also covers sealed content that authenticates but does not decode
+ * as the value its module expects. `runtime`: the platform could not derive a key
+ * or seal, which says nothing about stored data. No reason carries key material
+ * or text.
  */
 export class VaultError extends Schema.TaggedError<VaultError>()("VaultError", {
   reason: Schema.Literals(["configuration", "key", "cipher", "runtime"]),

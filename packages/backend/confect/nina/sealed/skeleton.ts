@@ -10,22 +10,18 @@ import { Array as Arr, Match, Predicate } from "effect";
 
 /** The provider options key that holds the sealed content of a message. Nothing else uses it. */
 export const SEALED_KEY = "nakafa";
-/** An http or https address, which a file reference may be. */
-const HTTP_URL = /^https?:\/\//u;
 
 type Part = Exclude<Message["content"], string>[number];
 type ProviderReference = Infer<typeof vProviderReference>;
 
 /**
- * A file's reference, which the skeleton keeps: a provider reference, or an http
- * or https address. Any other data is content, such as inline bytes or a base64
- * text, so it stays out of the clear.
+ * A file's reference, which the skeleton keeps: the provider's reference to the
+ * file, an opaque id. A string or bytes is content and stays out of the clear: an
+ * address that opens the file for anyone who holds it, a base64 text, or inline
+ * bytes.
  */
 function reference(data: string | ArrayBuffer | ProviderReference) {
-  if (Predicate.isString(data)) {
-    return HTTP_URL.test(data) ? data : "";
-  }
-  return data instanceof ArrayBuffer ? "" : data;
+  return Predicate.isString(data) || data instanceof ArrayBuffer ? "" : data;
 }
 
 /** A source keeps its type and its id. Its address and its title are content. */
@@ -48,9 +44,11 @@ const skeletonSource = Match.type<SourcePart>().pipe(
 );
 
 /**
- * The skeleton of one part. It keeps the type, the tool names and ids, the tool
- * approval ids, and the file references. It keeps no text, no reasoning, no tool
- * input or output, no file name and no source address or title.
+ * The skeleton of one part. It keeps the type, the media type of a file, an image
+ * or a reasoning file, the kind of a custom part, the tool names and ids, the tool
+ * approval ids, the source ids, and the provider references of files and images.
+ * It keeps no text, no reasoning, no tool input or output, no file name, no address
+ * or bytes of a file, and no source address or title.
  */
 const skeletonPart = Match.type<Part>().pipe(
   Match.discriminatorsExhaustive("type")({
@@ -70,7 +68,6 @@ const skeletonPart = Match.type<Part>().pipe(
     "reasoning-file": (part) => ({
       mediaType: part.mediaType,
       type: "reasoning-file",
-      url: reference(part.url ?? ""),
     }),
     source: skeletonSource,
     text: () => ({ text: "", type: "text" }),

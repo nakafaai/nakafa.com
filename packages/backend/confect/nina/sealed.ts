@@ -19,7 +19,14 @@ import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { encodeJsonText } from "@repo/utilities/json";
 import { convexToJson, type JSONValue, jsonToConvex, v } from "convex/values";
 import { parse } from "convex-helpers/validators";
-import { Effect, Predicate, Record, Schema, Struct } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Predicate,
+  Record,
+  Schema,
+  Struct,
+} from "effect";
 import { Base64Url } from "effect/encoding";
 
 /**
@@ -61,17 +68,30 @@ const JsonValue: Schema.Codec<JSONValue> = Schema.Union([
 ]);
 
 /**
- * The content that is sealed: the message and the fields that the row keeps out
- * of the clear. Opening checks the value against this validator.
+ * The fields that the sealed content of a message holds: the message, and the
+ * fields that its row keeps out of the clear. Sealing, opening and the checks of
+ * an opened row all read these names, so each one is written once here.
  */
-const SealedContent = v.object({
+const sealedFields = {
   error: v.optional(v.string()),
   message: vMessage,
   providerMetadata: v.optional(vProviderMetadata),
   reasoning: v.optional(v.string()),
   reasoningDetails: v.optional(vReasoningDetails),
   sources: v.optional(v.array(vSource)),
-});
+};
+
+/**
+ * The content that is sealed: the message and the fields that the row keeps out
+ * of the clear. Opening checks the value against this validator.
+ */
+const SealedContent = v.object(sealedFields);
+
+/** The sealed fields other than the message, which a stored row may keep in the clear. */
+const fieldsBesideMessage = Arr.filter(
+  Record.keys(sealedFields),
+  (field) => field !== "message"
+);
 
 /** The failure of sealed content that does not open. It reveals nothing about it. */
 const cipherError = () => new VaultError({ reason: "cipher" });
@@ -97,16 +117,7 @@ export const sealMessage = Effect.fn("nina.sealed.seal")(function* (
   row: MessageWithMetadata
 ) {
   const content = encodeJsonText(
-    convexToJson(
-      Struct.pick(row, [
-        "error",
-        "message",
-        "providerMetadata",
-        "reasoning",
-        "reasoningDetails",
-        "sources",
-      ])
-    )
+    convexToJson(Struct.pick(row, Record.keys(sealedFields)))
   );
   const sealed = yield* sealText(keys, messageField(identity), content);
   return {
@@ -157,8 +168,11 @@ const openContent = Effect.fn("nina.sealed.openContent")(function* (
  * Opens a stored message. A row with no sealed content is a plain row, and it is
  * returned as it is. A sealed row comes back as the message was written: its
  * content opened, its `text` and its `tool` derived the way the Agent derives
- * them, and no sealed key left. It fails with `VaultError` reason `cipher` when
- * the content does not open for these keys and this identity.
+ * them, and no sealed key left. A field that the row keeps in the clear beside its
+ * sealed content comes back as stored, such as the error that a cut-off turn writes
+ * after the row is sealed. It fails with `VaultError` reason `cipher` when the
+ * content does not open for these keys and this identity, or when the row and its
+ * sealed content both hold the same field, because neither value can be the right one.
  */
 export const openMessage = Effect.fn("nina.sealed.open")(function* (
   keys: LearnerKeys,
@@ -174,17 +188,15 @@ export const openMessage = Effect.fn("nina.sealed.open")(function* (
     return yield* cipherError();
   }
   const content = yield* openContent(keys, identity, sealed);
+  const held = Arr.some(
+    fieldsBesideMessage,
+    (field) => stored[field] !== undefined && content[field] !== undefined
+  );
+  if (held) {
+    return yield* cipherError();
+  }
   return {
-    ...Struct.omit(stored, [
-      "error",
-      "message",
-      "providerMetadata",
-      "reasoning",
-      "reasoningDetails",
-      "sources",
-      "text",
-      "tool",
-    ]),
+    ...stored,
     ...content,
     message: withoutSealed(content.message),
     text: extractText(content.message),

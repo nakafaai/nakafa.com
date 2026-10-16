@@ -12,14 +12,14 @@ export const MESSAGE_IDENTITY = {
   threadId: "thread-a",
 } satisfies MessageIdentity;
 
-/** A learner turn with text, images and files. Its file names must stay sealed. */
+/** A learner turn with text, images and files. Its file names and addresses must stay sealed. */
 export const learnerTurn: MessageWithMetadata = {
   fileIds: ["file-1"],
   message: {
     content: [
       { text: "Bantu saya soal ini.", type: "text" },
       {
-        image: "https://files.example.com/soal.png",
+        image: "https://files.example.com/PLANT-soal.png",
         mediaType: "image/png",
         type: "image",
       },
@@ -40,7 +40,7 @@ export const learnerTurn: MessageWithMetadata = {
         type: "file",
       },
       {
-        data: "https://files.example.com/modul.pdf",
+        data: "https://files.example.com/PLANT-modul.pdf",
         mediaType: "application/pdf",
         type: "file",
       },
@@ -153,6 +153,16 @@ export const plantedAnswer: MessageWithMetadata = {
       },
       { data: "PLANT-INLINE", mediaType: "text/plain", type: "file" },
       {
+        data: "https://files.example.com/PLANT-MODUL.pdf",
+        mediaType: "application/pdf",
+        type: "file",
+      },
+      {
+        mediaType: "image/png",
+        type: "reasoning-file",
+        url: "https://files.example.com/PLANT-SKETCH.png",
+      },
+      {
         id: "src-1",
         sourceType: "url",
         title: "PLANT-TITLE",
@@ -190,21 +200,6 @@ export function storedRow(
     stepOrder: identity.stepOrder,
     text: extractText(message.message),
     threadId: identity.threadId,
-    tool: isTool(message.message),
-  };
-}
-
-/** The message as a plain row reads after it opens: every field it was written with, and the derived ones. */
-export function expectedOpened(message: MessageWithMetadata) {
-  return {
-    ...message,
-    _creationTime: 1,
-    _id: "messageRow",
-    order: MESSAGE_IDENTITY.order,
-    status: message.status ?? "success",
-    stepOrder: MESSAGE_IDENTITY.stepOrder,
-    text: extractText(message.message),
-    threadId: MESSAGE_IDENTITY.threadId,
     tool: isTool(message.message),
   };
 }
