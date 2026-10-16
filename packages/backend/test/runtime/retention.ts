@@ -16,6 +16,7 @@ import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import type { TestConvex } from "convex-test";
 import { Effect, Schema, Struct } from "effect";
 
@@ -161,6 +162,7 @@ export async function insertRetentionAttempt(
       credits: 0,
       creditsResetAt: 1,
       email: "retention@nakafa.test",
+      mascot: MASCOT_CODE,
       name: "Retention Tester",
       plan: "pro",
     }),

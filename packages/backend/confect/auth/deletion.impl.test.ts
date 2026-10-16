@@ -12,6 +12,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api, internal } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 
 const NOW = Date.UTC(2026, 6, 28, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -146,6 +147,7 @@ describe("auth/deletion", () => {
         creditsResetAt: NOW,
         deletionPreparedAt: NOW,
         email: "removed-auth-user@example.com",
+        mascot: MASCOT_CODE,
         name: "Removed Auth User",
         plan: "free",
       });

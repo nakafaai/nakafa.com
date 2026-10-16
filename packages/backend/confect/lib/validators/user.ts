@@ -7,5 +7,5 @@ export const userDataValidator = Schema.Struct({
   name: Schema.String,
   email: Schema.String,
   image: Schema.optionalKey(Schema.NullOr(Schema.String)),
-  mascot: Schema.optionalKey(MascotCode),
+  mascot: MascotCode,
 });

@@ -11,6 +11,7 @@ import {
   shredLearnerKeys,
 } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { Effect, Exit } from "effect";
 
 // The stored fields as the database names them. Memories are already sealed in
@@ -33,6 +34,7 @@ const learner = Effect.fn("test.memory.seal.learner")(function* (name: string) {
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,
+    mascot: MASCOT,
     name,
     plan: "free",
   });
