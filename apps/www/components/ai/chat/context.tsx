@@ -38,6 +38,12 @@ const ChatContext = createContext<ChatContextValue | null>(null);
  * reader who is not the owner proves access with the share token of the link.
  * A chat its learner is deleting is not read: the server is about to delete
  * it, and a read that finds it gone fails the page.
+ *
+ * The last answer stays shown while the read starts again for the same chat:
+ * a closed sheet ends its subscriptions, and on reopening the new one has no
+ * answer until the server sends it. Without the last answer the chat would
+ * read as loading for that moment, and its composer would close and drop the
+ * files the learner had attached.
  */
 function useConversation(
   chatId: Id<"chats">,
@@ -49,13 +55,17 @@ function useConversation(
     nina.conversation.get,
     authenticating || leaving ? "skip" : readChatArgs(chatId, shareToken)
   );
+  const [answered, setAnswered] = useState(result);
   if (QueryResult.isFailure(result)) {
     throw result.error;
   }
-  return {
-    chat: QueryResult.isSuccess(result) ? result.value.chat : undefined,
-    turn: QueryResult.isSuccess(result) ? result.value.turn : null,
-  };
+  if (QueryResult.isSuccess(result) && result !== answered) {
+    setAnswered(result);
+  }
+  const shown = QueryResult.isSuccess(result) ? result : answered;
+  return leaving || !QueryResult.isSuccess(shown)
+    ? { chat: undefined, turn: null }
+    : { chat: shown.value.chat, turn: shown.value.turn };
 }
 
 /**
