@@ -108,7 +108,10 @@ const handledOf = (entry: EntryRef) => ({
  * creation order. The page may hold entries the position already handled, and those are
  * skipped. Settled entries lead the page, and the run handles each one, so `since` moves to
  * the newest and the settled entries stay out of `handled`, except those that share the
- * new `since` time, which the next read would otherwise handle again. Behind them the run
+ * new `since` time, which the next read would otherwise handle again. Those ties stay within
+ * `handledLimit` while each mutation writes at most one `person.invited` entry, which holds
+ * today (invite, resend, provisioning, and the operator's break-glass each write one).
+ * Behind them the run
  * handles unsettled entries early, while `handled` would hold fewer than `handledLimit` ids,
  * and it keeps each one in `handled`, because `since` may not pass an entry that is not yet
  * settled. The run stops at `pageSize` handled entries, or at the bound, and leaves the rest
