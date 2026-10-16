@@ -72,6 +72,23 @@ const invitedEntry = (fixture: Fixture, index: number) =>
     });
   });
 
+/**
+ * Writes `count` invitations of the school inside one window. The first one creates
+ * the school's cursor, as the invite mutation does, and the rest follow it.
+ */
+const burstOf = (fixture: Fixture, count: number) =>
+  fixture.run(
+    Effect.gen(function* () {
+      const first = yield* invitedEntry(fixture, 0);
+      yield* noteInvite(fixture.tenants.nf, first);
+      yield* Effect.forEach(
+        Arr.makeBy(count - 1, (index) => index + 1),
+        (index) => invitedEntry(fixture, index),
+        { discard: true }
+      );
+    })
+  );
+
 describe("journal/cursor window", () => {
   it.effect(
     "reads an invitation that committed after a run passed its creation time, inside the window",
@@ -94,6 +111,32 @@ describe("journal/cursor window", () => {
       })
   );
 
+  it.effect(
+    "reads an invitation created inside the window before the entry that starts its cursor",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        // An invitation recorded before the cursor exists, created three seconds before
+        // the entry that starts it.
+        const earlier = yield* fixture.run(invitedEntry(fixture, 0));
+        vi.setSystemTime(NOW + 3000);
+        const first = yield* fixture.run(
+          Effect.gen(function* () {
+            const entry = yield* invitedEntry(fixture, 1);
+            yield* noteInvite(fixture.tenants.nf, entry);
+            return entry;
+          })
+        );
+        yield* consumeSchool(fixture, fixture.tenants.nf);
+        expect(
+          Arr.map(yield* storedRows(fixture), (row) => row.journalEntryId)
+        ).toEqual([earlier, first]);
+      })
+  );
+
+  // This test passes with the window removed, because an invitation older than the
+  // position is not read either way. The tests above fail then. This one guards
+  // against a window that reaches back further than the commit lag.
   it.effect(
     "does not read an invitation created before the window behind its cursor",
     () =>
@@ -125,14 +168,20 @@ describe("journal/cursor window", () => {
         yield* inviteAt(fixture, "nf", first, GURU);
         yield* consumeSchool(fixture, fixture.tenants.nf);
         vi.setSystemTime(NOW + 10_000);
-        yield* inviteAt(fixture, "nf", second, LAIN);
+        const invite = yield* inviteAt(fixture, "nf", second, LAIN);
         yield* consumeSchool(fixture, fixture.tenants.nf);
-        const [, latest] = yield* fixture.run(journal);
+        const entries = Arr.filter(
+          yield* fixture.run(journal),
+          (entry) =>
+            entry.change.type === "person.invited" &&
+            entry.change.invite === invite.id
+        );
         expect(yield* cursors(fixture)).toMatchObject([
           {
-            handled: [
-              { createdAt: latest?._creationTime, entryId: latest?._id },
-            ],
+            handled: Arr.map(entries, (entry) => ({
+              createdAt: entry._creationTime,
+              entryId: entry._id,
+            })),
           },
         ]);
       })
@@ -144,17 +193,7 @@ describe("journal/cursor window", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         // One more invitation than a run may keep, all written inside one window.
-        yield* fixture.run(
-          Effect.gen(function* () {
-            const first = yield* invitedEntry(fixture, 0);
-            yield* noteInvite(fixture.tenants.nf, first);
-            yield* Effect.forEach(
-              Arr.makeBy(INBOX_PAGE_SIZE, (index) => index + 1),
-              (index) => invitedEntry(fixture, index),
-              { discard: true }
-            );
-          })
-        );
+        yield* burstOf(fixture, INBOX_PAGE_SIZE + 1);
         yield* consumeSchool(fixture, fixture.tenants.nf);
         expect(yield* storedRows(fixture)).toHaveLength(INBOX_PAGE_SIZE);
         const before = yield* cursors(fixture);
@@ -168,6 +207,25 @@ describe("journal/cursor window", () => {
         });
         expect(yield* storedRows(fixture)).toHaveLength(INBOX_PAGE_SIZE);
         expect(yield* cursors(fixture)).toEqual(before);
+      })
+  );
+
+  it.effect(
+    "resumes once a later invitation falls past the window of the burst that held it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* burstOf(fixture, INBOX_PAGE_SIZE + 1);
+        yield* consumeSchool(fixture, fixture.tenants.nf);
+        yield* consumeSchool(fixture, fixture.tenants.nf).pipe(Effect.flip);
+        // A later invitation, ten seconds after the burst, moves the window past it,
+        // so the next run reads the burst's last entry and the new one.
+        vi.setSystemTime(NOW + 10_000);
+        const later = yield* addPerson(fixture, fixture.tenants.nf, "Lain");
+        yield* inviteAt(fixture, "nf", later, LAIN);
+        yield* consumeSchool(fixture, fixture.tenants.nf);
+        expect(yield* storedRows(fixture)).toHaveLength(INBOX_PAGE_SIZE + 2);
+        expect(yield* cursors(fixture)).toMatchObject([{ pending: false }]);
       })
   );
 });

@@ -160,12 +160,13 @@ export const storedRows = Effect.fn("test.inbox.storedRows")(
 );
 
 /** Every journal cursor of the inbox, oldest first. */
-export const cursors = (fixture: Fixture) =>
+export const cursors = Effect.fn("test.inbox.cursors")((fixture: Fixture) =>
   fixture.run(
     Effect.flatMap(DatabaseReader, (reader) =>
       reader.table("journalCursors").index("by_creation_time").take(50)
     )
-  );
+  )
+);
 
 /**
  * Inserts inbox rows for one Person straight into the table. An invite of the

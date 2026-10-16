@@ -145,7 +145,7 @@ describe("notifications/consume run", () => {
   );
 
   it.effect(
-    "reads no invitation that was recorded before its cursor started",
+    "reads no invitation created more than the commit-lag window before its cursor starts",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
