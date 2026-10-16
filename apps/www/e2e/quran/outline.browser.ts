@@ -32,7 +32,7 @@ const verifyOutlineHydration = Effect.fn("NakafaE2E.verifyOutlineHydration")(
       )
     );
 
-    // Al-Baqarah has the longest outline of the surahs here, Al-Fatihah the shortest.
+    // Al-Baqarah has the longest outline and Al-Fatihah the shortest.
     for (const href of [appRoutes.quranSurah, "/en/quran/1"]) {
       yield* Effect.promise(() =>
         page.goto(href, { waitUntil: "domcontentloaded" })
