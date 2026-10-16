@@ -8,7 +8,7 @@ document, step, batch, and stored-step schemas, the storage form, the version
 rule, the size bounds, and the snapshot rule) is in code, with no database
 access. The sync slice of 16 October 2026 adds the tables, the functions that
 open, read, submit, and save a document, the `document` access kind, the step log
-and the editor-session records with their sweeps, the deletion of a document, and
+and its sweep, the editor-session records, the deletion of a document, and
 the client engine. None of
 them is live yet: the
 question editor of the School host is the first caller, in a later lane. The
@@ -102,11 +102,12 @@ Presence is one mechanism for the editor and for proctored sittings: the
 written by hand.
 
 Each editor session has one record in `editorClients`: the account that owns
-it, the last batch the server accepted from it, the version that batch produced,
-and when the session last submitted. A batch carries an id that the client makes
-for it, and a repeat of an accepted batch writes nothing and answers that version,
-so a retried call is idempotent. A session id that belongs to another account is
-refused with `ClientTaken`, and the server writes nothing.
+it, the last batch the server accepted from it, and the version that batch
+produced. A batch carries an id that the client makes for it, and a repeat of an
+accepted batch writes nothing and answers that version, so a retried call is
+idempotent. A session id that belongs to another account is refused with
+`ClientTaken`, and the server writes nothing. The record stays until its document
+is deleted.
 
 A client that the log no longer serves from its version gets `behind`, and it
 opens again from the snapshot. If its record shows that its in-flight batch
@@ -114,8 +115,8 @@ landed, that batch's steps are confirmed and dropped. Its other unconfirmed step
 are replayed onto the snapshot as unconfirmed steps of its version, and the
 server's steps after the snapshot rebase them. A replayed step that does not apply
 is dropped, and so is a step that the rebase cannot map. The editor reports the
-count of dropped steps once. What Stays Open records the one case that the record
-cannot answer.
+count of dropped steps once. The records are kept until the document is deleted,
+so the record answers every such client (What Stays Open records the cost).
 
 Every editor applies the server's steps to its own copy of the server's document,
 in order. A stored step that does not apply to that document is skipped by every
@@ -173,11 +174,10 @@ snapshot saved between two pages can leave a gap in the kept log until the next
 sweep. `steps:since` returns only the steps that follow its version without a
 gap, and a read at the gap gets `behind`.
 
-The session records are bounded by a second cron sweep,
-`internal.editor.prune.sweepClients`, on the same ten-minute interval. It reads
-the records in pages of 64 (`PRUNE_PAGE_CLIENTS`), and it deletes a record whose
-version the snapshot covers and whose session last submitted at least
-`STEP_KEEP_DELAY` ago. A record is a small row, so its page is bounded by its
+The session records have no sweep. A record is kept until its document is
+deleted: a client that was away for any time may still need it to learn whether
+its batch landed. The deletion of a document reads its records in pages of 64
+(`PRUNE_PAGE_CLIENTS`). A record is a small row, so its page is bounded by its
 count.
 
 Acceptance: in `convex-test`, a submit at a stale version is refused, a document
@@ -293,12 +293,23 @@ Drive copies come through the Drive connector (ADR 0015).
   authenticated route instead of a storage address. It is decided when that kind
   is built, and the limit above holds until then.
 - The byte limits of the Files module, which the plan sets.
-- A client whose session record the sweep has deleted cannot tell whether its
-  in-flight batch landed. The sweep deletes a record only when the snapshot covers
-  its version and the session has been idle for the keep delay, so the case needs
-  a client that stayed away that long with an unanswered batch. Its replay then
-  applies a batch that did land a second time. Keeping the record until the
-  session confirms its last batch closes the case, and the owner decides that.
+- Session records are kept until their document is deleted, so each session that
+  had a batch accepted leaves one small row. A record is reclaimed only when its
+  session confirms its last batch, and a query cannot record that: `steps:since`
+  and `documents:open` are queries, which cannot write. A client mutation that
+  confirms the batch would let a sweep reclaim the rows. The owner decides whether
+  to add it.
+- A remote change can nest the document past the depth bound. `depthGuard` lets
+  every change that another editor's steps brought in pass, so two editors can
+  make a document that the contract refuses at its snapshot, and no snapshot after
+  the last good one is saved. Refusing such a step on every editor, and dropping
+  the author's own rebased step, is open.
+- A step that one call cannot send, because it is over `MAX_BATCH_BYTES`, blocks
+  every later batch of its editor. The editor refuses no step by its size yet.
+- The rich editor offers strike and highlight, which the contract's inline marks
+  do not have, and it orders a link before bold, which the contract refuses. A
+  snapshot of such a document is refused. The owner decides which marks the
+  editor offers.
 - The public function that deletes a document. `internal.editor.deletion.document`
   is the one owner of the deletion: it deletes the session records and the steps
   of the document in pages, then its snapshot and its document row. The first
@@ -340,7 +351,7 @@ Drive copies come through the Drive connector (ADR 0015).
 | `mathlive` and `@convex-dev/presence` | Not installed. Planned for program wave B. |
 | `confect/editor` pure core: the document, step, batch, attribute, and stored-step schemas (the stored step is in `confect/editor/log.ts`), the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds, and the read bound of 512 KiB is `STEP_READ_BYTES`. |
 | The tables `editorDocuments`, `editorSnapshots`, `editorSteps`, and `editorClients` (`confect/tables/editor*.ts`) | In code, not live. The head version and the snapshot version are on the document row, and the snapshot rows, the step rows, and the session records hold the rest. |
-| The functions `editor/documents` (`create`, `open`), `editor/steps` (`since`, `submit`), and `editor/snapshots` (`save`), and the sweeps `internal.editor.prune.sweep` and `internal.editor.prune.sweepClients` | In code and tested in convex-test, not live: no page calls them yet. |
+| The functions `editor/documents` (`create`, `open`), `editor/steps` (`since`, `submit`), and `editor/snapshots` (`save`), and the sweep `internal.editor.prune.sweep` | In code and tested in convex-test, not live: no page calls them yet. |
 | The session record and the idempotent batch: the batch id, a repeat of an accepted batch answered with its version, `ClientTaken` for another account's session, and the record that `open` and `since` answer for the caller's own session | In code, not live: `confect/editor/steps.impl.ts`, `confect/editor/documents.impl.ts`, and `confect/editor/store.ts`. Tested in convex-test. |
 | The behind replay: the confirmation of the in-flight batch that landed, the replay of the other unconfirmed steps onto the snapshot, and the one `SyncDropped` count | In code, not live: `apps/www/lib/editor/receive.ts`, tested with the fake server in `apps/www/lib/editor/sync.test.ts`. |
 | The skip rule: a stored step that does not apply is skipped by every editor and logged once | In code, not live: `apps/www/lib/editor/receive.ts`. Tested: three editors with a stored step that does not apply converge. |
