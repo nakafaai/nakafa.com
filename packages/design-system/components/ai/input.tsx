@@ -2,6 +2,7 @@
 
 import { usePromptInputFiles } from "@repo/design-system/components/ai/input-files";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
+import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
 import {
   LocalAttachmentsContext,
@@ -161,10 +162,7 @@ export function PromptInput({
 const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
   event
 ) => {
-  if (event.key !== "Enter") {
-    return;
-  }
-  if (event.nativeEvent.isComposing) {
+  if (!isEnterOutsideComposition(event.nativeEvent)) {
     return;
   }
   if (event.shiftKey) {
