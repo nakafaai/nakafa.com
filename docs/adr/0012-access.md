@@ -9,7 +9,10 @@ period, cohort, people, and invite actions. Amended the same day for the
 integration client: `decide` takes the subject's tenant and judges a client
 principal, and the Integration role holds the roster reads (ADR 0029). Amended
 the same day for the operator visits and their transition access, which are
-live.
+live. Amended on 16 October 2026 for the `document` kind of the collaborative
+editor (ADR 0028): an Admin or a Teacher whose grant covers a document's scope
+views and edits it, and creating one is decided on that scope, as an integration
+client's creation is.
 
 ## Context
 

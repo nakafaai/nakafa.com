@@ -6,9 +6,13 @@ Accepted on 13 October 2026 with owner decisions K1, K10, K12, and K16. The owne
 approved decisions K1 to K20 on that day. The pure core of `confect/editor` (the
 document, step, batch, and stored-step schemas, the storage form, the version
 rule, the size bounds, and the snapshot rule) is in code, with no database
-access. Its tables, its functions, its import into live code, and the Files
-module, `confect/files`, are planned for program wave B (ADR 0013 describes the
-waves). The repository installs none of `prosemirror-collab`, `mathlive`, and
+access. The sync slice of 16 October 2026 adds the three tables, the functions
+that open, read, submit, and save a document, the `document` access kind, the
+step log with its sweep, and the client engine. None of them is live yet: the
+question editor of the School host is the first caller, in a later lane. The
+import into live code and the Files module, `confect/files`, are planned for
+program wave B (ADR 0013 describes the waves). The repository installs
+`prosemirror-collab` 1.3.1, and it installs none of `mathlive` and
 `@convex-dev/presence`.
 
 ## Context
@@ -111,7 +115,7 @@ as the last column says.
 | Attributes and attribute values | Each object and array of an attribute counts one level, and at most 16 levels are allowed (`AttributesSchema` and `AttributeValueSchema` in `confect/editor/node.ts`) | Target. This module reads generic ProseMirror attributes, which the contract's typed attributes do not cover, so the document's bound limits them too, and an admitted call can then be stored. |
 | Steps sent in one call | At most 128 KiB and 200 steps | Target |
 | A client id | At least one and at most 64 characters (`MAX_CLIENT_ID_LENGTH` in `confect/editor/batch.ts`) | Target. A v4 UUID from `randomUuid` has 36 characters, and each stored step keeps the id. |
-| Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. No code yet: the sync slice adds this bound with its test. |
+| Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. `STEP_READ_BYTES` in `confect/editor/store.ts` is the budget, and Convex's `maximumBytesRead` enforces it. A read stops at the row that reaches the budget, so one read may pass it by that row, which is at most one batch of 128 KiB. A read takes at most one batch of steps (`MAX_BATCH_STEPS`), and the client reads on from its last version. `steps.impl.test.ts` pins a read that stops and the reads that continue it. |
 | Snapshots | At most one every 30 seconds, and only when the editor has been idle for 30 seconds or 300 steps have gathered since the last snapshot (`SNAPSHOT_MIN_GAP`, `SNAPSHOT_IDLE_DELAY`, and `SNAPSHOT_STEP_LIMIT` in `confect/editor/snapshot.ts`) | Target. 200 KiB after 50 pauses an hour is about 10 MB for each document an hour (computed). |
 | An image file | At most 2 MB, with alternative text required | Target |
 | Presence | A heartbeat every 10 seconds and a limit of 25 seconds | Target. Three editors write about 1,080 times an hour (computed). |
@@ -122,10 +126,16 @@ the bank each refuse a document whose complete row would pass 1 MiB, before the
 write (ADR 0031). A step carries no whole document, so a draft that grows past
 the limit is refused at its next snapshot and never reaches the bank.
 
-The step log is bounded too. A scheduled sweep deletes, in bounded batches, the
-steps that a snapshot covers, after a delay that the build sets by test. A client
-that is behind the oldest step that is kept loads the snapshot and continues
-from it.
+The step log is bounded too. A cron sweep, `internal.editor.prune.sweep`, runs
+every ten minutes (`PRUNE_INTERVAL` in `confect/editor/prune.ts`). It deletes
+the steps that a snapshot covers once they are ten minutes old
+(`STEP_KEEP_DELAY`). The delay is ten minutes so that a client offline for less
+than that loads the steps it missed, and a client offline for longer opens again
+from the snapshot. The sweep reads the log in pages of 64 steps
+(`PRUNE_PAGE_STEPS`): a step is at most one batch of 128 KiB, so a page reads at
+most 8 MiB, under the 16 MiB that a transaction may read. A client whose version
+is older than the oldest step that is kept gets `behind` from `steps:since`, and
+it opens again from the snapshot.
 
 Acceptance: in `convex-test`, a submit at a stale version is refused, a document
 at the node depth bound of 16 is stored and read back, and a snapshot whose
@@ -239,8 +249,7 @@ Drive copies come through the Drive connector (ADR 0015).
 - Whether a kind of file, such as the photo of an exam answer, needs an
   authenticated route instead of a storage address. It is decided when that kind
   is built, and the limit above holds until then.
-- The delay of the step sweep and the byte limits of the Files module, which a
-  test and the plan set.
+- The byte limits of the Files module, which the plan sets.
 
 ## Consequences
 
@@ -273,10 +282,14 @@ Drive copies come through the Drive connector (ADR 0015).
 | --- | --- |
 | The Memory page editor in `packages/design-system/components/editor` (Markdown, one author) | Live |
 | Tiptap 3.31.4 and KaTeX 0.19.0 | Live |
-| `prosemirror-collab`, `mathlive`, and `@convex-dev/presence` | Not installed. Planned for program wave B. |
-| `confect/editor` pure core: the document, step, batch, attribute, and stored-step schemas (the stored step is in `confect/editor/log.ts`), the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code, with no function and no table. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds. The read bound of 512 KiB has no code yet. |
-| The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots, and the idle snapshot trigger | Planned, program wave B, with the tables |
-| The tables `editorDocuments`, `editorSteps`, and `editorSnapshots` | Planned, program wave B |
+| `prosemirror-collab` 1.3.1 | Installed in `packages/design-system` (the `Collab` extension) and `apps/www` (the sync loop), and pinned in the dependency policy. |
+| `mathlive` and `@convex-dev/presence` | Not installed. Planned for program wave B. |
+| `confect/editor` pure core: the document, step, batch, attribute, and stored-step schemas (the stored step is in `confect/editor/log.ts`), the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds, and the read bound of 512 KiB is `STEP_READ_BYTES`. |
+| The tables `editorDocuments`, `editorSnapshots`, and `editorSteps` (`confect/tables/editor*.ts`) | In code, not live. The head version is on the document row, and the snapshot rows and the step rows hold the rest. |
+| The functions `editor/documents` (`create`, `open`), `editor/steps` (`since`, `submit`), and `editor/snapshots` (`save`), and the sweep `internal.editor.prune.sweep` | In code and tested in convex-test, not live: no page calls them yet. |
+| The `document` access kind (`confect/editor/kinds.ts`), its authority, and its catalog entry | In code. ADR 0012 names it. |
+| The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots (`SnapshotRefused`), and the idle snapshot trigger (`snapshotDue`, read by the client) | In code, not live: `confect/editor/store.ts`, `confect/editor/prune.ts`, and the sync loop `apps/www/lib/editor/sync.ts`, which the fake-client tests drive. |
+| The client engine: the `Collab` extension | In code: `packages/design-system/components/editor/collab.ts`. No page mounts the editor yet. |
 | The formula node | Planned, program wave B |
 | Mermaid and content math under the forced KaTeX 0.19.0 | To be tested in program wave A |
 | `confect/files` and `fileRecords` | Planned, program wave B |
