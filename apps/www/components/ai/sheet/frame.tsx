@@ -1,6 +1,5 @@
 "use client";
 
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
@@ -8,6 +7,7 @@ import { Array as Arr, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Activity, useRef, useState } from "react";
+import { ChatBoundary } from "@/components/ai/chat/boundary";
 import { useAi } from "@/components/ai/context";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
 import { Authenticated, Unauthenticated } from "@/components/auth/gate";
@@ -116,21 +116,15 @@ export function AiSheet() {
 
 /**
  * The new-chat body, or the open chat once the learner has one. A chat that
- * could not open is forgotten, and the sheet shows a new chat. Each chat gets
- * a boundary of its own, because `resetKeys` cannot reset this one: a boundary
- * reads them in `componentDidUpdate`, and React runs no `componentDidUpdate`
- * in an update that hides its Activity, which is the update that forgets the
- * chat. The boundary kept its error, and the sheet showed nothing for every
- * chat after it.
+ * could not open shows its failure card, and the learner picks another chat or
+ * starts a new one. Each chat gets a boundary of its own, because `resetKeys`
+ * cannot reset this one: a boundary reads them in `componentDidUpdate`, and
+ * React runs no `componentDidUpdate` in an update that hides its Activity,
+ * which is the update that forgets the chat. The boundary kept its error, and
+ * the sheet showed nothing for every chat after it.
  */
 function SheetBody() {
   const activeChatId = useAi((state) => state.activeChatId);
-  const setActiveChatId = useAi((state) => state.setActiveChatId);
-
-  /** Returns the sheet to a new-chat state after private-chat failures. */
-  function handlePrivateChatError() {
-    setActiveChatId(null);
-  }
 
   return (
     <>
@@ -138,24 +132,15 @@ function SheetBody() {
         <SheetNew />
       </Activity>
       <Activity mode={activeChatId ? "visible" : "hidden"}>
-        <ErrorBoundary
-          fallback={<SheetError />}
-          key={activeChatId}
-          onError={handlePrivateChatError}
-        >
+        <ChatBoundary key={activeChatId}>
           <Authenticated>
             {!!activeChatId && <SheetConversation chatId={activeChatId} />}
           </Authenticated>
           <Unauthenticated>
             <SheetNew />
           </Unauthenticated>
-        </ErrorBoundary>
+        </ChatBoundary>
       </Activity>
     </>
   );
-}
-
-/** Keeps private-chat errors visually empty while the sheet resets. */
-function SheetError() {
-  return null;
 }

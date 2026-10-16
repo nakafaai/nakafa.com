@@ -20,6 +20,8 @@ const OWN_PROMPT = "What is the slope of a line?";
 const OWN_TITLE = "The slope of a line";
 /** What the sheet says when it holds no chat, in place of a conversation. */
 const NEW_CHAT = "What do you want to learn?";
+/** What the card of a chat the viewer may not read says, on the page and in the sheet. */
+const UNAVAILABLE_COPY = "This chat is not available to you";
 const VIEWPORT = { height: 900, width: 1440 };
 
 /** What the sheet writes to the browser to remember the chat it has open. */
@@ -92,9 +94,10 @@ const sharesAndRemembers = Effect.fn("NakafaE2E.sharesAndRemembers")(function* (
  * Another learner signs in to the browser whose sheet remembers that chat. The
  * id of a chat opens nothing for them, shared or not: its address is the page
  * of a chat that is not there, and the sheet, which reads a chat by its id, gets
- * the same answer. So the sheet shows nothing of the conversation, offers
- * nothing to write to it, forgets it and shows a new chat. It does not stay
- * there: the learner opens a chat of their own.
+ * the same answer. So the sheet shows the same card as the page, which says the
+ * chat is not available, and offers nothing to write to it. The learner starts
+ * a new chat from the sheet, which forgets that one, and then opens a chat of
+ * their own.
  */
 const meetsTheChat = Effect.fn("NakafaE2E.meetsTheChat")(function* (
   page: Page,
@@ -130,11 +133,18 @@ const meetsTheChat = Effect.fn("NakafaE2E.meetsTheChat")(function* (
 
     const sheet = inTheSheet(page);
 
+    await expect(notAvailable(sheet)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    });
+    await expect(sheet.getByText(UNAVAILABLE_COPY)).toBeVisible();
+    await expect(composerOf(sheet)).toHaveCount(0);
+    await expect(promptWith(sheet, PROMPT)).toHaveCount(0);
+
+    await sheet.getByRole("button", { exact: true, name: "New chat" }).click();
     await expect(sheet.getByText(NEW_CHAT)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
     await expect(composerOf(sheet)).toBeVisible();
-    await expect(promptWith(sheet, PROMPT)).toHaveCount(0);
     await expect
       .poll(() => rememberedChat(page), {
         timeout: readinessTimeoutMilliseconds,

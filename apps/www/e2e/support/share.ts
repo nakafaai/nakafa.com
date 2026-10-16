@@ -1,4 +1,9 @@
-import { expect, type Page, type Request } from "@playwright/test";
+import {
+  expect,
+  type Locator,
+  type Page,
+  type Request,
+} from "@playwright/test";
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import {
   ANSWER_MILLISECONDS,
@@ -39,9 +44,9 @@ export const promptOf = (page: Page, text: string) =>
 const retryButtons = (page: Page) =>
   page.getByRole("button", { name: "Retry message" });
 
-/** What a chat page shows in place of a chat the reader cannot open. */
-export const notAvailable = (page: Page) =>
-  page.locator('[data-slot="empty"]').filter({ hasText: "Access denied" });
+/** What a chat page or sheet shows in place of a chat the reader cannot open. */
+export const notAvailable = (scope: Page | Locator) =>
+  scope.locator('[data-slot="empty"]').filter({ hasText: "Access denied" });
 
 /** The link the dialog copied, read apart. */
 export function readLink(link: string) {
