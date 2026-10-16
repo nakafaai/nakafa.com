@@ -6,7 +6,7 @@ import {
   hashCardCode,
   readCardCode,
 } from "@repo/backend/confect/identity/code";
-import { ConfigProvider, Effect, Option } from "effect";
+import { Array as Arr, ConfigProvider, Effect, Option } from "effect";
 
 const CODE_PATTERN = /^[0-9A-HJKMNP-TV-Z]{10}$/;
 const HEX_DIGEST_PATTERN = /^[0-9a-f]{64}$/;
@@ -14,6 +14,14 @@ const HEX_DIGEST_PATTERN = /^[0-9a-f]{64}$/;
 describe("identity/code", () => {
   it("maps each random byte to one character of the alphabet", () => {
     expect(codeFromBytes(Uint8Array.of(0, 1, 31, 32, 255))).toBe("01Z0Z");
+  });
+
+  it("reads back every character the alphabet draws", () => {
+    // Every byte value, so each character that the modulus can pick is drawn.
+    const drawn = Arr.makeBy(256, (byte) =>
+      codeFromBytes(Uint8Array.from(Arr.replicate(byte, 10)))
+    );
+    expect(Arr.map(drawn, readCardCode)).toEqual(Arr.map(drawn, Option.some));
   });
 
   it.effect("draws a ten character code made of the alphabet", () =>

@@ -21,9 +21,13 @@ const GROUP_LENGTH = 5;
 const CODE_HASH_LABEL = "nakafa/identity/card/v1:";
 const encoder = new TextEncoder();
 
-/** A card code as it is stored and compared: ten characters of the alphabet, no dash. */
+/**
+ * A card code as it is stored and compared: ten characters of the alphabet, no
+ * dash. The pattern is built from the alphabet and the length, so the two
+ * cannot disagree about which characters a code may hold.
+ */
 const CardCode = Schema.String.check(
-  Schema.isPattern(/^[0-9A-HJKMNP-TV-Z]{10}$/)
+  Schema.isPattern(new RegExp(`^[${CODE_ALPHABET}]{${CODE_LENGTH}}$`))
 );
 
 /** Shows a code as two groups of five characters, joined by a dash. */
