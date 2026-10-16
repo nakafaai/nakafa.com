@@ -46,7 +46,7 @@ const since = FunctionImpl.make(
     if (version >= document.head) {
       return stepsReply(document.head, []);
     }
-    const rows = yield* stepsAfter(document._id, version);
+    const { steps: rows } = yield* stepsAfter(document._id, version);
     const kept = Option.match(Arr.head(rows), {
       onNone: () => false,
       onSome: (first) => first.version === version + 1,

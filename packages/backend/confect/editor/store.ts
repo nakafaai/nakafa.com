@@ -44,9 +44,11 @@ export const lastStepOf = Effect.fn("editor.store.lastStep")(function* (
 });
 
 /**
- * The steps of a document after one version, in version order. A read takes at
- * most one batch of steps (`MAX_BATCH_STEPS`) and stops at `STEP_READ_BYTES`, so
- * the caller reads on from the last version it received.
+ * The steps of a document after one version, in version order, in one read. A read
+ * takes at most one batch of steps (`MAX_BATCH_STEPS`) and stops at `STEP_READ_BYTES`,
+ * so `done` is false when the log holds more steps after the last one read. The caller
+ * then reads on from the last version it received. A Convex function may call
+ * `paginate` once, so a caller that needs every step makes one read and checks `done`.
  */
 export const stepsAfter = Effect.fn("editor.store.stepsAfter")(function* (
   documentId: GenericId.GenericId<"editorDocuments">,
@@ -63,5 +65,5 @@ export const stepsAfter = Effect.fn("editor.store.stepsAfter")(function* (
       numItems: MAX_BATCH_STEPS,
     })
     .pipe(Effect.orDie);
-  return page.page;
+  return { done: page.isDone, steps: page.page };
 });
