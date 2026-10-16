@@ -40,7 +40,6 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { useChange } from "@/components/ai/chat/change.client";
 import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
 import { useUpdateChatTitleMutation } from "@/components/ai/chat/mutation.client";
@@ -69,16 +68,14 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isOwner = useChat((state) => state.owner);
   const updateChatTitle = useUpdateChatTitleMutation();
-  const { change, isPending } = useChange();
 
   // The box takes the focus when it opens, and again when a refused rename
-  // brings it back, as soon as it can take input: it stays disabled while the
-  // rename is pending.
+  // brings it back.
   useEffect(() => {
-    if (isEditing && !isPending) {
+    if (isEditing) {
       inputRef.current?.focus();
     }
-  }, [isEditing, isPending]);
+  }, [isEditing]);
 
   /** Enter title editing with the current title selected for input. */
   const handleEdit = () => {
@@ -86,38 +83,39 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
     setIsEditing(true);
   };
 
-  /** Persist a non-empty edited chat title. */
+  /** Persist a non-empty edited chat title, unless the chat already has that title. */
   const handleSave = () => {
     const nextTitle = chatTitle.trim();
-    if (!nextTitle || isPending) {
+    if (!nextTitle) {
       return;
     }
     setIsEditing(false);
-    change(() =>
-      Effect.runPromise(
-        Effect.tryPromise(() =>
-          updateChatTitle({
-            chatId: chat._id,
-            title: nextTitle,
-          })
-        ).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/ai/chat/header",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    // The box comes back with the words the learner wrote.
-                    setIsEditing(true);
-                    toast.error(actionErrorMessage);
-                  })
-                )
-              ),
-          })
-        )
+    if (nextTitle === chat.title) {
+      return;
+    }
+    Effect.runFork(
+      Effect.tryPromise(() =>
+        updateChatTitle({
+          chatId: chat._id,
+          title: nextTitle,
+        })
+      ).pipe(
+        Effect.flatMap(Effect.fromResult),
+        Effect.matchEffect({
+          onSuccess: () => Effect.void,
+          onFailure: (error) =>
+            reportClientException(error, {
+              source: "components/ai/chat/header",
+            }).pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  // The box comes back with the words the learner wrote.
+                  setIsEditing(true);
+                  toast.error(actionErrorMessage);
+                })
+              )
+            ),
+        })
       )
     );
   };
@@ -132,7 +130,6 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
               <>
                 <Button
                   aria-label={tCommon("cancel")}
-                  disabled={isPending}
                   onClick={() => setIsEditing(false)}
                   size="icon"
                   variant="outline"
@@ -142,7 +139,6 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                 </Button>
                 <Button
                   aria-label={t("confirm")}
-                  disabled={isPending}
                   onClick={handleSave}
                   size="icon"
                   variant="outline"
@@ -159,7 +155,6 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                   render={
                     <Button
                       aria-label={tCommon("more-actions")}
-                      disabled={isPending}
                       size="icon"
                       variant="outline"
                     >
@@ -205,11 +200,11 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
         <Activity mode={isEditing ? "visible" : "hidden"}>
           <Input
             className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
-            disabled={isPending}
             maxLength={MAX_TITLE_LENGTH}
             onChange={(e) => setChatTitle(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              // Enter ends an IME composition first, so it does not save the title.
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                 handleSave();
               }
               if (e.key === "Escape") {

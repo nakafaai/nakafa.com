@@ -26,7 +26,6 @@ import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { useChange } from "@/components/ai/chat/change.client";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -158,33 +157,30 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
   const deleteChat = useDeleteChatMutation();
-  const { change, isPending } = useChange();
 
   /** Delete this chat through the optimistic list mutation. */
   function handleDelete() {
-    change(() =>
-      Effect.runPromise(
-        Effect.asVoid(
-          Effect.tryPromise(() =>
-            deleteChat({
-              chatId: chat._id,
-            })
-          ).pipe(Effect.flatMap(Effect.fromResult))
-        ).pipe(
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/user/chats",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(actionErrorMessage);
-                  })
-                )
-              ),
+    Effect.runFork(
+      Effect.asVoid(
+        Effect.tryPromise(() =>
+          deleteChat({
+            chatId: chat._id,
           })
-        )
+        ).pipe(Effect.flatMap(Effect.fromResult))
+      ).pipe(
+        Effect.matchEffect({
+          onSuccess: () => Effect.void,
+          onFailure: (error) =>
+            reportClientException(error, {
+              source: "components/user/chats",
+            }).pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  toast.error(actionErrorMessage);
+                })
+              )
+            ),
+        })
       )
     );
   }
@@ -194,7 +190,6 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
         render={
           <Button
             className="z-2 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
-            disabled={isPending}
             size="icon-sm"
             variant="ghost"
           >
@@ -206,7 +201,6 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuItem
           className="cursor-pointer"
-          disabled={isPending}
           onClick={handleDelete}
           variant="destructive"
         >
