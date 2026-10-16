@@ -66,3 +66,32 @@ export const retryVersionServiceStart = <
     times: 2,
     while: (error) => isVersionServiceServerError(error.message),
   });
+
+const FUNCTION_TIMEOUT =
+  /Function execution timed out \(maximum duration: \d+s\)/u;
+
+/**
+ * The local backend reports a function that passed its time limit as `Function
+ * execution timed out (maximum duration: <n>s)`. A loaded machine causes it, and
+ * a later attempt can outlast it.
+ */
+export const isFunctionTimeout = (message: string) =>
+  FUNCTION_TIMEOUT.test(message);
+
+/**
+ * Makes at most three attempts at one step of fixture setup, one second apart,
+ * and only while its failure is a local function timeout. The step must remove
+ * what it created when it fails, so a retry begins clean.
+ */
+export const retryFunctionTimeout = <
+  A,
+  E extends { readonly message: string },
+  R,
+>(
+  step: Effect.Effect<A, E, R>
+) =>
+  Effect.retry(step, {
+    schedule: Schedule.spaced("1 second"),
+    times: 2,
+    while: (error) => isFunctionTimeout(error.message),
+  });
