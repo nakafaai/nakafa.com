@@ -4,6 +4,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
   useEffect,
@@ -12,6 +13,7 @@ import {
   useRef,
   useTransition,
 } from "react";
+import { toast } from "sonner";
 import { useAi } from "@/components/ai/context";
 import type { NinaPrompt } from "@/components/ai/message/prompt";
 import { useNinaSubmission } from "@/components/ai/submission";
@@ -53,6 +55,7 @@ export function useChatAdmission({
   const gate = useAdmissionGate(onSignIn);
   const session = useAuthSessionStore();
   const setText = useAi((state) => state.setText);
+  const t = useTranslations("Ai");
   const { send } = useNinaSubmission();
   const [isPending, startTransition] = useTransition();
   const [prompt, showPrompt] = useOptimistic<
@@ -101,6 +104,14 @@ export function useChatAdmission({
         return;
       }
       if (activation.current !== submittedFrom) {
+        // The learner left before the answer came back. The chat exists now,
+        // so they are told once and may open it, but they are not moved.
+        toast(t("admitted-elsewhere"), {
+          action: {
+            label: t("open-chat"),
+            onClick: () => onComplete(receipt.chatId),
+          },
+        });
         return;
       }
       startTransition(() => {

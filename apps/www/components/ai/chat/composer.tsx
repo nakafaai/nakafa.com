@@ -5,6 +5,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { useChat } from "@/components/ai/chat/context";
+import { readComposerSubmit } from "@/components/ai/chat/submit";
 import { NinaInput } from "@/components/ai/input";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
@@ -33,23 +34,25 @@ export function ChatComposer({
   const isLoading = useChat((state) => state.isLoading);
 
   function handleSubmit(message: PromptInputMessage) {
-    if (isLoading || isPending) {
-      return false;
-    }
-    if (busy) {
-      cancel();
-      return false;
-    }
-    if (!message.text?.trim() || isUserPending) {
-      return false;
-    }
-    if (viewer === null) {
+    const text = message.text ?? "";
+    const action = readComposerSubmit({
+      busy,
+      hasText: text.trim() !== "",
+      loading: isLoading,
+      pending: isPending,
+      signedIn: viewer !== null,
+      userPending: isUserPending,
+    });
+    if (action === "sign-in") {
       router.push(authNavigation.readHref());
+      return false;
+    }
+    if (action === "keep") {
       return false;
     }
 
     return send({
-      text: message.text,
+      text,
       ...(message.files === undefined ? {} : { files: message.files }),
     });
   }
@@ -63,6 +66,7 @@ export function ChatComposer({
       <NinaInput
         {...props}
         disabled={isPending || isLoading || isUserPending}
+        onStop={cancel}
         onSubmit={handleSubmit}
         status={busy ? "streaming" : "ready"}
       />

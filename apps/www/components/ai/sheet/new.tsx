@@ -22,7 +22,12 @@ export function SheetNew() {
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const setOpen = useAi((state) => state.setOpen);
   const { disabled, prompt, submit } = useStartChat({
-    onComplete: setActiveChatId,
+    // The sheet is open while its own admission completes. A notice that opens
+    // the chat after the learner closed the sheet opens it, with the chat.
+    onComplete: (chatId) => {
+      setActiveChatId(chatId);
+      setOpen(true);
+    },
     onSignIn: () => setOpen(false),
   });
 

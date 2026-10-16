@@ -40,16 +40,22 @@ interface Props {
   children?: ReactNode;
   className?: string;
   disabled?: boolean;
+  onStop?: () => void;
   onSubmit: (message: PromptInputMessage) => boolean | Promise<boolean>;
   status?: ChatStatus;
 }
 
-/** One attachment-capable composer for Nina's home, conversation and sheet. */
+/**
+ * One attachment-capable composer for Nina's home, conversation and sheet. While
+ * Nina streams, the button stops the answer through `onStop` and never submits,
+ * so a key press in the text field cannot stop it.
+ */
 export function NinaInput({
   autoFocus,
   children,
   className,
   disabled,
+  onStop,
   onSubmit,
   status,
 }: Props) {
@@ -60,6 +66,7 @@ export function NinaInput({
     []
   );
   const [, startTransition] = useTransition();
+  const stopping = status === "streaming" && !disabled;
 
   function handleSubmit(message: PromptInputMessage) {
     const admission = onSubmit(message);
@@ -116,22 +123,15 @@ export function NinaInput({
           <NinaAttach />
           <div className="flex items-center gap-1">
             <InputGroupButton
-              aria-label={
-                status === "streaming" && !disabled
-                  ? t("stop-response")
-                  : t("send-message")
-              }
+              aria-label={stopping ? t("stop-response") : t("send-message")}
               className="rounded-full"
               disabled={disabled}
+              onClick={stopping ? onStop : undefined}
               size="icon"
-              type="submit"
+              type={stopping ? "button" : "submit"}
               variant="default"
             >
-              <HugeIcons
-                icon={
-                  status === "streaming" && !disabled ? StopIcon : ArrowUp02Icon
-                }
-              />
+              <HugeIcons icon={stopping ? StopIcon : ArrowUp02Icon} />
             </InputGroupButton>
           </div>
         </InputGroupAddon>

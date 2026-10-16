@@ -1,0 +1,183 @@
+import { expect, type Page, test } from "@playwright/test";
+import { Effect } from "effect";
+import type { Changes } from "@/e2e/support/changes";
+import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import { sidebarRows } from "@/e2e/support/rows";
+import {
+  composerOf,
+  inTheSheet,
+  openSheet,
+  promptWith,
+  UNCONFIRMED,
+} from "@/e2e/support/sheet";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+
+const PROMPT = "Why is the derivative of sine the cosine?";
+/** A chat the learner already has, which the sidebar opens while the new chat is admitted. */
+const OTHER = { prompt: "What is a limit?", title: "About limits" };
+/** The page of a chat, where the new chat opens once the learner asks for it. */
+const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
+const NOTICE = "Nina is answering in a new chat";
+const OPEN = "Open chat";
+
+/** The page of the new chat: the chat page holds its conversation in the main pane. */
+const onThePage = (page: Page) => page.locator("main main");
+
+/**
+ * Writes the prompt in the new chat and presses Enter. The server holds the
+ * admission back, so the prompt shows as sent and nothing else has happened.
+ */
+const sendsAndWaits = Effect.fn("NakafaE2E.sendsAndWaits")(function* (
+  page: Page,
+  changes: Changes
+) {
+  yield* Effect.promise(async () => {
+    const composer = composerOf(onThePage(page));
+    await composer.fill(PROMPT);
+    await expect(
+      onThePage(page).getByRole("button", { name: "Send message" })
+    ).toBeEnabled({ timeout: readinessTimeoutMilliseconds });
+    changes.hold();
+    await composer.press("Enter");
+    await expect(promptWith(onThePage(page), PROMPT)).toBeVisible();
+  });
+});
+
+/**
+ * The learner leaves the new chat for another chat of theirs, from the sidebar.
+ * The server still holds its answers, so the other chat is only addressed, not
+ * read: the test waits for the address, which the router changes at once.
+ */
+const leavesForOther = Effect.fn("NakafaE2E.leavesForOther")(function* (
+  page: Page
+) {
+  yield* Effect.promise(async () => {
+    await sidebarRows(page).filter({ hasText: OTHER.title }).click();
+    await expect(page).toHaveURL(OPENED_CHAT, {
+      timeout: readinessTimeoutMilliseconds,
+    });
+  });
+  return page.url();
+});
+
+test.describe("A new chat admitted after the learner left, at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("tells the learner once that Nina answers in a new chat, without moving them, and opens it on request", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        yield* learner.startChat(OTHER.prompt);
+        yield* learner.titleNewest([OTHER.title]);
+        yield* Effect.promise(() =>
+          expect(
+            sidebarRows(page).filter({ hasText: OTHER.title })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+        );
+
+        yield* sendsAndWaits(page, changes);
+        const left = yield* leavesForOther(page);
+        changes.release();
+
+        yield* Effect.promise(async () => {
+          await expect(page.getByText(NOTICE)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(page.getByRole("button", { name: OPEN })).toBeVisible();
+          expect(page.url()).toBe(left);
+          await expect(page.getByText(NOTICE)).toHaveCount(1);
+        });
+
+        yield* Effect.promise(async () => {
+          await page.getByRole("button", { name: OPEN }).click();
+          await expect(page).toHaveURL(OPENED_CHAT, {
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(promptWith(onThePage(page), PROMPT)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+        });
+      })
+    );
+  });
+
+  test("gives the learner's words back in the composer when the admission fails after they left", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        yield* learner.startChat(OTHER.prompt);
+        yield* learner.titleNewest([OTHER.title]);
+        yield* Effect.promise(() =>
+          expect(
+            sidebarRows(page).filter({ hasText: OTHER.title })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+        );
+
+        changes.failNext(START);
+        yield* sendsAndWaits(page, changes);
+        yield* leavesForOther(page);
+        changes.release();
+
+        yield* Effect.promise(async () => {
+          await expect(page.getByText(UNCONFIRMED).first()).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(composerOf(onThePage(page))).toHaveValue(PROMPT);
+        });
+      })
+    );
+  });
+
+  test("in the sheet, the notice opens the chat in the sheet after the learner closed it", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        yield* learner.startChat(OTHER.prompt);
+        yield* learner.titleNewest([OTHER.title]);
+
+        yield* openSheet(page);
+        const sheet = inTheSheet(page);
+        yield* Effect.promise(async () => {
+          const composer = composerOf(sheet);
+          await composer.fill(PROMPT);
+          await expect(
+            sheet.getByRole("button", { name: "Send message" })
+          ).toBeEnabled({ timeout: readinessTimeoutMilliseconds });
+          changes.hold();
+          await composer.press("Enter");
+          await expect(promptWith(sheet, PROMPT)).toBeVisible();
+          await sheet
+            .getByRole("button", { exact: true, name: "Close" })
+            .click();
+          await expect(sheet).toBeHidden({
+            timeout: readinessTimeoutMilliseconds,
+          });
+        });
+        changes.release();
+
+        yield* Effect.promise(async () => {
+          await expect(page.getByText(NOTICE)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await page.getByRole("button", { name: OPEN }).click();
+          await expect(inTheSheet(page)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(promptWith(inTheSheet(page), PROMPT)).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+        });
+      })
+    );
+  });
+});
