@@ -173,14 +173,14 @@ const PLACEMENTS: readonly ToyPlacement[] = [
 ];
 
 /**
- * The layer of toys over the whole home page. The page sits inside `Toys`, so a
- * toy can be carried from the hero to the footer, and `Scatter` puts each toy
- * where its place says at the current width of the page.
+ * The layer of toys over the whole home page, drawn inside the page's own
+ * positioned box. `Toys` covers that box, so a toy can be carried from the hero
+ * to the footer, and `Scatter` puts each toy where its place says at the current
+ * width of the page. The layer lets every click through except the toys.
  */
-export function HomeToys({ children }: { children: ReactNode }) {
+export function HomeToyLayer() {
   return (
-    <Toys>
-      {children}
+    <Toys className="pointer-events-none absolute inset-0">
       <Scatter>
         {Arr.map(PLACEMENTS, (toy) => (
           <Toy key={toy.key} place={toy.place}>

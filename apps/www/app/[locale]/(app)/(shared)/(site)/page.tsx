@@ -3,7 +3,6 @@ import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import { Array as Arr } from "effect";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { locale as rootLocale } from "next/root-params";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -21,6 +20,7 @@ import { Pricing } from "@/components/marketing/about/pricing/landing";
 import { Privacy } from "@/components/marketing/about/privacy";
 import { ProjectileStage } from "@/components/marketing/about/projectile/stage";
 import { Schools } from "@/components/marketing/about/schools";
+import { HomeToys } from "@/components/marketing/about/toys/intent.client";
 import { Tryout } from "@/components/marketing/about/tryout";
 import {
   getSubjectMenuHref,
@@ -31,16 +31,6 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
-
-/**
- * The toys of the page load after the page renders, so their drag code is not
- * part of the first JavaScript of the home page.
- */
-const HomeToys = dynamic(() =>
-  import("@/components/marketing/about/toys/layer.client").then(
-    (module) => module.HomeToys
-  )
-);
 
 export async function generateMetadata({
   params,
@@ -175,25 +165,24 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         }))}
         url={url}
       />
-      <HomeToys>
-        <div className="relative grid">
-          <Hero />
-          <Lesson />
-          <Tryout value={featuredTryout} />
-          <NinaSection />
-          <ProjectileStage />
-          <Memory />
-          <Privacy />
-          <Curricula locale={locale} />
-          <Letter />
-          <Medals />
-          <Pricing />
-          <Schools />
-          <Faq faqs={faqItems} />
-          <Community />
-          <Closing />
-        </div>
-      </HomeToys>
+      <div className="relative grid">
+        <Hero />
+        <Lesson />
+        <Tryout value={featuredTryout} />
+        <NinaSection />
+        <ProjectileStage />
+        <Memory />
+        <Privacy />
+        <Curricula locale={locale} />
+        <Letter />
+        <Medals />
+        <Pricing />
+        <Schools />
+        <Faq faqs={faqItems} />
+        <Community />
+        <Closing />
+        <HomeToys />
+      </div>
     </>
   );
 }
