@@ -9,6 +9,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
 } from "@repo/design-system/components/visual/card";
@@ -68,10 +69,11 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
 }
 
 /**
- * The footer of a coordinate scene's visual card: the grid and automatic
- * rotation beside the card's full screen action, above any readout the scene
- * adds. The coordinate store owns the grid and rotation, and the visual card
- * owns where the card is shown.
+ * The controls of a coordinate scene's visual card. Its children, such as a
+ * readout and a slider, sit in rows under the scene. The footer holds the grid
+ * and automatic rotation, with the card's full screen action, on the right. The
+ * coordinate store owns the grid and rotation, and the visual card owns where
+ * the card is shown.
  */
 export function CoordinateControls({ children }: { children?: ReactNode }) {
   const t = useTranslations("Common");
@@ -81,29 +83,34 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
   const togglePlay = useCoordinateControls((controls) => controls.togglePlay);
 
   return (
-    <VisualCardFooter data-coordinate-controls="" stacked>
-      <div className="flex gap-2 px-(--card-spacing)">
-        <Button
-          aria-pressed={showGrid}
-          onClick={toggleGrid}
-          size="icon"
-          variant="secondary"
-        >
-          <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
-          <span className="sr-only">{t("grid")}</span>
-        </Button>
-        <Button
-          aria-pressed={play}
-          onClick={togglePlay}
-          size="icon"
-          variant={play ? "secondary" : "default"}
-        >
-          <HugeIcons icon={play ? PauseIcon : PlayIcon} />
-          <span className="sr-only">{t("automatic-rotation")}</span>
-        </Button>
-        <VisualCardFullscreen />
-      </div>
-      {children}
-    </VisualCardFooter>
+    <div
+      className="flex flex-col gap-(--card-spacing)"
+      data-coordinate-controls=""
+    >
+      {children ? <VisualCardControls>{children}</VisualCardControls> : null}
+      <VisualCardFooter>
+        <div className="ms-auto flex gap-2">
+          <Button
+            aria-pressed={showGrid}
+            onClick={toggleGrid}
+            size="icon"
+            variant="secondary"
+          >
+            <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
+            <span className="sr-only">{t("grid")}</span>
+          </Button>
+          <Button
+            aria-pressed={play}
+            onClick={togglePlay}
+            size="icon"
+            variant={play ? "secondary" : "default"}
+          >
+            <HugeIcons icon={play ? PauseIcon : PlayIcon} />
+            <span className="sr-only">{t("automatic-rotation")}</span>
+          </Button>
+          <VisualCardFullscreen />
+        </div>
+      </VisualCardFooter>
+    </div>
   );
 }

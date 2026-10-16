@@ -12,6 +12,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -87,8 +88,8 @@ function Machine({ inputLabel }: MachineProps) {
           </UiButton>
         </div>
       </VisualCardBody>
-      <VisualCardFooter>
-        <div className="flex flex-1 justify-center">
+      <VisualCardControls>
+        <div className="flex flex-1 justify-center px-6">
           <NumberField
             formatOptions={{
               localeMatcher: "best fit",
@@ -122,6 +123,9 @@ function Machine({ inputLabel }: MachineProps) {
             </Group>
           </NumberField>
         </div>
+      </VisualCardControls>
+
+      <VisualCardFooter>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </>

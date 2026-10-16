@@ -9,6 +9,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -226,65 +227,63 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
         </VisualCardScene>
       </VisualCardBody>
 
-      <VisualCardFooter stacked>
-        <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <div className="flex justify-between gap-2">
-            <Button
-              aria-label={labels.reset}
-              onClick={resetAnimation}
-              size="icon"
-              variant="outline"
+      <VisualCardControls>
+        <div className="flex w-full flex-wrap justify-center gap-2 px-6">
+          {Arr.map(SPEED_VALUES, (speedValue) => (
+            <Choice
+              aria-label={`${labels.setSpeed} ${speedValue}x`}
+              key={speedValue}
+              onClick={() => setSpeed(speedValue)}
+              pressed={speed === speedValue}
             >
-              <HugeIcons icon={Clock04Icon} />
-              <span className="sr-only">{labels.reset}</span>
-            </Button>
-            <Button
-              aria-label={isPlaying ? labels.pause : labels.play}
-              onClick={togglePlayPause}
-              size="icon"
-              variant={isPlaying ? "outline" : "default"}
-            >
-              <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
-              <span className="sr-only">
-                {isPlaying ? labels.pause : labels.play}
-              </span>
-            </Button>
-            <VisualCardFullscreen />
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2">
-            {Arr.map(SPEED_VALUES, (speedValue) => (
-              <Choice
-                aria-label={`${labels.setSpeed} ${speedValue}x`}
-                key={speedValue}
-                onClick={() => setSpeed(speedValue)}
-                pressed={speed === speedValue}
-              >
-                {speedValue}x
-              </Choice>
-            ))}
-          </div>
+              {speedValue}x
+            </Choice>
+          ))}
         </div>
 
-        <div className="w-full border-t px-6 pt-4">
-          <div className="flex flex-wrap justify-center gap-2">
-            {Arr.map(
-              Array.from({ length: maxTables }, (_, index) => index + 1),
-              (count) => (
-                <Choice
-                  aria-label={`${labels.setTableCount} ${count}`}
-                  key={`table-count-${count}`}
-                  onClick={() => {
-                    setTableCount(count);
-                    setIsPlaying(false);
-                  }}
-                  pressed={tableCount === count}
-                >
-                  {count} {labels.table}
-                </Choice>
-              )
-            )}
-          </div>
+        <div className="flex w-full flex-wrap justify-center gap-2 px-6">
+          {Arr.map(
+            Array.from({ length: maxTables }, (_, index) => index + 1),
+            (count) => (
+              <Choice
+                aria-label={`${labels.setTableCount} ${count}`}
+                key={`table-count-${count}`}
+                onClick={() => {
+                  setTableCount(count);
+                  setIsPlaying(false);
+                }}
+                pressed={tableCount === count}
+              >
+                {count} {labels.table}
+              </Choice>
+            )
+          )}
+        </div>
+      </VisualCardControls>
+
+      <VisualCardFooter>
+        <div className="ms-auto flex gap-2">
+          <Button
+            aria-label={labels.reset}
+            onClick={resetAnimation}
+            size="icon"
+            variant="outline"
+          >
+            <HugeIcons icon={Clock04Icon} />
+            <span className="sr-only">{labels.reset}</span>
+          </Button>
+          <Button
+            aria-label={isPlaying ? labels.pause : labels.play}
+            onClick={togglePlayPause}
+            size="icon"
+            variant={isPlaying ? "outline" : "default"}
+          >
+            <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
+            <span className="sr-only">
+              {isPlaying ? labels.pause : labels.play}
+            </span>
+          </Button>
+          <VisualCardFullscreen />
         </div>
       </VisualCardFooter>
     </VisualCard>

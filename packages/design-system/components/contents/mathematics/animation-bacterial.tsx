@@ -4,6 +4,7 @@ import { useIntersection } from "@mantine/hooks";
 import {
   BacterialGenerations,
   BacterialPlayback,
+  BacterialSpeeds,
 } from "@repo/design-system/components/contents/mathematics/bacterial-controls";
 import {
   type BacterialFormulaType,
@@ -13,6 +14,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardHeader,
   VisualCardScene,
@@ -225,20 +227,22 @@ export function BacterialGrowth({
         </VisualCardScene>
       </VisualCardBody>
 
-      <VisualCardFooter stacked>
-        <BacterialPlayback
-          isPlaying={isEffectivelyPlaying}
-          onReset={resetAnimation}
-          onSpeedChange={setSpeed}
-          onTogglePlaying={togglePlayPause}
-          speed={speed}
-        />
+      <VisualCardControls>
+        <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
         <BacterialGenerations
           generation={activeGeneration}
           maxGenerations={maxGenerations}
           onGenerationChange={selectGeneration}
           timeInterval={timeInterval}
           timeUnit={timeUnit}
+        />
+      </VisualCardControls>
+
+      <VisualCardFooter>
+        <BacterialPlayback
+          isPlaying={isEffectivelyPlaying}
+          onReset={resetAnimation}
+          onTogglePlaying={togglePlayPause}
         />
       </VisualCardFooter>
     </VisualCard>

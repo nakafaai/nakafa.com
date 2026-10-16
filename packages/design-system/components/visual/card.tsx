@@ -22,7 +22,7 @@ import {
   type VisualState,
   type VisualStore,
 } from "@repo/design-system/components/visual/store";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import {
@@ -151,7 +151,7 @@ function VisualCardHeader({
   );
 }
 
-/** Holds the visual and its inline controls; it takes the free height in full screen. */
+/** Holds the visual; it takes the free height in full screen. */
 function VisualCardBody({
   className,
   ...props
@@ -182,29 +182,32 @@ function VisualCardScene({
   });
 }
 
-const visualCardFooterVariants = cva("items-start gap-4 border-t", {
-  variants: {
-    stacked: {
-      false: "",
-      true: "flex-col items-stretch px-0",
-    },
-  },
-});
-
 /**
- * The bordered footer for the visual's own controls and its full screen action.
- * A stacked footer holds rows of controls, each one full width and one above
- * the next.
+ * The bordered footer of a visual, in one row: a compact readout or label on
+ * the left, and the visual's actions on the right.
  */
 function VisualCardFooter({
   className,
-  stacked,
   ...props
-}: ComponentProps<typeof CardFooter> &
-  VariantProps<typeof visualCardFooterVariants>) {
+}: ComponentProps<typeof CardFooter>) {
   return (
     <CardFooter
-      className={cn(visualCardFooterVariants({ stacked }), className)}
+      className={cn("justify-between gap-4 border-t", className)}
+      {...props}
+    />
+  );
+}
+
+/**
+ * The visual's own controls, such as sliders, chips, and a readout, in rows
+ * right under its scene. The rows wrap on a narrow card. Each control brings
+ * its own horizontal inset.
+ */
+function VisualCardControls({ className, ...props }: ComponentProps<"div">) {
+  return (
+    <div
+      className={cn("flex flex-wrap items-center gap-4", className)}
+      data-slot="visual-card-controls"
       {...props}
     />
   );
@@ -244,6 +247,7 @@ function VisualCardFullscreen() {
 export {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
