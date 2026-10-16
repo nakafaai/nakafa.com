@@ -4,11 +4,12 @@
 
 Accepted on 13 October 2026 with owner decisions K1, K10, K12, and K16. The owner
 approved decisions K1 to K20 on that day. The pure core of `confect/editor` (the
-document, step, and batch schemas, the storage form, the version rule, and the
-snapshot rule) is in code, with no database access. Its tables, its functions,
-and its import into live code, and the Files module, `confect/files`, are
-planned for program wave B (ADR 0013 describes the waves). The repository
-installs none of `prosemirror-collab`, `mathlive`, and `@convex-dev/presence`.
+document, step, batch, and stored-step schemas, the storage form, the version
+rule, the size bounds, and the snapshot rule) is in code, with no database
+access. Its tables, its functions, its import into live code, and the Files
+module, `confect/files`, are planned for program wave B (ADR 0013 describes the
+waves). The repository installs none of `prosemirror-collab`, `mathlive`, and
+`@convex-dev/presence`.
 
 ## Context
 
@@ -107,7 +108,8 @@ as the last column says.
 | The content of a document | JSON text in one string field, not an object. Its UTF-8 bytes are checked before the write, and at most `MAX_DOCUMENT_BYTES` (`confect/editor/size.ts`). | The largest text whose row stays below 1 MiB by Convex's size function (`getDocumentSize`). ProseMirror can nest deeper than Convex allows. |
 | A document as a whole | A node depth of at most 16, and the complete row under 1 MiB | ADR 0031 |
 | Steps sent in one call | At most 128 KiB and 200 steps | Target |
-| Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. |
+| A client id | At least one and at most 64 characters (`MAX_CLIENT_ID_LENGTH` in `confect/editor/batch.ts`) | Target. A v4 UUID from `randomUuid` has 36 characters, and each stored step keeps the id. |
+| Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. No code yet: the sync slice adds this bound with its test. |
 | Snapshots | At most one every 30 seconds, and only when the editor has been idle for 30 seconds or 300 steps have gathered since the last snapshot (`SNAPSHOT_MIN_GAP`, `SNAPSHOT_IDLE_DELAY`, and `SNAPSHOT_STEP_LIMIT` in `confect/editor/snapshot.ts`) | Target. 200 KiB after 50 pauses an hour is about 10 MB for each document an hour (computed). |
 | An image file | At most 2 MB, with alternative text required | Target |
 | Presence | A heartbeat every 10 seconds and a limit of 25 seconds | Target. Three editors write about 1,080 times an hour (computed). |
@@ -270,7 +272,8 @@ Drive copies come through the Drive connector (ADR 0015).
 | The Memory page editor in `packages/design-system/components/editor` (Markdown, one author) | Live |
 | Tiptap 3.31.4 and KaTeX 0.19.0 | Live |
 | `prosemirror-collab`, `mathlive`, and `@convex-dev/presence` | Not installed. Planned for program wave B. |
-| `confect/editor` pure core: the document, step, and batch schemas, the storage form, the version rule, and the snapshot rule | In code, with no database access. Tests pin each bound. |
+| `confect/editor` pure core: the document, step, batch, and stored-step schemas, the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code, with no function and no table. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds. The read bound of 512 KiB has no code yet. |
+| The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots, and the idle snapshot trigger | Planned, program wave B, with the tables |
 | The tables `editorDocuments`, `editorSteps`, and `editorSnapshots` | Planned, program wave B |
 | The formula node | Planned, program wave B |
 | Mermaid and content math under the forced KaTeX 0.19.0 | To be tested in program wave A |

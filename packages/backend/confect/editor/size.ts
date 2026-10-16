@@ -2,10 +2,10 @@ import { getDocumentSize } from "convex/values";
 
 /**
  * Convex's size of one stored document: 1 MiB, in the Documents section of its
- * limits page (https://docs.convex.dev/production/state/limits, read on 14
- * October 2026). The types page says a value must be less than 1MB in total
- * (https://docs.convex.dev/database/types, read on 14 October 2026), so the
- * row must stay below this limit, and a row of exactly this size is refused.
+ * limits page (https://docs.convex.dev/production/state/limits, read on 13
+ * October 2026). The types page says "Convex values must be less than 1MB in
+ * total size" (https://docs.convex.dev/database/types, read on 14 October 2026),
+ * so the row must stay below this limit, and a row of exactly this size is refused.
  */
 export const CONVEX_DOCUMENT_LIMIT = 1024 * 1024;
 
