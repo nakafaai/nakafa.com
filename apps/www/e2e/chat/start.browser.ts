@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
+import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import {
@@ -19,6 +20,17 @@ import {
 } from "@/e2e/support/sheet";
 import { mostCopies, watchCopies } from "@/e2e/support/shown";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+
+declare global {
+  interface Window {
+    /**
+     * How many writes of the persisted AI store still go through once a test
+     * arms the refusal. Once none is left, each write is refused. Undefined
+     * means nothing is refused.
+     */
+    nakafaAiWritesAllowed?: number | undefined;
+  }
+}
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 /** The curriculum context a lesson link carries. */
@@ -209,6 +221,80 @@ test.describe("New chat in a sheet closed before the server answers at 1440px", 
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       givesBackAfterClosingTheSheet(page, origin)
+    );
+  });
+});
+
+/**
+ * Refuses the writes of the persisted AI store once the test has armed it, as a
+ * full quota does. The store writes on every change, and a new-chat send writes
+ * twice before its prompt is on its way: the composer empties, then the chat
+ * draft is kept. The test lets as many writes through as it allows, and the
+ * store refuses the rest.
+ */
+function refuseAiStoreWrites(key: string) {
+  const setItem = Storage.prototype.setItem;
+  Storage.prototype.setItem = function (name, value) {
+    const allowed = window.nakafaAiWritesAllowed;
+    if (name === key && allowed !== undefined) {
+      if (allowed <= 0) {
+        throw new DOMException(
+          "The quota has been exceeded.",
+          "QuotaExceededError"
+        );
+      }
+      window.nakafaAiWritesAllowed = allowed - 1;
+    }
+    setItem.call(this, name, value);
+  };
+}
+
+/**
+ * The store refuses the chat draft of a new-chat send, which it writes after the
+ * composer is emptied. The prompt leaves at once, and the learner's next send
+ * opens the chat.
+ */
+const refusesTheChatDraft = Effect.fn("NakafaE2E.refusesTheChatDraft")(
+  function* (page: Page, baseURL: string) {
+    yield* Effect.promise(() =>
+      page.addInitScript(refuseAiStoreWrites, AI_STORAGE_KEY)
+    );
+    yield* openChatPage(page, baseURL);
+
+    yield* Effect.promise(async () => {
+      const scope = onThePage(page);
+
+      await write(scope);
+      // One write goes through: the one that empties the composer.
+      await page.evaluate(() => {
+        window.nakafaAiWritesAllowed = 1;
+      });
+      await composerOf(scope).press("Enter");
+
+      await expect(promptIn(scope)).toHaveCount(0);
+      await expect(composerOf(scope)).toBeEnabled();
+      await expect(page).not.toHaveURL(OPENED_CHAT);
+
+      await page.evaluate(() => {
+        window.nakafaAiWritesAllowed = undefined;
+      });
+      await write(scope);
+      await composerOf(scope).press("Enter");
+      await pageOpensChat(page)();
+    });
+  }
+);
+
+test.describe("New chat whose draft the store refuses at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("clears the prompt, and takes the next send", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      refusesTheChatDraft(page, origin)
     );
   });
 });
