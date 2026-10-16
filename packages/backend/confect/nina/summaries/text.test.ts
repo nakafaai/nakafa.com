@@ -11,6 +11,7 @@ import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { VaultError } from "@repo/backend/confect/vault/schema";
 import { sealText } from "@repo/backend/confect/vault/text";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { showsText } from "@repo/backend/test/seal";
 import { Cause, Effect, Exit, Result } from "effect";
 
@@ -33,6 +34,7 @@ const learner = Effect.fn("test.summaries.text.learner")(function* (
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,
+    mascot: MASCOT,
     name,
     plan: "free",
   });

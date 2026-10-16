@@ -20,6 +20,7 @@ import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { MASCOT } from "@repo/backend/test/mascot";
 import type { Value } from "convex/values";
 import { Array as Arr, Effect, Ref, Schema } from "effect";
 
@@ -53,6 +54,7 @@ const tenant = Effect.fn("test.grant.tenant")(function* () {
       credits: 0,
       creditsResetAt: 0,
       email: "person@example.com",
+      mascot: MASCOT,
       name: "Person",
       plan: "free",
     });
@@ -249,3 +251,5 @@ describe("access/grant ensureOwnerRemains", () => {
     })
   );
 });
+
+/** Inserts one Person of the school, of the given kind and status, and reads it back. */

@@ -1,6 +1,8 @@
+import { Ref } from "@confect/core";
 import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
+import refs from "@repo/backend/confect/_generated/refs";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
   DEFAULT_USER_CREDITS,
@@ -305,6 +307,74 @@ describe("users/mutations", () => {
         ctx.db.get("users", identity.userId)
       );
       expect(stored?.bio).toBe("Kept.");
+    });
+  });
+
+  describe("mascot", () => {
+    const setMascot = Ref.getFunctionReference(
+      refs.public.users.mutations.setMascot
+    );
+    /** An animal that the mascot code of Nakafa's own seed names, so the text is a real one. */
+    const CODE = "crab.1.6d4b78.left.smile";
+    const OTHER = "cat.0.243e66.right.open";
+
+    it("stores the animal the caller chooses, answers it, and keeps the rest of the account", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const identity = await t.mutation(async (ctx) => {
+        const user = await seedAuthenticatedUser(ctx, { now: NOW });
+        await ctx.db.patch("users", user.userId, {
+          bio: "Belajar fisika.",
+          username: "rubah",
+        });
+        return user;
+      });
+      const as = t.withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      });
+
+      await expect(as.mutation(setMascot, { mascot: CODE })).resolves.toEqual({
+        mascot: CODE,
+      });
+      await expect(as.mutation(setMascot, { mascot: OTHER })).resolves.toEqual({
+        mascot: OTHER,
+      });
+
+      const stored = await t.query((ctx) =>
+        ctx.db.get("users", identity.userId)
+      );
+      expect(stored).toMatchObject({
+        bio: "Belajar fisika.",
+        mascot: OTHER,
+        username: "rubah",
+      });
+    });
+
+    it("stores the code of the animal as its canonical text", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const identity = await t.mutation(
+        async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
+      );
+
+      await t
+        .withIdentity({
+          subject: identity.authUserId,
+          sessionId: identity.sessionId,
+        })
+        .mutation(setMascot, { mascot: CODE });
+
+      const stored = await t.query((ctx) =>
+        ctx.db.get("users", identity.userId)
+      );
+      expect(stored?.mascot).toBe(CODE);
+    });
+
+    it("answers a visitor without a session as unauthenticated", async () => {
+      const t = createConvexTestWithBetterAuth();
+
+      await expect(
+        t.mutation(setMascot, { mascot: CODE })
+      ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
     });
   });
 });
