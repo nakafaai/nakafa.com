@@ -35,7 +35,9 @@ export function openingMessage(
 /**
  * The prompt the learner just sent, pending, in the place and under the key
  * its saved message will have once the Agent feed carries it: the order after
- * the chat's latest turn, or the first order of a chat without one.
+ * the chat's latest turn, or the first order of a chat without one. Each file
+ * keeps the id the composer gave it, because that id is the key of its upload
+ * state, which its chip shows until the upload is done.
  */
 export function draftMessage({
   chatId,
@@ -61,8 +63,9 @@ export function draftMessage({
     text: prompt.text,
     parts: [
       { type: "text", text: prompt.text },
-      ...Arr.map(prompt.files ?? [], ({ file, url }) => ({
+      ...Arr.map(prompt.files ?? [], ({ file, id, url }) => ({
         type: "file" as const,
+        id,
         url,
         filename: file.name,
         mediaType: file.type,

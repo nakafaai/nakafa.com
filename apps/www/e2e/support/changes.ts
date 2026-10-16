@@ -19,6 +19,7 @@ import {
   encodeRefusal,
   failQueriesIn,
   type GivenSchema,
+  isCall,
   isMutation,
   later,
   momentOf,
@@ -48,8 +49,9 @@ export const ANSWER_MILLISECONDS = 15_000;
  * Every frame passes through this route, so a step can also hold the server's
  * answers back: after `hold` the page gets nothing from the server until
  * `release`, and what it shows meanwhile is what it showed on its own. A step
- * can also fail one mutation: after `failNext` the next mutation the page sends
- * never reaches the server, and the page is told the server could not take it.
+ * can also fail one change: after `failNext` the next change the page sends, a
+ * mutation or an action, never reaches the server, and the page is told the
+ * server could not take it, with the typed failure the step names, if any.
  * It can fail the answers of a query too: after `failQuery` every answer of
  * that function reaches the page as the failure the server sends when the
  * function throws, until `recoverQuery`. It can change what a query answers,
@@ -200,6 +202,7 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
 
       socket.onMessage((message) => {
         const frame = decodeSent(message.toString());
+        const call = Option.filter(frame, isCall);
         const mutation = Option.filter(frame, isMutation);
 
         if (Option.isSome(frame)) {
@@ -207,26 +210,28 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
         }
         if (
           changes.failing &&
-          Option.isSome(mutation) &&
+          Option.isSome(call) &&
           (changes.failingPath === "" ||
-            changes.failingPath === mutation.value.udfPath)
+            changes.failingPath === call.value.udfPath)
         ) {
+          const { requestId, type } = call.value;
           const refusal = changes.failingRefusal;
 
           changes.failing = false;
           changes.failingRefusal = Option.none();
-          // The server never sees the change, and the page is told it failed.
+          // The server never sees the call, and the page is told it failed.
           deliver(() => {
             socket.send(
               encodeRefusal({
                 errorData: Option.getOrUndefined(refusal),
                 logLines: [],
-                requestId: mutation.value.requestId,
+                requestId,
                 result: "Refused by the test",
                 success: false,
-                type: "MutationResponse",
+                type: type === "Action" ? "ActionResponse" : "MutationResponse",
               })
             );
+            // A refused action was counted as sent, as a refused mutation was.
             changes.answered += 1;
           });
           return;
@@ -292,11 +297,11 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       );
     },
     /**
-     * Fails the next mutation the page sends, or the next one to the function
-     * `udfPath`: the server never gets it, and the page is told the server
-     * could not take it. With `refusal`, the page is told the function threw
-     * that typed failure on purpose, which it decodes as the function's own
-     * error, and not that the server broke.
+     * Fails the next change the page sends, a mutation or an action, or the
+     * next one to the function `udfPath`: the server never gets it, and the
+     * page is told the server could not take it. With `refusal`, the page is
+     * told the function threw that typed failure on purpose, which it decodes
+     * as the function's own error, and not that the server broke.
      */
     failNext(udfPath = "", refusal?: unknown) {
       changes.failing = true;

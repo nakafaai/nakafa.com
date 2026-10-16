@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import {
   clearAiDraftText,
   resolveAiDraftText,
+  resolveAiOwnerChange,
   saveAiDraftText,
 } from "@/components/ai/store/draft";
 
@@ -150,4 +151,36 @@ describe("ai/store/draft", () => {
       expect(yield* readSavedDraft(null)).toBeNull();
     })
   );
+});
+
+describe("ai/store/draft owner change", () => {
+  it("changes nothing for the first answer of a page, or for the same learner", () => {
+    for (const { next, previous } of [
+      { next: null, previous: undefined },
+      { next: "learner-a", previous: undefined },
+      { next: null, previous: null },
+      { next: "learner-a", previous: "learner-a" },
+    ]) {
+      expect(resolveAiOwnerChange(previous, next)).toEqual({
+        mustResetDraft: false,
+        ownerChanged: false,
+      });
+    }
+  });
+
+  it("ends the session of a visitor who signs in and keeps their draft, text and files", () => {
+    expect(resolveAiOwnerChange(null, "learner-a")).toEqual({
+      mustResetDraft: false,
+      ownerChanged: true,
+    });
+  });
+
+  it("ends the session and the draft of a learner whose session ends or who another learner replaces", () => {
+    for (const next of [null, "learner-b"]) {
+      expect(resolveAiOwnerChange("learner-a", next)).toEqual({
+        mustResetDraft: true,
+        ownerChanged: true,
+      });
+    }
+  });
 });
