@@ -1,10 +1,5 @@
-import { Effect, Schema } from "effect";
-
-const notificationNotFound = Schema.Literal("NOTIFICATION_NOT_FOUND");
-const notificationCursorInvalid = Schema.Literal("NOTIFICATION_CURSOR_INVALID");
-const notificationScopeTooLarge = Schema.Literal(
-  "NOTIFICATION_SCOPE_TOO_LARGE"
-);
+import { refusal } from "@repo/backend/confect/tenancy/errors";
+import { Schema } from "effect";
 
 /**
  * No inbox row of the caller has this ID. A row of another account, or of a
@@ -13,18 +8,7 @@ const notificationScopeTooLarge = Schema.Literal(
  */
 export class NotificationNotFound extends Schema.TaggedError<NotificationNotFound>()(
   "NotificationNotFound",
-  {
-    code: notificationNotFound.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed(notificationNotFound.literal)
-      )
-    ),
-    message: Schema.String.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed("This notification does not exist.")
-      )
-    ),
-  }
+  refusal("NOTIFICATION_NOT_FOUND", "This notification does not exist.")
 ) {}
 
 /**
@@ -33,33 +17,17 @@ export class NotificationNotFound extends Schema.TaggedError<NotificationNotFoun
  */
 export class NotificationScopeTooLarge extends Schema.TaggedError<NotificationScopeTooLarge>()(
   "NotificationScopeTooLarge",
-  {
-    code: notificationScopeTooLarge.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed(notificationScopeTooLarge.literal)
-      )
-    ),
-    message: Schema.String.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed("This account holds too many schools for its inbox.")
-      )
-    ),
-  }
+  refusal(
+    "NOTIFICATION_SCOPE_TOO_LARGE",
+    "This account holds too many schools for its inbox."
+  )
 ) {}
 
 /** The page cursor of the inbox list is not one that the list returned. */
 export class NotificationCursorInvalid extends Schema.TaggedError<NotificationCursorInvalid>()(
   "NotificationCursorInvalid",
-  {
-    code: notificationCursorInvalid.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed(notificationCursorInvalid.literal)
-      )
-    ),
-    message: Schema.String.pipe(
-      Schema.withConstructorDefault(
-        Effect.succeed("The page cursor of the inbox is not valid.")
-      )
-    ),
-  }
+  refusal(
+    "NOTIFICATION_CURSOR_INVALID",
+    "The page cursor of the inbox is not valid."
+  )
 ) {}
