@@ -30,7 +30,7 @@ import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useOptimistic, useTransition } from "react";
+import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
@@ -62,10 +62,7 @@ export function NinaInput({
   const t = useTranslations("Ai");
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
-  const [submittedFiles, hideSubmittedFiles] = useOptimistic<readonly string[]>(
-    []
-  );
-  const [, startTransition] = useTransition();
+  const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
   const stopping = status === "streaming" && !disabled;
 
   function handleSubmit(message: PromptInputMessage) {
@@ -73,11 +70,11 @@ export function NinaInput({
     if (admission === false) {
       return false;
     }
-    startTransition(async () => {
-      hideSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
-      await admission;
-    });
-    return admission;
+    // The submitted files leave the tray while the message is admitted, and
+    // come back if it is refused. No transition holds them: one that waits for
+    // the admission would hold every navigation the learner makes meanwhile.
+    setSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
+    return Promise.resolve(admission).finally(() => setSubmittedFiles([]));
   }
 
   return (

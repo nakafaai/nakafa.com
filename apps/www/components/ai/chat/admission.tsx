@@ -5,14 +5,7 @@ import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/su
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import {
-  type ComponentProps,
-  useEffect,
-  useId,
-  useOptimistic,
-  useRef,
-  useTransition,
-} from "react";
+import { type ComponentProps, useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAi } from "@/components/ai/context";
 import type { NinaPrompt } from "@/components/ai/message/prompt";
@@ -55,10 +48,12 @@ export function useChatAdmission({
   const gate = useAdmissionGate(onSignIn);
   const session = useAuthSessionStore();
   const setText = useAi((state) => state.setText);
+  // A new chat is on its way, from any surface, until its admission settles.
+  const admitting = useAi((state) => state.chatDrafts.length > 0);
   const t = useTranslations("Ai");
   const { send } = useNinaSubmission();
-  const [isPending, startTransition] = useTransition();
-  const [prompt, showPrompt] = useOptimistic<
+  // The prompt Nina is admitting, shown before its chat exists.
+  const [prompt, setPrompt] = useState<
     | (Required<Pick<ComponentProps<typeof NinaPrompt>, "files">> & {
         text: string;
       })
@@ -67,6 +62,9 @@ export function useChatAdmission({
   const promptId = useId();
   const activation = useRef(0);
   const viewerId = gate.viewerId;
+  // The prompt stays until the admission is refused, or until the surface that
+  // shows it hides or ends, so the composer waits for the chat it opens.
+  const busy = admitting || prompt !== null;
 
   // Leaving, hiding or changing viewer ends this activation, so a prompt that
   // is still being admitted opens no chat over the one the learner picked
@@ -78,30 +76,33 @@ export function useChatAdmission({
     }
     return () => {
       activation.current += 1;
+      setPrompt(null);
     };
   }, [viewerId]);
 
   function submit(message: PromptInputMessage) {
     const query = message.text?.trim();
-    if (!query || isPending || !gate.admit()) {
+    if (!query || busy || !gate.admit()) {
       return false;
     }
     const draft = { ...message, text: query };
     const submittedFrom = activation.current;
     const submittedBy = session.getState().userId;
-    const admission = send(draft);
-    startTransition(async () => {
-      showPrompt({ text: draft.text, files: draft.files ?? [] });
-      setText("");
-      const receipt = await admission;
+    // No async transition holds the admission. React makes every transition that
+    // starts while one is pending wait for its end, the navigation to another
+    // chat included, so the learner could not leave until the answer came back.
+    setPrompt({ text: draft.text, files: draft.files ?? [] });
+    setText("");
+    return send(draft).then((receipt) => {
       if (!receipt) {
         // The words go back to the composer wherever the learner has gone
         // meanwhile, so a refusal never loses them. Another account that has
         // signed in since does not get them.
+        setPrompt(null);
         if (session.getState().userId === submittedBy) {
           setText((previous) => previous || query);
         }
-        return;
+        return false;
       }
       if (activation.current !== submittedFrom) {
         // The learner left before the answer came back. The chat exists now,
@@ -112,22 +113,20 @@ export function useChatAdmission({
             onClick: () => onComplete(receipt.chatId),
           },
         });
-        return;
+        return true;
       }
-      startTransition(() => {
-        showPrompt({
-          text: receipt.prompt.text,
-          files: Arr.map(receipt.prompt.files, ({ filename, ...file }) => ({
-            ...file,
-            type: "file",
-            ...(filename === undefined ? {} : { filename }),
-          })),
-        });
-        onComplete(receipt.chatId);
+      setPrompt({
+        text: receipt.prompt.text,
+        files: Arr.map(receipt.prompt.files, ({ filename, ...file }) => ({
+          ...file,
+          type: "file",
+          ...(filename === undefined ? {} : { filename }),
+        })),
       });
+      onComplete(receipt.chatId);
+      return true;
     });
-    return admission.then((receipt) => receipt !== undefined);
   }
 
-  return { disabled: isPending || gate.pending, prompt, promptId, submit };
+  return { disabled: busy || gate.pending, prompt, promptId, submit };
 }
