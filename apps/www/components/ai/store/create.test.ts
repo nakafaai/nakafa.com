@@ -1,7 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  NINA_FILE_COUNT,
+  NINA_UPLOAD_LIFETIME,
+} from "@repo/backend/client/nina/uploads";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { encodeJsonText } from "@repo/utilities/json";
-import { DateTime, Record as Rec, Schema } from "effect";
+import {
+  Array as Arr,
+  DateTime,
+  Duration,
+  Option,
+  Record as Rec,
+  Schema,
+} from "effect";
 import { createAiStore } from "@/components/ai/store/create";
 
 const STORAGE_KEY = "nakafa-ai";
@@ -13,6 +24,12 @@ const StoredAiState = Schema.fromJsonString(
 );
 const chatId = Schema.decodeUnknownSync(Id("chats"))("chat_1");
 const otherChatId = Schema.decodeUnknownSync(Id("chats"))("chat_2");
+const uploadNamed = Schema.decodeUnknownSync(Id("ninaUploads"));
+const firstUpload = uploadNamed("upload_1");
+const secondUpload = uploadNamed("upload_2");
+/** The moment the uploads of a test began, and how long the server keeps one. */
+const NOW = 1000;
+const LIFETIME = Duration.toMillis(NINA_UPLOAD_LIFETIME);
 const receipt = {
   chatId,
   order: 0,
@@ -256,6 +273,175 @@ describe("ai/store/create", () => {
 
     store.getState().setOpen(false);
     expect(store.getState()).toMatchObject({ open: false, warmed: true });
+  });
+
+  it("marks an upload as on its way or failed by the id of its file, and clears it by that id", () => {
+    const store = createAiStore();
+
+    store.getState().markUpload("file-1", "uploading");
+    store.getState().markUpload("file-2", "uploading");
+    store.getState().markUpload("file-1", "error");
+    expect(store.getState().uploads).toEqual({
+      "file-1": "error",
+      "file-2": "uploading",
+    });
+
+    store.getState().clearUpload("file-1");
+    expect(store.getState().uploads).toEqual({ "file-2": "uploading" });
+
+    // A file that shows nothing has no entry, so clearing it again is no change.
+    store.getState().clearUpload("file-1");
+    expect(store.getState().uploads).toEqual({ "file-2": "uploading" });
+  });
+
+  it("remembers the upload that holds a file, by the id of the file", () => {
+    const store = createAiStore();
+
+    expect(store.getState().uploadOf("file-1", NOW)).toEqual(Option.none());
+
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().keepUpload("file-2", secondUpload, NOW);
+    expect(store.getState().uploadOf("file-1", NOW)).toEqual(
+      Option.some(firstUpload)
+    );
+    expect(store.getState().uploadOf("file-2", NOW)).toEqual(
+      Option.some(secondUpload)
+    );
+    // The server drops an upload a lifetime after it began.
+    expect(store.getState().uploadOf("file-1", NOW + LIFETIME)).toEqual(
+      Option.none()
+    );
+  });
+
+  it("reads the uploads that hold the files it is asked for, and changes nothing", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().keepUpload("file-2", secondUpload, NOW);
+    const before = store.getState();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.getState().readUploads(["file-1", "file-3"])).toEqual([
+      firstUpload,
+    ]);
+    expect(store.getState()).toBe(before);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("forgets the holds of the uploads it is given, and nothing else", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().keepUpload("file-2", secondUpload, NOW);
+
+    store.getState().forgetUploads([firstUpload]);
+
+    expect(store.getState().held).toEqual({
+      "file-2": { expiresAt: NOW + LIFETIME, uploadId: secondUpload },
+    });
+  });
+
+  it("keeps the hold that a file got after its upload was read, because holds are forgotten by upload", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    const read = store.getState().readUploads(["file-1"]);
+    store.getState().keepUpload("file-1", secondUpload, NOW);
+
+    store.getState().forgetUploads(read);
+
+    expect(store.getState().held).toEqual({
+      "file-1": { expiresAt: NOW + LIFETIME, uploadId: secondUpload },
+    });
+  });
+
+  it("changes nothing when none of the uploads it is given is held", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    const before = store.getState();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.getState().forgetUploads([secondUpload]);
+
+    expect(store.getState()).toBe(before);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("keeps a refused upload out of the holds until the server gives its place back", () => {
+    const store = createAiStore();
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().refuseUploads([firstUpload]);
+    store.getState().refuseUploads([firstUpload]);
+
+    expect(store.getState().uploadOf("file-1", NOW)).toEqual(Option.none());
+    expect(store.getState().readRefusedUploads()).toEqual([firstUpload]);
+    store.getState().forgetUploads([firstUpload]);
+    expect(store.getState().readRefusedUploads()).toEqual([]);
+  });
+
+  it("names the files outside a send whose uploads it holds, when the send would not fit", () => {
+    const store = createAiStore();
+    const strays = Arr.makeBy(NINA_FILE_COUNT, (index) => `stray-${index}`);
+    for (const fileId of strays) {
+      store.getState().keepUpload(fileId, uploadNamed(fileId), NOW);
+    }
+
+    expect(store.getState().strayFiles(["new"], NOW)).toEqual(strays);
+    expect(store.getState().strayFiles(strays, NOW)).toEqual([]);
+  });
+
+  it("ends the session of its owner: what it held for them is gone, and the draft and the page are not touched", () => {
+    const store = createAiStore();
+    store.getState().openAsk({ id: "ask-1", text: "Explain" });
+    store.getState().addChatDraft("draft-1");
+    store.getState().setActiveChatId(chatId);
+    store.getState().setOpeningChat({
+      prompt: receipt.prompt,
+      receipt,
+      submittedAt: 1,
+    });
+    store.getState().keepUpload("file-1", firstUpload, NOW);
+    store.getState().refuseUploads([firstUpload]);
+    store.getState().markUpload("file-1", "error");
+    store.getState().markUpload("file-2", "uploading");
+    store.getState().setText("Half typed");
+    store.getState().setContextTitle("Algebra");
+    store.getState().setOpen(true);
+
+    store.getState().endSession();
+
+    const state = store.getState();
+    expect(state.activeChatId).toBeNull();
+    expect(state.ask).toBeNull();
+    expect(state.chatDrafts).toEqual([]);
+    expect(state.openingChat).toBeNull();
+    // The next learner finds no upload of the last one to send or to show.
+    expect(state).toMatchObject({ held: {}, refusedUploads: [] });
+    expect(state.uploads).toEqual({});
+    expect(state.uploadOf("file-1", NOW)).toEqual(Option.none());
+    // The draft has its own rule, and the page keeps what it shows.
+    expect(state).toMatchObject({
+      contextTitle: "Algebra",
+      open: true,
+      text: "Half typed",
+    });
+    // A reload does not open the chat of the last learner either.
+    const stored = Schema.decodeUnknownSync(StoredAiState)(
+      localStorage.getItem(STORAGE_KEY)
+    );
+    expect(stored.state.activeChatId).toBeNull();
+  });
+
+  it("starts every composer over with a new key, and leaves the text alone", () => {
+    const store = createAiStore();
+    const { composerKey } = store.getState();
+    store.getState().setText("Half typed");
+
+    store.getState().resetComposers();
+    expect(store.getState().composerKey).toBe(composerKey + 1);
+
+    store.getState().resetComposers();
+    expect(store.getState().composerKey).toBe(composerKey + 2);
+    expect(store.getState().text).toBe("Half typed");
   });
 
   it("sets the composer text from a value or from an updater", () => {

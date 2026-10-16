@@ -45,8 +45,15 @@ function useChatState(
   store: ChatStoreApi
 ) {
   const leaving = useStore(store, (state) => state.leaving);
-  const { chat, loadMoreTurns, turn, turnAt, turnsLoading, turnsStatus } =
-    useConversation(chatId, shareToken, leaving);
+  const {
+    chat,
+    current,
+    loadMoreTurns,
+    turn,
+    turnAt,
+    turnsLoading,
+    turnsStatus,
+  } = useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
@@ -58,7 +65,7 @@ function useChatState(
   const viewerId = useViewer((state) => state.viewer?.id);
   const cancelChat = useMutation(nina.lifecycle.cancel);
 
-  const loading = !chat;
+  const loading = !current;
   const busy = isChatBusy({
     cancelling,
     loading,
@@ -80,6 +87,7 @@ function useChatState(
     chat,
     chatId,
     isPending,
+    loading,
     optimisticallyCancel,
     setText,
     showDraft,
@@ -95,7 +103,7 @@ function useChatState(
   const [actions] = useState(() => ({
     cancel() {
       const now = latest.current;
-      if (now.isPending) {
+      if (now.isPending || now.loading) {
         return;
       }
       const { setStopFailure } = store.getState();
@@ -134,7 +142,13 @@ function useChatState(
     retry(order?: number) {
       const now = latest.current;
       const target = order ?? now.turn?.order;
-      if (target === undefined || !now.chat || now.busy || now.isPending) {
+      if (
+        target === undefined ||
+        !now.chat ||
+        now.busy ||
+        now.isPending ||
+        now.loading
+      ) {
         return;
       }
       // The retry starts before the transition, for the same reason as a stop.
@@ -156,7 +170,7 @@ function useChatState(
     send(prompt: NinaDraft) {
       const now = latest.current;
       const chat = now.chat;
-      if (!chat || now.busy || now.isPending) {
+      if (!chat || now.busy || now.isPending || now.loading) {
         return false;
       }
       now.setText((previous) =>

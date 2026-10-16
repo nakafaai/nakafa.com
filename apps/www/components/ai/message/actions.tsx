@@ -38,11 +38,13 @@ export function AiChatMessageActions() {
 
   const retry = useChat((state) => state.retry);
   const busy = useChat((state) => state.busy);
+  const isLoading = useChat((state) => state.isLoading);
   const owner = useChat((state) => state.owner);
 
   const clipboard = useClipboard({ timeout: 1000 });
 
-  const disabled = busy;
+  // A chat that is still being read may show a turn that has moved on.
+  const disabled = busy || isLoading;
 
   if (!owner) {
     return null;

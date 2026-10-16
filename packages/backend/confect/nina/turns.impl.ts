@@ -1,6 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { createThread, saveMessage, toUIMessages } from "@convex-dev/agent";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
+import {
+  isPromptWithinLimit,
+  NINA_PROMPT_LENGTH_MESSAGE,
+  NinaPromptError,
+} from "@repo/backend/client/nina/prompt";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import schema from "@repo/backend/confect/_generated/schema";
@@ -38,6 +43,20 @@ const start = FunctionImpl.make(
   "start",
   Effect.fn("nina.turns.start")(function* (args) {
     const { appUser } = yield* requireAuth();
+    // A prompt over the limit is refused first, before it is hashed and before
+    // credits are held. A retry has no text to check: it sends a stored prompt.
+    // A stored prompt passed this check, or the older check of the same size
+    // that counted UTF-16 units. A string has at most as many code points as
+    // units, so every stored prompt fits the limit as it is counted now.
+    if (
+      args.input.kind === "message" &&
+      !isPromptWithinLimit(args.input.prompt.text)
+    ) {
+      return yield* new NinaPromptError({
+        code: "NINA_PROMPT_LENGTH",
+        message: NINA_PROMPT_LENGTH_MESSAGE,
+      });
+    }
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const fingerprintText = yield* Schema.encodeEffect(JsonTextSchema)([

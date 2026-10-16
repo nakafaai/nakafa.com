@@ -568,7 +568,13 @@
     "stop-response": "Stop response",
     "attach-files": "Attach files",
     "remove-attachment": "Remove {filename}",
-    "attachment-rejected": "Choose up to 10 PNG, JPEG, WebP, GIF, PDF, or text files, each no larger than 8 MiB.",
+    "attachment-rejections": {
+      "title": "Files not attached",
+      "type": "Only PNG, JPEG, WebP, GIF, PDF, and text files",
+      "empty": "Empty file",
+      "size": "Larger than {size, number}\u00a0MiB",
+      "count": "At most {count, number}\u00a0files per message"
+    },
     "ask-nina": "Ask Nina",
     "text-placeholder": "Ask Nina anything...",
     "error-message": "Nina could not finish this response. Please try again. If this continues, contact Nakafa support.",
@@ -763,7 +769,7 @@
       "context": "Nina could not load the learning material for this conversation. Please try again.",
       "attachment-invalid": "An attachment is invalid or no longer available. Choose it again and check its file type and size.",
       "attachment-limit": "You have reached the attachment limit. Send the files already uploaded or wait before uploading more.",
-      "attachment-size": "The documents in one message can be at most 10 MB together. Remove a document or send them in separate messages.",
+      "attachment-size": "Documents in one message can total at most {size, number}\u00a0MiB",
       "message-size": "This message is too long for Nina to read in one turn. Shorten it, or send the rest in a new message.",
       "attachment-failed": "Nina could not read or save the attachment. Please try uploading it again.",
       "provider-busy": "The AI service is handling too many requests right now. Wait a moment, then try again.",
