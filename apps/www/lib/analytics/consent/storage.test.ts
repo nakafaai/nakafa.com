@@ -1,16 +1,12 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
-  ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
-  ANALYTICS_CONSENT_NOTICE_VERSION,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   createAnonymousAnalyticsConsent,
-  decodeAnalyticsConsentAccountMarker,
 } from "@repo/analytics/consent";
 import { Effect, Option } from "effect";
 import {
   AnalyticsConsentStorageFailed,
   loadAnonymousAnalyticsConsent,
-  saveAnalyticsConsentAccountMarker,
   saveAnonymousAnalyticsConsent,
 } from "@/lib/analytics/consent/storage";
 
@@ -77,48 +73,6 @@ describe("anonymous analytics consent storage", () => {
       expect(readFailure).toBeInstanceOf(AnalyticsConsentStorageFailed);
       expect(writeFailure).toBeInstanceOf(AnalyticsConsentStorageFailed);
     })
-  );
-
-  it.effect("keeps the signed-in marker with the session it names", () =>
-    Effect.gen(function* () {
-      const marker = {
-        granted: false,
-        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-        sessionId: "session-1",
-      };
-      yield* saveAnalyticsConsentAccountMarker(marker);
-
-      expect(
-        decodeAnalyticsConsentAccountMarker(
-          window.localStorage.getItem(ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY)
-        )
-      ).toEqual(Option.some(marker));
-      expect(
-        window.localStorage.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)
-      ).toBeNull();
-    })
-  );
-
-  it.effect(
-    "reports a typed error when the account choice marker cannot be kept",
-    () =>
-      Effect.gen(function* () {
-        const failure = yield* saveAnalyticsConsentAccountMarker(
-          {
-            granted: true,
-            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-            sessionId: "session-1",
-          },
-          {
-            getItem: () => null,
-            setItem: () => {
-              throw new Error("storage unavailable");
-            },
-          }
-        ).pipe(Effect.flip);
-
-        expect(failure).toBeInstanceOf(AnalyticsConsentStorageFailed);
-      })
   );
 
   it.effect("fails with a typed error when a record cannot be encoded", () =>

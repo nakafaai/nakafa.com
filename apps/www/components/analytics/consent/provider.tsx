@@ -3,11 +3,11 @@
 import { useNetwork } from "@mantine/hooks";
 import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
 import { Effect } from "effect";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useState } from "react";
 import { useStore } from "zustand";
-import { useAuthSession } from "@/components/auth/session";
+import { markAnalyticsConsentRoot } from "@/lib/analytics/consent/bootstrap";
 import {
-  useAccountPromptChoiceMarker,
+  readNavigatorPrivacySignal,
   useAnonymousDenialPersistence,
   useBrowserConsentSync,
 } from "@/lib/analytics/consent/browser";
@@ -72,7 +72,6 @@ function AnalyticsConsentController({
   const { online: isOnline } = useNetwork();
   const { durableStatus, hasLoadError, interruptDepartedSave, promptIdentity } =
     consent;
-  const sessionId = useAuthSession((session) => session.sessionId);
 
   useBrowserConsentSync({
     isPreviewChild: consent.isPreviewChild,
@@ -86,18 +85,24 @@ function AnalyticsConsentController({
     setBrowserConsent,
     setHasStorageError,
   });
-  useAccountPromptChoiceMarker({
-    accountConsent: consent.accountConsent,
-    isAuthenticated: consent.isAuthenticated,
-    sessionId,
-  });
 
-  // The bootstrap marks the root before the app loads, so the prompt waits until
-  // the store knows the choice, or knows that it cannot load it. Then only the
-  // prompt's own state decides, and the mark goes, so a later sign-out or a soft
-  // navigation shows the prompt. A load error must not stay hidden, because the
-  // prompt is where it shows. This keeps the DOM in step with the store, so it is
-  // an effect.
+  // The inline script marks a page the server rendered. A page that mounts here
+  // without it, such as the first app page a soft navigation opens, takes the same
+  // mark before paint, so the prompt cannot paint before the store knows the visitor.
+  useLayoutEffect(() => {
+    Effect.runSync(
+      markAnalyticsConsentRoot(
+        document.documentElement,
+        readNavigatorPrivacySignal()
+      )
+    );
+  }, []);
+
+  // The mark holds the prompt until the store knows the choice, or knows that it
+  // cannot load it. Then only the prompt's own state decides, and the mark goes, so
+  // a later sign-out or a soft navigation shows the prompt. A load error must not
+  // stay hidden, because the prompt is where it shows. This keeps the DOM in step
+  // with the store, so it is an effect.
   useEffect(() => {
     if (durableStatus === "pending" && !hasLoadError) {
       return;

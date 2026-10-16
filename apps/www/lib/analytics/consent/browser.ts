@@ -15,17 +15,16 @@ import { readBrowserPrivacySignal } from "@/lib/analytics/consent/signal";
 import {
   type AccountConsentDecision,
   type BrowserConsentSnapshot,
-  createAccountConsentMarker,
   shouldPersistAnonymousAnalyticsDenial,
 } from "@/lib/analytics/consent/state";
 import {
   loadAnonymousAnalyticsConsent,
-  saveAnalyticsConsentAccountMarker,
   saveAnonymousAnalyticsConsent,
 } from "@/lib/analytics/consent/storage";
 import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
-function readNavigatorPrivacySignal() {
+/** Reads the browser's DNT and GPC values the way the inline bootstrap script reads them. */
+export function readNavigatorPrivacySignal() {
   let globalPrivacyControl: unknown;
   if ("globalPrivacyControl" in navigator) {
     globalPrivacyControl = navigator.globalPrivacyControl;
@@ -190,39 +189,6 @@ export function useBrowserConsentSync({
       Effect.runFork(Fiber.interrupt(loadFiber));
     };
   }, [isPreviewChild, setBrowserConsent, setHasStorageError]);
-}
-
-/**
- * Keeps this browser's marker of the signed-in account's confirmed choice and its
- * session, so the next page decides before paint for that session. Blocked
- * storage keeps no marker, and the prompt then waits for the account's choice as
- * it does without one.
- */
-export function useAccountPromptChoiceMarker({
-  accountConsent,
-  isAuthenticated,
-  sessionId,
-}: {
-  readonly accountConsent: AccountConsentDecision | null;
-  readonly isAuthenticated: boolean;
-  readonly sessionId: string | null;
-}) {
-  useEffect(() => {
-    const marker = createAccountConsentMarker({
-      accountConsent,
-      isAuthenticated,
-      sessionId,
-    });
-    if (marker === null) {
-      return;
-    }
-
-    Effect.runFork(
-      saveAnalyticsConsentAccountMarker(marker).pipe(
-        Effect.catchTag("AnalyticsConsentStorageFailed", () => Effect.void)
-      )
-    );
-  }, [accountConsent, isAuthenticated, sessionId]);
 }
 
 /**

@@ -4,7 +4,6 @@ import {
   type Page,
 } from "@playwright/test";
 import {
-  ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
   ANALYTICS_CONSENT_ROOT_ATTRIBUTE,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   type AnalyticsConsentDecision,
@@ -81,9 +80,6 @@ const describePage = Effect.fn("NakafaE2E.describeUsageDataPage")(function* (
 const promptButton = (page: Page, name: "Allow" | "Decline") =>
   page.getByRole("button", { exact: true, name });
 
-/** The Decline button of the usage-data prompt. */
-const declineButton = (page: Page) => promptButton(page, "Decline");
-
 /** Presses one button of the usage-data prompt and waits until the prompt is gone. */
 const pressPromptButton = Effect.fn("NakafaE2E.pressPromptButton")(function* (
   page: Page,
@@ -114,19 +110,7 @@ export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
 });
 
 /**
- * Presses Allow on the usage-data prompt of a signed-in learner and waits until
- * the prompt is gone. An Allow stores only the account's choice, so the browser
- * keeps no anonymous record that a later visitor of the browser would read.
- */
-export const pressAllow = Effect.fn("NakafaE2E.pressAllow")(function* (
-  page: Page,
-  hasTouch: boolean
-) {
-  yield* pressPromptButton(page, "Allow", hasTouch);
-});
-
-/**
- * Declines the usage data of a signed-in learner and waits until the server has
+ * Presses one button of the usage-data prompt and waits until the server has
  * stored the choice, for a test that loads another page next. The prompt hides
  * before the server has the choice. The Convex client asks the browser to
  * confirm a leave while a change is unanswered, and Playwright accepts that
@@ -137,31 +121,52 @@ export const pressAllow = Effect.fn("NakafaE2E.pressAllow")(function* (
  * The prompt must show within the readiness bound of the suite, or the helper
  * fails with what the page showed.
  */
+const answerUsageData = Effect.fn("NakafaE2E.answerUsageData")(function* (
+  page: Page,
+  changes: Changes,
+  name: "Allow" | "Decline"
+) {
+  yield* Effect.tryPromise(() =>
+    expect(promptButton(page, name)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  ).pipe(
+    Effect.catchTag("UnknownError", () =>
+      describePage(page, changes).pipe(
+        Effect.flatMap((shown) => new UsageDataPromptMissing({ shown }))
+      )
+    )
+  );
+  const before = changes.sent;
+  yield* pressPromptButton(page, name, false);
+  yield* Effect.promise(async () => {
+    await expect
+      .poll(() => changes.took(SAVE_CHOICE), {
+        timeout: ANSWER_MILLISECONDS,
+      })
+      .toBe(true);
+    await saved(changes, before);
+  });
+});
+
+/** Declines the usage data of a signed-in learner until the server has the choice. */
 export const declineUsageData = Effect.fn("NakafaE2E.declineUsageData")(
   function* (page: Page, changes: Changes) {
-    yield* Effect.tryPromise(() =>
-      expect(declineButton(page)).toBeVisible({
-        timeout: readinessTimeoutMilliseconds,
-      })
-    ).pipe(
-      Effect.catchTag("UnknownError", () =>
-        describePage(page, changes).pipe(
-          Effect.flatMap((shown) => new UsageDataPromptMissing({ shown }))
-        )
-      )
-    );
-    const before = changes.sent;
-    yield* pressDecline(page, false);
-    yield* Effect.promise(async () => {
-      await expect
-        .poll(() => changes.took(SAVE_CHOICE), {
-          timeout: ANSWER_MILLISECONDS,
-        })
-        .toBe(true);
-      await saved(changes, before);
-    });
+    yield* answerUsageData(page, changes, "Decline");
   }
 );
+
+/**
+ * Allows the usage data of a signed-in learner until the server has the choice. An
+ * Allow stores only the account's choice, so the browser keeps no anonymous record
+ * that a later visitor of the browser would read.
+ */
+export const allowUsageData = Effect.fn("NakafaE2E.allowUsageData")(function* (
+  page: Page,
+  changes: Changes
+) {
+  yield* answerUsageData(page, changes, "Allow");
+});
 
 /** The footer control that opens the usage-data preferences. */
 export function usageDataTrigger(page: Page) {
@@ -242,14 +247,6 @@ export function seedRawStorage(page: Page, key: string, value: string) {
  */
 export function expectPromptRendered(page: Page) {
   return expect(page.getByText(PROMPT_DESCRIPTION)).toBeAttached();
-}
-
-/** The account marker that this browser holds, or null when it holds none. */
-export function storedAccountMarker(page: Page) {
-  return page.evaluate(
-    (key) => localStorage.getItem(key),
-    ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY
-  );
 }
 
 /** Whether the document root carries the mark that the bootstrap writes before paint. */

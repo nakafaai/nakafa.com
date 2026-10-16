@@ -1,10 +1,7 @@
 import {
-  ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
-  type AnalyticsConsentAccountMarker,
   type AnonymousAnalyticsConsentRecord,
   decodeAnonymousAnalyticsConsent,
-  encodeAnalyticsConsentAccountMarker,
   encodeAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
 import { Effect, Option, Schema } from "effect";
@@ -52,27 +49,6 @@ export const loadAnonymousAnalyticsConsent = Effect.fn(
   }
 
   return decodeAnonymousAnalyticsConsent(persisted);
-});
-
-/**
- * Records the signed-in account's confirmed choice and its session in this
- * browser, so the next page decides before paint for that session only.
- */
-export const saveAnalyticsConsentAccountMarker = Effect.fn(
-  "www.analytics.saveAnalyticsConsentAccountMarker"
-)(function* (
-  marker: AnalyticsConsentAccountMarker,
-  storage?: AnalyticsConsentStorage
-) {
-  const target = yield* getAnalyticsConsentStorage(storage);
-  const encoded = yield* encodeAnalyticsConsentAccountMarker(marker).pipe(
-    Effect.mapError(analyticsConsentStorageFailure)
-  );
-
-  yield* Effect.try({
-    try: () => target.setItem(ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY, encoded),
-    catch: analyticsConsentStorageFailure,
-  });
 });
 
 /** Persists one explicit anonymous browser decision under the current notice. */

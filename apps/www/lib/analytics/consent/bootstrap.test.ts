@@ -1,26 +1,27 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
-  type AnalyticsConsentAccountMarker,
+  ANALYTICS_CONSENT_ROOT_ATTRIBUTE,
+  ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   type AnalyticsConsentState,
   CONSENT_NOTICE_VERSIONS,
-  decodeAnalyticsConsentAccountMarker,
   decodeAnonymousAnalyticsConsent,
   hasBrowserPrivacySignal,
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT,
   ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY,
+  markAnalyticsConsentRoot,
+  READ_RECORD_SCRIPT,
   resolveAnalyticsConsentMark,
 } from "@/lib/analytics/consent/bootstrap";
-import { EXPECTED_SESSION } from "@/lib/auth/keys";
+import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
 const CURRENT = ANALYTICS_CONSENT_NOTICE_VERSION;
 const OLDER = CONSENT_NOTICE_VERSIONS[1];
 const SESSION = "session-1";
-const OTHER_SESSION = "session-2";
 
 const JsonRecordSchema = Schema.fromJsonString(
   Schema.Record(Schema.String, Schema.Unknown)
@@ -28,6 +29,9 @@ const JsonRecordSchema = Schema.fromJsonString(
 
 /** Writes an object as the JSON text a browser stores, whatever its fields hold. */
 const storedJson = Schema.encodeSync(JsonRecordSchema);
+
+/** Writes one text as a JavaScript string literal, the way the bootstrap script embeds its constants. */
+const jsString = Schema.encodeSync(Schema.fromJsonString(Schema.String));
 
 /** The stored anonymous record, with the fields a case changes. */
 function anonymous(overrides: Readonly<Record<string, unknown>> = {}) {
@@ -41,23 +45,12 @@ function anonymous(overrides: Readonly<Record<string, unknown>> = {}) {
   });
 }
 
-/** The stored account marker, with the fields a case changes. */
-function marker(overrides: Readonly<Record<string, unknown>> = {}) {
-  return storedJson({
-    granted: true,
-    noticeVersion: CURRENT,
-    sessionId: SESSION,
-    ...overrides,
-  });
-}
-
 /**
  * One case: the stored values and browser signal, and what the page must do with
  * them. `decided` names the decided mark. A known session that is not decided is
  * pending, because the store waits for that session's answer.
  */
 const BootstrapCaseSchema = Schema.Struct({
-  accountMarker: Schema.optionalKey(Schema.String),
   anonymousRecord: Schema.optionalKey(Schema.String),
   decided: Schema.Boolean,
   doNotTrack: Schema.optionalKey(Schema.String),
@@ -70,7 +63,7 @@ type BootstrapCase = typeof BootstrapCaseSchema.Type;
 
 /**
  * The reader the table passes, with the same answer as the page's: an object, or
- * undefined for anything else. The script test below runs the page's own reader.
+ * undefined for anything else. The reader test below runs the page's own reader.
  */
 const readRecord = (text: string) =>
   Option.getOrUndefined(Schema.decodeOption(JsonRecordSchema)(text));
@@ -88,58 +81,21 @@ function storeStatusOf(
       ? Option.none()
       : decodeAnonymousAnalyticsConsent(bootstrapCase.anonymousRecord);
 
-  // Without a known session the viewer is anonymous once the browser has its record.
-  if (bootstrapCase.knownSession === undefined) {
-    return resolveAnalyticsConsentState({
-      accountConsent: null,
-      anonymousConsent,
-      hasBrowserPrivacySignal: hasSignal,
-      isAccountConsentResolved: false,
-      isAuthenticated: false,
-      isAuthLoading: false,
-    }).status;
-  }
-
-  // The sign-in on its way keeps the viewer loading until Better Auth answers.
-  if (bootstrapCase.knownSession === EXPECTED_SESSION) {
-    return resolveAnalyticsConsentState({
-      accountConsent: null,
-      anonymousConsent,
-      hasBrowserPrivacySignal: hasSignal,
-      isAccountConsentResolved: false,
-      isAuthenticated: false,
-      isAuthLoading: true,
-    }).status;
-  }
-
-  // A signed-in session reads only the account marker that names it.
-  const named = Option.filter(
-    bootstrapCase.accountMarker === undefined
-      ? Option.none<AnalyticsConsentAccountMarker>()
-      : decodeAnalyticsConsentAccountMarker(bootstrapCase.accountMarker),
-    (stored) => stored.sessionId === bootstrapCase.knownSession
-  );
-  const accountConsent = Option.match(named, {
-    onNone: () => null,
-    onSome: (stored) => ({
-      granted: stored.granted,
-      noticeVersion: stored.noticeVersion,
-    }),
-  });
+  // A known session, or a sign-in on its way, keeps the viewer loading until Better
+  // Auth and Convex answer. Without one, the anonymous record decides.
   return resolveAnalyticsConsentState({
-    accountConsent,
+    accountConsent: null,
     anonymousConsent,
     hasBrowserPrivacySignal: hasSignal,
-    isAccountConsentResolved: accountConsent !== null,
-    isAuthenticated: true,
-    isAuthLoading: false,
+    isAccountConsentResolved: false,
+    isAuthenticated: false,
+    isAuthLoading: bootstrapCase.knownSession !== undefined,
   }).status;
 }
 
 /** The mark the decision resolves for one case, with the table's reader. */
 function markOf(bootstrapCase: BootstrapCase) {
   return resolveAnalyticsConsentMark({
-    accountMarker: bootstrapCase.accountMarker ?? null,
     anonymousRecord: bootstrapCase.anonymousRecord ?? null,
     doNotTrack: bootstrapCase.doNotTrack ?? null,
     globalPrivacyControl: bootstrapCase.globalPrivacyControl,
@@ -274,7 +230,7 @@ const cases: readonly BootstrapCase[] = [
     decided: true,
     doNotTrack: "1",
     knownSession: SESSION,
-    name: "a privacy signal decides with no marker for the session",
+    name: "a privacy signal decides over a signed-in session",
   },
   {
     anonymousRecord: anonymous({ decision: "denied" }),
@@ -289,91 +245,27 @@ const cases: readonly BootstrapCase[] = [
     name: "a sign-in on its way decides nothing, even with an anonymous grant",
   },
   {
-    accountMarker: marker({ sessionId: EXPECTED_SESSION }),
-    decided: false,
-    knownSession: EXPECTED_SESSION,
-    name: "a marker that names the expected session does not decide",
-  },
-  {
     decided: true,
     doNotTrack: "1",
     knownSession: EXPECTED_SESSION,
     name: "a privacy signal decides over a sign-in on its way",
   },
   {
-    accountMarker: marker(),
-    decided: true,
-    knownSession: SESSION,
-    name: "a current grant that the session's marker names",
-  },
-  {
-    accountMarker: marker({ noticeVersion: OLDER }),
     decided: false,
     knownSession: SESSION,
-    name: "an older grant that the session's marker names",
-  },
-  {
-    accountMarker: marker({ granted: false, noticeVersion: OLDER }),
-    decided: true,
-    knownSession: SESSION,
-    name: "a denial under an older notice that the session's marker names",
-  },
-  {
-    accountMarker: marker({ granted: false }),
-    decided: true,
-    knownSession: SESSION,
-    name: "a current denial that the session's marker names",
-  },
-  {
-    accountMarker: marker({ sessionId: OTHER_SESSION }),
-    decided: false,
-    knownSession: SESSION,
-    name: "a current grant marker of another session",
+    name: "a signed-in session holds the prompt until the account answers",
   },
   {
     anonymousRecord: anonymous({ decision: "denied" }),
     decided: false,
     knownSession: SESSION,
-    name: "an anonymous denial with no marker for the session",
+    name: "an anonymous denial does not decide for a signed-in session",
   },
   {
-    decided: false,
-    knownSession: SESSION,
-    name: "a signed-in session with no marker",
-  },
-  {
-    accountMarker: "{",
-    decided: false,
-    knownSession: SESSION,
-    name: "a marker that is not JSON",
-  },
-  {
-    accountMarker: marker({ granted: "yes" }),
-    decided: false,
-    knownSession: SESSION,
-    name: "a marker whose grant is not a boolean",
-  },
-  {
-    accountMarker: marker({ granted: false, noticeVersion: 5 }),
-    decided: false,
-    knownSession: SESSION,
-    name: "a denial marker whose notice is not text",
-  },
-  {
-    accountMarker: marker(),
-    decided: false,
-    name: "a current grant marker with no known session",
-  },
-  {
-    accountMarker: marker({ granted: false, sessionId: OTHER_SESSION }),
-    decided: false,
-    name: "a denial marker of an older session with no known session",
-  },
-  {
-    accountMarker: marker({ sessionId: OTHER_SESSION }),
     anonymousRecord: anonymous(),
-    decided: true,
-    name: "an anonymous grant decides when only another session's marker is stored",
+    decided: false,
+    knownSession: SESSION,
+    name: "an anonymous grant does not decide for a signed-in session",
   },
 ];
 
@@ -391,10 +283,143 @@ describe("analytics consent bootstrap decision", () => {
   }
 
   // The script runs the decision on the source text of the function, so the two
-  // cannot drift. The browser suite runs the real script in a page.
+  // cannot drift. The browser suites run the real script in a production page.
   it("is the decision the inline script calls, so no second copy of the rule exists", () => {
     expect(ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT).toContain(
       `(${resolveAnalyticsConsentMark.toString()})({`
     );
   });
+});
+
+/** Stores one case's values in this browser and makes the navigator report its signals. */
+function arrangeBrowser(bootstrapCase: BootstrapCase) {
+  window.localStorage.clear();
+  if (bootstrapCase.anonymousRecord !== undefined) {
+    window.localStorage.setItem(
+      ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
+      bootstrapCase.anonymousRecord
+    );
+  }
+  if (bootstrapCase.knownSession !== undefined) {
+    window.localStorage.setItem(KNOWN_SESSION_KEY, bootstrapCase.knownSession);
+  }
+  Object.defineProperty(window.navigator, "doNotTrack", {
+    configurable: true,
+    value: bootstrapCase.doNotTrack ?? null,
+  });
+  if (bootstrapCase.globalPrivacyControl !== undefined) {
+    Object.defineProperty(window.navigator, "globalPrivacyControl", {
+      configurable: true,
+      value: bootstrapCase.globalPrivacyControl,
+    });
+  }
+}
+
+/** Puts this browser back as the test found it. */
+function resetBrowser() {
+  window.localStorage.clear();
+  document.documentElement.removeAttribute(ANALYTICS_CONSENT_ROOT_ATTRIBUTE);
+  Reflect.deleteProperty(window.navigator, "doNotTrack");
+  Reflect.deleteProperty(window.navigator, "globalPrivacyControl");
+}
+
+/** The mark the document root carries now, or null for none. */
+function rootMark() {
+  return document.documentElement.getAttribute(
+    ANALYTICS_CONSENT_ROOT_ATTRIBUTE
+  );
+}
+
+describe("analytics consent bootstrap in the document", () => {
+  afterEach(() => {
+    resetBrowser();
+  });
+
+  // The client mount reads the browser's own storage and navigator, so each case's
+  // stored values must mark the root as the decision table says.
+  for (const bootstrapCase of cases) {
+    it.effect(
+      `marks the root as the decision says for ${bootstrapCase.name}`,
+      () =>
+        Effect.gen(function* () {
+          arrangeBrowser(bootstrapCase);
+          yield* markAnalyticsConsentRoot(document.documentElement, {
+            doNotTrack: bootstrapCase.doNotTrack ?? null,
+            globalPrivacyControl: bootstrapCase.globalPrivacyControl,
+          });
+
+          expect(rootMark()).toBe(expectedMarkOf(bootstrapCase));
+        })
+    );
+  }
+
+  it.effect(
+    "marks a signed-in session pending on a page the server did not render",
+    () =>
+      Effect.gen(function* () {
+        window.localStorage.setItem(KNOWN_SESSION_KEY, SESSION);
+
+        yield* markAnalyticsConsentRoot(document.documentElement, {
+          doNotTrack: null,
+          globalPrivacyControl: undefined,
+        });
+
+        expect(rootMark()).toBe("pending");
+      })
+  );
+
+  it.effect("keeps the prompt shown when storage cannot be read", () =>
+    Effect.gen(function* () {
+      const unreadable = {
+        getItem: () => {
+          throw new Error("storage unavailable");
+        },
+      };
+
+      yield* markAnalyticsConsentRoot(
+        document.documentElement,
+        { doNotTrack: null, globalPrivacyControl: undefined },
+        unreadable
+      );
+
+      expect(rootMark()).toBeNull();
+    })
+  );
+});
+
+/**
+ * Runs the shipped reader on one stored text, as the inline script calls it, and
+ * returns its answer as text. The reader is source text rather than a function
+ * this suite compiles, so it runs in the document exactly as the page runs it.
+ */
+function shippedReaderAnswer(text: string) {
+  const script = document.createElement("script");
+  script.textContent = `(function () {
+    var value = (${READ_RECORD_SCRIPT})(${jsString(text)});
+    document.documentElement.setAttribute("data-reader-answer", value === undefined ? "undefined" : JSON.stringify(value));
+  })();`;
+  document.head.append(script);
+  script.remove();
+  const answer = document.documentElement.getAttribute("data-reader-answer");
+  document.documentElement.removeAttribute("data-reader-answer");
+  return answer;
+}
+
+describe("analytics consent bootstrap reader", () => {
+  const readerCases: readonly (readonly [string, string])[] = [
+    [
+      '{"noticeVersion":"privacy-2026-08-22"}',
+      '{"noticeVersion":"privacy-2026-08-22"}',
+    ],
+    ["{", "undefined"],
+    ["null", "undefined"],
+    ["42", "undefined"],
+    ['"text"', "undefined"],
+  ];
+
+  for (const [text, answer] of readerCases) {
+    it(`answers ${answer} for the stored text ${text}`, () => {
+      expect(shippedReaderAnswer(text)).toBe(answer);
+    });
+  }
 });

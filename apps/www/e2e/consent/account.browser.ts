@@ -1,23 +1,18 @@
 import { expect, test } from "@playwright/test";
-import {
-  ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
-  ANALYTICS_CONSENT_NOTICE_VERSION,
-  encodeAnalyticsConsentAccountMarker,
-} from "@repo/analytics/consent";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
+import { trackChanges } from "@/e2e/support/changes";
 import {
+  allowUsageData,
   compactContext,
   expectPromptRendered,
   isRootMarked,
   PROMPT_DESCRIPTION,
-  pressAllow,
   seedAnalyticsConsent,
   seedRawStorage,
   stopAppCode,
-  storedAccountMarker,
 } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
@@ -35,10 +30,7 @@ const AUTH_PAGE = /\/auth(\?|$)/u;
 /** The session the browser last had in the cases that seed one. */
 const KNOWN_SESSION = "session-known";
 
-/** A session that ended without a sign-out, whose marker a browser may still hold. */
-const EXPIRED_SESSION = "session-expired";
-
-test("a signed-in choice this browser keeps hides the prompt before the page hydrates", async ({
+test("a signed-in session hides the prompt before the page hydrates", async ({
   baseURL,
   browser,
 }) => {
@@ -50,14 +42,6 @@ test("a signed-in choice this browser keeps hides the prompt before the page hyd
       (context) =>
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
-          const marker = yield* encodeAnalyticsConsentAccountMarker({
-            granted: true,
-            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-            sessionId: KNOWN_SESSION,
-          });
-          yield* Effect.promise(() =>
-            seedRawStorage(page, ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY, marker)
-          );
           yield* Effect.promise(() =>
             seedRawStorage(page, KNOWN_SESSION_KEY, KNOWN_SESSION)
           );
@@ -157,41 +141,6 @@ test("a sign-in on its way hides the prompt before the page hydrates, then shows
   );
 });
 
-test("an account marker of an expired session does not hide the prompt for a browser with no known session", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  await Effect.runPromise(
-    withBrowserContext(
-      browser,
-      { baseURL: baseURL ?? "", ...compactContext },
-      (context) =>
-        Effect.gen(function* () {
-          const page = yield* Effect.promise(() => context.newPage());
-          const marker = yield* encodeAnalyticsConsentAccountMarker({
-            granted: true,
-            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-            sessionId: EXPIRED_SESSION,
-          });
-          yield* Effect.promise(() =>
-            seedRawStorage(page, ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY, marker)
-          );
-          yield* Effect.promise(() => stopAppCode(page));
-          yield* Effect.promise(() =>
-            page.goto(pinnedRoutes.material.en, {
-              waitUntil: "domcontentloaded",
-            })
-          );
-
-          yield* Effect.promise(() =>
-            expect(page.getByText(PROMPT_DESCRIPTION)).toBeVisible()
-          );
-        })
-    )
-  );
-});
-
 test("a session that ends without a sign-out shows the anonymous prompt once the page knows it", async ({
   baseURL,
   browser,
@@ -201,6 +150,7 @@ test("a session that ends without a sign-out shows the anonymous prompt once the
     withBrowserContext(browser, { baseURL: baseURL ?? "" }, (context) =>
       Effect.gen(function* () {
         const page = yield* Effect.promise(() => context.newPage());
+        const changes = yield* trackChanges(page, []);
         yield* signInLearner(context, baseURL ?? "");
         yield* Effect.promise(() =>
           page.goto(pinnedRoutes.material.en, {
@@ -209,11 +159,8 @@ test("a session that ends without a sign-out shows the anonymous prompt once the
         );
         // Allow stores only the account's choice, so the browser keeps no
         // anonymous denial that would hide the prompt once the session is gone.
-        yield* pressAllow(page, false);
-        // The choice is kept once Convex confirms it, which the marker shows.
-        yield* Effect.promise(() =>
-          expect.poll(() => storedAccountMarker(page)).not.toBeNull()
-        );
+        // The choice is kept once Convex confirms it, which allowUsageData waits for.
+        yield* allowUsageData(page, changes);
 
         // A page that loads with the choice kept hides the prompt at once.
         yield* Effect.promise(() =>
@@ -249,16 +196,14 @@ test("a soft sign-out after an account decision shows the anonymous prompt witho
     withBrowserContext(browser, { baseURL: baseURL ?? "" }, (context) =>
       Effect.gen(function* () {
         const page = yield* Effect.promise(() => context.newPage());
+        const changes = yield* trackChanges(page, []);
         yield* signInLearner(context, baseURL ?? "");
         yield* Effect.promise(() =>
           page.goto(pinnedRoutes.material.en, {
             waitUntil: "domcontentloaded",
           })
         );
-        yield* pressAllow(page, false);
-        yield* Effect.promise(() =>
-          expect.poll(() => storedAccountMarker(page)).not.toBeNull()
-        );
+        yield* allowUsageData(page, changes);
 
         // A page that loads with the choice kept marks the root before paint, and
         // the store removes that mark once it knows the choice.

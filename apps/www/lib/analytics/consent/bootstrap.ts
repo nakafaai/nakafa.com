@@ -1,6 +1,5 @@
 import {
   ANALYTICS_BROWSER_SIGNAL_MECHANISM,
-  ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
   ANALYTICS_CONSENT_CATEGORY,
   ANALYTICS_CONSENT_DENIED,
   ANALYTICS_CONSENT_GRANTED,
@@ -10,14 +9,14 @@ import {
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
-import { Schema } from "effect";
-import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
+import { Effect, Option, Schema } from "effect";
+import type { BrowserPrivacySignal } from "@/lib/analytics/consent/signal";
+import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
 /** The literals the decision compares against, named as the consent store names them. */
 const BootstrapVocabularySchema = Schema.Struct({
   category: Schema.String,
   decisions: Schema.Struct({ denied: Schema.String, granted: Schema.String }),
-  expectedSession: Schema.String,
   mechanisms: Schema.Struct({
     browserSignal: Schema.String,
     privacyControls: Schema.String,
@@ -34,7 +33,6 @@ export const ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY: BootstrapVocabulary = {
     denied: ANALYTICS_CONSENT_DENIED,
     granted: ANALYTICS_CONSENT_GRANTED,
   },
-  expectedSession: EXPECTED_SESSION,
   mechanisms: {
     browserSignal: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
     privacyControls: ANALYTICS_CONSENT_MECHANISM,
@@ -57,7 +55,7 @@ const vocabularyLiteral = (vocabulary: BootstrapVocabulary) =>
  * The page's reader of one stored JSON text, written into the script as source.
  * An unreadable text, or a value that is not an object, reads as undefined.
  */
-const READ_RECORD_SCRIPT = `function (text) {
+export const READ_RECORD_SCRIPT = `function (text) {
   var value;
   try {
     value = JSON.parse(text);
@@ -67,26 +65,30 @@ const READ_RECORD_SCRIPT = `function (text) {
   return value !== null && typeof value === "object" ? value : undefined;
 }`;
 
+const StoredRecordSchema = Schema.fromJsonString(
+  Schema.Record(Schema.String, Schema.Unknown)
+);
+
+/** The reader of a page that the server did not render with the script: the same answer. */
+const readStoredRecord = (text: string) =>
+  Option.getOrUndefined(Schema.decodeOption(StoredRecordSchema)(text));
+
 /**
- * Resolves the mark the inline script writes on the document root before paint,
- * from the raw values this browser holds. It is "decided" when the viewer has
- * already decided for the current notice, "pending" while the store has no answer
- * yet for a sign-in on its way or for a signed-in session, and null when the
- * prompt may show.
+ * Resolves the mark the page writes on the document root before paint, from the raw
+ * values this browser holds. It is "decided" when a browser privacy signal is set,
+ * or when the stored anonymous record decides: a denial under any notice, and a
+ * grant under the current notice only. It is "pending" while a session is known,
+ * whether it is signed in or a sign-in is on its way, because the store waits for
+ * Better Auth, Convex, and the account's choice before it knows the status. It is
+ * null when the prompt may show.
  *
  * The inline script is built from this function's source text, so it refers to
  * nothing outside its body: every value arrives as an argument, and so does the
- * reader that turns a stored text into a record. The page passes JSON parsing. The
- * unit table passes a generic JSON record reader, and the script test runs the
- * page's own reader through the real script. This runs before any import, the
- * same exception AGENTS.md names for code that Playwright serializes into the
- * page. It mirrors `resolveAnalyticsConsentState` in the consent store: "decided"
- * exactly when the store's status is neither prompt nor pending once it answers.
- * Every other signed-in session is "pending", because the store waits for Better
- * Auth, Convex, and the account's choice before it knows the status.
+ * reader that turns a stored text into a record. The script passes JSON parsing,
+ * and the client passes a Schema reader. This runs before any import, the same
+ * exception AGENTS.md names for code that Playwright serializes into the page.
  */
 export function resolveAnalyticsConsentMark({
-  accountMarker,
   anonymousRecord,
   doNotTrack,
   globalPrivacyControl,
@@ -95,7 +97,6 @@ export function resolveAnalyticsConsentMark({
   readRecord,
   vocabulary,
 }: {
-  readonly accountMarker: string | null;
   readonly anonymousRecord: string | null;
   readonly doNotTrack: string | null | undefined;
   readonly globalPrivacyControl: unknown;
@@ -115,32 +116,15 @@ export function resolveAnalyticsConsentMark({
     return "decided";
   }
 
-  // A sign-in on its way holds the prompt until Better Auth names its session.
-  if (knownSession === vocabulary.expectedSession) {
+  // A known session holds the prompt until the store knows the account's choice,
+  // since the first paint cannot read that choice. A sign-in on its way is a known
+  // session too, because the browser has no id for it yet.
+  if (knownSession !== null) {
     return "pending";
   }
 
-  // A signed-in session holds the prompt until the store knows the account's
-  // choice, since the first paint cannot tell whether the account has one. A
-  // marker that names the session and decides the choice marks the page as
-  // decided. Either way the mark stays until the store has the answer, so the
-  // prompt cannot show before then. A denial decides under any notice, and a
-  // grant under the current one only.
-  if (knownSession !== null) {
-    const marker =
-      accountMarker === null ? undefined : readRecord(accountMarker);
-    const granted = marker?.granted;
-    const markerNotice = marker?.noticeVersion;
-    const isMarkerDecided =
-      marker?.sessionId === knownSession &&
-      typeof granted === "boolean" &&
-      typeof markerNotice === "string" &&
-      (!granted || markerNotice === noticeVersion);
-    return isMarkerDecided ? "decided" : "pending";
-  }
-
-  // Without a signed-in session, the anonymous record decides, under the same
-  // rule: a denial under any notice, and a grant under the current one only.
+  // Without a known session, the anonymous record decides under the same rule: a
+  // denial under any notice, and a grant under the current notice only.
   const record =
     anonymousRecord === null ? undefined : readRecord(anonymousRecord);
   let isKnownNotice = false;
@@ -177,7 +161,6 @@ export function resolveAnalyticsConsentMark({
 export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
   try {
     var mark = (${resolveAnalyticsConsentMark.toString()})({
-      accountMarker: localStorage.getItem(${literal(ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY)}),
       anonymousRecord: localStorage.getItem(${literal(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)}),
       doNotTrack: navigator.doNotTrack,
       globalPrivacyControl: "globalPrivacyControl" in navigator ? navigator.globalPrivacyControl : undefined,
@@ -193,3 +176,34 @@ export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
     // Storage that cannot be read keeps the prompt shown.
   }
 })();`;
+
+/**
+ * Marks the document root before paint on a page the server rendered without the
+ * inline script, such as the first app page that a soft navigation opens. It reads
+ * the stored values the script reads and writes the same mark, so both agree.
+ * Storage that cannot be read keeps the prompt shown.
+ */
+export const markAnalyticsConsentRoot = Effect.fn(
+  "www.analytics.markAnalyticsConsentRoot"
+)(function* (
+  root: Pick<HTMLElement, "setAttribute">,
+  privacySignal: BrowserPrivacySignal,
+  storage?: Pick<Storage, "getItem">
+) {
+  const mark = yield* Effect.try(() => {
+    const target = storage ?? window.localStorage;
+    return resolveAnalyticsConsentMark({
+      anonymousRecord: target.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY),
+      doNotTrack: privacySignal.doNotTrack,
+      globalPrivacyControl: privacySignal.globalPrivacyControl,
+      knownSession: target.getItem(KNOWN_SESSION_KEY),
+      noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+      readRecord: readStoredRecord,
+      vocabulary: ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY,
+    });
+  }).pipe(Effect.orElseSucceed(() => null));
+
+  if (mark !== null) {
+    root.setAttribute(ANALYTICS_CONSENT_ROOT_ATTRIBUTE, mark);
+  }
+});

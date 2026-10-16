@@ -35,17 +35,10 @@ export const ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY =
   "nakafa-analytics-consent";
 
 /**
- * Browser storage key that holds the signed-in account's last confirmed choice,
- * with the session it belongs to. The choice itself stays in Convex; this key
- * only lets the next page decide before paint, and only for that same session.
- */
-export const ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY =
-  "nakafa-analytics-consent-account";
-
-/**
- * The attribute the inline script sets on the document root while the usage-data
- * prompt must wait, before paint. The consent provider removes it once the store
- * knows the choice, or knows that it cannot load it.
+ * The attribute the page sets on the document root while the usage-data prompt must
+ * wait, before paint: the inline script on a page the server rendered, and the
+ * consent provider on a page it mounts. The consent provider removes it once the
+ * store knows the choice, or knows that it cannot load it.
  */
 export const ANALYTICS_CONSENT_ROOT_ATTRIBUTE = "data-analytics-consent";
 
@@ -100,26 +93,6 @@ export const decodeAnonymousAnalyticsConsent = Schema.decodeUnknownOption(
 
 export const encodeAnonymousAnalyticsConsent = Schema.encodeEffect(
   AnonymousAnalyticsConsentSchema
-);
-
-/** The account marker: the session and the confirmed choice that a browser keeps. */
-const AnalyticsConsentAccountMarkerSchema = Schema.Struct({
-  granted: Schema.Boolean,
-  noticeVersion: Schema.String,
-  sessionId: Schema.String,
-});
-
-export type AnalyticsConsentAccountMarker =
-  typeof AnalyticsConsentAccountMarkerSchema.Type;
-
-/** Encodes the account marker as the JSON text the browser stores. */
-export const encodeAnalyticsConsentAccountMarker = Schema.encodeEffect(
-  Schema.fromJsonString(AnalyticsConsentAccountMarkerSchema)
-);
-
-/** Reads the stored account marker, or none when its text is not a valid marker. */
-export const decodeAnalyticsConsentAccountMarker = Schema.decodeUnknownOption(
-  Schema.fromJsonString(AnalyticsConsentAccountMarkerSchema)
 );
 
 /** Creates the exact anonymous record persisted after a browser decision. */
