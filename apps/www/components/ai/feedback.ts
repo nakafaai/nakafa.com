@@ -10,6 +10,7 @@ import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { Effect, Option, Schema } from "effect";
 import { toast } from "sonner";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 /**
  * A transport failure leaves the mutation's outcome unconfirmed. A call refused
@@ -23,6 +24,21 @@ export class NinaConnectionError extends Schema.TaggedError<NinaConnectionError>
     message: Schema.String,
   }
 ) {}
+
+/** A call refused while offline shows the connection failure and its retry, without a report. */
+export function requireNinaConnection(
+  convex: Parameters<typeof requireConvexOnline>[0]
+) {
+  return requireConvexOnline(convex).pipe(
+    Effect.mapError(
+      (offline) =>
+        new NinaConnectionError({
+          code: "NINA_OFFLINE",
+          message: offline.message,
+        })
+    )
+  );
+}
 
 export type NinaFailure =
   | Ref.Error<typeof nina.turns.start>

@@ -4,7 +4,8 @@ import { captureException } from "@repo/analytics/posthog/browser";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
-import { Array as Arr, Effect, Option, Record as Rec } from "effect";
+import { Array as Arr, Effect, Fiber, Option, Record as Rec } from "effect";
+import { TestClock } from "effect/testing";
 import { toast } from "sonner";
 import {
   NinaConnectionError,
@@ -12,6 +13,7 @@ import {
   ninaFailureLimits,
   promptRefusal,
   reportNinaFailure,
+  requireNinaConnection,
 } from "@/components/ai/feedback";
 import { aiTranslator, NO_BREAK } from "@/test/ai";
 
@@ -192,5 +194,76 @@ describe("the sentences of the failure table", () => {
           `${size} `
         );
       })
+  );
+});
+
+type Connection = Parameters<typeof requireNinaConnection>[0];
+type ConnectionState = ReturnType<Connection["connectionState"]>;
+
+/** A Convex connection whose socket is up or down, as the Convex client reports it. */
+function connection(connected: boolean): Connection {
+  const state: ConnectionState = {
+    connectionCount: 1,
+    connectionRetries: 0,
+    hasEverConnected: true,
+    hasInflightRequests: false,
+    inflightActions: 0,
+    inflightMutations: 0,
+    isWebSocketConnected: connected,
+    timeOfOldestInflightRequest: null,
+  };
+  return {
+    connectionState: () => state,
+    subscribeToConnectionState: vi.fn(() => () => undefined),
+  };
+}
+
+describe("the connection a Nina call waits on", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.effect(
+    "refuses a call made offline as NINA_OFFLINE, without waiting for a socket",
+    () =>
+      Effect.gen(function* () {
+        vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+        const convex = connection(false);
+
+        const failure = yield* Effect.flip(requireNinaConnection(convex));
+
+        expect(failure).toMatchObject({
+          _tag: "NinaConnectionError",
+          code: "NINA_OFFLINE",
+        });
+        expect(convex.subscribeToConnectionState).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "refuses as NINA_OFFLINE when no socket connects within five seconds",
+    () =>
+      Effect.gen(function* () {
+        vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+        const fiber = yield* Effect.forkChild(
+          Effect.flip(requireNinaConnection(connection(false)))
+        );
+
+        yield* TestClock.adjust("5 seconds");
+        const failure = yield* Fiber.join(fiber);
+
+        expect(failure).toMatchObject({
+          _tag: "NinaConnectionError",
+          code: "NINA_OFFLINE",
+        });
+      })
+  );
+
+  it.effect("lets a call start at once while the socket is connected", () =>
+    Effect.gen(function* () {
+      vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+
+      yield* requireNinaConnection(connection(true));
+    })
   );
 });

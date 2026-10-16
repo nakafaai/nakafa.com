@@ -51,6 +51,7 @@ export function AiChatError({ failed }: { failed: boolean }) {
   const retry = useChat((state) => state.retry);
   const canWrite = useChat((state) => state.canWrite);
   const busy = useChat((state) => state.busy);
+  const isLoading = useChat((state) => state.isLoading);
   if (!error && (turn?.state.status !== "failed" || failed)) {
     return null;
   }
@@ -69,7 +70,7 @@ export function AiChatError({ failed }: { failed: boolean }) {
           <p>{t(`failures.${feedback.message}`, ninaFailureLimits)}</p>
           {canWrite && feedback.action === "retry" ? (
             <Button
-              disabled={busy}
+              disabled={busy || isLoading}
               onClick={() => retry()}
               size="sm"
               variant="outline"

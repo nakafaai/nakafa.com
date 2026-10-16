@@ -5,6 +5,9 @@ import {
   NINA_FILE_SIZE,
   NINA_FILENAME_LENGTH,
 } from "@repo/backend/client/nina/uploads";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Array as Arr, Effect } from "effect";
 import {
   chipsIn,
@@ -20,8 +23,17 @@ import {
 } from "@/e2e/support/attachment";
 import { waitForSlide } from "@/e2e/support/layout";
 
-/** The reason of a file that Nina does not read. */
-const TYPES = "Only PNG, JPEG, WebP, GIF, PDF, and text files";
+/** The reasons a notice gives, as the English site words them. */
+const REJECTIONS = en.Ai["attachment-rejections"];
+const TYPES = REJECTIONS.type;
+const LARGER = REJECTIONS.size.replace(
+  "{size, number}",
+  String(NINA_FILE_MEBIBYTES)
+);
+const MANY = REJECTIONS.count.replace(
+  "{count, number}",
+  String(NINA_FILE_COUNT)
+);
 
 /** The part of a notice that gives one reason, with the files it dropped. */
 const reasonIn = (notice: Locator, reason: string) =>
@@ -193,10 +205,8 @@ for (const width of [320, 1440]) {
               NOT_ATTACHED
             );
             await expect(reasonIn(notice, TYPES)).toContainText("essay.docx");
-            await expect(
-              reasonIn(notice, `Larger than ${NINA_FILE_MEBIBYTES} MiB`)
-            ).toContainText("report.pdf");
-            await expect(reasonIn(notice, "Empty file")).toContainText(
+            await expect(reasonIn(notice, LARGER)).toContainText("report.pdf");
+            await expect(reasonIn(notice, REJECTIONS.empty)).toContainText(
               "empty.txt"
             );
             await expect(reasonIn(notice, TYPES)).not.toContainText(
@@ -222,10 +232,7 @@ for (const width of [320, 1440]) {
 
           yield* Effect.promise(async () => {
             await expect(chipsIn(composer)).toHaveCount(NINA_FILE_COUNT);
-            const reason = reasonIn(
-              noticeWith(page, NOT_ATTACHED),
-              `At most ${NINA_FILE_COUNT} files per message`
-            );
+            const reason = reasonIn(noticeWith(page, NOT_ATTACHED), MANY);
             await expect(reason).toContainText("last-1.png");
             await expect(reason).toContainText("last-2.png");
           });
@@ -348,11 +355,11 @@ for (const width of [320, 1440]) {
 
           yield* Effect.promise(async () => {
             const notice = noticeWith(page, NOT_ATTACHED);
-            await expect(reasonIn(notice, "Empty file")).toContainText(
+            await expect(reasonIn(notice, REJECTIONS.empty)).toContainText(
               "empty.txt"
             );
             await expect(chipsIn(composer)).toHaveCount(0);
-            await expect(notice).not.toContainText("Larger than");
+            await expect(notice).not.toContainText(LARGER);
           });
         })
       );
