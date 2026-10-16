@@ -66,11 +66,7 @@ interface Props {
   description: ReactNode;
   title: ReactNode;
   /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
-  trigValues?: {
-    sin?: string;
-    cos?: string;
-    tan?: string;
-  };
+  trigValues?: CardProps["trigValues"];
 }
 
 /**
@@ -128,13 +124,7 @@ function Content({
 }: {
   angle: number;
   live: boolean;
-  trigValues?:
-    | {
-        sin?: string;
-        cos?: string;
-        tan?: string;
-      }
-    | undefined;
+  trigValues?: CardProps["trigValues"];
   viewLabel: string | undefined;
 }) {
   const t = useTranslations("Common");
