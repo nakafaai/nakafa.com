@@ -240,18 +240,6 @@ export default CronJobs.make()
   )
   .add(
     /**
-     * Deletes the editor-session records that a snapshot covers, once they were last
-     * submitted more than the keep delay ago.
-     */
-    CronJob.make(
-      "prune covered editor sessions",
-      PRUNE_INTERVAL,
-      internal.editor.prune.sweepClients,
-      { cursor: null }
-    )
-  )
-  .add(
-    /**
      * Starts a run for each inbox cursor that a change left pending, if the run
      * that the change scheduled never happened.
      */

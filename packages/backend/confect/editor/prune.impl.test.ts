@@ -141,7 +141,7 @@ describe("editor/prune sweep", () => {
   );
 
   it.effect(
-    "deletes a session record a snapshot covers once the session was last submitted the keep delay ago",
+    "keeps the record of a batch that landed, so a client away past the sweeps learns that it landed",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -151,6 +151,7 @@ describe("editor/prune sweep", () => {
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
         });
+        // The reply to this batch is lost, so its client never learns that it landed.
         yield* teacher.mutation(steps.submit, {
           batch: yield* batchText(0, "rina", 3),
           documentId: made.id,
@@ -163,91 +164,28 @@ describe("editor/prune sweep", () => {
           slug: nf,
           version: 3,
         });
-        const young = yield* fixture.internal.mutation(prune.sweepClients, {
-          cursor: null,
-        });
-        expect(young).toEqual({ deleted: 0, done: true, scanned: 1 });
         vi.setSystemTime(TENANCY_NOW + LONG_AGO);
-        const old = yield* fixture.internal.mutation(prune.sweepClients, {
-          cursor: null,
-        });
-        expect(old).toEqual({ deleted: 1, done: true, scanned: 1 });
-        expect(yield* fixture.run(clientRows)).toEqual([]);
-      })
-  );
-
-  it.effect(
-    "keeps a session record whose version the snapshot does not cover, however old it is",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(documents.create, {
-          content: paragraphText("Soal"),
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-        });
-        yield* teacher.mutation(steps.submit, {
-          batch: yield* batchText(0, "rina", 3),
+        yield* fixture.internal.mutation(prune.sweep, { cursor: null });
+        expect(yield* fixture.run(stepRows)).toEqual([]);
+        // The client comes back after the sweeps: its record still says that its batch
+        // landed at version 3, so the client drops the batch and does not replay it.
+        const reopened = yield* teacher.query(documents.open, {
+          clientId: "rina",
           documentId: made.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
+        expect(reopened.client).toMatchObject({ version: 3 });
+        expect(yield* fixture.run(clientRows)).toHaveLength(1);
+        const behind = yield* teacher.query(steps.since, {
+          clientId: "rina",
           documentId: made.id,
           slug: nf,
-          version: 3,
+          version: 0,
         });
-        yield* fixture.as("admin").mutation(steps.submit, {
-          batch: yield* batchText(3, "hendra", 1),
-          documentId: made.id,
-          slug: nf,
+        expect(behind).toMatchObject({
+          _tag: "behind",
+          client: { version: 3 },
         });
-        vi.setSystemTime(TENANCY_NOW + LONG_AGO);
-        const swept = yield* fixture.internal.mutation(prune.sweepClients, {
-          cursor: null,
-        });
-        expect(swept).toEqual({ deleted: 1, done: true, scanned: 2 });
-        expect(
-          Arr.map(yield* fixture.run(clientRows), (row) => row.clientId)
-        ).toEqual(["hendra"]);
-      })
-  );
-
-  it.effect(
-    "reads the session records in pages, starting the next page until the table is read",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(documents.create, {
-          content: paragraphText("Soal"),
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-        });
-        // One session per step, so the head reaches 65 and every session holds a record.
-        for (const index of Arr.makeBy(65, (step) => step)) {
-          yield* teacher.mutation(steps.submit, {
-            batch: yield* batchText(index, `rina-${index}`, 1),
-            documentId: made.id,
-            slug: nf,
-          });
-        }
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId: made.id,
-          slug: nf,
-          version: 65,
-        });
-        vi.setSystemTime(TENANCY_NOW + LONG_AGO);
-        const firstPage = yield* fixture.internal.mutation(prune.sweepClients, {
-          cursor: null,
-        });
-        expect(firstPage).toMatchObject({ deleted: 64, done: false });
-        yield* fixture.finishScheduled();
-        expect(yield* fixture.run(clientRows)).toEqual([]);
       })
   );
 

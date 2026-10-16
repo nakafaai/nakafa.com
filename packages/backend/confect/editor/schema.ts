@@ -49,15 +49,15 @@ export const editorStepValidator = StoredStepSchema.mapFields(
 
 /**
  * The record of one editor session on one document: the account that owns the
- * session, the last batch the server accepted from it and the version that batch
- * produced, and when the session last submitted (ADR 0028). A retried batch is
- * answered from this row, and a co-editor cannot submit under the session.
+ * session, and the last batch the server accepted from it and the version that batch
+ * produced (ADR 0028). A retried batch is answered from this row, a co-editor cannot
+ * submit under the session, and the row stays until its document is deleted, because
+ * a client that was away may still need it to learn whether its batch landed.
  */
 export const editorClientValidator = Schema.Struct({
   author: Id("users"),
   batch: BatchIdSchema,
   clientId: ClientIdSchema,
   documentId: Id("editorDocuments"),
-  seenAt: Schema.Finite,
   version: VersionSchema,
 });

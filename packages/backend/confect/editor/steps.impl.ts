@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/confect/editor/view";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { Array as Arr, Clock, Effect, Layer, Option } from "effect";
+import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /** The reply that carries the head and the steps the log still keeps after the version. */
 const stepsReply = (
@@ -121,7 +121,6 @@ const submit = FunctionImpl.make(
       .table("editorDocuments")
       .patch(document._id, { head: admitted.version })
       .pipe(Effect.orDie);
-    const seenAt = yield* Clock.currentTimeMillis;
     if (Option.isNone(record)) {
       yield* writer
         .table("editorClients")
@@ -130,7 +129,6 @@ const submit = FunctionImpl.make(
           batch: batch.batch,
           clientId: batch.clientId,
           documentId: document._id,
-          seenAt,
           version: admitted.version,
         })
         .pipe(Effect.orDie);
@@ -139,7 +137,6 @@ const submit = FunctionImpl.make(
         .table("editorClients")
         .patch(record.value._id, {
           batch: batch.batch,
-          seenAt,
           version: admitted.version,
         })
         .pipe(Effect.orDie);
