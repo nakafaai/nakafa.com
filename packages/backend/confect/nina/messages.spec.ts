@@ -31,7 +31,9 @@ export class NinaReadError extends Schema.TaggedError<NinaReadError>()(
 // Exit: no call of `nina/messages:list` for the 12-hour skew window after that
 // deploy, read from the production logs.
 // Cleanup: one change deletes `list`, its implementation, its tests, its
-// bindings, and the schemas below that only `list` uses.
+// bindings, the schemas below that only `list` uses, and the check of `list` in
+// `response.impl.test.ts`, which `conversation.turns` already covers for a
+// failed turn.
 
 /** A message of `list`: the message as Agent lists it, with the turn it answers. */
 const ListMessage = Schema.Struct({

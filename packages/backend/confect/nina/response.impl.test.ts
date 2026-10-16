@@ -133,6 +133,8 @@ describe("The Nina response run when generation fails", () => {
         const state = yield* Effect.promise(f.inspect);
         expect(state.turn?.state).toMatchObject({ status: "failed", reason });
         expect(state.user?.credits).toBe(10);
+        // `list` is read for the turn metadata that tabs opened before `page`
+        // still use. `page` returns no metadata, so this check goes with `list`.
         const page = yield* Effect.promise(() =>
           f.owner.query(
             Ref.getFunctionReference(refs.public.nina.messages.list),
