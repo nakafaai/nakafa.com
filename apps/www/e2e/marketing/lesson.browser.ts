@@ -170,6 +170,9 @@ test("home lesson window keeps its visual mounted once the window has left the s
               yield* openRoute(page, "/id", "denied");
               const visual = visualNamed(page, PROJECTILE_VIEW);
               yield* Effect.promise(() =>
+                page.locator("#lesson").scrollIntoViewIfNeeded()
+              );
+              yield* Effect.promise(() =>
                 expect(visual).toBeAttached({
                   timeout: readinessTimeoutMilliseconds,
                 })
@@ -215,12 +218,12 @@ test("home lesson window keeps its height once its visual is mounted", async ({
               yield* openRoute(page, "/id", "denied");
               const panel = lessonPanel(page);
               yield* Effect.promise(() =>
+                page.locator("#lesson").scrollIntoViewIfNeeded()
+              );
+              yield* Effect.promise(() =>
                 expect(visualNamed(page, PROJECTILE_VIEW)).toBeAttached({
                   timeout: readinessTimeoutMilliseconds,
                 })
-              );
-              yield* Effect.promise(() =>
-                page.locator("#lesson").scrollIntoViewIfNeeded()
               );
 
               const heights = MutableList.make<number>();
@@ -268,6 +271,9 @@ test("home lesson placeholder holds still with reduced motion while its visual l
                 LOADING_HOLD_MS
               );
               yield* openRoute(page, "/id", "denied");
+              yield* Effect.promise(() =>
+                page.locator("#lesson").scrollIntoViewIfNeeded()
+              );
               // The placeholder sits in an aria-hidden frame, so the role is matched in the markup.
               const spinner = page.locator("#lesson [role='status']").first();
               yield* Effect.promise(() => expect(spinner).toBeVisible());
