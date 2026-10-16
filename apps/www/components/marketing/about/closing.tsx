@@ -2,6 +2,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
+import type { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { ClosingQuestion } from "@/components/marketing/about/closing/question.client";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
@@ -13,7 +14,7 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 export function Closing() {
   const t = useTranslations("Landing");
   const locale = useLocale();
-  const topics = [
+  const topics: Arr.NonEmptyReadonlyArray<string> = [
     t("closing-topic-0"),
     t("closing-topic-1"),
     t("closing-topic-2"),

@@ -8,7 +8,9 @@ import {
   useMergedRef,
   useReducedMotion,
 } from "@mantine/hooks";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
   Tabs,
   TabsList,
@@ -52,8 +54,39 @@ const LessonCopySchema = Schema.Struct({
 type LessonCopy = typeof LessonCopySchema.Type;
 
 interface LessonWindowProps {
+  /** The decimal separator of the page's locale, which the physics visual writes its numbers with. */
+  readonly decimalSeparator: DecimalSeparator;
   readonly label: string;
   readonly lessons: Record<Lesson, LessonCopy>;
+}
+
+/**
+ * The visual of one lesson. It mounts while the window is in the viewport and
+ * stays mounted while the reader has focus inside it, so a control that has
+ * focus is never removed: some browsers send no focus event for a removed
+ * control, and the window would keep waiting for a reader who has left. Out of
+ * view the frame stays still, with no spinner turning.
+ */
+function LessonScene({
+  decimalSeparator,
+  inViewport,
+  lesson,
+}: {
+  readonly decimalSeparator: DecimalSeparator;
+  readonly inViewport: boolean;
+  readonly lesson: Lesson;
+}) {
+  const { focused, ref } = useFocusWithin();
+
+  return (
+    <div className="grid" ref={ref}>
+      {inViewport || focused ? (
+        <LessonVisual decimalSeparator={decimalSeparator} lesson={lesson} />
+      ) : (
+        <div aria-hidden="true" className={threeSceneFrameVariants()} />
+      )}
+    </div>
+  );
 }
 
 /**
@@ -62,9 +95,13 @@ interface LessonWindowProps {
  * is on screen. It waits while the reader points at it or has focus in it, starts
  * the count again when the reader picks a lesson, and holds still with reduced
  * motion. Only the open lesson's visual is mounted, and only while the window is
- * in the viewport.
+ * in the viewport or the reader has focus inside it.
  */
-export function LessonWindow({ label, lessons }: LessonWindowProps) {
+export function LessonWindow({
+  decimalSeparator,
+  label,
+  lessons,
+}: LessonWindowProps) {
   const { entry, ref: viewRef } = useIntersection({ threshold: 0.5 });
   const { inViewport, ref: viewportRef } = useInViewport();
   const { hovered, ref: hoverRef } = useHover();
@@ -108,10 +145,12 @@ export function LessonWindow({ label, lessons }: LessonWindowProps) {
         </TabsList>
         {Arr.map(LessonSchema.literals, (id) => (
           <TabsPanel className="grid gap-6" key={id} value={id}>
-            <p className="min-h-36 text-pretty text-base lg:min-h-12">
-              {lessons[id].text}
-            </p>
-            {inViewport ? <LessonVisual lesson={id} /> : <ScenePlaceholder />}
+            <p className="text-pretty text-base">{lessons[id].text}</p>
+            <LessonScene
+              decimalSeparator={decimalSeparator}
+              inViewport={inViewport}
+              lesson={id}
+            />
           </TabsPanel>
         ))}
       </Tabs>

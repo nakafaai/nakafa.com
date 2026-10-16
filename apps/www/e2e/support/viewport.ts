@@ -36,3 +36,11 @@ export const tabletPortraitViewport = targetViewports[2];
 
 /** The viewports every try-out suite walks. */
 export const tryoutViewports = [desktopViewport, touchViewport] as const;
+
+/** The width and height of a viewport, as a browser context takes them. */
+export function viewportSize(viewport: {
+  readonly height: number;
+  readonly width: number;
+}) {
+  return { height: viewport.height, width: viewport.width };
+}

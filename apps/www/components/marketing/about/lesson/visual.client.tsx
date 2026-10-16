@@ -1,9 +1,10 @@
 "use client";
 
 import { ATOM_SHELL_SAMPLES } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import dynamic from "next/dynamic";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import type { ComponentType, ReactNode } from "react";
 import type { Lesson } from "@/components/marketing/about/lesson/id";
 import {
@@ -13,8 +14,11 @@ import {
 import { BacteriaStructureLab } from "@/lib/content/renderer/client/biology/bacteria";
 import { AtomShellLab } from "@/lib/content/renderer/client/chemistry/atom";
 import { ParabolicMovementLab } from "@/lib/content/renderer/client/physics/parabolic";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { decimalSeparators } from "@/lib/marketing/decimal";
+
+/** What every lesson visual receives from the window: the page's decimal separator. */
+interface LessonVisualProps {
+  readonly decimalSeparator: DecimalSeparator;
+}
 
 /** Turns the text between the math tags of a translated sentence into a formula. */
 const MATH_TAG = {
@@ -29,13 +33,12 @@ const MathVisual = dynamic(() =>
 );
 
 /** The projectile lesson: a ball thrown at a chosen angle, in three dimensions. */
-function ProjectileVisual() {
+function ProjectileVisual({ decimalSeparator }: LessonVisualProps) {
   const t = useTranslations("Landing");
-  const locale = getLocaleOrThrow(useLocale());
 
   return (
     <ParabolicMovementLab
-      decimalSeparator={decimalSeparators[locale]}
+      decimalSeparator={decimalSeparator}
       description={t("lab.projectile.description")}
       labels={{
         chooseLaunch: t("lab.projectile.choose"),
@@ -181,7 +184,7 @@ function BacteriaVisual() {
 }
 
 /** The product's own visual of each lesson, as a lesson page renders it. */
-const VISUALS: Record<Lesson, ComponentType> = {
+const VISUALS: Record<Lesson, ComponentType<LessonVisualProps>> = {
   cell: BacteriaVisual,
   mole: AtomVisual,
   projectile: ProjectileVisual,
@@ -191,8 +194,12 @@ const VISUALS: Record<Lesson, ComponentType> = {
 /**
  * The visual of one lesson of the home page window. The window loads this module
  * only when it comes into view, so the labs stay out of the first JavaScript.
+ * The locale is read on the server, so this client module imports no server code.
  */
-export function LessonVisual({ lesson }: { readonly lesson: Lesson }) {
+export function LessonVisual({
+  decimalSeparator,
+  lesson,
+}: LessonVisualProps & { readonly lesson: Lesson }) {
   const Visual = VISUALS[lesson];
-  return <Visual />;
+  return <Visual decimalSeparator={decimalSeparator} />;
 }

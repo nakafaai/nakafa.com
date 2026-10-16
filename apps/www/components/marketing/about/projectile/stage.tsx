@@ -116,7 +116,6 @@ export async function ProjectileStage() {
   });
   return (
     <ProjectileClient
-      initialScenario={Arr.headNonEmpty(scenarios)}
       lead={tHome("scene-lead")}
       scenarios={scenarios}
       talk={

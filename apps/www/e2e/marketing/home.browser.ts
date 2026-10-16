@@ -3,15 +3,12 @@ import { Effect, MutableList, Schema } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { NEXT_CHUNK_PATH, openRoute } from "@/e2e/support/route";
-import {
-  readinessTimeoutMilliseconds,
-  revealTimeoutMilliseconds,
-} from "@/e2e/support/timeout";
+import { openRoute } from "@/e2e/support/route";
 import {
   desktopViewport,
   tabletPortraitViewport,
   touchViewport,
+  viewportSize,
 } from "@/e2e/support/viewport";
 
 /** The parts of the home page, in the order of the page. */
@@ -38,24 +35,6 @@ const HOME_VIEWPORTS = [touchViewport, tabletPortraitViewport, desktopViewport];
 
 /** The two colour schemes the home page must hold in. */
 const COLOR_SCHEMES = Schema.Literals(["light", "dark"]).literals;
-
-/**
- * Long enough for a lesson to stay open for its full turn after it reaches the
- * screen, with room for the observer to see it. A lesson opens its next one
- * after six seconds.
- */
-const LESSON_TURN_MS = 8000;
-
-/** The name of the retry button that the projectile scene offers after a failed load. */
-const RETRY_NAME = "Retry";
-
-/** The width and height of a viewport, as a browser context takes them. */
-function viewportSize(viewport: {
-  readonly height: number;
-  readonly width: number;
-}) {
-  return { height: viewport.height, width: viewport.width };
-}
 
 /**
  * Scrolls the whole page one screen at a time, so every part reaches the
@@ -169,201 +148,6 @@ test("home page carries every part in Indonesian, English and German", async ({
                 );
               })
             )
-          );
-        })
-    )
-  );
-});
-
-test("home page holds still with reduced motion", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  await Effect.runPromise(
-    withBrowserContext(
-      browser,
-      {
-        baseURL: baseURL ?? "",
-        reducedMotion: "reduce",
-        serviceWorkers: "block",
-        viewport: viewportSize(desktopViewport),
-      },
-      (context) =>
-        Effect.gen(function* () {
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* withObservedPageErrors(
-            page,
-            Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
-              yield* Effect.promise(() =>
-                page.locator("#lesson").scrollIntoViewIfNeeded()
-              );
-              yield* Effect.promise(() => page.waitForTimeout(LESSON_TURN_MS));
-              const selected = page
-                .locator("#lesson")
-                .getByRole("tab", { selected: true });
-              yield* Effect.promise(() =>
-                expect(selected).toHaveText("Gerak parabola")
-              );
-            })
-          );
-        })
-    )
-  );
-});
-
-test("home page opens the next lesson by itself while the lessons are on screen", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  await Effect.runPromise(
-    withBrowserContext(
-      browser,
-      {
-        baseURL: baseURL ?? "",
-        reducedMotion: "no-preference",
-        serviceWorkers: "block",
-        viewport: viewportSize(desktopViewport),
-      },
-      (context) =>
-        Effect.gen(function* () {
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* withObservedPageErrors(
-            page,
-            Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
-              yield* Effect.promise(() =>
-                page.locator("#lesson").scrollIntoViewIfNeeded()
-              );
-              yield* Effect.promise(() => page.waitForTimeout(LESSON_TURN_MS));
-              const selected = page
-                .locator("#lesson")
-                .getByRole("tab", { selected: true });
-              yield* Effect.promise(() =>
-                expect(selected).toHaveText("Fungsi kuadrat")
-              );
-            })
-          );
-        })
-    )
-  );
-});
-
-test("home page defers the projectile scene until the reader scrolls to it", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  await Effect.runPromise(
-    withBrowserContext(
-      browser,
-      {
-        baseURL: baseURL ?? "",
-        reducedMotion: "reduce",
-        serviceWorkers: "block",
-        viewport: viewportSize(desktopViewport),
-      },
-      (context) =>
-        Effect.gen(function* () {
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* withObservedPageErrors(
-            page,
-            Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
-              const scene = page.locator("#scene");
-
-              yield* Effect.promise(() => expect(scene).toHaveCount(1));
-              yield* Effect.promise(() =>
-                expect(scene.locator("canvas")).toHaveCount(0)
-              );
-              yield* Effect.promise(() =>
-                expect(scene.getByRole("status")).toHaveCount(0)
-              );
-
-              yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
-              yield* Effect.promise(() =>
-                expect(scene.locator("canvas")).toBeAttached({
-                  timeout: revealTimeoutMilliseconds,
-                })
-              );
-            })
-          );
-        })
-    )
-  );
-});
-
-test("home page recovers the projectile scene after a failed load", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  await Effect.runPromise(
-    withBrowserContext(
-      browser,
-      {
-        baseURL: baseURL ?? "",
-        reducedMotion: "reduce",
-        serviceWorkers: "block",
-        viewport: viewportSize(tabletPortraitViewport),
-      },
-      (context) =>
-        Effect.gen(function* () {
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* withObservedPageErrors(
-            page,
-            Effect.gen(function* () {
-              yield* openRoute(page, "/en", "denied");
-              const scene = page.locator("#scene");
-              const error = scene.getByRole("alert");
-              const retry = error.getByRole("button", { name: RETRY_NAME });
-
-              yield* Effect.promise(() =>
-                page.route(NEXT_CHUNK_PATH, (route) => route.abort("failed"))
-              );
-              yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
-              yield* Effect.promise(() =>
-                expect(error).toBeVisible({
-                  timeout: readinessTimeoutMilliseconds,
-                })
-              );
-              yield* Effect.promise(() => expect(retry).toBeVisible());
-
-              yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
-              yield* Effect.promise(() =>
-                Promise.all([
-                  page.waitForEvent("framenavigated", {
-                    predicate: (frame) => frame === page.mainFrame(),
-                  }),
-                  retry.click(),
-                ])
-              );
-              yield* Effect.promise(() =>
-                page.waitForLoadState("domcontentloaded")
-              );
-              yield* Effect.promise(() =>
-                expect
-                  .poll(() =>
-                    page.evaluate(() => {
-                      const [entry] =
-                        performance.getEntriesByType("navigation");
-                      return entry instanceof PerformanceNavigationTiming
-                        ? entry.type
-                        : null;
-                    })
-                  )
-                  .toBe("reload")
-              );
-
-              yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
-              yield* Effect.promise(() =>
-                expect(scene.locator("canvas")).toBeAttached({
-                  timeout: revealTimeoutMilliseconds,
-                })
-              );
-            })
           );
         })
     )

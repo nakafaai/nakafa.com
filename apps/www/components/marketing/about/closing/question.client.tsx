@@ -1,7 +1,7 @@
 "use client";
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { useEffect, useState } from "react";
 
 /** The time between two letters of the topic that is being typed. */
@@ -14,7 +14,7 @@ interface ClosingQuestionProps {
   /** The question as the locale words it, with `{topic}` where the topic goes. */
   readonly template: string;
   /** The topics that take turns in the question. The first one is the one it rests on. */
-  readonly topics: readonly string[];
+  readonly topics: Arr.NonEmptyReadonlyArray<string>;
 }
 
 /**
@@ -29,10 +29,8 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   const [topic, setTopic] = useState(0);
   const [typed, setTyped] = useState(0);
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
-  const current = Option.getOrElse(Arr.get(topics, topic), () => "");
-  const shown = shouldReduceMotion
-    ? Option.getOrElse(Arr.get(topics, 0), () => "")
-    : current.slice(0, typed);
+  const current = topics[topic % topics.length];
+  const shown = shouldReduceMotion ? topics[0] : current.slice(0, typed);
   const longest = Arr.reduce(topics, "", (best, text) =>
     text.length > best.length ? text : best
   );
@@ -42,7 +40,7 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
     if (!playing) {
       return;
     }
-    const topicText = Option.getOrElse(Arr.get(topics, topic), () => "");
+    const topicText = topics[topic % topics.length];
     const finished = typed >= topicText.length;
     const timer = window.setTimeout(
       () => {
