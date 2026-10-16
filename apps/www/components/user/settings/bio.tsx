@@ -14,14 +14,15 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import { cn } from "cn";
 import { Array as Arr, Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateBioMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -91,19 +92,14 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
           </Field>
         </CardContent>
         <CardSectionFooter>
-          <div className="flex w-full items-center justify-between gap-4">
-            <p
-              className={cn(
-                "text-sm",
-                fits ? "text-muted-foreground" : "text-destructive"
-              )}
-            >
-              {t("bio-count", { count, max: BIO_MAX_LENGTH })}
-            </p>
+          <CardSectionHint className={fits ? undefined : "text-destructive"}>
+            {t("bio-count", { count, max: BIO_MAX_LENGTH })}
+          </CardSectionHint>
+          <CardSectionActions>
             <Button disabled={!canSave} size="sm" type="submit">
               {t("save")}
             </Button>
-          </div>
+          </CardSectionActions>
         </CardSectionFooter>
       </CardSection>
     </form>

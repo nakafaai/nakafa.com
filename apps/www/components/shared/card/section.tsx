@@ -15,6 +15,18 @@ const cardSectionVariants = cva("has-data-[slot=card-footer]:pb-0", {
   },
 });
 
+const cardSectionFooterVariants = cva(
+  "min-h-15 items-center justify-end gap-4 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
+  {
+    variants: {
+      bottomSheet: {
+        false: "",
+        true: "max-md:rounded-none max-md:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))]",
+      },
+    },
+  }
+);
+
 /**
  * A titled card that frames one self-contained section. Compose the design
  * system's card header, title, description, and content inside it, then end
@@ -35,21 +47,44 @@ export function CardSection({
 }
 
 /**
- * Holds a section's actions in a bar that follows its section variant. The bar
- * is as tall with a line of text alone as with a button, so every card ends the
- * same way.
+ * Holds a section's sentence and actions in one row at every width: the
+ * sentence on the left, the actions on the right. The bar is as tall with a
+ * line of text alone as with a button, so every card ends the same way.
+ * `bottomSheet` ends a phone's bottom sheet with square bottom corners and the
+ * safe area below its actions.
  */
 export function CardSectionFooter({
-  className,
+  bottomSheet,
   ...props
-}: ComponentProps<typeof CardFooter>) {
+}: Omit<ComponentProps<typeof CardFooter>, "className"> &
+  VariantProps<typeof cardSectionFooterVariants>) {
   return (
     <CardFooter
-      className={cn(
-        "min-h-15 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
-        className
-      )}
+      className={cardSectionFooterVariants({ bottomSheet })}
       {...props}
     />
   );
+}
+
+/**
+ * The one sentence that says what a section's actions do. It takes the free
+ * width on the left of its footer. A caller may change only its text color.
+ */
+export function CardSectionHint({ className, ...props }: ComponentProps<"p">) {
+  return (
+    <p
+      className={cn("min-w-0 flex-1 text-muted-foreground text-sm", className)}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Holds a section's actions on the right of its footer, side by side at their
+ * full size, so a footer with only actions keeps them on the right too.
+ */
+export function CardSectionActions(
+  props: Omit<ComponentProps<"div">, "className">
+) {
+  return <div className="flex shrink-0 items-center gap-2" {...props} />;
 }

@@ -33,7 +33,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateUsernameMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -140,14 +142,12 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
           </Field>
         </CardContent>
         <CardSectionFooter>
-          <div className="flex w-full items-center justify-between gap-4">
-            <p className="text-muted-foreground text-sm">
-              {t("username-footer")}
-            </p>
+          <CardSectionHint>{t("username-footer")}</CardSectionHint>
+          <CardSectionActions>
             <Button disabled={!reply.canSave} size="sm" type="submit">
               {t("save")}
             </Button>
-          </div>
+          </CardSectionActions>
         </CardSectionFooter>
       </CardSection>
     </form>

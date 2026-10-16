@@ -58,9 +58,7 @@ export function AnalyticsConsentControls() {
             <CardContent className="min-h-0 flex-1 overflow-y-auto">
               <ConsentDetails error={consent.error} />
             </CardContent>
-            <CardFooter className="flex-col gap-2 sm:flex-row sm:justify-end max-sm:[&>[data-slot=button]]:w-full">
-              {actions}
-            </CardFooter>
+            <CardFooter className="justify-end gap-2">{actions}</CardFooter>
           </Card>
         </section>
       ) : null}

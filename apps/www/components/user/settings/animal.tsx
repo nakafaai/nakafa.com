@@ -20,7 +20,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateMascotMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -101,8 +103,8 @@ export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
         </ul>
       </CardContent>
       <CardSectionFooter>
-        <div className="flex w-full items-center justify-between gap-4">
-          <p className="text-muted-foreground text-sm">{t("animal-footer")}</p>
+        <CardSectionHint>{t("animal-footer")}</CardSectionHint>
+        <CardSectionActions>
           <Button
             onClick={() => setSeed(Effect.runSync(Random.nextInt))}
             size="sm"
@@ -111,7 +113,7 @@ export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
           >
             {t("animal-shuffle")}
           </Button>
-        </div>
+        </CardSectionActions>
       </CardSectionFooter>
     </CardSection>
   );
