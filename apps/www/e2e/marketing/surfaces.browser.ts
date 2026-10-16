@@ -19,16 +19,10 @@ import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
- * Raw Community markup is dominated by the 16 contributor Characters, each one
- * animal drawn as a single svg. Rendering the section on the server counts 278
- * total descendants, 42 non-SVG descendants, and 32,351 bytes. The same count
- * gave 755, 220, and 210,970 for the avatars that the animals replaced, the
- * figures that protected #330 had measured. These ceilings leave about six
- * percent regression room.
- *
- * The homepage ceiling falls by the 477 descendants that those avatars carried,
- * so it keeps the room above the five production viewports that it had: they
- * measured 2390 to 2394 body descendants under the ceiling of 2540.
+ * These ceilings guard the markup of the marketing pages. They were measured
+ * before the home page drew its current parts: the Community section now draws
+ * the crowd of animals in `CROWD_HERD`, not the contributor gallery. Measure
+ * them again on a production build before they guard new markup.
  */
 const COMMUNITY_MAX_CHROME_DESCENDANTS = 45;
 const COMMUNITY_MAX_DESCENDANTS = 295;

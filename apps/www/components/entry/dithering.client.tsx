@@ -6,10 +6,8 @@ import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
 
 /**
- * This artwork's own canvas budget. Each artwork module keeps its own value,
- * such as CURRICULA_SHADER_PIXEL_BUDGET, and this one equals the hero field's
- * value today. The dither block still spans two CSS pixels, so only the
- * field's resolution changes.
+ * The pixel budget of this artwork's canvas. The shader lowers its render
+ * resolution on large or high-density screens to stay within it, up to rounding.
  */
 const DITHERING_PIXEL_BUDGET = 1_200_000;
 

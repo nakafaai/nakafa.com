@@ -10,7 +10,7 @@ context for it. A wide-screen browser without WebGL2 used to show a blank area
 and an unhandled error. Now the page keeps its plain background there, and a
 failed load of the artwork no longer replaces the page.
 
-Visitors who prefer reduced motion see a still picture. The canvas uses the
-same pixel budget as the hero artwork, so large screens draw fewer pixels. The
+Visitors who prefer reduced motion see a still picture. The canvas draws at
+about 1.2 million pixels, so large screens render at a lower resolution. The
 shader's code now loads on demand instead of with the first JavaScript of these
 pages.
