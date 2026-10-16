@@ -6,7 +6,10 @@ Accepted for the Nakafa School foundation. Amended on 13 October 2026 for the
 organisation tier, the neutral concepts, the country profile above units, and
 the account's home cell. Amended on 14 October 2026 for periods, cohorts,
 placements, people, invites, homeroom assignments, promotions, operators, and
-visits as they are built.
+visits as they are built. Amended on 16 October 2026 for the rule of a removed
+homeroom teacher, the write modules that own each cohort, period, and homeroom
+write, the move check on submit, and the lease that makes a stalled promotion run
+resumable.
 The school subdomains and their URL tree are in ADR 0026, and the country
 profile is in ADR 0032.
 
@@ -205,6 +208,16 @@ must be an active Teacher of the cohort's unit, and the assignment opens that
 cohort to them through the `homeroom` relation of ADR 0012. Assigning and ending
 one write `assignment.created` and `assignment.removed` in the same transaction.
 
+A removed teacher holds no slot. Removing a Person keeps their homeroom row as the
+record, and every reader of a cohort's homeroom treats that row as no homeroom
+teacher. `unassign` answers `null` and keeps the row, a promotion copy skips a
+removed source teacher, and the undo of a created cohort does not count the row as
+a holder. The writes that need the slot replace the row first and journal
+`assignment.removed`: `assign` replaces it, a promotion copy replaces it in a cohort
+that holds it, and the undo of a created cohort clears it together with the cohort.
+The `homeroom` relation names the holder of the cohort, and a removed teacher cannot
+be its caller, because only an active member reaches a relation.
+
 ### Promotions
 
 A promotion moves the students of one source period into the next period of the
@@ -216,8 +229,10 @@ cohort a destination, which is a cohort of the plan, `graduate`, or `stay` (the
 target cohort with the same name and grade). A student may have a destination of
 their own, which overrides their cohort's. A draft changes no roster row. The
 Admin submits the plan, which is checked against the source period as it stands,
-and the principal approves it (`approved`) or returns it to `draft` with a reason
-code. The Admin applies an approved promotion (`applied`), and opening its target
+and every student's move is checked too: a move to a target the plan no longer has
+refuses the submit with the reason `moves` (`PromotionPlanInvalid`). The principal
+approves the plan (`approved`) or returns it to `draft` with a reason code. The
+Admin applies an approved promotion (`applied`), and opening its target
 period (`opened`) ends it. The Admin cancels a draft or a submitted promotion
 (`cancelled`).
 
@@ -228,9 +243,15 @@ plan names. A run does one step or one page of students and schedules the next
 failure, with its step and page, on the promotion, and the next apply resumes
 there. A run that finds its school archived or its tenant suspended stops with
 `AccessDenied`, as a public write would be refused, and resumes once the lock
-lifts. Students move in pages of 100 (`PROMOTION_PAGE_SIZE`), so no run reads or
-writes more than one page of students. The cohort and homeroom steps each run
-once, and the 200-cohort limit of a period bounds them.
+lifts. Every write of a run records `movedAt`, the time it last moved. A run that
+has not moved for `PROMOTION_RUN_LEASE`, two minutes, counts as stopped. A page is
+one mutation that takes far under a second, so a run that quiet has stopped without
+a failure, such as a database defect that rolled its transaction back. Apply resumes
+such a run at its step and page, and undo backs it out through the paths of a stopped
+apply. A run that moved within the lease is refused with `PromotionState`. Students
+move in pages of 100 (`PROMOTION_PAGE_SIZE`), so no run reads or writes more than one
+page of students. The cohort and homeroom steps each run once, and the 200-cohort
+limit of a period bounds them.
 
 The plan and what applying created are rows of the promotion: its targets and
 sources, and the cohorts (`created`) and homeroom assignments (`copies`) that undo
@@ -255,8 +276,9 @@ a placement made by hand in another cohort of the target period stays. A created
 cohort that still holds a student, a homeroom teacher, or a class is refused
 (`PromotionCohortOccupied`), and the source period is refused while another period
 of the unit is active (`PeriodActive`). A stopped apply can be undone: its finished
-steps are undone, and a stopped place step that had written a page first removes the
-placements that apply wrote, on every page of the source period. Undoing the first
+steps are undone, and a stopped place step that had written a page first walks every
+page of the source period, as the place step does, and removes the placements that
+apply wrote on each page. Undoing the first
 step returns the promotion to `approved`, so it can be applied again. Undo is refused
 once the target period is open.
 
@@ -486,6 +508,19 @@ beside the old School. Four steps followed, in this order, and all four are done
 - Internal: `tenancy/promotion/run:run` runs one step or one page of a promotion
   that is being applied or undone, and schedules the next run until the steps
   finish.
+- Writes: each write of a cohort, a homeroom assignment, or a period status is
+  owned by one module of `tenancy/write/`, with its rule checks and its journal
+  record. `cohort` holds `checkCohorts` and `insertCohort`, `assignment` holds
+  `checkHomeroom`, `insertHomeroom`, `removeHomeroom`, and `clearRemovedHomeroom`,
+  and `period` holds `archivePeriod` and `reactivatePeriod`. The public functions
+  and the promotion steps both call them. The folder sits outside the modules that
+  the table definitions import (`tenancy/cohort`, `tenancy/assignment`, and
+  `tenancy/period`): a write needs `authority.ts`, which imports the generated
+  schema, and that schema imports every table, so a write placed in one of those
+  modules would import itself through the table.
+- The submit check of a promotion, `checkMoves` in `tenancy/promotion/check`, reads
+  the moves through `by_promotionId_and_personId` a page at a time, and checks each
+  move against the cohort its student is in through `placementOf`.
 - Operators and visits are built in `operators`: the tables `operators`
   (`by_userId`) and `tenantVisits` (`by_tenantId_and_operatorId_and_state_status`,
   `by_tenantId_and_state_status`, `by_state_status_and_state_expiresAt`), the
@@ -520,8 +555,9 @@ beside the old School. Four steps followed, in this order, and all four are done
   apply never wrote it.
 - A run that stops on an error that is not a typed failure, such as a database
   defect, rolls back its transaction and leaves the promotion marked running with
-  no run scheduled. Apply and undo refuse a running promotion, and no recovery
-  exists yet.
+  no run scheduled. A run that has not moved for `PROMOTION_RUN_LEASE` counts as
+  stopped, so apply resumes it and undo backs it out, as the Promotions section
+  describes. A run that moved within the lease still refuses apply and undo.
 
 ## Rejected Alternatives
 
