@@ -4,12 +4,13 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   createAnonymousAnalyticsConsent,
+  decodeAnalyticsConsentAccountMarker,
 } from "@repo/analytics/consent";
 import { Effect, Option } from "effect";
 import {
   AnalyticsConsentStorageFailed,
   loadAnonymousAnalyticsConsent,
-  saveAnalyticsConsentAccountChoice,
+  saveAnalyticsConsentAccountMarker,
   saveAnonymousAnalyticsConsent,
 } from "@/lib/analytics/consent/storage";
 
@@ -78,13 +79,20 @@ describe("anonymous analytics consent storage", () => {
     })
   );
 
-  it.effect("keeps the signed-in choice marker under the current notice", () =>
+  it.effect("keeps the signed-in marker with the session it names", () =>
     Effect.gen(function* () {
-      yield* saveAnalyticsConsentAccountChoice();
+      const marker = {
+        granted: false,
+        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        sessionId: "session-1",
+      };
+      yield* saveAnalyticsConsentAccountMarker(marker);
 
       expect(
-        window.localStorage.getItem(ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY)
-      ).toBe(ANALYTICS_CONSENT_NOTICE_VERSION);
+        decodeAnalyticsConsentAccountMarker(
+          window.localStorage.getItem(ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY)
+        )
+      ).toEqual(Option.some(marker));
       expect(
         window.localStorage.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)
       ).toBeNull();
@@ -95,12 +103,19 @@ describe("anonymous analytics consent storage", () => {
     "reports a typed error when the account choice marker cannot be kept",
     () =>
       Effect.gen(function* () {
-        const failure = yield* saveAnalyticsConsentAccountChoice({
-          getItem: () => null,
-          setItem: () => {
-            throw new Error("storage unavailable");
+        const failure = yield* saveAnalyticsConsentAccountMarker(
+          {
+            granted: true,
+            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+            sessionId: "session-1",
           },
-        }).pipe(Effect.flip);
+          {
+            getItem: () => null,
+            setItem: () => {
+              throw new Error("storage unavailable");
+            },
+          }
+        ).pipe(Effect.flip);
 
         expect(failure).toBeInstanceOf(AnalyticsConsentStorageFailed);
       })

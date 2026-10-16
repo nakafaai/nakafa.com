@@ -35,14 +35,23 @@ export const ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY =
   "nakafa-analytics-consent";
 
 /**
- * Browser storage key that holds the current notice version once this browser
- * has learned the signed-in account's choice for it. The account choice itself
- * stays in Convex; this key only lets the next page hide the prompt before paint.
+ * Browser storage key that holds the signed-in account's last confirmed choice,
+ * with the session it belongs to. The choice itself stays in Convex; this key
+ * only lets the next page decide before paint, and only for that same session.
  */
 export const ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY =
   "nakafa-analytics-consent-account";
 
-const AnalyticsConsentDecisionSchema = Schema.Literals(["granted", "denied"]);
+/** The decision that grants analytics. */
+export const ANALYTICS_CONSENT_GRANTED = "granted";
+
+/** The decision that denies analytics. */
+export const ANALYTICS_CONSENT_DENIED = "denied";
+
+const AnalyticsConsentDecisionSchema = Schema.Literals([
+  ANALYTICS_CONSENT_GRANTED,
+  ANALYTICS_CONSENT_DENIED,
+]);
 
 export type AnalyticsConsentDecision =
   typeof AnalyticsConsentDecisionSchema.Type;
@@ -84,6 +93,26 @@ export const decodeAnonymousAnalyticsConsent = Schema.decodeUnknownOption(
 
 export const encodeAnonymousAnalyticsConsent = Schema.encodeEffect(
   AnonymousAnalyticsConsentSchema
+);
+
+/** The account marker: the session and the confirmed choice that a browser keeps. */
+const AnalyticsConsentAccountMarkerSchema = Schema.Struct({
+  granted: Schema.Boolean,
+  noticeVersion: Schema.String,
+  sessionId: Schema.String,
+});
+
+export type AnalyticsConsentAccountMarker =
+  typeof AnalyticsConsentAccountMarkerSchema.Type;
+
+/** Encodes the account marker as the JSON text the browser stores. */
+export const encodeAnalyticsConsentAccountMarker = Schema.encodeEffect(
+  Schema.fromJsonString(AnalyticsConsentAccountMarkerSchema)
+);
+
+/** Reads the stored account marker, or none when its text is not a valid marker. */
+export const decodeAnalyticsConsentAccountMarker = Schema.decodeUnknownOption(
+  Schema.fromJsonString(AnalyticsConsentAccountMarkerSchema)
 );
 
 /** Creates the exact anonymous record persisted after a browser decision. */

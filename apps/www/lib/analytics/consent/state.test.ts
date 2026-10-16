@@ -8,10 +8,10 @@ import {
 import { Array as Arr, Option, Struct } from "effect";
 import {
   type BrowserAnalyticsUser,
+  createAccountConsentMarker,
   createBrowserAnalyticsIdentity,
   resolveBrowserAnalyticsConsentState,
   shouldPersistAnonymousAnalyticsDenial,
-  shouldRecordAccountPromptChoice,
   shouldRevokeAccountAnalyticsGrant,
 } from "@/lib/analytics/consent/state";
 
@@ -363,31 +363,52 @@ describe("browser analytics consent state", () => {
     ).toBeNull();
   });
 
-  it("records a signed-in choice only for the current notice", () => {
-    expect([
-      shouldRecordAccountPromptChoice({
+  it("marks a confirmed choice with the session it belongs to, under any notice", () => {
+    expect(
+      createAccountConsentMarker({
         accountConsent,
         isAuthenticated: true,
-      }),
-      shouldRecordAccountPromptChoice({
-        accountConsent: { ...accountConsent, granted: false },
-        isAuthenticated: true,
-      }),
-      shouldRecordAccountPromptChoice({
+        sessionId: "session-1",
+      })
+    ).toEqual({
+      granted: true,
+      noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+      sessionId: "session-1",
+    });
+    expect(
+      createAccountConsentMarker({
         accountConsent: {
           ...accountConsent,
+          granted: false,
           noticeVersion: "privacy-2026-08-21",
         },
         isAuthenticated: true,
-      }),
-      shouldRecordAccountPromptChoice({
+        sessionId: "session-1",
+      })
+    ).toEqual({
+      granted: false,
+      noticeVersion: "privacy-2026-08-21",
+      sessionId: "session-1",
+    });
+  });
+
+  it("marks nothing without a settled signed-in session and a confirmed choice", () => {
+    expect([
+      createAccountConsentMarker({
         accountConsent,
         isAuthenticated: false,
+        sessionId: "session-1",
       }),
-      shouldRecordAccountPromptChoice({
+      createAccountConsentMarker({
+        accountConsent,
+        isAuthenticated: true,
+        sessionId: null,
+      }),
+      createAccountConsentMarker({
         accountConsent: null,
         isAuthenticated: true,
+        sessionId: "session-1",
       }),
-    ]).toEqual([true, true, false, false, false]);
+    ]).toEqual([null, null, null]);
   });
 });

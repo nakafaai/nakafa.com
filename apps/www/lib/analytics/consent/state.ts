@@ -1,6 +1,7 @@
 import type { Ref } from "@confect/core";
 import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
+  type AnalyticsConsentAccountMarker,
   type AnalyticsConsentState,
   type AnonymousAnalyticsConsentRecord,
   AnonymousAnalyticsConsentRecordSchema,
@@ -83,20 +84,28 @@ export function shouldPersistAnonymousAnalyticsDenial({
 }
 
 /**
- * Returns whether this browser must keep the signed-in account's choice for the
- * current notice, so the next page hides the prompt before paint.
+ * The marker this browser keeps of the signed-in account's confirmed choice, with
+ * the session it belongs to. Only a choice that Convex confirmed for a settled
+ * signed-in session is recorded, so a marker never names a session it did not see.
  */
-export function shouldRecordAccountPromptChoice({
+export function createAccountConsentMarker({
   accountConsent,
   isAuthenticated,
+  sessionId,
 }: {
   readonly accountConsent: AccountConsentDecision | null;
   readonly isAuthenticated: boolean;
-}) {
-  return (
-    isAuthenticated &&
-    accountConsent?.noticeVersion === ANALYTICS_CONSENT_NOTICE_VERSION
-  );
+  readonly sessionId: string | null;
+}): AnalyticsConsentAccountMarker | null {
+  if (!isAuthenticated || sessionId === null || accountConsent === null) {
+    return null;
+  }
+
+  return {
+    granted: accountConsent.granted,
+    noticeVersion: accountConsent.noticeVersion,
+    sessionId,
+  };
 }
 
 /** Resolves preview, auth, account, and anonymous consent into one state. */

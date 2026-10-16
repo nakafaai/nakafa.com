@@ -1,35 +1,187 @@
 import {
+  ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY,
+  ANALYTICS_CONSENT_CATEGORY,
+  ANALYTICS_CONSENT_DENIED,
+  ANALYTICS_CONSENT_GRANTED,
+  ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
+  CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
 import { Schema } from "effect";
+import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
+
+/** The attribute that marks the document root once this browser has decided. */
+export const ANALYTICS_CONSENT_DECIDED_ATTRIBUTE = "data-analytics-consent";
+
+/** The literals the decision compares against, named as the consent store names them. */
+const BootstrapVocabularySchema = Schema.Struct({
+  category: Schema.String,
+  decisions: Schema.Struct({ denied: Schema.String, granted: Schema.String }),
+  expectedSession: Schema.String,
+  mechanisms: Schema.Struct({
+    browserSignal: Schema.String,
+    privacyControls: Schema.String,
+  }),
+  noticeVersions: Schema.Array(Schema.String),
+});
+
+type BootstrapVocabulary = typeof BootstrapVocabularySchema.Type;
+
+/** The literals of the consent store, passed into the decision as data. */
+export const ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY: BootstrapVocabulary = {
+  category: ANALYTICS_CONSENT_CATEGORY,
+  decisions: {
+    denied: ANALYTICS_CONSENT_DENIED,
+    granted: ANALYTICS_CONSENT_GRANTED,
+  },
+  expectedSession: EXPECTED_SESSION,
+  mechanisms: {
+    browserSignal: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
+    privacyControls: ANALYTICS_CONSENT_MECHANISM,
+  },
+  noticeVersions: CONSENT_NOTICE_VERSIONS,
+};
 
 const JsonStringSchema = Schema.fromJsonString(Schema.String);
 
 /** Writes one constant as a JavaScript string literal inside the script. */
 const literal = (value: string) => Schema.encodeSync(JsonStringSchema)(value);
 
+/** Writes the vocabulary as a JavaScript object literal inside the script. */
+const vocabularyLiteral = (vocabulary: BootstrapVocabulary) =>
+  Schema.encodeSync(Schema.fromJsonString(BootstrapVocabularySchema))(
+    vocabulary
+  );
+
 /**
- * The inline script that runs before the usage-data prompt paints. It marks the
- * document root when this browser already keeps a choice for the current notice,
- * and the prompt's class hides it from that point on.
+ * The page's reader of one stored JSON text, written into the script as source.
+ * An unreadable text, or a value that is not an object, reads as undefined.
+ */
+const READ_RECORD_SCRIPT = `function (text) {
+  var value;
+  try {
+    value = JSON.parse(text);
+  } catch (error) {
+    return undefined;
+  }
+  return value !== null && typeof value === "object" ? value : undefined;
+}`;
+
+/**
+ * Decides whether this browser's viewer has already decided analytics consent
+ * for the current notice, from the raw values the browser holds.
  *
- * It only reads what the consent store writes: the anonymous decision, and the
- * signed-in choice marker. It never writes a decision. Blocked or malformed
- * storage leaves the prompt shown, as the store does.
+ * The inline script that marks the document root before the app loads is built
+ * from this function's source text, so it refers to nothing outside its body:
+ * every value arrives as an argument, and so does the reader that turns a stored
+ * text into a record. The page passes JSON parsing, and the unit test passes the
+ * store's own decoding. It runs before any import, the same exception AGENTS.md
+ * names for code that Playwright serializes into the page. It mirrors
+ * `resolveAnalyticsConsentState` in the consent store, and the unit test checks
+ * the two case by case.
+ */
+export function isAnalyticsConsentDecidedBeforePaint({
+  accountMarker,
+  anonymousRecord,
+  doNotTrack,
+  globalPrivacyControl,
+  knownSession,
+  noticeVersion,
+  readRecord,
+  vocabulary,
+}: {
+  readonly accountMarker: string | null;
+  readonly anonymousRecord: string | null;
+  readonly doNotTrack: string | null | undefined;
+  readonly globalPrivacyControl: unknown;
+  readonly knownSession: string | null;
+  readonly noticeVersion: string;
+  readonly readRecord: (
+    text: string
+  ) => Readonly<Record<string, unknown>> | undefined;
+  readonly vocabulary: BootstrapVocabulary;
+}): boolean {
+  // A browser privacy signal is a decision of its own, as the store reads it.
+  if (
+    globalPrivacyControl === true ||
+    doNotTrack === "1" ||
+    doNotTrack === "yes"
+  ) {
+    return true;
+  }
+
+  // A sign-in on its way decides nothing until Better Auth names its session.
+  if (knownSession === vocabulary.expectedSession) {
+    return false;
+  }
+
+  // A signed-in session decides only through the account marker it names. A
+  // denial decides under any notice, and a grant under the current one only.
+  if (knownSession !== null) {
+    const marker =
+      accountMarker === null ? undefined : readRecord(accountMarker);
+    const granted = marker?.granted;
+    const markerNotice = marker?.noticeVersion;
+    return (
+      marker?.sessionId === knownSession &&
+      typeof granted === "boolean" &&
+      typeof markerNotice === "string" &&
+      (!granted || markerNotice === noticeVersion)
+    );
+  }
+
+  // Without a signed-in session, the anonymous record decides, under the same
+  // rule: a denial under any notice, and a grant under the current one only.
+  const record =
+    anonymousRecord === null ? undefined : readRecord(anonymousRecord);
+  let isKnownNotice = false;
+  for (const version of vocabulary.noticeVersions) {
+    isKnownNotice ||= version === record?.noticeVersion;
+  }
+  const decidedAt = record?.decidedAt;
+  const isDenied = record?.decision === vocabulary.decisions.denied;
+  const isGranted = record?.decision === vocabulary.decisions.granted;
+  const hasPrivacyControls =
+    record?.mechanism === vocabulary.mechanisms.privacyControls;
+  const hasBrowserSignal =
+    record?.mechanism === vocabulary.mechanisms.browserSignal;
+  return (
+    record !== undefined &&
+    record.category === vocabulary.category &&
+    typeof decidedAt === "number" &&
+    decidedAt >= 0 &&
+    isKnownNotice &&
+    ((isGranted && hasPrivacyControls) ||
+      (isDenied && (hasPrivacyControls || hasBrowserSignal))) &&
+    (isDenied || record.noticeVersion === noticeVersion)
+  );
+}
+
+/**
+ * The inline script that runs before the usage-data prompt paints. It reads what
+ * the consent store writes, asks the decision whether this browser already
+ * decided, and marks the document root when it did. The prompt's class hides the
+ * prompt while that mark stands, and the consent provider removes the mark once
+ * the store knows the choice.
+ *
+ * It never writes a decision. Storage that cannot be read keeps the prompt shown.
  */
 export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
-  var notice = ${literal(ANALYTICS_CONSENT_NOTICE_VERSION)};
   try {
-    var decided =
-      localStorage.getItem(${literal(ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY)}) === notice;
-    var record = localStorage.getItem(${literal(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)});
-    if (!decided && record !== null) {
-      decided = JSON.parse(record).noticeVersion === notice;
-    }
+    var decided = (${isAnalyticsConsentDecidedBeforePaint.toString()})({
+      accountMarker: localStorage.getItem(${literal(ANALYTICS_CONSENT_ACCOUNT_STORAGE_KEY)}),
+      anonymousRecord: localStorage.getItem(${literal(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)}),
+      doNotTrack: navigator.doNotTrack,
+      globalPrivacyControl: "globalPrivacyControl" in navigator ? navigator.globalPrivacyControl : undefined,
+      knownSession: localStorage.getItem(${literal(KNOWN_SESSION_KEY)}),
+      noticeVersion: ${literal(ANALYTICS_CONSENT_NOTICE_VERSION)},
+      readRecord: ${READ_RECORD_SCRIPT},
+      vocabulary: ${vocabularyLiteral(ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY)}
+    });
     if (decided) {
-      document.documentElement.setAttribute("data-analytics-consent", "decided");
+      document.documentElement.setAttribute(${literal(ANALYTICS_CONSENT_DECIDED_ATTRIBUTE)}, "decided");
     }
   } catch (error) {
     // Storage that cannot be read keeps the prompt shown.
