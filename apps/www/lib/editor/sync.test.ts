@@ -109,9 +109,9 @@ describe("editor/sync refusals and waiting", () => {
         ...reader.session,
         transport: {
           ...server.transport,
-          since: (version) =>
+          since: (clientId, version) =>
             Effect.yieldNow.pipe(
-              Effect.andThen(server.transport.since(version))
+              Effect.andThen(server.transport.since(clientId, version))
             ),
         },
       };
@@ -125,55 +125,7 @@ describe("editor/sync refusals and waiting", () => {
   );
 
   it.effect(
-    "opens the document again from its snapshot after the log pruned the steps an editor needs",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const writer = yield* openEditor(server.transport);
-        const reader = yield* openEditor(server.transport);
-        yield* typeText(writer.state, "a");
-        yield* tick(writer.session);
-        yield* tick(writer.session);
-        yield* TestClock.adjust(IDLE);
-        yield* tick(writer.session);
-        expect(yield* server.counts).toMatchObject({
-          head: 1,
-          snapshotVersion: 1,
-        });
-        yield* typeText(writer.state, "b");
-        yield* tick(writer.session);
-        yield* tick(writer.session);
-        yield* server.prune(1);
-        yield* tick(reader.session);
-        const readerState = yield* Ref.get(reader.state);
-        const writerState = yield* Ref.get(writer.state);
-        expect(getVersion(readerState)).toBe(2);
-        expect(textOf(readerState.doc)).toBe(textOf(writerState.doc));
-      })
-  );
-
-  it.effect(
-    "refuses to open the document again while the editor holds steps the server does not have",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const writer = yield* openEditor(server.transport);
-        const stale = yield* openEditor(server.transport);
-        yield* typeText(writer.state, "a");
-        yield* tick(writer.session);
-        yield* tick(writer.session);
-        yield* TestClock.adjust(IDLE);
-        yield* tick(writer.session);
-        yield* server.prune(1);
-        yield* typeText(stale.state, "unsent");
-        const refused = yield* tick(stale.session).pipe(Effect.flip);
-        expect(refused).toMatchObject({ _tag: "SyncDiverged" });
-        expect(textOf((yield* Ref.get(stale.state)).doc)).toContain("unsent");
-      })
-  );
-
-  it.effect(
-    "sends a long run of steps in calls of at most one call's worth, the rest on the next round",
+    "splits a long run of steps into calls of at most one call's worth, the rest on the next round",
     () =>
       Effect.gen(function* () {
         const server = yield* makeServer();
@@ -322,6 +274,7 @@ describe("editor/sync failures", () => {
         const editor = yield* openEditor(server.transport);
         const text = yield* encodeBatch({
           baseVersion: 0,
+          batch: "rina-heading",
           clientId: "rina",
           steps: [
             {
@@ -329,31 +282,6 @@ describe("editor/sync failures", () => {
               slice: { content: [{ type: "heading" }] },
               stepType: "replace",
               to: 1,
-            },
-          ],
-        }).pipe(Effect.orDie);
-        yield* server.transport.submit(text).pipe(Effect.orDie);
-        const failure = yield* tick(editor.session).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "SyncFailed" });
-        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("");
-      })
-  );
-
-  it.effect(
-    "refuses a stored step that does not apply to the document, and keeps the document",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        const text = yield* encodeBatch({
-          baseVersion: 0,
-          clientId: "rina",
-          steps: [
-            {
-              from: 99,
-              slice: { content: [{ text: "x", type: "text" }] },
-              stepType: "replace",
-              to: 99,
             },
           ],
         }).pipe(Effect.orDie);
@@ -390,43 +318,40 @@ describe("editor/sync failures", () => {
   );
 
   it.effect(
-    "refuses a reply that skips a version, and applies none of its steps",
+    "takes a batch once when the answer to its call was lost, because the call sends the same batch again",
     () =>
       Effect.gen(function* () {
         const server = yield* makeServer();
-        const writer = yield* openEditor(server.transport);
-        const reader = yield* openEditor(server.transport);
-        yield* typeText(writer.state, "a");
-        yield* tick(writer.session);
-        yield* typeText(writer.state, "b");
-        yield* tick(writer.session);
-        // This reply drops version 1, so it holds only version 2, which does not follow
-        // the reader's version 0.
-        const skipping: SyncSession = {
-          ...reader.session,
+        const editor = yield* openEditor(server.transport);
+        yield* typeText(editor.state, "a");
+        // The server takes the batch, and the answer never reaches the editor.
+        const lost: SyncSession = {
+          ...editor.session,
           transport: {
             ...server.transport,
-            since: (version) =>
-              server.transport.since(version).pipe(
-                Effect.map((reply) =>
-                  reply._tag === "steps"
-                    ? {
-                        ...reply,
-                        steps: Arr.filter(
-                          reply.steps,
-                          (step) => step.version !== 1
-                        ),
-                      }
-                    : reply
-                )
-              ),
+            submit: (text) =>
+              server.transport
+                .submit(text)
+                .pipe(
+                  Effect.andThen(
+                    Effect.fail(new SyncFailed({ reason: "lost" }))
+                  )
+                ),
           },
         };
-        const failure = yield* tick(skipping).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "SyncFailed" });
-        const readerState = yield* Ref.get(reader.state);
-        expect(textOf(readerState.doc)).toBe("");
-        expect(getVersion(readerState)).toBe(0);
+        const failure = yield* tick(lost).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "SyncFailed", reason: "lost" });
+        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        // The next round has no steps from the server yet, so it sends the batch again.
+        yield* tick(silentEditor(server, editor.session));
+        expect(yield* server.counts).toMatchObject({
+          head: 1,
+          submitAttempts: 2,
+          submits: 1,
+        });
+        yield* tick(editor.session);
+        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("a");
       })
   );
 

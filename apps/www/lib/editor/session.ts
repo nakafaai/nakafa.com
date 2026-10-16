@@ -1,5 +1,8 @@
 import type { VersionStale } from "@repo/backend/confect/editor/batch";
-import type { SnapshotRefused } from "@repo/backend/confect/editor/errors";
+import type {
+  ClientTaken,
+  SnapshotRefused,
+} from "@repo/backend/confect/editor/errors";
 import type {
   OpenedDocument,
   SinceReply,
@@ -21,18 +24,23 @@ export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
 }) {}
 
 /**
- * The server's log no longer keeps the steps this editor is missing, and this
- * editor holds steps the server has not accepted. Opening the document again
- * would drop those steps, so the loop stops and the editor keeps them.
+ * Steps of this editor that the document no longer takes, because another editor
+ * changed the same text while this one was away. The loop reports the count once,
+ * when it opens the document again from its snapshot, so the editor can tell its
+ * user once.
  */
-export class SyncDiverged extends Schema.TaggedError<SyncDiverged>()(
-  "SyncDiverged",
-  {}
+export class SyncDropped extends Schema.TaggedClass<SyncDropped>()(
+  "SyncDropped",
+  {
+    count: Schema.Natural,
+  }
 ) {}
 
 /** The server calls the loop makes. Each one wraps a Convex function, and maps the failures the loop does not decide to `SyncFailed`. */
 export interface SyncTransport {
-  readonly open: Effect.Effect<typeof OpenedDocument.Type, SyncFailed>;
+  readonly open: (
+    clientId: string
+  ) => Effect.Effect<typeof OpenedDocument.Type, SyncFailed>;
   readonly save: (snapshot: {
     readonly content: string;
     readonly version: number;
@@ -41,11 +49,15 @@ export interface SyncTransport {
     SyncFailed | SnapshotRefused
   >;
   readonly since: (
+    clientId: string,
     version: number
   ) => Effect.Effect<typeof SinceReply.Type, SyncFailed>;
   readonly submit: (
     batch: string
-  ) => Effect.Effect<{ readonly head: number }, SyncFailed | VersionStale>;
+  ) => Effect.Effect<
+    { readonly head: number },
+    SyncFailed | VersionStale | ClientTaken
+  >;
 }
 
 /** The editor the loop reads and changes. The caller builds it over a Tiptap editor, or over a plain state in a test. */
@@ -62,14 +74,26 @@ export interface EditorPort {
 }
 
 /**
- * What the loop remembers between rounds. `blockedAt` is the version of the batch
- * last sent, while that batch is in flight or refused: the next batch waits until
- * the server's steps move the version on. `lastChangeAt` is the last time an edit
- * of this document was seen, from this editor or another, and the snapshot rule
- * reads it as the idle time.
+ * The batch this editor made last: its id, how many of its unconfirmed steps it
+ * holds, and the version it was made on. `sent` is true once a call reached the
+ * server and the answer is awaited, so the next round waits for the server's steps
+ * instead of sending it again. A batch whose call failed keeps its id, and the next
+ * round sends the same batch, so the server can answer a repeat of a batch it took.
+ */
+const PendingBatch = Schema.Struct({
+  count: Schema.Natural,
+  id: Schema.String,
+  sent: Schema.Boolean,
+  version: Schema.Natural,
+});
+
+/**
+ * What the loop remembers between rounds. `batch` is the batch in flight, refused,
+ * or failed. `lastChangeAt` is the last time an edit of this document was seen, from
+ * this editor or another, and the snapshot rule reads it as the idle time.
  */
 export const Memory = Schema.Struct({
-  blockedAt: Schema.Option(Schema.Natural),
+  batch: Schema.Option(PendingBatch),
   clientId: Schema.String,
   head: Schema.Natural,
   lastChangeAt: Schema.DateTimeUtc,
@@ -79,14 +103,18 @@ export const Memory = Schema.Struct({
 
 /**
  * One editor's sync with one document: its port, its transport, what it remembers,
- * and its rounds. A round reads the version, waits for the server, and then applies
- * the reply, so two rounds at once would apply one reply twice. The `rounds` lock
- * lets one round run at a time.
+ * and its rounds. `server` is the document at the server's version: the loop applies
+ * the server's steps to it first, so every editor decides the same way whether a
+ * stored step applies, and the editor's own unconfirmed steps stay out of it. A
+ * round reads the version, waits for the server, and then applies the reply, so two
+ * rounds at once would apply one reply twice. The `rounds` lock lets one round run
+ * at a time.
  */
 export interface SyncSession {
   readonly memory: Ref.Ref<typeof Memory.Type>;
   readonly port: EditorPort;
   readonly rounds: Semaphore.Semaphore;
+  readonly server: Ref.Ref<Node>;
   readonly transport: SyncTransport;
 }
 
