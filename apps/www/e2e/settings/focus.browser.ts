@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { MEMORY_LIST_ID } from "@/components/user/settings/memory/focus";
 import { reloadUntil, saved } from "@/e2e/support/changes";
 import {
   LAST_SERVER,
@@ -72,7 +73,7 @@ const deletesToTheList = Effect.fn("NakafaE2E.memoryDeletesToList")(function* (
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
     await expect(editorOf(page)).toHaveCount(0);
     await expect(memoryRow(page, SECOND)).toHaveCount(0);
-    await expect(page.locator("#user-settings-memory-list")).toBeFocused();
+    await expect(page.locator(`#${MEMORY_LIST_ID}`)).toBeFocused();
     await saved(changes, before);
   });
 });
