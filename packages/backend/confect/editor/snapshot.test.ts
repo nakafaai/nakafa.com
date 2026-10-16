@@ -85,6 +85,11 @@ const cases = [
     name: "a last step dated after now is not idle",
     timing: { snapshotAgo: GAP, stepAgo: -1, steps: 1 },
   },
+  {
+    due: false,
+    name: "a last step dated far after now is not idle",
+    timing: { snapshotAgo: GAP, stepAgo: -IDLE * 10, steps: 1 },
+  },
 ];
 
 describe("editor/snapshot rule", () => {
