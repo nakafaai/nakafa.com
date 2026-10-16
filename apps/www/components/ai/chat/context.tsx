@@ -19,6 +19,7 @@ import { useStore } from "zustand";
 import { readChatAccess, readChatArgs } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
 import { optimisticCancel } from "@/components/ai/chat/cancel";
+import { nextAnswer, shownAnswer } from "@/components/ai/chat/kept";
 import { draftMessage } from "@/components/ai/chat/messages";
 import {
   type ChatStoreApi,
@@ -45,7 +46,8 @@ const ChatContext = createContext<ChatContextValue | null>(null);
  * close for that moment and drop the files the learner had attached. The kept
  * answer is only shown: `current` stays false until the server answers again,
  * so nothing acts on a turn that may have moved on. A read that is skipped,
- * while the session changes or the chat is being deleted, keeps nothing.
+ * while the session changes or the chat is being deleted, drops it
+ * (`kept.ts`), so the read that follows never shows another learner's chat.
  */
 function useConversation(
   chatId: Id<"chats">,
@@ -61,17 +63,13 @@ function useConversation(
   if (QueryResult.isFailure(result)) {
     throw result.error;
   }
-  if (QueryResult.isSuccess(result) && result !== answered) {
-    setAnswered(result);
+  const next = nextAnswer(answered, result);
+  if (next !== answered) {
+    setAnswered(next);
   }
-  const current = QueryResult.isSuccess(result);
-  const kept =
-    QueryResult.isLoading(result) &&
-    !result.skipped &&
-    QueryResult.isSuccess(answered);
-  const shown = current ? result : answered;
-  return (current || kept) && QueryResult.isSuccess(shown)
-    ? { chat: shown.value.chat, current, turn: shown.value.turn }
+  const { current, value } = shownAnswer(answered, result);
+  return value
+    ? { chat: value.chat, current, turn: value.turn }
     : { chat: undefined, current, turn: null };
 }
 
