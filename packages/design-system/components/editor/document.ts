@@ -24,24 +24,46 @@ export type DocumentMark =
   | "superscript"
   | "underline";
 
+/** A heading level, which Tiptap numbers from 1 to 6. */
+type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+/**
+ * The rules that make an editor hold one kind of document: the marks it may hold, in
+ * their order, the heading levels it may hold, and the addresses a link may take. This
+ * package holds no contract, so the caller gives the rules, and an assessment document
+ * gives the contract's (ADR 0031).
+ */
+export interface DocumentRules {
+  readonly headingLevels: readonly HeadingLevel[];
+  readonly isLinkAllowed: (href: string) => boolean;
+  readonly marks: readonly DocumentMark[];
+}
+
 /** The priority of the first mark of a list. Each later mark takes one less, so the list sets the order. */
 const TOP_PRIORITY = 1000;
 
 /**
- * The extension of each mark, given its priority. Tiptap sorts extensions by priority,
- * and ProseMirror ranks the marks of a text node in that order, so a mark's priority
- * sets its place. The link extension sets priority 1000 and the other marks keep the
- * default, so the link would rank first. Each mark therefore takes the priority of its
- * place in the list, and the list sets the order.
+ * The extension of each mark, given its priority and the rule of the link addresses.
+ * Tiptap sorts extensions by priority, and ProseMirror ranks the marks of a text node
+ * in that order, so a mark's priority sets its place. The link extension sets priority
+ * 1000 and the other marks keep the default, so the link would rank first. Each mark
+ * therefore takes the priority of its place in the list, and the list sets the order.
  */
-const MARKS: Record<DocumentMark, (priority: number) => AnyExtension> = {
+const MARKS: Record<
+  DocumentMark,
+  (
+    priority: number,
+    isLinkAllowed: DocumentRules["isLinkAllowed"]
+  ) => AnyExtension
+> = {
   bold: (priority) => Bold.extend({ priority }),
   code: (priority) => Code.extend({ priority }),
   italic: (priority) => Italic.extend({ priority }),
-  link: (priority) =>
+  link: (priority, isLinkAllowed) =>
     Link.extend({ priority }).configure({
       autolink: true,
       defaultProtocol: "https",
+      isAllowedUri: isLinkAllowed,
       openOnClick: false,
     }),
   subscript: (priority) => Subscript.extend({ priority }),
@@ -50,26 +72,30 @@ const MARKS: Record<DocumentMark, (priority: number) => AnyExtension> = {
 };
 
 /**
- * The extensions of an editor that holds a document with exactly the marks it is given,
- * in the order it is given them. StarterKit supplies the blocks and the text. Its own
- * marks are off, so no strike is offered, and no highlight is added, because a document
- * writes only the marks of its contract.
+ * The extensions of an editor that holds a document of the given rules. StarterKit
+ * supplies the blocks and the text, with the heading levels of the rules. Its own marks
+ * are off, so no strike and no highlight is offered, and its horizontal rule is off,
+ * because a document of this kind holds no rule (ADR 0031).
  */
-function documentExtensions(marks: readonly DocumentMark[]): AnyExtension[] {
+export function documentExtensions(rules: DocumentRules): AnyExtension[] {
   return [
     StarterKit.configure({
       bold: false,
       code: false,
+      heading: { levels: [...rules.headingLevels] },
+      horizontalRule: false,
       italic: false,
       link: false,
       strike: false,
       underline: false,
     }),
-    ...Arr.map(marks, (mark, index) => MARKS[mark](TOP_PRIORITY - index)),
+    ...Arr.map(rules.marks, (mark, index) =>
+      MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed)
+    ),
   ];
 }
 
-/** The ProseMirror schema of an editor that holds a document with the marks it is given. */
-export function documentSchema(marks: readonly DocumentMark[]): Schema {
-  return getSchema(documentExtensions(marks));
+/** The ProseMirror schema of an editor that holds a document of the given rules. */
+export function documentSchema(rules: DocumentRules): Schema {
+  return getSchema(documentExtensions(rules));
 }

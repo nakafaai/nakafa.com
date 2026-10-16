@@ -116,7 +116,7 @@ describe("editor/sync stored steps that do not apply", () => {
   );
 });
 
-/** A document nested to the bound less one: a paragraph in twelve quotes, held by the `doc` node. */
+/** A document nested to the bound less one: a paragraph in twelve blockquotes, held by the `doc` node. */
 const DEEP_DOCUMENT = encodeJsonText({
   content: [nestedQuote(13).toJSON()],
   type: "doc",
@@ -136,16 +136,16 @@ function paragraphBounds(doc: Node): typeof Bounds.Type | null {
   return found;
 }
 
-/** Wraps every block of the document in one quote, as one local edit of an editor does. */
+/** Wraps every block of the document in one blockquote, as one local edit of an editor does. */
 const wrapDocument = (state: EditorState) => {
   const { doc, schema, tr } = state;
   const range = doc.resolve(0).blockRange(doc.resolve(doc.content.size));
   return range === null
     ? state
-    : state.apply(tr.wrap(range, [{ type: schema.nodes.quote }]));
+    : state.apply(tr.wrap(range, [{ type: schema.nodes.blockquote }]));
 };
 
-/** Wraps the paragraph that holds the text in one quote, as one local edit of an editor does. */
+/** Wraps the paragraph that holds the text in one blockquote, as one local edit of an editor does. */
 const wrapParagraph = (state: EditorState) => {
   const { doc, schema, tr } = state;
   const bounds = paragraphBounds(doc);
@@ -155,7 +155,7 @@ const wrapParagraph = (state: EditorState) => {
       : doc.resolve(bounds.from).blockRange(doc.resolve(bounds.to));
   return range === null
     ? state
-    : state.apply(tr.wrap(range, [{ type: schema.nodes.quote }]));
+    : state.apply(tr.wrap(range, [{ type: schema.nodes.blockquote }]));
 };
 
 describe("editor/sync document bounds", () => {

@@ -1,8 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { storedDocument } from "@repo/backend/confect/editor/document";
+import { NodeTypeSchema } from "@repo/backend/confect/editor/node";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Record as Rec } from "effect";
-import { ASSESSMENT_MARKS, assessmentSchema } from "@/lib/editor/assessment";
+import { Array as Arr, Effect, Record as Rec, String as Str } from "effect";
+import {
+  ASSESSMENT_MARKS,
+  ASSESSMENT_RULES,
+  assessmentSchema,
+} from "@/lib/editor/assessment";
 
 /** The marks of an assessment document in the order the contract writes them (ADR 0031). */
 const CONTRACT_ORDER = [
@@ -28,6 +33,37 @@ const run = (
       )
     )
   );
+
+/** A document of one heading of `level`, as the editor writes it, as JSON text. */
+const headingText = (level: number) =>
+  encodeJsonText({
+    content: [
+      {
+        attrs: { level },
+        content: [{ text: "Judul", type: "text" }],
+        type: "heading",
+      },
+    ],
+    type: "doc",
+  });
+
+/** A document of one paragraph whose text links to `href`, as JSON text. */
+const linkText = (href: string) =>
+  encodeJsonText({
+    content: [
+      {
+        content: [
+          {
+            marks: [{ attrs: { href }, type: "link" }],
+            text: "a",
+            type: "text",
+          },
+        ],
+        type: "paragraph",
+      },
+    ],
+    type: "doc",
+  });
 
 describe("editor/assessment marks", () => {
   it("offers the contract's marks, in the contract's order, and the schema holds exactly them", () => {
@@ -80,6 +116,42 @@ describe("editor/assessment marks", () => {
         });
         const failure = yield* storedDocument(text).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "DocumentInvalid" });
+      })
+  );
+});
+
+describe("editor/assessment rules", () => {
+  it("reads exactly the node types the server admits, with its document root", () => {
+    expect(Arr.sort(Rec.keys(assessmentSchema.nodes), Str.Order)).toEqual(
+      Arr.sort([...NodeTypeSchema.literals, "doc"], Str.Order)
+    );
+  });
+
+  it.effect(
+    "offers the heading levels the contract accepts at the snapshot, and no other",
+    () =>
+      Effect.gen(function* () {
+        const accepted = yield* Effect.filter([1, 2, 3, 4, 5, 6], (level) =>
+          storedDocument(headingText(level)).pipe(
+            Effect.as(true),
+            Effect.catchTag("DocumentInvalid", () => Effect.succeed(false))
+          )
+        );
+        expect(ASSESSMENT_RULES.headingLevels).toEqual(accepted);
+      })
+  );
+
+  it.effect(
+    "takes a link only at an address the contract accepts, and refuses an http address at the snapshot",
+    () =>
+      Effect.gen(function* () {
+        expect(ASSESSMENT_RULES.isLinkAllowed("https://nakafa.com")).toBe(true);
+        expect(ASSESSMENT_RULES.isLinkAllowed("http://nakafa.com")).toBe(false);
+        const refused = yield* storedDocument(
+          linkText("http://nakafa.com")
+        ).pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "DocumentInvalid" });
+        yield* storedDocument(linkText("https://nakafa.com"));
       })
   );
 });

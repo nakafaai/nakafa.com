@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
 import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Option, Ref } from "effect";
+import { Array as Arr, Effect, Logger, MutableList, Option, Ref } from "effect";
 import { TestClock } from "effect/testing";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import {
@@ -270,6 +270,32 @@ describe("editor/sync snapshots", () => {
           saveAttempts: 1,
           saves: 0,
         });
+      })
+  );
+
+  it.effect(
+    "logs the server's refusal of a snapshot's content with its kind",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const editor = yield* openEditor(server.transport);
+        yield* typeText(editor.state, "a");
+        yield* tick(editor.session);
+        yield* TestClock.adjust(IDLE);
+        yield* server.refuseContent(true);
+        const messages = MutableList.make<unknown>();
+        yield* tick(editor.session).pipe(
+          Effect.provide(
+            Logger.layer([
+              Logger.make(({ message }) => {
+                MutableList.append(messages, message);
+              }),
+            ])
+          )
+        );
+        expect(MutableList.toArray(messages)).toEqual([
+          [expect.stringContaining("DocumentInvalid")],
+        ]);
       })
   );
 });

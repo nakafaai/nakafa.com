@@ -20,21 +20,25 @@ import type {
 } from "@/lib/editor/session";
 import { startSync, tick } from "@/lib/editor/sync";
 
-/** The schema of the tests: paragraphs of text, which a text step lands in, and quotes that nest them. */
+/**
+ * The schema of the tests: paragraphs of text, which a text step lands in, and
+ * blockquotes that nest them. The node types are the ones the editor reads (the
+ * server refuses any other), so a test step is one the server stores.
+ */
 const proseSchema = new ProseSchema({
   nodes: {
-    doc: { content: "(paragraph | quote)+" },
+    doc: { content: "(paragraph | blockquote)+" },
     paragraph: { content: "text*", group: "block" },
-    quote: { content: "(paragraph | quote)+", group: "block" },
+    blockquote: { content: "(paragraph | blockquote)+", group: "block" },
     text: { group: "inline", inline: true },
   },
 });
 
-/** A paragraph inside `levels - 1` quotes, so the top node is `levels` levels deep. */
+/** A paragraph inside `levels - 1` blockquotes, so the top node is `levels` levels deep. */
 export const nestedQuote = (levels: number): Node => {
   let node = proseSchema.node("paragraph", null, [proseSchema.text("x")]);
   for (let level = 1; level < levels; level += 1) {
-    node = proseSchema.node("quote", null, [node]);
+    node = proseSchema.node("blockquote", null, [node]);
   }
   return node;
 };
