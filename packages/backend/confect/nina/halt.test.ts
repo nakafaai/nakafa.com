@@ -32,11 +32,6 @@ vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
 
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual };
-});
-
 // Admission freezes the page facts of a prompt; the stop and resend test needs
 // no signed content for them.
 vi.mock("@repo/backend/confect/nina/context", () => ({

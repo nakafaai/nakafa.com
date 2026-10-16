@@ -23,11 +23,6 @@ vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual };
-});
-
 const NOW = Date.UTC(2026, 8, 27, 12);
 const DEADLINE = Duration.toMillis(TURN_DEADLINE);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);

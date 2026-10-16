@@ -21,11 +21,6 @@ vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
     await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
   return { ...actual, readThread: vi.fn(actual.readThread) };
 });
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual };
-});
-
 const NOW = Date.UTC(2026, 8, 27, 12);
 const DEADLINE = Duration.toMillis(TURN_DEADLINE);
 const START = Duration.toMillis(START_DEADLINE);

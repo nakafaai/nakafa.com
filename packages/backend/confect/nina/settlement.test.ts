@@ -20,11 +20,6 @@ vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual };
-});
-
 const NOW = Date.UTC(2026, 8, 27, 12);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
