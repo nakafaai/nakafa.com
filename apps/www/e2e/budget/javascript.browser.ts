@@ -22,6 +22,12 @@ const routeBudgets = [
     name: "English homepage no-scroll graph",
   },
   {
+    decodedBodySize: HOMEPAGE_MAX_DECODED_BYTES,
+    encodedBodySize: HOMEPAGE_MAX_ENCODED_BYTES,
+    href: "/en/pricing",
+    name: "English pricing no-scroll graph",
+  },
+  {
     decodedBodySize: QURAN_MAX_DECODED_BYTES,
     encodedBodySize: QURAN_MAX_ENCODED_BYTES,
     href: appRoutes.quranSurahId,

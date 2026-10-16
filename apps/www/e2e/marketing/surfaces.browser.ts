@@ -202,7 +202,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   yield* loadMarketingPage(page, "/en/pricing");
   yield* Effect.promise(() =>
     expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Start with Free. Move to Pro when you are ready."
+      "Free really means free"
     )
   );
   yield* Effect.promise(() =>
@@ -214,9 +214,23 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   yield* Effect.promise(() =>
     expect(
       page.getByRole("region", {
-        name: "Start with Free. Move to Pro when you are ready.",
+        name: "Free really means free",
       })
-    ).toContainText("3,000 AI credits")
+    ).toContainText("3,000 credits every month to ask Nina")
+  );
+  yield* Effect.promise(() =>
+    expect(
+      page.getByRole("heading", { level: 2, name: "What $8.99 comes to" })
+    ).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator("#comparison")).toContainText("About 2 lattes")
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator("#comparison")).toContainText("$0.30 a day")
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator("#comparison")).toContainText("600 answers from Nina")
   );
   yield* Effect.promise(() =>
     expect(page.getByRole("button", { name: "Get Pro" })).toBeEnabled()
@@ -232,40 +246,41 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   );
 
   const pricingQuestions = page.locator('#faq [data-slot="accordion-trigger"]');
-  yield* Effect.promise(() => expect(pricingQuestions).toHaveCount(20));
+  yield* Effect.promise(() => expect(pricingQuestions).toHaveCount(10));
 
-  const productQuestion = pricingQuestions.filter({
-    hasText: "What can I learn on Nakafa?",
+  // The first question is open when the page loads; the renewal one opens on a click.
+  const renewalQuestion = pricingQuestions.filter({
+    hasText: "When do credits renew?",
   });
-  const productItem = page
+  const renewalItem = page
     .locator('#faq [data-slot="accordion-item"]')
-    .filter({ hasText: "What can I learn on Nakafa?" });
-  const productPanel = productItem.locator('[data-slot="accordion-content"]');
-  yield* Effect.promise(() => productQuestion.click());
+    .filter({ hasText: "When do credits renew?" });
+  const renewalPanel = renewalItem.locator('[data-slot="accordion-content"]');
+  yield* Effect.promise(() => renewalQuestion.click());
   yield* Effect.promise(() =>
-    expect(productQuestion).toHaveAttribute("aria-expanded", "true")
+    expect(renewalQuestion).toHaveAttribute("aria-expanded", "true")
   );
   yield* Effect.promise(() =>
-    expect(productPanel).toHaveAttribute("data-open", "")
+    expect(renewalPanel).toHaveAttribute("data-open", "")
   );
   yield* Effect.promise(() =>
-    expect(productPanel).toHaveCSS("animation-name", "accordion-down")
+    expect(renewalPanel).toHaveCSS("animation-name", "accordion-down")
   );
   yield* Effect.promise(() =>
-    expect(productPanel).toHaveCSS("animation-duration", "0.18s")
+    expect(renewalPanel).toHaveCSS("animation-duration", "0.18s")
   );
   yield* Effect.promise(() =>
-    expect(productQuestion.locator("svg")).toHaveCSS("rotate", "180deg")
+    expect(renewalQuestion.locator("svg")).toHaveCSS("rotate", "180deg")
   );
   yield* Effect.promise(() =>
-    expect(productQuestion.locator("svg")).toHaveCSS(
+    expect(renewalQuestion.locator("svg")).toHaveCSS(
       "transition-duration",
       "0.18s"
     )
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#faq")).toContainText(
-      "primary school through university"
+    expect(renewalPanel).toContainText(
+      "Pro credits renew at the start of every month."
     )
   );
 
@@ -275,7 +290,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   yield* Effect.promise(() => subscriptionQuestion.click());
   yield* Effect.promise(() =>
     expect(page.locator("#faq")).toContainText(
-      "manage or cancel your subscription"
+      "manage or cancel the subscription"
     )
   );
   yield* Effect.promise(() =>
@@ -310,6 +325,16 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
     yield* Effect.promise(() =>
       expect(page.locator("[data-pricing-price-fallback]")).toHaveCount(0)
     );
+    yield* Effect.promise(() =>
+      expect(
+        page.getByRole("heading", { level: 2, name: "$8.99 itu segini" })
+      ).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(page.locator("#comparison")).toContainText(
+        "Kira-kira 2 gelas latte"
+      )
+    );
 
     const observation = yield* observeStablePricingReload(
       page,
@@ -318,6 +343,17 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
     yield* Effect.sync(() => expectStablePricingTransition(observation));
   }
 );
+
+const verifyPricingReducedMotion = Effect.fn(
+  "NakafaE2E.verifyPricingReducedMotion"
+)(function* (page: Page) {
+  yield* loadMarketingPage(page, "/en/pricing");
+  // A thing moves only through a motion that is on for people who allow it.
+  const thing = page.locator('[class*="animate-thing-"]').first();
+  yield* Effect.promise(() =>
+    expect(thing).toHaveCSS("animation-name", "none")
+  );
+});
 
 for (const viewport of targetViewports) {
   test.describe(`marketing surfaces at ${viewport.name}`, () => {
@@ -382,6 +418,22 @@ test.describe("dedicated pricing page", () => {
   }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyPricingNavigation(page))
+    );
+  });
+});
+
+test.describe("dedicated pricing page with reduced motion", () => {
+  test.use({
+    reducedMotion: "reduce",
+    viewport: {
+      height: desktopViewport.height,
+      width: desktopViewport.width,
+    },
+  });
+
+  test("holds its things still", async ({ page }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyPricingReducedMotion(page))
     );
   });
 });
