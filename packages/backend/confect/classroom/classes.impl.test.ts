@@ -51,7 +51,9 @@ describe("classroom/classes read and roles", () => {
         const read = yield* fixture
           .as("teacher")
           .query(get, { classId: made.id, slug: nf });
-        yield* fixture.as("owner").mutation(grants.revoke, { grantId, slug: nf });
+        yield* fixture
+          .as("owner")
+          .mutation(grants.revoke, { grantId, slug: nf });
         const refused = yield* fixture
           .as("teacher")
           .query(get, { classId: made.id, slug: nf })
