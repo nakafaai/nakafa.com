@@ -60,7 +60,7 @@ describe("auth/deletion/readiness", () => {
       expect(prepare).toHaveBeenCalledOnce();
     })
   );
-  it.effect.each(["failure", "defect"] as const)(
+  it.effect.each(["failure", "defect"])(
     "sanitizes adapter %s without retrying inside the auth request",
     (kind) =>
       Effect.gen(function* () {
