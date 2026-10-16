@@ -110,7 +110,8 @@ export function createWorld(
  * steps as its time holds, and keeps the rest for the next frame. The lean of
  * every ball and the fade of the pointer's speed change once per frame, as the
  * pool is drawn once per frame. The pool is at rest only when no step of the
- * frame moved a ball faster than the rest speed.
+ * frame moved a ball faster than the rest speed. A frame too short for one step
+ * moves nothing, so it keeps the reading of the frame before.
  */
 export function tick(world: World, seconds: number): World {
   const frame = Math.min(seconds, LONGEST_FRAME);
@@ -122,7 +123,8 @@ export function tick(world: World, seconds: number): World {
     walked = step(walked, STEP, frame);
     fastestStep = Math.max(fastestStep, walked.moved);
   }
-  const resting = isResting({ ...walked, moved: fastestStep });
+  const moved = count === 0 ? world.moved : fastestStep;
+  const resting = isResting({ ...walked, moved });
   return {
     ...walked,
     balls: Arr.map(walked.balls, (ball) => ({
@@ -130,7 +132,7 @@ export function tick(world: World, seconds: number): World {
       tilt: tiltOf(ball, resting),
     })),
     carry: owed - count * STEP,
-    moved: fastestStep,
+    moved,
     pointer: fadePointer(walked.pointer),
   };
 }

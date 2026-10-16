@@ -254,6 +254,13 @@ describe("the frames and their steps", () => {
     expect(rest.carry).toBeCloseTo(STEP * 0.2, 12);
   });
 
+  it("keeps the reading of the frame before when a frame is too short to run a step", () => {
+    const busy: World = { ...boxWith([ballAt({ y: 100 })]), moved: 100 };
+    const short = tick(busy, STEP / 2);
+    expect(short.moved).toBe(100);
+    expect(isResting(short)).toBe(false);
+  });
+
   it("moves the pool no further than the longest frame, however long the frame took", () => {
     const world = boxWith([ballAt({ y: 100 })]);
     expect(tick(world, 10)).toEqual(tick(world, LONGEST_FRAME));
