@@ -80,6 +80,8 @@ describe("access/kind declarations", () => {
       "invite.revoked",
       "grant.created",
       "grant.ended",
+      "person.reactivated",
+      "person.suspended",
     ]);
   });
 });

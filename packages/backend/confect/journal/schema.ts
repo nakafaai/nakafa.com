@@ -10,6 +10,8 @@ import { Schema, SchemaGetter } from "effect";
 export const TenantActor = Schema.Union([
   /** A member acting inside a tenant. */
   Schema.Struct({ id: Id("tenantPeople"), kind: Schema.Literal("person") }),
+  /** Nakafa staff acting outside a visit, such as to open or suspend a school. */
+  Schema.Struct({ id: Id("operators"), kind: Schema.Literal("operator") }),
   /** Scheduled or cascading work. */
   Schema.Struct({ kind: Schema.Literal("system") }),
 ]).pipe(Schema.toTaggedUnion("kind"));

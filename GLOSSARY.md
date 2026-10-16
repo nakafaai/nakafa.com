@@ -155,6 +155,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Cohort**: A rombel, the administrative class group that rapor, promotion, and Dapodik use. It is separate from a Classroom.
 - **Cohort placement**: One student's Cohort in one Period, for a student with a Student grant over the Cohort's unit or over the whole tenant. A student holds at most one placement per Period, and the placement opens its Cohort to them through the `cohortMember` relation.
 - **Classroom**: The learning space for one subject in one Cohort, or one per Cohort in SD.
+- **Class**: One subject taught to one Cohort in one Period, named for the subject and the cohort, such as Fisika X-1, with an address built the same way. A class without a subject is the homeroom class of an SD cohort. Its students are the Persons placed in its Cohort, and its subject teachers are the Persons assigned to it. Its Classroom is the learning space that opens from it.
 - **Person**: Someone in one tenant, separate from a User. A Person can exist before any account and is claimed later; an account holds at most one Person per tenant.
 - **Claim**: Binding a Person to the account that controls the Person's invite address. It happens automatically when an account's verified email equals the address of an unexpired invite, the tenant is active, and the tenant's email domains admit the address; it is the one place an account is matched by its email. The journal records the claim method.
 - **Invite**: A pending offer of one Person to the account whose verified email equals its address. It expires 14 days after it is created, and an expired invite is never claimed; a resend sends the same invite again without moving that date.
@@ -173,5 +174,5 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Journal**: The one record of audited changes for every space, written in the same transaction as the change and read by the audit log and by consumers.
 - **Journal entry**: One immutable audited change: its owner space, actor, subject, and change, holding IDs and codes only.
 - **Published change type**: A change type its kind exposes to journal consumers such as notifications, webhooks, and exports.
-- **Operator**: Nakafa staff who provision tenants. Not the school's Admin, whom Indonesian schools also call operator sekolah.
-- **Operator visit**: An operator's temporary, audited Auditor grant inside one tenant, approved by the school's Owner or Admin and ended on schedule.
+- **Operator**: Nakafa staff who open and suspend schools, and enter a school only on an approved visit. Not the school's Admin, whom Indonesian schools also call operator sekolah.
+- **Operator visit**: An operator's temporary, audited Auditor grant inside one school, requested by the operator and approved by the school's Owner or Admin. It ends when the operator leaves or deletes its account, when the school ends it, or at its term of at most 24 hours.

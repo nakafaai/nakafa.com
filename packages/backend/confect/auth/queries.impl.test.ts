@@ -4,6 +4,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 
 const NOW = Date.UTC(2026, 8, 4, 12, 0, 0);
 
@@ -48,15 +49,18 @@ describe("authenticated user query contracts", () => {
     );
     const args = { userId: user.userId };
     expect(await t.query(api.auth.queries.getUserById, args)).toEqual({
+      mascot: MASCOT_CODE,
       name: "User public-profile",
     });
     await t.mutation((ctx) =>
       ctx.db.patch("users", user.userId, {
         image: "https://example.com/user.png",
+        mascot: "crab.1.6d4b78.left.smile",
       })
     );
     expect(await t.query(api.auth.queries.getUserById, args)).toEqual({
       image: "https://example.com/user.png",
+      mascot: "crab.1.6d4b78.left.smile",
       name: "User public-profile",
     });
     await t.mutation((ctx) => ctx.db.delete("users", user.userId));

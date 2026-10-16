@@ -14,6 +14,7 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest, type TestConvex } from "convex-test";
 import { Array as Arr, Effect, Order } from "effect";
 
@@ -37,6 +38,7 @@ async function insertEnqueuedIntent(
       credits: 0,
       creditsResetAt: 0,
       email: `${suffix}@example.com`,
+      mascot: MASCOT_CODE,
       name: `Synthetic ${suffix}`,
       plan: "free",
     });
@@ -76,6 +78,7 @@ async function insertScheduledIntent(
       credits: 0,
       creditsResetAt: 0,
       email: `${suffix}@example.com`,
+      mascot: MASCOT_CODE,
       name: `Synthetic ${suffix}`,
       plan: "free",
     })

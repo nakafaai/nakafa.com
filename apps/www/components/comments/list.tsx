@@ -8,7 +8,7 @@ import {
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { randomUuid } from "@repo/utilities/uuid";
-import { Array as Arr, DateTime, Effect, Schema } from "effect";
+import { Array as Arr, DateTime, Effect, Schema, Struct } from "effect";
 import { useTranslations } from "next-intl";
 import { useOptimistic } from "react";
 import { toast } from "sonner";
@@ -56,6 +56,7 @@ export function CommentsList({ slug }: { slug: string }) {
       slug,
       user: {
         _id: user.appUser._id,
+        ...Struct.pick(user.appUser, ["mascot"]),
         name: user.authUser.name,
         image: user.authUser.image ?? null,
       },
