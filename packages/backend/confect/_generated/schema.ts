@@ -40,6 +40,7 @@ import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
 import learningPopularityCounters from "./tables/learningPopularityCounters";
@@ -58,6 +59,7 @@ import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
+import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
 import programBuckets from "./tables/programBuckets";
@@ -136,6 +138,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
+  readonly journalCursors: typeof journalCursors;
   readonly journalEntries: typeof journalEntries;
   readonly learningEngagementQueue: typeof learningEngagementQueue;
   readonly learningPopularityCounters: typeof learningPopularityCounters;
@@ -154,6 +157,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
+  readonly notifications: typeof notifications;
   readonly onboardingProfiles: typeof onboardingProfiles;
   readonly operators: typeof operators;
   readonly programBuckets: typeof programBuckets;
@@ -231,6 +235,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,
+  journalCursors,
   journalEntries,
   learningEngagementQueue,
   learningPopularityCounters,
@@ -249,6 +254,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   ninaSummaries,
   ninaTurns,
   ninaUploads,
+  notifications,
   onboardingProfiles,
   operators,
   programBuckets,
