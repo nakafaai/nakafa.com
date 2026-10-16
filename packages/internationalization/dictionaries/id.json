@@ -425,6 +425,8 @@
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
     "provider-error": "Kami tidak dapat melanjutkan dengan Google. Coba lagi.",
+    "sign-in-title": "Masuk ke Nakafa",
+    "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",
     "login": "Masuk",
     "login-cta-title": "Lanjutkan belajarmu",
@@ -529,6 +531,7 @@
     "text": "Teks memori",
     "placeholder": "Tulis yang perlu Nina ingat",
     "missing": "Memori ini sudah tidak ada",
+    "limit": "Tunggu sebentar sebelum menyimpan lagi",
     "too-long": "Teks itu terlalu panjang untuk satu memori",
     "title": "Judul",
     "untitled": "Tanpa judul",
@@ -691,6 +694,7 @@
     "sheet-description": "Tanya Nina, tutor AI Nakafa, tentang yang sedang kamu pelajari.",
     "chats": "Obrolan",
     "search-chats": "Cari obrolan kamu...",
+    "search-older": "Cari obrolan yang lebih lama",
     "rename-chat": "Ubah nama obrolan",
     "delete-chat": "Hapus obrolan",
     "delete-chat-description": "Yakin ingin menghapus obrolan ini? Nggak bisa dikembalikan lho.",
@@ -909,7 +913,7 @@
     "terms-and-policies": "Syarat dan Kebijakan",
     "terms-of-service": "Syarat dan Ketentuan",
     "privacy-policy": "Kebijakan Privasi",
-    "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
+    "legal-description": "Dengan masuk, kamu setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> serta <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "AnalyticsConsent": {
     "title": "Data penggunaan",

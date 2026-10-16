@@ -20,7 +20,7 @@ import spec from "@repo/backend/confect/nina/response.spec";
 import { refreshSummary } from "@repo/backend/confect/nina/summary";
 import { makeTiming } from "@repo/backend/confect/nina/timing";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
-import { type Cause, Effect, Exit, Layer } from "effect";
+import { type Cause, Effect, Exit, Layer, Option } from "effect";
 
 /**
  * Notes that a generation ended because its turn was halted, whichever of the
@@ -59,22 +59,31 @@ const run = FunctionImpl.make(
           new NinaGenerationError({ reason: "service-configuration" })
         )
       ),
+      // What the history of the prompt cost is known only for an answer that
+      // ended well. The settlement stores it with the stages the run reached.
+      Effect.asSome,
       // A generation that ends because its turn was stopped or settled elsewhere
       // has nothing left to report, whichever of the watch or Agent noticed
       // first. Its settlement below always does.
       Effect.catchCause((cause) =>
         Effect.flatMap(turnHalted(turn._id), (halted) =>
-          halted ? logHalted(turn._id, cause) : Effect.failCause(cause)
+          halted
+            ? Effect.as(logHalted(turn._id, cause), Option.none())
+            : Effect.failCause(cause)
         )
       ),
       Effect.onExit((exit) => {
         const failure = Exit.isFailure(exit)
           ? causeReason(exit.cause)
           : undefined;
+        const history = Exit.isSuccess(exit)
+          ? Option.getOrUndefined(exit.value)
+          : undefined;
         return Effect.flatMap(timing.read, (reached) =>
           mutate(refs.internal.nina.lifecycle.recover, {
             ...args,
             ...(failure ? { failure } : {}),
+            ...(history ? { history } : {}),
             timing: reached,
           }).pipe(Effect.orDie)
         );

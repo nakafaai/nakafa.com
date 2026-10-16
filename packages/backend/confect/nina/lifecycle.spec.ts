@@ -7,6 +7,7 @@ import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import {
   NinaFailureReason,
+  NinaHistoryCost,
   NinaTurnTiming,
 } from "@repo/backend/confect/nina/contract/turn";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
@@ -51,6 +52,7 @@ export default GroupSpec.make()
       args: () => ({
         turnId: Id("ninaTurns"),
         failure: Schema.optionalKey(NinaFailureReason),
+        history: Schema.optionalKey(NinaHistoryCost),
         timing: Schema.optionalKey(NinaTurnTiming),
       }),
       returns: () => Schema.Null,

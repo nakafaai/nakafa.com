@@ -72,8 +72,8 @@ The deltas stay for five minutes after a stream finishes (`streams.ts:69`,
 | Suggestions | `presentation.ts:42-66` | The Agent's own fetch: `recentMessages: 50` without tool rows (`search.ts:154-190`). |
 | Title | `presentation.ts:106-113` | The same fetch of 50 rows, and it uses one: `inputPrompt`. |
 | Settlement | `settlement.ts:28-53` | The newest row, to see whether it holds a non-empty answer. It runs only for an active turn (`:95`). |
-| The page of messages | `messages.impl.ts:103-107`, `:108-144` | `listUIMessages`, which lists rows and runs `toUIMessages`, and the turn facts for each `order`. |
-| Streaming | `messages.impl.ts:28-69` | `listStreams` and `syncStreams`, which carry the deltas to the owner's browser. A reader of a shared chat is told no stream (ADR 0001). |
+| The page of messages | `messages/page.ts` (`nina/messages:page`) | `listUIMessages`, which lists rows and runs `toUIMessages`. The page tells no turn facts: `conversation.turns` tells them. `messages.impl.ts` keeps the old `list` for clients opened before `page`, until its contract step. |
+| Streaming | `streams.ts` | `listStreams` and `syncStreams`, which carry the deltas to the owner's browser. A reader of a shared chat is told no stream (ADR 0001). |
 | Attachments | `nina/attachments.ts:22-31` | `getFile`, whose file or image part carries the component's `files.filename`, for the model's file part and the admission receipt. |
 | Deletion | `triggers/chats/chats.ts:45` | `deleteAllForThreadIdAsync`, which deletes row by row (`threads.ts:184-247`, `messages.ts:59-71`) without reading content. |
 | Recovery inside the component | `messages.ts:484-551`, `streams.ts:662-741` | `finalizeMessage` rebuilds a row from the deltas when a pending row has no content, and writes it from inside the component. |
