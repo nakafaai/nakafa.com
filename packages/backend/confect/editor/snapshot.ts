@@ -28,6 +28,7 @@ const SnapshotStateSchema = Schema.Struct({
   now: Schema.DateTimeUtc,
   stepsSince: Schema.Natural,
 });
+/** The input of the snapshot rule, as `SnapshotStateSchema` decodes it. */
 export type SnapshotState = typeof SnapshotStateSchema.Type;
 
 /** The milliseconds from one time to a later one; negative when the later time is earlier. */

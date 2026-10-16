@@ -4,6 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { AccessDenied } from "@repo/backend/confect/access/errors";
 import { type Batch, encodeBatch } from "@repo/backend/confect/editor/batch";
 import { STEP_KEEP_DELAY } from "@repo/backend/confect/editor/prune";
 import { SNAPSHOT_IDLE_DELAY } from "@repo/backend/confect/editor/snapshot";
@@ -25,7 +26,7 @@ export const nf = slugOf("nf");
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
 /** The access refusal of one reason, as a client decodes it. */
-export const denied = (reason: "resource" | "role" | "condition") => ({
+export const denied = (reason: AccessDenied["reason"]) => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
   reason,
@@ -44,7 +45,6 @@ export const LONG_AGO = Duration.toMillis(
 /** Reads a JSON text back into its value, so a test compares documents as values. */
 export const jsonValue = Schema.decodeUnknownSync(JsonTextSchema);
 
-/** A document of one paragraph of one text, as the contract reads it. */
 /** Creates a document in the SMP unit, as its teacher, and returns its ID. */
 export const newDocument = Effect.fn("test.editor.newDocument")(function* (
   fixture: Fixture
@@ -59,6 +59,7 @@ export const newDocument = Effect.fn("test.editor.newDocument")(function* (
   return made.id;
 });
 
+/** A document of one paragraph of one text, as the contract reads it, as JSON text. */
 export const paragraphText = (text: string) =>
   encodeJsonText(paragraphOf(text));
 

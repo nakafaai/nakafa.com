@@ -47,6 +47,7 @@ export const DocumentSchema = UncheckedDocumentSchema.pipe(
     SchemaTransformation.passthroughSupertype()
   )
 );
+/** One document, as `DocumentSchema` decodes it. */
 export type Document = typeof DocumentSchema.Type;
 
 /** The JSON text of a document: the one string field a document is stored in (ADR 0028). */

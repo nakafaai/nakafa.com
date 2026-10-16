@@ -63,6 +63,7 @@ export const BatchSchema = Schema.Struct({
     })
   ),
 });
+/** One call's batch of steps, as `BatchSchema` decodes it. */
 export type Batch = typeof BatchSchema.Type;
 
 /** A call whose batch is larger than one call may send. */

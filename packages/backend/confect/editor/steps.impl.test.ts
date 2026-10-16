@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
+import type { SinceReply } from "@repo/backend/confect/editor/view";
 import {
   batchText,
   clientRows,
@@ -39,6 +40,19 @@ beforeEach(() => {
 });
 
 /** Reads the steps after `version` of the session "rina", as the account reads them. */
+/**
+ * The steps of a reply that carries them. A `behind` reply is a failed read, so the
+ * test names the reply it did not expect instead of comparing against an empty list.
+ */
+const stepsOf = Effect.fn("test.editor.steps.stepsOf")(function* (
+  reply: typeof SinceReply.Type
+) {
+  if (reply._tag === "behind") {
+    return yield* Effect.die(`The read says behind at head ${reply.head}.`);
+  }
+  return reply.steps;
+});
+
 const readSince = Effect.fn("test.editor.steps.readSince")(function* (
   fixture: Fixture,
   account: Account,
@@ -428,12 +442,12 @@ describe("editor/steps since", () => {
         }
         const first = yield* readSince(fixture, "teacher", documentId, 0);
         expect(first).toMatchObject({ _tag: "steps", head: 6 });
-        const read = first._tag === "steps" ? first.steps : [];
+        const read = yield* stepsOf(first);
         expect(read.length).toBeGreaterThan(0);
         expect(read.length).toBeLessThan(6);
         const resume = Arr.reduce(read, 0, (_, step) => step.version);
         const rest = yield* readSince(fixture, "teacher", documentId, resume);
-        const restSteps = rest._tag === "steps" ? rest.steps : [];
+        const restSteps = yield* stepsOf(rest);
         expect([
           ...Arr.map(read, (step) => step.version),
           ...Arr.map(restSteps, (step) => step.version),

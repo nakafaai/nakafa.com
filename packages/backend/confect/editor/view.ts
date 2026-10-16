@@ -33,6 +33,7 @@ const ClientRecordSchema = Schema.Struct({
   version: VersionSchema,
 });
 
+/** A session's record as a reader sees it: its batch and version, or null when the caller has none. */
 export const ClientRecordView = Schema.NullOr(ClientRecordSchema);
 
 /** The wire view of a session's record, or null when the caller has none. */
