@@ -17,7 +17,8 @@ export const CONVEX_DOCUMENT_LIMIT = 1024 * 1024;
  * `_creationTime`) when they are absent, as the types page says. So every byte of
  * text adds exactly one byte to the row, and the largest text is the limit, less
  * one byte because the row must stay below it, less the row of an empty text. The
- * write slice checks the complete row before it writes (ADR 0031).
+ * sync slice that ADR 0028 plans will check the complete row before it writes
+ * (ADR 0031). Until then, this bound covers the text alone.
  */
 export const MAX_DOCUMENT_BYTES =
   CONVEX_DOCUMENT_LIMIT - 1 - getDocumentSize({ text: "" });
