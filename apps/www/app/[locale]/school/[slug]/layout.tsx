@@ -10,6 +10,14 @@ import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
+/**
+ * A school page blocks on the server: its status depends on the address and the
+ * viewer (not found for a missing school, a viewer who is not a member, or one the
+ * school does not admit), and a streamed boundary cannot change the status once
+ * the shell is sent.
+ */
+export const instant = false;
+
 /** A viewer the school does not list gets no school, and the page answers not found. */
 const notInSchool = () => Effect.succeedNone;
 
