@@ -13,6 +13,7 @@ import customers from "@repo/backend/confect/_generated/refs/customers";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -96,6 +97,7 @@ const domainModules = {
   journal,
   learningPreferences,
   nina,
+  notifications,
   onboarding,
   subscriptions,
   tenancy,

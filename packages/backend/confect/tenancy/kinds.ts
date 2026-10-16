@@ -152,6 +152,7 @@ export const person = Kind.make("person", "tenantPeople", {
   ],
   published: [
     "person.created",
+    "person.invited",
     "person.claimed",
     "person.released",
     "person.removed",

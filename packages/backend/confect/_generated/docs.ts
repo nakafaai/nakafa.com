@@ -38,6 +38,7 @@ export type CustomersDoc = Document.Document<typeof schemaDefinition, "customers
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
+export type JournalCursorsDoc = Document.Document<typeof schemaDefinition, "journalCursors">;
 export type JournalEntriesDoc = Document.Document<typeof schemaDefinition, "journalEntries">;
 export type LearningEngagementQueueDoc = Document.Document<typeof schemaDefinition, "learningEngagementQueue">;
 export type LearningPopularityCountersDoc = Document.Document<typeof schemaDefinition, "learningPopularityCounters">;
@@ -55,6 +56,7 @@ export type NinaMemoryRestoresDoc = Document.Document<typeof schemaDefinition, "
 export type NinaSummariesDoc = Document.Document<typeof schemaDefinition, "ninaSummaries">;
 export type NinaTurnsDoc = Document.Document<typeof schemaDefinition, "ninaTurns">;
 export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUploads">;
+export type NotificationsDoc = Document.Document<typeof schemaDefinition, "notifications">;
 export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "onboardingProfiles">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
@@ -122,6 +124,7 @@ export interface Docs {
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;
+  journalCursors: JournalCursorsDoc;
   journalEntries: JournalEntriesDoc;
   learningEngagementQueue: LearningEngagementQueueDoc;
   learningPopularityCounters: LearningPopularityCountersDoc;
@@ -139,6 +142,7 @@ export interface Docs {
   ninaSummaries: NinaSummariesDoc;
   ninaTurns: NinaTurnsDoc;
   ninaUploads: NinaUploadsDoc;
+  notifications: NotificationsDoc;
   onboardingProfiles: OnboardingProfilesDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;

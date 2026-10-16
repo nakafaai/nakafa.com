@@ -11,6 +11,7 @@ import {
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
+import { noteInvite } from "@repo/backend/confect/notifications/inbox";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -220,6 +221,11 @@ const resend = FunctionImpl.make(
       invite: stored._id,
       type: "invite.resent",
     });
+    yield* personAuthority.record(personActor(actor), person, {
+      invite: stored._id,
+      type: "person.invited",
+    });
+    yield* noteInvite(person.tenantId);
     return viewOf(stored, person.name);
   })
 );

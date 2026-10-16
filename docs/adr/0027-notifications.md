@@ -4,8 +4,9 @@
 
 Accepted on 13 October 2026 with owner decision K10. The owner approved decisions
 K1 to K20 on that day. Notifications are planned for program wave B
-(ADR 0013 describes the waves). Nothing in this ADR is live. The repository has
-no inbox table, no push code, and no service worker. It sends two emails: the
+(ADR 0013 describes the waves). The invitation rows of Implementation Status
+are live, and the rest is not. The repository has no push code and no service
+worker. It sends two emails: the
 welcome email (`packages/backend/confect/emails/welcome/internal.ts`) and the
 invitation email (`packages/backend/confect/emails/invite`), which the invite
 mutation starts (ADR 0011).
@@ -86,9 +87,12 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
 
 - The consumer follows ADR 0016. It adds an index on the owner and the change
   type to `journalEntries`, reads in creation order with its own cursor
-  (`journalCursors`, planned), checks permission again when it loads the
+  (`journalCursors`), checks permission again when it loads the
   subject, and proves its ordering assumption on Convex before it relies on a
-  creation-time cursor. An entry holds IDs and codes, never a name or a message.
+  creation-time cursor. The cursor holds the pagination position after the last
+  entry read, so entries that share a creation millisecond are read in order
+  and none is skipped. The Convex proof is still owed. An entry holds IDs and
+  codes, never a name or a message.
 - Preferences are kept for each kind and each channel (`notificationPreferences`,
   planned). The email for an invitation and for the account is always sent.
 - The fan-out is never one transaction. A workpool (`@convex-dev/workpool`, a
@@ -283,8 +287,12 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | The welcome email through `confect/emails` and the Resend component | Live |
 | The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
 | `apps/www/app/manifest.ts` with `display: "standalone"` | Live |
-| `notifications`, `notificationPreferences`, `notificationReminders`, `pushSubscriptions`, and `journalCursors` | Planned, program wave B |
-| The notify consumer, and the published list with `person.invited` | Planned, program wave B |
+| `journalCursors`, and the index of `journalEntries` on the owner and the change type | Live |
+| `notifications`, with the invitation rows and the purge of a released Person's rows | Live |
+| The invitation rows: `person.invited` is published, written by the invite and the resend, and read by the inbox consumer | Live |
+| The minute sweep that starts a run for each pending journal cursor | Live |
+| `notificationPreferences`, `notificationReminders`, and `pushSubscriptions` | Planned, program wave B |
+| The notify consumer for the change types other than `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |
 | A service worker and Web Push | Planned, program wave B |
 | The inbox panel and `nakafa.com/id/notifications` | Planned, program wave B |

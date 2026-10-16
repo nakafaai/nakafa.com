@@ -59,3 +59,25 @@ export const ChangeView = Schema.Union([...Change.members, UnknownChange]);
 
 /** A subject on the wire, tolerant of kinds added later. */
 export const SubjectView = Schema.Union([...ObjectRef.members, UnknownSubject]);
+
+/** The consumers that read the journal with a cursor of their own. */
+export const JournalConsumer = Schema.Literals(["inbox"]);
+
+/** The change types a consumer reads. */
+export const ConsumedChangeType = Schema.Literals(["person.invited"]);
+
+/**
+ * One consumer's place in the journal for one tenant and one change type.
+ * `position` is the pagination cursor that the consumer's last read ended on,
+ * so its next read starts exactly after the entries already read, including
+ * entries that share a creation millisecond. `pending` says a run is owed: a
+ * change sets it, and a run that reads to the end clears it, so the sweep can
+ * find the cursors whose run never happened.
+ */
+export const JournalCursor = Schema.Struct({
+  changeType: ConsumedChangeType,
+  consumer: JournalConsumer,
+  pending: Schema.Boolean,
+  position: Schema.NullOr(Schema.String),
+  tenantId: Id("tenants"),
+});

@@ -10,6 +10,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
+import { noteInvite } from "@repo/backend/confect/notifications/inbox";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
@@ -128,6 +129,7 @@ export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
     invite: inviteId,
     type: "person.invited",
   });
+  yield* noteInvite(person.tenantId);
   yield* startInviteEmail(inviteId, locale, requestedAt);
   yield* claimAfterInvite(email);
   return invite;
