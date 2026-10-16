@@ -26,7 +26,6 @@ export function StartSectionButton({
   const startSection = useMutation(tryouts.mutations.sections.start);
   const convex = useConvex();
   const tTryouts = useTranslations("Tryouts");
-  const tToast = useTranslations("Toast");
   const [isPending, startTransition] = useTransition();
 
   /** Starts this section timer and lets the Convex runtime subscription update. */
@@ -48,22 +47,26 @@ export function StartSectionButton({
               Effect.flatMap(Effect.fromResult),
               Effect.tap(() =>
                 Effect.sync(() => {
-                  toast.success(tToast("tryout-start-part-success.title"), {
-                    description: tToast(
-                      "tryout-start-part-success.description"
-                    ),
-                    position: "bottom-center",
-                  });
+                  toast.success(
+                    {
+                      description: "tryout-start-part-success.description",
+                      title: "tryout-start-part-success.title",
+                    },
+                    { position: "bottom-center" }
+                  );
                 })
               )
             )
           ),
           Effect.catch(() =>
             Effect.sync(() => {
-              toast.error(tToast("tryout-start-part-error.title"), {
-                description: tToast("tryout-start-part-error.description"),
-                position: "bottom-center",
-              });
+              toast.error(
+                {
+                  description: "tryout-start-part-error.description",
+                  title: "tryout-start-part-error.title",
+                },
+                { position: "bottom-center" }
+              );
             })
           )
         )

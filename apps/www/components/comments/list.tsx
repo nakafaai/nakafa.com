@@ -10,7 +10,6 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, DateTime, Effect, Schema, Struct } from "effect";
-import { useTranslations } from "next-intl";
 import { useOptimistic } from "react";
 import { CommentsAdd } from "@/components/comments/add";
 import {
@@ -33,7 +32,6 @@ const noDrafts: Draft[] = [];
 /** Owns the comment feed and pending submissions without inventing database IDs. */
 export function CommentsList({ slug }: { slug: string }) {
   const user = useViewer((state) => state.account);
-  const tToast = useTranslations("Toast");
   const pagination = usePaginatedQuery(
     comments.queries.getCommentsBySlug,
     { slug },
@@ -83,8 +81,9 @@ export function CommentsList({ slug }: { slug: string }) {
           reportClientException(error, { source: "comment-create" }).pipe(
             Effect.andThen(
               Effect.sync(() =>
-                toast.error(tToast("action-error.title"), {
-                  description: tToast("action-error.description"),
+                toast.error({
+                  description: "action-error.description",
+                  title: "action-error.title",
                 })
               )
             ),

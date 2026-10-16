@@ -74,7 +74,8 @@ const toasterStyle: ToasterStyle = {
  * toast, its buttons, and its close button in unlayered CSS, which beats every
  * Tailwind utility, so the design system recipes would never show. Every part
  * takes its classes here instead. A title takes one line and a description two,
- * which the line clamps enforce whatever the copy says.
+ * which the line clamps enforce whatever the copy says. The copy is a message
+ * node from `lib/toast/message`, which renders the reader's language.
  */
 function Toaster({ ...props }: ToasterProps) {
   const { resolvedTheme } = useTheme();

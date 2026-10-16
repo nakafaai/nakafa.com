@@ -39,7 +39,6 @@ const formSchema = Schema.toStandardSchemaV1(
 );
 /** Renders the settings form that validates and saves the user's app role. */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
-  const tToast = useTranslations("Toast");
   const t = useTranslations("Auth");
   const roleItems = Arr.map(roles, (role) => ({
     label: (
@@ -86,8 +85,9 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(tToast("action-error.title"), {
-                      description: tToast("action-error.description"),
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
                     });
                   })
                 )

@@ -19,7 +19,6 @@ import { rememberPlayerMode } from "@/components/player/remember.client";
  */
 export function PlayerModeToggle() {
   const t = useTranslations("Player");
-  const tToast = useTranslations("Toast");
   const mode = usePlayer((state) => state.mode);
   const choose = usePlayer((state) => state.choose);
   const [, startTransition] = useTransition();
@@ -35,10 +34,13 @@ export function PlayerModeToggle() {
         choose(next.value, rememberPlayerMode(next.value))
       );
       if (choice === "reverted") {
-        toast.error(tToast("mode-error.title"), {
-          description: tToast("mode-error.description"),
-          position: "bottom-center",
-        });
+        toast.error(
+          {
+            description: "mode-error.description",
+            title: "mode-error.title",
+          },
+          { position: "bottom-center" }
+        );
       }
     });
   }

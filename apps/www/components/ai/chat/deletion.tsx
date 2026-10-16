@@ -34,7 +34,6 @@ export function ChatDeletion({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("Ai");
-  const tToast = useTranslations("Toast");
   const router = useRouter();
   const user = useViewer((s) => s.account);
   const { change, isPending } = useChange();
@@ -75,8 +74,9 @@ export function ChatDeletion({
             onFailure: () =>
               Effect.sync(() => {
                 stay();
-                toast.error(tToast("action-error.title"), {
-                  description: tToast("action-error.description"),
+                toast.error({
+                  description: "action-error.description",
+                  title: "action-error.title",
                 });
               }),
           })

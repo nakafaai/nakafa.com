@@ -6,7 +6,6 @@ import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
 import {
@@ -24,7 +23,6 @@ type BillingSource = typeof BillingSourceSchema.Type;
 
 /** Owns checkout and customer-portal requests for every client purchase CTA. */
 export function useBillingNavigation() {
-  const tToast = useTranslations("Toast");
   const [isPending, startTransition] = useTransition();
   const convex = useConvex();
   const createCheckout = useAction(
@@ -46,10 +44,7 @@ export function useBillingNavigation() {
           },
           onFailure: () =>
             Effect.sync(() => {
-              toast.error(failure.copy.title, {
-                description: failure.copy.description,
-                position: "bottom-center",
-              });
+              toast.error(failure.copy, { position: "bottom-center" });
             }),
           request: requireConvexOnline(convex).pipe(
             Effect.andThen(
@@ -81,8 +76,8 @@ export function useBillingNavigation() {
         {
           ...failure,
           copy: {
-            description: tToast("checkout-error.description"),
-            title: tToast("checkout-error.title"),
+            description: "checkout-error.description",
+            title: "checkout-error.title",
           },
         }
       ),
@@ -94,8 +89,8 @@ export function useBillingNavigation() {
         {
           ...source,
           copy: {
-            description: tToast("portal-error.description"),
-            title: tToast("portal-error.title"),
+            description: "portal-error.description",
+            title: "portal-error.title",
           },
         }
       ),

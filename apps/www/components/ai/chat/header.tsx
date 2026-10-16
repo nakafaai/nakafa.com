@@ -60,7 +60,6 @@ export function AiChatHeader() {
 /** Render title, visibility, sharing, and deletion controls for one chat. */
 function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const tCommon = useTranslations("Common");
-  const tToast = useTranslations("Toast");
   const t = useTranslations("Ai");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
@@ -112,8 +111,9 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                   Effect.sync(() => {
                     // The box comes back with the words the learner wrote.
                     setIsEditing(true);
-                    toast.error(tToast("action-error.title"), {
-                      description: tToast("action-error.description"),
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
                     });
                   })
                 )

@@ -231,8 +231,7 @@ export const reportNinaFailure = Effect.fn("nina.feedback")(function* (
     if (feedback.report) {
       captureException(error, { source: "nina-admission" });
     }
-    toast.error(copy.title, {
-      description: copy.description,
+    toast.error(copy, {
       id: `nina-failure-${feedback.message}`,
       position: NINA_NOTICE_POSITION,
     });

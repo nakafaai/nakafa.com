@@ -74,7 +74,6 @@ export function OpenContent({
   sourceUrl?: null | string;
 }) {
   const t = useTranslations("Common");
-  const tToast = useTranslations("Toast");
   const [open, { close, set }] = useDisclosure(false);
   const [isCopying, startTransition] = useTransition();
   const copyAbortController = useRef<AbortController | null>(null);
@@ -107,15 +106,17 @@ export function OpenContent({
       Effect.matchEffect({
         onFailure: () =>
           Effect.sync(() =>
-            toast.error(tToast("copy-error.title"), {
-              position: "bottom-center",
-            })
+            toast.error(
+              { title: "copy-error.title" },
+              { position: "bottom-center" }
+            )
           ),
         onSuccess: () =>
           Effect.sync(() => {
-            toast.success(tToast("copy-success.title"), {
-              position: "bottom-center",
-            });
+            toast.success(
+              { title: "copy-success.title" },
+              { position: "bottom-center" }
+            );
           }),
       }),
       Effect.ensuring(

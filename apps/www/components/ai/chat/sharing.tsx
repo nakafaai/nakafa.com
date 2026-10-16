@@ -101,7 +101,6 @@ function ChatSharingDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("Ai");
-  const tToast = useTranslations("Toast");
   const { change, isPending } = useChange();
   const clipboard = useClipboard({ timeout: 500 });
   const updateChatVisibility = useUpdateChatVisibilityMutation();
@@ -134,8 +133,9 @@ function ChatSharingDialog({
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(tToast("action-error.title"), {
-                      description: tToast("action-error.description"),
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
                     });
                   })
                 )
@@ -151,9 +151,10 @@ function ChatSharingDialog({
       return;
     }
     clipboard.copy(shareLink(chat._id, token));
-    toast.success(tToast("link-copied.title"), {
-      position: "bottom-center",
-    });
+    toast.success(
+      { title: "link-copied.title" },
+      { position: "bottom-center" }
+    );
   };
 
   return (

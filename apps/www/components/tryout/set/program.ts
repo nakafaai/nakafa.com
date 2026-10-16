@@ -97,10 +97,7 @@ function reportRequestFailure(
   return reportClientException(error, { source }).pipe(
     Effect.tap(() =>
       Effect.sync(() => {
-        toast.error(message.title, {
-          description: message.description,
-          position: "bottom-center",
-        });
+        toast.error(message, { position: "bottom-center" });
       })
     )
   );
@@ -109,9 +106,6 @@ function reportRequestFailure(
 /** Shows one successful try-out action at the established screen position. */
 function showSuccess(message: ToastCopy) {
   return Effect.sync(() => {
-    toast.success(message.title, {
-      description: message.description,
-      position: "bottom-center",
-    });
+    toast.success(message, { position: "bottom-center" });
   });
 }

@@ -37,7 +37,6 @@ type HubCountry = Ref.Returns<
 /** Renders the realtime country-first try-out hub from Convex. */
 export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
   const tTryouts = useTranslations("Tryouts");
-  const tToast = useTranslations("Toast");
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredTryout = useSetPreferredTryoutMutation(page.countries);
@@ -60,7 +59,7 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
       saveTryoutPreference({
         countryKey: country.countryKey,
         errorMessage: {
-          title: tToast("tryout-preference-error.title"),
+          title: "tryout-preference-error.title",
         },
         locale,
         setPreferredTryout,

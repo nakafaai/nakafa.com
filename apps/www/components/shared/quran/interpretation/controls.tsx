@@ -100,11 +100,7 @@ export function QuranInterpretationControls({
       error: QuranInterpretationRequestError | QuranPublicationError
     ) =>
       Effect.sync(() => {
-        toast.error(errorMessage.title, {
-          description: errorMessage.description,
-          id: toastId,
-          position: "bottom-center",
-        });
+        toast.error(errorMessage, { id: toastId, position: "bottom-center" });
       }).pipe(
         Effect.andThen(
           reportClientException(error, {
@@ -124,8 +120,7 @@ export function QuranInterpretationControls({
         return reportFailure(error);
       }
       return Effect.sync(() =>
-        toast.info(refreshingMessage.title, {
-          description: refreshingMessage.description,
+        toast.info(refreshingMessage, {
           id: toastId,
           position: "bottom-center",
         })
@@ -139,8 +134,7 @@ export function QuranInterpretationControls({
               "QuranInterpretationRequestError",
               (recoveryError) =>
                 Effect.sync(() => {
-                  toast.error(errorMessage.title, {
-                    description: errorMessage.description,
+                  toast.error(errorMessage, {
                     id: toastId,
                     position: "bottom-center",
                   });

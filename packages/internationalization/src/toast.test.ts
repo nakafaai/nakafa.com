@@ -17,8 +17,24 @@ import {
   TOAST_DESCRIPTION_LINES,
   TOAST_TITLE_LINE_CHARACTERS,
   TOAST_TITLE_LINES,
+  type ToastCopyText,
+  ToastValuesSchema,
 } from "@repo/internationalization/src/toast";
 import { Array as Arr, Record as Rec } from "effect";
+
+/** A placeholder of a message, such as `{size, number}`, with its name in the first group. */
+const PLACEHOLDER = /\{(\w+)(?:,[^}]*)?\}/gu;
+
+/** The placeholder names of every title and description in a toast namespace. */
+function placeholdersOf(namespace: Readonly<Record<string, ToastCopyText>>) {
+  return Arr.flatMap(Rec.values(namespace), (copy) =>
+    Arr.flatMap([copy.title, copy.description ?? ""], (text) =>
+      Arr.flatMap(Arr.fromIterable(text.matchAll(PLACEHOLDER)), (match) =>
+        match[1] === undefined ? [] : [match[1]]
+      )
+    )
+  );
+}
 
 describe("toast copy at 320px", () => {
   it("keeps every German title on one line and every description on two", () => {
@@ -112,5 +128,14 @@ describe("toast copy at 320px", () => {
 
   it("counts a letter with an accent or an emoji as one character", () => {
     expect(characterCount("Ñandú 👍")).toBe(7);
+  });
+
+  it("names every placeholder of a toast message in the values the Toaster passes", () => {
+    const names = Arr.flatMap([de.Toast, en.Toast, id.Toast], placeholdersOf);
+
+    expect(names).toContain("size");
+    expect(Arr.difference(names, Rec.keys(ToastValuesSchema.fields))).toEqual(
+      []
+    );
   });
 });

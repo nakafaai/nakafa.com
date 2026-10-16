@@ -71,7 +71,6 @@ export function OnboardingQuestionnaire({
   intent: PostAuthIntentResolution;
 }) {
   const t = useTranslations("LearningPrograms");
-  const tToast = useTranslations("Toast");
   const locale = useLocale();
   const router = useRouter();
   const reactiveStatus = useQuery(onboarding.queries.getStatus, {});
@@ -126,8 +125,9 @@ export function OnboardingQuestionnaire({
           }).pipe(
             Effect.tap(() =>
               Effect.sync(() =>
-                toast.error(tToast("onboarding-save-error.title"), {
-                  description: tToast("onboarding-save-error.description"),
+                toast.error({
+                  description: "onboarding-save-error.description",
+                  title: "onboarding-save-error.title",
                 })
               )
             )
@@ -150,7 +150,7 @@ export function OnboardingQuestionnaire({
     event.preventDefault();
     const completeAnswers = getCompleteOnboardingAnswers(answers);
     if (!completeAnswers) {
-      toast.error(tToast("onboarding-invalid-selection.title"));
+      toast.error({ title: "onboarding-invalid-selection.title" });
       return;
     }
 
@@ -173,8 +173,9 @@ export function OnboardingQuestionnaire({
         )
       );
       if (outcome.status === "error") {
-        toast.error(tToast("onboarding-finish-error.title"), {
-          description: tToast("onboarding-finish-error.description"),
+        toast.error({
+          description: "onboarding-finish-error.description",
+          title: "onboarding-finish-error.title",
         });
         return;
       }

@@ -14,7 +14,6 @@ import { useTranslations } from "next-intl";
 
 export function ShareButton() {
   const t = useTranslations("Common");
-  const tToast = useTranslations("Toast");
 
   // use pathname hook from nextjs to get the locale
   const pathname = usePathname();
@@ -26,7 +25,10 @@ export function ShareButton() {
     clipboard.copy(url);
     // The link is on the clipboard, so the toast says only that it was copied:
     // a URL is not a dictionary message, and a long one takes more than two lines.
-    toast.success(tToast("link-copied.title"), { position: "bottom-center" });
+    toast.success(
+      { title: "link-copied.title" },
+      { position: "bottom-center" }
+    );
   }
 
   return (

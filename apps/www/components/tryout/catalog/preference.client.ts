@@ -56,10 +56,7 @@ export function saveTryoutPreference({
       reportClientException(error, { countryKey, source }).pipe(
         Effect.andThen(
           Effect.sync(() => {
-            toast.error(errorMessage.title, {
-              description: errorMessage.description,
-              position: "bottom-center",
-            });
+            toast.error(errorMessage, { position: "bottom-center" });
           })
         )
       )

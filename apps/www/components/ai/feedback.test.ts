@@ -4,7 +4,7 @@ import { captureException } from "@repo/analytics/posthog/browser";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
-import { toast } from "@repo/design-system/lib/toast/notify";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Fiber, Option, Record as Rec } from "effect";
 import { TestClock } from "effect/testing";
 import {
@@ -26,36 +26,59 @@ vi.mock("@repo/design-system/lib/toast/notify", () => ({
 
 afterEach(() => vi.clearAllMocks());
 
-const copy = {
-  fallbackMessage: { title: "Something went wrong." },
-  insufficientCreditsMessage: { title: "You need more credits." },
-  rateLimitMessage: { title: "Please wait before trying again." },
+const fallbackMessage: ToastCopy = {
+  description: "failure-connection.description",
+  title: "failure-connection.title",
+};
+const creditsMessage: ToastCopy = {
+  description: "failure-credits.description",
+  title: "failure-credits.title",
+};
+const rateLimitMessage: ToastCopy = {
+  description: "failure-rate-limit.description",
+  title: "failure-rate-limit.title",
 };
 
 describe("chat runtime feedback", () => {
-  for (const [code, message] of [
-    ["INSUFFICIENT_CREDITS", copy.insufficientCreditsMessage],
-    ["RATE_LIMITED", copy.rateLimitMessage],
-  ] as const) {
-    it.effect(`shows ${code} without recording an operational exception`, () =>
+  it.effect(
+    "shows insufficient credits without recording an operational exception",
+    () =>
       Effect.gen(function* () {
         yield* reportNinaFailure(
           new NinaCreditError({
-            code,
+            code: "INSUFFICIENT_CREDITS",
             message: "The request could not be admitted.",
           }),
-          message
+          creditsMessage
         );
 
-        expect(toast.error).toHaveBeenCalledExactlyOnceWith(message.title, {
-          description: undefined,
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(creditsMessage, {
           id: expect.any(String),
           position: "top-center",
         });
         expect(captureException).not.toHaveBeenCalled();
       })
-    );
-  }
+  );
+
+  it.effect(
+    "shows a rate limit without recording an operational exception",
+    () =>
+      Effect.gen(function* () {
+        yield* reportNinaFailure(
+          new NinaCreditError({
+            code: "RATE_LIMITED",
+            message: "The request could not be admitted.",
+          }),
+          rateLimitMessage
+        );
+
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(rateLimitMessage, {
+          id: expect.any(String),
+          position: "top-center",
+        });
+        expect(captureException).not.toHaveBeenCalled();
+      })
+  );
 
   it.effect("shows a call refused offline without recording an exception", () =>
     Effect.gen(function* () {
@@ -64,17 +87,13 @@ describe("chat runtime feedback", () => {
           code: "NINA_OFFLINE",
           message: "Convex is offline, so the request was not started.",
         }),
-        copy.fallbackMessage
+        fallbackMessage
       );
 
-      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
-        copy.fallbackMessage.title,
-        {
-          description: undefined,
-          id: expect.any(String),
-          position: "top-center",
-        }
-      );
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(fallbackMessage, {
+        id: expect.any(String),
+        position: "top-center",
+      });
       expect(captureException).not.toHaveBeenCalled();
     })
   );
@@ -96,11 +115,11 @@ describe("chat runtime feedback", () => {
           message: "The request could not be admitted.",
         });
 
-        yield* reportNinaFailure(lost, copy.fallbackMessage);
-        yield* reportNinaFailure(lost, copy.fallbackMessage);
+        yield* reportNinaFailure(lost, fallbackMessage);
+        yield* reportNinaFailure(lost, fallbackMessage);
         // A lost connection and an offline call say the same sentence.
-        yield* reportNinaFailure(offline, copy.fallbackMessage);
-        yield* reportNinaFailure(credits, copy.insufficientCreditsMessage);
+        yield* reportNinaFailure(offline, fallbackMessage);
+        yield* reportNinaFailure(credits, creditsMessage);
 
         const [first, again, other, apart] = Arr.map(
           vi.mocked(toast.error).mock.calls,
@@ -121,19 +140,15 @@ describe("chat runtime feedback", () => {
         code: "NINA_CONNECTION_FAILED",
         message: "Private transport diagnostic",
       });
-      yield* reportNinaFailure(error, copy.fallbackMessage);
+      yield* reportNinaFailure(error, fallbackMessage);
 
       expect(captureException).toHaveBeenCalledExactlyOnceWith(error, {
         source: "nina-admission",
       });
-      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
-        copy.fallbackMessage.title,
-        {
-          description: undefined,
-          id: expect.any(String),
-          position: "top-center",
-        }
-      );
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(fallbackMessage, {
+        id: expect.any(String),
+        position: "top-center",
+      });
     })
   );
 });

@@ -1,4 +1,38 @@
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Array as Arr, Record as Rec, Schema, String as Str } from "effect";
+
+/** The English messages of the Toast namespace, from which every toast key is derived. */
+type ToastMessages = typeof en.Toast;
+
+/**
+ * A key of a toast title, such as `action-error.title`. Each entry of the
+ * namespace has a title, so each entry gives one key.
+ */
+export type ToastTitleKey = {
+  [Name in keyof ToastMessages]: ToastMessages[Name] extends { title: string }
+    ? `${Name & string}.title`
+    : never;
+}[keyof ToastMessages];
+
+/** A key of a toast description, such as `action-error.description`, for each entry that has one. */
+export type ToastDescriptionKey = {
+  [Name in keyof ToastMessages]: ToastMessages[Name] extends {
+    description: string;
+  }
+    ? `${Name & string}.description`
+    : never;
+}[keyof ToastMessages];
+
+/**
+ * The values a toast message interpolates, by the name of its placeholder. The
+ * test in `toast.test.ts` checks that every placeholder of the dictionary is
+ * named here.
+ */
+export const ToastValuesSchema = Schema.Struct({ size: Schema.Finite });
+/** The values of one toast message, which the Toaster passes to next-intl. */
+export type ToastValues = typeof ToastValuesSchema.Type;
 
 /**
  * How many characters one line of a toast title holds at 320px.
@@ -34,6 +68,8 @@ const ToastCopyTextSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
   title: Schema.String,
 });
+/** The text of one toast copy, as the dictionary holds it. */
+export type ToastCopyText = typeof ToastCopyTextSchema.Type;
 
 /** One part of a toast copy that takes more lines than the Toaster shows. */
 const OverlongToastPartSchema = Schema.Struct({

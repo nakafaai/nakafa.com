@@ -25,7 +25,6 @@ import { useViewer } from "@/lib/identity/client";
 export function BillingButton() {
   const locale = useLocale();
   const t = useTranslations("Pricing");
-  const tToast = useTranslations("Toast");
   const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
   const errorCallbackURL = getPostAuthProviderErrorHref("/pricing", locale);
   const currentUser = useViewer((state) => state.account);
@@ -67,8 +66,9 @@ export function BillingButton() {
           )
         );
         if (!started) {
-          toast.error(tToast("provider-error.title"), {
-            description: tToast("provider-error.description"),
+          toast.error({
+            description: "provider-error.description",
+            title: "provider-error.title",
           });
         }
       });

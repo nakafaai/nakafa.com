@@ -5,7 +5,6 @@ import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Clock, Effect, Option, Result } from "effect";
-import { useTranslations } from "next-intl";
 import {
   applyOptimisticTryoutResponse,
   nextTryoutResponseVersion,
@@ -39,7 +38,6 @@ export function useTryoutResponseSubmit() {
       selectedAt
     );
   });
-  const tToast = useTranslations("Toast");
   /** Reports a failed answer: an ended attempt tells the learner to start again, a stale write is not reported, and any other failure is reported. */
   function handleSubmitError(
     error: unknown,
@@ -51,10 +49,13 @@ export function useTryoutResponseSubmit() {
     }
     if (failure === "ended") {
       return Effect.sync(() => {
-        toast.info(tToast("tryout-attempt-not-in-progress.title"), {
-          description: tToast("tryout-attempt-not-in-progress.description"),
-          position: "bottom-center",
-        });
+        toast.info(
+          {
+            description: "tryout-attempt-not-in-progress.description",
+            title: "tryout-attempt-not-in-progress.title",
+          },
+          { position: "bottom-center" }
+        );
       });
     }
     return reportClientException(error, {
@@ -67,10 +68,13 @@ export function useTryoutResponseSubmit() {
     }).pipe(
       Effect.andThen(
         Effect.sync(() => {
-          toast.error(tToast("tryout-submit-answer-error.title"), {
-            description: tToast("tryout-submit-answer-error.description"),
-            position: "bottom-center",
-          });
+          toast.error(
+            {
+              description: "tryout-submit-answer-error.description",
+              title: "tryout-submit-answer-error.title",
+            },
+            { position: "bottom-center" }
+          );
         })
       )
     );

@@ -155,7 +155,6 @@ function ChatList({
 
 /** Render owner actions for one profile chat row. */
 function UserChatsListActions({ chat }: { chat: ChatView }) {
-  const tToast = useTranslations("Toast");
   const t = useTranslations("Common");
   const deleteChat = useDeleteChatMutation();
   const { change, isPending } = useChange();
@@ -179,8 +178,9 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(tToast("action-error.title"), {
-                      description: tToast("action-error.description"),
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
                     });
                   })
                 )

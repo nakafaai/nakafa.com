@@ -47,7 +47,6 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
   const t = useTranslations("Memory");
   const labels = useTranslations("Editor");
   const common = useTranslations("Common");
-  const tToast = useTranslations("Toast");
   const close = useMemoryPage((state) => state.close);
   const restored = useMemoryPage((state) => state.draft);
   const { change, discard, starting } = useAutosave(memory, restored);
@@ -138,7 +137,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
           limit={MEMORY_TEXT_LIMIT}
           onChange={(text) => write({ ...draft, text })}
           onClose={close}
-          onRefuse={() => toast.error(tToast("memory-too-long.title"))}
+          onRefuse={() => toast.error({ title: "memory-too-long.title" })}
           placeholder={t("placeholder")}
         />
       </div>

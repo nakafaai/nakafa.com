@@ -22,7 +22,6 @@ import {
   MutableHashMap,
   Result,
 } from "effect";
-import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useAi } from "@/components/ai/context";
 import {
@@ -71,7 +70,6 @@ export function useNinaSubmission(
   const uploadOf = useAi((state) => state.uploadOf);
   const inFlight = useRef(false);
   const uncertain = useRef<Ref.Args<Start> | null>(null);
-  const tToast = useTranslations("Toast");
 
   /**
    * Admits one message or retry as one Effect, started now. It settles with
@@ -173,11 +171,9 @@ export function useNinaSubmission(
             const feedbackKey =
               ninaFailureFeedback[result.failure.code].message;
             const report = reportNinaFailure(result.failure, {
-              description: tToast(
-                `failure-${feedbackKey}.description`,
-                ninaFailureLimits
-              ),
-              title: tToast(`failure-${feedbackKey}.title`, ninaFailureLimits),
+              description: `failure-${feedbackKey}.description`,
+              title: `failure-${feedbackKey}.title`,
+              values: ninaFailureLimits,
             }).pipe(Effect.as(undefined));
             if (
               result.failure._tag === "NinaUploadError" &&

@@ -29,7 +29,6 @@ import type { CurrentUser } from "@/lib/identity/client";
 
 /** Renders the bio card: one line about the account, with its count of characters. */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
-  const tToast = useTranslations("Toast");
   const t = useTranslations("Auth");
   const updateBio = useUpdateBioMutation();
   const current = user.appUser.bio ?? "";
@@ -51,8 +50,9 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(tToast("action-error.title"), {
-                    description: tToast("action-error.description"),
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
                   });
                 })
               )

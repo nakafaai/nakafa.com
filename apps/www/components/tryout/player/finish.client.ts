@@ -7,7 +7,6 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
 import { useOptimistic, useTransition } from "react";
 import { requireConvexOnline } from "@/lib/convex/online";
 
@@ -42,7 +41,6 @@ export function useTryoutFinish<State>(input: {
   const router = useRouter();
   const convex = useConvex();
   const completeSection = useMutation(tryouts.mutations.sections.complete);
-  const tToast = useTranslations("Toast");
 
   return {
     pending,
@@ -65,13 +63,11 @@ export function useTryoutFinish<State>(input: {
                       router.push(input.returnHref);
                     });
                     toast.success(
-                      tToast("tryout-complete-part-success.title"),
                       {
-                        description: tToast(
-                          "tryout-complete-part-success.description"
-                        ),
-                        position: "bottom-center",
-                      }
+                        description: "tryout-complete-part-success.description",
+                        title: "tryout-complete-part-success.title",
+                      },
+                      { position: "bottom-center" }
                     );
                   })
                 )
@@ -79,10 +75,13 @@ export function useTryoutFinish<State>(input: {
             ),
             Effect.catch(() =>
               Effect.sync(() => {
-                toast.error(tToast("tryout-complete-part-error.title"), {
-                  description: tToast("tryout-complete-part-error.description"),
-                  position: "bottom-center",
-                });
+                toast.error(
+                  {
+                    description: "tryout-complete-part-error.description",
+                    title: "tryout-complete-part-error.title",
+                  },
+                  { position: "bottom-center" }
+                );
               })
             )
           )

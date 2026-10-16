@@ -34,7 +34,6 @@ const OFFERED_COUNT = 4;
  * and a button that offers four more. A pick takes effect at once.
  */
 export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
-  const tToast = useTranslations("Toast");
   const t = useTranslations("Auth");
   const animals = useTranslations("Animals");
   const updateMascot = useUpdateMascotMutation();
@@ -59,8 +58,9 @@ export function UserSettingsAnimal({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(tToast("action-error.title"), {
-                    description: tToast("action-error.description"),
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
                   });
                 })
               )

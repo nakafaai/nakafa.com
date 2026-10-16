@@ -16,7 +16,7 @@ import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/h
 import { useRouter } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";
@@ -52,7 +52,6 @@ export function CurriculumSelector({
 }) {
   const locale = useLocale();
   const router = useRouter();
-  const tToast = useTranslations("Toast");
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(
@@ -100,8 +99,8 @@ export function CurriculumSelector({
     await Effect.runPromise(
       saveCurriculumPreference({
         errorMessage: {
-          description: tToast("curriculum-preference-error.description"),
-          title: tToast("curriculum-preference-error.title"),
+          description: "curriculum-preference-error.description",
+          title: "curriculum-preference-error.title",
         },
         locale,
         programKey: selectedOption.value.programKey,
@@ -180,10 +179,7 @@ function saveCurriculumPreference({
       }).pipe(
         Effect.andThen(
           Effect.sync(() => {
-            toast.error(errorMessage.title, {
-              description: errorMessage.description,
-              position: "bottom-center",
-            });
+            toast.error(errorMessage, { position: "bottom-center" });
           })
         )
       )

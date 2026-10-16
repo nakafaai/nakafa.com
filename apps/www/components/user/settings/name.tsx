@@ -33,7 +33,6 @@ const formSchema = Schema.toStandardSchemaV1(
 );
 /** Render the validated optimistic user-name settings form. */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
-  const tToast = useTranslations("Toast");
   const t = useTranslations("Auth");
   const updateUserName = useUpdateUserNameMutation();
   const form = useForm({
@@ -66,8 +65,9 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(tToast("action-error.title"), {
-                      description: tToast("action-error.description"),
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
                     });
                   })
                 )

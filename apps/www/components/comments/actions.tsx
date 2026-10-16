@@ -57,7 +57,6 @@ export function CommentActionsProvider({
 
 /** Builds one comment's actions and their shared pending state from its mutations. */
 function useCommentActionsValue(comment: ActionComment) {
-  const tToast = useTranslations("Toast");
   const viewer = useViewer((state) => state.account);
   const [isPending, startTransition] = useTransition();
   const voteOnComment = useVoteCommentMutation();
@@ -79,8 +78,9 @@ function useCommentActionsValue(comment: ActionComment) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(tToast("action-error.title"), {
-                      description: tToast("action-error.description"),
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
                     });
                   })
                 )

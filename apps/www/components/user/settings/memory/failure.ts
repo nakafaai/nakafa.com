@@ -29,9 +29,7 @@ export const reportMemoryFailure = Effect.fn("www.memory.reportFailure")(
       });
     }
     yield* Effect.sync(() => {
-      toast.error(messages[failure].title, {
-        description: messages[failure].description,
-      });
+      toast.error(messages[failure]);
     });
 
     return failure !== "missing";

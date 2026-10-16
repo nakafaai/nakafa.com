@@ -54,7 +54,6 @@ export function NinaInput({
   status,
 }: Props) {
   const t = useTranslations("Ai");
-  const tToast = useTranslations("Toast");
   const composerKey = useAi((state) => state.composerKey);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
@@ -71,8 +70,8 @@ export function NinaInput({
     if (Option.isSome(refusal)) {
       Effect.runFork(
         reportNinaFailure(refusal.value, {
-          description: tToast("failure-message-size.description"),
-          title: tToast("failure-message-size.title"),
+          description: "failure-message-size.description",
+          title: "failure-message-size.title",
         })
       );
       return false;

@@ -5,7 +5,6 @@ import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect, Option, Record as Rec, type Result } from "effect";
-import { useTranslations } from "next-intl";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
 import {
   draftArgs,
@@ -40,10 +39,9 @@ import {
  * none of it.
  */
 export function useMemoryActions() {
-  const tToast = useTranslations("Toast");
   const other: ToastCopy = {
-    description: tToast("action-error.description"),
-    title: tToast("action-error.title"),
+    description: "action-error.description",
+    title: "action-error.title",
   };
 
   const latest = useMemoryLatest();
@@ -67,9 +65,9 @@ export function useMemoryActions() {
   const clearAll = useMutation(nina.memory.clear).withOptimisticUpdate(
     (store) => clearList(store)
   );
-  const messages = {
-    limit: { title: tToast("memory-limit.title") },
-    missing: { title: tToast("memory-missing.title") },
+  const messages: Record<"limit" | "missing" | "other", ToastCopy> = {
+    limit: { title: "memory-limit.title" },
+    missing: { title: "memory-missing.title" },
     other,
   };
 

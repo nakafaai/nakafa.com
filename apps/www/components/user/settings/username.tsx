@@ -50,7 +50,6 @@ const CHECK_DELAY_MILLISECONDS = 300;
  * taken.
  */
 export function UserSettingsUsername({ user }: { user: CurrentUser }) {
-  const tToast = useTranslations("Toast");
   const t = useTranslations("Auth");
   const updateUsername = useUpdateUsernameMutation();
   const current = user.appUser.username;
@@ -81,8 +80,9 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(tToast("action-error.title"), {
-                    description: tToast("action-error.description"),
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
                   });
                 })
               )
