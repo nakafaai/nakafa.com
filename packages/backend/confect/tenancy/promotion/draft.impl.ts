@@ -21,10 +21,7 @@ import {
   SourcePeriodInvalid,
   TargetPeriodInvalid,
 } from "@repo/backend/confect/tenancy/errors";
-import {
-  checkPlan,
-  targetNamesFree,
-} from "@repo/backend/confect/tenancy/promotion/check";
+import { checkPlan } from "@repo/backend/confect/tenancy/promotion/check";
 import spec from "@repo/backend/confect/tenancy/promotion/draft.spec";
 import {
   liveForSource,
@@ -38,6 +35,7 @@ import {
   update,
 } from "@repo/backend/confect/tenancy/promotion/row";
 import { view } from "@repo/backend/confect/tenancy/promotion/view";
+import { cohortNamesFree } from "@repo/backend/confect/tenancy/write/cohort";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /**
@@ -134,7 +132,7 @@ const plan = FunctionImpl.make(
       return yield* new PromotionState();
     }
     yield* checkPlan({ ...planOf(promotion), sources, targets });
-    yield* targetNamesFree(promotion.targetPeriodId, targets);
+    yield* cohortNamesFree(promotion.targetPeriodId, targets);
     const next = yield* update(promotion, {
       returnReason: null,
       sources,

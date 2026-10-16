@@ -18,7 +18,6 @@ import {
 import {
   PeriodActive,
   PeriodDatesInvalid,
-  PeriodNotActive,
   PeriodOverlaps,
 } from "@repo/backend/confect/tenancy/errors";
 import {
@@ -27,6 +26,7 @@ import {
 } from "@repo/backend/confect/tenancy/period";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
 import { openTarget } from "@repo/backend/confect/tenancy/promotion/open";
+import { archivePeriod } from "@repo/backend/confect/tenancy/write/period";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 /** One period as the wire shows it. */
@@ -161,21 +161,7 @@ const archive = FunctionImpl.make(
   Effect.fn("tenancy.periods.archive")(function* () {
     const { person } = yield* Member;
     const period = yield* Period;
-    if (period.status !== "active") {
-      return yield* new PeriodNotActive();
-    }
-    const status: typeof PeriodStatus.Type = "archived";
-    yield* (yield* DatabaseWriter)
-      .table("tenantPeriods")
-      .replace(
-        period._id,
-        Struct.assign(Struct.omit(period, ["_creationTime", "_id"]), { status })
-      )
-      .pipe(Effect.orDie);
-    yield* periodAuthority.record(personActor(person), period, {
-      type: "period.archived",
-    });
-    return view(Struct.assign(period, { status }));
+    return view(yield* archivePeriod(personActor(person), period));
   })
 );
 

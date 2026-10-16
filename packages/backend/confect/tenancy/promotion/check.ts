@@ -95,30 +95,3 @@ export const checkPlan = Effect.fn("tenancy.promotion.check.plan")(
     );
   }
 );
-
-/**
- * Refuses a plan whose new cohort names a cohort of the target period already has,
- * compared without regard to case. Each name is one indexed read.
- */
-export const targetNamesFree = Effect.fn("tenancy.promotion.check.namesFree")(
-  function* (
-    targetPeriodId: GenericId.GenericId<"tenantPeriods">,
-    targets: readonly (typeof PromotionTarget.Type)[]
-  ) {
-    const reader = yield* DatabaseReader;
-    const existing = yield* Effect.forEach(targets, (target) =>
-      reader
-        .table("tenantCohorts")
-        .index("by_periodId_and_nameKey", (query) =>
-          query
-            .eq("periodId", targetPeriodId)
-            .eq("nameKey", cohortNameKey(target.name))
-        )
-        .first()
-        .pipe(Effect.orDie)
-    );
-    if (Arr.some(existing, Option.isSome)) {
-      return yield* new CohortNameTaken();
-    }
-  }
-);

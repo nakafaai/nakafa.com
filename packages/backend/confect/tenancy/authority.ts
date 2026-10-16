@@ -2,6 +2,7 @@ import type { GenericId } from "@confect/core";
 import { MiddlewareImpl } from "@confect/server";
 import type {
   TenantCohortsDoc,
+  TenantPeopleDoc,
   TenantPeriodsDoc,
   TenantPromotionsDoc,
   TenantUnitsDoc,
@@ -165,6 +166,33 @@ export const homeroomOfPerson = Effect.fn("tenancy.authority.homeroomOfPerson")(
         Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
         Effect.orDie
       );
+  }
+);
+
+/**
+ * Whether the Person of a homeroom assignment still holds its cohort's slot. A removed
+ * teacher holds none: their row stays as the record, every reader treats it as no
+ * homeroom teacher, and assigning a teacher replaces it.
+ */
+export const holdsSlot = (teacher: Pick<TenantPeopleDoc, "status">) =>
+  teacher.status !== "removed";
+
+/**
+ * The homeroom teacher assignment of one cohort, unless its teacher was removed. Every
+ * reader of a cohort's homeroom asks this function. The writes ask `homeroomOf`, which
+ * also finds the row that a removed teacher leaves behind.
+ */
+export const activeHomeroomOf = Effect.fn("tenancy.authority.activeHomeroomOf")(
+  function* (cohortId: GenericId.GenericId<"tenantCohorts">) {
+    const assignment = yield* homeroomOf(cohortId);
+    if (Option.isNone(assignment)) {
+      return assignment;
+    }
+    const teacher = yield* (yield* DatabaseReader)
+      .table("tenantPeople")
+      .get(assignment.value.personId)
+      .pipe(Effect.orDie);
+    return holdsSlot(teacher) ? assignment : Option.none();
   }
 );
 

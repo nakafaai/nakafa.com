@@ -1,22 +1,11 @@
-import type { GenericId } from "@confect/core";
 import type { TenantPromotionsDoc } from "@repo/backend/confect/_generated/docs";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import {
-  cohortAuthority,
-  homeroomOf,
-  homeroomOfPerson,
+  activeHomeroomOf,
   promotionAuthority,
-  teacherOf,
 } from "@repo/backend/confect/tenancy/authority";
-import {
-  CohortHasHomeroom,
-  PersonNotTeacher,
-  TeacherHasHomeroom,
-} from "@repo/backend/confect/tenancy/errors";
+import { CohortHasHomeroom } from "@repo/backend/confect/tenancy/errors";
 import {
   createdCohort,
   targetNameOf,
@@ -24,19 +13,24 @@ import {
 import { finished } from "@repo/backend/confect/tenancy/promotion/progress";
 import { update } from "@repo/backend/confect/tenancy/promotion/row";
 import type { PromotionSource } from "@repo/backend/confect/tenancy/promotion/schema";
+import {
+  checkHomeroom,
+  insertHomeroom,
+  removeHomeroom,
+} from "@repo/backend/confect/tenancy/write/assignment";
 import { Array as Arr, Effect, Option } from "effect";
 
 /**
- * Plans the copy of one source cohort's homeroom teacher to the cohort their
- * students join. A source cohort without a homeroom teacher plans nothing. A teacher
- * removed during the run is not copied, because the removal ended them. A teacher
- * who is no longer an active teacher of the unit stops the copy, as assigning one would.
+ * Plans the copy of one source cohort's homeroom teacher to the cohort their students
+ * join. A source cohort without an active homeroom teacher plans nothing, so a teacher
+ * removed during the run is not copied. The copy is checked the way an assignment is,
+ * so a teacher who is no longer an active teacher of the unit stops the step.
  */
 const planCopy = Effect.fn("tenancy.promotion.homeroom.planCopy")(function* (
   promotion: TenantPromotionsDoc,
   entry: typeof PromotionSource.Type
 ) {
-  const assignment = yield* homeroomOf(entry.cohortId);
+  const assignment = yield* activeHomeroomOf(entry.cohortId);
   if (Option.isNone(assignment)) {
     return [];
   }
@@ -49,15 +43,6 @@ const planCopy = Effect.fn("tenancy.promotion.homeroom.planCopy")(function* (
     .table("tenantPeople")
     .get(assignment.value.personId)
     .pipe(Effect.orDie);
-  if (teacher.status === "removed") {
-    return [];
-  }
-  if (
-    teacher.status !== "active" ||
-    !(yield* teacherOf(teacher._id, source.unitId))
-  ) {
-    return yield* new PersonNotTeacher();
-  }
   // The plan check named a cohort for every homeroom copy, and the cohorts step
   // created each named cohort, so the target is always there.
   const name = yield* Effect.fromOption(
@@ -66,50 +51,12 @@ const planCopy = Effect.fn("tenancy.promotion.homeroom.planCopy")(function* (
   const cohortId = yield* Effect.fromOption(
     createdCohort(promotion.created, name)
   ).pipe(Effect.orDie);
-  const taken = yield* homeroomOf(cohortId);
-  if (Option.isSome(taken)) {
-    return yield* new CohortHasHomeroom();
-  }
-  const busy = yield* homeroomOfPerson(
-    promotion.targetPeriodId,
-    assignment.value.personId
-  );
-  if (Option.isSome(busy)) {
-    return yield* new TeacherHasHomeroom();
-  }
-  return [{ cohortId, personId: assignment.value.personId }];
-});
-
-/** Writes one homeroom copy, and journals it on the cohort it joins. */
-const writeCopy = Effect.fn("tenancy.promotion.homeroom.writeCopy")(function* (
-  promotion: TenantPromotionsDoc,
-  actor: typeof TenantActor.Type,
-  copy: {
-    readonly cohortId: GenericId.GenericId<"tenantCohorts">;
-    readonly personId: GenericId.GenericId<"tenantPeople">;
-  }
-) {
-  const reader = yield* DatabaseReader;
-  const assignmentId = yield* (yield* DatabaseWriter)
-    .table("tenantAssignments")
-    .insert({
-      cohortId: copy.cohortId,
-      kind: "homeroom",
-      periodId: promotion.targetPeriodId,
-      personId: copy.personId,
-      tenantId: promotion.tenantId,
-    })
-    .pipe(Effect.orDie);
   const cohort = yield* reader
     .table("tenantCohorts")
-    .get(copy.cohortId)
+    .get(cohortId)
     .pipe(Effect.orDie);
-  yield* cohortAuthority.record(actor, cohort, {
-    assignment: "homeroom",
-    person: copy.personId,
-    type: "assignment.created",
-  });
-  return assignmentId;
+  const replacing = yield* checkHomeroom(cohort, teacher);
+  return [{ cohort, personId: teacher._id, replacing }];
 });
 
 /**
@@ -128,12 +75,12 @@ export const homeroomApply = Effect.fn("tenancy.promotion.homeroom.apply")(
       (entry) => planCopy(promotion, entry)
     );
     const copies = Arr.flatten(planned);
-    const cohortIds = Arr.map(copies, (copy) => copy.cohortId);
+    const cohortIds = Arr.map(copies, (copy) => copy.cohort._id);
     if (Arr.dedupe(cohortIds).length !== cohortIds.length) {
       return yield* new CohortHasHomeroom();
     }
     const copied = yield* Effect.forEach(copies, (copy) =>
-      writeCopy(promotion, actor, copy)
+      insertHomeroom(actor, copy.cohort, copy.personId, copy.replacing)
     );
     yield* update(promotion, { copies: copied });
     return finished;
@@ -163,10 +110,11 @@ export const homeroomUndo = Effect.fn("tenancy.promotion.homeroom.undo")(
           if (Option.isNone(copy)) {
             return;
           }
-          yield* (yield* DatabaseWriter)
-            .table("tenantAssignments")
-            .delete(copy.value._id)
+          const cohort = yield* reader
+            .table("tenantCohorts")
+            .get(copy.value.cohortId)
             .pipe(Effect.orDie);
+          yield* removeHomeroom(actor, cohort, copy.value);
           yield* promotionAuthority.record(actor, promotion, {
             step: "homeroom",
             type: "promotion.undone",
