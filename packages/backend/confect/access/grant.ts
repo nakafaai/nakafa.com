@@ -8,13 +8,18 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { grantAuthority } from "@repo/backend/confect/access/authority";
-import { GrantRejected } from "@repo/backend/confect/access/errors";
+import {
+  GrantRejected,
+  inactivePerson,
+  integrationRole,
+} from "@repo/backend/confect/access/errors";
 import { activeGrants, GRANT_LIMIT } from "@repo/backend/confect/access/policy";
 import {
   type BuiltinRole,
   type GrantEndReason,
   GrantScope,
   type GrantStatus,
+  type GrantTerm,
   OwnerRole,
 } from "@repo/backend/confect/access/schema";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
@@ -38,7 +43,7 @@ export const OWNER_LIMIT = 8;
 const sameScope = Schema.toEquivalence(GrantScope);
 
 /** The tenant's active Owner grants, bounded by the Owner limit plus one. */
-const activeOwners = Effect.fn("access.grant.owners")(function* (
+export const activeOwners = Effect.fn("access.grant.owners")(function* (
   tenantId: GenericId.GenericId<"tenants">
 ) {
   return yield* (yield* DatabaseReader)
@@ -72,22 +77,8 @@ const refusal = (
           message: "Operators hold only temporary visit grants.",
         })
     ),
-    Match.not(
-      { person: { status: "active" } },
-      () =>
-        new GrantRejected({
-          code: "PERSON_INACTIVE",
-          message: "This person is not active.",
-        })
-    ),
-    Match.when(
-      { role: "integration" },
-      () =>
-        new GrantRejected({
-          code: "GRANT_ROLE",
-          message: "Integrations are not people.",
-        })
-    ),
+    Match.not({ person: { status: "active" } }, inactivePerson),
+    Match.when({ role: "integration" }, integrationRole),
     Match.when(
       { role: "owner", scope: { kind: "unit" } },
       () =>
@@ -98,6 +89,56 @@ const refusal = (
     ),
     Match.option
   );
+
+/**
+ * Writes one active grant under the Person and records it under the Person. The
+ * Person's grants are read by the caller; the limits of the Person and of the
+ * tenant's Owners are checked here before the grant is written.
+ */
+export const writeGrant = Effect.fn("access.grant.write")(function* (
+  actor: typeof TenantActor.Type,
+  person: TenantPeopleDoc,
+  grants: readonly TenantGrantsDoc[],
+  role: BuiltinRole,
+  scope: GrantScope,
+  term: typeof GrantTerm.Type
+) {
+  if (grants.length >= GRANT_LIMIT) {
+    return yield* new GrantRejected({
+      code: "GRANT_LIMIT",
+      message: "This person has too many roles.",
+    });
+  }
+  if (
+    role === "owner" &&
+    (yield* activeOwners(person.tenantId)).length >= OWNER_LIMIT
+  ) {
+    return yield* new GrantRejected({
+      code: "GRANT_LIMIT",
+      message: "This school has too many owners.",
+    });
+  }
+  const grantId = yield* (yield* DatabaseWriter)
+    .table("tenantGrants")
+    .insert({
+      grantedBy: actor,
+      personId: person._id,
+      role: { key: role, kind: "builtin" },
+      scope,
+      status: "active",
+      tenantId: person.tenantId,
+      term,
+    })
+    .pipe(Effect.orDie);
+  yield* personAuthority.record(actor, person, {
+    grant: grantId,
+    role: { key: role, kind: "builtin" },
+    scope,
+    term,
+    type: "grant.created",
+  });
+  return grantId;
+});
 
 /**
  * Gives a member Person a standing built-in role under the tenant's
@@ -126,44 +167,15 @@ export const assignRole = Effect.fn("access.grant.assign")(function* (
   if (Option.isSome(existing)) {
     return existing.value._id;
   }
-  if (grants.length >= GRANT_LIMIT) {
-    return yield* new GrantRejected({
-      code: "GRANT_LIMIT",
-      message: "This person has too many roles.",
-    });
-  }
-  if (
-    role === "owner" &&
-    (yield* activeOwners(person.tenantId)).length >= OWNER_LIMIT
-  ) {
-    return yield* new GrantRejected({
-      code: "GRANT_LIMIT",
-      message: "This school has too many owners.",
-    });
-  }
-  const grantId = yield* (yield* DatabaseWriter)
-    .table("tenantGrants")
-    .insert({
-      grantedBy: actor,
-      personId: person._id,
-      role: { key: role, kind: "builtin" },
-      scope,
-      status: "active",
-      tenantId: person.tenantId,
-      term: { kind: "standing" },
-    })
-    .pipe(Effect.orDie);
-  yield* personAuthority.record(actor, person, {
-    grant: grantId,
-    role: { key: role, kind: "builtin" },
-    scope,
-    term: { kind: "standing" },
-    type: "grant.created",
+  return yield* writeGrant(actor, person, grants, role, scope, {
+    kind: "standing",
   });
-  return grantId;
 });
 
-/** Ends an active grant and records it under the Person who held it. */
+/**
+ * Ends an active grant and records it under the Person who held it. A grant
+ * that expires is marked expired; every other reason marks it revoked.
+ */
 export const endGrant = Effect.fn("access.grant.end")(function* (
   actor: typeof TenantActor.Type,
   grant: TenantGrantsDoc,

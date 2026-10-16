@@ -231,7 +231,27 @@ describe("dependency policy validation", () => {
           devDependencies: { "@effect/platform": "0.97.1" },
         })),
       problem:
-        "apps/www/package.json retains obsolete Effect dependency @effect/platform.",
+        "apps/www/package.json declares the obsolete dependency @effect/platform; use the matching module of effect.",
+    },
+    {
+      name: "date-fns, which Intl and DateTime replace",
+      change: (input) =>
+        updateWebManifest(input, (manifest) => ({
+          ...manifest,
+          dependencies: { ...manifest.dependencies, "date-fns": "4.4.0" },
+        })),
+      problem:
+        "apps/www/package.json declares the obsolete dependency date-fns; use Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/lib/i18n/date.ts does.",
+    },
+    {
+      name: "nanoid, which randomUuid replaces",
+      change: (input) =>
+        updateWebManifest(input, (manifest) => ({
+          ...manifest,
+          devDependencies: { nanoid: "^6.0.2" },
+        })),
+      problem:
+        "apps/www/package.json declares the obsolete dependency nanoid; use randomUuid from @repo/utilities/uuid.",
     },
     {
       name: "a drifted reviewed script",

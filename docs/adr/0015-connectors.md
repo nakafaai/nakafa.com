@@ -445,7 +445,7 @@ Two kinds of connection decides.
 | --- | --- |
 | Google sign-in with offline access and a forced consent prompt (`packages/backend/confect/auth/runtime.ts`) | Live. ADR 0009 plans to stop storing its tokens. |
 | Learner key in `confect/vault` (`vaultKeys`) | Live |
-| School key (`tenantKeys`, ADR 0030) | Planned |
+| School key (`tenantKeys`, ADR 0030) | Built, program wave B |
 | `confect/connectors`, `connectorLinks`, `connectorSecrets` | Planned, program wave B |
 | The Drive, Forms, Classroom, Calendar, and Gmail adapters | Planned, program wave B. Each reaches production as Google verification says. |
 | The connector pages: connect, disconnect, reconnect, sync by hand, and the Admin's switch for each role (ADR 0026 has the school address) | Planned, program wave B |

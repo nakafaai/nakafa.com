@@ -5,7 +5,7 @@
 Accepted for the Nakafa School foundation. Amended on 13 October 2026 for the
 organisation tier, the neutral concepts, the country profile above units, and
 the account's home cell. Amended on 14 October 2026 for periods, cohorts,
-placements, people, and invites as they are built.
+placements, people, invites, operators, and visits as they are built.
 The school subdomains and their URL tree are in ADR 0026, and the country
 profile is in ADR 0032.
 
@@ -223,21 +223,52 @@ learner's self-description and never grants privilege; an environment allowlist
 would match emails instead of accounts and keep no history; the Better Auth admin
 plugin would move platform privilege into the auth component's schema.
 
-Operators provision tenants (the tenant with the journal retention that its data
-processing agreement states, its settings, its units, and the first Owner
-invite in one mutation), replace a tenant's unclaimed Owners as an audited
-break-glass, and suspend or reactivate a tenant. A suspended tenant stays
-readable and refuses every member write. The system transitions that time or
-an operator starts still run in it, because they end access, keep a deadline, or
-restore the tenant: a visit end, a grant expiry, an invite expiry, an account
-release, the close and the reconciliation of an attempt, and the operator's
-reactivation of the tenant (ADR 0012, Decisions). Operators enter a tenant only
-through an audited visit: a temporary Auditor grant of at most 24 hours. A visit
-grant is always the Auditor role, so approving a visit never mints an Admin. The
-school's Owner or Admin approves each visit, and a scheduled mutation ends the
-grant (ADR 0012). The operator directory of a cell, tenant metadata with no
-personal data, lists only the tenants of that cell and is the one public read
-across them; everything inside a tenant needs a visit.
+Each `operators` row holds its account, its status (`active` or `revoked`), and
+the times it was granted and last changed. The journal records tenant changes
+only, and a platform entry has no space to live in (ADR 0016), so the row keeps
+its own change times and no second audit table exists. Staff grant and revoke
+access with `operators/staff:grant` and `operators/staff:revoke`, which are
+internal, so only the deployment's key runs them. A revoked operator is refused
+at once in every tenant: the member middleware refuses an operator Person whose
+operator row is not active, and every operator command refuses the account.
+
+Operators open tenants with `operators/tenants:open`, which runs the same Effect
+as the internal `tenancy/provision:open` and journals each write under the
+operator actor (ADR 0016), which a school sees as Nakafa staff. The journal
+retention that the data processing agreement states is not stored yet. The
+operator also suspends and reactivates a tenant, both idempotently. A suspended
+tenant stays readable and refuses every write except the transitions that ADR
+0012 exempts (Decisions), such as the operator's reactivation.
+`operators/tenants:replaceOwner` is the audited break-glass: it refuses a
+suspended school, refuses while a signed-in Owner holds the school, and otherwise
+removes each unclaimed Owner
+with its invite and its grant, then invites a new Owner. Its journal entries
+carry the reason `break-glass`, and the ended grant the reason `replaced`.
+
+Operators enter a tenant only through an audited visit, a temporary Auditor
+grant that ends by its length of 15 to 1,440 minutes (at most 24 hours). An
+operator requests a visit with a reason code (`support`, `onboarding`, or
+`incident`), a note of up to 500 characters that stays out of the journal, and
+a length. The school's Owner or Admin approves or declines it, through the
+tenant action `visit.approve`. Approval admits the operator's Person of kind
+`operator`, claimed by the operator's account with method `operator` and named
+`Operator Nakafa`, and gives it the Auditor role over the whole tenant for the
+length. A visit grant is always the Auditor role, so approving a visit never
+mints an Admin. An operator holds at most one open visit, requested or approved,
+to each tenant, and a suspended tenant refuses a request. The operator or the
+school's Owner or Admin ends an approved visit at any time, and a suspended
+tenant does not refuse the end (ADR 0012). A scheduled mutation ends each
+approved visit at its term, and an hourly sweep ends any whose scheduled end
+never ran. An operator whose account is deleted ends its approved visit as
+`left`, and its Person is suspended, so no account can claim that Person again.
+A request or an approval for an operator whose account is being deleted is
+refused as `NotOperator`. When a school removes an operator's Person, the visit's
+later end leaves the removed Person and its ended grant as they are.
+
+The operator directory of a cell, `operators/tenants:list`, is the one public
+read across tenants. It lists each tenant's name, slug, kind, status, unit count,
+and the calling operator's open visit, and it reads no Person and no personal
+data. Everything inside a tenant needs a visit.
 
 ### Journal
 
@@ -338,9 +369,10 @@ beside the old School. Four steps followed, in this order, and all four are done
   that school only and an archived school refuses them. Restoring is decided on
   the tenant because an archived school refuses every write.
 - Internal: `tenancy/provision:open` opens an organisation (the tenant, its
-  schools, its first Owner as an unclaimed Person with the Owner role, the
-  invite, and the journal) in one transaction, and starts the invitation email
-  through `emails/invite`, since `emails` is the only sender. Nakafa staff run
+  schools, the school key that ADR 0030 gives it, its first Owner as an
+  unclaimed Person with the Owner role, the invite, and the journal) in one
+  transaction, and starts the invitation email through `emails/invite`, since
+  `emails` is the only sender. Nakafa staff run
   it with the deployment's key. `tenancy/claims:run` claims the pending invites of one
   account whose address Better Auth has verified and the tenant admits, a page
   at a time. It is scheduled by the Better Auth user triggers after sign-up and
@@ -364,9 +396,15 @@ beside the old School. Four steps followed, in this order, and all four are done
   as its expiry. It is internal, and it marks a still-pending invite expired.
   `tenancy/expiry:sweep` runs every hour as the backstop for a run that never
   happened: it expires each pending invite whose expiry has passed.
-- Operators, visits, and grant expiry follow as one change that extends this
-  contract. Invite expiry is built in `tenancy/expiry`, and the account release
-  in `tenancy/release.ts`, which account deletion and removal both call.
+- Operators and visits are built in `operators`: the tables `operators`
+  (`by_userId`) and `tenantVisits` (`by_tenantId_and_operatorId_and_state_status`,
+  `by_tenantId_and_state_status`, `by_state_status_and_state_expiresAt`), the
+  public functions of `operators/tenants` and `operators/visits`, and the
+  internal functions of `operators/staff` and `operators/expiry`. Invite expiry
+  is built in `tenancy/expiry`, and the account release in `tenancy/release.ts`,
+  which account deletion and removal both call. The removal of a Person is
+  `tenancy/remove.ts`, which the school and the operator's replacement of an
+  Owner share.
 - A tenant holds at most 24 units, at most 8 Owners, and at most 16 allowed
   email domains. A period holds at most 200 cohorts, a Person holds at most 64
   placements, and a Person's invite is sent again at most 3 times in any hour.

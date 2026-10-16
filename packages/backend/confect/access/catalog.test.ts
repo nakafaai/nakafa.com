@@ -20,6 +20,8 @@ describe("access/catalog", () => {
       "period",
       "cohort",
       "grant",
+      "class",
+      "visit",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
@@ -57,8 +59,21 @@ describe("access/catalog", () => {
       "cohort.created",
       "cohort.renamed",
       "cohort.archived",
+      "class.created",
+      "class.renamed",
+      "class.archived",
+      "class.teacherAssigned",
+      "class.teacherRemoved",
+      "visit.requested",
+      "visit.approved",
+      "visit.declined",
+      "visit.ended",
       "grant.created",
       "grant.ended",
+      "tenant.suspended",
+      "tenant.reactivated",
+      "person.reactivated",
+      "person.suspended",
     ]);
   });
 
@@ -119,6 +134,7 @@ describe("access/catalog", () => {
       "person.view",
       "grant.manage",
       "owner.manage",
+      "visit.approve",
     ]);
   });
 

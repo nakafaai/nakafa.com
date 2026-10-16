@@ -127,7 +127,7 @@ export const RULES = {
   },
   "node-module": {
     message:
-      "use FileSystem, Path, and ChildProcess from effect with NodeServices from @effect/platform-node instead of node:fs, node:path, or node:child_process.",
+      "use FileSystem, Path, and ChildProcess from effect with NodeServices from @effect/platform-node, Crypto from effect for digests and random bytes, Web Crypto for keys, signatures, and HMACs, Uint8Array with effect/encoding for bytes, ConfigProvider.fromDotEnvContents for .env text, NodeSocketServer and NodeHttpServer from @effect/platform-node for ports and servers, and navigator.hardwareConcurrency for the core count, instead of node:fs, node:path, node:child_process, node:crypto, node:buffer, node:util, node:os, node:net, or node:http.",
     scope: "code",
   },
   "object-helper": {

@@ -121,6 +121,7 @@ export declare const api: {
             deletionPreparedAt?: number;
             email: string;
             image?: string;
+            mascot?: string;
             name: string;
             plan: "free" | "pro";
             planCreditGrantId?: Id<"creditTransactions">;
@@ -139,7 +140,7 @@ export declare const api: {
         "query",
         "public",
         { userId: Id<"users"> },
-        { image?: string; name: string } | null
+        { image?: string; mascot?: string; name: string } | null
       >;
     };
   };
@@ -229,6 +230,148 @@ export declare const api: {
       >;
     };
   };
+  classroom: {
+    classes: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+      create: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string; subject?: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+      get: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            cohortId: Id<"tenantCohorts">;
+            id: Id<"classes">;
+            name: string;
+            periodId: Id<"tenantPeriods">;
+            slug: string;
+            status: "active" | "archived";
+            subject?: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      mine: FunctionReference<
+        "query",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        Array<{
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }>
+      >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; name: string; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+    };
+    teachers: {
+      assign: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
+        { id: Id<"tenantPeople">; name: string }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{ id: Id<"tenantPeople">; name: string }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
+        { id: Id<"tenantPeople"> }
+      >;
+    };
+  };
   comments: {
     mutations: {
       addComment: FunctionReference<
@@ -278,6 +421,7 @@ export declare const api: {
             replyToUser: {
               _id: Id<"users">;
               image?: string | null;
+              mascot?: string;
               name: string;
             } | null;
             replyToUserId?: Id<"users">;
@@ -287,6 +431,7 @@ export declare const api: {
             user: {
               _id: Id<"users">;
               image?: string | null;
+              mascot?: string;
               name: string;
             } | null;
             userId: Id<"users">;
@@ -2429,6 +2574,7 @@ export declare const api: {
           page: Array<{
             actor:
               | { id: Id<"tenantPeople">; kind: "person"; name: string }
+              | { kind: "operator" }
               | { kind: "system" };
             at: number;
             change:
@@ -2457,10 +2603,14 @@ export declare const api: {
               | { type: "unit.archived" }
               | { type: "unit.unarchived" }
               | { type: "person.created" }
-              | { invite: Id<"tenantInvites">; type: "person.invited" }
+              | {
+                  invite: Id<"tenantInvites">;
+                  reason?: "break-glass";
+                  type: "person.invited";
+                }
               | { method: "invite" | "operator"; type: "person.claimed" }
               | { type: "person.released" }
-              | { type: "person.removed" }
+              | { reason?: "break-glass"; type: "person.removed" }
               | { type: "person.renamed" }
               | { cohort: Id<"tenantCohorts">; type: "person.placed" }
               | {
@@ -2477,6 +2627,23 @@ export declare const api: {
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
+              | { type: "class.created" }
+              | { type: "class.renamed" }
+              | { type: "class.archived" }
+              | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
+              | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
+              | {
+                  minutes: number;
+                  reason: "support" | "onboarding" | "incident";
+                  type: "visit.requested";
+                }
+              | {
+                  grant: Id<"tenantGrants">;
+                  person: Id<"tenantPeople">;
+                  type: "visit.approved";
+                }
+              | { type: "visit.declined" }
+              | { reason: "expired" | "left" | "revoked"; type: "visit.ended" }
               | {
                   grant: Id<"tenantGrants">;
                   role: {
@@ -2505,9 +2672,13 @@ export declare const api: {
                 }
               | {
                   grant: Id<"tenantGrants">;
-                  reason: "revoked" | "expired" | "replaced";
+                  reason: "revoked" | "expired" | "replaced" | "left";
                   type: "grant.ended";
                 }
+              | { type: "tenant.suspended" }
+              | { type: "tenant.reactivated" }
+              | { type: "person.reactivated" }
+              | { type: "person.suspended" }
               | { type: string };
             id: Id<"journalEntries">;
             subject:
@@ -2517,6 +2688,8 @@ export declare const api: {
               | { id: Id<"tenantPeriods">; kind: "period" }
               | { id: Id<"tenantCohorts">; kind: "cohort" }
               | { id: Id<"tenantGrants">; kind: "grant" }
+              | { id: Id<"classes">; kind: "class" }
+              | { id: Id<"tenantVisits">; kind: "visit" }
               | { kind: string };
             subjectName: string | null;
           }>;
@@ -3044,6 +3217,314 @@ export declare const api: {
               updatedAt: number;
             };
           }
+      >;
+    };
+  };
+  operators: {
+    tenants: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"tenants">;
+            kind: "school" | "foundation";
+            name: string;
+            slug: string;
+            status: "active" | "suspended";
+            unitCount: number;
+            visit: {
+              id: Id<"tenantVisits">;
+              minutes: number;
+              note: string;
+              reason: "support" | "onboarding" | "incident";
+              requestedAt: number;
+              state:
+                | { status: "pending" }
+                | { at: number; status: "declined" }
+                | { at: number; expiresAt: number; status: "approved" }
+                | {
+                    at: number;
+                    reason: "expired" | "left" | "revoked";
+                    status: "ended";
+                  };
+            } | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      open: FunctionReference<
+        "mutation",
+        "public",
+        {
+          contract: {
+            contentLicense: string;
+            dpaVersion: string;
+            modules: Array<"classes" | "exams" | "bank" | "grades" | "reports">;
+            plan: "tenant" | "unit";
+          };
+          country: string;
+          currency: string;
+          kind: "school" | "foundation";
+          name: string;
+          owner: { email: string; name: string };
+          slug: string;
+          units: Array<{
+            contentLanguage: "en" | "id" | "de";
+            level:
+              | "paud"
+              | "sd"
+              | "mi"
+              | "smp"
+              | "mts"
+              | "sma"
+              | "ma"
+              | "smk"
+              | "slb"
+              | "other";
+            name: string;
+            npsn?: string;
+            timeZone: string;
+          }>;
+        },
+        {
+          invite: Id<"tenantInvites">;
+          owner: Id<"tenantPeople">;
+          tenant: Id<"tenants">;
+          units: Array<Id<"tenantUnits">>;
+        }
+      >;
+      reactivate: FunctionReference<
+        "mutation",
+        "public",
+        { tenantId: Id<"tenants"> },
+        {
+          id: Id<"tenants">;
+          kind: "school" | "foundation";
+          name: string;
+          slug: string;
+          status: "active" | "suspended";
+          unitCount: number;
+          visit: {
+            id: Id<"tenantVisits">;
+            minutes: number;
+            note: string;
+            reason: "support" | "onboarding" | "incident";
+            requestedAt: number;
+            state:
+              | { status: "pending" }
+              | { at: number; status: "declined" }
+              | { at: number; expiresAt: number; status: "approved" }
+              | {
+                  at: number;
+                  reason: "expired" | "left" | "revoked";
+                  status: "ended";
+                };
+          } | null;
+        }
+      >;
+      replaceOwner: FunctionReference<
+        "mutation",
+        "public",
+        {
+          locale: "en" | "id" | "de";
+          owner: { email: string; name: string };
+          tenantId: Id<"tenants">;
+        },
+        {
+          id: Id<"tenants">;
+          kind: "school" | "foundation";
+          name: string;
+          slug: string;
+          status: "active" | "suspended";
+          unitCount: number;
+          visit: {
+            id: Id<"tenantVisits">;
+            minutes: number;
+            note: string;
+            reason: "support" | "onboarding" | "incident";
+            requestedAt: number;
+            state:
+              | { status: "pending" }
+              | { at: number; status: "declined" }
+              | { at: number; expiresAt: number; status: "approved" }
+              | {
+                  at: number;
+                  reason: "expired" | "left" | "revoked";
+                  status: "ended";
+                };
+          } | null;
+        }
+      >;
+      suspend: FunctionReference<
+        "mutation",
+        "public",
+        { tenantId: Id<"tenants"> },
+        {
+          id: Id<"tenants">;
+          kind: "school" | "foundation";
+          name: string;
+          slug: string;
+          status: "active" | "suspended";
+          unitCount: number;
+          visit: {
+            id: Id<"tenantVisits">;
+            minutes: number;
+            note: string;
+            reason: "support" | "onboarding" | "incident";
+            requestedAt: number;
+            state:
+              | { status: "pending" }
+              | { at: number; status: "declined" }
+              | { at: number; expiresAt: number; status: "approved" }
+              | {
+                  at: number;
+                  reason: "expired" | "left" | "revoked";
+                  status: "ended";
+                };
+          } | null;
+        }
+      >;
+    };
+    visits: {
+      approve: FunctionReference<
+        "mutation",
+        "public",
+        { slug: string; visitId: Id<"tenantVisits"> },
+        {
+          id: Id<"tenantVisits">;
+          minutes: number;
+          note: string;
+          reason: "support" | "onboarding" | "incident";
+          requestedAt: number;
+          state:
+            | { status: "pending" }
+            | { at: number; status: "declined" }
+            | { at: number; expiresAt: number; status: "approved" }
+            | {
+                at: number;
+                reason: "expired" | "left" | "revoked";
+                status: "ended";
+              };
+        }
+      >;
+      decline: FunctionReference<
+        "mutation",
+        "public",
+        { slug: string; visitId: Id<"tenantVisits"> },
+        {
+          id: Id<"tenantVisits">;
+          minutes: number;
+          note: string;
+          reason: "support" | "onboarding" | "incident";
+          requestedAt: number;
+          state:
+            | { status: "pending" }
+            | { at: number; status: "declined" }
+            | { at: number; expiresAt: number; status: "approved" }
+            | {
+                at: number;
+                reason: "expired" | "left" | "revoked";
+                status: "ended";
+              };
+        }
+      >;
+      end: FunctionReference<
+        "mutation",
+        "public",
+        { slug: string; visitId: Id<"tenantVisits"> },
+        {
+          id: Id<"tenantVisits">;
+          minutes: number;
+          note: string;
+          reason: "support" | "onboarding" | "incident";
+          requestedAt: number;
+          state:
+            | { status: "pending" }
+            | { at: number; status: "declined" }
+            | { at: number; expiresAt: number; status: "approved" }
+            | {
+                at: number;
+                reason: "expired" | "left" | "revoked";
+                status: "ended";
+              };
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"tenantVisits">;
+            minutes: number;
+            note: string;
+            reason: "support" | "onboarding" | "incident";
+            requestedAt: number;
+            state:
+              | { status: "pending" }
+              | { at: number; status: "declined" }
+              | { at: number; expiresAt: number; status: "approved" }
+              | {
+                  at: number;
+                  reason: "expired" | "left" | "revoked";
+                  status: "ended";
+                };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      request: FunctionReference<
+        "mutation",
+        "public",
+        {
+          minutes: number;
+          note: string;
+          reason: "support" | "onboarding" | "incident";
+          tenantId: Id<"tenants">;
+        },
+        {
+          id: Id<"tenantVisits">;
+          minutes: number;
+          note: string;
+          reason: "support" | "onboarding" | "incident";
+          requestedAt: number;
+          state:
+            | { status: "pending" }
+            | { at: number; status: "declined" }
+            | { at: number; expiresAt: number; status: "approved" }
+            | {
+                at: number;
+                reason: "expired" | "left" | "revoked";
+                status: "ended";
+              };
+        }
       >;
     };
   };
@@ -5489,6 +5970,12 @@ export declare const api: {
   };
   users: {
     mutations: {
+      setMascot: FunctionReference<
+        "mutation",
+        "public",
+        { mascot: string },
+        { mascot: string }
+      >;
       syncUserInfoForChat: FunctionReference<
         "mutation",
         "public",
@@ -9100,6 +9587,43 @@ export declare const internal: {
       >;
     };
   };
+  operators: {
+    expiry: {
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+      visit: FunctionReference<
+        "mutation",
+        "internal",
+        { visitId: Id<"tenantVisits"> },
+        null
+      >;
+    };
+    staff: {
+      grant: FunctionReference<
+        "mutation",
+        "internal",
+        { userId: Id<"users"> },
+        {
+          changedAt: number;
+          grantedAt: number;
+          id: Id<"operators">;
+          status: "active" | "revoked";
+          userId: Id<"users">;
+        }
+      >;
+      revoke: FunctionReference<
+        "mutation",
+        "internal",
+        { userId: Id<"users"> },
+        {
+          changedAt: number;
+          grantedAt: number;
+          id: Id<"operators">;
+          status: "active" | "revoked";
+          userId: Id<"users">;
+        }
+      >;
+    };
+  };
   privacy: {
     recovery: {
       cleanupWorkflowStorage: FunctionReference<
@@ -9349,6 +9873,14 @@ export declare const internal: {
     };
   };
   users: {
+    backfill: {
+      assignMascots: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; dry: boolean },
+        { assigned: number; next: string | null; waiting: number }
+      >;
+    };
     queries: {
       getUserByAuthId: FunctionReference<
         "query",
@@ -9367,6 +9899,7 @@ export declare const internal: {
           deletionPreparedAt?: number;
           email: string;
           image?: string;
+          mascot?: string;
           name: string;
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
@@ -9391,6 +9924,7 @@ export declare const internal: {
           deletionPreparedAt?: number;
           email: string;
           image?: string;
+          mascot?: string;
           name: string;
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;

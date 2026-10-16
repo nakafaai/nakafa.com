@@ -20,6 +20,28 @@ export const UnitDraft = Schema.Struct({
   timeZone: NewTimeZone,
 });
 
+/** The fields an organisation opens with. Nakafa staff and the operator console send the same ones. */
+export const openArgs = {
+  contract: Contract,
+  country: CountryCodeSchema,
+  currency: NewCurrency,
+  kind: TenantKind,
+  name: TenantName,
+  owner: Schema.Struct({ email: Email, name: PersonName }),
+  slug: TenantSlug,
+  units: Schema.Array(UnitDraft),
+};
+/** The arguments of one opening, as the console and the command line send them. */
+export const OpenRequest = Schema.Struct(openArgs);
+
+/** What opening an organisation writes: its tenant, its schools, its first Owner, and the invite. */
+export const openResult = Schema.Struct({
+  invite: Id("tenantInvites"),
+  owner: Id("tenantPeople"),
+  tenant: Id("tenants"),
+  units: Schema.Array(Id("tenantUnits")),
+});
+
 /**
  * Opens an organisation, the way Nakafa staff do it from the command line with
  * the deployment's key. It is internal, so no browser can call it.
@@ -27,23 +49,8 @@ export const UnitDraft = Schema.Struct({
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({
     name: "open",
-    args: () => ({
-      contract: Contract,
-      country: CountryCodeSchema,
-      currency: NewCurrency,
-      kind: TenantKind,
-      name: TenantName,
-      owner: Schema.Struct({ email: Email, name: PersonName }),
-      slug: TenantSlug,
-      units: Schema.Array(UnitDraft),
-    }),
-    returns: () =>
-      Schema.Struct({
-        invite: Id("tenantInvites"),
-        owner: Id("tenantPeople"),
-        tenant: Id("tenants"),
-        units: Schema.Array(Id("tenantUnits")),
-      }),
+    args: () => openArgs,
+    returns: () => openResult,
     error: () => ProvisionRejected,
   })
 );

@@ -28,7 +28,7 @@ export const TenantName = Schema.String.check(
 );
 export const TenantKind = Schema.Literals(["school", "foundation"]);
 /** A suspended tenant stays readable and refuses every write. */
-const TenantStatus = Schema.Literals(["active", "suspended"]);
+export const TenantStatus = Schema.Literals(["active", "suspended"]);
 
 export const UnitName = Schema.String.check(
   Schema.isTrimmed(),
@@ -69,6 +69,11 @@ export const PersonKind = Schema.Literals(["member", "operator"]);
 export const PersonStatus = Schema.Literals(["active", "suspended", "removed"]);
 /** How an account came to hold a Person: an invite, a login card, or operator work. */
 export const ClaimMethod = Schema.Literals(["card", "invite", "operator"]);
+/**
+ * Why an operator changed a Person without the school's own action.
+ * `break-glass` removes an unclaimed Owner and invites a replacement.
+ */
+export const PersonReason = Schema.Literals(["break-glass"]);
 
 /** Binds a Person to at most one Nakafa account. */
 export const Account = Schema.Union([

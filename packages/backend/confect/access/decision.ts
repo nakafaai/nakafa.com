@@ -18,7 +18,8 @@ const Decision = Schema.Literals(["allow", "role", "condition"]);
 /**
  * Decides one rule for one principal on one placed subject. Conditions come
  * first, so no role or relation overrides a suspended tenant or a locked
- * subject. Relations decide only what roles leave open, so their checks, the
+ * subject; only a `write` rule is refused by them, and a `transition` is not
+ * (ADR 0012). Relations decide only what roles leave open, so their checks, the
  * only reads a decision may make, run last. No rule reads the clock.
  */
 export const decide = Effect.fn("access.decide")(function* (

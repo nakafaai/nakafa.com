@@ -17,7 +17,7 @@ import { inspectUsername } from "@repo/backend/confect/users/availability";
 import { readBio } from "@repo/backend/confect/users/bio";
 import spec from "@repo/backend/confect/users/mutations.spec";
 import { UsernameRejected } from "@repo/backend/confect/users/username";
-import { Clock, Effect, Layer, Result } from "effect";
+import { Clock, Effect, Layer, Result, Struct } from "effect";
 
 const updateUserRole = FunctionImpl.make(
   databaseSchema,
@@ -106,6 +106,29 @@ const updateBio = FunctionImpl.make(
     return null;
   })
 );
+
+/**
+ * Stores the caller's animal and answers the animal it stored. The row that the
+ * session loaded is replaced, not patched, because a patch reads the whole row
+ * again before it writes.
+ */
+const setMascot = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "setMascot",
+  Effect.fn("users.mutations.setMascot")(function* (args) {
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAuth();
+    yield* writer
+      .table("users")
+      .replace(user.appUser._id, {
+        ...Struct.omit(user.appUser, ["_id", "_creationTime"]),
+        mascot: args.mascot,
+      })
+      .pipe(Effect.orDie);
+    return { mascot: args.mascot };
+  })
+);
 const syncUserInfoForChat = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -154,6 +177,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(updateUserName),
   Layer.provide(updateUsername),
   Layer.provide(updateBio),
+  Layer.provide(setMascot),
   Layer.provide(syncUserInfoForChat),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),

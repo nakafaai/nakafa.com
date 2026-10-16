@@ -83,6 +83,8 @@ describe("access/kind declarations", () => {
       "card.redeemed",
       "grant.created",
       "grant.ended",
+      "person.reactivated",
+      "person.suspended",
     ]);
   });
 });

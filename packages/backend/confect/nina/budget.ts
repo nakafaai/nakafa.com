@@ -1,238 +1,261 @@
+import { languageModel } from "@repo/backend/confect/gateway/model";
+import { encodeJsonText } from "@repo/utilities/json";
+import type { ModelMessage } from "ai";
 import { Array as Arr } from "effect";
 
 /**
- * Model-facing token budgets for one Nina turn. Gemini accepts far more, so
- * these bound cost and latency; every limit truncates with a visible note
- * instead of failing the turn. `NINA_CALL_LIMIT` adds up the ones a chat call
- * holds at once. `captureMessage` and `foldMessage` bound the input of separate
- * background calls, the memory capture and the summary refresh, so they are not
- * part of it.
+ * Nina's parts of a call that hold their budget whatever the turn holds: the
+ * instructions with the tool definitions and the runtime facts, the signed
+ * page, what Nina reads about the learner, and the rolling summary. The
+ * learner's message with its files and the turn's evidence share what the call
+ * limit leaves after them, and the history takes what is left. Most of these
+ * travel in the system prompt. The recalled memories travel in front of the
+ * learner's message, which the turn counts as it is sent, so they are counted
+ * twice: a conservative reserve. Each budget is counted by the estimator below
+ * and rounded up to the next 500 tokens.
  */
-export const NINA_BUDGET = {
+const RESERVED = {
+  /** The account facts Nina reads about the learner. */
+  account: 1000,
   /**
-   * The account facts Nina reads about the learner. A try-out stores as many
-   * sections as its set has, so the facts are bounded here and never crowd the
-   * rest of the learner section out.
+   * Nina's static instructions, her tool definitions and the runtime facts, as
+   * the estimator counts them in the budget test. The tool definitions and the
+   * runtime facts are JSON, which the estimator prices at one token a
+   * punctuation mark, so the budget holds the measured count, rounded up.
    */
-  account: 500,
-  /** The learner text one capture call reads. */
-  captureMessage: 1000,
-  /** One capability output returned to the main Agent. */
-  evidence: 6000,
-  /** Evidence gathered by all tool calls in the current turn. */
-  turnEvidence: 16_000,
-  /** The text one message contributes to the transcript of a summary refresh. */
-  foldMessage: 1500,
-  /**
-   * Complete turns kept word for word after the conversation summary. When
-   * they cost more than this, the summary folds the oldest of them down to
-   * half of it.
-   */
-  history: 32_000,
-  /**
-   * Nina's static instructions, her four tool definitions and the runtime
-   * facts of a turn: what every call carries before any conversation. Nothing
-   * cuts to this number. The budget test measures a real turn by
-   * `countTextTokens`: the instructions with a question focus for the role that
-   * makes them longest, the tool definitions of the call, and its newest message
-   * with the runtime facts. With the memory capability on, that measure was 6,094
-   * tokens on 14 October 2026: 3,894 instructions, 1,933 tool definitions and 267
-   * runtime facts. This number is the measure rounded up to the next 1,000. The
-   * tokenizer that `countTextTokens` replaced measured 5,143 on 12 October 2026.
-   */
-  instructions: 7000,
-  /** The memories the memory capability returns to Nina in one call. */
-  lookup: 1500,
-  /** The signed current page placed in the stable prompt context. */
-  page: 6000,
-  /** The learner's portrait in the stable system prompt. */
-  portrait: 300,
+  instructions: 12_500,
+  /** The signed current page in the system prompt. */
+  page: 10_500,
+  /** The learner's portrait in the system prompt. */
+  portrait: 1000,
   /** The memories a turn recalls, in front of the learner's message. */
-  recall: 700,
+  recall: 1500,
   /** The rolling summary of the turns folded out of the history. */
-  summary: 2000,
-} as const;
+  summary: 3500,
+};
+
+/** Evidence gathered by all tool calls in one turn. */
+const TURN_EVIDENCE = 28_000;
 
 /**
- * The most tokens one Nina model call is built to carry, 64,500: the parts of
- * `NINA_BUDGET` that a call holds at once, which are the instructions, the
- * page, what Nina reads about the learner (the account facts, the portrait and
- * the recalled memories, 1,500 together), the summary, the history and the
- * evidence of the current turn. One tool result (`evidence`, or `lookup` for
- * the memory capability) lies inside the turn's evidence, so it is not added
- * again. Its instructions part is the measure of `NINA_BUDGET.instructions`,
- * rounded up to the next 1,000.
- *
- * The model accepts 1,048,576 input tokens
- * (https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash, the model in
- * `gateway/model.ts`, as that page read on 12 October 2026). Nina stays far
- * below that on purpose. Every call bills every token it carries again, a
- * larger call takes longer to read before the first word, and the provider
- * keeps a prefix for only about five minutes (`gateway/cache.ts`), so the
- * first call after a pause pays full price for all of it.
- *
- * This is what Nina's own builders hold, and three things lie outside it. The
- * learner's message and files are checked when a turn is admitted, and a
- * question focus has no budget of its own. The newest earlier turn is also kept
- * whatever it costs: only its tool results are shortened, never the words of
- * the learner or of Nina, so one very long message or answer in that turn can
- * take the history above its part.
+ * What a call holds of its reserved parts at their budgets. The learner's
+ * message and the history share what is left of the call limit after them.
+ */
+export const NINA_RESERVED =
+  RESERVED.account +
+  RESERVED.instructions +
+  RESERVED.page +
+  RESERVED.portrait +
+  RESERVED.recall +
+  RESERVED.summary;
+
+/**
+ * The most tokens one Nina model call is built to carry: the context limit less
+ * a margin for the estimator's error. The margin is the 95th percentile of the
+ * estimator's undercount on 120 texts, `tokens.undercount` of the language model
+ * profile, as a share of the limit. For 95 texts in 100 the estimate falls short
+ * of the true count by at most that share of the true count. So an estimate at
+ * most this large has a true count of at most the context limit, for 95 calls
+ * in 100.
  */
 export const NINA_CALL_LIMIT =
-  NINA_BUDGET.instructions +
-  NINA_BUDGET.page +
-  NINA_BUDGET.account +
-  NINA_BUDGET.portrait +
-  NINA_BUDGET.recall +
-  NINA_BUDGET.summary +
-  NINA_BUDGET.history +
-  NINA_BUDGET.turnEvidence;
-
-/** Tokens reserved for the truncation note appended to bounded text. */
-const NOTE_TOKENS = 80;
+  languageModel.contextLimit -
+  Math.ceil(
+    (languageModel.contextLimit * languageModel.tokens.undercount) / 10_000
+  );
 
 /**
- * The four separators from U+001C to U+001F, which the estimator's Python counts
- * as spaces. They are built from their code points, not written as escapes.
+ * What a call leaves for one turn after its reserved parts and the turn's
+ * evidence. The learner's message with its files may cost at most this much,
+ * and the history takes at most this much, so the message and the evidence fit
+ * the call limit together.
  */
-const SEPARATORS = String.fromCodePoint(0x1c, 0x1d, 0x1e, 0x1f);
-
-/** The estimator's spaces: White_Space and the four separators. */
-const SPACES = `\\p{White_Space}${SEPARATORS}`;
+const TURN_ROOM = NINA_CALL_LIMIT - NINA_RESERVED - TURN_EVIDENCE;
 
 /**
- * The pieces that `countTextTokens` counts, in order: a run of letters (a
- * letter, or a number that is not a decimal digit), one decimal digit, one
- * newline, a run of spaces other than newlines, or one other character. An
- * underscore is in no piece, so it costs nothing. The classes are those of the
- * estimator the budgets were fitted with: its word characters are letters,
- * numbers and the underscore, and its spaces are `SPACES`.
+ * Model-facing token budgets for one Nina turn. Every limit truncates with a
+ * visible note instead of failing the turn, except the learner's message: the
+ * send refuses a message that costs more than `prompt`. `captureMessage` and
+ * `foldMessage` bound the input of separate background calls, the memory capture
+ * and the summary refresh, so they are not part of a chat call. The known
+ * memories of the capture call have no budget of their own: the query holds them
+ * to `MEMORY_KNOWN_LIMIT` memories of `KNOWN_LENGTH` characters each, at most
+ * about 3,800 estimator tokens, so a budget there could never cut them.
  */
-const PIECE = new RegExp(
-  `[\\p{L}\\p{Nl}\\p{No}]+|\\p{Nd}|\\n|(?:(?!\\n)[${SPACES}])+|[^\\p{L}\\p{Nl}\\p{No}\\p{Nd}_${SPACES}]`,
-  "gu"
-);
-
-/** A piece that starts with a letter, as the estimator's `isalpha` reads it. */
-const LETTER_START = /^\p{L}/u;
-
-/** A piece that starts with a space, which is never a newline. */
-const SPACE_START = new RegExp(`^[${SPACES}]`, "u");
-
-/** One Chinese character, from U+3000 to U+9FFF. */
-const CHINESE_CHARACTER = /^[\u{3000}-\u{9fff}]$/u;
+export const NINA_BUDGET = {
+  ...RESERVED,
+  /** The learner's message with its files: the most one turn may carry. */
+  prompt: TURN_ROOM,
+  /** The learner text one capture call reads. */
+  captureMessage: 2000,
+  /** One capability output returned to the main Agent. */
+  evidence: 10_500,
+  /** Evidence gathered by all tool calls in the current turn. */
+  turnEvidence: TURN_EVIDENCE,
+  /** The text one message contributes to the transcript of a summary refresh. */
+  foldMessage: 3000,
+  /**
+   * Complete turns kept word for word after the conversation summary: what the
+   * call limit leaves after the reserved parts and one turn's evidence. When the
+   * turns cost more than this, the summary folds the oldest of them down to half
+   * of it. A call whose current turn costs more gets less history
+   * (`assembleContext`), never more.
+   */
+  history: TURN_ROOM,
+  /** The memories the memory capability returns to Nina in one call. */
+  lookup: 3000,
+};
 
 /**
- * Counts the tokens of a text, as the provider bills them. The count is an
- * estimate fitted on 13 October 2026 against the provider's own count of 120
- * texts: google/gemini-3.8-flash through the Convex AI gateway, where one user
- * message adds nothing around its content. The texts were six stored sections
- * in each of Indonesian, English and German, of articles, AI, mathematics,
- * physics, chemistry and Quran passages, and chat messages, Python, TypeScript,
- * LaTeX, emoji, Chinese, URLs and numbers.
- *
- * Over all 120 texts together the estimate is 0.4% above the provider's count,
- * and the mean error of one text is 9.1%. For prose, mathematics, science and
- * Quran passages in each language the error runs from 16.2% below to 23.1%
- * above. Emoji are 2.6% above, Chinese 14.2% above, URLs 1.6% above and numbers
- * 13.3% below. Python is 6.1% below and TypeScript 9.2% above.
- *
- * The count uses no tokenizer, so it needs no encoder. The tokenizer that the
- * budgets used before held 3,315 KiB of code and 16 MiB of heap, and the answer
- * run must fit the default Convex runtime. A budget bounds cost and latency far
- * below the model's input limit, so this precision is enough.
+ * One piece of text the estimator prices: a run of Latin letters, a single Han
+ * character, another letter, a digit, a run of spaces that is not a newline, a
+ * newline, an underscore, or any other single character such as punctuation,
+ * a mark or an emoji. The groups are read by position, so an unmatched group is
+ * `undefined`.
  */
-export function countTextTokens(text: string) {
+const PIECE =
+  /([A-Za-zÀ-ÖØ-öø-ɏḀ-ỿ]+)|([㐀-䶿一-鿿豈-﫿\u{20000}-\u{2fa1f}])|(\p{L})|(\p{Nd})|([^\S\n]+)|(\n)|(_)|[\s\S]/gu;
+
+/** The tokens one matched piece costs, by the rule of the group that matched it. */
+function pieceTokens(
+  match: RegExpExecArray,
+  costs: typeof languageModel.tokens
+) {
+  const [, latin, han, letter, digit, space, newline, underscore] = match;
+  if (latin !== undefined) {
+    return Math.ceil(latin.length / costs.latinLettersPerToken);
+  }
+  if (han !== undefined) {
+    return costs.han;
+  }
+  if (letter !== undefined) {
+    return costs.otherLetter;
+  }
+  if (digit !== undefined) {
+    return costs.digit;
+  }
+  if (space !== undefined) {
+    return space.length === 1 ? costs.space : costs.spaceRun;
+  }
+  if (newline !== undefined) {
+    return costs.newline;
+  }
+  if (underscore !== undefined) {
+    return costs.underscore;
+  }
+  return costs.other;
+}
+
+/**
+ * Counts model tokens for a text by the rules of the language model profile, so
+ * every budget shares one estimator whose costs change with the model alone.
+ * `costs` defaults to the profile's, and a test passes the costs of its own
+ * rules. A message adds the profile's `message` overhead on top, in
+ * `countMessageTokens`. Fitted on 120 texts, the estimate was 13.1% off a text on
+ * average and 4% above the provider over all of them.
+ */
+export function countTextTokens(text: string, costs = languageModel.tokens) {
   let total = 0;
   for (const match of text.matchAll(PIECE)) {
-    total += pieceTokens(match[0]);
+    total += pieceTokens(match, costs);
   }
   return Math.ceil(total);
 }
 
 /**
- * The tokens of one piece, as the estimator counts them: a newline costs 0, a
- * single space 0, two or more spaces 1, a run of letters by `letterTokens`, and
- * any other piece 1.
+ * The longest prefix of one piece that costs at most `room` tokens, cut between
+ * characters. A run of letters without a break is one piece, so a piece that
+ * alone outgrows the room is cut inside it instead of being dropped whole.
  */
-function pieceTokens(piece: string) {
-  if (piece === "\n") {
-    return 0;
+function prefixOfPieceWithin(piece: string, room: number) {
+  const characters = Arr.fromIterable(piece);
+  let low = 0;
+  let high = characters.length;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (countTextTokens(Arr.join(Arr.take(characters, middle), "")) <= room) {
+      low = middle;
+    } else {
+      high = middle - 1;
+    }
   }
-  if (SPACE_START.test(piece)) {
-    return piece.length === 1 ? 0 : 1;
-  }
-  if (LETTER_START.test(piece)) {
-    return letterTokens(piece);
-  }
-  return 1;
+  return Arr.join(Arr.take(characters, low), "");
 }
 
 /**
- * A run of letters costs 0.75 for each Chinese character, and one token for
- * each eight of its other characters, rounded up.
+ * The longest run of whole pieces from the start of `text` that costs at most
+ * `room` tokens. The piece that does not fit is cut inside, so the text keeps as
+ * many of its characters as the room holds.
  */
-function letterTokens(letters: string) {
-  const characters = Arr.fromIterable(letters);
-  const chinese = Arr.filter(characters, (character) =>
-    CHINESE_CHARACTER.test(character)
-  ).length;
-  return chinese * 0.75 + Math.ceil((characters.length - chinese) / 8);
-}
-
-/**
- * The index where the last piece of `text` ends whose running cost stays
- * within `budget`. Costs never fall, so the first piece that does not fit ends
- * the count.
- */
-function fittingEnd(text: string, budget: number) {
-  let used = 0;
-  let end = 0;
+function prefixWithin(text: string, room: number) {
+  let total = 0;
+  let end = text.length;
   for (const match of text.matchAll(PIECE)) {
-    used += pieceTokens(match[0]);
-    if (used > budget) {
+    const cost = pieceTokens(match, languageModel.tokens);
+    if (total + cost > room) {
+      end = match.index + prefixOfPieceWithin(match[0], room - total).length;
       break;
     }
-    end = match.index + match[0].length;
+    total += cost;
   }
-  return end;
+  return text.slice(0, end);
 }
 
 /**
- * What Gemini 3 bills at its default media resolution, which Nina leaves
- * unset: 1,120 tokens for an image of any size and 560 for a page of a
- * document. Earlier Gemini models billed an image by 768 pixel tiles instead.
- *
- * @see https://ai.google.dev/gemini-api/docs/media-resolution
- */
-const IMAGE_TOKENS = 1120;
-const DOCUMENT_PAGE_TOKENS = 560;
-
-/**
- * Tokens the model bills for one attachment, from its media type alone: this
- * is the one rule for what a file costs, so a file's bytes never reach the
- * estimator. A stored message keeps no size, page count, or dimensions of its
- * files, so a document counts one page. History only ever counts images: an
- * earlier document is replaced by a note before anything is counted, and the
- * learner's own message is not evidence.
- */
-export function countFileTokens(mediaType: string) {
-  return mediaType.startsWith("image/") ? IMAGE_TOKENS : DOCUMENT_PAGE_TOKENS;
-}
-
-/**
- * Keeps text within `limit` tokens. Truncated text ends after the last piece
- * that fits, on a paragraph or line boundary when one is close, followed by a
- * note that tells the model what was omitted and how to read further.
+ * Keeps text within `limit` tokens. Truncated text ends on a paragraph or line
+ * boundary when one is close, followed by a note that tells the model what was
+ * omitted and how to read further. The note is priced first, so the kept text
+ * and the note together stay within the limit.
  */
 export function boundText(text: string, limit: number, continuation: string) {
   const total = countTextTokens(text);
   if (total <= limit) {
     return text;
   }
-  const kept = text.slice(0, fittingEnd(text, limit - NOTE_TOKENS));
+  const note = `\n\n[Shortened to about ${limit} of ${total} tokens. ${continuation}]`;
+  const kept = prefixWithin(text, limit - countTextTokens(note));
   // A paragraph break ends with a line break, so this also finds paragraphs.
   const boundary = kept.lastIndexOf("\n");
   const cut = boundary > kept.length * 0.6 ? kept.slice(0, boundary) : kept;
-  return `${cut.trimEnd()}\n\n[Shortened to about ${limit} of ${total} tokens. ${continuation}]`;
+  return `${cut.trimEnd()}${note}`;
+}
+
+/**
+ * Tokens the provider bills for one attachment, from its media type alone, so a
+ * file's bytes never reach the estimator. A stored message keeps no size, page
+ * count, or dimensions of its files, so an image counts the most one image
+ * costs and a document counts one page.
+ */
+export function countFileTokens(mediaType: string) {
+  return mediaType.startsWith("image/")
+    ? languageModel.files.image
+    : languageModel.files.documentPage;
+}
+
+/**
+ * Counts the provider tokens of one model message: the overhead the provider adds
+ * to every message, and its content. A file counts what the provider bills for
+ * it (`countFileTokens`), not its bytes.
+ */
+export function countMessageTokens(message: ModelMessage) {
+  if (typeof message.content === "string") {
+    return languageModel.tokens.message + countTextTokens(message.content);
+  }
+  let total = languageModel.tokens.message;
+  for (const part of message.content) {
+    if (part.type === "text" || part.type === "reasoning") {
+      total += countTextTokens(part.text);
+    } else if (part.type === "tool-call") {
+      total += countTextTokens(encodeJsonText(part.input));
+    } else if (part.type === "tool-result") {
+      total += countTextTokens(encodeJsonText(part.output));
+    } else if (part.type === "image") {
+      total += countFileTokens(part.mediaType ?? "image/*");
+    } else if (part.type === "file") {
+      total += countFileTokens(part.mediaType);
+    } else {
+      total += countTextTokens(encodeJsonText(part));
+    }
+  }
+  return total;
 }

@@ -31,8 +31,9 @@ const app = defineApp({
     POSTHOG_HOST: v.string(),
     POSTHOG_PROJECT_ID: v.string(),
     POSTHOG_PROJECT_TOKEN: v.string(),
-    // Root keys that wrap each learner's vault key. Convex refuses a push to a
-    // deployment that lacks them, because nothing sealed could be read there.
+    // Root keys that wrap each learner's vault key and each school's key.
+    // Convex refuses a push to a deployment that lacks them, because nothing
+    // sealed could be read there.
     VAULT_ROOT_KEYS: v.string(),
   },
 });
