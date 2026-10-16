@@ -242,8 +242,10 @@ export class PromotionState extends Schema.TaggedError<PromotionState>()(
  * Why a plan does not fit its school: `targets` too many, `sources` not one entry
  * for each cohort of the source period, `destination` a cohort the plan does not
  * create, `stay` no cohort of the same name and grade, `graduate` a cohort whose
- * grade is not the last of its unit, and `homeroom` a homeroom teacher copied to
- * anything but a named cohort.
+ * grade is not the last of its unit, `homeroom` a homeroom teacher copied to
+ * anything but a named cohort, and `moves` a student's move that the plan no longer
+ * fits when it is submitted, whatever the destination's reason, or a new move past
+ * the most moves a promotion may hold.
  */
 export const PromotionPlanIssue = Schema.Literals([
   "targets",

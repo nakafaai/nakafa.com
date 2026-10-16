@@ -91,6 +91,14 @@ export const PromotionDestination = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("stay") }),
 ]).pipe(Schema.toTaggedUnion("kind"));
 
+/**
+ * The most student moves one promotion may hold. Submit reads a placement and a cohort
+ * for each move, two database calls, so 200 moves use about 400 of the 4,096 calls one
+ * mutation may make (docs.convex.dev/production/state/limits, read on 16 October 2026).
+ * `setMove` refuses a new move past this limit.
+ */
+export const PROMOTION_MOVE_LIMIT = 200;
+
 /** One new cohort of the target period, which applying the promotion creates. */
 export const PromotionTarget = Schema.Struct({
   grade: CohortGrade,

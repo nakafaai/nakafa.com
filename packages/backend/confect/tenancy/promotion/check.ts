@@ -129,7 +129,10 @@ const checkMove = Effect.fn("tenancy.promotion.check.move")(function* (
   }
 });
 
-/** Checks every move of the promotion, one page at a time through the moves index. */
+/**
+ * Checks every move of the promotion, one page at a time through the moves index. A
+ * promotion holds at most PROMOTION_MOVE_LIMIT moves, so the pages read a bounded set.
+ */
 const checkMovesOf = Effect.fn("tenancy.promotion.check.movesOf")(function* (
   promotion: TenantPromotionsDoc,
   lastGrade: Option.Option<number>

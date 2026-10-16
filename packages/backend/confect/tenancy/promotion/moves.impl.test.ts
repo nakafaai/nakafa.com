@@ -1,6 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { PromotionDestination } from "@repo/backend/confect/tenancy/promotion/schema";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
+  PROMOTION_MOVE_LIMIT,
+  type PromotionDestination,
+} from "@repo/backend/confect/tenancy/promotion/schema";
+import {
+  crowd,
   nf,
   promotion,
   scenario,
@@ -10,7 +15,7 @@ import {
   toStay,
 } from "@repo/backend/test/promotion";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const { create, plan } = promotion.draft;
 const { moves, setMove } = promotion.moves;
@@ -150,6 +155,68 @@ describe("tenancy/promotion moves", () => {
           { _tag: "PromotionPlanInvalid", reason: "stay" },
           { _tag: "PromotionPlanInvalid", reason: "graduate" },
         ]);
+      })
+  );
+
+  it.effect(
+    "refuses a new move once the promotion holds the most it may, and still replaces one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const made = yield* fixture.as("admin").mutation(create, {
+          periodId: s.source.id,
+          slug: nf,
+          targetPeriodId: s.target.id,
+        });
+        yield* fixture.as("admin").mutation(plan, {
+          promotionId: made.id,
+          slug: nf,
+          ...scenarioPlan(s.seventh, s.ninth),
+        });
+        // One student more than the limit, each placed in the seventh cohort the plan moves to 8A.
+        const students = yield* crowd(
+          fixture,
+          s.seventh.id,
+          s.source.id,
+          PROMOTION_MOVE_LIMIT + 1
+        );
+        const held = Arr.take(students, PROMOTION_MOVE_LIMIT);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            Effect.forEach(
+              held,
+              (personId) =>
+                writer.table("tenantPromotionMoves").insert({
+                  personId,
+                  promotionId: made.id,
+                  tenantId: fixture.tenants.nf,
+                  to: toEightA,
+                }),
+              { discard: true }
+            )
+          )
+        );
+        const refusal = yield* fixture
+          .as("admin")
+          .mutation(setMove, {
+            personId: Option.getOrThrow(Arr.last(students)),
+            promotionId: made.id,
+            slug: nf,
+            to: toEightA,
+          })
+          .pipe(Effect.flip);
+        const replaced = yield* fixture.as("admin").mutation(setMove, {
+          personId: Option.getOrThrow(Arr.head(held)),
+          promotionId: made.id,
+          slug: nf,
+          to: toEightA,
+        });
+        expect(refusal).toMatchObject({
+          _tag: "PromotionPlanInvalid",
+          reason: "moves",
+        });
+        expect(replaced.state).toBe("draft");
       })
   );
 });

@@ -28,9 +28,32 @@ import {
 } from "@repo/backend/confect/tenancy/promotion/destination";
 import spec from "@repo/backend/confect/tenancy/promotion/moves.spec";
 import { PLANNABLE, update } from "@repo/backend/confect/tenancy/promotion/row";
-import type { PromotionDestination } from "@repo/backend/confect/tenancy/promotion/schema";
+import {
+  PROMOTION_MOVE_LIMIT,
+  type PromotionDestination,
+} from "@repo/backend/confect/tenancy/promotion/schema";
 import { view } from "@repo/backend/confect/tenancy/promotion/view";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
+
+/**
+ * Refuses a new move once the promotion holds PROMOTION_MOVE_LIMIT moves, with the reason
+ * `moves`. The submit check reads every move, so the limit keeps that read bounded. It
+ * reads at most the limit, through the moves index.
+ */
+const checkMoveRoom = Effect.fn("tenancy.promotion.moves.room")(function* (
+  promotion: TenantPromotionsDoc
+) {
+  const held = yield* (yield* DatabaseReader)
+    .table("tenantPromotionMoves")
+    .index("by_promotionId_and_personId", (query) =>
+      query.eq("promotionId", promotion._id)
+    )
+    .take(PROMOTION_MOVE_LIMIT)
+    .pipe(Effect.orDie);
+  if (held.length >= PROMOTION_MOVE_LIMIT) {
+    return yield* new PromotionPlanInvalid({ reason: "moves" });
+  }
+});
 
 /** Writes one student's move: sets it, replaces it, or clears it when `to` is `null`. */
 const writeMove = Effect.fn("tenancy.promotion.moves.write")(function* (
@@ -64,6 +87,7 @@ const writeMove = Effect.fn("tenancy.promotion.moves.write")(function* (
       .pipe(Effect.orDie);
     return;
   }
+  yield* checkMoveRoom(promotion);
   yield* writer
     .table("tenantPromotionMoves")
     .insert({
