@@ -51,13 +51,13 @@ source check stays off, and its row names that check as the owner.
 ### Schema error brands
 
 A missing brand lets a structurally equal value pass for a Schema class instance.
-So every Schema error class carries `{ readonly brand: unique symbol }` as its
-second type argument, and both repositories keep `schemaClassMissingBrand` as an
-error. This branch does not make that sweep: fourteen open pull requests add
-Schema error classes, so the rule stays off here. The change that brands the
-last Schema error class sets it to error in both repositories together, and until
-then Aksara's copy of the block, which sets it to error, differs from this one in
-that rule alone. `Data.TaggedError` is not a Schema class and keeps its form.
+The target is that every Schema error class carries `{ readonly brand: unique symbol }`
+as its second type argument, and that both repositories set `schemaClassMissingBrand`
+to error in the same change that brands the last one. This branch does not make that
+sweep: fourteen open pull requests add Schema error classes, so the rule stays off
+here, and no Schema error class carries a brand yet. Until the sweep lands, Aksara's
+copy of the block, which sets the rule to error, differs from this one in that rule
+alone. `Data.TaggedError` is not a Schema class and keeps its form.
 `scripts/provenance/schema.ts`, the one shared class, stays byte-identical to
 Aksara's copy until then.
 
