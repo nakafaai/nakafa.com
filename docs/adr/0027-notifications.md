@@ -226,8 +226,8 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
   at 17:00 WITA, while the rule fires at 16:00 WITA, which is 08:00Z.
 - An archived unit sends no reminder and no digest. Its inbox rows stay readable,
   as ADR 0011 keeps an archived unit readable.
-- The tests run in Asia/Jakarta and Europe/Berlin, and they include a change of
-  daylight saving time.
+- The tests run in Asia/Jakarta, Asia/Makassar, and Europe/Berlin, and they
+  include a change of daylight saving time.
 
 ### Email
 
