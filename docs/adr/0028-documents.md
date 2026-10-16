@@ -122,12 +122,21 @@ Every editor applies the server's steps to its own copy of the server's document
 in order. A stored step that does not apply to that document is skipped by every
 editor the same way: the editor passes on a step that changes nothing in its place,
 so the version still counts it, and it logs one warning. The snapshot an editor
-saves is the document after the skip.
+saves is the document after the skip. A stored step is skipped in the same way
+when the document it makes nests past `MAX_DOCUMENT_DEPTH` of the contract, so no
+editor holds a document that no snapshot can save. An editor whose own step the
+server skips cannot keep that step's effect, so it opens again from the snapshot,
+where its landed batch is dropped, and the step counts as dropped.
 
 An editor refuses an edit that would nest its document deeper than the bound of
 the contract. `depthGuard` in `packages/design-system/components/editor/depth.ts`
 does that for the caller's bound, and it lets through a change that another
 editor's steps brought in, because the server's document is the one that counts.
+`stepSizeGuard` in `packages/design-system/components/editor/size.ts` refuses an
+edit with a step whose JSON text is over the caller's bound, which the question
+editor passes as `MAX_BATCH_BYTES`, so the editor holds no edit that no call can
+send. A queued step that no call can carry is dropped and counted by the sync
+(`dropUnsendable` in `apps/www/lib/editor/receive.ts`).
 
 ### Bounds
 
@@ -299,17 +308,16 @@ Drive copies come through the Drive connector (ADR 0015).
   and `documents:open` are queries, which cannot write. A client mutation that
   confirms the batch would let a sweep reclaim the rows. The owner decides whether
   to add it.
-- A remote change can nest the document past the depth bound. `depthGuard` lets
-  every change that another editor's steps brought in pass, so two editors can
-  make a document that the contract refuses at its snapshot, and no snapshot after
-  the last good one is saved. Refusing such a step on every editor, and dropping
-  the author's own rebased step, is open.
-- A step that one call cannot send, because it is over `MAX_BATCH_BYTES`, blocks
-  every later batch of its editor. The editor refuses no step by its size yet.
-- The rich editor offers strike and highlight, which the contract's inline marks
-  do not have, and it orders a link before bold, which the contract refuses. A
-  snapshot of such a document is refused. The owner decides which marks the
-  editor offers.
+- The size guard measures the JSON text of one step against `MAX_BATCH_BYTES`. A
+  call also carries its batch around the steps (the ids and the version), so a
+  step within that surrounding text of the bound passes the guard, and no call
+  carries it. The sync drops such a step and counts it, but the editor shows the
+  edit until then. Measuring the one-step batch at input is open.
+- A dropped step, or a step that the editor replays after it opens again, keeps
+  its position in the document it is replayed on. A later step that depended on
+  the dropped one can therefore land at another place, and the replay does not
+  map it through the dropped step. The replay keeps each step that applies, and
+  the count of dropped steps reports the loss. A mapping of the replay is open.
 - The public function that deletes a document. `internal.editor.deletion.document`
   is the one owner of the deletion: it deletes the session records and the steps
   of the document in pages, then its snapshot and its document row. The first
@@ -354,8 +362,10 @@ Drive copies come through the Drive connector (ADR 0015).
 | The functions `editor/documents` (`create`, `open`), `editor/steps` (`since`, `submit`), and `editor/snapshots` (`save`), and the sweep `internal.editor.prune.sweep` | In code and tested in convex-test, not live: no page calls them yet. |
 | The session record and the idempotent batch: the batch id, a repeat of an accepted batch answered with its version, `ClientTaken` for another account's session, and the record that `open` and `since` answer for the caller's own session | In code, not live: `confect/editor/steps.impl.ts`, `confect/editor/documents.impl.ts`, and `confect/editor/store.ts`. Tested in convex-test. |
 | The behind replay: the confirmation of the in-flight batch that landed, the replay of the other unconfirmed steps onto the snapshot, and the one `SyncDropped` count | In code, not live: `apps/www/lib/editor/receive.ts`, tested with the fake server in `apps/www/lib/editor/sync.test.ts`. |
-| The skip rule: a stored step that does not apply is skipped by every editor and logged once | In code, not live: `apps/www/lib/editor/receive.ts`. Tested: three editors with a stored step that does not apply converge. |
+| The skip rule: a stored step that does not apply, or that nests the document past `MAX_DOCUMENT_DEPTH`, is skipped by every editor and logged once; an editor whose own step the server skips opens again from the snapshot | In code, not live: `apps/www/lib/editor/receive.ts`. Tested: three editors converge with a stored step that does not apply, and three editors converge within the bound when a rebased step nests past it (`receive.test.ts`). |
 | The depth filter of the editor: `depthGuard` refuses an edit that nests the document past the bound it is given | In code, not live: `packages/design-system/components/editor/depth.ts`. No editor mounts it yet, and the question editor passes `MAX_DOCUMENT_DEPTH`. |
+| The size guard of the editor: `stepSizeGuard` refuses an edit with a step over the bound it is given, and a queued step that no call can carry is dropped and counted (`dropUnsendable`) | In code, not live: `packages/design-system/components/editor/size.ts` and `apps/www/lib/editor/send.ts`. The question editor passes `MAX_BATCH_BYTES`. Tested in `size.test.ts` and `sync.test.ts`. |
+| The assessment marks: `documentSchema` takes the marks its caller gives, in their order, with no strike and no highlight (`packages/design-system/components/editor/document.ts`), and `apps/www/lib/editor/assessment.ts` gives it the contract's marks in the contract's order | In code, not live. Bold, italic, code, link, subscript, and superscript are pinned at 3.31.4 in `packages/design-system` next to underline, because the editor offers each mark of the contract. The Memory editor keeps its own marks. Tested in `document.test.ts`, and in `assessment.test.ts`, which checks that the schema holds the contract's marks in its order and that a document using every mark passes the contract at the snapshot. |
 | The deletion of a document: its session records and its steps in pages, then its snapshot and its document row (`internal.editor.deletion.document`) | In code, not live: `confect/editor/deletion.impl.ts`, tested in convex-test. No public function deletes a document yet. |
 | The `document` access kind (`confect/editor/kinds.ts`), its authority, and its catalog entry | In code. ADR 0012 names it. |
 | The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots (`SnapshotRefused`), and the idle snapshot trigger (`snapshotDue`, read by the client) | In code, not live: `confect/editor/store.ts`, `confect/editor/prune.ts`, and the sync loop `apps/www/lib/editor/sync.ts`, which the fake-client tests drive. |
