@@ -12,10 +12,12 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import customers from "@repo/backend/confect/_generated/refs/customers";
 import editor from "@repo/backend/confect/_generated/refs/editor";
+import identity from "@repo/backend/confect/_generated/refs/identity";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import operators from "@repo/backend/confect/_generated/refs/operators";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
@@ -99,10 +101,12 @@ const domainModules = {
   contents,
   customers,
   editor,
+  identity,
   integrations,
   journal,
   learningPreferences,
   nina,
+  notifications,
   onboarding,
   operators,
   subscriptions,
