@@ -7,10 +7,11 @@ import {
   editorScroll,
 } from "@repo/design-system/components/editor/frame";
 import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
+import { EditorPreview } from "@repo/design-system/components/editor/words";
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import type { ComponentProps } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 interface RichEditorProps {
   /**
@@ -52,9 +53,9 @@ interface RichEditorProps {
  * parent decides the height. Each block takes the direction of its own words.
  *
  * Load it with `next/dynamic` and `ssr: false`: the editor needs the browser
- * and brings the editing library with it. Its view exists from the first
- * render, so the first commit that replaces the saved words already holds the
- * words, and no frame shows an empty document.
+ * and brings the editing library with it. Until the editor exists, the saved
+ * words show in its place, drawn the same way, so the words do not move when
+ * the editor takes their place.
  */
 export function RichEditor({
   autoFocus,
@@ -94,22 +95,21 @@ export function RichEditor({
   );
   const editor = useEditor({
     ...options,
+    autofocus: autoFocus ? "end" : false,
     content,
     contentType: "markdown",
     editorProps,
-    immediatelyRender: true,
+    immediatelyRender: false,
     onUpdate: ({ editor: current }) => change(current.getMarkdown()),
   });
   const context = useMemo(() => ({ editor }), [editor]);
 
-  // Tiptap's own autofocus starts its timer when the view is made, and this view
-  // is made while React renders, so the timer can fire before React attaches the
-  // view to the page. The caret goes to the end here, once the view is in place.
-  useEffect(() => {
-    if (autoFocus) {
-      editor?.commands.focus("end");
-    }
-  }, [autoFocus, editor]);
+  // The editor is made after the first render, so the saved words stand in for it
+  // until then, drawn the way the editor draws them. The editor replaces them
+  // with the same words, and no frame shows an empty document.
+  if (editor === null) {
+    return <EditorPreview markdown={content} placeholder={placeholder} />;
+  }
 
   return (
     <EditorContext value={context}>
