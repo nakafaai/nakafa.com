@@ -1,43 +1,8 @@
-import { BlockSchema } from "@nakafa/aksara-contracts/assessment/document";
-import {
-  MarkSchema as ContractMarkSchema,
-  InlineNodeSchema,
-} from "@nakafa/aksara-contracts/assessment/inline";
+import { MarkSchema as ContractMarkSchema } from "@nakafa/aksara-contracts/assessment/inline";
 import { BatchInvalid } from "@repo/backend/confect/editor/errors";
-import type { DocumentNode } from "@repo/backend/confect/editor/node";
+import { checkSlice } from "@repo/backend/confect/editor/slice";
 import type { Step } from "@repo/backend/confect/editor/step";
 import { Effect, Match, Schema } from "effect";
-
-/**
- * A node of a slice, read as the contract reads the same node in a document: a block,
- * or an inline node such as a text run or a line break. The text marks of a text node
- * are read with it, by the contract's own mark schema.
- */
-const SliceNodeSchema = Schema.Union([BlockSchema, InlineNodeSchema]);
-
-/**
- * A node as the contract reads it. A list item belongs to its list, so the contract
- * reads it inside a list of one item. Any other node is read as it is.
- */
-const readableNode = (node: DocumentNode): unknown =>
-  node.type === "listItem" ? { content: [node], type: "bulletList" } : node;
-
-/** Checks each node of a slice, with the contract's schema for its kind. */
-const checkNodes = (nodes: readonly DocumentNode[]) =>
-  Effect.forEach(
-    nodes,
-    (node) => Schema.decodeUnknownEffect(SliceNodeSchema)(readableNode(node)),
-    { discard: true }
-  );
-
-/** The slice that a replace step carries. A step that only removes content holds none. */
-type StepSlice = NonNullable<
-  Extract<Step, { readonly stepType: "replace" }>["slice"]
->;
-
-/** Checks the slice of a step, when it holds one. */
-const checkSlice = (slice: StepSlice | undefined) =>
-  slice === undefined ? Effect.void : checkNodes(slice.content);
 
 /**
  * Checks one mark with the contract's mark schema: a plain mark, or a link whose
@@ -49,7 +14,8 @@ const checkMark = (mark: unknown) =>
 /**
  * Checks the content that one step writes. An attribute step sets one value of a node
  * that the step does not type, so the step holds no content the contract can read here,
- * and the snapshot checks the document it makes (ADR 0028).
+ * and the snapshot checks the document it makes (ADR 0028). A replace-around step keeps
+ * its gap, so its slice is checked with the gap's depth only when the gap has content.
  */
 const checkStep = Match.type<Step>().pipe(
   Match.discriminatorsExhaustive("stepType")({
@@ -59,17 +25,19 @@ const checkStep = Match.type<Step>().pipe(
     docAttr: () => Effect.void,
     removeMark: (step) => checkMark(step.mark),
     removeNodeMark: (step) => checkMark(step.mark),
-    replace: (step) => checkSlice(step.slice),
-    replaceAround: (step) => checkSlice(step.slice),
+    replace: (step) => checkSlice(step.slice, 0),
+    replaceAround: (step) =>
+      checkSlice(step.slice, step.gapFrom < step.gapTo ? step.insert : 0),
   })
 );
 
 /**
  * Refuses a batch whose steps write content that the contract refuses at the snapshot:
  * a heading level outside the contract's levels, a link to an address that is not https,
- * or a node or mark the contract does not allow. The check runs before any write, so
- * a step the snapshot would refuse never reaches the log, and the log can still be
- * pruned (ADR 0028).
+ * or a node or mark the contract does not allow. The check runs before any write, so a
+ * step the snapshot would refuse does not reach the log, and the log can still be pruned.
+ * An attribute step is the exception: its value is not read here, because the step does
+ * not name its node, and the snapshot checks the document it makes (ADR 0028).
  */
 export const checkContent = Effect.fn("editor.content.check")(function* (
   steps: readonly Step[]

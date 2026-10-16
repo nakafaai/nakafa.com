@@ -368,4 +368,38 @@ describe("editor/content at submit", () => {
         expect(yield* fixture.run(stepRows)).toHaveLength(1);
       })
   );
+
+  it.effect(
+    "accepts a batch that wraps a range in a bullet list, and writes its one step",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        const text = yield* encodeBatch({
+          baseVersion: 0,
+          batch: "rina-wrap",
+          clientId: "rina",
+          steps: [
+            {
+              from: 0,
+              gapFrom: 0,
+              gapTo: 7,
+              insert: 2,
+              slice: {
+                content: [
+                  { content: [{ type: "listItem" }], type: "bulletList" },
+                ],
+              },
+              stepType: "replaceAround",
+              to: 7,
+            },
+          ],
+        }).pipe(Effect.orDie);
+        const accepted = yield* fixture
+          .as("teacher")
+          .mutation(submit, { batch: text, documentId, slug: nf });
+        expect(accepted).toEqual({ head: 1 });
+        expect(yield* fixture.run(stepRows)).toHaveLength(1);
+      })
+  );
 });
