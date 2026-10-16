@@ -168,6 +168,19 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.31.4 does not
+  // ship it. It is MIT, depends on prosemirror-state alone, and its last
+  // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
+  // design system installs its extension, and the sync loop of the web app
+  // reads the same plugin's state.
+  {
+    approved: "1.3.1",
+    declarationPaths: [
+      "apps/www/package.json",
+      "packages/design-system/package.json",
+    ],
+    dependency: "prosemirror-collab",
+  },
 ];
 
 export const REGISTRY_REVIEWS = [

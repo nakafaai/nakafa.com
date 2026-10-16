@@ -37,6 +37,7 @@ update:
     - next
     - node
     - pnpm
+    - prosemirror-collab
     - turbo
     - typescript
     - ultracite

@@ -336,6 +336,9 @@ importers:
       '@tanstack/react-form':
         specifier: ^1.33.5
         version: 1.33.5(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@tiptap/pm':
+        specifier: 3.31.4
+        version: 3.31.4
       '@vercel/functions':
         specifier: ^3.9.11
         version: 3.9.11(ws@8.22.0)
@@ -384,6 +387,9 @@ importers:
       nuqs:
         specifier: ^2.10.2
         version: 2.10.2(next@16.4.0(@babel/core@8.0.5)(@playwright/test@1.64.0)(@types/node@24.19.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)
+      prosemirror-collab:
+        specifier: 1.3.1
+        version: 1.3.1
       react:
         specifier: 19.3.0
         version: 19.3.0
@@ -877,6 +883,9 @@ importers:
       postcss:
         specifier: ^8.5.29
         version: 8.5.29
+      prosemirror-collab:
+        specifier: 1.3.1
+        version: 1.3.1
       react:
         specifier: 19.3.0
         version: 19.3.0
@@ -6615,6 +6624,9 @@ packages:
 
   prosemirror-changeset@2.4.4:
     resolution: {integrity: sha512-Gyuz9jYdrAeA9I7AholyOes9KUmv/lEwsC5O9s5xF5VB3EgTPsXMGUxz4+H1B+wKVPdZbvRcg1Cp3x8qX+8ofA==}
+
+  prosemirror-collab@1.3.1:
+    resolution: {integrity: sha512-4SnynYR9TTYaQVXd/ieUvsVV4PDMBzrq2xPUWutHivDuOshZXqQ5rGbZM84HEaXKbLdItse7weMGOUdDVcLKEQ==}
 
   prosemirror-commands@1.7.2:
     resolution: {integrity: sha512-q6Q6szxqdu9Xd6EcdKsqXghu5nQdZTpB4Q9yd04WRc7/jt763e/rT60Owh0L1GYY+T46o5rD+9lEN36dZS43tw==}
@@ -13133,6 +13145,10 @@ snapshots:
   prosemirror-changeset@2.4.4:
     dependencies:
       prosemirror-transform: 1.12.2
+
+  prosemirror-collab@1.3.1:
+    dependencies:
+      prosemirror-state: 1.4.4
 
   prosemirror-commands@1.7.2:
     dependencies:
