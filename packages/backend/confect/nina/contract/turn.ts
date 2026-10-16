@@ -111,6 +111,23 @@ export const NinaTurnTiming = Schema.Struct({
   tokenMs: Schema.optionalKey(MillisecondsSinceAdmission),
 });
 
+/**
+ * What the history cost when the prompt of a turn was built: the tokens of the
+ * complete turns that came before it and that the summary did not cover, how
+ * many they were, and the highest order the read left out (`unread`) when it
+ * stopped before the oldest of them. The summary's fold counts these turns to
+ * tell whether it is due, and a turn that stores the cost lets the fold count
+ * only the turn that just settled. A turn that never built a prompt, or whose
+ * run did not end well, stores none.
+ */
+export const NinaHistoryCost = Schema.Struct({
+  tokens: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  turns: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  unread: Schema.optionalKey(
+    Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))
+  ),
+});
+
 /** A request key survives settlement so network retries remain idempotent. */
 export const NinaRequestId = Schema.NonEmptyString.check(
   Schema.isMaxLength(128)
@@ -146,6 +163,8 @@ export const NinaTurnFacts = Schema.Struct({
   usage: Schema.Array(NinaUsageTotal).check(Schema.isMaxLength(32)),
   /** The waits of the turn. Turns stored before this field have none. */
   timing: Schema.optionalKey(NinaTurnTiming),
+  /** The cost of the history the turn's prompt held. Turns stored before this field have none. */
+  history: Schema.optionalKey(NinaHistoryCost),
   suggestions: Schema.optionalKey(NinaSuggestions),
   /** Memories Nina saved or confirmed from this turn's message, when there are any. */
   remembered: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),

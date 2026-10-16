@@ -31,12 +31,12 @@ import {
   provider,
 } from "@repo/backend/test/gateway";
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
+import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { sha256Hex } from "@repo/utilities/digest";
 import { APICallError } from "ai";
 import { MockEmbeddingModelV4 } from "ai/test";
-import { getFunctionName } from "convex/server";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /** The release that the knowledge fixture makes active. */
@@ -339,72 +339,6 @@ export function embedWithKnowledge() {
 
 type KnowledgeInput = Parameters<typeof runStep>[0];
 type KnowledgeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
-
-/** What one transaction read and wrote, with the name of the function that ran it. */
-function sampleOf(
-  name: string,
-  metrics: Awaited<ReturnType<MutationCtx["meta"]["getTransactionMetrics"]>>
-) {
-  return {
-    bytesRead: metrics.bytesRead.used,
-    bytesWritten: metrics.bytesWritten.used,
-    documentsRead: metrics.documentsRead.used,
-    documentsWritten: metrics.documentsWritten.used,
-    name,
-  };
-}
-type Sample = ReturnType<typeof sampleOf>;
-
-/** Adds the reads and writes of samples up. */
-function totalOf(samples: readonly Sample[]) {
-  return Arr.reduce(
-    samples,
-    { bytesRead: 0, bytesWritten: 0, documentsRead: 0, documentsWritten: 0 },
-    (total, sample) => ({
-      bytesRead: total.bytesRead + sample.bytesRead,
-      bytesWritten: total.bytesWritten + sample.bytesWritten,
-      documentsRead: total.documentsRead + sample.documentsRead,
-      documentsWritten: total.documentsWritten + sample.documentsWritten,
-    })
-  );
-}
-
-/**
- * Gives an action the means to run its queries and mutations as separate
- * transactions of a test deployment, each measured, as the deployment runs
- * them, and hands each measure to `observe`.
- */
-function measured(
-  t: KnowledgeTest,
-  ctx: ActionCtx,
-  observe: (sample: Sample) => void
-): ActionCtx {
-  return {
-    ...ctx,
-    runMutation: (mutation, ...args) =>
-      t.mutation(async (mutationCtx) => {
-        const value = await mutationCtx.runMutation(mutation, ...args);
-        observe(
-          sampleOf(
-            getFunctionName(mutation),
-            await mutationCtx.meta.getTransactionMetrics()
-          )
-        );
-        return value;
-      }),
-    runQuery: (query, ...args) =>
-      t.query(async (queryCtx) => {
-        const value = await queryCtx.runQuery(query, ...args);
-        observe(
-          sampleOf(
-            getFunctionName(query),
-            await queryCtx.meta.getTransactionMetrics()
-          )
-        );
-        return value;
-      }),
-  };
-}
 
 /**
  * Embeds like a gateway that is slow enough for another release to become the

@@ -42,7 +42,7 @@ describe("the frames of the realtime connection", () => {
       args: [{ paginationOpts: { cursor: null, numItems: 10 } }],
       queryId: 3,
       type: "Add",
-      udfPath: "nina/messages:list",
+      udfPath: "nina/messages:page",
     };
     const dropped = { queryId: 4, type: "Remove" };
     const frame = decodeSent(

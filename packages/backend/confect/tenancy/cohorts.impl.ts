@@ -21,11 +21,12 @@ import {
   cohortNameKey,
 } from "@repo/backend/confect/tenancy/cohort";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
-import {
-  CohortLimit,
-  CohortNameTaken,
-} from "@repo/backend/confect/tenancy/errors";
+import { CohortNameTaken } from "@repo/backend/confect/tenancy/errors";
 import { cohortMembers } from "@repo/backend/confect/tenancy/members";
+import {
+  checkCohorts,
+  insertCohort,
+} from "@repo/backend/confect/tenancy/write/cohort";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 /** One cohort as the wire shows it. */
@@ -80,48 +81,10 @@ const create = FunctionImpl.make(
   Effect.fn("tenancy.cohorts.create")(function* ({ grade, name }) {
     const { person } = yield* Member;
     const period = yield* Period;
-    const reader = yield* DatabaseReader;
-    const nameKey = cohortNameKey(name);
-    const sameName = yield* reader
-      .table("tenantCohorts")
-      .index("by_periodId_and_nameKey", (query) =>
-        query.eq("periodId", period._id).eq("nameKey", nameKey)
-      )
-      .first()
-      .pipe(Effect.orDie);
-    if (Option.isSome(sameName)) {
-      return yield* new CohortNameTaken();
-    }
-    const cohorts = yield* reader
-      .table("tenantCohorts")
-      .index("by_periodId_and_grade_and_nameKey", (query) =>
-        query.eq("periodId", period._id)
-      )
-      .take(COHORT_LIMIT)
-      .pipe(Effect.orDie);
-    if (cohorts.length >= COHORT_LIMIT) {
-      return yield* new CohortLimit();
-    }
-    const cohortId = yield* (yield* DatabaseWriter)
-      .table("tenantCohorts")
-      .insert({
-        grade,
-        name,
-        nameKey,
-        periodId: period._id,
-        status: "active",
-        tenantId: period.tenantId,
-        unitId: period.unitId,
-      })
-      .pipe(Effect.orDie);
-    const cohort = yield* reader
-      .table("tenantCohorts")
-      .get(cohortId)
-      .pipe(Effect.orDie);
-    yield* cohortAuthority.record(personActor(person), cohort, {
-      type: "cohort.created",
-    });
-    return view(cohort);
+    yield* checkCohorts(period, [{ grade, name }]);
+    return view(
+      yield* insertCohort(personActor(person), period, { grade, name })
+    );
   })
 );
 
