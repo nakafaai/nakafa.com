@@ -18,10 +18,14 @@ export function ChatBoundary({
 }: PropsWithChildren<{ resetKeys?: readonly unknown[] }>) {
   const pathname = usePathname();
 
+  // The card fills the surface it replaces, so it centres in a page whose
+  // content is not a flex container, and in the sheet's flex column alike.
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
-        <ChatFailure error={error} onRetry={resetErrorBoundary} />
+        <div className="flex size-full min-h-0 flex-1 flex-col">
+          <ChatFailure error={error} onRetry={resetErrorBoundary} />
+        </div>
       )}
       resetKeys={[pathname, ...resetKeys]}
     >

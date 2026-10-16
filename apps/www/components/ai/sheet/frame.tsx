@@ -7,7 +7,6 @@ import { Array as Arr, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Activity, useRef, useState } from "react";
-import { ChatBoundary } from "@/components/ai/chat/boundary";
 import { useAi } from "@/components/ai/context";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
 import { Authenticated, Unauthenticated } from "@/components/auth/gate";
@@ -24,6 +23,17 @@ const SheetConversation = dynamic(
   () =>
     import("@/components/ai/sheet/conversation").then(
       (module) => module.SheetConversation
+    ),
+  { loading: () => null, ssr: false }
+);
+
+// The boundary holds the failure card, whose sign-in chain only a signed-out
+// visitor who cannot read a chat needs. It loads with the body, so the shell's
+// first JavaScript does not carry it on every page.
+const ChatBoundary = dynamic(
+  () =>
+    import("@/components/ai/chat/boundary").then(
+      (module) => module.ChatBoundary
     ),
   { loading: () => null, ssr: false }
 );
