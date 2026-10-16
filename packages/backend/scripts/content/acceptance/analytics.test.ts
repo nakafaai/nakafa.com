@@ -1,10 +1,10 @@
-import { createServer } from "node:net";
 import { describe, expect, it } from "@effect/vitest";
 import {
   reserveAnalyticsOrigin,
   withAnalyticsSink,
 } from "@repo/backend/scripts/content/acceptance/analytics";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { isPortOccupied, occupyPort } from "@repo/backend/test/acceptance";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
@@ -53,18 +53,8 @@ describe("acceptance analytics stand-in", () => {
   it.live("refuses an occupied port and leaves its listener running", () =>
     Effect.gen(function* () {
       const origin = yield* reserveAnalyticsOrigin();
-      const occupant = yield* Effect.acquireRelease(
-        Effect.sync(() => createServer()),
-        (server) =>
-          Effect.callback<void>((resume) => {
-            server.close(() => resume(Effect.void));
-          })
-      );
-      yield* Effect.callback<void>((resume) => {
-        occupant.listen(Number(new URL(origin).port), "127.0.0.1", () =>
-          resume(Effect.void)
-        );
-      });
+      const port = Number(new URL(origin).port);
+      yield* occupyPort(port);
 
       expect(
         yield* withAnalyticsSink(origin, Effect.void).pipe(Effect.flip)
@@ -72,7 +62,7 @@ describe("acceptance analytics stand-in", () => {
         _tag: "AcceptanceRuntimeError",
         message: `The saved analytics stand-in port at ${origin} is occupied; its process is preserved.`,
       });
-      expect(occupant.listening).toBe(true);
+      expect(yield* isPortOccupied(port)).toBe(true);
     }).pipe(Effect.scoped)
   );
 });

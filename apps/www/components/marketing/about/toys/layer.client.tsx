@@ -1,11 +1,11 @@
 "use client";
 
-import { Animal } from "@repo/design-system/components/ui/animal";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Scatter, Toy, Toys } from "@repo/design-system/components/ui/toy";
 import type { Place } from "@repo/design-system/lib/toy/scatter";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
+import { CastAnimal } from "@/components/marketing/about/cast";
 import { TOY_HERD } from "@/components/marketing/about/toys/herd";
 import { within } from "@/components/marketing/about/toys/place";
 
@@ -24,7 +24,7 @@ export function ToyAnimal({
   herd: typeof TOY_HERD;
   index: number;
 }) {
-  return <Animal className="size-14" mascot={Arr.getUnsafe(herd, index)} />;
+  return <CastAnimal className="size-14" mascot={Arr.getUnsafe(herd, index)} />;
 }
 
 /**

@@ -14,14 +14,21 @@ import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
- * These ceilings guard the markup of the marketing pages. They were measured
- * before the home page drew its current parts: the Community section now draws
- * the crowd of animals in `CROWD_HERD`, not the contributor gallery. Measure
- * them again on a production build before they guard new markup.
+ * Each contributor sits in the design system's Avatar with its AvatarFallback,
+ * the same anatomy as every other avatar, and the gallery takes its animals from
+ * one cast. Raw Community markup therefore grew from the single svg per
+ * contributor that the earlier ceilings measured. Measured in the browser on a
+ * production build on 14 October 2026, at all five target viewports (the same
+ * at each), the section counts 74 non-SVG descendants, 340 descendants, and
+ * 39,335 bytes, and the 16 animals are all different. These ceilings leave about
+ * six percent regression room over that measure: 79, 361, and 41,700 bytes.
+ *
+ * The homepage ceiling stays at 2063. The same build measured 1,813 homepage
+ * descendants at each viewport.
  */
-const COMMUNITY_MAX_CHROME_DESCENDANTS = 45;
-const COMMUNITY_MAX_DESCENDANTS = 295;
-const COMMUNITY_MAX_HTML_BYTES = 35_000;
+const COMMUNITY_MAX_CHROME_DESCENDANTS = 79;
+const COMMUNITY_MAX_DESCENDANTS = 361;
+const COMMUNITY_MAX_HTML_BYTES = 41_700;
 const HOMEPAGE_MAX_DESCENDANTS = 2063;
 const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
   function* (page: Page) {

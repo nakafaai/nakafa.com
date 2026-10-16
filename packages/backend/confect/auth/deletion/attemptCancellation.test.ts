@@ -18,6 +18,7 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -69,6 +70,7 @@ describe("auth/deletion/attemptCancellation", () => {
         creditsResetAt: 0,
         deletionPreparedAt: NOW,
         email: "started@example.com",
+        mascot: MASCOT_CODE,
         name: "Started Owner",
         plan: "free",
       });
@@ -159,6 +161,7 @@ describe("auth/deletion/attemptCancellation", () => {
         creditsResetAt: 0,
         deletionPreparedAt: NOW,
         email: "attempt@example.com",
+        mascot: MASCOT_CODE,
         name: "Attempt Owner",
         plan: "free",
       });
@@ -198,6 +201,7 @@ describe("auth/deletion/attemptCancellation", () => {
         creditsResetAt: 0,
         deletionPreparedAt: NOW,
         email: "batch-cancel-owner@example.com",
+        mascot: MASCOT_CODE,
         name: "Batch Cancel Owner",
         plan: "free",
       });

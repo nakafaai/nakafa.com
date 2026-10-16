@@ -182,7 +182,12 @@ const readStableJavascriptRun = Effect.fn("NakafaE2E.readStableJavascriptRun")(
 
 const readSettledJavascriptRun = Effect.fn(
   "NakafaE2E.readSettledJavascriptRun"
-)(function* (page: Page, href: string, requestTracker: RequestTracker) {
+)(function* (
+  page: Page,
+  href: string,
+  requestTracker: RequestTracker,
+  awaitsPrefetch: boolean
+) {
   const startedAt = yield* Clock.currentTimeMillis;
   let lastChangeAt = startedAt;
   let previousCount = -1;
@@ -206,7 +211,7 @@ const readSettledJavascriptRun = Effect.fn(
       previousRevision = requestTracker.revision;
       lastChangeAt = observedAt;
     }
-    if (requestTracker.successfulCount("prefetch") === 0) {
+    if (awaitsPrefetch && requestTracker.successfulCount("prefetch") === 0) {
       if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
         return yield* new JavascriptPrefetchReadinessTimeout({
           href,
@@ -240,10 +245,20 @@ const readSettledJavascriptRun = Effect.fn(
   }
 });
 
-/** Measures one route in three isolated, uncached Chromium contexts. */
+/**
+ * Measures one route in three isolated, uncached Chromium contexts. A route
+ * whose visible links prefetch waits for one successful prefetch first. A route
+ * with no such link, such as the sign-in page, has none to wait for, so it
+ * measures its own page once the JavaScript stops arriving.
+ */
 export const measureRouteJavascript = Effect.fn(
   "NakafaE2E.measureRouteJavascript"
-)(function* (browser: Browser, baseURL: string, href: string) {
+)(function* (
+  browser: Browser,
+  baseURL: string,
+  href: string,
+  awaitsPrefetch: boolean
+) {
   const runs = MutableList.make<JavascriptRun>();
 
   for (let run = 0; run < 3; run += 1) {
@@ -290,7 +305,8 @@ export const measureRouteJavascript = Effect.fn(
                 return yield* readSettledJavascriptRun(
                   page,
                   href,
-                  requestTracker
+                  requestTracker,
+                  awaitsPrefetch
                 );
               })
           );

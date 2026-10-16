@@ -102,6 +102,7 @@ export async function createSummaryTest(
     for (let order = 0; order < turns; order += 1) {
       const {
         cancelled = false,
+        replies = 0,
         retryOf,
         steps = 0,
         tokens = 0,
@@ -116,6 +117,12 @@ export async function createSummaryTest(
             role: "assistant",
             content: `Answer ${order}${tokens === 0 ? "" : ` ${filler(tokens)}`}`,
           },
+          ...(replies === 0
+            ? []
+            : Arr.makeBy(replies, (reply) => ({
+                role: "assistant" as const,
+                content: `Reply ${order}.${reply} ${filler(tokens)}`,
+              }))),
         ],
       });
       const promptMessageId = messages[0]?._id ?? "";

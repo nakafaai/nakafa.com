@@ -425,6 +425,8 @@
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
     "provider-error": "Kami tidak dapat melanjutkan dengan Google. Coba lagi.",
+    "sign-in-title": "Masuk ke Nakafa",
+    "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",
     "login": "Masuk",
     "login-cta-title": "Lanjutkan belajarmu",
@@ -740,6 +742,7 @@
       "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
       "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",
       "attachment-size": "Total ukuran dokumen dalam satu pesan paling banyak 10 MB. Hapus salah satu dokumen atau kirim dalam pesan terpisah.",
+      "message-size": "Pesan ini terlalu panjang untuk dibaca Nina dalam satu giliran. Persingkat, atau kirim sisanya dalam pesan baru.",
       "attachment-failed": "Nina belum bisa membaca atau menyimpan lampiran. Coba unggah lagi.",
       "provider-busy": "Layanan AI sedang menerima terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.",
       "provider-unavailable": "Layanan AI sedang mengalami gangguan sementara. Coba lagi sebentar lagi.",
@@ -854,7 +857,7 @@
       },
       "quadratic": {
         "title": "Akar dan puncak",
-        "description": "Puncak berada tepat di tengah kedua akar, pada x = 2."
+        "description": "Puncak berada tepat di tengah kedua akar, pada x = {vertex}."
       },
       "atom": {
         "title": "Model Kulit Atom",
@@ -927,12 +930,12 @@
     },
     "lesson-projectile": "Gerak parabola",
     "lesson-quadratic": "Fungsi kuadrat",
-    "lesson-mole": "Konsep mol",
+    "lesson-atom": "Atom",
     "lesson-cell": "Sel",
-    "lesson-projectile-text": "Bola dilempar dengan kecepatan 40 m/s pada sudut 60 derajat. Lintasannya berbentuk parabola.",
-    "lesson-quadratic-text": "Grafik x² − 4x + 3 memotong sumbu x di x = 1 dan x = 3.",
-    "lesson-mole-text": "Molekul air berbentuk sudut. Sudut ikatannya 104,5 derajat.",
-    "lesson-cell-text": "Sel adalah satuan terkecil dari makhluk hidup.",
+    "lesson-projectile-text": "Bola dilempar dengan kecepatan {speed} m/s pada sudut {angle} derajat. Lintasannya berbentuk parabola.",
+    "lesson-quadratic-text": "Grafik memotong sumbu x di x = {left} dan x = {right}.",
+    "lesson-atom-text": "{name} memiliki {atomicNumber} elektron. Kulit terluarnya, {outerShell}, berisi {electrons} elektron.",
+    "lesson-cell-text": "Bakteri adalah satu sel tanpa inti, dan DNA-nya terletak di nukleoid.",
     "tryout-title": "Skor try out langsung keluar",
     "tryout-lead": "Mau ulang? Tinggal ulang.",
     "tryout-ask": "Aku udah paham belum, ya?",
@@ -1017,7 +1020,7 @@
     "terms-and-policies": "Syarat dan Kebijakan",
     "terms-of-service": "Syarat dan Ketentuan",
     "privacy-policy": "Kebijakan Privasi",
-    "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
+    "legal-description": "Dengan masuk, kamu setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> serta <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "AnalyticsConsent": {
     "title": "Data penggunaan",

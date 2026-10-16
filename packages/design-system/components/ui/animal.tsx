@@ -1,12 +1,19 @@
 import { Picture } from "@repo/design-system/components/ui/picture";
-import type { Box } from "@repo/design-system/lib/picture";
 import type { Mascot } from "@repo/mascot/code";
 import { CANVAS, draw } from "@repo/mascot/draw";
-import { cn } from "cn";
 import { Array as Arr } from "effect";
 
+interface Props {
+  /**
+   * The animal of the person. A reader that finds no account row, such as the
+   * author of a comment whose row no longer exists, has none, and then nothing is
+   * drawn. A deleted account keeps its animal on its tombstone.
+   */
+  mascot: typeof Mascot.Type | undefined;
+}
+
 /** The whole canvas that an animal is drawn on. */
-const BOX: Box = [0, 0, CANVAS, CANVAS];
+const BOX = [0, 0, CANVAS, CANVAS] as const;
 
 /**
  * What an animal marks in its picture: its open eyes. They carry `look`, the
@@ -18,21 +25,17 @@ function marked() {
 }
 
 /**
- * One animal of the identity, drawn from the mascot that names it. The same
- * mascot always draws the same picture, so a page can give each animal its own
- * place in a cast without a second copy of the drawing.
+ * The profile animal of one person, drawn to fill its parent. The `Avatar` around
+ * it is the circle, so the animal has no border and no rounding of its own.
  */
-export function Animal({
-  className,
-  mascot,
-}: {
-  className?: string;
-  mascot: typeof Mascot.Type;
-}) {
+export function Animal({ mascot }: Props) {
+  if (mascot === undefined) {
+    return null;
+  }
   return (
     <Picture
       box={BOX}
-      className={cn("shrink-0", className)}
+      className="size-full"
       data-look=""
       marked={marked}
       shapes={Arr.of(draw(mascot))}

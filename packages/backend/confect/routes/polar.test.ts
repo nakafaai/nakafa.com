@@ -1,3 +1,4 @@
+import { MASCOT } from "@repo/backend/test/mascot";
 // @vitest-environment edge-runtime
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
@@ -114,6 +115,7 @@ const seedPolarCustomer = Effect.fn("routes.polar.test.seedPolarCustomer")(
           credits: 0,
           creditsResetAt: 1,
           email: "deletion@example.com",
+          mascot: MASCOT,
           name: "Deletion",
           plan: "free",
         });

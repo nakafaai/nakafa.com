@@ -1,11 +1,11 @@
 import { Mail01Icon } from "@hugeicons/core-free-icons";
-import { Animal } from "@repo/design-system/components/ui/animal";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { Mascot } from "@repo/mascot/code";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import { CastAnimal } from "@/components/marketing/about/cast";
 
 /**
  * The school part: a dark band with rounded corners, the words for a whole
@@ -50,7 +50,7 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
           >
             {Arr.map(herd, (mascot) => (
               <li key={mascot.animal}>
-                <Animal className="size-16" mascot={mascot} />
+                <CastAnimal className="size-16" mascot={mascot} />
               </li>
             ))}
           </ul>

@@ -128,11 +128,31 @@ thresholds in the catalog were set from what that command printed on 12 October
   dependency policy allows. Release 0.3.0 (9 October 2026) is the first that
   puts `provider.zdr` on a Decisions request, which the decision model below
   needs (see Decisions).
-- **Model.** Every language call runs `google/gemini-3.8-flash`, the one model
-  that `gateway/model.ts` names for text. Learners cannot choose a model, so
+- **Model.** Every language call runs `anthropic/claude-haiku-5.5`, the one model
+  that the language model profile in `gateway/model.ts` names. It replaced
+  `google/gemini-3.8-flash` on 14 October 2026 by the owner's decision. The
+  profile is the only place that holds the model's id and its facts (efforts,
+  context limit, output caps, token costs, file costs, cache marker), so a
+  switch changes that record alone. Learners cannot choose a model, so
   `Gateway.language(purpose)` takes only the purpose, and every Nina answer
   costs 5 credits. The model keys learners chose before October 2026 are
-  gone: no function takes one and no stored row holds one.
+  gone: no function takes one and no stored row holds one. Measured on the dev
+  deployment through the gateway on 14 October 2026: the model is listed by
+  `GET /v1/models`; plain chat, function tools with `tool_choice` `required` and
+  `auto`, a tool result sent back, strict `json_schema` output, a PDF `file` part,
+  a PNG data URL and streaming with `usage` on the last chunk all return 200,
+  and reasoning summaries stream as `delta.reasoning`. With `zdr: true` and
+  `data_collection: "deny"` it returns 200. The price steps up between 94,423
+  and 104,573 prompt tokens: a call of 94,423 billed $0.10 per million input
+  tokens and $0.50 per million output tokens, one of 104,573 billed $0.50 and
+  $2.50, five times as much. So `contextLimit` is 100,000, and the call limit
+  (ADR 0001) sits below it. Claude counts about 1.6 times the tokens Gemini
+  counts for the same text (112,715 against 69,428 over 120 texts, about 2 times
+  for Indonesian and German prose), so the estimator of `confect/nina/budget.ts`
+  takes its costs from the profile: a run of Latin letters costs one token per
+  2.25 letters, and the other rules are in the profile's doc comment. Over the
+  same 120 texts it is 13.1% off a text on average and 4% above the provider in
+  all together, and its undercount's 95th percentile is 9.39%.
 - **Routing and retention.** No routing choice is sent: Convex rejects
   `provider.only` and the other routing fields. Every language model call does
   send `provider: { zdr: true, data_collection: "deny" }`, which the gateway
@@ -154,12 +174,15 @@ thresholds in the catalog were set from what that command printed on 12 October
   `gateway/model.ts` or from the candidate that the model test of knowledge
   search names. It fails with `GatewayFailure` when the reply does not match
   the request, and ends a call after `embeddingTimeoutMs`.
-- **Prompt cache.** The gateway caches nothing on its own: a repeated prefix of
-  53,624 tokens read zero cached tokens. `gateway/cache.ts` marks the last
-  message before the newest user message with
-  `cache_control: { type: "ephemeral" }`, so every later step of a turn reads
-  the prefix the first step wrote. The provider keeps a prefix for about five
-  minutes, in memory, and ignores one below about 4,000 tokens. Nina keeps her
+- **Prompt cache.** The gateway caches nothing on its own. Measured on
+  `anthropic/claude-haiku-5.5` on 14 October 2026: without a marker nothing is
+  cached; with one, the first call wrote 12,802 tokens and the next read the same
+  12,802 at a tenth of the input price; prefixes of 1,058, 2,114, 3,170, 4,226
+  and 5,282 tokens were all cached, so the smallest cached prefix is at most
+  1,058 tokens. How long the provider keeps a prefix is not measured for this
+  model. `gateway/cache.ts` marks the last message before the newest user message
+  with the marker from the profile, `cache_control: { type: "ephemeral" }`, so
+  every later step of a turn reads the prefix the first step wrote. Nina keeps her
   instructions and her tool list the same in every step of a turn, and usage
   rows record cached and reasoning tokens. Everything before the newest learner
   message repeats byte for byte, except what the learner or Nina added: the
@@ -172,18 +195,30 @@ thresholds in the catalog were set from what that command printed on 12 October
   prefix does change when something in it does: the learner moves to a page
   with other content, a remembered fact changes, the learner retries an
   answer, which takes the replaced asking out of the history, or the summary
-  folds the oldest turns of the history. The history, kept to 32,000 tokens,
+  folds the oldest turns of the history. The history, kept to 32,610 tokens (the
+  call limit less the reserved parts and the turn's evidence, ADR 0001),
   otherwise only grows at its end between folds, and a fold brings it down to
-  16,000, so folds are about half a budget of turns apart. Between those events
+  16,305, so folds are about half a budget of turns apart. Between those events
   a turn adds only its question and answer to the prefix.
 - **Spend.** No tenant or person identifier goes to the gateway, so the `space`
   argument leaves `Gateway.language`. Nakafa records cost itself: each usage row
   keeps the `providerMetadata.convexGateway.cost` its calls report, summed per
   agent, model, and provider.
 - **Reasoning.** `fast` purposes send `reasoning_effort: "low"` and `interactive`
-  purposes send `"high"`. Each is a default set through
-  `defaultSettingsMiddleware`, so a call may override it. Reasoning summaries
-  need no extra flag.
+  purposes send `"high"`, both read from the language model profile. Each is a
+  default set through `defaultSettingsMiddleware`, so a call may override it.
+  Reasoning summaries need no extra flag. Measured on 14 October 2026, every
+  effort the gateway accepts returns 200 (`none`, `minimal`, `low`, `medium`,
+  `high`, `xhigh`, `max`). One arithmetic question reasoned 51 tokens at `low`,
+  122 at `xhigh` and 187 at `max`. Chat stays at `high`, not `xhigh`: a long
+  lesson request reasoned 53,370 tokens at `xhigh` and still reached a 64,000
+  cap after 236 s, so the learner would get a cut answer, while `high` wrote
+  30,038 tokens (7,070 of them reasoning) and stopped by itself after 108 s.
+  Changing chat back to `xhigh` is one line of the profile.
+- **Sampling.** No call sets a temperature. The gateway's acceptance of a
+  temperature with reasoning on this model was not measured, and Anthropic's
+  extended thinking refuses a temperature on some models, so the two specialist
+  agents (`nakafa/agent.ts`, `math/agent.ts`) send none.
 - **Research.** Google Search grounding is removed. Research forces one
   Firecrawl `webSearch` step and synthesizes from its results in a second
   call. A step with no tools after a tool call does not make the model write

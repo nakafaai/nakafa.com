@@ -56,7 +56,7 @@ export const getUserMap = Effect.fn("users.directory.read")(function* (
         _id: user._id,
         name: user.name,
         email: user.email,
-        ...Struct.pick(user, ["image"]),
+        ...Struct.pick(user, ["image", "mascot"]),
       },
     ]);
   }

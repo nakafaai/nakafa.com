@@ -11,7 +11,10 @@ import {
 } from "@/lib/content/views/device";
 
 const DEVICE_KEY = "nakafa-device-id";
-const CREATED_DEVICE_PATTERN = /^\d+-[\w-]{9}$/;
+const CREATED_DEVICE_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+/** An identifier in the form that earlier releases created: a timestamp and nine characters. */
+const EARLIER_DEVICE = "1760000000000-V1StGXR8_";
 const unavailableStorage = {
   getItem: () => {
     throw new Error("storage unavailable");
@@ -88,11 +91,14 @@ describe("content-view device storage", () => {
 
   it.effect("keeps an identifier stored by an earlier release", () =>
     Effect.gen(function* () {
-      window.localStorage.setItem(DEVICE_KEY, encodeJsonText("legacy-device"));
+      window.localStorage.setItem(DEVICE_KEY, encodeJsonText(EARLIER_DEVICE));
 
       const deviceId = yield* ensureContentViewDevice();
 
-      expect(deviceId).toBe("legacy-device");
+      expect(deviceId).toBe(EARLIER_DEVICE);
+      expect(window.localStorage.getItem(DEVICE_KEY)).toBe(
+        encodeJsonText(EARLIER_DEVICE)
+      );
     })
   );
 

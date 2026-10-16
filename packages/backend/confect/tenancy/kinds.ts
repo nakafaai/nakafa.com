@@ -6,16 +6,34 @@ import type { RuleRole } from "@repo/backend/confect/access/schema";
 import { Contract } from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
-import { ClaimMethod } from "@repo/backend/confect/tenancy/schema";
+import {
+  ClaimMethod,
+  PersonReason,
+} from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
-/** The school roles that read the periods and cohorts of their school. */
+/**
+ * The school roles and integration clients that read the periods and cohorts
+ * of their school. A client holds a read only when its action list names it.
+ */
 const planReaders: (typeof RuleRole.Type)[] = [
   "admin",
   "principal",
   "deputy",
   "staff",
   "auditor",
+  "integration",
+];
+
+/** The school roles and integration clients that read the people of their school. */
+const personReaders: (typeof RuleRole.Type)[] = [
+  "admin",
+  "principal",
+  "deputy",
+  "counselor",
+  "staff",
+  "auditor",
+  "integration",
 ];
 
 /**
@@ -112,13 +130,14 @@ export const person = Kind.make("person", "tenantPeople", {
       access: "read",
       grantedBy: "roles",
       relations: ["self"],
-      roles: ["admin", "principal", "deputy", "counselor", "staff", "auditor"],
+      roles: personReaders,
     },
   },
   changes: [
     Schema.Struct({ type: Schema.Literal("person.created") }),
     Schema.Struct({
       invite: Id("tenantInvites"),
+      reason: Schema.optionalKey(PersonReason),
       type: Schema.Literal("person.invited"),
     }),
     Schema.Struct({
@@ -126,7 +145,10 @@ export const person = Kind.make("person", "tenantPeople", {
       type: Schema.Literal("person.claimed"),
     }),
     Schema.Struct({ type: Schema.Literal("person.released") }),
-    Schema.Struct({ type: Schema.Literal("person.removed") }),
+    Schema.Struct({
+      reason: Schema.optionalKey(PersonReason),
+      type: Schema.Literal("person.removed"),
+    }),
     Schema.Struct({ type: Schema.Literal("person.renamed") }),
     Schema.Struct({
       cohort: Id("tenantCohorts"),
@@ -235,7 +257,7 @@ const tenantPeople = Kind.extend(tenant, {
       access: "read",
       grantedBy: "roles",
       relations: [],
-      roles: ["admin", "principal", "deputy", "counselor", "staff", "auditor"],
+      roles: personReaders,
     },
   },
   changes: [],

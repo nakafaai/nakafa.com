@@ -110,7 +110,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
           model,
           instructions: nakafaAgentPrompt({ locale, context }),
           messages: [{ role: "user", content: task }],
-          temperature: 0,
           tools: {
             search: createTool({
               description: nakafaSearch,

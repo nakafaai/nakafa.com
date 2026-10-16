@@ -11,6 +11,7 @@ import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { MASCOT } from "@repo/backend/test/mascot";
 import {
   activateMaterialCatalog,
   insertMaterialProjection,
@@ -36,6 +37,7 @@ const seedUser = Effect.fn("test.nina.context.user")(function* () {
   const id = yield* writer.table("users").insert({
     email: "context@example.invalid",
     authId: "context",
+    mascot: MASCOT,
     name: "Learner",
     plan: "free",
     credits: 10,
