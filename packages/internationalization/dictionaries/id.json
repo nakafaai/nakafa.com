@@ -883,6 +883,9 @@
     "lesson-answer": "Baca ini dulu.",
     "lesson-tabs": "Pelajaran",
     "lab": {
+      "circle": {
+        "view": "Visual lingkaran satuan"
+      },
       "projectile": {
         "choose": "Pilih sudut lontar",
         "view": "Visual lintasan bola lontar",

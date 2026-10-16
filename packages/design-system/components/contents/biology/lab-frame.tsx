@@ -1,6 +1,5 @@
 "use client";
 
-import { useThree } from "@react-three/fiber";
 import {
   BIOLOGY_DEFAULT_VIEW,
   type BiologySceneColors,
@@ -8,12 +7,8 @@ import {
   isBiologyItemIndex,
 } from "@repo/design-system/components/contents/biology/data";
 import { biologyReadings } from "@repo/design-system/components/contents/biology/readings";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
-import {
-  isNarrowThreeScene,
-  threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -29,11 +24,19 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
+import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 
-const NARROW_CANVAS_ASPECT_RATIO = 1.3;
+/** The stage loads once the lab asks for it, and its frame holds the place meanwhile. */
+const BiologyStage = dynamic(
+  () =>
+    import("@repo/design-system/components/contents/biology/stage").then(
+      ({ BiologyStage }) => BiologyStage
+    ),
+  { loading: SceneSpinner }
+);
 
 export interface BiologyLabCalloutProps {
   id: string;
@@ -59,6 +62,11 @@ export interface BiologyLabProps<
     takeawayLabel?: string;
     viewLabel: string;
   };
+  /**
+   * Whether the three-dimensional scene is mounted. A lab that is not live keeps
+   * its whole card in place, with an empty frame where the scene goes.
+   */
+  live?: boolean;
   title?: ReactNode;
 }
 
@@ -76,6 +84,7 @@ export interface BiologySceneProps<
 export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   description,
   labels,
+  live = true,
   scene: Scene,
   title,
   view = BIOLOGY_DEFAULT_VIEW,
@@ -132,36 +141,19 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
           className={threeSceneFrameVariants()}
           render={<section />}
         >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ResponsiveBiologyCamera key={selectedIndex} view={view} />
-              <ambientLight intensity={0.58} />
-              <hemisphereLight
-                color={colors.skyLight}
-                groundColor={colors.soil}
-                intensity={0.68}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.45}
-                position={[4.5, 6, 4.5]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <pointLight
-                color={colors.skyLight}
-                intensity={0.34}
-                position={[-3, 2, 3]}
-              />
+          {live ? (
+            <BiologyStage
+              colors={colors}
+              selectedIndex={selectedIndex}
+              view={view}
+            >
               <Scene
                 colors={colors}
                 item={selectedItem}
                 selectedIndex={selectedIndex}
               />
-            </Suspense>
-          </ThreeCanvas>
+            </BiologyStage>
+          ) : null}
         </VisualCardScene>
 
         {selectedItem.caption === undefined ? null : (
@@ -186,24 +178,5 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Keeps the active biology scene framed on narrow and wide canvases.
- */
-function ResponsiveBiologyCamera({ view }: { view: NarrowCameraPose }) {
-  const size = useThree((state) => state.size);
-  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
-    ? view.narrowCameraPosition
-    : view.cameraPosition;
-
-  return (
-    <CameraControls
-      autoRotate={false}
-      cameraPosition={cameraPosition}
-      cameraTarget={view.cameraTarget}
-      fov={45}
-    />
   );
 }

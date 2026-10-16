@@ -6,8 +6,8 @@ import {
   CoordinateControls,
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
-import { UnitCircle as UnitCircle3D } from "@repo/design-system/components/three/unit-circle";
+import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
@@ -19,6 +19,7 @@ import {
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import { Array as Arr, Option } from "effect";
+import dynamic from "next/dynamic";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
@@ -30,7 +31,35 @@ import {
   NumberField,
 } from "react-aria-components";
 
-const CAMERA_Z_POSITION = 4;
+/** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
+const UnitCircleStage = dynamic(
+  () =>
+    import(
+      "@repo/design-system/components/contents/mathematics/unit-circle/stage"
+    ).then(({ UnitCircleStage }) => UnitCircleStage),
+  { loading: ScenePlaceholder }
+);
+
+interface CardProps {
+  angle?: number;
+  /** The card's header. A lesson page names its unit circle with a title and a description. */
+  header?: ReactNode;
+  /**
+   * Whether the three-dimensional scene is mounted. A card that is not live keeps
+   * its whole frame in place, with an empty frame where the scene goes.
+   */
+  live?: boolean;
+  /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
+  trigValues?:
+    | {
+        sin?: string;
+        cos?: string;
+        tan?: string;
+      }
+    | undefined;
+  /** The name of the scene for assistive technology. */
+  viewLabel?: string | undefined;
+}
 
 interface Props {
   angle?: number;
@@ -44,31 +73,61 @@ interface Props {
   };
 }
 
-export function UnitCircle({
-  title,
-  description,
+/**
+ * The unit circle as a visual card without a header. The scene, its angle
+ * controls and the trigonometric values of the angle are all in the card; the
+ * page or the window that holds the card names the lesson.
+ */
+export function UnitCircleCard({
   angle = 45,
+  header,
+  live = true,
   trigValues,
-}: Props) {
+  viewLabel,
+}: CardProps) {
   const locale = useLocale();
 
   return (
     <CoordinateProvider>
       <VisualCard>
-        <VisualCardHeader description={description} title={title} />
+        {header}
         <I18nProvider locale={locale}>
-          <Content angle={angle} trigValues={trigValues} />
+          <Content
+            angle={angle}
+            live={live}
+            trigValues={trigValues}
+            viewLabel={viewLabel}
+          />
         </I18nProvider>
       </VisualCard>
     </CoordinateProvider>
   );
 }
 
+/** The unit circle of a lesson page, with the title and description of its lesson. */
+export function UnitCircle({
+  title,
+  description,
+  angle = 45,
+  trigValues,
+}: Props) {
+  return (
+    <UnitCircleCard
+      angle={angle}
+      header={<VisualCardHeader description={description} title={title} />}
+      trigValues={trigValues}
+    />
+  );
+}
+
 function Content({
   angle,
+  live,
   trigValues,
+  viewLabel,
 }: {
   angle: number;
+  live: boolean;
   trigValues?:
     | {
         sin?: string;
@@ -76,6 +135,7 @@ function Content({
         tan?: string;
       }
     | undefined;
+  viewLabel: string | undefined;
 }) {
   const t = useTranslations("Common");
   const format = useFormatter();
@@ -111,13 +171,11 @@ function Content({
   return (
     <>
       <VisualCardBody>
-        <CoordinateSystem
-          cameraPosition={[0, 0, CAMERA_Z_POSITION]}
-          cameraProjection={{ kind: "orthographic" }}
-          showOrigin={false}
-        >
-          <UnitCircle3D angle={angleValue} />
-        </CoordinateSystem>
+        {live ? (
+          <UnitCircleStage angle={angleValue} viewLabel={viewLabel} />
+        ) : (
+          <div aria-hidden="true" className={threeSceneFrameVariants()} />
+        )}
       </VisualCardBody>
       <CoordinateControls>
         <div className="flex w-full flex-col gap-4">

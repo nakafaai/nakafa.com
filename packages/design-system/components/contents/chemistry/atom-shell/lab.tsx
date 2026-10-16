@@ -45,6 +45,11 @@ interface AtomShellLabProps {
       }
     >;
   };
+  /**
+   * Whether the three-dimensional model is mounted. A lab that is not live keeps
+   * its whole card in place, with an empty frame where the model goes.
+   */
+  live?: boolean;
   title?: ReactNode;
 }
 
@@ -53,6 +58,7 @@ export function AtomShellLab({
   title,
   description,
   labels,
+  live = true,
 }: AtomShellLabProps) {
   const [selectedSampleId, setSelectedSampleId] =
     useState<AtomShellSampleId>(CALCIUM_ID);
@@ -114,6 +120,7 @@ export function AtomShellLab({
 
         <ShellModelCanvas
           aria-label={`${selectedLabels.name ?? selectedSample.symbol}, ${labels.electronTotal} ${selectedSample.atomicNumber}`}
+          live={live}
           outerShellKey={outerShell.key}
           sample={selectedSample}
           shells={shellConfiguration}

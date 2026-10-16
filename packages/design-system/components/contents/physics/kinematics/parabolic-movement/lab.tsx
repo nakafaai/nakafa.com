@@ -12,13 +12,10 @@ import {
   getParabolicMotionState,
   isParabolicLaunchId,
   PARABOLIC_LAUNCHES,
-  PARABOLIC_SCENE,
   type ParabolicLaunchId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
-import { ProjectileBallScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
   ToggleGroup,
@@ -33,9 +30,18 @@ import {
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { type ReactNode, useMemo, useState } from "react";
+
+/** The scene loads once the lab asks for it, and its frame holds the place meanwhile. */
+const ParabolicMovementStage = dynamic(
+  () =>
+    import(
+      "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"
+    ).then(({ ParabolicMovementStage }) => ParabolicMovementStage),
+  { loading: SceneSpinner }
+);
 
 interface ParabolicMovementLabProps {
   decimalSeparator?: DecimalSeparator;
@@ -50,6 +56,11 @@ interface ParabolicMovementLabProps {
     };
     viewLabel: string;
   };
+  /**
+   * Whether the three-dimensional scene is mounted. A lab that is not live keeps
+   * its whole card in place, with an empty frame where the scene goes.
+   */
+  live?: boolean;
   title?: ReactNode;
 }
 
@@ -58,6 +69,7 @@ export function ParabolicMovementLab({
   title,
   description,
   labels,
+  live = true,
 }: ParabolicMovementLabProps) {
   const [launchId, setLaunchId] = useState<ParabolicLaunchId>(
     DEFAULT_PARABOLIC_LAUNCH_ID
@@ -122,36 +134,7 @@ export function ParabolicMovementLab({
           className={threeSceneFrameVariants()}
           render={<section />}
         >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.72} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE", 400)}
-                intensity={0.68}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[4.2, 5.5, 4.8]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <directionalLight intensity={0.28} position={[-4, 3.2, -3.5]} />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={PARABOLIC_SCENE.cameraPosition}
-                cameraTarget={PARABOLIC_SCENE.cameraTarget}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={PARABOLIC_SCENE.cameraFov}
-              />
-              <ProjectileBallScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
+          {live ? <ParabolicMovementStage motion={motion} /> : null}
         </VisualCardScene>
       </VisualCardBody>
 

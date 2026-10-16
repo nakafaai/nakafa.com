@@ -883,6 +883,9 @@
     "lesson-answer": "Read this first.",
     "lesson-tabs": "Lessons",
     "lab": {
+      "circle": {
+        "view": "Unit circle visual"
+      },
       "projectile": {
         "choose": "Choose launch angle",
         "view": "Projectile ball path visual",

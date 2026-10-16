@@ -883,6 +883,9 @@
     "lesson-answer": "Lies erst das hier.",
     "lesson-tabs": "Lektionen",
     "lab": {
+      "circle": {
+        "view": "Visualisierung des Einheitskreises"
+      },
       "projectile": {
         "choose": "Abwurfwinkel wählen",
         "view": "Visualisierung der Flugbahn eines geworfenen Balls",
