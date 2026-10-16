@@ -249,8 +249,9 @@ export const cohortAuthority = Authority.make(cohort, Authority.load(cohort), {
           Option.exists(placement, (found) => found.cohortId === row._id)
         )
       ),
+    // The active holder only: a removed teacher's row opens nothing, as every reader treats it.
     homeroom: (row, member) =>
-      homeroomOf(row._id).pipe(
+      activeHomeroomOf(row._id).pipe(
         Effect.map((assignment) =>
           Option.exists(
             assignment,
