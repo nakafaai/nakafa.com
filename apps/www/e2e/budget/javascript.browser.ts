@@ -14,18 +14,32 @@ const HOMEPAGE_MAX_DECODED_BYTES = 3_278_000;
 const QURAN_MAX_ENCODED_BYTES = 1_147_000;
 const QURAN_MAX_DECODED_BYTES = 3_381_000;
 
+// The sign-in page, with the animal pool that a wide screen loads: measured at
+// 515,493 encoded / 1,546,566 decoded bytes. Limits keep the ~6% margin.
+const AUTH_MAX_ENCODED_BYTES = 547_000;
+const AUTH_MAX_DECODED_BYTES = 1_638_000;
+
 const routeBudgets = [
   {
     decodedBodySize: HOMEPAGE_MAX_DECODED_BYTES,
     encodedBodySize: HOMEPAGE_MAX_ENCODED_BYTES,
     href: "/en",
     name: "English homepage no-scroll graph",
+    prefetches: true,
   },
   {
     decodedBodySize: QURAN_MAX_DECODED_BYTES,
     encodedBodySize: QURAN_MAX_ENCODED_BYTES,
     href: appRoutes.quranSurahId,
     name: "Indonesian Quran normal-prefetch graph",
+    prefetches: true,
+  },
+  {
+    decodedBodySize: AUTH_MAX_DECODED_BYTES,
+    encodedBodySize: AUTH_MAX_ENCODED_BYTES,
+    href: "/en/auth",
+    name: "English sign-in no-scroll graph",
+    prefetches: false,
   },
 ] as const;
 
@@ -36,7 +50,12 @@ for (const budget of routeBudgets) {
   }, testInfo) => {
     expect(baseURL).toBeTruthy();
     const measurement = await Effect.runPromise(
-      measureRouteJavascript(browser, baseURL ?? "", budget.href)
+      measureRouteJavascript(
+        browser,
+        baseURL ?? "",
+        budget.href,
+        budget.prefetches
+      )
     );
     const measurementEvidence = encodeJsonText(measurement);
 

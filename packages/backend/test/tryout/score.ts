@@ -12,6 +12,7 @@ import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content/state";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Effect } from "effect";
 
 export const FROZEN_SCORE_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
@@ -88,6 +89,7 @@ export const seedFrozenTryoutScoreState = Effect.fn(
       credits: 0,
       creditsResetAt: FROZEN_SCORE_NOW,
       email: "score-snapshot@example.com",
+      mascot: MASCOT_CODE,
       name: "Score Snapshot",
       plan: "pro",
     })

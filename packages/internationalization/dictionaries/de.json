@@ -426,6 +426,8 @@
     "continue-with-google": "Mit Google fortfahren",
     "opening-google": "Google wird geöffnet...",
     "provider-error": "Mit Google konnte nicht fortgefahren werden. Bitte versuche es erneut.",
+    "sign-in-title": "Bei Nakafa anmelden",
+    "sign-in-description": "Damit dein Fortschritt gespeichert bleibt.",
     "logout": "Abmelden",
     "login": "Anmelden",
     "login-cta-title": "Weiterlernen",
@@ -929,7 +931,7 @@
     "terms-and-policies": "Bedingungen und Richtlinien",
     "terms-of-service": "Nutzungsbedingungen",
     "privacy-policy": "Datenschutzerklärung",
-    "legal-description": "Mit der Nutzung unserer Dienste stimmst du unseren <terms-of-service>Nutzungsbedingungen</terms-of-service> und unserer <privacy-policy>Datenschutzerklärung</privacy-policy> zu."
+    "legal-description": "Mit der Anmeldung stimmst du den <terms-of-service>Nutzungsbedingungen</terms-of-service> und der <privacy-policy>Datenschutzerklärung</privacy-policy> zu."
   },
   "AnalyticsConsent": {
     "title": "Nutzungsdaten",
