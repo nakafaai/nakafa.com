@@ -170,7 +170,7 @@ export const person = Kind.make("person", "tenantPeople", {
     }),
     Schema.Struct({
       card: Id("loginCards"),
-      type: Schema.Literal("login.card.redeemed"),
+      type: Schema.Literal("card.redeemed"),
     }),
   ],
   published: [
@@ -178,6 +178,7 @@ export const person = Kind.make("person", "tenantPeople", {
     "person.claimed",
     "person.released",
     "person.removed",
+    "card.redeemed",
   ],
   relations: ["self"],
 });

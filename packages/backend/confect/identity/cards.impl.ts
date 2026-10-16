@@ -1,15 +1,14 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { authorizeOwnerRole } from "@repo/backend/confect/access/grant";
-import { activeGrants } from "@repo/backend/confect/access/policy";
 import {
+  type CardRefusal,
   cardOf,
-  takesCard,
+  cardRefusalOf,
   writeCard,
 } from "@repo/backend/confect/identity/card";
 import spec from "@repo/backend/confect/identity/cards.spec";
 import {
+  CardRoleRefused,
   LoginMissing,
   LoginNameRefused,
 } from "@repo/backend/confect/identity/errors";
@@ -29,27 +28,25 @@ import {
   personAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { PersonClaimed } from "@repo/backend/confect/tenancy/errors";
-import { Effect, Layer, Option, Result } from "effect";
+import { Effect, Layer, Match, Option, Result } from "effect";
 
 /**
- * A card hands the Person's standing grants to whoever signs in with it, so a
- * Person who holds an Owner or Admin role may only get a card from someone who
- * holds `owner.manage` (ADR 0011, ADR 0012).
+ * The error that a Person the card rule refuses answers with: a role that no
+ * card may hand over, or an account that a card did not make.
  */
-const authorizeHeldRoles = Effect.fn("identity.cards.heldRoles")(function* (
-  personId: TenantPeopleDoc["_id"]
-) {
-  const grants = yield* activeGrants(personId);
-  yield* Effect.forEach(grants, (grant) => authorizeOwnerRole(grant.role.key), {
-    discard: true,
-  });
-});
+const refusalError = (refusal: typeof CardRefusal.Type) =>
+  Match.value(refusal).pipe(
+    Match.when("role", () => new CardRoleRefused()),
+    Match.when("claimed", () => new PersonClaimed()),
+    Match.exhaustive
+  );
 
 /**
  * Gives a Person their school login name and prints their first card. Only a
  * Person with no account yet may take one, the same rule an invite follows, so
  * a card never sets a password on an account that an invite claimed. A Person
- * who already has a login gets a new card from `reissue`.
+ * who holds the Owner or Admin role gets none. A Person who already has a login
+ * gets a new card from `reissue`.
  */
 const issue = FunctionImpl.make(
   databaseSchema,
@@ -58,9 +55,9 @@ const issue = FunctionImpl.make(
   Effect.fn("identity.cards.issue")(function* ({ loginName }) {
     const { person: issuer } = yield* Member;
     const person = yield* Person;
-    yield* authorizeHeldRoles(person._id);
-    if (!takesCard(person)) {
-      return yield* new PersonClaimed();
+    const refusal = yield* cardRefusalOf(person);
+    if (Option.isSome(refusal)) {
+      return yield* refusalError(refusal.value);
     }
     const name = readLoginName(loginName);
     if (Result.isFailure(name)) {
@@ -92,9 +89,9 @@ const reissue = FunctionImpl.make(
   Effect.fn("identity.cards.reissue")(function* () {
     const { person: issuer } = yield* Member;
     const person = yield* Person;
-    yield* authorizeHeldRoles(person._id);
-    if (!takesCard(person)) {
-      return yield* new PersonClaimed();
+    const refusal = yield* cardRefusalOf(person);
+    if (Option.isSome(refusal)) {
+      return yield* refusalError(refusal.value);
     }
     const login = yield* loginOf(person._id);
     if (Option.isNone(login)) {

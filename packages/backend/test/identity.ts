@@ -2,9 +2,11 @@ import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
+  MutationCtx,
 } from "@repo/backend/confect/_generated/services";
+import { createAuth } from "@repo/backend/confect/auth/runtime";
 import { slugOf, type tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** The moment the card tests start from. Fake timers hold the clock here. */
 export const CARD_NOW = Date.UTC(2026, 9, 14, 9, 0, 0);
@@ -89,4 +91,43 @@ export const cardRowOf = (
         .first()
         .pipe(Effect.orDie)
     )
+  );
+
+/**
+ * Whether the invitee's stored password is `password`, checked the way Better
+ * Auth checks a password at sign-in, so a test reads the stored credential.
+ */
+export const storedPasswordIs = (fixture: CardFixture, password: string) =>
+  fixture.run(
+    Effect.gen(function* () {
+      const reader = yield* DatabaseReader;
+      const person = yield* reader
+        .table("tenantPeople")
+        .get(fixture.invited)
+        .pipe(Effect.orDie);
+      if (person.account.state !== "claimed") {
+        return false;
+      }
+      const user = yield* reader
+        .table("users")
+        .get(person.account.userId)
+        .pipe(Effect.orDie);
+      const auth = yield* createAuth(yield* MutationCtx);
+      const context = yield* Effect.promise(() => auth.$context);
+      const accounts = yield* Effect.promise(() =>
+        context.internalAdapter.findAccountByUserId(user.authId)
+      );
+      const hash = Option.getOrUndefined(
+        Arr.findFirst(
+          accounts,
+          (account) => account.providerId === "credential"
+        )
+      )?.password;
+      if (!hash) {
+        return false;
+      }
+      return yield* Effect.promise(() =>
+        context.password.verify({ hash, password })
+      );
+    })
   );

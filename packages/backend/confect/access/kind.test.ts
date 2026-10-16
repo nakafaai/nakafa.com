@@ -80,7 +80,7 @@ describe("access/kind declarations", () => {
       "invite.revoked",
       "login.card.issued",
       "login.card.reissued",
-      "login.card.redeemed",
+      "card.redeemed",
       "grant.created",
       "grant.ended",
     ]);

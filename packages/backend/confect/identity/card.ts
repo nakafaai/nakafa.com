@@ -6,24 +6,55 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { activeGrants } from "@repo/backend/confect/access/policy";
+import { OwnerRole } from "@repo/backend/confect/access/schema";
 import {
   drawCardCode,
   formatCardCode,
   hashCardCode,
 } from "@repo/backend/confect/identity/code";
-import { Clock, Duration, Effect, Option, Struct } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Duration,
+  Effect,
+  Option,
+  Schema,
+  Struct,
+} from "effect";
 
 /** How long a printed card works, counted from the moment it is issued. */
 export const CARD_TERM = Duration.days(14);
 
 /**
- * Whether a card may be printed for a Person or redeemed by one: a Person with
- * no account yet, or one whose account a card made, so a reissued card sets a
- * new password on that account (ADR 0009). An account that an invite or an
- * operator claimed never takes a password from a card.
+ * Why a Person cannot take a login card: an account that a card did not make,
+ * or the Owner or Admin role. A card hands the Person's standing grants to
+ * whoever redeems it, and a redemption has no signed-in caller who could check
+ * a role, so no card goes to either (ADR 0009).
  */
-export const takesCard = (person: TenantPeopleDoc) =>
-  person.account.state === "unclaimed" || person.account.method === "card";
+export const CardRefusal = Schema.Literals(["claimed", "role"]);
+
+/** A refusal of one reason, as the card rule answers it. */
+const refuse = (reason: typeof CardRefusal.Type) => Option.some(reason);
+
+/**
+ * The first reason a Person cannot take a card, or none. Issue, reissue, and
+ * redeem all call this one rule, so it has one owner. An account that a card
+ * made takes a new card, so a reissued card sets a new password on it. A
+ * removed Person is refused by each caller's own status check (ADR 0009).
+ */
+export const cardRefusalOf = Effect.fn("identity.card.refusal")(function* (
+  person: TenantPeopleDoc
+) {
+  if (person.account.state === "claimed" && person.account.method !== "card") {
+    return refuse("claimed");
+  }
+  const grants = yield* activeGrants(person._id);
+  if (Arr.some(grants, (grant) => Schema.is(OwnerRole)(grant.role.key))) {
+    return refuse("role");
+  }
+  return Option.none();
+});
 
 /** The card of one Person, if one was ever issued: one indexed read. */
 export const cardOf = Effect.fn("identity.card.of")(function* (

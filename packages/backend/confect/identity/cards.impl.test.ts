@@ -27,7 +27,7 @@ beforeEach(() => {
 
 /**
  * An unclaimed Person of the fixture's school who holds the Owner role, so that
- * only an Owner may print a card for it.
+ * no card may be printed for it.
  */
 const unclaimedOwner = (fixture: Effect.Success<typeof tenancyFixture>) =>
   fixture.run(
@@ -188,12 +188,12 @@ describe("identity/cards issue", () => {
   );
 
   it.effect(
-    "lets an Admin issue a card for an Owner only when the Admin holds owner.manage",
+    "refuses a card for a Person who holds the Owner or Admin role, from any caller",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const owner = yield* unclaimedOwner(fixture);
-        const denied = yield* fixture
+        const byAdmin = yield* fixture
           .as("admin")
           .mutation(issue, {
             loginName: "pemilik.baru",
@@ -201,14 +201,18 @@ describe("identity/cards issue", () => {
             slug: nf,
           })
           .pipe(Effect.flip);
-        expect(denied).toMatchObject({ _tag: "AccessDenied" });
-        expect(
-          yield* fixture.as("owner").mutation(issue, {
+        const byOwner = yield* fixture
+          .as("owner")
+          .mutation(issue, {
             loginName: "pemilik.baru",
             personId: owner,
             slug: nf,
           })
-        ).toMatchObject({ loginName: "pemilik.baru" });
+          .pipe(Effect.flip);
+        expect([byAdmin, byOwner]).toMatchObject([
+          { _tag: "CardRoleRefused" },
+          { _tag: "CardRoleRefused" },
+        ]);
       })
   );
 });
@@ -272,26 +276,23 @@ describe("identity/cards reissue", () => {
   );
 
   it.effect(
-    "lets an Admin reissue a card for an Owner only when the Admin holds owner.manage",
+    "refuses a reissue once the Person holds the Admin role, and voids nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const owner = yield* unclaimedOwner(fixture);
-        yield* fixture.as("owner").mutation(issue, {
-          loginName: "pemilik.baru",
-          personId: owner,
-          slug: nf,
-        });
-        const denied = yield* fixture
-          .as("admin")
-          .mutation(reissue, { personId: owner, slug: nf })
+        yield* issueFirst(fixture);
+        const before = yield* cardRowOf(fixture, fixture.invited);
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, fixture.invited, "admin", {
+            kind: "tenant",
+          })
+        );
+        const refused = yield* fixture
+          .as("owner")
+          .mutation(reissue, { personId: fixture.invited, slug: nf })
           .pipe(Effect.flip);
-        expect(denied).toMatchObject({ _tag: "AccessDenied" });
-        expect(
-          yield* fixture
-            .as("owner")
-            .mutation(reissue, { personId: owner, slug: nf })
-        ).toMatchObject({ loginName: "pemilik.baru" });
+        expect(refused).toMatchObject({ _tag: "CardRoleRefused" });
+        expect(yield* cardRowOf(fixture, fixture.invited)).toEqual(before);
       })
   );
 

@@ -111,11 +111,11 @@ not an invite row, so this ADR's earlier plan of a card channel is withdrawn: an
 invite names an email address and a card names none, so a card cannot be matched
 to an account the way an invite is. A card is its own record, `loginCards`
 (ADR 0009), and redeeming it binds the Person with the claim method `card`. A
-claim hands the claimant the Person's standing grants, so creating an invite, or
-printing a login card, for a Person that holds the Owner or Admin role needs the
-right to give that role, `owner.manage` (ADR 0012). A card goes only to a Person
-with no account or with an account that a card made, so an invite that claimed
-the Person first refuses it.
+claim hands the claimant the Person's standing grants, so creating an invite for
+a Person that holds the Owner or Admin role needs the right to give that role,
+`owner.manage` (ADR 0012). A login card never goes to such a Person (ADR 0009). A
+card goes only to a Person with no account or with an account that a card made, so
+an invite that claimed the Person first refuses it.
 
 Account deletion releases the account's Persons instead of deleting them: the
 school controls its records, so each Person and its standing grants stay,

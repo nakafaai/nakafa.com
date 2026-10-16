@@ -1,7 +1,8 @@
-import { HOUR, MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
+import { MINUTE, RateLimiter } from "@convex-dev/rate-limiter";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
 import {
+  Auth as ConvexAuth,
   DatabaseReader,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
@@ -10,7 +11,10 @@ import {
   createLoginAccount,
   setLoginPassword,
 } from "@repo/backend/confect/identity/account";
-import { markRedeemed, takesCard } from "@repo/backend/confect/identity/card";
+import {
+  cardRefusalOf,
+  markRedeemed,
+} from "@repo/backend/confect/identity/card";
 import {
   hashCardCode,
   readCardCode,
@@ -25,25 +29,19 @@ import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { bindPerson } from "@repo/backend/confect/tenancy/claim";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Clock, Effect, Option, pipe, Result, String as Str } from "effect";
+import { Clock, Effect, Option, Result } from "effect";
 
 /**
  * Attempts one device may make: five at once, then five more each fifteen
- * minutes. The device is a UUID that the sign-in page keeps, so this limit alone
- * does not stop a device that asks for a new one.
+ * minutes. The device is a UUID that the sign-in page keeps, so a device that
+ * asks for a new one gets a new bucket. A code holds 50 bits (ADR 0009), so a
+ * bucket shared by every device adds no protection against guessing, and it would
+ * let one person block another's card.
  */
 const DEVICE_ATTEMPTS = { capacity: 5, period: 15 * MINUTE, rate: 5 };
-/**
- * Attempts one code prefix may take in an hour, from every device together.
- * It holds whatever device a guesser claims, so it is the limit that holds.
- */
-const PREFIX_ATTEMPTS = { capacity: 10, period: HOUR, rate: 10 };
-/** The characters that name a code's prefix: its first group of five. */
-const PREFIX_LENGTH = 5;
 
 const attempts = new RateLimiter(components.agentRateLimiter, {
   cardRedeemByDevice: { ...DEVICE_ATTEMPTS, kind: "token bucket" },
-  cardRedeemByPrefix: { ...PREFIX_ATTEMPTS, kind: "token bucket" },
 });
 
 /** A refusal, as the outcome that the page reads. */
@@ -60,32 +58,36 @@ const redeemed = (loginName: string): typeof RedeemOutcome.Type => ({
 /** A reason that a card cannot be redeemed, as a failed result. */
 const reject = (reason: typeof RedeemRefusal.Type) => Result.fail(reason);
 
-/** Counts one attempt against one limit, and says whether the attempt may go on. */
+/** Counts one attempt from one device against its limit, and says whether the attempt may go on. */
 const admit = Effect.fn("identity.redeem.admit")(function* (
   ctx: MutationCtx,
-  name: "cardRedeemByDevice" | "cardRedeemByPrefix",
-  key: string
+  device: string
 ) {
   const quota = yield* Effect.tryPromise(() =>
-    attempts.limit(ctx, name, { key })
+    attempts.limit(ctx, "cardRedeemByDevice", { key: device })
   ).pipe(Effect.orDie);
   return quota.ok;
 });
 
-/** The first characters of what was typed, without spaces or dashes: the key of the prefix limit. */
-const prefixOf = (input: string) =>
-  pipe(
-    input,
-    Str.toUpperCase,
-    Str.replaceAll(/[\s-]/gu, ""),
-    Str.takeLeft(PREFIX_LENGTH)
+/**
+ * Whether the request carries an authenticated identity. A card is redeemed only
+ * from a signed-out device, so a request that carries one is refused (ADR 0009).
+ */
+const isSignedIn = Effect.fn("identity.redeem.signedIn")(function* () {
+  const identity = yield* (yield* ConvexAuth).getUserIdentity.pipe(
+    Effect.asSome,
+    Effect.catchTag("NoUserIdentityFoundError", () => Effect.succeedNone)
   );
+  return Option.isSome(identity);
+});
 
 /**
  * The card that a code opens on this school's host, when the card can still be
  * redeemed. A code of another school, an unknown code, a suspended school, and
- * a removed Person all read as `invalid`, so the answer tells a guesser nothing
- * about which part was right. A used card and an expired one are told apart.
+ * a removed Person all read as `invalid`, and so does a Person the card rule
+ * refuses, so the answer tells a guesser nothing about which part was right. The
+ * Person is read before the card's state, so a used or expired card of such a
+ * Person reads as `invalid` too. A used card and an expired one are told apart.
  */
 const findRedeemable = Effect.fn("identity.redeem.find")(function* (
   slug: TenantSlug,
@@ -116,18 +118,21 @@ const findRedeemable = Effect.fn("identity.redeem.find")(function* (
   ) {
     return reject("invalid");
   }
+  const person = yield* reader
+    .table("tenantPeople")
+    .get(card.value.personId)
+    .pipe(Effect.orDie);
+  if (
+    person.status !== "active" ||
+    Option.isSome(yield* cardRefusalOf(person))
+  ) {
+    return reject("invalid");
+  }
   if (card.value.redeemedAt !== undefined) {
     return reject("used");
   }
   if (card.value.expiresAt <= (yield* Clock.currentTimeMillis)) {
     return reject("expired");
-  }
-  const person = yield* reader
-    .table("tenantPeople")
-    .get(card.value.personId)
-    .pipe(Effect.orDie);
-  if (person.status !== "active" || !takesCard(person)) {
-    return reject("invalid");
   }
   return Result.succeed({ card: card.value, person });
 });
@@ -166,23 +171,23 @@ const accountOf = Effect.fn("identity.redeem.account")(function* (
 
 /**
  * Redeems one login card: the student's first sign-in, or the new password that
- * a reissued card allows. In order, it counts the attempt against the rate
- * limits, reads the code, opens the card on the school's host, checks the
- * password length, creates the account if the Person has none and claims the
- * Person, stores the password through Better Auth, and marks the card used.
- * The rate-limit counts are written first, on purpose: a refusal is a value, so
- * the attempt it refuses still counts. The account, claim, password, and card
- * writes come after the last refusal, so a refused card changes nothing else.
+ * a reissued card allows. In order, it refuses a request that carries a signed-in
+ * identity before any limit is spent, counts the attempt against the device limit,
+ * reads the code, opens the card on the school's host, checks the password length,
+ * creates the account if the Person has none and claims the Person, stores the
+ * password through Better Auth, marks the card used, and journals the redemption.
+ * The rate-limit count is written first, on purpose: a refusal is a value, so the
+ * attempt it refuses still counts. The account, claim, password, and card writes
+ * come after the last refusal, so a refused card changes nothing else.
  */
 export const redeemCard = Effect.fn("identity.redeem.card")(function* (
   input: typeof RedeemRequest.Type
 ) {
+  if (yield* isSignedIn()) {
+    return refused("invalid");
+  }
   const ctx = yield* MutationCtx;
-  const [byDevice, byPrefix] = yield* Effect.all([
-    admit(ctx, "cardRedeemByDevice", input.deviceId),
-    admit(ctx, "cardRedeemByPrefix", prefixOf(input.code)),
-  ]);
-  if (!(byDevice && byPrefix)) {
+  if (!(yield* admit(ctx, input.deviceId))) {
     return refused("rateLimited");
   }
   const code = readCardCode(input.code);
@@ -214,7 +219,7 @@ export const redeemCard = Effect.fn("identity.redeem.card")(function* (
   yield* markRedeemed(card, yield* Clock.currentTimeMillis);
   yield* personAuthority.record(personActor(person), person, {
     card: card._id,
-    type: "login.card.redeemed",
+    type: "card.redeemed",
   });
   return redeemed(login.name);
 });

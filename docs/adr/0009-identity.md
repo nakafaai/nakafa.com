@@ -151,9 +151,10 @@ only, each at its own address (ADR 0026).
   A teacher or an admin prints a card again, which voids the old code and writes
   a journal entry, and redeeming the new card lets the student set a new
   password. A card is not an invite row (ADR 0011), but the same rules apply to
-  it: who may print one for a Person who holds the Owner or Admin role, and a
-  card goes only to a Person with no account yet or with an account that a card
-  made. A code is shown with dashes and accepted with or without them.
+  it: a card never goes to a Person who holds the Owner or Admin role, and it goes
+  only to a Person with no account yet or with an account that a card made. A code
+  is shown with dashes and accepted with or without them. A typed code reads O as 0
+  and I or L as 1, as Crockford base32 does, and U is refused.
 - **Parent.** A parent signs in with an email code: six digits, valid for five
   minutes, void after three wrong tries, and stored as a keyed hash (an HMAC
   under a server secret, like the login-card code), because six digits have
@@ -208,29 +209,41 @@ stays closed on every host.
   characters of Crockford base32. It is drawn from Effect's `Crypto` service,
   because the default `Random` is not secure. A card works for `CARD_TERM`, 14
   days. Issuing or reissuing replaces the row, so the old code matches nothing.
-  `card.issue` is an Admin's right. An Owner or Admin role that the Person holds
-  also needs `owner.manage`, because a card hands over the Person's grants. A
-  card goes only to a Person with no account or with an account a card made
-  (`takesCard`, `identity/card`). Issuing for any other Person answers
-  `PersonClaimed`, the refusal an invite gives, and redeeming a card for one
-  reads as `invalid`.
-- **Redeem.** `cards:redeem` is one mutation, in this order: it counts the
-  attempt against two limits, reads the code, opens the card on the school's
-  host, refuses a password outside Better Auth's length before any write, creates
-  the account if the Person has none (the global username from
-  `users/allocation`, the placeholder address, no Google link), binds the Person
+  `card.issue` is an Admin's right. A card never goes to a Person who holds the
+  Owner or Admin role: issuing or reissuing for one answers `CardRoleRefused`, and
+  redeeming a card for one reads as `invalid`. `cardRefusalOf` (`identity/card`)
+  is the one rule that issue, reissue, and redeem all call. A card goes only to a
+  Person with no account or with an account a card made. Issuing for any other
+  Person answers `PersonClaimed`, the refusal an invite gives, and redeeming a card
+  for one reads as `invalid`.
+- **Redeem.** `cards:redeem` is one mutation, in this order: it refuses a request
+  that carries a signed-in identity as `invalid` before any limit is spent, counts
+  the attempt against the device limit, reads the code, reads the Person and
+  refuses one that is removed or that the card rule refuses (the Owner or Admin
+  role, or an account that a card did not make) as `invalid` whatever the card
+  says, opens the card on the school's host (`used`, then `expired`), refuses a
+  password outside Better Auth's length before any write, creates the account if
+  the Person has none (the global username from `users/allocation`, the
+  placeholder address named by a random key, no Google link), binds the Person
   with method `card`, stores the password through Better Auth's reset endpoint,
-  and marks the card used. A refusal is a value, so the attempt still counts.
+  marks the card used, and journals `card.redeemed`. A refusal is a value, so the
+  attempt still counts.
   A failure that throws rolls back the whole mutation, so an account, a claim,
   or a redemption never survives without the others. A card whose Person has no
   school login cannot exist: issuing writes the login first and nothing deletes
   one, so the login is a required read, and a broken row fails the mutation.
 - **Rate limits.** Per device (the UUID the sign-in page keeps): five attempts at
-  once, then five more every 15 minutes. Per code prefix (the first five
-  characters, from every device): ten attempts at once, then ten every hour.
-  These are design choices, not measurements. Every attempt counts against both.
+  once, then five more every 15 minutes. These are design choices, not
+  measurements. Every attempt counts against it. A code is 50 bits, ten characters
+  of five bits each, so guessing one takes about 2^49, or 5.6 x 10^14, tries on
+  average. That figure is computed from the alphabet, not measured. A bucket shared
+  by every device would add no protection against that guessing, and it would let
+  one person block another's card, so there is no limit per code prefix.
 - **Placeholder address.** An account made from a school login holds
-  `<username>@login.nakafa.invalid`. `identity/address` owns the domain.
+  `<random key>@login.nakafa.invalid`, where the key is a random UUID drawn for that
+  account, so the address names no one. The Convex adapter writes the Better Auth
+  id itself, so the id is not known before the write. The handle is allocated from
+  the Person's name, as it is for every account. `identity/address` owns the domain.
   `emails/client` refuses a message to it before the provider is called, in any
   recipient field. No welcome intent and no payment customer is made for it, on
   creation or on a profile change, and an invitation to it sends nothing. The

@@ -238,8 +238,9 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       passwordSignInRoutesDisabled,
       usernameUpdatesDisabled,
       openAPI(),
-      // A school username is the global username of the account (ADR 0009), so
-      // the plugin holds the same value as `users.username`, under one rule.
+      // The plugin holds the global username of the account (ADR 0009), which is
+      // the same value as `users.username`. A school login name lives in
+      // `schoolLogins` and is separate from the username.
       username({
         maxUsernameLength: USERNAME_MAX_LENGTH,
         minUsernameLength: USERNAME_MIN_LENGTH,

@@ -67,3 +67,20 @@ export class LoginMissing extends Schema.TaggedError<LoginMissing>()(
     ),
   }
 ) {}
+
+/** Issuing or reissuing a card for a Person who holds the Owner or Admin role. No card goes to such a Person (ADR 0009). */
+export class CardRoleRefused extends Schema.TaggedError<CardRoleRefused>()(
+  "CardRoleRefused",
+  {
+    code: Schema.Literal("CARD_ROLE_REFUSED").pipe(
+      Schema.withConstructorDefault(Effect.succeed("CARD_ROLE_REFUSED"))
+    ),
+    message: Schema.String.pipe(
+      Schema.withConstructorDefault(
+        Effect.succeed(
+          "A login card cannot be given to a person who holds the Owner or Admin role."
+        )
+      )
+    ),
+  }
+) {}

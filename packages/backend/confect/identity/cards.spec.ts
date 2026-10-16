@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import {
+  CardRoleRefused,
   LoginExists,
   LoginMissing,
   LoginNameRefused,
@@ -37,6 +38,7 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           AccessDenied,
+          CardRoleRefused,
           LoginExists,
           LoginNameRefused,
           LoginNameTaken,
@@ -52,7 +54,13 @@ export default GroupSpec.make()
       name: "reissue",
       args: () => ({ personId: Id("tenantPeople"), slug: TenantSlug }),
       returns: () => IssuedCard,
-      error: () => Schema.Union([AccessDenied, LoginMissing, PersonClaimed]),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          CardRoleRefused,
+          LoginMissing,
+          PersonClaimed,
+        ]),
     })
       .middleware(Session)
       .middleware(RequireMember)

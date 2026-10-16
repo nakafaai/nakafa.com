@@ -50,7 +50,7 @@ describe("access/catalog", () => {
       "invite.revoked",
       "login.card.issued",
       "login.card.reissued",
-      "login.card.redeemed",
+      "card.redeemed",
       "period.created",
       "period.opened",
       "period.archived",

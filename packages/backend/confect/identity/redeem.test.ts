@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { setLoginPassword } from "@repo/backend/confect/identity/account";
-import { loginAddress } from "@repo/backend/confect/identity/address";
 import { CARD_TERM } from "@repo/backend/confect/identity/card";
 import {
   CARD_NOW,
@@ -12,12 +11,19 @@ import {
   issueFirst,
   nf,
   PASSWORD,
+  redeem,
   redeemOn,
   reissue,
+  storedPasswordIs,
   UNKNOWN_CODE,
   userNamed,
 } from "@repo/backend/test/identity";
-import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  grantRole,
+  journal,
+  slugOf,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Duration, Effect, Exit, Option } from "effect";
 
 // The password step is the one Better Auth call in a redemption. A test makes it
@@ -34,6 +40,14 @@ vi.mock("@repo/backend/confect/identity/account", async (importOriginal) => {
 });
 
 const TERM = Duration.toMillis(CARD_TERM);
+
+/** A placeholder address: a random UUID key at the reserved `.invalid` domain. */
+const PLACEHOLDER_ADDRESS =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}@login\.nakafa\.invalid$/;
+
+/** A device the sign-in page keeps, as a UUID, numbered so that each one differs. */
+const deviceAt = (index: number) =>
+  `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
 
 /** Fake timers keep the clock at one moment, so every term and limit is exact. */
 beforeEach(() => {
@@ -60,10 +74,10 @@ describe("identity/cards redeem", () => {
         const user = Option.getOrUndefined(
           yield* userNamed(fixture, "invited")
         );
-        expect(user).toMatchObject({
-          email: loginAddress("invited"),
-          username: "invited",
-        });
+        expect(user).toMatchObject({ username: "invited" });
+        // The placeholder address is named by a random key, never by the name.
+        expect(user?.email).toMatch(PLACEHOLDER_ADDRESS);
+        expect(user?.email).not.toContain("invited");
         expect(person.account).toMatchObject({ userId: user?._id });
         expect(yield* fixture.run(journal)).toMatchObject([
           { change: { type: "login.card.issued" } },
@@ -73,7 +87,7 @@ describe("identity/cards redeem", () => {
           },
           {
             actor: { id: fixture.invited, kind: "person" },
-            change: { type: "login.card.redeemed" },
+            change: { type: "card.redeemed" },
           },
         ]);
         expect(yield* redeemOn(fixture, issued.code)).toEqual({
@@ -142,6 +156,10 @@ describe("identity/cards redeem", () => {
           )
         ).toEqual({ outcome: "refused", reason: "invalid" });
         expect(yield* redeemOn(fixture, "1234")).toEqual({
+          outcome: "refused",
+          reason: "invalid",
+        });
+        expect(yield* redeemOn(fixture, "UUUUU-UUUUU")).toEqual({
           outcome: "refused",
           reason: "invalid",
         });
@@ -237,25 +255,131 @@ describe("identity/cards redeem", () => {
     })
   );
 
-  it.effect("limits the attempts on one code prefix from every device", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      yield* issueFirst(fixture);
-      const devices = Arr.makeBy(
-        11,
-        (index) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`
-      );
-      const outcomes = yield* Effect.forEach(devices, (device) =>
-        redeemOn(fixture, UNKNOWN_CODE, PASSWORD, device)
-      );
-      expect(Arr.take(outcomes, 10)).toEqual(
-        Arr.replicate({ outcome: "refused", reason: "invalid" }, 10)
-      );
-      expect(outcomes[10]).toEqual({
-        outcome: "refused",
-        reason: "rateLimited",
-      });
-    })
+  it.effect(
+    "does not let the attempts of other devices block a card that shares their code prefix",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        // A guess that keeps the first five characters of the card, from ten devices.
+        const guess = `${issued.code.slice(0, 5)}-${
+          issued.code.endsWith("ZZZZZ") ? "00000" : "ZZZZZ"
+        }`;
+        const outcomes = yield* Effect.forEach(
+          Arr.makeBy(10, deviceAt),
+          (device) => redeemOn(fixture, guess, PASSWORD, device)
+        );
+        expect(outcomes).toEqual(
+          Arr.replicate({ outcome: "refused", reason: "invalid" }, 10)
+        );
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          loginName: "guru.baru",
+          outcome: "redeemed",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses a card from a signed-in caller before it spends an attempt, and the card stays redeemable",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        const signedIn = yield* Effect.forEach(
+          Arr.replicate(issued.code, 6),
+          (code) =>
+            fixture.as("admin").mutation(redeem, {
+              code,
+              deviceId: DEVICE,
+              password: PASSWORD,
+              slug: nf,
+            })
+        );
+        expect(signedIn).toEqual(
+          Arr.replicate({ outcome: "refused", reason: "invalid" }, 6)
+        );
+        expect((yield* inviteePerson(fixture)).account).toEqual({
+          state: "unclaimed",
+        });
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          loginName: "guru.baru",
+          outcome: "redeemed",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses a card whose Person was given the Admin role after the card was printed",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, fixture.invited, "admin", {
+            kind: "tenant",
+          })
+        );
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          outcome: "refused",
+          reason: "invalid",
+        });
+        expect((yield* inviteePerson(fixture)).account).toEqual({
+          state: "unclaimed",
+        });
+        expect(
+          Option.getOrUndefined(yield* cardRowOf(fixture, fixture.invited))
+            ?.redeemedAt
+        ).toBeUndefined();
+      })
+  );
+
+  it.effect(
+    "reads a removed Person as invalid even when its card was already used",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        expect(yield* redeemOn(fixture, issued.code)).toMatchObject({
+          outcome: "redeemed",
+        });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("tenantPeople")
+              .patch(fixture.invited, { status: "removed" })
+          )
+        );
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          outcome: "refused",
+          reason: "invalid",
+        });
+      })
+  );
+
+  it.effect(
+    "stores the password that the student chose, and a reissued card replaces it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const first = yield* issueFirst(fixture);
+        expect(yield* redeemOn(fixture, first.code, PASSWORD)).toMatchObject({
+          outcome: "redeemed",
+        });
+        expect(yield* storedPasswordIs(fixture, PASSWORD)).toBe(true);
+        expect(yield* storedPasswordIs(fixture, "new password here")).toBe(
+          false
+        );
+        const second = yield* fixture
+          .as("admin")
+          .mutation(reissue, { personId: fixture.invited, slug: nf });
+        expect(
+          yield* redeemOn(fixture, second.code, "new password here")
+        ).toEqual({ loginName: "guru.baru", outcome: "redeemed" });
+        expect(yield* storedPasswordIs(fixture, "new password here")).toBe(
+          true
+        );
+        expect(yield* storedPasswordIs(fixture, PASSWORD)).toBe(false);
+      })
   );
 
   it.effect(
