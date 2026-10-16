@@ -471,7 +471,7 @@
     "username-taken": "Sudah dipakai orang lain.",
     "username-too-short": "Minimal 3 karakter.",
     "bio": "Bio",
-    "bio-count": "{count} dari {max} karakter",
+    "bio-count": "Kamu sudah memakai {count} dari {max} karakter.",
     "bio-description": "Satu baris tentang dirimu, tampil di profil.",
     "bio-placeholder": "Tulis satu baris tentang dirimu...",
     "edit-profile": "Edit profil",
@@ -529,7 +529,7 @@
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",
-    "footer": "Memori tetap ada sampai kamu menghapusnya, juga saat kamu menghapus obrolan",
+    "footer": "Memori tetap ada sampai kamu menghapusnya, juga saat kamu menghapus obrolan.",
     "clear": "Hapus semua",
     "clear-title": "Hapus semua memori?",
     "clear-description": "Ini tidak bisa dibatalkan",

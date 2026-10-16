@@ -471,7 +471,7 @@
     "username-taken": "Already taken.",
     "username-too-short": "At least 3 characters.",
     "bio": "Bio",
-    "bio-count": "{count} of {max} characters",
+    "bio-count": "You have used {count} of {max} characters.",
     "bio-description": "One line about you, shown on your profile.",
     "bio-placeholder": "Write one line about yourself...",
     "edit-profile": "Edit profile",
@@ -529,7 +529,7 @@
   },
   "Memory": {
     "remember": "Let Nina save and use memories",
-    "footer": "Memories stay until you delete them, even when you delete a chat",
+    "footer": "Memories stay until you delete them, even when you delete a chat.",
     "clear": "Delete all",
     "clear-title": "Delete all memories?",
     "clear-description": "This cannot be undone",

@@ -471,7 +471,7 @@
     "username-taken": "Schon vergeben.",
     "username-too-short": "Mindestens 3 Zeichen.",
     "bio": "Bio",
-    "bio-count": "{count} von {max} Zeichen",
+    "bio-count": "Du hast {count} von {max} Zeichen verwendet.",
     "bio-description": "Eine Zeile über dich, im Profil zu sehen.",
     "bio-placeholder": "Schreib eine Zeile über dich...",
     "edit-profile": "Profil bearbeiten",
@@ -529,7 +529,7 @@
   },
   "Memory": {
     "remember": "Nina darf Erinnerungen speichern und nutzen",
-    "footer": "Erinnerungen bleiben, bis du sie löschst, auch wenn du einen Chat löschst",
+    "footer": "Erinnerungen bleiben, bis du sie löschst, auch wenn du einen Chat löschst.",
     "clear": "Alle löschen",
     "clear-title": "Alle Erinnerungen löschen?",
     "clear-description": "Das lässt sich nicht rückgängig machen",

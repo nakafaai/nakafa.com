@@ -175,9 +175,12 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
         await page.goto(SETTINGS);
         await bioField(page).fill(bio);
         await expect(
-          page.getByText(`${bio.length} of ${BIO_MAX_LENGTH} characters`, {
-            exact: true,
-          })
+          page.getByText(
+            `You have used ${bio.length} of ${BIO_MAX_LENGTH} characters.`,
+            {
+              exact: true,
+            }
+          )
         ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         await save.click();
 
