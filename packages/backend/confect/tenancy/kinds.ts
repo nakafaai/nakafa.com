@@ -3,9 +3,14 @@ import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
+import { AssignmentKind } from "@repo/backend/confect/tenancy/assignment";
 import { Contract } from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
+import {
+  PromotionReturnReason,
+  PromotionStep,
+} from "@repo/backend/confect/tenancy/promotion/schema";
 import {
   ClaimMethod,
   PersonReason,
@@ -160,6 +165,10 @@ export const person = Kind.make("person", "tenantPeople", {
       type: Schema.Literal("person.moved"),
     }),
     Schema.Struct({
+      promotion: Id("tenantPromotions"),
+      type: Schema.Literal("person.graduated"),
+    }),
+    Schema.Struct({
       invite: Id("tenantInvites"),
       type: Schema.Literal("invite.expired"),
     }),
@@ -223,7 +232,7 @@ export const cohort = Kind.make("cohort", "tenantCohorts", {
     "cohort.view": {
       access: "read",
       grantedBy: "roles",
-      relations: ["cohortMember"],
+      relations: ["cohortMember", "homeroom"],
       roles: planReaders,
     },
   },
@@ -231,9 +240,19 @@ export const cohort = Kind.make("cohort", "tenantCohorts", {
     Schema.Struct({ type: Schema.Literal("cohort.created") }),
     Schema.Struct({ type: Schema.Literal("cohort.renamed") }),
     Schema.Struct({ type: Schema.Literal("cohort.archived") }),
+    Schema.Struct({
+      assignment: AssignmentKind,
+      person: Id("tenantPeople"),
+      type: Schema.Literal("assignment.created"),
+    }),
+    Schema.Struct({
+      assignment: AssignmentKind,
+      person: Id("tenantPeople"),
+      type: Schema.Literal("assignment.removed"),
+    }),
   ],
   published: [],
-  relations: ["cohortMember"],
+  relations: ["cohortMember", "homeroom"],
 });
 
 /**
@@ -302,7 +321,65 @@ const periodCohorts = Kind.extend(period, {
   published: [],
 });
 
+/**
+ * One promotion of a school's students to its next period. The Admin prepares
+ * and applies it, and the principal approves it. Each write that applying it
+ * makes is journaled on its own subject: the archived period, the new cohorts,
+ * the placements and graduations of students, and the copied homeroom teachers.
+ */
+export const promotion = Kind.make("promotion", "tenantPromotions", {
+  actions: {
+    "promotion.apply": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
+    "promotion.approve": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["principal"],
+    },
+    "promotion.prepare": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
+    "promotion.view": {
+      access: "read",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin", "principal", "deputy", "staff", "auditor"],
+    },
+  },
+  changes: [
+    Schema.Struct({ type: Schema.Literal("promotion.applied") }),
+    Schema.Struct({ type: Schema.Literal("promotion.approved") }),
+    Schema.Struct({ type: Schema.Literal("promotion.cancelled") }),
+    Schema.Struct({ type: Schema.Literal("promotion.created") }),
+    Schema.Struct({ type: Schema.Literal("promotion.opened") }),
+    Schema.Struct({ type: Schema.Literal("promotion.planned") }),
+    Schema.Struct({
+      person: Id("tenantPeople"),
+      type: Schema.Literal("promotion.studentPlanned"),
+    }),
+    Schema.Struct({ type: Schema.Literal("promotion.submitted") }),
+    Schema.Struct({
+      reason: PromotionReturnReason,
+      type: Schema.Literal("promotion.returned"),
+    }),
+    Schema.Struct({
+      step: PromotionStep,
+      type: Schema.Literal("promotion.undone"),
+    }),
+  ],
+  published: [],
+  relations: [],
+});
+
 export const tenancy = {
   extensions: [tenantPeople, unitPeriods, periodCohorts],
-  kinds: [tenant, unit, person, period, cohort],
+  kinds: [tenant, unit, person, period, cohort, promotion],
 } as const;

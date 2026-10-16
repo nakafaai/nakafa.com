@@ -67,13 +67,17 @@ import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
+import tenantGraduates from "./tables/tenantGraduates";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
 import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
 import tenantPeriods from "./tables/tenantPeriods";
+import tenantPromotionMoves from "./tables/tenantPromotionMoves";
+import tenantPromotions from "./tables/tenantPromotions";
 import tenantUnits from "./tables/tenantUnits";
 import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
@@ -159,13 +163,17 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly quranSearch: typeof quranSearch;
   readonly snapshotBatches: typeof snapshotBatches;
   readonly subscriptions: typeof subscriptions;
+  readonly tenantAssignments: typeof tenantAssignments;
   readonly tenantCohortMembers: typeof tenantCohortMembers;
   readonly tenantCohorts: typeof tenantCohorts;
+  readonly tenantGraduates: typeof tenantGraduates;
   readonly tenantGrants: typeof tenantGrants;
   readonly tenantInvites: typeof tenantInvites;
   readonly tenantKeys: typeof tenantKeys;
   readonly tenantPeople: typeof tenantPeople;
   readonly tenantPeriods: typeof tenantPeriods;
+  readonly tenantPromotionMoves: typeof tenantPromotionMoves;
+  readonly tenantPromotions: typeof tenantPromotions;
   readonly tenantUnits: typeof tenantUnits;
   readonly tenantVisits: typeof tenantVisits;
   readonly tenants: typeof tenants;
@@ -250,13 +258,17 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   quranSearch,
   snapshotBatches,
   subscriptions,
+  tenantAssignments,
   tenantCohortMembers,
   tenantCohorts,
+  tenantGraduates,
   tenantGrants,
   tenantInvites,
   tenantKeys,
   tenantPeople,
   tenantPeriods,
+  tenantPromotionMoves,
+  tenantPromotions,
   tenantUnits,
   tenantVisits,
   tenants,

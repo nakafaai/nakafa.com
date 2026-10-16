@@ -1,6 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { readLearningPreferenceByUserId } from "@repo/backend/confect/learningPreferences/impl";
 import type { NinaLearnerProfile } from "@repo/backend/confect/nina/memory.spec";
 import { readOnboardingProfileByUserId } from "@repo/backend/confect/onboarding/impl";
 import { Array as Arr, Effect, Option } from "effect";
@@ -55,14 +54,16 @@ const readLatestTryout = Effect.fn("nina.memory.profile.tryout")(function* (
   };
 });
 
-/** Derives the account facts Nina may use to personalize a turn. */
+/**
+ * Derives the account facts Nina may use to personalize a turn. The caller
+ * passes the learner's preference row, which it reads for the memory state too,
+ * so the row is read once.
+ */
 export const readLearnerProfile = Effect.fn("nina.memory.profile")(function* (
-  userId: Docs["users"]["_id"]
+  userId: Docs["users"]["_id"],
+  preference: Docs["learningPreferences"] | null
 ) {
   const onboarding = yield* readOnboardingProfileByUserId(userId).pipe(
-    Effect.orDie
-  );
-  const preference = yield* readLearningPreferenceByUserId(userId).pipe(
     Effect.orDie
   );
   const tryout = yield* readLatestTryout(userId);

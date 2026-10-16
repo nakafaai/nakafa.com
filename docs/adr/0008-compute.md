@@ -22,6 +22,14 @@ turns within its token budgets, so a long thread cannot trigger unbounded
 pagination. Whole turns preserve tool-call and tool-result parts together. The
 full transcript remains available for browsing.
 
+A turn whose run ends well stores what the history of its prompt cost: the
+tokens of those turns, how many they were, and the highest order the read left
+out. When the turn settles, the rolling summary reads only the turn itself, one
+page of ten messages, and leaves the fold for later while the stored cost and
+the turn fit the history budget, the read left no turn out, and the turns stay
+under the most the history takes. Otherwise it reads the turns after the summary
+as before, so `nina/fold.ts` decides every fold from the same counts.
+
 Successful persistence closes the hold and completes its existing ledger entry.
 Failure refunds it at most once. A refund can restore only the allowance from
 which the hold was taken: both the reset timestamp and the plan grant identity
@@ -60,8 +68,10 @@ stopped, in any chat, in the same transaction that admits it, before the busy
 check, the open-turn count and the credit hold. The cut-off stream can no longer
 save output, so that refund is the one the run's exit would give a moment later,
 and a prompt in a chat whose turn was not stopped is still refused as busy. The
-run checks its turn every second and aborts its generation when the turn was
-stopped or settled elsewhere, which also stops a silent provider call.
+run checks its turn every two seconds and aborts its generation when the turn
+was stopped or settled elsewhere, which also stops a silent provider call. Each
+check is a function call, so the interval halves the calls of a run, and a stop
+reaches the provider call at most two seconds later.
 Whichever settlement comes first, the turn ends as cancelled at the time of the
 stop, and the later ones find it settled and change nothing. A saved answer wins
 a race with a cancel and settles as complete.
@@ -85,6 +95,14 @@ follows its answer. A learner waits that long more than the stages show. The
 turn sent right after a stop waits for none of the stopped run's exit, its
 refund and the sweep, since its admission settles the stopped turn and
 schedules its own run in one transaction.
+Between the claim and the first model call the run reads in two calls for a
+short chat: the brief of the turn (`nina/brief:read`), one query that gives the
+learner's words, what the turn knows of the learner, the summary of the chat and
+the first page of the turns the summary does not cover, and the first page of
+the thread's messages. Every function call loads its module before it reads a
+row, so one query for the brief saves the loads of two functions and a call
+into the Agent component. A chat longer
+than a page of each asks again for the next one (`readUncovered`).
 `convex run nina/waits:summary '{"count": 500}'` reports the smallest, median,
 90th percentile (nearest rank) and largest of each stage over the newest turns,
 as counts and milliseconds only, and one run is bounded: it reads at most 500

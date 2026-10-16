@@ -93,7 +93,7 @@ const start = FunctionImpl.make(
     // chat, whichever comes first. Settling it before the busy check, the
     // open-turn count and the credit hold keeps a turn the page shows as
     // cancelled from blocking the chat, counting as open or holding credits.
-    const learner = yield* settleStopped(appUser);
+    const { learner, open } = yield* settleStopped(appUser);
     const chat = args.chatId
       ? yield* requireChatOwner(args.chatId, appUser._id)
       : null;
@@ -103,7 +103,7 @@ const start = FunctionImpl.make(
         message: "A Nina response is already running in this chat.",
       });
     }
-    yield* requireOpenCapacity(appUser._id);
+    yield* requireOpenCapacity(open);
     const now = yield* Clock.currentTimeMillis;
     const reservation = yield* reserveCredits(learner);
     const prompt = yield* preparePrompt(learner, chat, args.input);
