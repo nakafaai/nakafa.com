@@ -58,23 +58,26 @@ test("a learner picks another animal in settings, and the account button and the
           })
           .toBe(pickedMarkup);
 
-        // The pick is stored: a fresh load of the settings page draws it.
+        // The pick is stored, which a second tab shows once it loads the page. This
+        // tab stays where it is: a navigation here would cut the pick short on its
+        // way to the server, and the reloads would never store it.
+        const stored = await page.context().newPage();
         await expect(async () => {
-          await page.goto(SETTINGS);
-          expect(await animalOf(sidebarAvatar(page)).innerHTML()).toBe(
+          await stored.goto(SETTINGS);
+          expect(await animalOf(sidebarAvatar(stored)).innerHTML()).toBe(
             pickedMarkup
           );
         }).toPass({ timeout: readinessTimeoutMilliseconds });
 
         // The profile draws the same animal.
-        await page.goto(`/en/@${learner.username}`);
-        const header = page
+        await stored.goto(`/en/@${learner.username}`);
+        const header = stored
           .locator("main header")
           .locator('[data-slot="avatar"]');
         expect((await drawnAnimal(header)).markup).toBe(pickedMarkup);
+        await stored.close();
 
         // Drawing again offers four other animals.
-        await page.goto(SETTINGS);
         await expect(animalPicks(page)).toHaveCount(4, {
           timeout: readinessTimeoutMilliseconds,
         });
