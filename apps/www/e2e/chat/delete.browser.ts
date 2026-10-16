@@ -16,12 +16,16 @@ const sidebarRowOf = (page: Page, chatId: string) =>
     .locator(`a[data-sidebar="menu-button"][href$="/chat/${chatId}"]`)
     .filter({ visible: true });
 
-/** Deletes a chat from the menu of its row on the chats page. */
+/** Deletes a chat from the menu of its row on the chats page, and confirms in the dialog. */
 const deleteFromRow = async (page: Page, chatId: string) => {
   await rowOf(page, chatId)
     .getByRole("button", { name: "More actions" })
     .click();
   await page.getByRole("menuitem", { name: "Delete" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Confirm" })
+    .click();
 };
 
 /** A learner with two chats, on their chats page. */
@@ -88,6 +92,31 @@ const comesBackWhenRefused = Effect.fn("NakafaE2E.deleteComesBackWhenRefused")(
     });
   }
 );
+
+/**
+ * Deleting from the chats page asks first. Closing the dialog keeps the chat in
+ * its row, and no change reaches the server.
+ */
+const asksBeforeDeleting = Effect.fn("NakafaE2E.deleteAsksFirst")(function* (
+  page: Page,
+  baseURL: string
+) {
+  const { changes, oldest } = yield* onTheChatsPage(page, baseURL);
+
+  yield* Effect.promise(async () => {
+    const before = changes.sent;
+
+    await rowOf(page, oldest.chatId)
+      .getByRole("button", { name: "More actions" })
+      .click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(rowOf(page, oldest.chatId)).toContainText("Oldest chat");
+    expect(changes.sent).toBe(before);
+  });
+});
 
 /** The button that opens the menu of the open chat, which only its owner has. */
 const chatMenuOf = (page: Page) =>
@@ -212,6 +241,15 @@ test.describe("Chat delete at 1440px", () => {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       comesBackWhenRefused(page, origin)
+    );
+  });
+
+  test("asks before it deletes from the chats page", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      asksBeforeDeleting(page, origin)
     );
   });
 
