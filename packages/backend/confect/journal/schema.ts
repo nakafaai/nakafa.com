@@ -75,10 +75,11 @@ export const ConsumedChangeType = Schema.Literals(["person.invited"]);
  * are never replayed, and afterwards it is the creation time of the last entry read.
  * `read` holds the IDs of the entries read at `since`, so the next run skips them and
  * still reads the entries that share their creation millisecond. No pagination
- * cursor is kept, so no run resumes from the end position of an earlier page: the
- * Convex proof of ADR 0027 covers the creation-time order. `pending` says a run is
- * owed: a change sets it, and a run that reads to the end clears it, so the sweep
- * can find the cursors whose run never happened.
+ * cursor is kept, so no run resumes from the end position of an earlier page. The
+ * creation-time order that this relies on is assumed, not proven: ADR 0016 requires
+ * a proof on Convex first, and ADR 0027 records that it is still owed. `pending`
+ * says a run is owed: a change sets it, and a run that reads to the end clears it,
+ * so the sweep can find the cursors whose run never happened.
  */
 export const JournalCursor = Schema.Struct({
   changeType: ConsumedChangeType,
