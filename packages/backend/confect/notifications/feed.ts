@@ -1,7 +1,10 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { NotificationCursorInvalid } from "@repo/backend/confect/notifications/errors";
-import type { HeldSchool } from "@repo/backend/confect/notifications/held";
+import {
+  HELD_SCHOOL_LIMIT,
+  type HeldSchool,
+} from "@repo/backend/confect/notifications/held";
 import { notificationView } from "@repo/backend/confect/notifications/schema";
 import { Array as Arr, Effect, Option, Order, pipe, Schema } from "effect";
 
@@ -17,15 +20,26 @@ const FeedCursor = Schema.Struct({
 type FeedCursor = typeof FeedCursor.Type;
 const FeedCursorJson = Schema.fromJsonString(FeedCursor);
 
-/** Reads the position of a list page. A cursor that the list did not return is refused. */
+/**
+ * Reads the position of a list page. A cursor that does not decode is refused, and
+ * so is one that names more rows at its time than the account can hold. Each school
+ * adds at most one row at a creation time, because a Person's invitations are
+ * written one after another and their rows never share a time. So the rows at one
+ * creation time number at most `HELD_SCHOOL_LIMIT`, and no cursor sizes a read past
+ * that bound.
+ */
 export const decodeFeedCursor = Effect.fn("notifications.feed.decodeCursor")(
   function* (cursor: string | null) {
     if (cursor === null) {
       return null;
     }
-    return yield* Schema.decodeEffect(FeedCursorJson)(cursor).pipe(
+    const decoded = yield* Schema.decodeEffect(FeedCursorJson)(cursor).pipe(
       Effect.mapError(() => new NotificationCursorInvalid())
     );
+    if (decoded.shown.length > HELD_SCHOOL_LIMIT) {
+      return yield* new NotificationCursorInvalid();
+    }
+    return decoded;
   }
 );
 
@@ -78,7 +92,9 @@ const isShown = (cursor: FeedCursor | null, row: Candidate["row"]) =>
  * time keep the order of the index, which breaks ties by the newest insert, so every
  * page size shows the same order. Rows that tie on both keep the order of their
  * school. The cursor keeps the rows at its time that it has shown, so no row is
- * shown twice or skipped, even when several rows share one creation time.
+ * shown twice or skipped, even when several rows share one creation time. Each
+ * school is read with at most `numItems + 1 + HELD_SCHOOL_LIMIT` rows, because a
+ * decoded cursor names at most `HELD_SCHOOL_LIMIT` rows.
  */
 export const feedPage = Effect.fn("notifications.feed.page")(function* (
   schools: readonly HeldSchool[],

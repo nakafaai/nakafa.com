@@ -1,15 +1,20 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { HELD_SCHOOL_LIMIT } from "@repo/backend/confect/notifications/held";
 import {
   addPerson,
   claim,
   claimedPersons,
   consumeSchool,
+  type Fixture,
   insertRows,
   inviteAt,
   NOW,
+  type PersonId,
   storedRows,
 } from "@repo/backend/test/inbox";
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -24,6 +29,50 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
+
+/**
+ * Inserts one row at `NOW` for each Person, so every row shares one creation time,
+ * as the invitations of one moment would leave them. Each row takes its Person's school.
+ */
+const rowsAtOneTime = (fixture: Fixture, personIds: readonly PersonId[]) =>
+  Effect.gen(function* () {
+    const made = yield* inviteAt(
+      fixture,
+      "nf",
+      fixture.invited,
+      "satu@harapan.example.test"
+    );
+    const [entry] = yield* fixture.run(journal);
+    if (entry === undefined) {
+      return yield* Effect.die("The invite must have written a journal entry.");
+    }
+    yield* fixture.run(
+      Effect.gen(function* () {
+        const reader = yield* DatabaseReader;
+        const writer = yield* DatabaseWriter;
+        yield* Effect.forEach(
+          personIds,
+          (personId) =>
+            Effect.gen(function* () {
+              const person = yield* reader
+                .table("tenantPeople")
+                .get(personId)
+                .pipe(Effect.orDie);
+              return yield* writer.table("notifications").insert({
+                changeType: "person.invited",
+                createdAt: NOW,
+                inviteId: made.id,
+                journalEntryId: entry._id,
+                recipientPersonId: personId,
+                subject: { id: personId, kind: "person" },
+                tenantId: person.tenantId,
+              });
+            }),
+          { discard: true }
+        );
+      })
+    );
+  });
 
 describe("notifications/inbox list", () => {
   it.effect(
@@ -303,6 +352,72 @@ describe("notifications/inbox list", () => {
         .pipe(Effect.flip);
       expect(refused).toMatchObject({ _tag: "NotificationCursorInvalid" });
     })
+  );
+
+  it.effect(
+    "refuses a page cursor that names more rows at its time than the account can hold",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const ana = yield* fixture.account(
+          "ana",
+          "ana@harapan.example.test",
+          true
+        );
+        const anaNf = yield* addPerson(fixture, fixture.tenants.nf, "Ana");
+        yield* claim(fixture, anaNf, ana.userId);
+        yield* insertRows(fixture, anaNf, fixture.tenants.nf, 1);
+        const [row] = yield* storedRows(fixture);
+        if (row === undefined) {
+          return yield* Effect.die("The insert must have written a row.");
+        }
+        // A real row ID, repeated past the bound: the cursor decodes, and only its length is wrong.
+        const cursor = JSON.stringify({
+          at: NOW,
+          shown: Arr.replicate(row._id, HELD_SCHOOL_LIMIT + 1),
+        });
+        const refused = yield* ana.client
+          .query(list, { paginationOpts: { cursor, numItems: 1 } })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "NotificationCursorInvalid" });
+      })
+  );
+
+  it.effect(
+    "pages a creation time that every held school shares, up to the most rows a cursor names",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const ana = yield* fixture.account(
+          "ana",
+          "ana@harapan.example.test",
+          true
+        );
+        const personIds = yield* claimedPersons(
+          fixture,
+          ana.userId,
+          HELD_SCHOOL_LIMIT
+        );
+        yield* rowsAtOneTime(fixture, personIds);
+        const first = yield* ana.client.query(list, {
+          paginationOpts: { cursor: null, numItems: 50 },
+        });
+        const second = yield* ana.client.query(list, {
+          paginationOpts: { cursor: first.continueCursor, numItems: 50 },
+        });
+        expect(second.isDone).toBe(true);
+        const shown = Arr.map(
+          Arr.appendAll(first.page, second.page),
+          (item) => item.id
+        );
+        expect(Arr.dedupe(shown)).toHaveLength(HELD_SCHOOL_LIMIT);
+        // The cursor after the last row names every row at the time: the most a cursor
+        // holds, which the list still accepts.
+        const after = yield* ana.client.query(list, {
+          paginationOpts: { cursor: second.continueCursor, numItems: 50 },
+        });
+        expect(after).toMatchObject({ isDone: true, page: [] });
+      })
   );
 
   it.effect("refuses a caller without a session", () =>

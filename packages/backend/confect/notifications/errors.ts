@@ -23,7 +23,10 @@ export class NotificationScopeTooLarge extends Schema.TaggedError<NotificationSc
   )
 ) {}
 
-/** The page cursor of the inbox list is not one that the list returned. */
+/**
+ * The page cursor of the inbox list is not one that the list could return: it is
+ * malformed, or it names more rows at its time than the account can hold.
+ */
 export class NotificationCursorInvalid extends Schema.TaggedError<NotificationCursorInvalid>()(
   "NotificationCursorInvalid",
   refusal(
