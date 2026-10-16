@@ -4,40 +4,60 @@ import {
   VersionStale,
 } from "@repo/backend/confect/editor/batch";
 import { SnapshotRefused } from "@repo/backend/confect/editor/errors";
+import { SNAPSHOT_IDLE_DELAY } from "@repo/backend/confect/editor/snapshot";
 import { encodeStep } from "@repo/backend/confect/editor/step";
 import type { SinceReply } from "@repo/backend/confect/editor/view";
+import { encodeJsonText } from "@repo/utilities/json";
 import { type Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
-import { Array as Arr, Effect, Ref, Schema } from "effect";
+import { Array as Arr, Duration, Effect, Option, Ref, Schema } from "effect";
 import { collab } from "prosemirror-collab";
-import {
-  type EditorPort,
-  type SyncSession,
-  type SyncTransport,
-  startSync,
-  tick,
-} from "@/lib/editor/sync";
+import type {
+  EditorPort,
+  SyncSession,
+  SyncTransport,
+} from "@/lib/editor/session";
+import { startSync, tick } from "@/lib/editor/sync";
 
-/** The schema of the tests: paragraphs of text, which a text step lands in. */
+/** The schema of the tests: paragraphs of text, which a text step lands in, and quotes that nest them. */
 const proseSchema = new ProseSchema({
   nodes: {
-    doc: { content: "paragraph+" },
+    doc: { content: "(paragraph | quote)+" },
     paragraph: { content: "text*", group: "block" },
+    quote: { content: "(paragraph | quote)+", group: "block" },
     text: { group: "inline", inline: true },
   },
 });
 
-/** Writes a value as its JSON text, the form a snapshot takes on the wire. */
-export const encodeJson = Schema.encodeSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+/** A paragraph inside `levels - 1` quotes, so the top node is `levels` levels deep. */
+export const nestedQuote = (levels: number): Node => {
+  let node = proseSchema.node("paragraph", null, [proseSchema.text("x")]);
+  for (let level = 1; level < levels; level += 1) {
+    node = proseSchema.node("quote", null, [node]);
+  }
+  return node;
+};
+
+/** Past the snapshot rule's idle delay by one second, so a snapshot is due at once. */
+export const IDLE = Duration.sum(SNAPSHOT_IDLE_DELAY, Duration.seconds(1));
 
 /** One empty document, where every test starts. */
 const emptyDoc = () =>
   proseSchema.node("doc", null, [proseSchema.node("paragraph")]);
 
-/** The fake server's state: its head, its steps, its snapshot, and what it counted. */
+/** The JSON text of the empty document, which a server starts from and a test can save. */
+export const EMPTY_DOCUMENT = encodeJsonText(emptyDoc().toJSON());
+
+/** One editor session's record on the fake server: the batch it had accepted last, and the version that batch produced. */
+const FakeClient = Schema.Struct({
+  batch: Schema.String,
+  clientId: Schema.String,
+  version: Schema.Finite,
+});
+
+/** The fake server's state: its head, its steps, its snapshot, its sessions, and what it counted. */
 const FakeLog = Schema.Struct({
+  clients: Schema.Array(FakeClient),
   firstKept: Schema.Finite,
   head: Schema.Finite,
   saveAttempts: Schema.Finite,
@@ -54,15 +74,28 @@ const FakeLog = Schema.Struct({
   submits: Schema.Finite,
 });
 
+/** The record of a session, read as the wire shows it: null before the session's first accepted batch. */
+const clientOf = (current: typeof FakeLog.Type, clientId: string) =>
+  Option.match(
+    Arr.findFirst(current.clients, (client) => client.clientId === clientId),
+    {
+      onNone: () => null,
+      onSome: ({ batch, version }) => ({ batch, version }),
+    }
+  );
+
 /**
  * A fake of the Convex functions that the loop calls. It applies the version rule
- * of the server, and it stores each step as the server does: as JSON text, with
- * the client that sent it.
+ * of the server, keeps one record per session as the server does, answers a repeat
+ * of an accepted batch with its version, and stores each step as JSON text, with the
+ * client that sent it. It does not apply the steps, so a test can store a step that
+ * does not apply and see every editor skip it.
  */
 export const makeServer = Effect.fn("test.sync.server")(function* (
-  initialContent = encodeJson(emptyDoc().toJSON())
+  initialContent = EMPTY_DOCUMENT
 ) {
   const log = yield* Ref.make<typeof FakeLog.Type>({
+    clients: [],
     firstKept: 1,
     head: 0,
     saveAttempts: 0,
@@ -75,25 +108,30 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
   const refuseSaves = yield* Ref.make(false);
 
   const transport: SyncTransport = {
-    open: Effect.map(Ref.get(log), (current) => ({
-      head: current.head,
-      snapshot: current.snapshot,
-      steps: Arr.filter(
-        current.steps,
-        (step) => step.version > current.snapshot.version
-      ),
-    })),
-    since: (version) =>
+    open: (clientId) =>
+      Effect.map(Ref.get(log), (current) => ({
+        client: clientOf(current, clientId),
+        head: current.head,
+        snapshot: current.snapshot,
+        steps: Arr.filter(
+          current.steps,
+          (step) => step.version > current.snapshot.version
+        ),
+      })),
+    since: (clientId, version) =>
       Effect.gen(function* () {
         const current = yield* Ref.get(log);
+        const client = clientOf(current, clientId);
         if (current.head > version && current.firstKept > version + 1) {
           return {
             _tag: "behind",
+            client,
             head: current.head,
           } satisfies typeof SinceReply.Type;
         }
         return {
           _tag: "steps",
+          client,
           head: current.head,
           steps: Arr.filter(current.steps, (step) => step.version > version),
         } satisfies typeof SinceReply.Type;
@@ -106,6 +144,10 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
         }));
         const batch: Batch = yield* decodeBatch(text).pipe(Effect.orDie);
         const current = yield* Ref.get(log);
+        const record = clientOf(current, batch.clientId);
+        if (record !== null && record.batch === batch.batch) {
+          return { head: record.version };
+        }
         if (batch.baseVersion !== current.head) {
           return yield* new VersionStale({
             baseVersion: batch.baseVersion,
@@ -118,6 +160,13 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
         const head = current.head + batch.steps.length;
         yield* Ref.update(log, (state) => ({
           ...state,
+          clients: [
+            ...Arr.filter(
+              state.clients,
+              (client) => client.clientId !== batch.clientId
+            ),
+            { batch: batch.batch, clientId: batch.clientId, version: head },
+          ],
           head,
           steps: [
             ...state.steps,
@@ -158,6 +207,7 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
       submitAttempts: current.submitAttempts,
       submits: current.submits,
     })),
+    snapshot: Effect.map(Ref.get(log), (current) => current.snapshot),
     /** Drops the steps that a snapshot at `through` covers, as the server's sweep does once they are old. */
     prune: (through: number) =>
       Ref.update(log, (state) => ({
@@ -191,8 +241,14 @@ const makePort = Effect.fn("test.sync.port")(function* () {
 });
 
 /** Types text at the start of the document, as one local edit of an editor. */
-export const typeText = (state: Ref.Ref<EditorState>, text: string) =>
-  Ref.update(state, (current) => current.apply(current.tr.insertText(text, 1)));
+export const typeText = Effect.fn("test.sync.typeText")(function* (
+  state: Ref.Ref<EditorState>,
+  text: string
+) {
+  yield* Ref.update(state, (current) =>
+    current.apply(current.tr.insertText(text, 1))
+  );
+});
 
 /** The text of a document, which the convergence checks compare. */
 export const textOf = (doc: Node) => doc.textContent;
@@ -236,6 +292,7 @@ export const silentEditor = (
         ({ head }) =>
           ({
             _tag: "steps",
+            client: null,
             head,
             steps: [],
           }) satisfies typeof SinceReply.Type

@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { MAX_BATCH_STEPS } from "@repo/backend/confect/editor/size";
-import { Effect } from "effect";
+import { Array as Arr, Effect, HashMap } from "effect";
 
 /**
  * The most bytes one read of steps may take: 512 KiB (ADR 0028 Bounds). The read
@@ -20,6 +20,44 @@ export const snapshotOf = Effect.fn("editor.store.snapshot")(function* (
   return yield* (yield* DatabaseReader)
     .table("editorSnapshots")
     .get("by_documentId", documentId)
+    .pipe(Effect.orDie);
+});
+
+/**
+ * The snapshot version of each document in the list, read from the small document
+ * rows. The sweep reads this instead of the snapshot rows, which hold a whole
+ * document each (ADR 0028 Bounds).
+ */
+export const snapshotVersionsOf = Effect.fn("editor.store.snapshotVersions")(
+  function* (documentIds: readonly GenericId.GenericId<"editorDocuments">[]) {
+    const reader = yield* DatabaseReader;
+    const rows = yield* Effect.forEach(documentIds, (documentId) =>
+      reader.table("editorDocuments").get(documentId).pipe(Effect.orDie)
+    );
+    return HashMap.fromIterable(
+      Arr.zip(
+        documentIds,
+        Arr.map(rows, (row) => row.snapshotVersion)
+      )
+    );
+  }
+);
+
+/**
+ * The record of one editor session on a document, if the session has had a batch
+ * accepted. The caller decides who may read it: `open` and `since` answer only the
+ * session's own author.
+ */
+export const clientRecordOf = Effect.fn("editor.store.client")(function* (
+  documentId: GenericId.GenericId<"editorDocuments">,
+  clientId: string
+) {
+  return yield* (yield* DatabaseReader)
+    .table("editorClients")
+    .index("by_documentId_and_clientId", (query) =>
+      query.eq("documentId", documentId).eq("clientId", clientId)
+    )
+    .first()
     .pipe(Effect.orDie);
 });
 

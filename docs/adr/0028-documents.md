@@ -6,9 +6,10 @@ Accepted on 13 October 2026 with owner decisions K1, K10, K12, and K16. The owne
 approved decisions K1 to K20 on that day. The pure core of `confect/editor` (the
 document, step, batch, and stored-step schemas, the storage form, the version
 rule, the size bounds, and the snapshot rule) is in code, with no database
-access. The sync slice of 16 October 2026 adds the three tables, the functions
-that open, read, submit, and save a document, the `document` access kind, the
-step log with its sweep, and the client engine. None of them is live yet: the
+access. The sync slice of 16 October 2026 adds the tables, the functions that
+open, read, submit, and save a document, the `document` access kind, the step log
+and the editor-session records with their sweeps, and the client engine. None of
+them is live yet: the
 question editor of the School host is the first caller, in a later lane. The
 import into live code and the Files module, `confect/files`, are planned for
 program wave B (ADR 0013 describes the waves). The repository installs
@@ -99,6 +100,33 @@ Presence is one mechanism for the editor and for proctored sittings: the
 `@convex-dev/presence` component at 0.4.0 (ADR 0013). No presence table is
 written by hand.
 
+Each editor session has one record in `editorClients`: the account that owns
+it, the last batch the server accepted from it, the version that batch produced,
+and when the session last submitted. A batch carries an id that the client makes
+for it, and a repeat of an accepted batch writes nothing and answers that version,
+so a retried call is idempotent. A session id that belongs to another account is
+refused with `ClientTaken`, and the server writes nothing.
+
+A client that the log no longer serves from its version gets `behind`, and it
+opens again from the snapshot. If its record shows that its in-flight batch
+landed, that batch's steps are confirmed and dropped. Its other unconfirmed steps
+are replayed onto the snapshot as unconfirmed steps of its version, and the
+server's steps after the snapshot rebase them. A replayed step that does not apply
+is dropped, and so is a step that the rebase cannot map. The editor reports the
+count of dropped steps once. What Stays Open records the one case that the record
+cannot answer.
+
+Every editor applies the server's steps to its own copy of the server's document,
+in order. A stored step that does not apply to that document is skipped by every
+editor the same way: the editor passes on a step that changes nothing in its place,
+so the version still counts it, and it logs one warning. The snapshot an editor
+saves is the document after the skip.
+
+An editor refuses an edit that would nest its document deeper than the bound of
+the contract. `depthGuard` in `packages/design-system/components/editor/depth.ts`
+does that for the caller's bound, and it lets through a change that another
+editor's steps brought in, because the server's document is the one that counts.
+
 ### Bounds
 
 ADR 0031 sets the bounds of the assessment document: a node depth of 16, and the
@@ -114,7 +142,7 @@ as the last column says.
 | A document as a whole | A node depth of at most 16, counted as `MAX_DOCUMENT_DEPTH` counts it: the `doc` node is level 1 and each node below it is one level, while its `content` array is not. The complete row stays under 1 MiB. | ADR 0031, and `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0 (`confect/editor/node.ts`) |
 | Attributes and attribute values | Each object and array of an attribute counts one level, and at most 16 levels are allowed (`AttributesSchema` and `AttributeValueSchema` in `confect/editor/node.ts`) | Target. This module reads generic ProseMirror attributes, which the contract's typed attributes do not cover, so the document's bound limits them too, and an admitted call can then be stored. |
 | Steps sent in one call | At most 128 KiB and 200 steps | Target |
-| A client id | At least one and at most 64 characters (`MAX_CLIENT_ID_LENGTH` in `confect/editor/batch.ts`) | Target. A v4 UUID from `randomUuid` has 36 characters, and each stored step keeps the id. |
+| A client id and a batch id | At least one and at most 64 characters each (`MAX_ID_LENGTH` in `confect/editor/batch.ts`) | Target. A v4 UUID from `randomUuid` has 36 characters. Each stored step keeps its client id, and the session record keeps the batch id. |
 | Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. `STEP_READ_BYTES` in `confect/editor/store.ts` is the budget, and Convex's `maximumBytesRead` enforces it. A read stops at the row that reaches the budget, so one read may pass it by that row, which is at most one batch of 128 KiB. A read takes at most one batch of steps (`MAX_BATCH_STEPS`), and the client reads on from its last version. `steps.impl.test.ts` pins a read that stops and the reads that continue it. |
 | Snapshots | At most one every 30 seconds, and only when the editor has been idle for 30 seconds or 300 steps have gathered since the last snapshot (`SNAPSHOT_MIN_GAP`, `SNAPSHOT_IDLE_DELAY`, and `SNAPSHOT_STEP_LIMIT` in `confect/editor/snapshot.ts`) | Target. 200 KiB after 50 pauses an hour is about 10 MB for each document an hour (computed). |
 | An image file | At most 2 MB, with alternative text required | Target |
@@ -133,9 +161,23 @@ the steps that a snapshot covers once they are ten minutes old
 than that loads the steps it missed, and a client offline for longer opens again
 from the snapshot. The sweep reads the log in pages of 64 steps
 (`PRUNE_PAGE_STEPS`): a step is at most one batch of 128 KiB, so a page reads at
-most 8 MiB, under the 16 MiB that a transaction may read. A client whose version
-is older than the oldest step that is kept gets `behind` from `steps:since`, and
-it opens again from the snapshot.
+most 8 MiB of step text. Each document of the page is read once, through its
+document row, which holds its snapshot version (`snapshotVersion`). The sweep
+never reads a snapshot row: a snapshot holds a whole document, so reading one for
+each document of a page could pass the 16 MiB that a transaction may read. A
+client whose version is older than the oldest step that is kept gets `behind`
+from `steps:since`, and it opens again from the snapshot. A page decides a
+document's steps against the snapshot version it reads on that page, so a
+snapshot saved between two pages can leave a gap in the kept log until the next
+sweep. `steps:since` returns only the steps that follow its version without a
+gap, and a read at the gap gets `behind`.
+
+The session records are bounded by a second cron sweep,
+`internal.editor.prune.sweepClients`, on the same ten-minute interval. It reads
+the records in pages of 64 (`PRUNE_PAGE_CLIENTS`), and it deletes a record whose
+version the snapshot covers and whose session last submitted at least
+`STEP_KEEP_DELAY` ago. A record is a small row, so its page is bounded by its
+count.
 
 Acceptance: in `convex-test`, a submit at a stale version is refused, a document
 at the node depth bound of 16 is stored and read back, and a snapshot whose
@@ -250,6 +292,15 @@ Drive copies come through the Drive connector (ADR 0015).
   authenticated route instead of a storage address. It is decided when that kind
   is built, and the limit above holds until then.
 - The byte limits of the Files module, which the plan sets.
+- A client whose session record the sweep has deleted cannot tell whether its
+  in-flight batch landed. The sweep deletes a record only when the snapshot covers
+  its version and the session has been idle for the keep delay, so the case needs
+  a client that stayed away that long with an unanswered batch. Its replay then
+  applies a batch that did land a second time. Keeping the record until the
+  session confirms its last batch closes the case, and the owner decides that.
+- The deletion of a document and its session records has no owner yet. It is
+  written with the first function that deletes a document, and the bounded steps
+  of the document are deleted in pages, as the sweep deletes them.
 
 ## Consequences
 
@@ -285,11 +336,16 @@ Drive copies come through the Drive connector (ADR 0015).
 | `prosemirror-collab` 1.3.1 | Installed in `packages/design-system` (the `Collab` extension) and `apps/www` (the sync loop), and pinned in the dependency policy. |
 | `mathlive` and `@convex-dev/presence` | Not installed. Planned for program wave B. |
 | `confect/editor` pure core: the document, step, batch, attribute, and stored-step schemas (the stored step is in `confect/editor/log.ts`), the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds, and the read bound of 512 KiB is `STEP_READ_BYTES`. |
-| The tables `editorDocuments`, `editorSnapshots`, and `editorSteps` (`confect/tables/editor*.ts`) | In code, not live. The head version is on the document row, and the snapshot rows and the step rows hold the rest. |
-| The functions `editor/documents` (`create`, `open`), `editor/steps` (`since`, `submit`), and `editor/snapshots` (`save`), and the sweep `internal.editor.prune.sweep` | In code and tested in convex-test, not live: no page calls them yet. |
+| The tables `editorDocuments`, `editorSnapshots`, `editorSteps`, and `editorClients` (`confect/tables/editor*.ts`) | In code, not live. The head version and the snapshot version are on the document row, and the snapshot rows, the step rows, and the session records hold the rest. |
+| The functions `editor/documents` (`create`, `open`), `editor/steps` (`since`, `submit`), and `editor/snapshots` (`save`), and the sweeps `internal.editor.prune.sweep` and `internal.editor.prune.sweepClients` | In code and tested in convex-test, not live: no page calls them yet. |
+| The session record and the idempotent batch: the batch id, a repeat of an accepted batch answered with its version, `ClientTaken` for another account's session, and the record that `open` and `since` answer for the caller's own session | In code, not live: `confect/editor/steps.impl.ts`, `confect/editor/documents.impl.ts`, and `confect/editor/store.ts`. Tested in convex-test. |
+| The behind replay: the confirmation of the in-flight batch that landed, the replay of the other unconfirmed steps onto the snapshot, and the one `SyncDropped` count | In code, not live: `apps/www/lib/editor/receive.ts`, tested with the fake server in `apps/www/lib/editor/sync.test.ts`. |
+| The skip rule: a stored step that does not apply is skipped by every editor and logged once | In code, not live: `apps/www/lib/editor/receive.ts`. Tested: three editors with a stored step that does not apply converge. |
+| The depth filter of the editor: `depthGuard` refuses an edit that nests the document past the bound it is given | In code, not live: `packages/design-system/components/editor/depth.ts`. No editor mounts it yet, and the question editor passes `MAX_DOCUMENT_DEPTH`. |
+| A document's deletion deletes its session records | Not written. No function deletes a document yet, and the sweep of the records does not yet delete the records of a document that no longer exists. |
 | The `document` access kind (`confect/editor/kinds.ts`), its authority, and its catalog entry | In code. ADR 0012 names it. |
 | The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots (`SnapshotRefused`), and the idle snapshot trigger (`snapshotDue`, read by the client) | In code, not live: `confect/editor/store.ts`, `confect/editor/prune.ts`, and the sync loop `apps/www/lib/editor/sync.ts`, which the fake-client tests drive. |
-| The client engine: the `Collab` extension | In code: `packages/design-system/components/editor/collab.ts`. No page mounts the editor yet. |
+| The client engine: the `Collab` extension in `packages/design-system/components/editor/collab.ts` and the sync loop in `apps/www/lib/editor` | In code. No page mounts the editor yet. |
 | The formula node | Planned, program wave B |
 | Mermaid and content math under the forced KaTeX 0.19.0 | To be tested in program wave A |
 | `confect/files` and `fileRecords` | Planned, program wave B |

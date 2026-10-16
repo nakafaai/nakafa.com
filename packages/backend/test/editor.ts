@@ -1,17 +1,22 @@
 import type { GenericId } from "@confect/core";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { type Batch, encodeBatch } from "@repo/backend/confect/editor/batch";
+import { STEP_KEEP_DELAY } from "@repo/backend/confect/editor/prune";
+import { SNAPSHOT_IDLE_DELAY } from "@repo/backend/confect/editor/snapshot";
 import type { Step } from "@repo/backend/confect/editor/step";
+import { paragraphOf } from "@repo/backend/test/editor/nodes";
 import {
   grantRole,
   slugOf,
   TENANCY_NOW,
   type tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
+import { Array as Arr, Duration, Effect, Schema } from "effect";
 
 /** The school's address in every call of the editor tests. */
 export const nf = slugOf("nf");
@@ -26,22 +31,36 @@ export const denied = (reason: "resource" | "role" | "condition") => ({
   reason,
 });
 
-/** Writes a value as its JSON text, the form a client sends a document or a batch in. */
-export const encodeJson = Schema.encodeSync(
-  Schema.fromJsonString(Schema.Unknown)
+/** Past the snapshot rule's idle delay by one second, so a snapshot is due at once. */
+export const IDLE = Duration.toMillis(
+  Duration.sum(SNAPSHOT_IDLE_DELAY, Duration.seconds(1))
+);
+
+/** Past the step keep delay by one minute, so every step a snapshot covers is old enough to prune. */
+export const LONG_AGO = Duration.toMillis(
+  Duration.sum(STEP_KEEP_DELAY, Duration.minutes(1))
 );
 
 /** Reads a JSON text back into its value, so a test compares documents as values. */
-export const jsonValue = Schema.decodeUnknownSync(
-  Schema.fromJsonString(Schema.Unknown)
-);
+export const jsonValue = Schema.decodeUnknownSync(JsonTextSchema);
 
 /** A document of one paragraph of one text, as the contract reads it. */
+/** Creates a document in the SMP unit, as its teacher, and returns its ID. */
+export const newDocument = Effect.fn("test.editor.newDocument")(function* (
+  fixture: Fixture
+) {
+  const made = yield* fixture
+    .as("teacher")
+    .mutation(refs.public.editor.documents.create, {
+      content: paragraphText("Soal"),
+      scope: { kind: "unit", unitId: fixture.units.smp },
+      slug: nf,
+    });
+  return made.id;
+});
+
 export const paragraphText = (text: string) =>
-  encodeJson({
-    content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
-    type: "doc",
-  });
+  encodeJsonText(paragraphOf(text));
 
 /**
  * A replace step that inserts one text node at the start of a document. The step
@@ -56,7 +75,9 @@ export const insertStep = (text: string): Step => ({
 
 /**
  * The JSON text of one batch of `count` steps made on `baseVersion`, each of
- * `text` characters. A test that needs a large batch passes a long text.
+ * `text` characters. A test that needs a large batch passes a long text. The batch
+ * id is derived from the arguments, so the same arguments make the same batch, and
+ * a test that sends a batch again sends the same id.
  */
 export const batchText = Effect.fn("test.editor.batchText")(function* (
   baseVersion: number,
@@ -66,6 +87,7 @@ export const batchText = Effect.fn("test.editor.batchText")(function* (
 ) {
   const batch: Batch = {
     baseVersion,
+    batch: `${clientId}-${baseVersion}-${count}-${text.length}`,
     clientId,
     steps: Arr.makeBy(count, () => insertStep(text)),
   };
@@ -73,12 +95,14 @@ export const batchText = Effect.fn("test.editor.batchText")(function* (
 });
 
 /** The document row, read inside the fixture. */
-export const storedDocument = (
+export const documentRowOf = Effect.fn("test.editor.documentRowOf")(function* (
   documentId: GenericId.GenericId<"editorDocuments">
-) =>
-  Effect.flatMap(DatabaseReader, (reader) =>
-    reader.table("editorDocuments").get(documentId).pipe(Effect.orDie)
-  );
+) {
+  return yield* (yield* DatabaseReader)
+    .table("editorDocuments")
+    .get(documentId)
+    .pipe(Effect.orDie);
+});
 
 /** Every document row, for a test that expects none or one. */
 export const documentRows = Effect.flatMap(DatabaseReader, (reader) =>
@@ -88,6 +112,11 @@ export const documentRows = Effect.flatMap(DatabaseReader, (reader) =>
 /** Every snapshot row, for a test that counts them. */
 export const snapshotRows = Effect.flatMap(DatabaseReader, (reader) =>
   reader.table("editorSnapshots").index("by_creation_time").take(100)
+);
+
+/** Every editor-session record, for a test that counts them. */
+export const clientRows = Effect.flatMap(DatabaseReader, (reader) =>
+  reader.table("editorClients").index("by_creation_time").take(100)
 );
 
 /** Every step row, for a test that counts them. */

@@ -2,13 +2,18 @@ import type { GenericId } from "@confect/core";
 import { MiddlewareImpl } from "@confect/server";
 import type {
   TenantCohortsDoc,
+  TenantPeopleDoc,
   TenantPeriodsDoc,
+  TenantPromotionsDoc,
   TenantUnitsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Authority, activeGrants } from "@repo/backend/confect/access/policy";
-import { GrantScope } from "@repo/backend/confect/access/schema";
+import {
+  type BuiltinRole,
+  GrantScope,
+} from "@repo/backend/confect/access/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   Cohort,
@@ -17,11 +22,14 @@ import {
   PeriodAccess,
   Person,
   PersonAccess,
+  Promotion,
+  PromotionAccess,
 } from "@repo/backend/confect/tenancy/access";
 import {
   cohort,
   period,
   person,
+  promotion,
   tenant,
   unit,
 } from "@repo/backend/confect/tenancy/kinds";
@@ -38,10 +46,16 @@ export const tenantAuthority = Authority.make(tenant, Authority.load(tenant), {
   tenantOf: (row) => row._id,
 });
 
+/**
+ * Whether a unit is locked. An archived unit is locked, and every row placed in
+ * it is locked with it, so the other modules call this rule too.
+ */
+export const unitLocked = (row: Pick<TenantUnitsDoc, "status">) =>
+  row.status === "archived";
+
 /** An archived unit is locked; unit grants cover it. */
 export const unitAuthority = Authority.make(unit, Authority.load(unit), {
-  place: (row) =>
-    Effect.succeed({ locked: row.status === "archived", units: [row._id] }),
+  place: (row) => Effect.succeed({ locked: unitLocked(row), units: [row._id] }),
   relations: { member: membership },
   tenantOf: (row) => row.tenantId,
 });
@@ -69,7 +83,7 @@ export const scopePlace = Effect.fn("tenancy.authority.place")(function* (
     unit: ({ unitId }) =>
       readUnit(unitId).pipe(
         Effect.map((unit) => ({
-          locked: unit.status === "archived",
+          locked: unitLocked(unit),
           units: [unitId],
         }))
       ),
@@ -131,24 +145,106 @@ export const placementOf = Effect.fn("tenancy.authority.placementOf")(
 );
 
 /**
- * Whether one Person holds an active student grant that covers a unit. A cohort
- * holds only the students of its own unit, so a placement checks this first.
+ * Whether one Person holds an active grant of a role that covers a unit: a grant
+ * over the whole school, or over that unit. A cohort holds only the members of
+ * its own unit, so each check names the unit of the cohort.
  */
-export const studentOf = Effect.fn("tenancy.authority.studentOf")(function* (
+const holdsRoleIn = Effect.fn("tenancy.authority.holdsRoleIn")(function* (
   personId: GenericId.GenericId<"tenantPeople">,
-  unitId: GenericId.GenericId<"tenantUnits">
+  unitId: GenericId.GenericId<"tenantUnits">,
+  role: BuiltinRole
 ) {
   const grants = yield* activeGrants(personId);
   return Arr.some(
     grants,
     (grant) =>
-      grant.role.key === "student" &&
+      grant.role.key === role &&
       GrantScope.match(grant.scope, {
         tenant: () => true,
         unit: (scope) => scope.unitId === unitId,
       })
   );
 });
+
+/** Whether one Person holds an active student grant that covers a unit, so a placement may name them. */
+export const studentOf = Effect.fn("tenancy.authority.studentOf")(function* (
+  personId: GenericId.GenericId<"tenantPeople">,
+  unitId: GenericId.GenericId<"tenantUnits">
+) {
+  return yield* holdsRoleIn(personId, unitId, "student");
+});
+
+/** Whether one Person holds an active teacher grant that covers a unit, so a homeroom assignment may name them. */
+export const teacherOf = Effect.fn("tenancy.authority.teacherOf")(function* (
+  personId: GenericId.GenericId<"tenantPeople">,
+  unitId: GenericId.GenericId<"tenantUnits">
+) {
+  return yield* holdsRoleIn(personId, unitId, "teacher");
+});
+
+/**
+ * The homeroom teacher assignment of one cohort, if it has one. A cohort holds at
+ * most one, so the lookup is one indexed read.
+ */
+export const homeroomOf = Effect.fn("tenancy.authority.homeroomOf")(function* (
+  cohortId: GenericId.GenericId<"tenantCohorts">
+) {
+  return yield* (yield* DatabaseReader)
+    .table("tenantAssignments")
+    .get("by_cohortId_and_kind", cohortId, "homeroom")
+    .pipe(
+      Effect.asSome,
+      Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
+      Effect.orDie
+    );
+});
+
+/**
+ * The homeroom assignment of one Person in one period, if any. A Person is the
+ * homeroom teacher of at most one cohort of a period, so the lookup is one read.
+ */
+export const homeroomOfPerson = Effect.fn("tenancy.authority.homeroomOfPerson")(
+  function* (
+    periodId: GenericId.GenericId<"tenantPeriods">,
+    personId: GenericId.GenericId<"tenantPeople">
+  ) {
+    return yield* (yield* DatabaseReader)
+      .table("tenantAssignments")
+      .get("by_periodId_and_personId_and_kind", periodId, personId, "homeroom")
+      .pipe(
+        Effect.asSome,
+        Effect.catchTag("GetByIndexFailure", () => Effect.succeedNone),
+        Effect.orDie
+      );
+  }
+);
+
+/**
+ * Whether the Person of a homeroom assignment still holds its cohort's slot. A removed
+ * teacher holds none: their row stays as the record, every reader treats it as no
+ * homeroom teacher, and assigning a teacher replaces it.
+ */
+export const holdsSlot = (teacher: Pick<TenantPeopleDoc, "status">) =>
+  teacher.status !== "removed";
+
+/**
+ * The homeroom teacher assignment of one cohort, unless its teacher was removed. Every
+ * reader of a cohort's homeroom asks this function. The writes ask `homeroomOf`, which
+ * also finds the row that a removed teacher leaves behind.
+ */
+export const activeHomeroomOf = Effect.fn("tenancy.authority.activeHomeroomOf")(
+  function* (cohortId: GenericId.GenericId<"tenantCohorts">) {
+    const assignment = yield* homeroomOf(cohortId);
+    if (Option.isNone(assignment)) {
+      return assignment;
+    }
+    const teacher = yield* (yield* DatabaseReader)
+      .table("tenantPeople")
+      .get(assignment.value.personId)
+      .pipe(Effect.orDie);
+    return holdsSlot(teacher) ? assignment : Option.none();
+  }
+);
 
 /**
  * A period is locked once it is archived, and so is every period of an archived
@@ -203,6 +299,16 @@ export const cohortAuthority = Authority.make(cohort, Authority.load(cohort), {
           Option.exists(placement, (found) => found.cohortId === row._id)
         )
       ),
+    // The active holder only: a removed teacher's row opens nothing, as every reader treats it.
+    homeroom: (row, member) =>
+      activeHomeroomOf(row._id).pipe(
+        Effect.map((assignment) =>
+          Option.exists(
+            assignment,
+            (found) => found.personId === member.person._id
+          )
+        )
+      ),
   },
   tenantOf: (row) => row.tenantId,
 });
@@ -243,4 +349,47 @@ export const cohortAccess = MiddlewareImpl.make(
   databaseSchema,
   CohortAccess,
   cohortAuthority.middleware(Cohort)
+);
+
+/**
+ * A promotion is locked once it is opened, and so is every promotion of an
+ * archived school. Its school's grants cover it. Undo is not a lock: applying a
+ * promotion archives its source period, which the promotion itself must undo.
+ */
+export const promotionAuthority = Authority.make(
+  promotion,
+  Authority.load(promotion),
+  {
+    place: (row) =>
+      readUnit(row.unitId).pipe(
+        Effect.map((parent) => ({
+          locked: row.state === "opened" || parent.status === "archived",
+          units: [row.unitId],
+        }))
+      ),
+    relations: {},
+    tenantOf: (row) => row.tenantId,
+  }
+);
+
+export const promotionAccess = MiddlewareImpl.make(
+  databaseSchema,
+  PromotionAccess,
+  promotionAuthority.middleware(Promotion)
+);
+
+/**
+ * Whether a promotion's writes are refused now, because its school is archived or its
+ * tenant is suspended. These are the two conditions that `decide` refuses every write
+ * for. A run has no caller to decide for it, so it reads them here.
+ */
+export const promotionLocked = Effect.fn("tenancy.authority.promotionLocked")(
+  function* (promotion: Pick<TenantPromotionsDoc, "tenantId" | "unitId">) {
+    const tenant = yield* (yield* DatabaseReader)
+      .table("tenants")
+      .get(promotion.tenantId)
+      .pipe(Effect.orDie);
+    const parent = yield* readUnit(promotion.unitId);
+    return tenant.status === "suspended" || parent.status === "archived";
+  }
 );

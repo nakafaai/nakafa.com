@@ -1,13 +1,17 @@
 import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { NinaMemoryDraft } from "@repo/backend/confect/nina/memory.spec";
+import { limitWrites } from "@repo/backend/confect/nina/memory/quota";
+import {
+  MEMORY_WRITES_PER_MINUTE,
+  type NinaMemoryDraft,
+} from "@repo/backend/confect/nina/memory.spec";
 import {
   createMemoryTest,
   sessionRequired,
 } from "@repo/backend/test/nina/memory";
 import { createPortraitTest } from "@repo/backend/test/nina/portrait";
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const memory = refs.public.nina.memory;
 const add = Ref.getFunctionReference(memory.add);
@@ -19,7 +23,7 @@ const state = Ref.getFunctionReference(memory.state);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
-const rejected = (reason: "empty" | "missing") => ({
+const rejected = (reason: "empty" | "limit" | "missing") => ({
   data: { _tag: "NinaMemoryRejected", reason },
 });
 /** The arguments refuse the title before the function runs, which is no `NinaMemoryRejected`. */
@@ -130,6 +134,46 @@ describe("Nina memory writes", () => {
     const edited = `${text}\n\n> Catatan`;
     await f.owner.mutation(edit, { id, text: edited });
     expect(await f.texts()).toEqual([edited]);
+  });
+
+  it("takes a minute's writes by hand from a bucket of each learner, refuses the next one, and gives the places back as the minute passes", async () => {
+    const f = await createMemoryTest();
+    const other = await f.stranger();
+    const userId = f.identity.userId;
+    const id = await f.seed({ author: "learner", text: "Kelas 11" });
+    // All the places of the minute but the last are taken at once.
+    await f.execute(
+      Effect.forEach(
+        Arr.makeBy(MEMORY_WRITES_PER_MINUTE - 1, () => userId),
+        limitWrites,
+        { discard: true }
+      )
+    );
+    // A write with nothing in it is refused before it takes a place.
+    await expect(f.owner.mutation(add, { text: " " })).rejects.toMatchObject(
+      rejected("empty")
+    );
+    await f.owner.mutation(add, { text: "The last place of the minute" });
+    for (const write of [
+      () => f.owner.mutation(add, { text: "One too many" }),
+      () => f.owner.mutation(edit, { id, text: "Rewritten" }),
+    ]) {
+      await expect(write()).rejects.toMatchObject(rejected("limit"));
+    }
+    // Refusals change nothing.
+    expect(await f.texts()).toEqual([
+      "Kelas 11",
+      "The last place of the minute",
+    ]);
+    // The bucket is the learner's own.
+    await other.owner.mutation(add, { text: "Another learner's words" });
+    expect(await f.texts(other.userId)).toEqual(["Another learner's words"]);
+    vi.setSystemTime(NOW + 60_000);
+    await f.owner.mutation(edit, { id, text: "Rewritten" });
+    expect(await f.texts()).toEqual([
+      "Rewritten",
+      "The last place of the minute",
+    ]);
   });
 
   it("keeps adding memories, however many the learner has: there is no limit", async () => {

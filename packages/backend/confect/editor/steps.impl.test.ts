@@ -1,51 +1,53 @@
+import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
 import {
   batchText,
+  clientRows,
   denied,
-  encodeJson,
+  documentRowOf,
+  IDLE,
   insertStep,
+  LONG_AGO,
+  newDocument,
   nf,
   otherSchoolTeacher,
   paragraphText,
   stepRows,
-  storedDocument,
 } from "@repo/backend/test/editor";
 import {
   slugOf,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect } from "effect";
 
-const documents = refs.public.editor.documents;
 const { since, submit } = refs.public.editor.steps;
 const snapshots = refs.public.editor.snapshots;
 const prune = refs.internal.editor.prune;
 const other = slugOf("other");
 
-/** One minute after the snapshot rule's idle delay, so a snapshot is due at once. */
-const IDLE = Duration.toMillis(Duration.seconds(31));
-/** Past the step keep delay, so every covered step is old enough to prune. */
-const LONG_AGO = Duration.toMillis(Duration.minutes(11));
+type Fixture = Effect.Success<typeof tenancyFixture>;
+type Account = Parameters<Fixture["as"]>[0];
 
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(TENANCY_NOW);
 });
 
-/** Creates a document in the SMP unit, as its teacher, and returns its ID. */
-const newDocument = Effect.fn("test.editor.steps.newDocument")(function* (
-  fixture: Effect.Success<typeof tenancyFixture>
+/** Reads the steps after `version` of the session "rina", as the account reads them. */
+const readSince = Effect.fn("test.editor.steps.readSince")(function* (
+  fixture: Fixture,
+  account: Account,
+  documentId: GenericId.GenericId<"editorDocuments">,
+  version: number
 ) {
-  const made = yield* fixture.as("teacher").mutation(documents.create, {
-    content: paragraphText("Soal"),
-    scope: { kind: "unit", unitId: fixture.units.smp },
-    slug: nf,
-  });
-  return made.id;
+  return yield* fixture
+    .as(account)
+    .query(since, { clientId: "rina", documentId, slug: nf, version });
 });
 
 describe("editor/steps submit", () => {
@@ -61,7 +63,7 @@ describe("editor/steps submit", () => {
           .mutation(submit, { batch: text, documentId, slug: nf });
         const rows = yield* fixture.run(stepRows);
         expect(submitted).toEqual({ head: 3 });
-        expect((yield* fixture.run(storedDocument(documentId))).head).toBe(3);
+        expect((yield* fixture.run(documentRowOf(documentId))).head).toBe(3);
         expect(Arr.map(rows, (row) => row.version)).toEqual([1, 2, 3]);
         expect(Arr.map(rows, (row) => row.clientId)).toEqual([
           "rina",
@@ -72,7 +74,48 @@ describe("editor/steps submit", () => {
   );
 
   it.effect(
-    "refuses a batch on a document of an archived unit, writes nothing, and still reads its steps",
+    "records the session of the batch: its batch id, its version, and its author",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        yield* fixture.as("teacher").mutation(submit, {
+          batch: yield* batchText(0, "rina", 3),
+          documentId,
+          slug: nf,
+        });
+        const [record] = yield* fixture.run(clientRows);
+        expect(record).toMatchObject({
+          batch: "rina-0-3-1",
+          clientId: "rina",
+          documentId,
+          version: 3,
+        });
+      })
+  );
+
+  it.effect(
+    "answers a retried batch with the version it produced, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        const teacher = fixture.as("teacher");
+        const text = yield* batchText(0, "rina", 2);
+        yield* teacher.mutation(submit, { batch: text, documentId, slug: nf });
+        const retried = yield* teacher.mutation(submit, {
+          batch: text,
+          documentId,
+          slug: nf,
+        });
+        expect(retried).toEqual({ head: 2 });
+        expect(yield* fixture.run(stepRows)).toHaveLength(2);
+        expect((yield* fixture.run(documentRowOf(documentId))).head).toBe(2);
+      })
+  );
+
+  it.effect(
+    "refuses a batch on a document of an archived unit, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -89,12 +132,8 @@ describe("editor/steps submit", () => {
           .as("teacher")
           .mutation(submit, { batch: text, documentId, slug: nf })
           .pipe(Effect.flip);
-        const read = yield* fixture
-          .as("teacher")
-          .query(since, { documentId, slug: nf, version: 0 });
         expect(refused).toMatchObject(denied("condition"));
         expect(yield* fixture.run(stepRows)).toEqual([]);
-        expect(read).toEqual({ _tag: "steps", head: 0, steps: [] });
       })
   );
 
@@ -153,6 +192,34 @@ describe("editor/steps submit", () => {
   );
 
   it.effect(
+    "refuses a batch under another author's session id with ClientTaken, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        yield* fixture.as("teacher").mutation(submit, {
+          batch: yield* batchText(0, "rina", 1),
+          documentId,
+          slug: nf,
+        });
+        const taken = yield* fixture
+          .as("admin")
+          .mutation(submit, {
+            batch: yield* batchText(1, "rina", 1, "y"),
+            documentId,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(taken).toMatchObject({
+          _tag: "ClientTaken",
+          code: "CLIENT_TAKEN",
+        });
+        expect(yield* fixture.run(stepRows)).toHaveLength(1);
+        expect(yield* fixture.run(clientRows)).toHaveLength(1);
+      })
+  );
+
+  it.effect(
     "counts the version in steps, so a batch of two after three ends at five",
     () =>
       Effect.gen(function* () {
@@ -192,8 +259,9 @@ describe("editor/steps submit", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const documentId = yield* newDocument(fixture);
-        const text = encodeJson({
+        const text = encodeJsonText({
           baseVersion: 0,
+          batch: "rina-big",
           clientId: "rina",
           steps: [insertStep("x".repeat(MAX_BATCH_BYTES))],
         });
@@ -266,31 +334,29 @@ describe("editor/steps since", () => {
         });
         vi.setSystemTime(TENANCY_NOW + LONG_AGO);
         yield* fixture.internal.mutation(prune.sweep, { cursor: null });
-        const behind = yield* teacher.query(since, {
-          documentId,
-          slug: nf,
-          version: 0,
+        const behind = yield* readSince(fixture, "teacher", documentId, 0);
+        const after = yield* readSince(fixture, "teacher", documentId, 3);
+        const atHead = yield* readSince(fixture, "teacher", documentId, 5);
+        expect(behind).toEqual({
+          _tag: "behind",
+          client: { batch: "rina-3-2-1", version: 5 },
+          head: 5,
         });
-        const after = yield* teacher.query(since, {
-          documentId,
-          slug: nf,
-          version: 3,
-        });
-        const atHead = yield* teacher.query(since, {
-          documentId,
-          slug: nf,
-          version: 5,
-        });
-        expect(behind).toEqual({ _tag: "behind", head: 5 });
         expect(after).toEqual({
           _tag: "steps",
+          client: { batch: "rina-3-2-1", version: 5 },
           head: 5,
           steps: [
             { clientId: "rina", step: expect.any(String), version: 4 },
             { clientId: "rina", step: expect.any(String), version: 5 },
           ],
         });
-        expect(atHead).toEqual({ _tag: "steps", head: 5, steps: [] });
+        expect(atHead).toEqual({
+          _tag: "steps",
+          client: { batch: "rina-3-2-1", version: 5 },
+          head: 5,
+          steps: [],
+        });
       })
   );
 
@@ -316,12 +382,32 @@ describe("editor/steps since", () => {
         vi.setSystemTime(TENANCY_NOW + LONG_AGO);
         yield* fixture.internal.mutation(prune.sweep, { cursor: null });
         expect(yield* fixture.run(stepRows)).toEqual([]);
-        const behind = yield* teacher.query(since, {
+        const behind = yield* readSince(fixture, "teacher", documentId, 0);
+        expect(behind).toEqual({
+          _tag: "behind",
+          client: { batch: "rina-0-3-1", version: 3 },
+          head: 3,
+        });
+      })
+  );
+
+  it.effect(
+    "answers the caller's own session record, and none of another author's session",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        yield* fixture.as("teacher").mutation(submit, {
+          batch: yield* batchText(0, "rina", 1),
           documentId,
           slug: nf,
-          version: 0,
         });
-        expect(behind).toEqual({ _tag: "behind", head: 3 });
+        const own = yield* readSince(fixture, "teacher", documentId, 1);
+        const theirs = yield* readSince(fixture, "admin", documentId, 1);
+        expect(own).toMatchObject({
+          client: { batch: "rina-0-1-1", version: 1 },
+        });
+        expect(theirs).toMatchObject({ client: null });
       })
   );
 
@@ -340,26 +426,54 @@ describe("editor/steps since", () => {
             slug: nf,
           });
         }
-        const first = yield* teacher.query(since, {
-          documentId,
-          slug: nf,
-          version: 0,
-        });
+        const first = yield* readSince(fixture, "teacher", documentId, 0);
         expect(first).toMatchObject({ _tag: "steps", head: 6 });
         const read = first._tag === "steps" ? first.steps : [];
         expect(read.length).toBeGreaterThan(0);
         expect(read.length).toBeLessThan(6);
         const resume = Arr.reduce(read, 0, (_, step) => step.version);
-        const rest = yield* teacher.query(since, {
-          documentId,
-          slug: nf,
-          version: resume,
-        });
+        const rest = yield* readSince(fixture, "teacher", documentId, resume);
         const restSteps = rest._tag === "steps" ? rest.steps : [];
         expect([
           ...Arr.map(read, (step) => step.version),
           ...Arr.map(restSteps, (step) => step.version),
         ]).toEqual([1, 2, 3, 4, 5, 6]);
+      })
+  );
+
+  it.effect(
+    "returns the steps up to a gap the log holds, and says behind at the gap",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        yield* fixture.as("teacher").mutation(submit, {
+          batch: yield* batchText(0, "rina", 5),
+          documentId,
+          slug: nf,
+        });
+        // A sweep of two pages can keep a step below one it deleted, so the log
+        // holds a gap at version 3 while the head is at 5.
+        const rows = yield* fixture.run(stepRows);
+        const dropped = yield* Effect.fromOption(
+          Arr.findFirst(rows, (row) => row.version === 3)
+        );
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("editorSteps").delete(dropped._id)
+          )
+        );
+        const beforeGap = yield* readSince(fixture, "teacher", documentId, 0);
+        const atGap = yield* readSince(fixture, "teacher", documentId, 2);
+        expect(beforeGap).toMatchObject({
+          _tag: "steps",
+          head: 5,
+          steps: [
+            { clientId: "rina", step: expect.any(String), version: 1 },
+            { clientId: "rina", step: expect.any(String), version: 2 },
+          ],
+        });
+        expect(atGap).toMatchObject({ _tag: "behind", head: 5 });
       })
   );
 });

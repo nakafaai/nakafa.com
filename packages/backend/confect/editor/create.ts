@@ -24,7 +24,7 @@ export const createDocument = Effect.fn("editor.document.create")(function* ({
   const writer = yield* DatabaseWriter;
   const documentId = yield* writer
     .table("editorDocuments")
-    .insert({ createdAt: at, head: 0, scope, tenantId })
+    .insert({ createdAt: at, head: 0, scope, snapshotVersion: 0, tenantId })
     .pipe(Effect.orDie);
   const snapshot = { at, content: text, documentId, version: 0 };
   yield* ensureRowSize(snapshot);

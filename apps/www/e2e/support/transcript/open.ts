@@ -4,13 +4,13 @@ import {
   type Locator,
   type Page,
 } from "@playwright/test";
-import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { Effect, MutableRef, Option, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import type { ServedMessage } from "@/e2e/support/query";
 import { SHEET_POPUP } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { exchange, type Part } from "@/e2e/support/transcript/message";
@@ -81,7 +81,7 @@ const startTranscript = Effect.fn("NakafaE2E.startTranscript")(function* (
   page: Page,
   baseURL: string
 ) {
-  const shown = MutableRef.make<readonly NinaMessage[]>([]);
+  const shown = MutableRef.make<readonly ServedMessage[]>([]);
   yield* seedAnalyticsConsent(page, "denied");
   yield* serveIcons(page);
   yield* serveConversation(page, shown);
@@ -119,9 +119,9 @@ const OVERLAY_SCROLLBARS =
  */
 const showChat = Effect.fn("NakafaE2E.showChat")(function* (
   page: Page,
-  shown: MutableRef.MutableRef<readonly NinaMessage[]>,
+  shown: MutableRef.MutableRef<readonly ServedMessage[]>,
   locale: string,
-  messages: readonly NinaMessage[]
+  messages: readonly ServedMessage[]
 ) {
   MutableRef.set(shown, messages);
   yield* Effect.promise(() => page.goto(`/${locale}/chat/${CHAT}`));
@@ -143,9 +143,9 @@ const showChat = Effect.fn("NakafaE2E.showChat")(function* (
  */
 const showSheet = Effect.fn("NakafaE2E.showSheet")(function* (
   page: Page,
-  shown: MutableRef.MutableRef<readonly NinaMessage[]>,
+  shown: MutableRef.MutableRef<readonly ServedMessage[]>,
   locale: string,
-  messages: readonly NinaMessage[]
+  messages: readonly ServedMessage[]
 ) {
   MutableRef.set(shown, messages);
   yield* Effect.promise(() =>

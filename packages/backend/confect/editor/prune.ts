@@ -4,35 +4,47 @@ import { Duration } from "effect";
  * How long a step that a snapshot covers stays in the log, after its creation. A
  * client that was offline for less than this loads the steps it missed; a client
  * offline for longer opens again from the snapshot (ADR 0028 Bounds). Ten minutes
- * is the value the build sets, and the ADR records it.
+ * is the value the build sets, and the ADR records it. The editor sessions use the
+ * same delay before the sweep deletes their records.
  */
 export const STEP_KEEP_DELAY = Duration.minutes(10);
 
 /**
- * How often the sweep starts. It runs at the pace of the keep delay, so a covered
- * step waits at most one interval after the delay before it is deleted.
+ * How often each sweep starts. It runs at the pace of the keep delay, so a covered
+ * row waits at most one interval after the delay before it is deleted.
  */
 export const PRUNE_INTERVAL = Duration.minutes(10);
 
 /**
- * How many steps one page of the sweep reads. A step is at most one batch of
- * `MAX_BATCH_BYTES`, so 64 steps read at most 8 MiB, under the 16 MiB that a
- * transaction may read (ADR 0028 Context).
+ * How many steps one page of the step sweep reads. A step is at most one batch of
+ * `MAX_BATCH_BYTES`, so 64 steps read at most 8 MiB of step text, under the 16 MiB
+ * that a transaction may read (ADR 0028 Bounds). The page also reads the small
+ * document row of each document it names, which holds the snapshot version, and
+ * never a snapshot row, which holds a whole document.
  */
 export const PRUNE_PAGE_STEPS = 64;
 
 /**
- * Whether the sweep deletes a step: a snapshot at `snapshotVersion` covers it, and
- * it is at least `STEP_KEEP_DELAY` old at `now`. Both times are epoch milliseconds.
+ * How many editor-session records one page of the record sweep reads. A record is
+ * a small row, so the page is bounded by its count and not by its bytes.
+ */
+export const PRUNE_PAGE_CLIENTS = 64;
+
+/**
+ * Whether a sweep deletes a row that a snapshot covers: its version is at most the
+ * snapshot's, and it was written at least `STEP_KEEP_DELAY` before `now`. A step is
+ * covered by the snapshot of its document, and a session record by the same
+ * snapshot, with its last submit as the write time. Both times are epoch
+ * milliseconds.
  */
 export function isPrunable(input: {
-  createdAt: number;
+  at: number;
   now: number;
   snapshotVersion: number;
   version: number;
 }): boolean {
   return (
     input.version <= input.snapshotVersion &&
-    input.now - input.createdAt >= Duration.toMillis(STEP_KEEP_DELAY)
+    input.now - input.at >= Duration.toMillis(STEP_KEEP_DELAY)
   );
 }

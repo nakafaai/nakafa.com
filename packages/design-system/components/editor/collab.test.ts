@@ -24,7 +24,7 @@ function stateOf(editor: Editor) {
 }
 
 describe("Collab", () => {
-  it("starts at the version and under the client ID it is given, with nothing to send", () => {
+  it("starts at the version it is given, with nothing to send", () => {
     const editor = openEditor("rina", 40);
     const state = stateOf(editor);
 

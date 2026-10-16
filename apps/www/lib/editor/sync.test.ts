@@ -1,12 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
-import { Array as Arr, Duration, Effect, Ref } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr, Effect, Ref } from "effect";
 import { TestClock } from "effect/testing";
 import { getVersion, sendableSteps } from "prosemirror-collab";
-import { SyncFailed, type SyncSession, tick } from "@/lib/editor/sync";
+import { SyncFailed, type SyncSession } from "@/lib/editor/session";
+import { tick } from "@/lib/editor/sync";
 import {
-  encodeJson,
+  IDLE,
   makeServer,
+  nestedQuote,
   openEditor,
   settle,
   silentEditor,
@@ -94,56 +97,35 @@ describe("editor/sync refusals and waiting", () => {
       })
   );
 
-  it.effect(
-    "opens the document again from its snapshot after the log pruned the steps an editor needs",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const writer = yield* openEditor(server.transport);
-        const reader = yield* openEditor(server.transport);
-        yield* typeText(writer.state, "a");
-        yield* tick(writer.session);
-        yield* tick(writer.session);
-        yield* TestClock.adjust(Duration.seconds(31));
-        yield* tick(writer.session);
-        expect(yield* server.counts).toMatchObject({
-          head: 1,
-          snapshotVersion: 1,
-        });
-        yield* typeText(writer.state, "b");
-        yield* tick(writer.session);
-        yield* tick(writer.session);
-        yield* server.prune(1);
-        yield* tick(reader.session);
-        const readerState = yield* Ref.get(reader.state);
-        const writerState = yield* Ref.get(writer.state);
-        expect(getVersion(readerState)).toBe(2);
-        expect(textOf(readerState.doc)).toBe(textOf(writerState.doc));
-      })
+  it.effect("applies a reply once when two rounds of one editor overlap", () =>
+    Effect.gen(function* () {
+      const server = yield* makeServer();
+      const writer = yield* openEditor(server.transport);
+      const reader = yield* openEditor(server.transport);
+      yield* typeText(writer.state, "a");
+      yield* tick(writer.session);
+      // Each read of the server yields, so the second round starts before the first ends.
+      const slow: SyncSession = {
+        ...reader.session,
+        transport: {
+          ...server.transport,
+          since: (clientId, version) =>
+            Effect.yieldNow.pipe(
+              Effect.andThen(server.transport.since(clientId, version))
+            ),
+        },
+      };
+      yield* Effect.forEach([slow, slow], (session) => tick(session), {
+        concurrency: 2,
+      });
+      const readerState = yield* Ref.get(reader.state);
+      expect(textOf(readerState.doc)).toBe("a");
+      expect(getVersion(readerState)).toBe(1);
+    })
   );
 
   it.effect(
-    "refuses to open the document again while the editor holds steps the server does not have",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const writer = yield* openEditor(server.transport);
-        const stale = yield* openEditor(server.transport);
-        yield* typeText(writer.state, "a");
-        yield* tick(writer.session);
-        yield* tick(writer.session);
-        yield* TestClock.adjust(Duration.seconds(31));
-        yield* tick(writer.session);
-        yield* server.prune(1);
-        yield* typeText(stale.state, "unsent");
-        const refused = yield* tick(stale.session).pipe(Effect.flip);
-        expect(refused).toMatchObject({ _tag: "SyncDiverged" });
-        expect(textOf((yield* Ref.get(stale.state)).doc)).toContain("unsent");
-      })
-  );
-
-  it.effect(
-    "sends a long run of steps in calls of at most one call's worth, the rest on the next round",
+    "splits a long run of steps into calls of at most one call's worth, the rest on the next round",
     () =>
       Effect.gen(function* () {
         const server = yield* makeServer();
@@ -200,7 +182,7 @@ describe("editor/sync snapshots", () => {
         yield* typeText(editor.state, "a");
         yield* tick(editor.session);
         expect(yield* server.counts).toMatchObject({ saves: 0 });
-        yield* TestClock.adjust(Duration.seconds(31));
+        yield* TestClock.adjust(IDLE);
         yield* tick(editor.session);
         expect(yield* server.counts).toMatchObject({
           head: 1,
@@ -221,7 +203,7 @@ describe("editor/sync snapshots", () => {
         const editor = yield* openEditor(server.transport);
         yield* typeText(editor.state, "a");
         yield* tick(editor.session);
-        yield* TestClock.adjust(Duration.seconds(31));
+        yield* TestClock.adjust(IDLE);
         // The steps the server accepted have not come back yet, so the editor holds
         // "a" as unconfirmed while the idle time has passed.
         yield* tick(silentEditor(server, editor.session));
@@ -244,10 +226,10 @@ describe("editor/sync snapshots", () => {
         const reader = yield* openEditor(server.transport);
         yield* typeText(writer.state, "a");
         yield* tick(writer.session);
-        yield* TestClock.adjust(Duration.seconds(31));
+        yield* TestClock.adjust(IDLE);
         yield* tick(reader.session);
         expect(yield* server.counts).toMatchObject({ head: 1, saves: 0 });
-        yield* TestClock.adjust(Duration.seconds(31));
+        yield* TestClock.adjust(IDLE);
         yield* tick(reader.session);
         expect(yield* server.counts).toMatchObject({ head: 1, saves: 1 });
       })
@@ -261,7 +243,7 @@ describe("editor/sync snapshots", () => {
         const editor = yield* openEditor(server.transport);
         yield* typeText(editor.state, "a");
         yield* tick(editor.session);
-        yield* TestClock.adjust(Duration.seconds(31));
+        yield* TestClock.adjust(IDLE);
         yield* server.refuseSaves(true);
         yield* tick(editor.session);
         yield* tick(editor.session);
@@ -278,7 +260,7 @@ describe("editor/sync failures", () => {
     "refuses to start from a snapshot the editor's schema cannot read",
     () =>
       Effect.gen(function* () {
-        const server = yield* makeServer(encodeJson({ type: "unknown" }));
+        const server = yield* makeServer(encodeJsonText({ type: "unknown" }));
         const failure = yield* openEditor(server.transport).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "SyncFailed" });
       })
@@ -292,6 +274,7 @@ describe("editor/sync failures", () => {
         const editor = yield* openEditor(server.transport);
         const text = yield* encodeBatch({
           baseVersion: 0,
+          batch: "rina-heading",
           clientId: "rina",
           steps: [
             {
@@ -299,31 +282,6 @@ describe("editor/sync failures", () => {
               slice: { content: [{ type: "heading" }] },
               stepType: "replace",
               to: 1,
-            },
-          ],
-        }).pipe(Effect.orDie);
-        yield* server.transport.submit(text).pipe(Effect.orDie);
-        const failure = yield* tick(editor.session).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "SyncFailed" });
-        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("");
-      })
-  );
-
-  it.effect(
-    "refuses a stored step that does not apply to the document, and keeps the document",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        const text = yield* encodeBatch({
-          baseVersion: 0,
-          clientId: "rina",
-          steps: [
-            {
-              from: 99,
-              slice: { content: [{ text: "x", type: "text" }] },
-              stepType: "replace",
-              to: 99,
             },
           ],
         }).pipe(Effect.orDie);
@@ -356,6 +314,63 @@ describe("editor/sync failures", () => {
         expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
         yield* tick(editor.session);
         expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+      })
+  );
+
+  it.effect(
+    "takes a batch once when the answer to its call was lost, because the call sends the same batch again",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const editor = yield* openEditor(server.transport);
+        yield* typeText(editor.state, "a");
+        // The server takes the batch, and the answer never reaches the editor.
+        const lost: SyncSession = {
+          ...editor.session,
+          transport: {
+            ...server.transport,
+            submit: (text) =>
+              server.transport
+                .submit(text)
+                .pipe(
+                  Effect.andThen(
+                    Effect.fail(new SyncFailed({ reason: "lost" }))
+                  )
+                ),
+          },
+        };
+        const failure = yield* tick(lost).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "SyncFailed", reason: "lost" });
+        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        // The next round has no steps from the server yet, so it sends the batch again.
+        yield* tick(silentEditor(server, editor.session));
+        expect(yield* server.counts).toMatchObject({
+          head: 1,
+          submitAttempts: 2,
+          submits: 1,
+        });
+        yield* tick(editor.session);
+        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("a");
+      })
+  );
+
+  it.effect(
+    "fails with a typed error on every round for a step the server refuses, and sends nothing",
+    () =>
+      Effect.gen(function* () {
+        const server = yield* makeServer();
+        const editor = yield* openEditor(server.transport);
+        yield* Ref.update(editor.state, (current) =>
+          current.apply(current.tr.insert(0, nestedQuote(17)))
+        );
+        const first = yield* tick(editor.session).pipe(Effect.flip);
+        const second = yield* tick(editor.session).pipe(Effect.flip);
+        expect([first, second]).toMatchObject([
+          { _tag: "SyncFailed" },
+          { _tag: "SyncFailed" },
+        ]);
+        expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
       })
   );
 });

@@ -4,77 +4,98 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { Document } from "@repo/backend/confect/editor/access";
 import { documentAccess } from "@repo/backend/confect/editor/authority";
-import { admitBatch } from "@repo/backend/confect/editor/batch";
-import { BatchInvalid } from "@repo/backend/confect/editor/errors";
+import { admitBatch, decodeBatch } from "@repo/backend/confect/editor/batch";
+import { BatchInvalid, ClientTaken } from "@repo/backend/confect/editor/errors";
 import { encodeStoredStep } from "@repo/backend/confect/editor/log";
 import spec from "@repo/backend/confect/editor/steps.spec";
-import { stepsAfter } from "@repo/backend/confect/editor/store";
+import { clientRecordOf, stepsAfter } from "@repo/backend/confect/editor/store";
 import {
+  type ClientRecordView,
+  clientView,
   type SinceReply,
   type StepView,
   stepView,
 } from "@repo/backend/confect/editor/view";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { Array as Arr, Effect, Layer, Option } from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option } from "effect";
 
 /** The reply that carries the head and the steps the log still keeps after the version. */
 const stepsReply = (
   head: number,
+  client: typeof ClientRecordView.Type,
   steps: readonly (typeof StepView.Type)[]
-): typeof SinceReply.Type => ({ _tag: "steps", head, steps });
+): typeof SinceReply.Type => ({ _tag: "steps", client, head, steps });
 
 /** The reply when the log has pruned a step the client needs: the client opens again from the snapshot. */
-const behindReply = (head: number): typeof SinceReply.Type => ({
-  _tag: "behind",
-  head,
-});
+const behindReply = (
+  head: number,
+  client: typeof ClientRecordView.Type
+): typeof SinceReply.Type => ({ _tag: "behind", client, head });
 
 /**
  * The steps after a version, in order, one read's worth. The log keeps every step
  * after the snapshot and prunes the covered steps after a delay. So the first step
  * after the version is the next one only while the log still keeps it. When it is
  * missing, or when the version is behind the head with no step after it, the client
- * opens again from the snapshot.
+ * opens again from the snapshot. A sweep can also leave a gap further on, so the
+ * reply stops at the first step that does not follow the one before it, and the
+ * next read from there says `behind`. The reply carries the session's own record.
  */
 const since = FunctionImpl.make(
   databaseSchema,
   spec,
   "since",
-  Effect.fn("editor.steps.since")(function* ({ version }) {
+  Effect.fn("editor.steps.since")(function* ({ clientId, version }) {
     const document = yield* Document;
+    const { appUser } = yield* requireAuth().pipe(Effect.orDie);
+    const record = yield* clientRecordOf(document._id, clientId);
+    const client = clientView(
+      Option.filter(record, (own) => own.author === appUser._id)
+    );
     if (version >= document.head) {
-      return stepsReply(document.head, []);
+      return stepsReply(document.head, client, []);
     }
     const { steps: rows } = yield* stepsAfter(document._id, version);
-    const kept = Option.match(Arr.head(rows), {
-      onNone: () => false,
-      onSome: (first) => first.version === version + 1,
-    });
-    if (!kept) {
-      return behindReply(document.head);
+    const run = Arr.takeWhile(
+      rows,
+      (row, index) => row.version === version + index + 1
+    );
+    if (run.length === 0) {
+      return behindReply(document.head, client);
     }
-    return stepsReply(document.head, Arr.map(rows, stepView));
+    return stepsReply(document.head, client, Arr.map(run, stepView));
   })
 );
 
 /**
- * Accepts a batch of steps made on the document's head. The batch is checked
- * against the bounds and the head, then each step is written as one row at the
- * version it produces, and the head moves by the number of steps. All of it is
- * one transaction, so two clients never win one version: a stale batch writes
+ * Accepts a batch of steps made on the document's head. A batch the session has
+ * had accepted before is answered with the version it produced, and writes nothing,
+ * so a retried batch is idempotent. A session id that belongs to another author is
+ * refused with `ClientTaken`. Any other batch is checked against the bounds and the
+ * head, then each step is written as one row at the version it produces, the head
+ * moves by the number of steps, and the session's record takes the batch. All of it
+ * is one transaction, so two clients never win one version: a stale batch writes
  * nothing and fails with `VersionStale`.
  */
 const submit = FunctionImpl.make(
   databaseSchema,
   spec,
   "submit",
-  Effect.fn("editor.steps.submit")(function* ({ batch }) {
+  Effect.fn("editor.steps.submit")(function* ({ batch: text }) {
     const document = yield* Document;
     const { appUser } = yield* requireAuth().pipe(Effect.orDie);
-    const admitted = yield* admitBatch(document.head, batch).pipe(
+    const batch = yield* decodeBatch(text).pipe(
       Effect.catchTag("SchemaError", () => Effect.fail(new BatchInvalid()))
     );
+    const record = yield* clientRecordOf(document._id, batch.clientId);
+    if (Option.isSome(record) && record.value.author !== appUser._id) {
+      return yield* new ClientTaken();
+    }
+    if (Option.isSome(record) && record.value.batch === batch.batch) {
+      return { head: record.value.version };
+    }
+    const admitted = yield* admitBatch(document.head, batch);
     const rows = yield* Effect.forEach(admitted.batch.steps, (step) =>
       encodeStoredStep({
         author: appUser._id,
@@ -100,6 +121,29 @@ const submit = FunctionImpl.make(
       .table("editorDocuments")
       .patch(document._id, { head: admitted.version })
       .pipe(Effect.orDie);
+    const seenAt = yield* Clock.currentTimeMillis;
+    if (Option.isNone(record)) {
+      yield* writer
+        .table("editorClients")
+        .insert({
+          author: appUser._id,
+          batch: batch.batch,
+          clientId: batch.clientId,
+          documentId: document._id,
+          seenAt,
+          version: admitted.version,
+        })
+        .pipe(Effect.orDie);
+    } else {
+      yield* writer
+        .table("editorClients")
+        .patch(record.value._id, {
+          batch: batch.batch,
+          seenAt,
+          version: admitted.version,
+        })
+        .pipe(Effect.orDie);
+    }
     return { head: admitted.version };
   })
 );

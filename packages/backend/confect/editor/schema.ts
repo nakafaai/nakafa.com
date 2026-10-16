@@ -1,6 +1,10 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { GrantScope } from "@repo/backend/confect/access/schema";
-import { VersionSchema } from "@repo/backend/confect/editor/batch";
+import {
+  BatchIdSchema,
+  ClientIdSchema,
+  VersionSchema,
+} from "@repo/backend/confect/editor/batch";
 import { StoredStepSchema } from "@repo/backend/confect/editor/log";
 import { Schema, Struct } from "effect";
 
@@ -8,11 +12,14 @@ import { Schema, Struct } from "effect";
  * One collaborative document: its tenant, the scope that decides who may read and
  * edit it (the tenant or one unit), its head, and when it was made. `head` is the
  * version, the number of steps accepted so far, so a submit reads one small row.
+ * `snapshotVersion` is the version of the snapshot row, so the sweep decides which
+ * steps a snapshot covers without reading the snapshot itself.
  */
 export const editorDocumentValidator = Schema.Struct({
   createdAt: Schema.Finite,
   head: VersionSchema,
   scope: GrantScope,
+  snapshotVersion: VersionSchema,
   tenantId: Id("tenants"),
 });
 
@@ -39,3 +46,18 @@ export const editorStepValidator = StoredStepSchema.mapFields(
     version: VersionSchema,
   })
 );
+
+/**
+ * The record of one editor session on one document: the account that owns the
+ * session, the last batch the server accepted from it and the version that batch
+ * produced, and when the session last submitted (ADR 0028). A retried batch is
+ * answered from this row, and a co-editor cannot submit under the session.
+ */
+export const editorClientValidator = Schema.Struct({
+  author: Id("users"),
+  batch: BatchIdSchema,
+  clientId: ClientIdSchema,
+  documentId: Id("editorDocuments"),
+  seenAt: Schema.Finite,
+  version: VersionSchema,
+});

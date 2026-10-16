@@ -27,7 +27,7 @@ const WEB_MANIFEST = "apps/www/package.json";
 const FIXTURE_MANIFEST_PATHS = [
   ...CONTRACT_MANIFEST_PATHS,
   "packages/design-system/package.json",
-] as const;
+];
 
 type PolicyInput = Parameters<typeof validateDependencyPolicy>[0];
 type Manifest = PolicyInput["manifests"][number]["manifest"];

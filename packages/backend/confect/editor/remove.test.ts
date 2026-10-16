@@ -3,6 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { removeDocument } from "@repo/backend/confect/editor/remove";
 import {
   batchText,
+  clientRows,
   documentRows,
   nf,
   paragraphText,
@@ -17,7 +18,7 @@ const { submit } = refs.public.editor.steps;
 
 describe("editor/remove", () => {
   it.effect(
-    "deletes a document with its snapshot and every step, though its step log takes more than one read",
+    "deletes a document with its snapshot, every step, and its session records, though its step log takes more than one read",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -58,6 +59,10 @@ describe("editor/remove", () => {
         ]);
         const steps = yield* fixture.run(stepRows);
         expect(Arr.map(steps, (step) => step.documentId)).toEqual([kept.id]);
+        const clients = yield* fixture.run(clientRows);
+        expect(Arr.map(clients, (client) => client.documentId)).toEqual([
+          kept.id,
+        ]);
       })
   );
 });

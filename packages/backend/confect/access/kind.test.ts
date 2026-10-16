@@ -78,6 +78,7 @@ describe("access/kind declarations", () => {
       "person.renamed",
       "person.placed",
       "person.moved",
+      "person.graduated",
       "invite.expired",
       "invite.resent",
       "invite.revoked",

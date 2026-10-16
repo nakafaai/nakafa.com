@@ -1,10 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import {
-  decodeStoredStep,
-  encodeStoredStep,
-} from "@repo/backend/confect/editor/log";
+import { encodeStoredStep } from "@repo/backend/confect/editor/log";
 import type { Step } from "@repo/backend/confect/editor/step";
 import { nested } from "@repo/backend/test/editor/nodes";
 import { Effect, Schema } from "effect";
@@ -22,20 +19,13 @@ describe("editor/log stored steps", () => {
       const author = yield* Schema.decodeUnknownEffect(IdSchema("users"))(
         "users_rina"
       );
-      const stored = { author, clientId: "rina-tab", step: oneStep };
-      const row = yield* encodeStoredStep(stored);
-      expect(row).toMatchObject({ author: "users_rina", clientId: "rina-tab" });
-      expect(yield* decodeStoredStep(row)).toEqual(stored);
-    })
-  );
-
-  it.effect("refuses a stored row without an author", () =>
-    Effect.gen(function* () {
-      const failure = yield* decodeStoredStep({
+      const row = yield* encodeStoredStep({
+        author,
         clientId: "rina-tab",
-        step: '{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}',
-      }).pipe(Effect.flip);
-      expect(failure._tag).toBe("SchemaError");
+        step: oneStep,
+      });
+      expect(row).toMatchObject({ author: "users_rina", clientId: "rina-tab" });
+      expect(typeof row.step).toBe("string");
     })
   );
 
