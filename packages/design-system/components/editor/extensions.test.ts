@@ -115,6 +115,20 @@ describe("richOptions", () => {
       editor.destroy();
     });
 
+    it("lets a change that another editor's steps brought in pass, though it takes the Markdown past the limit", () => {
+      const editor = openEditor("x".repeat(15), { limit: 20 });
+
+      // The same insertion is refused when this editor types it, and the collab plugin
+      // marks a change it receives with `rebased`: every editor applies the server's steps.
+      expect(passes(editor, (tr) => tr.insertText("y".repeat(10)))).toBe(false);
+      expect(
+        passes(editor, (tr) =>
+          tr.insertText("y".repeat(10)).setMeta("rebased", 1)
+        )
+      ).toBe(true);
+      editor.destroy();
+    });
+
     it("lets a change that touches no word pass", () => {
       const editor = openEditor("x".repeat(20), { limit: 20 });
 

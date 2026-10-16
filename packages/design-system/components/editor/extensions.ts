@@ -15,10 +15,13 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { Array as Arr, Function as Fn, String as Str } from "effect";
 
 /**
- * Refuses every edit that would take the Markdown of the text past `limit`
- * characters, so the text a reader sees is always text that fits. An edit that
- * makes a text shorter always passes. When a paste is refused, `onRefuse` runs,
- * because nothing else tells the reader why nothing was inserted.
+ * Refuses every edit of this editor that would take the Markdown of the text past
+ * `limit` characters, so the text a reader types always fits. An edit that makes a
+ * text shorter always passes. A change that another editor's steps brought in
+ * carries the `rebased` meta of the collab plugin, and passes: every editor applies
+ * the server's steps, so a refusal here would split this editor from the others. When
+ * a paste is refused, `onRefuse` runs, because nothing else tells the reader why
+ * nothing was inserted.
  */
 const Limit = Extension.create<{ limit: number; onRefuse: () => void }>({
   addOptions: () => ({ limit: 0, onRefuse: Fn.constVoid }),
@@ -32,7 +35,10 @@ const Limit = Extension.create<{ limit: number; onRefuse: () => void }>({
     return [
       new Plugin({
         filterTransaction: (transaction, state) => {
-          if (!transaction.docChanged) {
+          if (
+            !transaction.docChanged ||
+            transaction.getMeta("rebased") !== undefined
+          ) {
             return true;
           }
 
