@@ -25,15 +25,27 @@ import {
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import { randomUuid } from "@repo/utilities/uuid";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
-import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
-import { useAi } from "@/components/ai/context";
+import {
+  NinaAttach,
+  NinaAttachments,
+  RejectedFiles,
+} from "@/components/ai/attachment";
+import { rejectionNotice } from "@/components/ai/attachments";
+import { REJECTION_NOTICE, useAi } from "@/components/ai/context";
+import {
+  NINA_NOTICE_POSITION,
+  promptRefusal,
+  reportNinaFailure,
+} from "@/components/ai/feedback";
 
 interface Props {
   autoFocus?: boolean;
@@ -60,12 +72,22 @@ export function NinaInput({
   status,
 }: Props) {
   const t = useTranslations("Ai");
+  const composerKey = useAi((state) => state.composerKey);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
   const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
-  const stopping = status === "streaming" && !disabled;
+  // While Nina answers, the button stops the reply and a press sends no text.
+  const answering = status === "streaming";
+  const stopping = answering && !disabled;
 
   function handleSubmit(message: PromptInputMessage) {
+    const refusal = promptRefusal(message.text, answering);
+    if (Option.isSome(refusal)) {
+      Effect.runFork(
+        reportNinaFailure(refusal.value, t("failures.message-size"))
+      );
+      return false;
+    }
     const admission = onSubmit(message);
     if (admission === false) {
       return false;
@@ -74,16 +96,62 @@ export function NinaInput({
     // come back if it is refused. No transition holds them: one that waits for
     // the admission would hold every navigation the learner makes meanwhile.
     setSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
-    return Promise.resolve(admission).finally(() => setSubmittedFiles([]));
+    return Promise.resolve(admission)
+      .then((admitted) => {
+        // Once the message is sent, the notice about the files an earlier pick
+        // did not attach has done its work.
+        if (admitted) {
+          toast.dismiss(REJECTION_NOTICE);
+        }
+        return admitted;
+      })
+      .finally(() => setSubmittedFiles([]));
   }
 
+  /**
+   * Says why a pick was not attached in full: one notice for the pick, naming
+   * the files it dropped and the reason of each. Two notices would stack, and
+   * the one in front would hide the other, so the notice has one id, and a new
+   * pick replaces it. A learner needs time to read a list of names, and a list
+   * that scrolls cannot be used in a notice that is about to leave, so it stays
+   * until the learner closes it, picks again, or sends the message. A pick that
+   * attached every file takes the notice away, since its names are no longer a
+   * problem.
+   */
+  function handlePick(rejections: readonly PromptInputFileConstraintError[]) {
+    if (!Arr.isReadonlyArrayNonEmpty(rejections)) {
+      toast.dismiss(REJECTION_NOTICE);
+      return;
+    }
+    const notice = rejectionNotice(rejections, t);
+    toast.error(notice.title, {
+      // A new pick is a new list. With a key of its own it starts at its top,
+      // not where the list it replaces was scrolled to.
+      description: (
+        <RejectedFiles
+          key={Effect.runSync(randomUuid)}
+          reasons={notice.reasons}
+        />
+      ),
+      duration: Number.POSITIVE_INFINITY,
+      id: REJECTION_NOTICE,
+      position: NINA_NOTICE_POSITION,
+    });
+  }
+
+  // The files of a composer live in the state of its PromptInput, and a new key
+  // is how React starts that state over. The key changes with the text of the
+  // draft, when the draft stops belonging to the learner who is signed in, so
+  // every surface of this composer drops the files the previous learner picked.
   return (
     <PromptInput
       accept={Arr.join(NinaFileType.literals, ",")}
+      fileInputLabel={t("attach-files")}
+      key={composerKey}
       maxFileSize={NINA_FILE_SIZE}
       maxFiles={NINA_FILE_COUNT}
       multiple
-      onError={() => toast.error(t("attachment-rejected"))}
+      onPick={handlePick}
       onSubmit={handleSubmit}
     >
       {children}
@@ -97,7 +165,8 @@ export function NinaInput({
         <PromptInputTextarea
           aria-label={t("text-placeholder")}
           autoFocus={autoFocus}
-          className="text-(length:--text-chat) md:text-(length:--text-chat) px-3 py-3"
+          className="text-(length:--text-chat) md:text-(length:--text-chat) max-h-[min(12rem,35dvh)] px-3 py-3"
+          dir="auto"
           onChange={(event) => setText(event.target.value)}
           onFocus={() =>
             // Load the stylesheet's math faces before streamed formulas arrive.
@@ -174,7 +243,7 @@ export function NinaSuggestions({
       {Arr.map(suggestions, (suggestion) => (
         <Button
           aria-label={suggestion.prompt}
-          className="group w-full justify-start font-normal shadow-none"
+          className="group h-auto min-h-9 w-full justify-start whitespace-normal py-1.5 font-normal shadow-none"
           disabled={disabled}
           key={suggestion.label}
           onClick={() => onSubmit({ text: suggestion.prompt })}

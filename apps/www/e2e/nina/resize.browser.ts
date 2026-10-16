@@ -4,9 +4,8 @@ import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { SHEET_POPUP } from "@/e2e/support/selector";
+import { openSheet } from "@/e2e/support/sheet";
 
-const LESSON =
-  "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
 /** Where the pointer lets go of the edge, in pixels from the left of the window. */
 const POINTER = 800;
 
@@ -31,10 +30,7 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyNinaSheetDrag")(function* (
   page: Page
 ) {
   yield* seedAnalyticsConsent(page, "denied");
-  yield* Effect.promise(() => page.goto(LESSON));
-  yield* Effect.promise(() =>
-    page.getByRole("button", { name: "Ask Nina", exact: true }).click()
-  );
+  yield* openSheet(page);
 
   const sheet = page.locator(SHEET_POPUP);
 

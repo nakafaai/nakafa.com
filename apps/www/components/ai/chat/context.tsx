@@ -26,6 +26,7 @@ import {
 } from "@/components/ai/chat/store.client";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
+import { restoreRefusedText } from "@/components/ai/store/draft";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 import { useViewer } from "@/lib/identity/client";
 
@@ -43,8 +44,15 @@ function useChatState(
   store: ChatStoreApi
 ) {
   const leaving = useStore(store, (state) => state.leaving);
-  const { chat, loadMoreTurns, turn, turnAt, turnsLoading, turnsStatus } =
-    useConversation(chatId, shareToken, leaving);
+  const {
+    chat,
+    current,
+    loadMoreTurns,
+    turn,
+    turnAt,
+    turnsLoading,
+    turnsStatus,
+  } = useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   // A send, stop or retry on its way holds these as plain state. A transition
   // would hold them until the server answers, and React makes every transition
@@ -60,7 +68,7 @@ function useChatState(
   const viewerId = useViewer((state) => state.viewer?.id);
   const cancelChat = useMutation(nina.lifecycle.cancel);
 
-  const loading = !chat;
+  const loading = !current;
   const busy = isChatBusy({
     cancelling,
     loading,
@@ -82,6 +90,7 @@ function useChatState(
     chat,
     chatId,
     isPending,
+    loading,
     setText,
     submission,
     turn,
@@ -94,7 +103,7 @@ function useChatState(
   const [actions] = useState(() => ({
     cancel() {
       const now = latest.current;
-      if (now.isPending) {
+      if (now.isPending || now.loading) {
         return;
       }
       const { setStopFailure } = store.getState();
@@ -135,7 +144,13 @@ function useChatState(
     retry(order?: number) {
       const now = latest.current;
       const target = order ?? now.turn?.order;
-      if (target === undefined || !now.chat || now.busy || now.isPending) {
+      if (
+        target === undefined ||
+        !now.chat ||
+        now.busy ||
+        now.isPending ||
+        now.loading
+      ) {
         return;
       }
       // The retry holds `isPending` until it settles, for the same reason as a stop.
@@ -152,7 +167,7 @@ function useChatState(
      * readers: the optimistic prompt, which shows until the admission settles,
      * and the composer, which keeps the learner's text and files until it knows
      * the prompt was admitted. A prompt that was not admitted returns to the
-     * composer, unless the learner has typed something else since. The text
+     * composer ahead of anything the learner has typed since. The text
      * is one draft for every chat, so a prompt that fails after the learner
      * opened another chat returns to the composer open then, and its files
      * stay with the composer they were added in.
@@ -160,7 +175,7 @@ function useChatState(
     send(prompt: NinaDraft) {
       const now = latest.current;
       const chat = now.chat;
-      if (!chat || now.busy || now.isPending) {
+      if (!chat || now.busy || now.isPending || now.loading) {
         return false;
       }
       now.setText((previous) =>
@@ -173,7 +188,7 @@ function useChatState(
             admitted
               ? Effect.void
               : Effect.sync(() =>
-                  now.setText((previous) => previous || prompt.text)
+                  now.setText((typed) => restoreRefusedText(prompt.text, typed))
                 )
           )
         )

@@ -34,10 +34,11 @@ export function ChatComposer({
   const isLoading = useChat((state) => state.isLoading);
 
   function handleSubmit(message: PromptInputMessage) {
-    const text = message.text ?? "";
+    // Every composer sends the text trimmed, as a new chat does.
+    const text = message.text?.trim() ?? "";
     const action = readComposerSubmit({
       busy,
-      hasText: text.trim() !== "",
+      hasText: text !== "",
       loading: isLoading,
       pending: isPending,
       signedIn: viewer !== null,

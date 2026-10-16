@@ -9,15 +9,24 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { type AiStoreApi, createAiStore } from "@/components/ai/store/create";
 import {
   resolveAiDraftText,
+  resolveAiOwnerChange,
   saveAiDraftText,
 } from "@/components/ai/store/draft";
 import type { AiStore } from "@/components/ai/store/types";
 import { useAuthSession } from "@/components/auth/session";
+
+/**
+ * The id of the one notice that names the files a pick did not attach. It lives
+ * in this module, not beside the notice's content, so the shared routes that
+ * load this module do not load the attachment module as well.
+ */
+export const REJECTION_NOTICE = "nina-files";
 
 const AiContext = createContext<AiStoreApi | null>(null);
 
@@ -61,19 +70,16 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const previousOwnerId = previousDraftOwnerIdRef.current;
-    const ownerChanged =
-      previousOwnerId !== undefined && previousOwnerId !== ownerId;
-    const mustResetDraft = ownerChanged && previousOwnerId !== null;
+    const { mustResetDraft, ownerChanged } = resolveAiOwnerChange(
+      previousDraftOwnerIdRef.current,
+      ownerId
+    );
     if (ownerChanged) {
-      // A pending ask belongs to the previous owner; its receipt must not
-      // open that owner's chat in this session.
-      store.setState({
-        activeChatId: null,
-        ask: null,
-        chatDrafts: [],
-        openingChat: null,
-      });
+      // Nothing the store holds for the previous owner is for this one. A
+      // pending ask must not open that owner's chat in this session. The
+      // uploads that owner held are forgotten, not given back: the server
+      // refuses to release another learner's upload, so their expiry frees them.
+      store.getState().endSession();
     }
     if (mustResetDraft) {
       activeDraftOwnerIdRef.current = undefined;
@@ -84,6 +90,11 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
       if (store.getState().text.length > 0) {
         store.setState({ text: "" });
       }
+      // The files of the draft go with its text, so every composer starts over.
+      // The notice about an earlier pick names the previous learner's files, so
+      // it goes with them.
+      store.getState().resetComposers();
+      toast.dismiss(REJECTION_NOTICE);
     }
 
     const pendingDraft = pendingDraftRef.current;
@@ -105,6 +116,16 @@ export function AiContextProvider({ children }: { children: ReactNode }) {
     };
     previousDraftOwnerIdRef.current = ownerId;
   }, [ownerId, store]);
+
+  // The notice names files picked into this provider's composers, which go when
+  // it unmounts, as when the learner leaves for the sign-in page. The toaster
+  // outlives the provider, so the notice is taken down here.
+  useEffect(
+    () => () => {
+      toast.dismiss(REJECTION_NOTICE);
+    },
+    []
+  );
 
   return <AiContext value={store}>{children}</AiContext>;
 }

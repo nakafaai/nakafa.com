@@ -1,6 +1,7 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
+import { composerOf } from "@/e2e/support/attachment";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -11,7 +12,6 @@ import {
   UNAVAILABLE_COPY,
 } from "@/e2e/support/share";
 import {
-  composerOf,
   inTheSheet,
   openFromHistory,
   openSheet,

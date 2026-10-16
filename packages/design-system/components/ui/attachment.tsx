@@ -54,8 +54,10 @@ const mediaVariants = cva(
     variants: {
       variant: {
         icon: "",
+        // A picture with a transparent background keeps its dark ink readable in
+        // the dark theme: its backdrop is the light foreground token there.
         image:
-          "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
+          "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 dark:bg-foreground *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
       },
     },
   }

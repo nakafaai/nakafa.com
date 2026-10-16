@@ -1,10 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
+import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
 import { sidebarRows } from "@/e2e/support/rows";
 import {
-  composerOf,
   inTheSheet,
   openSheet,
   promptWith,

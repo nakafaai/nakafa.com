@@ -1,15 +1,16 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
+import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import {
   LESSON_PATH,
+  onThePage,
   openChatPage,
   runOnPage,
   START,
 } from "@/e2e/support/chat";
 import { BUBBLE } from "@/e2e/support/selector";
 import {
-  composerOf,
   inTheSheet,
   openSheet,
   promptWith,
@@ -82,15 +83,6 @@ const givesBackWhenRefused = (page: Page, scope: Locator, changes: Changes) =>
     await expect(composerOf(scope)).toHaveValue(PROMPT);
     await expect(page).not.toHaveURL(OPENED_CHAT);
   });
-
-/**
- * The part of a chat page that holds the conversation, beside the sidebar. The
- * new chat page and the page of the chat it opens share it, and the page the
- * learner left stays in it, hidden, until React renders that page again.
- * `promptWith` counts only the bubbles a reader can see, so the left page
- * never counts.
- */
-const onThePage = (page: Page) => page.locator("main main");
 
 /** Waits until the page of the chat that the new chat page moved to holds the prompt. */
 const pageOpensChat = (page: Page) => async () => {
@@ -296,6 +288,56 @@ test.describe("Retry from a lesson at 1440px", () => {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       retriesWithTheLessonContext(page, origin)
+    );
+  });
+});
+
+/** A follow-up to the chat the learner started, which the server refuses. */
+const FOLLOW_UP = "And what about the tangent?";
+/** What the learner types while the follow-up is on its way. */
+const TYPED_WHILE_SENT = "And the normal line?";
+
+/**
+ * A follow-up the server refuses goes back to the composer ahead of what the
+ * learner typed while it was on its way, so neither is lost. The composer takes
+ * the typing while the send is pending, as the new chat's composer does.
+ */
+const givesBackAheadOfTyping = (page: Page, changes: Changes) =>
+  Effect.promise(async () => {
+    const scope = onThePage(page);
+    const composer = composerOf(scope);
+
+    await composer.fill(FOLLOW_UP);
+    await expect(
+      scope.getByRole("button", { name: "Send message" })
+    ).toBeEnabled({ timeout: readinessTimeoutMilliseconds });
+    changes.hold();
+    changes.failNext(START);
+    await composer.press("Enter");
+    await expect(promptWith(scope, FOLLOW_UP)).toBeVisible();
+    await composer.fill(TYPED_WHILE_SENT);
+    changes.release();
+
+    await expect(promptWith(scope, FOLLOW_UP)).toHaveCount(0);
+    await expect(composer).toHaveValue(`${FOLLOW_UP}\n\n${TYPED_WHILE_SENT}`);
+  });
+
+test.describe("A follow-up the server refuses at 1440px", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("goes back to the composer ahead of what the learner typed while it was sent", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes, learner } = yield* openChatPage(page, origin);
+        const started = yield* learner.startChat(PROMPT);
+
+        yield* Effect.promise(() => page.goto(`/en/chat/${started.chatId}`));
+        yield* givesBackAheadOfTyping(page, changes);
+      })
     );
   });
 });
