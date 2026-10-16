@@ -4,6 +4,7 @@ import { syncCustomerPlan } from "@repo/backend/confect/triggers/subscriptions/i
 import type { UserPlan } from "@repo/backend/confect/users/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { DateTime, Effect, Schema } from "effect";
 
 /** The instant that the subscription fixtures are written at. */
@@ -29,6 +30,7 @@ export async function insertUser(
   return await ctx.db.insert("users", {
     authId: `auth-${suffix}`,
     email: `${suffix}@example.com`,
+    mascot: MASCOT_CODE,
     name: `User ${suffix}`,
     plan: overrides?.plan ?? "free",
     credits: overrides?.credits ?? 10,

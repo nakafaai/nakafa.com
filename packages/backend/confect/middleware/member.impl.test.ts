@@ -6,6 +6,7 @@ import {
 import { Session } from "@repo/backend/confect/auth/session";
 import { member } from "@repo/backend/confect/middleware/member.impl";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { Cause, Effect, Exit, Schema } from "effect";
 
 describe("middleware/member", () => {
@@ -19,6 +20,7 @@ describe("middleware/member", () => {
             credits: 0,
             creditsResetAt: 0,
             email: "member-wiring@example.com",
+            mascot: MASCOT,
             name: "Member Wiring",
             plan: "free",
           });

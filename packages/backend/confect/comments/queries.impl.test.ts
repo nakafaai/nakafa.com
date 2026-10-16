@@ -4,32 +4,33 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Array as Arr, Option } from "effect";
 
 const now = Date.UTC(2026, 8, 1);
 
-/** The animal of the author who holds one, as its stored code. */
+/** The animal of the author who asks, as its stored code, unlike the fixture animal of the author who answers. */
 const CODE = "crab.1.6d4b78.left.smile";
 
 describe("comments/queries", () => {
-  it("shows the animal of each author and of each reply target, and leaves it out for an author who holds none", async () => {
+  it("shows the animal of each author and of each reply target", async () => {
     const t = createConvexTestWithBetterAuth();
-    const withAnimal = await t.mutation(async (ctx) => {
+    const asker = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
         now,
-        suffix: "animal-author",
+        suffix: "asking-author",
       });
       await ctx.db.patch("users", user.userId, { mascot: CODE });
       return user;
     });
-    const withoutAnimal = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now, suffix: "plain-author" })
+    const answerer = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now, suffix: "answering-author" })
     );
     const slug = "articles/animals";
     const question = await t
       .withIdentity({
-        subject: withAnimal.authUserId,
-        sessionId: withAnimal.sessionId,
+        subject: asker.authUserId,
+        sessionId: asker.sessionId,
       })
       .mutation(api.comments.mutations.addComment, {
         slug,
@@ -37,8 +38,8 @@ describe("comments/queries", () => {
       });
     await t
       .withIdentity({
-        subject: withoutAnimal.authUserId,
-        sessionId: withoutAnimal.sessionId,
+        subject: answerer.authUserId,
+        sessionId: answerer.sessionId,
       })
       .mutation(api.comments.mutations.addComment, {
         slug,
@@ -56,13 +57,16 @@ describe("comments/queries", () => {
       );
 
     expect(rowOf("Pertanyaan")?.user).toMatchObject({
-      _id: withAnimal.userId,
+      _id: asker.userId,
       mascot: CODE,
     });
     expect(rowOf("Pertanyaan")?.replyToUser).toBeNull();
-    expect(rowOf("Jawaban")?.user).not.toHaveProperty("mascot");
+    expect(rowOf("Jawaban")?.user).toMatchObject({
+      _id: answerer.userId,
+      mascot: MASCOT_CODE,
+    });
     expect(rowOf("Jawaban")?.replyToUser).toMatchObject({
-      _id: withAnimal.userId,
+      _id: asker.userId,
       mascot: CODE,
     });
   });

@@ -9,6 +9,7 @@ import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
@@ -35,6 +36,7 @@ describe("customers/checkout/admission", () => {
             credits: 10,
             creditsResetAt: NOW,
             email: "checkout-without-consent@example.com",
+            mascot: MASCOT_CODE,
             name: "Checkout Without Consent",
             plan: "free",
           })
@@ -69,6 +71,7 @@ describe("customers/checkout/admission", () => {
               credits: 10,
               creditsResetAt: NOW,
               email: "checkout-with-consent@example.com",
+              mascot: MASCOT_CODE,
               name: "Checkout With Consent",
               plan: "free",
             });
@@ -126,6 +129,7 @@ describe("customers/checkout/admission", () => {
             creditsResetAt: NOW,
             deletionPreparedAt: NOW,
             email: "deleting-checkout@example.com",
+            mascot: MASCOT_CODE,
             name: "Deleting Checkout",
             plan: "free",
           })
@@ -151,6 +155,7 @@ describe("customers/checkout/admission", () => {
         credits: 0,
         creditsResetAt: NOW,
         email: "missing@example.com",
+        mascot: MASCOT_CODE,
         name: "Missing",
         plan: "free",
       });
