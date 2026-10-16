@@ -14,6 +14,7 @@ import {
   addPerson,
   claim,
   consumeSchool,
+  cursors,
   type Fixture,
   inviteAt,
   NOW,
@@ -39,14 +40,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
 });
-
-/** Every journal cursor, oldest first. */
-const cursors = (fixture: Fixture) =>
-  fixture.run(
-    Effect.flatMap(DatabaseReader, (reader) =>
-      reader.table("journalCursors").index("by_creation_time").take(50)
-    )
-  );
 
 /** The scheduled runs of the inbox consumer, as the system table lists them. */
 const runs = (fixture: Fixture) =>
@@ -100,7 +93,7 @@ const rewindCursors = (fixture: Fixture) =>
           (cursor) =>
             writer
               .table("journalCursors")
-              .patch(cursor._id, { pending: true, read: [], since: 0 }),
+              .patch(cursor._id, { handled: [], pending: true, since: 0 }),
           { discard: true }
         )
       )
@@ -142,8 +135,8 @@ describe("notifications/consume run", () => {
             _id: expect.any(String),
             changeType: "person.invited",
             consumer: "inbox",
+            handled: [{ createdAt: entry?._creationTime, entryId: entry?._id }],
             pending: false,
-            read: [entry?._id],
             since: entry?._creationTime,
             tenantId: fixture.tenants.nf,
           },
@@ -333,8 +326,9 @@ describe("notifications/consume run", () => {
           addPerson(fixture, fixture.tenants.nf, "Dua"),
           addPerson(fixture, fixture.tenants.nf, "Tiga"),
         ]);
-        // The three invitations share one creation time, so the order of the
-        // pages rests on the index tie-break, and the cursor must resume inside it.
+        // convex-test gives each insert its own creation time, a step after the last,
+        // so the three never share one here. The page boundary still falls inside one
+        // window, so the cursor must resume from the entries it handled.
         yield* Effect.forEach(
           people,
           (personId, index) =>
@@ -382,7 +376,12 @@ describe("notifications/consume run", () => {
       yield* consumeSchool(fixture, fixture.tenants.nf);
       expect(yield* storedRows(fixture)).toEqual([]);
       expect(yield* cursors(fixture)).toMatchObject([
-        { pending: false, read: [expect.any(String)] },
+        {
+          handled: [
+            { createdAt: expect.any(Number), entryId: expect.any(String) },
+          ],
+          pending: false,
+        },
       ]);
     })
   );
@@ -466,7 +465,7 @@ describe("notifications/consume run", () => {
         const fixture = yield* tenancyFixture;
         yield* inviteAt(fixture, "nf", fixture.invited, GURU);
         expect(yield* cursors(fixture)).toMatchObject([
-          { pending: true, read: [] },
+          { handled: [], pending: true },
         ]);
         expect(yield* runs(fixture)).toHaveLength(1);
       })

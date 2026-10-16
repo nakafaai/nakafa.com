@@ -69,23 +69,31 @@ export const JournalConsumer = Schema.Literals(["inbox"]);
 export const ConsumedChangeType = Schema.Literals(["person.invited"]);
 
 /**
+ * One entry that a cursor has handled, with its creation time. The creation time
+ * decides when the cursor drops the entry: once `since` has moved on past the
+ * commit-lag window, no run reads the entry again.
+ */
+const HandledEntry = Schema.Struct({
+  createdAt: Schema.Finite,
+  entryId: Id("journalEntries"),
+});
+
+/**
  * One consumer's place in the journal for one tenant and one change type. `since`
- * is the creation time from which the next run reads. It starts at the creation
- * time of the entry that made the cursor, so the entries recorded before the cursor
- * are never replayed, and afterwards it is the creation time of the last entry read.
- * `read` holds the IDs of the entries read at `since`, so the next run skips them and
- * still reads the entries that share their creation millisecond. No pagination
- * cursor is kept, so no run resumes from the end position of an earlier page. The
- * creation-time order that this relies on is assumed, not proven: ADR 0016 requires
- * a proof on Convex first, and ADR 0027 records that it is still owed. `pending`
- * says a run is owed: a change sets it, and a run that reads to the end clears it,
- * so the sweep can find the cursors whose run never happened.
+ * is the creation time of the newest entry the cursor handled. It starts at the
+ * creation time of the entry that made the cursor, and that entry is the first one
+ * read. `handled` holds the entries the cursor handled whose creation time lies within
+ * the commit-lag window behind `since`. A run reads that window again and skips them,
+ * so an entry that commits after a run has passed its creation time is still read,
+ * and no run resumes from the end position of an earlier page. `pending` says a run
+ * is owed: a change sets it, and a run that reads to the end clears it, so the sweep
+ * can find the cursors whose run never happened.
  */
 export const JournalCursor = Schema.Struct({
   changeType: ConsumedChangeType,
   consumer: JournalConsumer,
+  handled: Schema.Array(HandledEntry),
   pending: Schema.Boolean,
-  read: Schema.Array(Id("journalEntries")),
   since: Schema.Finite,
   tenantId: Id("tenants"),
 });

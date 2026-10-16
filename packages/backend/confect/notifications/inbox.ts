@@ -38,6 +38,15 @@ const InvitedChange = Schema.Struct({ invite: Id("tenantInvites") });
  */
 export const INBOX_PAGE_SIZE = 50;
 
+/**
+ * Handled entries that one cursor may keep, so the window of a run holds at most this
+ * many. A run reads a page of new entries beside them, so one page of handled entries
+ * bounds the read at two pages of the journal, the 100 entries of a list page (ADR
+ * 0016), plus one entry to know whether the run is done. A window over this bound
+ * fails the run before it writes.
+ */
+const HANDLED_LIMIT = INBOX_PAGE_SIZE;
+
 /** Cursors one sweep starts, so a long backlog drains over several sweeps. */
 const DUE_BATCH_SIZE = 50;
 
@@ -148,9 +157,10 @@ const writeRow = Effect.fn("notifications.inbox.writeRow")(function* (
 
 /**
  * Runs the inbox consumer for one tenant. It reads one page of the tenant's
- * journal entries of invitations after the cursor's place, writes their rows, and
+ * journal entries of invitations in the cursor's window, writes their rows, and
  * moves the cursor past the page in the same transaction, so a run that fails
- * writes nothing. A page that is not the last one schedules the next run.
+ * writes nothing. A window over `HANDLED_LIMIT` fails the run before the first
+ * write. A page that is not the last one schedules the next run.
  */
 export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
   function* (tenantId: GenericId.GenericId<"tenants">, numItems: number) {
@@ -159,6 +169,11 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
       return;
     }
     const page = yield* readAfter(tenantId, CHANGE, cursor.value, numItems);
+    const next = yield* positionAfter(
+      cursor.value,
+      page.entries,
+      HANDLED_LIMIT
+    );
     yield* Effect.forEach(
       page.entries,
       (entry) =>
@@ -178,11 +193,7 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
         ),
       { discard: true }
     );
-    yield* advance(
-      cursor.value._id,
-      positionAfter(cursor.value, page.entries),
-      !page.isDone
-    );
+    yield* advance(cursor.value._id, next, !page.isDone);
     if (!page.isDone) {
       yield* scheduleRun(tenantId);
     }
@@ -193,8 +204,10 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
  * After an invitation is recorded, marks the inbox cursor of its tenant pending
  * and schedules a run. `entryId` is the journal entry that the write recorded in
  * the same transaction. The first invitation of a tenant creates its cursor at
- * that entry, so only the invitations recorded from then on get rows. The run is
- * the normal path; the minute sweep is the backstop for a run that never happened.
+ * that entry, so an invitation that committed before it gets no row. One that
+ * committed after it, but was created inside the commit-lag window before it, still
+ * gets one. The run is the normal path; the minute sweep is the backstop for a run
+ * that never happened.
  */
 export const noteInvite = Effect.fn("notifications.inbox.noteInvite")(
   function* (
