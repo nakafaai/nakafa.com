@@ -1,11 +1,12 @@
 import { Ref } from "@confect/core";
 import { QueryRunner } from "@confect/server";
-import { listMessages } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { turnHalted, watchHalt } from "@repo/backend/confect/nina/halt";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
@@ -22,14 +23,14 @@ import {
 } from "effect";
 import { TestClock } from "effect/testing";
 
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
-
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual, listMessages: vi.fn(actual.listMessages) };
-});
 
 // Admission freezes the page facts of a prompt; the stop and resend test needs
 // no signed content for them.
@@ -160,17 +161,16 @@ describe("A running Nina turn that the learner stops", () => {
   it("reports a settlement that failed after the learner stopped the turn", async () => {
     const report = stubReport();
     const f = await createSilentTest();
-    const actual =
-      await vi.importActual<typeof import("@convex-dev/agent")>(
-        "@convex-dev/agent"
-      );
+    const actual = await vi.importActual<
+      typeof import("@repo/backend/confect/nina/sealed/thread")
+    >("@repo/backend/confect/nina/sealed/thread");
     try {
       const { running } = await f.begin();
       // The stop reads the journal once and succeeds. The settlement that the
       // run's exit makes reads it next, and that read fails.
-      vi.mocked(listMessages)
-        .mockImplementationOnce(actual.listMessages)
-        .mockRejectedValueOnce(new Error("Private component failure"));
+      vi.mocked(readThread)
+        .mockImplementationOnce(actual.readThread)
+        .mockReturnValueOnce(Effect.fail(new SealedReadError()));
       await f.owner.mutation(cancel, { chatId: f.chatId });
       await running;
 
