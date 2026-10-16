@@ -3,7 +3,9 @@
 ## Status
 
 Accepted. Amended on 13 October 2026: forum posts are not journaled per message,
-and journal retention is set per organisation.
+and journal retention is set per organisation. Amended on 16 October 2026: a
+creation-time consumer passes only settled entries behind a commit-lag window and
+drains a burst in bounded runs, instead of proving the order of the journal.
 
 ## Context
 
@@ -70,9 +72,26 @@ removing a kind that rows reference is a stored-data migration.
 Consumers read published change types from the journal itself; there is no
 outbox copy and no dispatcher. A kind's declaration lists which of its change
 types are published. The first consumer adds an index on the owner and change
-type, reads in creation order with its own cursor per subscription, re-checks
-permission when it loads the subject, and proves its ordering assumption on
-Convex before relying on a creation-time cursor.
+type, reads in creation order with its own cursor per subscription, and re-checks
+permission when it loads the subject. A creation-time cursor does not rely on a
+proof of ordering. A mutation takes its entry's creation time while it runs, and
+the entry becomes visible only when the mutation commits, so no proof can show
+that an entry never commits after a later one was read. Instead the cursor
+passes an entry only once it has settled: an entry created at or before the clock
+less five seconds counts as committed. That window covers the one second of user
+code that a Convex mutation may run (the limits page, read on 16 October 2026,
+which does not count database operations), with a margin for the rest. A run
+handles an unsettled entry early and holds its ID. The cursor holds at most one
+page of IDs, fifty entries, half of the 100-entry list page, so its state stays
+bounded, and one of the fifty stays free for the record of a settled entry that a
+late commit may need. A run that leaves entries unread schedules the next run: at
+once when the next entry has settled or the list has room for it, and for the
+moment the oldest of them settles otherwise. So a burst drains without the minute
+sweep and nothing is refused, and a burst starts one chain of runs, because an
+invitation schedules a run only when none is owed. Entries that share one creation
+time each keep a record, so the design assumes such groups stay small. A cursor
+starts five seconds before the entry that makes it, so an entry created up to that
+long before the first one is read.
 
 ### Retention
 
