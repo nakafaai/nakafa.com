@@ -299,11 +299,6 @@ Drive copies come through the Drive connector (ADR 0015).
   a client that stayed away that long with an unanswered batch. Its replay then
   applies a batch that did land a second time. Keeping the record until the
   session confirms its last batch closes the case, and the owner decides that.
-- The public function that deletes a document. `internal.editor.deletion.document`
-  is the one owner of the deletion: it deletes the session records and the steps
-  of the document in pages, then its snapshot and its document row. The first
-  function that deletes a document for a user calls it, and the caller is decided
-  then.
 
 ## Consequences
 
@@ -345,7 +340,7 @@ Drive copies come through the Drive connector (ADR 0015).
 | The behind replay: the confirmation of the in-flight batch that landed, the replay of the other unconfirmed steps onto the snapshot, and the one `SyncDropped` count | In code, not live: `apps/www/lib/editor/receive.ts`, tested with the fake server in `apps/www/lib/editor/sync.test.ts`. |
 | The skip rule: a stored step that does not apply is skipped by every editor and logged once | In code, not live: `apps/www/lib/editor/receive.ts`. Tested: three editors with a stored step that does not apply converge. |
 | The depth filter of the editor: `depthGuard` refuses an edit that nests the document past the bound it is given | In code, not live: `packages/design-system/components/editor/depth.ts`. No editor mounts it yet, and the question editor passes `MAX_DOCUMENT_DEPTH`. |
-| The deletion of a document: its session records and its steps in pages, then its snapshot and its document row (`internal.editor.deletion.document`) | In code, not live: `confect/editor/deletion.impl.ts`, tested in convex-test. No public function deletes a document yet. |
+| The deletion of a document: its session records and its steps in pages, then its snapshot and its document row (`internal.editor.deletion.document`) | In code, not live: `confect/editor/deletion.impl.ts`, tested in convex-test. Its one caller is the school exam removal, `exams.questions.remove`, which schedules it for the question's prompt (row below). |
 | The `document` access kind (`confect/editor/kinds.ts`), its authority, and its catalog entry | In code. ADR 0012 names it. |
 | The sync slice: the head version on the draft row, the step log and its pruning, refused snapshots (`SnapshotRefused`), and the idle snapshot trigger (`snapshotDue`, read by the client) | In code, not live: `confect/editor/store.ts`, `confect/editor/prune.ts`, and the sync loop `apps/www/lib/editor/sync.ts`, which the fake-client tests drive. |
 | The client engine: the `Collab` extension in `packages/design-system/components/editor/collab.ts` and the sync loop in `apps/www/lib/editor` | In code. No page mounts the editor yet. |
@@ -356,5 +351,5 @@ Drive copies come through the Drive connector (ADR 0015).
 | The import from a PDF | Planned. It waits for the accuracy gate. |
 | The import from Google Forms | Planned, with the connectors (ADR 0015) |
 | The sentence in AGENTS.md about teacher questions | Not written |
-| The school exam functions (`confect/exams`) create a question's prompt through `createDocument` in `confect/editor/create.ts`, and delete it through `removeDocument` in `confect/editor/remove.ts`, which also deletes the document's snapshot, its steps, and the records of its editor sessions. A copy reads the original's steps after its snapshot through `stepsAfter` in `confect/editor/store.ts`, in one bounded read, and refuses a history that the read does not finish, so a copy never loops over the log. | In code and tested in convex-test, not live. They are the first callers of the creator and the deleter. |
+| The school exam functions (`confect/exams`) create a question's prompt through `createDocument` in `confect/editor/create.ts`, and, when a question is removed, schedule `internal.editor.deletion.document` for its prompt, which deletes the records of the document's editor sessions and its steps in pages, then its snapshot and its document row. A copy reads the original's steps after its snapshot through `stepsAfter` in `confect/editor/store.ts`, in one bounded read, and refuses a history that the read does not finish, so a copy never loops over the log. | In code and tested in convex-test, not live. They are the first callers of the creator and the deleter. |
 | The school exam editor page and its client mount of the sync loop (`apps/www/lib/editor/sync.ts`) | Not built. A later lane mounts the editor and drives the loop from the Confect hooks. |
