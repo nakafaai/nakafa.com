@@ -312,6 +312,9 @@ importers:
       '@repo/internationalization':
         specifier: workspace:*
         version: link:../../packages/internationalization
+      '@repo/mascot':
+        specifier: workspace:*
+        version: link:../../packages/mascot
       '@repo/math':
         specifier: workspace:*
         version: link:../../packages/math
@@ -545,6 +548,9 @@ importers:
       '@repo/email':
         specifier: workspace:*
         version: link:../email
+      '@repo/mascot':
+        specifier: workspace:*
+        version: link:../mascot
       '@repo/math':
         specifier: workspace:*
         version: link:../math

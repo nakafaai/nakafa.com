@@ -10,6 +10,7 @@ import {
   readTenantKeys,
 } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { slugOf } from "@repo/backend/test/tenancy";
 import { withRoots } from "@repo/backend/test/vault";
 import { Effect } from "effect";
@@ -28,6 +29,7 @@ export const learner = Effect.fn("test.vault.owner.learner")(function* (
     credits: 0,
     creditsResetAt: 0,
     email: `${name}@example.com`,
+    mascot: MASCOT,
     name,
     plan: "free",
   });

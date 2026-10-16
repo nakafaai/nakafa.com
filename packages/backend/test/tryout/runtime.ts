@@ -33,6 +33,7 @@ import {
   TEST_RELEASE_ID,
   testTextHash,
 } from "@repo/backend/test/content/release";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import {
   ensureTestTryoutRuntimeBundle,
   insertTestTryoutRuntimeBundle,
@@ -86,6 +87,7 @@ export function insertTryoutUser(
     ...identity,
     credits: 0,
     creditsResetAt: TRYOUT_TEST_NOW,
+    mascot: MASCOT_CODE,
     plan: "pro",
   });
 }

@@ -121,6 +121,7 @@ export declare const api: {
             deletionPreparedAt?: number;
             email: string;
             image?: string;
+            mascot: string;
             name: string;
             plan: "free" | "pro";
             planCreditGrantId?: Id<"creditTransactions">;
@@ -139,7 +140,7 @@ export declare const api: {
         "query",
         "public",
         { userId: Id<"users"> },
-        { image?: string; name: string } | null
+        { image?: string; mascot: string; name: string } | null
       >;
     };
   };
@@ -420,6 +421,7 @@ export declare const api: {
             replyToUser: {
               _id: Id<"users">;
               image?: string | null;
+              mascot: string;
               name: string;
             } | null;
             replyToUserId?: Id<"users">;
@@ -429,6 +431,7 @@ export declare const api: {
             user: {
               _id: Id<"users">;
               image?: string | null;
+              mascot: string;
               name: string;
             } | null;
             userId: Id<"users">;
@@ -6105,6 +6108,12 @@ export declare const api: {
   };
   users: {
     mutations: {
+      setMascot: FunctionReference<
+        "mutation",
+        "public",
+        { mascot: string },
+        { mascot: string }
+      >;
       syncUserInfoForChat: FunctionReference<
         "mutation",
         "public",
@@ -10037,6 +10046,7 @@ export declare const internal: {
           deletionPreparedAt?: number;
           email: string;
           image?: string;
+          mascot: string;
           name: string;
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
@@ -10061,6 +10071,7 @@ export declare const internal: {
           deletionPreparedAt?: number;
           email: string;
           image?: string;
+          mascot: string;
           name: string;
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
