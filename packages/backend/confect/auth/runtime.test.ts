@@ -209,6 +209,32 @@ describe("auth/runtime", () => {
       }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
   it.effect(
+    "expires the host-only session cookie when the shared one is cleared on the site's host",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("SITE_URL", "https://local.nakafa.com");
+        vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
+        vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
+        const test = createConvexTestWithBetterAuth();
+        // The Next.js handler sends the host the browser asked for in these two
+        // headers, and the Convex route restores it before Better Auth answers.
+        const response = yield* Effect.promise(() =>
+          test.fetch("/api/auth/sign-out", {
+            headers: {
+              origin: "https://local.nakafa.com",
+              "x-better-auth-forwarded-host": "local.nakafa.com",
+              "x-better-auth-forwarded-proto": "https",
+            },
+            method: "POST",
+          })
+        );
+        expect(response.status).toBe(200);
+        expect(response.headers.getSetCookie()).toContain(
+          "__Secure-better-auth.session_token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax; Secure"
+        );
+      }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
+  );
+  it.effect(
     "never looks a Google ID token up, so a copied one cannot sign anyone in",
     () =>
       Effect.gen(function* () {

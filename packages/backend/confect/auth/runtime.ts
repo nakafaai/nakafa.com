@@ -201,7 +201,7 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
         },
       ],
     });
-    // The host rule reads the request, which no plugin hook receives (ADR 0009).
+    // A plugin's response hook receives no request, so the host rule wraps the handler.
     return {
       ...auth,
       handler: hostOnlySessionCookieHandler(auth.handler, siteUrl),
