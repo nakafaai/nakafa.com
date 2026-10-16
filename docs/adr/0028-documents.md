@@ -12,7 +12,7 @@ installs none of `prosemirror-collab`, `mathlive`, and `@convex-dev/presence`.
 
 The design system has one Tiptap editor, in
 `packages/design-system/components/editor`, which the Memory page uses. It reads
-and writes Markdown for one author, and Tiptap is pinned at 3.31.4 in
+and writes Markdown for one author, and Tiptap is pinned at 3.32.0 in
 `packages/design-system/package.json`. A school needs more. Teachers write
 questions together in real time, with formulas, images, a reading passage that
 several questions share, and rubrics. Announcements are composed in the same
@@ -71,7 +71,7 @@ three steps moves it by three.
 | 3 | Rina fetches the step of Hendra | She rebases her unsent steps on the client. |
 | 4 | Rina sends again at version 41 | Accepted. The document is at version 42. |
 
-`prosemirror-collab` is not part of `@tiptap/pm` 3.31.4 (`pnpm-lock.yaml`). It
+`prosemirror-collab` is not part of `@tiptap/pm` 3.32.0 (`pnpm-lock.yaml`). It
 is added next to the Tiptap packages of `packages/design-system`, pinned like
 them. It is MIT, depends on `prosemirror-state` alone, and its last release is
 1.3.1 of 17 May 2023 (npm).
@@ -83,7 +83,7 @@ them. It is MIT, depends on `prosemirror-state` alone, and its last release is
 | Yjs through `y-convex` 1.0.1 | No. It sends binary updates, and it is an unofficial package of one maintainer. | We would build both. | Unofficial | Not used |
 | One writer at a time | Yes | One writer. Presence still comes from the component. | Our code, the smallest | Not used. The owner asked for real-time collaboration. |
 
-The editor is Tiptap 3.31.4. `@convex-dev/prosemirror-sync` accepts this version
+The editor is Tiptap 3.32.0. `@convex-dev/prosemirror-sync` accepts this version
 (its peer range for `@tiptap/core` is `^2.7.0 || ^3.10.7`), and the decision
 stays the same.
 
@@ -266,7 +266,7 @@ Drive copies come through the Drive connector (ADR 0015).
 | Part | Status |
 | --- | --- |
 | The Memory page editor in `packages/design-system/components/editor` (Markdown, one author) | Live |
-| Tiptap 3.31.4 and KaTeX 0.19.0 | Live |
+| Tiptap 3.32.0 and KaTeX 0.19.0 | Live |
 | `prosemirror-collab`, `mathlive`, and `@convex-dev/presence` | Not installed. Planned for program wave B. |
 | `confect/editor` and its tables `editorDocuments`, `editorSteps`, and `editorSnapshots` | Planned, program wave B |
 | The formula node | Planned, program wave B |

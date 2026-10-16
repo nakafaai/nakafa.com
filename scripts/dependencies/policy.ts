@@ -265,7 +265,7 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "ai@latest",
-    AI_SDK_COHORT.ai,
+    "7.0.142",
     "AI SDK packages move as one reviewed cohort. 7.0.142 stays out: with it, `new Agent(...)` in confect/nina fails the backend typecheck with TS2590 (16 October 2026, with @convex-dev/agent 0.7.8 and with 0.7.7; 7.0.140 passes). Its release notes change the streamed input of OpenAI custom tools and the workflow telemetry context, and Nakafa uses neither.",
   ],
   [
