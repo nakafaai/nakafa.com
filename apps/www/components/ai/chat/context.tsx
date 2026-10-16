@@ -41,9 +41,11 @@ const ChatContext = createContext<ChatContextValue | null>(null);
  *
  * The last answer stays shown while the read starts again for the same chat:
  * a closed sheet ends its subscriptions, and on reopening the new one has no
- * answer until the server sends it. Without the last answer the chat would
- * read as loading for that moment, and its composer would close and drop the
- * files the learner had attached.
+ * answer until the server sends it. Without the last answer the composer would
+ * close for that moment and drop the files the learner had attached. The kept
+ * answer is only shown: `current` stays false until the server answers again,
+ * so nothing acts on a turn that may have moved on. A read that is skipped,
+ * while the session changes or the chat is being deleted, keeps nothing.
  */
 function useConversation(
   chatId: Id<"chats">,
@@ -62,10 +64,15 @@ function useConversation(
   if (QueryResult.isSuccess(result) && result !== answered) {
     setAnswered(result);
   }
-  const shown = QueryResult.isSuccess(result) ? result : answered;
-  return leaving || !QueryResult.isSuccess(shown)
-    ? { chat: undefined, turn: null }
-    : { chat: shown.value.chat, turn: shown.value.turn };
+  const current = QueryResult.isSuccess(result);
+  const kept =
+    QueryResult.isLoading(result) &&
+    !result.skipped &&
+    QueryResult.isSuccess(answered);
+  const shown = current ? result : answered;
+  return (current || kept) && QueryResult.isSuccess(shown)
+    ? { chat: shown.value.chat, current, turn: shown.value.turn }
+    : { chat: undefined, current, turn: null };
 }
 
 /**
@@ -80,7 +87,7 @@ function useChatState(
   store: ChatStoreApi
 ) {
   const leaving = useStore(store, (state) => state.leaving);
-  const { chat, turn } = useConversation(chatId, shareToken, leaving);
+  const { chat, current, turn } = useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
   const [isPending, startTransition] = useTransition();
   const [cancelling, optimisticallyCancel] = useOptimistic(false);
@@ -92,7 +99,7 @@ function useChatState(
   const viewerId = useViewer((state) => state.viewer?.id);
   const cancelChat = useMutation(nina.lifecycle.cancel);
 
-  const loading = !chat;
+  const loading = !current;
   const busy = isChatBusy({
     cancelling,
     loading,
@@ -114,6 +121,7 @@ function useChatState(
     chat,
     chatId,
     isPending,
+    loading,
     optimisticallyCancel,
     setText,
     showDraft,
@@ -129,7 +137,7 @@ function useChatState(
   const [actions] = useState(() => ({
     cancel() {
       const now = latest.current;
-      if (now.isPending) {
+      if (now.isPending || now.loading) {
         return;
       }
       const { setStopFailure } = store.getState();
@@ -168,7 +176,13 @@ function useChatState(
     retry(order?: number) {
       const now = latest.current;
       const target = order ?? now.turn?.order;
-      if (target === undefined || !now.chat || now.busy || now.isPending) {
+      if (
+        target === undefined ||
+        !now.chat ||
+        now.busy ||
+        now.isPending ||
+        now.loading
+      ) {
         return;
       }
       // The retry starts before the transition, for the same reason as a stop.
@@ -190,7 +204,7 @@ function useChatState(
     send(prompt: NinaDraft) {
       const now = latest.current;
       const chat = now.chat;
-      if (!chat || now.busy || now.isPending) {
+      if (!chat || now.busy || now.isPending || now.loading) {
         return false;
       }
       now.setText((previous) =>
