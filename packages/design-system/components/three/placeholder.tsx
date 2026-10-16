@@ -9,7 +9,7 @@ export function ScenePlaceholder() {
         className: "grid place-items-center",
       })}
     >
-      <Spinner className="size-6" />
+      <Spinner className="size-6 motion-reduce:animate-none" />
     </div>
   );
 }

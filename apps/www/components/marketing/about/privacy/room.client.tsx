@@ -80,7 +80,7 @@ export function PrivacyRoom({ words }: { readonly words: string }) {
       <Thing
         className={
           current === "locked"
-            ? "scale-110 transition-transform duration-300"
+            ? "transition-transform duration-300 motion-safe:scale-110"
             : "transition-transform duration-300"
         }
         name="padlock"

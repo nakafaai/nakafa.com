@@ -1,3 +1,6 @@
+"use client";
+
+import { useIntersection } from "@mantine/hooks";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
@@ -30,6 +33,7 @@ const dotVariants = cva(
   }
 );
 
+/** The dots bounce only while the loader is on screen. They rest while it is out of view. */
 export function TypingLoader({
   className,
   size = "md",
@@ -38,15 +42,18 @@ export function TypingLoader({
   size?: "sm" | "md" | "lg";
 }) {
   const t = useTranslations("Ai");
+  const { entry, ref } = useIntersection({ threshold: 0 });
+  const playing = entry?.isIntersecting ?? false;
 
   return (
-    <div className={cn(containerVariants({ size }), className)}>
+    <div className={cn(containerVariants({ size }), className)} ref={ref}>
       {Arr.map(DOT_DELAYS, (delay) => (
         <div
           className={dotVariants({ size })}
           key={delay}
           style={{
             animationDelay: `${delay}ms`,
+            animationPlayState: playing ? "running" : "paused",
           }}
         />
       ))}
