@@ -4,8 +4,8 @@
 
 Accepted. Amended on 13 October 2026: forum posts are not journaled per message,
 and journal retention is set per organisation. Amended on 16 October 2026: a
-creation-time consumer re-reads a commit-lag window instead of proving the order
-of the journal.
+creation-time consumer passes only settled entries behind a commit-lag window and
+drains a burst in bounded runs, instead of proving the order of the journal.
 
 ## Context
 
@@ -77,9 +77,16 @@ permission when it loads the subject. A creation-time cursor does not rely on a
 proof of ordering. A mutation takes its entry's creation time while it runs, and
 the entry becomes visible only when the mutation commits, so no proof can show
 that an entry never commits after a later one was read. Instead the cursor
-re-reads a commit-lag window of five seconds behind its position, which covers
-the one second of user code that a Convex mutation may run (the limits page,
-read on 16 October 2026), and it skips the entries it has already handled.
+passes an entry only once it has settled: an entry created at or before the clock
+less five seconds counts as committed. That window covers the one second of user
+code that a Convex mutation may run (the limits page, read on 16 October 2026,
+which does not count database operations), with a margin for the rest. A run
+handles an unsettled entry early and holds its ID, and it holds at most one page
+of such IDs, fifty entries, half of the 100-entry list page, so the cursor's state
+stays bounded. A run that leaves entries unread schedules the next run for the
+moment the oldest of them settles, so a burst drains without the minute sweep and
+nothing is refused. A cursor starts five seconds before the entry that makes it,
+so an entry created up to that long before the first one is read.
 
 ### Retention
 
