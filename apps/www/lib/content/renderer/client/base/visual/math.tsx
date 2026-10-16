@@ -16,13 +16,10 @@ import { DeferredMathScene } from "@/lib/content/renderer/client/base/visual/def
 const EMPTY_LABELS: Readonly<Record<string, ReactNode>> = {};
 
 interface Props {
-  /** The lesson's description of the scene. A visual without a title shows none. */
-  readonly description?: ReactNode;
+  readonly description: ReactNode;
   readonly labels?: Readonly<Record<string, ReactNode>>;
   readonly scene: MathVisualScene;
-  readonly title?: ReactNode;
-  /** The name of the figure when the visual has no title, such as on the home page. */
-  readonly viewLabel?: string;
+  readonly title: ReactNode;
 }
 
 /** Renders one stable mathematical scene without content-specific components. */
@@ -31,35 +28,22 @@ export function MathVisual({
   labels = EMPTY_LABELS,
   scene,
   title,
-  viewLabel,
 }: Props) {
   const identifier = useId();
   const descriptionId = `${identifier}-description`;
   const titleId = `${identifier}-title`;
-  const figureName = title === undefined ? viewLabel : undefined;
 
   return (
     <CoordinateProvider>
       <VisualCard>
         <VisualCardHeader
-          description={
-            description === undefined ? undefined : (
-              <span id={descriptionId}>{description}</span>
-            )
-          }
-          title={
-            title === undefined ? undefined : <span id={titleId}>{title}</span>
-          }
+          description={<span id={descriptionId}>{description}</span>}
+          title={<span id={titleId}>{title}</span>}
         />
         <VisualCardBody>
           <VisualCardScene
-            aria-describedby={
-              title === undefined || description === undefined
-                ? undefined
-                : descriptionId
-            }
-            aria-label={figureName}
-            aria-labelledby={title === undefined ? undefined : titleId}
+            aria-describedby={descriptionId}
+            aria-labelledby={titleId}
             className="m-0"
             render={<figure />}
           >
