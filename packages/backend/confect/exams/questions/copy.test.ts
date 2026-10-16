@@ -61,10 +61,12 @@ describe("exams/questions/copy", () => {
           copied.id,
         ]);
         const source = yield* teacher.query(openDocument, {
+          clientId: "reader",
           documentId: original.prompt,
           slug: nf,
         });
         const duplicate = yield* teacher.query(openDocument, {
+          clientId: "reader",
           documentId: copied.prompt,
           slug: nf,
         });
@@ -93,6 +95,7 @@ describe("exams/questions/copy", () => {
           slug: nf,
         });
         const duplicate = yield* teacher.query(openDocument, {
+          clientId: "reader",
           documentId: copied.prompt,
           slug: nf,
         });
