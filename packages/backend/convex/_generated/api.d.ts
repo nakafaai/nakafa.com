@@ -2618,6 +2618,7 @@ export declare const api: {
                   to: Id<"tenantCohorts">;
                   type: "person.moved";
                 }
+              | { promotion: Id<"tenantPromotions">; type: "person.graduated" }
               | { invite: Id<"tenantInvites">; type: "invite.expired" }
               | { invite: Id<"tenantInvites">; type: "invite.resent" }
               | { invite: Id<"tenantInvites">; type: "invite.revoked" }
@@ -2627,6 +2628,32 @@ export declare const api: {
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
+              | {
+                  assignment: "homeroom";
+                  person: Id<"tenantPeople">;
+                  type: "assignment.created";
+                }
+              | {
+                  assignment: "homeroom";
+                  person: Id<"tenantPeople">;
+                  type: "assignment.removed";
+                }
+              | { type: "promotion.applied" }
+              | { type: "promotion.approved" }
+              | { type: "promotion.cancelled" }
+              | { type: "promotion.created" }
+              | { type: "promotion.opened" }
+              | { type: "promotion.planned" }
+              | { person: Id<"tenantPeople">; type: "promotion.studentPlanned" }
+              | { type: "promotion.submitted" }
+              | {
+                  reason: "cohorts" | "students" | "homeroom" | "other";
+                  type: "promotion.returned";
+                }
+              | {
+                  step: "archive" | "cohorts" | "place" | "homeroom";
+                  type: "promotion.undone";
+                }
               | { type: "class.created" }
               | { type: "class.renamed" }
               | { type: "class.archived" }
@@ -2687,6 +2714,7 @@ export declare const api: {
               | { id: Id<"tenantPeople">; kind: "person" }
               | { id: Id<"tenantPeriods">; kind: "period" }
               | { id: Id<"tenantCohorts">; kind: "cohort" }
+              | { id: Id<"tenantPromotions">; kind: "promotion" }
               | { id: Id<"tenantGrants">; kind: "grant" }
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"tenantVisits">; kind: "visit" }
@@ -3539,6 +3567,34 @@ export declare const api: {
     };
   };
   tenancy: {
+    assignments: {
+      assign: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          personId: Id<"tenantPeople">;
+          slug: string;
+        },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"tenantAssignments">;
+          kind: "homeroom";
+          personId: Id<"tenantPeople">;
+        }
+      >;
+      unassign: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"tenantAssignments">;
+          kind: "homeroom";
+          personId: Id<"tenantPeople">;
+        } | null
+      >;
+    };
     cohorts: {
       archive: FunctionReference<
         "mutation",
@@ -3895,6 +3951,576 @@ export declare const api: {
           status: "active" | "suspended";
         }
       >;
+    };
+    promotion: {
+      apply: {
+        apply: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+      draft: {
+        create: FunctionReference<
+          "mutation",
+          "public",
+          {
+            periodId: Id<"tenantPeriods">;
+            slug: string;
+            targetPeriodId: Id<"tenantPeriods">;
+          },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+        get: FunctionReference<
+          "query",
+          "public",
+          { periodId: Id<"tenantPeriods">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          } | null
+        >;
+        plan: FunctionReference<
+          "mutation",
+          "public",
+          {
+            promotionId: Id<"tenantPromotions">;
+            slug: string;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            targets: Array<{ grade: number; name: string }>;
+          },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+      moves: {
+        moves: FunctionReference<
+          "query",
+          "public",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            promotionId: Id<"tenantPromotions">;
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              personId: Id<"tenantPeople">;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        setMove: FunctionReference<
+          "mutation",
+          "public",
+          {
+            personId: Id<"tenantPeople">;
+            promotionId: Id<"tenantPromotions">;
+            slug: string;
+            to:
+              | { kind: "cohort"; name: string }
+              | { kind: "graduate" }
+              | { kind: "stay" }
+              | null;
+          },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+      review: {
+        approve: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+        cancel: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+        returnToDraft: FunctionReference<
+          "mutation",
+          "public",
+          {
+            promotionId: Id<"tenantPromotions">;
+            reason: "cohorts" | "students" | "homeroom" | "other";
+            slug: string;
+          },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+        submit: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+      undo: {
+        undo: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
     };
     settings: {
       setLocale: FunctionReference<
@@ -9758,6 +10384,16 @@ export declare const internal: {
         { cursor: string | null; email: string },
         null
       >;
+    };
+    promotion: {
+      run: {
+        run: FunctionReference<
+          "mutation",
+          "internal",
+          { actorId: Id<"tenantPeople">; promotionId: Id<"tenantPromotions"> },
+          null
+        >;
+      };
     };
     provision: {
       open: FunctionReference<
