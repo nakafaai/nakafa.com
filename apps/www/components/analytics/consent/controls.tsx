@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import {
   type AnalyticsConsentContextValue,
@@ -158,6 +158,10 @@ function ConsentDetails({
 /**
  * Links the privacy policy without prefetching it, as every signed Page link
  * must (see `PageNavigation`). This prompt opens on every first visit.
+ *
+ * The server renders this link in the root layout, outside every `Suspense`,
+ * so it is a plain localized `Link`: `NavigationLink` reads the pathname, which
+ * blocks the prerender of a dynamic route such as `/[locale]/chat/[id]`.
  */
 function PrivacyPolicyLink() {
   const t = useTranslations("AnalyticsConsent");
@@ -173,13 +177,13 @@ function PrivacyPolicyLink() {
     <p className="text-muted-foreground text-sm">
       {t.rich("policy", {
         "privacy-policy": (chunks) => (
-          <NavigationLink
+          <Link
             className="text-foreground underline underline-offset-4"
             href={href}
             prefetch={false}
           >
             {chunks}
-          </NavigationLink>
+          </Link>
         ),
       })}
     </p>
