@@ -25,6 +25,7 @@ import {
   start,
 } from "@repo/backend/test/nina/admission";
 import { homePage } from "@repo/backend/test/nina/page";
+import { sealThreadIn } from "@repo/backend/test/nina/seal";
 import { showsText } from "@repo/backend/test/seal";
 import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -174,6 +175,25 @@ describe("native Nina admission", () => {
     );
     const turns = await t.query((ctx) => ctx.db.query("ninaTurns").collect());
     expect(turns).toHaveLength(2);
+  });
+
+  it("replays the prompt of a saved request from its sealed copy as from the plain copy", async () => {
+    const { t, identity, owner } = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    const plain = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    await sealThreadIn(t, first.threadId, identity.userId);
+    const sealed = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    expect(sealed.prompt).toEqual(plain.prompt);
+    expect(sealed.prompt.text).not.toBe("");
   });
 
   it("begins a chat with its default title sealed for the learner", async () => {

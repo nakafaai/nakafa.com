@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/confect/nina/uncovered";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest } from "@repo/backend/test/nina";
+import { sealThreadIn, withoutRowIds } from "@repo/backend/test/nina/seal";
 import {
   BIG,
   createSummaryTest,
@@ -45,9 +46,16 @@ async function read(
   return nina.t.action(async (ctx) => {
     const runQuery = vi.spyOn(ctx, "runQuery");
     const result = await Effect.runPromise(
-      readUncovered(nina, active?.order ?? 0, null, later).pipe(
-        Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
-      )
+      readUncovered(
+        {
+          ...nina,
+          promptMessageId: active?.promptMessageId ?? nina.promptMessageId,
+          userId: nina.identity.userId,
+        },
+        active?.order ?? 0,
+        null,
+        later
+      ).pipe(Effect.provide(RegisteredFunction.actionLayer(schema, ctx)))
     );
     const queries = Arr.map(runQuery.mock.calls, ([, args]) => args);
     return {
@@ -207,6 +215,30 @@ describe("Nina turns after the summary", () => {
     const { turns } = await read(f, [{ order: 6, retryOf: 3 }]);
     expect(Arr.map(turns, ({ order }) => order)).toEqual([0, 1, 2, 4, 5]);
   });
+
+  it("fails with its own error when the turns of the summary cannot be listed for the order it reads before", async () => {
+    const f = await createNinaTest({ history: 3 });
+    // An order is never negative, so the query of the turns refuses the argument.
+    const failure = await f.t.action((ctx) =>
+      Effect.runPromise(
+        readUncovered(
+          {
+            ...f,
+            promptMessageId: f.promptMessageId,
+            userId: f.identity.userId,
+          },
+          -1,
+          null,
+          []
+        ).pipe(
+          Effect.flip,
+          Effect.map((error) => error._tag),
+          Effect.provide(RegisteredFunction.actionLayer(schema, ctx))
+        )
+      )
+    );
+    expect(failure).toBe("NinaUncoveredError");
+  });
 });
 
 describe("Nina fold wait from the cost its prompt stored", () => {
@@ -357,4 +389,13 @@ describe("Nina fold wait from the cost its prompt stored", () => {
       expect.objectContaining({ throughOrder: SUMMARY_FOLD_LIMIT - 1 }),
     ]);
   }, 60_000);
+
+  it("reads the same turns and messages from a sealed thread as from a plain one", async () => {
+    const nina = await createNinaTest({ history: 3 });
+    const plain = await read(nina);
+    await sealThreadIn(nina.t, nina.threadId, nina.identity.userId);
+    const sealed = await read(nina);
+    expect(plain.turns.length).toBeGreaterThan(0);
+    expect(withoutRowIds(sealed)).toEqual(withoutRowIds(plain));
+  });
 });

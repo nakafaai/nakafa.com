@@ -12,6 +12,7 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
+import { sealThreadIn } from "@repo/backend/test/nina/seal";
 import { Array as Arr } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -62,6 +63,36 @@ describe("a retried Nina prompt", () => {
         ...args,
         chatId: first.chatId,
         requestId: "retry-text",
+        input: { kind: "retry", order: first.order },
+      })
+    );
+    expect(retried.prompt.text).toBe("An owned text-only prompt.");
+  });
+
+  it("retries a sealed prompt with the text it was asked with", async () => {
+    const f = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, args)
+    );
+    await f.owner.mutation(cancel, { chatId: first.chatId });
+    await f.t.mutation(async (ctx) => {
+      const saved = await saveMessage(ctx, components.nina, {
+        threadId: first.threadId,
+        userId: f.identity.userId,
+        prompt: "An owned text-only prompt.",
+      });
+      await ctx.db.patch("ninaTurns", first.turnId, {
+        promptMessageId: saved.messageId,
+      });
+    });
+    await sealThreadIn(f.t, first.threadId, f.identity.userId);
+    const retried = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, {
+        ...args,
+        chatId: first.chatId,
+        requestId: "retry-sealed",
         input: { kind: "retry", order: first.order },
       })
     );

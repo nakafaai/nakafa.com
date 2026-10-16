@@ -1,13 +1,10 @@
 import { Ref } from "@confect/core";
-import {
-  createThread,
-  listStreams,
-  listUIMessages,
-  syncStreams,
-} from "@convex-dev/agent";
+import { createThread, listStreams, syncStreams } from "@convex-dev/agent";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
@@ -15,25 +12,33 @@ import {
   ninaStream,
   ninaUsage,
 } from "@repo/backend/test/nina";
+import { sealThreadIn, withoutRowIds } from "@repo/backend/test/nina/seal";
 import {
   createThreadTest,
   MEMORY_TURN,
   SEARCH,
   SEARCHING_TURN,
+  startStream,
 } from "@repo/backend/test/nina/thread";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { FunctionArgs } from "convex/server";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@repo/backend/confect/nina/sealed/thread")
+    >();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@convex-dev/agent", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@convex-dev/agent")>();
   return {
     ...actual,
     listStreams: vi.fn(actual.listStreams),
-    listUIMessages: vi.fn(actual.listUIMessages),
     syncStreams: vi.fn(actual.syncStreams),
   };
 });
@@ -59,26 +64,6 @@ async function shareChat(
   const shareToken = await owner.query(token, { chatId });
   assert(shareToken !== null);
   return shareToken;
-}
-
-/** Starts a stream on the thread of the chat, as a running turn does, and writes "Live" to it. */
-function startStream(f: Fixture) {
-  return f.t.mutation(async (ctx) => {
-    const streamId = await ctx.runMutation(components.nina.streams.create, {
-      threadId: f.identity.threadId,
-      userId: f.identity.userId,
-      order: 1,
-      stepOrder: 0,
-      format: "UIMessageChunk",
-    });
-    await ctx.runMutation(components.nina.streams.addDelta, {
-      streamId,
-      start: 0,
-      end: 1,
-      parts: [{ type: "text-delta", id: "text-1", delta: "Live" }],
-    });
-    return streamId;
-  });
 }
 
 /** What a reader is told by one call of the query, as the page decodes it. */
@@ -165,6 +150,26 @@ describe("Nina message boundary", () => {
     ).toBe(true);
   });
 
+  it("dates the learner's message by the moment its turn was asked, not by the moment its row was written", async () => {
+    const f = await createNinaTest();
+    const asked = Date.UTC(2026, 9, 1, 9);
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", f.turnId, { promptedAt: asked })
+    );
+    const page = Ref.decodeReturnsSync(
+      refs.public.nina.messages.list,
+      await f.owner.query(query, {
+        chatId: f.chatId,
+        threadId: f.threadId,
+        paginationOpts: { cursor: null, numItems: 20 },
+      })
+    );
+    const prompt = Option.getOrThrow(
+      Arr.findFirst(page.page, ({ role }) => role === "user")
+    );
+    expect(prompt._creationTime).toBe(asked);
+  });
+
   it("allows an anonymous reader with the share token and denies every other reader before touching the component", async () => {
     const shared = await createThreadTest();
     await shared.owner.mutation(share, {
@@ -193,7 +198,16 @@ describe("Nina message boundary", () => {
     ).rejects.toMatchObject({
       data: { _tag: "ChatAccessError", code: "CHAT_NOT_FOUND" },
     });
-    expect(listUIMessages).not.toHaveBeenCalled();
+    expect(readThread).not.toHaveBeenCalled();
+  });
+
+  it("gives the owner the same list of a sealed thread as of the plain thread, with every row opened", async () => {
+    const { t, owner, identity, args } = await createThreadTest();
+    const plain = await owner.query(query, args);
+    await sealThreadIn(t, identity.threadId, identity.userId);
+    const sealed = await owner.query(query, args);
+    expect(withoutRowIds(sealed)).toEqual(withoutRowIds(plain));
+    expect(encodeJsonText(sealed)).toContain("Check the expression.");
   });
 
   it("denies a guessed thread even when the reader owns the supplied chat", async () => {
@@ -203,7 +217,7 @@ describe("Nina message boundary", () => {
     ).rejects.toMatchObject({
       data: { _tag: "ChatAccessError", code: "FORBIDDEN" },
     });
-    expect(listUIMessages).not.toHaveBeenCalled();
+    expect(readThread).not.toHaveBeenCalled();
   });
 
   it("resumes only deltas belonging to the authorized thread", async () => {
@@ -272,7 +286,7 @@ describe("Nina message boundary", () => {
     });
     expect(resumed.page).toEqual([]);
     // Stream round trips never re-read the transcript.
-    expect(listUIMessages).not.toHaveBeenCalled();
+    expect(readThread).not.toHaveBeenCalled();
     expect(syncStreams).toHaveBeenLastCalledWith(
       expect.anything(),
       components.nina,
@@ -442,7 +456,7 @@ describe("Nina message boundary", () => {
       await expect(
         owner.query(query, { ...args, streamArgs: { kind: "deltas", cursors } })
       ).rejects.toThrow();
-      expect(listUIMessages).not.toHaveBeenCalled();
+      expect(readThread).not.toHaveBeenCalled();
       expect(syncStreams).not.toHaveBeenCalled();
     }
   );
@@ -456,7 +470,9 @@ describe("Nina message boundary", () => {
     const { owner, args } = await createThreadTest();
     const error = new Error("private transport diagnostic");
     if (source === "messages") {
-      vi.mocked(listUIMessages).mockRejectedValueOnce(error);
+      vi.mocked(readThread).mockReturnValueOnce(
+        Effect.fail(new SealedReadError())
+      );
     }
     if (source === "streams") {
       vi.mocked(syncStreams).mockRejectedValueOnce(error);
