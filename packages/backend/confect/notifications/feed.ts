@@ -18,7 +18,8 @@ const FeedCursor = Schema.Struct({
   shown: Schema.Array(Id("notifications")),
 });
 type FeedCursor = typeof FeedCursor.Type;
-const FeedCursorJson = Schema.fromJsonString(FeedCursor);
+/** The page cursor as the list sends it: the JSON text of a position. */
+export const FeedCursorJson = Schema.fromJsonString(FeedCursor);
 
 /**
  * Reads the position of a list page. A cursor that does not decode is refused, and
