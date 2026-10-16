@@ -58,6 +58,16 @@ export type HomeLessonReader = (
   };
 } | null>;
 
+/** The reader rejected while it read one home lesson. Its own error stays the cause. */
+export class HomeLessonReadError extends Schema.TaggedError<HomeLessonReadError>()(
+  "HomeLessonReadError",
+  {
+    appLocale: AppLocaleSchema,
+    cause: Schema.Unknown,
+    publicPath: Schema.String,
+  }
+) {}
+
 /** Reads one published lesson's title, description and link for the page's locale. */
 const readHomeLesson = Effect.fn("www.home.readLesson")(function* (
   locale: AppLocaleCode,
@@ -66,7 +76,10 @@ const readHomeLesson = Effect.fn("www.home.readLesson")(function* (
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const publicPath = HOME_LESSON_PATHS[lesson][locale];
-  const found = yield* Effect.promise(() => readLesson(locale, publicPath));
+  const found = yield* Effect.tryPromise({
+    try: () => readLesson(locale, publicPath),
+    catch: (cause) => new HomeLessonReadError({ appLocale, cause, publicPath }),
+  });
   const projection = found?.model.projection;
   if (!projection) {
     return yield* new PublishedProjectionError({ appLocale, publicPath });
@@ -85,8 +98,9 @@ const readHomeLesson = Effect.fn("www.home.readLesson")(function* (
 
 /**
  * Reads the four lessons of the home window for one locale. A lesson that is
- * not published in that locale fails the read, so the page cannot be built
- * with a hole where a lesson belongs.
+ * not published in that locale fails with PublishedProjectionError, and a read
+ * that the reader rejects fails with HomeLessonReadError, so the page cannot be
+ * built with a hole where a lesson belongs.
  */
 export const readHomeLessons = Effect.fn("www.home.readLessons")(function* (
   locale: AppLocaleCode,

@@ -4,6 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
   HOME_LESSON_PATHS,
+  HomeLessonReadError,
   type HomeLessonReader,
   readHomeLessons,
 } from "@/components/marketing/about/lesson/published";
@@ -32,6 +33,18 @@ function readerOf(
   >
 ): HomeLessonReader {
   return async (_locale, publicPath) => lessons[publicPath] ?? null;
+}
+
+/** A reader that rejects the read of one path with the cause, and reads every other path normally. */
+function readerRejectingAt(
+  rejectedPath: string,
+  cause: unknown
+): HomeLessonReader {
+  const reader = readerOf(INDONESIAN);
+  return (locale, publicPath) =>
+    publicPath === rejectedPath
+      ? Promise.reject(cause)
+      : reader(locale, publicPath);
 }
 
 /** The four lessons of the Indonesian home page, each published under its declared path. */
@@ -110,5 +123,22 @@ describe("the lessons of the home page window", () => {
       expect(error).toBeInstanceOf(PublishedProjectionError);
       expect(error.publicPath).toBe(HOME_LESSON_PATHS.projectile.id);
     })
+  );
+
+  it.effect(
+    "fails with a read error that keeps the reader's cause when the reader rejects",
+    () =>
+      Effect.gen(function* () {
+        const cause = { reason: "the content store is unreachable" };
+
+        const error = yield* readHomeLessons(
+          "id",
+          readerRejectingAt(HOME_LESSON_PATHS.cell.id, cause)
+        ).pipe(Effect.flip);
+
+        expect(error).toBeInstanceOf(HomeLessonReadError);
+        expect(error.publicPath).toBe(HOME_LESSON_PATHS.cell.id);
+        expect(error.cause).toBe(cause);
+      })
   );
 });
