@@ -6,7 +6,10 @@ import type { RuleRole } from "@repo/backend/confect/access/schema";
 import { Contract } from "@repo/backend/confect/tenancy/contract";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PolicyKey } from "@repo/backend/confect/tenancy/policy";
-import { ClaimMethod } from "@repo/backend/confect/tenancy/schema";
+import {
+  ClaimMethod,
+  PersonReason,
+} from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
 /**
@@ -131,6 +134,7 @@ export const person = Kind.make("person", "tenantPeople", {
     Schema.Struct({ type: Schema.Literal("person.created") }),
     Schema.Struct({
       invite: Id("tenantInvites"),
+      reason: Schema.optionalKey(PersonReason),
       type: Schema.Literal("person.invited"),
     }),
     Schema.Struct({
@@ -138,7 +142,10 @@ export const person = Kind.make("person", "tenantPeople", {
       type: Schema.Literal("person.claimed"),
     }),
     Schema.Struct({ type: Schema.Literal("person.released") }),
-    Schema.Struct({ type: Schema.Literal("person.removed") }),
+    Schema.Struct({
+      reason: Schema.optionalKey(PersonReason),
+      type: Schema.Literal("person.removed"),
+    }),
     Schema.Struct({ type: Schema.Literal("person.renamed") }),
     Schema.Struct({
       cohort: Id("tenantCohorts"),

@@ -179,6 +179,7 @@ describe("access/policy authority", () => {
             "person.view",
             "tenant.manage",
             "tenant.view",
+            "visit.approve",
           ],
           ["grant.revoke", "grant.view"],
           ["grant.view"],

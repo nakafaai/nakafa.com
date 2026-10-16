@@ -7,7 +7,14 @@ import {
   getUserMap,
 } from "@repo/backend/confect/users/directory";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Array as Arr, Effect, HashMap, Option } from "effect";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
+import { MascotCode } from "@repo/mascot/code";
+import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
+
+/** The animal of the first account of these tests, as the code that is stored. */
+const CRAB_CODE = "crab.1.6d4b78.left.smile";
+/** The same animal, decoded the way the Confect reader returns it. */
+const CRAB = Schema.decodeSync(MascotCode)(CRAB_CODE);
 
 describe("users/directory", () => {
   it.effect(
@@ -44,6 +51,7 @@ describe("users/directory", () => {
                     creditsResetAt: 0,
                     email: `${suffix}@example.com`,
                     image: `/avatars/${suffix}.png`,
+                    mascot: MASCOT_CODE,
                     name: suffix,
                     plan: "free",
                   })
@@ -51,6 +59,11 @@ describe("users/directory", () => {
               );
             }
             const [firstId, missingId, secondId] = ids;
+            yield* Effect.promise(() =>
+              tCtx.db.patch("users", firstId, {
+                mascot: CRAB_CODE,
+              })
+            );
             yield* Effect.promise(() => tCtx.db.delete("users", missingId));
             const get = vi.spyOn(tCtx.db, "get");
             const users = yield* getUserMap([
@@ -68,6 +81,7 @@ describe("users/directory", () => {
               _id: firstId,
               email: "first@example.com",
               image: "/avatars/first.png",
+              mascot: CRAB,
               name: "first",
             });
             expect(
@@ -92,6 +106,7 @@ describe("users/directory", () => {
                 credits: 100,
                 creditsResetAt: 0,
                 email: "known@example.com",
+                mascot: MASCOT_CODE,
                 name: "Known user",
                 plan: "free",
               })
@@ -119,6 +134,7 @@ describe("users/directory", () => {
                 credits: 100,
                 creditsResetAt: 0,
                 email: "handle@example.com",
+                mascot: MASCOT_CODE,
                 name: "Handle user",
                 plan: "free",
                 username: "handle",

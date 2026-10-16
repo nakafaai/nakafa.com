@@ -20,20 +20,21 @@ import { targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
- * Raw Community markup is dominated by the 16 contributor Characters, each one
- * animal drawn as a single svg. Rendering the section on the server counts 278
- * total descendants, 42 non-SVG descendants, and 32,351 bytes. The same count
- * gave 755, 220, and 210,970 for the avatars that the animals replaced, the
- * figures that protected #330 had measured. These ceilings leave about six
- * percent regression room.
+ * Each contributor sits in the design system's Avatar with its AvatarFallback,
+ * the same anatomy as every other avatar, and the gallery takes its animals from
+ * one cast. Raw Community markup therefore grew from the single svg per
+ * contributor that the earlier ceilings measured. Measured in the browser on a
+ * production build on 14 October 2026, at all five target viewports (the same
+ * at each), the section counts 74 non-SVG descendants, 340 descendants, and
+ * 39,335 bytes, and the 16 animals are all different. These ceilings leave about
+ * six percent regression room over that measure: 79, 361, and 41,700 bytes.
  *
- * The homepage ceiling falls by the 477 descendants that those avatars carried,
- * so it keeps the room above the five production viewports that it had: they
- * measured 2390 to 2394 body descendants under the ceiling of 2540.
+ * The homepage ceiling stays at 2063. The same build measured 1,813 homepage
+ * descendants at each viewport.
  */
-const COMMUNITY_MAX_CHROME_DESCENDANTS = 45;
-const COMMUNITY_MAX_DESCENDANTS = 295;
-const COMMUNITY_MAX_HTML_BYTES = 35_000;
+const COMMUNITY_MAX_CHROME_DESCENDANTS = 79;
+const COMMUNITY_MAX_DESCENDANTS = 361;
+const COMMUNITY_MAX_HTML_BYTES = 41_700;
 const HOMEPAGE_MAX_DESCENDANTS = 2063;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 

@@ -18,6 +18,7 @@ import type {
 import {
   defectOf,
   principal,
+  suspend,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -456,6 +457,38 @@ describe("access/decision", () => {
           })
         );
         expect(verdicts).toEqual(["condition", "allow", "condition"]);
+      })
+  );
+
+  it.effect(
+    "lets a transition end access in a suspended tenant, where a write is refused",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const transition: Rule = {
+          access: "transition",
+          grantedBy: "roles",
+          relations: [],
+          roles: ["admin"],
+        };
+        const verdicts = yield* fixture.run(
+          Effect.gen(function* () {
+            yield* suspend(fixture.tenants.nf);
+            const owner = yield* principal(fixture.people.owner.personId);
+            const nf = tenantLevel(fixture.tenants.nf);
+            return [
+              yield* decide("tenant.manage", write, nf, owner, related(false)),
+              yield* decide(
+                "tenant.manage",
+                transition,
+                nf,
+                owner,
+                related(false)
+              ),
+            ];
+          })
+        );
+        expect(verdicts).toEqual(["condition", "allow"]);
       })
   );
 });

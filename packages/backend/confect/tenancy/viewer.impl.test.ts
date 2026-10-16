@@ -74,6 +74,7 @@ describe("tenancy/viewer", () => {
           "person.view",
           "tenant.manage",
           "tenant.view",
+          "visit.approve",
         ]);
       })
   );

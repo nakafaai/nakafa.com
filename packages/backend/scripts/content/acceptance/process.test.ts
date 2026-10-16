@@ -1,5 +1,3 @@
-import { createServer } from "node:net";
-import { availableParallelism, tmpdir } from "node:os";
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
@@ -11,7 +9,12 @@ import {
   withTerminal,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { createLocalSigningIdentity } from "@repo/backend/scripts/content/acceptance/signing";
-import { ticking, versionServiceError } from "@repo/backend/test/acceptance";
+import {
+  isPortOccupied,
+  occupyPort,
+  ticking,
+  versionServiceError,
+} from "@repo/backend/test/acceptance";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
   Array as Arr,
@@ -22,6 +25,7 @@ import {
   Layer,
   Logger,
   MutableList,
+  Path,
   Schedule,
   Sink,
   Stream,
@@ -160,6 +164,7 @@ describe("application process ownership", () => {
     it.live(`closes its local child after application ${outcome}`, () =>
       Effect.gen(function* () {
         const { fs, runtime } = yield* fixture;
+        const path = yield* Path.Path;
         const child = yield* spawner();
         fetcher.mockImplementation(() =>
           Promise.resolve(new Response("owned"))
@@ -194,8 +199,12 @@ describe("application process ownership", () => {
                 ...localConvexEnvironment,
                 AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
                 AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
-                FUNRUN_ISOLATE_ACTIVE_THREADS: String(availableParallelism()),
-                TMPDIR: expect.stringContaining(`${tmpdir()}/convex-`),
+                FUNRUN_ISOLATE_ACTIVE_THREADS: String(
+                  navigator.hardwareConcurrency
+                ),
+                TMPDIR: expect.stringContaining(
+                  `${path.dirname(runtime.directory)}/convex-`
+                ),
               },
             }),
           }),
@@ -290,16 +299,7 @@ describe("application process ownership", () => {
     () =>
       Effect.gen(function* () {
         const { runtime } = yield* fixture;
-        const listener = yield* Effect.acquireRelease(
-          Effect.sync(() => createServer()),
-          (server) =>
-            Effect.callback<void>((resume) => {
-              server.close(() => resume(Effect.void));
-            })
-        );
-        yield* Effect.callback<void>((resume) => {
-          listener.listen(43_310, "127.0.0.1", () => resume(Effect.void));
-        });
+        yield* occupyPort(43_310);
         const child = yield* spawner();
         const error = yield* withLocalBackend(runtime, Effect.void).pipe(
           Effect.provideService(
@@ -312,7 +312,7 @@ describe("application process ownership", () => {
           _tag: "AcceptanceRuntimeError",
           message: expect.stringContaining("occupied"),
         });
-        expect(listener.listening).toBe(true);
+        expect(yield* isPortOccupied(43_310)).toBe(true);
         expect(child.commands).toHaveLength(0);
       }).pipe(Effect.provide(services))
   );

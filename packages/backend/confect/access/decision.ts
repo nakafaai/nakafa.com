@@ -59,8 +59,9 @@ const decideForClient = (
  * Decides one action for one principal on one subject, a Person through
  * `Member` or an integration client. The subject's tenant comes first, so a
  * principal of another tenant is refused whatever the subject's state. A
- * revoked client and a write in a suspended tenant or on a locked subject are
- * refused as `condition`, even for Owners. Then a client is decided by its
+ * revoked client, and a write in a suspended tenant or on a locked subject, are
+ * refused as `condition`, even for Owners. Only a `write` rule is refused that
+ * way, and a `transition` is not (ADR 0012). Then a client is decided by its
  * action list, and a Person by roles and, where roles leave it open, relations.
  * Relations are checked last, and they are the only reads a decision makes. No
  * rule reads the clock.

@@ -1,5 +1,4 @@
-import { createServer } from "node:net";
-import { availableParallelism } from "node:os";
+import { NodeSocketServer } from "@effect/platform-node";
 import {
   acceptanceRuntimeError,
   retryVersionServiceStart,
@@ -101,31 +100,15 @@ export const localConvexEnvironment = {
 const reservePort = Effect.fn("contentAcceptance.reservePort")(function* (
   url: string
 ) {
-  const server = yield* Effect.acquireRelease(
-    Effect.sync(() => createServer()),
-    (socket) =>
-      Effect.callback<void>((resume) => {
-        if (!socket.listening) {
-          resume(Effect.void);
-          return;
-        }
-        socket.close(() => resume(Effect.void));
-      })
-  );
-  yield* Effect.callback<void, ReturnType<typeof acceptanceRuntimeError>>(
-    (resume) => {
-      server.once("error", () =>
-        resume(
-          acceptanceRuntimeError(
-            `The saved local runtime port at ${url} is occupied; its process is preserved.`
-          )
-        )
-      );
-      server.listen(
-        { host: "127.0.0.1", port: Number(new URL(url).port) },
-        () => resume(Effect.void)
-      );
-    }
+  yield* NodeSocketServer.make({
+    host: "127.0.0.1",
+    port: Number(new URL(url).port),
+  }).pipe(
+    Effect.mapError(() =>
+      acceptanceRuntimeError(
+        `The saved local runtime port at ${url} is occupied; its process is preserved.`
+      )
+    )
   );
 });
 
@@ -146,7 +129,7 @@ export const assertLocalPortsFree = Effect.fn(
  * @see https://github.com/get-convex/convex-backend/blob/main/crates/isolate/src/timeout.rs
  */
 const localBackendEnvironment = {
-  FUNRUN_ISOLATE_ACTIVE_THREADS: String(availableParallelism()),
+  FUNRUN_ISOLATE_ACTIVE_THREADS: String(navigator.hardwareConcurrency),
 };
 
 /**
