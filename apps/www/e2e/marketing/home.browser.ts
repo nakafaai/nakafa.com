@@ -116,6 +116,49 @@ for (const viewport of HOME_VIEWPORTS) {
   }
 }
 
+test("the header fits a portrait tablet in every language", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      {
+        baseURL: baseURL ?? "",
+        serviceWorkers: "block",
+        viewport: viewportSize(tabletPortraitViewport),
+      },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* withObservedPageErrors(
+            page,
+            Effect.forEach(["id", "en", "de"], (locale) =>
+              Effect.gen(function* () {
+                yield* openRoute(page, `/${locale}`, "denied");
+                const overflow = yield* Effect.promise(() =>
+                  page.evaluate(() => {
+                    const header = document.querySelector("header");
+                    return {
+                      header: header
+                        ? header.scrollWidth - header.clientWidth
+                        : 0,
+                      page:
+                        document.documentElement.scrollWidth -
+                        window.innerWidth,
+                    };
+                  })
+                );
+                expect(overflow).toEqual({ header: 0, page: 0 });
+              })
+            )
+          );
+        })
+    )
+  );
+});
+
 test("home page carries every part in Indonesian, English and German", async ({
   baseURL,
   browser,

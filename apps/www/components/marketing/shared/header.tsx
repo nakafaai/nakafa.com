@@ -9,7 +9,8 @@ import { Language } from "@/components/marketing/shared/language";
 /**
  * The marketing header in three parts: the name with its links, Nina peeking in
  * the middle, and the language and the sign-up action on the right. The name
- * stands apart from the links, which read as one group.
+ * stands apart from the links, which read as one group. The links and Nina join
+ * from `lg`: on a portrait tablet the German labels would not fit beside them.
  */
 export function Header() {
   const t = useTranslations("Marketing");
@@ -21,7 +22,7 @@ export function Header() {
         <div className="flex items-center">
           <LogoCta />
 
-          <nav className="hidden items-center gap-6.5 ps-14 md:flex">
+          <nav className="hidden items-center gap-6.5 ps-14 lg:flex">
             <Button
               nativeButton={false}
               render={<a href={`/${locale}`}>{t("about")}</a>}
@@ -46,7 +47,7 @@ export function Header() {
           </nav>
         </div>
 
-        <div aria-hidden="true" className="hidden md:block">
+        <div aria-hidden="true" className="hidden lg:block">
           <Nina act="greeting" label="" lean="peek" size={40} />
         </div>
 
