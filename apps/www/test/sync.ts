@@ -230,9 +230,7 @@ export const makePort = Effect.fn("test.sync.port")(function* () {
   const port: EditorPort = {
     dispatch: (from, transaction) =>
       Ref.modify(state, (current) =>
-        current === from
-          ? [true, current.apply(transaction)]
-          : [false, current]
+        current === from ? [true, current.apply(transaction)] : [false, current]
       ),
     fresh: ({ clientId, doc, version }) =>
       EditorState.create({

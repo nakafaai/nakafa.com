@@ -209,7 +209,7 @@ const dispatchReceived = Effect.fn("editor.sync.dispatch")(function* (
  * idle rule. A reply whose steps do not follow the editor's version is refused before
  * any of it applies, so no step is applied twice or skipped.
  */
-export const applySteps = Effect.fn("editor.sync.apply")(function* (
+const applySteps = Effect.fn("editor.sync.apply")(function* (
   session: SyncSession,
   steps: readonly (typeof StepView.Type)[],
   head: number
@@ -316,8 +316,7 @@ const reseat = Effect.fn("editor.sync.reseat")(function* (
     return yield* reseat(session, snapshot);
   }
   return {
-    rebaseDropped:
-      unconfirmedCount(replayed.state) - unconfirmedCount(rebased),
+    rebaseDropped: unconfirmedCount(replayed.state) - unconfirmedCount(rebased),
     refused: replayed.refused,
   };
 });
@@ -356,8 +355,7 @@ const reopen = Effect.fn("editor.sync.reopen")(function* (
   yield* Ref.update(session.memory, (current) => ({
     ...current,
     batch: Option.none(),
-    dropped:
-      current.dropped + replaced.refused.length + replaced.rebaseDropped,
+    dropped: current.dropped + replaced.refused.length + replaced.rebaseDropped,
     head: opened.head,
     snapshotAt: Option.some(now),
     snapshotVersion: opened.snapshot.version,
