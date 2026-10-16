@@ -109,7 +109,7 @@ secret first in `BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old
 value, and keep each older version listed while anything is still sealed with
 it.
 
-### The shared session cookie
+## The Shared Session Cookie
 
 Nakafa and every school host of the `us` cell share one session cookie. Better
 Auth sets it with a `Domain` attribute that is the host of `SITE_URL`
@@ -126,8 +126,8 @@ name, and the two readers pick different values:
   name (better-call `parseCookies`, which skips a name it already has). The
   browser sends the older cookie first (RFC 6265 section 5.4), so the identity
   route reads the older host-only cookie.
-- The presence check of the app (`getSessionCookie`, `cookie-utils.mjs`) reads
-  the last value.
+- The presence check of the app (`getSessionCookie` in `cookies/index.mjs`,
+  which parses with `cookie-utils.mjs`) reads the last value.
 
 Every response from the main site that sets or clears the shared cookie also
 expires the older host-only cookie (`packages/backend/confect/auth/host.ts`), so
