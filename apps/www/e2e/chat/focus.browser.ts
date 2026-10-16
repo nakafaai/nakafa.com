@@ -15,9 +15,9 @@ import {
 } from "@/e2e/support/rename";
 
 /**
- * A rename saved with Enter while the server holds its answer. The control that
- * opened the box is disabled until the answer comes, and the focus goes back to
- * it once the answer has come.
+ * A rename saved with Enter while the server holds its answer. The focus goes
+ * back to the control that opened the box at once, and stays there when the
+ * answer comes.
  */
 const returnsFocusWhenSaved = Effect.fn("NakafaE2E.renameReturnsFocus")(
   function* (page: Page, baseURL: string) {
@@ -31,7 +31,7 @@ const returnsFocusWhenSaved = Effect.fn("NakafaE2E.renameReturnsFocus")(
       await page.keyboard.type(NEW);
       await page.keyboard.press("Enter");
       await expect(titleOf(page)).toHaveText(NEW);
-      await expect(menuOf(page)).toBeDisabled();
+      await expect(menuOf(page)).toBeFocused();
       changes.release();
       await saved(changes, before);
       await expect(menuOf(page)).toBeFocused();

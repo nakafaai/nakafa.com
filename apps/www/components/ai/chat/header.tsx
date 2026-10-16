@@ -66,8 +66,9 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
     handleSave,
     inputRef,
     isEditing,
-    isPending,
+    menuFinalFocus,
     moreActions,
+    onMenuOpenChange,
     setChatTitle,
     titleRef,
   } = useChatRename(chat);
@@ -82,7 +83,6 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
               <>
                 <Button
                   aria-label={tCommon("cancel")}
-                  disabled={isPending}
                   onClick={closeEditor}
                   size="icon"
                   variant="outline"
@@ -92,7 +92,6 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                 </Button>
                 <Button
                   aria-label={t("confirm")}
-                  disabled={isPending}
                   onClick={handleSave}
                   size="icon"
                   variant="outline"
@@ -104,12 +103,11 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
             ) : null}
 
             {isOwner ? (
-              <DropdownMenu>
+              <DropdownMenu onOpenChange={onMenuOpenChange}>
                 <DropdownMenuTrigger
                   render={
                     <Button
                       aria-label={tCommon("more-actions")}
-                      disabled={isPending}
                       ref={moreActions}
                       size="icon"
                       variant="outline"
@@ -119,7 +117,11 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                     </Button>
                   }
                 />
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56"
+                  finalFocus={menuFinalFocus}
+                >
                   <DropdownMenuGroup>
                     <DropdownMenuItem
                       className="cursor-pointer"

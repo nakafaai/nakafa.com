@@ -10,7 +10,6 @@ import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { useChange } from "@/components/ai/chat/change.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { useChatStore } from "@/components/ai/chat/store.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -37,48 +36,47 @@ export function ChatDeletion({
   const actionErrorMessage = useTranslations("Common")("action-error");
   const router = useRouter();
   const user = useViewer((s) => s.account);
-  const { change, isPending } = useChange();
   const deleteChat = useDeleteChatMutation();
+  const leaving = useChatStore((state) => state.leaving);
   const leave = useChatStore((state) => state.leave);
   const stay = useChatStore((state) => state.stay);
   const convex = useConvex();
   /** Leave the current route and delete the owned chat. */
   const handleDelete = () => {
-    if (!user || isPending) {
+    // A press while the chat is already leaving would send the delete twice.
+    if (!user || leaving) {
       return;
     }
     const { username } = user.appUser;
-    change(() =>
-      Effect.runPromise(
-        requireConvexOnline(convex).pipe(
-          Effect.tap(() =>
-            Effect.sync(() => {
-              onOpenChange(false);
-              leave();
-            })
-          ),
-          Effect.andThen(
-            Effect.tryPromise(() => deleteChat({ chatId: chat._id })).pipe(
-              Effect.flatMap(Effect.fromResult),
-              Effect.tapError((error) =>
-                reportClientException(error, {
-                  source: "components/ai/chat/deletion",
-                })
-              )
-            )
-          ),
-          Effect.tap(() =>
-            Effect.sync(() => router.replace(ownChatsHref(username)))
-          ),
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: () =>
-              Effect.sync(() => {
-                stay();
-                toast.error(actionErrorMessage);
-              }),
+    Effect.runFork(
+      requireConvexOnline(convex).pipe(
+        Effect.tap(() =>
+          Effect.sync(() => {
+            onOpenChange(false);
+            leave();
           })
-        )
+        ),
+        Effect.andThen(
+          Effect.tryPromise(() => deleteChat({ chatId: chat._id })).pipe(
+            Effect.flatMap(Effect.fromResult),
+            Effect.tapError((error) =>
+              reportClientException(error, {
+                source: "components/ai/chat/deletion",
+              })
+            )
+          )
+        ),
+        Effect.tap(() =>
+          Effect.sync(() => router.replace(ownChatsHref(username)))
+        ),
+        Effect.matchEffect({
+          onSuccess: () => Effect.void,
+          onFailure: () =>
+            Effect.sync(() => {
+              stay();
+              toast.error(actionErrorMessage);
+            }),
+        })
       )
     );
   };
@@ -86,11 +84,7 @@ export function ChatDeletion({
     <ResponsiveDialog
       description={t("delete-chat-description")}
       footer={
-        <Button
-          disabled={isPending}
-          onClick={handleDelete}
-          variant="destructive"
-        >
+        <Button onClick={handleDelete} variant="destructive">
           <HugeIcons icon={Delete02Icon} />
           {t("confirm")}
         </Button>

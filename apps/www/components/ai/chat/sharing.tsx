@@ -21,7 +21,6 @@ import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { useChange } from "@/components/ai/chat/change.client";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -102,7 +101,6 @@ function ChatSharingDialog({
 }) {
   const t = useTranslations("Ai");
   const actionErrorMessage = useTranslations("Common")("action-error");
-  const { change, isPending } = useChange();
   const clipboard = useClipboard({ timeout: 500 });
   const updateChatVisibility = useUpdateChatVisibilityMutation();
   const isPrivate = chat.visibility === "private";
@@ -114,32 +112,36 @@ function ChatSharingDialog({
     throw tokenResult.error;
   }
   const token = QueryResult.isSuccess(tokenResult) ? tokenResult.value : null;
-  /** Persist the selected chat visibility. */
+  /**
+   * Persist the selected chat visibility. Choosing the visibility the chat
+   * already has sends nothing.
+   */
   const handleUpdateVisibility = (visibility: ChatVisibility) => {
-    change(() =>
-      Effect.runPromise(
-        Effect.asVoid(
-          Effect.tryPromise(() =>
-            updateChatVisibility({
-              chatId: chat._id,
-              visibility,
-            })
-          ).pipe(Effect.flatMap(Effect.fromResult))
-        ).pipe(
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/ai/chat/sharing",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(actionErrorMessage);
-                  })
-                )
-              ),
+    if (chat.visibility === visibility) {
+      return;
+    }
+    Effect.runFork(
+      Effect.asVoid(
+        Effect.tryPromise(() =>
+          updateChatVisibility({
+            chatId: chat._id,
+            visibility,
           })
-        )
+        ).pipe(Effect.flatMap(Effect.fromResult))
+      ).pipe(
+        Effect.matchEffect({
+          onSuccess: () => Effect.void,
+          onFailure: (error) =>
+            reportClientException(error, {
+              source: "components/ai/chat/sharing",
+            }).pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  toast.error(actionErrorMessage);
+                })
+              )
+            ),
+        })
       )
     );
   };
@@ -159,15 +161,12 @@ function ChatSharingDialog({
       description={t("share-chat-description")}
       footer={
         isPrivate ? (
-          <Button
-            disabled={isPending}
-            onClick={() => handleUpdateVisibility("public")}
-          >
+          <Button onClick={() => handleUpdateVisibility("public")}>
             <HugeIcons icon={Link04Icon} />
             {t("create-link")}
           </Button>
         ) : (
-          <Button disabled={isPending || token === null} onClick={handleCopy}>
+          <Button disabled={token === null} onClick={handleCopy}>
             <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
             {t("copy-link")}
           </Button>
@@ -184,7 +183,6 @@ function ChatSharingDialog({
           return (
             <button
               className="group flex cursor-pointer items-start gap-4 bg-card p-4 text-card-foreground transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-              disabled={isPending}
               key={visibility}
               onClick={() => handleUpdateVisibility(visibility)}
               type="button"
