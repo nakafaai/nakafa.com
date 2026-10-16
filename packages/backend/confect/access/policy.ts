@@ -4,16 +4,15 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  entries,
-  type kinds,
-  ObjectRef,
-} from "@repo/backend/confect/access/catalog";
+import { entries, type kinds } from "@repo/backend/confect/access/catalog";
 import { decide, type Placement } from "@repo/backend/confect/access/decision";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { Rule } from "@repo/backend/confect/access/schema";
-import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import {
+  JournalEntry,
+  type TenantActor,
+} from "@repo/backend/confect/journal/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   Array as Arr,
@@ -205,26 +204,24 @@ const make = <
    * Records one audited change about a subject in the caller's transaction,
    * so a failed or retried mutation leaves no entry. The entry's owner and
    * reference come from the row, never from the caller, so it is filed only
-   * under the subject's space. One insert and no reads, so concurrent
-   * mutations never conflict here.
+   * under the subject's space. The entry is decoded against the journal's union
+   * first, so a change of another kind is refused before the insert. One insert
+   * and no reads, so concurrent mutations never conflict here.
    */
   const record = Effect.fn("journal.record")(function* (
     actor: typeof TenantActor.Type,
     row: Row,
     change: typeof Change.Type
   ) {
-    const subject = yield* Schema.decodeUnknownEffect(ObjectRef)({
-      id: row._id,
-      kind: name,
+    const entry = yield* Schema.decodeUnknownEffect(JournalEntry)({
+      actor,
+      change,
+      owner: { kind: "tenant", tenantId: implementation.tenantOf(row) },
+      subject: { id: row._id, kind: name },
     }).pipe(Effect.orDie);
     return yield* (yield* DatabaseWriter)
       .table("journalEntries")
-      .insert({
-        actor,
-        change,
-        owner: { kind: "tenant", tenantId: implementation.tenantOf(row) },
-        subject,
-      })
+      .insert(entry)
       .pipe(Effect.orDie);
   });
 

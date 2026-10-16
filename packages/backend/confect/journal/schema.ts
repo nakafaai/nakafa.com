@@ -1,7 +1,23 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Change, ObjectRef } from "@repo/backend/confect/access/catalog";
+import {
+  entries,
+  type kinds,
+  ObjectRef,
+} from "@repo/backend/confect/access/catalog";
+import { Kind } from "@repo/backend/confect/access/kind";
+import { classKind } from "@repo/backend/confect/classroom/kinds";
+import { integration } from "@repo/backend/confect/integrations/kinds";
+import { visit } from "@repo/backend/confect/operators/kinds";
 import { Space } from "@repo/backend/confect/space";
-import { Schema, SchemaGetter } from "effect";
+import {
+  cohort,
+  period,
+  person,
+  promotion,
+  tenant,
+  unit,
+} from "@repo/backend/confect/tenancy/kinds";
+import { Array as Arr, Schema, SchemaGetter } from "effect";
 
 /**
  * Who performed a change inside a tenant. Tenant rows name Persons, never
@@ -22,17 +38,6 @@ export const Actor = Schema.Union([
   Schema.Struct({ id: Id("users"), kind: Schema.Literal("user") }),
   TenantActor,
 ]).pipe(Schema.toTaggedUnion("kind"));
-
-/**
- * One audited change, immutable once written. Its owner and subject come
- * from the subject's row through its kind's authority, never from the caller.
- */
-export const JournalEntry = Schema.Struct({
-  actor: Actor,
-  change: Change,
-  owner: Space,
-  subject: ObjectRef,
-});
 
 const unknown = Schema.Literal("unknown");
 
@@ -56,8 +61,55 @@ const UnknownSubject = Schema.Struct({ kind: Schema.String }).pipe(
   })
 );
 
-/** A change on the wire, tolerant of change types added later. */
-export const ChangeView = Schema.Union([...Change.members, UnknownChange]);
+/**
+ * The stored entry of one kind: its actor, the given change union of that kind, its
+ * owner, and the kind's own reference as its subject. The change union is passed in
+ * from a call on the literal kind, because a change union taken from a generic kind
+ * makes Confect 10.3.0 fail with TS2589.
+ */
+const entryOf = <
+  const K extends (typeof kinds)[number],
+  const C extends Schema.Top,
+>(
+  kind: K,
+  change: C
+) =>
+  Schema.Struct({
+    actor: Actor,
+    change,
+    owner: Space,
+    subject: kind.ref,
+  });
+
+/**
+ * One audited change, immutable once written. Its owner and subject come from the
+ * subject's row through its kind's authority, never from the caller. The union has one
+ * member for each kind that holds changes, so a subject can carry only its own kind's
+ * changes. The members are listed here, not mapped from the catalog at run time: a
+ * member whose changes come from a generic kind fails the table with TS2589 on Confect
+ * 10.3.0, and so does a union above about 40 members. The catalog test checks that this
+ * list holds exactly the kinds that hold changes.
+ */
+export const JournalEntry = Schema.Union([
+  entryOf(classKind, Kind.changes(entries, classKind.kind)),
+  entryOf(cohort, Kind.changes(entries, cohort.kind)),
+  entryOf(integration, Kind.changes(entries, integration.kind)),
+  entryOf(period, Kind.changes(entries, period.kind)),
+  entryOf(person, Kind.changes(entries, person.kind)),
+  entryOf(promotion, Kind.changes(entries, promotion.kind)),
+  entryOf(tenant, Kind.changes(entries, tenant.kind)),
+  entryOf(unit, Kind.changes(entries, unit.kind)),
+  entryOf(visit, Kind.changes(entries, visit.kind)),
+]);
+
+/**
+ * A change on the wire: each kind's own changes, plus one member that decodes a
+ * change type added later as `unknown`.
+ */
+export const ChangeView = Schema.Union([
+  ...Arr.map(JournalEntry.members, (entry) => entry.fields.change),
+  UnknownChange,
+]);
 
 /** A subject on the wire, tolerant of kinds added later. */
 export const SubjectView = Schema.Union([...ObjectRef.members, UnknownSubject]);
