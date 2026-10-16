@@ -1,4 +1,5 @@
 import { inspectUsername } from "@repo/backend/confect/users/availability";
+import { isReservedUsername } from "@repo/backend/confect/users/reserved";
 import { USERNAME_MAX_LENGTH } from "@repo/backend/confect/users/username";
 import {
   Array as Arr,
@@ -9,7 +10,10 @@ import {
   String as Str,
 } from "effect";
 
-/** The name of an account that has no letter or digit of the Latin alphabet to start from. */
+/**
+ * The base of an account whose name has no letter or digit of the Latin alphabet
+ * to start from, and of a name that is reserved, so no handle is built on a route.
+ */
 const FALLBACK_NAME = "teman";
 const COMBINING_MARKS = /\p{M}/gu;
 const OUTSIDE_LATIN_ALPHANUMERIC = /[^a-z0-9]/g;
@@ -34,7 +38,8 @@ export class UsernameExhausted extends Schema.TaggedError<UsernameExhausted>()(
  * The letters and digits of a name, as far as a username can hold them: accents
  * drop, so "Wiśniewska" becomes "wisniewska", and a username starts with a
  * letter, so leading digits drop. A name with nothing left, such as one in
- * another script, becomes the fallback.
+ * another script, becomes the fallback. So does a reserved name, such as
+ * `nakafa` or the route `user`, so that no handle is built on a reserved base.
  */
 function nameToUsername(name: string) {
   const username = pipe(
@@ -46,7 +51,9 @@ function nameToUsername(name: string) {
     Str.replace(LEADING_DIGITS, ""),
     Str.takeLeft(USERNAME_MAX_LENGTH)
   );
-  return username === "" ? FALLBACK_NAME : username;
+  return username === "" || isReservedUsername(username)
+    ? FALLBACK_NAME
+    : username;
 }
 
 /** The name with its suffix, cut short so that both fit in a username. */

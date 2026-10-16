@@ -16,6 +16,7 @@ process.env.POLAR_ACCESS_TOKEN = "polar_test";
 process.env.POLAR_WEBHOOK_SECRET = "polar_webhook_test";
 process.env.RESEND_API_KEY = "re_test_welcome_delivery";
 process.env.VAULT_ROOT_KEYS = `${TEST_ROOT_KEYS.current},${TEST_ROOT_KEYS.retired}`;
+process.env.LOGIN_CARD_SECRET = "test-login-card-secret";
 
 /** Restores real timers after every backend test to prevent timer leakage. */
 afterEach(() => {

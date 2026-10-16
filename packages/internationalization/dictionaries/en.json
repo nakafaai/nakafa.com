@@ -450,6 +450,8 @@
     "continue-with-google": "Continue with Google",
     "opening-google": "Opening Google...",
     "provider-error": "We couldn't continue with Google. Please try again.",
+    "sign-in-title": "Sign in to Nakafa",
+    "sign-in-description": "So your progress stays saved.",
     "logout": "Logout",
     "login": "Login",
     "login-cta-title": "Continue learning",
@@ -554,6 +556,7 @@
     "text": "Memory text",
     "placeholder": "Write what Nina should remember",
     "missing": "This memory no longer exists",
+    "limit": "Wait a moment before saving again",
     "too-long": "That text is too long for one memory",
     "title": "Title",
     "untitled": "Untitled",
@@ -716,6 +719,7 @@
     "sheet-description": "Ask Nina, Nakafa's AI tutor, about what you are learning.",
     "chats": "Chats",
     "search-chats": "Search your chats...",
+    "search-older": "Search older chats",
     "rename-chat": "Rename chat",
     "delete-chat": "Delete chat",
     "delete-chat-description": "Are you sure? This chat cannot be recovered once deleted.",
@@ -934,7 +938,7 @@
     "terms-and-policies": "Terms and Policies",
     "terms-of-service": "Terms of Service",
     "privacy-policy": "Privacy Policy",
-    "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
+    "legal-description": "By signing in, you agree to the <terms-of-service>Terms of Service</terms-of-service> and the <privacy-policy>Privacy Policy</privacy-policy>."
   },
   "AnalyticsConsent": {
     "title": "Usage data",

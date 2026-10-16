@@ -26,7 +26,8 @@ import {
   withPostHogErasureConfig,
 } from "@repo/backend/test/auth";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, pipe, Schema } from "effect";
+import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
+import { Array as Arr, Effect, Predicate, pipe, Schema } from "effect";
 
 vi.mock("@convex-dev/better-auth/plugins", async (importOriginal) => {
   const actual =
@@ -308,6 +309,7 @@ describe("auth/runtime", () => {
   );
   it.each([
     ["POST", "/api/auth/change-password"],
+    ["POST", "/api/auth/is-username-available"],
     ["POST", "/api/auth/request-password-reset"],
     ["POST", "/api/auth/reset-password"],
     ["GET", "/api/auth/reset-password/legacy-token?callbackURL=%2Fen"],
@@ -330,6 +332,31 @@ describe("auth/runtime", () => {
       expect(await response.text()).toBe("Not Found");
     }
   );
+  it("refuses a password sign-up that server code calls directly", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const outcome = await test.run((ctx) =>
+      betterAuth<BetterAuthOptions>({
+        ...createAuthOptions(ctx),
+        baseURL: "http://localhost:3000",
+      })
+        .api.signUpEmail({
+          body: {
+            email: "siswa@harapan.example.test",
+            name: "Siswa",
+            password: "correct horse battery",
+          },
+        })
+        .then(
+          () => "signed up",
+          (error: unknown) =>
+            Predicate.hasProperty(error, "body") &&
+            Predicate.hasProperty(error.body, "code")
+              ? error.body.code
+              : "unexpected error"
+        )
+    );
+    expect(outcome).toBe("EMAIL_PASSWORD_SIGN_UP_DISABLED");
+  });
   it.effect("accepts one ready preparation step", () =>
     Effect.gen(function* () {
       const prepare = vi.fn(() =>

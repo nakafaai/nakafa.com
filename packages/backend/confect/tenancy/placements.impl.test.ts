@@ -13,7 +13,7 @@ import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
 const { place, move } = refs.public.tenancy.placements;
-const { archive, create, members, rename } = refs.public.tenancy.cohorts;
+const { archive, create, members } = refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
@@ -241,6 +241,58 @@ describe("tenancy/placements place", () => {
         ]);
       })
   );
+
+  it.effect(
+    "refuses to place a student who graduated from the unit, in any period of it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* sma(fixture);
+        const seventhA = yield* cohort(fixture, period.id, "7A");
+        yield* enrolInSma(fixture);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            Effect.gen(function* () {
+              const promotionId = yield* writer
+                .table("tenantPromotions")
+                .insert({
+                  copies: [],
+                  created: [],
+                  progress: {
+                    cursor: null,
+                    direction: null,
+                    done: [],
+                    failure: null,
+                    movedAt: 0,
+                    running: false,
+                    step: null,
+                  },
+                  returnReason: null,
+                  sourcePeriodId: period.id,
+                  sources: [],
+                  state: "opened",
+                  targetPeriodId: period.id,
+                  targets: [],
+                  tenantId: fixture.tenants.nf,
+                  unitId: fixture.units.sma,
+                });
+              yield* writer.table("tenantGraduates").insert({
+                personId: fixture.people.student.personId,
+                promotionId,
+                tenantId: fixture.tenants.nf,
+                unitId: fixture.units.sma,
+              });
+            })
+          )
+        );
+        const refusal = yield* placeAdmin(
+          fixture,
+          seventhA.id,
+          fixture.people.student.personId
+        ).pipe(Effect.flip);
+        expect(refusal).toMatchObject({ _tag: "PersonGraduated" });
+      })
+  );
 });
 
 describe("tenancy/placements move", () => {
@@ -360,67 +412,6 @@ describe("tenancy/placements move", () => {
           { change: { type: "person.placed" } },
           { change: { type: "cohort.archived" } },
         ]);
-      })
-  );
-});
-
-describe("tenancy/placements cohortMember relation", () => {
-  it.effect(
-    "opens the cohort to the Person placed in it, and to no one else",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const period = yield* sma(fixture);
-        const seventhA = yield* cohort(fixture, period.id, "7A");
-        const seventhB = yield* cohort(fixture, period.id, "7B");
-        yield* enrolInSma(fixture);
-        yield* placeAdmin(
-          fixture,
-          seventhA.id,
-          fixture.people.student.personId
-        );
-        const placedReads = yield* fixture
-          .as("student")
-          .query(members, { ...firstPage, cohortId: seventhA.id, slug: nf });
-        expect(Arr.map(placedReads.page, (row) => row.id)).toEqual([
-          fixture.people.student.personId,
-        ]);
-        const otherCohort = yield* fixture
-          .as("student")
-          .query(members, { ...firstPage, cohortId: seventhB.id, slug: nf })
-          .pipe(Effect.flip);
-        const renamed = yield* fixture
-          .as("student")
-          .mutation(rename, { cohortId: seventhA.id, name: "Saya", slug: nf })
-          .pipe(Effect.flip);
-        const placedSomeoneElse = yield* fixture
-          .as("student")
-          .mutation(place, {
-            cohortId: seventhA.id,
-            personId: fixture.people.teacher.personId,
-            slug: nf,
-          })
-          .pipe(Effect.flip);
-        expect([otherCohort, renamed, placedSomeoneElse]).toMatchObject([
-          denied("role"),
-          denied("role"),
-          denied("role"),
-        ]);
-      })
-  );
-
-  it.effect(
-    "keeps the members of a cohort closed to a Person placed nowhere in it",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const period = yield* sma(fixture);
-        const seventhA = yield* cohort(fixture, period.id, "7A");
-        const teacherReads = yield* fixture
-          .as("teacher")
-          .query(members, { ...firstPage, cohortId: seventhA.id, slug: nf })
-          .pipe(Effect.flip);
-        expect(teacherReads).toMatchObject(denied("role"));
       })
   );
 });

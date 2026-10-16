@@ -5,60 +5,24 @@ import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { sentTurn } from "@repo/backend/confect/nina/history";
 import { provider } from "@repo/backend/test/gateway";
 import {
+  BIG,
   createSummaryTest,
+  EARLIER,
+  EARLIER_THROUGH,
+  EARLIER_USAGE,
+  expectEarlier,
   failingModel,
+  readsOf,
   summaryModel,
 } from "@repo/backend/test/nina/summary";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Predicate } from "effect";
 
-/** A turn whose answer costs about 6,000 tokens, so six of them outweigh the history budget. */
-const BIG = { tokens: 6000 } as const;
-/** The summary that a failed fold must leave as it was, covering the turns through order 1. */
-const EARLIER = "- Earlier study.";
-const EARLIER_THROUGH = 1;
-
-type SummaryTest = Awaited<ReturnType<typeof createSummaryTest>>;
-
 afterEach(() => {
   vi.restoreAllMocks();
   provider.languageModel.mockReset();
 });
-
-/** Sorts the queries of a refresh by what they read, from the shape of their arguments. */
-function readsOf(queries: readonly unknown[]) {
-  const having = (key: string) =>
-    Arr.filter(queries, (args) => Predicate.hasProperty(args, key));
-  const pages = having("paginationOpts");
-  return {
-    anchors: Arr.filter(
-      having("order"),
-      (args) =>
-        Predicate.hasProperty(args, "order") && Predicate.isNumber(args.order)
-    ),
-    asked: having("questions"),
-    pages,
-    uncovered: having("through"),
-    window: Arr.filter(
-      pages,
-      (args) =>
-        Predicate.hasProperty(args, "excludeToolMessages") &&
-        args.excludeToolMessages === true
-    ),
-  };
-}
-
-/** What the summary that `seed` stores has cost. */
-const EARLIER_USAGE = { calls: 1, input: 900, output: 120 };
-
-/** The summary stays as `seed` stored it: its text and what it covers, and it has cost `usage`. */
-async function expectEarlier(f: SummaryTest, usage = EARLIER_USAGE) {
-  expect(await f.text()).toBe(EARLIER);
-  expect(await f.summary()).toEqual([
-    expect.objectContaining({ throughOrder: EARLIER_THROUGH, usage }),
-  ]);
-}
 
 describe("Nina rolling summary", () => {
   it("keeps the previous summary when the fold fails, and the next model input stays inside the history budget", async () => {
@@ -411,7 +375,7 @@ describe("Nina rolling summary", () => {
     provider.languageModel.mockReturnValue(summaryModel("unused"));
     const f = await createSummaryTest(9, () => BIG);
     await f.seed(EARLIER_THROUGH, EARLIER);
-    await f.refresh(8, "missing-thread");
+    await f.refresh(8, { threadId: "missing-thread" });
     await expectEarlier(f);
   });
 });

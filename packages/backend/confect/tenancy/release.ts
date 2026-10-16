@@ -4,6 +4,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import { purgeInbox } from "@repo/backend/confect/notifications/purge";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { replaceInviteState } from "@repo/backend/confect/tenancy/invite";
 import type {
@@ -20,8 +21,9 @@ const unclaimed: typeof Account.Type = { state: "unclaimed" };
  * The Person becomes unclaimed, and its accepted invite is revoked, so the invite
  * names no account and can never be claimed. The address of that account can be
  * invited again. The journal records the release only when the Person held an
- * account, because an unclaimed Person has none to release. Returns the Person as
- * stored.
+ * account, because an unclaimed Person has none to release. The Person's inbox
+ * rows are deleted, the first page now and the rest in scheduled runs; the Person
+ * row stays. Returns the Person as stored.
  */
 export const releaseAccount = Effect.fn("tenancy.release.account")(function* (
   person: TenantPeopleDoc,
@@ -52,5 +54,6 @@ export const releaseAccount = Effect.fn("tenancy.release.account")(function* (
   if (person.account.state === "claimed") {
     yield* personAuthority.record(actor, person, { type: "person.released" });
   }
+  yield* purgeInbox(person._id);
   return Struct.assign(person, { account: unclaimed, status });
 });

@@ -92,9 +92,11 @@ const nextText = Effect.fn("nina.portrait.next")(function* (
  * has told Nina.
  *
  * The tokens of the model call the build made (`usage`) are added to the row
- * first, so they count whether or not the text is stored. A portrait that is
- * gone has no row to count them in. It reads at most 44 documents and writes
- * two.
+ * first, so they count whether or not the text is stored. A build whose answer
+ * was rejected passes them alone, with no memory read and `reached` at the
+ * `through` it started from, so they count and nothing else changes. A
+ * portrait that is gone has no row to count them in. It reads at most 44
+ * documents and writes two.
  */
 export const savePortrait = Effect.fn("nina.portrait.keep")(function* (args: {
   readonly expected: number;
