@@ -148,8 +148,8 @@ describe("native Nina admission", () => {
     expect(state.messages.page).toHaveLength(1);
   });
 
-  it("takes a context hint of the longest length and refuses a longer one before it charges or saves anything", async () => {
-    const { t, identity, owner } = await fixture();
+  it("starts a turn for a context hint of the longest length a page writes, and for a longer one", async () => {
+    const { t, owner } = await fixture();
     const withHint = (requestId: string, length: number) => ({
       requestId,
       input: {
@@ -161,21 +161,13 @@ describe("native Nina admission", () => {
       start,
       withHint("request-longest", MATERIAL_CONTEXT_HINT_LENGTH)
     );
-    await expect(
-      owner.mutation(
-        start,
-        withHint("request-longer", MATERIAL_CONTEXT_HINT_LENGTH + 1)
-      )
-    ).rejects.toMatchObject({
-      _tag: "SchemaError",
-      message: expect.stringContaining("materialContextHint"),
-    });
-    const state = await t.query(async (ctx) => ({
-      turns: await ctx.db.query("ninaTurns").collect(),
-      user: await ctx.db.get("users", identity.userId),
-    }));
-    expect(state.turns).toHaveLength(1);
-    expect(state.user?.credits).toBe(5);
+    // A client built before the page bounded its hint may send a longer one.
+    await owner.mutation(
+      start,
+      withHint("request-longer", MATERIAL_CONTEXT_HINT_LENGTH + 1)
+    );
+    const turns = await t.query((ctx) => ctx.db.query("ninaTurns").collect());
+    expect(turns).toHaveLength(2);
   });
 
   it("begins a chat with its default title sealed for the learner", async () => {

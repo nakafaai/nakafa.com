@@ -1,5 +1,6 @@
 import {
   CHAT_LIST_PAGE_SIZE,
+  CHAT_SEARCH_LENGTH,
   CHAT_SEARCH_WINDOW,
   CHAT_SEARCH_WORDS,
 } from "@repo/backend/client/chats/list";
@@ -53,11 +54,16 @@ const chatsOf = Effect.fn("chats.list.chatsOf")(function* (
   return chats.index("by_userId", (q) => q.eq("userId", userId), "desc");
 });
 
-/** The first lower-case words of a search query, none when the query is blank. */
+/**
+ * The first lower-case words of a search query, none when the query is blank.
+ * Only its first `CHAT_SEARCH_LENGTH` characters count, as many as the search box
+ * takes, so a longer query costs no more to read.
+ */
 function searchWords(searchQuery: string | undefined) {
+  const counted = Str.slice(0, CHAT_SEARCH_LENGTH)(searchQuery ?? "");
   return Arr.take(
     Arr.filter(
-      Str.split(Str.toLowerCase(Str.trim(searchQuery ?? "")), SPACES),
+      Str.split(Str.toLowerCase(Str.trim(counted)), SPACES),
       Str.isNonEmpty
     ),
     CHAT_SEARCH_WORDS

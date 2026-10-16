@@ -26,16 +26,14 @@ import {
   NinaCreditHold,
 } from "@repo/backend/confect/nina/credits/schema";
 import { LocaleSchema } from "@repo/contents/content";
-import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import { Schema } from "effect";
 
 export const NinaPageInput = Schema.Struct({
   locale: LocaleSchema,
   slug: Schema.String.pipe(Schema.check(Schema.isMaxLength(2048))),
-  // The page leaves out a hint longer than this (`getMaterialContextHint`).
-  materialContextHint: Schema.optionalKey(
-    Schema.String.check(Schema.isMaxLength(MATERIAL_CONTEXT_HINT_LENGTH))
-  ),
+  // Any text: `readMaterialContextHint` leaves out a hint longer than a page
+  // writes, which a client built before that bound may still send.
+  materialContextHint: Schema.optionalKey(Schema.String),
   focus: Schema.optionalKey(NinaFocusInputSchema),
 });
 

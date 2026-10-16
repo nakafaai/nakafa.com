@@ -202,19 +202,19 @@ describe("chat lists with sealed titles", () => {
     expect(rest.isDone).toBe(true);
   });
 
-  it("takes a search of the longest length a title can answer and refuses a longer one", async () => {
+  it("counts the first characters of a search that a title can answer, and none after them", async () => {
     const f = await fixture();
     const search = (q: string) =>
       f.asOwner.query(api.chats.queries.getOwnChats, { paginationOpts, q });
     expect(
       titles((await search("aljabar".padEnd(CHAT_SEARCH_LENGTH))).page)
     ).toEqual([BOOLEAN, ALGEBRA]);
-    await expect(
-      search("aljabar".padEnd(CHAT_SEARCH_LENGTH + 1))
-    ).rejects.toMatchObject({
-      _tag: "SchemaError",
-      message: expect.stringContaining('["q"]'),
-    });
+    // A client built before the search box had its bound may send more.
+    expect(
+      titles(
+        (await search(`${"aljabar".padEnd(CHAT_SEARCH_LENGTH)}tidakada`)).page
+      )
+    ).toEqual([BOOLEAN, ALGEBRA]);
   });
 
   it("returns every match of a window whatever page size was asked, and ends at the oldest chat", async () => {

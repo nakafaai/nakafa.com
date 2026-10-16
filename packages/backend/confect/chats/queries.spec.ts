@@ -1,5 +1,4 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { CHAT_SEARCH_LENGTH } from "@repo/backend/client/chats/list";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
@@ -25,14 +24,13 @@ export default GroupSpec.make()
   )
   // The learner's own chats, newest first. A page holds at most
   // `CHAT_LIST_PAGE_SIZE` chats, however many the caller asks for, and a search
-  // is at most `CHAT_SEARCH_LENGTH` characters long.
+  // counts only its first `CHAT_SEARCH_LENGTH` characters. The argument takes
+  // any text, because a client built before the bound may send a longer one.
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "getOwnChats",
       args: () => ({
-        q: Schema.optionalKey(
-          Schema.String.check(Schema.isMaxLength(CHAT_SEARCH_LENGTH))
-        ),
+        q: Schema.optionalKey(Schema.String),
         visibility: Schema.optionalKey(chatVisibilityValidator),
         type: Schema.optionalKey(chatTypeValidator),
       }),
