@@ -6,7 +6,9 @@ import {
   DatabaseReader,
   type DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
+import { promotionLocked } from "@repo/backend/confect/tenancy/authority";
 import {
   archiveApply,
   archiveUndo,
@@ -121,6 +123,22 @@ const run = FunctionImpl.make(
       .pipe(Effect.orDie);
     const { cursor, direction, running, step } = promotion.progress;
     if (!running || direction === null || step === null) {
+      return null;
+    }
+    // A school archived or a tenant suspended during the run refuses writes, as every
+    // public write does. The run stops at this step and resumes once the lock lifts.
+    if (yield* promotionLocked(promotion)) {
+      const denial = new AccessDenied({
+        action: "promotion.apply",
+        reason: "condition",
+      });
+      yield* update(promotion, {
+        progress: {
+          ...promotion.progress,
+          failure: denial._tag,
+          running: false,
+        },
+      });
       return null;
     }
     const actor: typeof TenantActor.Type = { id: actorId, kind: "person" };

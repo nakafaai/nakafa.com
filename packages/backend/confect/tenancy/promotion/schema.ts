@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { CohortGrade, CohortName } from "@repo/backend/confect/tenancy/cohort";
 import {
   CohortHasHomeroom,
@@ -6,6 +7,7 @@ import {
   CohortNameTaken,
   PeriodActive,
   PersonAlreadyPlaced,
+  PersonGraduated,
   PersonNotStudent,
   PersonNotTeacher,
   PersonPlacementLimit,
@@ -49,13 +51,17 @@ export const PromotionReturnReason = Schema.Literals([
 /**
  * Every typed failure a step may stop with. The stored failure of a promotion and the
  * error type of a step both come from this list, so a new failure is added once.
+ * `AccessDenied` is the refusal a school's lock gives the public path, which a run
+ * stops with too.
  */
 const PROMOTION_STEP_FAILURES = [
+  AccessDenied,
   CohortHasHomeroom,
   CohortLimit,
   CohortNameTaken,
   PeriodActive,
   PersonAlreadyPlaced,
+  PersonGraduated,
   PersonNotStudent,
   PersonNotTeacher,
   PersonPlacementLimit,

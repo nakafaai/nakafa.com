@@ -3,6 +3,7 @@ import { MiddlewareImpl } from "@confect/server";
 import type {
   TenantCohortsDoc,
   TenantPeriodsDoc,
+  TenantPromotionsDoc,
   TenantUnitsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
@@ -296,4 +297,20 @@ export const promotionAccess = MiddlewareImpl.make(
   databaseSchema,
   PromotionAccess,
   promotionAuthority.middleware(Promotion)
+);
+
+/**
+ * Whether a promotion's writes are refused now, because its school is archived or its
+ * tenant is suspended. These are the two conditions that `decide` refuses every write
+ * for. A run has no caller to decide for it, so it reads them here.
+ */
+export const promotionLocked = Effect.fn("tenancy.authority.promotionLocked")(
+  function* (promotion: Pick<TenantPromotionsDoc, "tenantId" | "unitId">) {
+    const tenant = yield* (yield* DatabaseReader)
+      .table("tenants")
+      .get(promotion.tenantId)
+      .pipe(Effect.orDie);
+    const parent = yield* readUnit(promotion.unitId);
+    return tenant.status === "suspended" || parent.status === "archived";
+  }
 );

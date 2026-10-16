@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
   allJournal,
   approvedPromotion,
@@ -15,10 +17,11 @@ import {
   toEightB,
   toGraduate,
 } from "@repo/backend/test/promotion";
-import { tenancyFixture } from "@repo/backend/test/tenancy";
+import { suspend, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { create, plan } = promotion.draft;
+const { archive, unarchive } = refs.public.tenancy.units;
 const { setMove } = promotion.moves;
 const { apply } = promotion.apply;
 const { approve, submit } = promotion.review;
@@ -129,6 +132,83 @@ describe("tenancy/promotion run", () => {
           promotionId,
         });
         expect(yield* fixture.run(runJobs)).toHaveLength(2);
+      })
+  );
+
+  it.effect(
+    "stops a run when its school is archived, writes nothing more, and resumes once the school is restored",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        // Only the archive step runs here, so the school is archived before the cohorts step.
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        yield* fixture
+          .as("owner")
+          .mutation(archive, { slug: nf, unitId: fixture.units.smp });
+        const stopped = yield* drain(fixture, promotionId);
+        expect(stopped.progress).toMatchObject({
+          failure: "AccessDenied",
+          running: false,
+          step: "cohorts",
+        });
+        expect(stopped.created).toEqual([]);
+        yield* fixture
+          .as("owner")
+          .mutation(unarchive, { slug: nf, unitId: fixture.units.smp });
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress.failure).toBeNull();
+        expect(finished.progress.done).toEqual([
+          "archive",
+          "cohorts",
+          "place",
+          "homeroom",
+        ]);
+      })
+  );
+
+  it.effect(
+    "stops a run when its tenant is suspended, writes nothing more, and resumes once the tenant is active again",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const s = yield* scenario(fixture);
+        const promotionId = yield* approvedPromotion(fixture, s);
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        yield* fixture.internal.mutation(runPromotion, {
+          actorId: fixture.people.admin.personId,
+          promotionId,
+        });
+        yield* fixture.run(suspend(fixture.tenants.nf));
+        const stopped = yield* drain(fixture, promotionId);
+        expect(stopped.progress).toMatchObject({
+          failure: "AccessDenied",
+          running: false,
+          step: "cohorts",
+        });
+        expect(stopped.created).toEqual([]);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("tenants")
+              .patch(fixture.tenants.nf, { status: "active" })
+          )
+        );
+        yield* fixture.as("admin").mutation(apply, { promotionId, slug: nf });
+        const finished = yield* drain(fixture, promotionId);
+        expect(finished.progress.failure).toBeNull();
+        expect(finished.progress.done).toEqual([
+          "archive",
+          "cohorts",
+          "place",
+          "homeroom",
+        ]);
       })
   );
 
