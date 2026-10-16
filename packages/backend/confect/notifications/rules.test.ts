@@ -250,6 +250,36 @@ describe("notifications/rules deliveriesOf", () => {
     ]);
   });
 
+  it("sends a guardian's exam reminder 30 minutes before a sitting that opens at 06:00, because that is earlier than 06:30", () => {
+    const opens = anchorAt("2026-10-15T06:00:00.000", jakarta);
+    expect(sendsOf("examGuardianReminder", "guardian", opens, jakarta)).toEqual(
+      [
+        "inbox 2026-10-15T05:30:00.000+07:00[Asia/Jakarta]",
+        "email 2026-10-15T05:30:00.000+07:00[Asia/Jakarta]",
+      ]
+    );
+  });
+
+  it("keeps 06:30 for a sitting that opens at 07:30, because 06:30 is earlier than 30 minutes before it", () => {
+    const opens = anchorAt("2026-10-15T07:30:00.000", jakarta);
+    expect(sendsOf("examGuardianReminder", "guardian", opens, jakarta)).toEqual(
+      [
+        "inbox 2026-10-15T06:30:00.000+07:00[Asia/Jakarta]",
+        "email 2026-10-15T06:30:00.000+07:00[Asia/Jakarta]",
+      ]
+    );
+  });
+
+  it("sends a guardian's exam reminder 30 minutes before a sitting that opens at 06:45, at 06:15", () => {
+    const opens = anchorAt("2026-10-15T06:45:00.000", jakarta);
+    expect(sendsOf("examGuardianReminder", "guardian", opens, jakarta)).toEqual(
+      [
+        "inbox 2026-10-15T06:15:00.000+07:00[Asia/Jakarta]",
+        "email 2026-10-15T06:15:00.000+07:00[Asia/Jakarta]",
+      ]
+    );
+  });
+
   it("sends a released grade at once to the student in the inbox and push, and never by email", () => {
     const released = anchorAt("2026-10-14T09:15:00.000", jakarta);
     expect(sendsOf("gradeReleased", "student", released, jakarta)).toEqual([

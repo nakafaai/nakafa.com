@@ -43,6 +43,9 @@ export const Relation = Schema.Literals([
 /** A channel that reaches a person: the inbox row, a push, or an email. */
 const Channel = Schema.Literals(["inbox", "push", "email"]);
 
+/** A whole number of minutes, zero or more. */
+const Minutes = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
+
 /**
  * When a channel sends, relative to the anchor of its notice: the change that
  * caused it, the deadline of a task, or the opening of a sitting. `Now` sends at
@@ -50,15 +53,19 @@ const Channel = Schema.Literals(["inbox", "push", "email"]);
  * notice chose email for it. `Before` sends a whole number of minutes, zero or
  * more, before the anchor. `Clock` sends at a wall-clock time on a day of the
  * anchor's zone, and `Digest` sends at the 17:00 digest that carries the anchor.
+ * `EarlierOf` sends at the earlier of a wall-clock time and a number of minutes
+ * before the anchor.
  */
 export const Timing = Schema.Union([
   Schema.TaggedStruct("Now", {}),
   Schema.TaggedStruct("Chosen", {}),
-  Schema.TaggedStruct("Before", {
-    minutes: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
-  }),
+  Schema.TaggedStruct("Before", { minutes: Minutes }),
   Schema.TaggedStruct("Clock", LocalClock.fields),
   Schema.TaggedStruct("Digest", {}),
+  Schema.TaggedStruct("EarlierOf", {
+    clock: LocalClock,
+    minutes: Minutes,
+  }),
 ]);
 
 /**
@@ -114,12 +121,14 @@ const DAY_BEFORE_AT_16: typeof Timing.Type = {
   hour: 16,
   minute: 0,
 };
-/** 06:30 on the day of an exam, for a guardian (ADR 0027). */
-const EXAM_DAY_AT_0630: typeof Timing.Type = {
-  _tag: "Clock",
-  dayOffset: 0,
-  hour: 6,
-  minute: 30,
+/**
+ * The guardian's exam reminder: 06:30 on the day of the exam, or 30 minutes
+ * before the sitting opens when that is earlier (ADR 0027).
+ */
+const EXAM_GUARDIAN_REMINDER: typeof Timing.Type = {
+  _tag: "EarlierOf",
+  clock: { dayOffset: 0, hour: 6, minute: 30 },
+  minutes: 30,
 };
 
 /**
@@ -177,8 +186,8 @@ export const NOTICE_RULES: typeof NoticeRules.Type = {
     routes: [
       {
         relation: "guardian",
-        inbox: [EXAM_DAY_AT_0630],
-        email: [EXAM_DAY_AT_0630],
+        inbox: [EXAM_GUARDIAN_REMINDER],
+        email: [EXAM_GUARDIAN_REMINDER],
       },
     ],
   },
@@ -235,6 +244,10 @@ const Delivery = Schema.Struct({
   timing: Timing,
 });
 
+/** The instant a whole number of minutes before `anchor`, in elapsed time. */
+const minutesBefore = (anchor: DateTime.Utc, minutes: number): DateTime.Utc =>
+  DateTime.subtractDuration(anchor, Duration.minutes(minutes));
+
 /**
  * The instant at which a send of a notice is due. It is the one function that
  * turns a Timing into an instant. It takes the anchor of the notice, the Timing,
@@ -251,10 +264,14 @@ export const deliveryInstant = (
     Match.tagsExhaustive({
       Now: () => anchor,
       Chosen: () => anchor,
-      Before: ({ minutes }) =>
-        DateTime.subtractDuration(anchor, Duration.minutes(minutes)),
+      Before: ({ minutes }) => minutesBefore(anchor, minutes),
       Clock: (clock) => atLocalClock(anchor, zone, clock),
       Digest: () => digestInstant(anchor, zone),
+      EarlierOf: ({ clock, minutes }) =>
+        DateTime.min(
+          atLocalClock(anchor, zone, clock),
+          minutesBefore(anchor, minutes)
+        ),
     })
   );
 

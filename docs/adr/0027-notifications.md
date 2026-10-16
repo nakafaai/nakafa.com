@@ -157,7 +157,7 @@ final times.
 | A released grade | Grades | Yes | Yes | For a guardian, a link only |
 | A late task, for a guardian | Tasks | Yes | Yes | A link only |
 | An exam starts | Exams | Yes | 15 minutes before | Yes, a link only |
-| An exam reminder, for a guardian | Exams | Yes | No | At 06:30 on the day of the exam, a link only |
+| An exam reminder, for a guardian | Exams | Yes | No | At the earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens, a link only |
 | An invitation or the account | Invitations | Yes, after sign-in | No | Yes, always, a link only |
 
 A guardian gets no forum mention. A guardian's push is for grades and late tasks
@@ -179,7 +179,7 @@ planned), and `assignment.deadlineChanged` replaces the rows of its task.
 | Deadline, the day before | A task is published or its deadline changes. Journal cursor. | 16:00 on the day before the deadline (proposal) | Push, inbox |
 | Deadline, one hour before | The same trigger | One hour before the deadline | Push, inbox |
 | Exam starts | A sitting is scheduled. Journal cursor. | 15 minutes before the sitting opens | Push, inbox, email |
-| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | 06:30 on the day of the exam | Inbox, email |
+| Guardian's exam reminder | A sitting is scheduled. Journal cursor. | The earlier of 06:30 on the day of the exam and 30 minutes before the sitting opens | Inbox, email |
 | Daily digest | Email that is not sent yet. A cursor for each recipient. | 17:00 every day (proposal) | Email |
 
 ### Push
