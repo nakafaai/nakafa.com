@@ -14,7 +14,7 @@ import {
 import { inAction } from "@repo/backend/test/nina/sealed";
 import { createThreadTest } from "@repo/backend/test/nina/thread";
 import type { ModelMessage } from "ai";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 
 type Fixture = Awaited<ReturnType<typeof createThreadTest>>;
 type Owner = Fixture["identity"]["userId"];
@@ -56,23 +56,6 @@ function turnThread(
   });
 }
 
-/** The newest prompt of a thread, which the reads name by its id. */
-function promptOf(t: Fixture["t"], threadId: string) {
-  return t.mutation(async (ctx) => {
-    const { page } = await ctx.runQuery(
-      components.nina.messages.listMessagesByThreadId,
-      {
-        order: "asc",
-        paginationOpts: { cursor: null, numItems: 100 },
-        threadId,
-      }
-    );
-    return Option.getOrThrow(
-      Arr.findFirst(page, (row) => row.message?.role === "user")
-    )._id;
-  });
-}
-
 /** The same read, naming the prompt by the id that its sealed copy has. */
 function afterSeal<T extends { readonly promptMessageId: string }>(
   read: T,
@@ -93,7 +76,7 @@ describe("the recent context of a turn through the sealed module", () => {
     const owner = f.identity.userId;
     const read = {
       ...SUGGESTIONS,
-      promptMessageId: await promptOf(f.t, f.identity.threadId),
+      promptMessageId: f.promptMessageId,
       threadId: f.identity.threadId,
     };
     const plain = await inAction(f.t, readRecentContext(owner, read));
@@ -112,7 +95,7 @@ describe("the recent context of a turn through the sealed module", () => {
     const owner = f.identity.userId;
     const read = {
       excludeToolMessages: false,
-      promptMessageId: await promptOf(f.t, f.identity.threadId),
+      promptMessageId: f.promptMessageId,
       recentMessages: 2,
       threadId: f.identity.threadId,
     };
@@ -196,7 +179,7 @@ describe("the prompt input of a turn through the sealed module", () => {
   it("gives the successful prompt as the model input, opened, as a plain prompt gives it", async () => {
     const f = await createThreadTest();
     const owner = f.identity.userId;
-    const promptMessageId = await promptOf(f.t, f.identity.threadId);
+    const promptMessageId = f.promptMessageId;
     const plain = await inAction(f.t, readPromptInput(owner, promptMessageId));
     const replacements = await sealThreadIn(f.t, f.identity.threadId, owner);
     const sealed = await inAction(
