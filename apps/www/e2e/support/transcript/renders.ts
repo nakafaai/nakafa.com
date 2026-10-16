@@ -1,9 +1,8 @@
 import type { Page } from "@playwright/test";
 import { Schema } from "effect";
 
-/** One commit of the page: when it finished, and how many transcript rows rendered again in it. */
+/** One commit of the page: how many transcript rows rendered again in it. */
 const Commit = Schema.Struct({
-  at: Schema.Finite,
   rows: Schema.Finite,
 });
 type Commit = typeof Commit.Type;
@@ -101,7 +100,6 @@ export const watchRenders = (page: Page) =>
       isDisabled: false,
       onCommitFiberRoot(_rendererId: number, root: unknown) {
         window.renderCommits.push({
-          at: performance.now(),
           rows: rowsRendered(root),
         });
       },
