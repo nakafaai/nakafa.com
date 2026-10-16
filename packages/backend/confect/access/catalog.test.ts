@@ -20,6 +20,7 @@ describe("access/catalog", () => {
       "period",
       "cohort",
       "grant",
+      "class",
       "visit",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
@@ -54,6 +55,11 @@ describe("access/catalog", () => {
       "cohort.created",
       "cohort.renamed",
       "cohort.archived",
+      "class.created",
+      "class.renamed",
+      "class.archived",
+      "class.teacherAssigned",
+      "class.teacherRemoved",
       "visit.requested",
       "visit.approved",
       "visit.declined",

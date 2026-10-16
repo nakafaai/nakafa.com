@@ -229,6 +229,148 @@ export declare const api: {
       >;
     };
   };
+  classroom: {
+    classes: {
+      archive: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+      create: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string; subject?: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+      get: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            cohortId: Id<"tenantCohorts">;
+            id: Id<"classes">;
+            name: string;
+            periodId: Id<"tenantPeriods">;
+            slug: string;
+            status: "active" | "archived";
+            subject?: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      mine: FunctionReference<
+        "query",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        Array<{
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }>
+      >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; name: string; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
+    };
+    teachers: {
+      assign: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
+        { id: Id<"tenantPeople">; name: string }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{ id: Id<"tenantPeople">; name: string }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { classId: Id<"classes">; personId: Id<"tenantPeople">; slug: string },
+        { id: Id<"tenantPeople"> }
+      >;
+    };
+  };
   comments: {
     mutations: {
       addComment: FunctionReference<
@@ -2482,6 +2624,11 @@ export declare const api: {
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
+              | { type: "class.created" }
+              | { type: "class.renamed" }
+              | { type: "class.archived" }
+              | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
+              | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | {
                   minutes: number;
                   reason: "support" | "onboarding" | "incident";
@@ -2538,6 +2685,7 @@ export declare const api: {
               | { id: Id<"tenantPeriods">; kind: "period" }
               | { id: Id<"tenantCohorts">; kind: "cohort" }
               | { id: Id<"tenantGrants">; kind: "grant" }
+              | { id: Id<"classes">; kind: "class" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { kind: string };
             subjectName: string | null;
