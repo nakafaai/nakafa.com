@@ -22,6 +22,12 @@ const PLAN = "Plan";
 const TASK = "[ ] Milk";
 /** The words of the task in `TASK`, which name its row. */
 const MILK = "Milk";
+/**
+ * The class that `prosemirror-view` adds to the editor when it hides the
+ * selection. Only the editor's libraries hold this name, and the static preview
+ * loads none of them, so a chunk that holds the name is the editor's code.
+ */
+const EDITOR_CODE_MARKER = "ProseMirror-hideselection";
 
 type Box = Awaited<ReturnType<Locator["boundingBox"]>>;
 
@@ -72,7 +78,7 @@ const showsSavedWordsWhileLoading = Effect.fn(
     );
   });
 
-  // The editor's code is the chunk that loads on the press, and it waits here.
+  // Every chunk of the page waits here, so the saved words are all the box shows.
   const release = yield* holdChunks(page);
 
   yield* Effect.promise(async () => {
@@ -113,8 +119,10 @@ const keepsFormattedWords = Effect.fn("NakafaE2E.memoryKeepsFormattedWords")(
       );
     });
 
-    // The editor's code is the chunk that loads on the press, and it waits here.
-    const release = yield* holdChunks(page);
+    // The editor's code waits here, and the preview's code loads on the press.
+    const release = yield* holdChunks(page, {
+      containing: EDITOR_CODE_MARKER,
+    });
 
     yield* Effect.promise(async () => {
       await nameOf(page, PLAN).click();
@@ -157,8 +165,10 @@ const keepsTheTaskCheck = Effect.fn("NakafaE2E.memoryKeepsTaskCheck")(
       );
     });
 
-    // The editor's code is the chunk that loads on the press, and it waits here.
-    const release = yield* holdChunks(page);
+    // The editor's code waits here, and the preview's code loads on the press.
+    const release = yield* holdChunks(page, {
+      containing: EDITOR_CODE_MARKER,
+    });
 
     yield* Effect.promise(async () => {
       await nameOf(page, MILK).click();
