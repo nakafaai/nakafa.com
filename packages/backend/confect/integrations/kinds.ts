@@ -79,6 +79,10 @@ const unitIntegrations = Kind.extend(unit, {
   published: [],
 });
 
+/**
+ * The integration module's kinds for the access catalog: the client, and its
+ * extensions on the tenant and the unit.
+ */
 export const integrations = {
   extensions: [tenantIntegrations, unitIntegrations],
   kinds: [integration],

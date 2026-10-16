@@ -27,6 +27,10 @@ export const integrationAuthority = Authority.make(
   }
 );
 
+/**
+ * Implements the `IntegrationAccess` check: it authorizes the action on the
+ * client whose ID the named argument holds, and provides that client.
+ */
 export const integrationAccess = MiddlewareImpl.make(
   databaseSchema,
   IntegrationAccess,

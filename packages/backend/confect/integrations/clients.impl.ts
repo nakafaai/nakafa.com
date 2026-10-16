@@ -103,6 +103,10 @@ const revoke = FunctionImpl.make(
   })
 );
 
+/**
+ * Implements the clients group of `clients.spec.ts`: list, create, rotate, and
+ * revoke.
+ */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(create),
