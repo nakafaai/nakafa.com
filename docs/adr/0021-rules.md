@@ -30,6 +30,37 @@ It never gets an allowlist, a baseline, or a suppression.
 | `nodeBuiltinImport` | | Framework configuration needs a Node path, a platform HTTP server needs Node's `createServer`, and a fixture that signs synchronously needs Node's Ed25519 `sign`. The source rule `node-module` judges nine Node modules and keeps those three places by construction |
 | `unstableApiUsage`, `experimentalApiUsage`, `apiStabilityLeak` | | Effect moves as one exact cohort that is reviewed at every upgrade, so an unstable Effect module in a signature is not a leak here |
 
+### Compiler rules that `@effect/tsgo` 0.52 and 0.53 add
+
+`@effect/tsgo` 0.52 and 0.53 add nine rules. `packages/typescript-config/base.json`
+decides each one, in the same way in both repositories. A rule that duplicates a
+source check stays off, and its row names that check as the owner.
+
+| Rule | Decision | Owner, or the reason it stays off |
+| --- | --- | --- |
+| `effectSleepZeroToYieldNow` | error | Fixed at its source: a zero-duration `Effect.sleep` becomes `Effect.yieldNow` |
+| `errorPayloadShadowsName` | error | Fixed at its source: an error payload field named `name` is renamed, so the error keeps its own name |
+| `flatMapToTap` | error | Fixed at its source: a `flatMap` that runs an effect and returns its input becomes `Effect.tap`, with the same error and requirement types |
+| `schemaClassMissingBrand` | off | Stays off until the change that brands the last Schema error class, which sets it to error. See the brand paragraph below |
+| `preferEffectArray` | off | Owner: the source check `array-method`, `array-mutation`, and `array-search`, which forbid the native array methods (`scripts/check/calls.ts`, judged in `scripts/check/arrays.ts`) |
+| `preferEffectRecord` | off | Owner: the source check `object-helper`, which forbids `Object.entries`, `Object.fromEntries`, `Object.keys`, and `Object.values` (`scripts/check/globals.ts`) |
+| `preferSchemaTaggedError` | off | Not a duplicate. `Data.TaggedError` keeps its form for an error that is not a Schema contract, and the source check `error-class` (`scripts/check/rules.ts`) accepts either class for an expected failure |
+| `preferBarrelImport` | off | Not a duplicate. `base.json` lists no `barrelImportPackages`, so the rule has nothing to check. Authored modules import `effect` by name from its barrel (3,286 files have a one-line named import from `"effect"`), and 146 files import a module path such as `effect/process` |
+| `preferNamespaceImport` | off | Not a duplicate. `base.json` lists no `namespaceImportPackages`, so the rule has nothing to check. No authored module imports `effect` as a namespace |
+
+### Schema error brands
+
+A missing brand lets a structurally equal value pass for a Schema class instance.
+So every Schema error class carries `{ readonly brand: unique symbol }` as its
+second type argument, and both repositories keep `schemaClassMissingBrand` as an
+error. This branch does not make that sweep: fourteen open pull requests add
+Schema error classes, so the rule stays off here. The change that brands the
+last Schema error class sets it to error in both repositories together, and until
+then Aksara's copy of the block, which sets it to error, differs from this one in
+that rule alone. `Data.TaggedError` is not a Schema class and keeps its form.
+`scripts/provenance/schema.ts`, the one shared class, stays byte-identical to
+Aksara's copy until then.
+
 ### Source rules for raw TypeScript forms
 
 | Rule | Reports | Never reports, by construction |
@@ -141,11 +172,12 @@ service. All of these hold:
   argument of every call is an object literal with `detached: true`: each child
   leads a process group of its own.
 
-Effect's spawner owns termination (4.0.2, `NodeChildProcessSpawner.ts`, lines
-549 to 568). When the scope closes it signals the child's process group, also
-after the child ended by itself with code zero, as long as the handle is
-referenced. When the child exits with another code it signals the group at
-once. `unref` turns the signals at scope close off, but it also removes the
+Effect's spawner owns termination (4.0.5, `packages/platform/node-shared/src/NodeChildProcessSpawner.ts`,
+lines 563 to 600). When the scope closes it signals the child's process group,
+also after the child ended by itself with code zero, as long as the handle is
+referenced, the platform is not Windows, and the child was not started with
+`detached: false`. When the child exits with another code it signals the group
+at once. `unref` turns the signals at scope close off, but it also removes the
 child from the event loop, so the parent no longer stays alive for it. No
 option leaves termination to the caller. So a service cannot both never signal
 a group whose leader already ended and keep the parent alive while it waits. It
@@ -163,8 +195,9 @@ termination, the construction goes away.
 The import of `createServer` from `node:http` stays in a module that serves
 with Effect's HTTP server for Node. `NodeHttpServer.make`, `layerServer`,
 `layer`, and `layerConfig` each take `evaluate: LazyArg<Http.Server>` as their
-first argument (4.0.2, `NodeHttpServer.ts`, lines 102, 450, 479, and 500), and
-`layerTest` builds the server with `Http.createServer` on port 0 (line 536), so
+first argument (4.0.5, `packages/platform/node/src/NodeHttpServer.ts`, lines 102,
+450, 479, and 500), and `layerTest` builds the server with `Http.createServer`
+on port 0 (line 537), so
 it cannot serve on a port that was picked earlier. No layer builds the server
 without Node's constructor. All of these hold:
 
@@ -184,7 +217,7 @@ platform layer builds the server itself, the construction goes away.
 
 The imports of `generateKeyPairSync` and `sign` from `node:crypto` stay in a
 fixture that signs with Ed25519 as its module loads. Effect's `Crypto` has
-digests and random bytes and no signing (4.0.2, `Crypto.ts`), and
+digests and random bytes and no signing (4.0.5, `packages/effect/src/Crypto.ts`), and
 `crypto.subtle.sign` returns a Promise. The technical signed artifacts,
 releases, and bundles of the backend tests come from
 `packages/backend/test/content/proof.ts`: 77 calls in 40 modules, 15 of them
@@ -388,7 +421,7 @@ import, keeps them equal.
 ## Consequences
 
 - `packages/typescript-config/base.json` lists every rule the installed plugin
-  defines, as `error`, or as `off` for a rule in the table above. It holds the
+  defines, as `error`, or as `off` for a rule in the tables above. It holds the
   only `plugins` array of the repository: a `plugins` array replaces the one it
   extends, so a second array would have to repeat the whole block. Every other
   configuration, the Next.js one included, inherits it. Next.js does not need
