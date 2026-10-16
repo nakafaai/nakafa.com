@@ -173,6 +173,45 @@ describe("tenancy/assignments assign", () => {
       })
   );
 
+  it.effect(
+    "refuses a cohort that holds an active homeroom teacher before a teacher who leads another cohort of the period",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* smpPeriod(fixture);
+        const first = yield* cohort(fixture, period.id, "7A");
+        const second = yield* cohort(fixture, period.id, "7B");
+        const holder = yield* fixture
+          .as("admin")
+          .mutation(people.create, { name: "Guru Kedua", slug: nf });
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, holder.id, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.smp,
+          })
+        );
+        yield* fixture.as("admin").mutation(assign, {
+          cohortId: first.id,
+          personId: holder.id,
+          slug: nf,
+        });
+        yield* fixture.as("admin").mutation(assign, {
+          cohortId: second.id,
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        const refusal = yield* fixture
+          .as("admin")
+          .mutation(assign, {
+            cohortId: first.id,
+            personId: fixture.people.teacher.personId,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refusal).toMatchObject({ _tag: "CohortHasHomeroom" });
+      })
+  );
+
   it.effect("refuses a person who is not an active teacher of the unit", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
