@@ -23,6 +23,22 @@ test("a school path without a locale answers not found on the main host", async 
   expect(response?.status()).toBe(404);
 });
 
+test("an encoded school path answers not found on the main host, even to a Flight request", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const context = await browser.newContext();
+
+  const response = await context.request.get(
+    new URL(`/id/%73chool/${school.slug}`, baseURL).href,
+    { headers: { RSC: "1" } }
+  );
+
+  expect(response.status()).toBe(404);
+  await context.close();
+});
+
 test("an unknown school answers not found on its own host", async ({
   page,
   baseURL,

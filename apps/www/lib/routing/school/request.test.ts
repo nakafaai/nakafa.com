@@ -76,6 +76,32 @@ describe("school requests", () => {
     expect(mockSchool.middleware).not.toHaveBeenCalled();
   });
 
+  it("answers an encoded school path with 404 on the main host", () => {
+    const response = routeSchoolRequest(
+      new NextRequest("https://nakafa.com/id/%73chool/harapan")
+    );
+
+    expect(response?.status).toBe(404);
+    expect(mockSchool.middleware).not.toHaveBeenCalled();
+  });
+
+  it("answers an encoded school path with 404 to a Flight request and to a POST", () => {
+    const flight = routeSchoolRequest(
+      new NextRequest("https://nakafa.com/id/%73chool/harapan", {
+        headers: { rsc: "1" },
+      })
+    );
+    const post = routeSchoolRequest(
+      new NextRequest("https://nakafa.com/id/%73chool/harapan", {
+        method: "POST",
+      })
+    );
+
+    expect(flight?.status).toBe(404);
+    expect(post?.status).toBe(404);
+    expect(mockSchool.middleware).not.toHaveBeenCalled();
+  });
+
   it("leaves a bypass file of a school host to the public routes", () => {
     const response = routeSchoolRequest(
       new NextRequest("https://harapan.nakafa.com/robots.txt")
