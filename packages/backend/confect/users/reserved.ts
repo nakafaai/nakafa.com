@@ -39,7 +39,7 @@ const OUTSIDE_ROUTE_ROOTS = ["about", "community", "discord", "sitemap"];
  * application route, each namespace a public route surface owns in any
  * language, and the roots that answer outside the route roots.
  */
-const RESERVED_USERNAMES = HashSet.fromIterable<string>(
+export const RESERVED_USERNAMES = HashSet.fromIterable<string>(
   Arr.flatten([
     MISLEADING_NAMES,
     OUTSIDE_ROUTE_ROOTS,
