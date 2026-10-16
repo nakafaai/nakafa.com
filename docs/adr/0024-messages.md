@@ -292,26 +292,35 @@ A sealed row keeps in the clear what the component, the index and the
 settlement need: `threadId`, `userId`, `order`, `stepOrder`, `status`, `tool`,
 `model`, `provider`, `finishReason`, `usage`, `warnings`, `fileIds`. The
 content moves into one sealed payload for the learner who owns the chat, bound
-to the field `{ table: "ninaMessages", field: "message" }`. The payload holds
-`message`, `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and
-`error`, encoded with Convex's value-to-JSON so that bytes survive. The prompt
+to the field `{ table: "ninaMessages", field: "message", row: [threadId, order,
+stepOrder] }`, so a payload opens only in the row it was sealed for. The payload
+holds `message`, `reasoning`, `reasoningDetails`, `sources`, `providerMetadata`
+and `error`, encoded with Convex's value-to-JSON so that bytes survive. The prompt
 that a cancelled or failed turn marks failed keeps its `error`, which Nakafa
 sets to `cancelled` or `failed` (`settlement.ts:75-82`). The row keeps a
 skeleton of `message` that is valid for the component:
 
 - the role is kept;
-- a text row has empty `content`, so `text` is empty and `text_search` indexes
-  nothing;
+- every part keeps its type. A text or reasoning part keeps an empty text, so
+  `text` is empty and `text_search` indexes nothing;
+- a file or image part keeps its media type and, when it has one, its provider
+  reference. Its address and its bytes stay in the payload, because an address of
+  a stored file opens the file for anyone who holds it. A custom part keeps its
+  kind, a source keeps its id and its source type, and a tool approval keeps its
+  ids, with `approved` on a response;
 - a tool-call part keeps `toolCallId` and `toolName` with an empty `input`, and
-  a tool-result part keeps both with a `null` `output`, so the `tool` flag, the
-  pairing of calls with results (`filterOutOrphanedToolMessages`) and
-  `excludeToolMessages` keep working;
+  a tool-result part keeps both with no `output`, because the Agent's validator
+  rejects `null`, so the `tool` flag, the pairing of calls with results
+  (`filterOutOrphanedToolMessages`) and `excludeToolMessages` keep working;
 - the sealed bytes sit in `message.providerOptions.nakafa.sealed`.
 
 `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and `error` are
-not passed to `addMessages`, so the row has none. A row that has no sealed
-bytes is read as plain. It is a running turn's row, or a row of a settled turn
-that the seal has not reached yet, and the module passes it through, so a read
+not passed to `addMessages`, so the row has none. A field of that list that a row
+keeps in the clear beside its sealed bytes comes back as stored, such as the error
+that a cut-off turn writes onto a prompt row (`journal.ts`). A field that both the
+row and its sealed content hold fails the read, because neither value can be the
+right one. A row that has no sealed bytes is read as plain. It is a running
+turn's row, or a row of a settled turn that the seal has not reached yet, and the module passes it through, so a read
 does not fail before its turn is sealed. The seal writes `sealedAt` in the same
 transaction as the sealed rows, so a turn that carries it has no plain row unless
 a write came from outside the seal. Such a row fails the read, because the read
