@@ -610,10 +610,6 @@
     "tryout-preference-error": {
       "title": "Probetest-Wahl nicht gespeichert."
     },
-    "tryout-start-entry-success": {
-      "title": "Probetest gestartet.",
-      "description": "Der Timer läuft jetzt."
-    },
     "tryout-start-error": {
       "title": "Probetest nicht gestartet.",
       "description": "Versuche es erneut."
@@ -621,10 +617,6 @@
     "tryout-start-part-error": {
       "title": "Abschnitt nicht gestartet.",
       "description": "Versuche es erneut."
-    },
-    "tryout-start-success": {
-      "title": "Probetest gestartet.",
-      "description": "Du kannst wählen, welchen Abschnitt du zuerst bearbeitest."
     },
     "tryout-submit-answer-error": {
       "title": "Antwort nicht gespeichert.",

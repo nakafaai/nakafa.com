@@ -610,10 +610,6 @@
     "tryout-preference-error": {
       "title": "Tryout preference not saved yet."
     },
-    "tryout-start-entry-success": {
-      "title": "Tryout started.",
-      "description": "The timer is now running."
-    },
     "tryout-start-error": {
       "title": "We could not start the tryout yet.",
       "description": "Please try again."
@@ -621,10 +617,6 @@
     "tryout-start-part-error": {
       "title": "We could not start this section yet.",
       "description": "Please try again."
-    },
-    "tryout-start-success": {
-      "title": "Tryout started.",
-      "description": "You can choose which section to work on first."
     },
     "tryout-submit-answer-error": {
       "title": "We couldn't save your answer.",
