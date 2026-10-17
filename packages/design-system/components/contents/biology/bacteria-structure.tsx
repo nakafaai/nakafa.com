@@ -9,19 +9,21 @@ import type { ReactNode } from "react";
 export function BacterialStructure({
   colors,
   nucleoidDnaLabel,
-}: Pick<BiologySceneProps, "colors"> & { nucleoidDnaLabel: ReactNode }) {
+}: Pick<BiologySceneProps, "colors"> & { nucleoidDnaLabel?: ReactNode }) {
   return (
     <group>
       <group rotation={[0, 0, -0.08]}>
         <BacillusBacteriumModel colors={colors} scale={1.18} />
       </group>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[0.58, -0.34, 0.72]}
-      >
-        {nucleoidDnaLabel}
-      </ThreeLabel>
+      {nucleoidDnaLabel === undefined ? null : (
+        <ThreeLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[0.58, -0.34, 0.72]}
+        >
+          {nucleoidDnaLabel}
+        </ThreeLabel>
+      )}
     </group>
   );
 }

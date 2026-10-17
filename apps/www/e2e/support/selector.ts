@@ -42,8 +42,8 @@ export const SURAH_SIDEBAR_TRIGGER =
 export const VISIBLE_SIDEBAR_TRIGGER = '[data-slot="sidebar-trigger"]:visible';
 /** The main element of a marketing page, which marks the page as one. */
 export const MARKETING_PAGE = 'main[data-marketing-page="true"]';
-/** The Nina conversation showcase on the homepage and the composer suites. */
-export const NINA_SHOWCASE = '[data-slot="nina-showcase"]';
+/** The Nina part of the homepage, which holds its own composer. */
+export const NINA_SECTION = "#nina";
 /** A visual card, which wraps a lesson's lab, chart, or 3D scene. */
 export const VISUAL_CARD = '[data-slot="visual-card"]';
 /** The controls and readouts in a visual card's body, under its scene. */

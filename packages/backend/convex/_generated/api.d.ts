@@ -11236,22 +11236,6 @@ export declare const internal: {
         }
       >;
     };
-    documents: {
-      run: FunctionReference<
-        "action",
-        "internal",
-        { turnId: Id<"ninaTurns"> },
-        null
-      >;
-    };
-    fingerprints: {
-      clear: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor?: string; dryRun: boolean },
-        { activeOld: number; cleared: number; done: boolean; scanned: number }
-      >;
-    };
     focus: {
       read: FunctionReference<
         "query",

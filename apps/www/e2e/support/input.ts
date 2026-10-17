@@ -71,10 +71,7 @@ export const activateUntilVisible = Effect.fn("NakafaE2E.activateUntilVisible")(
 );
 
 /** The interactive surfaces a swipe starts on. */
-const SwipeSurfaceSchema = Schema.Literals([
-  "consent-drawer",
-  "contributor-drawer",
-]);
+const SwipeSurfaceSchema = Schema.Literals(["consent-drawer"]);
 
 /** One interactive surface did not expose measurable bounds for a gesture. */
 class SurfaceBoundsMissing extends Schema.TaggedError<SurfaceBoundsMissing>()(

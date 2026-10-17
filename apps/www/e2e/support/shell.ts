@@ -1,6 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Option, pipe, Schema } from "effect";
-import { recordLayoutShifts } from "@/e2e/support/layout";
+import {
+  readRecordedLayoutShifts,
+  recordLayoutShifts,
+} from "@/e2e/support/layout";
 import { TOASTER } from "@/e2e/support/selector";
 
 const SAMPLES_KEY = "nakafaShellSamples";
@@ -19,18 +22,6 @@ const ShellFrame = Schema.Struct({
 const ShellSamples = Schema.Struct({
   frames: Schema.mutable(Schema.Array(ShellFrame)),
 });
-
-/**
- * The layout shifts the page recorded, each with the time it started and what
- * moved. The recorder leaves out the shifts of the toasts alone.
- */
-const RecordedShifts = Schema.Array(
-  Schema.Struct({
-    sources: Schema.Array(Schema.String),
-    time: Schema.Finite,
-    value: Schema.Finite,
-  })
-);
 
 /** What the browser rendered of the app shell since one point in time. */
 const ShellObservation = Schema.Struct({
@@ -162,9 +153,7 @@ export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
     const samples = yield* Effect.promise(() =>
       page.evaluate((key) => Reflect.get(window, key), SAMPLES_KEY)
     ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(ShellSamples)));
-    const shifts = yield* Effect.promise(() =>
-      page.evaluate((key) => Reflect.get(window, key), LAYOUT_SHIFTS_KEY)
-    ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(RecordedShifts)));
+    const shifts = yield* readRecordedLayoutShifts(page, LAYOUT_SHIFTS_KEY);
     const frames = Arr.filter(samples.frames, (frame) => frame.time >= since);
     return ShellObservation.make({
       frames: frames.length,
