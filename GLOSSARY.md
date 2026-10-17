@@ -109,6 +109,10 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Document step**: One ProseMirror step that a client sends with the version it is based on. The server accepts it only at the current version.
 - **Document version**: The number of steps a collaborative document has accepted.
 
+## School Exams
+
+- **Exam draft**: A school exam as its teachers write it before it is scheduled: its title, its language, and its questions in order. Each question holds a prompt document, its answers, and its key, which is absent until one option is marked correct. A draft is not frozen, and it is not an item version of the bank.
+
 ## School Keys
 
 - **Key owner**: Whom a vault key belongs to: the root, a learner, a school, or a connection.

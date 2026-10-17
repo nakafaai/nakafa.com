@@ -40,6 +40,8 @@ import editorClients from "./tables/editorClients";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
+import examQuestions from "./tables/examQuestions";
+import exams from "./tables/exams";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -144,6 +146,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly editorDocuments: typeof editorDocuments;
   readonly editorSnapshots: typeof editorSnapshots;
   readonly editorSteps: typeof editorSteps;
+  readonly examQuestions: typeof examQuestions;
+  readonly exams: typeof exams;
   readonly integrationClients: typeof integrationClients;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
@@ -247,6 +251,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   editorDocuments,
   editorSnapshots,
   editorSteps,
+  examQuestions,
+  exams,
   integrationClients,
   irtCalibrationRuns,
   irtScaleItems,

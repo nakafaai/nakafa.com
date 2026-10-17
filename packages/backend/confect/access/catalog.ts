@@ -3,6 +3,7 @@ import { access } from "@repo/backend/confect/access/kinds";
 import type { Rule, RuleRole } from "@repo/backend/confect/access/schema";
 import { classroom } from "@repo/backend/confect/classroom/kinds";
 import { editor } from "@repo/backend/confect/editor/kinds";
+import { exam } from "@repo/backend/confect/exams/kinds";
 import { integrations } from "@repo/backend/confect/integrations/kinds";
 import { operators } from "@repo/backend/confect/operators/kinds";
 import { tenancy } from "@repo/backend/confect/tenancy/kinds";
@@ -16,6 +17,7 @@ export const kinds = [
   ...classroom.kinds,
   ...operators.kinds,
   ...editor.kinds,
+  ...exam.kinds,
 ] as const;
 
 /** Every lane's extensions of another lane's kinds. */
@@ -26,6 +28,7 @@ const extensions = [
   ...classroom.extensions,
   ...operators.extensions,
   ...editor.extensions,
+  ...exam.extensions,
 ] as const;
 
 /** Every declaration and extension; each kind's actions, rules, and changes join from these. */

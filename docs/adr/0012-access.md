@@ -12,7 +12,9 @@ client principal, and the Integration role holds the roster reads (ADR 0029).
 Amended on 16 October 2026 for the `document` kind of the collaborative editor
 (ADR 0028): an Admin or a Teacher whose grant covers a document's scope views and
 edits it, and creating one is decided on that scope, as an integration client's
-creation is.
+creation is. Amended on 16 October 2026 for the `exam` kind of the school exam
+drafts (ADR 0031): an Admin or a Teacher whose grant covers an exam's scope views
+and edits it, and creating one is decided on that scope, as a document is.
 
 ## Context
 
