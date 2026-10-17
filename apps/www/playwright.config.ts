@@ -9,7 +9,7 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
 // Projects select files by folder path, so a file that repeats a basename
 // never joins a project by accident.
-// Each CI leg pays about ten minutes to prepare and build before its first
+// Each suite pays about ten minutes to prepare and build before its first
 // test, so the suites are balanced by run time. Measured on 12 October: runtime
 // 290 s plus 40 s of site checks, learner 316 s, chat 361 s, visual 349 s,
 // navigation 267 to 344 s. Marketing and consent run in the visual suite only
@@ -40,7 +40,7 @@ const CHAT_TESTS = ["**/chat/**/*.browser.ts", "**/nina/**/*.browser.ts"];
 const PROJECTS = {
   // The hydration checks need pages that still stream on demand, so they run
   // first in the runtime suite, before any other test caches those pages. Each
-  // CI job starts its own runtime, so no other suite caches them first.
+  // suite starts its own runtime, so no other suite caches them first.
   "cold-runtime": {
     testMatch: "**/content/hydration.browser.ts",
     workers: 1,
@@ -84,7 +84,7 @@ const PROJECTS = {
 
 type ProjectName = keyof typeof PROJECTS;
 
-// Each CI job runs one suite in its own runtime. Projects in a suite run in
+// Each suite runs in its own runtime. Projects in a suite run in
 // the listed order, and each one waits for the project before it. Without a
 // selection, every suite runs as one chain in this order.
 const SUITES = {
@@ -129,13 +129,11 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
-  failOnFlakyTests: Boolean(process.env.CI),
-  forbidOnly: Boolean(process.env.CI),
   fullyParallel: false,
   outputDir: "../../.cache/playwright/www",
   projects: chainProjects(selectedProjectNames(process.env.PLAYWRIGHT_SUITE)),
   reporter: "list",
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   testDir: "./e2e",
   testMatch: "**/*.browser.ts",
   timeout: 120_000,
