@@ -1,7 +1,33 @@
 import { describe, expect, it } from "@effect/vitest";
-import { patchUser, withoutBio } from "@/components/user/state";
+import {
+  patchUser,
+  publicPictureFields,
+  withoutBio,
+} from "@/components/user/state";
+
+const PHOTO = "https://lh3.example.test/ada.png";
 
 describe("current user optimistic state", () => {
+  it("copies the Google photo into the public account when the new picture shows it", () => {
+    expect(publicPictureFields({ image: PHOTO }, "photo")).toEqual({
+      image: PHOTO,
+      picture: "photo",
+    });
+  });
+
+  it("leaves the Google photo out of the public account while the animal shows", () => {
+    const result = publicPictureFields({ image: PHOTO }, "animal");
+
+    expect(result).toEqual({ picture: "animal" });
+    expect("image" in result).toBe(false);
+  });
+
+  it("leaves the photo out when the account holds none", () => {
+    expect(publicPictureFields({ image: null }, "photo")).toEqual({
+      picture: "photo",
+    });
+  });
+
   it("patches a name without replacing other projection fields", () => {
     const user = { id: "user-1", name: "Ari" };
     const result = patchUser(user, { name: "Budi" });

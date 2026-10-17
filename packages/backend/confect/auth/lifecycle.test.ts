@@ -89,4 +89,27 @@ describe("auth/lifecycle", () => {
       Arr.filter(stored.jobs, (job) => job.name.includes("syncCustomer"))
     ).toEqual([]);
   });
+
+  it("gives a new account with a Google photo no picture choice, so it draws its animal", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation(async (ctx) => {
+      const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
+      await adapter.create({
+        model: "user",
+        data: {
+          createdAt: NOW,
+          email: "ada@example.com",
+          emailVerified: true,
+          image: "https://lh3.example.test/ada.png",
+          name: "Ada Lovelace",
+          updatedAt: NOW,
+        },
+      });
+    });
+
+    const user = await test.query((ctx) => ctx.db.query("users").unique());
+
+    expect(user).toMatchObject({ image: "https://lh3.example.test/ada.png" });
+    expect(user).not.toHaveProperty("picture");
+  });
 });
