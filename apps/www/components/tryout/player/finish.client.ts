@@ -57,18 +57,13 @@ export function useTryoutFinish<State>(input: {
             Effect.andThen(
               Effect.tryPromise(() => completeSection(target)).pipe(
                 Effect.flatMap(Effect.fromResult),
+                // The page the learner returns to shows the finished section,
+                // so no toast repeats it over the page.
                 Effect.tap(() =>
                   Effect.sync(() => {
                     startTransition(() => {
                       router.push(input.returnHref);
                     });
-                    toast.success(
-                      {
-                        description: "tryout-complete-part-success.description",
-                        title: "tryout-complete-part-success.title",
-                      },
-                      { position: "bottom-center" }
-                    );
                   })
                 )
               )
