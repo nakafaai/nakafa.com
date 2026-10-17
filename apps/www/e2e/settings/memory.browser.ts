@@ -179,8 +179,21 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     await expect(question).toBeVisible();
     await question.getByRole("button", { name: "Cancel" }).click();
     await expect(question).toHaveCount(0);
+    // The editor still shows the memory's words. At 390px the editor is a dialog
+    // over the list, which hides the list from the accessibility tree, so the
+    // list is checked by its markup: the memory is still in it, with its title.
     await expect(editor).toBeVisible();
-    await expect(row.getByText("Written by you")).toBeVisible();
+    await expect(editor).toHaveText(REWRITTEN);
+    await expect(
+      page.locator("main ul > li").filter({ hasText: NAMED })
+    ).toBeAttached();
+    // Closing the editor shows the row, and the learner opens the editor on it
+    // again to delete the memory.
+    await page.getByRole("button", { exact: true, name: "Close" }).click();
+    await expect(editor).toHaveCount(0);
+    await expect(row).toBeVisible();
+    await row.getByText(NAMED).click();
+    await opened(page, REWRITTEN);
 
     // A confirmed delete removes the memory from the editor and the list at
     // once, and the server deletes it: it is gone after a reload.
