@@ -13,6 +13,7 @@ import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedArtifact,
+  testSignedEmptyRelease,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import { Effect } from "effect";
@@ -29,24 +30,27 @@ import {
 
 const readMock = vi.hoisted(() => vi.fn());
 const bodyMock = vi.hoisted(() => vi.fn());
-const release = testSignedRelease(
-  testEmptyManifest(ReleaseIdSchema.make("release-material-domain"))
-);
-const found: PublicContentRuntimeFound = {
-  activeManifestHash: release.manifestHash,
-  activeReleaseId: release.manifest.releaseId,
-  artifact: testSignedArtifact("mathematics", {
-    contentKey: projection.contentKey,
-    rawMdx: "## Material delivery evidence\n\nThe signed material source.",
-  }),
-  delivery: "public",
-  kind: "found",
-  projection,
-  projectionHash: hashContentProjection(projection),
-  release,
-  rendererManifest: TEST_PROOF_RENDERER,
-  sourcePath,
-};
+const releaseId = ReleaseIdSchema.make("release-material-domain");
+/** Builds the signed material found response that each delivery test reads. */
+const makeFound = Effect.fn("test.www.publishedMaterial.found")(function* () {
+  const release = yield* testSignedEmptyRelease(releaseId);
+  const found: PublicContentRuntimeFound = {
+    activeManifestHash: release.manifestHash,
+    activeReleaseId: release.manifest.releaseId,
+    artifact: yield* testSignedArtifact("mathematics", {
+      contentKey: projection.contentKey,
+      rawMdx: "## Material delivery evidence\n\nThe signed material source.",
+    }),
+    delivery: "public",
+    kind: "found",
+    projection,
+    projectionHash: yield* hashContentProjection(projection),
+    release,
+    rendererManifest: TEST_PROOF_RENDERER,
+    sourcePath,
+  };
+  return found;
+});
 const input = {
   appLocale: projection.appLocale,
   publicPath: projection.publicPath,
@@ -69,13 +73,14 @@ vi.mock("@/lib/content/published/body", () => ({
 }));
 
 beforeEach(() => {
-  readMock.mockReset().mockReturnValue(Effect.succeed(found));
+  readMock.mockReset().mockImplementation(() => makeFound());
   bodyMock.mockReset().mockReturnValue(Effect.succeed("cached-material-body"));
 });
 
 describe("published material delivery", () => {
   it.effect("keeps current source evidence with its signed rendered body", () =>
     Effect.gen(function* () {
+      const found = yield* makeFound();
       expect(yield* readRenderedMaterial(input)).toEqual({
         activeReleaseId: found.activeReleaseId,
         artifactHash: found.artifact.artifactHash,
@@ -101,12 +106,17 @@ describe("published material delivery", () => {
 
   it.effect("reads the current rollback without inventing Git provenance", () =>
     Effect.gen(function* () {
-      const rollback = testSignedRelease({
-        ...testEmptyManifest(ReleaseIdSchema.make("release-material-rollback")),
-        baseActiveAppLocales: release.manifest.activeAppLocales,
-        baseManifestHash: release.manifestHash,
-        baseReleaseId: release.manifest.releaseId,
-        origin: { kind: "rollback", releaseId: release.manifest.releaseId },
+      const found = yield* makeFound();
+      const base = found.release;
+      const rollbackEmpty = yield* testEmptyManifest(
+        ReleaseIdSchema.make("release-material-rollback")
+      );
+      const rollback = yield* testSignedRelease({
+        ...rollbackEmpty,
+        baseActiveAppLocales: base.manifest.activeAppLocales,
+        baseManifestHash: base.manifestHash,
+        baseReleaseId: base.manifest.releaseId,
+        origin: { kind: "rollback", releaseId: base.manifest.releaseId },
       });
       readMock.mockReturnValueOnce(
         Effect.succeed({
@@ -134,6 +144,7 @@ describe("published material delivery", () => {
     "rejects excess fields and a different content family",
     (invalid) =>
       Effect.gen(function* () {
+        const found = yield* makeFound();
         readMock.mockReturnValueOnce(
           Effect.succeed({ ...found, projection: invalid })
         );
@@ -183,6 +194,7 @@ describe("published material delivery", () => {
 
   it.effect("preserves a typed failure from the immutable body cache", () =>
     Effect.gen(function* () {
+      const found = yield* makeFound();
       const failure = new ContentExecutionError({
         contentKey: found.artifact.payload.contentKey,
         stage: "evaluate",

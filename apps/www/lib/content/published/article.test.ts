@@ -11,9 +11,8 @@ import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import {
   TEST_PROOF_RENDERER,
-  testEmptyManifest,
   testSignedArtifact,
-  testSignedRelease,
+  testSignedEmptyRelease,
 } from "@repo/backend/test/content/proof";
 import { Effect } from "effect";
 import {
@@ -29,26 +28,29 @@ import { previewProjection } from "@/test/content-preview";
 
 const readMock = vi.hoisted(() => vi.fn());
 const bodyMock = vi.hoisted(() => vi.fn());
-const release = testSignedRelease(
-  testEmptyManifest(ReleaseIdSchema.make("release-article-domain"))
-);
-const found: PublicContentRuntimeFound = {
-  activeManifestHash: release.manifestHash,
-  activeReleaseId: release.manifest.releaseId,
-  artifact: testSignedArtifact("politics", {
-    contentKey: projection.contentKey,
-    rawMdx: "## Article delivery evidence\n\nThe signed article source.",
-  }),
-  delivery: "public",
-  kind: "found",
-  projection,
-  projectionHash: hashContentProjection(projection),
-  release,
-  rendererManifest: TEST_PROOF_RENDERER,
-  sourcePath,
-};
+const releaseId = ReleaseIdSchema.make("release-article-domain");
+/** Builds the signed article found response that each delivery test reads. */
+const makeFound = Effect.fn("test.www.publishedArticle.found")(function* () {
+  const release = yield* testSignedEmptyRelease(releaseId);
+  const found: PublicContentRuntimeFound = {
+    activeManifestHash: release.manifestHash,
+    activeReleaseId: release.manifest.releaseId,
+    artifact: yield* testSignedArtifact("politics", {
+      contentKey: projection.contentKey,
+      rawMdx: "## Article delivery evidence\n\nThe signed article source.",
+    }),
+    delivery: "public",
+    kind: "found",
+    projection,
+    projectionHash: yield* hashContentProjection(projection),
+    release,
+    rendererManifest: TEST_PROOF_RENDERER,
+    sourcePath,
+  };
+  return found;
+});
 const input = {
-  activeReleaseId: found.activeReleaseId,
+  activeReleaseId: releaseId,
   appLocale: projection.appLocale,
   publicPath: projection.publicPath,
 };
@@ -70,13 +72,14 @@ vi.mock("@/lib/content/published/body", () => ({
 }));
 
 beforeEach(() => {
-  readMock.mockReset().mockReturnValue(Effect.succeed(found));
+  readMock.mockReset().mockImplementation(() => makeFound());
   bodyMock.mockReset().mockReturnValue(Effect.succeed("cached-article-body"));
 });
 
 describe("published article delivery", () => {
   it.effect("keeps pinned source evidence with its signed rendered body", () =>
     Effect.gen(function* () {
+      const found = yield* makeFound();
       const data = yield* readPublishedArticle(input);
 
       expect(bodyMock).not.toHaveBeenCalled();
@@ -110,6 +113,7 @@ describe("published article delivery", () => {
 
   it.effect("rejects an article from a different signed release", () =>
     Effect.gen(function* () {
+      const found = yield* makeFound();
       const expectedReleaseId = ReleaseIdSchema.make("release-older");
 
       expect(
@@ -130,6 +134,7 @@ describe("published article delivery", () => {
     "rejects excess fields and a different content family",
     (invalid) =>
       Effect.gen(function* () {
+        const found = yield* makeFound();
         readMock.mockReturnValueOnce(
           Effect.succeed({ ...found, projection: invalid })
         );
@@ -179,6 +184,7 @@ describe("published article delivery", () => {
 
   it.effect("preserves a typed failure from the immutable body cache", () =>
     Effect.gen(function* () {
+      const found = yield* makeFound();
       const data = yield* readPublishedArticle(input);
       const failure = new ContentExecutionError({
         contentKey: found.artifact.payload.contentKey,

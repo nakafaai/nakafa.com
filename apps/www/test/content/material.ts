@@ -49,11 +49,17 @@ export const makeMaterialRuntimeSource = Effect.fn(
 )(function* (
   projections: readonly MaterialLessonProjection[] = defaultProjections
 ) {
-  const signed = testSignedRelease({
-    ...testEmptyManifest(ReleaseIdSchema.make("app-material-snapshot")),
+  const empty = yield* testEmptyManifest(
+    ReleaseIdSchema.make("app-material-snapshot")
+  );
+  const signed = yield* testSignedRelease({
+    ...empty,
     scope: testPublicationScope({ families: ["material"] }),
   });
-  const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
+  const fixture = yield* makeRuntimeSource(
+    signed,
+    signed.manifest.scope.families
+  );
   const heads = MutableList.make<PublicationRow<"contentHeads">>();
   const bindings = MutableList.make<PublicationRow<"contentBindings">>();
   const artifacts = MutableList.make<PublicationRow<"contentArtifacts">>();
@@ -63,11 +69,11 @@ export const makeMaterialRuntimeSource = Effect.fn(
     projections,
     (projection, index) =>
       Effect.gen(function* () {
-        const artifact = testSignedArtifact("mathematics", {
+        const artifact = yield* testSignedArtifact("mathematics", {
           artifactLocale: activeAppLocaleCode(projection.appLocale),
           contentKey: projection.contentKey,
         });
-        const projectionHash = hashContentProjection(projection);
+        const projectionHash = yield* hashContentProjection(projection);
         const projectionJson = canonicalizeMaterialProjection(projection);
         const sourcePath = `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`;
         const publicIdentity = {

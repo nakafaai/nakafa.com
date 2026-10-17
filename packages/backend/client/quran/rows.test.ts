@@ -11,7 +11,7 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect } from "effect";
+import { Effect } from "effect";
 
 const snapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 const first = makeQuranChunk({
@@ -29,10 +29,11 @@ const second = makeQuranChunk({
 
 it.effect("preserves contiguous chunk order and exact verse content", () =>
   Effect.gen(function* () {
+    const rows = yield* Effect.forEach([first, second], (chunk) =>
+      encodeTestQuranRow(snapshotId, chunk)
+    );
     const verses = yield* decodeQuranChunkVerses(
-      Arr.map([first, second], (chunk) =>
-        encodeTestQuranRow(snapshotId, chunk)
-      ),
+      rows,
       snapshotId,
       "reference",
       1
@@ -72,8 +73,11 @@ it.effect.each([
   [second, first],
 ])("rejects empty, foreign, missing, and reordered Quran chunks", (chunks) =>
   Effect.gen(function* () {
+    const rows = yield* Effect.forEach(chunks, (chunk) =>
+      encodeTestQuranRow(snapshotId, chunk)
+    );
     const failure = yield* decodeQuranChunkVerses(
-      Arr.map(chunks, (chunk) => encodeTestQuranRow(snapshotId, chunk)),
+      rows,
       snapshotId,
       "reference",
       1
@@ -86,17 +90,19 @@ it.effect.each([
 );
 
 it.effect.each([
-  "{",
-  encodeJsonText({ family: "quran", record: {} }),
-  encodeTestQuranRow(
-    Sha256HashSchema.make(`sha256:${"c".repeat(64)}`),
-    makeQuranSurah(1, 7)
-  ),
-  encodeTestQuranRow(snapshotId, makeQuranSurah(1, 7)),
+  () => Effect.succeed("{"),
+  () => Effect.succeed(encodeJsonText({ family: "quran", record: {} })),
+  () =>
+    encodeTestQuranRow(
+      Sha256HashSchema.make(`sha256:${"c".repeat(64)}`),
+      makeQuranSurah(1, 7)
+    ),
+  () => encodeTestQuranRow(snapshotId, makeQuranSurah(1, 7)),
 ])("rejects malformed, foreign, and wrong-kind search rows", (source) =>
   Effect.gen(function* () {
+    const row = yield* source();
     const failure = yield* decodeQuranSearchRow(
-      source,
+      row,
       snapshotId,
       "reference"
     ).pipe(Effect.flip);

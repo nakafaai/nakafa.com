@@ -46,8 +46,8 @@ describe("contentRelease/ingress/snapshot", () => {
       const quran = yield* makeQuranSnapshot();
       const quranRow = yield* makeQuranSnapshotRow(quran.manifest.snapshotId);
       const tryout = yield* makeTryoutSnapshotManifest();
-      const catalog = makeTryoutCatalogRow();
-      const placement = makeTryoutPlacementRow();
+      const catalog = yield* makeTryoutCatalogRow();
+      const placement = yield* makeTryoutPlacementRow();
 
       expect(
         yield* Effect.all([
@@ -91,7 +91,7 @@ describe("contentRelease/ingress/snapshot", () => {
 
   it.live("rejects a tampered try-out row hash before storage", () =>
     Effect.gen(function* () {
-      const row = makeTryoutCatalogRow();
+      const row = yield* makeTryoutCatalogRow();
       const tampered: ContentSnapshotRow = {
         ...row,
         record: {

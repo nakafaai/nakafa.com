@@ -12,8 +12,8 @@ describe("content publication authenticated reads", () => {
       const unsigned = yield* Schema.decodeEffect(
         Schema.fromJsonString(SignedContentReleaseSchema)
       )(testReleaseJson());
-      const first = testSignedRelease(unsigned.manifest);
-      const changed = testSignedRelease({
+      const first = yield* testSignedRelease(unsigned.manifest);
+      const changed = yield* testSignedRelease({
         ...unsigned.manifest,
         origin: { kind: "git", sha: GitCommitShaSchema.make("b".repeat(40)) },
       });

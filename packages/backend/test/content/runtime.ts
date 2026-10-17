@@ -43,9 +43,10 @@ import {
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
 import {
-  TEST_RUNTIME_ENVELOPE,
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
+  testRuntimeEnvelope,
+  testRuntimeRelease,
 } from "@repo/backend/test/runtime/values";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import type { FunctionReturnType } from "convex/server";
@@ -232,8 +233,9 @@ export async function insertRuntimeRelease(
   ctx: MutationCtx,
   families: readonly ContentFamily[] = ContentFamilySchema.literals
 ) {
+  const runtime = await Effect.runPromise(testRuntimeRelease());
   await insertZeroRelease(ctx, {
-    ...TEST_RUNTIME_RELEASE,
+    ...runtime,
     ownership: {
       base: [],
       result: families,
@@ -245,9 +247,10 @@ export async function insertRuntimeRelease(
     status: "completed",
   });
   await insertTestState(ctx, {
-    active: TEST_RUNTIME_RELEASE,
-    nextSequence: TEST_RUNTIME_RELEASE.sequence + 1,
+    active: runtime,
+    nextSequence: runtime.sequence + 1,
   });
+  return runtime;
 }
 
 /** Inserts active indexed articles through the production writer. */
@@ -261,13 +264,13 @@ export async function insertRuntimeArticles(
     projection: ReturnType<typeof testArticleProjection>
   ) => string | undefined = () => undefined
 ) {
-  await insertRuntimeRelease(ctx);
+  const runtime = await insertRuntimeRelease(ctx);
   const state = await ctx.db.query("contentState").unique();
   assert.ok(state, "Expected one active content state.");
   await ctx.db.patch("contentState", state._id, {
-    articleManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-    articleReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-    articleSequence: TEST_RUNTIME_RELEASE.sequence,
+    articleManifestHash: runtime.manifestHash,
+    articleReleaseId: runtime.releaseId,
+    articleSequence: runtime.sequence,
   });
   for (let index = 0; index < count; index += 1) {
     const projection = projectionAt(index);
@@ -311,13 +314,25 @@ export async function insertRuntimeArticles(
   }
 }
 
+/** Points the active content state's search identity at the runtime release. */
+export async function patchRuntimeSearchState(ctx: MutationCtx) {
+  const runtime = await Effect.runPromise(testRuntimeRelease());
+  const state = await ctx.db.query("contentState").unique();
+  assert.ok(state, "Expected one active content state.");
+  await ctx.db.patch("contentState", state._id, {
+    searchManifestHash: runtime.manifestHash,
+    searchReleaseId: runtime.releaseId,
+    searchSequence: runtime.sequence,
+  });
+}
+
 /** Inserts a completed release authenticated by the isolated test key. */
 export async function insertSignedRelease(ctx: MutationCtx) {
   await insertRuntimeRelease(ctx);
   const release = await ctx.db.query("contentReleases").unique();
   assert.ok(release, "Expected one runtime release.");
   await ctx.db.patch("contentReleases", release._id, {
-    releaseJson: encodeJsonText(TEST_RUNTIME_ENVELOPE),
+    releaseJson: encodeJsonText(await Effect.runPromise(testRuntimeEnvelope())),
     rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
   });
 }

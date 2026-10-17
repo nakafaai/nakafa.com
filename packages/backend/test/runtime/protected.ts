@@ -23,7 +23,7 @@ import {
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout/snapshot";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const SignedReleaseJsonSchema = Schema.fromJsonString(
   SignedContentReleaseSchema
@@ -50,7 +50,7 @@ function protectedSelector(
 /** Inserts one signed artifact with immutable retention. */
 function insertArtifact(
   ctx: MutationCtx,
-  artifact: ReturnType<typeof testSignedArtifact>
+  artifact: Effect.Success<ReturnType<typeof testSignedArtifact>>
 ) {
   return insertTestArtifact(ctx, {
     artifactHash: artifact.artifactHash,
@@ -70,41 +70,51 @@ export async function insertProtectedRuntime(
   }
 ) {
   const locales = ["en", "id"] as const;
-  const bodies = Arr.flatMap(locales, (appLocale) =>
-    Array.from({ length: options?.questionCount ?? 1 }, (_, index) => {
-      const questionKey = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${index + 1}`;
-      const question = testSignedArtifact("snbt-quant", {
-        artifactLocale: appLocale,
-        ...(options?.compiledCode === undefined
-          ? {}
-          : { compiledCode: options?.compiledCode }),
-        contentKey: `${questionKey}/question`,
-        rawMdx:
-          appLocale === "en"
-            ? (options?.rawMdx ?? "## Technical question")
-            : "## Pertanyaan teknis",
-      });
-      const answer = testSignedArtifact("snbt-quant", {
-        artifactLocale: appLocale,
-        compiledCode: options?.answerCompiledCode ?? options?.compiledCode,
-        contentKey: `${questionKey}/answer`,
-        rawMdx:
-          appLocale === "en"
-            ? (options?.answerRawMdx ?? "#### Technical answer")
-            : "#### Jawaban teknis",
-      });
-      const placement = Schema.decodeSync(TryoutPlacementSchema)({
-        ...makeTryoutPlacementRow(appLocale, {
-          answerArtifactHash: answer.artifactHash,
-          questionArtifactHash: question.artifactHash,
-        }).record.row,
-        answerContentKey: answer.payload.contentKey,
-        questionContentKey: question.payload.contentKey,
-        questionOrder: index + 1,
-        questionSourcePath: `packages/corpus/${questionKey}`,
-      });
-      return { answer, placement, question };
-    })
+  const bodies = await Effect.runPromise(
+    Effect.all(
+      Arr.flatMap(locales, (appLocale) =>
+        Array.from({ length: options?.questionCount ?? 1 }, (_, index) =>
+          Effect.gen(function* () {
+            const questionKey = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${index + 1}`;
+            const question = yield* testSignedArtifact("snbt-quant", {
+              artifactLocale: appLocale,
+              ...(options?.compiledCode === undefined
+                ? {}
+                : { compiledCode: options?.compiledCode }),
+              contentKey: `${questionKey}/question`,
+              rawMdx:
+                appLocale === "en"
+                  ? (options?.rawMdx ?? "## Technical question")
+                  : "## Pertanyaan teknis",
+            });
+            const answer = yield* testSignedArtifact("snbt-quant", {
+              artifactLocale: appLocale,
+              compiledCode:
+                options?.answerCompiledCode ?? options?.compiledCode,
+              contentKey: `${questionKey}/answer`,
+              rawMdx:
+                appLocale === "en"
+                  ? (options?.answerRawMdx ?? "#### Technical answer")
+                  : "#### Jawaban teknis",
+            });
+            const placementRow = yield* makeTryoutPlacementRow(appLocale, {
+              answerArtifactHash: answer.artifactHash,
+              questionArtifactHash: question.artifactHash,
+            });
+            const placement = yield* Schema.decodeEffect(TryoutPlacementSchema)(
+              {
+                ...placementRow.record.row,
+                answerContentKey: answer.payload.contentKey,
+                questionContentKey: question.payload.contentKey,
+                questionOrder: index + 1,
+                questionSourcePath: `packages/corpus/${questionKey}`,
+              }
+            );
+            return { answer, placement, question };
+          })
+        )
+      )
+    )
   );
   const english = Arr.filter(
     bodies,
@@ -112,13 +122,15 @@ export async function insertProtectedRuntime(
   );
   const first = english[0];
   assert.ok(first, "Expected a protected runtime question.");
-  const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog: [
-      makeTryoutCatalogRow("en").record.row,
-      makeTryoutCatalogRow("id").record.row,
-    ],
-    placements: Arr.map(bodies, ({ placement }) => placement),
-  });
+  const countries = await Effect.runPromise(
+    Effect.all([makeTryoutCatalogRow("en"), makeTryoutCatalogRow("id")])
+  );
+  const snapshotId = await Effect.runPromise(
+    activateTryoutSnapshot(ctx, {
+      catalog: Arr.map(countries, ({ record }) => record.row),
+      placements: Arr.map(bodies, ({ placement }) => placement),
+    })
+  );
   const [release, state] = await Promise.all([
     ctx.db.query("contentReleases").unique(),
     ctx.db.query("contentState").unique(),
@@ -141,10 +153,12 @@ export async function insertProtectedRuntime(
     snapshot.family === "tryout",
     "Expected a try-out snapshot manifest."
   );
-  const signedRelease = testSignedRelease({
-    ...storedRelease.manifest,
-    rendererManifestHash: TEST_PROOF_RENDERER.hash,
-  });
+  const signedRelease = await Effect.runPromise(
+    testSignedRelease({
+      ...storedRelease.manifest,
+      rendererManifestHash: TEST_PROOF_RENDERER.hash,
+    })
+  );
   const bundle = testSignedTryoutRuntimeBundle({
     release: signedRelease,
     rendererManifest: TEST_PROOF_RENDERER,

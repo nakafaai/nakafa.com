@@ -1,4 +1,4 @@
-import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
+import { RegisteredConvexFunction } from "@confect/server";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 // @vitest-environment node
 
@@ -25,16 +25,11 @@ import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signatu
 import { stagePublication } from "@repo/backend/confect/contentRelease/ingress/stage";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import type {
-  ActionCtx,
-  MutationCtx,
-} from "@repo/backend/convex/_generated/server";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import {
-  ingressArtifact,
-  ingressItem,
-  ingressRelease,
   ingressReleaseId,
+  makeIngressFixture,
 } from "@repo/backend/test/content/ingress";
 import {
   TEST_KEY_ID,
@@ -44,15 +39,19 @@ import {
   testEmptyManifest,
   testProofRenderer,
   testSignedArtifact,
+  testSignedEmptyRelease,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import { insertSignedCandidate } from "@repo/backend/test/content/stage";
+import {
+  insertSignedCandidate,
+  runStage,
+} from "@repo/backend/test/content/stage";
 import {
   makeProgramSnapshotData,
   type ProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
-import { convexTest, type TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Data, Effect, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 
@@ -81,7 +80,10 @@ const rotatedKeyResolver = ContentVerificationKeyResolver.of({
 });
 
 /** Re-signs the complete ingress manifest under the simulated active key. */
-function activeSignedRelease() {
+const activeSignedRelease = Effect.fn(
+  "test.contentRelease.activeSignedRelease"
+)(function* () {
+  const { ingressRelease } = yield* makeIngressFixture();
   return SignedContentReleaseSchema.make({
     keyId: activeKeyId,
     manifest: ingressRelease.manifest,
@@ -101,31 +103,30 @@ function activeSignedRelease() {
       )
     ),
   });
-}
+});
 
-/** Creates one signed empty release bound to the technical renderer. */
-function signedRelease(releaseId = candidateId) {
-  return testSignedRelease(testEmptyManifest(releaseId));
-}
+/** Signs one empty release bound to the technical renderer. */
+const signedRelease = Effect.fn("test.contentRelease.signedStageRelease")(
+  function* (releaseId = candidateId) {
+    return yield* testSignedEmptyRelease(releaseId);
+  }
+);
 
 /** Signs one candidate that replaces the complete technical program snapshot. */
-function snapshotRelease(snapshots: ProgramSnapshotData["snapshots"]) {
-  return testSignedRelease(
-    ContentReleaseManifestSchema.make({
-      ...testEmptyManifest(candidateId),
-      scope: testPublicationScope({
+const snapshotRelease = Effect.fn("test.contentRelease.snapshotStageRelease")(
+  function* (snapshots: ProgramSnapshotData["snapshots"]) {
+    const emptyManifest = yield* testEmptyManifest(candidateId);
+    return yield* testSignedRelease(
+      ContentReleaseManifestSchema.make({
+        ...emptyManifest,
+        scope: testPublicationScope({
+          snapshots,
+        }),
         snapshots,
-      }),
-      snapshots,
-    })
-  );
-}
-class ObservedStageActionFailure extends Schema.TaggedError<ObservedStageActionFailure>()(
-  "ObservedStageActionFailure",
-  {
-    cause: Schema.Unknown,
+      })
+    );
   }
-) {}
+);
 class UnexpectedStageTestState extends Data.TaggedError(
   "UnexpectedStageTestState"
 )<{
@@ -136,11 +137,13 @@ class UnexpectedStageTestState extends Data.TaggedError(
 const storeIngressRelease = Effect.fn(
   "test.contentRelease.storeIngressRelease"
 )(function* (ctx: MutationCtx, role: "candidate" | "recovery") {
+  const { ingressRelease } = yield* makeIngressFixture();
+  const activeRelease = yield* activeSignedRelease();
   yield* Effect.promise(() =>
     insertSignedCandidate(
       ctx,
       ingressReleaseId,
-      activeSignedRelease(),
+      activeRelease,
       encodeRendererJson(TEST_PROOF_RENDERER)
     )
   );
@@ -175,45 +178,16 @@ const storeIngressRelease = Effect.fn(
   );
 });
 
-/** Runs one staging program through the real Convex action boundary. */
-const runStage = Effect.fn("test.contentRelease.runStage")(function* <A, E>(
-  target: TestConvex<typeof schema>,
-  makeProgram: (
-    ctx: ActionCtx
-  ) => Effect.Effect<
-    A,
-    E,
-    | ContentVerificationKeyResolver
-    | RegisteredFunction.ActionServices<typeof confectSchema>
-  >,
-  resolver = TEST_KEY_RESOLVER
-) {
-  const runtimeServices = yield* Effect.context<never>();
-  return yield* Effect.tryPromise({
-    catch: (cause) =>
-      new ObservedStageActionFailure({
-        cause,
-      }),
-    try: () =>
-      target.action((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(
-          makeProgram(ctx).pipe(
-            Effect.provideService(ContentVerificationKeyResolver, resolver),
-            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
-          )
-        )
-      ),
-  });
-});
 describe("content release staging ingress", () => {
   it.effect("rejects a renderer not owned by the signed release", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
+      const release = yield* signedRelease();
       const failure = yield* runStage(t, (_ctx) =>
         stagePublication(
           {
             operation: "stageRelease",
-            release: signedRelease(),
+            release,
             rendererManifest: testProofRenderer("h1"),
           },
           TEST_KEY_ID
@@ -227,7 +201,9 @@ describe("content release staging ingress", () => {
   it.effect("rejects a stored candidate whose signed identity drifted", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
-      const other = signedRelease(ReleaseIdSchema.make("release-stage-other"));
+      const other = yield* signedRelease(
+        ReleaseIdSchema.make("release-stage-other")
+      );
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           insertSignedCandidate(
@@ -238,10 +214,11 @@ describe("content release staging ingress", () => {
           )
         )
       );
+      const artifact = yield* testSignedArtifact();
       const failure = yield* runStage(t, (_ctx) =>
         stagePublication(
           {
-            artifacts: [testSignedArtifact()],
+            artifacts: [artifact],
             batchIndex: 0,
             operation: "stageArtifactBatch",
             releaseId: candidateId,
@@ -257,17 +234,18 @@ describe("content release staging ingress", () => {
   it.effect("rejects a tampered artifact before storage", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
+      const candidate = yield* signedRelease();
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           insertSignedCandidate(
             ctx,
             candidateId,
-            signedRelease(),
+            candidate,
             encodeRendererJson(TEST_PROOF_RENDERER)
           )
         )
       );
-      const artifact = testSignedArtifact();
+      const artifact = yield* testSignedArtifact();
       const prefix = artifact.signature.startsWith("A") ? "B" : "A";
       const tampered = {
         ...artifact,
@@ -296,6 +274,7 @@ describe("content release staging ingress", () => {
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
+        const { ingressArtifact, ingressItem } = yield* makeIngressFixture();
         for (const role of ["candidate", "recovery"] as const) {
           const t = convexTest(schema, convexModules);
           yield* Effect.promise(() =>
@@ -357,7 +336,7 @@ describe("content release staging ingress", () => {
     () =>
       Effect.gen(function* () {
         const data = yield* makeProgramSnapshotData();
-        const release = snapshotRelease(data.snapshots);
+        const release = yield* snapshotRelease(data.snapshots);
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
@@ -429,7 +408,7 @@ describe("content release staging ingress", () => {
             rowHash: Sha256HashSchema.make(`sha256:${"9".repeat(64)}`),
           },
         };
-        const release = snapshotRelease(data.snapshots);
+        const release = yield* snapshotRelease(data.snapshots);
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>

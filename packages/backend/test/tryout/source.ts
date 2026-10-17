@@ -29,7 +29,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 export const TRYOUT_START_NOW = Date.UTC(2026, 6, 8, 12, 0, 0);
 export const TRYOUT_START_COUNTRY = "indonesia";
@@ -70,10 +70,12 @@ export async function activateTryoutStartSource(
     makeTryoutStartHierarchy(locale, visibility, scoringStrategy)
   );
   const placements = Arr.map(tryoutStartLocales, makeTryoutStartPlacement);
-  const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog,
-    placements,
-  });
+  const snapshotId = await Effect.runPromise(
+    activateTryoutSnapshot(ctx, {
+      catalog,
+      placements,
+    })
+  );
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
   const section = Arr.findFirst(
     catalog,
@@ -142,10 +144,12 @@ export async function activateRenamedTryoutStartSource(ctx: MutationCtx) {
       return row;
     })
   );
-  const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog,
-    placements: Arr.map(tryoutStartLocales, makeTryoutStartPlacement),
-  });
+  const snapshotId = await Effect.runPromise(
+    activateTryoutSnapshot(ctx, {
+      catalog,
+      placements: Arr.map(tryoutStartLocales, makeTryoutStartPlacement),
+    })
+  );
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
 }
 
@@ -177,10 +181,12 @@ export async function activateRevisedTryoutStartEntry(ctx: MutationCtx) {
       })
     )
   );
-  const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog,
-    placements: Arr.map(tryoutStartLocales, makeRevisedTryoutStartPlacement),
-  });
+  const snapshotId = await Effect.runPromise(
+    activateTryoutSnapshot(ctx, {
+      catalog,
+      placements: Arr.map(tryoutStartLocales, makeRevisedTryoutStartPlacement),
+    })
+  );
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
 }
 
@@ -213,10 +219,12 @@ export async function activateReusedTryoutStartPath(ctx: MutationCtx) {
       })
     )
   );
-  const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog,
-    placements: Arr.map(tryoutStartLocales, makeReusedTryoutStartPlacement),
-  });
+  const snapshotId = await Effect.runPromise(
+    activateTryoutSnapshot(ctx, {
+      catalog,
+      placements: Arr.map(tryoutStartLocales, makeReusedTryoutStartPlacement),
+    })
+  );
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
 }
 

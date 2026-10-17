@@ -156,16 +156,19 @@ describe("contentRelease/snapshot/read", () => {
       Effect.gen(function* () {
         const t = convexTest(schema, convexModules);
         const quran = makeQuranSearch("en", 1, "Technical search text");
-        const catalog = makeTryoutCatalogRow();
-        const placement = makeTryoutPlacementRow();
+        const runtimeServices = yield* Effect.context<never>();
+        const catalog = yield* makeTryoutCatalogRow();
+        const placement = yield* makeTryoutPlacementRow();
         const snapshotId = yield* Effect.promise(() =>
           t.mutation((ctx) =>
             family === "quran"
               ? activateQuranSnapshot(ctx, [quran])
-              : activateTryoutSnapshot(ctx, {
-                  catalog: [catalog.record.row],
-                  placements: [placement.record.row],
-                })
+              : Effect.runPromiseWith(runtimeServices)(
+                  activateTryoutSnapshot(ctx, {
+                    catalog: [catalog.record.row],
+                    placements: [placement.record.row],
+                  })
+                )
           )
         );
         const rowJson =

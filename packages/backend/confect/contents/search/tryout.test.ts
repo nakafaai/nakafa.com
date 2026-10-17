@@ -70,23 +70,21 @@ describe("contents/search/tryout", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            yield* Effect.promise(() =>
-              activateTryoutSnapshot(tCtx, {
-                catalog: [
-                  {
-                    ...makeTryoutCatalogRow("en").record.row,
-                    description: "Signed description",
-                  },
-                  makeInternalSection("en"),
-                  makeTryoutCatalogRow("id").record.row,
-                  makeInternalSection("id"),
-                ],
-                placements: [
-                  makeTryoutPlacementRow("en").record.row,
-                  makeTryoutPlacementRow("id").record.row,
-                ],
-              })
-            );
+            yield* activateTryoutSnapshot(tCtx, {
+              catalog: [
+                {
+                  ...(yield* makeTryoutCatalogRow("en")).record.row,
+                  description: "Signed description",
+                },
+                makeInternalSection("en"),
+                (yield* makeTryoutCatalogRow("id")).record.row,
+                makeInternalSection("id"),
+              ],
+              placements: [
+                (yield* makeTryoutPlacementRow("en")).record.row,
+                (yield* makeTryoutPlacementRow("id")).record.row,
+              ],
+            });
             const input = {
               limit: 10,
               locale: "en",
