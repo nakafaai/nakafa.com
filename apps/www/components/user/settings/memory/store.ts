@@ -37,8 +37,20 @@ const MemoryStateSchema = Schema.Struct({
    * first save is answered.
    */
   hidden: Schema.Array(Id("ninaMemories")),
+  /**
+   * The memory that the opening of the editor began with, or none for a new
+   * memory. Closing the editor returns the focus to the row of that memory, or to
+   * the Add button for a new one. The first save of a new memory does not change it.
+   */
+  opener: Schema.NullOr(Id("ninaMemories")),
   /** Whether the editor panel is open. */
   open: Schema.Boolean,
+  /**
+   * Whether the learner paused memory last, which the switch shows while the
+   * page has not read the state, because the state is not subscribed yet. None
+   * when the switch shows what the page read.
+   */
+  paused: Schema.NullOr(Schema.Boolean),
   /** The words the learner typed to search. */
   query: Schema.String,
   /** Counts the openings of the editor, so each one starts with fresh words. */
@@ -128,6 +140,11 @@ interface MemoryActions {
   /** Sets the words the learner searches for. */
   search: (query: string) => void;
   /**
+   * Sets the learner's pause choice for the switch, or none to show what the
+   * page read again, as a refused change does.
+   */
+  setPaused: (paused: boolean | null) => void;
+  /**
    * Lets go of the memory `hide` left out, because the server answered its first
    * save. The row that carried its id is gone, and the stored memory has its own id.
    */
@@ -188,6 +205,7 @@ export function createMemoryStore() {
     openEdit: (memory) =>
       set((state) => ({
         draft: null,
+        opener: memory.id,
         open: true,
         session: state.session + 1,
         target: memory,
@@ -196,10 +214,13 @@ export function createMemoryStore() {
     openNew: () =>
       set((state) => ({
         draft: null,
+        opener: null,
         open: true,
         session: state.session + 1,
         target: null,
       })),
+    opener: null,
+    paused: null,
     query: "",
     reopen: (session, draft, memory) =>
       set((state) =>
@@ -209,6 +230,7 @@ export function createMemoryStore() {
           ? state
           : {
               draft,
+              opener: memory?.id ?? null,
               open: true,
               session: state.session + 1,
               target: memory,
@@ -227,6 +249,7 @@ export function createMemoryStore() {
           : state
       ),
     search: (query) => set({ query }),
+    setPaused: (paused) => set({ paused }),
     session: 0,
     target: null,
     unhide: (id) =>

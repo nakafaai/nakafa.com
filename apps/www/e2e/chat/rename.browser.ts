@@ -1,56 +1,19 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { live, reloadUntil, saved } from "@/e2e/support/changes";
-import { FAILED, openChatPage, RENAME, runOnPage } from "@/e2e/support/chat";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { reloadUntil, saved } from "@/e2e/support/changes";
+import { FAILED, RENAME, runOnPage } from "@/e2e/support/chat";
+import {
+  editorOf,
+  NEW,
+  OLD,
+  openedChat,
+  REFUSED,
+  startRename,
+  titleOf,
+} from "@/e2e/support/rename";
 
-const OLD = "Limits of sine";
-const NEW = "Derivatives of cosine";
 /** The longest title a chat takes, and what a learner who types more ends up with. */
 const LONGEST = "x".repeat(80);
-const REFUSED = "A title the server refuses";
-
-/** The title in the header of a chat page. */
-const titleOf = (page: Page) =>
-  page.locator("main main header").getByRole("heading", { level: 1 });
-
-/** The box that renames the chat, which replaces the title while the learner edits it. */
-const editorOf = (page: Page) =>
-  page.locator("main main header").getByRole("textbox");
-
-/** Opens the box that renames the chat, from the chat's menu, with its words selected. */
-const startRename = async (page: Page) => {
-  await page
-    .locator("main main header")
-    .getByRole("button", { name: "More actions" })
-    .click();
-  await page.getByRole("menuitem", { name: "Rename chat" }).click();
-  await expect(editorOf(page)).toBeFocused();
-  await page.keyboard.press("ControlOrMeta+a");
-};
-
-/** A learner with one chat named `OLD`, open on its page with the sidebar beside it. */
-const openedChat = Effect.fn("NakafaE2E.openedChat")(function* (
-  page: Page,
-  baseURL: string
-) {
-  const { changes, learner } = yield* openChatPage(page, baseURL);
-  const chat = yield* learner.startChat("Rename me");
-  yield* learner.titleNewest([OLD]);
-  const row = page
-    .locator(`a[data-sidebar="menu-button"][href$="/chat/${chat.chatId}"]`)
-    .filter({ visible: true });
-
-  yield* Effect.promise(async () => {
-    await page.goto(`/en/chat/${chat.chatId}`);
-    await expect(titleOf(page)).toHaveText(OLD, {
-      timeout: readinessTimeoutMilliseconds,
-    });
-    await expect(row).toHaveText(OLD);
-    await live(changes);
-  });
-  return { changes, row };
-});
 
 /** The new title shows in the header and in the sidebar before the server has answered anything. */
 const showsAtOnce = Effect.fn("NakafaE2E.renameShowsAtOnce")(function* (

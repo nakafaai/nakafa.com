@@ -3,7 +3,11 @@
 import { createContext, type ReactNode, use, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
-import type { MemoryPage } from "@/components/user/settings/memory/list";
+import {
+  type MemoryPage,
+  shownMemories,
+  withoutHidden,
+} from "@/components/user/settings/memory/list";
 import type { MemoryReading } from "@/components/user/settings/memory/reading";
 import { useMemoryReading } from "@/components/user/settings/memory/reading.client";
 import {
@@ -66,7 +70,10 @@ function MemoryReader({
   now: number;
   paused: boolean;
 }) {
-  const reading = useMemoryReading(first, paused, now);
+  // The learner's own choice stands in for what the page read, until the state
+  // is read: the reading uses the state once Convex answers with it.
+  const choice = useMemoryPage((state) => state.paused);
+  const reading = useMemoryReading(first, choice ?? paused, now);
 
   return <ReadingContext value={reading}>{children}</ReadingContext>;
 }
@@ -84,6 +91,19 @@ export function useMemory<T>(selector: (reading: MemoryReading) => T) {
   }
 
   return selector(reading);
+}
+
+/**
+ * The memories the page shows: the loaded ones the learner has not deleted, in
+ * the order of the list, narrowed by the search. The list draws them and the
+ * editor reads them too, so the focus after a delete finds the row the learner sees.
+ */
+export function useShownMemories() {
+  const query = useMemoryPage((state) => state.query);
+  const hidden = useMemoryPage((state) => state.hidden);
+  const loaded = useMemory((reading) => reading.loaded);
+
+  return shownMemories(withoutHidden(loaded, hidden), query);
 }
 
 /**
