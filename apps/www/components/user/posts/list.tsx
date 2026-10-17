@@ -8,9 +8,14 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Array as Arr, DateTime } from "effect";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
+import {
+  createPostsClock,
+  type PostsClock,
+} from "@/components/user/posts/clock";
 import { PostComposer } from "@/components/user/posts/composer";
 import {
   failedView,
@@ -18,7 +23,11 @@ import {
   type PostsView,
   postsView,
 } from "@/components/user/posts/live";
-import { PostDraftProvider } from "@/components/user/posts/provider";
+import {
+  PostDraftProvider,
+  PostsProvider,
+  usePostsContext,
+} from "@/components/user/posts/provider";
 import { PostRow } from "@/components/user/posts/row";
 import { AGE_TICK_MILLISECONDS } from "@/components/user/posts/time";
 import { type CurrentUser, useViewer } from "@/lib/identity/client";
@@ -42,41 +51,37 @@ export function UserPosts({
   now: number;
 }) {
   const identity = useViewer((state) => state);
-  const now = usePostsNow(serverNow);
   // Until the browser knows the viewer, the account the server read stands for
   // the viewer, because the profile opens only for its owner.
   const viewer = identity.isPending ? account : identity.account;
   const author =
     viewer && viewer.appUser._id === account.appUser._id ? viewer : null;
+  const [clock] = useState(() => createPostsClock(serverNow));
+  useAgeTimer(clock);
   // A Retry changes the key, which remounts the list so that it asks the server
   // again. The draft lives in the provider above the list, so it stays. The
   // boundary catches an error the list throws, so the header and the tabs stay
   // on the screen and the failure shows above the server's page.
   const [attempt, setAttempt] = useState(0);
-  const onRetry = () => setAttempt((count) => count + 1);
+  const onRetry = useCallback(() => setAttempt((count) => count + 1), []);
 
   return (
     <PostDraftProvider>
-      <ErrorBoundary
-        fallbackRender={() => (
-          <PostsPanel
-            account={account}
-            author={author}
-            now={now}
-            onRetry={onRetry}
-            view={failedView(first?.page ?? null)}
-          />
-        )}
-        key={attempt}
+      <PostsProvider
+        account={account}
+        author={author}
+        clock={clock}
+        onRetry={onRetry}
       >
-        <PostsFeed
-          account={account}
-          author={author}
-          first={first}
-          now={now}
-          onRetry={onRetry}
-        />
-      </ErrorBoundary>
+        <ErrorBoundary
+          fallbackRender={() => (
+            <PostsPanel view={failedView(first?.page ?? null)} />
+          )}
+          key={attempt}
+        >
+          <PostsFeed first={first} />
+        </ErrorBoundary>
+      </PostsProvider>
     </PostDraftProvider>
   );
 }
@@ -87,19 +92,11 @@ export function UserPosts({
  * and the server's first page.
  */
 function PostsFeed({
-  account,
-  author,
   first,
-  now,
-  onRetry,
 }: {
-  account: CurrentUser;
-  /** The signed-in account when it is the profile's owner, which may write posts. */
-  author: CurrentUser | null;
   first: Ref.Returns<typeof posts.queries.list> | null;
-  now: number;
-  onRetry: () => void;
 }) {
+  const { account } = usePostsContext();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const live = usePaginatedQuery(
     posts.queries.list,
@@ -109,15 +106,11 @@ function PostsFeed({
 
   return (
     <PostsPanel
-      account={account}
-      author={author}
-      now={now}
       onLoadMore={
         PaginatedQueryResult.isCanLoadMore(live)
           ? () => live.loadMore(POST_PAGE_SIZE)
           : undefined
       }
-      onRetry={onRetry}
       view={postsView(live, first?.page ?? null)}
     />
   );
@@ -129,22 +122,14 @@ function PostsFeed({
  * The rows stay inert until the list takes a change.
  */
 function PostsPanel({
-  account,
-  author,
-  now,
   onLoadMore,
-  onRetry,
   view,
 }: {
-  account: CurrentUser;
-  /** The signed-in account when it is the profile's owner, which may write posts. */
-  author: CurrentUser | null;
-  now: number;
   onLoadMore?: (() => void) | undefined;
-  onRetry: () => void;
   view: PostsView;
 }) {
   const t = useTranslations("Posts");
+  const { author, onRetry } = usePostsContext();
 
   return (
     <div className="flex flex-col">
@@ -156,14 +141,9 @@ function PostsPanel({
         {view.rows.length > 0 && (
           <div className="flex flex-col">
             {Arr.map(view.rows, (post, index) => (
-              // The rows show the profile's own account, never the signed-in
-              // viewer, so a row does not depend on who is looking at it.
               <PostRow
-                author={account}
-                isAuthor={author !== null}
                 isLast={index === view.rows.length - 1}
                 key={post._id}
-                now={now}
                 post={post}
               />
             ))}
@@ -187,19 +167,15 @@ function PostsPanel({
 }
 
 /**
- * The moment the ages count from. It starts at the moment the server read the
- * page, so the browser writes the words the server wrote, and then it reads the
- * browser's clock on every tick, so an age keeps up with the time.
+ * Moves the clock of the ages to the browser's time at once, and then on each
+ * tick, so an age keeps up with the time after the server wrote it.
  */
-function usePostsNow(serverNow: number) {
-  const [now, setNow] = useState(serverNow);
-
+function useAgeTimer(clock: StoreApi<PostsClock>) {
   useEffect(() => {
-    const tick = () => setNow(DateTime.toEpochMillis(DateTime.nowUnsafe()));
+    const tick = () =>
+      clock.getState().setNow(DateTime.toEpochMillis(DateTime.nowUnsafe()));
     tick();
     const timer = window.setInterval(tick, AGE_TICK_MILLISECONDS);
     return () => window.clearInterval(timer);
-  }, []);
-
-  return now;
+  }, [clock]);
 }

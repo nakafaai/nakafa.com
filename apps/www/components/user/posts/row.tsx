@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
@@ -27,10 +28,14 @@ import {
   likeInLists,
   unlikeInLists,
 } from "@/components/user/posts/mutation.client";
+import {
+  usePostDraft,
+  usePostsContext,
+  usePostsNow,
+} from "@/components/user/posts/provider";
 import type { ListPost } from "@/components/user/posts/state";
 import { formatPostAge } from "@/components/user/posts/time";
 import { reportClientException } from "@/lib/analytics/client";
-import type { CurrentUser } from "@/lib/identity/client";
 
 /** The delete dialog loads when the learner opens the More menu of a post, before they can choose Delete. */
 const PostDeletion = dynamic(
@@ -45,22 +50,16 @@ const PostDeletion = dynamic(
  * One post of the list: the author's picture, the author's name and the age of
  * the post, the text, and the actions of the post. Only the author sees the
  * More menu. Separate posts have no line between their pictures, because a
- * post has no replies to join.
+ * post has no replies to join. The actions of a post that the server is still
+ * saving are held back, because the server does not know its placeholder id.
  */
-export function PostRow({
-  author,
-  isAuthor,
-  isLast,
-  now,
-  post,
-}: {
-  author: CurrentUser;
-  isAuthor: boolean;
-  isLast: boolean;
-  now: number;
-  post: ListPost;
-}) {
+export function PostRow({ isLast, post }: { isLast: boolean; post: ListPost }) {
   const locale = useLocale();
+  // The rows show the profile's own account, never the signed-in viewer, so a
+  // row does not depend on who is looking at it.
+  const { account, author } = usePostsContext();
+  const now = usePostsNow();
+  const pending = usePostDraft((draft) => draft.savingPostId === post._id);
   return (
     <article
       className={cn("flex gap-3 py-4", !isLast && "border-b")}
@@ -68,12 +67,12 @@ export function PostRow({
     >
       <PersonAvatar
         className="size-10 shrink-0"
-        mascot={author.appUser.mascot}
-        photo={photoOf(author.appUser)}
+        mascot={account.appUser.mascot}
+        photo={photoOf(account.appUser)}
       />
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-baseline gap-2 text-sm">
-          <span className="truncate font-medium">{author.authUser.name}</span>
+          <span className="truncate font-medium">{account.authUser.name}</span>
           <time
             className="shrink-0 text-muted-foreground"
             dateTime={DateTime.formatIso(
@@ -89,9 +88,9 @@ export function PostRow({
         >
           {post.text}
         </p>
-        <div className="flex -translate-x-2 items-center">
+        <div className="flex -translate-x-2 items-center" inert={pending}>
           <PostLikeButton post={post} />
-          {isAuthor && <PostMoreMenu postId={post._id} />}
+          {author !== null && <PostMoreMenu postId={post._id} />}
         </div>
       </div>
     </article>
@@ -100,8 +99,10 @@ export function PostRow({
 
 /**
  * The like toggle of a post, with its count once the count is above zero. The
- * count keeps its width at zero, so the first like does not move the row. The
- * change is made at once and the server answers after it.
+ * button keeps its width, so a like never moves the More menu beside it. The
+ * change is made at once and the server answers after it. The ghost variant
+ * recolors the icon on hover, so a liked heart keeps its color with a rule of
+ * its own.
  */
 function PostLikeButton({ post }: { post: ListPost }) {
   const t = useTranslations("Common");
@@ -142,7 +143,10 @@ function PostLikeButton({ post }: { post: ListPost }) {
     <Button
       aria-label={t("like")}
       aria-pressed={post.liked}
-      className="gap-1.5"
+      className={cn(
+        "w-16 gap-1.5",
+        post.liked && "hover:[&_svg]:text-destructive"
+      )}
       onClick={toggle}
       size="sm"
       variant="ghost"
@@ -151,9 +155,15 @@ function PostLikeButton({ post }: { post: ListPost }) {
         className={cn(post.liked && "text-destructive [&_path]:fill-current")}
         icon={FavouriteIcon}
       />
-      <span className="min-w-[3ch] text-xs tabular-nums">
-        {post.likeCount > 0 && post.likeCount}
-      </span>
+      <NumberFormat
+        className={cn(
+          "text-xs tabular-nums tracking-tight",
+          post.likeCount === 0 && "invisible"
+        )}
+        format={{ notation: "compact", maximumFractionDigits: 1 }}
+        isolate={true}
+        value={post.likeCount}
+      />
     </Button>
   );
 }

@@ -35,7 +35,7 @@ export function PostComposer({
 }) {
   const t = useTranslations("Posts");
   const text = usePostDraft((draft) => draft.text);
-  const saving = usePostDraft((draft) => draft.saving);
+  const saving = usePostDraft((draft) => draft.savingPostId !== null);
   const setText = usePostDraft((draft) => draft.setText);
   const startSaving = usePostDraft((draft) => draft.startSaving);
   const finishSaving = usePostDraft((draft) => draft.finishSaving);
@@ -52,14 +52,15 @@ export function PostComposer({
       return;
     }
     const posted = body.success;
-    startSaving();
     Effect.runPromise(
       randomUuid.pipe(
-        // The placeholder id of a post the server has not saved yet. It is
-        // never sent to the server, and the saved post replaces it.
+        // The placeholder id of a post the server has not saved yet. The create
+        // mutation sends only the text, so the server never sees this id, and
+        // the saved post replaces the placeholder in the list.
         Effect.flatMap((uuid) =>
           Schema.decodeUnknownEffect(Id("posts"))(uuid).pipe(Effect.orDie)
         ),
+        Effect.tap((draftId) => Effect.sync(() => startSaving(draftId))),
         Effect.flatMap((draftId) => {
           const draft: ListPost = {
             _creationTime: DateTime.toEpochMillis(DateTime.nowUnsafe()),
