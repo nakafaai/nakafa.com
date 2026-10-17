@@ -1,12 +1,12 @@
 {
   "NotFound": {
     "title": "We can't find this page",
-    "description": "Maybe the address has a typo, or the page has moved",
+    "description": "Maybe the address has a typo, or the page has moved.",
     "search-button": "Search materials"
   },
   "Error": {
     "title": "Something broke",
-    "description": "It's not your fault, and we'll take care of it",
+    "description": "It's not your fault, and we'll take care of it.",
     "retry": "Retry",
     "report": "Report"
   },

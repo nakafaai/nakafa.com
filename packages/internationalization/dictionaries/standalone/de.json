@@ -1,12 +1,12 @@
 {
   "NotFound": {
     "title": "Diese Seite finden wir nicht",
-    "description": "Vielleicht ein Tippfehler in der Adresse, oder die Seite ist umgezogen",
+    "description": "Vielleicht ein Tippfehler in der Adresse, oder die Seite ist umgezogen.",
     "search-button": "Lernmaterialien suchen"
   },
   "Error": {
     "title": "Etwas ist kaputtgegangen",
-    "description": "Das liegt nicht an dir, wir kümmern uns darum",
+    "description": "Das liegt nicht an dir, wir kümmern uns darum.",
     "retry": "Erneut versuchen",
     "report": "Melden"
   },
