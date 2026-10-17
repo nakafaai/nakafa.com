@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -43,14 +43,15 @@ const expectBandsInOrder = Effect.fn("NakafaE2E.expectVisualBandsInOrder")(
   function* (card: Locator) {
     const bands = yield* Effect.promise(() => readBands(card));
     yield* Effect.sync(() => {
-      const known = bands.slots.filter(
-        (slot): slot is string => slot !== null && BAND_ORDER.includes(slot)
+      const known = Arr.filter(
+        bands.slots,
+        (slot): slot is string =>
+          slot !== null && Arr.contains(BAND_ORDER, slot)
       );
       expect(known).toContain("visual-card-body");
+      // The bands present, read in the order a card must hold them.
       expect(known).toEqual(
-        [...known].sort(
-          (left, right) => BAND_ORDER.indexOf(left) - BAND_ORDER.indexOf(right)
-        )
+        Arr.filter(BAND_ORDER, (slot) => Arr.contains(known, slot))
       );
       expect(bands.bodyControls).toBe(0);
     });
