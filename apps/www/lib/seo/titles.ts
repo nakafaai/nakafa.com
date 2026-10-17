@@ -1,11 +1,9 @@
-import { Predicate } from "effect";
-
 const TITLE_LENGTH = 55;
 const TITLE_SEPARATOR = " - ";
 
 /** Fits prioritized title parts and the site name within the app's title budget. */
 export function createSEOTitle(
-  parts: readonly unknown[],
+  parts: readonly (string | undefined)[],
   siteName = "Nakafa"
 ): string {
   const site = truncateAtWordBoundary(siteName, TITLE_LENGTH);
@@ -16,10 +14,7 @@ export function createSEOTitle(
 
   let title = "";
   for (const part of parts) {
-    if (!Predicate.isString(part)) {
-      continue;
-    }
-    const text = part.trim();
+    const text = part?.trim();
     if (!text) {
       continue;
     }
