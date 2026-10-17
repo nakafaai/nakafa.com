@@ -50,7 +50,7 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
       <div className="grid justify-items-center gap-4">
         <p
           aria-live="polite"
-          className="min-h-24 max-w-md text-pretty rounded-xl bg-muted px-4 py-3 text-base"
+          className="min-h-24 w-full max-w-md text-pretty rounded-xl bg-muted px-4 py-3 text-base"
         >
           {latest?.said}
         </p>

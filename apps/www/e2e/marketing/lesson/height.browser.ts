@@ -32,6 +32,21 @@ const HEIGHT_SAMPLE_COUNT = Math.ceil(LESSON_WAIT_MS / HEIGHT_SAMPLE_MS);
  */
 const TAB_SAMPLE_COUNT = 10;
 
+/**
+ * Opens the home page and waits until its lesson window is on the page. React
+ * streams the window into a hidden element first and moves it into place with a
+ * script, so a window that is only attached may still have no box; the heights
+ * the tests compare are read once it is visible.
+ */
+const openHome = Effect.fn("NakafaE2E.openHomeLesson")(function* (page: Page) {
+  yield* openRoute(page, "/id", "denied");
+  yield* Effect.promise(() =>
+    expect(lessonWindow(page)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+});
+
 /** The widths the window's height is checked at: a phone and a desktop. */
 const WINDOW_VIEWPORTS = [touchViewport, desktopViewport];
 
@@ -66,7 +81,7 @@ test("home lesson window keeps its height once its visual is mounted", async ({
           yield* withObservedPageErrors(
             page,
             Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
+              yield* openHome(page);
               const panel = lessonPanel(page);
               yield* Effect.promise(() =>
                 lessonWindow(page).scrollIntoViewIfNeeded()
@@ -118,7 +133,7 @@ for (const viewport of WINDOW_VIEWPORTS) {
             yield* withObservedPageErrors(
               page,
               Effect.gen(function* () {
-                yield* openRoute(page, "/id", "denied");
+                yield* openHome(page);
                 const root = lessonWindow(page);
 
                 // Before the reveal the open panel holds its frame, which must already be the window's height.
@@ -168,7 +183,7 @@ for (const viewport of WINDOW_VIEWPORTS) {
             yield* withObservedPageErrors(
               page,
               Effect.gen(function* () {
-                yield* openRoute(page, "/id", "denied");
+                yield* openHome(page);
                 const root = lessonWindow(page);
                 const tabs = lessonSection(page).getByRole("tab");
                 yield* Effect.promise(() => root.scrollIntoViewIfNeeded());
@@ -229,7 +244,7 @@ for (const viewport of WINDOW_VIEWPORTS) {
             yield* withObservedPageErrors(
               page,
               Effect.gen(function* () {
-                yield* openRoute(page, "/id", "denied");
+                yield* openHome(page);
                 const cards = lessonCards(page);
                 const tabs = lessonSection(page).getByRole("tab");
 
