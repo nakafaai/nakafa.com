@@ -146,3 +146,4 @@ The first rule is live. The other two are targets.
 | Signed Aksara profile for Indonesia | Planned, program wave A |
 | The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NEXT_LOCALE` cookie |
 | Text direction through one helper | Live. `textDirection` in `packages/internationalization/src/direction.ts` sets `dir` on `<html>` and the `DirectionProvider` of Base UI, which `DesignSystemProvider` renders |
+| School time through one formatter | Live. `formatSchoolTime` in `packages/internationalization/src/school/time.ts`. No screen uses it yet |
