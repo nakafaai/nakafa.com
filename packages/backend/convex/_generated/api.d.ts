@@ -3994,6 +3994,64 @@ export declare const api: {
       >;
     };
   };
+  posts: {
+    mutations: {
+      create: FunctionReference<
+        "mutation",
+        "public",
+        { text: string },
+        Id<"posts">
+      >;
+      like: FunctionReference<
+        "mutation",
+        "public",
+        { postId: Id<"posts"> },
+        null
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { postId: Id<"posts"> },
+        null
+      >;
+      unlike: FunctionReference<
+        "mutation",
+        "public",
+        { postId: Id<"posts"> },
+        null
+      >;
+    };
+    queries: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          authorId: Id<"users">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"posts">;
+            likeCount: number;
+            liked: boolean;
+            text: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+  };
   subscriptions: {
     queries: {
       hasActiveSubscription: FunctionReference<
@@ -10778,6 +10836,16 @@ export declare const internal: {
           status: "active" | "revoked";
           userId: Id<"users">;
         }
+      >;
+    };
+  };
+  posts: {
+    cleanup: {
+      cleanupDeletedPost: FunctionReference<
+        "mutation",
+        "internal",
+        { postId: Id<"posts"> },
+        null
       >;
     };
   };
