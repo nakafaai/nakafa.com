@@ -8,6 +8,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import id from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
+import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import {
   characterCount,
   lineCount,
@@ -21,7 +22,13 @@ import {
   ToastValueKeySchema,
   ToastValuesSchema,
 } from "@repo/internationalization/src/toast";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
+
+/** The locales that have a dictionary, so each one's messages can be loaded. */
+const Locales = Schema.Literals(["de", "en", "id"]);
+
+/** A namespace of the app's messages, which holds messages or namespaces. */
+const MessageNamespaceSchema = Schema.Record(Schema.String, Schema.Unknown);
 
 /** A placeholder of a message, such as `{size, number}`, with its name in the first group. */
 const PLACEHOLDER = /\{(\w+)(?:,[^}]*)?\}/gu;
@@ -37,6 +44,28 @@ function placeholdersIn(text: string) {
 function placeholdersOf(namespace: Readonly<Record<string, ToastCopyText>>) {
   return Arr.flatMap(Rec.values(namespace), (copy) =>
     Arr.flatMap([copy.title, copy.description ?? ""], placeholdersIn)
+  );
+}
+
+/** Every message under a node of the app's messages, at any depth. */
+function messagesOf(node: unknown): readonly string[] {
+  if (typeof node === "string") {
+    return [node];
+  }
+  return Schema.is(MessageNamespaceSchema)(node)
+    ? Arr.flatMap(Rec.values(node), messagesOf)
+    : [];
+}
+
+/**
+ * The text each toast copy shows as a whole: its title alone, or its title and
+ * its description after it.
+ */
+function wholeCopiesOf(namespace: Readonly<Record<string, ToastCopyText>>) {
+  return Arr.map(Rec.values(namespace), (copy) =>
+    copy.description === undefined
+      ? copy.title
+      : `${copy.title} ${copy.description}`
   );
 }
 
@@ -176,4 +205,17 @@ describe("toast copy at 320px", () => {
 
     expect(unlisted).toEqual([]);
   });
+});
+
+describe("toast copy has one owner", () => {
+  it.each(Locales.literals)(
+    "names no message of the app in %s that repeats the whole copy of a toast",
+    async (locale) => {
+      const { Toast, ...messages } = await loadLocaleMessages(locale);
+
+      expect(
+        Arr.intersection(wholeCopiesOf(Toast), messagesOf(messages))
+      ).toEqual([]);
+    }
+  );
 });

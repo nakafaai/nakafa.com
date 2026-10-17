@@ -404,7 +404,6 @@
   "Auth": {
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
-    "provider-error": "Kami tidak dapat melanjutkan dengan Google. Coba lagi.",
     "sign-in-title": "Masuk ke Nakafa",
     "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",

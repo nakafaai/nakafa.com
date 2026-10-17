@@ -404,7 +404,6 @@
   "Auth": {
     "continue-with-google": "Continue with Google",
     "opening-google": "Opening Google...",
-    "provider-error": "We couldn't continue with Google. Please try again.",
     "sign-in-title": "Sign in to Nakafa",
     "sign-in-description": "So your progress stays saved.",
     "logout": "Logout",

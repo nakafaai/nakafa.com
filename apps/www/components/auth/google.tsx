@@ -24,6 +24,7 @@ interface Props {
 export function AuthGoogle({ redirect }: Props) {
   const locale = useLocale();
   const t = useTranslations("Auth");
+  const tToast = useTranslations("Toast");
   const [redirectQuery] = useQueryState("redirect");
   const [errorQuery] = useQueryState("error");
   const [hasClientError, setHasClientError] = useState(false);
@@ -66,12 +67,13 @@ export function AuthGoogle({ redirect }: Props) {
   return (
     <div className="flex flex-col items-center gap-2">
       {hasProviderError ? (
-        <p
+        <div
           className="max-w-sm text-center text-destructive text-sm"
           role="alert"
         >
-          {t("provider-error")}
-        </p>
+          <p className="font-medium">{tToast("provider-error.title")}</p>
+          <p>{tToast("provider-error.description")}</p>
+        </div>
       ) : null}
       <Button
         aria-busy={isPending || undefined}
