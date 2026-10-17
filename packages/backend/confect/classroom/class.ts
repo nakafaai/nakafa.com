@@ -69,7 +69,8 @@ export const classSlugOf = (name: string) =>
 /**
  * A class's address in its period: the form `classSlugOf` gives a name, with a
  * number after a hyphen when another class of the period holds the address
- * first. A string of any other shape names no class.
+ * first. The check admits capitals too, so a spelling that the form does not
+ * give names no class, and a lookup refuses it as missing.
  */
 export const ClassAddress = Schema.String.check(
   Schema.isPattern(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u)
