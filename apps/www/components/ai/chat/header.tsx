@@ -29,7 +29,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { useTranslations } from "next-intl";
 import {
   Activity,
@@ -39,6 +38,7 @@ import {
 } from "react";
 import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
+import { handleTitleKeyDown } from "@/components/ai/chat/rename";
 import { useChatRename } from "@/components/ai/chat/rename.client";
 import { ChatSharing } from "@/components/ai/chat/sharing";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -160,15 +160,12 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
             className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
             maxLength={MAX_TITLE_LENGTH}
             onChange={(e) => setChatTitle(e.target.value)}
-            onKeyDown={(e) => {
-              // While the learner composes a character, Enter belongs to the keyboard.
-              if (isEnterOutsideComposition(e.nativeEvent)) {
-                handleSave();
-              }
-              if (e.key === "Escape") {
-                closeEditor();
-              }
-            }}
+            onKeyDown={(e) =>
+              handleTitleKeyDown(e.nativeEvent, {
+                close: closeEditor,
+                save: handleSave,
+              })
+            }
             ref={inputRef}
             value={chatTitle}
           />
