@@ -28,3 +28,15 @@ export function focusFirst(candidates: readonly (HTMLElement | null)[]) {
     }
   }
 }
+
+/**
+ * Moves the focus from the Undo button to the search field when the learner
+ * presses Undo. The toast of the Undo leaves the page at the press, and while the
+ * focus is in the toast, the toast's region gives the focus back to the element it
+ * had before the toast as soon as the focus leaves the toast. An editor that a
+ * failed Undo opens would lose its focus that way, so the press moves the focus
+ * out of the toast first.
+ */
+export function focusSearchOnUndo() {
+  focusFirst([document.getElementById(MEMORY_SEARCH_ID)]);
+}

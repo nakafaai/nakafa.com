@@ -15,6 +15,7 @@ import {
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
+import { focusSearchOnUndo } from "@/components/user/settings/memory/focus";
 import {
   draftArgs,
   draftOf,
@@ -243,7 +244,13 @@ export function useMemoryActions() {
 
     const { session } = latest();
     const shown = toast(t("deleted"), {
-      action: { label: t("undo"), onClick: () => undo.press() },
+      action: {
+        label: t("undo"),
+        onClick: () => {
+          focusSearchOnUndo();
+          undo.press();
+        },
+      },
       duration: Duration.toMillis(MEMORY_UNDO),
     });
 
