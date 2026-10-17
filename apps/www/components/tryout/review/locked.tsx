@@ -17,6 +17,7 @@ import {
 } from "@/components/marketing/about/pricing/price";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
@@ -161,14 +162,16 @@ function TryoutReviewOffer({
       <CardContent>
         <PricingPrice Price={StaticPrice} period={period} plan="pro" />
       </CardContent>
-      <CardSectionFooter className="flex-col-reverse items-stretch gap-2 max-md:rounded-none max-md:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] md:flex-row md:justify-end">
-        <IntentLink
-          className={buttonVariants({ variant: "outline" })}
-          href="/pricing"
-        >
-          {compare}
-        </IntentLink>
-        <TryoutReviewCheckout />
+      <CardSectionFooter bottomSheet>
+        <CardSectionActions share>
+          <IntentLink
+            className={buttonVariants({ variant: "outline" })}
+            href="/pricing"
+          >
+            {compare}
+          </IntentLink>
+          <TryoutReviewCheckout />
+        </CardSectionActions>
       </CardSectionFooter>
     </CardSection>
   );

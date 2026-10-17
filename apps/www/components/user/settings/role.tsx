@@ -24,7 +24,9 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -148,18 +150,18 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
             selector={(state) => [state.isDirty, state.isSubmitting]}
           >
             {([isDirty, isSubmitting]) => (
-              <div className="flex w-full items-center justify-between gap-4">
-                <p className="text-muted-foreground text-sm">
-                  {t("role-footer")}
-                </p>
-                <Button
-                  disabled={!isDirty || isSubmitting}
-                  size="sm"
-                  type="submit"
-                >
-                  {t("save")}
-                </Button>
-              </div>
+              <>
+                <CardSectionHint>{t("role-footer")}</CardSectionHint>
+                <CardSectionActions>
+                  <Button
+                    disabled={!isDirty || isSubmitting}
+                    size="sm"
+                    type="submit"
+                  >
+                    {t("save")}
+                  </Button>
+                </CardSectionActions>
+              </>
             )}
           </form.Subscribe>
         </CardSectionFooter>
