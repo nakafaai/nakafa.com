@@ -6,8 +6,6 @@ import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import {
   type Memory,
-  markChanged,
-  nowTime,
   StepRejected,
   type SyncSession,
 } from "@/lib/editor/session";
@@ -144,7 +142,6 @@ export const reopen = Effect.fn("editor.sync.reopen")(function* (
     settled.skipped,
     (view) => view.clientId === memory.clientId
   );
-  const now = yield* nowTime;
   yield* Ref.set(session.server, settled.doc);
   yield* Ref.update(session.memory, (current) => ({
     ...current,
@@ -154,11 +151,7 @@ export const reopen = Effect.fn("editor.sync.reopen")(function* (
       replaced.refused.length +
       replaced.rebaseDropped +
       ownSkipped.length,
-    head: opened.head,
-    snapshotAt: Option.some(now),
-    snapshotVersion: opened.snapshot.version,
   }));
-  yield* markChanged(session, opened.steps);
 });
 
 /**

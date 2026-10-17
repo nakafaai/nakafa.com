@@ -1,12 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option, Ref } from "effect";
-import { TestClock } from "effect/testing";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import type { SyncSession } from "@/lib/editor/session";
 import { startSync, tick } from "@/lib/editor/sync";
 import {
-  EMPTY_DOCUMENT,
-  IDLE,
   makePort,
   makeServer,
   openEditor,
@@ -27,8 +24,7 @@ describe("editor/sync reopening from a snapshot", () => {
         yield* typeText(writer.state, "a");
         yield* tick(writer.session);
         yield* tick(writer.session);
-        yield* TestClock.adjust(IDLE);
-        yield* tick(writer.session);
+        yield* server.fold;
         expect(yield* server.counts).toMatchObject({
           head: 1,
           snapshotVersion: 1,
@@ -55,8 +51,7 @@ describe("editor/sync reopening from a snapshot", () => {
         yield* typeText(writer.state, "a");
         yield* tick(writer.session);
         yield* tick(writer.session);
-        yield* TestClock.adjust(IDLE);
-        yield* tick(writer.session);
+        yield* server.fold;
         yield* typeText(stale.state, "unsent");
         // The stale editor sends its batch before it sees the server's steps, so the server
         // refuses it, and it waits. The log then loses the steps it needs.
@@ -82,8 +77,7 @@ describe("editor/sync reopening from a snapshot", () => {
         yield* tick(writer.session);
         yield* typeText(writer.state, "b");
         yield* tick(other.session);
-        yield* TestClock.adjust(IDLE);
-        yield* tick(other.session);
+        yield* server.fold;
         expect(yield* server.counts).toMatchObject({
           head: 1,
           snapshotVersion: 1,
@@ -120,7 +114,7 @@ describe("editor/sync reopening from a snapshot", () => {
         );
         yield* tick(writer.session);
         yield* tick(writer.session);
-        yield* server.transport.save({ content: EMPTY_DOCUMENT, version: 2 });
+        yield* server.fold;
         yield* server.prune(2);
         const reported = yield* tick(stale.session);
         expect(reported).toEqual(
@@ -146,8 +140,7 @@ describe("editor/sync reopening from a snapshot", () => {
         yield* typeText(writer.state, "a");
         yield* tick(writer.session);
         yield* tick(writer.session);
-        yield* TestClock.adjust(IDLE);
-        yield* tick(writer.session);
+        yield* server.fold;
         yield* typeText(writer.state, "b");
         yield* tick(writer.session);
         yield* tick(writer.session);

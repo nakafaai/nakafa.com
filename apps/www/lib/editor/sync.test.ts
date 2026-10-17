@@ -2,18 +2,15 @@ import { describe, expect, it } from "@effect/vitest";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
 import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Logger, MutableList, Option, Ref } from "effect";
-import { TestClock } from "effect/testing";
+import { Array as Arr, Effect, Option, Ref } from "effect";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import {
-  SyncDropped,
   SyncFailed,
   type SyncSession,
   type SyncTransport,
 } from "@/lib/editor/session";
 import { startSync, tick } from "@/lib/editor/sync";
 import {
-  IDLE,
   makePort,
   makeServer,
   nestedQuote,
@@ -159,141 +156,6 @@ describe("editor/sync refusals and waiting", () => {
         expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
         yield* tick(editor.session);
         expect(yield* server.counts).toMatchObject({ head: 2, submits: 2 });
-      })
-  );
-});
-
-describe("editor/sync snapshots", () => {
-  it.effect(
-    "saves a snapshot only when nothing is unconfirmed and the snapshot rule allows one",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "a");
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({ saves: 0 });
-        yield* TestClock.adjust(IDLE);
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({
-          head: 1,
-          saves: 1,
-          snapshotVersion: 1,
-        });
-        // Nothing has changed since the snapshot, so the rule allows no second one.
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({ saves: 1 });
-      })
-  );
-
-  it.effect(
-    "does not save a snapshot while its batch still waits for the server's steps, though the idle time has passed",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "a");
-        yield* tick(editor.session);
-        yield* TestClock.adjust(IDLE);
-        // The steps the server accepted have not come back yet, so the editor holds
-        // "a" as unconfirmed while the idle time has passed.
-        yield* tick(silentEditor(server, editor.session));
-        expect(yield* server.counts).toMatchObject({ head: 1, saves: 0 });
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({
-          head: 1,
-          saves: 1,
-          snapshotVersion: 1,
-        });
-      })
-  );
-
-  it.effect(
-    "counts an edit by another editor as a change, so the idle time of this editor starts over",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const writer = yield* openEditor(server.transport);
-        const reader = yield* openEditor(server.transport);
-        yield* typeText(writer.state, "a");
-        yield* tick(writer.session);
-        yield* TestClock.adjust(IDLE);
-        yield* tick(reader.session);
-        expect(yield* server.counts).toMatchObject({ head: 1, saves: 0 });
-        yield* TestClock.adjust(IDLE);
-        yield* tick(reader.session);
-        expect(yield* server.counts).toMatchObject({ head: 1, saves: 1 });
-      })
-  );
-
-  it.effect(
-    "does not ask again on every tick after the server refuses a snapshot",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "a");
-        yield* tick(editor.session);
-        yield* TestClock.adjust(IDLE);
-        yield* server.refuseSaves(true);
-        yield* tick(editor.session);
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({
-          saveAttempts: 1,
-          saves: 0,
-        });
-      })
-  );
-
-  it.effect(
-    "completes the round when the server refuses the content of a snapshot, and still reports the steps dropped",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "a");
-        yield* tick(editor.session);
-        yield* TestClock.adjust(IDLE);
-        yield* server.refuseContent(true);
-        yield* Ref.update(editor.session.memory, (current) => ({
-          ...current,
-          dropped: 2,
-        }));
-        // The contract's refusal of the content is an answer, not a failure of the call:
-        // the round completes, and the count of dropped steps is reported.
-        const reported = yield* tick(editor.session);
-        expect(reported).toEqual(Option.some(new SyncDropped({ count: 2 })));
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({
-          saveAttempts: 1,
-          saves: 0,
-        });
-      })
-  );
-
-  it.effect(
-    "logs the server's refusal of a snapshot's content with its kind",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "a");
-        yield* tick(editor.session);
-        yield* TestClock.adjust(IDLE);
-        yield* server.refuseContent(true);
-        const messages = MutableList.make<unknown>();
-        yield* tick(editor.session).pipe(
-          Effect.provide(
-            Logger.layer([
-              Logger.make(({ message }) => {
-                MutableList.append(messages, message);
-              }),
-            ])
-          )
-        );
-        expect(MutableList.toArray(messages)).toEqual([
-          [expect.stringContaining("DocumentInvalid")],
-        ]);
       })
   );
 });

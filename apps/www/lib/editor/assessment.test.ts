@@ -1,9 +1,21 @@
 import { describe, expect, it } from "@effect/vitest";
 import { storedDocument } from "@repo/backend/confect/editor/document";
+import { foldSteps } from "@repo/backend/confect/editor/fold";
+import { assessmentModel } from "@repo/backend/confect/editor/model";
 import { NodeTypeSchema } from "@repo/backend/confect/editor/node";
+import { StepSchema } from "@repo/backend/confect/editor/step";
 import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";
-import { Array as Arr, Effect, Record as Rec, String as Str } from "effect";
+import type { Transaction } from "@tiptap/pm/state";
+import { EditorState } from "@tiptap/pm/state";
+import { findWrapping, type Step } from "@tiptap/pm/transform";
+import {
+  Array as Arr,
+  Effect,
+  Record as Rec,
+  Schema,
+  String as Str,
+} from "effect";
 import {
   ASSESSMENT_MARKS,
   ASSESSMENT_RULES,
@@ -117,6 +129,79 @@ describe("editor/assessment marks", () => {
         });
         const failure = yield* storedDocument(text).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "DocumentInvalid" });
+      })
+  );
+});
+
+describe("editor/assessment server fold", () => {
+  it.effect(
+    "folds the steps of the editor's own commands on the server into the document the editor holds",
+    () =>
+      Effect.gen(function* () {
+        const start = assessmentSchema.nodeFromJSON({
+          content: [
+            { content: [{ text: "Soal", type: "text" }], type: "paragraph" },
+          ],
+          type: "doc",
+        });
+        let state = EditorState.create({ doc: start });
+        let steps: readonly Step[] = [];
+        // Each change is one transaction of the editor, and its steps are the ones the
+        // editor sends, so the server folds what the editor really makes.
+        const commit = (change: (tr: Transaction) => void) => {
+          const tr = state.tr;
+          change(tr);
+          steps = Arr.appendAll(steps, tr.steps);
+          state = state.apply(tr);
+        };
+        commit((tr) =>
+          tr.setBlockType(1, 5, assessmentSchema.nodes.heading, { level: 2 })
+        );
+        commit((tr) => tr.addMark(1, 3, assessmentSchema.marks.bold.create()));
+        commit((tr) => tr.insertText("?", 1));
+        commit((tr) => tr.insertText("!", 6));
+        commit((tr) =>
+          tr.addMark(
+            2,
+            4,
+            assessmentSchema.marks.link.create({
+              href: "https://nakafa.com",
+            })
+          )
+        );
+        commit((tr) => tr.removeMark(1, 3, assessmentSchema.marks.bold));
+        commit((tr) => {
+          const range = tr.doc.resolve(1).blockRange();
+          const wrapping =
+            range === null
+              ? null
+              : findWrapping(range, assessmentSchema.nodes.blockquote);
+          if (range !== null && wrapping !== null) {
+            tr.wrap(range, wrapping);
+          }
+        });
+        commit((tr) =>
+          tr.insert(
+            tr.doc.content.size,
+            assessmentSchema.nodes.paragraph.create(
+              null,
+              assessmentSchema.text("fin")
+            )
+          )
+        );
+        const decoded = yield* Effect.forEach(steps, (step) =>
+          Schema.decodeUnknownEffect(StepSchema)(step.toJSON()).pipe(
+            Effect.orDie
+          )
+        );
+        const folded = yield* foldSteps(
+          assessmentModel,
+          assessmentModel.nodeFromJSON(start.toJSON()),
+          0,
+          decoded
+        );
+        expect(folded.skipped).toEqual([]);
+        expect(folded.doc.toJSON()).toEqual(state.doc.toJSON());
       })
   );
 });

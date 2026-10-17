@@ -5,14 +5,12 @@ import { push } from "@/lib/editor/send";
 import {
   type EditorPort,
   type Memory,
-  nowTime,
   SyncDropped,
   SyncFailed,
   type SyncSession,
   type SyncTransport,
 } from "@/lib/editor/session";
 import { readDocument, receiveOnto, settleSteps } from "@/lib/editor/settle";
-import { snapshotIfDue } from "@/lib/editor/snapshot";
 
 /**
  * Opens the document for an editor. The editor gets a session ID of its own, the
@@ -44,15 +42,10 @@ export const startSync = Effect.fn("editor.sync.start")(function* (
         "The editor changed while the document opened, so it did not open.",
     });
   }
-  const now = yield* nowTime;
   const memory = yield* Ref.make<typeof Memory.Type>({
     batch: Option.none(),
     clientId,
     dropped: 0,
-    head: opened.head,
-    lastChangeAt: now,
-    snapshotAt: Option.none(),
-    snapshotVersion: opened.snapshot.version,
   });
   const server = yield* Ref.make(settled.doc);
   const rounds = yield* Semaphore.make(1);
@@ -61,13 +54,12 @@ export const startSync = Effect.fn("editor.sync.start")(function* (
 });
 
 /**
- * One round of sync: take the server's steps, send the editor's own steps, and save a
- * snapshot when the rule allows one.
+ * One round of sync: take the server's steps, then send the editor's own steps. The
+ * server folds the steps into the snapshot, so an editor never writes one (ADR 0028).
  */
 const round = Effect.fn("editor.sync.round")(function* (session: SyncSession) {
   yield* pull(session);
   yield* push(session);
-  yield* snapshotIfDue(session);
 });
 
 /**

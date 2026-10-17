@@ -1,28 +1,12 @@
 import type { VersionStale } from "@repo/backend/confect/editor/batch";
-import type {
-  DocumentInvalid,
-  DocumentTooLarge,
-} from "@repo/backend/confect/editor/document";
-import type {
-  ClientTaken,
-  SnapshotRefused,
-} from "@repo/backend/confect/editor/errors";
+import type { ClientTaken } from "@repo/backend/confect/editor/errors";
 import type {
   OpenedDocument,
   SinceReply,
-  StepView,
 } from "@repo/backend/confect/editor/view";
 import type { Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
-import {
-  Array as Arr,
-  Clock,
-  DateTime,
-  Effect,
-  Ref,
-  Schema,
-  type Semaphore,
-} from "effect";
+import { type Effect, type Ref, Schema, type Semaphore } from "effect";
 
 /** A call to the server that failed for a reason the loop does not decide: the network, a denied access, or a refused read. */
 export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
@@ -62,14 +46,6 @@ export interface SyncTransport {
   readonly open: (
     clientId: string
   ) => Effect.Effect<typeof OpenedDocument.Type, SyncFailed>;
-  /** The server refuses a snapshot whose rule is not due, or whose content the contract or the row size refuses. */
-  readonly save: (snapshot: {
-    readonly content: string;
-    readonly version: number;
-  }) => Effect.Effect<
-    { readonly version: number },
-    DocumentInvalid | DocumentTooLarge | SnapshotRefused | SyncFailed
-  >;
   readonly since: (
     clientId: string,
     version: number
@@ -128,17 +104,12 @@ const PendingBatch = Schema.Struct({
 /**
  * What the loop remembers between rounds. `batch` is the batch in flight, refused,
  * or failed. `dropped` counts the steps this editor lost while it opened again, which
- * no round has reported yet. `lastChangeAt` is the last time an edit of this document
- * was seen, from this editor or another, and the snapshot rule reads it as the idle time.
+ * no round has reported yet.
  */
 export const Memory = Schema.Struct({
   batch: Schema.Option(PendingBatch),
   clientId: Schema.String,
   dropped: Schema.Natural,
-  head: Schema.Natural,
-  lastChangeAt: Schema.DateTimeUtc,
-  snapshotAt: Schema.Option(Schema.DateTimeUtc),
-  snapshotVersion: Schema.Natural,
 });
 
 /**
@@ -157,21 +128,3 @@ export interface SyncSession {
   readonly server: Ref.Ref<Node>;
   readonly transport: SyncTransport;
 }
-
-/** The current time as a `DateTime`, read from the clock so a test can move it. */
-export const nowTime = Effect.map(Clock.currentTimeMillis, DateTime.makeUnsafe);
-
-/** An edit by another editor counts as a change, so the idle time of this editor starts over. */
-export const markChanged = Effect.fn("editor.sync.changed")(function* (
-  session: SyncSession,
-  steps: readonly (typeof StepView.Type)[]
-) {
-  const memory = yield* Ref.get(session.memory);
-  if (Arr.some(steps, (view) => view.clientId !== memory.clientId)) {
-    const now = yield* nowTime;
-    yield* Ref.update(session.memory, (current) => ({
-      ...current,
-      lastChangeAt: now,
-    }));
-  }
-});

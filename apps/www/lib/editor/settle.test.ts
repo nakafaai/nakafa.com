@@ -6,12 +6,10 @@ import { encodeJsonText } from "@repo/utilities/json";
 import type { Node } from "@tiptap/pm/model";
 import type { EditorState } from "@tiptap/pm/state";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
-import { TestClock } from "effect/testing";
 import { getVersion } from "prosemirror-collab";
 import type { SyncSession } from "@/lib/editor/session";
 import { tick } from "@/lib/editor/sync";
 import {
-  IDLE,
   makeServer,
   nestedQuote,
   openEditor,
@@ -58,9 +56,9 @@ describe("editor/sync stored steps that do not apply", () => {
         // The skipped step still counts in the version, so the editors stand at the head.
         expect(getVersion(firstState)).toBe(4);
         expect(getVersion(thirdState)).toBe(4);
-        // A snapshot saved after the skip holds the document the editors share.
-        yield* TestClock.adjust(IDLE);
-        yield* tick(first.session);
+        // The server's fold skips the same step, so its snapshot holds the document the
+        // editors share.
+        yield* server.fold;
         const snapshot = yield* server.snapshot;
         expect(snapshot).toEqual({
           content: encodeJsonText(firstState.doc.toJSON()),

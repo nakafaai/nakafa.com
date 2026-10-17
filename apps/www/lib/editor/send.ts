@@ -14,7 +14,7 @@ import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { sendableSteps } from "prosemirror-collab";
 import { dropUnsendable } from "@/lib/editor/replay";
-import { nowTime, SyncFailed, type SyncSession } from "@/lib/editor/session";
+import { SyncFailed, type SyncSession } from "@/lib/editor/session";
 
 /** A batch as the loop encodes it: its text, and the number of steps the text holds. */
 const FittedBatch = Schema.Struct({
@@ -115,7 +115,6 @@ export const push = Effect.fn("editor.sync.push")(function* (
     onNone: () => Math.min(sendable.steps.length, MAX_BATCH_STEPS),
     onSome: (batch) => batch.count,
   });
-  const now = yield* nowTime;
   const fitted = yield* fittingBatch(
     id,
     sendable.version,
@@ -140,17 +139,14 @@ export const push = Effect.fn("editor.sync.push")(function* (
       sent: false,
       version: sendable.version,
     }),
-    lastChangeAt: now,
   }));
-  const head = yield* session.transport.submit(fitted.text).pipe(
-    Effect.map((accepted) => accepted.head),
+  yield* session.transport.submit(fitted.text).pipe(
     // A refused batch waits for the server's steps, and the next round sends nothing on
     // this version. A failure of the call is not caught here: the batch stays unsent.
-    Effect.catchTag("VersionStale", () => Effect.succeed(null))
+    Effect.catchTag("VersionStale", () => Effect.void)
   );
   yield* Ref.update(session.memory, (current) => ({
     ...current,
     batch: Option.map(current.batch, (batch) => ({ ...batch, sent: true })),
-    head: head ?? current.head,
   }));
 });

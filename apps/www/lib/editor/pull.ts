@@ -3,11 +3,7 @@ import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Ref } from "effect";
 import { getVersion, receiveTransaction } from "prosemirror-collab";
 import { reopen } from "@/lib/editor/replay";
-import {
-  markChanged,
-  SyncFailed,
-  type SyncSession,
-} from "@/lib/editor/session";
+import { SyncFailed, type SyncSession } from "@/lib/editor/session";
 import { settleSteps } from "@/lib/editor/settle";
 
 /** Whether the steps follow the version one by one, starting with the version after it. */
@@ -40,15 +36,13 @@ const dispatchReceived = Effect.fn("editor.sync.dispatch")(function* (
 /**
  * Applies the steps the server returned, in order. The server's document takes them
  * first, then the editor's state does, through the collab plugin: the editor's own
- * steps confirm its unconfirmed ones, and the others are rebased over them. The head
- * moves to the server's head, and an edit by another editor counts as a change for the
- * idle rule. A reply whose steps do not follow the editor's version is refused before
- * any of it applies, so no step is applied twice or skipped.
+ * steps confirm its unconfirmed ones, and the others are rebased over them. A reply
+ * whose steps do not follow the editor's version is refused before any of it applies,
+ * so no step is applied twice or skipped.
  */
 const applySteps = Effect.fn("editor.sync.apply")(function* (
   session: SyncSession,
-  steps: readonly (typeof StepView.Type)[],
-  head: number
+  steps: readonly (typeof StepView.Type)[]
 ) {
   const state = yield* session.port.state;
   if (!followsVersion(getVersion(state), steps)) {
@@ -56,7 +50,6 @@ const applySteps = Effect.fn("editor.sync.apply")(function* (
       reason: "The server's steps do not follow this editor's version.",
     });
   }
-  yield* Ref.update(session.memory, (current) => ({ ...current, head }));
   if (steps.length === 0) {
     return;
   }
@@ -76,7 +69,6 @@ const applySteps = Effect.fn("editor.sync.apply")(function* (
     Arr.map(steps, (view) => view.clientId)
   );
   yield* Ref.set(session.server, settled.doc);
-  yield* markChanged(session, steps);
 });
 
 /**
@@ -96,5 +88,5 @@ export const pull = Effect.fn("editor.sync.pull")(function* (
   if (reply._tag === "behind") {
     return yield* reopen(session);
   }
-  yield* applySteps(session, reply.steps, reply.head);
+  yield* applySteps(session, reply.steps);
 });

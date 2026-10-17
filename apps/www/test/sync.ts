@@ -3,15 +3,13 @@ import {
   decodeBatch,
   VersionStale,
 } from "@repo/backend/confect/editor/batch";
-import { DocumentInvalid } from "@repo/backend/confect/editor/document";
-import { SnapshotRefused } from "@repo/backend/confect/editor/errors";
-import { SNAPSHOT_IDLE_DELAY } from "@repo/backend/confect/editor/snapshot";
-import { encodeStep } from "@repo/backend/confect/editor/step";
+import { foldSteps, snapshotNode } from "@repo/backend/confect/editor/fold";
+import { decodeStep, encodeStep } from "@repo/backend/confect/editor/step";
 import type { SinceReply } from "@repo/backend/confect/editor/view";
 import { encodeJsonText } from "@repo/utilities/json";
 import { type Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
-import { Array as Arr, Duration, Effect, Option, Ref, Schema } from "effect";
+import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { collab } from "prosemirror-collab";
 import type {
   EditorPort,
@@ -43,15 +41,12 @@ export const nestedQuote = (levels: number): Node => {
   return node;
 };
 
-/** Past the snapshot rule's idle delay by one second, so a snapshot is due at once. */
-export const IDLE = Duration.sum(SNAPSHOT_IDLE_DELAY, Duration.seconds(1));
-
 /** One empty document, where every test starts. */
 const emptyDoc = () =>
   proseSchema.node("doc", null, [proseSchema.node("paragraph")]);
 
-/** The JSON text of the empty document, which a server starts from and a test can save. */
-export const EMPTY_DOCUMENT = encodeJsonText(emptyDoc().toJSON());
+/** The JSON text of the empty document, which a server starts from. */
+const EMPTY_DOCUMENT = encodeJsonText(emptyDoc().toJSON());
 
 /** One editor session's record on the fake server: the batch it had accepted last, and the version that batch produced. */
 const FakeClient = Schema.Struct({
@@ -65,8 +60,6 @@ const FakeLog = Schema.Struct({
   clients: Schema.Array(FakeClient),
   firstKept: Schema.Finite,
   head: Schema.Finite,
-  saveAttempts: Schema.Finite,
-  saves: Schema.Finite,
   snapshot: Schema.Struct({ content: Schema.String, version: Schema.Finite }),
   steps: Schema.Array(
     Schema.Struct({
@@ -103,15 +96,11 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
     clients: [],
     firstKept: 1,
     head: 0,
-    saveAttempts: 0,
-    saves: 0,
     snapshot: { content: initialContent, version: 0 },
     steps: [],
     submitAttempts: 0,
     submits: 0,
   });
-  const refuseSaves = yield* Ref.make(false);
-  const refuseContent = yield* Ref.make(false);
 
   const transport: SyncTransport = {
     open: (clientId) =>
@@ -186,36 +175,48 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
         }));
         return { head };
       }),
-    save: ({ content, version }) =>
-      Effect.gen(function* () {
-        yield* Ref.update(log, (state) => ({
-          ...state,
-          saveAttempts: state.saveAttempts + 1,
-        }));
-        if (yield* Ref.get(refuseSaves)) {
-          return yield* new SnapshotRefused({ reason: "notDue" });
-        }
-        if (yield* Ref.get(refuseContent)) {
-          return yield* new DocumentInvalid();
-        }
-        yield* Ref.update(log, (state) => ({
-          ...state,
-          saves: state.saves + 1,
-          snapshot: { content, version },
-        }));
-        return { version };
-      }),
   };
 
   return {
     counts: Effect.map(Ref.get(log), (current) => ({
       head: current.head,
-      saveAttempts: current.saveAttempts,
-      saves: current.saves,
       snapshotVersion: current.snapshot.version,
       submitAttempts: current.submitAttempts,
       submits: current.submits,
     })),
+    /**
+     * Folds the steps after the snapshot into it, as the server folds its log. The fold
+     * is the one of `confect/editor/fold`, so the server's snapshot is the document the
+     * editors share, and no editor writes it (ADR 0028).
+     */
+    fold: Effect.gen(function* () {
+      const current = yield* Ref.get(log);
+      const pending = Arr.filter(
+        current.steps,
+        (step) => step.version > current.snapshot.version
+      );
+      const start = yield* snapshotNode(proseSchema, current.snapshot.content);
+      const steps = yield* Effect.forEach(pending, (step) =>
+        decodeStep(step.step).pipe(Effect.orDie)
+      );
+      const folded = yield* foldSteps(
+        proseSchema,
+        start,
+        current.snapshot.version,
+        steps
+      );
+      yield* Ref.update(log, (state) => ({
+        ...state,
+        snapshot: {
+          content: encodeJsonText(folded.doc.toJSON()),
+          version: Arr.reduce(
+            pending,
+            current.snapshot.version,
+            (_, step) => step.version
+          ),
+        },
+      }));
+    }),
     snapshot: Effect.map(Ref.get(log), (current) => current.snapshot),
     /** Drops the steps that a snapshot at `through` covers, as the server's sweep does once they are old. */
     prune: (through: number) =>
@@ -224,8 +225,6 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
         firstKept: through + 1,
         steps: Arr.filter(state.steps, (step) => step.version > through),
       })),
-    refuseContent: (refuse: boolean) => Ref.set(refuseContent, refuse),
-    refuseSaves: (refuse: boolean) => Ref.set(refuseSaves, refuse),
     transport,
   };
 });
