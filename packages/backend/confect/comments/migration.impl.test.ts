@@ -366,24 +366,35 @@ describe("comments/migration (one-off)", () => {
         upvoteCount: 0,
         userId: author.userId,
       });
-      return { legacyReply, root };
+      // A reply to that reply, so the thread is two parents away from the new reply.
+      const legacyNested = await ctx.db.insert("comments", {
+        downvoteCount: 0,
+        parentId: legacyReply,
+        replyCount: 0,
+        slug: "articles/chain",
+        text: "Reply to the reply before the migration",
+        upvoteCount: 0,
+        userId: author.userId,
+      });
+      return { legacyNested, root };
     });
 
-    // The new reply names a reply that holds no thread yet, so its thread is found by walking up.
+    // The new reply names a reply that holds no thread yet, and that reply's parent
+    // holds none either, so the thread is found by walking up to the top-level comment.
     const replyId = await t
       .withIdentity({
         subject: replier.authUserId,
         sessionId: replier.sessionId,
       })
       .mutation(api.comments.mutations.addComment, {
-        parentId: ids.legacyReply,
+        parentId: ids.legacyNested,
         slug: "articles/chain",
-        text: "Reply to the reply in the window",
+        text: "Reply to the nested reply in the window",
       });
 
     expect(
       await t.query((ctx) => ctx.db.get("comments", replyId))
-    ).toMatchObject({ parentId: ids.legacyReply, threadId: ids.root });
+    ).toMatchObject({ parentId: ids.legacyNested, threadId: ids.root });
     expect(
       await t.query((ctx) => ctx.db.get("comments", ids.root))
     ).toMatchObject({ replyCount: 1 });
