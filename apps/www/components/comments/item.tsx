@@ -150,7 +150,6 @@ function CommentReplyToggle({
         render={
           <Button
             aria-label={t("reply")}
-            className="w-16"
             disabled={isPending}
             onClick={onReplyToggle}
             size="sm"

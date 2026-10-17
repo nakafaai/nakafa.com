@@ -67,6 +67,7 @@ describe("retired profile address redirects", () => {
     [`/id/user/${ID}`, "/id/@nabilfatih"],
     [`/en/user/${ID}`, "/en/@nabilfatih"],
     [`/de/user/${ID}/chat`, "/de/@nabilfatih/chat"],
+    [`/en/user/${ID}/comments`, "/en/@nabilfatih/comments"],
   ])(
     "sends the id address %s of the signed-in account to %s for good",
     ([pathname, destination]) =>
@@ -136,7 +137,6 @@ describe("retired profile address redirects", () => {
     "/id/user",
     "/id/user/settings",
     "/id/user/settings/memory",
-    `/id/user/${ID}/comments`,
     `/id/user/${ID}/chat/more`,
     `/id/search/${ID}`,
     "/id/@nabilfatih",

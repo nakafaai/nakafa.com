@@ -67,6 +67,8 @@ import ninaUploads from "./tables/ninaUploads";
 import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
+import postLikes from "./tables/postLikes";
+import posts from "./tables/posts";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
@@ -169,6 +171,8 @@ export default $defineSchema({
   notifications: $Table.tableDefinition(notifications),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),
   operators: $Table.tableDefinition(operators),
+  postLikes: $Table.tableDefinition(postLikes),
+  posts: $Table.tableDefinition(posts),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
