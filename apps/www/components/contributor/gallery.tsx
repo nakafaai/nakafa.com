@@ -12,7 +12,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import {
   Drawer,
   DrawerCreateHandle,
-  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerPopup,
@@ -150,9 +149,7 @@ function ContributorDrawer({ contributor, mascot }: Entry) {
       <DrawerHeader className="items-center">
         <PersonAvatar className="size-16" mascot={mascot} />
         <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
-        <DrawerDescription className="text-center">
-          <Badge>{t(contributor.type)}</Badge>
-        </DrawerDescription>
+        <Badge>{t(contributor.type)}</Badge>
       </DrawerHeader>
       <DrawerFooter className="sm:justify-center">
         {contributor.social && (

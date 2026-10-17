@@ -141,7 +141,7 @@ const refuseUnknownRoots = Effect.fn("vault.rewrap.unknownRoots")(function* (
     Option.isSome(schoolsBelow) ||
     Option.isSome(schoolsAbove)
   ) {
-    return yield* new VaultError({ reason: "key" });
+    return yield* new VaultError({ reason: "configuration" });
   }
 });
 
@@ -150,9 +150,9 @@ const refuseUnknownRoots = Effect.fn("vault.rewrap.unknownRoots")(function* (
  * first, then school keys. Sealed values do not change, only the wrapping of each
  * key does. It returns how many keys it moved. Zero means that every learner key
  * and every school key is wrapped by the current root key, so the retired root
- * keys can leave `VAULT_ROOT_KEYS` and be destroyed. It fails with reason `key`,
- * instead of returning zero, while a stored key names a root key that is not in
- * the environment.
+ * keys can leave `VAULT_ROOT_KEYS` and be destroyed. It fails with reason
+ * `configuration`, instead of returning zero, while a stored key names a root key
+ * that is not in the environment.
  */
 export const rewrapKeys = Effect.fn("vault.rewrap.keys")(function* (
   limit: number

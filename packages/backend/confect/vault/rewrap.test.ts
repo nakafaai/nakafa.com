@@ -47,7 +47,9 @@ describe("vault key rewrap", () => {
             yield* learnerUnder("eko", retired);
             expect(yield* rewrapKeys(10)).toBe(1);
             expect((yield* keyRoots()).learners).toEqual(["former", "test"]);
-            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe("key");
+            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe(
+              "configuration"
+            );
             expect(yield* rewrapKeys(10).pipe(withRoots(bothRetired))).toBe(1);
             expect(yield* rewrapKeys(10).pipe(withRoots(bothRetired))).toBe(0);
             expect((yield* keyRoots()).learners).toEqual(["test", "test"]);
@@ -100,7 +102,9 @@ describe("vault key rewrap", () => {
         yield* t.run(
           Effect.gen(function* () {
             yield* schoolUnder("baru", former);
-            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe("key");
+            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe(
+              "configuration"
+            );
             expect(yield* rewrapKeys(10).pipe(withRoots(bothRetired))).toBe(1);
             expect(yield* rewrapKeys(10).pipe(withRoots(bothRetired))).toBe(0);
             expect((yield* keyRoots()).schools).toEqual(["test"]);
@@ -117,7 +121,9 @@ describe("vault key rewrap", () => {
         yield* t.run(
           Effect.gen(function* () {
             yield* learnerUnder("fitri", above);
-            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe("key");
+            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe(
+              "configuration"
+            );
             expect((yield* keyRoots()).learners).toEqual(["zed"]);
           }).pipe(Effect.orDie)
         );
@@ -132,7 +138,9 @@ describe("vault key rewrap", () => {
         yield* t.run(
           Effect.gen(function* () {
             yield* schoolUnder("bahari", above);
-            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe("key");
+            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe(
+              "configuration"
+            );
             expect((yield* keyRoots()).schools).toEqual(["zed"]);
           }).pipe(Effect.orDie)
         );

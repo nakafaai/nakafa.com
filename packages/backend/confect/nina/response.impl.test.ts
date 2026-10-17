@@ -276,6 +276,10 @@ describe("The Nina response run and the memory tool", () => {
       await f.owner.mutation(pause, { paused: true });
     }
     await f.t.action(run, { turnId: f.turnId });
+    // Settlement schedules the turn's follow-up work (title, suggestions, memory and
+    // seal) at zero delay. The test runs it here, so none of it is still pending when
+    // the next test advances the clock and finds it.
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     expect(model.doStreamCalls).toHaveLength(1);
     return Arr.map(model.doStreamCalls[0]?.tools ?? [], (tool) => tool.name);
   }
