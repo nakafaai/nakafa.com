@@ -1,13 +1,6 @@
 import { Ref } from "@confect/core";
 import { saveMessages } from "@convex-dev/agent";
-import {
-  afterEach,
-  assert,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
@@ -16,6 +9,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
   createNinaTest,
@@ -24,9 +18,18 @@ import {
   ninaUsage,
 } from "@repo/backend/test/nina";
 import { contextFor } from "@repo/backend/test/nina/admission";
-import { withoutRowIds } from "@repo/backend/test/nina/seal";
+import {
+  earlierTurnIn,
+  sealThreadIn,
+  withoutRowIds,
+} from "@repo/backend/test/nina/seal";
 import { readThreadIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
+import {
+  attachment,
+  readyFileIdIn,
+  saved,
+} from "@repo/backend/test/nina/uploads";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect, Record } from "effect";
@@ -44,16 +47,23 @@ vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
   return { ...actual, saveMessages: vi.fn(actual.saveMessages) };
 });
+vi.mock("@repo/backend/confect/vault/keys", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@repo/backend/confect/vault/keys")>();
+  return { ...actual, readLearnerKeys: vi.fn(actual.readLearnerKeys) };
+});
 
 const NOW = Date.UTC(2026, 8, 27, 12);
 
 /**
  * One text for each place the seal must keep out of the component tables: the
  * learner's message, the reasoning, the answer, a tool input, a tool output and a
- * source (ADR 0024). Each one is unique, so a search finds only its own place.
+ * source (ADR 0024), and the name of the learner's file. Each one is unique, so a
+ * search finds only its own place.
  */
 const PLANTED = {
   answer: "planted-answer-5c1e",
+  file: "planted-file-4a8c",
   input: "planted-tool-input-3b9d",
   output: "planted-tool-output-8a2f",
   prompt: "planted-prompt-0e7a",
@@ -155,6 +165,25 @@ async function askedIn(text: string) {
   return { owner, receipt, sealedAt, t, turn, userId: identity.userId };
 }
 
+/**
+ * Seals the settled turn of a fixture whose component stores the seal's rows as
+ * `store` makes it, and checks that the seal is refused and writes nothing (ADR 0024).
+ */
+async function refusedSeal(store: () => unknown) {
+  const f = await createNinaTest({ history: [{ steps: 1 }], now: NOW });
+  const turn = await earlierTurnIn(f.t);
+  const before = await storedRowsIn(f.t, f.threadId, []);
+  await store();
+
+  await expect(f.t.mutation(seal, { turnId: turn._id })).rejects.toThrow();
+
+  expect(await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))).toEqual(
+    turn
+  );
+  const after = await storedRowsIn(f.t, f.threadId, []);
+  expect(after.messages.page).toEqual(before.messages.page);
+}
+
 beforeEach(() => {
   // Only the clock is faked: the delta writer and the scheduler keep real timers.
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -175,11 +204,17 @@ describe("Sealing a settled Nina turn", () => {
       Effect.succeed({ text: PLANTED.output })
     );
     const f = await askedIn(PLANTED.prompt);
+    // The file keeps its sealed name in the files table, sent by a turn or not.
+    const uploadId = await saved(f.owner, {
+      ...attachment,
+      filename: `${PLANTED.file}.png`,
+    });
+    const fileId = await readyFileIdIn(f.t, uploadId);
     await f.t.action(run, { turnId: f.receipt.turnId });
 
-    // During the turn the planted texts sit in the plain rows and the deltas. The
-    // learner's message is sealed at admission, so it is in neither.
-    const during = await storedRowsIn(f.t, f.receipt.threadId, []);
+    // During the turn the planted texts sit in the plain rows and the deltas. The message
+    // is sealed at admission and the file name at upload, so neither is in a table.
+    const during = await storedRowsIn(f.t, f.receipt.threadId, [fileId]);
     expect(plantedIn(during)).toEqual(
       expect.arrayContaining([
         PLANTED.answer,
@@ -190,6 +225,7 @@ describe("Sealing a settled Nina turn", () => {
       ])
     );
     expect(plantedIn(during)).not.toContain(PLANTED.prompt);
+    expect(plantedIn(during)).not.toContain(PLANTED.file);
     const streamIds = Arr.map(during.streams, (stream) => stream.streamId);
     const shapeBefore = Arr.map(
       during.messages.page,
@@ -214,8 +250,11 @@ describe("Sealing a settled Nina turn", () => {
 
     await f.t.finishAllScheduledFunctions(() => undefined);
 
-    const settled = await storedRowsIn(f.t, f.receipt.threadId, []);
+    const settled = await storedRowsIn(f.t, f.receipt.threadId, [fileId]);
     expect(plantedIn(settled)).toEqual([]);
+    expect(settled.files).toEqual([
+      expect.objectContaining({ mediaType: "image/png" }),
+    ]);
     const deltas = await f.t.query((ctx) =>
       ctx.runQuery(components.nina.streams.listDeltas, {
         cursors: Arr.map(streamIds, (streamId) => ({ cursor: 0, streamId })),
@@ -356,9 +395,7 @@ describe("Sealing a settled Nina turn", () => {
 
   it("seals a turn whose rows take more than one page to read", async () => {
     const f = await createNinaTest({ history: [{ steps: 5 }], now: NOW });
-    const turns = await f.t.query((ctx) => ctx.db.query("ninaTurns").collect());
-    const [earlier] = Arr.filter(turns, (turn) => turn.phase === "settled");
-    assert(earlier !== undefined);
+    const earlier = await earlierTurnIn(f.t);
     const readBefore = await readThreadIn(f.t, {
       owner: f.identity.userId,
       paginationOpts: { cursor: null, numItems: 50 },
@@ -413,22 +450,46 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.sealedAt()).toBeUndefined();
   });
 
-  it("writes nothing when the component stores the sealed rows at other steps", async () => {
-    provider.languageModel.mockReturnValue(plantedModel());
-    vi.mocked(runNakafaAgent).mockImplementation(() =>
-      Effect.succeed({ text: PLANTED.output })
-    );
-    const f = await askedIn(PLANTED.prompt);
-    await f.t.action(run, { turnId: f.receipt.turnId });
-    const before = await storedRowsIn(f.t, f.receipt.threadId, []);
-    vi.mocked(saveMessages).mockResolvedValueOnce({ messages: [] });
+  it("writes nothing when the component stores fewer rows than the seal wrote", () =>
+    refusedSeal(() => {
+      vi.mocked(saveMessages).mockResolvedValueOnce({ messages: [] });
+    }));
 
-    await expect(
-      f.t.mutation(seal, { turnId: f.receipt.turnId })
-    ).rejects.toThrow();
+  it("writes nothing when the component stores the sealed rows at other steps", () =>
+    refusedSeal(async () => {
+      const actual =
+        await vi.importActual<typeof import("@convex-dev/agent")>(
+          "@convex-dev/agent"
+        );
+      // The same rows, stored five steps later than the seal named them.
+      vi.mocked(saveMessages).mockImplementationOnce(
+        async (ctx, component, args) => {
+          const stored = await actual.saveMessages(ctx, component, args);
+          return {
+            ...stored,
+            messages: Arr.map(stored.messages, (row) => ({
+              ...row,
+              stepOrder: row.stepOrder + 5,
+            })),
+          };
+        }
+      );
+    }));
 
-    expect(await f.sealedAt()).toBeUndefined();
-    const after = await storedRowsIn(f.t, f.receipt.threadId, []);
-    expect(after.messages.page).toEqual(before.messages.page);
+  it("seals a turn with no second read of the learner's key, since the prompt's place needs none", async () => {
+    const f = await createNinaTest({ history: [{ steps: 1 }], now: NOW });
+    // Admission seals the prompt, so the fixture's rows are sealed in place the same way.
+    await sealThreadIn(f.t, f.threadId, f.identity.userId);
+    const turn = await earlierTurnIn(f.t);
+    vi.mocked(readLearnerKeys).mockClear();
+
+    await f.t.mutation(seal, { turnId: turn._id });
+
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))
+    ).toMatchObject({
+      sealedAt: expect.any(Number),
+    });
+    expect(readLearnerKeys).not.toHaveBeenCalled();
   });
 });

@@ -15,7 +15,6 @@ import {
   openMessage,
   sealMessage,
 } from "@repo/backend/confect/nina/sealed";
-import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { parse } from "convex-helpers/validators";
 import { Array as Arr, Clock, Effect, Order, Schema, Struct } from "effect";
@@ -33,7 +32,10 @@ class TurnSealError extends Schema.TaggedError<TurnSealError>()(
   {}
 ) {}
 
-/** Rows one query reads of a turn, the same page that `uncovered.ts` reads one turn with. */
+/**
+ * Rows one query reads of a turn. The seal reads pages until it reaches the prompt, so
+ * the page size sets how many queries it takes, and never which rows it seals.
+ */
 const TURN_PAGE = 10;
 
 /** A row of a turn, sealed for the step it takes, with the agent that wrote it. */
@@ -184,11 +186,13 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
     return null;
   }
   const keys = yield* ensureLearnerKeys(turn.userId).pipe(Effect.orDie);
-  const prompt = yield* readMessage(
-    ctx,
-    turn.userId,
-    turn.promptMessageId
-  ).pipe(Effect.orDie);
+  // The prompt keeps its order in the clear, so the seal checks its place and does not
+  // open its content. Opening it would read the learner's key a second time.
+  const [prompt] = yield* Effect.promise(() =>
+    ctx.runQuery(components.nina.messages.getMessagesByIds, {
+      messageIds: [turn.promptMessageId],
+    })
+  );
   if (prompt?.order !== turn.order) {
     return null;
   }

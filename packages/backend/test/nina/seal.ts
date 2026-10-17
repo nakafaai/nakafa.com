@@ -279,6 +279,22 @@ export function plainThreadIn(
   );
 }
 
+/**
+ * The earlier settled turn of a fixture, read from the test deployment. A fixture
+ * made with `createNinaTest` starts no seal, so the rows of this turn stay as the
+ * fixture wrote them until a test seals them.
+ */
+export async function earlierTurnIn(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>
+) {
+  const turns = await t.query((ctx) => ctx.db.query("ninaTurns").collect());
+  return Effect.runPromise(
+    Effect.fromOption(
+      Arr.findFirst(turns, (turn) => turn.phase === "settled")
+    ).pipe(Effect.orDie)
+  );
+}
+
 /** The fields that a row changes when a sealed copy of it replaces it: its id and creation time. */
 const ROW_IDENTITY_FIELDS = HashSet.make("_creationTime", "_id", "id");
 
