@@ -13,6 +13,7 @@ import { type ReactNode, Suspense } from "react";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { PaginationContent } from "@/components/shared/content/pagination";
+import { FragmentLanding } from "@/components/shared/fragment";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import {
@@ -285,6 +286,8 @@ async function CachedSurahShell({
               ) : (
                 <QuranVerseList items={verseItems} />
               )}
+              {/* After the verses, so it mounts once they are in the page. */}
+              <FragmentLanding />
             </QuranVersesProvider>
           </LayoutContent>
           <PaginationContent pagination={pagination} />
