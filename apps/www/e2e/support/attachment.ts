@@ -19,17 +19,6 @@ const UploadSchema = Schema.Struct({
 });
 type Upload = typeof UploadSchema.Type;
 
-/** The title of the notice that names the files a pick did not attach. */
-export const NOT_ATTACHED = en.Ai["attachment-rejections"].title;
-
-/**
- * The box a long list of that notice scrolls in: the viewport of its scroll
- * area, with the reasons and the names inside it. A function that Playwright
- * sends to the page cannot reach a constant of its module, so such a function
- * takes this selector as its argument.
- */
-export const NOTICE_LIST = '[data-slot="scroll-area-viewport"]';
-
 /** The media type of a Word file, which Nina does not read. */
 export const WORD_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -150,6 +139,14 @@ export function chipsIn(scope: Locator) {
   return scope.locator('[data-slot="attachment"]');
 }
 
+/**
+ * The chips in a composer for the files that a pick did not attach. Each one
+ * names its file and gives its reason, in the refused state, and never uploads.
+ */
+export function refusedChipsIn(scope: Locator) {
+  return scope.locator('[data-slot="attachment"][data-state="error"]');
+}
+
 /** The chips of the messages on the page, which are not the chips of the composer. */
 export function chipsOfMessages(page: Page) {
   return chipsIn(page.locator('[data-slot="message"]'));
@@ -163,13 +160,8 @@ export function chipsOfComposer(scope: Locator) {
   return chipsIn(scope.locator('[data-slot="input-group"]'));
 }
 
-/**
- * The computed color of a border that is not drawn. A chip in the composer
- * sits inside the border of the composer and draws none of its own, except
- * when its upload failed, so a test reads this color from the chip's top
- * border.
- */
-export const NO_BORDER = "rgba(0, 0, 0, 0)";
+/** The computed color of a background or a border that is not drawn, as the browser reports it. */
+export const TRANSPARENT = "rgba(0, 0, 0, 0)";
 
 /** Writes the prompt and waits until the page lets it be sent. */
 export const write = Effect.fn("NakafaE2E.write")(function* (

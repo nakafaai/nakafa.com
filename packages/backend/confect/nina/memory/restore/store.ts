@@ -24,12 +24,12 @@ type MemoryId = Docs["ninaMemories"]["_id"];
 type RestoreId = Docs["ninaMemoryRestores"]["_id"];
 
 /**
- * Keeps a memory the learner just deleted, for the length of its Undo
- * (`MEMORY_UNDO`): every stored field as it was, sealed and never opened, the
- * keys the memory had in the index, and the moment the Undo ends. It
- * schedules the deletion of the record for that moment. The record is in the
- * transaction of the deletion, so a memory is never deleted without it and
- * never kept without being deleted. Only `remove` keeps one: the learner
+ * Keeps a memory the learner just deleted, for the length of the restore
+ * window (`MEMORY_UNDO`): every stored field as it was, sealed and never
+ * opened, the keys the memory had in the index, and the moment the window
+ * ends. It schedules the deletion of the record for that moment. The record is
+ * in the transaction of the deletion, so a memory is never deleted without it
+ * and never kept without being deleted. Only `remove` keeps one: the learner
  * deleting a memory is the one deletion that can be taken back.
  */
 export const keepRestore = Effect.fn("nina.memory.restore.keep")(function* (
@@ -55,9 +55,10 @@ export const keepRestore = Effect.fn("nina.memory.restore.keep")(function* (
 
 /**
  * Reads the record of a deleted memory when it can be put back now: it is the
- * learner's, its Undo has not ended, and "Delete all" did not take the memory
- * (see `readMemoryState`), which every reader would hide and no batch might
- * delete. A record that was used is gone, so it is not found either.
+ * learner's, its restore window has not ended, and "Delete all" did not take
+ * the memory (see `readMemoryState`), which every reader would hide and no
+ * batch might delete. A record that was used is gone, so it is not found
+ * either.
  */
 const readRestore = Effect.fn("nina.memory.restore.read")(function* (
   userId: UserId,
@@ -138,8 +139,8 @@ export const restoreMemory = Effect.fn("nina.memory.restore.memory")(function* (
 });
 
 /**
- * Deletes a record at the end of its Undo, when it is still there. The learner
- * may have used it, or an account deletion may have taken it.
+ * Deletes a record at the end of its restore window, when it is still there.
+ * The learner may have used it, or an account deletion may have taken it.
  */
 export const purgeRestore = Effect.fn("nina.memory.restore.purge")(function* (
   id: RestoreId

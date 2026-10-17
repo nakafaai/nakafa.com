@@ -12,7 +12,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Option, Tuple } from "effect";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";
@@ -34,7 +34,6 @@ export function TryoutCountrySelector({
   options: readonly TryoutCountrySelectorOption[];
 }) {
   const locale = useLocale();
-  const tTryouts = useTranslations("Tryouts");
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredTryout = useSetPreferredTryoutMutation(options);
@@ -73,7 +72,9 @@ export function TryoutCountrySelector({
     await Effect.runPromise(
       saveTryoutPreference({
         countryKey: selectedOption.value.countryKey,
-        errorMessage: tTryouts("preference-save-error"),
+        errorMessage: {
+          title: "tryout-preference-error.title",
+        },
         locale,
         setPreferredTryout,
         source: "tryout-country-selector",
