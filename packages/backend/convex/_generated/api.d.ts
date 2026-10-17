@@ -2952,6 +2952,8 @@ export declare const api: {
                   type: "tenant.provisioned";
                 }
               | { country: string; currency: string; type: "tenant.locale.set" }
+              | { type: "tenant.logo.removed" }
+              | { type: "tenant.logo.set" }
               | {
                   key: "emailDomains" | "nina" | "studentThreads";
                   type: "tenant.policy.set";
@@ -3597,6 +3599,8 @@ export declare const api: {
               | { kind: string };
             tenant: {
               kind: "school" | "foundation";
+              logo?: string;
+              mascot: string;
               name: string;
               slug: string;
               status: "active" | "suspended";
@@ -3630,6 +3634,8 @@ export declare const api: {
             | { kind: string };
           tenant: {
             kind: "school" | "foundation";
+            logo?: string;
+            mascot: string;
             name: string;
             slug: string;
             status: "active" | "suspended";
@@ -4294,6 +4300,26 @@ export declare const api: {
         null
       >;
     };
+    logo: {
+      remove: FunctionReference<"mutation", "public", { slug: string }, {}>;
+      set: FunctionReference<
+        "mutation",
+        "public",
+        {
+          contentType: "image/png" | "image/svg+xml";
+          slug: string;
+          storageId: Id<"_storage">;
+        },
+        | { _tag: "LogoSet"; logo: string }
+        | { _tag: "LogoRefused"; reason: "size" }
+      >;
+      uploadUrl: FunctionReference<
+        "mutation",
+        "public",
+        { slug: string },
+        string
+      >;
+    };
     memberships: {
       list: FunctionReference<
         "query",
@@ -4315,6 +4341,8 @@ export declare const api: {
             person: { id: Id<"tenantPeople">; name: string };
             tenant: {
               kind: "school" | "foundation";
+              logo?: string;
+              mascot: string;
               name: string;
               slug: string;
               status: "active" | "suspended";
@@ -4502,6 +4530,8 @@ export declare const api: {
         { slug: string },
         {
           kind: "school" | "foundation";
+          logo?: string;
+          mascot: string;
           name: string;
           slug: string;
           status: "active" | "suspended";
@@ -5139,6 +5169,12 @@ export declare const api: {
         "public",
         { slug: string },
         {
+          account: {
+            image?: string;
+            mascot: string;
+            name: string;
+            username?: string;
+          };
           can: Array<string>;
           grants: Array<{
             id: Id<"tenantGrants">;
@@ -5173,6 +5209,8 @@ export declare const api: {
             currency: string;
             id: Id<"tenants">;
             kind: "school" | "foundation";
+            logo?: string;
+            mascot: string;
             name: string;
             policies: {
               emailDomains: Array<string>;
