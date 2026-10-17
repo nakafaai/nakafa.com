@@ -30,3 +30,18 @@ export const findLike = Effect.fn("posts.rows.findLike")(function* (
       Effect.orDie
     );
 });
+
+/**
+ * Whether a learner has liked the post. A signed-out caller has no id, so it
+ * has liked nothing.
+ */
+export const isLikedBy = Effect.fn("posts.rows.isLikedBy")(function* (
+  postId: Id<"posts">,
+  userId: Id<"users"> | null
+) {
+  if (userId === null) {
+    return false;
+  }
+  const like = yield* findLike(postId, userId);
+  return like !== null;
+});

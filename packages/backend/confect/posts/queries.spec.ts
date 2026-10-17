@@ -16,7 +16,7 @@ const postRowValidator = Schema.Struct({
   liked: Schema.Boolean,
 });
 
-/** Reads one page of an author's posts, newest first, for the people the profile shows them to. */
+/** Reads one page of an author's posts, newest first, for anyone: a profile is public. */
 export default GroupSpec.make().addFunction(
   FunctionSpec.publicPaginatedQuery({
     name: "list",

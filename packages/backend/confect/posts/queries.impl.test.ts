@@ -165,26 +165,31 @@ describe("posts list contract", () => {
     ]);
   });
 
-  it("answers nothing to another learner or to a signed-out caller", async () => {
+  it("reads the posts and their counts to another learner and to a signed-out caller, and tells each caller only its own likes", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(now);
     const { anonymous, author, stranger } = await createReaders();
-    await writePosts(author, ["Hanya untuk pemilik"]);
-    const nothing = {
+    const [first, second] = await writePosts(author, ["Disukai", "Tidak"]);
+    await author.session.mutation(like, { postId: first });
+    await stranger.mutation(like, { postId: second });
+    const readAs = (caller: Pick<typeof anonymous, "query">) =>
+      caller.query(list, { authorId: author.userId, paginationOpts: PAGE });
+    // The newest post comes first. The stranger sees its own like on the second
+    // post, and the author's like on the first post only as a count.
+    expect(await readAs(stranger)).toMatchObject({
       isDone: true,
-      page: [],
-    };
-    expect(
-      await stranger.query(list, {
-        authorId: author.userId,
-        paginationOpts: PAGE,
-      })
-    ).toMatchObject(nothing);
-    expect(
-      await anonymous.query(list, {
-        authorId: author.userId,
-        paginationOpts: PAGE,
-      })
-    ).toMatchObject(nothing);
+      page: [
+        expect.objectContaining({ _id: second, likeCount: 1, liked: true }),
+        expect.objectContaining({ _id: first, likeCount: 1, liked: false }),
+      ],
+    });
+    // A signed-out caller reads the same counts, and has liked nothing.
+    expect(await readAs(anonymous)).toMatchObject({
+      isDone: true,
+      page: [
+        expect.objectContaining({ _id: second, likeCount: 1, liked: false }),
+        expect.objectContaining({ _id: first, likeCount: 1, liked: false }),
+      ],
+    });
   });
 });

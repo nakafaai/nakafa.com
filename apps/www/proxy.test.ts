@@ -418,7 +418,7 @@ describe("proxy", () => {
       expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     }
   );
-  it("answers a profile its owner did not ask for as not found, with 404", async () => {
+  it("answers a profile address whose username nobody holds as not found, with 404", async () => {
     runtimeMocks.readProfileRefusal.mockReturnValue(Effect.succeed("de"));
     const response = await requestProxy("/de/@nabilfatih");
     expectHardNotFound(response, "de");

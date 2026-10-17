@@ -26,32 +26,27 @@ import {
   usePostsContext,
 } from "@/components/user/posts/provider";
 import { PostRow } from "@/components/user/posts/row";
-import { type CurrentUser, useViewer } from "@/lib/identity/client";
+import type { PublicProfile } from "@/lib/profile/public";
 
 /**
  * The posts of one profile, newest first. The first page comes from the server,
  * so it is on the screen before the browser connects, and the live list takes
- * its place with the same posts. The profile opens only for its owner, so the
- * owner's composer and More menus show whenever the viewer is the author. The
- * actions wait until the live list holds its first page, so every change made
- * in the list shows at once.
+ * its place with the same posts. The composer shows, and the More menus of the
+ * rows, only when the viewer owns the profile. The actions wait until the live
+ * list holds its first page, so every change made in the list shows at once.
  */
 export function UserPosts({
-  account,
   first,
+  isOwner,
   now: serverNow,
+  profile,
 }: {
-  account: CurrentUser;
   /** The first page the server read, or none when that read failed, so the live list loads the page. */
   first: Ref.Returns<typeof posts.queries.list> | null;
+  isOwner: boolean;
   now: number;
+  profile: PublicProfile;
 }) {
-  const identity = useViewer((state) => state);
-  // Until the browser knows the viewer, the account the server read stands for
-  // the viewer, because the profile opens only for its owner.
-  const viewer = identity.isPending ? account : identity.account;
-  const author =
-    viewer && viewer.appUser._id === account.appUser._id ? viewer : null;
   const clock = useAgeClock(serverNow);
   // A Retry changes the key, which remounts the list so that it asks the server
   // again. The draft lives in the provider above the list, so it stays. The
@@ -63,10 +58,10 @@ export function UserPosts({
   return (
     <PostDraftProvider>
       <PostsProvider
-        account={account}
-        author={author}
         clock={clock}
+        isOwner={isOwner}
         onRetry={onRetry}
+        profile={profile}
       >
         <ErrorBoundary
           fallbackRender={() => (
@@ -82,20 +77,20 @@ export function UserPosts({
 }
 
 /**
- * The live list of one profile. It asks for the author's posts once Convex
- * confirms the session, and `postsView` decides what it shows from the answer
- * and the server's first page.
+ * The live list of one profile. It asks for the posts once Convex has settled
+ * the session, and `postsView` decides what it shows from the answer and the
+ * server's first page.
  */
 function PostsFeed({
   first,
 }: {
   first: Ref.Returns<typeof posts.queries.list> | null;
 }) {
-  const { account } = usePostsContext();
-  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const { profile } = usePostsContext();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const live = usePaginatedQuery(
     posts.queries.list,
-    livePostsArgs(account.appUser._id, isAuthenticated),
+    livePostsArgs(profile._id, isSettled),
     { initialNumItems: POST_PAGE_SIZE }
   );
 
@@ -112,10 +107,10 @@ function PostsFeed({
 }
 
 /**
- * What the owner's Posts tab shows, as its view decides it: the composer above,
- * the failure with its Retry, the rows, the empty sentence, and the next page,
- * which loads as the end of the rows comes near.
- * The rows stay inert until the list takes a change.
+ * What the Posts tab shows, as its view decides it: the composer above for the
+ * owner, the failure with its Retry, the rows, the empty sentence, and the next
+ * page, which loads as the end of the rows comes near. The rows stay inert until
+ * the list takes a change.
  */
 function PostsPanel({
   onLoadMore,
@@ -125,13 +120,11 @@ function PostsPanel({
   view: PostsView;
 }) {
   const t = useTranslations("Posts");
-  const { author, onRetry } = usePostsContext();
+  const { isOwner, onRetry, profile } = usePostsContext();
 
   return (
     <div className="flex flex-col">
-      {author && (
-        <PostComposer appUser={author.appUser} disabled={!view.ready} />
-      )}
+      {isOwner && <PostComposer disabled={!view.ready} profile={profile} />}
       {view.failed && (
         <FeedNotice>
           <DataFailure onRetry={onRetry} />
