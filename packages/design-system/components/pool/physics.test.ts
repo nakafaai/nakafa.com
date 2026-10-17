@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Ball } from "@repo/design-system/components/pool/ball";
-import { ARTWORK_SHARE } from "@repo/design-system/components/pool/cover";
 import {
   hop,
   isResting,
@@ -22,7 +21,9 @@ import { settle } from "@repo/design-system/components/pool/settle";
 import {
   ballAt,
   boxWith,
+  CHECKED_POOLS,
   poolWorld,
+  sweep,
 } from "@repo/design-system/components/pool/test.fixture";
 import { Array as Arr } from "effect";
 
@@ -39,22 +40,10 @@ const TOP_SPEED = 760;
 /** The frames in six seconds at 60 frames a second. */
 const FRAMES_IN_SIX_SECONDS = 360;
 /**
- * The checked pools: the sign-in column beside the form on screens 1024, 1440 and
- * 2560 wide. The artwork takes its share of the width, in whole pixels as the browser
- * reports it. The phone box is gone: the pool never renders below the lg breakpoint,
- * 1024 pixels wide.
- */
-const POOLS = [
-  { height: 640, width: Math.round(1024 * ARTWORK_SHARE) },
-  { height: 900, width: Math.round(1440 * ARTWORK_SHARE) },
-  { height: 1440, width: Math.round(2560 * ARTWORK_SHARE) },
-];
-/**
  * The pools that are held to the six seconds of rest that main allowed. The widest
- * pool takes longer than that with this solver, so it is recorded in the sign-in pool
- * report rather than asserted here.
+ * pool takes longer than that, so it is not held to it here.
  */
-const RESTING_POOLS = Arr.take(POOLS, 2);
+const RESTING_POOLS = Arr.take(CHECKED_POOLS, 2);
 /** The grabs and throws that pit.mjs makes: up out of the box, right, left, down, and into both top corners. */
 const THROWS: readonly (readonly [number, number])[] = [
   [0.5, -0.6],
@@ -64,11 +53,6 @@ const THROWS: readonly (readonly [number, number])[] = [
   [0.02, 0.02],
   [0.98, 0.02],
 ];
-/**
- * The fastest a free ball may move while the pointer sweeps over the pool, a third of
- * the top speed. Every checked pool is held to it.
- */
-const GENTLE_SPEED = TOP_SPEED / 3;
 /** After the pointer stops over the pile, the pile rests within this many frames, which is about a second. */
 const SECOND_AFTER_STOP = 60;
 
@@ -149,15 +133,6 @@ function lowest(world: World): Ball {
   );
 }
 
-/** The fastest that any free ball of a world moves, in pixels per second. */
-function fastestFree(world: World): number {
-  return Arr.reduce(world.balls, 0, (fastest, ball, index) =>
-    index === world.held
-      ? fastest
-      : Math.max(fastest, Math.hypot(ball.vx, ball.vy))
-  );
-}
-
 /**
  * The frames that a pile takes from this world to rest for `REST_FRAMES` frames in a
  * row, counted at 60 frames a second. A pile that does not rest within the limit
@@ -176,30 +151,8 @@ function framesUntilRest(start: World, limit: number): number {
   return limit + 1;
 }
 
-/**
- * Sweeps the pointer across the middle of a settled pool at this speed, in pixels
- * per second. Returns the pool at the end of the sweep, and the fastest free ball.
- */
-function sweep(
-  world: World,
-  box: Pick<World, "height" | "width">,
-  speed: number
-): readonly [World, number] {
-  const distance = box.width;
-  const frames = Math.ceil(distance / (speed * FRAME));
-  const y = box.height * 0.6;
-  let current = world;
-  let fastest = 0;
-  for (let frame = 0; frame < frames; frame += 1) {
-    const x = Math.min(distance, frame * speed * FRAME);
-    current = tick(move(current, { x, y }), FRAME);
-    fastest = Math.max(fastest, fastestFree(current));
-  }
-  return [current, fastest];
-}
-
 describe("the pool under rough handling", () => {
-  for (const pool of POOLS) {
+  for (const pool of CHECKED_POOLS) {
     it(`keeps every ball inside a ${pool.width} by ${pool.height} box through sweeps and throws`, () => {
       let world = poolWorld(pool.width, pool.height);
       // The pile lands before the pointer comes, so every ball has entered.
@@ -264,7 +217,7 @@ describe("the pile", () => {
 
   it("stays at rest with no pointer: a settled pile is at rest in every frame of six seconds", () => {
     // The loop sleeps on a pile at rest, so a pile that rests must not wake up on its own. Only the narrowest pool is held to this here: over six seconds the wider pools still have a ball fall off a perch, which the sign-in pool report records.
-    const narrowest = POOLS[0];
+    const narrowest = CHECKED_POOLS[0];
     let world = settle(poolWorld(narrowest.width, narrowest.height));
     for (let frame = 0; frame < FRAMES_IN_SIX_SECONDS; frame += 1) {
       world = tick(world, FRAME);
@@ -274,22 +227,8 @@ describe("the pile", () => {
 });
 
 describe("the pointer over the pile", () => {
-  for (const speed of [300, 1200]) {
-    for (const pool of POOLS) {
-      it(`moves no ball faster than a third of the top speed in a ${pool.width} by ${pool.height} pool when the pointer sweeps at ${speed} pixels a second`, () => {
-        const settled = settle(poolWorld(pool.width, pool.height));
-        const [swept, fastest] = sweep(settled, pool, speed);
-        // The sweep crossed the pool: the pointer ends within one frame of the far wall.
-        expect(pool.width - swept.pointer.x).toBeLessThanOrEqual(
-          speed * FRAME + NOISE
-        );
-        expect(fastest).toBeLessThanOrEqual(GENTLE_SPEED);
-      });
-    }
-  }
-
   it("lets the pile rest within about a second after the pointer stops over it", () => {
-    const narrowest = POOLS[0];
+    const narrowest = CHECKED_POOLS[0];
     const [swept] = sweep(
       settle(poolWorld(narrowest.width, narrowest.height)),
       narrowest,
@@ -491,8 +430,8 @@ describe("the frame loop's sleep", () => {
 describe("the box", () => {
   it("follows a resize with the walls of the new box, and keeps the balls where they were", () => {
     const world = boxWith([ballAt({ x: 300, y: 300 })]);
-    const resized = resize(world, 390, 800);
-    expect(resized).toMatchObject({ height: 800, width: 390 });
+    const resized = resize(world, 585, 640);
+    expect(resized).toMatchObject({ height: 640, width: 585 });
     expect(resized.balls).toEqual(world.balls);
   });
 });

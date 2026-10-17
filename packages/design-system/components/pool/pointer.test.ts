@@ -5,7 +5,13 @@ import {
   measure,
   pointerPush,
 } from "@repo/design-system/components/pool/pointer";
-import { ballAt } from "@repo/design-system/components/pool/test.fixture";
+import { settle } from "@repo/design-system/components/pool/settle";
+import {
+  ballAt,
+  CHECKED_POOLS,
+  poolWorld,
+  sweep,
+} from "@repo/design-system/components/pool/test.fixture";
 
 /** A pointer over the box, at the given place, with no speed yet. */
 function overBox(x: number, y: number) {
@@ -21,6 +27,17 @@ function enteredAt(x: number, y: number) {
 const UNIT_STEP = 1;
 /** A frame at 60 frames a second. */
 const FRAME = 1 / 60;
+/** Float noise that a wall may leave behind, in pixels. */
+const NOISE = 1e-9;
+/** The top speed, in pixels per second, of anything that is not held. */
+const TOP_SPEED = 760;
+/**
+ * The fastest a ball may move while the pointer sweeps over the pool, in pixels per
+ * second at scale 1: a third of the top speed. Every checked pool is held to it.
+ * Speed is measured against the size of the animal, so a ball's speed is divided by
+ * its size ratio, its radius over the radius it has at scale 1.
+ */
+const GENTLE_SPEED = TOP_SPEED / 3;
 
 describe("the push of the pointer", () => {
   it("pushes nothing before the pointer comes over the box", () => {
@@ -118,4 +135,20 @@ describe("the speed of the pointer", () => {
   it("starts before the box, and not over it", () => {
     expect(idlePointer().active).toBe(false);
   });
+});
+
+describe("the pointer over the pile", () => {
+  for (const speed of [300, 1200]) {
+    for (const pool of CHECKED_POOLS) {
+      it(`keeps every ball within a third of the top speed at its own size in a ${pool.width} by ${pool.height} pool when the pointer sweeps at ${speed} pixels a second`, () => {
+        const settled = settle(poolWorld(pool.width, pool.height));
+        const [swept, fastest] = sweep(settled, pool, speed);
+        // The sweep crossed the pool: the pointer ends within one frame of the far wall.
+        expect(pool.width - swept.pointer.x).toBeLessThanOrEqual(
+          speed * FRAME + NOISE
+        );
+        expect(fastest).toBeLessThanOrEqual(GENTLE_SPEED);
+      });
+    }
+  }
 });

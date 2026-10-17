@@ -9,14 +9,14 @@ import { Array as Arr } from "effect";
 
 describe("the start of the balls", () => {
   it("starts every ball above the box, spread across its width by its fractions", () => {
-    const world = createWorld(390, 800, [
+    const world = createWorld(585, 640, [
       { fx: 0, fy: 0, r: 20, vx: 0 },
       { fx: 1, fy: 1, r: 20, vx: 10 },
     ]);
     expect(world.balls[0].x).toBe(20);
-    expect(world.balls[1].x).toBeCloseTo(370, 10);
+    expect(world.balls[1].x).toBeCloseTo(585 - 20, 10);
     expect(world.balls[0].y).toBe(-20);
-    expect(world.balls[1].y).toBeCloseTo(-20 - 800 * 1.2, 10);
+    expect(world.balls[1].y).toBeCloseTo(-20 - 640 * 1.2, 10);
     expect(Arr.every(world.balls, (ball) => !ball.inside)).toBe(true);
   });
 });
