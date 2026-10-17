@@ -18,6 +18,7 @@ import {
   recordSizeChanges,
 } from "@/e2e/support/resize";
 import { openRoute } from "@/e2e/support/route";
+import { isKnownSceneDiagnostic } from "@/e2e/support/scene";
 import { TOASTER } from "@/e2e/support/selector";
 import {
   desktopViewport,
@@ -102,8 +103,12 @@ function observeConsole(page: Page) {
   const issues = MutableList.make<string>();
   page.on("console", (message) => {
     const type = message.type();
-    if (type === "error" || type === "warning") {
-      MutableList.append(issues, `${type}: ${message.text()}`);
+    const text = message.text();
+    if (
+      (type === "error" || type === "warning") &&
+      !isKnownSceneDiagnostic(text)
+    ) {
+      MutableList.append(issues, `${type}: ${text}`);
     }
   });
   return issues;

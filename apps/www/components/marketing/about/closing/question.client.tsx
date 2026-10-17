@@ -60,12 +60,13 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
     <h2 className="text-balance text-3xl tracking-tight sm:text-4xl" ref={ref}>
       {before}
       {/* The invisible longest topic holds the box and the baseline of the line,
-          so an empty or short typed topic never moves the words around it. */}
+          so an empty or short typed topic never moves the words around it. The
+          typed topic starts at the box's start, so a new letter moves no text. */}
       <span className="relative inline-block">
         <span aria-hidden="true" className="invisible">
           {longest}
         </span>
-        <span className="absolute inset-0">{shown}</span>
+        <span className="absolute inset-0 text-start">{shown}</span>
       </span>
       {after}
     </h2>
