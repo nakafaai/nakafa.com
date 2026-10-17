@@ -3,6 +3,7 @@ import schema from "@repo/backend/confect/_generated/schema";
 import { QueryCtx } from "@repo/backend/confect/_generated/services";
 import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { sealTurn } from "@repo/backend/confect/nina/sealed/turn";
 import spec from "@repo/backend/confect/nina/sealed.spec";
 import { Effect, Layer } from "effect";
 
@@ -28,8 +29,20 @@ const message = FunctionImpl.make(
   })
 );
 
+/** Seals the rows of one settled turn, or leaves it alone (`sealTurn`). */
+const seal = FunctionImpl.make(
+  schema,
+  spec,
+  "seal",
+  Effect.fn("nina.sealed.sealTurn")(function* ({ turnId }) {
+    yield* sealTurn(turnId);
+    return null;
+  })
+);
+
 export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(thread),
   Layer.provide(message),
+  Layer.provide(seal),
   GroupImpl.finalize
 );

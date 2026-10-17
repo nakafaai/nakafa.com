@@ -15,12 +15,15 @@ import { NinaTurn } from "@repo/backend/confect/nina/turns.spec";
  * newest first. The turn that runs has another phase, so it lies outside the
  * range, and a write to the running turn (its usage after every model
  * response) does not run a query that reads the range again.
+ * `by_phase_and_sealedAt` finds the settled turns whose rows are still plain
+ * (ADR 0024), so the sweep seals them. Sealed turns leave the range.
  */
 export default Table.make(() => NinaTurn)
   .index("by_userId_and_requestId", ["userId", "requestId"])
   .index("by_chatId_and_order", ["chatId", "order"])
   .index("by_chatId_and_phase_and_order", ["chatId", "phase", "order"])
   .index("by_phase", ["phase"])
+  .index("by_phase_and_sealedAt", ["phase", "sealedAt"])
   .index("by_userId_and_phase", ["userId", "phase"])
   .index("by_chatId_and_state_status_and_order", [
     "chatId",

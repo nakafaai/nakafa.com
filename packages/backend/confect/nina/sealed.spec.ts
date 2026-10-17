@@ -53,4 +53,12 @@ export default GroupSpec.make()
       returns: () => Schema.NullOr(Schema.Unknown),
       error: () => Schema.Union([SealedReadError, VaultError]),
     })
+  )
+  // Seals the rows of one settled turn (ADR 0024). Settlement and the sweep schedule it.
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "seal",
+      args: () => ({ turnId: Id("ninaTurns") }),
+      returns: () => Schema.Null,
+    })
   );

@@ -17,6 +17,14 @@ import { Array as Arr, Clock, Duration, Effect } from "effect";
 const SWEEP_PAGE = 50;
 
 /**
+ * How many settled turns that still hold plain rows one sweep run seals. ADR 0024
+ * derives it from the measured cost of one seal of the largest turn the model may
+ * write, and from the sweep's cadence, so that sealing every old turn stays under
+ * 1 GB of database I/O a day.
+ */
+export const SEAL_TURNS_PER_SWEEP = 1;
+
+/**
  * True once a queued turn waited too long for its run to start. Every turn
  * therefore has one clock, its admission: a run that starts in time ends
  * before the turn's deadline, so the open-turn limit and the sweep never
@@ -30,6 +38,31 @@ export const startsLate = Effect.fn("nina.sweep.late")(function* (
 });
 
 /**
+ * Schedules the seal of the settled turns that still hold plain rows, oldest first,
+ * `SEAL_TURNS_PER_SWEEP` of them. A turn that the seal sealed leaves the index
+ * range. A turn whose seal fails stays in it, and the next run tries it again.
+ */
+const scheduleSeals = Effect.fn("nina.sweep.seals")(function* () {
+  const reader = yield* DatabaseReader;
+  const scheduler = yield* Scheduler;
+  const plain = yield* reader
+    .table("ninaTurns")
+    .index("by_phase_and_sealedAt", (q) =>
+      q.eq("phase", "settled").eq("sealedAt", undefined)
+    )
+    .take(SEAL_TURNS_PER_SWEEP)
+    .pipe(Effect.orDie);
+  yield* Effect.forEach(
+    plain,
+    (turn) =>
+      scheduler.runAfter(Duration.zero, refs.internal.nina.sealed.seal, {
+        turnId: turn._id,
+      }),
+    { discard: true }
+  );
+});
+
+/**
  * Settles every turn that stayed open past its deadline, whatever stopped its
  * own settlement: a crashed action, a deploy that took the run away, a lost
  * schedule or a failed write. No run is alive past the deadline, so such a
@@ -39,6 +72,8 @@ export const startsLate = Effect.fn("nina.sweep.late")(function* (
  * the turn at the end of `SETTLE_GRACE`, counted from that sweep. The first one
  * to run ends a turn that every try failed to settle, and the rest find it
  * settled. A call reads one page and schedules the next while more remain.
+ * The first call of a sweep also schedules the seal of a few settled turns that
+ * still hold plain rows (`scheduleSeals`), so no run seals more than the bound.
  */
 export const sweepTurns = Effect.fn("nina.sweep")(function* (
   resume?: typeof NinaSweepResume.Type
@@ -47,6 +82,9 @@ export const sweepTurns = Effect.fn("nina.sweep")(function* (
   const scheduler = yield* Scheduler;
   const now = yield* Clock.currentTimeMillis;
   const before = resume?.before ?? now - Duration.toMillis(TURN_DEADLINE);
+  if (resume === undefined) {
+    yield* scheduleSeals();
+  }
   const page = yield* reader
     .table("ninaTurns")
     .index("by_phase", (q) =>

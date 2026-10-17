@@ -88,6 +88,11 @@ export const NinaSettledTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
   phase: Schema.Literal("settled"),
   state: Schema.Union([NinaCompleteState, NinaFailedState, NinaCancelledState]),
+  /**
+   * When the turn's rows were sealed (ADR 0024). A settled turn without it still
+   * holds plain rows, and the sweep seals it. Turns settled before sealing have none.
+   */
+  sealedAt: Schema.optionalKey(Schema.Finite),
 });
 
 export const NinaTurn = Schema.Union([NinaActiveTurn, NinaSettledTurn]);

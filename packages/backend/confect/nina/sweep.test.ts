@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/confect/nina/deadline";
 import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
+import { SEAL_TURNS_PER_SWEEP } from "@repo/backend/confect/nina/sweep";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { stubReport } from "@repo/backend/test/nina/report";
@@ -429,5 +430,55 @@ describe("Nina turn start check", () => {
     expect(
       Arr.filter(state.ledger, (row) => row.type === "refund")
     ).toHaveLength(1);
+  });
+});
+
+describe("Nina sweep seals settled turns", () => {
+  type Deployment = Awaited<ReturnType<typeof createNinaTest>>;
+
+  /** Each settled turn of the chat, by order, and whether its rows are sealed. */
+  const settledSeals = (t: Deployment["t"]) =>
+    t.query(async (ctx) =>
+      Arr.flatMap(await ctx.db.query("ninaTurns").collect(), (turn) =>
+        turn.phase === "settled"
+          ? [{ order: turn.order, sealed: turn.sealedAt !== undefined }]
+          : []
+      )
+    );
+
+  /** The ids of the stored rows of the chat's thread that were written at an order below `before`. */
+  const rowIdsBelow = (f: Deployment, before: number) =>
+    f.t
+      .query((ctx) =>
+        listMessages(ctx, components.nina, {
+          paginationOpts: { cursor: null, numItems: 200 },
+          threadId: f.threadId,
+        })
+      )
+      .then((rows) =>
+        Arr.flatMap(rows.page, (row) => (row.order < before ? [row._id] : []))
+      );
+
+  it("seals the oldest settled turns that still hold plain rows, no more than the bound per run, and leaves a sealed turn alone", async () => {
+    const turns = SEAL_TURNS_PER_SWEEP + 1;
+    const f = await createNinaTest({ history: turns, now: NOW });
+    await f.t.mutation(sweep, {});
+    await f.t.finishAllScheduledFunctions(() => undefined);
+
+    expect(await settledSeals(f.t)).toEqual(
+      Arr.makeBy(turns, (order) => ({
+        order,
+        sealed: order < SEAL_TURNS_PER_SWEEP,
+      }))
+    );
+    const sealedBefore = await rowIdsBelow(f, SEAL_TURNS_PER_SWEEP);
+
+    await f.t.mutation(sweep, {});
+    await f.t.finishAllScheduledFunctions(() => undefined);
+
+    expect(await settledSeals(f.t)).toEqual(
+      Arr.makeBy(turns, (order) => ({ order, sealed: true }))
+    );
+    expect(await rowIdsBelow(f, SEAL_TURNS_PER_SWEEP)).toEqual(sealedBefore);
   });
 });
