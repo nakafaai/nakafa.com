@@ -18,6 +18,7 @@ import { Duration, Schema, Struct } from "effect";
  * Undo now: an older web build that still calls `restore` during the deploy
  * skew window is the only caller, and its Undo lasted this long. Remove
  * `restore`, its record, and this window together once that window has passed.
+ * Owner: pull request #1099, which takes the Undo toast out of the Memory page.
  */
 export const MEMORY_UNDO = Duration.seconds(5);
 /** Characters of one memory's words, their Markdown formatting included. */
