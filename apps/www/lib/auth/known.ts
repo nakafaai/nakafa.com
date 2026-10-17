@@ -1,18 +1,6 @@
 import { Effect } from "effect";
+import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 import type { AuthSession } from "@/lib/auth/session";
-
-/**
- * Where the browser keeps the id of the session it last had. The key starts
- * with the prefix of account state, so signing out and deleting the account
- * remove it with the rest of what the browser holds for the account.
- */
-const KNOWN_SESSION_KEY = "nakafa-session";
-
-/**
- * Stands for a session whose id the browser cannot know yet: the one a
- * sign-in that just left for the provider will come back with.
- */
-const EXPECTED_SESSION = "expected";
 
 type KnownSessionStorage = Pick<Storage, "getItem" | "removeItem" | "setItem">;
 

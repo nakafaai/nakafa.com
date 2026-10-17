@@ -3,6 +3,7 @@ import { Array as Arr, Effect, MutableRef, Schema } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
 declare global {
   interface Window {
@@ -315,6 +316,25 @@ const verifyColdPages = Effect.fn("NakafaE2E.verifyColdPages")(function* (
   yield* Effect.sync(() => expect(verified).toBe(wanted));
 });
 
+/**
+ * Lets a signed-in browser settle its session the way its first page does:
+ * Better Auth answers once, and the browser keeps the id of that session, as
+ * `saveKnownSession` writes it after each settled answer. The session test does
+ * the same before it checks the saved session.
+ */
+const settleSignedInBrowser = Effect.fn("NakafaE2E.settleSignedInBrowser")(
+  function* (page: Page) {
+    yield* Effect.promise(() => page.goto("/en", { waitUntil: "load" }));
+    yield* Effect.promise(() =>
+      page.waitForFunction(
+        (key) => window.localStorage.getItem(key) !== null,
+        KNOWN_SESSION_KEY,
+        { timeout: readinessTimeoutMilliseconds }
+      )
+    );
+  }
+);
+
 /** Proves this run's cold lessons, and its article, survive hydration. */
 const verifyRun = Effect.fn("NakafaE2E.verifyRun")(function* (
   page: Page,
@@ -355,6 +375,7 @@ for (const run of runs) {
           if (run.signedIn) {
             const origin = yield* Effect.fromNullishOr(baseURL);
             yield* signInLearner(page.context(), origin);
+            yield* settleSignedInBrowser(page);
           }
           yield* verifyRun(page, run);
         })
