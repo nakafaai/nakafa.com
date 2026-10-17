@@ -130,8 +130,8 @@ const cleanupNinaUploads = Effect.fn("auth.cleanup.ninaUploads")(
 /**
  * Deletes one bounded batch of the learner's Nina memories, with their key
  * rows, the learner's portrait, and the records that keep a deleted memory for
- * its Undo. A capture that lands during the deletion writes a memory and asks
- * for a portrait, and the next pass deletes both.
+ * the restore window. A capture that lands during the deletion writes a memory
+ * and asks for a portrait, and the next pass deletes both.
  */
 const cleanupNinaMemory = Effect.fn("auth.cleanup.ninaMemory")(
   function* (userId: Id<"users">) {

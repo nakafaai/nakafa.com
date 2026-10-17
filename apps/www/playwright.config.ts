@@ -1,7 +1,11 @@
 import { defineConfig, type Project } from "@playwright/test";
 import { Array as Arr, Record as Rec } from "effect";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
+// The acceptance runtime serves its SITE_URL host, localhost, as set in
+// packages/backend/scripts/content/acceptance/local.ts. The browser tests use
+// that host too: a local session cookie is set for localhost, and the browser
+// never sends it to 127.0.0.1.
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
 // Projects select files by folder path, so a file that repeats a basename
 // never joins a project by accident.

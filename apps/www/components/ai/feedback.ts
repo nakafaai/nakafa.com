@@ -8,8 +8,8 @@ import {
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option, Schema } from "effect";
-import { toast } from "sonner";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 /**
@@ -164,9 +164,10 @@ export const ninaFailureFeedback = {
 >;
 
 /**
- * The numbers the sentences of `Ai.failures` name, from the limits the code
- * checks. Every place that words a failure passes them, so a sentence never
- * says a limit the code does not check.
+ * The numbers the copy of a failure names, from the limits the code checks.
+ * Every place that words a failure passes them, so a sentence never says a
+ * limit the code does not check. An admission failure's copy is the toast copy
+ * of `Toast.failure-*`, and a persisted response failure reads `Ai.failures`.
  */
 export const ninaFailureLimits = {
   size: NINA_DOCUMENT_MEBIBYTES,
@@ -213,24 +214,24 @@ export const ninaResponseFeedback = {
  * send button stay in reach while it does. The composer sits at the bottom of
  * the page and of the sheet, where a notice would cover it on a phone.
  */
-export const NINA_NOTICE_POSITION = "top-center";
+const NINA_NOTICE_POSITION = "top-center";
 
 /**
- * Report operational failures and show only the caller's localized message.
- * A sentence has one notice: a failure that says the same thing again, such as
+ * Report operational failures and show only the caller's localized copy. A
+ * failure has one notice: a failure that says the same thing again, such as
  * Enter pressed again on a prompt that is too long, updates the notice in
  * place instead of stacking a copy of it.
  */
 export const reportNinaFailure = Effect.fn("nina.feedback")(function* (
   error: NinaFailure,
-  message: string
+  copy: ToastCopy
 ) {
   yield* Effect.sync(() => {
     const feedback = ninaFailureFeedback[error.code];
     if (feedback.report) {
       captureException(error, { source: "nina-admission" });
     }
-    toast.error(message, {
+    toast.error(copy, {
       id: `nina-failure-${feedback.message}`,
       position: NINA_NOTICE_POSITION,
     });
