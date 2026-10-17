@@ -86,22 +86,29 @@ describe("tryouts/start/source", () => {
           const source = Schema.decodeSync(SignedReleaseJsonSchema)(
             release.releaseJson
           );
-          const reused = testSignedRelease({
-            ...source.manifest,
-            releaseId: REUSED_RELEASE_ID,
-          });
-          await ctx.db.patch("contentReleases", release._id, {
+          return {
+            releaseDocId: release._id,
+            source,
+            sourceReleaseId: source.manifest.releaseId,
+            stateDocId: state._id,
+            user,
+          };
+        })
+      );
+      const reused = yield* testSignedRelease({
+        ...seeded.source.manifest,
+        releaseId: REUSED_RELEASE_ID,
+      });
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          await ctx.db.patch("contentReleases", seeded.releaseDocId, {
             releaseId: REUSED_RELEASE_ID,
             releaseJson: encodeJsonText(reused),
           });
-          await ctx.db.patch("contentState", state._id, {
+          await ctx.db.patch("contentState", seeded.stateDocId, {
             activeManifestHash: reused.manifestHash,
             activeReleaseId: REUSED_RELEASE_ID,
           });
-          return {
-            sourceReleaseId: source.manifest.releaseId,
-            user,
-          };
         })
       );
       const source = yield* Effect.promise(() =>

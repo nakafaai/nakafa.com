@@ -125,21 +125,24 @@ describe("tryouts/catalog/featured", () => {
     "rejects a publication missing its featured %s",
     (kind) =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
-            const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-                Arr.filter(
-                  makeLandingHierarchy(locale, "visible"),
-                  (row) => row.kind !== kind
-                )
-              ),
-              placements: Arr.map(
-                ACTIVE_APP_LOCALE_CODES,
-                makeLandingPlacement
-              ),
-            });
+            const snapshotId = await Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+                  Arr.filter(
+                    makeLandingHierarchy(locale, "visible"),
+                    (row) => row.kind !== kind
+                  )
+                ),
+                placements: Arr.map(
+                  ACTIVE_APP_LOCALE_CODES,
+                  makeLandingPlacement
+                ),
+              })
+            );
             await insertTestTryoutRuntimeBundle(ctx, snapshotId);
           })
         );
@@ -161,22 +164,25 @@ describe("tryouts/catalog/featured", () => {
     "rejects a replaced featured %s without selecting another example",
     (missing) =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
-            const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-                Arr.map(makeLandingHierarchy(locale, "visible"), (row) =>
-                  missing === "set" && "setKey" in row
-                    ? { ...row, setKey: "set-2" }
-                    : row
-                )
-              ),
-              placements: Arr.map(
-                ACTIVE_APP_LOCALE_CODES,
-                makeLandingPlacement
-              ),
-            });
+            const snapshotId = await Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+                  Arr.map(makeLandingHierarchy(locale, "visible"), (row) =>
+                    missing === "set" && "setKey" in row
+                      ? { ...row, setKey: "set-2" }
+                      : row
+                  )
+                ),
+                placements: Arr.map(
+                  ACTIVE_APP_LOCALE_CODES,
+                  makeLandingPlacement
+                ),
+              })
+            );
             if (missing !== "bundle") {
               await insertTestTryoutRuntimeBundle(ctx, snapshotId);
             }
@@ -341,19 +347,22 @@ describe("tryouts/catalog/featured", () => {
     "ignores an earlier section when selecting the landing question",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
-            const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: Arr.flatMap(
-                ACTIVE_APP_LOCALE_CODES,
-                makeLeadingSectionHierarchy
-              ),
-              placements: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
-                makeLeadingPlacement(locale),
-                makeLandingPlacement(locale),
-              ]),
-            });
+            const snapshotId = await Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog: Arr.flatMap(
+                  ACTIVE_APP_LOCALE_CODES,
+                  makeLeadingSectionHierarchy
+                ),
+                placements: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
+                  makeLeadingPlacement(locale),
+                  makeLandingPlacement(locale),
+                ]),
+              })
+            );
             await insertTestTryoutRuntimeBundle(ctx, snapshotId);
           })
         );
@@ -374,18 +383,21 @@ describe("tryouts/catalog/featured", () => {
     "returns the stable authored question for every response format",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
-            const snapshotId = await activateTryoutSnapshot(ctx, {
-              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-                makeLandingHierarchy(locale, "visible")
-              ),
-              placements: Arr.map(
-                ACTIVE_APP_LOCALE_CODES,
-                makeMultipleChoicePlacement
-              ),
-            });
+            const snapshotId = await Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+                  makeLandingHierarchy(locale, "visible")
+                ),
+                placements: Arr.map(
+                  ACTIVE_APP_LOCALE_CODES,
+                  makeMultipleChoicePlacement
+                ),
+              })
+            );
             await insertTestTryoutRuntimeBundle(ctx, snapshotId);
           })
         );
@@ -403,15 +415,21 @@ describe("tryouts/catalog/featured", () => {
 
   it.effect("returns a category response without narrowing its structure", () =>
     Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
-          const snapshotId = await activateTryoutSnapshot(ctx, {
-            catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-              makeLandingHierarchy(locale, "visible")
-            ),
-            placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeCategoryPlacement),
-          });
+          const snapshotId = await Effect.runPromiseWith(runtimeServices)(
+            activateTryoutSnapshot(ctx, {
+              catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+                makeLandingHierarchy(locale, "visible")
+              ),
+              placements: Arr.map(
+                ACTIVE_APP_LOCALE_CODES,
+                makeCategoryPlacement
+              ),
+            })
+          );
           await insertTestTryoutRuntimeBundle(ctx, snapshotId);
         })
       );

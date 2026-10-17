@@ -14,7 +14,7 @@ import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/
 import {
   createTestPublication,
   makePageRuntimeSource,
-  TEST_PUBLICATION_RELEASE,
+  testPublicationRelease,
 } from "@repo/backend/test/content/publication";
 import {
   Array as Arr,
@@ -99,7 +99,10 @@ describe("published Page catalog", () => {
     "reads the inherited Page and active release identity from authenticated snapshot rows",
     () =>
       Effect.gen(function* () {
-        const locales = Arr.map(ACTIVE_APP_LOCALE_CODES, makePageRuntimeSource);
+        const locales = yield* Effect.forEach(
+          ACTIVE_APP_LOCALE_CODES,
+          makePageRuntimeSource
+        );
         const fixture = locales[0];
         for (const table of [
           "contentHeads",
@@ -115,10 +118,11 @@ describe("published Page catalog", () => {
             )
           );
         }
+        const publication = yield* testPublicationRelease();
         MutableHashMap.set(fixture.source, "contentReleases", [
           {
             ...fixture.release,
-            resultFamilies: TEST_PUBLICATION_RELEASE.manifest.scope.families,
+            resultFamilies: publication.manifest.scope.families,
           },
         ]);
         const context = yield* createTestPublication(fixture.source);

@@ -4,6 +4,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type { QuranRowHashError } from "@nakafa/aksara-contracts/quran/snapshot/row/hash";
 import {
   decodePublishedQuranCatalog,
   decodePublishedQuranSurah,
@@ -32,7 +33,7 @@ describe("signed Quran catalog decoder", () => {
   it.live("decodes the complete ordered current catalog", () =>
     Effect.gen(function* () {
       const catalog = yield* decodePublishedQuranCatalog(
-        catalogResult((index) =>
+        yield* catalogResult((index) =>
           encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
         )
       );
@@ -53,7 +54,7 @@ describe("signed Quran catalog decoder", () => {
       const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
       const wrongSnapshot = yield* Effect.result(
         decodePublishedQuranCatalog(
-          catalogResult((index) =>
+          yield* catalogResult((index) =>
             encodeTestQuranRow(otherSnapshotId, makeQuranSurah(index + 1))
           )
         )
@@ -73,14 +74,16 @@ describe("signed Quran catalog decoder", () => {
       const incomplete = yield* Effect.result(
         decodePublishedQuranCatalog({
           ...source,
-          rowJson: Array.from({ length: 113 }, (_, index) =>
-            encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
+          rowJson: yield* Effect.forEach(
+            Arr.makeBy(113, (index) => index),
+            (index) =>
+              encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
           ),
         })
       );
       const unordered = yield* Effect.result(
         decodePublishedQuranCatalog(
-          catalogResult((index) => {
+          yield* catalogResult((index) => {
             const surahNumber = index < 2 ? 2 - index : index + 1;
             return encodeTestQuranRow(
               source.snapshotId,
@@ -158,9 +161,14 @@ describe("signed Quran catalog decoder", () => {
 });
 
 /** Builds all 114 schema-valid signed metadata rows. */
-function catalogResult(row: (index: number) => string) {
+const catalogResult = Effect.fn("test.quran.catalogResult")(function* (
+  row: (index: number) => Effect.Effect<string, QuranRowHashError>
+) {
   return {
     ...source,
-    rowJson: Array.from({ length: 114 }, (_, index) => row(index)),
+    rowJson: yield* Effect.forEach(
+      Arr.makeBy(114, (index) => index),
+      row
+    ),
   };
-}
+});

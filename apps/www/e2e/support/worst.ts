@@ -10,7 +10,7 @@ import {
 } from "@/e2e/support/memory";
 import { CARD } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { isHydrated } from "@/e2e/support/window";
+import { firstRow, isHydrated } from "@/e2e/support/window";
 
 /** The scripts of the page itself. */
 const SCRIPTS = /\/_next\/static\/.*\.js/;
@@ -186,18 +186,20 @@ export const namesAcrossHydration = Effect.fn("NakafaE2E.namesAcrossHydration")(
         MutableList.append(held, route);
       });
       await page.goto(path, { waitUntil: "domcontentloaded" });
-      await expect(page.locator("main ul > li").first()).toBeVisible({
+      await expect(firstRow(page)).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       });
       const served = await namesOf(page);
 
-      expect(await isHydrated(page)).toBe(false);
+      expect(await isHydrated(firstRow(page))).toBe(false);
       for (const route of MutableList.toArray(held)) {
         await route.continue();
       }
       await page.unroute(SCRIPTS);
       await expect
-        .poll(() => isHydrated(page), { timeout: readinessTimeoutMilliseconds })
+        .poll(() => isHydrated(firstRow(page)), {
+          timeout: readinessTimeoutMilliseconds,
+        })
         .toBe(true);
       page.off("console", listen);
 

@@ -32,7 +32,7 @@ import { Effect, HashMap, Struct } from "effect";
 describe("immutable publication projections", () => {
   it.effect("rejects withdrawn or incomplete selected route bindings", () =>
     Effect.gen(function* () {
-      const fixture = makePageRuntimeSource();
+      const fixture = yield* makePageRuntimeSource();
       const runtime = yield* createTestPublication(fixture.source);
       yield* runtime.run(
         Effect.gen(function* () {
@@ -133,7 +133,7 @@ describe("immutable publication projections", () => {
   );
   it.effect("rejects incomplete or invalid head contracts", () =>
     Effect.gen(function* () {
-      const fixture = makePageRuntimeSource();
+      const fixture = yield* makePageRuntimeSource();
       const runtime = yield* createTestPublication(fixture.source);
       for (const head of [
         {
@@ -165,7 +165,7 @@ describe("immutable publication projections", () => {
     "binds stored projection family, locale, hash, and renderer provenance",
     () =>
       Effect.gen(function* () {
-        const fixture = makePageRuntimeSource();
+        const fixture = yield* makePageRuntimeSource();
         const heads: readonly PublicationRow<"contentHeads">[] = [
           Struct.omit(fixture.head, ["projectionHash"]),
           {

@@ -67,7 +67,7 @@ describe("published material discovery", () => {
         const context = yield* createTestPublication(fixture.source);
         runtimeQueryMock.mockImplementation(context.query);
         const projection = makeMaterialProjection("en", 1);
-        const bucket = getHashBucket(hashContentProjection(projection));
+        const bucket = getHashBucket(yield* hashContentProjection(projection));
         const partition = yield* readPublishedMaterialBucket("en", bucket);
         expect(partition).toMatchObject({
           activeReleaseId: fixture.state.activeReleaseId,

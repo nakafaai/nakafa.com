@@ -65,12 +65,18 @@ export const makeProgramContextRuntimeSource = Effect.fn(
       rowDigest: evidence.rowDigest,
     }),
   };
-  const signed = testSignedRelease({
-    ...testEmptyManifest(ReleaseIdSchema.make("app-program-context-snapshot")),
+  const empty = yield* testEmptyManifest(
+    ReleaseIdSchema.make("app-program-context-snapshot")
+  );
+  const signed = yield* testSignedRelease({
+    ...empty,
     scope: testPublicationScope({ families: ["material"], snapshots }),
     snapshots,
   });
-  const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
+  const fixture = yield* makeRuntimeSource(
+    signed,
+    signed.manifest.scope.families
+  );
   MutableHashMap.set(fixture.source, "contentSnapshots", [
     {
       createdAt: 1,

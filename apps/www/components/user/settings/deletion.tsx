@@ -28,7 +28,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import {
   clearAccountDeletionAttempt,
@@ -141,10 +143,8 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
           <CardDescription>{t("delete-account-description")}</CardDescription>
         </CardHeader>
         <CardSectionFooter>
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-muted-foreground text-sm">
-              {t("delete-account-footer")}
-            </p>
+          <CardSectionHint>{t("delete-account-footer")}</CardSectionHint>
+          <CardSectionActions>
             <Button
               onClick={() => setOpen(true)}
               type="button"
@@ -153,7 +153,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
               <HugeIcons icon={Delete02Icon} />
               {t("delete-account")}
             </Button>
-          </div>
+          </CardSectionActions>
         </CardSectionFooter>
       </CardSection>
 

@@ -64,12 +64,12 @@ update:
     - vitest
 
 catalog:
-  '@confect/core': 10.2.0
+  '@confect/core': 10.3.1
   '@convex-dev/agent': 0.7.8
   '@convex-dev/ai-sdk-provider': 0.3.0
-  '@effect/platform-browser': 4.0.2
-  '@effect/platform-node': 4.0.2
-  '@effect/vitest': 4.0.2
+  '@effect/platform-browser': 4.0.5
+  '@effect/platform-node': 4.0.5
+  '@effect/vitest': 4.0.5
   '@hugeicons/core-free-icons': ^4.3.5
   '@hugeicons/react': ^1.1.10
   '@mantine/hooks': ^9.7.2
@@ -82,7 +82,7 @@ catalog:
   ai: 7.0.140
   class-variance-authority: ^0.7.1
   cn: 0.5.0
-  effect: 4.0.2
+  effect: 4.0.5
   motion: ^14.3.0
   next-intl: ^4.14.9
   next-themes: ^0.4.6
@@ -104,10 +104,10 @@ overrides:
   "react-dom": "19.3.1"
   "@types/react": "19.3.0"
   "@types/react-dom": "19.3.0"
-  "@effect/ai-openai-compat": "4.0.2"
-  "@effect/ai-openrouter": "4.0.2"
-  "@effect/platform-node": "4.0.2"
-  "@effect/platform-node-shared": "4.0.2"
+  "@effect/ai-openai-compat": "4.0.5"
+  "@effect/ai-openrouter": "4.0.5"
+  "@effect/platform-node": "4.0.5"
+  "@effect/platform-node-shared": "4.0.5"
   # posthog-node 5.56 imports @opentelemetry/api, an optional peer that is not
   # installed. Convex cannot bundle the PostHog component with it, so the
   # component keeps the release it bundles with: 5.55.1, as on main.
