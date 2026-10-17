@@ -34,9 +34,12 @@ import {
 } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import type { StoreApi } from "zustand";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { formatShortAge } from "@/components/user/age";
+import type { AgeClock } from "@/components/user/clock";
+import { useAgeClock, useAgeNow } from "@/components/user/clock.client";
 import {
   FeedAge,
   FeedAvatar,
@@ -63,9 +66,7 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
     return <OwnChatsList />;
   }
   if (isPending) {
-    return (
-      <ChatList canDelete={false} isLoading loadMore={undefined} results={[]} />
-    );
+    return null;
   }
   return <ChatsByLink />;
 }
@@ -76,8 +77,13 @@ function ChatsByLink() {
   return <FeedEmpty>{t("chats-by-link")}</FeedEmpty>;
 }
 
-/** Subscribe to all study chats owned by the current viewer. */
+/**
+ * The owner's study chats, in the anatomy every row of the profile shares.
+ * Nothing shows while the first page loads, and the next page loads as the end
+ * of the list comes into view.
+ */
 function OwnChatsList() {
+  const t = useTranslations("Common");
   const pagination = usePaginatedQuery(
     chats.queries.getOwnChats,
     {
@@ -88,37 +94,11 @@ function OwnChatsList() {
     }
   );
   const { loadMore, results } = useChatList(pagination);
+  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
-  return (
-    <ChatList
-      canDelete={true}
-      isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
-      loadMore={loadMore}
-      results={results}
-    />
-  );
-}
-
-/**
- * The chats of a page, in the anatomy every row of the profile shares. Nothing
- * shows while the first page loads, and the next page loads as the end of the
- * list comes into view.
- */
-function ChatList({
-  canDelete,
-  loadMore,
-  results,
-  isLoading,
-}: {
-  canDelete: boolean;
-  loadMore: (() => void) | undefined;
-  results: readonly ChatView[];
-  isLoading: boolean;
-}) {
-  const t = useTranslations("Common");
-  if (isLoading) {
+  if (PaginatedQueryResult.isLoadingFirstPage(pagination)) {
     return null;
   }
   if (results.length === 0) {
@@ -127,7 +107,7 @@ function ChatList({
   return (
     <div className="flex flex-col">
       {Arr.map(results, (chat) => (
-        <ChatRow canDelete={canDelete} chat={chat} key={chat._id} />
+        <ChatRow chat={chat} clock={clock} key={chat._id} />
       ))}
       {loadMore ? <Intersection onIntersect={loadMore} /> : null}
     </div>
@@ -135,15 +115,22 @@ function ChatList({
 }
 
 /**
- * One chat: the owner's picture, then its title, whether it is private or
- * shared, its age and the owner's More menu on one line. The title is the
- * row's link, and the whole row opens the chat.
+ * One chat, as a post of the owner: the owner's picture, then the name, the age,
+ * whether the chat is private or shared, and its More menu on one line, then
+ * the title on up to two lines. The title is the row's link, and the whole row
+ * opens the chat.
  */
-function ChatRow({ canDelete, chat }: { canDelete: boolean; chat: ChatView }) {
+function ChatRow({
+  chat,
+  clock,
+}: {
+  chat: ChatView;
+  clock: StoreApi<AgeClock>;
+}) {
   const tAi = useTranslations("Ai");
   const locale = useLocale();
   const account = useViewer((state) => state.account);
-  const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
+  const now = useAgeNow(clock);
   const isPrivate = chat.visibility === "private";
   // A chat Nina has not named yet reads as a new chat, so its link has a name.
   const title = pipe(
@@ -151,39 +138,38 @@ function ChatRow({ canDelete, chat }: { canDelete: boolean; chat: ChatView }) {
     Option.filter(Str.isNonEmpty),
     Option.getOrElse(() => tAi("new-chat"))
   );
+  if (!account) {
+    return null;
+  }
   return (
     <FeedRow>
-      {account && (
-        <FeedAvatar
-          mascot={account.appUser.mascot}
-          photo={photoOf(account.appUser)}
-        />
-      )}
+      <FeedAvatar
+        mascot={account.appUser.mascot}
+        photo={photoOf(account.appUser)}
+      />
       <FeedBody>
         <FeedHeader>
-          <FeedName>
-            <NavigationLink
-              className="after:absolute after:inset-0"
-              href={`/chat/${chat._id}`}
-            >
-              {title}
-            </NavigationLink>
-          </FeedName>
+          <FeedName>{account.authUser.name}</FeedName>
+          <FeedAge at={chat.updatedAt}>
+            {formatShortAge(chat.updatedAt, now, locale)}
+          </FeedAge>
           <HugeIcons
             aria-label={tAi(isPrivate ? "private" : "public")}
             className="size-4 text-muted-foreground"
             icon={isPrivate ? SquareLock01Icon : Globe02Icon}
             role="img"
           />
-          <FeedAge at={chat.updatedAt}>
-            {formatShortAge(chat.updatedAt, now, locale)}
-          </FeedAge>
-          {canDelete ? (
-            <FeedEnd>
-              <UserChatsListActions chat={chat} />
-            </FeedEnd>
-          ) : null}
+          <FeedEnd>
+            <UserChatsListActions chat={chat} />
+          </FeedEnd>
         </FeedHeader>
+        <NavigationLink
+          className="wrap-anywhere line-clamp-2 rounded-sm outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          dir="auto"
+          href={`/chat/${chat._id}`}
+        >
+          {title}
+        </NavigationLink>
       </FeedBody>
     </FeedRow>
   );

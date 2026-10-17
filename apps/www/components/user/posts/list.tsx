@@ -6,18 +6,13 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
-import type { StoreApi } from "zustand";
+import { useCallback, useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
-import { AGE_TICK_MILLISECONDS } from "@/components/user/age";
+import { useAgeClock } from "@/components/user/clock.client";
 import { FeedEmpty, FeedMore, FeedNotice } from "@/components/user/feed";
-import {
-  createPostsClock,
-  type PostsClock,
-} from "@/components/user/posts/clock";
 import { PostComposer } from "@/components/user/posts/composer";
 import {
   failedView,
@@ -57,8 +52,7 @@ export function UserPosts({
   const viewer = identity.isPending ? account : identity.account;
   const author =
     viewer && viewer.appUser._id === account.appUser._id ? viewer : null;
-  const [clock] = useState(() => createPostsClock(serverNow));
-  useAgeTimer(clock);
+  const clock = useAgeClock(serverNow);
   // A Retry changes the key, which remounts the list so that it asks the server
   // again. The draft lives in the provider above the list, so it stays. The
   // boundary catches an error the list throws, so the header and the tabs stay
@@ -157,18 +151,4 @@ function PostsPanel({
       </div>
     </div>
   );
-}
-
-/**
- * Moves the clock of the ages to the browser's time at once, and then on each
- * tick, so an age keeps up with the time after the server wrote it.
- */
-function useAgeTimer(clock: StoreApi<PostsClock>) {
-  useEffect(() => {
-    const tick = () =>
-      clock.getState().setNow(DateTime.toEpochMillis(DateTime.nowUnsafe()));
-    tick();
-    const timer = window.setInterval(tick, AGE_TICK_MILLISECONDS);
-    return () => window.clearInterval(timer);
-  }, [clock]);
 }

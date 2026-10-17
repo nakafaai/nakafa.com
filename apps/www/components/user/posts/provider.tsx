@@ -2,7 +2,8 @@
 
 import { createContext, type ReactNode, use, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
-import type { PostsClock } from "@/components/user/posts/clock";
+import type { AgeClock } from "@/components/user/clock";
+import { useAgeNow } from "@/components/user/clock.client";
 import { createPostDraft, type PostDraft } from "@/components/user/posts/draft";
 import type { CurrentUser } from "@/lib/identity/client";
 
@@ -39,7 +40,7 @@ interface PostsValue {
   /** The signed-in account when it is the profile's owner, which may write posts. */
   readonly author: CurrentUser | null;
   /** The clock that the ages of the posts count from. */
-  readonly clock: StoreApi<PostsClock>;
+  readonly clock: StoreApi<AgeClock>;
   /** Asks the server for the list again. */
   readonly onRetry: () => void;
 }
@@ -80,5 +81,5 @@ export function usePostsContext() {
 export function usePostsNow() {
   const { clock } = usePostsContext();
 
-  return useStore(clock, (state) => state.now);
+  return useAgeNow(clock);
 }

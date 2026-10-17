@@ -13,15 +13,9 @@ const rowVariants = cva("relative flex items-start gap-3 border-b py-4");
  * and the trailing menu sit on the content's edges, so every icon lines up with
  * the text above it.
  */
-export function FeedRow({
-  children,
-  inert,
-}: {
-  children: ReactNode;
-  inert?: boolean;
-}) {
+export function FeedRow({ children }: { children: ReactNode }) {
   return (
-    <article className={rowVariants()} data-slot="feed-row" inert={inert}>
+    <article className={rowVariants()} data-slot="feed-row">
       {children}
     </article>
   );

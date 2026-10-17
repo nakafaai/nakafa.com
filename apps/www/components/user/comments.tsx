@@ -27,9 +27,11 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, DateTime } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import type { StoreApi } from "zustand";
 import {
   CommentActionsProvider,
   CommentCount,
@@ -38,6 +40,8 @@ import {
 } from "@/components/comments/actions";
 import { DataFailure } from "@/components/shared/failure";
 import { formatShortAge } from "@/components/user/age";
+import type { AgeClock } from "@/components/user/clock";
+import { useAgeClock, useAgeNow } from "@/components/user/clock.client";
 import {
   FeedActions,
   FeedAge,
@@ -73,6 +77,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
     }
   );
   const { results } = pagination;
+  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
   if (QueryResult.isFailure(userQuery)) {
     throw userQuery.error;
   }
@@ -104,6 +109,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
       )}
       {Arr.map(results, (comment) => (
         <CommentRow
+          clock={clock}
           comment={comment}
           key={comment._id}
           user={userQuery.value}
@@ -133,15 +139,17 @@ type UserComment = Ref.Returns<
  * comment on its page.
  */
 function CommentRow({
+  clock,
   comment,
   user,
 }: {
+  clock: StoreApi<AgeClock>;
   comment: UserComment;
   user: Ref.Returns<typeof auth.queries.getUserById>;
 }) {
   const t = useTranslations("Common");
   const locale = useLocale();
-  const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
+  const now = useAgeNow(clock);
   return (
     <CommentActionsProvider comment={comment}>
       <FeedRow>
@@ -156,21 +164,19 @@ function CommentRow({
               <CommentMoreMenu />
             </FeedEnd>
           </FeedHeader>
-          <MarkdownContent id={comment._id}>{comment.text}</MarkdownContent>
+          <MarkdownContent className="wrap-anywhere" id={comment._id}>
+            {comment.text}
+          </MarkdownContent>
           <FeedActions>
             <CommentVotes />
-            <Button
+            <NavigationLink
               aria-label={t("reply")}
-              nativeButton={false}
-              render={
-                <NavigationLink href={getCleanHref(comment.slug)}>
-                  <HugeIcons icon={ArrowTurnBackwardIcon} />
-                  <CommentCount value={comment.replyCount} />
-                </NavigationLink>
-              }
-              size="sm"
-              variant="ghost"
-            />
+              className={buttonVariants({ size: "sm", variant: "ghost" })}
+              href={getCleanHref(comment.slug)}
+            >
+              <HugeIcons icon={ArrowTurnBackwardIcon} />
+              <CommentCount value={comment.replyCount} />
+            </NavigationLink>
           </FeedActions>
         </FeedBody>
       </FeedRow>
