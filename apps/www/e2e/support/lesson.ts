@@ -20,9 +20,12 @@ export function lessonPanel(page: Page) {
   return lessonSection(page).getByRole("tabpanel");
 }
 
-/** The tab row, which is the top of the lesson window. */
-export function lessonTabs(page: Page) {
-  return lessonSection(page).getByRole("tablist");
+/**
+ * The whole lesson window: its tabs and its panels. Its height is the one of its
+ * tallest panel, and its lab mounts once at least half of it is on the screen.
+ */
+export function lessonWindow(page: Page) {
+  return lessonSection(page).locator('[data-slot="tabs"]');
 }
 
 /** The visual of a lesson, found by the name of its view. */

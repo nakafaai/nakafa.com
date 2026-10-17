@@ -6,6 +6,7 @@ import {
   lessonPanel,
   lessonSection,
   lessonVisual,
+  lessonWindow,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
@@ -118,7 +119,9 @@ test("home lesson window keeps the launch the reader picked when the reader retu
               const launch = lessonPanel(page)
                 .locator('[data-slot="toggle-group-item"]')
                 .nth(HIGH_ANGLE_TOGGLE_INDEX);
-              yield* Effect.promise(() => lesson.scrollIntoViewIfNeeded());
+              yield* Effect.promise(() =>
+                lessonWindow(page).scrollIntoViewIfNeeded()
+              );
               yield* Effect.promise(() =>
                 expect(
                   lessonPanel(page).locator("canvas").first()
@@ -168,10 +171,18 @@ test("home lesson window keeps a focused control on the page while the window is
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
               const lesson = lessonSection(page);
-              const control = lessonPanel(page).locator("button").first();
               const probe = page.locator(`[${FOCUS_PROBE}]`);
 
-              yield* Effect.promise(() => lesson.scrollIntoViewIfNeeded());
+              yield* Effect.promise(() =>
+                lessonWindow(page).scrollIntoViewIfNeeded()
+              );
+              // The lab replaces the card, so the control is taken once the lab is mounted and stays mounted.
+              yield* Effect.promise(() =>
+                expect(
+                  lessonPanel(page).locator("canvas").first()
+                ).toBeAttached({ timeout: readinessTimeoutMilliseconds })
+              );
+              const control = lessonPanel(page).locator("button").first();
               yield* Effect.promise(() => expect(control).toBeVisible());
               yield* Effect.promise(() =>
                 control.evaluate(

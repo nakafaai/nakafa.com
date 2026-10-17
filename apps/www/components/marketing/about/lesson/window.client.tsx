@@ -65,9 +65,11 @@ interface LessonPanelProps {
  * tab change moves nothing below it. A panel that is not open is hidden by
  * visibility and made inert, so it leaves the accessibility tree and takes no
  * pointer or focus. The open panel's lab replaces its card in the same box once
- * the window is live. The cards of the panels are never skipped by
- * content-visibility: a skipped card takes a fallback height until it is first
- * drawn, so the window would change height when the reader reaches it.
+ * the window is live. The card is inert until its lab mounts, so no control of
+ * the card can hold focus when the lab replaces it. The cards of the panels are
+ * never skipped by content-visibility: a skipped card takes a fallback height
+ * until it is first drawn, so the window would change height when the reader
+ * reaches it.
  */
 function LessonPanel({
   decimalSeparator,
@@ -81,6 +83,7 @@ function LessonPanel({
   placeholder,
 }: LessonPanelProps) {
   const Lab = LESSON_LABS[lesson];
+  const card = <div inert>{placeholder}</div>;
 
   return (
     <div
@@ -107,11 +110,11 @@ function LessonPanel({
         />
       </div>
       {live ? (
-        <Suspense fallback={placeholder}>
+        <Suspense fallback={card}>
           <Lab decimalSeparator={decimalSeparator} />
         </Suspense>
       ) : (
-        placeholder
+        card
       )}
     </div>
   );
@@ -122,9 +125,11 @@ function LessonPanel({
  * lesson, and each panel holds the lesson's description, a link that opens the
  * lesson, and the lesson's card. The panels share one grid cell, so the window
  * holds one height from its first paint to every tab. Only the open lesson's lab
- * is mounted: it replaces the card once the window nears the screen, or once its
- * tab is pressed. The window keeps each lab's choice while the reader moves between
- * lessons. The window turns only when the reader picks a tab, never by itself.
+ * is mounted, and its code loads once at least half of the window is on the
+ * screen, or once the reader points at, focuses or presses the window. Until then
+ * the server's card shows in the same box. The window keeps each lab's choice
+ * while the reader moves between lessons. The window turns only when the reader
+ * picks a tab, never by itself.
  */
 export function LessonWindow({
   decimalSeparator,
@@ -138,10 +143,16 @@ export function LessonWindow({
   const [selections] = useState(createLessonSelectionStore);
   const windowId = useId();
 
+  /** Lets the open lesson's lab load and mount. It never turns back once it is revealed. */
+  function reveal() {
+    setRevealed(true);
+  }
+
   /** Opens the lesson that the tab names. Any other value leaves the window as it is. */
   function handleChange(value: unknown) {
     if (Schema.is(LessonSchema)(value)) {
       setLesson(value);
+      reveal();
     }
   }
 
@@ -150,9 +161,12 @@ export function LessonWindow({
       <Intersection
         className="grid gap-6"
         once
-        onIntersect={() => setRevealed(true)}
-        rootMargin="100% 0px"
-        threshold={0}
+        onFocus={reveal}
+        onIntersect={reveal}
+        onPointerDown={reveal}
+        onPointerEnter={reveal}
+        rootMargin="0px"
+        threshold={0.5}
       >
         <Tabs onValueChange={handleChange} value={lesson}>
           <TabsList

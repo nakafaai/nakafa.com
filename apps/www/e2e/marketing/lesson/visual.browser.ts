@@ -1,12 +1,12 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
   lessonPanel,
   lessonSection,
-  lessonTabs,
   lessonVisual,
+  lessonWindow,
   PROJECTILE_VIEW,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -23,7 +23,7 @@ const LOADING_HOLD_MS = 8000;
  */
 const CIRCLE_SCENE_MARKER = "coordinate-system";
 
-/** The tabs of the window, in order: projectile, circle, atom and cell. */
+/** The tab of the circle lesson, the second of the window's tabs. */
 const CIRCLE_TAB_INDEX = 1;
 
 /**
@@ -54,7 +54,20 @@ function countSectionShifts(page: Page) {
   }, LESSON_SECTION_ID);
 }
 
-test("home lesson window mounts its visual before the window reaches the screen", async ({
+/** The share of a box that lies inside the viewport, from 0 to 1. */
+function visibleShare(
+  box: Awaited<ReturnType<Locator["boundingBox"]>>,
+  viewportHeight: number
+) {
+  if (box === null || box.height <= 0) {
+    return 0;
+  }
+  const visible =
+    Math.min(box.y + box.height, viewportHeight) - Math.max(box.y, 0);
+  return Math.max(0, visible) / box.height;
+}
+
+test("home lesson window mounts its visual once half of the window is on the screen", async ({
   baseURL,
   browser,
 }) => {
@@ -76,11 +89,20 @@ test("home lesson window mounts its visual before the window reaches the screen"
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
               yield* Effect.promise(() => page.waitForLoadState("load"));
-              // The window starts below the fold, so the visual must mount before the reader scrolls.
-              const tabs = yield* Effect.promise(() =>
-                lessonTabs(page).boundingBox()
+              const root = lessonWindow(page);
+              const box = yield* Effect.promise(() => root.boundingBox());
+              expect(box).not.toBeNull();
+              // Under half of the window is on the screen, so the server's card is still the visual.
+              expect(visibleShare(box, desktopViewport.height)).toBeLessThan(
+                0.5
               );
-              expect(tabs?.y).toBeGreaterThanOrEqual(desktopViewport.height);
+              yield* Effect.promise(() =>
+                expect(
+                  lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
+                ).toHaveCount(0)
+              );
+
+              yield* Effect.promise(() => root.scrollIntoViewIfNeeded());
               yield* Effect.promise(() =>
                 expect(
                   lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
@@ -120,7 +142,7 @@ test("home lesson window keeps its visual mounted once the window has left the s
                 "canvas"
               );
               yield* Effect.promise(() =>
-                lessonSection(page).scrollIntoViewIfNeeded()
+                lessonWindow(page).scrollIntoViewIfNeeded()
               );
               yield* Effect.promise(() =>
                 expect(visual).toBeAttached({
@@ -172,7 +194,7 @@ test("home lesson window draws no layout shift in its section while it is reveal
               );
 
               yield* Effect.promise(() =>
-                lessonSection(page).scrollIntoViewIfNeeded()
+                lessonWindow(page).scrollIntoViewIfNeeded()
               );
               yield* Effect.promise(() =>
                 expect(
@@ -222,7 +244,7 @@ test("home lesson placeholder holds still with reduced motion while its scene lo
               );
               yield* openRoute(page, "/id", "denied");
               yield* Effect.promise(() =>
-                lessonSection(page).scrollIntoViewIfNeeded()
+                lessonWindow(page).scrollIntoViewIfNeeded()
               );
               yield* Effect.promise(() =>
                 expect(
