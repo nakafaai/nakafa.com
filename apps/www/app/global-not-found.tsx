@@ -19,6 +19,7 @@ import { Suspense } from "react";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 import { Stage } from "@/components/state/stage";
+import { NEXT_INTL_LOCALE_HEADER } from "@/lib/routing/answer";
 import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 import { appViewport } from "@/lib/theme/viewport";
 
@@ -29,7 +30,6 @@ export const viewport = appViewport;
 export const instant = true;
 
 const dictionaries = { de, en, id };
-const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 
 /** Generates metadata from the same locale dictionary as the 404 document. */
 export async function generateMetadata(): Promise<Metadata> {
