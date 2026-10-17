@@ -35,15 +35,23 @@ export function tenantWrapBinding(tenantId: TenantId, generation: number) {
 
 /**
  * Unwraps a stored key with the root key that its row names, for the binding it
- * was wrapped under. Any failure, including an unknown root key, is reason `key`.
+ * was wrapped under. A root key that the ring does not hold is reason
+ * `configuration`: the environment lacks a key that stored data names. A stored key
+ * that does not open under its root key is reason `key`.
  */
-export const unwrap = Effect.fn("vault.keys.unwrap")(
-  function* (ring: Ring, root: string, wrapped: ArrayBuffer, binding: string) {
-    const rootKey = yield* Effect.fromOption(HashMap.get(ring.keys, root));
-    return yield* open(rootKey, binding, wrapped);
-  },
-  Effect.mapError(() => new VaultError({ reason: "key" }))
-);
+export const unwrap = Effect.fn("vault.keys.unwrap")(function* (
+  ring: Ring,
+  root: string,
+  wrapped: ArrayBuffer,
+  binding: string
+) {
+  const rootKey = yield* Effect.fromOption(HashMap.get(ring.keys, root)).pipe(
+    Effect.mapError(() => new VaultError({ reason: "configuration" }))
+  );
+  return yield* open(rootKey, binding, wrapped).pipe(
+    Effect.mapError(() => new VaultError({ reason: "key" }))
+  );
+});
 
 /** Finds the stored key row of one learner. */
 const findKey = Effect.fn("vault.keys.find")(function* (userId: UserId) {

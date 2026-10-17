@@ -11249,6 +11249,14 @@ export declare const internal: {
         }
       >;
     };
+    fingerprints: {
+      clear: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor?: string; dryRun: boolean },
+        { activeOld: number; cleared: number; done: boolean; scanned: number }
+      >;
+    };
     focus: {
       read: FunctionReference<
         "query",
@@ -11552,6 +11560,14 @@ export declare const internal: {
             remembered?: number;
             requestId?: string;
             retryOf?: number;
+            sealAttempts?: number;
+            sealFailedAt?: number;
+            sealHold?:
+              | "accountDeleted"
+              | "chatDeleted"
+              | "failedAttempts"
+              | "promptMissing";
+            sealedAt?: number;
             state:
               | { finishedAt: number; status: "complete" }
               | {
@@ -11769,6 +11785,14 @@ export declare const internal: {
             remembered?: number;
             requestId?: string;
             retryOf?: number;
+            sealAttempts?: number;
+            sealFailedAt?: number;
+            sealHold?:
+              | "accountDeleted"
+              | "chatDeleted"
+              | "failedAttempts"
+              | "promptMissing";
+            sealedAt?: number;
             state:
               | { finishedAt: number; status: "complete" }
               | {
@@ -12031,11 +12055,30 @@ export declare const internal: {
       >;
     };
     sealed: {
+      candidates: FunctionReference<
+        "query",
+        "internal",
+        { cursor: string | null; numItems: number },
+        { continueCursor: string; ids: Array<Id<"ninaTurns">>; isDone: boolean }
+      >;
+      drain: FunctionReference<"action", "internal", { budget: number }, null>;
       message: FunctionReference<
         "query",
         "internal",
         { messageId: string; owner: Id<"users"> },
         any | null
+      >;
+      recordFailure: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        { attempts: number; held: boolean } | null
+      >;
+      seal: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        { bytes: number }
       >;
       thread: FunctionReference<
         "query",
