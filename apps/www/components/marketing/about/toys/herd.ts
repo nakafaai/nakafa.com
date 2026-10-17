@@ -10,6 +10,9 @@ const TOY_COUNT = 17;
 /** How many friends stand in the crowd of the community part. */
 const CROWD_COUNT = 18;
 
+/** Every this many friends of the crowd, one of them is typing, so a bubble of dots rises above it. */
+export const CROWD_TYPING_EVERY = 4;
+
 /** How many animals sit in the class photo of the school part. */
 const CLASS_COUNT = 7;
 
