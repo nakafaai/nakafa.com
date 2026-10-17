@@ -51,14 +51,13 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   const { remove } = useMemoryActions();
   // The memory a row asked to delete, until the learner confirms or cancels.
   const [pending, setPending] = useState<Memory | null>(null);
-  // The memory after the one asked about, or before it when it was the last, read
-  // when the learner asked. It takes the focus once the delete is confirmed.
+  // The memory after the one confirmed, or before it when it was the last, read
+  // when the learner confirms. It takes the focus once the delete is confirmed.
   const neighbour = useRef<Option.Option<Memory["id"]>>(NO_NEIGHBOUR);
   // Set when the learner confirms, so the question gives the focus to the neighbour.
   const confirmed = useRef(false);
   // One function for every row, so a row renders again only when its memory changes.
   const askRow = useCallbackRef((memory: Memory) => {
-    neighbour.current = memoryNeighbour(memories, memory.id);
     confirmed.current = false;
     setPending(memory);
   });
@@ -71,6 +70,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   /** Removes the memory the learner confirmed, and closes the question. */
   function confirmDelete() {
     if (pending !== null) {
+      neighbour.current = memoryNeighbour(memories, pending.id);
       confirmed.current = true;
       remove(pending);
     }
@@ -125,8 +125,8 @@ type Placed<Props extends { style: CSSProperties }> = Omit<Props, "style"> &
  * The list the rows stand in. It can take the focus from a row that leaves the
  * page, but no press or Tab stops on it. When the list itself leaves the page
  * with the focus in it, the focus goes to the search field, which stays, so a
- * focus that a row handed to the list is not lost. A delete question gives the
- * focus back on its own.
+ * focus that a row handed to the list is not lost. A cancelled delete question
+ * gives the focus back on its own, and a confirmed one moves it to the neighbour.
  */
 function MemoryItems({
   children,
