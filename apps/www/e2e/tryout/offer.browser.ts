@@ -7,10 +7,7 @@ import { activate, visibleLink } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { finishSection, runFirstSection } from "@/e2e/support/player";
 import { CARD } from "@/e2e/support/selector";
-import {
-  readinessTimeoutMilliseconds,
-  revealTimeoutMilliseconds,
-} from "@/e2e/support/timeout";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { arrive, LOCKED_SHELL, setHref } from "@/e2e/support/tryout";
 import { compactViewport } from "@/e2e/support/viewport";
 
@@ -64,7 +61,7 @@ const pathOf = (page: Page, href: string) => new URL(href, page.url()).pathname;
 /**
  * Starts one section row of the running attempt and finishes it. Any section
  * but the last returns to the set page, still locked. The last one completes
- * the attempt, which unlocks the shell, so this waits for the review instead.
+ * the attempt, which unlocks the shell, so this waits for the set page instead.
  */
 const finishSectionRow = Effect.fn("NakafaE2E.finishTryoutSectionRow")(
   function* (page: Page, href: string, last: boolean) {
@@ -97,10 +94,12 @@ const finishSectionRow = Effect.fn("NakafaE2E.finishTryoutSectionRow")(
         .getByRole("button", { exact: true, name: "Finish" }),
       false
     );
-    yield* Effect.promise(() =>
-      expect(page.locator(LOCKED_REVIEW)).toBeVisible({
-        timeout: revealTimeoutMilliseconds,
-      })
+    // A completed attempt unlocks the shell, and this set's page shows no
+    // review, so wait for its section rows instead.
+    yield* arrive(
+      page,
+      (url) => url.pathname === setHref && url.searchParams.has("attemptId"),
+      attemptRows(page).filter({ visible: true }).first()
     );
   }
 );
