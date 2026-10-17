@@ -20,8 +20,7 @@ import { releaseReachability } from "@repo/backend/confect/contentRelease/reacha
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_PROOF_RENDERER,
-  testEmptyManifest,
-  testSignedRelease,
+  testSignedEmptyRelease,
 } from "@repo/backend/test/content/proof";
 import {
   TEST_DIGEST,
@@ -30,7 +29,7 @@ import {
   testStoredReachability,
 } from "@repo/backend/test/content/release";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const TestIdentitySchema = Schema.Struct({
   manifestHash: Schema.String,
@@ -230,8 +229,8 @@ export async function insertTestState(
 /** Inserts one detached terminal release for cleanup dispatch coverage. */
 export async function insertAbortedRelease(ctx: MutationCtx) {
   const releaseId = "release-cleanup-dispatch";
-  const signed = testSignedRelease(
-    testEmptyManifest(ReleaseIdSchema.make(releaseId))
+  const signed = await Effect.runPromise(
+    testSignedEmptyRelease(ReleaseIdSchema.make(releaseId))
   );
   const now = Date.UTC(2026, 6, 22, 12);
   await ctx.db.insert("contentReleases", {
@@ -301,7 +300,7 @@ export async function insertActiveRelease(
   signedReleaseId = activeReleaseId
 ) {
   const activeId = ReleaseIdSchema.make(signedReleaseId);
-  const active = testSignedRelease(testEmptyManifest(activeId));
+  const active = await Effect.runPromise(testSignedEmptyRelease(activeId));
   const manifest = active.manifest;
   const now = Date.UTC(2026, 6, 22, 12);
   const receipt = {

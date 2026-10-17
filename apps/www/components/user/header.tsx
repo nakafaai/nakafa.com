@@ -11,9 +11,9 @@ import { type CurrentUser, useViewer } from "@/lib/identity/client";
 
 /**
  * The header of the owner's own profile: the name and the address on the left,
- * the picture on the right, the bio under them, and the button that edits the
- * profile. A profile opens only for its owner, so the header shows nothing
- * about anyone else.
+ * the picture on the right, the bio under them, and the full-width button that
+ * edits the profile. A profile opens only for its owner, so the header shows
+ * nothing about anyone else.
  */
 export function UserHeader({
   initialAccount,
@@ -32,10 +32,10 @@ export function UserHeader({
 
   const { appUser, authUser } = account;
   return (
-    <section className="grid gap-4">
+    <section className="grid gap-4 pb-6">
       <header className="flex items-start justify-between gap-4">
         <div className="grid min-w-0 gap-1">
-          <h1 className="truncate font-semibold text-2xl sm:text-3xl">
+          <h1 className="wrap-anywhere text-balance font-semibold text-2xl sm:text-3xl">
             {authUser.name}
           </h1>
           <p className="truncate text-base text-muted-foreground">
@@ -49,22 +49,21 @@ export function UserHeader({
         />
       </header>
       {appUser.bio ? (
-        <p className="wrap-break-word line-clamp-3 whitespace-pre-line text-pretty text-base">
+        <p className="wrap-anywhere whitespace-pre-line text-pretty text-base">
           {appUser.bio}
         </p>
       ) : null}
-      <div>
-        <Button
-          nativeButton={false}
-          render={
-            <NavigationLink href="/user/settings">
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("edit-profile")}
-            </NavigationLink>
-          }
-          variant="outline"
-        />
-      </div>
+      <Button
+        className="w-full"
+        nativeButton={false}
+        render={
+          <NavigationLink href="/user/settings">
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("edit-profile")}
+          </NavigationLink>
+        }
+        variant="outline"
+      />
     </section>
   );
 }

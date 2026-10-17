@@ -8,9 +8,8 @@ import {
   encodeItemJson,
 } from "@repo/backend/confect/contentRelease/wire";
 import {
-  ingressArtifact,
-  ingressItem,
   ingressReleaseId,
+  makeIngressFixture,
 } from "@repo/backend/test/content/ingress";
 import {
   TEST_KEY_RESOLVER,
@@ -25,6 +24,7 @@ describe("authenticated artifact proof batches", () => {
     "counts only authenticated artifacts bound to their staged item",
     () =>
       Effect.gen(function* () {
+        const { ingressArtifact, ingressItem } = yield* makeIngressFixture();
         expect(
           yield* verifyArtifactBatch(
             [
@@ -45,6 +45,7 @@ describe("authenticated artifact proof batches", () => {
 
   it.effect("rejects a deletion inserted into an artifact proof batch", () =>
     Effect.gen(function* () {
+      const { ingressArtifact } = yield* makeIngressFixture();
       expect(
         yield* verifyArtifactBatch(
           [
@@ -70,7 +71,8 @@ describe("authenticated artifact proof batches", () => {
     "rejects a genuine signature when the artifact belongs to another item",
     () =>
       Effect.gen(function* () {
-        const artifact = testSignedArtifact("mathematics", {
+        const { ingressItem } = yield* makeIngressFixture();
+        const artifact = yield* testSignedArtifact("mathematics", {
           contentKey: "test:another",
         });
         expect(

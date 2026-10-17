@@ -7,7 +7,11 @@ import {
   insertRuntimeRelease,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import {
+  itWithRuntimeRelease,
+  TEST_RUNTIME_RELEASE,
+  testRuntimeRelease,
+} from "@repo/backend/test/runtime/values";
 import {
   ARTICLE_PUBLICATION_CURSOR_PREFIX,
   encodeArticlePublicationCursor,
@@ -67,117 +71,128 @@ describe("contentRelease/article", () => {
       })
   );
 
-  it("returns localized categories and newest articles through exact indexes", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertRuntimeArticles(ctx, 2));
+  itWithRuntimeRelease(
+    "returns localized categories and newest articles through exact indexes",
+    async (runtime) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) => insertRuntimeArticles(ctx, 2));
 
-    const categoryPage = await t.query(categories, {
-      expectedManifestHash: null,
-      expectedReleaseId: null,
-      appLocale: "en",
-      paginationOpts: { cursor: null, numItems: 2 },
-    });
-    expect(categoryPage).toMatchObject({
-      activeManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-      activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-      managed: true,
-      result: {
-        isDone: true,
-        page: [
-          {
-            category: "politics",
-            rendererDomain: "politics",
-            route: "politics",
-            title: "Politics",
-          },
-        ],
-      },
-      sourceRevision: "a".repeat(40),
-    });
-    const first = await t.query(page, {
-      category: "politics",
-      expectedManifestHash: null,
-      expectedReleaseId: null,
-      appLocale: "en",
-      paginationOpts: { cursor: null, numItems: 1 },
-    });
-    expect(first.result.page).toMatchObject([
-      {
-        contentKey: testArticleProjection(1).contentKey,
-        family: "article",
-      },
-    ]);
-    expect(first.result.isDone).toBe(false);
-    const second = await t.query(page, {
-      category: "politics",
-      expectedManifestHash: first.activeManifestHash,
-      expectedReleaseId: first.activeReleaseId,
-      appLocale: "en",
-      paginationOpts: {
-        cursor: first.result.continueCursor,
-        numItems: 1,
-      },
-    });
-    expect(second.result.page).toMatchObject([
-      { contentKey: testArticleProjection(0).contentKey },
-    ]);
-    expect(second.result.isDone).toBe(true);
-  });
-
-  it.each([
-    encodeArticlePublicationCursor("not-json"),
-    encodeArticlePublicationCursor("[]"),
-  ])("rejects malformed publication cursor %s", async (cursor) => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
-
-    await expect(
-      t.query(page, {
-        category: "politics",
-        expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-        expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+      const categoryPage = await t.query(categories, {
+        expectedManifestHash: null,
+        expectedReleaseId: null,
         appLocale: "en",
-        paginationOpts: { cursor, numItems: 1 },
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
-
-  it("restarts cursors from the retired publication queries", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
-    const identity = {
-      expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-      expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-      appLocale: "en" as const,
-    };
-
-    await expect(
-      t.query(page, {
-        ...identity,
+        paginationOpts: { cursor: null, numItems: 2 },
+      });
+      expect(categoryPage).toMatchObject({
+        activeManifestHash: runtime.manifestHash,
+        activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        managed: true,
+        result: {
+          isDone: true,
+          page: [
+            {
+              category: "politics",
+              rendererDomain: "politics",
+              route: "politics",
+              title: "Politics",
+            },
+          ],
+        },
+        sourceRevision: "a".repeat(40),
+      });
+      const first = await t.query(page, {
         category: "politics",
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+        appLocale: "en",
+        paginationOpts: { cursor: null, numItems: 1 },
+      });
+      expect(first.result.page).toMatchObject([
+        {
+          contentKey: testArticleProjection(1).contentKey,
+          family: "article",
+        },
+      ]);
+      expect(first.result.isDone).toBe(false);
+      const second = await t.query(page, {
+        category: "politics",
+        expectedManifestHash: first.activeManifestHash,
+        expectedReleaseId: first.activeReleaseId,
+        appLocale: "en",
         paginationOpts: {
-          cursor: "article-publication:v1:[]",
+          cursor: first.result.continueCursor,
           numItems: 1,
         },
-      })
-    ).resolves.toMatchObject({
-      managed: true,
-      result: { isDone: true, page: [] },
-      stale: true,
-    });
-    await expect(
-      t.query(categories, {
-        ...identity,
-        paginationOpts: { cursor: "retired-native-cursor", numItems: 1 },
-      })
-    ).resolves.toMatchObject({
-      managed: true,
-      result: { isDone: true, page: [] },
-      stale: true,
-    });
-  });
+      });
+      expect(second.result.page).toMatchObject([
+        { contentKey: testArticleProjection(0).contentKey },
+      ]);
+      expect(second.result.isDone).toBe(true);
+    }
+  );
+
+  it.effect.each([
+    encodeArticlePublicationCursor("not-json"),
+    encodeArticlePublicationCursor("[]"),
+  ])("rejects malformed publication cursor %s", (cursor) =>
+    Effect.gen(function* () {
+      const runtime = yield* testRuntimeRelease();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(async () => {
+        await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+
+        await expect(
+          t.query(page, {
+            category: "politics",
+            expectedManifestHash: runtime.manifestHash,
+            expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+            appLocale: "en",
+            paginationOpts: { cursor, numItems: 1 },
+          })
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        });
+      });
+    })
+  );
+
+  itWithRuntimeRelease(
+    "restarts cursors from the retired publication queries",
+    async (runtime) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+      const identity = {
+        expectedManifestHash: runtime.manifestHash,
+        expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        appLocale: "en" as const,
+      };
+
+      await expect(
+        t.query(page, {
+          ...identity,
+          category: "politics",
+          paginationOpts: {
+            cursor: "article-publication:v1:[]",
+            numItems: 1,
+          },
+        })
+      ).resolves.toMatchObject({
+        managed: true,
+        result: { isDone: true, page: [] },
+        stale: true,
+      });
+      await expect(
+        t.query(categories, {
+          ...identity,
+          paginationOpts: { cursor: "retired-native-cursor", numItems: 1 },
+        })
+      ).resolves.toMatchObject({
+        managed: true,
+        result: { isDone: true, page: [] },
+        stale: true,
+      });
+    }
+  );
 
   it("paginates every current article without duplication", async () => {
     const t = convexTest(schema, convexModules);
@@ -348,45 +363,48 @@ describe("contentRelease/article", () => {
     });
   });
 
-  it("rejects invalid claims and marks superseded cursors for restart", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
-    await expect(
-      t.query(page, {
-        category: "Politics",
-        expectedManifestHash: null,
-        expectedReleaseId: null,
-        appLocale: "en",
-        paginationOpts: { cursor: null, numItems: 1 },
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-    await expect(
-      t.query(page, {
-        category: "politics",
-        expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-        expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-        appLocale: "en",
-        paginationOpts: { cursor: null, numItems: 1 },
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-    await expect(
-      t.query(page, {
-        category: "politics",
-        expectedManifestHash: "wrong",
-        expectedReleaseId: "wrong",
-        appLocale: "en",
-        paginationOpts: { cursor: "stale", numItems: 1 },
-      })
-    ).resolves.toMatchObject({
-      activeManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-      activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-      managed: true,
-      result: { isDone: true, page: [] },
-      stale: true,
-    });
-  });
+  itWithRuntimeRelease(
+    "rejects invalid claims and marks superseded cursors for restart",
+    async (runtime) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+      await expect(
+        t.query(page, {
+          category: "Politics",
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+          appLocale: "en",
+          paginationOpts: { cursor: null, numItems: 1 },
+        })
+      ).rejects.toMatchObject({
+        data: { code: "CONTENT_RELEASE_LIMIT" },
+      });
+      await expect(
+        t.query(page, {
+          category: "politics",
+          expectedManifestHash: runtime.manifestHash,
+          expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+          appLocale: "en",
+          paginationOpts: { cursor: null, numItems: 1 },
+        })
+      ).rejects.toMatchObject({
+        data: { code: "CONTENT_RELEASE_LIMIT" },
+      });
+      await expect(
+        t.query(page, {
+          category: "politics",
+          expectedManifestHash: "wrong",
+          expectedReleaseId: "wrong",
+          appLocale: "en",
+          paginationOpts: { cursor: "stale", numItems: 1 },
+        })
+      ).resolves.toMatchObject({
+        activeManifestHash: runtime.manifestHash,
+        activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        managed: true,
+        result: { isDone: true, page: [] },
+        stale: true,
+      });
+    }
+  );
 });

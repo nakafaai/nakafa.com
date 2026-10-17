@@ -1,5 +1,12 @@
-import { RegisteredConvexFunction, RegisteredFunctions } from "@confect/server";
+import { ConvexFunctionDefinitions, RegisteredConvexFunction, type RegisteredFunctions } from "@confect/server";
 import databaseSchema from "../../../schema";
-import sessions from "../../../../customers/actions/sessions.impl";
+import groupLayer from "../../../../customers/actions/sessions.impl";
 
-export default RegisteredFunctions.buildForGroup<typeof import("../../../../customers/actions/sessions.spec")["default"]>(databaseSchema, sessions, RegisteredConvexFunction.make);
+const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<Returns>) => (ctx: Ctx, args: Args) => handler(ctx, args);
+
+const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../../customers/actions/sessions.spec")["default"]>(databaseSchema, groupLayer);
+
+export default {
+["generateCheckoutLink"]: RegisteredConvexFunction.register({ ...definitions["generateCheckoutLink"], handler: forward(definitions["generateCheckoutLink"].handler) }),
+["generateCustomerPortalUrl"]: RegisteredConvexFunction.register({ ...definitions["generateCustomerPortalUrl"], handler: forward(definitions["generateCustomerPortalUrl"].handler) }),
+} as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../customers/actions/sessions.spec")["default"]>;

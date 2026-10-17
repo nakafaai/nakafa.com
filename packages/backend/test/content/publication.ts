@@ -11,9 +11,8 @@ import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
 import { makeTestPageProjection } from "@repo/backend/test/content/page";
 import {
   TEST_PROOF_RENDERER,
-  testEmptyManifest,
   testSignedArtifact,
-  testSignedRelease,
+  testSignedEmptyRelease,
 } from "@repo/backend/test/content/proof";
 import {
   testRouteJson,
@@ -30,70 +29,80 @@ import {
   Schema,
 } from "effect";
 
-export const TEST_PUBLICATION_RELEASE = testSignedRelease(
-  testEmptyManifest(ReleaseIdSchema.make("publication-active"))
-);
+/** Signs the empty publication manifest that serving fixtures use by default. */
+export const testPublicationRelease = Effect.fn(
+  "test.content.publicationRelease"
+)(function* () {
+  return yield* testSignedEmptyRelease(
+    ReleaseIdSchema.make("publication-active")
+  );
+});
 
 /** Creates a complete empty serving runtime with a real signed release envelope. */
-export function makeRuntimeSource(
-  signed: SignedContentRelease = TEST_PUBLICATION_RELEASE,
-  resultFamilies: SignedContentRelease["manifest"]["scope"]["families"] = []
-) {
-  const source = MutableHashMap.empty<TableNames, readonly unknown[]>();
-  const state = {
-    activeManifestHash: signed.manifestHash,
-    activeReleaseId: signed.manifest.releaseId,
-    activeSequence: 9,
-    articleManifestHash: signed.manifestHash,
-    articleReleaseId: signed.manifest.releaseId,
-    articleSequence: 9,
-    articleSlot: "blue",
-    key: "primary",
-    materialManifestHash: signed.manifestHash,
-    materialReleaseId: signed.manifest.releaseId,
-    materialSequence: 9,
-    materialSlot: "blue",
-    nextSequence: 10,
-    searchManifestHash: signed.manifestHash,
-    searchReleaseId: signed.manifest.releaseId,
-    searchSequence: 9,
-    searchSlot: "blue",
-    updatedAt: 100,
-  } satisfies PublicationRow<"contentState">;
-  MutableHashMap.set(source, "contentState", [state]);
-  const release = {
-    ...releaseReachability(signed),
-    baseFamilies: [],
-    checkedIndex: -1,
-    checkedItems: 0,
-    createdAt: 100,
-    releaseId: signed.manifest.releaseId,
-    releaseJson: encodeJsonText(signed),
-    rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
-    resultFamilies: [...resultFamilies],
-    role: "candidate",
-    sequence: 9,
-    stagedArtifacts: 0,
-    stagedDeletes: 0,
-    stagedItems: 0,
-    stagedProjections: 0,
-    stagedRoutes: 0,
-    stagedSnapshotBatches: 0,
-    stagedSnapshotRows: 0,
-    stagedUpserts: 0,
-    status: "completed",
-    updatedAt: 100,
-  } satisfies PublicationRow<"contentReleases">;
-  MutableHashMap.set(source, "contentReleases", [release]);
-  return { source, state, release };
-}
+export const makeRuntimeSource = Effect.fn("test.content.runtimeSource")(
+  function* (
+    signedRelease?: SignedContentRelease,
+    resultFamilies: SignedContentRelease["manifest"]["scope"]["families"] = []
+  ) {
+    const signed = signedRelease ?? (yield* testPublicationRelease());
+    const source = MutableHashMap.empty<TableNames, readonly unknown[]>();
+    const state = {
+      activeManifestHash: signed.manifestHash,
+      activeReleaseId: signed.manifest.releaseId,
+      activeSequence: 9,
+      articleManifestHash: signed.manifestHash,
+      articleReleaseId: signed.manifest.releaseId,
+      articleSequence: 9,
+      articleSlot: "blue",
+      key: "primary",
+      materialManifestHash: signed.manifestHash,
+      materialReleaseId: signed.manifest.releaseId,
+      materialSequence: 9,
+      materialSlot: "blue",
+      nextSequence: 10,
+      searchManifestHash: signed.manifestHash,
+      searchReleaseId: signed.manifest.releaseId,
+      searchSequence: 9,
+      searchSlot: "blue",
+      updatedAt: 100,
+    } satisfies PublicationRow<"contentState">;
+    MutableHashMap.set(source, "contentState", [state]);
+    const release = {
+      ...releaseReachability(signed),
+      baseFamilies: [],
+      checkedIndex: -1,
+      checkedItems: 0,
+      createdAt: 100,
+      releaseId: signed.manifest.releaseId,
+      releaseJson: encodeJsonText(signed),
+      rendererJson: encodeJsonText(TEST_PROOF_RENDERER),
+      resultFamilies: [...resultFamilies],
+      role: "candidate",
+      sequence: 9,
+      stagedArtifacts: 0,
+      stagedDeletes: 0,
+      stagedItems: 0,
+      stagedProjections: 0,
+      stagedRoutes: 0,
+      stagedSnapshotBatches: 0,
+      stagedSnapshotRows: 0,
+      stagedUpserts: 0,
+      status: "completed",
+      updatedAt: 100,
+    } satisfies PublicationRow<"contentReleases">;
+    MutableHashMap.set(source, "contentReleases", [release]);
+    return { source, state, release };
+  }
+);
 
 /** Creates one inherited public head with real signed bytes and its complete serving closure. */
-export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
-  const fixture = makeRuntimeSource();
+export const makePageRuntimeSource = Effect.fn(
+  "test.content.pageRuntimeSource"
+)(function* (appLocale: ActiveAppLocaleCode = "en") {
+  const fixture = yield* makeRuntimeSource();
   const projection = makeTestPageProjection(appLocale);
   const projectionJson = canonicalizePublicPageProjection(projection);
-  const artifact = testSignedArtifact("site", {
+  const artifact = yield* testSignedArtifact("site", {
     artifactLocale: appLocale,
     contentKey: projection.contentKey,
   });
@@ -148,7 +157,7 @@ export function makePageRuntimeSource(appLocale: ActiveAppLocaleCode = "en") {
     },
   ]);
   return { ...fixture, artifact, binding, head, projection };
-}
+});
 
 /** Decodes fixture rows through their native table contracts into a fresh Confect database. */
 export const createTestPublication = Effect.fn("TestContent.createPublication")(

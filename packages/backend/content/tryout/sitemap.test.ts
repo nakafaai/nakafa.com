@@ -16,17 +16,19 @@ import {
 import { Effect, Schema } from "effect";
 
 /** Creates one public country row with a deterministic technical identity. */
-function makeCountry(
+const makeCountry = Effect.fn("test.tryout.sitemap.country")(function* (
   locale: ActiveAppLocaleCode,
   countryKey: string,
   publicPath: string,
   order: number
 ) {
-  const source = makeTryoutCatalogRow(locale).record.row;
+  const source = (yield* makeTryoutCatalogRow(locale)).record.row;
   if (source.kind !== "country") {
-    throw new Error("Expected the shared try-out fixture to be a country.");
+    return yield* Effect.die(
+      "Expected the shared try-out fixture to be a country."
+    );
   }
-  return Schema.decodeSync(TryoutCatalogRowSchema)({
+  return yield* Schema.decodeEffect(TryoutCatalogRowSchema)({
     ...source,
     countryKey,
     graph: {
@@ -36,35 +38,38 @@ function makeCountry(
     },
     order,
     publicPath,
-  });
-}
+  }).pipe(Effect.orDie);
+});
 
 /** Creates one internal entry section that must never enter a sitemap. */
-function makeInternalSection(locale: ActiveAppLocaleCode) {
-  const source = makeTryoutCatalogRow(locale).record.row;
-  return Schema.decodeSync(TryoutCatalogRowSchema)({
-    countryKey: "indonesia",
-    examKey: "snbt",
-    graph: {
-      ...source.graph,
-      assetId: `asset:${locale}:tryout:entry:section`,
-      learningObjectId: "lo:tryout-entry-section",
-    },
-    kind: "section",
-    appLocale: locale,
-    order: 1,
-    questionCount: 1,
-    questionSourcePath:
-      "packages/corpus/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1",
-    sectionKey: "quantitative-knowledge",
-    setKey: "set-1",
-    sourceRevision: "technical-revision",
-    timeLimitSeconds: 60,
-    title: "Technical entry section",
-    trackKey: "2027",
-    visibility: "internal-entry",
-  });
-}
+const makeInternalSection = Effect.fn("test.tryout.sitemap.internalSection")(
+  function* (locale: ActiveAppLocaleCode) {
+    const source = (yield* makeTryoutCatalogRow(locale)).record.row;
+    return yield* Schema.decodeEffect(TryoutCatalogRowSchema)({
+      countryKey: "indonesia",
+      examKey: "snbt",
+      graph: {
+        ...source.graph,
+        assetId: `asset:${locale}:tryout:entry:section`,
+        learningObjectId: "lo:tryout-entry-section",
+      },
+      kind: "section",
+      appLocale: locale,
+      order: 1,
+      questionCount: 1,
+      questionSourcePath:
+        "packages/corpus/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1",
+      sectionKey: "quantitative-knowledge",
+      setKey: "set-1",
+      sourceRevision: "technical-revision",
+      timeLimitSeconds: 60,
+      title: "Technical entry section",
+      trackKey: "2027",
+      visibility: "internal-entry",
+    }).pipe(Effect.orDie);
+  }
+);
+
 describe("contentRelease/tryout/sitemap", () => {
   it.effect("requires an active signed try-out publication", () =>
     Effect.gen(function* () {
@@ -100,26 +105,24 @@ describe("contentRelease/tryout/sitemap", () => {
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
             const catalog = [
-              makeCountry("en", "zeta", "try-out/zeta", 2),
-              makeCountry("en", "alpha", "try-out/alpha", 1),
-              makeInternalSection("en"),
-              makeCountry("id", "zeta", "try-out/zeta", 2),
-              makeCountry("id", "alpha", "try-out/alpha", 1),
-              makeInternalSection("id"),
-              makeCountry("de", "zeta", "try-out/zeta", 2),
-              makeCountry("de", "alpha", "try-out/alpha", 1),
-              makeInternalSection("de"),
+              yield* makeCountry("en", "zeta", "try-out/zeta", 2),
+              yield* makeCountry("en", "alpha", "try-out/alpha", 1),
+              yield* makeInternalSection("en"),
+              yield* makeCountry("id", "zeta", "try-out/zeta", 2),
+              yield* makeCountry("id", "alpha", "try-out/alpha", 1),
+              yield* makeInternalSection("id"),
+              yield* makeCountry("de", "zeta", "try-out/zeta", 2),
+              yield* makeCountry("de", "alpha", "try-out/alpha", 1),
+              yield* makeInternalSection("de"),
             ];
-            yield* Effect.promise(() =>
-              activateTryoutSnapshot(tCtx, {
-                catalog,
-                placements: [
-                  makeTryoutPlacementRow("en").record.row,
-                  makeTryoutPlacementRow("id").record.row,
-                  makeTryoutPlacementRow("de").record.row,
-                ],
-              })
-            );
+            yield* activateTryoutSnapshot(tCtx, {
+              catalog,
+              placements: [
+                (yield* makeTryoutPlacementRow("en")).record.row,
+                (yield* makeTryoutPlacementRow("id")).record.row,
+                (yield* makeTryoutPlacementRow("de")).record.row,
+              ],
+            });
             expect(
               yield* readTryoutSitemapCount("en").pipe(
                 Effect.provide(tryoutLayer)

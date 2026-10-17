@@ -60,9 +60,10 @@ describe("content proof streams", () => {
         releaseId,
         Stream.fromIterable(rollbacks)
       );
-      const release = testSignedRelease(
+      const emptyManifest = yield* testEmptyManifest(releaseId);
+      const release = yield* testSignedRelease(
         ContentReleaseManifestSchema.make({
-          ...testEmptyManifest(releaseId),
+          ...emptyManifest,
           deleteCount: items.length,
           itemCount: items.length,
           itemsDigest: itemDigest.digest,

@@ -3,13 +3,18 @@ import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 import {
   type CallExpression,
   type Expression,
+  isAsExpression,
   isCallExpression,
+  isComputedPropertyName,
   isIdentifier,
   isImportDeclaration,
+  isObjectLiteralExpression,
   isPropertyAccessExpression,
+  isPropertyAssignment,
   isStringLiteral,
   isVariableStatement,
-  type PropertyAccessExpression,
+  type ObjectLiteralElementLike,
+  type ObjectLiteralExpression,
   type SourceFile,
 } from "typescript/unstable/ast";
 import { createVirtualFileSystem } from "typescript/unstable/fs";
@@ -36,64 +41,67 @@ const LeafImport = Schema.Struct({
   specifier: Schema.String,
 });
 
-/** A leaf and the group path that the `addAt` and `addGroupAt` calls nest it at. */
+/** A leaf and the group path that the group objects of the spec nest it at. */
 const NestedLeaf = Schema.Struct({
   localName: Schema.String,
   segments: Schema.Array(Schema.String),
 });
 
-/** One leaf spec of the assembled spec, with the group path its calls give it. */
+/** One leaf spec of the assembled spec, with the group path its groups give it. */
 export const AssembledLeaf = Schema.Struct({
   localName: Schema.String,
   nestedSegments: Schema.Array(Schema.String),
   specifier: Schema.String,
 });
 
-/** The arguments of one call in a method chain. */
-type CallArguments = readonly Expression[];
-
-/** Whether a node is a call of the method `method`, such as `chain.addAt(...)`. */
-const isMethodCall = (
-  node: Expression,
-  method: string
-): node is CallExpression & { readonly expression: PropertyAccessExpression } =>
-  isCallExpression(node) &&
-  isPropertyAccessExpression(node.expression) &&
-  node.expression.name.text === method;
-
-/**
- * Unwinds a method chain such as `base.method(a).method(b)` into its base and
- * its calls, in source order.
- */
-const unwindChain = (
-  expression: Expression,
-  method: string,
-  calls: readonly CallArguments[] = []
-): readonly [Expression, readonly CallArguments[]] =>
-  isMethodCall(expression, method)
-    ? unwindChain(expression.expression.expression, method, [
-        expression.arguments,
-        ...calls,
-      ])
-    : [expression, calls];
-
-/** Whether a node reads `owner.member`, such as `GroupSpec.makeAt`. */
+/** Whether a node reads `owner.member`, such as `GroupSpec.make`. */
 const isStaticMember = (node: Expression, owner: string, member: string) =>
   isPropertyAccessExpression(node) &&
   isIdentifier(node.expression) &&
   node.expression.text === owner &&
   node.name.text === member;
 
-/** Whether a node calls `GroupSpec.makeAt`. */
-const isGroupFactory = (node: Expression) =>
-  isCallExpression(node) &&
-  isStaticMember(node.expression, "GroupSpec", "makeAt");
+/**
+ * Removes the `as typeof spec` that a generated spec ends with, so the call
+ * under it is read.
+ */
+const withoutAssertion = (expression: Expression): Expression =>
+  isAsExpression(expression)
+    ? withoutAssertion(expression.expression)
+    : expression;
 
-/** Whether a node is the `Spec.make()` call that starts the assembled chain. */
-const isSpecFactory = (node: Expression) =>
+/** Whether a node calls `GroupSpec.make()`, the empty base of a group. */
+const isGroupBase = (node: Expression) =>
   isCallExpression(node) &&
   node.arguments.length === 0 &&
-  isStaticMember(node.expression, "Spec", "make");
+  isStaticMember(node.expression, "GroupSpec", "make");
+
+/** Whether a node calls `Spec.fromGroups(...)`, which starts the assembled spec. */
+const isSpecFactory = (node: Expression): node is CallExpression =>
+  isCallExpression(node) &&
+  isStaticMember(node.expression, "Spec", "fromGroups");
+
+/** The base and the group object of a `GroupSpec.addGroupsAt(base, { ... })` call. */
+const addGroupsCall = (
+  expression: Expression
+): Option.Option<{
+  readonly base: Expression;
+  readonly groups: ObjectLiteralExpression;
+}> => {
+  if (
+    !(
+      isCallExpression(expression) &&
+      isStaticMember(expression.expression, "GroupSpec", "addGroupsAt") &&
+      expression.arguments.length === 2
+    )
+  ) {
+    return Option.none();
+  }
+  const [base, groups] = expression.arguments;
+  return isObjectLiteralExpression(groups)
+    ? Option.some({ base, groups })
+    : Option.none();
+};
 
 /** Opens the spec source in one in-memory native project for the enclosing scope. */
 const openSourceFile = Effect.fn("RefsAssembly.openSourceFile")(function* (
@@ -154,62 +162,67 @@ const leafImports = (sourceFile: SourceFile) =>
         });
   });
 
-/** A group name must be a string literal, such as `"turns"`. */
-const groupName = Effect.fn("RefsAssembly.groupName")(function* (
-  expression: Expression
+/** Reads the name and the value of one group property, such as `["turns"]: nina_turns`. */
+const groupEntry = Effect.fn("RefsAssembly.groupEntry")(function* (
+  property: ObjectLiteralElementLike
 ) {
-  if (!isStringLiteral(expression)) {
-    return yield* new RefsSourceError({
-      message: "Each nested group needs a string literal name.",
-    });
+  if (
+    isPropertyAssignment(property) &&
+    isComputedPropertyName(property.name) &&
+    isStringLiteral(property.name.expression)
+  ) {
+    return {
+      initializer: property.initializer,
+      name: property.name.expression.text,
+    };
   }
-  return expression.text;
+  return yield* new RefsSourceError({
+    message: "Each nested group needs a string literal name.",
+  });
 });
 
-/** The name and the group argument of an `addAt` or `addGroupAt` call. */
-const nameAndGroup = Effect.fn("RefsAssembly.nameAndGroup")(function* (
-  args: CallArguments,
-  method: string
-) {
-  if (args.length !== 2) {
-    return yield* new RefsSourceError({
-      message: `${method} takes a name and a group.`,
-    });
-  }
-  const [name, group] = args;
-  return { group, name };
+/** The error of a group expression that is neither a leaf import nor a group built on `GroupSpec.make()`. */
+const unexpectedGroup = (segments: readonly string[]) =>
+  new RefsSourceError({
+    message: `Unexpected group expression under ${Arr.join(segments, ".")}.`,
+  });
+
+/** The leaves under one group object, nested at `segments` plus the name of each property. */
+const groupsNesting = Effect.fn("RefsAssembly.groupsNesting")(function* (
+  groups: ObjectLiteralExpression,
+  segments: readonly string[]
+): Effect.fn.Return<readonly (typeof NestedLeaf.Type)[], RefsSourceError> {
+  const entries = yield* Effect.forEach(groups.properties, groupEntry);
+  const nested = yield* Effect.forEach(entries, ({ initializer, name }) =>
+    groupNesting(initializer, [...segments, name])
+  );
+  return Arr.flatten(nested);
 });
 
-/** The leaves nested under one group expression, at the group path `segments`. */
+/** The leaves under one group expression: a leaf import, or a group that may hold its own leaf. */
 const groupNesting = Effect.fn("RefsAssembly.groupNesting")(function* (
   expression: Expression,
   segments: readonly string[]
 ): Effect.fn.Return<readonly (typeof NestedLeaf.Type)[], RefsSourceError> {
-  const [base, calls] = unwindChain(expression, "addGroupAt");
-  if (!(isIdentifier(base) || isGroupFactory(base))) {
-    return yield* new RefsSourceError({
-      message: `Unexpected group expression under ${Arr.join(segments, ".")}.`,
-    });
+  if (isIdentifier(expression)) {
+    return [{ localName: expression.text, segments }];
   }
-  const own = isIdentifier(base) ? [{ localName: base.text, segments }] : [];
-  const children = yield* Effect.forEach(calls, (args) =>
-    nestedCall(args, "addGroupAt", segments)
-  );
-  return [...own, ...Arr.flatten(children)];
+  const call = addGroupsCall(expression);
+  if (Option.isNone(call)) {
+    return yield* unexpectedGroup(segments);
+  }
+  const { base, groups } = call.value;
+  if (isIdentifier(base)) {
+    const children = yield* groupsNesting(groups, segments);
+    return [{ localName: base.text, segments }, ...children];
+  }
+  if (isGroupBase(base)) {
+    return yield* groupsNesting(groups, segments);
+  }
+  return yield* unexpectedGroup(segments);
 });
 
-/** The leaves under one `addAt` or `addGroupAt` call, nested at `segments` plus the call's name. */
-const nestedCall = Effect.fn("RefsAssembly.nestedCall")(function* (
-  args: CallArguments,
-  method: string,
-  segments: readonly string[]
-): Effect.fn.Return<readonly (typeof NestedLeaf.Type)[], RefsSourceError> {
-  const { group, name } = yield* nameAndGroup(args, method);
-  const segment = yield* groupName(name);
-  return yield* groupNesting(group, [...segments, segment]);
-});
-
-/** Every leaf that the `Spec.make()` chain nests, read from its `addAt` calls. */
+/** Every leaf that the `Spec.fromGroups` call nests, read from its group object. */
 const specNesting = Effect.fn("RefsAssembly.specNesting")(function* (
   sourceFile: SourceFile
 ): Effect.fn.Return<readonly (typeof NestedLeaf.Type)[], RefsSourceError> {
@@ -230,16 +243,19 @@ const specNesting = Effect.fn("RefsAssembly.specNesting")(function* (
       message: "The assembled spec must declare const spec.",
     });
   }
-  const [base, calls] = unwindChain(expression.value, "addAt");
-  if (!isSpecFactory(base)) {
+  const assembled = withoutAssertion(expression.value);
+  if (!isSpecFactory(assembled)) {
     return yield* new RefsSourceError({
-      message: "The assembled spec must start from Spec.make().",
+      message: "The assembled spec must start from Spec.fromGroups().",
     });
   }
-  const nested = yield* Effect.forEach(calls, (args) =>
-    nestedCall(args, "addAt", [])
-  );
-  return Arr.flatten(nested);
+  const [groups] = assembled.arguments;
+  if (assembled.arguments.length !== 1 || !isObjectLiteralExpression(groups)) {
+    return yield* new RefsSourceError({
+      message: "Spec.fromGroups takes one object of groups.",
+    });
+  }
+  return yield* groupsNesting(groups, []);
 });
 
 /** Pairs one default import with its single nesting in the spec. */
@@ -266,8 +282,8 @@ const pairLeaf = Effect.fn("RefsAssembly.pairLeaf")(function* (
 
 /**
  * Reads the default leaf imports of an assembled spec source, and the group path
- * that its `addAt` and `addGroupAt` calls nest each leaf at. Every import must be
- * nested exactly once, and every nested leaf must be an import.
+ * that its group objects nest each leaf at. Every import must be nested exactly
+ * once, and every nested leaf must be an import.
  */
 export const readAssembly = Effect.fn("RefsAssembly.readAssembly")(function* (
   sourceText: string

@@ -97,7 +97,7 @@ describe("published article discovery", () => {
         const context = yield* createTestPublication(fixture.source);
         runtimeQueryMock.mockImplementation(context.query);
         const projection = testLocalizedArticleProjection(1, "de");
-        const bucket = getHashBucket(hashContentProjection(projection));
+        const bucket = getHashBucket(yield* hashContentProjection(projection));
         expect(yield* readPublishedArticleBucket("de", bucket)).toMatchObject({
           activeReleaseId: fixture.state.activeReleaseId,
           articles: expect.arrayContaining([

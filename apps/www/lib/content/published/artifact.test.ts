@@ -36,7 +36,10 @@ describe("authenticated artifact execution", () => {
             })
           )
         );
-        const artifact = testSignedArtifact("site", { compiledCode, rawMdx });
+        const artifact = yield* testSignedArtifact("site", {
+          compiledCode,
+          rawMdx,
+        });
         const rendered = yield* executeSignedArtifact({
           artifact,
           rendererManifest: TEST_PROOF_RENDERER,
@@ -64,7 +67,7 @@ describe("authenticated artifact execution", () => {
     "preserves the signed identity when %s fails",
     ([stage, compiledCode]) =>
       Effect.gen(function* () {
-        const artifact = testSignedArtifact("site", { compiledCode });
+        const artifact = yield* testSignedArtifact("site", { compiledCode });
         const failure = yield* executeSignedArtifact({
           artifact,
           rendererManifest: TEST_PROOF_RENDERER,
@@ -85,7 +88,9 @@ describe("authenticated artifact execution", () => {
 
   it.effect("rejects changed compiled bytes before they can execute", () =>
     Effect.gen(function* () {
-      const signed = testSignedArtifact("site", { compiledCode: "return {};" });
+      const signed = yield* testSignedArtifact("site", {
+        compiledCode: "return {};",
+      });
       const failure = yield* executeSignedArtifact({
         artifact: {
           ...signed,

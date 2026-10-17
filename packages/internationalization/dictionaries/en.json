@@ -34,6 +34,8 @@
   },
   "Common": {
     "load-error": "We could not load this data. Please try again.",
+    "load-error-retry": "We could not load this data.",
+    "retry": "Retry",
     "copyright": "Copyright © {year} {companyName}. All rights reserved.",
     "made-with-love": "Made with love",
     "version": "Version {version}",
@@ -128,6 +130,7 @@
     "open-in-gemini": "Open in Gemini",
     "see-on-youtube": "See on YouTube",
     "comments": "Comments",
+    "posts": "Posts",
     "anonymous": "Anonymous",
     "delete": "Delete",
     "edit": "Edit",
@@ -137,10 +140,9 @@
     "like": "Like",
     "dislike": "Dislike",
     "former-official": "Former Official",
-    "see": "See",
     "chat": "Chat",
     "no-chats": "No chats yet.",
-    "chats-by-link": "A shared chat opens with its link",
+    "chats-by-link": "A shared chat opens with its link.",
     "try-out": "Try out",
     "try-out-short": "Tryout",
     "search-country-placeholder": "Search country...",
@@ -216,11 +218,19 @@
       "school-curriculum": "Curriculum"
     }
   },
+  "Posts": {
+    "placeholder": "What's new?",
+    "post": "Post",
+    "empty": "You have not posted anything yet.",
+    "delete-title": "Delete post?",
+    "delete-description": "The post and its likes are deleted for good."
+  },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
     "comment": "Comment",
     "no-comments": "No comments yet.",
-    "load-more": "Load more"
+    "delete-title": "Delete comment?",
+    "delete-description": "The comment is deleted for good."
   },
   "Subject": {
     "elementary-school": "Elementary School",

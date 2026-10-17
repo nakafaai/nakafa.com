@@ -123,41 +123,56 @@ function index(
   );
 }
 
-const firstSnapshot = tryoutSectionSnapshot({
-  signed: makeSignedTryoutSection(
-    makeTryoutSection({ sectionKey: "first-section" })
-  ).signed,
-});
-const secondSnapshot = tryoutSectionSnapshot({
-  signed: makeSignedTryoutSection(
-    makeTryoutSection({ order: 2, sectionKey: "second-section" })
-  ).signed,
-});
+/** One signed section snapshot as the response integrity check reads it. */
+type SectionSnapshot = ReturnType<typeof tryoutSectionSnapshot>;
+
+/** Builds the two signed section snapshots that the duplicate table varies. */
+const sectionSnapshots = Effect.fn("test.tryouts.response.sectionSnapshots")(
+  function* () {
+    const first = yield* makeSignedTryoutSection(
+      makeTryoutSection({ sectionKey: "first-section" })
+    );
+    const second = yield* makeSignedTryoutSection(
+      makeTryoutSection({ order: 2, sectionKey: "second-section" })
+    );
+    return {
+      firstSnapshot: tryoutSectionSnapshot({ signed: first.signed }),
+      secondSnapshot: tryoutSectionSnapshot({ signed: second.signed }),
+    };
+  }
+);
 
 describe("tryouts/response/integrity", () => {
   it.live.each([
     {
       kind: "identity",
-      snapshot: {
-        ...secondSnapshot,
-        sectionIdentity: firstSnapshot.sectionIdentity,
-      },
+      vary: (first: SectionSnapshot, second: SectionSnapshot) => ({
+        ...second,
+        sectionIdentity: first.sectionIdentity,
+      }),
     },
     {
       kind: "key",
-      snapshot: { ...secondSnapshot, sectionKey: firstSnapshot.sectionKey },
+      vary: (first: SectionSnapshot, second: SectionSnapshot) => ({
+        ...second,
+        sectionKey: first.sectionKey,
+      }),
     },
     {
       kind: "order",
-      snapshot: {
-        ...secondSnapshot,
-        sectionOrder: firstSnapshot.sectionOrder,
-      },
+      vary: (first: SectionSnapshot, second: SectionSnapshot) => ({
+        ...second,
+        sectionOrder: first.sectionOrder,
+      }),
     },
-  ])("rejects duplicate snapshot $kind", ({ snapshot }) =>
+  ])("rejects duplicate snapshot $kind", ({ vary }) =>
     Effect.gen(function* () {
+      const { firstSnapshot, secondSnapshot } = yield* sectionSnapshots();
       const error = yield* Effect.flip(
-        validateTryoutSectionSnapshots([firstSnapshot, snapshot])
+        validateTryoutSectionSnapshots([
+          firstSnapshot,
+          vary(firstSnapshot, secondSnapshot),
+        ])
       );
 
       expect(error).toMatchObject({

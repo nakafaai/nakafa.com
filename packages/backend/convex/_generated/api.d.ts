@@ -2829,30 +2829,42 @@ export declare const api: {
               | { kind: "system" };
             at: number;
             change:
+              | { type: "class.created" }
+              | { type: "class.renamed" }
+              | { type: "class.archived" }
+              | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
+              | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
+              | { type: "cohort.created" }
+              | { type: "cohort.renamed" }
+              | { type: "cohort.archived" }
               | {
-                  contract: {
-                    contentLicense: string;
-                    dpaVersion: string;
-                    modules: Array<
-                      "classes" | "exams" | "bank" | "grades" | "reports"
-                    >;
-                    plan: "tenant" | "unit";
-                  };
-                  type: "tenant.provisioned";
+                  assignment: "homeroom";
+                  person: Id<"tenantPeople">;
+                  type: "assignment.created";
                 }
-              | { country: string; currency: string; type: "tenant.locale.set" }
               | {
-                  key: "emailDomains" | "nina" | "studentThreads";
-                  type: "tenant.policy.set";
+                  assignment: "homeroom";
+                  person: Id<"tenantPeople">;
+                  type: "assignment.removed";
                 }
-              | { type: "unit.created" }
               | {
-                  contentLanguage: "en" | "id" | "de";
-                  timeZone: string;
-                  type: "unit.locale.set";
+                  client: Id<"integrationClients">;
+                  scope:
+                    | { kind: "tenant" }
+                    | { kind: "unit"; unitId: Id<"tenantUnits"> };
+                  type: "integration.created";
                 }
-              | { type: "unit.archived" }
-              | { type: "unit.unarchived" }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.rotated";
+                }
+              | {
+                  client: Id<"integrationClients">;
+                  type: "integration.revoked";
+                }
+              | { type: "period.created" }
+              | { type: "period.opened" }
+              | { type: "period.archived" }
               | { type: "person.created" }
               | {
                   invite: Id<"tenantInvites">;
@@ -2879,70 +2891,6 @@ export declare const api: {
               | { card: Id<"loginCards">; type: "card.issued" }
               | { card: Id<"loginCards">; type: "card.reissued" }
               | { card: Id<"loginCards">; type: "card.redeemed" }
-              | { type: "period.created" }
-              | { type: "period.opened" }
-              | { type: "period.archived" }
-              | { type: "cohort.created" }
-              | { type: "cohort.renamed" }
-              | { type: "cohort.archived" }
-              | {
-                  assignment: "homeroom";
-                  person: Id<"tenantPeople">;
-                  type: "assignment.created";
-                }
-              | {
-                  assignment: "homeroom";
-                  person: Id<"tenantPeople">;
-                  type: "assignment.removed";
-                }
-              | { type: "promotion.applied" }
-              | { type: "promotion.approved" }
-              | { type: "promotion.cancelled" }
-              | { type: "promotion.created" }
-              | { type: "promotion.opened" }
-              | { type: "promotion.planned" }
-              | { person: Id<"tenantPeople">; type: "promotion.studentPlanned" }
-              | { type: "promotion.submitted" }
-              | {
-                  reason: "cohorts" | "students" | "homeroom" | "other";
-                  type: "promotion.returned";
-                }
-              | {
-                  step: "archive" | "cohorts" | "place" | "homeroom";
-                  type: "promotion.undone";
-                }
-              | {
-                  client: Id<"integrationClients">;
-                  scope:
-                    | { kind: "tenant" }
-                    | { kind: "unit"; unitId: Id<"tenantUnits"> };
-                  type: "integration.created";
-                }
-              | {
-                  client: Id<"integrationClients">;
-                  type: "integration.rotated";
-                }
-              | {
-                  client: Id<"integrationClients">;
-                  type: "integration.revoked";
-                }
-              | { type: "class.created" }
-              | { type: "class.renamed" }
-              | { type: "class.archived" }
-              | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
-              | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
-              | {
-                  minutes: number;
-                  reason: "support" | "onboarding" | "incident";
-                  type: "visit.requested";
-                }
-              | {
-                  grant: Id<"tenantGrants">;
-                  person: Id<"tenantPeople">;
-                  type: "visit.approved";
-                }
-              | { type: "visit.declined" }
-              | { reason: "expired" | "left" | "revoked"; type: "visit.ended" }
               | {
                   grant: Id<"tenantGrants">;
                   role: {
@@ -2974,10 +2922,62 @@ export declare const api: {
                   reason: "revoked" | "expired" | "replaced" | "left";
                   type: "grant.ended";
                 }
-              | { type: "tenant.suspended" }
-              | { type: "tenant.reactivated" }
               | { type: "person.reactivated" }
               | { type: "person.suspended" }
+              | { type: "promotion.applied" }
+              | { type: "promotion.approved" }
+              | { type: "promotion.cancelled" }
+              | { type: "promotion.created" }
+              | { type: "promotion.opened" }
+              | { type: "promotion.planned" }
+              | { person: Id<"tenantPeople">; type: "promotion.studentPlanned" }
+              | { type: "promotion.submitted" }
+              | {
+                  reason: "cohorts" | "students" | "homeroom" | "other";
+                  type: "promotion.returned";
+                }
+              | {
+                  step: "archive" | "cohorts" | "place" | "homeroom";
+                  type: "promotion.undone";
+                }
+              | {
+                  contract: {
+                    contentLicense: string;
+                    dpaVersion: string;
+                    modules: Array<
+                      "classes" | "exams" | "bank" | "grades" | "reports"
+                    >;
+                    plan: "tenant" | "unit";
+                  };
+                  type: "tenant.provisioned";
+                }
+              | { country: string; currency: string; type: "tenant.locale.set" }
+              | {
+                  key: "emailDomains" | "nina" | "studentThreads";
+                  type: "tenant.policy.set";
+                }
+              | { type: "tenant.suspended" }
+              | { type: "tenant.reactivated" }
+              | { type: "unit.created" }
+              | {
+                  contentLanguage: "en" | "id" | "de";
+                  timeZone: string;
+                  type: "unit.locale.set";
+                }
+              | { type: "unit.archived" }
+              | { type: "unit.unarchived" }
+              | {
+                  minutes: number;
+                  reason: "support" | "onboarding" | "incident";
+                  type: "visit.requested";
+                }
+              | {
+                  grant: Id<"tenantGrants">;
+                  person: Id<"tenantPeople">;
+                  type: "visit.approved";
+                }
+              | { type: "visit.declined" }
+              | { reason: "expired" | "left" | "revoked"; type: "visit.ended" }
               | { type: string };
             id: Id<"journalEntries">;
             subject:
@@ -4050,6 +4050,64 @@ export declare const api: {
                 reason: "expired" | "left" | "revoked";
                 status: "ended";
               };
+        }
+      >;
+    };
+  };
+  posts: {
+    mutations: {
+      create: FunctionReference<
+        "mutation",
+        "public",
+        { text: string },
+        Id<"posts">
+      >;
+      like: FunctionReference<
+        "mutation",
+        "public",
+        { postId: Id<"posts"> },
+        null
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { postId: Id<"posts"> },
+        null
+      >;
+      unlike: FunctionReference<
+        "mutation",
+        "public",
+        { postId: Id<"posts"> },
+        null
+      >;
+    };
+    queries: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          authorId: Id<"users">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"posts">;
+            likeCount: number;
+            liked: boolean;
+            text: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
         }
       >;
     };
@@ -5202,7 +5260,7 @@ export declare const api: {
                   text: string;
                 }
               | null;
-            version?: number;
+            version: number;
           },
           null
         >;
@@ -10864,6 +10922,16 @@ export declare const internal: {
           status: "active" | "revoked";
           userId: Id<"users">;
         }
+      >;
+    };
+  };
+  posts: {
+    cleanup: {
+      cleanupDeletedPost: FunctionReference<
+        "mutation",
+        "internal",
+        { postId: Id<"posts"> },
+        null
       >;
     };
   };

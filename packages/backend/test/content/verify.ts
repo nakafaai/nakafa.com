@@ -1,7 +1,10 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { vWorkflowId, type WorkflowStatus } from "@convex-dev/workflow";
-import { assert } from "@effect/vitest";
+import { assert, it } from "@effect/vitest";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -16,6 +19,7 @@ import {
 import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
@@ -25,7 +29,11 @@ import {
   TEST_PAGE_PROJECTION_JSON,
   TEST_PAGE_SOURCE,
 } from "@repo/backend/test/content/page";
-import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import {
+  TEST_KEY_RESOLVER,
+  TEST_PROOF_RENDERER,
+  testSignedEmptyRelease,
+} from "@repo/backend/test/content/proof";
 import {
   TEST_QUESTION_CONTENT_KEY,
   TEST_QUESTION_PROJECTION_JSON,
@@ -43,14 +51,17 @@ import {
   TEST_ARTICLE_PROJECTION_JSON,
   TEST_ARTICLE_SOURCE,
 } from "@repo/backend/test/content/runtime";
-import { insertTestRelease } from "@repo/backend/test/content/stage";
+import {
+  insertSignedCandidate,
+  insertTestRelease,
+} from "@repo/backend/test/content/stage";
 import {
   insertRuntimeBinding,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
 import { parse } from "convex-helpers/validators";
 import type { TestConvex } from "convex-test";
-import { Effect } from "effect";
+import { Data, Effect, Schema } from "effect";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;
@@ -348,3 +359,82 @@ export async function completeContentProof(
   );
   return proof;
 }
+
+export const proofReleaseId = ReleaseIdSchema.make("release-proof");
+
+/** Signs the proof release that each test authenticates, inside the test's Effect. */
+export const testProofFixture = Effect.fn("test.contentRelease.proofFixture")(
+  function* () {
+    const signedRelease = yield* testSignedEmptyRelease(proofReleaseId);
+    return { manifestHash: signedRelease.manifestHash, signedRelease };
+  }
+);
+
+/** Runs one promise-based proof test with its freshly signed release. */
+export function itWithRelease(
+  name: string,
+  body: (fixture: {
+    readonly manifestHash: string;
+    readonly signedRelease: SignedContentRelease;
+  }) => Promise<void>
+) {
+  return it.effect(name, () =>
+    Effect.gen(function* () {
+      const fixture = yield* testProofFixture();
+      yield* Effect.promise(() => body(fixture));
+    })
+  );
+}
+
+export const rendererJson = Schema.encodeSync(
+  Schema.fromJsonString(RendererManifestEnvelopeSchema)
+)(TEST_PROOF_RENDERER);
+
+class ObservedProofFailure extends Schema.TaggedError<ObservedProofFailure>()(
+  "ObservedProofFailure",
+  {
+    cause: Schema.Unknown,
+  }
+) {}
+
+export class UnexpectedProofTestState extends Data.TaggedError(
+  "UnexpectedProofTestState"
+)<{
+  readonly operation:
+    | "load-candidate-manifest"
+    | "load-proof-release"
+    | "load-staged-artifact";
+}> {}
+
+/** Observes the production proof across convex-test's component limitation. */
+export const runProof = Effect.fn("contentRelease.proof.verify.test.runProof")(
+  function* (
+    t: TestConvex<typeof schema>,
+    manifestHash: string,
+    options: {
+      readonly hash?: string;
+      readonly releaseId?: string;
+      readonly resolver?: typeof TEST_KEY_RESOLVER;
+    } = {}
+  ) {
+    const hash = options.hash ?? manifestHash;
+    const releaseIdentity = options.releaseId ?? proofReleaseId;
+    const resolver = options.resolver ?? TEST_KEY_RESOLVER;
+    return yield* Effect.tryPromise({
+      catch: (cause) =>
+        new ObservedProofFailure({
+          cause,
+        }),
+      try: () => recomputeContentProof(t, hash, releaseIdentity, resolver),
+    });
+  }
+);
+
+/** Inserts one authenticated candidate using the canonical technical fixture. */
+export const insertRelease = Effect.fn(
+  "contentRelease.proof.verify.test.insertRelease"
+)((ctx: MutationCtx, signedRelease: SignedContentRelease) =>
+  Effect.promise(() =>
+    insertSignedCandidate(ctx, proofReleaseId, signedRelease, rendererJson)
+  )
+);

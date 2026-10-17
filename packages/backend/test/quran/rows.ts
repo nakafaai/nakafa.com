@@ -393,10 +393,10 @@ export function makeQuranSearch(
 }
 
 /** Encodes one authentic snapshot envelope for signed Quran consumer tests. */
-export function encodeTestQuranRow(
+export const encodeTestQuranRow = Effect.fn("test.quran.encodeRow")(function* (
   snapshotId: Sha256Hash,
   payload: QuranRowPayload
 ) {
-  const record = Effect.runSync(bindQuranRow(snapshotId, payload));
+  const record = yield* bindQuranRow(snapshotId, payload);
   return canonicalizeContentSnapshotRow({ family: "quran", record });
-}
+});

@@ -20,6 +20,7 @@ import nina from "@repo/backend/confect/_generated/refs/nina";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import operators from "@repo/backend/confect/_generated/refs/operators";
+import posts from "@repo/backend/confect/_generated/refs/posts";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
@@ -109,6 +110,7 @@ const domainModules = {
   notifications,
   onboarding,
   operators,
+  posts,
   subscriptions,
   tenancy,
   tryouts,
@@ -168,7 +170,7 @@ describe("generateRefs", () => {
           specPath,
           `import { GroupSpec, Spec } from "@confect/core";
 import nina_turns from "../nina/turns.spec";
-const spec: Spec.Spec<{}> = Spec.make().addAt("nina", GroupSpec.makeAt("nina").addGroupAt("other", nina_turns));
+const spec: Spec.Spec<{}> = Spec.fromGroups({ ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), { ["other"]: nina_turns }) });
 export default spec;
 `
         );

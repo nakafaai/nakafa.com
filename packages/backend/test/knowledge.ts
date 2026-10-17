@@ -33,7 +33,10 @@ import {
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
 import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import {
+  TEST_RUNTIME_RELEASE,
+  testRuntimeRelease,
+} from "@repo/backend/test/runtime/values";
 import { sha256Hex } from "@repo/utilities/digest";
 import { APICallError } from "ai";
 import { MockEmbeddingModelV4 } from "ai/test";
@@ -282,10 +285,11 @@ export async function seedKnowledge(ctx: MutationCtx) {
       rawMdx: knowledgeLesson(order, appLocale),
     }))
   );
+  const release = await Effect.runPromise(testRuntimeRelease());
   const layer = RegisteredConvexFunction.mutationLayer(confectSchema, ctx);
   for (const { projection, rawMdx } of lessons) {
     await Effect.runPromise(
-      insertMaterialProjection(projection, KNOWLEDGE_RELEASE, rawMdx).pipe(
+      insertMaterialProjection(projection, release, rawMdx).pipe(
         Effect.provide(layer)
       )
     );
@@ -303,10 +307,10 @@ export async function seedKnowledge(ctx: MutationCtx) {
   const state = await ctx.db.query("contentState").unique();
   assert.ok(state, "Expected one active content state.");
   await ctx.db.patch("contentState", state._id, {
-    materialManifestHash: KNOWLEDGE_RELEASE.manifestHash,
+    materialManifestHash: release.manifestHash,
     materialReleaseId: KNOWLEDGE_RELEASE.releaseId,
     materialSequence: KNOWLEDGE_RELEASE.sequence,
-    searchManifestHash: KNOWLEDGE_RELEASE.manifestHash,
+    searchManifestHash: release.manifestHash,
     searchReleaseId: KNOWLEDGE_RELEASE.releaseId,
     searchSequence: KNOWLEDGE_RELEASE.sequence,
   });
