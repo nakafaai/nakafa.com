@@ -14,11 +14,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -93,7 +95,7 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseIsotope}
           gridColumns="3"
@@ -112,70 +114,69 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <div className="flex flex-col gap-5 py-2">
-          <section
-            aria-label={`${selectedLabels.ariaName}, ${labels.massNumber} ${selectedSample.massNumber}`}
-            className="grid gap-4 text-center"
-          >
-            <div className="grid place-items-center px-2 py-4">
-              <div className="flex flex-col items-center gap-3">
-                <div className="text-muted-foreground text-sm">
-                  {selectedLabels.name}
-                </div>
-                <div className="text-5xl sm:text-6xl">
-                  <InlineMath math={notation} />
-                </div>
-              </div>
+      <VisualCardBody
+        aria-label={`${selectedLabels.ariaName}, ${labels.massNumber} ${selectedSample.massNumber}`}
+        className="grid gap-4 p-(--card-spacing) text-center"
+        render={<section />}
+      >
+        <div className="grid place-items-center px-2 py-4">
+          <div className="flex flex-col items-center gap-3">
+            <div className="text-muted-foreground text-sm">
+              {selectedLabels.name}
             </div>
-
-            <NucleusDots
-              labels={labels}
-              neutronCount={neutronCount}
-              protonCount={selectedSample.atomicNumber}
-            />
-          </section>
-
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            <VisualFact
-              label={labels.atomicNumber}
-              value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
-            />
-            <VisualFact
-              label={labels.massNumber}
-              value={<InlineMath math={`A = ${selectedSample.massNumber}`} />}
-            />
-            <VisualFact
-              label={labels.neutrons}
-              value={
-                <InlineMath
-                  math={`n^0 = ${selectedSample.massNumber} - ${selectedSample.atomicNumber} = ${neutronCount}`}
-                />
-              }
-            />
-            <VisualFact
-              label={labels.abundance}
-              value={selectedLabels.abundance}
-            />
-          </dl>
+            <div className="text-5xl sm:text-6xl">
+              <InlineMath math={notation} />
+            </div>
+          </div>
         </div>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <VisualFact
-              label={labels.protons}
-              value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
-            />
-            <VisualFact
-              label={labels.electrons}
-              value={<InlineMath math={`${electronCount}`} />}
-            />
-            <VisualFact label={labels.neutrons} value={selectedLabels.note} />
-          </dl>
-        </VisualCardControls>
+
+        <NucleusDots
+          labels={labels}
+          neutronCount={neutronCount}
+          protonCount={selectedSample.atomicNumber}
+        />
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.atomicNumber}
+            value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
+          />
+          <VisualFact
+            label={labels.massNumber}
+            value={<InlineMath math={`A = ${selectedSample.massNumber}`} />}
+          />
+          <VisualFact
+            label={labels.neutrons}
+            value={
+              <InlineMath
+                math={`n^0 = ${selectedSample.massNumber} - ${selectedSample.atomicNumber} = ${neutronCount}`}
+              />
+            }
+          />
+          <VisualFact
+            label={labels.abundance}
+            value={selectedLabels.abundance}
+          />
+        </VisualCardFacts>
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.protons}
+            value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
+          />
+          <VisualFact
+            label={labels.electrons}
+            value={<InlineMath math={`${electronCount}`} />}
+          />
+          <VisualFact label={labels.neutrons} value={selectedLabels.note} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
