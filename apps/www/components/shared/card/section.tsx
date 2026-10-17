@@ -16,7 +16,7 @@ const cardSectionVariants = cva("has-data-[slot=card-footer]:pb-0", {
 });
 
 const cardSectionFooterVariants = cva(
-  "min-h-15 items-center justify-end gap-4 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
+  "min-h-15 flex-wrap items-center justify-end gap-x-4 gap-y-3 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
   {
     variants: {
       bottomSheet: {
@@ -27,7 +27,7 @@ const cardSectionFooterVariants = cva(
   }
 );
 
-const cardSectionHintVariants = cva("min-w-0 flex-1 text-sm", {
+const cardSectionHintVariants = cva("flex-1 text-sm", {
   defaultVariants: {
     tone: "muted",
   },
@@ -39,17 +39,20 @@ const cardSectionHintVariants = cva("min-w-0 flex-1 text-sm", {
   },
 });
 
-const cardSectionActionsVariants = cva("flex items-center gap-2", {
-  defaultVariants: {
-    share: false,
-  },
-  variants: {
-    share: {
-      false: "shrink-0",
-      true: "min-w-0 flex-1 *:min-w-0 *:flex-1",
+const cardSectionActionsVariants = cva(
+  "flex flex-wrap items-center justify-end gap-2",
+  {
+    defaultVariants: {
+      share: false,
     },
-  },
-});
+    variants: {
+      share: {
+        false: "",
+        true: "flex-1 *:flex-1",
+      },
+    },
+  }
+);
 
 /**
  * A titled card that frames one self-contained section. Compose the design
@@ -71,11 +74,12 @@ export function CardSection({
 }
 
 /**
- * Holds a section's sentence and actions in one row at every width: the
- * sentence on the left, the actions on the right. The bar is as tall with a
- * line of text alone as with a button, so every card ends the same way.
- * `bottomSheet` ends a phone's bottom sheet with square bottom corners and the
- * safe area below its actions.
+ * Holds a section's sentence and actions in one row, the sentence on the left
+ * and the actions on the right. When the two cannot share the row, the actions
+ * move to the next line, end-aligned, so no action is clipped. The bar is as
+ * tall with a line of text alone as with a button, so every card ends the
+ * same way. `bottomSheet` ends a phone's bottom sheet with square bottom
+ * corners and the safe area below its actions.
  */
 export function CardSectionFooter({
   bottomSheet,
@@ -93,8 +97,8 @@ export function CardSectionFooter({
 
 /**
  * The one sentence that says what a section's actions do, or what stops them.
- * It takes the free width on the left of its footer. Its tone is the only
- * styling a caller chooses, so the sentence cannot break the row.
+ * It takes the free width on the left of its footer, and its words wrap within
+ * it. Its tone is the only styling a caller chooses.
  */
 export function CardSectionHint({
   tone,
@@ -107,9 +111,11 @@ export function CardSectionHint({
 
 /**
  * Holds a section's actions on the right of its footer, side by side at their
- * full size, so a footer with only actions keeps them on the right too. A
- * footer with no sentence passes `share`: its actions split the row equally,
- * and each one keeps its label on one line within its share.
+ * full size, so a footer with only actions keeps them on the right too. When
+ * they have no room beside the sentence, they move to their own line, and wrap
+ * within it, so none is clipped. A footer with no sentence passes `share`: its
+ * actions split the row equally, and when their labels do not fit side by side
+ * they stack, each across the full width.
  */
 export function CardSectionActions({
   share,
