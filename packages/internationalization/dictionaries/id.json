@@ -9,6 +9,7 @@
   },
   "Common": {
     "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
+    "load-error-retry": "Data ini belum dapat dimuat.",
     "retry": "Coba lagi",
     "action-error": "Tindakan ini belum berhasil. Silakan coba lagi.",
     "copyright": "Hak Cipta © {year} {companyName}. Seluruh hak dilindungi.",

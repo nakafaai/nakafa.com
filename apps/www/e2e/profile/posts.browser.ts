@@ -5,7 +5,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect, Schema } from "effect";
-import { live, saved } from "@/e2e/support/changes";
+import { saved } from "@/e2e/support/changes";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -55,10 +55,10 @@ for (const viewport of VIEWPORTS) {
           yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
 
           yield* Effect.promise(async () => {
+            // The composer is enabled once the live list holds its first page.
             await expect(composerOf(page)).toBeEnabled({
               timeout: readinessTimeoutMilliseconds,
             });
-            await live(changes);
 
             // An older post is on the list first, so the new post is at the
             // top only when the list puts it there.
@@ -123,10 +123,10 @@ for (const viewport of VIEWPORTS) {
           yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
 
           yield* Effect.promise(async () => {
+            // The composer is enabled once the live list holds its first page.
             await expect(composerOf(page)).toBeEnabled({
               timeout: readinessTimeoutMilliseconds,
             });
-            await live(changes);
 
             // The next change never reaches the server, and the server answers
             // wait until the test releases them. While they wait the post shows
@@ -166,7 +166,9 @@ for (const viewport of VIEWPORTS) {
             await expect(postOf(page, KEPT)).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
-            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
+            await expect(
+              page.getByText(app.Common["load-error-retry"])
+            ).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
@@ -178,9 +180,9 @@ for (const viewport of VIEWPORTS) {
             await expect(composerOf(page)).toBeEnabled({
               timeout: readinessTimeoutMilliseconds,
             });
-            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
-              0
-            );
+            await expect(
+              page.getByText(app.Common["load-error-retry"])
+            ).toHaveCount(0);
             await expect(postOf(page, KEPT)).toBeVisible();
           });
         })
@@ -203,10 +205,10 @@ for (const viewport of VIEWPORTS) {
           yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
 
           yield* Effect.promise(async () => {
+            // The composer is enabled once the live list holds its first page.
             await expect(composerOf(page)).toBeEnabled({
               timeout: readinessTimeoutMilliseconds,
             });
-            await live(changes);
             await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
 
             // The second page fails: the rows stay, the failure shows, and there
@@ -215,7 +217,9 @@ for (const viewport of VIEWPORTS) {
             await page
               .getByRole("button", { name: app.Posts["load-more"] })
               .click();
-            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
+            await expect(
+              page.getByText(app.Common["load-error-retry"])
+            ).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
@@ -229,9 +233,47 @@ for (const viewport of VIEWPORTS) {
             await expect(
               page.getByRole("button", { name: app.Posts["load-more"] })
             ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
-              0
-            );
+            await expect(
+              page.getByText(app.Common["load-error-retry"])
+            ).toHaveCount(0);
+          });
+        })
+      );
+    });
+
+    test("an error of the list that is no typed failure shows the failure above the server's page, and loads on Retry", async ({
+      baseURL,
+      page,
+    }) => {
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          const { changes, learner } = yield* openChatPage(page, origin);
+          yield* learner.writePost(KEPT);
+          // The live list throws an error with no typed failure. The page catches
+          // it, so the header and the tabs stay and the failure shows above the
+          // server's page.
+          changes.failQuery(POSTS_LIST_QUERY, undefined);
+          yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
+
+          yield* Effect.promise(async () => {
+            await expect(postOf(page, KEPT)).toBeVisible({
+              timeout: readinessTimeoutMilliseconds,
+            });
+            await expect(
+              page.getByText(app.Common["load-error-retry"])
+            ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+            await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
+            await expect(composerOf(page)).toBeDisabled();
+
+            changes.recoverQuery();
+            await page.getByRole("button", { name: app.Common.retry }).click();
+            await expect(composerOf(page)).toBeEnabled({
+              timeout: readinessTimeoutMilliseconds,
+            });
+            await expect(
+              page.getByText(app.Common["load-error-retry"])
+            ).toHaveCount(0);
+            await expect(postOf(page, KEPT)).toBeVisible();
           });
         })
       );

@@ -9,6 +9,7 @@
   },
   "Common": {
     "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
+    "load-error-retry": "Diese Daten konnten nicht geladen werden.",
     "retry": "Erneut versuchen",
     "action-error": "Diese Aktion konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
     "copyright": "Copyright © {year} {companyName}. Alle Rechte vorbehalten.",

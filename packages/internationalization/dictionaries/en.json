@@ -9,6 +9,7 @@
   },
   "Common": {
     "load-error": "We could not load this data. Please try again.",
+    "load-error-retry": "We could not load this data.",
     "retry": "Retry",
     "action-error": "We could not complete this action. Please try again.",
     "copyright": "Copyright © {year} {companyName}. All rights reserved.",

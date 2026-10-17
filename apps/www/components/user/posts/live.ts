@@ -1,4 +1,5 @@
 import { PaginatedQueryResult } from "@confect/react";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import type { ListPost } from "@/components/user/posts/state";
 
 /**
@@ -12,7 +13,7 @@ import type { ListPost } from "@/components/user/posts/state";
 export function postsView<E>(
   live: PaginatedQueryResult.Variants<ListPost, E>,
   first: readonly ListPost[] | null
-) {
+): PostsView {
   if (PaginatedQueryResult.isLoadingFirstPage(live)) {
     return {
       empty: first !== null && first.length === 0,
@@ -22,14 +23,12 @@ export function postsView<E>(
     };
   }
   if (PaginatedQueryResult.isFailure(live)) {
-    // A first page that failed holds no rows, so the server's page stands in.
-    const holdsFirstPage = live.results.length > 0;
-    return {
-      empty: false,
-      failed: true,
-      ready: holdsFirstPage,
-      rows: holdsFirstPage ? live.results : (first ?? []),
-    };
+    // The rows a later page loaded stay under the failure, and the list stays
+    // ready for a change. A first page that failed holds no rows.
+    if (live.results.length > 0) {
+      return { empty: false, failed: true, ready: true, rows: live.results };
+    }
+    return failedView(first);
   }
   return {
     empty: live.results.length === 0,
@@ -37,4 +36,24 @@ export function postsView<E>(
     ready: true,
     rows: live.results,
   };
+}
+
+/**
+ * The view of a first page that failed, and of an error the live list throws:
+ * the server's page stands under the failure, and nothing is ready to change.
+ */
+export function failedView(first: readonly ListPost[] | null) {
+  return { empty: false, failed: true, ready: false, rows: first ?? [] };
+}
+
+/** What the posts list shows: its rows, its failure, its empty state, and whether it takes a change. */
+export type PostsView = ReturnType<typeof failedView>;
+
+/**
+ * What the live list subscribes to. Convex answers a read that has no viewer
+ * with an empty final page, so the list asks only once Convex confirms the
+ * session. Until then the server's page stands in for the list.
+ */
+export function livePostsArgs(authorId: Id<"users">, isAuthenticated: boolean) {
+  return isAuthenticated ? { authorId } : "skip";
 }

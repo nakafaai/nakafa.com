@@ -1,29 +1,20 @@
 "use client";
 
 import { createContext, type ReactNode, use, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
-
-/** The words an author writes in the composer, and how to change them. */
-interface PostDraft {
-  readonly setText: (text: string) => void;
-  readonly text: string;
-}
+import { type StoreApi, useStore } from "zustand";
+import { createPostDraft, type PostDraft } from "@/components/user/posts/draft";
 
 const DraftContext = createContext<StoreApi<PostDraft> | null>(null);
 
 /**
  * Keeps the words an author writes in the composer above the list, so a Retry,
- * which remounts the list, keeps them. The store is created once for the
- * provider, and only the composer writes it, as ADR 0017 asks for state that
- * its own actions write.
+ * which remounts the list, keeps them, and keeps the lock of a post that is
+ * still saving. The store is created once for the provider, and only the
+ * composer's own actions write it, as ADR 0017 asks for state that its own
+ * actions write.
  */
 export function PostDraftProvider({ children }: { children: ReactNode }) {
-  const [store] = useState(() =>
-    createStore<PostDraft>()((set) => ({
-      setText: (text) => set({ text }),
-      text: "",
-    }))
-  );
+  const [store] = useState(() => createPostDraft());
 
   return <DraftContext value={store}>{children}</DraftContext>;
 }

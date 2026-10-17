@@ -5,12 +5,19 @@ import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Array as Arr, DateTime } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { PostComposer } from "@/components/user/posts/composer";
-import { postsView } from "@/components/user/posts/live";
+import {
+  failedView,
+  livePostsArgs,
+  type PostsView,
+  postsView,
+} from "@/components/user/posts/live";
 import { PostDraftProvider } from "@/components/user/posts/provider";
 import { PostRow } from "@/components/user/posts/row";
 import { AGE_TICK_MILLISECONDS } from "@/components/user/posts/time";
@@ -41,28 +48,43 @@ export function UserPosts({
   const viewer = identity.isPending ? account : identity.account;
   const author =
     viewer && viewer.appUser._id === account.appUser._id ? viewer : null;
-  // A Retry changes the key, which remounts the live list so that it asks the
-  // server again. The draft lives in the provider above the list, so it stays.
+  // A Retry changes the key, which remounts the list so that it asks the server
+  // again. The draft lives in the provider above the list, so it stays. The
+  // boundary catches an error the list throws, so the header and the tabs stay
+  // on the screen and the failure shows above the server's page.
   const [attempt, setAttempt] = useState(0);
+  const onRetry = () => setAttempt((count) => count + 1);
 
   return (
     <PostDraftProvider>
-      <PostsFeed
-        account={account}
-        author={author}
-        first={first}
+      <ErrorBoundary
+        fallbackRender={() => (
+          <PostsPanel
+            account={account}
+            author={author}
+            now={now}
+            onRetry={onRetry}
+            view={failedView(first?.page ?? null)}
+          />
+        )}
         key={attempt}
-        now={now}
-        onRetry={() => setAttempt((count) => count + 1)}
-      />
+      >
+        <PostsFeed
+          account={account}
+          author={author}
+          first={first}
+          now={now}
+          onRetry={onRetry}
+        />
+      </ErrorBoundary>
     </PostDraftProvider>
   );
 }
 
 /**
- * The live list of one profile, with the owner's composer above it and the
- * failure above the rows. A failure keeps the rows the list holds, and its Retry
- * remounts this part to ask the server anew.
+ * The live list of one profile. It asks for the author's posts once Convex
+ * confirms the session, and `postsView` decides what it shows from the answer
+ * and the server's first page.
  */
 function PostsFeed({
   account,
@@ -78,13 +100,51 @@ function PostsFeed({
   now: number;
   onRetry: () => void;
 }) {
-  const t = useTranslations("Posts");
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const live = usePaginatedQuery(
     posts.queries.list,
-    { authorId: account.appUser._id },
+    livePostsArgs(account.appUser._id, isAuthenticated),
     { initialNumItems: POST_PAGE_SIZE }
   );
-  const view = postsView(live, first?.page ?? null);
+
+  return (
+    <PostsPanel
+      account={account}
+      author={author}
+      now={now}
+      onLoadMore={
+        PaginatedQueryResult.isCanLoadMore(live)
+          ? () => live.loadMore(POST_PAGE_SIZE)
+          : undefined
+      }
+      onRetry={onRetry}
+      view={postsView(live, first?.page ?? null)}
+    />
+  );
+}
+
+/**
+ * What the owner's Posts tab shows, as its view decides it: the composer above,
+ * the failure with its Retry, the rows, the empty sentence, and the next page.
+ * The rows stay inert until the list takes a change.
+ */
+function PostsPanel({
+  account,
+  author,
+  now,
+  onLoadMore,
+  onRetry,
+  view,
+}: {
+  account: CurrentUser;
+  /** The signed-in account when it is the profile's owner, which may write posts. */
+  author: CurrentUser | null;
+  now: number;
+  onLoadMore?: (() => void) | undefined;
+  onRetry: () => void;
+  view: PostsView;
+}) {
+  const t = useTranslations("Posts");
 
   return (
     <div className="flex flex-col">
@@ -114,12 +174,9 @@ function PostsFeed({
             {t("empty")}
           </p>
         )}
-        {PaginatedQueryResult.isCanLoadMore(live) && (
+        {onLoadMore && (
           <div className="flex justify-center">
-            <Button
-              onClick={() => live.loadMore(POST_PAGE_SIZE)}
-              variant="outline"
-            >
+            <Button onClick={onLoadMore} variant="outline">
               {t("load-more")}
             </Button>
           </div>

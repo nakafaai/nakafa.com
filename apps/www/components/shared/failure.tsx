@@ -11,7 +11,8 @@ import { useTranslations } from "next-intl";
 
 /**
  * Keeps already loaded content visible when its next read fails. A list that
- * can ask the server again passes `onRetry`, and the failure offers that Retry.
+ * can ask the server again passes `onRetry`, and the failure offers that Retry,
+ * so its sentence does not ask for a second try.
  */
 export function DataFailure({ onRetry }: { onRetry?: () => void }) {
   const t = useTranslations("Common");
@@ -19,7 +20,7 @@ export function DataFailure({ onRetry }: { onRetry?: () => void }) {
     <Alert variant="destructive">
       <HugeIcons icon={Alert02Icon} />
       <AlertDescription>
-        {t("load-error")}
+        {onRetry ? t("load-error-retry") : t("load-error")}
         {onRetry && (
           <Button onClick={onRetry} size="sm" variant="outline">
             <HugeIcons icon={Refresh03Icon} />

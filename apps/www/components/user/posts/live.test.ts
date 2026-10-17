@@ -2,7 +2,7 @@ import { PaginatedQueryResult } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
-import { postsView } from "@/components/user/posts/live";
+import { livePostsArgs, postsView } from "@/components/user/posts/live";
 import type { ListPost } from "@/components/user/posts/state";
 
 /** A post row with the given id, as the server sends it. */
@@ -93,5 +93,17 @@ describe("posts list view", () => {
         [serverPost]
       )
     ).toEqual({ empty: false, failed: true, ready: true, rows: [post] });
+  });
+});
+
+describe("posts live subscription", () => {
+  const authorId = Schema.decodeUnknownSync(Id("users"))("author");
+
+  it("asks for the author's posts once Convex confirms the session", () => {
+    expect(livePostsArgs(authorId, true)).toEqual({ authorId });
+  });
+
+  it("asks for nothing before Convex confirms the session, so no empty answer replaces the server's page", () => {
+    expect(livePostsArgs(authorId, false)).toBe("skip");
   });
 });
