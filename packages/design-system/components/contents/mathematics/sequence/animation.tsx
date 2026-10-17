@@ -8,10 +8,12 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
   VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
+  VisualCardGroup,
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
@@ -225,44 +227,43 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             </div>
           </div>
         </VisualCardScene>
+        <VisualCardControls>
+          <VisualCardGroup>
+            {Arr.map(SPEED_VALUES, (speedValue) => (
+              <Choice
+                aria-label={`${labels.setSpeed} ${speedValue}x`}
+                key={speedValue}
+                onClick={() => setSpeed(speedValue)}
+                pressed={speed === speedValue}
+              >
+                {speedValue}x
+              </Choice>
+            ))}
+          </VisualCardGroup>
+
+          <VisualCardGroup>
+            {Arr.map(
+              Array.from({ length: maxTables }, (_, index) => index + 1),
+              (count) => (
+                <Choice
+                  aria-label={`${labels.setTableCount} ${count}`}
+                  key={`table-count-${count}`}
+                  onClick={() => {
+                    setTableCount(count);
+                    setIsPlaying(false);
+                  }}
+                  pressed={tableCount === count}
+                >
+                  {count} {labels.table}
+                </Choice>
+              )
+            )}
+          </VisualCardGroup>
+        </VisualCardControls>
       </VisualCardBody>
 
-      <VisualCardControls>
-        <div className="flex w-full flex-wrap justify-center gap-2 px-6">
-          {Arr.map(SPEED_VALUES, (speedValue) => (
-            <Choice
-              aria-label={`${labels.setSpeed} ${speedValue}x`}
-              key={speedValue}
-              onClick={() => setSpeed(speedValue)}
-              pressed={speed === speedValue}
-            >
-              {speedValue}x
-            </Choice>
-          ))}
-        </div>
-
-        <div className="flex w-full flex-wrap justify-center gap-2 px-6">
-          {Arr.map(
-            Array.from({ length: maxTables }, (_, index) => index + 1),
-            (count) => (
-              <Choice
-                aria-label={`${labels.setTableCount} ${count}`}
-                key={`table-count-${count}`}
-                onClick={() => {
-                  setTableCount(count);
-                  setIsPlaying(false);
-                }}
-                pressed={tableCount === count}
-              >
-                {count} {labels.table}
-              </Choice>
-            )
-          )}
-        </div>
-      </VisualCardControls>
-
       <VisualCardFooter>
-        <div className="ms-auto flex gap-2">
+        <VisualCardActions>
           <Button
             aria-label={labels.reset}
             onClick={resetAnimation}
@@ -284,7 +285,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             </span>
           </Button>
           <VisualCardFullscreen />
-        </div>
+        </VisualCardActions>
       </VisualCardFooter>
     </VisualCard>
   );

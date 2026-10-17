@@ -151,7 +151,7 @@ function VisualCardHeader({
   );
 }
 
-/** Holds the visual; it takes the free height in full screen. */
+/** Holds the visual and its controls; it takes the free height in full screen. */
 function VisualCardBody({
   className,
   ...props
@@ -183,31 +183,51 @@ function VisualCardScene({
 }
 
 /**
- * The bordered footer of a visual, in one row: a compact readout or label on
- * the left, and the visual's actions on the right.
+ * The bordered footer of a visual, in one row: at most one compact readout or
+ * label on the left, and the visual's actions on the right. The footer owns
+ * its layout, so a caller passes no classes.
  */
-function VisualCardFooter({
-  className,
-  ...props
-}: ComponentProps<typeof CardFooter>) {
+function VisualCardFooter(
+  props: Omit<ComponentProps<typeof CardFooter>, "className">
+) {
+  return <CardFooter className="justify-between gap-4 border-t" {...props} />;
+}
+
+/** The visual's actions, grouped at the right end of its footer. */
+function VisualCardActions(props: Omit<ComponentProps<"div">, "className">) {
   return (
-    <CardFooter
-      className={cn("justify-between gap-4 border-t", className)}
+    <div
+      className="ms-auto flex shrink-0 gap-2"
+      data-slot="visual-card-actions"
       {...props}
     />
   );
 }
 
 /**
- * The visual's own controls, such as sliders, chips, and a readout, in rows
- * right under its scene. The rows wrap on a narrow card. Each control brings
- * its own horizontal inset.
+ * The visual's own controls and readouts, in rows under its scene inside the
+ * card body. The body gives them its inset and spacing, and the rows wrap on a
+ * narrow card.
  */
-function VisualCardControls({ className, ...props }: ComponentProps<"div">) {
+function VisualCardControls(props: Omit<ComponentProps<"div">, "className">) {
   return (
     <div
-      className={cn("flex flex-wrap items-center gap-4", className)}
+      className="flex w-full flex-wrap items-center justify-center gap-4"
       data-slot="visual-card-controls"
+      {...props}
+    />
+  );
+}
+
+/**
+ * A centered, wrapping group of one kind of control or readout, such as the
+ * speeds, the generations, or the badges. It takes a full row of controls.
+ */
+function VisualCardGroup(props: Omit<ComponentProps<"div">, "className">) {
+  return (
+    <div
+      className="flex w-full flex-wrap justify-center gap-2"
+      data-slot="visual-card-group"
       {...props}
     />
   );
@@ -246,10 +266,12 @@ function VisualCardFullscreen() {
 
 export {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
   VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
+  VisualCardGroup,
   VisualCardHeader,
   VisualCardScene,
 };

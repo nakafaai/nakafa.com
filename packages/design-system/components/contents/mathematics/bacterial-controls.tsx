@@ -4,7 +4,11 @@ import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { VisualCardFullscreen } from "@repo/design-system/components/visual/card";
+import {
+  VisualCardActions,
+  VisualCardFullscreen,
+  VisualCardGroup,
+} from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 
@@ -27,7 +31,7 @@ export function BacterialPlayback({
   const t = useTranslations("Common");
 
   return (
-    <div className="ms-auto flex gap-2">
+    <VisualCardActions>
       <Button onClick={onReset} size="icon" variant="outline">
         <HugeIcons icon={Clock04Icon} />
         <span className="sr-only">{t("reset")}</span>
@@ -41,7 +45,7 @@ export function BacterialPlayback({
         <span className="sr-only">{t(isPlaying ? "pause" : "play")}</span>
       </Button>
       <VisualCardFullscreen />
-    </div>
+    </VisualCardActions>
   );
 }
 
@@ -54,7 +58,7 @@ export function BacterialSpeeds({
   speed: number;
 }) {
   return (
-    <div className="flex w-full flex-wrap justify-center gap-2 px-6">
+    <VisualCardGroup>
       {Arr.map(SPEED_VALUES, (speedValue) => (
         <Choice
           key={speedValue}
@@ -64,7 +68,7 @@ export function BacterialSpeeds({
           {speedValue}x
         </Choice>
       ))}
-    </div>
+    </VisualCardGroup>
   );
 }
 
@@ -83,7 +87,7 @@ export function BacterialGenerations({
   timeUnit: string;
 }) {
   return (
-    <div className="flex w-full flex-wrap justify-center gap-2 px-6">
+    <VisualCardGroup>
       {Array.from({ length: maxGenerations + 1 }, (_, index) => {
         const time = index * timeInterval;
 
@@ -97,6 +101,6 @@ export function BacterialGenerations({
           </Choice>
         );
       })}
-    </div>
+    </VisualCardGroup>
   );
 }

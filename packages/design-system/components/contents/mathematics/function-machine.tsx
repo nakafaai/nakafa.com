@@ -87,9 +87,7 @@ function Machine({ inputLabel }: MachineProps) {
             <InlineMath math={`f(x) = ${output}`} />
           </UiButton>
         </div>
-      </VisualCardBody>
-      <VisualCardControls>
-        <div className="flex flex-1 justify-center px-6">
+        <VisualCardControls>
           <NumberField
             formatOptions={{
               localeMatcher: "best fit",
@@ -122,8 +120,8 @@ function Machine({ inputLabel }: MachineProps) {
               </Button>
             </Group>
           </NumberField>
-        </div>
-      </VisualCardControls>
+        </VisualCardControls>
+      </VisualCardBody>
 
       <VisualCardFooter>
         <VisualCardFullscreen />

@@ -225,18 +225,17 @@ export function BacterialGrowth({
             </MotionConfig>
           </div>
         </VisualCardScene>
+        <VisualCardControls>
+          <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
+          <BacterialGenerations
+            generation={activeGeneration}
+            maxGenerations={maxGenerations}
+            onGenerationChange={selectGeneration}
+            timeInterval={timeInterval}
+            timeUnit={timeUnit}
+          />
+        </VisualCardControls>
       </VisualCardBody>
-
-      <VisualCardControls>
-        <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
-        <BacterialGenerations
-          generation={activeGeneration}
-          maxGenerations={maxGenerations}
-          onGenerationChange={selectGeneration}
-          timeInterval={timeInterval}
-          timeUnit={timeUnit}
-        />
-      </VisualCardControls>
 
       <VisualCardFooter>
         <BacterialPlayback
