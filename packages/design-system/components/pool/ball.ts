@@ -2,12 +2,13 @@ import { Number as Num, Schema } from "effect";
 
 /**
  * One ball of the pool and what belongs to one ball alone: how fast it may go,
- * how it bounces off the box, and how it leans as it moves. Every function
- * takes a ball and returns the next one.
+ * how it bounces off the box, and how it leans as it moves. Most functions take
+ * a ball and return the next one. `fastest` takes velocities, and `tiltOf` returns
+ * a lean.
  */
 
 /** The top speed, in pixels per second, of anything that is not held. */
-const FASTEST = 760;
+export const FASTEST = 760;
 /** The share of speed that a ball keeps when a left or right wall turns it back. */
 const SIDE_BOUNCE = 0.45;
 /** The share of speed that a ball keeps when the floor turns it back. */

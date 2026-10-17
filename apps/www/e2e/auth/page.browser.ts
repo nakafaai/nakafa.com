@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { COVER } from "@repo/design-system/components/pool/cover";
 import { Array as Arr, Duration, Effect, MutableList, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -30,13 +31,7 @@ const CROSSING_INSET = 4;
 const CROSSING_STEPS = 60;
 /** The share of the pool's height that a pointer crossing runs along. */
 const CROSSING_HEIGHT = 0.6;
-/**
- * The share of the pool that the members cover at rest: about half, with Nina's
- * things counted. The margin is the one the animal count's unit test uses. An
- * offline replica of this grid, on the settled pile, reads about 0.51 of the
- * laptop layout and 0.50 of the wide layout; the browser run has not measured it.
- */
-const COVER = 0.5;
+/** The margin around the cover that the pool's unit test allows, for the sizes that are left over. */
 const COVER_MARGIN = 0.02;
 /** The spacing of the grid that the covered share is read on, in pixels. */
 const GRID_PIXELS = 4;

@@ -3,7 +3,9 @@ import { Number as Num, Schema } from "effect";
 
 /**
  * The pointer of the pool: where it is over the box, how fast it moves, and what
- * it pushes. Every function takes the pointer and returns the next one.
+ * it pushes. Most functions take the pointer and return the next one. `pointerPush`
+ * returns the change of velocity that the pointer gives a ball, and `idlePointer`
+ * takes no pointer at all.
  */
 
 /** How far beyond its radius a ball feels the pointer, in pixels. */
@@ -11,9 +13,9 @@ const POINTER_REACH = 44;
 /**
  * How hard the pointer pushes a ball, per pixel that the ball is inside its reach.
  * Measured on the three checked pools, 585, 823 and 1463 pixels wide, with the
- * pointer swept across 0.6 of the height from a settled pile at 300 pixels a second:
- * the fastest ball reached 63, 85 and 158 pixels a second, where 80 gave 272, 206
- * and 297.
+ * pointer swept across 0.6 of the height from a settled pile at 300 pixels a second,
+ * with the friction of `collide.ts`: the fastest ball at scale 1 reached 63, 85 and
+ * 153 pixels a second, where 80 gave 272, 205 and 180.
  */
 const POINTER_PUSH = 40;
 /**

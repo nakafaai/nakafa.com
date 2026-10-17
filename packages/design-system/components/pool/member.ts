@@ -71,9 +71,9 @@ function thingMember(name: ThingName): PoolMember {
 }
 
 /**
- * Places a thing at its place among the members, as the pit does: the thing
- * with index `index` lies at place `THING_FIRST + index * THING_STEP`, or at the
- * end when the members run out first.
+ * Places a thing at its place among the members: the thing with index `index` lies
+ * at place `THING_FIRST + index * THING_STEP`, or at the end when the members run
+ * out first.
  */
 function placeThing(
   members: readonly PoolMember[],

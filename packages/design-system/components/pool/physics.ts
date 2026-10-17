@@ -19,27 +19,27 @@ import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
 /**
  * The physics of the pool: round balls that fall, pile up, and move away from a
- * pointer inside a box with four walls. Every function takes the state of the
- * pool and returns the next one, so nothing here reads a clock, a random number,
- * or the page.
+ * pointer inside a box with four walls. Functions take the state of the pool and
+ * return the next one, or read it, as `isResting` does. Nothing here reads a clock,
+ * a random number, or the page.
  */
 
 /** Gravity, in pixels per second squared. */
 const GRAVITY = 1500;
 /**
  * How much speed a free ball keeps each second: its speed is multiplied by `exp(-DAMPING * dt)`.
- * Measured on the three checked pools: at 6 a fresh pool rests after 311, 488 and 821
- * frames, and at 3 it rests after 194, 298 and 528.
+ * With the friction of `collide.ts`, a fresh pool rests after 194, 298 and 528 frames
+ * on the three checked pools, 585, 823 and 1463 pixels wide.
  */
 const DAMPING = 3;
 /** A held ball sits on its target at once. This share of its speed over half a frame is what it carries into a collision, its release, and its lean. */
 const HOLD_SHARE = 0.35;
 /**
  * The pile is at rest while no ball moves faster than this over a frame, in pixels
- * per second, counting each axis. Read per step instead, a resting pile never rests:
- * the contacts move a ball by a few hundredths of a pixel in one step and back again.
- * Measured at the 1440 layout: a settled pile read 21 to 37 pixels a second per step
- * while no ball moved 24 pixels a second over a frame.
+ * per second, counting each axis. Read per step instead, a resting pile can stay
+ * above this speed, because the contacts move a ball back and forth from one step
+ * to the next. Measured at commit ec767b9198, the 823 by 900 pool did not come to
+ * rest within 3000 frames when it was read per step.
  */
 const REST_SPEED = 24;
 /**

@@ -17,7 +17,7 @@ import { Array as Arr, Schema } from "effect";
 /** The length of a settle's frame, in seconds: a frame at 60 frames a second. */
 const SETTLE_FRAME = 1 / 60;
 /** The most frames that a settle runs, so that a pile which never rests still ends: 30 seconds at 60 frames a second. */
-const SETTLE_FRAMES = 60 * 30;
+export const SETTLE_FRAMES = 60 * 30;
 
 /**
  * A settle that runs in parts: the pool, the frames it has run, and the calm frames
@@ -82,9 +82,4 @@ export function finishSettle(settling: Settling): World {
       vx: 0,
     })),
   };
-}
-
-/** Moves the pool a frame at a time until the pile is settled, and returns it finished. */
-export function settle(world: World): World {
-  return finishSettle(settleFor(startSettle(world), SETTLE_FRAMES));
 }

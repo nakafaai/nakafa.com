@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { Ball } from "@repo/design-system/components/pool/ball";
+import { type Ball, FASTEST } from "@repo/design-system/components/pool/ball";
 import {
   hop,
   isResting,
@@ -17,34 +17,33 @@ import {
   tick,
   type World,
 } from "@repo/design-system/components/pool/physics";
-import { settle } from "@repo/design-system/components/pool/settle";
 import {
   ballAt,
   boxWith,
   CHECKED_POOLS,
+  FRAME,
+  NOISE,
   poolWorld,
+  settle,
   sweep,
 } from "@repo/design-system/components/pool/test.fixture";
 import { Array as Arr } from "effect";
 
-/** A frame of the pool at 60 frames a second. */
-const FRAME = 1 / 60;
 /** The steps in one frame at 60 frames a second. */
 const STEPS_IN_FRAME = Math.round(FRAME / STEP);
 /** A step short enough that gravity and damping barely change a speed. */
 const SHORT = 0.0001;
-/** Float noise that a wall may leave behind, in pixels or pixels per second. */
-const NOISE = 1e-9;
-/** The top speed, in pixels per second, of anything that is not held. */
-const TOP_SPEED = 760;
 /** The frames in six seconds at 60 frames a second. */
 const FRAMES_IN_SIX_SECONDS = 360;
 /**
- * The pools that are held to the six seconds of rest that main allowed. The widest
- * pool takes longer than that, so it is not held to it here.
+ * The two narrower checked pools, which are held to six seconds of rest. The widest
+ * pool rests after more than six seconds (see `collide.ts`), so it is not held to it.
  */
 const RESTING_POOLS = Arr.take(CHECKED_POOLS, 2);
-/** The grabs and throws that pit.mjs makes: up out of the box, right, left, down, and into both top corners. */
+/**
+ * The grabs and throws that the rough-handling test makes: up out of the box, right,
+ * left, down, and into both top corners.
+ */
 const THROWS: readonly (readonly [number, number])[] = [
   [0.5, -0.6],
   [1.6, 0.4],
@@ -80,7 +79,7 @@ function checkedStep(world: World, dt: number): World {
       expect(
         Math.hypot(ball.vx, ball.vy),
         `free ball ${index} is faster than the top speed`
-      ).toBeLessThanOrEqual(TOP_SPEED + NOISE);
+      ).toBeLessThanOrEqual(FASTEST + NOISE);
     }
   });
   return next;
@@ -216,7 +215,7 @@ describe("the pile", () => {
   });
 
   it("stays at rest with no pointer: a settled pile is at rest in every frame of six seconds", () => {
-    // The loop sleeps on a pile at rest, so a pile that rests must not wake up on its own. Only the narrowest pool is held to this here: over six seconds the wider pools still have a ball fall off a perch, which the sign-in pool report records.
+    // The loop sleeps on a pile at rest, so a pile that rests must not wake up on its own. Only the narrowest pool is held to this here: within six seconds the wider pools move past the rest speed now and then (see `collide.ts`).
     const narrowest = CHECKED_POOLS[0];
     let world = settle(poolWorld(narrowest.width, narrowest.height));
     for (let frame = 0; frame < FRAMES_IN_SIX_SECONDS; frame += 1) {

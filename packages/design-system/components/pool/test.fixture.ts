@@ -13,6 +13,11 @@ import {
   type World,
 } from "@repo/design-system/components/pool/physics";
 import { createWorld } from "@repo/design-system/components/pool/place";
+import {
+  finishSettle,
+  settleFor,
+  startSettle,
+} from "@repo/design-system/components/pool/settle";
 import { Array as Arr } from "effect";
 
 /** One ball inside the box of the tests, unless the test says otherwise. */
@@ -51,7 +56,14 @@ export const CHECKED_POOLS = [
 ];
 
 /** A frame of the pool at 60 frames a second. */
-const FRAME = 1 / 60;
+export const FRAME = 1 / 60;
+/** Float noise that a wall may leave behind, in pixels or pixels per second. */
+export const NOISE = 1e-9;
+
+/** The pool moved a frame at a time until its pile is settled, with no pointer: the pile it rests in, finished. */
+export function settle(world: World): World {
+  return finishSettle(settleFor(startSettle(world), Number.POSITIVE_INFINITY));
+}
 
 /**
  * The radius that each ball of a pool of this size has at scale 1, in the order of its

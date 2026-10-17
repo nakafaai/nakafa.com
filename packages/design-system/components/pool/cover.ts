@@ -7,13 +7,13 @@ import { Array as Arr, Number as Num, Schema } from "effect";
 
 /**
  * How many animals the pool holds and how big each one is. The animals and Nina's
- * things together cover about half of the pool's area on every screen. A bigger
- * pool holds more animals, and when the catalog runs out the animals grow instead
- * of repeating.
+ * things together cover about half of the pool's area on every screen at least as
+ * tall as the shortest height. A bigger pool holds more animals, and when the catalog
+ * runs out the animals grow instead of repeating.
  */
 
 /** The share of the pool's area that the animals and Nina's things cover together. */
-const COVER = 0.5;
+export const COVER = 0.5;
 /**
  * The narrowest screen that shows the pool, in pixels: the lg breakpoint of
  * `lib/breakpoints`, 64 rem at the default font size, where the artwork column appears.
@@ -47,7 +47,8 @@ function wantedAnimals(width: number, height: number) {
 
 /**
  * The fewest animals: the pool on the narrowest screen that shows it, the lg
- * breakpoint wide, at the shortest height.
+ * breakpoint wide, at the shortest height. A box whose count would fall below this
+ * floor keeps the floor, so its animals and things cover more than half of it.
  */
 const FLOOR = Math.round(
   wantedAnimals(NARROWEST_SCREEN * ARTWORK_SHARE, SHORTEST_HEIGHT)

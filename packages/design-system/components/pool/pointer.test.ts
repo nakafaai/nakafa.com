@@ -1,15 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
+import { FASTEST } from "@repo/design-system/components/pool/ball";
 import {
   idlePointer,
   locate,
   measure,
   pointerPush,
 } from "@repo/design-system/components/pool/pointer";
-import { settle } from "@repo/design-system/components/pool/settle";
 import {
   ballAt,
   CHECKED_POOLS,
+  FRAME,
+  NOISE,
   poolWorld,
+  settle,
   sweep,
 } from "@repo/design-system/components/pool/test.fixture";
 
@@ -25,19 +28,13 @@ function enteredAt(x: number, y: number) {
 
 /** A step of one second, so that a ball takes over the pointer's speed one for one. */
 const UNIT_STEP = 1;
-/** A frame at 60 frames a second. */
-const FRAME = 1 / 60;
-/** Float noise that a wall may leave behind, in pixels. */
-const NOISE = 1e-9;
-/** The top speed, in pixels per second, of anything that is not held. */
-const TOP_SPEED = 760;
 /**
  * The fastest a ball may move while the pointer sweeps over the pool, in pixels per
  * second at scale 1: a third of the top speed. Every checked pool is held to it.
  * Speed is measured against the size of the animal, so a ball's speed is divided by
  * its size ratio, its radius over the radius it has at scale 1.
  */
-const GENTLE_SPEED = TOP_SPEED / 3;
+const GENTLE_SPEED = FASTEST / 3;
 
 describe("the push of the pointer", () => {
   it("pushes nothing before the pointer comes over the box", () => {

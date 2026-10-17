@@ -33,7 +33,7 @@ describe("the members of the pool", () => {
     expect(HashSet.size(HashSet.fromIterable(animals))).toBe(animals.length);
   });
 
-  it("lays the things among the animals after the second member, then every fourth, as the pit does", () => {
+  it("lays the things among the animals after the second member, then every fourth", () => {
     const things = Arr.flatMap(poolMembers(22), (member, index) =>
       member.kind === "thing" ? [{ index, name: member.name }] : []
     );

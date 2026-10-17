@@ -1,14 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   ARTWORK_SHARE,
+  COVER,
   coverOf,
 } from "@repo/design-system/components/pool/cover";
 import { poolStarts } from "@repo/design-system/components/pool/member";
+import { CHECKED_POOLS } from "@repo/design-system/components/pool/test.fixture";
 import { Animal } from "@repo/mascot/animal";
 import { Array as Arr, Order } from "effect";
 
-/** The share of the pool that its members should cover, with a margin for the sizes that are left over. */
-const SHARE = 0.5;
+/** How far the share of the members may stray from the cover, for the sizes that are left over. */
 const MARGIN = 0.02;
 
 /** The width of the pool on a screen of this width: the artwork takes its share of the width. */
@@ -27,19 +28,14 @@ function coveredShare(width: number, height: number) {
   return area / (width * height);
 }
 
-/** Pools of the screens that show them: the narrowest, a laptop, a wide monitor, and a 4K screen. */
-const POOLS = [
-  { height: 640, width: poolWidth(1024) },
-  { height: 900, width: poolWidth(1440) },
-  { height: 1440, width: poolWidth(2560) },
-  { height: 2160, width: poolWidth(3840) },
-];
+/** The checked pools, and a 4K screen, the widest that the pool is sized for. */
+const POOLS = [...CHECKED_POOLS, { height: 2160, width: poolWidth(3840) }];
 
 describe("the members of the pool", () => {
   for (const pool of POOLS) {
     it(`covers about half of a ${pool.width} by ${pool.height} pool with the animals and Nina's things`, () => {
       const share = coveredShare(pool.width, pool.height);
-      expect(Math.abs(share - SHARE)).toBeLessThanOrEqual(MARGIN);
+      expect(Math.abs(share - COVER)).toBeLessThanOrEqual(MARGIN);
     });
   }
 
