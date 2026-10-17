@@ -132,6 +132,17 @@ export function removeMemory(memories: readonly Memory[], id: Memory["id"]) {
 }
 
 /**
+ * Takes out the memories whose ids are in `hidden`: the memories the learner
+ * deleted before the server stored them. Every other memory stays, in order.
+ */
+export function withoutHidden(
+  memories: readonly Memory[],
+  hidden: readonly Memory["id"][]
+) {
+  return Arr.filter(memories, (memory) => !Arr.contains(hidden, memory.id));
+}
+
+/**
  * Returns one loaded page of the list after `memory` was confirmed just now,
  * the way the server will show it: the page that starts the list holds the
  * memory first, and no other page holds it. A page that has nothing to do with

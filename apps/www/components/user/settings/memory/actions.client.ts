@@ -100,7 +100,8 @@ export function useMemoryActions() {
   /**
    * Writes a new memory in the learner's own words. `done` gets the memory as
    * the learner has it, with the id the server gave it. `failed` runs when the
-   * server did not take it, with whether the learner can try again.
+   * server did not take it, with whether the learner can try again. The row
+   * shows under the id it returns until the server answers.
    */
   function add(
     draft: MemoryDraft,
@@ -108,7 +109,7 @@ export function useMemoryActions() {
       done: (memory: Memory) => void;
       failed: (again: boolean) => void;
     }
-  ) {
+  ): Memory["id"] {
     const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
     const memory = learnerMemory(
       draft,
@@ -123,6 +124,8 @@ export function useMemoryActions() {
         ),
       { ...after, done: (id) => after.done({ ...memory, id }) }
     );
+
+    return memory.id;
   }
 
   /**

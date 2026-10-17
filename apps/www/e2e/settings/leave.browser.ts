@@ -148,9 +148,10 @@ const verifyFirstSave = Effect.fn("NakafaE2E.verifyFirstSave")(function* (
     const confirmed = changes.sent;
     await confirmDelete(page);
     await expect(editorOf(page)).toHaveCount(0);
+    // The row leaves the list at once, while the server still holds its answer.
+    await expect(row).toHaveCount(0);
 
     changes.release();
-    await expect(row).toHaveCount(0);
     await expect(page.getByText(EMPTY)).toBeVisible();
     // The delete goes out once the server has stored the memory. A reload drops
     // a change that is still on its way, so the page waits for the server's answer.

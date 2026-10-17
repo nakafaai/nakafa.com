@@ -37,9 +37,11 @@ export function useAutosave(
 ) {
   const { add, edit, remove } = useMemoryActions();
   const adopt = useMemoryPage((state) => state.adopt);
+  const hide = useMemoryPage((state) => state.hide);
   const leave = useMemoryPage((state) => state.leave);
   const reopen = useMemoryPage((state) => state.reopen);
   const session = useMemoryPage((state) => state.session);
+  const unhide = useMemoryPage((state) => state.unhide);
   const latest = useMemoryLatest();
   const [saving] = useState(() => createAutosave(memory, restored));
   const send = {
@@ -47,10 +49,12 @@ export function useAutosave(
     adopt: (stored: Memory) => adopt(session, stored),
     cleared: () => latest().cleared,
     edit,
+    hide,
     leave: () => leave(session),
     remove,
     // The editor holds the memory it opened, which follows what it saved.
     reopen: (draft: MemoryDraft) => reopen(session, draft, latest().target),
+    unhide,
   };
   const write = useCallbackRef(() => saving.write(send));
   const later = useDebouncedCallback(write, {

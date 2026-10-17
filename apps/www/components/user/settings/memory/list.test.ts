@@ -20,6 +20,7 @@ import {
   removeMemory,
   sameDraft,
   shownMemories,
+  withoutHidden,
 } from "@/components/user/settings/memory/list";
 
 const memoryId = Schema.decodeUnknownSync(Id("ninaMemories"));
@@ -139,6 +140,15 @@ describe("memory list", () => {
         memoryId("a"),
         memoryId("c"),
       ]);
+    });
+
+    it("leaves out the memories whose ids are hidden, and keeps the order of the rest", () => {
+      const memories = [stored("a"), stored("b"), stored("c")];
+
+      expect(ids(withoutHidden(memories, []))).toEqual(ids(memories));
+      expect(
+        ids(withoutHidden(memories, [memoryId("c"), memoryId("gone")]))
+      ).toEqual([memoryId("a"), memoryId("b")]);
     });
   });
 

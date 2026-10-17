@@ -813,8 +813,9 @@ nobody tries them again without a new reason.
   the editor, nothing is written, because the server keeps the last words it was
   handed: only a confirmed delete removes a memory. A new memory that was never
   given a word creates nothing. A new memory that the learner deletes while its
-  first save is on its way has a row from the moment that save goes out, so it
-  is deleted when the server has stored it. No page offers an Undo: a delete
+  first save is on its way has a row from the moment that save goes out, and
+  the row leaves the list at once; the memory is deleted when the server has
+  stored it. No page offers an Undo: a delete
   asks first, with the design system's `ResponsiveDialog`. The `restore`
   mutation below stays only for an older web build that still calls it during
   the deploy skew window, and it gives back what that build deleted. Words that

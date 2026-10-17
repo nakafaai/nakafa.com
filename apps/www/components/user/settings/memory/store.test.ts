@@ -279,6 +279,19 @@ describe("memory page store", () => {
     expect(store.getState().deleted).toBeNull();
   });
 
+  it("leaves the first saves the learner deleted out of the hidden list, and lets each go once its answer came", () => {
+    const store = createMemoryStore();
+    const typed = memoryId("pending-typed");
+
+    expect(store.getState().hidden).toEqual([]);
+    store.getState().hide(typed);
+    store.getState().hide(second.id);
+    expect(store.getState().hidden).toEqual([typed, second.id]);
+
+    store.getState().unhide(typed);
+    expect(store.getState().hidden).toEqual([second.id]);
+  });
+
   it("takes back the count of a Delete all the server refused, so a first save on its way finds the count it started with", () => {
     const store = createMemoryStore();
     const before = store.getState().cleared;
