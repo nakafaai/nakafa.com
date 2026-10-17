@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { FaqAccordion } from "@/components/marketing/about/faq/accordion.client";
+import { MarketingSection } from "@/components/marketing/shared/section";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 
 /**
@@ -11,13 +12,13 @@ export function Faq({ faqs }: { faqs: readonly MarketingFaqItem[] }) {
   const t = useTranslations("Landing");
 
   return (
-    <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="faq">
+    <MarketingSection id="faq">
       <div className="mx-auto grid w-full max-w-2xl gap-10">
         <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
           {t("faq-title")}
         </h2>
         <FaqAccordion faqs={faqs} openFirst />
       </div>
-    </section>
+    </MarketingSection>
   );
 }
