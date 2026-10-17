@@ -306,6 +306,13 @@ thresholds in the catalog were set from what that command printed on 12 October
   the first upload starts. A retry applies the same limit to the stored
   message, because a turn stored before this change could hold up to 80 MiB of
   documents.
+- **Runtime.** A call through the gateway runs in the default runtime, or in the
+  Node action `nina/documents` for a turn whose message carries a PDF or a text
+  file. ADR 0008 (section "Runtime Of The Answer Run") holds the measurements, dated
+  17 October 2026. Both runtimes run the same program and send the same requests.
+  The probe of 17 October 2026 answered through a canned completion, so it proves
+  the closure and the memory of a call, not the gateway's answer in the default
+  runtime. A real turn verifies that.
 - **Availability.** `GatewayLive` reads the service token once per action. A
   deployment that cannot use the gateway, such as a free, local, or self-hosted
   one, fails with `GatewayConfigurationError` before any request.

@@ -8514,6 +8514,19 @@ export declare const api: {
         | "notAllowed"
         | "taken"
       >;
+      getProfileByUsername: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          _id: Id<"users">;
+          bio?: string;
+          image?: string;
+          mascot: string;
+          name: string;
+          username: string;
+        } | null
+      >;
     };
   };
 };
@@ -11234,6 +11247,14 @@ export declare const internal: {
           summary: { text: string; throughOrder: number } | null;
           uncovered: Array<{ order: number; retryOf?: number }>;
         }
+      >;
+    };
+    documents: {
+      run: FunctionReference<
+        "action",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
       >;
     };
     focus: {

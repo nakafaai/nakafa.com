@@ -17,22 +17,21 @@ import {
   POST_TEXT_MAX_LENGTH,
   readPostText,
 } from "@repo/backend/confect/posts/schema";
-import { mayReadPosts } from "@repo/backend/confect/posts/visibility";
 import { Duration, Effect, Layer, Result, Struct } from "effect";
 
-/** A post the viewer may read. Another learner's post is not found, so it is never revealed. */
-const readReadablePost = Effect.fn("posts.mutations.readReadablePost")(
-  function* (postId: Id<"posts">, viewerId: Id<"users">) {
-    const post = yield* findPost(postId);
-    if (post === null || !mayReadPosts(viewerId, post.authorId)) {
-      return yield* new PostWriteError({
-        code: "POST_NOT_FOUND",
-        message: "Post not found.",
-      });
-    }
-    return post;
+/** The post with this id. A missing post gives the same answer to every learner. */
+const readPost = Effect.fn("posts.mutations.readPost")(function* (
+  postId: Id<"posts">
+) {
+  const post = yield* findPost(postId);
+  if (post === null) {
+    return yield* new PostWriteError({
+      code: "POST_NOT_FOUND",
+      message: "Post not found.",
+    });
   }
-);
+  return post;
+});
 
 const create = FunctionImpl.make(
   databaseSchema,
@@ -69,7 +68,7 @@ const remove = FunctionImpl.make(
     const user = yield* requireAuth();
     const post = yield* findPost(args.postId);
     // Only the author deletes a post. Another learner gets the answer for a
-    // missing post, so a post they may not read is never revealed.
+    // missing post, so the same answer covers a post that is not theirs.
     if (post === null || post.authorId !== user.appUser._id) {
       return yield* new PostWriteError({
         code: "POST_NOT_FOUND",
@@ -94,7 +93,7 @@ const like = FunctionImpl.make(
   Effect.fn("posts.mutations.like")(function* (args) {
     const writer = yield* DatabaseWriter;
     const user = yield* requireAuth();
-    const post = yield* readReadablePost(args.postId, user.appUser._id);
+    const post = yield* readPost(args.postId);
     const existing = yield* findLike(post._id, user.appUser._id);
     if (existing !== null) {
       return null;
@@ -120,7 +119,7 @@ const unlike = FunctionImpl.make(
   "unlike",
   Effect.fn("posts.mutations.unlike")(function* (args) {
     const user = yield* requireAuth();
-    const post = yield* readReadablePost(args.postId, user.appUser._id);
+    const post = yield* readPost(args.postId);
     const existing = yield* findLike(post._id, user.appUser._id);
     if (existing === null) {
       return null;
