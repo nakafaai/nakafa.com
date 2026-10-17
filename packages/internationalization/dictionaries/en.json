@@ -223,16 +223,14 @@
     "post": "Post",
     "empty": "You have not posted anything yet.",
     "delete-title": "Delete post?",
-    "delete-description": "The post and its likes are deleted for good.",
-    "load-more": "Load more"
+    "delete-description": "The post and its likes are deleted for good."
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
     "comment": "Comment",
     "no-comments": "No comments yet.",
     "delete-title": "Delete comment?",
-    "delete-description": "The comment is deleted for good.",
-    "load-more": "Load more"
+    "delete-description": "The comment is deleted for good."
   },
   "Subject": {
     "elementary-school": "Elementary School",

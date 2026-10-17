@@ -122,8 +122,3 @@ export function FeedEmpty({ children }: { children: ReactNode }) {
     </p>
   );
 }
-
-/** The control under the rows that brings the next page. */
-export function FeedMore({ children }: { children: ReactNode }) {
-  return <div className="flex justify-center py-6">{children}</div>;
-}

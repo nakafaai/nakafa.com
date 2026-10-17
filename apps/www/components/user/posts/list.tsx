@@ -4,15 +4,15 @@ import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
-import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { useAgeClock } from "@/components/user/clock.client";
-import { FeedEmpty, FeedMore, FeedNotice } from "@/components/user/feed";
+import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { PostComposer } from "@/components/user/posts/composer";
 import {
   failedView,
@@ -113,7 +113,8 @@ function PostsFeed({
 
 /**
  * What the owner's Posts tab shows, as its view decides it: the composer above,
- * the failure with its Retry, the rows, the empty sentence, and the next page.
+ * the failure with its Retry, the rows, the empty sentence, and the next page,
+ * which loads as the end of the rows comes near.
  * The rows stay inert until the list takes a change.
  */
 function PostsPanel({
@@ -141,13 +142,7 @@ function PostsPanel({
           <PostRow key={post._id} post={post} />
         ))}
         {view.empty && <FeedEmpty>{t("empty")}</FeedEmpty>}
-        {onLoadMore && (
-          <FeedMore>
-            <Button onClick={onLoadMore} variant="outline">
-              {t("load-more")}
-            </Button>
-          </FeedMore>
-        )}
+        {onLoadMore && <Intersection onIntersect={onLoadMore} />}
       </div>
     </div>
   );

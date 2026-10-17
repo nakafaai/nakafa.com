@@ -211,31 +211,28 @@ for (const viewport of VIEWPORTS) {
             });
             await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
 
-            // The second page fails: the rows stay, the failure shows, and there
-            // is no load-more action until the list asks again.
+            // Scrolling to the end asks for the second page, which fails: the
+            // rows stay, the failure shows, and nothing asks again by itself.
             changes.failQuery(POSTS_LIST_QUERY, unreadable);
-            await page
-              .getByRole("button", { name: app.Posts["load-more"] })
-              .click();
+            await rowsOf(page).last().scrollIntoViewIfNeeded();
             await expect(
               page.getByText(app.Common["load-error-retry"])
             ).toBeVisible({
               timeout: readinessTimeoutMilliseconds,
             });
             await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
-            await expect(
-              page.getByRole("button", { name: app.Posts["load-more"] })
-            ).toHaveCount(0);
 
-            // Retry asks for the list again, which holds its first page and offers more.
+            // Retry asks for the list again, and the end of the rows brings the
+            // second page.
             changes.recoverQuery();
             await page.getByRole("button", { name: app.Common.retry }).click();
             await expect(
-              page.getByRole("button", { name: app.Posts["load-more"] })
-            ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-            await expect(
               page.getByText(app.Common["load-error-retry"])
-            ).toHaveCount(0);
+            ).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
+            await rowsOf(page).last().scrollIntoViewIfNeeded();
+            await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE + 1, {
+              timeout: readinessTimeoutMilliseconds,
+            });
           });
         })
       );

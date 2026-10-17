@@ -223,16 +223,14 @@
     "post": "Posten",
     "empty": "Du hast noch nichts gepostet.",
     "delete-title": "Beitrag löschen?",
-    "delete-description": "Der Beitrag und seine Likes werden endgültig gelöscht.",
-    "load-more": "Mehr laden"
+    "delete-description": "Der Beitrag und seine Likes werden endgültig gelöscht."
   },
   "Comments": {
     "add-comment-placeholder": "Kommentar hinzufügen...",
     "comment": "Kommentieren",
     "no-comments": "Noch keine Kommentare.",
     "delete-title": "Kommentar löschen?",
-    "delete-description": "Der Kommentar wird endgültig gelöscht.",
-    "load-more": "Mehr laden"
+    "delete-description": "Der Kommentar wird endgültig gelöscht."
   },
   "Subject": {
     "elementary-school": "Grundschule",

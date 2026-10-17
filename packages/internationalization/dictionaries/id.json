@@ -223,16 +223,14 @@
     "post": "Kirim",
     "empty": "Kamu belum membuat postingan.",
     "delete-title": "Hapus postingan?",
-    "delete-description": "Postingan dan suka-sukanya dihapus permanen.",
-    "load-more": "Muat lebih banyak"
+    "delete-description": "Postingan dan suka-sukanya dihapus permanen."
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",
     "comment": "Komentar",
     "no-comments": "Belum ada komentar.",
     "delete-title": "Hapus komentar?",
-    "delete-description": "Komentar ini dihapus permanen.",
-    "load-more": "Muat lebih banyak"
+    "delete-description": "Komentar ini dihapus permanen."
   },
   "Subject": {
     "elementary-school": "SD",

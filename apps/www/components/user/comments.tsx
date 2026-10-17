@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -50,7 +51,6 @@ import {
   FeedEmpty,
   FeedEnd,
   FeedHeader,
-  FeedMore,
   FeedName,
   FeedNotice,
   FeedRow,
@@ -116,14 +116,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
         />
       ))}
       {PaginatedQueryResult.isCanLoadMore(pagination) && (
-        <FeedMore>
-          <Button
-            onClick={() => pagination.loadMore(PAGE_SIZE)}
-            variant="outline"
-          >
-            {t("load-more")}
-          </Button>
-        </FeedMore>
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       )}
     </div>
   );
