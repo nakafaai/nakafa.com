@@ -2,6 +2,7 @@ import { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { openNinaLearningSession } from "@repo/backend/confect/nina/contract/pack";
+import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -26,7 +27,7 @@ export const args = {
     kind: "message",
     prompt: { text: "Explain a limit." },
     page: { locale: "en", slug: "home" },
-  },
+  } satisfies typeof NinaInput.Type,
 };
 
 /** A signed-in learner with credits, and nothing asked yet. */
