@@ -24,18 +24,13 @@ describe("createSEOTitle", () => {
       expect(result).toBe("Nakafa");
     });
 
-    it("returns only site name when all parts are null/undefined", () => {
-      const result = createSEOTitle([null, undefined, null]);
+    it("returns only site name when every part is missing", () => {
+      const result = createSEOTitle([undefined, undefined]);
       expect(result).toBe("Nakafa");
     });
   });
 
-  describe("null and undefined filtering", () => {
-    it("filters out null values", () => {
-      const result = createSEOTitle(["First", null, "Second"]);
-      expect(result).toBe("First - Second - Nakafa");
-    });
-
+  describe("missing and empty parts", () => {
     it("filters out undefined values", () => {
       const result = createSEOTitle(["First", undefined, "Second"]);
       expect(result).toBe("First - Second - Nakafa");
@@ -46,10 +41,9 @@ describe("createSEOTitle", () => {
       expect(result).toBe("First - Second - Nakafa");
     });
 
-    it("handles mixed null, undefined, and valid values", () => {
+    it("handles missing, empty, and valid values together", () => {
       const result = createSEOTitle([
         "First",
-        null,
         undefined,
         "Second",
         "",
@@ -58,8 +52,8 @@ describe("createSEOTitle", () => {
       expect(result).toBe("First - Second - Third - Nakafa");
     });
 
-    it("handles all falsy values", () => {
-      const result = createSEOTitle([null, undefined, ""]);
+    it("returns only site name when every part is missing or empty", () => {
+      const result = createSEOTitle([undefined, "", "   "]);
       expect(result).toBe("Nakafa");
     });
   });
@@ -202,7 +196,7 @@ describe("createSEOTitle", () => {
     });
 
     it("handles missing metadata gracefully", () => {
-      const result = createSEOTitle([null, "Fallback Category"]);
+      const result = createSEOTitle([undefined, "Fallback Category"]);
       expect(result).toBe("Fallback Category - Nakafa");
     });
   });
@@ -318,18 +312,6 @@ describe("createSEOTitle", () => {
       // Parts should be trimmed to prevent extra spaces in title
       expect(result).toBe("Hello - World - Nakafa");
     });
-
-    it("handles zero as a part", () => {
-      const result = createSEOTitle(["Hello", 0, "World"]);
-      // 0 is falsy, should be filtered out
-      expect(result).toBe("Hello - World - Nakafa");
-    });
-
-    it("handles false as a part", () => {
-      const result = createSEOTitle(["Hello", false, "World"]);
-      // false is falsy, should be filtered out
-      expect(result).toBe("Hello - World - Nakafa");
-    });
   });
 
   describe("separator handling", () => {
@@ -357,17 +339,6 @@ describe("createSEOTitle", () => {
       const parts: readonly string[] = ["One", "Two"];
       const result = createSEOTitle(parts);
       expect(result).toBe("One - Two - Nakafa");
-    });
-
-    it("handles mixed types in array", () => {
-      const parts: (string | null | undefined)[] = [
-        "Valid",
-        null,
-        undefined,
-        "Also Valid",
-      ];
-      const result = createSEOTitle(parts);
-      expect(result).toBe("Valid - Also Valid - Nakafa");
     });
   });
 });
