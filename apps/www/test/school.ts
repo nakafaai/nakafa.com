@@ -206,18 +206,18 @@ export function visit(
 }
 
 /** The answer of the refusal for one request, with the log messages it wrote. */
-export function answerOf(
+export const answerOf = Effect.fn("test.school.answerOf")(function* (
   address: string,
   init?: { headers?: HeadersInit; method?: string }
 ) {
-  return readSchoolRefusal(visit(address, init)).pipe(
+  return yield* readSchoolRefusal(visit(address, init)).pipe(
     Effect.provide(Logger.layer([]))
   );
-}
+});
 
 /** The answer of the refusal for one request, with the causes that it logged. */
-export function answerAndCauses(address: string, headers: HeadersInit) {
-  return Effect.gen(function* () {
+export const answerAndCauses = Effect.fn("test.school.answerAndCauses")(
+  function* (address: string, headers: HeadersInit) {
     const causes = MutableList.make<Cause.Cause<unknown>>();
     const answer = yield* readSchoolRefusal(visit(address, { headers })).pipe(
       Effect.provide(
@@ -234,5 +234,5 @@ export function answerAndCauses(address: string, headers: HeadersInit) {
       count: logged.length,
       text: Arr.join(Arr.map(logged, Cause.pretty), "\n"),
     };
-  });
-}
+  }
+);
