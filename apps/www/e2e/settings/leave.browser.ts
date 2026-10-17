@@ -1,4 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Clock, Effect } from "effect";
 import { rewriteList } from "@/e2e/support/answer";
 import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
@@ -177,7 +180,7 @@ test.describe("Memory deleted while its first save is on its way", () => {
   });
 });
 
-const NOTICE = "That text is too long for one memory";
+const NOTICE = en.Toast["memory-too-long"].title;
 
 /**
  * A paste that fits goes in. A paste that does not fit is refused as a whole
