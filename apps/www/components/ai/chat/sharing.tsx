@@ -20,7 +20,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
@@ -100,9 +100,11 @@ function ChatSharingError({
  * link can be copied once the token arrives. A token the server fails to read
  * shows the link error, and Retry mounts this dialog afresh to ask again.
  *
- * The failure is returned, never thrown. Convex keeps a failed answer after its
- * last subscriber leaves, and a render that throws that answer never subscribes
- * again, so a retry that threw it would find the same error.
+ * The server declares the failures of the token read, and the dialog returns
+ * each one rather than throwing it. Convex keeps a failed answer until the
+ * server answers again after its last subscriber leaves, and a render that
+ * throws that answer never subscribes again, so a retry that threw it would
+ * find the same error.
  */
 function ChatSharingDialog({
   chat,
@@ -124,6 +126,17 @@ function ChatSharingDialog({
     chats.queries.getShareToken,
     isPrivate ? "skip" : { chatId: chat._id }
   );
+  // A declared failure shows inline and never reaches the error boundary, which
+  // would have reported it, so the dialog reports each answer that carries one.
+  useEffect(() => {
+    if (QueryResult.isFailure(tokenResult)) {
+      Effect.runFork(
+        reportClientException(tokenResult.error, {
+          source: "components/ai/chat/sharing",
+        })
+      );
+    }
+  }, [tokenResult]);
   if (QueryResult.isFailure(tokenResult)) {
     return (
       <ChatSharingError
