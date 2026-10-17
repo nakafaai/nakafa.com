@@ -7,9 +7,9 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { readProfile } from "@/lib/profile/server";
 
 /**
- * Keeps a profile out of search results: it shows a learner's name, bio, and
- * comments, and many learners are minors. The page stays reachable by link, so
- * robots.txt does not block it and a crawler can read this rule.
+ * Keeps a profile out of search results: it shows a learner's name, bio, posts,
+ * comments, and chats, and many learners are minors. The page stays reachable by
+ * link, so robots.txt does not block it and a crawler can read this rule.
  */
 export const metadata: Metadata = {
   robots: {
@@ -45,12 +45,10 @@ async function UserLayoutContent(
 
   return (
     <ErrorBoundary fallback={null}>
-      <main className="relative mx-auto min-h-[calc(100svh-4rem)] max-w-3xl px-6 py-10 sm:py-20 lg:min-h-svh">
-        <div className="flex flex-col gap-6">
-          <UserHeader initialAccount={account} username={username} />
-          <UserTabs username={username} />
-          {children}
-        </div>
+      <main className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-3xl flex-col px-6 pt-6 pb-24 lg:min-h-svh lg:pt-12">
+        <UserHeader initialAccount={account} username={username} />
+        <UserTabs username={username} />
+        {children}
       </main>
     </ErrorBoundary>
   );

@@ -34,6 +34,8 @@
   },
   "Common": {
     "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
+    "load-error-retry": "Data ini belum dapat dimuat.",
+    "retry": "Coba lagi",
     "copyright": "Hak Cipta © {year} {companyName}. Seluruh hak dilindungi.",
     "made-with-love": "Dibuat dengan cinta",
     "version": "Versi {version}",
@@ -128,6 +130,7 @@
     "open-in-gemini": "Buka di Gemini",
     "see-on-youtube": "Lihat di YouTube",
     "comments": "Komentar",
+    "posts": "Postingan",
     "anonymous": "Anonim",
     "delete": "Hapus",
     "edit": "Ubah",
@@ -137,10 +140,9 @@
     "like": "Suka",
     "dislike": "Tidak suka",
     "former-official": "Resmi Lama",
-    "see": "Lihat",
     "chat": "Obrolan",
     "no-chats": "Belum ada obrolan.",
-    "chats-by-link": "Obrolan yang dibagikan dibuka lewat tautannya",
+    "chats-by-link": "Obrolan yang dibagikan dibuka lewat tautannya.",
     "try-out": "Try out",
     "try-out-short": "Tryout",
     "search-country-placeholder": "Cari negara...",
@@ -216,11 +218,19 @@
       "school-curriculum": "Kurikulum"
     }
   },
+  "Posts": {
+    "placeholder": "Apa yang baru?",
+    "post": "Kirim",
+    "empty": "Kamu belum membuat postingan.",
+    "delete-title": "Hapus postingan?",
+    "delete-description": "Postingan dan suka-sukanya dihapus permanen."
+  },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",
     "comment": "Komentar",
     "no-comments": "Belum ada komentar.",
-    "load-more": "Muat lebih banyak"
+    "delete-title": "Hapus komentar?",
+    "delete-description": "Komentar ini dihapus permanen."
   },
   "Subject": {
     "elementary-school": "SD",

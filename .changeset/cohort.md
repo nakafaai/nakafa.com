@@ -15,7 +15,7 @@
 "@repo/utilities": patch
 ---
 
-Run on Effect 4.0.5 with the Effect compiler plugin 0.53.2. The UUID helper calls
+Run on Effect 4.0.5 with the Effect compiler plugin 0.53.3. The UUID helper calls
 Effect's `randomUUIDv4()`, which Effect 4.0.3 made a function. The backend reads
 local runtime inode numbers as exact bigints. No change to what the application
 does.
