@@ -1,9 +1,5 @@
 "use client";
 
-import {
-  MessageMultiple01Icon,
-  MessageMultiple02Icon,
-} from "@hugeicons/core-free-icons";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
@@ -18,12 +14,14 @@ export function UserTabs({ username }: { username: string }) {
 
   const tabs = [
     {
-      icon: MessageMultiple01Icon,
-      label: t("comments"),
+      label: t("posts"),
       href: profileHref(username),
     },
     {
-      icon: MessageMultiple02Icon,
+      label: t("comments"),
+      href: `${profileHref(username)}/comments`,
+    },
+    {
       label: t("chat"),
       href: `${profileHref(username)}/chat`,
     },

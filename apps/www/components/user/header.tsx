@@ -11,9 +11,9 @@ import { type CurrentUser, useViewer } from "@/lib/identity/client";
 
 /**
  * The header of the owner's own profile: the name and the address on the left,
- * the picture on the right, the bio under them, and the button that edits the
- * profile. A profile opens only for its owner, so the header shows nothing
- * about anyone else.
+ * the picture on the right, the bio under them, and the full-width button that
+ * edits the profile. A profile opens only for its owner, so the header shows
+ * nothing about anyone else.
  */
 export function UserHeader({
   initialAccount,
@@ -53,18 +53,17 @@ export function UserHeader({
           {appUser.bio}
         </p>
       ) : null}
-      <div>
-        <Button
-          nativeButton={false}
-          render={
-            <NavigationLink href="/user/settings">
-              <HugeIcons icon={PencilEdit02Icon} />
-              {t("edit-profile")}
-            </NavigationLink>
-          }
-          variant="outline"
-        />
-      </div>
+      <Button
+        className="w-full"
+        nativeButton={false}
+        render={
+          <NavigationLink href="/user/settings">
+            <HugeIcons icon={PencilEdit02Icon} />
+            {t("edit-profile")}
+          </NavigationLink>
+        }
+        variant="outline"
+      />
     </section>
   );
 }

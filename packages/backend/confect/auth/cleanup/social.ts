@@ -113,7 +113,7 @@ const cleanupPostLikes = Effect.fn("auth.cleanup.cleanupPostLikes")(
           .table("posts")
           .replace(post._id, {
             ...Struct.omit(post, ["_id", "_creationTime"]),
-            likeCount: Math.max(post.likeCount - 1, 0),
+            likeCount: post.likeCount - 1,
           })
           .pipe(Effect.orDie);
       }

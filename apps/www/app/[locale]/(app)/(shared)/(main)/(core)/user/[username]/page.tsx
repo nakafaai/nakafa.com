@@ -1,8 +1,13 @@
-import { String as Str } from "effect";
+import { HttpClient } from "@confect/js";
+import posts from "@repo/backend/confect/_generated/refs/posts";
+import { Clock, Effect, String as Str } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { Suspense, use } from "react";
-import { UserComments } from "@/components/user/comments";
+import { Suspense } from "react";
+import { UserPosts } from "@/components/user/posts/list";
+import { POST_PAGE_SIZE } from "@/components/user/posts/state";
+import { getToken } from "@/lib/auth/server";
+import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { profileHref } from "@/lib/profile/href";
 import { readProfile } from "@/lib/profile/server";
@@ -30,16 +35,37 @@ export default function Page({
 }: PageProps<"/[locale]/user/[username]">) {
   return (
     <Suspense fallback={null}>
-      <UserCommentsRoute params={params} />
+      <UserPostsRoute params={params} />
     </Suspense>
   );
 }
 
-/** Resolves the profile inside the nearest streaming boundary. */
-function UserCommentsRoute({
+/**
+ * Resolves the profile and its first page of posts inside the streaming
+ * boundary, with the moment the server read them. The browser shows that page
+ * until its own live list answers, so the two show the same posts.
+ */
+async function UserPostsRoute({
   params,
 }: Pick<PageProps<"/[locale]/user/[username]">, "params">) {
-  const { username } = use(params);
-  const { account } = use(readProfile(username));
-  return <UserComments userId={account.appUser._id} />;
+  const { username } = await params;
+  const [{ account }, token] = await Promise.all([
+    readProfile(username),
+    getToken(),
+  ]);
+  const { first, now } = await Effect.runPromise(
+    HttpClient.HttpClient.pipe(
+      Effect.flatMap((client) =>
+        client.query(posts.queries.list, {
+          authorId: account.appUser._id,
+          paginationOpts: { cursor: null, numItems: POST_PAGE_SIZE },
+        })
+      ),
+      Effect.flatMap((first) =>
+        Effect.map(Clock.currentTimeMillis, (now) => ({ first, now }))
+      ),
+      Effect.provide(httpLayer(token ? { auth: token } : {}))
+    )
+  );
+  return <UserPosts account={account} first={first} now={now} />;
 }

@@ -107,6 +107,7 @@
     "open-in-gemini": "In Gemini öffnen",
     "see-on-youtube": "Auf YouTube ansehen",
     "comments": "Kommentare",
+    "posts": "Beiträge",
     "anonymous": "Anonym",
     "delete": "Löschen",
     "edit": "Bearbeiten",
@@ -198,6 +199,14 @@
     "kind": {
       "school-curriculum": "Lehrplan"
     }
+  },
+  "Posts": {
+    "placeholder": "Was gibt es Neues?",
+    "post": "Posten",
+    "empty": "Du hast noch nichts gepostet.",
+    "delete-title": "Beitrag löschen?",
+    "delete-description": "Der Beitrag und seine Likes werden endgültig gelöscht.",
+    "load-more": "Mehr laden"
   },
   "Comments": {
     "add-comment-placeholder": "Kommentar hinzufügen...",

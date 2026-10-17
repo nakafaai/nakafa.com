@@ -24,6 +24,7 @@ test("a learner opens their own profile at the username address, which keeps the
     Effect.gen(function* () {
       const { learner } = yield* openChatPage(page, origin);
       const profile = new RegExp(`/en/@${learner.username}$`);
+      const comments = new RegExp(`/en/@${learner.username}/comments$`);
       const chat = new RegExp(`/en/@${learner.username}/chat$`);
       yield* Effect.promise(() => page.goto(appRoutes.settings));
 
@@ -56,7 +57,7 @@ test("a learner opens their own profile at the username address, which keeps the
           timeout: readinessTimeoutMilliseconds,
         });
         await page.getByRole("tab", { name: app.Common.comments }).click();
-        await expect(page).toHaveURL(profile, {
+        await expect(page).toHaveURL(comments, {
           timeout: readinessTimeoutMilliseconds,
         });
       });
