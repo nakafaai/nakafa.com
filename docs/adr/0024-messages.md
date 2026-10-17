@@ -170,7 +170,7 @@ fixtures that write the same kind of tool output:
 A real turn adds one stream document a step, a few hundred bytes. The 24,000-character
 outputs of the long shape are an assumption of the measurement, not a measured
 maximum of what a tool stores. An earlier spike probe, which wrapped the database
-calls of one seal, counted 9,398 bytes for the short shape and 2,016,855 for the
+calls of one seal, counted 9,388 bytes for the short shape and 2,016,855 for the
 long one. The counter in the code replaces it.
 
 The budget. A sweep runs every five minutes (`SWEEP_INTERVAL`, `deadline.ts`), so
