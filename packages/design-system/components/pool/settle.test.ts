@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { REST_FRAMES } from "@repo/design-system/components/pool/physics";
+import {
+  isResting,
+  move,
+  press,
+  REST_FRAMES,
+} from "@repo/design-system/components/pool/physics";
 import {
   finishSettle,
   isSettled,
@@ -10,6 +15,7 @@ import {
 import {
   ballAt,
   boxWith,
+  CHECKED_POOLS,
   poolWorld,
 } from "@repo/design-system/components/pool/test.fixture";
 import { Array as Arr } from "effect";
@@ -47,4 +53,25 @@ describe("the settle of a pile", () => {
     expect(isSettled(parts)).toBe(true);
     expect(finishSettle(parts)).toEqual(settle(start));
   });
+
+  it("ignores a pointer and a held ball, so the pile does not depend on where the pointer was", () => {
+    const pressed = press(boxWith([ballAt({ x: 300, y: 300 })]), {
+      x: 300,
+      y: 300,
+    });
+    const pointed = move(pressed, { x: 330, y: 300 });
+    expect(settle(pointed)).toEqual(
+      settle(boxWith([ballAt({ x: 300, y: 300 })]))
+    );
+  });
+});
+
+describe("the pile when it first shows", () => {
+  for (const pool of CHECKED_POOLS) {
+    it(`shows a ${pool.width} by ${pool.height} pool with every ball inside the box, and at rest`, () => {
+      const shown = settle(poolWorld(pool.width, pool.height));
+      expect(Arr.every(shown.balls, (ball) => ball.inside)).toBe(true);
+      expect(isResting(shown)).toBe(true);
+    });
+  }
 });

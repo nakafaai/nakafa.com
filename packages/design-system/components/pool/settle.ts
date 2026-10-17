@@ -5,6 +5,7 @@ import {
   type World,
   WorldSchema,
 } from "@repo/design-system/components/pool/physics";
+import { idlePointer } from "@repo/design-system/components/pool/pointer";
 import { Array as Arr, Schema } from "effect";
 
 /**
@@ -31,9 +32,16 @@ const SettlingSchema = Schema.Struct({
 /** A settle that runs in parts. */
 export type Settling = typeof SettlingSchema.Type;
 
-/** A settle that has not run a frame yet. */
+/**
+ * A settle that has not run a frame yet. A settle has no pointer and no held ball, so
+ * the pile it leaves does not depend on where the pointer was.
+ */
 export function startSettle(world: World): Settling {
-  return { calm: 0, frames: 0, world };
+  return {
+    calm: 0,
+    frames: 0,
+    world: { ...world, held: null, pointer: idlePointer() },
+  };
 }
 
 /**

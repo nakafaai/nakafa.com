@@ -26,10 +26,9 @@ import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
 
 /**
- * Reduced motion settles a box again once it has been still this many
- * milliseconds. The search and the chat sidebar wait 500 milliseconds before they
- * act on a change too. A pause in the middle of a drag that is this long settles
- * the pile again.
+ * A box settles its pile again once it has been still this many milliseconds. The
+ * search and the chat sidebar wait 500 milliseconds before they act on a change
+ * too. A pause in the middle of a drag that is this long settles the pile again.
  */
 const RESIZE_QUIET = 500;
 /** The first hop comes this many milliseconds after the pool starts. */
@@ -50,10 +49,12 @@ function draw() {
 
 /**
  * Drives the pool of one box: its world, its frame loop, its pointer, its hops,
- * and its size. It writes to the elements that React drew, and never draws with
- * React itself. Each time the box takes a new count of animals, `onAnimals` hears
- * it, and React draws the members of that count; `sync` then gives each member its
- * size and place.
+ * and its size. A pile settles in parts between animation frames before the box
+ * shows it, so the pool never shows a fall. After that the frame loop runs only for
+ * the pointer and for the hops. It writes to the elements that React drew, and never
+ * draws with React itself. Each time the box takes a new count of animals,
+ * `onAnimals` hears it, and React draws the members of that count; `sync` then gives
+ * each member its size and place.
  */
 export function createDrive(
   element: HTMLDivElement,
@@ -95,27 +96,25 @@ export function createDrive(
 
   /**
    * Makes the world match a box of this size: its walls, and its animals. The
-   * animals that stay keep their place. With reduced motion the pile settles in
-   * parts, and the old pile stays until the new one has come to rest.
+   * animals that stay keep their place. The new pile settles in parts between
+   * animation frames, and the old pile stays on screen until the new one has come to
+   * rest.
    */
   function update(width: number, height: number) {
     const cover = coverOf(width, height);
-    const next = fit(resize(world, width, height), poolStarts(cover));
-    if (!calm) {
-      world = next;
-      measured = true;
-      onAnimals(cover.animals);
-      sync();
-      wake();
-      return;
-    }
     settlingAnimals = cover.animals;
-    settling = startSettle(next);
+    settling = startSettle(
+      fit(resize(world, width, height), poolStarts(cover))
+    );
+    sleep();
     cancelFrame(settleChunk);
     frame.render(settleChunk);
   }
 
-  /** Runs one part of a reduced-motion settle, and shows the pile once it has come to rest. */
+  /**
+   * Runs one part of a settle, and shows the pile once it has come to rest. The
+   * shown pile then stands still until the pointer or a hop moves it.
+   */
   function settleChunk() {
     settling = settleFor(settling, SETTLE_CHUNK_FRAMES);
     if (!isSettled(settling)) {
@@ -126,11 +125,17 @@ export function createDrive(
     measured = true;
     onAnimals(settlingAnimals);
     sync();
+    // The pool's CSS fades the box in when this is set, and shows it at once under
+    // reduced motion.
+    element.dataset.shown = "true";
   }
 
-  /** Starts the frame loop, unless it runs already, the box is out of view, or the person asked for less motion. */
+  /**
+   * Starts the frame loop, unless it runs already, a settle is under way, the box is
+   * out of view, or the person asked for less motion.
+   */
   function wake() {
-    if (!measured || running || !visible || calm) {
+    if (!measured || running || !visible || calm || !isSettled(settling)) {
       return;
     }
     rested = 0;
@@ -190,7 +195,12 @@ export function createDrive(
 
   function hopNow() {
     hopAt(HOP_WAIT + draw() * HOP_SPREAD);
-    if (!(measured && visible) || running || world.held !== null) {
+    if (
+      !(measured && visible) ||
+      running ||
+      world.held !== null ||
+      !isSettled(settling)
+    ) {
       return;
     }
     const index = Effect.runSync(
@@ -210,21 +220,26 @@ export function createDrive(
     }
   }
 
-  const resizing = new ResizeObserver(() => {
+  /**
+   * Settles the pile for the box's size now, unless the box has no size, as when a
+   * narrow screen hides it.
+   */
+  function settleBox() {
     const width = element.clientWidth;
     const height = element.clientHeight;
     if (width === 0 || height === 0) {
       return;
     }
-    if (!(measured && calm)) {
-      update(width, height);
+    update(width, height);
+  }
+
+  const resizing = new ResizeObserver(() => {
+    if (!measured) {
+      settleBox();
       return;
     }
     window.clearTimeout(quiet);
-    quiet = window.setTimeout(
-      () => update(element.clientWidth, element.clientHeight),
-      RESIZE_QUIET
-    );
+    quiet = window.setTimeout(settleBox, RESIZE_QUIET);
   });
   resizing.observe(element);
 

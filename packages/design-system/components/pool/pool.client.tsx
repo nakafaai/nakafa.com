@@ -45,12 +45,13 @@ function Member({ member }: { member: PoolMember }) {
 }
 
 /**
- * The animal pool of the sign-in page: animals and things that fall, pile up,
- * and move away from the pointer. The animals cover about half of the box, so the
- * box sets how many of them React draws. Each frame writes only where each member
- * is and how it leans, straight onto its element. The loop sleeps while the pile
- * rests, and wakes for the pointer, a resize, a hop, or a view of the box. With
- * reduced motion there is no loop and no pointer.
+ * The animal pool of the sign-in page: animals and things that pile up, and move
+ * away from the pointer. The animals cover about half of the box, so the box sets
+ * how many of them React draws. The pile settles before the box shows it, and the
+ * box then fades in. Each frame writes only where each member is and how it leans,
+ * straight onto its element. The loop sleeps while the pile rests, and wakes for the
+ * pointer, a resize, a hop, or a view of the box. With reduced motion there is no
+ * loop, no pointer, and no fade.
  */
 export function Pool() {
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
@@ -89,7 +90,7 @@ export function Pool() {
   return (
     <div
       aria-hidden
-      className="absolute inset-0 overflow-hidden"
+      className="absolute inset-0 overflow-hidden opacity-0 transition-opacity data-[shown=true]:opacity-100 motion-reduce:transition-none"
       data-slot="pool"
       ref={place}
     >
