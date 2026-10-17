@@ -841,7 +841,7 @@ nobody tries them again without a new reason.
   edge and not on both (`globals.css`), on every route: the gutter belongs to
   the page, and a gutter that changed with the route would move the page when
   the learner navigates. Where a browser's scrollbars take room, which includes
-  the headless Chromium of CI (it paints no scrollbar and still reserves the
+  the headless Chromium that CI ran (it paints no scrollbar and still reserves the
   gutter), two gutters left a 320px page cards too narrow for the German
   placeholder of the search and for the end date of a situation in a row, and
   the 320px browser tests failed in CI until the page kept one gutter. A phone

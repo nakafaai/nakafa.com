@@ -31,8 +31,7 @@ owns the authored contract generation; Convex owns `convex/_generated`, includin
 the static client API. `pnpm --filter @repo/backend codegen` also writes the
 per-domain refs under `confect/_generated/refs`, and the web app imports only
 those. `pnpm acceptance:prepare` and `pnpm acceptance:build`
-refresh these bindings against the owned local backend. CI verifies the result
-before building consumers. Use the repository's pnpm CLI
+refresh these bindings against the owned local backend. Use the repository's pnpm CLI
 and never print secrets. Never copy `CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`,
 or generated Convex URL values out of this checkout. The root guide owns the
 deployment policy; the configured production build deploys Convex before
@@ -90,8 +89,7 @@ Start authentication and app-user resolution from
 
 The root development command runs Confect generation and Convex watching
 through Turborepo. Setup, deployment, typechecking, tests, and production
-acceptance generate contracts before consuming them. CI rejects generated
-output that differs from the committed source.
+acceptance generate contracts before consuming them.
 
 A one-off migration, backfill, repair, or maintenance function is finished only
 when dev and prod data are verified and the function and its tests are deleted.
