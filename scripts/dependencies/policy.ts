@@ -210,6 +210,19 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     ],
     dependency: "prosemirror-collab",
   },
+  // The model and the transform that the server folds stored steps with (ADR
+  // 0028). They are the versions that `@tiptap/pm` 3.31.4 resolves in
+  // `pnpm-lock.yaml`, so the server applies a step with the code the editors run.
+  {
+    approved: "1.25.12",
+    declarationPaths: ["packages/backend/package.json"],
+    dependency: "prosemirror-model",
+  },
+  {
+    approved: "1.12.2",
+    declarationPaths: ["packages/backend/package.json"],
+    dependency: "prosemirror-transform",
+  },
   ...Arr.map(TIPTAP_PACKAGES, (dependency) => ({
     approved: TIPTAP_COHORT_VERSION,
     declarationPaths:

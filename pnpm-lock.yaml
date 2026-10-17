@@ -590,6 +590,12 @@ importers:
       parse-domain:
         specifier: ^8.4.0
         version: 8.4.0
+      prosemirror-model:
+        specifier: 1.25.12
+        version: 1.25.12
+      prosemirror-transform:
+        specifier: 1.12.2
+        version: 1.12.2
       react:
         specifier: 19.3.0
         version: 19.3.0

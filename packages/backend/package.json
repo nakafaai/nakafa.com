@@ -60,6 +60,8 @@
     "dedent": "^1.7.2",
     "effect": "catalog:",
     "parse-domain": "^8.4.0",
+    "prosemirror-model": "1.25.12",
+    "prosemirror-transform": "1.12.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-email": "catalog:",
