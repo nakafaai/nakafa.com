@@ -46,16 +46,16 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyDrag")(function* (
   );
   yield* Effect.promise(() => live(changes));
 
-  // The list grows with each memory the learner writes, so memories are written
-  // until the page is taller than the window.
+  // The memory that the panel opens is written first. The empty state is taller
+  // than one row, so more memories are written after it until the list makes the
+  // page taller than the window; the open panel only narrows the list, which
+  // keeps the page at least that tall.
+  yield* writeWorst(page, changes, { text: WORDS });
   let written = 0;
   while (!(yield* Effect.promise(() => pageOverflows(page)))) {
     written += 1;
     yield* writeWorst(page, changes, { text: `Memory ${written}` });
   }
-  // The memory that the panel opens is written last, so it is the newest row at
-  // the top of the list.
-  yield* writeWorst(page, changes, { text: WORDS });
   yield* Effect.promise(async () => {
     await memoryRow(page, WORDS).getByText(WORDS).click();
     await opened(page, WORDS);

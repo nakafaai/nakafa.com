@@ -17,9 +17,9 @@ const deletionCard = (page: Page) =>
 const actionsOf = (page: Page) =>
   deletionCard(page).locator('[data-slot="card-footer"] button');
 
-/** The delete action, the button named Delete account. */
+/** The delete action, the footer's button named Delete account. */
 const deleteAction = (page: Page) =>
-  actionsOf(page).getByRole("button", {
+  deletionCard(page).locator('[data-slot="card-footer"]').getByRole("button", {
     exact: true,
     name: app.Auth["delete-account"],
   });

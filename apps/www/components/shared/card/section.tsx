@@ -16,7 +16,7 @@ const cardSectionVariants = cva("has-data-[slot=card-footer]:pb-0", {
 });
 
 const cardSectionFooterVariants = cva(
-  "@container/card-footer min-h-15 flex-wrap items-center justify-end gap-x-4 gap-y-3 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
+  "@container/card-footer min-h-15 shrink-0 flex-wrap items-center justify-end gap-x-4 gap-y-3 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
   {
     variants: {
       bottomSheet: {
@@ -83,10 +83,11 @@ export function CardSection({
  * Holds a section's sentence and actions in one row, the sentence on the left
  * and the actions on the right. When the two cannot share the row, the actions
  * move to the next line, end-aligned. The bar is as tall with a line of text
- * alone as with a button, so every card ends the same way. The footer is a size
- * container, so its actions can adapt to a narrow row. `bottomSheet` ends a
- * phone's bottom sheet with square bottom corners and the safe area below its
- * actions.
+ * alone as with a button, so every card ends the same way. It never shrinks: in
+ * a card with a height limit the body scrolls and the actions stay whole. The
+ * footer is a size container, so its actions can adapt to a narrow row.
+ * `bottomSheet` ends a phone's bottom sheet with square bottom corners and the
+ * safe area below its actions.
  */
 export function CardSectionFooter({
   bottomSheet,
