@@ -24,18 +24,19 @@ import {
 } from "@repo/design-system/components/pool/settle";
 import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
+import { flushSync } from "react-dom";
 
 /**
  * A box settles its pile again once it has been still this many milliseconds. The
  * search and the chat sidebar wait 500 milliseconds before they act on a change
  * too. A pause in the middle of a drag that is this long settles the pile again.
  */
-const RESIZE_QUIET = 500;
+export const RESIZE_QUIET = 500;
 /** The first hop comes this many milliseconds after the pool starts. */
-const FIRST_HOP = 3600;
+export const FIRST_HOP = 3600;
 /** Each hop waits this many milliseconds, plus up to the spread. */
-const HOP_WAIT = 2800;
-const HOP_SPREAD = 2600;
+export const HOP_WAIT = 2800;
+export const HOP_SPREAD = 2600;
 /**
  * The frames of a reduced-motion settle that run in each animation frame. A settle
  * runs in these parts, so that no single frame blocks the page for long.
@@ -123,7 +124,9 @@ export function createDrive(
     }
     world = finishSettle(settling);
     measured = true;
-    onAnimals(settlingAnimals);
+    // React commits a state update later, so the new members are drawn first: placing
+    // the new pile on the old members would show a mix of both piles for one frame.
+    flushSync(() => onAnimals(settlingAnimals));
     sync();
     // The pool's CSS fades the box in when this is set, and shows it at once under
     // reduced motion.
@@ -175,6 +178,11 @@ export function createDrive(
   }
 
   function onDown(event: PointerEvent) {
+    // A pile that is still settling is not the one on screen yet, and a ball taken
+    // now would be lost when the settle ends, so the press is ignored.
+    if (!isSettled(settling)) {
+      return;
+    }
     const holding = world.held !== null;
     world = press(world, locate(event));
     if (!holding && world.held !== null) {
@@ -188,19 +196,15 @@ export function createDrive(
     wake();
   }
 
-  /** Waits, then throws one member up if the box is in view, the pile is still, and nothing is held. */
+  /** Waits, then throws one member up if the box is in view, its loop sleeps, and its pile has settled. */
   function hopAt(wait: number) {
     hopping = window.setTimeout(hopNow, wait);
   }
 
   function hopNow() {
     hopAt(HOP_WAIT + draw() * HOP_SPREAD);
-    if (
-      !(measured && visible) ||
-      running ||
-      world.held !== null ||
-      !isSettled(settling)
-    ) {
+    // A held ball keeps the loop awake, so a hop never finds a ball held with the loop asleep.
+    if (!(measured && visible) || running || !isSettled(settling)) {
       return;
     }
     const index = Effect.runSync(

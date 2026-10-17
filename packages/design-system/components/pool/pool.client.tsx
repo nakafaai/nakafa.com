@@ -50,8 +50,9 @@ function Member({ member }: { member: PoolMember }) {
  * how many of them React draws. The pile settles before the box shows it, and the
  * box then fades in. Each frame writes only where each member is and how it leans,
  * straight onto its element. The loop sleeps while the pile rests, and wakes for the
- * pointer, a resize, a hop, or a view of the box. With reduced motion there is no
- * loop, no pointer, and no fade.
+ * pointer, a hop, or a view of the box. A resize settles a new pile first, and the
+ * loop stays asleep until it is done. With reduced motion there is no loop, no
+ * pointer, and no fade.
  */
 export function Pool() {
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
