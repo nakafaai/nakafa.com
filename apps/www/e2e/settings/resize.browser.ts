@@ -8,7 +8,8 @@ const WORDS = "Studies after dinner";
 const POINTER = 760;
 
 // The page has a scrollbar that takes room, as the pages of Windows and Linux
-// do, and the window is low enough that the page needs one.
+// do. On this page the root scroller shows one only when the page overflows the
+// window, so verifyDrag asks for it.
 test.use({
   launchOptions: {
     args: ["--disable-features=OverlayScrollbar"],
@@ -27,6 +28,12 @@ const verifyDrag = Effect.fn("NakafaE2E.verifyDrag")(function* (
   baseURL: string
 ) {
   yield* openedPanel(page, baseURL, WORDS);
+  // At this height the Memory page showed no scrollbar of its own, because its
+  // footer now holds one row and the card is shorter. The scrollbar is set here,
+  // so the drag still runs beside one, which is what this test proves.
+  yield* Effect.promise(() =>
+    page.addStyleTag({ content: "html { overflow-y: scroll; }" })
+  );
   const scrollbar = yield* Effect.promise(() =>
     page.evaluate(
       () => window.innerWidth - document.documentElement.clientWidth
