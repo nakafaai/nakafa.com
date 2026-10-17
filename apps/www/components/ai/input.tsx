@@ -204,7 +204,6 @@ export function NinaSuggestions({
     <div className="flex flex-col gap-2 pb-4">
       {Arr.map(suggestions, (suggestion) => (
         <Button
-          aria-label={suggestion.prompt}
           className="group h-auto min-h-9 w-full justify-start whitespace-normal py-1.5 font-normal shadow-none"
           disabled={disabled}
           key={suggestion.label}
