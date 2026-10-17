@@ -8,7 +8,8 @@ and the root of the URL tree are live, and the rest of the URL tree is planned.
 The eu data cell is planned, and it is created when the first school in the
 European Union signs (K5). The routes of the old School are deleted from the web
 app (#1051, K11) and get no redirect. Amended on 14 October 2026: ADR 0027
-decides what an email may hold (Data cells).
+decides what an email may hold (Data cells). Amended on 17 October 2026: the
+proxy decides the 404 of a school page before it streams (Hosts).
 
 ## Context
 
@@ -31,13 +32,38 @@ finds the right data.
   organisations under a registrable domain of its own (see Data cells). One host
   serves every unit of the organisation.
 - A school host has no locale prefix. The language comes from the `NEXT_LOCALE`
-  cookie. Sign-in sets the cookie, and changing the language in the account menu
-  sets it again.
+  cookie, then from Accept-Language, then from the default locale, as next-intl
+  resolves it. Sign-in sets the cookie, and changing the language in the account
+  menu sets it again.
 - One sign-in covers `nakafa.com` and every school host of the `us` cell,
   through the cross-subdomain cookies that ADR 0011 describes.
-- The proxy reads only the host and the cookie. The map from host to school is
-  configuration, so a request never reads the database to find its school. Its
-  target is under 1 ms, measured at the edge.
+- The proxy reads the host, the cookie, and Accept-Language. The map from host to
+  school is configuration, so a request never reads the database to find its
+  school. A request that reads nothing keeps the target of under 1 ms, measured at
+  the edge. A page request on a school host makes the one Convex query of the next
+  bullets, and only to decide the page's status.
+- A school page's status is decided by the proxy before the page streams, in
+  `lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
+  the proxy (`lib/routing/public/profile.ts`). A visitor with no session is refused
+  when the school does not exist: `tenancy.profile.get` answers `TenantNotFound`. A
+  signed-in viewer is refused when `tenancy.viewer.get` answers `NotMember`, which
+  it gives for a school that does not exist and for a school the viewer does not
+  belong to alike, or `AccessDenied`. The refused page answers with the app's
+  not-found page and a 404 status, through a rewrite to the not-found route, in
+  the locale that the school page negotiates. The school layout cannot answer 404
+  itself: Next sends the static shell of the route with status 200 first, and a
+  `notFound()` call after that keeps the 200 (the installed docs, `loading.md`,
+  "Status codes").
+- A page request is a GET or HEAD document that is not a Flight request. A client
+  navigation and a prefetch both carry `rsc: 1`, so they pay no read, and the
+  layout still refuses a membership that has ended. A read that fails goes on to
+  the school tree, and its full cause is logged, so an outage never answers with
+  not found.
+- A school page request costs two or three Convex query calls. The proxy makes one:
+  `tenancy.profile.get`, which reads one school row by its slug, or
+  `tenancy.viewer.get`, which reads a few indexed rows and at most `UNIT_LIMIT`
+  units. The layout reads its profile and, for a signed-in viewer, its viewer
+  again, because it still renders the name and the role.
 - School pages are private and not indexed (ADR 0011).
 - An address never holds personal data, so a student's name never enters a URL.
 - A school member or an account under 18 has no public profile (K15). Each school
@@ -184,6 +210,9 @@ A move runs in this order:
 - A school that moves cells needs an export, an import, a dated cutover, and a
   deletion of the source rows. Nothing moves on its own, and its members claim
   their Persons again with accounts of the target cell.
+- A school page that the proxy cannot read is answered as it was before the proxy
+  decided it: a missing school shows the not-found page with a 200 status, because
+  the layout cannot change the status once the shell is sent.
 - The eu cell adds a second place where data lives, a second `www` project, and a
   second budget. Its cost starts with the first European school that signs.
 - Data location is limited by the providers. Resend stores account data in the
@@ -197,8 +226,8 @@ A move runs in this order:
 - Personal data in an address, such as a student's name. An address is shared and
   logged, so it never carries personal data.
 - Creating the eu cell now. K5 defers it until the first European school signs.
-- Reading the database in the proxy to find a school. The proxy reads only the
-  host and the cookie.
+- Reading the database in the proxy to find a school. The host names the school,
+  so the proxy reads the database only to decide the status of a page (Hosts).
 - A session cookie of its own name for each cell under `.nakafa.com`. The
   browser sends every `.nakafa.com` cookie to every host under it, so the names
   keep the sessions apart but still send one cell's session to the other cell's
@@ -224,6 +253,7 @@ A move runs in this order:
 | Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
 | Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Proven on `localhost` alone. Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so sign-in sharing across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |
 | School URL tree, root (`/`, Beranda) | Live |
+| The proxy decides the 404 of a school page (Hosts) | Built on #1072, not yet live |
 | School URL tree, every other address | Planned |
 | `us` data cell | Live |
 | `eu` data cell, with its own `www` project and Convex deployment | Planned, created by K5 |
