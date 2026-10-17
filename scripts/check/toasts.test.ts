@@ -7,6 +7,7 @@ const COMPONENT = "apps/www/components/example/toast.tsx";
 const HELPER = "packages/design-system/lib/toast/notify.ts";
 const TOASTER = "packages/design-system/components/ui/sonner.tsx";
 const TEST_MODULE = "apps/www/components/example/toast.test.ts";
+const TEST_HELPER = "packages/design-system/components/pool/test.fixture.ts";
 const SONNER_RULE =
   "import { toast } from @repo/design-system/lib/toast/notify instead of sonner, which only the Toaster and that helper import";
 
@@ -77,5 +78,16 @@ toast.error({ title: "action-error.title", description: "action-error.descriptio
         []
       );
     })
+  );
+
+  it.effect(
+    "does not judge a test.*.ts helper, which sets up the tests like a test module",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`import { toast } from "sonner";`, TEST_HELPER),
+          []
+        );
+      })
   );
 });
