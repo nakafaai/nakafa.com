@@ -34,10 +34,11 @@ const formSchema = Schema.toStandardSchemaV1(
   })
 );
 /**
- * Render the validated user-name settings form. A save does not wait: the
- * optimistic update shows the new name at once, so Save has nothing left to
- * save, and a refused save returns the stored name, so Save offers the typed
- * name again beside the error toast.
+ * Render the validated user-name settings form. A save does not wait: the new
+ * name is the form's saved one at once and the optimistic update shows it
+ * everywhere, so Save has nothing left to save. A refused save brings the
+ * stored name back as the saved one and keeps the typed name in the field, so
+ * Save offers it again beside the error toast.
  */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -49,7 +50,10 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: ({ value }) => {
+    onSubmit: ({ value, formApi }) => {
+      const stored = formApi.options.defaultValues?.name ?? value.name;
+      // The new name is the saved one at once, so Save has nothing to save.
+      formApi.reset(value);
       Effect.runPromise(
         Effect.tryPromise(() =>
           updateUserName({ name: Str.trim(value.name) })
@@ -63,6 +67,10 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
+                    // The stored name comes back as the saved one, and the
+                    // typed name stays in the field, so Save offers it again.
+                    formApi.reset({ name: stored });
+                    formApi.setFieldValue("name", value.name);
                     toast.error({
                       description: "action-error.description",
                       title: "action-error.title",
@@ -110,14 +118,14 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
         </CardContent>
         <CardSectionFooter>
           <form.Subscribe
-            selector={(state) => [state.values.name, state.isValid] as const}
+            selector={(state) => [state.isDirty, state.isValid] as const}
           >
-            {([name, isValid]) => (
+            {([isDirty, isValid]) => (
               <>
                 <CardSectionHint>{t("name-footer")}</CardSectionHint>
                 <CardSectionActions>
                   <Button
-                    disabled={!isValid || Str.trim(name) === user.authUser.name}
+                    disabled={!(isDirty && isValid)}
                     size="sm"
                     type="submit"
                   >

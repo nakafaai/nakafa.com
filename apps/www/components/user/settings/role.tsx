@@ -41,9 +41,10 @@ const formSchema = Schema.toStandardSchemaV1(
 );
 /**
  * Renders the settings form that validates and saves the user's app role. A
- * save does not wait: the optimistic update shows the new role at once, so
- * Save has nothing left to save, and a refused save returns the stored role,
- * so Save offers the chosen role again beside the error toast.
+ * save does not wait: the new role is the form's saved one at once and the
+ * optimistic update shows it everywhere, so Save has nothing left to save. A
+ * refused save brings the stored role back as the saved one and keeps the
+ * chosen role, so Save offers it again beside the error toast.
  */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -70,7 +71,10 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: ({ value }) => {
+    onSubmit: ({ value, formApi }) => {
+      const stored = formApi.options.defaultValues?.role;
+      // The new role is the saved one at once, so Save has nothing to save.
+      formApi.reset(value);
       Effect.runPromise(
         Schema.decodeUnknownEffect(roleSchema)(value.role).pipe(
           Effect.flatMap((role) =>
@@ -85,6 +89,10 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
+                    // The stored role comes back as the saved one, and the
+                    // chosen role stays, so Save offers it again.
+                    formApi.reset({ role: stored });
+                    formApi.setFieldValue("role", value.role);
                     toast.error({
                       description: "action-error.description",
                       title: "action-error.title",
@@ -145,16 +153,12 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
           </form.Field>
         </CardContent>
         <CardSectionFooter>
-          <form.Subscribe selector={(state) => state.values.role}>
-            {(role) => (
+          <form.Subscribe selector={(state) => state.isDirty}>
+            {(isDirty) => (
               <>
                 <CardSectionHint>{t("role-footer")}</CardSectionHint>
                 <CardSectionActions>
-                  <Button
-                    disabled={role === undefined || role === initialRole}
-                    size="sm"
-                    type="submit"
-                  >
+                  <Button disabled={!isDirty} size="sm" type="submit">
                     {t("save")}
                   </Button>
                 </CardSectionActions>

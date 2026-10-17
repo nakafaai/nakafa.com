@@ -111,9 +111,10 @@ export function UserSettingsCurriculum({
 }
 /**
  * Owns the curriculum preference form state after Convex data is ready. A save
- * does not wait: the optimistic update shows the new preference at once, so
- * Save has nothing left to save, and a refused save returns the stored one, so
- * Save offers the choice again beside the error toast.
+ * does not wait: the new choice is the form's saved one at once and the
+ * optimistic update shows it everywhere, so Save has nothing left to save. A
+ * refused save brings the stored choice back as the saved one and keeps the new
+ * choice, so Save offers it again beside the error toast.
  */
 function UserSettingsCurriculumForm({
   initialProgramKey,
@@ -141,10 +142,35 @@ function UserSettingsCurriculumForm({
     validators: {
       onChange: formSchema,
     },
-    onSubmit: ({ value }) => {
+    onSubmit: ({ value, formApi }) => {
       if (!isActiveLocale(locale)) {
         return;
       }
+      const stored =
+        formApi.options.defaultValues?.preferredCurriculumProgramKey;
+      // The new choice is the saved one at once, so Save has nothing to save.
+      formApi.reset(value);
+      const reportFailure = (error: CurriculumPreferenceMutationError) =>
+        reportClientException(error, {
+          source: "user-settings-curriculum",
+        }).pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              // The stored choice comes back as the saved one, and the new
+              // choice stays, so Save offers it again.
+              formApi.reset({ preferredCurriculumProgramKey: stored ?? "" });
+              formApi.setFieldValue(
+                "preferredCurriculumProgramKey",
+                value.preferredCurriculumProgramKey
+              );
+              toast.error({
+                description: "action-error.description",
+                title: "action-error.title",
+              });
+            })
+          )
+        );
+      const skipInvalid = () => Effect.void;
       Effect.runPromise(
         submitCurriculumPreference({
           locale,
@@ -153,20 +179,8 @@ function UserSettingsCurriculumForm({
           value,
         }).pipe(
           Effect.catchTags({
-            CurriculumPreferenceMutationError: (error) =>
-              reportClientException(error, {
-                source: "user-settings-curriculum",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error({
-                      description: "action-error.description",
-                      title: "action-error.title",
-                    });
-                  })
-                )
-              ),
-            CurriculumPreferenceValidationError: () => Effect.void,
+            CurriculumPreferenceMutationError: reportFailure,
+            CurriculumPreferenceValidationError: skipInvalid,
           })
         )
       );
@@ -224,19 +238,14 @@ function UserSettingsCurriculumForm({
         </CardContent>
         <CardSectionFooter>
           <form.Subscribe
-            selector={(state) =>
-              [
-                state.values.preferredCurriculumProgramKey,
-                state.isValid,
-              ] as const
-            }
+            selector={(state) => [state.isDirty, state.isValid] as const}
           >
-            {([programKey, isValid]) => (
+            {([isDirty, isValid]) => (
               <>
                 <CardSectionHint>{t("curriculum-footer")}</CardSectionHint>
                 <CardSectionActions>
                   <Button
-                    disabled={!isValid || programKey === initialProgramKey}
+                    disabled={!(isDirty && isValid)}
                     size="sm"
                     type="submit"
                   >

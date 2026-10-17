@@ -28,7 +28,13 @@ test("a learner renames themselves in settings: the new name shows before the se
 
       yield* Effect.promise(async () => {
         await page.goto(appRoutes.settings);
-        // The form shows the stored name once the page is signed in.
+        // A reload opens a connection that signs in a moment after the page
+        // shows, and a change sent before that is refused, so the steps wait.
+        await expect
+          .poll(() => changes.signedIn, {
+            timeout: readinessTimeoutMilliseconds,
+          })
+          .toBe(true);
         await expect(field).toHaveValue(LEARNER_NAME, {
           timeout: readinessTimeoutMilliseconds,
         });
