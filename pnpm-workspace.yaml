@@ -87,6 +87,10 @@ overrides:
   "@effect/ai-openrouter": "4.0.2"
   "@effect/platform-node": "4.0.2"
   "@effect/platform-node-shared": "4.0.2"
+  # posthog-node 5.56 imports @opentelemetry/api, an optional peer that is not
+  # installed. Convex cannot bundle the PostHog component with it, so the
+  # component keeps the release it bundles with: 5.55.1, as on main.
+  "@posthog/convex@2.1.5>posthog-node": "5.55.1"
   "@react-email/ui@6.11.3>next": "16.4.2"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
   "auth@1.6.33>@babel/core": "7.29.7"

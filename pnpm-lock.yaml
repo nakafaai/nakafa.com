@@ -115,6 +115,7 @@ overrides:
   '@effect/ai-openrouter': 4.0.2
   '@effect/platform-node': 4.0.2
   '@effect/platform-node-shared': 4.0.2
+  '@posthog/convex@2.1.5>posthog-node': 5.55.1
   '@react-email/ui@6.11.3>next': 16.4.2
   '@vercel/routing-utils@6.6.0>path-to-regexp': 6.3.0
   auth@1.6.33>@babel/core: 7.29.7
@@ -6556,15 +6557,12 @@ packages:
       react:
         optional: true
 
-  posthog-node@5.56.1:
-    resolution: {integrity: sha512-TlEeE5OHNbsIje/htLwvmxN45/X0FcMSsln15cHdQqybUGj9Ebd0yyziWec0Fi5YQwMHYCfJPcNdgol/s1lIFA==}
+  posthog-node@5.55.1:
+    resolution: {integrity: sha512-YLnILmFn1zxGYBuCaBldqMjTq9OZBNNbHIr2F0am3iLfU+6ZTvuRmUbTmys//+LnCA6DfZNGgqTb4goFa93u+Q==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
-      '@opentelemetry/api': ^1.2.0
       rxjs: ^7.0.0
     peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
       rxjs:
         optional: true
 
@@ -9493,9 +9491,8 @@ snapshots:
     dependencies:
       '@posthog/core': 1.57.1
       convex: 1.47.0(react@19.3.1)
-      posthog-node: 5.56.1
+      posthog-node: 5.55.1
     transitivePeerDependencies:
-      - '@opentelemetry/api'
       - rxjs
 
   '@posthog/core@1.57.1':
@@ -13119,7 +13116,7 @@ snapshots:
     transitivePeerDependencies:
       - preact-render-to-string
 
-  posthog-node@5.56.1:
+  posthog-node@5.55.1:
     dependencies:
       '@posthog/core': 1.59.1
 
