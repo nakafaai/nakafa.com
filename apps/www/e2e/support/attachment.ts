@@ -160,13 +160,8 @@ export function chipsOfComposer(scope: Locator) {
   return chipsIn(scope.locator('[data-slot="input-group"]'));
 }
 
-/**
- * The computed color of a border that is not drawn. A chip in the composer
- * sits inside the border of the composer and draws none of its own, except
- * when its upload failed, so a test reads this color from the chip's top
- * border.
- */
-export const NO_BORDER = "rgba(0, 0, 0, 0)";
+/** The computed color of a background or a border that is not drawn, as the browser reports it. */
+export const TRANSPARENT = "rgba(0, 0, 0, 0)";
 
 /** Writes the prompt and waits until the page lets it be sent. */
 export const write = Effect.fn("NakafaE2E.write")(function* (
