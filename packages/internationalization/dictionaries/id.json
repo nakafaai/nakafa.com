@@ -1,4 +1,31 @@
 {
+  "School": {
+    "account-settings": "Pengaturan akun",
+    "back-to-learning": "Pindah ke Nakafa belajar",
+    "for-you": "Untukmu",
+    "home": "Beranda",
+    "language": "Bahasa",
+    "language-error": "Kamu belum bisa mengubah bahasa.",
+    "nina-memory": "Memori Nina",
+    "role": {
+      "admin": "Admin",
+      "auditor": "Auditor",
+      "counselor": "Konselor",
+      "deputy": "Wakil kepala sekolah",
+      "guardian": "Wali",
+      "integration": "Integrasi",
+      "owner": "Pemilik",
+      "principal": "Kepala sekolah",
+      "proctor": "Pengawas",
+      "staff": "Staf",
+      "student": "Siswa",
+      "teacher": "Guru"
+    },
+    "sign-in-title": "Masuk ke {school}",
+    "signed-in": "Kamu sudah masuk.",
+    "signed-in-as": "Kamu masuk sebagai {role}.",
+    "try-again": "Coba lagi"
+  },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
     "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",
@@ -407,6 +434,7 @@
     "sign-in-title": "Masuk ke Nakafa",
     "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",
+    "logout-error": "Kamu belum bisa keluar. Periksa koneksimu, lalu coba lagi.",
     "login": "Masuk",
     "login-cta-title": "Lanjutkan belajarmu",
     "login-cta-description": "Masuk untuk menyimpan progres materi dan try out.",

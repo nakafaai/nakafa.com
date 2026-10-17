@@ -1,4 +1,31 @@
 {
+  "School": {
+    "account-settings": "Account settings",
+    "back-to-learning": "Back to Nakafa learning",
+    "for-you": "For you",
+    "home": "Home",
+    "language": "Language",
+    "language-error": "We could not change the language.",
+    "nina-memory": "Nina memory",
+    "role": {
+      "admin": "Admin",
+      "auditor": "Auditor",
+      "counselor": "Counselor",
+      "deputy": "Deputy principal",
+      "guardian": "Guardian",
+      "integration": "Integration",
+      "owner": "Owner",
+      "principal": "Principal",
+      "proctor": "Proctor",
+      "staff": "Staff",
+      "student": "Student",
+      "teacher": "Teacher"
+    },
+    "sign-in-title": "Sign in to {school}",
+    "signed-in": "You are signed in.",
+    "signed-in-as": "You are signed in as {role}.",
+    "try-again": "Try again"
+  },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
     "description": "Study math, science, computer science, AI, and exam prep on Nakafa. Free lessons from K-12 to university with practice questions and explanations.",
@@ -407,6 +434,7 @@
     "sign-in-title": "Sign in to Nakafa",
     "sign-in-description": "So your progress stays saved.",
     "logout": "Logout",
+    "logout-error": "We could not sign you out. Check your connection, then try again.",
     "login": "Login",
     "login-cta-title": "Continue learning",
     "login-cta-description": "Log in to save progress in materials and tryouts.",

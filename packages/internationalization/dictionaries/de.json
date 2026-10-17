@@ -1,4 +1,31 @@
 {
+  "School": {
+    "account-settings": "Kontoeinstellungen",
+    "back-to-learning": "Zu Nakafa Lernen wechseln",
+    "for-you": "Für dich",
+    "home": "Startseite",
+    "language": "Sprache",
+    "language-error": "Die Sprache konnte nicht geändert werden.",
+    "nina-memory": "Nina-Gedächtnis",
+    "role": {
+      "admin": "Admin",
+      "auditor": "Prüfer:in",
+      "counselor": "Beratungslehrkraft",
+      "deputy": "Stellvertretende Schulleitung",
+      "guardian": "Erziehungsberechtigte Person",
+      "integration": "Integration",
+      "owner": "Inhaber:in",
+      "principal": "Schulleitung",
+      "proctor": "Aufsicht",
+      "staff": "Personal",
+      "student": "Schüler:in",
+      "teacher": "Lehrkraft"
+    },
+    "sign-in-title": "Anmelden bei {school}",
+    "signed-in": "Du bist angemeldet.",
+    "signed-in-as": "Du bist als {role} angemeldet.",
+    "try-again": "Erneut versuchen"
+  },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
     "description": "Lerne auf Nakafa Mathematik, Naturwissenschaften, Informatik, KI und bereite dich auf Prüfungen vor. Kostenlose Lerninhalte von der Grundschule bis zur Universität mit Übungsaufgaben und Erklärungen.",
@@ -407,6 +434,7 @@
     "sign-in-title": "Bei Nakafa anmelden",
     "sign-in-description": "Damit dein Fortschritt gespeichert bleibt.",
     "logout": "Abmelden",
+    "logout-error": "Abmelden ist fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
     "login": "Anmelden",
     "login-cta-title": "Weiterlernen",
     "login-cta-description": "Melde dich an, um deinen Fortschritt in Lerninhalten und Probetests zu speichern.",

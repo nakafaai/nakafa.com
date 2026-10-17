@@ -18,10 +18,18 @@ import { requestGoogleSignIn } from "@/lib/auth/social.client";
 
 interface Props {
   redirect?: string;
+  /**
+   * A path on the host the visitor signs in from, such as the root of a school.
+   * Google returns the visitor to that host, in place of a Nakafa destination.
+   */
+  returnPath?: string;
 }
 
-/** Renders the Google sign-in button with one sanitized internal callback URL. */
-export function AuthGoogle({ redirect }: Props) {
+/**
+ * Renders the Google sign-in button. It returns the visitor to one sanitized
+ * internal destination, or to `returnPath` on the host the button is on.
+ */
+export function AuthGoogle({ redirect, returnPath }: Props) {
   const locale = useLocale();
   const t = useTranslations("Auth");
   const tToast = useTranslations("Toast");
@@ -39,7 +47,10 @@ export function AuthGoogle({ redirect }: Props) {
     startTransition(async () => {
       const intentSource =
         redirect ?? redirectQuery ?? authNavigation.readIntentSource();
-      const callbackURL = getPostAuthOnboardingHref(intentSource, locale);
+      const callbackURL =
+        returnPath === undefined
+          ? getPostAuthOnboardingHref(intentSource, locale)
+          : new URL(returnPath, window.location.href).href;
       const errorCallbackURL = getPostAuthProviderErrorHref(
         intentSource,
         locale
