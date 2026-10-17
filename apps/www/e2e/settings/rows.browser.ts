@@ -2,7 +2,13 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { live, saved } from "@/e2e/support/changes";
 import { writeMemory } from "@/e2e/support/list";
-import { EMPTY, memoryRow, openMemoryPage } from "@/e2e/support/memory";
+import {
+  confirmDelete,
+  deleteQuestion,
+  EMPTY,
+  memoryRow,
+  openMemoryPage,
+} from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -45,9 +51,9 @@ const verifyShortList = Effect.fn("NakafaE2E.verifyShortList")(function* (
       .getByRole("button", { name: "Delete memory" })
       .focus();
     await page.keyboard.press("Enter");
-    const question = page.getByRole("dialog");
+    const question = deleteQuestion(page);
     await expect(question).toBeVisible();
-    await question.getByRole("button", { exact: true, name: "Delete" }).click();
+    await confirmDelete(page);
     await expect(memoryRow(page, SECOND)).toHaveCount(0);
     await saved(changes, before);
     expect(await stillMarked()).toBe(true);

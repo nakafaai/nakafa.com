@@ -22,10 +22,29 @@ export const EMPTY = "No memories yet";
 export const NO_RESULT = "No memory found";
 /** What the Memory page says when a change names a memory that is gone. */
 export const MISSING = "This memory no longer exists";
+/** The title of the question that asks before one memory is deleted. */
+const DELETE_TITLE = "Delete this memory?";
+/** The button that confirms the delete which the question asks about. */
+const DELETE_CONFIRM = "Delete memory";
 
 /** One memory on the page, found by its title or its words. */
 export const memoryRow = (page: Page, text: string) =>
   page.locator("main").getByRole("listitem").filter({ hasText: text });
+
+/**
+ * The question asked before one memory is deleted: a dialog on desktop and a
+ * drawer on a phone, where the editor is a dialog too, so it is found by its title.
+ */
+export const deleteQuestion = (page: Page) =>
+  page.getByRole("dialog").filter({
+    has: page.getByRole("heading", { exact: true, name: DELETE_TITLE }),
+  });
+
+/** Confirms the delete that the question asks about. */
+export const confirmDelete = (page: Page) =>
+  deleteQuestion(page)
+    .getByRole("button", { exact: true, name: DELETE_CONFIRM })
+    .click();
 
 /** The text of a memory in its editor. The editor's code loads when the learner opens it. */
 export const editorOf = (page: Page) =>

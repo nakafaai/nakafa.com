@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
 import { writeMemory } from "@/e2e/support/list";
 import {
+  confirmDelete,
   EMPTY,
   editorOf,
   MISSING,
@@ -72,10 +73,7 @@ const removesBeforeTheAnswer = (page: Page, changes: Changes) =>
 
       await row.hover();
       await row.getByRole("button", { name: "Delete memory" }).click();
-      await page
-        .getByRole("dialog")
-        .getByRole("button", { exact: true, name: "Delete" })
-        .click();
+      await confirmDelete(page);
     }),
     async () => {
       await expect(memoryRow(page, REWRITTEN)).toHaveCount(0);
@@ -178,10 +176,7 @@ const verifyRowDeleteWithEditor = Effect.fn("NakafaE2E.verifyRowDelete")(
       const remove = row.getByRole("button", { name: "Delete memory" });
       await page.keyboard.type("!");
       await remove.click();
-      await page
-        .getByRole("dialog")
-        .getByRole("button", { exact: true, name: "Delete" })
-        .click();
+      await confirmDelete(page);
       await expect(editorOf(page)).toHaveCount(0);
       await expect(row).toHaveCount(0);
       await saved(changes, before);

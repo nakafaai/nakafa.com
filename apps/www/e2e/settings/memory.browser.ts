@@ -7,6 +7,8 @@ import {
   saved,
 } from "@/e2e/support/changes";
 import {
+  confirmDelete,
+  deleteQuestion,
   EMPTY,
   editorOf,
   memoryRow,
@@ -173,7 +175,7 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     await row.getByText(NAMED).click();
     await opened(page, REWRITTEN);
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
-    const question = page.getByRole("dialog");
+    const question = deleteQuestion(page);
     await expect(question).toBeVisible();
     await question.getByRole("button", { name: "Cancel" }).click();
     await expect(question).toHaveCount(0);
@@ -184,7 +186,7 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     // once, and the server deletes it: it is gone after a reload.
     const before = changes.sent;
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
-    await question.getByRole("button", { exact: true, name: "Delete" }).click();
+    await confirmDelete(page);
     await expect(editor).toHaveCount(0);
     await expect(row).toHaveCount(0);
     await saved(changes, before);

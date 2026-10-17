@@ -6,6 +6,7 @@ import { Clock, Effect } from "effect";
 import { rewriteList } from "@/e2e/support/answer";
 import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
 import {
+  confirmDelete,
   EMPTY,
   editorOf,
   MEMORY_PATH,
@@ -89,10 +90,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
     await titleOf(page).fill("");
     await row.hover();
     await row.getByRole("button", { name: "Delete memory" }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { exact: true, name: "Delete" })
-      .click();
+    await confirmDelete(page);
     await expect(editorOf(page)).toHaveCount(0);
     await expect(row).toHaveCount(0);
     await saved(changes, once);
@@ -147,10 +145,7 @@ const verifyFirstSave = Effect.fn("NakafaE2E.verifyFirstSave")(function* (
     await expect.poll(() => changes.sent).toBeGreaterThan(before);
     await expect(row).toBeVisible();
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { exact: true, name: "Delete" })
-      .click();
+    await confirmDelete(page);
     await expect(editorOf(page)).toHaveCount(0);
 
     changes.release();

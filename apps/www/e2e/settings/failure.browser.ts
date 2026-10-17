@@ -9,6 +9,7 @@ import {
 } from "@/e2e/support/changes";
 import { writeMemory } from "@/e2e/support/list";
 import {
+  confirmDelete,
   EMPTY,
   editorOf,
   MISSING,
@@ -178,10 +179,7 @@ const verifyFailedDelete = Effect.fn("NakafaE2E.verifyFailedDelete")(function* (
     changes.failNext();
     await row.hover();
     await row.getByRole("button", { name: "Delete memory" }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { exact: true, name: "Delete" })
-      .click();
+    await confirmDelete(page);
     await expect(page.getByText(FAILED).first()).toBeVisible();
     await expect(row).toBeVisible();
 
@@ -238,10 +236,7 @@ const verifyFailedEditorDelete = Effect.fn(
     await opened(page, KEPT);
     changes.failNext();
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { exact: true, name: "Delete" })
-      .click();
+    await confirmDelete(page);
     await expect(page.getByText(FAILED).first()).toBeVisible();
     await opened(page, KEPT);
     await expect(row).toBeVisible();
