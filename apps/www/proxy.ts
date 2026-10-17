@@ -165,9 +165,7 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  const profileRefusal = await Effect.runPromise(
-    readProfileRefusal(pathname, request.headers)
-  );
+  const profileRefusal = await Effect.runPromise(readProfileRefusal(pathname));
   if (profileRefusal !== null) {
     return rewriteToNotFoundPage(
       request,

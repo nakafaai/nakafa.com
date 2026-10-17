@@ -5,7 +5,7 @@ import { type StoreApi, useStore } from "zustand";
 import type { AgeClock } from "@/components/user/clock";
 import { useAgeNow } from "@/components/user/clock.client";
 import { createPostDraft, type PostDraft } from "@/components/user/posts/draft";
-import type { CurrentUser } from "@/lib/identity/client";
+import type { PublicProfile } from "@/lib/profile/public";
 
 const DraftContext = createContext<StoreApi<PostDraft> | null>(null);
 
@@ -33,34 +33,34 @@ export function usePostDraft<T>(selector: (draft: PostDraft) => T) {
   return useStore(store, selector);
 }
 
-/** What the list and its rows show: the profile's account, its owner, the clock of the ages, and Retry. */
+/** What the list and its rows show: the profile, whether the viewer owns it, the clock of the ages, and Retry. */
 interface PostsValue {
-  /** The profile's account, whose posts the list shows. */
-  readonly account: CurrentUser;
-  /** The signed-in account when it is the profile's owner, which may write posts. */
-  readonly author: CurrentUser | null;
   /** The clock that the ages of the posts count from. */
   readonly clock: StoreApi<AgeClock>;
+  /** Whether the signed-in viewer owns the profile, which lets them write and delete its posts. */
+  readonly isOwner: boolean;
   /** Asks the server for the list again. */
   readonly onRetry: () => void;
+  /** The profile whose posts the list shows. */
+  readonly profile: PublicProfile;
 }
 
 const PostsContext = createContext<PostsValue | null>(null);
 
 /**
- * Gives the list and its rows what they show. The account, the owner, and Retry
- * are render values, so they travel in this context. The clock is a store that
- * a timer moves, so only the rows that show an age read it on each tick.
+ * Gives the list and its rows what they show. The profile, the owner flag, and
+ * Retry are render values, so they travel in this context. The clock is a store
+ * that a timer moves, so only the rows that show an age read it on each tick.
  */
 export function PostsProvider({
-  account,
-  author,
   children,
   clock,
+  isOwner,
   onRetry,
+  profile,
 }: PostsValue & { children: ReactNode }) {
   return (
-    <PostsContext value={{ account, author, clock, onRetry }}>
+    <PostsContext value={{ clock, isOwner, onRetry, profile }}>
       {children}
     </PostsContext>
   );
