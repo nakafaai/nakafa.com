@@ -65,7 +65,7 @@ function held(tokens: MarkdownToken[] | undefined) {
  * sakit` or `ok. saya` then opens as a list item and loses its first word, and
  * the next save writes `1. Budi sakit` in its place (ueberdosis/tiptap issues
  * 8376 and 8395). The fix merged upstream for 8376 only stops mixed-case titles
- * such as `Dr.` and is not in 3.31.4, the latest release. Here `marked` lexes
+ * such as `Dr.` and is in no release up to 3.32.0. Here `marked` lexes
  * the list, as it lexes a bullet list, and its items are parsed the way a bullet
  * list's items are, so the words of a learner stay the words of a learner.
  * Tiptap offers a `list` token to the bullet list first, so this parser only
