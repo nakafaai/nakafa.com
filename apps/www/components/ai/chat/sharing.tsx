@@ -20,6 +20,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { toast } from "sonner";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
@@ -38,6 +39,9 @@ export function ChatSharing({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  // Each retry gives the dialog a new key, which mounts its query afresh.
+  const [attempt, setAttempt] = useState(0);
+
   return (
     <ErrorBoundary
       fallbackRender={({ resetErrorBoundary }) => (
@@ -48,7 +52,13 @@ export function ChatSharing({
         />
       )}
     >
-      <ChatSharingDialog chat={chat} onOpenChange={onOpenChange} open={open} />
+      <ChatSharingDialog
+        chat={chat}
+        key={attempt}
+        onOpenChange={onOpenChange}
+        onRetry={() => setAttempt((count) => count + 1)}
+        open={open}
+      />
     </ErrorBoundary>
   );
 }
@@ -88,16 +98,22 @@ function ChatSharingError({
  * Owns sharing state and visibility admission independently of title editing.
  * The link carries a token the server draws when the chat is shared, so the
  * link can be copied once the token arrives. A token the server fails to read
- * fails the dialog, which its boundary shows.
+ * shows the link error, and Retry mounts this dialog afresh to ask again.
+ *
+ * The failure is returned, never thrown. Convex keeps a failed answer after its
+ * last subscriber leaves, and a render that throws that answer never subscribes
+ * again, so a retry that threw it would find the same error.
  */
 function ChatSharingDialog({
   chat,
   open,
   onOpenChange,
+  onRetry,
 }: {
   chat: ChatView;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRetry: () => void;
 }) {
   const t = useTranslations("Ai");
   const actionErrorMessage = useTranslations("Common")("action-error");
@@ -109,7 +125,13 @@ function ChatSharingDialog({
     isPrivate ? "skip" : { chatId: chat._id }
   );
   if (QueryResult.isFailure(tokenResult)) {
-    throw tokenResult.error;
+    return (
+      <ChatSharingError
+        onOpenChange={onOpenChange}
+        onRetry={onRetry}
+        open={open}
+      />
+    );
   }
   const token = QueryResult.isSuccess(tokenResult) ? tokenResult.value : null;
   /** Persist the selected chat visibility, unless the chat already has it. */

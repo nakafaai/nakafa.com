@@ -736,7 +736,7 @@
     "create-link": "Buat link",
     "copy-link": "Salin link",
     "link-copied": "Link berhasil disalin!",
-    "share-link-error": "Link belum bisa dimuat",
+    "share-link-error": "Link belum bisa dimuat.",
     "private-chat-error": "Akses ditolak",
     "chat-unavailable": "Chat ini tidak tersedia untukmu.",
     "chat-failed": "Terjadi kesalahan",

@@ -736,7 +736,7 @@
     "create-link": "Link erstellen",
     "copy-link": "Link kopieren",
     "link-copied": "Link kopiert!",
-    "share-link-error": "Der Link konnte nicht geladen werden",
+    "share-link-error": "Der Link konnte nicht geladen werden.",
     "private-chat-error": "Zugriff verweigert",
     "chat-unavailable": "Dieser Chat ist für dich nicht verfügbar.",
     "chat-failed": "Etwas ist schiefgelaufen",
