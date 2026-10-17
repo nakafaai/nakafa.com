@@ -2,7 +2,12 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import {
+  OPENED_CHAT,
+  onThePage,
+  openChatPage,
+  runOnPage,
+} from "@/e2e/support/chat";
 import { LEARNER_TEXT, PASTED } from "@/e2e/support/prose";
 import { MARKDOWN_MARKUP, NINA_SECTION } from "@/e2e/support/selector";
 import { promptWith } from "@/e2e/support/sheet";
@@ -10,8 +15,6 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** What a learner writes first: lines that Markdown would read as markup, then a pasted set of exercises. */
 const WORDS = `${LEARNER_TEXT.angle}\n${LEARNER_TEXT.product}\n${LEARNER_TEXT.choices}\n${PASTED}`;
-/** The address of a chat that a surface moves to once its first prompt is admitted. */
-const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 
 /**
  * What a surface shows while the first message of a learner is on its way:
@@ -58,7 +61,7 @@ test.describe("A learner's first message at 390px", () => {
       Effect.gen(function* () {
         const { changes } = yield* openChatPage(page, origin);
 
-        yield* showsWordsAsWritten(page, page.locator("main main"), changes);
+        yield* showsWordsAsWritten(page, onThePage(page), changes);
       })
     );
   });

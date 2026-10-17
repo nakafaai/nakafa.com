@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/nina/memory.spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { isComposingKey } from "@repo/utilities/composition";
 import { String as Str } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -74,7 +75,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
             onKeyDown={(event) => {
               // Enter leaves the title for the text, as in a document. While
               // the learner composes a character, Enter belongs to the keyboard.
-              if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
                 event.preventDefault();
                 body.current
                   ?.querySelector<HTMLElement>("[contenteditable]")

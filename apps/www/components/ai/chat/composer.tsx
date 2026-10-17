@@ -5,6 +5,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { useChat } from "@/components/ai/chat/context";
+import { readComposerSubmit } from "@/components/ai/chat/submit";
 import { NinaInput } from "@/components/ai/input";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
@@ -33,19 +34,21 @@ export function ChatComposer({
   const isLoading = useChat((state) => state.isLoading);
 
   function handleSubmit(message: PromptInputMessage) {
-    if (isLoading || isPending) {
-      return false;
-    }
-    if (busy) {
-      cancel();
-      return false;
-    }
-    const text = message.text?.trim();
-    if (!text || isUserPending) {
-      return false;
-    }
-    if (viewer === null) {
+    // Every composer sends the text trimmed, as a new chat does.
+    const text = message.text?.trim() ?? "";
+    const action = readComposerSubmit({
+      busy,
+      hasText: text !== "",
+      loading: isLoading,
+      pending: isPending,
+      signedIn: viewer !== null,
+      userPending: isUserPending,
+    });
+    if (action === "sign-in") {
       router.push(authNavigation.readHref());
+      return false;
+    }
+    if (action === "keep") {
       return false;
     }
 
@@ -64,6 +67,7 @@ export function ChatComposer({
       <NinaInput
         {...props}
         disabled={isPending || isLoading || isUserPending}
+        onStop={cancel}
         onSubmit={handleSubmit}
         status={busy ? "streaming" : "ready"}
       />

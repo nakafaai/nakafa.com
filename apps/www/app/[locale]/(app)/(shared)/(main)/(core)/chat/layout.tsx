@@ -1,5 +1,5 @@
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import { ChatBoundary } from "@/components/ai/chat/boundary";
 import { AiChatSidebar } from "@/components/ai/chat/sidebar";
 
 export default function Layout(props: LayoutProps<"/[locale]/chat">) {
@@ -13,7 +13,7 @@ export default function Layout(props: LayoutProps<"/[locale]/chat">) {
         sidebarDesktop={1279}
       >
         <div className="relative min-w-0 flex-1 overflow-hidden">
-          <ErrorBoundary fallback={null}>{children}</ErrorBoundary>
+          <ChatBoundary>{children}</ChatBoundary>
         </div>
 
         <AiChatSidebar />
