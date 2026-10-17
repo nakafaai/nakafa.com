@@ -17,6 +17,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -88,18 +89,20 @@ export function DaltonEvidenceLab({
           beforeTitle={selectedLabels.beforeTitle}
           expression={selectedLabels.expression}
         />
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            {Arr.map(selectedLabels.facts, (fact) => (
+              <VisualFact
+                key={fact.label}
+                label={fact.label}
+                value={<InlineMath math={fact.value} />}
+              />
+            ))}
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          {Arr.map(selectedLabels.facts, (fact) => (
-            <VisualFact
-              key={fact.label}
-              label={fact.label}
-              value={<InlineMath math={fact.value} />}
-            />
-          ))}
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

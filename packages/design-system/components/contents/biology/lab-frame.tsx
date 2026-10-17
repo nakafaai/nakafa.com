@@ -17,6 +17,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -170,20 +171,22 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
             {selectedItem.caption}
           </p>
         )}
+        {readings.length === 0 ? null : (
+          <VisualCardControls>
+            <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+              {Arr.map(readings, (reading) => (
+                <VisualFact
+                  key={reading.key}
+                  label={reading.label}
+                  value={reading.value}
+                />
+              ))}
+            </dl>
+          </VisualCardControls>
+        )}
       </VisualCardBody>
 
       <VisualCardFooter>
-        {readings.length === 0 ? null : (
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            {Arr.map(readings, (reading) => (
-              <VisualFact
-                key={reading.key}
-                label={reading.label}
-                value={reading.value}
-              />
-            ))}
-          </dl>
-        )}
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

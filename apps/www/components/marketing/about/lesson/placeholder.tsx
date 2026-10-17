@@ -37,8 +37,10 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
+  VisualCardGroup,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import {
@@ -90,17 +92,19 @@ export function ProjectilePlaceholder({
           className={threeSceneFrameVariants()}
           render={<section />}
         />
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            {Arr.map(facts, (fact) => (
+              <VisualFactTabular
+                key={fact.id}
+                label={fact.label}
+                value={<InlineMath math={fact.math} />}
+              />
+            ))}
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          {Arr.map(facts, (fact) => (
-            <VisualFactTabular
-              key={fact.id}
-              label={fact.label}
-              value={<InlineMath math={fact.math} />}
-            />
-          ))}
-        </dl>
         <VisualCardFullscreen inert />
       </VisualCardFooter>
     </VisualCard>
@@ -139,10 +143,8 @@ export function CirclePlaceholder({
       <VisualCard>
         <VisualCardBody>
           <div aria-hidden="true" className={threeSceneFrameVariants()} />
-        </VisualCardBody>
-        <CoordinateControls inert>
-          <div className="flex w-full flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-center gap-2 px-6">
+          <VisualCardControls>
+            <VisualCardGroup>
               <Badge variant="outline">
                 <InlineMath math={`\\sin\\theta ${sin}`} />
               </Badge>
@@ -152,11 +154,11 @@ export function CirclePlaceholder({
               <Badge variant="outline">
                 <InlineMath math={`\\tan\\theta ${tan}`} />
               </Badge>
-            </div>
+            </VisualCardGroup>
 
             <Separator />
 
-            <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
+            <div className="mx-auto flex w-full max-w-md flex-col gap-4">
               <div className="flex items-center gap-2">
                 <Badge style={{ color: COLORS.VIOLET }} variant="outline">
                   <InlineMath
@@ -173,8 +175,9 @@ export function CirclePlaceholder({
               </div>
               <div aria-hidden="true" className={stepperVariants()} />
             </div>
-          </div>
-        </CoordinateControls>
+          </VisualCardControls>
+        </VisualCardBody>
+        <CoordinateControls inert />
       </VisualCard>
     </CoordinateProvider>
   );
@@ -225,30 +228,32 @@ export function AtomPlaceholder({
           className={threeSceneFrameVariants()}
           render={<section />}
         />
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <VisualFact
+              label={labels.atomicNumber}
+              value={<InlineMath math={`Z = ${sample.atomicNumber}`} />}
+            />
+            <VisualFact
+              label={labels.configuration}
+              value={<InlineMath math={configurationMath} />}
+            />
+            <VisualFact
+              label={labels.outerShell}
+              value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
+            />
+            <VisualFact
+              label={labels.maximumCapacity}
+              value={
+                <InlineMath
+                  math={`2(${outerShell.principalQuantumNumber})^2 = ${outerShell.maximumElectrons}`}
+                />
+              }
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <VisualFact
-            label={labels.atomicNumber}
-            value={<InlineMath math={`Z = ${sample.atomicNumber}`} />}
-          />
-          <VisualFact
-            label={labels.configuration}
-            value={<InlineMath math={configurationMath} />}
-          />
-          <VisualFact
-            label={labels.outerShell}
-            value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
-          />
-          <VisualFact
-            label={labels.maximumCapacity}
-            value={
-              <InlineMath
-                math={`2(${outerShell.principalQuantumNumber})^2 = ${outerShell.maximumElectrons}`}
-              />
-            }
-          />
-        </dl>
         <VisualCardFullscreen inert />
       </VisualCardFooter>
     </VisualCard>

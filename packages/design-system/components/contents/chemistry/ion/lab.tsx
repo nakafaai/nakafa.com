@@ -17,6 +17,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -157,31 +158,33 @@ export function IonLab({ title, description, labels }: IonLabProps) {
             value={<InlineMath math={`e^-: ${electronFlowMath}`} />}
           />
         </dl>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            <VisualFact
+              label={labels.protons}
+              value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
+            />
+            <VisualFact
+              label={labels.neutrons}
+              value={
+                <InlineMath
+                  math={`${selectedSample.massNumber} - ${selectedSample.atomicNumber} = ${neutronCount}`}
+                />
+              }
+            />
+            <VisualFact
+              label={labels.charge}
+              value={
+                <InlineMath
+                  math={`q = p^+ - e^- = ${selectedSample.atomicNumber} - ${ionElectrons} = ${signedChargeMath}`}
+                />
+              }
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <VisualFact
-            label={labels.protons}
-            value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
-          />
-          <VisualFact
-            label={labels.neutrons}
-            value={
-              <InlineMath
-                math={`${selectedSample.massNumber} - ${selectedSample.atomicNumber} = ${neutronCount}`}
-              />
-            }
-          />
-          <VisualFact
-            label={labels.charge}
-            value={
-              <InlineMath
-                math={`q = p^+ - e^- = ${selectedSample.atomicNumber} - ${ionElectrons} = ${signedChargeMath}`}
-              />
-            }
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

@@ -20,6 +20,8 @@ import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
+  VisualCardGroup,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
@@ -161,10 +163,8 @@ function Content({
         ) : (
           <div aria-hidden="true" className={threeSceneFrameVariants()} />
         )}
-      </VisualCardBody>
-      <CoordinateControls>
-        <div className="flex w-full flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-2 px-6">
+        <VisualCardControls>
+          <VisualCardGroup>
             <Badge variant="outline">
               <InlineMath
                 math={`\\sin\\theta ${formatRatio(getSin(angleValue), exactValues?.sin)}`}
@@ -186,11 +186,11 @@ function Content({
                 </>
               )}
             </Badge>
-          </div>
+          </VisualCardGroup>
 
           <Separator />
 
-          <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
+          <div className="mx-auto flex w-full max-w-md flex-col gap-4">
             <div className="flex items-center gap-2">
               <Badge style={{ color: COLORS.VIOLET }} variant="outline">
                 <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
@@ -241,8 +241,9 @@ function Content({
               </Group>
             </NumberField>
           </div>
-        </div>
-      </CoordinateControls>
+        </VisualCardControls>
+      </VisualCardBody>
+      <CoordinateControls />
     </>
   );
 }

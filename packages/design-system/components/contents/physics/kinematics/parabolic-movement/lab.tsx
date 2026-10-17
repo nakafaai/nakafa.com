@@ -20,6 +20,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -115,18 +116,20 @@ export function ParabolicMovementLab({
         >
           {live ? <ParabolicMovementStage motion={motion} /> : null}
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            {Arr.map(facts, (fact) => (
+              <VisualFactTabular
+                key={fact.id}
+                label={fact.label}
+                value={<InlineMath math={fact.math} />}
+              />
+            ))}
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          {Arr.map(facts, (fact) => (
-            <VisualFactTabular
-              key={fact.id}
-              label={fact.label}
-              value={<InlineMath math={fact.math} />}
-            />
-          ))}
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
