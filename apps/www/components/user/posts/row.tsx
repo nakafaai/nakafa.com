@@ -19,7 +19,7 @@ import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -70,7 +70,7 @@ export function PostRow({ post }: { post: ListPost }) {
   // The rows show the profile, whoever is looking at them.
   const { isOwner, profile } = usePostsContext();
   const now = usePostsNow();
-  const pending = usePostDraft((draft) => draft.savingPostId === post._id);
+  const pending = usePostDraft((draft) => HashSet.has(draft.saving, post._id));
   return (
     <FeedRow>
       <FeedAvatar mascot={profile.mascot} photo={profile.image} />
