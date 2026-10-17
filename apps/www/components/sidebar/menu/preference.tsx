@@ -143,10 +143,25 @@ function LanguageSubmenuContent() {
   );
 }
 
+/** The theme submenu of an account menu, shared by the Nakafa and the school menus. */
+export function SidebarThemeSubmenu() {
+  const t = useTranslations("Common");
+  const side = useSidebar(selectMenuSide);
+
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger className="cursor-pointer">
+        <HugeIcons icon={PaintBoardIcon} />
+        <span className="truncate">{t("theme")}</span>
+      </DropdownMenuSubTrigger>
+      <ThemeSubmenuContent side={side} />
+    </DropdownMenuSub>
+  );
+}
+
 /** Provides preference submenus that can be mounted from account menu surfaces. */
 export function SidebarPreferenceSubmenus() {
   const t = useTranslations("Common");
-  const side = useSidebar(selectMenuSide);
 
   return (
     <DropdownMenuGroup>
@@ -157,13 +172,7 @@ export function SidebarPreferenceSubmenus() {
         <LanguageSubmenuContent />
       </DropdownMenuSub>
 
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="cursor-pointer">
-          <HugeIcons icon={PaintBoardIcon} />
-          <span className="truncate">{t("theme")}</span>
-        </DropdownMenuSubTrigger>
-        <ThemeSubmenuContent side={side} />
-      </DropdownMenuSub>
+      <SidebarThemeSubmenu />
     </DropdownMenuGroup>
   );
 }

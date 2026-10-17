@@ -20,6 +20,7 @@ import {
 } from "@repo/backend/confect/notifications/held";
 import spec from "@repo/backend/confect/notifications/inbox.spec";
 import { notificationView } from "@repo/backend/confect/notifications/schema";
+import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
 import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
 
 /**
@@ -56,15 +57,16 @@ const read = FunctionImpl.make(
       .table("tenants")
       .get(row.tenantId)
       .pipe(Effect.orDie);
+    const profile = yield* tenantProfile(tenant);
     if (row.readAt !== undefined) {
-      return notificationView(row, tenant);
+      return notificationView(row, profile);
     }
     const readAt = yield* Clock.currentTimeMillis;
     yield* (yield* DatabaseWriter)
       .table("notifications")
       .patch(row._id, { readAt })
       .pipe(Effect.orDie);
-    return notificationView({ ...row, readAt }, tenant);
+    return notificationView({ ...row, readAt }, profile);
   })
 );
 

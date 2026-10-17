@@ -5,11 +5,7 @@ import {
   ConsumedChangeType,
   SubjectView,
 } from "@repo/backend/confect/journal/schema";
-import {
-  TenantProfile,
-  tenantProfile,
-  type tenantValidator,
-} from "@repo/backend/confect/tenancy/schema";
+import { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
 
 /**
@@ -40,17 +36,18 @@ export const NotificationView = Schema.Struct({
 });
 
 /**
- * Projects a stored row onto its wire view. The read time is set only once a
- * row is read, so an unread row has no `readAt` key at all.
+ * Projects a stored row onto its wire view, with the profile of the school that
+ * holds it. The read time is set only once a row is read, so an unread row has
+ * no `readAt` key at all.
  */
 export const notificationView = (
   row: NotificationsDoc,
-  tenant: typeof tenantValidator.Type
+  tenant: typeof TenantProfile.Type
 ) => ({
   changeType: row.changeType,
   createdAt: row.createdAt,
   id: row._id,
   subject: row.subject,
-  tenant: tenantProfile(tenant),
+  tenant,
   ...(row.readAt === undefined ? {} : { readAt: row.readAt }),
 });
