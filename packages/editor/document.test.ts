@@ -5,7 +5,7 @@ import {
   type DocumentRules,
   documentExtensions,
   documentSchema,
-} from "@repo/design-system/components/editor/document";
+} from "@repo/editor/document";
 import { Editor } from "@tiptap/core";
 import { Record as Rec } from "effect";
 

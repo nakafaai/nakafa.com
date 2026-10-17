@@ -55,33 +55,74 @@ export const AI_SDK_COHORT = {
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
- * each manifest pins it exactly. Every Tiptap package that the design system
- * declares, and the web app's `@tiptap/pm`, is held to this one version (ADR 0028).
- * A bump changes this line and then every manifest that pins the cohort: the policy
- * test reports each declaration that still holds the old version, so none is missed.
+ * each manifest pins it exactly. Every Tiptap package that a workspace declares is
+ * held to this one version (ADR 0028). A bump changes this line and then every
+ * manifest that pins the cohort: the policy test reports each declaration that still
+ * holds the old version, so none is missed.
  */
 const TIPTAP_COHORT_VERSION = "3.32.0";
-/** The Tiptap packages the design system declares. The web app also declares `@tiptap/pm`. */
-const TIPTAP_PACKAGES = [
-  "@tiptap/core",
-  "@tiptap/extension-bold",
-  "@tiptap/extension-code",
-  "@tiptap/extension-document",
-  "@tiptap/extension-highlight",
-  "@tiptap/extension-italic",
-  "@tiptap/extension-link",
-  "@tiptap/extension-list",
-  "@tiptap/extension-paragraph",
-  "@tiptap/extension-subscript",
-  "@tiptap/extension-superscript",
-  "@tiptap/extension-text",
-  "@tiptap/extension-underline",
-  "@tiptap/extensions",
-  "@tiptap/markdown",
-  "@tiptap/pm",
-  "@tiptap/react",
-  "@tiptap/starter-kit",
+/**
+ * The Tiptap packages each manifest declares. The editor package holds the schema of
+ * an assessment document, the design system holds the Memory editor, and the web app
+ * declares `@tiptap/pm` alone. The backend declares the packages that its bundle imports
+ * by name: the Convex bundle resolves each one from the backend, and pnpm does not link a
+ * workspace package's dependencies into another workspace (ADR 0028).
+ */
+const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
+  ["apps/www/package.json", ["@tiptap/pm"]],
+  [
+    "packages/backend/package.json",
+    [
+      "@tiptap/core",
+      "@tiptap/extension-bold",
+      "@tiptap/extension-code",
+      "@tiptap/extension-italic",
+      "@tiptap/extension-link",
+      "@tiptap/extension-list",
+      "@tiptap/extension-subscript",
+      "@tiptap/extension-superscript",
+      "@tiptap/extension-underline",
+      "@tiptap/starter-kit",
+    ],
+  ],
+  [
+    "packages/design-system/package.json",
+    [
+      "@tiptap/core",
+      "@tiptap/extension-document",
+      "@tiptap/extension-highlight",
+      "@tiptap/extension-list",
+      "@tiptap/extension-paragraph",
+      "@tiptap/extension-text",
+      "@tiptap/extension-underline",
+      "@tiptap/extensions",
+      "@tiptap/markdown",
+      "@tiptap/pm",
+      "@tiptap/react",
+      "@tiptap/starter-kit",
+    ],
+  ],
+  [
+    "packages/editor/package.json",
+    [
+      "@tiptap/core",
+      "@tiptap/extension-bold",
+      "@tiptap/extension-code",
+      "@tiptap/extension-italic",
+      "@tiptap/extension-link",
+      "@tiptap/extension-list",
+      "@tiptap/extension-subscript",
+      "@tiptap/extension-superscript",
+      "@tiptap/extension-underline",
+      "@tiptap/pm",
+      "@tiptap/starter-kit",
+    ],
+  ],
 ];
+/** Every Tiptap package that a manifest declares, each named once. */
+const TIPTAP_PACKAGES = Arr.dedupe(
+  Arr.flatMap(TIPTAP_DECLARATIONS, ([, packages]) => packages)
+);
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "19.3.1", dependency: "react", minimumDeclarations: 1 },
@@ -225,10 +266,12 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   ...Arr.map(TIPTAP_PACKAGES, (dependency) => ({
     approved: TIPTAP_COHORT_VERSION,
-    declarationPaths:
-      dependency === "@tiptap/pm"
-        ? ["apps/www/package.json", "packages/design-system/package.json"]
-        : ["packages/design-system/package.json"],
+    declarationPaths: Arr.map(
+      Arr.filter(TIPTAP_DECLARATIONS, ([, packages]) =>
+        Arr.contains(packages, dependency)
+      ),
+      ([path]) => path
+    ),
     dependency,
   })),
 ];

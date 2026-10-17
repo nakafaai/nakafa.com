@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import { foldSteps } from "@repo/backend/confect/editor/fold";
-import { assessmentModel } from "@repo/backend/confect/editor/model";
+import {
+  ASSESSMENT_RULES,
+  assessmentModel,
+} from "@repo/backend/confect/editor/model";
 import { NodeTypeSchema } from "@repo/backend/confect/editor/node";
 import { StepSchema } from "@repo/backend/confect/editor/step";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -16,11 +19,10 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import {
-  ASSESSMENT_MARKS,
-  ASSESSMENT_RULES,
-  assessmentSchema,
-} from "@/lib/editor/assessment";
+import { assessmentSchema } from "@/lib/editor/assessment";
+
+/** The marks the editor offers, which are the contract's marks in the contract's order. */
+const ASSESSMENT_MARKS = ASSESSMENT_RULES.marks;
 
 /** The marks of an assessment document in the order the contract writes them (ADR 0031). */
 const CONTRACT_ORDER = [
@@ -196,6 +198,7 @@ describe("editor/assessment server fold", () => {
         );
         const folded = yield* foldSteps(
           assessmentModel,
+          "assessment-test",
           assessmentModel.nodeFromJSON(start.toJSON()),
           0,
           decoded

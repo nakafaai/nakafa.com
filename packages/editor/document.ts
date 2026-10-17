@@ -16,7 +16,7 @@ import { Array as Arr } from "effect";
  * the Aksara contract of an assessment document (ADR 0031), so the caller passes the
  * contract's own names and nothing is renamed on the way.
  */
-export type DocumentMark =
+type DocumentMark =
   | "bold"
   | "code"
   | "italic"

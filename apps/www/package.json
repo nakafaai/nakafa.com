@@ -37,6 +37,7 @@
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
+    "@repo/editor": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/mascot": "workspace:*",
     "@repo/math": "workspace:*",

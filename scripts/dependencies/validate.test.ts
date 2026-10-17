@@ -23,10 +23,11 @@ const CONTRACT_MANIFEST_PATHS = [
 ] as const;
 const CONTRACT_OWNERS = Arr.join(CONTRACT_MANIFEST_PATHS, ", ");
 const WEB_MANIFEST = "apps/www/package.json";
-/** Every manifest the fixture builds: the contract owners, and the design system that holds collab. */
+/** Every manifest the fixture builds: the contract owners, the design system that holds collab, and the editor package. */
 const FIXTURE_MANIFEST_PATHS = [
   ...CONTRACT_MANIFEST_PATHS,
   "packages/design-system/package.json",
+  "packages/editor/package.json",
 ];
 
 type PolicyInput = Parameters<typeof validateDependencyPolicy>[0];
