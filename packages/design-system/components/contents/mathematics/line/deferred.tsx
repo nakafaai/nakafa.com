@@ -23,7 +23,7 @@ export function DeferredLineScene(props: LineSceneProps) {
   const [shouldRender, setShouldRender] = useState(false);
 
   return (
-    <VisualCardBody className="relative" data-slot="line-scene">
+    <VisualCardBody className="relative" data-scene="line">
       {shouldRender ? <LineScene {...props} /> : <ScenePlaceholder />}
       {/* Last, so the scene or its stand-in is the body's first child and draws no second divider. */}
       <Intersection

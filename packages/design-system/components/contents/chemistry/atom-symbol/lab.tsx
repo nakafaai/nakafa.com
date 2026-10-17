@@ -107,7 +107,7 @@ export function AtomSymbolLab({
 
       <VisualCardBody
         aria-label={`${selectedLabels.ariaName}, ${labels.massNumber} ${selectedSample.massNumber}, ${labels.atomicNumber} ${selectedSample.atomicNumber}`}
-        className="grid min-h-44 place-items-center p-(--card-spacing) text-center sm:min-h-48"
+        className="grid min-h-44 place-items-center p-(--card-spacing) text-center sm:min-h-48 [[data-fullscreen]>&]:grid"
         render={<section />}
       >
         <div className="flex flex-col items-center gap-3">

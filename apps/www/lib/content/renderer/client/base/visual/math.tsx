@@ -43,7 +43,7 @@ export function MathVisual({
           aria-describedby={descriptionId}
           aria-labelledby={titleId}
           className="relative m-0"
-          data-slot="math-scene"
+          data-scene="math"
           render={<figure />}
         >
           <DeferredMathScene labels={labels} scene={scene} />

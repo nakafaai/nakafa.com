@@ -147,10 +147,10 @@ export function CirclePlaceholder({
             <div aria-hidden="true" className={stepperVariants()} />
           </div>
         </VisualCardToolbar>
-        <VisualCardBody
-          aria-hidden="true"
-          className={threeSceneFrameVariants()}
-        />
+        {/* The unit circle draws its frame inside its body, as this does. */}
+        <VisualCardBody aria-hidden="true">
+          <div className={threeSceneFrameVariants()} />
+        </VisualCardBody>
         <CoordinateControls inert />
         <VisualCardFooter>
           <VisualCardGroup>

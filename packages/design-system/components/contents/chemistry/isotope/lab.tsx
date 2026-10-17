@@ -118,7 +118,7 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
 
       <VisualCardBody
         aria-label={`${selectedLabels.ariaName}, ${labels.massNumber} ${selectedSample.massNumber}`}
-        className="grid gap-4 p-(--card-spacing) text-center"
+        className="grid gap-4 p-(--card-spacing) text-center [[data-fullscreen]>&]:grid"
         render={<section />}
       >
         <div className="grid place-items-center px-2 py-4">

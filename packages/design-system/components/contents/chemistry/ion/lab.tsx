@@ -115,7 +115,7 @@ export function IonLab({ title, description, labels }: IonLabProps) {
         </ToggleGroup>
       </VisualCardToolbar>
 
-      <VisualCardBody className="grid gap-2 p-(--card-spacing) md:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] md:items-center">
+      <VisualCardBody className="grid gap-2 p-(--card-spacing) md:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] md:items-center [[data-fullscreen]>&]:grid">
         <ParticleCard
           charge={<InlineMath math="0" />}
           electrons={<InlineMath math={`${neutralElectrons}`} />}

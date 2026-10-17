@@ -141,7 +141,7 @@ function Content({
           </NumberField>
         </div>
       </VisualCardToolbar>
-      <VisualCardBody className="relative" data-slot="triangle-scene">
+      <VisualCardBody className="relative" data-scene="triangle">
         {isNearViewport ? (
           <TriangleScene angle={angleValue} size={size} />
         ) : (

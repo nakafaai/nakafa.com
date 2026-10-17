@@ -123,7 +123,7 @@ export function CoordinateSystem({
     <VisualCardBody
       aria-label={ariaLabel}
       className={cn(threeSceneFrameVariants(), "cursor-grab", className)}
-      data-slot="coordinate-system"
+      data-scene="coordinate-system"
       render={ariaLabel === undefined ? undefined : <section />}
     >
       <ThreeCanvas style={{ background: backgroundColor }}>

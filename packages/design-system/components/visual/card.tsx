@@ -105,14 +105,15 @@ const visualBandVariants = cva(
 /**
  * The body holds the visual alone, edge to edge. In full screen the body of the
  * card takes the free height and drops its aspect ratio, and size containment
- * keeps a chart's own aspect ratio from claiming more than the screen has, so
- * the visual fills the free height, or keeps its minimum while the card
- * scrolls. The body keeps its own display, so a drawing laid out as a grid
- * stays a grid. A body inside another body, such as a scene loaded into its
- * frame, fills that body and adds no line.
+ * keeps a chart's own aspect ratio from claiming more than the screen has. The
+ * body is then a column, so a chart or a scene that grows into the free space
+ * fills it, or keeps its minimum while the card scrolls. A body laid out as a
+ * grid says so for full screen too (`[[data-fullscreen]>&]:grid`). A body inside
+ * another body, such as a scene loaded into its frame, fills that body and adds
+ * no line.
  */
 const visualBodyVariants = cva(
-  "relative border-t first:border-t-0 [[data-fullscreen]>&]:aspect-auto [[data-fullscreen]>&]:min-h-64 [[data-fullscreen]>&]:flex-1 [[data-fullscreen]>&]:contain-size [[data-slot=visual-card-body]>&]:size-full [[data-slot=visual-card-body]>&]:border-t-0"
+  "relative border-t first:border-t-0 [[data-fullscreen]>&]:flex [[data-fullscreen]>&]:aspect-auto [[data-fullscreen]>&]:min-h-64 [[data-fullscreen]>&]:flex-1 [[data-fullscreen]>&]:flex-col [[data-fullscreen]>&]:contain-size [[data-slot=visual-card-body]>&]:size-full [[data-slot=visual-card-body]>&]:border-t-0"
 );
 
 /**
