@@ -192,17 +192,6 @@ const abandon = FunctionImpl.make(
   }, Effect.catchDefect(lifecycleFailure))
 );
 
-/** True once a run has no reason to go on: its turn was stopped, settled or removed. */
-const halted = FunctionImpl.make(
-  schema,
-  spec,
-  "halted",
-  Effect.fn("nina.lifecycle.halted")(function* (args) {
-    const turn = yield* readTurn(args.turnId);
-    return turn?.phase !== "active" || turn.cancelRequestedAt !== undefined;
-  })
-);
-
 /** The cron entry: settles every turn that stayed open past its deadline. */
 const sweep = FunctionImpl.make(
   schema,
@@ -249,7 +238,6 @@ export default GroupImpl.make(schema, spec).pipe(
   Layer.provide(recover),
   Layer.provide(expire),
   Layer.provide(abandon),
-  Layer.provide(halted),
   Layer.provide(sweep),
   Layer.provide(cancel),
   Layer.provide(atomic),

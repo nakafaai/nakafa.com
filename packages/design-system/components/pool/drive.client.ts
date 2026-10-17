@@ -38,8 +38,8 @@ export const FIRST_HOP = 3600;
 export const HOP_WAIT = 2800;
 export const HOP_SPREAD = 2600;
 /**
- * The frames of a reduced-motion settle that run in each animation frame. A settle
- * runs in these parts, so that no single frame blocks the page for long.
+ * The frames of a settle that run in each animation frame. A settle runs in these
+ * parts, so that no single frame blocks the page for long.
  */
 const SETTLE_CHUNK_FRAMES = 8;
 
@@ -50,12 +50,15 @@ function draw() {
 
 /**
  * Drives the pool of one box: its world, its frame loop, its pointer, its hops,
- * and its size. A pile settles in parts between animation frames before the box
- * shows it, so the pool never shows a fall. After that the frame loop runs only for
- * the pointer and for the hops. It writes to the elements that React drew, and never
- * draws with React itself. Each time the box takes a new count of animals,
- * `onAnimals` hears it, and React draws the members of that count; `sync` then gives
- * each member its size and place.
+ * and its size. With motion, the first pile starts above the box and falls in, so
+ * the box shows it at once and the frame loop runs it until it rests. With reduced
+ * motion, a pile settles in parts between animation frames before the box shows it,
+ * and no frame loop runs for it. A resize settles the new pile the same way while the
+ * old one stays on screen. After that the frame loop runs only for the pointer and for
+ * the hops. It writes to the elements that React drew, and never draws with React
+ * itself. Each time the box takes a new count of animals, `onAnimals` hears it, and
+ * React draws the members of that count; `sync` then gives each member its size and
+ * place.
  */
 export function createDrive(
   element: HTMLDivElement,
@@ -73,6 +76,8 @@ export function createDrive(
   let hopping: number | undefined;
   let quiet: number | undefined;
   let settling: Settling = startSettle(world);
+  // Whether a settle is queued: a pile that is settling is not the one on screen yet.
+  let settleUnderWay = false;
   let settlingAnimals = 0;
 
   /** Writes where each member is and how it leans, straight onto its element. */
@@ -97,13 +102,20 @@ export function createDrive(
 
   /**
    * Makes the world match a box of this size: its walls, and its animals. The
-   * animals that stay keep their place. The new pile settles in parts between
+   * animals that stay keep their place. The first pile with motion is not settled: it
+   * starts above the box and falls in. Any other new pile settles in parts between
    * animation frames, and the old pile stays on screen until the new one has come to
    * rest.
    */
   function update(width: number, height: number) {
     const cover = coverOf(width, height);
+    if (!(measured || calm)) {
+      show(createWorld(width, height, poolStarts(cover)), cover.animals);
+      wake();
+      return;
+    }
     settlingAnimals = cover.animals;
+    settleUnderWay = true;
     settling = startSettle(
       fit(resize(world, width, height), poolStarts(cover))
     );
@@ -113,7 +125,7 @@ export function createDrive(
   }
 
   /**
-   * Runs one part of a settle, and shows the pile once it has come to rest. The
+   * Runs one part of a settle, and shows the new pile once it has come to rest. The
    * shown pile then stands still until the pointer or a hop moves it.
    */
   function settleChunk() {
@@ -122,11 +134,20 @@ export function createDrive(
       frame.render(settleChunk);
       return;
     }
-    world = finishSettle(settling);
+    settleUnderWay = false;
+    show(finishSettle(settling), settlingAnimals);
+  }
+
+  /**
+   * Shows a pile with the members of its count: React draws the members, the drive
+   * places them, and the box fades in.
+   */
+  function show(next: World, animals: number) {
+    world = next;
     measured = true;
     // React commits a state update later, so the new members are drawn first: placing
     // the new pile on the old members would show a mix of both piles for one frame.
-    flushSync(() => onAnimals(settlingAnimals));
+    flushSync(() => onAnimals(animals));
     sync();
     // The pool's CSS fades the box in when this is set, and shows it at once under
     // reduced motion.
@@ -138,7 +159,7 @@ export function createDrive(
    * out of view, or the person asked for less motion.
    */
   function wake() {
-    if (!measured || running || !visible || calm || !isSettled(settling)) {
+    if (!measured || running || !visible || calm || settleUnderWay) {
       return;
     }
     rested = 0;
@@ -180,7 +201,7 @@ export function createDrive(
   function onDown(event: PointerEvent) {
     // A pile that is still settling is not the one on screen yet, and a ball taken
     // now would be lost when the settle ends, so the press is ignored.
-    if (!isSettled(settling)) {
+    if (settleUnderWay) {
       return;
     }
     const holding = world.held !== null;
@@ -204,7 +225,7 @@ export function createDrive(
   function hopNow() {
     hopAt(HOP_WAIT + draw() * HOP_SPREAD);
     // A held ball keeps the loop awake, so a hop never finds a ball held with the loop asleep.
-    if (!(measured && visible) || running || !isSettled(settling)) {
+    if (!(measured && visible) || running || settleUnderWay) {
       return;
     }
     const index = Effect.runSync(

@@ -1,4 +1,11 @@
-import { Array as Arr, Equal, MutableHashMap, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Equal,
+  MutableHashMap,
+  Number as Num,
+  Option,
+  Schema,
+} from "effect";
 
 /** Where a toy belongs: its top left corner in the layer, and, if it has one, the side it is drawn at. */
 const SpotSchema = Schema.Struct({
@@ -72,12 +79,20 @@ export function createScatter(rest: (el: HTMLElement) => void) {
     // would make the browser lay the page out again for each toy.
     const spots = Arr.map(Arr.fromIterable(toys), ([el, place]) => ({
       el,
+      drawn: el.offsetWidth,
       spot: place(next, box),
     }));
-    Arr.forEach(spots, ({ el, spot }) => {
+    Arr.forEach(spots, ({ drawn, el, spot }) => {
       el.hidden = Option.isNone(spot);
       if (Option.isSome(spot)) {
-        el.style.left = `${Math.round(spot.value.x)}px`;
+        // A toy never reaches past the layer's right edge, so no place can make
+        // the page scroll sideways; a toy wider than the layer starts at its left.
+        const wide = spot.value.size ?? drawn;
+        const x = Num.clamp(spot.value.x, {
+          maximum: Num.max(0, next - wide),
+          minimum: 0,
+        });
+        el.style.left = `${Math.round(x)}px`;
         el.style.top = `${Math.round(spot.value.y)}px`;
         if (spot.value.size !== undefined) {
           el.style.setProperty("--toy", `${Math.round(spot.value.size)}px`);

@@ -1,3 +1,6 @@
+"use client";
+
+import { useIntersection } from "@mantine/hooks";
 import type { MarkAttributes } from "@repo/design-system/components/ui/drawing";
 import { Picture } from "@repo/design-system/components/ui/picture";
 import type { Mark } from "@repo/mascot/thing/mark";
@@ -30,19 +33,27 @@ const motionVariants = cva("", {
   },
 });
 
-/** The class of a marked shape, and the delay its motion starts after. */
-function marked({ delay, motion }: Mark): MarkAttributes {
+/**
+ * The class of a marked shape, the delay its motion starts after, and whether
+ * the motion runs. A paused motion keeps its place until the thing is on screen.
+ */
+function markedAttributes({ delay, motion }: Mark, playing: boolean) {
   return {
     className: motionVariants({ motion }),
-    style: delay === undefined ? undefined : { animationDelay: `${delay}s` },
-  };
+    style: {
+      animationDelay: `${delay ?? 0}s`,
+      animationPlayState: playing ? "running" : "paused",
+    },
+  } satisfies MarkAttributes;
 }
 
 /**
  * One thing of Nina's world as a flat picture, with no outline. Left without a
  * `size` it takes the side of the toy it lies in (`--toy`, 56px by default), and
  * its free lines take the color of the text around it, so it shows on every
- * ground. The picture itself carries no meaning for a screen reader.
+ * ground. The picture itself carries no meaning for a screen reader. Its motion
+ * runs only while the thing is on screen, and never for a reader who asked for
+ * less motion.
  */
 export function Thing({
   className,
@@ -53,6 +64,9 @@ export function Thing({
   name: ThingName;
   size?: number;
 }) {
+  const { entry, ref } = useIntersection({ threshold: 0 });
+  const playing = entry?.isIntersecting ?? false;
+
   return (
     <Picture
       box={BOX}
@@ -61,7 +75,8 @@ export function Thing({
         size === undefined && "size-[var(--toy,56px)]",
         className
       )}
-      marked={marked}
+      marked={(mark) => markedAttributes(mark, playing)}
+      ref={ref}
       shapes={PICTURES[name]}
       size={size}
     />

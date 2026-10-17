@@ -12,7 +12,6 @@ export default {
 ["recover"]: RegisteredConvexFunction.register({ ...definitions["recover"], handler: forward(definitions["recover"].handler) }),
 ["expire"]: RegisteredConvexFunction.register({ ...definitions["expire"], handler: forward(definitions["expire"].handler) }),
 ["abandon"]: RegisteredConvexFunction.register({ ...definitions["abandon"], handler: forward(definitions["abandon"].handler) }),
-["halted"]: RegisteredConvexFunction.register({ ...definitions["halted"], handler: forward(definitions["halted"].handler) }),
 ["sweep"]: RegisteredConvexFunction.register({ ...definitions["sweep"], handler: forward(definitions["sweep"].handler) }),
 ["cancel"]: RegisteredConvexFunction.register({ ...definitions["cancel"], handler: forward(definitions["cancel"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../nina/lifecycle.spec")["default"]>;

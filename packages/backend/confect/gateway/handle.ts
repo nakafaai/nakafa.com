@@ -1,4 +1,5 @@
 import { cachedPrefix } from "@repo/backend/confect/gateway/cache";
+import { classify } from "@repo/backend/confect/gateway/classify";
 import {
   type Answers,
   type DecisionModel,
@@ -6,10 +7,7 @@ import {
   type Question,
   type State,
 } from "@repo/backend/confect/gateway/decide";
-import {
-  classify,
-  GatewayFailure,
-} from "@repo/backend/confect/gateway/failure";
+import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import {
   decisionModelId,
   type EmbeddingModelId,

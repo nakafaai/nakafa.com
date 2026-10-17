@@ -109,6 +109,19 @@ describe("placing toys", () => {
     expect(el.style.getPropertyValue("--toy")).toBe("40px");
   });
 
+  it("keeps a toy inside the layer, so a place near an edge never makes the page scroll sideways", () => {
+    const { layer, placed, toy } = scatter();
+    const drawn = toy(() => Option.some({ x: 780, y: 0 }));
+    Object.defineProperty(drawn, "offsetWidth", { get: () => 56 });
+    const sized = toy(() => Option.some({ size: 40, x: 790, y: 0 }));
+    const left = toy(() => Option.some({ x: -12, y: 0 }));
+    placed.attach(layer);
+    wait(FRAME);
+    expect(drawn.style.left).toBe("744px");
+    expect(sized.style.left).toBe("760px");
+    expect(left.style.left).toBe("0px");
+  });
+
   it("asks for the width of the layer and leaves the size alone when a place gives none", () => {
     const { layer, placed, toy } = scatter();
     const place = vi.fn(anywhere);

@@ -15,12 +15,11 @@ const IMPULSE = 0.62;
 /**
  * The most sliding that a contact stops, as a share of the push that presses two balls
  * together. Measured on the three checked pools, 585, 823 and 1463 pixels wide, with
- * the pointer's push at 40: a sweep at 300 pixels a second peaks with the fastest ball
- * at scale 1 at 319 pixels a second on the 585 pool with no friction, and at 63, 85
- * and 153 with 0.1. A fresh pool rests after 194, 298 and 528 frames with 0.1, and
- * after 268, 296 and 436 with none. Over six seconds after a settle, 0, 23 and 76
- * frames move a ball faster than 24 pixels a second with 0.1, against 41, 0 and 0
- * with none.
+ * the pointer's push at 160: a sweep at 300 pixels a second peaks with the fastest ball
+ * at scale 1 at 705, 851 and 502 pixels a second with no friction, and at 468, 748 and
+ * 449 with 0.1. A fresh pool rests after 153, 213 and 253 frames with none, and after
+ * 153, 214 and 443 with 0.1. Over six seconds after a settle, 0, 15 and 0 frames move a
+ * ball faster than 24 pixels a second with none, against 57, 0 and 0 with 0.1.
  */
 const FRICTION = 0.1;
 /** The distance that two balls on the very same point are treated as apart, in pixels. */

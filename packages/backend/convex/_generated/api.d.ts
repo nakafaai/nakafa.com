@@ -11249,14 +11249,6 @@ export declare const internal: {
         }
       >;
     };
-    fingerprints: {
-      clear: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor?: string; dryRun: boolean },
-        { activeOld: number; cleared: number; done: boolean; scanned: number }
-      >;
-    };
     focus: {
       read: FunctionReference<
         "query",
@@ -11632,12 +11624,6 @@ export declare const internal: {
         { turnId: Id<"ninaTurns"> },
         null
       >;
-      halted: FunctionReference<
-        "query",
-        "internal",
-        { turnId: Id<"ninaTurns"> },
-        boolean
-      >;
       presentation: FunctionReference<
         "query",
         "internal",
@@ -11984,6 +11970,14 @@ export declare const internal: {
         "internal",
         { id: Id<"ninaMemoryRestores"> },
         null
+      >;
+    };
+    phase: {
+      halted: FunctionReference<
+        "query",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        boolean
       >;
     };
     portrait: {
