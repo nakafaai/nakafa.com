@@ -1,15 +1,15 @@
 import type { Ref } from "@confect/core";
 import { useConvex } from "convex/react";
-import { Effect, Fiber } from "effect";
+import { Effect, Exit, Fiber } from "effect";
 import { startTransition, useEffect, useRef, useState } from "react";
 import { awaitServerAnswer } from "@/lib/convex/answer";
 
 /**
  * Retries a share link that the server could not load in a way the query does
- * not declare. Its readers have unmounted, so nothing subscribes to the query,
- * and a remount would read the failure that the cache still holds. The retry
- * waits for the server's answer first, then remounts the readers, which read
- * that answer and subscribe.
+ * not declare. Its readers have unmounted, so nothing subscribes to the query.
+ * Until the next server message replaces the cache, a remount would read the
+ * failure that the cache still holds, so the retry waits for the server's answer
+ * first, then remounts the readers, which read that answer and subscribe.
  *
  * The wait is one fiber. Its scope ends with the fiber, so its subscription ends
  * when the answer comes or when the fiber is interrupted.
@@ -27,7 +27,8 @@ export function useAnswerRetry<Query extends Ref.AnyPublicQuery>(
   const [waiting, setWaiting] = useState(false);
   const wait = useRef<Fiber.Fiber<void> | null>(null);
 
-  // Unmounting the dialog interrupts the wait, which ends its subscription.
+  // Unmounting ChatSharing interrupts the wait, which ends its subscription.
+  // Closing the dialog keeps ChatSharing mounted, so the wait goes on.
   useEffect(() => () => interruptWait(wait.current), []);
 
   /**
@@ -40,10 +41,24 @@ export function useAnswerRetry<Query extends Ref.AnyPublicQuery>(
     wait.current = Effect.runFork(
       awaitServerAnswer(convex, ref, args).pipe(
         Effect.scoped,
-        // The answer has come, so no async action is open for this transition to
-        // wait on, and the page's other transitions are not held.
-        Effect.andThen(Effect.sync(() => startTransition(remount))),
-        Effect.ensuring(Effect.sync(() => setWaiting(false)))
+        // The remount and the end of the wait are one transition, so Retry stays
+        // disabled until the readers replace the failure. The answer has come, so
+        // no async action is open for this transition to wait on, and the page's
+        // other transitions are not held.
+        Effect.andThen(
+          Effect.sync(() =>
+            startTransition(() => {
+              remount();
+              setWaiting(false);
+            })
+          )
+        ),
+        // A wait that ends without an answer clears the flag, and never remounts.
+        Effect.onExit((exit) =>
+          Exit.isSuccess(exit)
+            ? Effect.void
+            : Effect.sync(() => setWaiting(false))
+        )
       )
     );
   }

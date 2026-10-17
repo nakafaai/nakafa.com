@@ -50,7 +50,8 @@ const unopenable = Schema.encodeSync(ChatShareReadError)(
  * with `failure`, and loads it on Retry once the server answers again. While the
  * answers are held, the dialog keeps its Retry and shows no link. A failure the
  * query does not declare unmounts the dialog's readers, so Retry is disabled
- * until the answer comes (`pending`), and it asks the server first.
+ * until the answer comes (`pending`), and it asks the server first. When the
+ * answer is a failure again, Retry is enabled for the next press.
  */
 const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
   page: Page,
@@ -79,10 +80,23 @@ const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
     await expect(promptOf(page, PROMPT)).toBeVisible();
     await expect(notAvailable(page)).toHaveCount(0);
 
+    // The server still fails, and its answers are held while Retry asks again.
+    // The answer is a failure again, so Retry is enabled for the next press.
+    const retry = dialog.getByRole("button", { name: en.Ai.retry });
+    owner.changes.hold();
+    await retry.click();
+    if (scenario.pending) {
+      await expect(retry).toBeDisabled();
+    }
+    await expect(retry).toBeVisible();
+    await expect(copy).toHaveCount(0);
+    owner.changes.release();
+    await expect(retry).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
+    await expect(copy).toHaveCount(0);
+
     // The server recovers, and its answers are held while Retry asks for the link.
     owner.changes.recoverQuery();
     owner.changes.hold();
-    const retry = dialog.getByRole("button", { name: en.Ai.retry });
     await retry.click();
     if (scenario.pending) {
       await expect(retry).toBeDisabled();
