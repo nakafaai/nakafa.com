@@ -145,8 +145,10 @@ queued step that no call can carry is dropped and counted by the sync
 `packages/design-system/components/editor/size.ts` refuses an edit that grows the
 document past `MAX_DOCUMENT_BYTES`, measured as the snapshot measures it: the UTF-8
 length of the document's JSON text. It measures a transaction only when the
-transaction can grow the document, so a transaction that only removes content or
-marks passes unmeasured.
+transaction can grow the document, so a transaction that only removes content, or
+removes a mark of one node, passes unmeasured. A mark removed from a range is
+measured: when the range ends inside a text node, ProseMirror splits the node, and
+the parts serialize to more text than the node did.
 
 ### The server folds the log
 

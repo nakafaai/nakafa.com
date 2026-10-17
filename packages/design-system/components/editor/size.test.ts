@@ -129,6 +129,18 @@ describe("documentSizeGuard", () => {
     expect(next.doc.textContent).toBe("x".repeat(300));
   });
 
+  it("refuses a mark removal that splits a text node and grows the document past the bound", () => {
+    const { schema, stateOf } = openEditor(documentSizeGuard(MAX_BYTES));
+    const bold = schema.marks.bold.create();
+    const state = stateOf(
+      schema.node("doc", null, [
+        schema.node("paragraph", null, [schema.text("x".repeat(300), [bold])]),
+      ])
+    );
+    const next = state.apply(state.tr.removeMark(101, 201, bold));
+    expect(next).toBe(state);
+  });
+
   it("refuses an edit that adds a mark past the bound, and keeps the document", () => {
     const { schema, stateOf } = openEditor(documentSizeGuard(MAX_BYTES));
     const state = stateOf(

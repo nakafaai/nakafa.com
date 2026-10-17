@@ -4,7 +4,6 @@ import { Extension } from "@tiptap/core";
 import type { Node } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
 import {
-  RemoveMarkStep,
   RemoveNodeMarkStep,
   ReplaceStep,
   type Step,
@@ -28,12 +27,17 @@ function documentBytes(doc: Node): number {
   return utf8Bytes(encodeJsonText(doc.toJSON()));
 }
 
-/** Whether a step only removes content or marks, so the document it makes is no larger. */
+/**
+ * Whether a step only removes content, or a mark of one node, so the document it makes
+ * is no larger. A mark removed from a range is not such a step: when the range ends
+ * inside a text node, the node splits in two, and the two serialize to more text than
+ * the one did, so that step is measured.
+ */
 function onlyRemoves(step: Step): boolean {
   if (step instanceof ReplaceStep) {
     return step.slice.size === 0;
   }
-  return step instanceof RemoveMarkStep || step instanceof RemoveNodeMarkStep;
+  return step instanceof RemoveNodeMarkStep;
 }
 
 /**
@@ -65,8 +69,8 @@ export const stepSizeGuard = (maxBytes: number) =>
 /**
  * Refuses an edit that grows the document past `maxBytes`, measured as the snapshot
  * measures it (ADR 0028 Bounds, `MAX_DOCUMENT_BYTES`). The document is measured only
- * when the transaction can grow it: a transaction that only removes content or marks
- * cannot, so it passes without a measure. A document already past the bound stays
+ * when the transaction can grow it: a transaction that only removes content, or a mark
+ * of one node, cannot, so it passes without a measure. A document already past the bound stays
  * editable, and an edit that grows it is refused. A change that another editor's steps
  * brought in carries the `rebased` meta of the collab plugin, and passes.
  */
