@@ -3,19 +3,26 @@ import { Number as Num, Schema } from "effect";
 
 /**
  * The pointer of the pool: where it is over the box, how fast it moves, and what
- * it pushes. Every function takes the pointer and returns the next one.
+ * it pushes. Most functions take the pointer and return the next one. `pointerPush`
+ * returns the change of velocity that the pointer gives a ball, and `idlePointer`
+ * takes no pointer at all.
  */
 
 /** How far beyond its radius a ball feels the pointer, in pixels. */
 const POINTER_REACH = 44;
-/** How hard the pointer pushes a ball, per pixel that the ball is inside its reach. */
-const POINTER_PUSH = 110;
-/** The pointer's own speed that a ball takes over, in pixels per second, before it is clamped. */
-const POINTER_SPEED_LIMIT = 28;
-/** The share of the pointer's own speed that a ball takes over in each half frame. */
-const POINTER_SHARE = 0.5;
-/** The share of the pointer's speed that stays after each frame. */
-const POINTER_FADE = 0.8;
+/**
+ * How hard the pointer pushes a ball, per pixel that the ball is inside its reach.
+ * Measured on the three checked pools, 585, 823 and 1463 pixels wide, with the
+ * pointer swept across 0.6 of the height from a settled pile at 300 pixels a second,
+ * with the friction of `collide.ts`: the fastest ball at scale 1 reached 63, 85 and
+ * 153 pixels a second, where 80 gave 272, 205 and 180.
+ */
+const POINTER_PUSH = 40;
+/**
+ * The most of the pointer's speed that a ball takes over, in pixels per second.
+ * This is 28 pixels a frame at 60 frames a second.
+ */
+const POINTER_SPEED_LIMIT = 1680;
 /** Where the pointer waits before it has come near the box, in pixels. */
 const NOWHERE = -9999;
 
@@ -28,9 +35,13 @@ export const PointSchema = Schema.Struct({
 /** A place in the box. */
 export type Point = typeof PointSchema.Type;
 
-/** The pointer: where it is, how fast it moves, and whether it is over the box. */
+/**
+ * The pointer: where it is, whether it is over the box, and its speed in pixels per
+ * second over the last frame. `seen` is where the pointer was when that frame began.
+ */
 export const PointerSchema = Schema.Struct({
   active: Schema.Boolean,
+  seen: PointSchema,
   vx: Schema.Finite,
   vy: Schema.Finite,
   x: Schema.Finite,
@@ -42,33 +53,52 @@ type Pointer = typeof PointerSchema.Type;
 
 /** The pointer before it has come near the box. */
 export function idlePointer(): Pointer {
-  return { active: false, vx: 0, vy: 0, x: NOWHERE, y: NOWHERE };
+  return {
+    active: false,
+    seen: { x: NOWHERE, y: NOWHERE },
+    vx: 0,
+    vy: 0,
+    x: NOWHERE,
+    y: NOWHERE,
+  };
 }
 
-/** The pointer at `point`, with the speed it has since its last place. */
+/**
+ * The pointer at `point`. A pointer that was not over the box starts from this
+ * place, so that its first frame has no speed.
+ */
 export function locate(pointer: Pointer, point: Point): Pointer {
   return {
-    active: pointer.active,
-    vx: point.x - pointer.x,
-    vy: point.y - pointer.y,
+    ...pointer,
+    seen: pointer.active ? pointer.seen : point,
     x: point.x,
     y: point.y,
   };
 }
 
 /**
- * The change of velocity that the pointer gives a free ball in one step of `dt`
- * seconds, in a frame that lasted `frame` seconds. Only a pointer over the box,
- * and near the ball, gives any. The spring acts over the step. The pointer's own
- * speed is passed on per half frame, so a frame passes on the same share at any
- * refresh rate.
+ * The speed of the pointer over a frame that lasted `seconds`, in pixels per second,
+ * from where it was when the frame began. Speed comes from the time that passed, not
+ * from the number of pointer events in the frame, so every frame measures the whole
+ * move at once.
  */
-export function pointerPush(
-  pointer: Pointer,
-  ball: Ball,
-  dt: number,
-  frame: number
-) {
+export function measure(pointer: Pointer, seconds: number): Pointer {
+  const moving = pointer.active && seconds > 0;
+  return {
+    ...pointer,
+    seen: { x: pointer.x, y: pointer.y },
+    vx: moving ? (pointer.x - pointer.seen.x) / seconds : 0,
+    vy: moving ? (pointer.y - pointer.seen.y) / seconds : 0,
+  };
+}
+
+/**
+ * The change of velocity that the pointer gives a free ball in one step of `dt`
+ * seconds. Only a pointer over the box, and near the ball, gives any. The spring
+ * acts over the step, and the ball takes over the pointer's speed in proportion to the
+ * step: a second of steps takes over all of it.
+ */
+export function pointerPush(pointer: Pointer, ball: Ball, dt: number) {
   if (!pointer.active) {
     return { vx: 0, vy: 0 };
   }
@@ -82,27 +112,12 @@ export function pointerPush(
   const distance = Math.sqrt(near);
   // A soft spring: the nearer the pointer, the firmer the push.
   const push = (reach - distance) * POINTER_PUSH;
-  // The share of a half frame that this step covers.
-  const share = (dt * 2) / frame;
   const limit = {
     maximum: POINTER_SPEED_LIMIT,
     minimum: -POINTER_SPEED_LIMIT,
   };
   return {
-    vx:
-      (dx / distance) * push * dt +
-      Num.clamp(pointer.vx, limit) * POINTER_SHARE * share,
-    vy:
-      (dy / distance) * push * dt +
-      Num.clamp(pointer.vy, limit) * POINTER_SHARE * share,
-  };
-}
-
-/** The pointer's own speed fades a little each frame. */
-export function fadePointer(pointer: Pointer): Pointer {
-  return {
-    ...pointer,
-    vx: pointer.vx * POINTER_FADE,
-    vy: pointer.vy * POINTER_FADE,
+    vx: (dx / distance) * push * dt + Num.clamp(pointer.vx, limit) * dt,
+    vy: (dy / distance) * push * dt + Num.clamp(pointer.vy, limit) * dt,
   };
 }

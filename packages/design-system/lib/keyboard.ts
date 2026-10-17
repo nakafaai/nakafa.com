@@ -1,16 +1,15 @@
+import { isComposingKey } from "@repo/utilities/composition";
+
 /**
  * Whether a key press is the learner's own key press for the field, and not a
  * key that belongs to a composed character, such as the Enter that confirms a
- * Japanese conversion or the Escape that cancels it. Browsers report such a key
- * press while the composition runs, with `isComposing` set. Some Safari versions
- * send it after the composition has ended, with `isComposing` unset, and key
- * code 229 is what browsers report for a key press of an input method, so the
- * key code is checked as well.
+ * Japanese conversion or the Escape that cancels it. The check, and why it also
+ * reads the key code, is `isComposingKey`, the one owner of that rule.
  */
 export function isOutsideComposition(
   event: Pick<KeyboardEvent, "isComposing" | "keyCode">
 ) {
-  return !event.isComposing && event.keyCode !== 229;
+  return !isComposingKey(event);
 }
 
 /**

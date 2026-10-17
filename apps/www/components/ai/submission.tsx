@@ -93,50 +93,53 @@ export function useNinaSubmission(
       : randomUuid;
     return Effect.runPromise(
       draftKey.pipe(
-        Effect.tap((key) =>
+        Effect.flatMap((key) =>
+          // The chat draft and the in-flight guard are released on every exit,
+          // a defect of the store included, so no later send is held back.
           Effect.sync(() => {
             if (key) {
               addChatDraft(key);
             }
-          })
-        ),
-        Effect.flatMap((key) =>
-          inputProgram.pipe(
-            Effect.tap(() => requireNinaConnection(convex)),
-            Effect.flatMap((input) => {
-              const payload = {
-                ...(chatId ? { chatId } : {}),
-                input,
-              };
-              const previous = uncertain.current;
-              const same =
-                previous &&
-                encodeJsonText({ ...previous, requestId: undefined }) ===
-                  encodeJsonText(payload);
-              const requestId: Effect.Effect<string> = same
-                ? Effect.succeed(previous.requestId)
-                : randomUuid;
-              return requestId.pipe(
-                Effect.flatMap((id) => {
-                  const args = { ...payload, requestId: id };
-                  uncertain.current = args;
-                  const submit = start.withOptimisticUpdate(
-                    optimisticPrompt(
-                      HashMap.fromIterable(previews),
-                      DateTime.toEpochMillis(DateTime.nowUnsafe())
-                    )
+          }).pipe(
+            Effect.andThen(
+              inputProgram.pipe(
+                Effect.tap(() => requireNinaConnection(convex)),
+                Effect.flatMap((input) => {
+                  const payload = {
+                    ...(chatId ? { chatId } : {}),
+                    input,
+                  };
+                  const previous = uncertain.current;
+                  const same =
+                    previous &&
+                    encodeJsonText({ ...previous, requestId: undefined }) ===
+                      encodeJsonText(payload);
+                  const requestId: Effect.Effect<string> = same
+                    ? Effect.succeed(previous.requestId)
+                    : randomUuid;
+                  return requestId.pipe(
+                    Effect.flatMap((id) => {
+                      const args = { ...payload, requestId: id };
+                      uncertain.current = args;
+                      const submit = start.withOptimisticUpdate(
+                        optimisticPrompt(
+                          HashMap.fromIterable(previews),
+                          DateTime.toEpochMillis(DateTime.nowUnsafe())
+                        )
+                      );
+                      return Effect.tryPromise({
+                        try: () => submit(args),
+                        catch: () =>
+                          new NinaConnectionError({
+                            code: "NINA_CONNECTION_FAILED",
+                            message: "Nina admission could not be confirmed.",
+                          }),
+                      }).pipe(Effect.flatMap(Effect.fromResult));
+                    })
                   );
-                  return Effect.tryPromise({
-                    try: () => submit(args),
-                    catch: () =>
-                      new NinaConnectionError({
-                        code: "NINA_CONNECTION_FAILED",
-                        message: "Nina admission could not be confirmed.",
-                      }),
-                  }).pipe(Effect.flatMap(Effect.fromResult));
                 })
-              );
-            }),
+              )
+            ),
             Effect.onExit((exit) =>
               Effect.sync(() => {
                 if (!key) {

@@ -29,6 +29,8 @@ export const PAGE = CHAT_LIST_PAGE_SIZE;
  * never counts.
  */
 export const onThePage = (page: Page) => page.locator("main main");
+/** The address of a chat that a page moves to once its first prompt is admitted. */
+export const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 /**
  * The Convex names of the functions the chat pages call. The refs module
  * cannot be imported here, because it pulls in packages that Node does not

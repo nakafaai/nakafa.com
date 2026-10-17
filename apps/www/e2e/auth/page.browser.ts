@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { COVER } from "@repo/design-system/components/pool/cover";
 import { Array as Arr, Duration, Effect, MutableList, Schema } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -24,10 +25,24 @@ const READS_APART_MILLISECONDS = 500;
 const EDGE_SLACK = 0.5;
 /** A drag ends this far to the left of the column, in pixels. */
 const DRAG_PAST = 200;
+/** A pointer crossing starts and ends this far inside the column, in pixels. */
+const CROSSING_INSET = 4;
+/** A pointer crossing moves in this many parts, so the pool sees the pointer move. */
+const CROSSING_STEPS = 60;
+/** The share of the pool's height that a pointer crossing runs along. */
+const CROSSING_HEIGHT = 0.6;
+/** The margin around the cover that the pool's unit test allows, for the sizes that are left over. */
+const COVER_MARGIN = 0.02;
+/** The spacing of the grid that the covered share is read on, in pixels. */
+const GRID_PIXELS = 4;
 /** The height of the screen that must show the whole sign-in page. */
 const SHORT_SCREEN = 640;
-/** The pool's own code writes this attribute on its element, and no other script does. */
-const POOL_SCRIPT = /["']data-slot["']\s*:\s*["']pool["']/u;
+/**
+ * The pool's driver reveals the settled pile through `element.dataset.shown`,
+ * and no other script writes that property. A minifier keeps property names,
+ * while the React Compiler may move a JSX attribute's text into a variable.
+ */
+const POOL_SCRIPT = /\.dataset\.shown\s*=\s*["']true["']/u;
 
 /** A box on the screen, in pixels. */
 const BoxSchema = Schema.Struct({
@@ -47,12 +62,22 @@ function boxOf(locator: Locator): Promise<Box> {
   });
 }
 
-/** The box of every member, in the order the pool draws them. */
+/**
+ * The box of every member, in the order the pool draws them. A member is turned
+ * a little while it moves, so its box is its size around its center, which a turn
+ * leaves in place. The size is the one that the pool writes on the member.
+ */
 function memberBoxes(page: Page): Promise<readonly Box[]> {
   return page.locator(MEMBERS).evaluateAll((nodes) =>
     nodes.map((node) => {
-      const { height, width, x, y } = node.getBoundingClientRect();
-      return { height, width, x, y };
+      const rect = node.getBoundingClientRect();
+      const size = Number.parseFloat(node.style.width);
+      return {
+        height: size,
+        width: size,
+        x: rect.x + rect.width / 2 - size / 2,
+        y: rect.y + rect.height / 2 - size / 2,
+      };
     })
   );
 }
@@ -62,6 +87,42 @@ function transformsOf(page: Page): Promise<readonly string[]> {
   return page
     .locator(MEMBERS)
     .evaluateAll((nodes) => nodes.map((node) => node.style.transform));
+}
+
+/**
+ * The share of the pool's box that the members cover, read on a grid of points. A
+ * member covers a disc of half its width around its center, as the physics has it.
+ */
+function coveredShare(page: Page): Promise<number> {
+  return page.locator(POOL).evaluate((pool, step) => {
+    const origin = pool.getBoundingClientRect();
+    const discs = Array.from(
+      pool.querySelectorAll<HTMLElement>(":scope > div"),
+      (node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          r: node.offsetWidth / 2,
+          x: rect.x + rect.width / 2 - origin.x,
+          y: rect.y + rect.height / 2 - origin.y,
+        };
+      }
+    );
+    let covered = 0;
+    let total = 0;
+    for (let y = step / 2; y < origin.height; y += step) {
+      for (let x = step / 2; x < origin.width; x += step) {
+        total += 1;
+        if (
+          discs.some(
+            (disc) => (x - disc.x) ** 2 + (y - disc.y) ** 2 <= disc.r ** 2
+          )
+        ) {
+          covered += 1;
+        }
+      }
+    }
+    return covered / total;
+  }, GRID_PIXELS);
 }
 
 /** The center of the member that lies lowest on the screen. */
@@ -98,6 +159,19 @@ function expectInside(members: readonly Box[], column: Box) {
   });
 }
 
+/** Waits until the pool has drawn its members, and each of them has its place. */
+const waitForPlaced = Effect.fn("NakafaE2E.waitForPoolPlaced")(function* (
+  page: Page
+) {
+  yield* Effect.promise(() =>
+    expect(async () => {
+      const placed = await transformsOf(page);
+      expect(placed.length).toBeGreaterThan(0);
+      expect(Arr.every(placed, (transform) => transform !== "")).toBe(true);
+    }).toPass({ timeout: readinessTimeoutMilliseconds })
+  );
+});
+
 /**
  * Waits until the pool stands still: its members are placed, and two reads a
  * moment apart give the same transforms.
@@ -108,6 +182,7 @@ const waitForRest = Effect.fn("NakafaE2E.waitForPoolRest")(function* (
   yield* Effect.promise(() =>
     expect(async () => {
       const first = await transformsOf(page);
+      expect(first.length).toBeGreaterThan(0);
       expect(Arr.every(first, (transform) => transform !== "")).toBe(true);
       await page.waitForTimeout(READS_APART_MILLISECONDS);
       expect(await transformsOf(page)).toEqual(first);
@@ -151,24 +226,25 @@ function holdsPool(texts: MutableList.MutableList<Promise<string>>) {
   );
 }
 
-const verifyRestInside = Effect.fn("NakafaE2E.verifyPoolRestsInside")(
-  function* (page: Page) {
-    const texts = watchScripts(page);
-    yield* openSignIn(page);
-    yield* Effect.promise(() => expect(page.locator(MEMBERS)).toHaveCount(30));
-    yield* waitForRest(page);
-    const column = yield* Effect.promise(() => boxOf(page.locator(POOL)));
-    const members = yield* Effect.promise(() => memberBoxes(page));
-    yield* Effect.sync(() => expectInside(members, column));
-    expect(yield* holdsPool(texts)).toBe(true);
-  }
-);
+/** Expects the members at rest to cover about half of the pool, and to lie inside its column. */
+const verifyRestCover = Effect.fn("NakafaE2E.verifyPoolCoversHalf")(function* (
+  page: Page
+) {
+  const texts = watchScripts(page);
+  yield* openSignIn(page);
+  yield* waitForRest(page);
+  const share = yield* Effect.promise(() => coveredShare(page));
+  expect(Math.abs(share - COVER)).toBeLessThanOrEqual(COVER_MARGIN);
+  const column = yield* Effect.promise(() => boxOf(page.locator(POOL)));
+  const members = yield* Effect.promise(() => memberBoxes(page));
+  yield* Effect.sync(() => expectInside(members, column));
+  expect(yield* holdsPool(texts)).toBe(true);
+});
 
 const verifyDragOut = Effect.fn("NakafaE2E.verifyPoolDragOut")(function* (
   page: Page
 ) {
   yield* openSignIn(page);
-  yield* Effect.promise(() => expect(page.locator(MEMBERS)).toHaveCount(30));
   yield* waitForRest(page);
   const column = yield* Effect.promise(() => boxOf(page.locator(POOL)));
   const grip = yield* Effect.promise(() => lowestCenter(page));
@@ -187,6 +263,33 @@ const verifyDragOut = Effect.fn("NakafaE2E.verifyPoolDragOut")(function* (
   const members = yield* Effect.promise(() => memberBoxes(page));
   yield* Effect.sync(() => expectInside(members, column));
 });
+
+/** Moves the pointer across the middle of the pool, from its left edge to its right edge. */
+const crossPool = Effect.fn("NakafaE2E.crossPool")(function* (page: Page) {
+  const column = yield* Effect.promise(() => boxOf(page.locator(POOL)));
+  const y = column.y + column.height * CROSSING_HEIGHT;
+  yield* Effect.promise(async () => {
+    await page.mouse.move(column.x + CROSSING_INSET, y);
+    await page.mouse.move(column.x + column.width - CROSSING_INSET, y, {
+      steps: CROSSING_STEPS,
+    });
+  });
+  return column;
+});
+
+const verifyPointerCrossing = Effect.fn("NakafaE2E.verifyPoolCrossed")(
+  function* (page: Page) {
+    yield* openSignIn(page);
+    yield* waitForRest(page);
+    const before = yield* Effect.promise(() => transformsOf(page));
+    const column = yield* crossPool(page);
+    // While the pointer crosses, the animals it passes move.
+    expect(yield* Effect.promise(() => transformsOf(page))).not.toEqual(before);
+    yield* waitForRest(page);
+    const members = yield* Effect.promise(() => memberBoxes(page));
+    yield* Effect.sync(() => expectInside(members, column));
+  }
+);
 
 const verifyWithoutScrolling = Effect.fn("NakafaE2E.verifySignInFits")(
   function* (page: Page) {
@@ -230,16 +333,20 @@ const verifyWithoutScrolling = Effect.fn("NakafaE2E.verifySignInFits")(
 const verifyStill = Effect.fn("NakafaE2E.verifyPoolStillWithReducedMotion")(
   function* (page: Page) {
     yield* openSignIn(page);
-    yield* Effect.promise(() => expect(page.locator(MEMBERS)).toHaveCount(30));
-    yield* Effect.promise(() =>
-      expect(async () => {
-        const placed = await transformsOf(page);
-        expect(Arr.every(placed, (transform) => transform !== "")).toBe(true);
-      }).toPass({ timeout: readinessTimeoutMilliseconds })
-    );
+    yield* waitForPlaced(page);
     const first = yield* Effect.promise(() => transformsOf(page));
     yield* Effect.sleep(Duration.millis(READS_APART_MILLISECONDS));
     expect(yield* Effect.promise(() => transformsOf(page))).toEqual(first);
+  }
+);
+
+const verifyPointerIgnored = Effect.fn("NakafaE2E.verifyPoolIgnoresPointer")(
+  function* (page: Page) {
+    yield* openSignIn(page);
+    yield* waitForPlaced(page);
+    const before = yield* Effect.promise(() => transformsOf(page));
+    yield* crossPool(page);
+    expect(yield* Effect.promise(() => transformsOf(page))).toEqual(before);
   }
 );
 
@@ -257,11 +364,11 @@ const verifyPhone = Effect.fn("NakafaE2E.verifySignInOnAPhone")(function* (
 test.describe("the animal pool beside the sign-in form at 1440 by 900", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
 
-  test("holds thirty members, and at rest each one lies inside the column", async ({
+  test("covers about half of the pool at rest, and each member lies inside the column", async ({
     page,
   }) => {
     await Effect.runPromise(
-      withObservedPageErrors(page, verifyRestInside(page))
+      withObservedPageErrors(page, verifyRestCover(page))
     );
   });
 
@@ -269,6 +376,25 @@ test.describe("the animal pool beside the sign-in form at 1440 by 900", () => {
     page,
   }) => {
     await Effect.runPromise(withObservedPageErrors(page, verifyDragOut(page)));
+  });
+
+  test("moves the animals a pointer crosses, and they stay inside the column", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyPointerCrossing(page))
+    );
+  });
+});
+
+test.describe("the animal pool beside the sign-in form at 2560 by 1440", () => {
+  test.use({ viewport: { height: 1440, width: 2560 } });
+
+  // The catalog is too small to cover half of this pool at the animals' own size, so the animals grow.
+  test("covers about half of the wide pool at rest", async ({ page }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyRestCover(page))
+    );
   });
 });
 
@@ -291,6 +417,14 @@ test.describe("the animal pool with reduced motion", () => {
     page,
   }) => {
     await Effect.runPromise(withObservedPageErrors(page, verifyStill(page)));
+  });
+
+  test("a pointer that crosses the pool moves none of its members", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyPointerIgnored(page))
+    );
   });
 });
 

@@ -283,6 +283,11 @@ export const REGISTRY_REVIEWS = [
     "0.12.5",
     "The adapter defines the accepted Better Auth peer range.",
   ],
+  [
+    "posthog-node@latest",
+    "5.56.2",
+    "posthog-node 5.56 imports @opentelemetry/api, an optional peer that is not installed, and Convex's bundler cannot resolve it. The PostHog Convex component therefore stays on 5.55.1 through the override for @posthog/convex in pnpm-workspace.yaml, and the analytics package keeps 5.56.2. Review this again when a posthog-node or @posthog/convex release bundles for Convex without the import.",
+  ],
   ["@biomejs/biome@latest", "2.5.15", "Formatting is reviewed with Ultracite."],
   [
     "ultracite@latest",

@@ -10654,7 +10654,12 @@ export declare const internal: {
         { uploadId: Id<"ninaUploads"> },
         null
       >;
-      reserve: FunctionReference<"mutation", "internal", {}, Id<"ninaUploads">>;
+      reserve: FunctionReference<
+        "mutation",
+        "internal",
+        { filename: string },
+        { storedFilename: string; uploadId: Id<"ninaUploads"> }
+      >;
     };
     usage: {
       record: FunctionReference<

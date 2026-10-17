@@ -171,6 +171,7 @@ export function PromptInput({
 const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
   event
 ) => {
+  // The key that confirms a composition is not a send.
   if (!isEnterOutsideComposition(event.nativeEvent)) {
     return;
   }

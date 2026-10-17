@@ -19,6 +19,7 @@ import {
   copyOf,
   type Replacement,
   sealThreadIn,
+  writtenThreadIn,
 } from "@repo/backend/test/nina/seal";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { sealedSummary } from "@repo/backend/test/seal";
@@ -89,14 +90,15 @@ function toolSteps(order: number, steps: number) {
  * the summary as a turn settles, and read the model input of a turn. A
  * cancelled turn keeps the answer text it wrote before it stopped, and its
  * prompt is failed, as settlement leaves it. `shape` sets a turn's size with
- * `tokens`, which a fold counts, and gives it `steps` tool steps. With `sealed`,
- * every row is sealed in place before the test runs, and each prompt names its
- * sealed copy, so the fold reads the sealed form.
+ * `tokens`, which a fold counts, and gives it `steps` tool steps. With `copy`
+ * other than plain, every learner's prompt is written by the writers before the
+ * test runs, and with `sealed` every row is then sealed in place. Each prompt
+ * names its copy, so the fold reads the written or the sealed form.
  */
 export async function createSummaryTest(
   turns: number,
   shape: (order: number) => typeof EarlierTurn.Type = () => ({}),
-  options: { readonly sealed?: boolean } = {}
+  options: { readonly copy?: "plain" | "written" | "sealed" } = {}
 ) {
   const t = createConvexTestWithBetterAuth();
   const plain = await t.mutation(async (ctx) => {
@@ -160,12 +162,20 @@ export async function createSummaryTest(
     }
     return { chatId, prompts, threadId, userId };
   });
-  const replacements: readonly Replacement[] = options.sealed
-    ? await sealThreadIn(t, plain.threadId, plain.userId)
-    : [];
+  const copy = options.copy ?? "plain";
+  const written: readonly Replacement[] =
+    copy === "plain"
+      ? []
+      : await writtenThreadIn(t, plain.threadId, plain.userId);
+  const replacements: readonly Replacement[] =
+    copy === "sealed"
+      ? await sealThreadIn(t, plain.threadId, plain.userId)
+      : [];
   const setup = {
     ...plain,
-    prompts: Arr.map(plain.prompts, (id) => copyOf(replacements, id)),
+    prompts: Arr.map(plain.prompts, (id) =>
+      copyOf(replacements, copyOf(written, id))
+    ),
   };
   const settled = (order: number) => ({
     ...setup,

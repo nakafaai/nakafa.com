@@ -1,5 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { AuthFailure, AuthReadError } from "@repo/backend/confect/auth/spec";
+import { ChatShareReadError } from "@repo/backend/confect/chats/access/spec";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect, Schema } from "effect";
 import { ANSWER_MILLISECONDS } from "@/e2e/support/changes";
 import { openChatPage, runOnPage, SHARE_TOKEN_QUERY } from "@/e2e/support/chat";
@@ -24,8 +28,7 @@ const NOT_LOADED = "We could not load the link";
 
 /**
  * What the server throws, as the page decodes it, when it cannot read the
- * account behind a query. It is the one failure of the query that gives the
- * owner the token of a link.
+ * account behind the query: one of the failures the query declares.
  */
 const unreadable = Schema.encodeSync(AuthFailure)(
   new AuthReadError({
@@ -35,10 +38,63 @@ const unreadable = Schema.encodeSync(AuthFailure)(
 );
 
 /**
+ * What the server throws, as the page decodes it, when it cannot read or open
+ * the share of the chat: the other failure the query declares.
+ */
+const unopenable = Schema.encodeSync(ChatShareReadError)(
+  new ChatShareReadError()
+);
+
+/**
  * What the server throws when it fails in a way the query does not declare. The
  * page cannot read it as the failure of the query, so the query itself breaks.
  */
 const undeclared = { code: "SHARE_TOKEN_UNAVAILABLE" };
+
+/**
+ * The owner's share dialog says the link could not load while the query fails
+ * with `failure`, and loads it on Retry once the server answers again.
+ */
+const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
+  page: Page,
+  origin: string,
+  failure: unknown
+) {
+  const owner = yield* ownedChat(page, origin, {
+    prompt: PROMPT,
+    title: TITLE,
+  });
+
+  yield* Effect.promise(async () => {
+    const dialog = await openShareDialog(page);
+    const copy = dialog.getByRole("button", { name: "Copy link" });
+    await dialog.evaluate((node) => Reflect.set(node, "shareDialogKept", true));
+
+    // The server fails to answer the query for the token of the link.
+    owner.changes.failQuery(SHARE_TOKEN_QUERY, failure);
+    await dialog.getByRole("button", { name: "Create link" }).click();
+
+    // The dialog says so and offers to try again, and the chat stays.
+    await expect(dialog.getByText(NOT_LOADED)).toBeVisible({
+      timeout: ANSWER_MILLISECONDS,
+    });
+    await expect(copy).toHaveCount(0);
+    await expect(promptOf(page, PROMPT)).toBeVisible();
+    await expect(notAvailable(page)).toHaveCount(0);
+
+    // The server recovers, the retry loads the link, and the owner copies it.
+    owner.changes.recoverQuery();
+    await dialog.getByRole("button", { name: en.Ai.retry }).click();
+    await expect(copy).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
+    // The failure and the retry changed what the dialog says, never the dialog.
+    expect(
+      await dialog.evaluate((node) => Reflect.get(node, "shareDialogKept"))
+    ).toBe(true);
+    await copy.click();
+    const link = await page.evaluate(() => navigator.clipboard.readText());
+    expect(readLink(link).token).toMatch(SHARE_TOKEN);
+  });
+});
 
 test.describe("A share link at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
@@ -87,79 +143,25 @@ test.describe("A share link at 1440px", () => {
     page,
   }) => {
     await runOnPage(page, baseURL, (origin) =>
-      Effect.gen(function* () {
-        const owner = yield* ownedChat(page, origin, {
-          prompt: PROMPT,
-          title: TITLE,
-        });
-
-        yield* Effect.promise(async () => {
-          const dialog = await openShareDialog(page);
-          const copy = dialog.getByRole("button", { name: "Copy link" });
-
-          // The server fails to answer the query for the token of the link.
-          owner.changes.failQuery(SHARE_TOKEN_QUERY, unreadable);
-          await dialog.getByRole("button", { name: "Create link" }).click();
-
-          // The dialog says so and offers to try again, and the chat stays.
-          await expect(dialog.getByText(NOT_LOADED)).toBeVisible({
-            timeout: ANSWER_MILLISECONDS,
-          });
-          await expect(copy).toHaveCount(0);
-          await expect(promptOf(page, PROMPT)).toBeVisible();
-          await expect(notAvailable(page)).toHaveCount(0);
-
-          // The server recovers, the retry loads the link, and the owner copies it.
-          owner.changes.recoverQuery();
-          await dialog.getByRole("button", { name: "Retry" }).click();
-          await expect(copy).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
-          await copy.click();
-          const link = await page.evaluate(() =>
-            navigator.clipboard.readText()
-          );
-          expect(readLink(link).token).toMatch(SHARE_TOKEN);
-        });
-      })
+      retriesTheLink(page, origin, unreadable)
     );
   });
 
-  test("the share dialog stays open when the link fails in a way the query does not declare", async ({
+  test("the share dialog says when the server cannot open the link, and loads it again on Retry", async ({
     baseURL,
     page,
   }) => {
     await runOnPage(page, baseURL, (origin) =>
-      Effect.gen(function* () {
-        const owner = yield* ownedChat(page, origin, {
-          prompt: PROMPT,
-          title: TITLE,
-        });
+      retriesTheLink(page, origin, unopenable)
+    );
+  });
 
-        yield* Effect.promise(async () => {
-          const dialog = await openShareDialog(page);
-          const copy = dialog.getByRole("button", { name: "Copy link" });
-          // The dialog the learner opened is the one that shows the failure, so
-          // the element is tagged and read again after each step.
-          await dialog.evaluate((element) =>
-            Reflect.set(element, "kept", true)
-          );
-          const kept = () =>
-            dialog.evaluate((element) => Reflect.get(element, "kept"));
-
-          owner.changes.failQuery(SHARE_TOKEN_QUERY, undeclared);
-          await dialog.getByRole("button", { name: "Create link" }).click();
-
-          await expect(dialog.getByText(NOT_LOADED)).toBeVisible({
-            timeout: ANSWER_MILLISECONDS,
-          });
-          expect(await kept()).toBe(true);
-          await expect(promptOf(page, PROMPT)).toBeVisible();
-
-          owner.changes.recoverQuery();
-          await dialog.getByRole("button", { name: "Retry" }).click();
-          await expect(copy).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
-          expect(await kept()).toBe(true);
-        });
-      })
+  test("the share dialog says when the link fails in a way the query does not declare, and loads it again on Retry", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      retriesTheLink(page, origin, undeclared)
     );
   });
 });
