@@ -100,6 +100,10 @@ function createAppRewrites() {
       source: `/${LOCALE_SEGMENT}${profileHref(":username")}/chat`,
       destination: "/:locale/user/:username/chat",
     },
+    {
+      source: `/${LOCALE_SEGMENT}${profileHref(":username")}/comments`,
+      destination: "/:locale/user/:username/comments",
+    },
   ];
   return {
     // PostHog requires the specific static and array rewrites to come before the

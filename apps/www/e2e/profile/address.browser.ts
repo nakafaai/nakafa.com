@@ -60,6 +60,10 @@ test("a learner opens their own profile at the username address, which keeps the
         await expect(page).toHaveURL(comments, {
           timeout: readinessTimeoutMilliseconds,
         });
+        // The page is the Comments tab, not a not-found page.
+        await expect(
+          page.getByRole("tab", { name: app.Common.comments })
+        ).toHaveAttribute("aria-selected", "true");
       });
     })
   );

@@ -5,7 +5,9 @@ import { PROFILE_SIGN } from "@/lib/profile/href";
 /** Whether the segments below a profile name one of its tabs: comments, or `chat`. */
 export function isProfileTab(segments: readonly string[]) {
   return (
-    segments.length === 0 || (segments.length === 1 && segments[0] === "chat")
+    segments.length === 0 ||
+    (segments.length === 1 &&
+      (segments[0] === "comments" || segments[0] === "chat"))
   );
 }
 
