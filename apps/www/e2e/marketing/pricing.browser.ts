@@ -244,7 +244,11 @@ const verifyRupiahPricingComparisons = Effect.fn(
   );
 });
 
-/** The toys of the pricing page wait for their part, and then come on screen. */
+/**
+ * The toys of the pricing page wait for their part, and then come on screen
+ * while the reader stays where they scrolled: loading the toys must not hide
+ * the page and drop the reader back at the top.
+ */
 const verifyPricingToysWaitForTheirPart = Effect.fn(
   "NakafaE2E.verifyPricingToysWaitForTheirPart"
 )(function* (page: Page) {
@@ -254,7 +258,16 @@ const verifyPricingToysWaitForTheirPart = Effect.fn(
   yield* Effect.promise(() =>
     page.locator("#comparison").scrollIntoViewIfNeeded()
   );
+  const scrolled = yield* Effect.promise(() =>
+    page.evaluate(() => window.scrollY)
+  );
   yield* Effect.promise(() => expect(toys.first()).toBeVisible());
+  yield* Effect.promise(() =>
+    expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scrolled)
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator("#comparison")).toBeInViewport()
+  );
 });
 
 const verifyPricingReducedMotion = Effect.fn(
