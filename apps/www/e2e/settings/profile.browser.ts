@@ -40,6 +40,13 @@ function bioField(page: Page) {
   return page.getByRole("textbox", { name: app.Auth.bio });
 }
 
+/** The footer sentence that says why a bio over the limit cannot be saved. */
+function bioTooLongAlert(page: Page) {
+  return page
+    .getByRole("alert")
+    .getByText(app.Auth["bio-too-long"], { exact: true });
+}
+
 test("a learner picks another animal in settings, and the account button and the profile draw it", async ({
   baseURL,
   page,
@@ -173,17 +180,16 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
 
       yield* Effect.promise(async () => {
         await page.goto(SETTINGS);
-        // A bio over the limit says why in the footer, and cannot be saved.
+        // A bio over the limit says why in an alert in the footer, and cannot
+        // be saved.
         await bioField(page).fill("a".repeat(BIO_MAX_LENGTH + 1));
-        await expect(
-          page.getByText(app.Auth["bio-too-long"], { exact: true })
-        ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        await expect(bioTooLongAlert(page)).toBeVisible({
+          timeout: readinessTimeoutMilliseconds,
+        });
         await expect(save).toBeDisabled();
 
         await bioField(page).fill(bio);
-        await expect(
-          page.getByText(app.Auth["bio-too-long"], { exact: true })
-        ).toHaveCount(0);
+        await expect(bioTooLongAlert(page)).toHaveCount(0);
         await expect(save).toBeEnabled({
           timeout: readinessTimeoutMilliseconds,
         });
