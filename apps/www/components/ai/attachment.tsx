@@ -38,7 +38,8 @@ import { releaseUploads } from "@/components/ai/uploads";
 
 // A chip in the composer sits inside the composer's own border, so it draws no
 // frame: no border and no background of its own. The `preview` variant keeps
-// the size of the chip, and its state shows in the icon tile and the text.
+// the size of the chip. A document's state shows in its icon tile and its text;
+// a picture shows a failure with the wash of its media variant.
 const imageVariants = cva("", {
   variants: {
     variant: {
