@@ -1,102 +1,119 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { Array as Arr, Effect } from "effect";
+import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { openRoute } from "@/e2e/support/route";
+import { targetViewports, viewportSize } from "@/e2e/support/viewport";
 
-const HOME = "/en";
-
-/**
- * Samples the scroll position on every animation frame until the page has stayed
- * still for half a second after it moved, and counts the positions it passed
- * between its start and its end. A smooth scroll passes through positions, an
- * instant jump does not. It runs in the page, so it uses no import.
- */
-function countPassedPositions() {
-  return new Promise<number>((resolve) => {
-    const startedAt = performance.now();
-    const start = window.scrollY;
-    const positions: number[] = [];
-    let lastTop = start;
-    let stillFrames = 0;
-
-    const sample = () => {
-      if (window.scrollY === lastTop) {
-        stillFrames += 1;
-      } else {
-        lastTop = window.scrollY;
-        positions.push(lastTop);
-        stillFrames = 0;
-      }
-      const settled = lastTop !== start && stillFrames >= 30;
-      if (!settled && performance.now() - startedAt < 10_000) {
-        requestAnimationFrame(sample);
-        return;
-      }
-      const end = lastTop;
-      resolve(positions.filter((top) => top !== end).length);
-    };
-    requestAnimationFrame(sample);
-  });
-}
-
-/** How far the features section sits from the place its scroll margin leaves for it. Zero when it is there. */
-function readFeaturesGap() {
-  const section = document.getElementById("features");
-  if (!section) {
-    return Number.NaN;
+/** Nina, the line under the header and the header's links, measured as the eye sees them. */
+function readHeader() {
+  const header = document.querySelector("header");
+  const nina = document.querySelector('[data-slot="header-nina"]');
+  if (header === null || nina === null) {
+    return null;
   }
-  return (
-    section.getBoundingClientRect().top -
-    Number.parseFloat(getComputedStyle(section).scrollMarginTop)
-  );
+  const bar = header.getBoundingClientRect();
+  const figure = nina.getBoundingClientRect();
+  const links = Array.from(header.querySelectorAll("nav a"), (link) =>
+    link.getBoundingClientRect()
+  ).filter((rect) => rect.width > 0);
+  return {
+    border: getComputedStyle(header).borderBottomWidth,
+    linkGaps: links
+      .slice(1)
+      .map((rect, index) => rect.left - links[index].right),
+    lineTop: bar.bottom - 1,
+    ninaBottom: figure.bottom,
+    ninaCentre: figure.left + figure.width / 2,
+    pageCentre: document.documentElement.clientWidth / 2,
+    top: bar.top,
+  };
 }
 
 /**
- * Chooses Features in the header of the home page, where the section is on the
- * same page. The jump must pass through positions on its way, as a smooth
- * scroll does, and the section must land under the header.
+ * Checks the header as the identity's Header card draws it: the line under it
+ * is drawn, Nina stands in the middle of the page with her feet on that line,
+ * and the links sit side by side with no space beyond their own padding.
  */
-const verifyFeaturesGlide = Effect.fn("NakafaE2E.verifyFeaturesGlide")(
-  function* (page: Page) {
-    yield* seedAnalyticsConsent(page, "denied");
-    yield* Effect.promise(() => page.goto(HOME));
-    yield* waitForCommittedAppRouter(
-      page,
-      HOME,
-      HOME,
-      readinessTimeoutMilliseconds
+const expectHeaderDrawn = Effect.fn("NakafaE2E.expectHeaderDrawn")(function* (
+  page: Page
+) {
+  const drawn = yield* Effect.promise(() => page.evaluate(readHeader));
+  yield* Effect.sync(() => {
+    expect(drawn).not.toBeNull();
+    if (drawn === null) {
+      return;
+    }
+    expect(drawn.top).toBe(0);
+    expect(drawn.border).toBe("1px");
+    expect(Math.abs(drawn.ninaCentre - drawn.pageCentre)).toBeLessThanOrEqual(
+      1
     );
-    // The header draws this link with a button role, so it is found by its label.
-    const features = page
-      .locator("header")
-      .getByText("Features", { exact: true });
-    yield* Effect.promise(() =>
-      expect(features).toBeVisible({ timeout: readinessTimeoutMilliseconds })
-    );
-    const sampling = page.evaluate(countPassedPositions);
-    yield* Effect.promise(() => features.click());
-    const passed = yield* Effect.promise(() => sampling);
-    const gap = yield* Effect.promise(() => page.evaluate(readFeaturesGap));
-    yield* Effect.sync(() => {
-      expect(passed).toBeGreaterThan(0);
-      expect(Math.abs(gap)).toBeLessThanOrEqual(1);
-    });
-  }
-);
-
-test.describe("Marketing header", () => {
-  test.use({
-    reducedMotion: "no-preference",
-    viewport: { height: 900, width: 1440 },
-  });
-
-  test("glides to the features section from the home page", async ({
-    page,
-  }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyFeaturesGlide(page))
-    );
+    expect(Math.abs(drawn.ninaBottom - drawn.lineTop)).toBeLessThanOrEqual(1);
+    for (const gap of drawn.linkGaps) {
+      expect(gap).toBeLessThanOrEqual(2);
+    }
   });
 });
+
+for (const viewport of targetViewports) {
+  test(`the marketing header keeps Nina centred on its line through history and fast scrolling at ${viewport.name}`, async ({
+    baseURL,
+    browser,
+  }) => {
+    await Effect.runPromise(
+      withBrowserContext(
+        browser,
+        {
+          ...(baseURL === undefined ? {} : { baseURL }),
+          hasTouch: viewport.hasTouch,
+          viewport: viewportSize(viewport),
+        },
+        (context) =>
+          Effect.gen(function* () {
+            const page = yield* Effect.promise(() => context.newPage());
+            yield* withObservedPageErrors(
+              page,
+              Effect.gen(function* () {
+                const heading = page.getByRole("heading", { level: 1 });
+                yield* openRoute(page, "/en", "denied");
+                yield* Effect.promise(() => expect(heading).toBeVisible());
+                const home = yield* Effect.promise(() => heading.textContent());
+                yield* expectHeaderDrawn(page);
+
+                // Fast wheel bursts down the page and back up.
+                yield* Effect.promise(async () => {
+                  for (const delta of Arr.makeBy(12, () => 1600)) {
+                    await page.mouse.wheel(0, delta);
+                  }
+                  await page.waitForTimeout(400);
+                  for (const delta of Arr.makeBy(12, () => -1600)) {
+                    await page.mouse.wheel(0, delta);
+                  }
+                  await page.waitForTimeout(400);
+                });
+                yield* expectHeaderDrawn(page);
+
+                // Pricing and back, then forward again, through the browser's history.
+                yield* Effect.promise(() => page.goto("/en/pricing"));
+                yield* Effect.promise(() =>
+                  expect(heading).not.toHaveText(home ?? "")
+                );
+                yield* expectHeaderDrawn(page);
+                yield* Effect.promise(() => page.goBack());
+                yield* Effect.promise(() =>
+                  expect(heading).toHaveText(home ?? "")
+                );
+                yield* expectHeaderDrawn(page);
+                yield* Effect.promise(() => page.goForward());
+                yield* Effect.promise(() =>
+                  expect(heading).not.toHaveText(home ?? "")
+                );
+                yield* expectHeaderDrawn(page);
+              })
+            );
+          })
+      )
+    );
+  });
+}

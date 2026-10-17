@@ -133,14 +133,21 @@ function VisualCard({ className, ref, ...props }: ComponentProps<typeof Card>) {
   );
 }
 
-/** The visual's title and, when it has one, its description. */
+/**
+ * The visual's title and, when it has one, its description. A visual without a
+ * title draws no header, because the page around it already names the visual.
+ */
 function VisualCardHeader({
   description,
   title,
 }: {
   description?: ReactNode;
-  title: ReactNode;
+  title?: ReactNode;
 }) {
+  if (title === undefined) {
+    return null;
+  }
+
   return (
     <CardHeader>
       <CardTitle>{title}</CardTitle>
@@ -248,9 +255,10 @@ function VisualCardGroup(props: Omit<ComponentProps<"div">, "className">) {
 /**
  * Shows the card across the whole screen, and returns it to the page. Its
  * pressed state and a polite status tell assistive technology where the
- * visual is.
+ * visual is. A static stand-in of the visual passes `inert`, so the button takes
+ * no focus until the visual is mounted.
  */
-function VisualCardFullscreen() {
+function VisualCardFullscreen({ inert = false }: { inert?: boolean }) {
   const t = useTranslations("Common");
   const { presented, toggle } = useVisual((state) => ({
     presented: state.presentation !== "inline",
@@ -262,6 +270,7 @@ function VisualCardFullscreen() {
       <Button
         aria-pressed={presented}
         className="ms-auto shrink-0"
+        inert={inert}
         onClick={(event) => toggle(event.currentTarget)}
         size="icon"
         variant="secondary"

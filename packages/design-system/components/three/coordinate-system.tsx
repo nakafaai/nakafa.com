@@ -26,6 +26,8 @@ const CAMERA_POSITION_Y = 8;
 const CAMERA_POSITION_Z = 12;
 
 interface Props {
+  /** The name of the scene for assistive technology. A named scene is a region. */
+  "aria-label"?: string | undefined;
   /** Background color of the canvas */
   backgroundColor?: CSSProperties["backgroundColor"];
   /** Explicit complete-content fit for finite illustrations. */
@@ -87,6 +89,7 @@ export function CoordinateSystem({
   origin,
   children,
   className,
+  "aria-label": ariaLabel,
 }: Props) {
   const play = useCoordinateControls((controls) => controls.play);
   const showGrid = useCoordinateControls((controls) => controls.showGrid);
@@ -118,8 +121,10 @@ export function CoordinateSystem({
 
   return (
     <VisualCardScene
+      aria-label={ariaLabel}
       className={cn(threeSceneFrameVariants(), "cursor-grab", className)}
       data-slot="coordinate-system"
+      render={ariaLabel === undefined ? undefined : <section />}
     >
       <ThreeCanvas style={{ background: backgroundColor }}>
         <Suspense>

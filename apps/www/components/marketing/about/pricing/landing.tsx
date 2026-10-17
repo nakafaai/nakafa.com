@@ -15,30 +15,29 @@ function AnimatedPrice({ price }: PriceProps) {
   );
 }
 
-/** Renders the landing pricing section above the shared plan comparison. */
+/**
+ * The home pricing part: the heading, then the shared plan comparison with the
+ * price of each visitor's region.
+ */
 export function Pricing() {
-  const t = useTranslations("Pricing");
+  const t = useTranslations("Landing");
 
   return (
-    <section aria-labelledby="pricing-heading" className="border-b">
-      <div className="mx-auto w-full max-w-7xl border-x">
-        <div
-          className="scroll-mt-28 px-6 pt-24 pb-12 sm:pt-28 lg:px-10 lg:pt-32"
-          id="pricing"
+    <section aria-labelledby="pricing-heading" className="scroll-mt-28">
+      <div
+        className="mx-auto w-full max-w-7xl px-6 pt-20 lg:px-10 lg:pt-32"
+        id="pricing"
+      >
+        <h2
+          className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
+          id="pricing-heading"
         >
-          <h2
-            className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
-            id="pricing-heading"
-          >
-            {t.rich("headline", {
-              mark: (chunks) => <mark>{chunks}</mark>,
-            })}
-          </h2>
-        </div>
+          {t("prices-title")}
+        </h2>
+      </div>
 
-        <div className="border-t bg-card text-card-foreground">
-          <PricingCards headingLevel="h3" Price={AnimatedPrice} />
-        </div>
+      <div className="px-6 lg:px-10">
+        <PricingCards headingLevel="h3" Price={AnimatedPrice} />
       </div>
     </section>
   );

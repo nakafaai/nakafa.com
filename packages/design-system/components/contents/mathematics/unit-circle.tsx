@@ -1,13 +1,19 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
+import {
+  formatTrigRatioMath,
+  TRIG_NUMBER_OPTIONS,
+  UNIT_CIRCLE_DEFAULT_ANGLE,
+} from "@repo/design-system/components/contents/mathematics/trig";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   CoordinateControls,
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
-import { UnitCircle as UnitCircle3D } from "@repo/design-system/components/three/unit-circle";
+import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
@@ -20,7 +26,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
-import { Array as Arr, Option } from "effect";
+import dynamic from "next/dynamic";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
@@ -32,45 +38,28 @@ import {
   NumberField,
 } from "react-aria-components";
 
-const CAMERA_Z_POSITION = 4;
+/** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
+const UnitCircleStage = dynamic(
+  () =>
+    import("@repo/design-system/components/three/unit-circle").then(
+      ({ UnitCircleStage }) => UnitCircleStage
+    ),
+  { loading: ScenePlaceholder }
+);
 
-interface Props {
-  angle?: number;
-  description: ReactNode;
-  title: ReactNode;
+interface CardProps {
+  /** The angle the card shows until the reader picks another. */
+  angle?: number | undefined;
+  /** The card's header. A lesson page names its unit circle with a title and a description. */
+  header?: ReactNode;
+  /**
+   * Whether the three-dimensional scene is mounted. A card that is not live keeps
+   * its whole frame in place, with an empty frame where the scene goes.
+   */
+  live?: boolean;
+  /** Reports each angle the reader picks, so a window can keep it while this card is unmounted. */
+  onAngleChange?: (angle: number) => void;
   /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
-  trigValues?: {
-    sin?: string;
-    cos?: string;
-    tan?: string;
-  };
-}
-
-export function UnitCircle({
-  title,
-  description,
-  angle = 45,
-  trigValues,
-}: Props) {
-  const locale = useLocale();
-
-  return (
-    <CoordinateProvider>
-      <VisualCard>
-        <VisualCardHeader description={description} title={title} />
-        <I18nProvider locale={locale}>
-          <Content angle={angle} trigValues={trigValues} />
-        </I18nProvider>
-      </VisualCard>
-    </CoordinateProvider>
-  );
-}
-
-function Content({
-  angle,
-  trigValues,
-}: {
-  angle: number;
   trigValues?:
     | {
         sin?: string;
@@ -78,6 +67,79 @@ function Content({
         tan?: string;
       }
     | undefined;
+  /** The name of the scene for assistive technology. */
+  viewLabel?: string | undefined;
+}
+
+interface Props {
+  angle?: number | undefined;
+  description: ReactNode;
+  title: ReactNode;
+  /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
+  trigValues?: CardProps["trigValues"];
+}
+
+/**
+ * The unit circle as a visual card without a header. The scene, its angle
+ * controls and the trigonometric values of the angle are all in the card; the
+ * page or the window that holds the card names the lesson.
+ */
+export function UnitCircleCard({
+  angle = UNIT_CIRCLE_DEFAULT_ANGLE,
+  header,
+  live = true,
+  onAngleChange,
+  trigValues,
+  viewLabel,
+}: CardProps) {
+  const locale = useLocale();
+
+  return (
+    <CoordinateProvider>
+      <VisualCard>
+        {header}
+        <I18nProvider locale={locale}>
+          <Content
+            angle={angle}
+            live={live}
+            onAngleChange={onAngleChange}
+            trigValues={trigValues}
+            viewLabel={viewLabel}
+          />
+        </I18nProvider>
+      </VisualCard>
+    </CoordinateProvider>
+  );
+}
+
+/** The unit circle of a lesson page, with the title and description of its lesson. */
+export function UnitCircle({
+  title,
+  description,
+  angle = UNIT_CIRCLE_DEFAULT_ANGLE,
+  trigValues,
+}: Props) {
+  return (
+    <UnitCircleCard
+      angle={angle}
+      header={<VisualCardHeader description={description} title={title} />}
+      trigValues={trigValues}
+    />
+  );
+}
+
+function Content({
+  angle,
+  live,
+  onAngleChange,
+  trigValues,
+  viewLabel,
+}: {
+  angle: number;
+  live: boolean;
+  onAngleChange: ((angle: number) => void) | undefined;
+  trigValues?: CardProps["trigValues"];
+  viewLabel: string | undefined;
 }) {
   const t = useTranslations("Common");
   const format = useFormatter();
@@ -86,40 +148,21 @@ function Content({
   const exactValues = angleValue === angle ? trigValues : undefined;
 
   function formatRatio(value: number, exactValue?: string) {
-    if (exactValue !== undefined) {
-      return `= ${exactValue}`;
-    }
-    if (Math.abs(value) < 1e-10) {
-      return "= 0";
-    }
-    const commonValues = [
-      { value: 0.5, display: "\\frac{1}{2}" },
-      { value: Math.SQRT1_2, display: "\\frac{\\sqrt{2}}{2}" },
-      { value: Math.sqrt(3) / 2, display: "\\frac{\\sqrt{3}}{2}" },
-      { value: 1, display: "1" },
-      { value: Math.sqrt(3), display: "\\sqrt{3}" },
-      { value: Math.sqrt(3) / 3, display: "\\frac{\\sqrt{3}}{3}" },
-    ];
-    const exact = Arr.findFirst(
-      commonValues,
-      (candidate) => Math.abs(Math.abs(value) - candidate.value) < 1e-10
+    return formatTrigRatioMath(
+      value,
+      (approximation) => format.number(approximation, TRIG_NUMBER_OPTIONS),
+      exactValue
     );
-    if (Option.isSome(exact)) {
-      return `= ${value < 0 ? "-" : ""}${exact.value.display}`;
-    }
-    return `\\approx ${format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).replaceAll(",", "{,}")}`;
   }
 
   return (
     <>
       <VisualCardBody>
-        <CoordinateSystem
-          cameraPosition={[0, 0, CAMERA_Z_POSITION]}
-          cameraProjection={{ kind: "orthographic" }}
-          showOrigin={false}
-        >
-          <UnitCircle3D angle={angleValue} />
-        </CoordinateSystem>
+        {live ? (
+          <UnitCircleStage angle={angleValue} viewLabel={viewLabel} />
+        ) : (
+          <div aria-hidden="true" className={threeSceneFrameVariants()} />
+        )}
         <VisualCardControls>
           <VisualCardGroup>
             <Badge variant="outline">
@@ -153,11 +196,7 @@ function Content({
                 <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
               </Badge>
               <Badge className="font-mono" variant="outline">
-                {format.number(getRadians(angleValue), {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                  useGrouping: false,
-                })}{" "}
+                {format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}{" "}
                 {t("radian")}
               </Badge>
             </div>
@@ -168,12 +207,13 @@ function Content({
               onChange={(value) => {
                 if (Number.isFinite(value)) {
                   setAngleOverride(value);
+                  onAngleChange?.(value);
                 }
               }}
               value={angleValue}
             >
               <Label className="sr-only">{t("angle")}</Label>
-              <Group className="relative inline-flex h-9 w-full items-center overflow-hidden whitespace-nowrap rounded-md border border-input text-sm shadow-xs outline-none transition-[color,box-shadow] data-focus-within:border-ring data-disabled:opacity-50 data-focus-within:ring-3 data-focus-within:ring-ring/50 data-focus-within:has-aria-invalid:border-destructive data-focus-within:has-aria-invalid:ring-destructive/20 dark:data-focus-within:has-aria-invalid:ring-destructive/40">
+              <Group className={stepperVariants()}>
                 <Button
                   className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-e bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                   slot="decrement"

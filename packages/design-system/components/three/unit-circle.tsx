@@ -2,6 +2,7 @@
 
 import { Line } from "@react-three/drei";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import {
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
   THREE_FONT_SIZE,
@@ -152,5 +153,31 @@ export function UnitCircle({ angle = 45, showLabels = true, ...props }: Props) {
         </ThreeLabel>
       </group>
     </group>
+  );
+}
+
+const CAMERA_Z_POSITION = 4;
+
+/**
+ * The unit circle drawn at one angle, in its own coordinate system. It loads
+ * apart from the card that holds its controls, so the card can keep its frame
+ * before the scene has loaded.
+ */
+export function UnitCircleStage({
+  angle,
+  viewLabel,
+}: {
+  angle: number;
+  viewLabel: string | undefined;
+}) {
+  return (
+    <CoordinateSystem
+      aria-label={viewLabel}
+      cameraPosition={[0, 0, CAMERA_Z_POSITION]}
+      cameraProjection={{ kind: "orthographic" }}
+      showOrigin={false}
+    >
+      <UnitCircle angle={angle} />
+    </CoordinateSystem>
   );
 }

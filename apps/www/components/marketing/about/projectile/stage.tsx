@@ -1,12 +1,9 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   formatTrimmedMeterMath,
   formatTrimmedSecondMath,
   formatTrimmedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
-import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import {
-  DEFAULT_PROJECTILE_SCENARIO_ID,
   formatVelocityVectorMath,
   getProjectileMotionState,
   getVelocityAtTime,
@@ -14,21 +11,24 @@ import {
   PROJECTILE_SCENARIOS,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ProjectileClient } from "@/components/marketing/about/projectile/client";
+import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { decimalSeparators } from "@/lib/marketing/decimal";
 
-const decimalSeparators = {
-  de: "comma",
-  en: "dot",
-  id: "comma",
-} as const satisfies Record<ActiveAppLocaleCode, DecimalSeparator>;
-
-/** Renders deterministic projectile formulas on the server for every scenario. */
-export async function FeaturesProjectile() {
+/**
+ * The full-width lesson scene. The server works out every formula the scene
+ * shows, so the numbers on the water are the lesson's own, and the client only
+ * moves the scene and the trajectories.
+ */
+export async function ProjectileStage() {
   const locale = getLocaleOrThrow(await getLocale());
-  const t = await getTranslations({ locale, namespace: "Features" });
+  const [t, tHome] = await Promise.all([
+    getTranslations({ locale, namespace: "Features" }),
+    getTranslations({ locale, namespace: "Landing" }),
+  ]);
   const decimalSeparator = decimalSeparators[locale];
   const scenarios = Arr.map(PROJECTILE_SCENARIOS, (scenario) => {
     const motion = getProjectileMotionState(scenario.id);
@@ -109,24 +109,19 @@ export async function FeaturesProjectile() {
       motion,
     };
   });
-  const initialScenario = Option.orElse(
-    Arr.findFirst(scenarios, ({ id }) => id === DEFAULT_PROJECTILE_SCENARIO_ID),
-    () => Arr.head(scenarios)
-  );
-
-  if (Option.isNone(initialScenario)) {
-    return null;
-  }
-
   return (
     <ProjectileClient
-      controlsLabel={t("projectile-controls")}
-      initialScenario={initialScenario.value}
+      lead={tHome("scene-lead")}
       scenarios={scenarios}
-      title={t.rich("projectile-title", {
-        mark: (chunks) => <mark>{chunks}</mark>,
-      })}
-      viewLabel={t("projectile-view-label")}
+      talk={
+        <Talk ask={tHome("scene-ask")} tone="sky">
+          <TalkReply act="gripping" mood="proud">
+            {tHome("scene-answer")}
+          </TalkReply>
+        </Talk>
+      }
+      title={tHome("scene-title")}
+      viewLabel={tHome("scene-label")}
     />
   );
 }
