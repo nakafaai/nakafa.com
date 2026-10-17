@@ -37,8 +37,12 @@ const COVER_MARGIN = 0.02;
 const GRID_PIXELS = 4;
 /** The height of the screen that must show the whole sign-in page. */
 const SHORT_SCREEN = 640;
-/** The pool's own code writes this attribute on its element, and no other script does. */
-const POOL_SCRIPT = /["']data-slot["']\s*:\s*["']pool["']/u;
+/**
+ * The pool's driver reveals the settled pile through `element.dataset.shown`,
+ * and no other script writes that property. A minifier keeps property names,
+ * while the React Compiler may move a JSX attribute's text into a variable.
+ */
+const POOL_SCRIPT = /\.dataset\.shown\s*=\s*["']true["']/u;
 
 /** A box on the screen, in pixels. */
 const BoxSchema = Schema.Struct({
