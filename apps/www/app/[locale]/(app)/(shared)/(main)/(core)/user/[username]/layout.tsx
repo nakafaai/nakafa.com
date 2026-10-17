@@ -7,9 +7,9 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { readProfile } from "@/lib/profile/server";
 
 /**
- * Keeps a profile out of search results: it shows a learner's name, bio, and
- * comments, and many learners are minors. The page stays reachable by link, so
- * robots.txt does not block it and a crawler can read this rule.
+ * Keeps a profile out of search results: it shows a learner's name, bio, posts,
+ * comments, and chats, and many learners are minors. The page stays reachable by
+ * link, so robots.txt does not block it and a crawler can read this rule.
  */
 export const metadata: Metadata = {
   robots: {

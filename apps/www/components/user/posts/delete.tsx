@@ -59,10 +59,19 @@ export function PostDeletion({
     <ResponsiveDialog
       description={t("delete-description")}
       footer={
-        <Button onClick={confirm} variant="destructive">
-          <HugeIcons icon={Delete02Icon} />
-          {tCommon("delete")}
-        </Button>
+        <>
+          <Button
+            onClick={() => onOpenChange(false)}
+            type="button"
+            variant="outline"
+          >
+            {tCommon("cancel")}
+          </Button>
+          <Button onClick={confirm} type="button" variant="destructive">
+            <HugeIcons icon={Delete02Icon} />
+            {tCommon("delete")}
+          </Button>
+        </>
       }
       open={open}
       setOpen={onOpenChange}
