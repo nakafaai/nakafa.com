@@ -10,8 +10,8 @@ export function GramWallComparison({
   gramNegativeLabel,
   gramPositiveLabel,
 }: Pick<BiologySceneProps, "colors"> & {
-  gramNegativeLabel: ReactNode;
-  gramPositiveLabel: ReactNode;
+  gramNegativeLabel?: ReactNode;
+  gramPositiveLabel?: ReactNode;
 }) {
   return (
     <group position={[0, 0.32, 0]}>

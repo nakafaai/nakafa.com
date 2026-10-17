@@ -1,0 +1,35 @@
+// @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr, HashSet } from "effect";
+import {
+  CLASS_HERD,
+  CROWD_HERD,
+  HOME_CAST,
+  PRICING_CLASS_HERD,
+  PRICING_TOY_HERD,
+  TOY_HERD,
+} from "@/components/marketing/about/toys/herd";
+
+describe("the animals of the home page", () => {
+  it("gives the toys, the crowd and the class the slices of one cast, so no animal appears twice", () => {
+    const parts = [...TOY_HERD, ...CROWD_HERD, ...CLASS_HERD];
+    const names = Arr.map(parts, (mascot) => mascot.animal);
+
+    expect(parts).toEqual(HOME_CAST);
+    expect(HashSet.size(HashSet.fromIterable(names))).toBe(names.length);
+  });
+});
+
+describe("the animals of the pricing page", () => {
+  it("takes its toys and its class from the cast after the home page's, so no animal repeats on either page", () => {
+    const parts = [...PRICING_TOY_HERD, ...PRICING_CLASS_HERD];
+    const names = Arr.map(parts, (mascot) => mascot.animal);
+    const homeNames = Arr.map(HOME_CAST, (mascot) => mascot.animal);
+
+    expect(PRICING_TOY_HERD).toHaveLength(6);
+    expect(PRICING_CLASS_HERD).toHaveLength(7);
+    expect(HashSet.size(HashSet.fromIterable(names))).toBe(names.length);
+    expect(Arr.difference(names, homeNames)).toEqual(names);
+  });
+});

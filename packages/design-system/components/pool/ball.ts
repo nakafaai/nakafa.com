@@ -8,17 +8,17 @@ import { Number as Num, Schema } from "effect";
  */
 
 /** The top speed, in pixels per second, of anything that is not held. */
-export const FASTEST = 760;
+export const FASTEST = 1400;
 /** The share of speed that a ball keeps when a left or right wall turns it back. */
-const SIDE_BOUNCE = 0.45;
+const SIDE_BOUNCE = 0.6;
 /** The share of speed that a ball keeps when the floor turns it back. */
-const FLOOR_BOUNCE = 0.32;
+const FLOOR_BOUNCE = 0.45;
 /** The share of sideways speed that a ball keeps when the floor turns it back. */
 const FLOOR_FRICTION = 0.9;
 /** A floor bounce slower than this, in pixels per second, stops the ball. */
 const FLOOR_STOP = 26;
 /** The share of speed that a ball keeps when the top wall turns it back, once it has been inside. */
-const CEILING_BOUNCE = 0.4;
+const CEILING_BOUNCE = 0.5;
 /** The lean of a ball per pixel per second of sideways speed, in degrees. */
 const LEAN_PER_SPEED = 0.03;
 /** The most that a ball leans, in degrees, either way. */

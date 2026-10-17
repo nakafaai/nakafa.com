@@ -1,6 +1,11 @@
-import { expect, type Page } from "@playwright/test";
+import {
+  type APIResponse,
+  expect,
+  type Page,
+  type Route,
+} from "@playwright/test";
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
-import { Array as Arr, Deferred, Effect, Record as Rec } from "effect";
+import { Deferred, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -47,21 +52,69 @@ export const NEXT_CHUNK_PATH =
   /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
 
 /**
- * The headers that describe a body as the server compressed it. Playwright hands
- * a fetched body back decoded, so a chunk it fulfills drops both and the browser
- * reads the decoded body as it is.
+ * Routes every chunk the page asks for. A chunk whose code holds `marker` goes
+ * to `onMatch` with its response, and every other chunk is fulfilled as the
+ * server sent it. The chunk's text is read from the response, so the route
+ * matches the module itself and not its name, which changes with each build.
  */
-const COMPRESSED_BODY_HEADERS = ["content-encoding", "content-length"];
+function routeChunkHolding(
+  page: Page,
+  marker: string,
+  onMatch: (route: Route, response: APIResponse) => Effect.Effect<void>
+) {
+  return Effect.promise(() =>
+    page.route(NEXT_CHUNK_PATH, (route) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const response = yield* Effect.promise(() => route.fetch());
+          const body = yield* Effect.promise(() => response.text());
+          if (body.includes(marker)) {
+            return yield* onMatch(route, response);
+          }
+          return yield* Effect.promise(() => route.fulfill({ response }));
+        })
+      )
+    )
+  );
+}
+
+/**
+ * Aborts the chunk whose code holds `marker`, while the page hydrates. The
+ * result lists the URLs it aborted, in order, so a test can prove the failure
+ * happened.
+ */
+export function abortChunkHolding(page: Page, marker: string) {
+  const aborted = MutableList.make<string>();
+  return Effect.as(
+    routeChunkHolding(page, marker, (route) => {
+      MutableList.append(aborted, route.request().url());
+      return Effect.promise(() => route.abort("failed"));
+    }),
+    aborted
+  );
+}
+
+/** Holds the chunk whose code holds `marker` for `milliseconds` before it loads. */
+export function holdChunkHolding(
+  page: Page,
+  marker: string,
+  milliseconds: number
+) {
+  return routeChunkHolding(page, marker, (route, response) =>
+    Effect.andThen(
+      Effect.sleep(milliseconds),
+      Effect.promise(() => route.fulfill({ response }))
+    )
+  );
+}
 
 /**
  * Holds every JavaScript chunk of the app that the page asks for, until the
  * `release` it returns runs. A step holds the editor's code this way, so the
  * page shows what it draws while the code is on its way. Call it once the page
  * has loaded: a chunk that the page loads with it would wait for the release.
- *
  * With `containing`, only a chunk whose code holds that text waits, and every
- * other chunk loads at once. Every chunk is fetched once to read its code, and
- * the page then receives that same code.
+ * other chunk loads at once.
  */
 export const holdChunks = Effect.fn("NakafaE2E.holdChunks")(function* (
   page: Page,
@@ -69,31 +122,12 @@ export const holdChunks = Effect.fn("NakafaE2E.holdChunks")(function* (
 ) {
   const gate = yield* Deferred.make<void>();
   const services = yield* Effect.context<never>();
-
-  yield* Effect.promise(() =>
-    page.route(NEXT_CHUNK_PATH, async (route) => {
-      const { containing } = options;
-      if (containing === undefined) {
-        await Effect.runPromiseWith(services)(Deferred.await(gate));
-        await route.continue();
-        return;
-      }
-      const response = await route.fetch();
-      const code = await response.body();
-      if (code.includes(containing)) {
-        await Effect.runPromiseWith(services)(Deferred.await(gate));
-      }
-      await route.fulfill({
-        body: code,
-        headers: Rec.filter(
-          response.headers(),
-          (_value, name) => !Arr.contains(COMPRESSED_BODY_HEADERS, name)
-        ),
-        status: response.status(),
-      });
-    })
+  yield* routeChunkHolding(page, options.containing ?? "", (route, response) =>
+    Effect.andThen(
+      Deferred.await(gate),
+      Effect.promise(() => route.fulfill({ response }))
+    )
   );
-
   return () =>
     Effect.runPromiseWith(services)(Deferred.succeed(gate, undefined));
 });

@@ -73,9 +73,10 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
  * rotation beside the card's full screen action, on the right. A scene's own
  * controls sit in its card body, so the footer renders after the body. The
  * coordinate store owns the grid and rotation, and the visual card owns where
- * the card is shown.
+ * the card is shown. A static stand-in of the scene passes `inert`, so its
+ * three controls take no focus while the scene is not mounted.
  */
-export function CoordinateControls() {
+export function CoordinateControls({ inert = false }: { inert?: boolean }) {
   const t = useTranslations("Common");
   const play = useCoordinateControls((controls) => controls.play);
   const showGrid = useCoordinateControls((controls) => controls.showGrid);
@@ -87,6 +88,7 @@ export function CoordinateControls() {
       <VisualCardActions>
         <Button
           aria-pressed={showGrid}
+          inert={inert}
           onClick={toggleGrid}
           size="icon"
           variant="secondary"
@@ -96,6 +98,7 @@ export function CoordinateControls() {
         </Button>
         <Button
           aria-pressed={play}
+          inert={inert}
           onClick={togglePlay}
           size="icon"
           variant={play ? "secondary" : "default"}
@@ -103,7 +106,7 @@ export function CoordinateControls() {
           <HugeIcons icon={play ? PauseIcon : PlayIcon} />
           <span className="sr-only">{t("automatic-rotation")}</span>
         </Button>
-        <VisualCardFullscreen />
+        <VisualCardFullscreen inert={inert} />
       </VisualCardActions>
     </VisualCardFooter>
   );

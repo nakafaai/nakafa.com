@@ -1,12 +1,12 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
-import { readBounds, swipeDown } from "@/e2e/support/input";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { openRoute } from "@/e2e/support/route";
+import { MARKETING_PAGE } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const MarketingSurfaceSchema = Schema.Literals([
-  "contributor-drawer",
-  "community",
-]);
+const MarketingSurfaceSchema = Schema.Literals(["community"]);
 
 /** The fixed contributor fixture does not contain its required first row. */
 class MarketingContributorMissing extends Schema.TaggedError<MarketingContributorMissing>()(
@@ -29,6 +29,29 @@ class MarketingSurfaceMissing extends Schema.TaggedError<MarketingSurfaceMissing
 }
 
 /** Reads the required first contributor without inventing fixture data. */
+/** Opens one marketing page and waits until its visible route boundary is on screen. */
+export const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(
+  function* (page: Page, href: string) {
+    yield* openRoute(page, href, "denied");
+    yield* waitForCommittedAppRouter(
+      page,
+      href,
+      href,
+      readinessTimeoutMilliseconds
+    );
+    /**
+     * Next.js may commit App Router history before React reveals a streamed route.
+     * Keep the existing readiness budget attached to the visible route boundary.
+     * @see https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
+     */
+    yield* Effect.promise(() =>
+      expect(
+        page.locator(MARKETING_PAGE).filter({ visible: true })
+      ).toHaveCount(1, { timeout: readinessTimeoutMilliseconds })
+    );
+  }
+);
+
 export const readFirstContributor = Effect.fn(
   "NakafaE2E.readFirstMarketingContributor"
 )(function* (values: readonly Contributor[]) {
@@ -91,11 +114,3 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
     return measurements;
   }
 );
-
-/** Dismisses the active contributor drawer through a real touch gesture. */
-export const swipeContributorDrawer = Effect.fn(
-  "NakafaE2E.swipeContributorDrawer"
-)(function* (drawer: Locator, page: Page) {
-  const bounds = yield* readBounds(drawer, "contributor-drawer");
-  yield* swipeDown(page, bounds, { inset: 20, stopAt: "surface" });
-});

@@ -9,9 +9,10 @@ import { idlePointer } from "@repo/design-system/components/pool/pointer";
 import { Array as Arr, Schema } from "effect";
 
 /**
- * Settling: the pool moves a frame at a time until its pile rests, so that the
- * pile is already at rest when it first shows. A settle runs in parts, so that a
- * long settle never blocks the page in one piece.
+ * Settling: the pool moves a frame at a time until its pile rests, so that a pile
+ * is already at rest when the box shows it. A settle runs in parts, so that a long
+ * settle never blocks the page in one piece. A settle serves reduced motion and a
+ * resize; with motion, the first pile falls in on screen instead.
  */
 
 /** The length of a settle's frame, in seconds: a frame at 60 frames a second. */

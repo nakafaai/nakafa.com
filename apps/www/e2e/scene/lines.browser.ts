@@ -1,6 +1,6 @@
 import { type ConsoleMessage, expect, type Page, test } from "@playwright/test";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
-import { Array as Arr, Effect } from "effect";
+import { Effect } from "effect";
 import {
   countCanvasFrames,
   expectCanvasToMove,
@@ -16,28 +16,11 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
-import { revealLineScene } from "@/e2e/support/scene";
+import { isKnownSceneDiagnostic, revealLineScene } from "@/e2e/support/scene";
 import { COORDINATE_CONTROLS, lineSceneCards } from "@/e2e/support/selector";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
-/**
- * Scene notices that come from the test browser or a held dependency.
- *
- * Playwright's headless shell renders WebGL with SwiftShader through ANGLE's
- * Vulkan backend, which reports Chromium's copy of each presented frame as a
- * ReadPixels stall, at most four times per GPU process. `recordPixelReadbacks`
- * proves page scripts read no pixels, and GPU-backed WebGL presents the same
- * frames without the notice.
- *
- * Fiber 9 constructs the THREE.Clock that three.js r183 deprecated in every
- * Canvas root. Fiber 10 removes it:
- * https://github.com/pmndrs/react-three-fiber/issues/3741
- */
-const KNOWN_SCENE_DIAGNOSTICS = [
-  /^\[\.WebGL-0x[\da-f]+\]GL Driver Message \(OpenGL, Performance, \w+, High\): GPU stall due to ReadPixels( \(this message will no longer repeat\))?$/,
-  /^THREE\.Clock: This module has been deprecated\. Please use THREE\.Timer instead\.$/,
-];
 
 /** Observes unexplained three.js and WebGL notices for the page program. */
 const withObservedSceneDiagnostics = Effect.fn(
@@ -50,10 +33,7 @@ const withObservedSceneDiagnostics = Effect.fn(
     (record) => {
       const listener = (message: ConsoleMessage) => {
         const text = message.text();
-        if (
-          SCENE_DIAGNOSTIC.test(text) &&
-          !Arr.some(KNOWN_SCENE_DIAGNOSTICS, (known) => known.test(text))
-        ) {
+        if (SCENE_DIAGNOSTIC.test(text) && !isKnownSceneDiagnostic(text)) {
           record(`${message.type()}: ${text}`);
         }
       };

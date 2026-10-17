@@ -1,7 +1,5 @@
-import {
-  classify,
-  GatewayFailure,
-} from "@repo/backend/confect/gateway/failure";
+import { classify } from "@repo/backend/confect/gateway/classify";
+import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { decisionDeadline } from "@repo/backend/confect/gateway/purpose";
 import {
   type Experimental_DecisionModel as DecisionModelOrId,

@@ -3,7 +3,7 @@ import {
   formatTrimmedNumber,
 } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Number as Num, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Schema } from "effect";
 
 const ProjectileScenarioIdSchema = Schema.Literals([
   "sixty-degree",
@@ -21,8 +21,15 @@ const ProjectileScenarioSchema = Schema.Struct({
 type ProjectileScenario = typeof ProjectileScenarioSchema.Type;
 
 const PROJECTILE_GRAVITY = 10;
-export const DEFAULT_PROJECTILE_SCENARIO_ID =
-  "sixty-degree" satisfies ProjectileScenarioId;
+/** The trajectory that opens first: 40 m/s at 60 degrees. */
+const DEFAULT_PROJECTILE_SCENARIO = {
+  angleDegrees: 60,
+  color: getColor("TEAL"),
+  id: "sixty-degree",
+  initialSpeed: 40,
+} satisfies ProjectileScenario;
+
+export const DEFAULT_PROJECTILE_SCENARIO_ID = DEFAULT_PROJECTILE_SCENARIO.id;
 
 export const PROJECTILE_ASSET_PATHS = {
   ball: "/models/physics/kinematics/kenney-pirate-kit/cannon-ball.glb",
@@ -58,26 +65,35 @@ export const PROJECTILE_SCENE = {
 
 export const PROJECTILE_INSTANT_TIME = 2;
 
-export const PROJECTILE_SCENARIOS: ProjectileScenario[] = [
-  {
-    id: "sixty-degree",
-    angleDegrees: 60,
-    color: getColor("TEAL"),
-    initialSpeed: 40,
-  },
-  {
-    id: "long-drive",
-    angleDegrees: 35,
-    color: getColor("ORANGE", 500),
-    initialSpeed: 42,
-  },
-  {
-    id: "high-arc",
-    angleDegrees: 70,
-    color: getColor("VIOLET"),
-    initialSpeed: 34,
-  },
-];
+const LONG_DRIVE_SCENARIO = {
+  angleDegrees: 35,
+  color: getColor("ORANGE", 500),
+  id: "long-drive",
+  initialSpeed: 42,
+} satisfies ProjectileScenario;
+
+const HIGH_ARC_SCENARIO = {
+  angleDegrees: 70,
+  color: getColor("VIOLET"),
+  id: "high-arc",
+  initialSpeed: 34,
+} satisfies ProjectileScenario;
+
+/**
+ * Every trajectory by its id. The record has one entry per id, so a lookup by
+ * id always finds its trajectory and needs no fallback.
+ */
+const PROJECTILE_SCENARIO_BY_ID = {
+  "high-arc": HIGH_ARC_SCENARIO,
+  "long-drive": LONG_DRIVE_SCENARIO,
+  "sixty-degree": DEFAULT_PROJECTILE_SCENARIO,
+} satisfies Record<ProjectileScenarioId, ProjectileScenario>;
+
+/** Every trajectory of the scene. The default one comes first, so it opens first. */
+export const PROJECTILE_SCENARIOS: readonly [
+  ProjectileScenario,
+  ...ProjectileScenario[],
+] = [DEFAULT_PROJECTILE_SCENARIO, LONG_DRIVE_SCENARIO, HIGH_ARC_SCENARIO];
 
 export type ProjectileMotionState = ReturnType<typeof getProjectileMotionState>;
 
@@ -88,10 +104,7 @@ export function isProjectileScenarioId(
 }
 
 export function getProjectileMotionState(id: ProjectileScenarioId) {
-  const scenario = Option.getOrElse(
-    Arr.findFirst(PROJECTILE_SCENARIOS, (item) => item.id === id),
-    () => PROJECTILE_SCENARIOS[0]
-  );
+  const scenario: ProjectileScenario = PROJECTILE_SCENARIO_BY_ID[id];
   const angleRadians = (scenario.angleDegrees * Math.PI) / 180;
   const horizontalVelocity = scenario.initialSpeed * Math.cos(angleRadians);
   const verticalVelocity = scenario.initialSpeed * Math.sin(angleRadians);

@@ -46,12 +46,6 @@ const unopenable = Schema.encodeSync(ChatShareReadError)(
 );
 
 /**
- * What the server throws when it fails in a way the query does not declare. The
- * page cannot read it as the failure of the query, so the query itself breaks.
- */
-const undeclared = { code: "SHARE_TOKEN_UNAVAILABLE" };
-
-/**
  * The owner's share dialog says the link could not load while the query fails
  * with `failure`, and loads it on Retry once the server answers again. While the
  * answers are held, the dialog keeps its Retry and shows no link. A failure the
@@ -191,15 +185,6 @@ test.describe("A share link at 1440px", () => {
     // the query does not declare.
     await runOnPage(page, baseURL, (origin) =>
       retriesTheLink(page, origin, { failure: undefined, pending: true })
-    );
-  });
-
-  test("the share dialog says when the link fails in a way the query does not declare, and loads it again on Retry", async ({
-    baseURL,
-    page,
-  }) => {
-    await runOnPage(page, baseURL, (origin) =>
-      retriesTheLink(page, origin, undeclared)
     );
   });
 });

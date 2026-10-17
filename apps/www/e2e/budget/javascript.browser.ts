@@ -10,6 +10,12 @@ import { appRoutes } from "@/e2e/support/route";
 const HOMEPAGE_MAX_ENCODED_BYTES = 1_112_000;
 const HOMEPAGE_MAX_DECODED_BYTES = 3_278_000;
 
+// The pricing page loads no toys before its comparison comes on screen, so its
+// no-scroll graph is its own: remeasured at 929,111 encoded / 2,755,522 decoded
+// bytes. Limits keep the ~6% margin.
+const PRICING_MAX_ENCODED_BYTES = 985_000;
+const PRICING_MAX_DECODED_BYTES = 2_921_000;
+
 // The always-on baseline loads the SDK on every visit: remeasured at
 // 1,081,541 encoded / 3,189,166 decoded bytes. Limits keep the ~6% margin.
 const QURAN_MAX_ENCODED_BYTES = 1_147_000;
@@ -31,6 +37,14 @@ const routeBudgets = [
     encodedBodySize: HOMEPAGE_MAX_ENCODED_BYTES,
     href: "/en",
     name: "English homepage no-scroll graph",
+    prefetches: true,
+    signedIn: false,
+  },
+  {
+    decodedBodySize: PRICING_MAX_DECODED_BYTES,
+    encodedBodySize: PRICING_MAX_ENCODED_BYTES,
+    href: "/en/pricing",
+    name: "English pricing no-scroll graph",
     prefetches: true,
     signedIn: false,
   },

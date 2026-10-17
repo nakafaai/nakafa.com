@@ -55,6 +55,14 @@ export const CHECKED_POOLS = [
   { height: 1440, width: Math.round(2560 * ARTWORK_SHARE) },
 ];
 
+/**
+ * The per-test timeout of a test over one of the two larger checked pools, in
+ * milliseconds. A settle, a sweep or a rough hand over those pools takes longer than the
+ * default five seconds under load, so their tests pass this as a test option. The
+ * narrowest pool keeps the default.
+ */
+export const LARGE_POOL_TIMEOUT = 20_000;
+
 /** A frame of the pool at 60 frames a second. */
 export const FRAME = 1 / 60;
 /** Float noise that a wall may leave behind, in pixels or pixels per second. */

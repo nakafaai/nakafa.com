@@ -1,4 +1,4 @@
-import { classify } from "@repo/backend/confect/gateway/failure";
+import { classify } from "@repo/backend/confect/gateway/classify";
 import { ResearchGenerationError } from "@repo/backend/confect/nina/research/schema";
 import { NoObjectGeneratedError } from "ai";
 import { Effect } from "effect";

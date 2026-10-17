@@ -232,7 +232,7 @@ describe("llms markdown content resolver", () => {
       const text = yield* readMarkdown("pricing");
 
       expect(text).toContain("# Nakafa Pricing: Free and Pro");
-      expect(text?.match(/^### /gm)).toHaveLength(20);
+      expect(text?.match(/^### /gm)).toHaveLength(10);
       expect(
         yield* hasLlmsMarkdownSource({ cleanSlug: "pricing", locale: "en" })
       ).toBe(true);
