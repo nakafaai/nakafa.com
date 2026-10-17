@@ -3,12 +3,14 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
+  ClassAddress,
   ClassName,
   ClassStatus,
   ClassSubject,
 } from "@repo/backend/confect/classroom/class";
 import {
   ClassAddressEmpty,
+  ClassAmbiguous,
   ClassLimit,
   ClassNameTaken,
   ClassSubjectNotAllowed,
@@ -41,7 +43,8 @@ const ClassView = Schema.Struct({
 /**
  * The classes of a school. The Admin creates, renames, and archives them. The
  * roles that lead the school read a period's classes and each class, and a
- * subject teacher or a student placed in the cohort reads its own classes.
+ * subject teacher or a student placed in the cohort reads its own classes. A
+ * member resolves a class by its address, and the class's read rule decides it.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -109,5 +112,13 @@ export default GroupSpec.make()
       args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
       returns: () => Schema.Array(ClassView),
       error: () => AccessDenied,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "resolve",
+      args: () => ({ classSlug: ClassAddress, slug: TenantSlug }),
+      returns: () => ClassView,
+      error: () => Schema.Union([AccessDenied, ClassAmbiguous]),
     })
   );
