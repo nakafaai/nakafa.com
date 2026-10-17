@@ -5,6 +5,14 @@ import { createSchool, hostAddress } from "@/e2e/support/school";
 /** A school address that no school holds, so the school host answers not found. */
 const UNKNOWN_SCHOOL = "zz-unknown";
 
+/**
+ * A visitor whose browser prefers Indonesian. Playwright sets the Accept-Language
+ * header of every page request from the context `locale`, so that header
+ * replaces an Accept-Language in `extraHTTPHeaders`, which never reaches the
+ * server.
+ */
+const INDONESIAN_VISITOR = { locale: "id-ID" };
+
 test("the school tree answers not found on the main host", async ({
   page,
   baseURL,
@@ -56,9 +64,7 @@ test("a school root keeps its address with no locale prefix, even for a visitor 
 }) => {
   const school = await Effect.runPromise(createSchool());
   const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
-  const context = await browser.newContext({
-    extraHTTPHeaders: { "Accept-Language": "id" },
-  });
+  const context = await browser.newContext(INDONESIAN_VISITOR);
   const page = await context.newPage();
 
   await page.goto(schoolHome);
@@ -74,9 +80,7 @@ test("the NEXT_LOCALE cookie chooses the language of a school host before Accept
 }) => {
   const school = await Effect.runPromise(createSchool());
   const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
-  const context = await browser.newContext({
-    extraHTTPHeaders: { "Accept-Language": "id" },
-  });
+  const context = await browser.newContext(INDONESIAN_VISITOR);
   await context.addCookies([
     { name: "NEXT_LOCALE", url: schoolHome, value: "de" },
   ]);
@@ -96,9 +100,7 @@ test("Accept-Language chooses the language of a school host without a cookie", a
   baseURL,
 }) => {
   const school = await Effect.runPromise(createSchool());
-  const context = await browser.newContext({
-    extraHTTPHeaders: { "Accept-Language": "id" },
-  });
+  const context = await browser.newContext(INDONESIAN_VISITOR);
   const page = await context.newPage();
 
   await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
