@@ -3,7 +3,6 @@ import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
 import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
-import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -88,18 +87,3 @@ export const nameOf = (page: Page, text: string) =>
 /** The editor on a wide screen: the panel beside the list. */
 export const panelOf = (page: Page) =>
   page.getByRole("complementary", { name: "Edit memory" });
-
-/** Runs one Memory flow in a browser, with the page's errors observed. */
-export const runMemory = <E>(
-  page: Page,
-  baseURL: string | undefined,
-  flow: (page: Page, origin: string) => Effect.Effect<void, E, never>
-) =>
-  Effect.runPromise(
-    withObservedPageErrors(
-      page,
-      Effect.fromNullishOr(baseURL).pipe(
-        Effect.flatMap((origin) => flow(page, origin))
-      )
-    )
-  );

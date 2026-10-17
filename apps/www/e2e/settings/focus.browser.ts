@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { MEMORY_LIST_ID } from "@/components/user/settings/memory/focus";
 import { reloadUntil, saved } from "@/e2e/support/changes";
+import { runOnPage } from "@/e2e/support/chat";
 import {
   LAST_SERVER,
   NEWEST,
@@ -17,7 +18,6 @@ import {
   nameOf,
   opened,
   openMemoryPage,
-  runMemory,
 } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -197,14 +197,18 @@ test.describe("Memory editor focus at 390px and 1440px", () => {
         baseURL,
         page,
       }) => {
-        await runMemory(page, baseURL, closesToTheRow);
+        await runOnPage(page, baseURL, (origin) =>
+          closesToTheRow(page, origin)
+        );
       });
 
       test("moves the focus to the list when the editor deletes its memory", async ({
         baseURL,
         page,
       }) => {
-        await runMemory(page, baseURL, deletesToTheList);
+        await runOnPage(page, baseURL, (origin) =>
+          deletesToTheList(page, origin)
+        );
       });
     });
   }
@@ -218,27 +222,31 @@ test.describe("Memory focus at 1440px", () => {
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, closesNewToAdd);
+    await runOnPage(page, baseURL, (origin) => closesNewToAdd(page, origin));
   });
 
   test("moves the focus to the search field when the last memory goes", async ({
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, deletesLastToSearch);
+    await runOnPage(page, baseURL, (origin) =>
+      deletesLastToSearch(page, origin)
+    );
   });
 
   test("keeps the focus when a delete crosses the window threshold", async ({
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, deletesAcrossTheThreshold);
+    await runOnPage(page, baseURL, (origin) =>
+      deletesAcrossTheThreshold(page, origin)
+    );
   });
 
   test("moves the focus to the search field once Delete all is confirmed", async ({
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, clearsToSearch);
+    await runOnPage(page, baseURL, (origin) => clearsToSearch(page, origin));
   });
 });

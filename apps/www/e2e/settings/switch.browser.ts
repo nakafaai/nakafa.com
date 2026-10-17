@@ -5,9 +5,10 @@ import {
   saved,
   trackChanges,
 } from "@/e2e/support/changes";
+import { runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
-import { LIST_QUERY, MEMORY_PATH, runMemory } from "@/e2e/support/memory";
+import { LIST_QUERY, MEMORY_PATH } from "@/e2e/support/memory";
 import { isTakenOver } from "@/e2e/support/window";
 
 /** The Convex name of `nina.memory.pause`, the mutation behind the switch. */
@@ -70,8 +71,8 @@ test.describe("Memory switch at 1440px", () => {
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, (flowPage, origin) =>
-      pausesBeforeTheAnswer(flowPage, origin, false)
+    await runOnPage(page, baseURL, (origin) =>
+      pausesBeforeTheAnswer(page, origin, false)
     );
   });
 
@@ -79,8 +80,8 @@ test.describe("Memory switch at 1440px", () => {
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, (flowPage, origin) =>
-      pausesBeforeTheAnswer(flowPage, origin, true)
+    await runOnPage(page, baseURL, (origin) =>
+      pausesBeforeTheAnswer(page, origin, true)
     );
   });
 });

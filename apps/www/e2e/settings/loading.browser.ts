@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { reloadUntil, saved } from "@/e2e/support/changes";
+import { runOnPage } from "@/e2e/support/chat";
 import { writeMemory } from "@/e2e/support/list";
 import {
   editorOf,
@@ -8,7 +9,6 @@ import {
   nameOf,
   openMemoryPage,
   panelOf,
-  runMemory,
 } from "@/e2e/support/memory";
 import { holdChunks } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -247,21 +247,25 @@ test.describe("Memory editor's saved words at 1440px", () => {
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, showsSavedWordsWhileLoading);
+    await runOnPage(page, baseURL, (origin) =>
+      showsSavedWordsWhileLoading(page, origin)
+    );
   });
 
   test("shows formatted words where the editor puts them while its code loads", async ({
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, keepsFormattedWords);
+    await runOnPage(page, baseURL, (origin) =>
+      keepsFormattedWords(page, origin)
+    );
   });
 
   test("keeps the check of a task that is clicked while the editor's code loads", async ({
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, keepsTheTaskCheck);
+    await runOnPage(page, baseURL, (origin) => keepsTheTaskCheck(page, origin));
   });
 });
 
@@ -273,6 +277,8 @@ test.describe("Memory editor's first frame at 768px", () => {
     baseURL,
     page,
   }) => {
-    await runMemory(page, baseURL, showsWordsOnArrival);
+    await runOnPage(page, baseURL, (origin) =>
+      showsWordsOnArrival(page, origin)
+    );
   });
 });
