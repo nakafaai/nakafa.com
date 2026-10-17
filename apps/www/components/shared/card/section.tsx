@@ -16,7 +16,7 @@ const cardSectionVariants = cva("has-data-[slot=card-footer]:pb-0", {
 });
 
 const cardSectionFooterVariants = cva(
-  "min-h-15 flex-wrap items-center justify-end gap-x-4 gap-y-3 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
+  "@container/card-footer min-h-15 flex-wrap items-center justify-end gap-x-4 gap-y-3 border-t bg-muted/20 py-3 group-data-[variant=destructive]/card:border-destructive group-data-[variant=destructive]/card:bg-destructive/20 [.border-t]:pt-3",
   {
     variants: {
       bottomSheet: {
@@ -39,12 +39,13 @@ const cardSectionHintVariants = cva("flex-1 text-sm", {
   },
 });
 
-// A label wider than the row wraps inside its button, which grows taller: `h-auto`
-// lets the button grow, and `min-h-8` keeps the small size's height as its floor.
-// An action's minimum width is its full label, capped at the row, so the `share`
-// variant still stacks the actions that do not fit side by side.
+// In a footer narrower than the built-in `@3xs` container size, an action drops its
+// icon, wraps its label between words, grows with its content, and takes the row's
+// width. `min-h-8` keeps the small size's height as the floor of a one-line label,
+// and `min-w-fit` keeps a share footer's actions stacked when their labels do not
+// fit side by side.
 const cardSectionActionsVariants = cva(
-  "flex flex-wrap items-center justify-end gap-2 *:h-auto *:min-h-8 *:min-w-fit *:max-w-full *:whitespace-normal",
+  "@max-3xs/card-footer:*:wrap-normal flex flex-wrap items-center justify-end gap-2 @max-3xs/card-footer:*:h-auto @max-3xs/card-footer:*:min-h-8 @max-3xs/card-footer:*:w-full @max-3xs/card-footer:*:min-w-fit @max-3xs/card-footer:*:whitespace-normal @max-3xs/card-footer:[&_svg]:hidden",
   {
     defaultVariants: {
       share: false,
@@ -81,9 +82,10 @@ export function CardSection({
  * Holds a section's sentence and actions in one row, the sentence on the left
  * and the actions on the right. When the two cannot share the row, the actions
  * move to the next line, end-aligned. The bar is as tall with a line of text
- * alone as with a button, so every card ends the same way. `bottomSheet` ends
- * a phone's bottom sheet with square bottom corners and the safe area below
- * its actions.
+ * alone as with a button, so every card ends the same way. The footer is a size
+ * container, so its actions can adapt to a narrow row. `bottomSheet` ends a
+ * phone's bottom sheet with square bottom corners and the safe area below its
+ * actions.
  */
 export function CardSectionFooter({
   bottomSheet,
@@ -117,12 +119,11 @@ export function CardSectionHint({
  * Holds a section's actions on the right of its footer, side by side at their
  * full size, so a footer with only actions keeps them on the right too. When
  * they have no room beside the sentence, they move to their own line and wrap
- * among their buttons. An action wider than the row takes the row's width, and
- * its label wraps onto more lines, so its button grows taller. When its icon and
- * longest word do not fit the row either, it runs into the footer's padding, and
- * past the card's edge when that is not enough, so keep labels short. A footer
- * with no sentence passes `share`: its actions split the row equally, and when
- * their labels do not fit side by side they stack, each across the full width.
+ * among their buttons. In a footer narrower than the built-in `@3xs` container
+ * size, each action drops its icon, wraps its label between words, and takes the
+ * row's width, so the actions stack. A footer with no sentence passes `share`:
+ * its actions split the row equally, and when their labels do not fit side by
+ * side they stack, each across the full width.
  */
 export function CardSectionActions({
   share,
