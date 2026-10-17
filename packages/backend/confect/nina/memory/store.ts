@@ -161,7 +161,7 @@ export const readKeptMemory = Effect.fn("nina.memory.store.kept")(function* (
 
 /**
  * Deletes one memory and its key rows, and returns the keys the memory had.
- * Only `remove` keeps them, for an Undo.
+ * Only `remove` keeps them, for the restore window.
  */
 export const deleteMemory = Effect.fn("nina.memory.store.delete")(function* (
   memoryId: MemoryId
@@ -223,7 +223,7 @@ export const drainMemories = Effect.fn("nina.memory.store.drain")(function* (
 /**
  * Reads a learner's newest record of a deleted memory (see `keepRestore`), the
  * one confirmed last, as a list of at most that one. A record holds the
- * confirmation time its memory had, and the Undo is refused when that is at or
+ * confirmation time its memory had, and a restore is refused when that is at or
  * before the moment of a "Delete all" (see `clearMemories`).
  */
 const readNewestRestore = Effect.fn("nina.memory.store.newestRestore")(
@@ -253,7 +253,7 @@ const readNewestRestore = Effect.fn("nina.memory.store.newestRestore")(
  * all" is confirmed after that request even when the clock had not moved on
  * (`confirmedAfterClear`), so `now` alone could be earlier than a memory that
  * exists, and this request would leave it. It could be earlier than the record
- * of a memory deleted since, and the Undo would then put back a memory the
+ * of a memory deleted since, and a restore would then put back a memory the
  * learner deleted before asking to delete everything.
  *
  * The learner's portrait goes in the same transaction: it is derived from the

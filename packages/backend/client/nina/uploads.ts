@@ -3,7 +3,7 @@ import { Duration, Schema } from "effect";
 const MEBIBYTE = 1024 * 1024;
 
 /** The most MiB one file can hold. The copy that names the limit reads this number. */
-export const NINA_FILE_MEBIBYTES = 8;
+const NINA_FILE_MEBIBYTES = 8;
 export const NINA_FILE_SIZE = NINA_FILE_MEBIBYTES * MEBIBYTE;
 export const NINA_FILE_COUNT = 10;
 /**

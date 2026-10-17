@@ -58,7 +58,9 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
     Effect.runPromise(
       saveTryoutPreference({
         countryKey: country.countryKey,
-        errorMessage: tTryouts("preference-save-error"),
+        errorMessage: {
+          title: "tryout-preference-error.title",
+        },
         locale,
         setPreferredTryout,
         source: "tryout-country-card",

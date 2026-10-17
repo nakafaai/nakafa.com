@@ -208,7 +208,7 @@ it("deletes the learner's portrait with their memories, also one that a capture 
   expect(await owners()).toEqual([other.userId]);
 });
 
-it("deletes the records that keep a deleted memory for its Undo with the learner's memories, and keeps another learner's", async () => {
+it("deletes the records that keep a deleted memory for the restore window with the learner's memories, and keeps another learner's", async () => {
   vi.useFakeTimers();
   const now = Date.UTC(2026, 9, 10, 12);
   vi.setSystemTime(now);

@@ -155,7 +155,8 @@ const edit = FunctionImpl.make(
 
 /**
  * Deletes one memory of the learner, with its keys, and keeps what it deleted
- * for the length of the Undo (`keepRestore`). The learner's portrait may hold a
+ * for the window in which `restore` can give it back (`keepRestore`). The
+ * learner's portrait may hold a
  * sentence that came from it, so the portrait loses its text at once and is
  * built again from scratch (`requestPortrait`).
  */
@@ -175,7 +176,16 @@ const remove = FunctionImpl.make(
   })
 );
 
-/** Puts back the memory that `remove` deleted, with every field it had (`restoreMemory`). */
+/**
+ * Puts back the memory that `remove` deleted, with every field it had
+ * (`restoreMemory`). No page calls it now. A web build from before the Undo
+ * toast went can still call it until 12 hours after the production deploy that
+ * ships this change (deploy day plus 12 hours, the www skew window).
+ * Owner: pull request #1099, which takes the Undo toast out of the Memory page.
+ * Its cleanup change, which runs once that time has passed, deletes `restore`,
+ * `purge`, the `keepRestore` write in `remove`, and the restore store and table
+ * with every read of them.
+ */
 const restore = FunctionImpl.make(
   schema,
   spec,
@@ -267,7 +277,7 @@ const expire = FunctionImpl.make(
   })
 );
 
-/** Deletes the restore record whose Undo ended, if it is still there. */
+/** Deletes the restore record whose window ended, if it is still there. */
 const purge = FunctionImpl.make(
   schema,
   spec,

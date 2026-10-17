@@ -267,10 +267,16 @@ async function CachedSurahShell({
               {tafsirAccess.kind === "embedded" ? (
                 <QuranInterpretationControls
                   appLocale={tafsirAccess.appLocale}
-                  errorMessage={t("interpretation-error")}
+                  errorMessage={{
+                    description: "interpretation-error.description",
+                    title: "interpretation-error.title",
+                  }}
                   label={interpretationLabel}
                   recoverSnapshot={recoverSnapshot}
-                  refreshingMessage={t("interpretation-refreshing")}
+                  refreshingMessage={{
+                    description: "interpretation-refreshing.description",
+                    title: "interpretation-refreshing.title",
+                  }}
                   snapshotId={result.snapshotId}
                   surahNumber={surahData.number}
                 >
