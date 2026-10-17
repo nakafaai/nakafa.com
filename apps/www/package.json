@@ -65,7 +65,7 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "server-only": "catalog:",
-    "takumi-js": "^2.16.2",
+    "takumi-js": "^2.16.3",
     "virtua": "catalog:",
     "zustand": "catalog:"
   },
