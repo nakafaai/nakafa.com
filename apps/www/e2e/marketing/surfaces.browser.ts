@@ -33,7 +33,13 @@ import { contributors } from "@/lib/data/contributor";
  * the budget. The per-friend figures come from the trace snapshot of the home
  * page of commit d739c56bd6 on 17 October 2026: 18 friends, 5 of them typing,
  * 400 descendants, 73 non-SVG descendants, and 35,739 bytes once serialized,
- * which approximates the browser's outerHTML. Each ceiling is about six percent
+ * which approximates the browser's outerHTML. The crowd's markup has since
+ * changed without changing any element count, and the exact byte deltas are
+ * added to the byte ceiling: the list became a labelled div with a role, which
+ * adds 13 bytes to the fixed part, the English label is 13 bytes longer, also in
+ * the fixed part, each friend's wrapper is a div rather than an li, which adds
+ * two bytes per friend, and each typing bubble is hidden from assistive
+ * technology, which adds 19 bytes per bubble. Each ceiling is about six percent
  * over its measure: a fixed part plus the friends and the bubbles.
  */
 const COMMUNITY_MARGIN = 1.06;
@@ -50,7 +56,7 @@ const COMMUNITY_MAX_DESCENDANTS = Math.ceil(
 );
 const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
   COMMUNITY_MARGIN *
-    (2717 + 1655 * COMMUNITY_FRIENDS + 648 * COMMUNITY_TYPING_FRIENDS)
+    (2743 + 1657 * COMMUNITY_FRIENDS + 667 * COMMUNITY_TYPING_FRIENDS)
 );
 
 /**
