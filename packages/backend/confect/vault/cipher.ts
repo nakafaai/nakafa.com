@@ -8,7 +8,7 @@ const TAG_BYTES = 16;
 const HEADER_BYTES = 1 + NONCE_BYTES;
 const KEY_BITS = 256;
 /** The bytes of a blind hash that are kept: 128 bits, far too many to collide. */
-const BLIND_BYTES = 16;
+export const BLIND_BYTES = 16;
 
 const encoder = new TextEncoder();
 const derivation = {

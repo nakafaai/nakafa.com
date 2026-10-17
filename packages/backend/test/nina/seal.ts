@@ -123,7 +123,7 @@ const rewriteThreadRows = Effect.fn("test.nina.seal.rewrite")(function* (
       const message = yield* Effect.fromNullishOr(row.message).pipe(
         Effect.orDie
       );
-      const saved = yield* savePrompt(ctx, owner, {
+      const saved = yield* savePrompt(ctx, keys, {
         fileIds: row.fileIds ?? [],
         message: toModelMessage(message),
         threadId,
@@ -276,6 +276,22 @@ export function plainThreadIn(
         Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
       )
     )
+  );
+}
+
+/**
+ * The earlier settled turn of a fixture, read from the test deployment. A fixture
+ * made with `createNinaTest` starts no seal, so the rows of this turn stay as the
+ * fixture wrote them until a test seals them.
+ */
+export async function earlierTurnIn(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>
+) {
+  const turns = await t.query((ctx) => ctx.db.query("ninaTurns").collect());
+  return Effect.runPromise(
+    Effect.fromOption(
+      Arr.findFirst(turns, (turn) => turn.phase === "settled")
+    ).pipe(Effect.orDie)
   );
 }
 

@@ -8,7 +8,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { useConvex } from "convex/react";
@@ -18,11 +18,7 @@ import { useTransition } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
-import {
-  START_ENTRY_SUCCESS,
-  START_ERROR,
-  START_PART_ERROR,
-} from "@/components/tryout/set/copy";
+import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
 import {
@@ -129,7 +125,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
                 failureMessage: START_PART_ERROR,
                 mutation: startSection,
                 sectionKey,
-                successMessage: START_ENTRY_SUCCESS,
               })
             ),
             Effect.catchTag("ConvexOfflineError", () =>
@@ -150,12 +145,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     if (busy) {
       return;
     }
-    const startedCopy: ToastCopy = directEntry
-      ? START_ENTRY_SUCCESS
-      : {
-          description: "tryout-start-success.description",
-          title: "tryout-start-success.title",
-        };
     const program = startAttemptProgram({
       args: {
         countryKey: request.countryKey,
@@ -179,7 +168,6 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       onSuccess: (result) =>
         Effect.sync(() => {
           dialog.close();
-          toast.success(startedCopy, { position: "bottom-center" });
           const href = getTryoutAttemptHref(
             result.navigation.publicPath,
             result.attemptId

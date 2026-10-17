@@ -306,13 +306,13 @@
     "action-loading": "Wird geladen",
     "cancel-cta": "Abbrechen",
     "start-dialog-title": "Diesen Probetest starten?",
-    "start-dialog-description": "Dein Probetest bleibt bis zu 3 Tage aktiv. Nach dem Start kannst du wählen, welchen Abschnitt du zuerst bearbeiten möchtest.",
+    "start-dialog-description": "Dein Probetest bleibt bis zu 3 Tage aktiv, und nach dem Start kannst du wählen, welchen Abschnitt du zuerst bearbeiten möchtest.",
     "free-dialog-title": "Probetest kostenlos starten",
-    "free-dialog-description": "Du kannst alle Probetests kostenlos bearbeiten und beliebig oft wiederholen. Jeder Versuch bleibt bis zu 3 Tage aktiv. Dein Ergebnis erhältst du kostenlos. Die Lösungswege sind mit Nakafa Pro zugänglich.",
-    "free-entry-dialog-description": "Du kannst alle Probetests kostenlos bearbeiten und wiederholen. Dein Ergebnis ist enthalten. Die Zeit läuft sofort nach dem Start. Die Lösungswege sind mit Nakafa Pro zugänglich.",
+    "free-dialog-description": "Du kannst alle Probetests kostenlos bearbeiten und beliebig oft wiederholen, jeder Versuch bleibt bis zu 3 Tage aktiv, du erhältst dein Ergebnis kostenlos, und die Lösungswege sind mit Nakafa Pro zugänglich.",
+    "free-entry-dialog-description": "Du kannst alle Probetests kostenlos bearbeiten und wiederholen, dein Ergebnis ist enthalten, der Timer dieses Aufgabensatzes startet, sobald du beginnst, und die Lösungswege sind mit Nakafa Pro zugänglich.",
     "restart-dialog-title": "Diesen Probetest von vorn beginnen?",
-    "restart-dialog-description": "Du beginnst von vorn. Dein vorheriges Ergebnis bleibt gespeichert.",
-    "restart-entry-dialog-description": "Du beginnst von vorn und der Timer dieses Aufgabensatzes startet sofort. Dein vorheriges Ergebnis bleibt gespeichert.",
+    "restart-dialog-description": "Du beginnst von vorn, und dein vorheriges Ergebnis bleibt gespeichert.",
+    "restart-entry-dialog-description": "Du beginnst von vorn, der Timer dieses Aufgabensatzes startet sofort, und dein vorheriges Ergebnis bleibt gespeichert.",
     "start-entry-dialog-description": "Der Timer dieses Aufgabensatzes startet, sobald du beginnst.",
     "paywall-title": "{count, plural, one {Lösung zu dieser Aufgabe ansehen} other {Lösungen zu allen # Aufgaben ansehen}}",
     "paywall-description": "Verstehe die Schritte und Gründe hinter jeder Antwort und frag Nina, wenn etwas unklar bleibt.",
@@ -613,16 +613,8 @@
       "title": "Abschnitt nicht beendet.",
       "description": "Versuche es erneut."
     },
-    "tryout-complete-part-success": {
-      "title": "Abschnitt beendet.",
-      "description": "Wähle einen anderen Abschnitt oder kehre zum Set zurück."
-    },
     "tryout-preference-error": {
       "title": "Probetest-Wahl nicht gespeichert."
-    },
-    "tryout-start-entry-success": {
-      "title": "Probetest gestartet.",
-      "description": "Der Timer läuft jetzt."
     },
     "tryout-start-error": {
       "title": "Probetest nicht gestartet.",
@@ -631,14 +623,6 @@
     "tryout-start-part-error": {
       "title": "Abschnitt nicht gestartet.",
       "description": "Versuche es erneut."
-    },
-    "tryout-start-part-success": {
-      "title": "Abschnitt gestartet.",
-      "description": "Der Timer läuft jetzt."
-    },
-    "tryout-start-success": {
-      "title": "Probetest gestartet.",
-      "description": "Du kannst wählen, welchen Abschnitt du zuerst bearbeitest."
     },
     "tryout-submit-answer-error": {
       "title": "Antwort nicht gespeichert.",
@@ -1111,11 +1095,11 @@
     "allow": "Erlauben",
     "decline": "Ablehnen",
     "manage": "Nutzungsdaten",
-    "status-granted": "Detaillierte Nutzungsteilung ist an",
-    "status-denied": "Detaillierte Nutzungsteilung ist aus",
-    "status-browser-signal": "Deine Browser-Datenschutzeinstellungen lassen das Teilen von Details ausgeschaltet",
-    "status-pending": "Entscheidung wird geladen",
-    "status-prompt": "Noch keine Auswahl",
+    "status-granted": "Detaillierte Nutzungsteilung ist an.",
+    "status-denied": "Detaillierte Nutzungsteilung ist aus.",
+    "status-browser-signal": "Deine Browser-Datenschutzeinstellungen lassen das Teilen von Details ausgeschaltet.",
+    "status-pending": "Deine Entscheidung wird geladen.",
+    "status-prompt": "Du hast noch keine Auswahl getroffen.",
     "policy": "<privacy-policy>Datenschutzerklärung</privacy-policy>",
     "load-error": "Deine Auswahl konnte nicht geladen werden. Das Teilen bleibt ausgeschaltet, während wir es erneut versuchen.",
     "runtime-error": "Deine Auswahl wurde gespeichert, konnte aber nicht angewendet werden. Der bisherige Status bleibt bestehen.",

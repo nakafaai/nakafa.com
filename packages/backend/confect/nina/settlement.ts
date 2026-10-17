@@ -104,6 +104,14 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
     .table("ninaTurns")
     .replace(turn._id, settled)
     .pipe(Effect.orDie);
+  // The seal runs at once, as the sweep also seals a turn it finds unsealed (ADR
+  // 0024). A failed seal leaves the turn plain until the next sweep, and never
+  // blocks the refund or the chat, which are written above.
+  yield* (yield* Scheduler).runAfter(
+    Duration.zero,
+    refs.internal.nina.sealed.seal,
+    { turnId: turn._id }
+  );
   if (status === "complete") {
     // Settlement schedules this once, including recovery after an interrupted action.
     yield* (yield* Scheduler).runAfter(
