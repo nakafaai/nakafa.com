@@ -25,12 +25,13 @@ import {
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Effect } from "effect";
@@ -85,40 +86,8 @@ export function VectorConceptLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="flex flex-col gap-4">
-        <VisualCardScene
-          aria-label={labels.bridgeView}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="demand">
-            <Suspense>
-              <ResponsiveVectorConceptCamera />
-              <ambientLight intensity={0.72} />
-              <hemisphereLight
-                color={colors.skyLight}
-                groundColor={colors.groundLight}
-                intensity={0.64}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[4.5, 6, 4.5]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <VectorConceptScene
-                colors={colors}
-                labels={labels}
-                vectorState={vectorState}
-              />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-
-        <div className="flex flex-col gap-3 pt-2">
+      <VisualCardToolbar>
+        <div className="flex w-full flex-col gap-3">
           <div className="flex items-center justify-between gap-4 text-sm">
             <div>{labels.chooseLoadPosition}</div>
             <div className="shrink-0 tabular-nums">
@@ -134,23 +103,50 @@ export function VectorConceptLab({
             value={loadX}
           />
         </div>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <VisualFact
-              label={labels.magnitude}
-              value={labels.magnitudeValue}
+      </VisualCardToolbar>
+
+      <VisualCardBody
+        aria-label={labels.bridgeView}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="demand">
+          <Suspense>
+            <ResponsiveVectorConceptCamera />
+            <ambientLight intensity={0.72} />
+            <hemisphereLight
+              color={colors.skyLight}
+              groundColor={colors.groundLight}
+              intensity={0.64}
             />
-            <VisualFact
-              label={labels.direction}
-              value={labels.directionValue}
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[4.5, 6, 4.5]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
             />
-            <VisualFact label={labels.netIdea} value={labels.netIdeaValue} />
-          </dl>
-        </VisualCardControls>
+            <VectorConceptScene
+              colors={colors}
+              labels={labels}
+              vectorState={vectorState}
+            />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact label={labels.magnitude} value={labels.magnitudeValue} />
+          <VisualFact label={labels.direction} value={labels.directionValue} />
+          <VisualFact label={labels.netIdea} value={labels.netIdeaValue} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

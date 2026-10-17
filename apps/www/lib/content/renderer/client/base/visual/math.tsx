@@ -7,7 +7,6 @@ import {
   VisualCard,
   VisualCardBody,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { type ReactNode, useId } from "react";
 
@@ -40,15 +39,14 @@ export function MathVisual({
           description={<span id={descriptionId}>{description}</span>}
           title={<span id={titleId}>{title}</span>}
         />
-        <VisualCardBody>
-          <VisualCardScene
-            aria-describedby={descriptionId}
-            aria-labelledby={titleId}
-            className="m-0"
-            render={<figure />}
-          >
-            <DeferredMathScene labels={labels} scene={scene} />
-          </VisualCardScene>
+        <VisualCardBody
+          aria-describedby={descriptionId}
+          aria-labelledby={titleId}
+          className="relative m-0"
+          data-scene="math"
+          render={<figure />}
+        >
+          <DeferredMathScene labels={labels} scene={scene} />
         </VisualCardBody>
         <CoordinateControls />
       </VisualCard>

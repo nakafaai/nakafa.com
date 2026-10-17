@@ -15,11 +15,10 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { type ReactNode, useMemo } from "react";
@@ -76,40 +75,38 @@ export function ProfitChart({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody>
-        <VisualCardScene>
-          <EvilBarChart
-            className="aspect-video"
-            config={chartConfig}
-            data={chartData}
-          >
-            <Grid vertical={false} />
-            <XAxis dataKey="year" tickFormatter={formatYear} tickMargin={10} />
-            <YAxis tickMargin={10} />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => formatYear(String(value))}
-                />
-              }
-            />
-            <Legend />
-            <Bar
-              dataKey="capital"
-              radius={PROFIT_CUES.capital.radius}
-              variant={PROFIT_CUES.capital.variant}
-            />
-            <Bar
-              dataKey="revenue"
-              radius={PROFIT_CUES.revenue.radius}
-              variant={PROFIT_CUES.revenue.variant}
-            />
-          </EvilBarChart>
-        </VisualCardScene>
+      <VisualCardBody className="p-(--card-spacing)">
+        <EvilBarChart
+          className="aspect-video"
+          config={chartConfig}
+          data={chartData}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="year" tickFormatter={formatYear} tickMargin={10} />
+          <YAxis tickMargin={10} />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                labelFormatter={(value) => formatYear(String(value))}
+              />
+            }
+          />
+          <Legend />
+          <Bar
+            dataKey="capital"
+            radius={PROFIT_CUES.capital.radius}
+            variant={PROFIT_CUES.capital.variant}
+          />
+          <Bar
+            dataKey="revenue"
+            radius={PROFIT_CUES.revenue.radius}
+            variant={PROFIT_CUES.revenue.variant}
+          />
+        </EvilBarChart>
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }

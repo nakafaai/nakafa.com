@@ -59,14 +59,15 @@ test("home page defers the projectile scene until the reader scrolls to it", asy
               const scene = page.locator("#scene");
 
               yield* Effect.promise(() => expect(scene).toHaveCount(1));
-              // The scene is a named landmark, so landmark navigation finds it.
+              // The scene is a named landmark inside its section, so landmark
+              // navigation finds it.
               yield* Effect.promise(() =>
                 expect(
-                  page.getByRole("region", {
+                  scene.getByRole("region", {
                     exact: true,
                     name: id.Landing["scene-label"],
                   })
-                ).toHaveAttribute("id", "scene")
+                ).toHaveCount(1)
               );
               yield* Effect.promise(() =>
                 expect(scene.locator("canvas")).toHaveCount(0)

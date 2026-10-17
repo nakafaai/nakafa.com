@@ -22,6 +22,10 @@ export const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] hover:shadow-md",
         "secondary-outline":
           "border border-muted-foreground bg-[color-mix(in_oklch,var(--secondary)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] hover:shadow-md",
+        // On a band that stays dark in every theme, such as the school band:
+        // Nina's light face color with her ink, so it reads in every theme.
+        inverse:
+          "bg-nina-face text-nina-ink shadow-xs hover:bg-[color-mix(in_oklch,var(--color-nina-face)_90%,var(--color-nina-ink))] hover:shadow-md",
         ghost:
           "hover:bg-accent hover:text-accent-foreground hover:[&_svg]:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
