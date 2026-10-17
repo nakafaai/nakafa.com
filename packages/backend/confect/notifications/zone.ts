@@ -1,7 +1,8 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { UnitStatus } from "@repo/backend/confect/tenancy/schema";
-import { Array as Arr, DateTime, Effect, Option, Order, Schema } from "effect";
+import { namedTimeZone } from "@repo/utilities/timezone";
+import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 
 /**
  * A unit as the zone rule reads it: its id, the moment it was created, its
@@ -89,12 +90,7 @@ export const zoneOfNotice = Effect.fn("notifications.zone.of")(function* (
   units: readonly UnitZone[]
 ) {
   const unit = yield* unitOf(unitId, units);
-  return yield* Effect.fromOption(
-    Option.filter(
-      DateTime.zoneFromString(unit.timeZone),
-      DateTime.isTimeZoneNamed
-    )
-  ).pipe(
+  return yield* Effect.fromOption(namedTimeZone(unit.timeZone)).pipe(
     Effect.mapError(() => new NoticeZoneUnresolved({ reason: "ZONE_INVALID" }))
   );
 });
