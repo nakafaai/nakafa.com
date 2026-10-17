@@ -3,7 +3,7 @@
 import type { LineSceneProps } from "@repo/design-system/components/contents/mathematics/line/scene";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { VisualCardScene } from "@repo/design-system/components/visual/card";
+import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 
@@ -23,14 +23,15 @@ export function DeferredLineScene(props: LineSceneProps) {
   const [shouldRender, setShouldRender] = useState(false);
 
   return (
-    <VisualCardScene className="relative" data-slot="line-scene">
+    <VisualCardBody className="relative" data-slot="line-scene">
+      {shouldRender ? <LineScene {...props} /> : <ScenePlaceholder />}
+      {/* Last, so the scene or its stand-in is the body's first child and draws no second divider. */}
       <Intersection
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         once
         onIntersect={() => setShouldRender(true)}
       />
-      {shouldRender ? <LineScene {...props} /> : <ScenePlaceholder />}
-    </VisualCardScene>
+    </VisualCardBody>
   );
 }

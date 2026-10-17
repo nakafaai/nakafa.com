@@ -3,8 +3,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -31,7 +31,7 @@ export function FunctionIllustration({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
-        <div className="flex flex-col items-center justify-center gap-8 py-8 sm:flex-row">
+        <div className="flex flex-col items-center justify-center gap-8 px-(--card-spacing) py-8 sm:flex-row">
           <Button className="pointer-events-none">{content.input}</Button>
 
           <HugeIcons
@@ -61,9 +61,9 @@ export function FunctionIllustration({
           </Button>
         </div>
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }
