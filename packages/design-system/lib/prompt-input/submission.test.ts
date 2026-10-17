@@ -143,6 +143,26 @@ describe("prompt input submission", () => {
       })
   );
 
+  it.effect(
+    "keeps the refusals of a press that takes neither text nor a file",
+    () =>
+      Effect.gen(function* () {
+        const dismissRefusals = vi.fn();
+
+        yield* submitPromptInput({
+          dismissRefusals,
+          event: "submit-event",
+          files: [],
+          onSubmit: () => false,
+          onSuccess: vi.fn(),
+          refusals: [createRefusal()],
+          text: "  ",
+        });
+
+        expect(dismissRefusals).not.toHaveBeenCalled();
+      })
+  );
+
   it.effect("types synchronous consumer failures", () =>
     Effect.gen(function* () {
       const cause = new Error("Submit failed immediately.");
