@@ -69,18 +69,24 @@ describe("posts write contracts", () => {
     await expect(
       writePost(author, "a".repeat(POST_TEXT_MAX_LENGTH + 1))
     ).rejects.toMatchObject({
-      data: { code: "POST_TEXT_TOO_LONG" },
+      data: {
+        code: "POST_TEXT_TOO_LONG",
+        message: `The post must hold 1 to ${POST_TEXT_MAX_LENGTH} characters.`,
+      },
     });
     const longest = "a".repeat(POST_TEXT_MAX_LENGTH);
     expect(await writePost(author, longest)).toBeDefined();
   });
 
-  it("lets only the author delete a post, and refuses a post that is gone", async () => {
+  it("lets only the author delete a post, and answers another learner as it answers a post that is gone", async () => {
     const { author, stranger, t } = await createPeople();
     const postId = await writePost(author);
+    // The stranger gets the same answer for a post they may not read as for a
+    // missing one, so the answer never shows that the post exists.
     await expect(stranger.mutation(remove, { postId })).rejects.toMatchObject({
-      data: { code: "FORBIDDEN" },
+      data: { code: "POST_NOT_FOUND", message: "Post not found." },
     });
+    expect(await t.query((ctx) => ctx.db.get("posts", postId))).not.toBeNull();
     await author.session.mutation(remove, { postId });
     expect(await t.query((ctx) => ctx.db.get("posts", postId))).toBeNull();
     await expect(

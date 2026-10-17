@@ -13,7 +13,7 @@ export const postTextValidator = Schema.String.check(
 );
 
 /** Why a text is refused as a post. */
-const PostTextRefusal = Schema.Literals([
+export const PostTextRefusal = Schema.Literals([
   "POST_TEXT_EMPTY",
   "POST_TEXT_TOO_LONG",
 ]);
@@ -21,6 +21,15 @@ const PostTextRefusal = Schema.Literals([
 /** The number of characters in a text, which is its number of Unicode code points. */
 export function countPostCharacters(text: string): number {
   return Arr.length(Arr.fromIterable(text));
+}
+
+/**
+ * The characters a post has left before the limit, counted on the text the
+ * server would store, so the white space at its ends does not count. The
+ * composer shows this number, and it agrees with `readPostText`.
+ */
+export function remainingPostCharacters(input: string): number {
+  return POST_TEXT_MAX_LENGTH - countPostCharacters(Str.trim(input));
 }
 
 /**

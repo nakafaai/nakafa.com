@@ -4,6 +4,7 @@ import {
   POST_TEXT_MAX_LENGTH,
   postTextValidator,
   readPostText,
+  remainingPostCharacters,
 } from "@repo/backend/confect/posts/schema";
 import { Result, Schema } from "effect";
 
@@ -41,6 +42,15 @@ describe("posts/schema", () => {
     expect(readPostText(emoji)).toEqual(Result.succeed(emoji));
     expect(readPostText(`${emoji}😀`)).toEqual(
       Result.fail("POST_TEXT_TOO_LONG")
+    );
+  });
+
+  it("counts the characters left on the text the server stores, so padding does not count", () => {
+    const padded = `${" ".repeat(20)}${"a".repeat(POST_TEXT_MAX_LENGTH - 10)}${" ".repeat(20)}`;
+    expect(remainingPostCharacters(padded)).toBe(10);
+    expect(remainingPostCharacters(" ".repeat(600))).toBe(POST_TEXT_MAX_LENGTH);
+    expect(remainingPostCharacters("a".repeat(POST_TEXT_MAX_LENGTH + 1))).toBe(
+      -1
     );
   });
 

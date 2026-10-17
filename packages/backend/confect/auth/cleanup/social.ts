@@ -7,9 +7,13 @@ import { dropRestores } from "@repo/backend/confect/nina/memory/restore/store";
 import { deleteBatch } from "@repo/backend/confect/nina/memory/store";
 import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
 import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
+import {
+  removeLike,
+  removePostLikeBatch,
+} from "@repo/backend/confect/posts/likes";
 import { findPost } from "@repo/backend/confect/posts/rows";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, flow, Option, Struct } from "effect";
+import { Effect, flow, Option } from "effect";
 
 const COMMENT_VOTE_BATCH_SIZE = 50;
 const COMMENT_REFERENCE_BATCH_SIZE = 25;
@@ -100,7 +104,6 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
 const cleanupPostLikes = Effect.fn("auth.cleanup.cleanupPostLikes")(
   function* (userId: Id<"users">) {
     const database = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
     const likes = yield* database
       .table("postLikes")
       .index("by_userId", (query) => query.eq("userId", userId))
@@ -108,16 +111,7 @@ const cleanupPostLikes = Effect.fn("auth.cleanup.cleanupPostLikes")(
       .pipe(Effect.orDie);
     for (const like of likes) {
       const post = yield* findPost(like.postId);
-      if (post !== null) {
-        yield* writer
-          .table("posts")
-          .replace(post._id, {
-            ...Struct.omit(post, ["_id", "_creationTime"]),
-            likeCount: post.likeCount - 1,
-          })
-          .pipe(Effect.orDie);
-      }
-      yield* writer.table("postLikes").delete(like._id);
+      yield* removeLike(like, post);
     }
     return likes.length > 0;
   },
@@ -141,15 +135,7 @@ const cleanupPosts = Effect.fn("auth.cleanup.cleanupPosts")(
     if (!post) {
       return false;
     }
-    const likes = yield* database
-      .table("postLikes")
-      .index("by_postId_and_userId", (query) => query.eq("postId", post._id))
-      .take(POST_LIKE_CLEANUP_BATCH_SIZE)
-      .pipe(Effect.orDie);
-    for (const like of likes) {
-      yield* writer.table("postLikes").delete(like._id);
-    }
-    if (likes.length > 0) {
+    if ((yield* removePostLikeBatch(post._id)) > 0) {
       return true;
     }
     yield* writer.table("posts").delete(post._id);
