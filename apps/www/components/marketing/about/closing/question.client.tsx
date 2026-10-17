@@ -20,11 +20,13 @@ interface ClosingQuestionProps {
 /**
  * The closing question at the size of the hero, with one of its topics typed in
  * place of the placeholder. The words before the topic make the first line, and
- * the topic with the words after it the second, so a typed letter only moves
- * its own line. That line keeps the room of the longest topic, so a topic that
- * wraps on a phone never changes the height of the question. The topics take
- * turns while the question is on screen. With reduced motion the question rests
- * on its first topic.
+ * the topic with the words after it the second. The whole topic is laid out
+ * from its first letter and its letters only turn visible, so typing never
+ * moves the words after it, and each topic is a new element, so the next topic
+ * is painted in place instead of moving the last one. The line keeps the room
+ * of the longest topic, so a topic that wraps on a phone never changes the
+ * height of the question. The topics take turns while the question is on
+ * screen. With reduced motion the question rests on its first topic.
  */
 export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
@@ -32,8 +34,10 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   const [topic, setTopic] = useState(0);
   const [typed, setTyped] = useState(0);
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
-  const current = topics[topic % topics.length];
-  const shown = shouldReduceMotion ? topics[0] : current.slice(0, typed);
+  const current = shouldReduceMotion
+    ? topics[0]
+    : topics[topic % topics.length];
+  const shown = shouldReduceMotion ? current.length : typed;
   const longest = Arr.reduce(topics, "", (best, text) =>
     text.length > best.length ? text : best
   );
@@ -70,8 +74,11 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
           {longest}
           {after}
         </span>
-        <span className="col-start-1 row-start-1">
-          <span className="text-primary">{shown}</span>
+        <span className="col-start-1 row-start-1" key={current}>
+          <span className="text-primary">{current.slice(0, shown)}</span>
+          <span className="invisible">
+            {current.slice(shown)}
+          </span>
           {after}
         </span>
       </span>
