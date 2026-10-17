@@ -8,6 +8,8 @@ import {
 import { editorFrame } from "@repo/design-system/components/editor/frame";
 import { EditorPane } from "@repo/design-system/components/editor/pane";
 import { plainText } from "@repo/design-system/components/editor/plain";
+import type * as RichEditorModule from "@repo/design-system/components/editor/rich";
+import type * as EditorPreviewModule from "@repo/design-system/components/editor/words";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -15,7 +17,7 @@ import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { String as Str } from "effect";
 import { useTranslations } from "next-intl";
-import { lazy, Suspense, useRef, useState } from "react";
+import { type ComponentProps, Suspense, use, useRef, useState } from "react";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
@@ -33,19 +35,24 @@ import {
 } from "@/components/user/settings/memory/module";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
-/** The editor's code loads when a learner opens it, never with the page. */
-const Editor = lazy(() =>
-  loadRichEditorModule().then((module) => ({
-    default: module.RichEditor,
-  }))
-);
+/**
+ * The rich editor, drawn once its code has loaded. The code loads when a learner
+ * opens the editor, never with the page.
+ */
+function Editor(props: ComponentProps<typeof RichEditorModule.RichEditor>) {
+  const { RichEditor } = use(loadRichEditorModule());
+
+  return <RichEditor {...props} />;
+}
 
 /** The saved words drawn as the editor draws them, which show while the editor's code loads. */
-const Preview = lazy(() =>
-  loadEditorPreviewModule().then((module) => ({
-    default: module.EditorPreview,
-  }))
-);
+function Preview(
+  props: ComponentProps<typeof EditorPreviewModule.EditorPreview>
+) {
+  const { EditorPreview } = use(loadEditorPreviewModule());
+
+  return <EditorPreview {...props} />;
+}
 
 /**
  * The saved words as plain text, in the frame the editor and its preview share.
