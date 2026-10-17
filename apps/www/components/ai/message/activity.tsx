@@ -47,7 +47,12 @@ export function Activity({
 }) {
   return (
     <ActivityContext value={invocation}>
-      <Collapsible className="not-prose min-w-0" defaultOpen={false}>
+      {/* A row with nothing to open is disabled at the root, so every part carries `data-disabled`. */}
+      <Collapsible
+        className="not-prose min-w-0"
+        defaultOpen={false}
+        disabled={invocation.artifacts.length === 0}
+      >
         <ActivityTrigger />
         <CollapsibleContent className="motion-reduce:transition-none">
           {/* The line runs under the middle of the row's icon, and the evidence starts where the row's words start (8 + 1 + 15 = 24 px), so it reads as their children. */}
@@ -107,7 +112,6 @@ function ActivityTrigger() {
           ? "text-destructive"
           : "text-muted-foreground hover:text-foreground"
       )}
-      disabled={artifactCount === 0}
     >
       <Spinner
         aria-hidden="true"
