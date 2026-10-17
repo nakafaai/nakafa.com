@@ -30,12 +30,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -89,7 +90,7 @@ export function UniformCircularMotionLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.choosePeriod}
           gridColumns="3"
@@ -104,80 +105,77 @@ export function UniformCircularMotionLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.75} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE")}
-                intensity={0.6}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.25}
-                position={[3.5, 6, 4.5]}
-                shadow-bias={-0.0006}
-                shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
-                shadow-camera-left={-SHADOW_CAMERA_RADIUS}
-                shadow-camera-right={SHADOW_CAMERA_RADIUS}
-                shadow-camera-top={SHADOW_CAMERA_RADIUS}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <CircularMotionCamera />
-              <CircularMotionScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
-            <VisualFactTabular
-              label={labels.period}
-              value={
-                <InlineMath math={formatRoundedSecondMath(motion.period)} />
-              }
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.75} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("SLATE")}
+              intensity={0.6}
             />
-            <VisualFactTabular
-              label={labels.radius}
-              value={
-                <InlineMath math={formatRoundedMeterMath(motion.radius)} />
-              }
+            <directionalLight
+              castShadow
+              intensity={1.25}
+              position={[3.5, 6, 4.5]}
+              shadow-bias={-0.0006}
+              shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
+              shadow-camera-left={-SHADOW_CAMERA_RADIUS}
+              shadow-camera-right={SHADOW_CAMERA_RADIUS}
+              shadow-camera-top={SHADOW_CAMERA_RADIUS}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
             />
-            <VisualFactTabular
-              label={labels.speed}
-              value={
-                <InlineMath
-                  math={`${formatCircularMotionDecimal(
-                    motion.speed,
-                    decimalSeparator
-                  )}\\text{ m/s}`}
-                />
-              }
-            />
-            <VisualFactTabular
-              label={labels.acceleration}
-              value={
-                <InlineMath
-                  math={`${formatCircularMotionDecimal(
-                    motion.acceleration,
-                    decimalSeparator
-                  )}\\text{ m/s}^2`}
-                />
-              }
-            />
-          </dl>
-        </VisualCardControls>
+            <CircularMotionCamera />
+            <CircularMotionScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFactTabular
+            label={labels.period}
+            value={<InlineMath math={formatRoundedSecondMath(motion.period)} />}
+          />
+          <VisualFactTabular
+            label={labels.radius}
+            value={<InlineMath math={formatRoundedMeterMath(motion.radius)} />}
+          />
+          <VisualFactTabular
+            label={labels.speed}
+            value={
+              <InlineMath
+                math={`${formatCircularMotionDecimal(
+                  motion.speed,
+                  decimalSeparator
+                )}\\text{ m/s}`}
+              />
+            }
+          />
+          <VisualFactTabular
+            label={labels.acceleration}
+            value={
+              <InlineMath
+                math={`${formatCircularMotionDecimal(
+                  motion.acceleration,
+                  decimalSeparator
+                )}\\text{ m/s}^2`}
+              />
+            }
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
