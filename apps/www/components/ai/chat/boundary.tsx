@@ -1,9 +1,11 @@
 "use client";
 
+import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
+import { useAnswerRetry } from "@/lib/convex/retry.client";
 
 // The failure card holds the sign-in chain, which only a signed-out visitor who
 // cannot read a chat needs. It loads when a card is needed, so the first
@@ -14,6 +16,12 @@ const ChatFailure = dynamic(
   { loading: () => null, ssr: false }
 );
 
+/** The query whose failure a boundary shows, and the args that read it. */
+interface ChatRead<Query extends Ref.AnyPublicQuery> {
+  readonly args: Ref.Args<Query>;
+  readonly ref: Query;
+}
+
 /**
  * The boundary of every chat surface. A failure shows the failure card in
  * place of the surface, and the card's retry runs the read again. The card's
@@ -21,11 +29,19 @@ const ChatFailure = dynamic(
  * can show an empty surface until the code arrives. The boundary also tries
  * again when the route changes or one of `resetKeys` changes, so a card does
  * not stay over a page the learner has moved to.
+ *
+ * With `read`, the retry waits for the server's answer before the surface
+ * remounts, so the remount does not read the failure that the cache still holds.
+ * The card's retry button is disabled while that wait is open.
  */
-export function ChatBoundary({
+export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
   children,
+  read,
   resetKeys = [],
-}: PropsWithChildren<{ resetKeys?: readonly unknown[] }>) {
+}: PropsWithChildren<{
+  read?: ChatRead<Query> | undefined;
+  resetKeys?: readonly unknown[];
+}>) {
   const pathname = usePathname();
 
   // The card fills the surface it replaces, so it centres in a page whose
@@ -34,7 +50,15 @@ export function ChatBoundary({
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) => (
         <div className="flex size-full min-h-0 flex-1 flex-col">
-          <ChatFailure error={error} onRetry={resetErrorBoundary} />
+          {read ? (
+            <ChatReadFailure
+              error={error}
+              read={read}
+              reset={resetErrorBoundary}
+            />
+          ) : (
+            <ChatFailure error={error} onRetry={resetErrorBoundary} />
+          )}
         </div>
       )}
       resetKeys={[pathname, ...resetKeys]}
@@ -42,4 +66,21 @@ export function ChatBoundary({
       {children}
     </ErrorBoundary>
   );
+}
+
+/**
+ * The failure card of a boundary that has `read`. Its retry waits for the
+ * server's answer, then the surface remounts and reads the answer.
+ */
+function ChatReadFailure<Query extends Ref.AnyPublicQuery>({
+  error,
+  read,
+  reset,
+}: {
+  error: unknown;
+  read: ChatRead<Query>;
+  reset: () => void;
+}) {
+  const { retry, waiting } = useAnswerRetry(read.ref, read.args, reset);
+  return <ChatFailure error={error} isPending={waiting} onRetry={retry} />;
 }
