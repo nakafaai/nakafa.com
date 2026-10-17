@@ -8,10 +8,10 @@ import {
   chipsOfComposer,
   composerOf,
   fileOf,
-  NO_BORDER,
   noticeWith,
   pickFiles,
   pictureOf,
+  TRANSPARENT,
   write,
 } from "@/e2e/support/attachment";
 import { saved } from "@/e2e/support/changes";
@@ -33,7 +33,7 @@ import {
 } from "@/e2e/support/upload";
 
 /** What the pages tell the learner when the server calls an upload invalid. */
-const INVALID = en.Ai.failures["attachment-invalid"];
+const INVALID = en.Toast["failure-attachment-invalid"].title;
 /** The failure the server names when an upload is gone or is not the learner's. */
 const INVALID_UPLOAD = {
   _tag: "NinaUploadError",
@@ -251,7 +251,7 @@ test.describe("Uploads of a composer at 390px", () => {
           );
           await expect(chipsOfComposer(composer).first()).toHaveCSS(
             "border-top-color",
-            NO_BORDER
+            TRANSPARENT
           );
         });
       })
@@ -267,22 +267,25 @@ test.describe("Uploads of a composer at 390px", () => {
           fileOf("report.pdf", "application/pdf", 12),
         ]);
         yield* write(composer, "Summarize this report");
+        const chip = chipsOfComposer(composer).first();
+        const tile = chip.locator('[data-slot="attachment-media"]');
         changes.failNext(SAVE);
 
         yield* Effect.promise(async () => {
+          // Before the send the chip is done, so this is the tile color that a
+          // failure must change.
+          const doneTile = await tile.evaluate(
+            (element) => getComputedStyle(element).backgroundColor
+          );
           await composerOf(composer).press("Enter");
           await expect(page.getByText(UNCONFIRMED).first()).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
-          await expect(chipsIn(composer).first()).toHaveAttribute(
-            "data-state",
-            "error"
-          );
-          // The failure is the one thing a chip still draws a border for.
-          await expect(chipsOfComposer(composer).first()).not.toHaveCSS(
-            "border-top-color",
-            NO_BORDER
-          );
+          await expect(chip).toHaveAttribute("data-state", "error");
+          // A failed chip draws no frame: its state shows in its icon tile and its text.
+          await expect(chip).toHaveCSS("border-top-color", TRANSPARENT);
+          await expect(tile).not.toHaveCSS("background-color", TRANSPARENT);
+          await expect(tile).not.toHaveCSS("background-color", doneTile);
         });
       })
     );

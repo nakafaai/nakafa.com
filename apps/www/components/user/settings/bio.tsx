@@ -14,10 +14,10 @@ import {
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   CardSection,
   CardSectionFooter,
@@ -31,7 +31,6 @@ import type { CurrentUser } from "@/lib/identity/client";
  * says so in words, and Save waits until it fits.
  */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updateBio = useUpdateBioMutation();
   const current = user.appUser.bio ?? "";
@@ -52,7 +51,10 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),

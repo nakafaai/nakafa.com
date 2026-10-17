@@ -3,12 +3,11 @@
 import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
 import { useOptimistic, useTransition } from "react";
-import { toast } from "sonner";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 /** What a running section needs to finish itself. */
@@ -42,7 +41,6 @@ export function useTryoutFinish<State>(input: {
   const router = useRouter();
   const convex = useConvex();
   const completeSection = useMutation(tryouts.mutations.sections.complete);
-  const tTryouts = useTranslations("Tryouts");
 
   return {
     pending,
@@ -64,18 +62,26 @@ export function useTryoutFinish<State>(input: {
                     startTransition(() => {
                       router.push(input.returnHref);
                     });
-                    toast.success(tTryouts("complete-part-success"), {
-                      position: "bottom-center",
-                    });
+                    toast.success(
+                      {
+                        description: "tryout-complete-part-success.description",
+                        title: "tryout-complete-part-success.title",
+                      },
+                      { position: "bottom-center" }
+                    );
                   })
                 )
               )
             ),
             Effect.catch(() =>
               Effect.sync(() => {
-                toast.error(tTryouts("complete-part-error"), {
-                  position: "bottom-center",
-                });
+                toast.error(
+                  {
+                    description: "tryout-complete-part-error.description",
+                    title: "tryout-complete-part-error.title",
+                  },
+                  { position: "bottom-center" }
+                );
               })
             )
           )

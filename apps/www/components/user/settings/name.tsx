@@ -9,10 +9,10 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import {
   CardSection,
   CardSectionFooter,
@@ -33,7 +33,6 @@ const formSchema = Schema.toStandardSchemaV1(
 );
 /** Render the validated optimistic user-name settings form. */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updateUserName = useUpdateUserNameMutation();
   const form = useForm({
@@ -66,7 +65,10 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(actionErrorMessage);
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
+                    });
                   })
                 )
               ),
