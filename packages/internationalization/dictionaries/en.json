@@ -5,7 +5,6 @@
     "for-you": "For you",
     "home": "Home",
     "language": "Language",
-    "language-error": "We could not change the language.",
     "nina-memory": "Nina memory",
     "role": {
       "admin": "Admin",
@@ -23,8 +22,7 @@
     },
     "sign-in-title": "Sign in to {school}",
     "signed-in": "You are signed in.",
-    "signed-in-as": "You are signed in as {role}.",
-    "try-again": "Try again"
+    "signed-in-as": "You are signed in as {role}."
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
@@ -434,7 +432,6 @@
     "sign-in-title": "Sign in to Nakafa",
     "sign-in-description": "So your progress stays saved.",
     "logout": "Logout",
-    "logout-error": "We could not sign you out. Check your connection, then try again.",
     "login": "Login",
     "login-cta-title": "Continue learning",
     "login-cta-description": "Log in to save progress in materials and tryouts.",
@@ -722,7 +719,15 @@
       "description": "Sign in again to continue."
     },
     "admitted-elsewhere": { "title": "Nina is answering in a new chat" },
-    "open-chat": { "title": "Open chat" }
+    "open-chat": { "title": "Open chat" },
+    "school-language-error": {
+      "title": "We could not change the language.",
+      "description": "Please try again."
+    },
+    "sign-out-error": {
+      "title": "We could not sign you out.",
+      "description": "Check your connection, then try again."
+    }
   },
   "Ai": {
     "attachment": "Attachment",

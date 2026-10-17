@@ -5,7 +5,6 @@
     "for-you": "Untukmu",
     "home": "Beranda",
     "language": "Bahasa",
-    "language-error": "Kamu belum bisa mengubah bahasa.",
     "nina-memory": "Memori Nina",
     "role": {
       "admin": "Admin",
@@ -23,8 +22,7 @@
     },
     "sign-in-title": "Masuk ke {school}",
     "signed-in": "Kamu sudah masuk.",
-    "signed-in-as": "Kamu masuk sebagai {role}.",
-    "try-again": "Coba lagi"
+    "signed-in-as": "Kamu masuk sebagai {role}."
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
@@ -434,7 +432,6 @@
     "sign-in-title": "Masuk ke Nakafa",
     "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",
-    "logout-error": "Kamu belum bisa keluar. Periksa koneksimu, lalu coba lagi.",
     "login": "Masuk",
     "login-cta-title": "Lanjutkan belajarmu",
     "login-cta-description": "Masuk untuk menyimpan progres materi dan try out.",
@@ -722,7 +719,15 @@
       "description": "Masuk lagi untuk melanjutkan."
     },
     "admitted-elsewhere": { "title": "Nina sedang menjawab di chat baru" },
-    "open-chat": { "title": "Buka chat" }
+    "open-chat": { "title": "Buka chat" },
+    "school-language-error": {
+      "title": "Kamu belum bisa mengubah bahasa.",
+      "description": "Silakan coba lagi."
+    },
+    "sign-out-error": {
+      "title": "Kamu belum bisa keluar.",
+      "description": "Periksa koneksimu, lalu coba lagi."
+    }
   },
   "Ai": {
     "attachment": "Lampiran",

@@ -5,7 +5,6 @@
     "for-you": "Für dich",
     "home": "Startseite",
     "language": "Sprache",
-    "language-error": "Die Sprache konnte nicht geändert werden.",
     "nina-memory": "Nina-Gedächtnis",
     "role": {
       "admin": "Admin",
@@ -23,8 +22,7 @@
     },
     "sign-in-title": "Anmelden bei {school}",
     "signed-in": "Du bist angemeldet.",
-    "signed-in-as": "Du bist als {role} angemeldet.",
-    "try-again": "Erneut versuchen"
+    "signed-in-as": "Du bist als {role} angemeldet."
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
@@ -434,7 +432,6 @@
     "sign-in-title": "Bei Nakafa anmelden",
     "sign-in-description": "Damit dein Fortschritt gespeichert bleibt.",
     "logout": "Abmelden",
-    "logout-error": "Abmelden ist fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
     "login": "Anmelden",
     "login-cta-title": "Weiterlernen",
     "login-cta-description": "Melde dich an, um deinen Fortschritt in Lerninhalten und Probetests zu speichern.",
@@ -722,7 +719,15 @@
       "description": "Melde dich erneut an, um fortzufahren."
     },
     "admitted-elsewhere": { "title": "Nina antwortet in einem neuen Chat" },
-    "open-chat": { "title": "Chat öffnen" }
+    "open-chat": { "title": "Chat öffnen" },
+    "school-language-error": {
+      "title": "Sprache nicht geändert.",
+      "description": "Bitte versuche es erneut."
+    },
+    "sign-out-error": {
+      "title": "Abmelden ist fehlgeschlagen.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
+    }
   },
   "Ai": {
     "attachment": "Anhang",
