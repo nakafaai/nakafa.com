@@ -1,10 +1,5 @@
-import { MarkdownContent } from "@repo/design-system/components/markdown/content";
-import {
-  Message,
-  MessageContent,
-} from "@repo/design-system/components/ui/message";
 import { useTranslations } from "next-intl";
-import { NinaPrompt } from "@/components/ai/message/prompt";
+import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
 import type { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
@@ -23,25 +18,18 @@ export function Tryout({ value }: { value: FeaturedTryout }) {
 
   return (
     <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="tryout">
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
         <div className="grid min-w-0 content-center gap-8">
-          <div className="grid gap-4">
-            <Message align="end">
-              <NinaPrompt text={t("tryout-ask")} />
-            </Message>
-            <Message>
-              <MessageContent>
-                <MarkdownContent id="home-tryout-answer" variant="chat">
-                  {t("tryout-answer")}
-                </MarkdownContent>
-              </MessageContent>
-            </Message>
-          </div>
-          <div className="grid gap-3">
-            <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+          <Talk ask={t("tryout-ask")}>
+            <TalkReply act="drumming" mood="winking">
+              {t("tryout-answer")}
+            </TalkReply>
+          </Talk>
+          <div className="grid gap-2">
+            <h2 className="text-balance text-2xl tracking-tight">
               {t("tryout-title")}
             </h2>
-            <p className="max-w-xl text-pretty text-base text-muted-foreground">
+            <p className="max-w-md text-pretty text-base text-muted-foreground">
               {t("tryout-lead")}
             </p>
           </div>

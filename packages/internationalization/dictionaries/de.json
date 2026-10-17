@@ -563,8 +563,12 @@
       "title": "Aktion nicht abgeschlossen.",
       "description": "Bitte versuche es erneut."
     },
-    "copy-error": { "title": "Kopieren nicht möglich" },
-    "copy-success": { "title": "Kopiert!" },
+    "copy-error": {
+      "title": "Kopieren nicht möglich"
+    },
+    "copy-success": {
+      "title": "Kopiert!"
+    },
     "curriculum-preference-error": {
       "title": "Lehrplanwahl nicht gespeichert.",
       "description": "Versuche es erneut."
@@ -573,12 +577,16 @@
       "title": "Onboarding nicht abgeschlossen.",
       "description": "Versuch es erneut."
     },
-    "onboarding-invalid-selection": { "title": "Beantworte jede Frage." },
+    "onboarding-invalid-selection": {
+      "title": "Beantworte jede Frage."
+    },
     "onboarding-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es erneut."
     },
-    "link-copied": { "title": "Link kopiert!" },
+    "link-copied": {
+      "title": "Link kopiert!"
+    },
     "provider-error": {
       "title": "Mit Google nicht fortgefahren.",
       "description": "Bitte versuche es erneut."
@@ -634,9 +642,15 @@
       "title": "Antwort nicht gespeichert.",
       "description": "Versuche es erneut."
     },
-    "memory-limit": { "title": "Warte kurz, dann speichere erneut." },
-    "memory-missing": { "title": "Erinnerung nicht mehr vorhanden." },
-    "memory-too-long": { "title": "Text zu lang für eine Erinnerung." },
+    "memory-limit": {
+      "title": "Warte kurz, dann speichere erneut."
+    },
+    "memory-missing": {
+      "title": "Erinnerung nicht mehr vorhanden."
+    },
+    "memory-too-long": {
+      "title": "Text zu lang für eine Erinnerung."
+    },
     "interpretation-error": {
       "title": "Tafsir konnte nicht geladen werden.",
       "description": "Versuche es erneut."
@@ -717,8 +731,12 @@
       "title": "Deine Sitzung ist abgelaufen.",
       "description": "Melde dich erneut an, um fortzufahren."
     },
-    "admitted-elsewhere": { "title": "Nina antwortet in einem neuen Chat" },
-    "open-chat": { "title": "Chat öffnen" },
+    "admitted-elsewhere": {
+      "title": "Nina antwortet in einem neuen Chat"
+    },
+    "open-chat": {
+      "title": "Chat öffnen"
+    },
     "school-language-error": {
       "title": "Sprache nicht geändert.",
       "description": "Bitte versuche es erneut."
@@ -1069,7 +1087,6 @@
         }
       }
     },
-    "lesson-open": "Lernmaterial lesen",
     "tryout-title": "Probetests mit sofortigem Ergebnis",
     "tryout-lead": "Jederzeit wiederholbar.",
     "tryout-ask": "Hab ich es schon verstanden?",
@@ -1078,6 +1095,8 @@
     "nina-lead": "Frag direkt aus der Aufgabe oder Lektion, die du offen hast.",
     "nina-ask": "Die hier verstehe ich noch nicht.",
     "nina-answer": "Komm, wir nehmen sie zusammen auseinander.",
+    "nina-chat-ask": "Warum ist 13 falsch?",
+    "nina-chat-answer": "### 13 kommt heraus, wenn m gleich 3 ist\n\nDann rechnest du $5(2) + 9/3 = 13$. Nur passt $m = 3$ nicht zur Aufgabe.\n\n#### Prüf es mit dem, was gegeben ist\n\n$$\n\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\n$$\n\nMit $m = 1$ passt es: $2(2) + 4/1 = 8$. Also ist $m$ gleich 1, und die Antwort ist 19.",
     "scene-label": "Dreidimensionale Szene zum schiefen Wurf, eine Kanonenkugel",
     "scene-title": "Was schwer vorstellbar ist, kannst du sehen",
     "scene-lead": "Eine Szene aus der Lektion zum schiefen Wurf.",
@@ -1115,6 +1134,18 @@
     "school-cta": "Erzähl von eurer Schule",
     "school-class": "Eine Klasse aus Tieren",
     "faq-title": "Häufig gefragt",
+    "faq-subjects-question": "Welche Fächer und Klassen gibt es?",
+    "faq-subjects-answer": "Von der Grundschule bis zur Universität: Mathematik, Physik, Chemie, Biologie, Informatik und mehr.",
+    "faq-account-question": "Kann ich ohne Konto lernen?",
+    "faq-account-answer": "Ja. Öffentliche Lernmaterialien kannst du ohne Konto lesen. Melde dich an, um deinen Fortschritt zu speichern, Nina zu fragen und Probetests zu machen.",
+    "faq-phone-question": "Geht das auf dem Smartphone?",
+    "faq-phone-answer": "Ja. Nakafa läuft im Browser auf Smartphone, Tablet und Computer, ohne Installation.",
+    "faq-credits-question": "Was sind KI-Credits?",
+    "faq-credits-answer": "KI-Credits werden genutzt, wenn Nina deine Frage beantwortet. Eine Antwort kostet 5 Credits.",
+    "faq-empty-question": "Was passiert, wenn meine Credits aufgebraucht sind?",
+    "faq-empty-answer": "Nina ist wieder verfügbar, sobald deine Credits erneuert werden. Lernmaterialien, Übungen und Probetests bleiben nutzbar.",
+    "faq-accuracy-question": "Wie sorgt Nakafa für richtige Inhalte?",
+    "faq-accuracy-answer": "Alle Inhalte schreiben qualifizierte Autorinnen und Autoren. Weil der Quellcode einsehbar ist, kann jede Person ein Lernmaterial prüfen und eine Korrektur vorschlagen.",
     "faq-languages-question": "In welchen Sprachen gibt es Nakafa?",
     "faq-languages-answer": "Auf Deutsch, Englisch und Indonesisch.",
     "faq-nina-question": "Hat Nina immer recht?",
@@ -1127,8 +1158,8 @@
     "community-lead": "Fragen, antworten und einander helfen.",
     "community-cta": "Discord beitreten",
     "community-crowd": "Tierische Mitlernende, manche tippen gerade",
-    "closing-ask": "Was willst du {topic} verstehen?",
-    "closing-topic-0": "heute",
+    "closing-ask": "Willst du heute {topic} verstehen?",
+    "closing-topic-0": "etwas",
     "closing-topic-1": "den schiefen Wurf",
     "closing-topic-2": "quadratische Funktionen",
     "closing-topic-3": "das Mol",

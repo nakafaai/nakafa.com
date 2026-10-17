@@ -563,8 +563,12 @@
       "title": "We could not complete this action.",
       "description": "Please try again."
     },
-    "copy-error": { "title": "Couldn't copy" },
-    "copy-success": { "title": "Copied!" },
+    "copy-error": {
+      "title": "Couldn't copy"
+    },
+    "copy-success": {
+      "title": "Copied!"
+    },
     "curriculum-preference-error": {
       "title": "Curriculum preference not saved.",
       "description": "Please try again."
@@ -573,12 +577,16 @@
       "title": "Onboarding did not finish.",
       "description": "Try again."
     },
-    "onboarding-invalid-selection": { "title": "Answer every question." },
+    "onboarding-invalid-selection": {
+      "title": "Answer every question."
+    },
     "onboarding-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
     },
-    "link-copied": { "title": "Link copied!" },
+    "link-copied": {
+      "title": "Link copied!"
+    },
     "provider-error": {
       "title": "We couldn't continue with Google.",
       "description": "Please try again."
@@ -634,9 +642,15 @@
       "title": "We couldn't save your answer.",
       "description": "Please try again."
     },
-    "memory-limit": { "title": "Wait a moment before saving again." },
-    "memory-missing": { "title": "This memory no longer exists." },
-    "memory-too-long": { "title": "That text is too long for a memory." },
+    "memory-limit": {
+      "title": "Wait a moment before saving again."
+    },
+    "memory-missing": {
+      "title": "This memory no longer exists."
+    },
+    "memory-too-long": {
+      "title": "That text is too long for a memory."
+    },
     "interpretation-error": {
       "title": "Could not load this interpretation.",
       "description": "Try again."
@@ -717,8 +731,12 @@
       "title": "Your session has expired.",
       "description": "Sign in again to continue."
     },
-    "admitted-elsewhere": { "title": "Nina is answering in a new chat" },
-    "open-chat": { "title": "Open chat" },
+    "admitted-elsewhere": {
+      "title": "Nina is answering in a new chat"
+    },
+    "open-chat": {
+      "title": "Open chat"
+    },
     "school-language-error": {
       "title": "We could not change the language.",
       "description": "Please try again."
@@ -1069,7 +1087,6 @@
         }
       }
     },
-    "lesson-open": "Read the lesson",
     "tryout-title": "Practice tests that score you right away",
     "tryout-lead": "You can repeat them any time.",
     "tryout-ask": "Do I get it yet?",
@@ -1078,6 +1095,8 @@
     "nina-lead": "Ask from the question or lesson you have open.",
     "nina-ask": "This one still confuses me.",
     "nina-answer": "Come, let us take it apart together.",
+    "nina-chat-ask": "Why is 13 wrong?",
+    "nina-chat-answer": "### 13 comes from taking m as 3\n\nThat gives $5(2) + 9/3 = 13$. The trouble is that $m = 3$ does not fit the question.\n\n#### Check it against what you know\n\n$$\n\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\n$$\n\nWith $m = 1$ it fits: $2(2) + 4/1 = 8$. So $m$ must be 1, and the answer is 19.",
     "scene-label": "Three-dimensional scene of a projectile motion, a cannonball",
     "scene-title": "What is hard to picture, you can see",
     "scene-lead": "A scene from the Projectile Motion lesson.",
@@ -1115,6 +1134,18 @@
     "school-cta": "Tell us about your school",
     "school-class": "One class of animals",
     "faq-title": "Frequently asked",
+    "faq-subjects-question": "Which subjects and grades are covered?",
+    "faq-subjects-answer": "From primary school to university: Mathematics, Physics, Chemistry, Biology, Computer Science and more.",
+    "faq-account-question": "Can I learn without an account?",
+    "faq-account-answer": "Yes. Public lessons can be read without an account. Sign in to save your progress, ask Nina and take try-outs.",
+    "faq-phone-question": "Does it work on a phone?",
+    "faq-phone-answer": "Yes. Nakafa runs in the browser on a phone, a tablet and a computer, with nothing to install.",
+    "faq-credits-question": "What are AI credits?",
+    "faq-credits-answer": "AI credits are used when Nina answers your question. One answer uses 5 credits.",
+    "faq-empty-question": "What happens when my credits run out?",
+    "faq-empty-answer": "Nina is available again once your credits renew. Lessons, exercises and try-outs keep working.",
+    "faq-accuracy-question": "How does Nakafa keep its content accurate?",
+    "faq-accuracy-answer": "All content is written by qualified contributors. Because it is source-available, anyone can review a lesson and suggest a fix.",
     "faq-languages-question": "Which languages is Nakafa in?",
     "faq-languages-answer": "English, Indonesian and German.",
     "faq-nina-question": "Is Nina always right?",
@@ -1127,8 +1158,8 @@
     "community-lead": "Ask, answer and help each other.",
     "community-cta": "Join Discord",
     "community-crowd": "Animal friends, some of them typing",
-    "closing-ask": "What do you want to understand {topic}?",
-    "closing-topic-0": "today",
+    "closing-ask": "Want to understand {topic} today?",
+    "closing-topic-0": "something",
     "closing-topic-1": "projectile motion",
     "closing-topic-2": "quadratic functions",
     "closing-topic-3": "the mole",

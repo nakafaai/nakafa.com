@@ -12,8 +12,9 @@ import {
 } from "@/components/marketing/about/toys/herd";
 
 /**
- * The community part: a line about learning together, the Discord link, and a
- * crowd of friends, some of them typing. The crowd is one named picture to
+ * The community part, in the middle of the page: a line about learning
+ * together, the Discord link, and a close crowd of friends, some of them
+ * typing: nine to a row where nine fit, six below that. The crowd is one named picture to
  * assistive technology, so its friends and their typing bubbles stay hidden.
  */
 export function Community() {
@@ -24,8 +25,8 @@ export function Community() {
       className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32"
       id="community"
     >
-      <div className="mx-auto grid w-full max-w-7xl gap-12">
-        <div className="grid justify-items-start gap-6">
+      <div className="mx-auto grid w-full max-w-7xl justify-items-center gap-12">
+        <div className="grid justify-items-center gap-6 text-center">
           <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
             {t("community-title")}
           </h2>
@@ -48,7 +49,7 @@ export function Community() {
         </div>
         <div
           aria-label={t("community-crowd")}
-          className="grid grid-cols-6 justify-items-center gap-4 min-[760px]:grid-cols-9"
+          className="grid w-fit grid-cols-6 gap-3 min-[760px]:grid-cols-9"
           role="img"
         >
           {Arr.map(CROWD_HERD, (mascot, index) => (

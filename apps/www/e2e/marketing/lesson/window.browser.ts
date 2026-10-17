@@ -20,13 +20,58 @@ import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 const FOCUS_PROBE = "data-focus-probe";
 
 /**
- * The cell lesson's tab, named by its published lesson's title, and the view its
- * visual names, in Indonesian.
+ * The tabs of the first two lessons and of the cell lesson, named by their
+ * subjects, and the view the cell's visual names, in Indonesian.
  */
-const CELL_TAB = "Bakteri";
+const PHYSICS_TAB = "Fisika";
+const MATHEMATICS_TAB = "Matematika";
+const CELL_TAB = "Biologi";
 const CELL_VIEW = "Model struktur bakteri";
 
-test("home lesson window turns only when the reader picks a lesson", async ({
+test("home lesson window opens the next lesson by itself while it is on screen", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      {
+        baseURL: baseURL ?? "",
+        reducedMotion: "no-preference",
+        serviceWorkers: "block",
+        viewport: viewportSize(desktopViewport),
+      },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              yield* openRoute(page, "/id", "denied");
+              const lesson = lessonSection(page);
+              const selected = lesson.getByRole("tab", { selected: true });
+              yield* Effect.promise(() =>
+                lessonWindow(page).scrollIntoViewIfNeeded()
+              );
+              // Nothing points at the window or holds the focus in it.
+              yield* Effect.promise(() => page.mouse.move(0, 0));
+              yield* Effect.promise(() =>
+                expect(selected).toHaveText(PHYSICS_TAB)
+              );
+              yield* Effect.promise(() =>
+                expect(selected).toHaveText(MATHEMATICS_TAB, {
+                  timeout: LESSON_WAIT_MS,
+                })
+              );
+            })
+          );
+        })
+    )
+  );
+});
+
+test("home lesson window stops turning once the reader picks a lesson", async ({
   baseURL,
   browser,
 }) => {

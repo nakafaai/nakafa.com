@@ -7,6 +7,7 @@ import type { Place } from "@repo/design-system/lib/toy/scatter";
 import type { ThingName } from "@repo/mascot/thing/name";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
+import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { TOY_HERD } from "@/components/marketing/about/toys/herd";
 import { within } from "@/components/marketing/about/toys/place";
@@ -31,76 +32,137 @@ function thing(name: ThingName) {
 }
 
 /**
+ * The animals around the hero's title between two widths of the page, one for
+ * each spot. A spot is the middle of the animal as fractions of the hero's box;
+ * a spot at the top edge sits 20 px under it.
+ */
+function heroAnimals(
+  minWidth: number,
+  maxWidth: number,
+  spots: readonly (readonly [number, number])[]
+): ToyPlacement[] {
+  return Arr.map(spots, ([x, y], index) => ({
+    key: `hero-${minWidth}-${index}`,
+    picture: animal(index),
+    place: within("hero", {
+      dx: -28,
+      dy: y === 0 ? 20 : -28,
+      maxWidth,
+      minWidth,
+      x,
+      y,
+    }),
+  }));
+}
+
+/**
+ * The small group of toys in the space where the part `part` begins, around
+ * `x`, a fraction of the part's width: the animal at the herd's `index` in the
+ * middle, and two things beside it. Each spot is in the part's top padding,
+ * which no text or window reaches. Below 1024 px only the animal stays, and a
+ * phone has none.
+ */
+function gap(
+  part: string,
+  x: number,
+  index: number,
+  [before, after]: readonly [ThingName, ThingName]
+): ToyPlacement[] {
+  return [
+    {
+      key: `${part}-gap-animal`,
+      picture: animal(index),
+      place: within(part, { dx: -28, dy: 28, minWidth: 768, x, y: 0 }),
+    },
+    {
+      key: `${part}-gap-${before}`,
+      picture: thing(before),
+      place: within(part, {
+        dx: -24,
+        dy: 40,
+        minWidth: 1024,
+        x: x - 0.07,
+        y: 0,
+      }),
+    },
+    {
+      key: `${part}-gap-${after}`,
+      picture: thing(after),
+      place: within(part, {
+        dx: -24,
+        dy: 20,
+        minWidth: 1024,
+        x: x + 0.07,
+        y: 0,
+      }),
+    },
+  ];
+}
+
+/**
  * The toys of the home page: animals and things in the open space beside each
  * part. Each one has its own place, so it stays where its part puts it, and
  * none of them covers the text, a button or a window of the page.
  */
 const PLACEMENTS: readonly ToyPlacement[] = [
+  // Seven animals around the title from 1280 px, the widths with room on both
+  // sides of it. Each spot is the middle of a 56 px animal.
+  ...heroAnimals(1280, Number.POSITIVE_INFINITY, [
+    [0.06, 0.1],
+    [0.19, 0.25],
+    [0.05, 0.47],
+    [0.94, 0.09],
+    [0.81, 0.27],
+    [0.93, 0.46],
+    [0.85, 0.68],
+  ]),
+  // Five on a tablet and a small laptop, kept to the outer columns, where the
+  // title never reaches.
+  ...heroAnimals(768, 1279, [
+    [0.05, 0.12],
+    [0.12, 0.42],
+    [0.88, 0.1],
+    [0.95, 0.36],
+    [0.9, 0.64],
+  ]),
+  // Four in one row above the title on a phone.
+  ...heroAnimals(0, 767, [
+    [0.14, 0],
+    [0.38, 0],
+    [0.62, 0],
+    [0.86, 0],
+  ]),
+  // Nina's things around her: what she reads with on her left, what she thinks
+  // with on her right.
   {
-    key: "hero-left",
-    picture: animal(0),
-    place: within("hero", { minWidth: 1024, x: 0.005, y: 0.22 }),
-  },
-  {
-    key: "hero-right",
-    picture: animal(1),
-    place: within("hero", { minWidth: 1024, x: 0.955, y: 0.2 }),
-  },
-  {
-    key: "hero-low",
-    picture: animal(2),
-    place: within("hero", { minWidth: 1024, x: 0.01, y: 0.72 }),
+    key: "hero-glasses",
+    picture: thing("glasses"),
+    place: within(HERO_NINA_ID, { minWidth: 768, x: -0.45, y: 0.12 }),
   },
   {
     key: "hero-book",
     picture: thing("book"),
-    place: within("hero", { minWidth: 1024, x: 0.5, y: 0.86 }),
+    place: within(HERO_NINA_ID, { minWidth: 768, x: -0.3, y: 0.62 }),
   },
   {
-    key: "hero-top-1",
-    picture: animal(3),
-    place: within("hero", { maxWidth: 767, x: 0.08, y: 0.03 }),
+    key: "hero-pencil",
+    picture: thing("pencil"),
+    place: within(HERO_NINA_ID, { minWidth: 768, x: 1.25, y: 0.1 }),
   },
   {
-    key: "hero-top-2",
-    picture: animal(4),
-    place: within("hero", { maxWidth: 767, x: 0.36, y: 0 }),
+    key: "hero-bulb",
+    picture: thing("bulb"),
+    place: within(HERO_NINA_ID, { minWidth: 768, x: 1.1, y: 0.6 }),
   },
-  {
-    key: "hero-top-3",
-    picture: animal(5),
-    place: within("hero", { maxWidth: 767, x: 0.64, y: 0.03 }),
-  },
-  {
-    key: "hero-top-4",
-    picture: animal(6),
-    place: within("hero", { maxWidth: 767, x: 0.86, y: 0 }),
-  },
-  {
-    key: "lesson-gap",
-    picture: animal(7),
-    place: within(LESSON_SECTION_ID, {
-      dy: -30,
-      minWidth: 1024,
-      x: 0.97,
-      y: 0,
-    }),
-  },
-  {
-    key: "tryout-gap",
-    picture: thing("stopwatch"),
-    place: within("tryout", { dy: -30, minWidth: 1024, x: 0.03, y: 0 }),
-  },
-  {
-    key: "nina-gap",
-    picture: animal(8),
-    place: within("nina", { dy: -30, minWidth: 1024, x: 0.96, y: 0 }),
-  },
-  {
-    key: "memory-gap",
-    picture: thing("calendar"),
-    place: within("memory", { dy: -30, minWidth: 1024, x: 0.04, y: 0 }),
-  },
+  // One small group in the space where each part begins: an animal with two
+  // things that say what comes next, in turn in the middle, a little to the
+  // left and a little to the right. A tablet keeps the animal alone.
+  ...gap(LESSON_SECTION_ID, 0.5, 7, ["ruler", "highlighter"]),
+  ...gap("tryout", 0.3, 8, ["stopwatch", "board"]),
+  ...gap("nina", 0.7, 9, ["bubble", "magnifier"]),
+  ...gap("memory", 0.5, 10, ["calendar", "note"]),
+  // The dark room of privacy holds its own: a key and a shield beside Nina,
+  // and two animals keeping watch.
   {
     key: "privacy-key",
     picture: thing("key"),
@@ -113,69 +175,32 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   },
   {
     key: "privacy-left",
-    picture: animal(9),
+    picture: animal(11),
     place: within("privacy", { minWidth: 1024, x: 0.04, y: 0.2 }),
   },
   {
     key: "privacy-right",
-    picture: animal(10),
+    picture: animal(12),
     place: within("privacy", { minWidth: 1024, x: 0.9, y: 0.8 }),
   },
-  {
-    key: "curricula-gap",
-    picture: thing("globe"),
-    place: within("curricula", { dy: -30, minWidth: 1024, x: 0.03, y: 0 }),
-  },
-  {
-    key: "curricula-animal",
-    picture: animal(11),
-    place: within("curricula", { dy: -30, minWidth: 1024, x: 0.97, y: 0 }),
-  },
+  ...gap("curricula", 0.3, 13, ["globe", "backpack"]),
+  ...gap("letter", 0.7, 14, ["letter", "plane"]),
   {
     key: "letter-left",
-    picture: animal(12),
-    place: within("letter", { minWidth: 1100, x: 0.02, y: 0.1 }),
+    picture: animal(15),
+    place: within("letter", { minWidth: 1100, x: 0.02, y: 0.3 }),
   },
   {
     key: "letter-right",
-    picture: animal(13),
-    place: within("letter", { minWidth: 1100, x: 0.96, y: 0.7 }),
-  },
-  {
-    key: "medals-medal",
-    picture: thing("medal"),
-    place: within("medals", { minWidth: 1024, x: 0.02, y: 0.12 }),
-  },
-  {
-    key: "pricing-donut",
-    picture: thing("donut"),
-    place: within("pricing", { minWidth: 1024, x: 0.94, y: 0.1 }),
-  },
-  {
-    key: "pricing-calculator",
-    picture: thing("calculator"),
-    place: within("pricing", { minWidth: 1024, x: 0.04, y: 0.8 }),
-  },
-  {
-    key: "school-animal",
-    picture: animal(14),
-    place: within("school", { minWidth: 1024, x: 0.01, y: 0.12 }),
-  },
-  {
-    key: "faq-clip",
-    picture: thing("clip"),
-    place: within("faq", { minWidth: 1024, x: 0.97, y: 0.1 }),
-  },
-  {
-    key: "community-animal",
-    picture: animal(15),
-    place: within("community", { minWidth: 1024, x: 0.02, y: 0.82 }),
-  },
-  {
-    key: "closing-animal",
     picture: animal(16),
-    place: within("closing", { minWidth: 1024, x: 0.96, y: 0.1 }),
+    place: within("letter", { minWidth: 1100, x: 0.94, y: 0.62 }),
   },
+  ...gap("medals", 0.5, 17, ["cap", "medal"]),
+  ...gap("pricing", 0.3, 18, ["donut", "calculator"]),
+  ...gap("school", 0.7, 19, ["eraser", "flag"]),
+  ...gap("faq", 0.5, 20, ["clip", "hourglass"]),
+  ...gap("community", 0.3, 21, ["headphones", "coffee"]),
+  ...gap("closing", 0.7, 22, ["trophy", "check"]),
 ];
 
 /**

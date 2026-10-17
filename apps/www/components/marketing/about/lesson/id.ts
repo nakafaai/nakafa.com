@@ -16,3 +16,15 @@ export const LessonSchema = Schema.Literals([
 
 /** One lesson of the home page window. */
 export type Lesson = typeof LessonSchema.Type;
+
+/**
+ * The subject of each lesson, which names its tab. The tabs read as the four
+ * subjects of the window, each with its own icon, so no lesson's long title
+ * stretches the row.
+ */
+export const LESSON_SUBJECTS = {
+  atom: "chemistry",
+  cell: "biology",
+  circle: "mathematics",
+  projectile: "physics",
+} as const satisfies Record<Lesson, string>;

@@ -1,3 +1,7 @@
+import {
+  Reasoning,
+  ReasoningTrigger,
+} from "@repo/design-system/components/ai/reasoning";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Message,
@@ -6,35 +10,51 @@ import {
 import { useTranslations } from "next-intl";
 import { NinaPrompt } from "@/components/ai/message/prompt";
 import { NinaComposer } from "@/components/marketing/about/nina/client";
+import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
 
 /**
- * The Nina row: a question the learner has open, Nina's reply, and her real
- * message box. The bubbles and the box are the product's own components.
+ * The Nina row: the learner says which question still confuses them, Nina
+ * answers, and beside them is her real chat. It holds a finished turn about the
+ * try-out question above, with the product's own prompt, reasoning row and
+ * answer, then her real message box: what the visitor types there opens a new
+ * chat with her.
  */
 export function NinaSection() {
   const t = useTranslations("Landing");
 
   return (
     <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="nina">
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div className="grid min-w-0 content-center gap-8">
-          <Message align="end">
-            <NinaPrompt text={t("nina-ask")} />
-          </Message>
-          <div className="grid gap-3">
-            <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+          <Talk ask={t("nina-ask")}>
+            <TalkReply act="drumming" mood="happy">
+              {t("nina-answer")}
+            </TalkReply>
+          </Talk>
+          <div className="grid gap-2">
+            <h2 className="text-balance text-2xl tracking-tight">
               {t("nina-title")}
             </h2>
-            <p className="max-w-xl text-pretty text-base text-muted-foreground">
+            <p className="max-w-md text-pretty text-base text-muted-foreground">
               {t("nina-lead")}
             </p>
           </div>
         </div>
         <div className="grid min-w-0 gap-6">
+          <Message align="end">
+            <NinaPrompt text={t("nina-chat-ask")} />
+          </Message>
           <Message>
             <MessageContent>
+              <Reasoning
+                className="w-full"
+                defaultOpen={false}
+                hasContent={false}
+              >
+                <ReasoningTrigger />
+              </Reasoning>
               <MarkdownContent id="home-nina-answer" variant="chat">
-                {t("nina-answer")}
+                {t.raw("nina-chat-answer")}
               </MarkdownContent>
             </MessageContent>
           </Message>

@@ -2,8 +2,8 @@ import type { Locator, Page } from "@playwright/test";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 
 /**
- * Longer than a turn would take: a lesson that changed by itself within this
- * time would show it. The window turns only when the reader picks a tab.
+ * Longer than one turn of the lesson window, which opens the next lesson every
+ * six seconds while it is on screen and nobody holds it.
  */
 export const LESSON_WAIT_MS = 8000;
 

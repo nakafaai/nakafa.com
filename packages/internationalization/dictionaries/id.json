@@ -563,8 +563,12 @@
       "title": "Tindakan ini belum berhasil.",
       "description": "Silakan coba lagi."
     },
-    "copy-error": { "title": "Gagal nyalin nih" },
-    "copy-success": { "title": "Udah disalin!" },
+    "copy-error": {
+      "title": "Gagal nyalin nih"
+    },
+    "copy-success": {
+      "title": "Udah disalin!"
+    },
     "curriculum-preference-error": {
       "title": "Preferensi kurikulum gagal disimpan.",
       "description": "Coba lagi ya."
@@ -573,12 +577,16 @@
       "title": "Onboarding belum selesai.",
       "description": "Coba lagi."
     },
-    "onboarding-invalid-selection": { "title": "Jawab semua pertanyaan." },
+    "onboarding-invalid-selection": {
+      "title": "Jawab semua pertanyaan."
+    },
     "onboarding-save-error": {
       "title": "Jawaban belum tersimpan.",
       "description": "Coba lagi."
     },
-    "link-copied": { "title": "Link berhasil disalin!" },
+    "link-copied": {
+      "title": "Link berhasil disalin!"
+    },
     "provider-error": {
       "title": "Tidak bisa lanjut dengan Google.",
       "description": "Coba lagi ya."
@@ -634,9 +642,15 @@
       "title": "Jawabanmu belum bisa disimpan.",
       "description": "Coba lagi ya."
     },
-    "memory-limit": { "title": "Tunggu sebentar, lalu simpan lagi." },
-    "memory-missing": { "title": "Memori ini sudah tidak ada." },
-    "memory-too-long": { "title": "Teks terlalu panjang untuk memori." },
+    "memory-limit": {
+      "title": "Tunggu sebentar, lalu simpan lagi."
+    },
+    "memory-missing": {
+      "title": "Memori ini sudah tidak ada."
+    },
+    "memory-too-long": {
+      "title": "Teks terlalu panjang untuk memori."
+    },
     "interpretation-error": {
       "title": "Tafsir ayat ini belum dapat dimuat.",
       "description": "Coba lagi."
@@ -717,8 +731,12 @@
       "title": "Sesimu sudah berakhir.",
       "description": "Masuk lagi untuk melanjutkan."
     },
-    "admitted-elsewhere": { "title": "Nina sedang menjawab di chat baru" },
-    "open-chat": { "title": "Buka chat" },
+    "admitted-elsewhere": {
+      "title": "Nina sedang menjawab di chat baru"
+    },
+    "open-chat": {
+      "title": "Buka chat"
+    },
     "school-language-error": {
       "title": "Kamu belum bisa mengubah bahasa.",
       "description": "Silakan coba lagi."
@@ -1069,7 +1087,6 @@
         }
       }
     },
-    "lesson-open": "Baca materinya",
     "tryout-title": "Skor try out langsung keluar",
     "tryout-lead": "Mau ulang? Tinggal ulang.",
     "tryout-ask": "Aku udah paham belum, ya?",
@@ -1078,6 +1095,8 @@
     "nina-lead": "Tanya dari soal atau materi yang sedang kamu buka.",
     "nina-ask": "Nomor ini masih bingung.",
     "nina-answer": "Sini, kita bedah bareng.",
+    "nina-chat-ask": "Kenapa jawabanku 13 salah?",
+    "nina-chat-answer": "### 13 muncul kalau m dianggap 3\n\nHitungannya jadi $5(2) + 9/3 = 13$. Masalahnya, $m = 3$ tidak cocok dengan soal.\n\n#### Cek dengan yang diketahui\n\n$$\n\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\n$$\n\nDengan $m = 1$ hasilnya pas: $2(2) + 4/1 = 8$. Jadi $m$ harus 1, dan jawabannya 19.",
     "scene-label": "Adegan tiga dimensi gerak parabola bola meriam",
     "scene-title": "Yang sulit dibayangkan, bisa kamu lihat",
     "scene-lead": "Adegan dari pelajaran Gerak Parabola.",
@@ -1115,6 +1134,18 @@
     "school-cta": "Ceritakan sekolahmu",
     "school-class": "Satu kelas hewan",
     "faq-title": "Yang sering ditanyakan",
+    "faq-subjects-question": "Mata pelajaran dan kelas apa yang tercakup?",
+    "faq-subjects-answer": "Kami mencakup SD hingga universitas: Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, dan lainnya.",
+    "faq-account-question": "Bisa belajar tanpa membuat akun?",
+    "faq-account-answer": "Bisa. Materi publik dapat dibaca tanpa akun. Masuk diperlukan untuk menyimpan progres, bertanya ke Nina, dan mengerjakan try out.",
+    "faq-phone-question": "Bisa dipakai di ponsel?",
+    "faq-phone-answer": "Bisa. Nakafa berjalan di peramban ponsel, tablet, dan komputer, tanpa memasang apa pun.",
+    "faq-credits-question": "Apa itu kredit AI?",
+    "faq-credits-answer": "Kredit AI dipakai saat Nina menjawab pertanyaanmu. Satu jawaban memakai 5 kredit.",
+    "faq-empty-question": "Apa yang terjadi kalau kreditku habis?",
+    "faq-empty-answer": "Nina bisa dipakai lagi setelah kredit diperbarui. Materi, latihan, dan try out tetap bisa dipakai.",
+    "faq-accuracy-question": "Bagaimana Nakafa memastikan akurasi konten?",
+    "faq-accuracy-answer": "Semua konten dibuat oleh kontributor yang berkualifikasi. Pendekatan source-available kami membuat siapa pun bisa meninjau materi dan mengusulkan perbaikan.",
     "faq-languages-question": "Nakafa tersedia dalam bahasa apa?",
     "faq-languages-answer": "Bahasa Indonesia, Inggris, dan Jerman.",
     "faq-nina-question": "Apakah jawaban Nina selalu benar?",

@@ -1,3 +1,4 @@
+import { Nina } from "@repo/design-system/components/ui/nina";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { CurriculumList } from "@/components/marketing/about/curricula/list.client";
@@ -7,9 +8,10 @@ import {
 } from "@/lib/curriculum/model";
 
 /**
- * The curricula part: a heading and the curricula of the catalog, which the
- * list lights up one at a time. The names come from the catalog, so the page
- * never names a class.
+ * The curricula part: a heading, then Nina pointing at the curricula of the
+ * catalog, which the list lights up one at a time. The names come from the
+ * catalog, so the page never names a class. On a phone, where the list stands
+ * under the heading on its own, Nina is left out.
  */
 export async function Curricula({ locale }: { locale: Locale }) {
   const [t, catalog] = await Promise.all([
@@ -23,11 +25,16 @@ export async function Curricula({ locale }: { locale: Locale }) {
       className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32"
       id="curricula"
     >
-      <div className="mx-auto grid w-full max-w-7xl gap-10">
-        <h2 className="max-w-4xl text-balance text-3xl tracking-tight sm:text-4xl">
+      <div className="mx-auto grid w-full max-w-5xl justify-items-center gap-12">
+        <h2 className="max-w-2xl text-balance text-center text-3xl tracking-tight sm:text-4xl">
           {t("curricula-title")}
         </h2>
-        <CurriculumList curricula={curricula} label={t("curricula-list")} />
+        <div className="grid items-center gap-16 md:grid-cols-[auto_minmax(0,1fr)]">
+          <div className="hidden md:block">
+            <Nina act="pointing" label="" size={200} whole />
+          </div>
+          <CurriculumList curricula={curricula} label={t("curricula-list")} />
+        </div>
       </div>
     </section>
   );

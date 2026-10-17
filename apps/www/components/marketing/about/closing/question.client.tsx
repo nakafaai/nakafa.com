@@ -18,10 +18,13 @@ interface ClosingQuestionProps {
 }
 
 /**
- * The closing question, with one of its topics typed in place of the placeholder.
- * The space of the longest topic is kept, so typing never moves the words around
- * it. The topics take turns while the question is on screen. With reduced motion
- * the question rests on its first topic.
+ * The closing question at the size of the hero, with one of its topics typed in
+ * place of the placeholder. The words before the topic make the first line, and
+ * the topic with the words after it the second, so a typed letter only moves
+ * its own line. That line keeps the room of the longest topic, so a topic that
+ * wraps on a phone never changes the height of the question. The topics take
+ * turns while the question is on screen. With reduced motion the question rests
+ * on its first topic.
  */
 export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
@@ -57,18 +60,21 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   }, [playing, topic, topics, typed]);
 
   return (
-    <h2 className="text-balance text-3xl tracking-tight sm:text-4xl" ref={ref}>
-      {before}
-      {/* The invisible longest topic holds the box and the baseline of the line,
-          so an empty or short typed topic never moves the words around it. The
-          typed topic starts at the box's start, so a new letter moves no text. */}
-      <span className="relative inline-block">
-        <span aria-hidden="true" className="invisible">
+    <h2
+      className="text-balance text-[2.5rem] leading-[1.1] tracking-tight md:text-[3rem] lg:text-[4rem]"
+      ref={ref}
+    >
+      {before.trim()}
+      <span className="grid">
+        <span aria-hidden="true" className="invisible col-start-1 row-start-1">
           {longest}
+          {after}
         </span>
-        <span className="absolute inset-0 text-start">{shown}</span>
+        <span className="col-start-1 row-start-1">
+          <span className="text-primary">{shown}</span>
+          {after}
+        </span>
       </span>
-      {after}
     </h2>
   );
 }

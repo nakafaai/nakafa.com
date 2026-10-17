@@ -97,15 +97,12 @@ export default async function Page() {
  * navigation data that powers the app entry points.
  */
 async function MarketingHomePageContent({ locale }: { locale: Locale }) {
-  const [tMetadata, tSubject, tHome, tPricing, tFaq, featuredTryout] =
-    await Promise.all([
-      getTranslations({ locale, namespace: "Metadata" }),
-      getTranslations({ locale, namespace: "Subject" }),
-      getTranslations({ locale, namespace: "Landing" }),
-      getTranslations({ locale, namespace: "PricingPage" }),
-      getTranslations({ locale, namespace: "Faq" }),
-      readFeaturedTryout(locale),
-    ]);
+  const [tMetadata, tSubject, tHome, featuredTryout] = await Promise.all([
+    getTranslations({ locale, namespace: "Metadata" }),
+    getTranslations({ locale, namespace: "Subject" }),
+    getTranslations({ locale, namespace: "Landing" }),
+    readFeaturedTryout(locale),
+  ]);
 
   const collectionItems = [
     ...Arr.flatMap(subjectMenu, (category) =>
@@ -124,25 +121,28 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
     ),
   ];
 
-  /** The ten questions of the home page. Each one is answered in one place of the dictionaries. */
-  const faqItems: MarketingFaqItem[] = [
-    { answer: tPricing("a6"), question: tPricing("q6") },
-    { answer: tPricing("a20"), question: tPricing("q20") },
-    {
-      answer: tHome("faq-languages-answer"),
-      question: tHome("faq-languages-question"),
-    },
-    { answer: tHome("faq-nina-answer"), question: tHome("faq-nina-question") },
-    { answer: tPricing("a9"), question: tPricing("q9") },
-    { answer: tPricing("a12"), question: tPricing("q12") },
-    {
-      answer: tHome("faq-memory-answer"),
-      question: tHome("faq-memory-question"),
-    },
-    { answer: tHome("faq-data-answer"), question: tHome("faq-data-question") },
-    { answer: tFaq("a4"), question: tFaq("q4") },
-    { answer: tFaq("a7"), question: tFaq("q7") },
-  ];
+  /**
+   * The ten questions of the home page, in the order the page asks them, the
+   * first one open. They are the questions no other part of the page answers.
+   */
+  const faqItems: MarketingFaqItem[] = Arr.map(
+    [
+      "subjects",
+      "account",
+      "phone",
+      "languages",
+      "nina",
+      "credits",
+      "empty",
+      "memory",
+      "data",
+      "accuracy",
+    ] as const,
+    (key) => ({
+      answer: tHome(`faq-${key}-answer`),
+      question: tHome(`faq-${key}-question`),
+    })
+  );
 
   const url = `${COMPANY_IDENTITY.url}/${locale}`;
 

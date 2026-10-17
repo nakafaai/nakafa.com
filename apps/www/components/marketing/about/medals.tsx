@@ -1,6 +1,8 @@
 "use client";
 
+import { FavouriteIcon } from "@hugeicons/core-free-icons";
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import Image from "next/image";
@@ -80,11 +82,10 @@ function Medal({
   tone: RibbonTone;
 }) {
   return (
-    <li className="grid justify-items-center border-t">
+    <li className="grid content-start justify-items-center gap-3 border-t">
       <span
-        aria-label={school.name}
+        aria-hidden="true"
         className={medalSwing({ swinging })}
-        role="img"
         style={{
           animationDelay: `${index * SWING_STEP}s`,
           animationPlayState: paused ? "paused" : "running",
@@ -105,13 +106,16 @@ function Medal({
           )}
         </span>
       </span>
+      <span className="max-w-28 text-balance text-center text-xs leading-4">
+        {school.name}
+      </span>
     </li>
   );
 }
 
 /**
- * The wall of schools and campuses as medals on rails: seven to a rail, three on
- * a phone. The last hook is empty and asks about the learner's own school. The
+ * The wall of schools and campuses as medals on rails, each with its name under
+ * it: seven to a rail, three on a phone. The last hook is empty and asks about the learner's own school. The
  * medals swing while the wall is on screen, and hang still with reduced motion.
  */
 export function Medals() {
@@ -122,13 +126,13 @@ export function Medals() {
 
   return (
     <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="medals">
-      <div className="mx-auto grid w-full max-w-7xl gap-12">
-        <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+      <div className="mx-auto grid w-full max-w-4xl gap-12">
+        <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
           {t("medals-title")}
         </h2>
         <ul
           aria-label={t("medals-label")}
-          className="grid grid-cols-3 gap-y-10 sm:grid-cols-7"
+          className="grid grid-cols-3 gap-y-8 sm:grid-cols-7"
           ref={ref}
         >
           {Arr.map(schools, (school, index) => (
@@ -141,8 +145,14 @@ export function Medals() {
               tone={Arr.getUnsafe(RIBBON_TONES, index % RIBBON_TONES.length)}
             />
           ))}
-          <li className="grid justify-items-center border-t pt-10">
-            <span className="grid size-16 place-items-center rounded-full border border-dashed text-center text-muted-foreground text-sm">
+          <li className="grid content-start justify-items-center gap-3 border-t pt-10">
+            <span
+              aria-hidden="true"
+              className="grid size-16 place-items-center rounded-full border border-dashed text-muted-foreground"
+            >
+              <HugeIcons className="size-5" icon={FavouriteIcon} />
+            </span>
+            <span className="text-center text-muted-foreground text-xs leading-4">
               {t("medals-hook")}
             </span>
           </li>
