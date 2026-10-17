@@ -8,7 +8,7 @@ const HELPER = "packages/design-system/lib/toast/notify.ts";
 const TOASTER = "packages/design-system/components/ui/sonner.tsx";
 const TEST_MODULE = "apps/www/components/example/toast.test.ts";
 const SONNER_RULE =
-  "import toast from @repo/design-system/lib/toast/notify instead of sonner, which only the Toaster and that helper import";
+  "import { toast } from @repo/design-system/lib/toast/notify instead of sonner, which only the Toaster and that helper import";
 
 /** Inspects one module with the toast policy alone. */
 function inspect(sourceText: string, file = COMPONENT) {

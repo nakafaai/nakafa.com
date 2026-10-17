@@ -12,7 +12,7 @@ const TOAST_MODULES = HashSet.make(
   "packages/design-system/components/ui/sonner.tsx",
   "packages/design-system/lib/toast/notify.ts"
 );
-const SONNER_RULE = `import toast from @repo/design-system/lib/toast/notify instead of ${TOAST_LIBRARY}, which only the Toaster and that helper import`;
+const SONNER_RULE = `import { toast } from @repo/design-system/lib/toast/notify instead of ${TOAST_LIBRARY}, which only the Toaster and that helper import`;
 const TEST_MODULE_PATTERN = /\.test\.tsx?$/u;
 
 /**
