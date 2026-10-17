@@ -200,7 +200,9 @@ describe("proxy", () => {
   });
   it("rewrites a school host into the school tree before the public routes read it", async () => {
     const response = await proxy(
-      new NextRequest("https://harapan.nakafa.com/classes")
+      new NextRequest("https://harapan.nakafa.com/classes", {
+        headers: { host: "harapan.nakafa.com" },
+      })
     );
 
     expect(mockLocaleRouting.activeMiddleware).toHaveBeenCalledOnce();

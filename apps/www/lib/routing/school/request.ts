@@ -7,7 +7,11 @@ import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { plainTextAnswer } from "@/lib/routing/answer";
 import { isLocaleBypassPath } from "@/lib/routing/bypass";
-import { isRefusedSchoolHost, readSchoolSlug } from "@/lib/routing/school/host";
+import {
+  isRefusedSchoolHost,
+  readRequestHostname,
+  readSchoolSlug,
+} from "@/lib/routing/school/host";
 import { isSchoolTreePath, SCHOOL_SEGMENT } from "@/lib/routing/school/tree";
 
 const handleSchoolLocalizedRequest = createMiddleware(schoolRouting);
@@ -54,11 +58,13 @@ function redirectToMainSite(request: NextRequest) {
  * see it, or returns nothing so that the public routes answer it. A school host
  * gets its school tree, a label that names no school under the production
  * domain goes to the main site, and the school tree answers 404 everywhere else.
- * The root files of the matcher never reach this function, so they are the same
- * on every host.
+ * The host is the one in the `host` header (see `readRequestHostname`). The root
+ * files of the matcher never reach this function, so they are the same on every
+ * host.
  */
 export function routeSchoolRequest(request: NextRequest) {
-  const { hostname, pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl;
+  const hostname = readRequestHostname(request.headers);
   const schoolSlug = readSchoolSlug(hostname);
   if (Option.isSome(schoolSlug) && !isLocaleBypassPath(pathname)) {
     return rewriteToSchool(request, schoolSlug.value);

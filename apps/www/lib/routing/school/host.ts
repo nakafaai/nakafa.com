@@ -59,3 +59,19 @@ export function isRefusedSchoolHost(hostname: string) {
     ) && Option.isNone(readSchoolSlug(hostname))
   );
 }
+
+/**
+ * The hostname that the visitor asked for, read from the `host` header and not
+ * from the request URL. A local run, or any server that builds its request URL
+ * from its own address, names that address for every host, so only the header
+ * tells the school hosts apart. On Vercel, Next.js builds the URL from this same
+ * header (`trustHostHeader`), so production reads the same host here. The port
+ * is dropped, and a header that is not a valid host names no host at all.
+ */
+export function readRequestHostname(headers: Headers) {
+  const host = headers.get("host");
+  if (host === null || !URL.canParse(`http://${host}`)) {
+    return "";
+  }
+  return new URL(`http://${host}`).hostname;
+}
