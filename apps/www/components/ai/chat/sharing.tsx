@@ -17,6 +17,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { useConvex } from "convex/react";
 import { Array as Arr, Effect, Exit, Scope } from "effect";
@@ -28,7 +29,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import { toast } from "sonner";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -52,7 +52,6 @@ export function ChatSharing({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("Ai");
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const convex = useConvex();
   const updateChatVisibility = useUpdateChatVisibilityMutation();
   // A retry gives the readers of the link a new key, and the dialog stays
@@ -122,7 +121,10 @@ export function ChatSharing({
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),
@@ -303,9 +305,10 @@ function ChatShareAction({
       return;
     }
     clipboard.copy(shareLink(chatId, token));
-    toast.success(t("link-copied"), {
-      position: "bottom-center",
-    });
+    toast.success(
+      { title: "link-copied.title" },
+      { position: "bottom-center" }
+    );
   };
 
   return (

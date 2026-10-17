@@ -22,6 +22,24 @@ update:
     - '@effect/vitest'
     - '@nakafa/aksara-contracts'
     - '@react-three/fiber'
+    - '@tiptap/core'
+    - '@tiptap/extension-bold'
+    - '@tiptap/extension-code'
+    - '@tiptap/extension-document'
+    - '@tiptap/extension-highlight'
+    - '@tiptap/extension-italic'
+    - '@tiptap/extension-link'
+    - '@tiptap/extension-list'
+    - '@tiptap/extension-paragraph'
+    - '@tiptap/extension-subscript'
+    - '@tiptap/extension-superscript'
+    - '@tiptap/extension-text'
+    - '@tiptap/extension-underline'
+    - '@tiptap/extensions'
+    - '@tiptap/markdown'
+    - '@tiptap/pm'
+    - '@tiptap/react'
+    - '@tiptap/starter-kit'
     - afdocs
     - '@next/third-parties'
     - '@turbo/gen'
@@ -37,6 +55,9 @@ update:
     - next
     - node
     - pnpm
+    - prosemirror-collab
+    - prosemirror-model
+    - prosemirror-transform
     - turbo
     - typescript
     - ultracite

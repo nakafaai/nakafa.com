@@ -31,8 +31,8 @@ const FIRST = {
 };
 /** What the learner adds to a chat that has answered. */
 const FOLLOW_UP = "And what about the tangent?";
-const NOTICE = en.Ai["admitted-elsewhere"];
-const OPEN = en.Ai["open-chat"];
+const NOTICE = en.Toast["admitted-elsewhere"].title;
+const OPEN = en.Toast["open-chat"].title;
 
 /**
  * Writes the prompt in the new chat and presses Enter. The server holds the

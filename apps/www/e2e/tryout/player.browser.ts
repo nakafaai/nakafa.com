@@ -33,7 +33,7 @@ const SHORT_WINDOW_HEIGHT = 400;
 const SINGLE_VIEW_ADDRESS = /[?&]view=single(&|$)/;
 
 /** What the learner is told when the server cannot save the view. */
-const VIEW_ERROR = "We couldn't save your view. Please try again.";
+const VIEW_ERROR = "We couldn't save your view.";
 
 /** The address of the running section with a `view` parameter, or without one. */
 function withView(address: string, view?: string) {

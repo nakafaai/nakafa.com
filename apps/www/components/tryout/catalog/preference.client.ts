@@ -4,9 +4,9 @@ import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import type learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 import { isActiveLocale } from "@/lib/i18n/active";
 
@@ -34,7 +34,7 @@ export function saveTryoutPreference({
   source,
 }: {
   countryKey: string;
-  errorMessage: string;
+  errorMessage: ToastCopy;
   locale: Locale;
   setPreferredTryout: SavePreferredTryout;
   source: string;

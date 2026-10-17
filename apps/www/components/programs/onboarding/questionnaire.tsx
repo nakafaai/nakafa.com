@@ -23,13 +23,13 @@ import {
   QuestionnaireTitle,
 } from "@repo/design-system/components/ui/questionnaire";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { redirect, useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
 import { useConvex } from "convex/react";
 import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { toast } from "sonner";
 import { OnboardingOption } from "@/components/programs/onboarding/choice";
 import { getOnboardingDestination } from "@/components/programs/onboarding/destination";
 import { useSaveOnboardingAnswerMutation } from "@/components/programs/onboarding/mutation.client";
@@ -124,7 +124,12 @@ export function OnboardingQuestionnaire({
             source: "onboarding-draft",
           }).pipe(
             Effect.tap(() =>
-              Effect.sync(() => toast.error(t("onboarding.save-error")))
+              Effect.sync(() =>
+                toast.error({
+                  description: "onboarding-save-error.description",
+                  title: "onboarding-save-error.title",
+                })
+              )
             )
           )
         )
@@ -145,7 +150,7 @@ export function OnboardingQuestionnaire({
     event.preventDefault();
     const completeAnswers = getCompleteOnboardingAnswers(answers);
     if (!completeAnswers) {
-      toast.error(t("onboarding.invalid-selection"));
+      toast.error({ title: "onboarding-invalid-selection.title" });
       return;
     }
 
@@ -168,7 +173,10 @@ export function OnboardingQuestionnaire({
         )
       );
       if (outcome.status === "error") {
-        toast.error(t("onboarding.finish-error"));
+        toast.error({
+          description: "onboarding-finish-error.description",
+          title: "onboarding-finish-error.title",
+        });
         return;
       }
 
