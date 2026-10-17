@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -17,7 +18,6 @@ import {
   readPostText,
 } from "@repo/backend/confect/posts/schema";
 import { mayReadPosts } from "@repo/backend/confect/posts/visibility";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Duration, Effect, Layer, Result, Struct } from "effect";
 
 /** A post the viewer may read. Another learner's post is not found, so it is never revealed. */

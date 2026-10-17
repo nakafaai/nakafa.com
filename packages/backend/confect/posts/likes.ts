@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/confect/_generated/id";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -5,7 +6,6 @@ import {
 import type postLikesTable from "@repo/backend/confect/_generated/tables/postLikes";
 import type postsTable from "@repo/backend/confect/_generated/tables/posts";
 import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Struct } from "effect";
 
 /** A post as the database holds it. */

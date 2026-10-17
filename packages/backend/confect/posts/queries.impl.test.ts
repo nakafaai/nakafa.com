@@ -1,12 +1,12 @@
 import { Ref } from "@confect/core";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Option, Order, Record } from "effect";
 
 const create = Ref.getFunctionReference(refs.public.posts.mutations.create);
@@ -112,6 +112,35 @@ describe("posts list contract", () => {
     });
     expect(rest.page).toHaveLength(1);
     expect(rest.isDone).toBe(true);
+  });
+
+  it("does not let a range end from the caller widen a page past its size", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(now);
+    const { author } = await createReaders();
+    await writePosts(
+      author,
+      Arr.makeBy(POST_PAGE_SIZE + 10, (index) => `Post ${index + 1}`)
+    );
+    const first: ListPage = await author.session.query(list, {
+      authorId: author.userId,
+      paginationOpts: PAGE,
+    });
+    // Five more posts, so the range end below sits past the first page.
+    const beyond: ListPage = await author.session.query(list, {
+      authorId: author.userId,
+      paginationOpts: { cursor: first.continueCursor, numItems: 5 },
+    });
+    const widened: ListPage = await author.session.query(list, {
+      authorId: author.userId,
+      paginationOpts: {
+        cursor: null,
+        endCursor: beyond.continueCursor,
+        numItems: 1_000_000,
+      },
+    });
+    expect(widened.page).toHaveLength(POST_PAGE_SIZE);
+    expect(widened.page).toEqual(first.page);
   });
 
   it("tells the author which posts they have liked, and counts each like", async () => {

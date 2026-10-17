@@ -1,5 +1,6 @@
 import { Ref } from "@confect/core";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
 import { POST_TEXT_MAX_LENGTH } from "@repo/backend/confect/posts/schema";
@@ -7,7 +8,6 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 const create = Ref.getFunctionReference(refs.public.posts.mutations.create);
 const remove = Ref.getFunctionReference(refs.public.posts.mutations.remove);
@@ -103,7 +103,9 @@ describe("posts write contracts", () => {
     const likes = POST_LIKE_CLEANUP_BATCH_SIZE + 1;
     await t.mutation(async (ctx) => {
       for (let index = 0; index < likes; index += 1) {
-        // One row per learner who liked the post. The batches never depend on who.
+        // Every row names one learner. A batch reads each like by its post and
+        // never by its learner, and a like write never makes two rows for one
+        // learner, so this fixture is a shape only the batch removal reads.
         await ctx.db.insert("postLikes", {
           postId,
           userId: author.userId,

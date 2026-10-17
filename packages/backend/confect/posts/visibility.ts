@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/id";
 
 /**
  * Whether a learner may read an author's posts, and so like one. Posts show

@@ -1,5 +1,5 @@
+import type { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 
 /** The post with this id, or null once it is deleted. */

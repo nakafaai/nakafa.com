@@ -22,15 +22,16 @@ const list = FunctionImpl.make(
       return { page: [], isDone: true, continueCursor: "" };
     }
     // A page holds at most POST_PAGE_SIZE posts, however many the caller asks
-    // for, so the like reads below stay bounded by it.
+    // for, so the like reads below stay bounded by it. Only the cursor and the
+    // size reach the read, because a range end from the caller would widen the
+    // page past its size.
     const posts = yield* database
       .table("posts")
       .index("by_authorId", (q) => q.eq("authorId", args.authorId), "desc")
-      .paginate(
-        Struct.assign(args.paginationOpts, {
-          numItems: Num.min(args.paginationOpts.numItems, POST_PAGE_SIZE),
-        })
-      )
+      .paginate({
+        cursor: args.paginationOpts.cursor,
+        numItems: Num.min(args.paginationOpts.numItems, POST_PAGE_SIZE),
+      })
       .pipe(Effect.orDie);
     const page = yield* Effect.forEach(posts.page, (post) =>
       Effect.map(findLike(post._id, viewer.appUser._id), (like) => ({

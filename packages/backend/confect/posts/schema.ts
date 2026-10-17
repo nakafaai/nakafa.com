@@ -24,15 +24,6 @@ export function countPostCharacters(text: string): number {
 }
 
 /**
- * The characters a post has left before the limit, counted on the text the
- * server would store, so the white space at its ends does not count. The
- * composer shows this number, and it agrees with `readPostText`.
- */
-export function remainingPostCharacters(input: string): number {
-  return POST_TEXT_MAX_LENGTH - countPostCharacters(Str.trim(input));
-}
-
-/**
  * Reads what a person typed as a post: the text without the white space at its
  * ends, when it has at least one character and at most the limit. The composer
  * and the server both read a text with this function, so they agree.
