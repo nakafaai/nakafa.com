@@ -3,14 +3,14 @@ import { Option } from "effect";
 import { isProfileTab, readProfileRoot } from "@/lib/profile/route";
 
 describe("profile address", () => {
-  it.each([[[]], [["chat"]]])(
+  it.each([[[]], [["comments"]], [["chat"]]])(
     "names the tab at the segments %j",
     (segments) => {
       expect(isProfileTab(segments)).toBe(true);
     }
   );
 
-  it.each([[["comments"]], [["chat", "more"]], [["chat", "chat"]]])(
+  it.each([[["comments", "more"]], [["chat", "more"]], [["chat", "chat"]]])(
     "names no tab at the segments %j",
     (segments) => {
       expect(isProfileTab(segments)).toBe(false);

@@ -34,6 +34,8 @@
   },
   "Common": {
     "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
+    "load-error-retry": "Diese Daten konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
     "copyright": "Copyright © {year} {companyName}. Alle Rechte vorbehalten.",
     "made-with-love": "Mit Liebe gemacht",
     "version": "Version {version}",
@@ -128,6 +130,7 @@
     "open-in-gemini": "In Gemini öffnen",
     "see-on-youtube": "Auf YouTube ansehen",
     "comments": "Kommentare",
+    "posts": "Beiträge",
     "anonymous": "Anonym",
     "delete": "Löschen",
     "edit": "Bearbeiten",
@@ -137,10 +140,9 @@
     "like": "Gefällt mir",
     "dislike": "Gefällt mir nicht",
     "former-official": "Früher offiziell",
-    "see": "Ansehen",
     "chat": "Chat",
     "no-chats": "Noch keine Chats.",
-    "chats-by-link": "Ein geteilter Chat öffnet sich über seinen Link",
+    "chats-by-link": "Ein geteilter Chat öffnet sich über seinen Link.",
     "try-out": "Probetest",
     "try-out-short": "Probetest",
     "search-country-placeholder": "Land suchen...",
@@ -216,11 +218,19 @@
       "school-curriculum": "Lehrplan"
     }
   },
+  "Posts": {
+    "placeholder": "Was gibt es Neues?",
+    "post": "Posten",
+    "empty": "Du hast noch nichts gepostet.",
+    "delete-title": "Beitrag löschen?",
+    "delete-description": "Der Beitrag und seine Likes werden endgültig gelöscht."
+  },
   "Comments": {
     "add-comment-placeholder": "Kommentar hinzufügen...",
     "comment": "Kommentieren",
     "no-comments": "Noch keine Kommentare.",
-    "load-more": "Mehr laden"
+    "delete-title": "Kommentar löschen?",
+    "delete-description": "Der Kommentar wird endgültig gelöscht."
   },
   "Subject": {
     "elementary-school": "Grundschule",
