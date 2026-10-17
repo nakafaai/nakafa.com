@@ -8,8 +8,6 @@ import {
   type MemoryDraft,
   type MemoryPage,
   pageCleared,
-  pageForRestored,
-  pageRestored,
   pageWith,
   pageWithout,
 } from "@/components/user/settings/memory/list";
@@ -86,33 +84,6 @@ export function editInList(
 /** Takes a memory out of every page that holds it. */
 export function removeFromList(store: Store, id: Memory["id"]) {
   changePages(store, (page) => pageWithout(page, id));
-}
-
-/**
- * Shows a memory that comes back where it was, as the server will: in the one
- * page that holds its place, between the memories confirmed before and after
- * it. A memory whose place is beyond the pages the browser holds is left to
- * the server. Only that page is written.
- */
-export function restoreInList(store: Store, memory: Memory) {
-  const held = heldPages(store);
-  const target = Option.flatMap(
-    pageForRestored(
-      Arr.map(held, ({ page }) => page),
-      memory
-    ),
-    (index) => Arr.get(held, index)
-  );
-
-  if (Option.isNone(target)) {
-    return;
-  }
-
-  store.setQuery(
-    nina.memory.list,
-    target.value.args,
-    Option.some(pageRestored(target.value.page, memory))
-  );
 }
 
 /**

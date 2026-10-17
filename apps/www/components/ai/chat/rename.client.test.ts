@@ -12,11 +12,7 @@ const mocks = vi.hoisted(() => ({
   updateTitle: vi.fn(),
 }));
 
-vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
-}));
-
-vi.mock("sonner", () => ({
+vi.mock("@repo/design-system/lib/toast/notify", () => ({
   toast: { error: mocks.toastError },
 }));
 
@@ -226,7 +222,10 @@ describe("useChatRename", () => {
 
     await act(async () => {
       await vi.waitFor(() =>
-        expect(mocks.toastError).toHaveBeenCalledWith("action-error")
+        expect(mocks.toastError).toHaveBeenCalledWith({
+          description: "action-error.description",
+          title: "action-error.title",
+        })
       );
     });
     expect(hook().isEditing).toBe(true);
@@ -251,7 +250,10 @@ describe("useChatRename", () => {
     await act(async () => {
       refuse(Result.fail(new Error("Refused by the test.")));
       await vi.waitFor(() =>
-        expect(mocks.toastError).toHaveBeenCalledWith("action-error")
+        expect(mocks.toastError).toHaveBeenCalledWith({
+          description: "action-error.description",
+          title: "action-error.title",
+        })
       );
     });
 

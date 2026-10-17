@@ -109,6 +109,50 @@ secret first in `BETTER_AUTH_SECRETS`, keep `BETTER_AUTH_SECRET` at its old
 value, and keep each older version listed while anything is still sealed with
 it.
 
+## The Shared Session Cookie
+
+Nakafa and every school host of the `us` cell share one session cookie. Better
+Auth sets it with a `Domain` attribute that is the host of `SITE_URL`
+(`advanced.crossSubDomainCookies`, Better Auth 1.6.33, `cookies/index.mjs`). The
+name stays `better-auth.session_token`, with the `__Secure-` prefix on HTTPS,
+because the app sets no cookie name or prefix of its own, and ADR 0026 rejects a
+session cookie named for each cell.
+
+Before school hosts, the cookie had no `Domain` attribute. A browser that still
+holds that older host-only cookie sends it next to the shared one under the same
+name, and the two readers pick different values:
+
+- The identity route (`get-session` and `sign-out`) reads the first value of a
+  name (better-call `parseCookies`, which skips a name it already has). The
+  browser sends the older cookie first (RFC 6265 section 5.4), so the identity
+  route reads the older host-only cookie.
+- The presence check of the app (`getSessionCookie` in `cookies/index.mjs`,
+  which parses with `cookie-utils.mjs`) reads the last value.
+
+A response that sets or clears the shared cookie also expires the older host-only
+cookie of the host that answered, when the shared cookie reaches that host
+(`packages/backend/confect/auth/host.ts`). The shared cookie reaches the site's
+own host and, when its domain has a dot, every subdomain of that domain. A
+response from a host that the shared cookie does not reach leaves that host's
+cookie alone. The expiry has no `Domain` attribute, so it reaches only the host
+that answered. The expiry comes before the shared cookie in the response, because
+a browser that stores both as one cookie, as Chromium does for `localhost`, must
+keep the shared one.
+
+The pair would form if a school host wrote the shared cookie while an older
+host-only cookie existed. The browser would send the older cookie first, and the
+identity route reads the first value, so the main site would serve the older
+session. No flow of this change does that, since the Google callback runs on the
+main site. A school sign-in endpoint must not write the shared cookie while an
+older host-only cookie can exist: it must end on the main site, where a response
+that sets the shared cookie expires that older cookie.
+
+A session that exists only as the older cookie keeps working on the main site
+until its next refresh or sign-in, and it shows as signed out on a school host
+until then. A rollback to the build before this change has one known effect: a
+sign-out in that build clears only its own host-only cookie, so the shared
+cookie can still identify a valid session until that session expires.
+
 ## School Sign-In
 
 Program wave A, the first delivery wave of the School program, changes how

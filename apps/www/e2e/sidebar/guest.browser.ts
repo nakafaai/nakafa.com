@@ -194,12 +194,14 @@ test("provider failures land on one clean generic retry", async ({ page }) => {
         yield* Effect.promise(() =>
           expect(page).toHaveURL(new URL(retryHref, page.url()).toString())
         );
-        const providerError = page.getByText(en.Auth["provider-error"], {
-          exact: true,
+        const providerError = page.getByRole("alert").filter({
+          hasText: en.Toast["provider-error"].title,
         });
         yield* Effect.promise(() => expect(providerError).toBeVisible());
         yield* Effect.promise(() =>
-          expect(providerError).toHaveAttribute("role", "alert")
+          expect(providerError).toContainText(
+            en.Toast["provider-error"].description
+          )
         );
         yield* Effect.sync(() => {
           expect(page.url()).not.toContain("access_denied");

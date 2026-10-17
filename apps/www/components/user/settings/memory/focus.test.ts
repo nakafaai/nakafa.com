@@ -3,8 +3,6 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 import {
   focusFirst,
-  focusSearchOnUndo,
-  MEMORY_SEARCH_ID,
   memoryRowId,
 } from "@/components/user/settings/memory/focus";
 
@@ -40,14 +38,5 @@ describe("memory focus", () => {
     focusFirst([null, document.getElementById("off")]);
 
     expect(document.activeElement?.id).toBe("kept");
-  });
-
-  it("moves the focus from the Undo button to the search field when the learner presses Undo", () => {
-    document.body.innerHTML = `<input id="${MEMORY_SEARCH_ID}" /><button id="undo" type="button"></button>`;
-    document.getElementById("undo")?.focus();
-
-    focusSearchOnUndo();
-
-    expect(document.activeElement?.id).toBe(MEMORY_SEARCH_ID);
   });
 });

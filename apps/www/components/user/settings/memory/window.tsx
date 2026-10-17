@@ -3,13 +3,14 @@
 import { useCallbackRef, useMergedRef } from "@mantine/hooks";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { type CSSProperties, useLayoutEffect, useRef } from "react";
+import { type CSSProperties, useLayoutEffect, useRef, useState } from "react";
 import {
   type CustomContainerComponentProps,
   type CustomItemComponentProps,
   WindowVirtualizer,
 } from "virtua";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
+import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
   focusFirst,
   MEMORY_LIST_ID,
@@ -45,33 +46,59 @@ const ROW_SIZE = 72;
  */
 export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   const { remove } = useMemoryActions();
+  // The memory a row asked to delete, until the learner confirms or cancels.
+  const [pending, setPending] = useState<Memory | null>(null);
+  const frame = useRef<HTMLDivElement>(null);
   // One function for every row, so a row renders again only when its memory changes.
-  const removeRow = useCallbackRef(remove);
+  const askRow = useCallbackRef((memory: Memory) => setPending(memory));
+  // The row the learner deleted leaves the page while the question closes, and
+  // the focus was in the question, so the question hands the focus to the list.
+  const focusList = useCallbackRef(
+    () => frame.current?.querySelector("ul") ?? null
+  );
 
-  if (Arr.length(memories) < MEMORY_PAGE) {
-    return (
-      <MemoryItems>
-        {Arr.map(memories, (memory, index) => (
-          <MemoryItem index={index} key={memory.id}>
-            <MemoryRow memory={memory} remove={removeRow} />
-          </MemoryItem>
-        ))}
-      </MemoryItems>
-    );
+  /** Removes the memory the learner confirmed, and closes the question. */
+  function confirmDelete() {
+    if (pending !== null) {
+      remove(pending);
+    }
+    setPending(null);
   }
 
   return (
-    <WindowVirtualizer
-      as={MemoryItems}
-      data={memories}
-      item={MemoryItem}
-      itemSize={ROW_SIZE}
-      ssrCount={MEMORY_PAGE}
-    >
-      {(memory) => (
-        <MemoryRow key={memory.id} memory={memory} remove={removeRow} />
+    <div ref={frame}>
+      {Arr.length(memories) < MEMORY_PAGE ? (
+        <MemoryItems>
+          {Arr.map(memories, (memory, index) => (
+            <MemoryItem index={index} key={memory.id}>
+              <MemoryRow askDelete={askRow} memory={memory} />
+            </MemoryItem>
+          ))}
+        </MemoryItems>
+      ) : (
+        <WindowVirtualizer
+          as={MemoryItems}
+          data={memories}
+          item={MemoryItem}
+          itemSize={ROW_SIZE}
+          ssrCount={MEMORY_PAGE}
+        >
+          {(memory) => (
+            <MemoryRow askDelete={askRow} key={memory.id} memory={memory} />
+          )}
+        </WindowVirtualizer>
       )}
-    </WindowVirtualizer>
+      <MemoryDeleteDialog
+        finalFocus={focusList}
+        onConfirm={confirmDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPending(null);
+          }
+        }}
+        open={pending !== null}
+      />
+    </div>
   );
 }
 

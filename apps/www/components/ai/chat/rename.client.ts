@@ -1,10 +1,9 @@
 "use client";
 
 import type { ChatView } from "@repo/backend/confect/chats/view";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
 import { useLayoutEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import { useUpdateChatTitleMutation } from "@/components/ai/chat/mutation.client";
 import {
   focusBoxAfterRefusal,
@@ -18,8 +17,6 @@ import { reportClientException } from "@/lib/analytics/client";
  * the save that sends the new title.
  */
 export function useChatRename(chat: ChatView) {
-  const tCommon = useTranslations("Common");
-  const actionErrorMessage = tCommon("action-error");
   const [isEditing, setIsEditing] = useState(false);
   const [chatTitle, setChatTitle] = useState("");
   // Set by the rename item. The chat's menu then hands the focus to the box when it closes.
@@ -110,7 +107,10 @@ export function useChatRename(chat: ChatView) {
                       ),
                   });
                   setIsEditing(true);
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),

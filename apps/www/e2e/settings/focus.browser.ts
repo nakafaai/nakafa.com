@@ -10,6 +10,7 @@ import {
   writeMemory,
 } from "@/e2e/support/list";
 import {
+  confirmDelete,
   EMPTY,
   editorOf,
   memoryRow,
@@ -71,6 +72,7 @@ const deletesToTheList = Effect.fn("NakafaE2E.memoryDeletesToList")(function* (
   yield* Effect.promise(async () => {
     await openRow(page, SECOND);
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
+    await confirmDelete(page);
     await expect(editorOf(page)).toHaveCount(0);
     await expect(memoryRow(page, SECOND)).toHaveCount(0);
     await expect(page.locator(`#${MEMORY_LIST_ID}`)).toBeFocused();
@@ -121,6 +123,7 @@ const deletesLastToSearch = Effect.fn("NakafaE2E.memoryDeletesLast")(function* (
     await expect(row).toBeVisible({ timeout: readinessTimeoutMilliseconds });
     await row.hover();
     await row.getByRole("button", { name: "Delete memory" }).click();
+    await confirmDelete(page);
     await expect(row).toHaveCount(0);
     await expect(page.getByText(EMPTY)).toBeVisible();
     await expect(searchOf(page)).toBeFocused();
@@ -149,6 +152,7 @@ const deletesAcrossTheThreshold = Effect.fn(
 
     await row.hover();
     await row.getByRole("button", { name: "Delete memory" }).click();
+    await confirmDelete(page);
     await expect(row).toHaveCount(0);
     await expect(searchOf(page)).toBeFocused();
     await expect(memoryRow(page, LAST_SERVER)).toBeVisible();

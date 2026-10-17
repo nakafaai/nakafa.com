@@ -8,7 +8,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { cn } from "cn";
 import { Schema } from "effect";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
@@ -65,7 +67,16 @@ const toasterStyle: ToasterStyle = {
   "--warning-text": "var(--popover-foreground)",
 };
 
-/** Renders app toasts with the active appearance and subtle status colors. */
+/**
+ * Renders app toasts with the active appearance and subtle status colors.
+ *
+ * The Toaster is `unstyled`: Sonner's own stylesheet would otherwise set the
+ * toast, its buttons, and its close button in unlayered CSS, which beats every
+ * Tailwind utility, so the design system recipes would never show. Every part
+ * takes its classes here instead. A title takes one line and a description two,
+ * which the line clamps enforce whatever the copy says. The copy is a message
+ * node from `lib/toast/message`, which renders the reader's language.
+ */
 function Toaster({ ...props }: ToasterProps) {
   const { resolvedTheme } = useTheme();
   const appearance = getThemeAppearance(resolvedTheme);
@@ -86,16 +97,20 @@ function Toaster({ ...props }: ToasterProps) {
       theme={appearance}
       toastOptions={{
         classNames: {
-          actionButton:
-            "focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
-          cancelButton:
-            "bg-secondary! text-secondary-foreground! focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
-          closeButton:
-            "transition-colors! ease-out! hover:border-current! hover:bg-accent! hover:text-accent-foreground! focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
-          description: "text-muted-foreground!",
+          actionButton: buttonVariants({ size: "sm" }),
+          cancelButton: buttonVariants({ size: "sm", variant: "secondary" }),
+          closeButton: cn(
+            buttonVariants({ size: "icon-xs", variant: "ghost" }),
+            "absolute start-0 top-0 -translate-x-[35%] -translate-y-[35%]"
+          ),
+          content: "flex min-w-0 flex-1 flex-col gap-0.5",
+          description: "line-clamp-2 text-muted-foreground leading-[1.4]",
+          icon: "-ms-0.75 me-1 flex size-4 shrink-0 items-center justify-center",
+          title: "line-clamp-1 font-medium leading-normal",
           toast:
-            "focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
+            "flex w-(--width) items-center gap-1.5 rounded-(--border-radius) border border-border bg-popover p-4 text-[13px] text-popover-foreground shadow-[0_4px_12px_rgba(0,0,0,0.1)] focus-visible:shadow-none! focus-visible:ring-2 focus-visible:ring-current focus-visible:ring-inset",
         },
+        unstyled: true,
       }}
       {...props}
     />
