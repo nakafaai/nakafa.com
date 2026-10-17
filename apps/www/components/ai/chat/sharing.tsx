@@ -20,6 +20,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { toast } from "sonner";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
@@ -27,7 +28,8 @@ import { reportClientException } from "@/lib/analytics/client";
 
 /**
  * The share dialog of one chat. A link the server could not load shows in the
- * dialog, which offers to load it again, and never takes the chat page with it.
+ * dialog's footer, which offers to load it again, and never takes the chat page
+ * with it.
  */
 export function ChatSharing({
   chat,
@@ -54,8 +56,8 @@ export function ChatSharing({
 }
 
 /**
- * The share dialog while the link could not be loaded. It says so in one
- * sentence and offers to load the link again, which asks the server anew.
+ * The share dialog while the page itself failed. It says so in one sentence and
+ * offers to load the link again, which asks the server anew.
  */
 function ChatSharingError({
   open,
@@ -85,10 +87,10 @@ function ChatSharingError({
 }
 
 /**
- * Owns sharing state and visibility admission independently of title editing.
- * The link carries a token the server draws when the chat is shared, so the
- * link can be copied once the token arrives. A token the server fails to read
- * fails the dialog, which its boundary shows.
+ * The share dialog of one chat. It stays mounted while its link loads, shows,
+ * fails and loads again: only its footer changes between those states, so a
+ * Retry does not open the dialog again. The visibility the learner chooses is
+ * saved here, independently of title editing.
  */
 function ChatSharingDialog({
   chat,
@@ -101,17 +103,9 @@ function ChatSharingDialog({
 }) {
   const t = useTranslations("Ai");
   const actionErrorMessage = useTranslations("Common")("action-error");
-  const clipboard = useClipboard({ timeout: 500 });
   const updateChatVisibility = useUpdateChatVisibilityMutation();
-  const isPrivate = chat.visibility === "private";
-  const tokenResult = useQuery(
-    chats.queries.getShareToken,
-    isPrivate ? "skip" : { chatId: chat._id }
-  );
-  if (QueryResult.isFailure(tokenResult)) {
-    throw tokenResult.error;
-  }
-  const token = QueryResult.isSuccess(tokenResult) ? tokenResult.value : null;
+  // Each retry gives the footer a new key, which subscribes to the link afresh.
+  const [attempt, setAttempt] = useState(0);
   /**
    * Persist the selected chat visibility. Choosing the visibility the chat
    * already has sends nothing.
@@ -145,32 +139,17 @@ function ChatSharingDialog({
       )
     );
   };
-  /** Copy the link once the server has drawn its token. */
-  const handleCopy = () => {
-    if (token === null) {
-      return;
-    }
-    clipboard.copy(shareLink(chat._id, token));
-    toast.success(t("link-copied"), {
-      position: "bottom-center",
-    });
-  };
 
   return (
     <ResponsiveDialog
       description={t("share-chat-description")}
       footer={
-        isPrivate ? (
-          <Button onClick={() => handleUpdateVisibility("public")}>
-            <HugeIcons icon={Link04Icon} />
-            {t("create-link")}
-          </Button>
-        ) : (
-          <Button disabled={token === null} onClick={handleCopy}>
-            <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
-            {t("copy-link")}
-          </Button>
-        )
+        <ChatSharingAction
+          chat={chat}
+          key={attempt}
+          onCreate={() => handleUpdateVisibility("public")}
+          onRetry={() => setAttempt((count) => count + 1)}
+        />
       }
       open={open}
       setOpen={onOpenChange}
@@ -212,5 +191,69 @@ function ChatSharingDialog({
         })}
       </div>
     </ResponsiveDialog>
+  );
+}
+
+/**
+ * The one action of the share dialog and the token it needs. A private chat
+ * creates its link. A shared chat copies the link once the server has drawn its
+ * token. A token the server could not read is said in the footer, beside Retry.
+ * The token is read here, so the dialog reads it while it is open.
+ */
+function ChatSharingAction({
+  chat,
+  onCreate,
+  onRetry,
+}: {
+  chat: ChatView;
+  onCreate: () => void;
+  onRetry: () => void;
+}) {
+  const t = useTranslations("Ai");
+  const clipboard = useClipboard({ timeout: 500 });
+  const isPrivate = chat.visibility === "private";
+  const tokenResult = useQuery(
+    chats.queries.getShareToken,
+    isPrivate ? "skip" : { chatId: chat._id }
+  );
+
+  if (QueryResult.isFailure(tokenResult)) {
+    return (
+      <div className="flex w-full items-center justify-between gap-4">
+        <p className="text-muted-foreground text-sm">{t("share-link-error")}</p>
+        <Button onClick={onRetry}>
+          <HugeIcons icon={Refresh03Icon} />
+          {t("retry")}
+        </Button>
+      </div>
+    );
+  }
+
+  if (isPrivate) {
+    return (
+      <Button onClick={onCreate}>
+        <HugeIcons icon={Link04Icon} />
+        {t("create-link")}
+      </Button>
+    );
+  }
+
+  const token = QueryResult.isSuccess(tokenResult) ? tokenResult.value : null;
+  /** Copy the link once the server has drawn its token. */
+  const handleCopy = () => {
+    if (token === null) {
+      return;
+    }
+    clipboard.copy(shareLink(chat._id, token));
+    toast.success(t("link-copied"), {
+      position: "bottom-center",
+    });
+  };
+
+  return (
+    <Button disabled={token === null} onClick={handleCopy}>
+      <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
+      {t("copy-link")}
+    </Button>
   );
 }

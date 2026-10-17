@@ -739,7 +739,7 @@
     "create-link": "Link erstellen",
     "copy-link": "Link kopieren",
     "link-copied": "Link kopiert!",
-    "share-link-error": "Der Link konnte nicht geladen werden",
+    "share-link-error": "Der Link konnte nicht geladen werden.",
     "private-chat-error": "Zugriff verweigert",
     "private-chat-error-description": "Dieser Chat gehört dir nicht. Bitte die besitzende Person um Zugriff.",
     "credits-label": "Credits",
