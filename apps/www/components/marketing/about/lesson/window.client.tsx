@@ -159,8 +159,10 @@ export function LessonWindow({
 
   return (
     <LessonSelectionContext value={selections}>
+      {/* One column that may shrink below its content, so the tab list scrolls
+          inside it and long lesson names never widen the page on a phone. */}
       <Intersection
-        className="grid gap-6"
+        className="grid grid-cols-1 gap-6"
         minimumRatio={LAB_VISIBLE_SHARE}
         once
         onFocus={reveal}
@@ -187,7 +189,7 @@ export function LessonWindow({
               </TabsTab>
             ))}
           </TabsList>
-          <div className="grid">
+          <div className="grid grid-cols-1">
             {Arr.map(LessonSchema.literals, (id) => (
               <LessonPanel
                 decimalSeparator={decimalSeparator}

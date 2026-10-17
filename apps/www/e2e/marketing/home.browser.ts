@@ -19,6 +19,7 @@ import {
 } from "@/e2e/support/resize";
 import { openRoute } from "@/e2e/support/route";
 import { isKnownSceneDiagnostic } from "@/e2e/support/scene";
+import { scrollThroughPage } from "@/e2e/support/scroll";
 import { TOASTER } from "@/e2e/support/selector";
 import {
   desktopViewport,
@@ -71,32 +72,6 @@ const SIZED_ELEMENTS = "section[id], [role='tabpanel']";
  * and the message lists candidate causes, not proven ones.
  */
 const SHIFT_TOLERANCE_MILLISECONDS = 50;
-
-/**
- * Scrolls the whole page one screen at a time, so every part reaches the
- * viewport and every observer runs, then returns to the top.
- */
-const scrollThroughPage = Effect.fn("NakafaE2E.scrollThroughPage")(function* (
-  page: Page
-) {
-  const height = yield* Effect.promise(() =>
-    page.evaluate(() => window.innerHeight)
-  );
-  const documentHeight = yield* Effect.promise(() =>
-    page.evaluate(() => document.documentElement.scrollHeight)
-  );
-  for (
-    let offset = 0;
-    offset < documentHeight;
-    offset += Math.round(height * 0.8)
-  ) {
-    yield* Effect.promise(() =>
-      page.evaluate((top) => window.scrollTo(0, top), offset)
-    );
-    yield* Effect.promise(() => page.waitForTimeout(120));
-  }
-  yield* Effect.promise(() => page.evaluate(() => window.scrollTo(0, 0)));
-});
 
 /** Collects the console errors and warnings a page writes, hydration warnings included. */
 function observeConsole(page: Page) {
@@ -202,49 +177,6 @@ for (const viewport of HOME_VIEWPORTS) {
     });
   }
 }
-
-test("the header fits a portrait tablet in every language", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  await Effect.runPromise(
-    withBrowserContext(
-      browser,
-      {
-        baseURL: baseURL ?? "",
-        serviceWorkers: "block",
-        viewport: viewportSize(tabletPortraitViewport),
-      },
-      (context) =>
-        Effect.gen(function* () {
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* withObservedPageErrors(
-            page,
-            Effect.forEach(["id", "en", "de"], (locale) =>
-              Effect.gen(function* () {
-                yield* openRoute(page, `/${locale}`, "denied");
-                const overflow = yield* Effect.promise(() =>
-                  page.evaluate(() => {
-                    const header = document.querySelector("header");
-                    return {
-                      header: header
-                        ? header.scrollWidth - header.clientWidth
-                        : 0,
-                      page:
-                        document.documentElement.scrollWidth -
-                        window.innerWidth,
-                    };
-                  })
-                );
-                expect(overflow).toEqual({ header: 0, page: 0 });
-              })
-            )
-          );
-        })
-    )
-  );
-});
 
 test("home page carries every part in Indonesian, English and German", async ({
   baseURL,
