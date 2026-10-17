@@ -4,6 +4,7 @@ import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { fonts } from "@repo/design-system/lib/fonts";
+import { textDirection } from "@repo/internationalization/src/direction";
 import { routing } from "@repo/internationalization/src/routing";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
@@ -156,6 +157,7 @@ export async function generateStaticParams() {
  */
 export default async function Layout({ children }: LayoutProps<"/[locale]">) {
   const locale = getLocaleOrThrow(await getLocale());
+  const direction = textDirection(locale);
 
   const messages = await getMessages();
 
@@ -163,6 +165,7 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
     <html
       className={fonts}
       data-scroll-behavior="smooth"
+      dir={direction}
       lang={locale}
       suppressHydrationWarning
     >
@@ -179,7 +182,7 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
         <EducationalOrgJsonLd />
         <WebsiteJsonLd locale={locale} />
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <DesignSystemProvider>
+          <DesignSystemProvider direction={direction}>
             <div className="isolate">{children}</div>
             <Toaster />
           </DesignSystemProvider>

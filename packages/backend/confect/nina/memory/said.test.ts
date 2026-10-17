@@ -5,7 +5,11 @@ import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import { readSaid } from "@repo/backend/confect/nina/memory/said";
 import { createNinaTest } from "@repo/backend/test/nina";
-import { copyOf, sealThreadIn } from "@repo/backend/test/nina/seal";
+import {
+  copyOf,
+  sealThreadIn,
+  writtenThreadIn,
+} from "@repo/backend/test/nina/seal";
 import { Array as Arr, Effect, Option } from "effect";
 
 const PROMPT = "Bagaimana rumus luas lingkaran?";
@@ -53,10 +57,13 @@ describe("the learner's words of a turn", () => {
         )
       );
     const plain = await said(turn);
+    const written = await writtenThreadIn(f.t, f.threadId, f.identity.userId);
+    const writtenPrompt = copyOf(written, turn.promptMessageId);
+    expect(await said({ ...turn, promptMessageId: writtenPrompt })).toBe(plain);
     const replacements = await sealThreadIn(f.t, f.threadId, f.identity.userId);
     const sealed = await said({
       ...turn,
-      promptMessageId: copyOf(replacements, turn.promptMessageId),
+      promptMessageId: copyOf(replacements, writtenPrompt),
     });
     expect(plain).toBe(PROMPT);
     expect(sealed).toBe(plain);

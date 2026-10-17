@@ -45,7 +45,7 @@
     "country-code-lookup": "^0.2.1",
     "effect": "catalog:",
     "frimousse": "^0.4.0",
-    "geist": "^1.7.2",
+    "geist": "^1.8.1",
     "katex": "^0.19.0",
     "marked": "^18.1.1",
     "marked-tiptap": "npm:marked@^17.0.1",
