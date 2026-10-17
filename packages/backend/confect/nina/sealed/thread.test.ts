@@ -2,7 +2,11 @@ import { createThread, saveMessage } from "@convex-dev/agent";
 import { describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import { isSealed } from "@repo/backend/confect/nina/sealed";
-import { sealThreadIn, withoutRowIds } from "@repo/backend/test/nina/seal";
+import {
+  sealThreadIn,
+  withoutRowIds,
+  writtenThreadIn,
+} from "@repo/backend/test/nina/seal";
 import { readThreadIn, threadFailureIn } from "@repo/backend/test/nina/sealed";
 import { createThreadTest } from "@repo/backend/test/nina/thread";
 import { Array as Arr } from "effect";
@@ -35,6 +39,12 @@ describe("reading a thread through the sealed module", () => {
       ...scope,
       paginationOpts: FIRST_PAGE,
     });
+    await writtenThreadIn(f.t, scope.threadId, scope.owner);
+    expect(
+      withoutRowIds(
+        await readThreadIn(f.t, { ...scope, paginationOpts: FIRST_PAGE })
+      )
+    ).toEqual(withoutRowIds(plain));
     await sealThreadIn(f.t, scope.threadId, scope.owner);
     const stored = await storedRowsOf(f.t, scope.threadId);
     expect(

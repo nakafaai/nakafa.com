@@ -17,6 +17,9 @@ const NinaFilename = Schema.NonEmptyString.check(
 export const NinaUpload = Schema.Struct({
   userId: Id("users"),
   expiresAt: Schema.Finite,
+  // True when the upload sealed its file name at reservation (ADR 0024). An upload
+  // reserved before sealing has no such field, so its name is read as it is.
+  nameSealed: Schema.optionalKey(Schema.Literal(true)),
   state: Schema.Union([
     Schema.Struct({ status: Schema.Literal("uploading") }),
     Schema.Struct({ status: Schema.Literal("ready"), fileId: Schema.String }),

@@ -102,7 +102,7 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     catch: retryUnavailable,
   });
   const fileIds = stored.fileIds ?? [];
-  yield* requireStoredDocumentLimit(user._id, fileIds);
+  yield* requireStoredDocumentLimit(fileIds);
   // A message stored before the limit existed can cost more than a turn carries.
   yield* requirePromptLimit(message);
   const retryOf = original.retryOf ?? original.order;

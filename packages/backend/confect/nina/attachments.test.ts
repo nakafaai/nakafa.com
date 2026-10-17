@@ -13,7 +13,18 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
+import {
+  learnerWithKeyIn,
+  sealedFileNameIn,
+} from "@repo/backend/test/nina/sealed";
 import { Array as Arr, Effect, Schema } from "effect";
+
+vi.mock("@repo/backend/confect/vault/keys", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@repo/backend/confect/vault/keys")>();
+  return { ...actual, readLearnerKeys: vi.fn(actual.readLearnerKeys) };
+});
 
 const MiB = 1024 * 1024;
 /** One tenth of a MiB, rounded up to a whole byte. */
@@ -91,15 +102,11 @@ function storedFileIds(t: TestTransaction, uploadIds: UploadId[]) {
   });
 }
 
-/** Applies the limit to the stored files of `owner` and reports the refusal, if any. */
-function checkStored(
-  t: TestTransaction,
-  owner: UploadOwner,
-  fileIds: readonly string[]
-) {
+/** Applies the limit to the stored files and reports the refusal, if any. */
+function checkStored(t: TestTransaction, fileIds: readonly string[]) {
   return t.run((ctx) =>
     Effect.runPromise(
-      requireStoredDocumentLimit(owner, fileIds).pipe(
+      requireStoredDocumentLimit(fileIds).pipe(
         Effect.match({
           onFailure: (error) => error.code,
           onSuccess: () => "accepted" as const,
@@ -207,25 +214,127 @@ describe("Nina attachment document limit", () => {
 
   it("refuses a stored message whose documents total 10.1 MiB before a retry sends it", async () => {
     const t = createConvexTestWithBetterAuth();
-    const { userId, uploadIds } = await seedUploads(t, [
+    const { uploadIds } = await seedUploads(t, [
       { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE - 2 * MiB },
       { mediaType: "text/plain", size: 2 * MiB + TENTH_MIB },
     ]);
 
-    expect(
-      await checkStored(t, userId, await storedFileIds(t, uploadIds))
-    ).toBe("NINA_UPLOAD_SIZE");
+    expect(await checkStored(t, await storedFileIds(t, uploadIds))).toBe(
+      "NINA_UPLOAD_SIZE"
+    );
   });
 
   it("accepts a stored message whose documents fit, whatever its images weigh", async () => {
     const t = createConvexTestWithBetterAuth();
-    const { userId, uploadIds } = await seedUploads(t, [
+    const { uploadIds } = await seedUploads(t, [
       { mediaType: "image/png", size: 12 * MiB },
       { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE },
     ]);
 
-    expect(
-      await checkStored(t, userId, await storedFileIds(t, uploadIds))
-    ).toBe("accepted");
+    expect(await checkStored(t, await storedFileIds(t, uploadIds))).toBe(
+      "accepted"
+    );
+  });
+});
+
+/** Stores one file under `filename` from an action, as an upload does, and returns its id. */
+function storeNamedFile(t: TestTransaction, filename: string) {
+  return t.action(
+    async (ctx) =>
+      (
+        await storeFile(
+          ctx,
+          components.nina,
+          new Blob(["Soal"], { type: "application/pdf" }),
+          { filename }
+        )
+      ).file.fileId
+  );
+}
+
+/**
+ * Grants `userId` a ready upload of `fileId`. `nameSealed` is set only as the
+ * reservation sets it, so an upload from before sealing has no such field.
+ */
+function grantIn(
+  t: TestTransaction,
+  userId: UploadOwner,
+  fileId: string,
+  nameSealed: boolean
+) {
+  return t.run((ctx) =>
+    ctx.db.insert("ninaUploads", {
+      userId,
+      expiresAt: EXPIRES_AT,
+      ...(nameSealed ? { nameSealed: true } : {}),
+      state: { status: "ready", fileId },
+    })
+  );
+}
+
+/**
+ * Sends the uploads as one message, and reports the file name that the model reads
+ * for each, or the code of the refusal.
+ */
+function sendIn(
+  t: TestTransaction,
+  userId: UploadOwner,
+  uploadIds: readonly UploadId[],
+  text: string
+) {
+  return t.run((ctx) =>
+    Effect.runPromise(
+      consumeAttachments(userId, uploadIds, text).pipe(
+        Effect.map((sent) =>
+          Arr.map(sent.parts, (part) =>
+            "filename" in part ? part.filename : undefined
+          )
+        ),
+        Effect.match({
+          onFailure: (error) => error.code,
+          onSuccess: (names) => names,
+        }),
+        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+      )
+    )
+  );
+}
+
+describe("Nina attachment names", () => {
+  it("retries a stored message whose file has a name from before sealing, even one that begins with the prefix", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const fileId = await storeNamedFile(t, "nakafa.sealed.v1:abcd");
+
+    expect(await checkStored(t, [fileId])).toBe("accepted");
+  });
+
+  it("sends a pending upload from before sealing with its name as it is, even one that begins with the prefix", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const owner = await learnerWithKeyIn(t, "owner");
+    const fileId = await storeNamedFile(t, "nakafa.sealed.v1:abcd");
+    const uploadId = await grantIn(t, owner, fileId, false);
+
+    expect(await sendIn(t, owner, [uploadId], "Read this.")).toEqual([
+      "nakafa.sealed.v1:abcd",
+    ]);
+  });
+
+  it("sends the sealed names of a message with one read of the learner's keys", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const owner = await learnerWithKeyIn(t, "owner");
+    let uploadIds: readonly UploadId[] = [];
+    for (const name of ["Soal-1.pdf", "Soal-2.pdf", "Soal-3.pdf"]) {
+      const sealedName = await sealedFileNameIn(t, owner, name);
+      const fileId = await storeNamedFile(t, sealedName);
+      uploadIds = Arr.append(uploadIds, await grantIn(t, owner, fileId, true));
+    }
+    vi.mocked(readLearnerKeys).mockClear();
+
+    expect(await sendIn(t, owner, uploadIds, "Read these.")).toEqual([
+      "Soal-1.pdf",
+      "Soal-2.pdf",
+      "Soal-3.pdf",
+    ]);
+    expect(readLearnerKeys).toHaveBeenCalledTimes(1);
   });
 });

@@ -18,7 +18,6 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
-import { sealThreadIn } from "@repo/backend/test/nina/seal";
 import { readFileIn, readMessageIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import {
@@ -138,7 +137,9 @@ describe("native Nina attachment ownership", () => {
       ctx.runQuery(components.nina.files.get, { fileId })
     );
     expect(storedTextOf(file)).not.toContain(planted);
-    expect(await readFileIn(f.t, f.identity.userId, fileId)).toMatchObject({
+    expect(
+      await readFileIn(f.t, f.identity.userId, fileId, true)
+    ).toMatchObject({
       filename: planted,
     });
 
@@ -277,46 +278,6 @@ describe("native Nina attachment ownership", () => {
       })
     ).rejects.toMatchObject({ data: { code: "NINA_RETRY_UNAVAILABLE" } });
   });
-  it("retries a prompt with its attachment the same way after the seal runs over its rows in place", async () => {
-    /** The retry of a prompt with an image, after the seal runs over the chat in place when `sealed`. */
-    const retried = async (sealed: boolean) => {
-      const { t, owner, identity } = await uploadFixture();
-      const uploadId = Ref.decodeReturnsSync(
-        refs.public.nina.uploads.save,
-        await owner.action(save, attachment)
-      );
-      const first = Ref.decodeReturnsSync(
-        refs.public.nina.turns.start,
-        await owner.mutation(start, {
-          ...admission,
-          input: {
-            ...admission.input,
-            prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
-          },
-        })
-      );
-      await owner.mutation(cancel, { chatId: first.chatId });
-      if (sealed) {
-        await sealThreadIn(t, first.threadId, identity.userId);
-      }
-      const second = Ref.decodeReturnsSync(
-        refs.public.nina.turns.start,
-        await owner.mutation(start, {
-          requestId: "retry",
-          chatId: first.chatId,
-          input: { kind: "retry", order: first.order },
-        })
-      );
-      return { order: second.order, prompt: second.prompt };
-    };
-    const written = await retried(false);
-    const resealed = await retried(true);
-    expect(resealed).toEqual(written);
-    expect(resealed.prompt.files).toEqual([
-      expect.objectContaining({ type: "file", mediaType: "image/png" }),
-    ]);
-  });
-
   it("limits repeated discarded uploads without counting them as pending files", async () => {
     const f = await uploadFixture();
     for (let i = 0; i < NINA_FILE_COUNT; i += 1) {

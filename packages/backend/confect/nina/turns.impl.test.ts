@@ -25,7 +25,7 @@ import {
   start,
 } from "@repo/backend/test/nina/admission";
 import { homePage } from "@repo/backend/test/nina/page";
-import { sealThreadIn } from "@repo/backend/test/nina/seal";
+import { plainThreadIn, sealThreadIn } from "@repo/backend/test/nina/seal";
 import { readMessageIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import { showsText } from "@repo/backend/test/seal";
@@ -181,12 +181,17 @@ describe("native Nina admission", () => {
     expect(turns).toHaveLength(2);
   });
 
-  it("replays the prompt of a saved request from its sealed copy as from the plain copy", async () => {
+  it("replays the prompt of a saved request the same from the writer's sealed row, a plain row and the seal in place", async () => {
     const { t, identity, owner } = await fixture();
     const first = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
     );
+    const written = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    await plainThreadIn(t, first.threadId, identity.userId);
     const plain = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
@@ -196,6 +201,7 @@ describe("native Nina admission", () => {
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
     );
+    expect(written.prompt).toEqual(plain.prompt);
     expect(sealed.prompt).toEqual(plain.prompt);
     expect(sealed.prompt.text).not.toBe("");
   });

@@ -150,6 +150,7 @@ const reserve = FunctionImpl.make(
       .insert({
         userId: appUser._id,
         expiresAt: now + Duration.toMillis(NINA_UPLOAD_LIFETIME),
+        nameSealed: true,
         state: { status: "uploading" },
       })
       .pipe(Effect.orDie);
