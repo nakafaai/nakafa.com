@@ -9,6 +9,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
+  VisualCardActions,
   VisualCardFooter,
   VisualCardFullscreen,
 } from "@repo/design-system/components/visual/card";
@@ -69,11 +70,12 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
 
 /**
  * The footer of a coordinate scene's visual card: the grid and automatic
- * rotation beside the card's full screen action, above any readout the scene
- * adds. The coordinate store owns the grid and rotation, and the visual card
- * owns where the card is shown.
+ * rotation beside the card's full screen action, on the right. A scene's own
+ * controls sit in its card body, so the footer renders after the body. The
+ * coordinate store owns the grid and rotation, and the visual card owns where
+ * the card is shown.
  */
-export function CoordinateControls({ children }: { children?: ReactNode }) {
+export function CoordinateControls() {
   const t = useTranslations("Common");
   const play = useCoordinateControls((controls) => controls.play);
   const showGrid = useCoordinateControls((controls) => controls.showGrid);
@@ -81,11 +83,8 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
   const togglePlay = useCoordinateControls((controls) => controls.togglePlay);
 
   return (
-    <VisualCardFooter
-      className="flex-col items-stretch px-0"
-      data-coordinate-controls=""
-    >
-      <div className="flex gap-2 px-(--card-spacing)">
+    <VisualCardFooter data-coordinate-controls="">
+      <VisualCardActions>
         <Button
           aria-pressed={showGrid}
           onClick={toggleGrid}
@@ -105,8 +104,7 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
           <span className="sr-only">{t("automatic-rotation")}</span>
         </Button>
         <VisualCardFullscreen />
-      </div>
-      {children}
+      </VisualCardActions>
     </VisualCardFooter>
   );
 }

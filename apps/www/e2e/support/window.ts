@@ -34,13 +34,15 @@ const overflowingRows = (page: Page) =>
       ).length
   );
 
-/** Whether React has taken over the first row of the list. */
-export const isHydrated = (page: Page) =>
-  page.evaluate(() =>
-    Object.keys(document.querySelector("main ul > li") ?? {}).some((key) =>
-      key.startsWith("__reactFiber")
-    )
-  );
+/** The first row of the memory list. */
+export const firstRow = (page: Page) => page.locator("main ul > li").first();
+
+/** Whether React has hydrated an element, which attaches its fiber to the node. */
+const hasReactFiber = (element: Element) =>
+  Object.keys(element).some((key) => key.startsWith("__reactFiber"));
+
+/** Whether React has taken over the element that a locator finds. */
+export const isHydrated = (target: Locator) => target.evaluate(hasReactFiber);
 
 /**
  * Whether React has taken over one element, which it does when it hydrates the
@@ -82,14 +84,14 @@ export const hydratesInPlace = Effect.fn("NakafaE2E.hydratesInPlace")(
       expect(last).not.toBeNull();
       // The scripts were asked for and never answered: React has not run.
       expect(held.length).toBeGreaterThan(0);
-      expect(await isHydrated(page)).toBe(false);
+      expect(await isHydrated(firstRow(page))).toBe(false);
 
       for (const route of MutableList.toArray(held)) {
         await route.continue();
       }
       await page.unroute(SCRIPTS);
       await expect
-        .poll(() => isHydrated(page), {
+        .poll(() => isHydrated(firstRow(page)), {
           timeout: readinessTimeoutMilliseconds,
         })
         .toBe(true);

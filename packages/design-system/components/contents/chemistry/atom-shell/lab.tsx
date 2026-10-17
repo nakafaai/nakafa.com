@@ -18,6 +18,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -122,31 +123,33 @@ export function AtomShellLab({
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.note}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <VisualFact
+              label={labels.atomicNumber}
+              value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
+            />
+            <VisualFact
+              label={labels.configuration}
+              value={<InlineMath math={`${configurationMath}`} />}
+            />
+            <VisualFact
+              label={labels.outerShell}
+              value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
+            />
+            <VisualFact
+              label={labels.maximumCapacity}
+              value={
+                <InlineMath
+                  math={`2(${outerShell.principalQuantumNumber})^2 = ${outerShell.maximumElectrons}`}
+                />
+              }
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <VisualFact
-            label={labels.atomicNumber}
-            value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
-          />
-          <VisualFact
-            label={labels.configuration}
-            value={<InlineMath math={`${configurationMath}`} />}
-          />
-          <VisualFact
-            label={labels.outerShell}
-            value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
-          />
-          <VisualFact
-            label={labels.maximumCapacity}
-            value={
-              <InlineMath
-                math={`2(${outerShell.principalQuantumNumber})^2 = ${outerShell.maximumElectrons}`}
-              />
-            }
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

@@ -26,6 +26,7 @@ import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -133,13 +134,22 @@ export function VectorConceptLab({
             value={loadX}
           />
         </div>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            <VisualFact
+              label={labels.magnitude}
+              value={labels.magnitudeValue}
+            />
+            <VisualFact
+              label={labels.direction}
+              value={labels.directionValue}
+            />
+            <VisualFact label={labels.netIdea} value={labels.netIdeaValue} />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
+
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <VisualFact label={labels.magnitude} value={labels.magnitudeValue} />
-          <VisualFact label={labels.direction} value={labels.directionValue} />
-          <VisualFact label={labels.netIdea} value={labels.netIdeaValue} />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

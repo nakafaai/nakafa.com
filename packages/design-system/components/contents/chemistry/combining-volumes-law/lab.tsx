@@ -23,6 +23,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -142,16 +143,21 @@ export function CombiningVolumesLab({
         <p className="text-muted-foreground text-sm">
           {selectedLabels.helperCaption}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact
+              label={labels.ratioLabel}
+              value={selectedLabels.ratio}
+            />
+            <VisualFact
+              label={labels.exampleLabel}
+              value={selectedLabels.example}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact label={labels.ratioLabel} value={selectedLabels.ratio} />
-          <VisualFact
-            label={labels.exampleLabel}
-            value={selectedLabels.example}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
