@@ -10,7 +10,9 @@ import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
   readRecordedLayoutShifts,
+  readRecordedSizeChanges,
   recordLayoutShifts,
+  recordSizeChanges,
 } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
@@ -52,6 +54,15 @@ const COLOR_SCHEMES = Schema.Literals(["light", "dark"]).literals;
  * that moved, so a failure names them. A fixed toaster's shifts are left out.
  */
 const LAYOUT_SHIFTS_KEY = "nakafaHomeLayoutShifts";
+
+/** The page global that holds the size changes of the sections and the lesson window's panels. */
+const SIZE_CHANGES_KEY = "nakafaHomeSizeChanges";
+
+/** The sections of the page and the panels of the lesson window, whose sizes a failure names. */
+const SIZED_ELEMENTS = "section[id], [role='tabpanel']";
+
+/** A resize within this many milliseconds of a shift is in the same frame, so it is the shift's cause to name. */
+const SHIFT_FRAME_MILLISECONDS = 50;
 
 /**
  * Scrolls the whole page one screen at a time, so every part reaches the
@@ -119,6 +130,12 @@ for (const viewport of HOME_VIEWPORTS) {
                   overlay: TOASTER,
                 })
               );
+              yield* Effect.promise(() =>
+                page.addInitScript(recordSizeChanges, {
+                  key: SIZE_CHANGES_KEY,
+                  selector: SIZED_ELEMENTS,
+                })
+              );
               yield* withObservedPageErrors(
                 page,
                 Effect.gen(function* () {
@@ -131,8 +148,13 @@ for (const viewport of HOME_VIEWPORTS) {
                     page,
                     LAYOUT_SHIFTS_KEY
                   );
+                  const resizes = yield* readRecordedSizeChanges(
+                    page,
+                    SIZE_CHANGES_KEY
+                  );
                   // The number and the failure message read the same shifts: the
-                  // ones that no press or key caused, with the elements they moved.
+                  // ones that no press or key caused, with the elements they moved
+                  // and the elements that changed size in the same frame.
                   const counted = Arr.filter(
                     shifts,
                     (shift) => !shift.hadRecentInput
@@ -140,11 +162,24 @@ for (const viewport of HOME_VIEWPORTS) {
                   const shift = Num.sumAll(
                     Arr.map(counted, ({ value }) => value)
                   );
-                  const moved = Arr.map(
-                    counted,
-                    (entry) =>
-                      `${entry.value} at ${Math.round(entry.time)} ms: ${Arr.join(entry.sources, "; ")}`
-                  );
+                  const moved = Arr.map(counted, (entry) => {
+                    const resized = Arr.filter(
+                      resizes,
+                      (resize) =>
+                        Math.abs(resize.time - entry.time) <=
+                        SHIFT_FRAME_MILLISECONDS
+                    );
+                    const sized = Arr.map(
+                      resized,
+                      (resize) =>
+                        `${resize.element} ${resize.width}x${resize.height} at ${Math.round(resize.time)} ms`
+                    );
+                    const named =
+                      sized.length === 0
+                        ? ""
+                        : `; resized: ${Arr.join(sized, ", ")}`;
+                    return `${entry.value} at ${Math.round(entry.time)} ms: ${Arr.join(entry.sources, "; ")}${named}`;
+                  });
                   expect(shift, Arr.join(moved, "\n")).toBe(0);
                   expect(MutableList.toArray(issues)).toEqual([]);
                 })
