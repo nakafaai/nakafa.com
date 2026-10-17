@@ -79,3 +79,11 @@ export const openMemoryPage = Effect.fn("NakafaE2E.openMemoryPage")(function* (
   yield* declineUsageData(page, changes);
   return changes;
 });
+
+/** The name button of one memory's row, which opens the memory in the editor. */
+export const nameOf = (page: Page, text: string) =>
+  memoryRow(page, text).locator("button").first();
+
+/** The editor on a wide screen: the panel beside the list. */
+export const panelOf = (page: Page) =>
+  page.getByRole("complementary", { name: "Edit memory" });

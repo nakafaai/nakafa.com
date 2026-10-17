@@ -21,6 +21,8 @@ const topic = (number: number) =>
   `Revision topic ${Str.padStart(2, "0")(`${number}`)}`;
 /** The memory written last, so it is the first on the list. */
 export const NEWEST = topic(MANY - 1);
+/** The memory written just before the newest, so it is the second on the list. */
+export const SECOND_NEWEST = topic(MANY - 2);
 /** The memory written just after the oldest, so it waits on the second page too. */
 export const LATE = topic(1);
 /**

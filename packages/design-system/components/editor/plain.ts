@@ -26,7 +26,7 @@ import { Lexer, Marked, type Token, type Tokens } from "marked-tiptap";
  */
 
 /** One reader for the page, whose rules no editor can change. */
-const reader = new Marked({
+export const reader = new Marked({
   extensions: [markExtension("underline"), markExtension("highlight")],
 });
 
@@ -35,7 +35,7 @@ const reader = new Marked({
  * a non-breaking space, which the editor writes for the second blank line in a
  * row and reads back as no words.
  */
-function isEmptyMarker(tokens: readonly Token[]) {
+export function isEmptyMarker(tokens: readonly Token[]) {
   return (
     Arr.length(tokens) === 1 &&
     Option.exists(
@@ -63,6 +63,24 @@ function isNumberedText({ text, tokens }: Tokens.ListItem) {
 }
 
 /**
+ * The blocks that hold the words of a list item, as the editor holds them. A
+ * numbered text is one paragraph of its own, since the editor keeps its number
+ * as the first words of the item, and any other item holds its blocks.
+ */
+export function itemTokens(item: Tokens.ListItem): readonly Token[] {
+  if (!isNumberedText(item)) {
+    return item.tokens;
+  }
+  const paragraph: Tokens.Paragraph = {
+    raw: item.text,
+    text: item.text,
+    tokens: Lexer.lexInline(item.text, reader.defaults),
+    type: "paragraph",
+  };
+  return [paragraph];
+}
+
+/**
  * What a token says as words, in the order the editor shows them. The editor
  * shows a code block, a code span and an escaped character as they are, other
  * text without the references that stand for `&`, `<` and `>`, and a divider,
@@ -81,9 +99,7 @@ function read(token: Token): string {
     ),
     Match.when({ type: "list" }, ({ items }) => join(items, " ")),
     Match.when({ type: "list_item" }, (item) =>
-      isNumberedText(item)
-        ? join(Lexer.lexInline(item.text, reader.defaults), "")
-        : join(item.tokens, " ")
+      join(itemTokens(item), isNumberedText(item) ? "" : " ")
     ),
     Match.when({ type: "blockquote" }, ({ tokens }) => join(tokens, " ")),
     Match.when({ type: "paragraph" }, ({ tokens }) =>
