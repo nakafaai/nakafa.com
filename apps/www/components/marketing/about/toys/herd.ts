@@ -7,8 +7,11 @@ const HOME_SEED = "nakafa-home";
 /** How many animals the toys beside the parts of the page take. */
 const TOY_COUNT = 17;
 
-/** How many friends stand in the crowd of the community part. */
-const CROWD_COUNT = 18;
+/**
+ * How many friends stand in the crowd of the community part. Sixteen keeps the
+ * section within the community budget that the e2e surface test states.
+ */
+const CROWD_COUNT = 16;
 
 /** Every this many friends of the crowd, one of them is typing, so a bubble of dots rises above it. */
 export const CROWD_TYPING_EVERY = 4;

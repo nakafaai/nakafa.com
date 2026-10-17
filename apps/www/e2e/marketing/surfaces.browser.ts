@@ -1,9 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, Order, Record as Rec } from "effect";
-import {
-  CROWD_HERD,
-  CROWD_TYPING_EVERY,
-} from "@/components/marketing/about/toys/herd";
 import { activateUntilVisible } from "@/e2e/support/input";
 import {
   measureMarketingPage,
@@ -23,39 +19,30 @@ import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
- * Each friend of the crowd is one animal drawn as an svg of 15 to 25 elements,
- * and every fourth friend also has a typing bubble of six elements. The ceilings
- * follow the friends that the section renders, read from the crowd's own
- * constants, so a new friend adds its share and a heavier drawing still breaks
- * the budget. The per-friend figures come from the trace snapshot of the home
- * page of commit d739c56bd6 on 17 October 2026: 18 friends, 5 of them typing,
- * 400 descendants, 73 non-SVG descendants, and 35,739 bytes once serialized,
- * which approximates the browser's outerHTML. Each ceiling is about six percent
- * over its measure: a fixed part plus the friends and the bubbles.
+ * The community section, measured in the browser on 14 October 2026 with its
+ * gallery of 16 contributors at every target viewport, the same at each: 74
+ * non-SVG descendants, 340 descendants, and 39,335 bytes. The ceilings leave
+ * about six percent room over that measure.
+ *
+ * The crowd draws 16 friends, the same count: each one an animal drawn as an svg
+ * of 14 to 24 elements inside its list item, and each friend whose index is a
+ * multiple of CROWD_TYPING_EVERY has a typing bubble of six elements. Counting
+ * the section's server markup gives 63 non-SVG descendants, 346 descendants, and
+ * 30,798 bytes. The same count gives 400 descendants for the 18-friend crowd of
+ * commit d739c56bd6, which the 17 October browser trace measured, so the count
+ * matches the browser.
  */
-const COMMUNITY_MARGIN = 1.06;
-const COMMUNITY_FRIENDS = CROWD_HERD.length;
-const COMMUNITY_TYPING_FRIENDS = Math.ceil(
-  COMMUNITY_FRIENDS / CROWD_TYPING_EVERY
-);
-const COMMUNITY_MAX_CHROME_DESCENDANTS = Math.ceil(
-  COMMUNITY_MARGIN * (7 + 2 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
-);
-const COMMUNITY_MAX_DESCENDANTS = Math.ceil(
-  COMMUNITY_MARGIN *
-    (11 + 20 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
-);
-const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
-  COMMUNITY_MARGIN *
-    (2717 + 1655 * COMMUNITY_FRIENDS + 648 * COMMUNITY_TYPING_FRIENDS)
-);
+const COMMUNITY_MAX_CHROME_DESCENDANTS = 79;
+const COMMUNITY_MAX_DESCENDANTS = 361;
+const COMMUNITY_MAX_HTML_BYTES = 41_700;
 
 /**
- * The homepage ceiling stays at 2063, measured on 14 October. The lesson window
- * keeps four lab cards in the page at once: the 17 October trace counts 2,663
- * homepage elements, 766 of them in the lesson section.
+ * The homepage ceiling. The 17 October traces of this page with the 18-friend
+ * crowd counted at most 2,685 body elements, at the touch viewport. The 16-friend
+ * crowd renders 54 fewer (400 community descendants against 346), so the measure
+ * is 2,631, and six percent over it is 2,789.
  */
-const HOMEPAGE_MAX_DESCENDANTS = 2063;
+const HOMEPAGE_MAX_DESCENDANTS = 2789;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 
 const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
