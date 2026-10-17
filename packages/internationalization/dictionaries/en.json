@@ -1088,7 +1088,7 @@
     "nina-ask": "This one still confuses me.",
     "nina-answer": "Come, let us take it apart together.",
     "nina-chat-ask": "Why is 13 wrong?",
-    "nina-chat-answer": "### 13 comes from taking m as 3\n\nThat gives $5(2) + 9/3 = 13$. The trouble is that $m = 3$ does not fit the question.\n\n#### Check it against what you know\n\n$$\n\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\n$$\n\nWith $m = 1$ it fits: $2(2) + 4/1 = 8$. So $m$ must be 1, and the answer is 19.",
+    "nina-chat-answer": "### 13 comes from taking m as 3\n\nThat gives $5(2) + 9/3 = 13$. The trouble is that $m = 3$ does not fit the question.\n\n#### Check it against what you know\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nWith $m = 1$ it fits: $2(2) + 4/1 = 8$. So $m$ must be 1, and the answer is 19.",
     "scene-label": "Three-dimensional scene of a projectile motion, a cannonball",
     "scene-title": "What is hard to picture, you can see",
     "scene-lead": "A scene from the Projectile Motion lesson.",
