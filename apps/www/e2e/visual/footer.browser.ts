@@ -4,8 +4,10 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
+import { readFooterActions } from "@/e2e/support/footer";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { VISUAL_CARD_CONTROLS } from "@/e2e/support/selector";
+import { compactViewport } from "@/e2e/support/viewport";
 import { openVisualLesson, revealLab, revealScene } from "@/e2e/support/visual";
 
 /** A visual card's controls in its card body, directly under the scene. */
@@ -90,6 +92,37 @@ const expectSceneFooterInRow = Effect.fn("NakafaE2E.expectSceneFooterInRow")(
   }
 );
 
+/**
+ * Opens a 3D scene at 200 percent text and proves its three footer actions stay
+ * inside the card that holds them. The card clips what lies beyond its edge, so
+ * an action outside the card is cut off without any error.
+ */
+const expectSceneActionsInsideCardAtLargeText = Effect.fn(
+  "NakafaE2E.expectSceneActionsInsideCardAtLargeText"
+)(function* (page: Page) {
+  yield* openVisualLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
+  const { card } = yield* revealScene(page);
+  // Browser text at 200 percent doubles the root font size, and every rem with it.
+  yield* Effect.promise(() =>
+    page.addStyleTag({ content: "html { font-size: 200% !important; }" })
+  );
+  yield* Effect.promise(() =>
+    page.evaluate(async () => {
+      await document.fonts.ready;
+    })
+  );
+  const actions = yield* Effect.promise(() =>
+    readFooterActions(card.locator('[data-slot="card-footer"] button'))
+  );
+  yield* Effect.sync(() => {
+    expect(actions).toHaveLength(3);
+    for (const action of actions) {
+      expect(action.inside).toBe(true);
+      expect(action.clipped).toBe(false);
+    }
+  });
+});
+
 for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
@@ -110,3 +143,20 @@ for (const viewport of [
     });
   });
 }
+
+test.describe("visual footer actions on the smallest phone", () => {
+  test.use({
+    viewport: { height: compactViewport.height, width: compactViewport.width },
+  });
+
+  test("keep a 3D scene's three actions inside its card at 200% text", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        expectSceneActionsInsideCardAtLargeText(page)
+      )
+    );
+  });
+});

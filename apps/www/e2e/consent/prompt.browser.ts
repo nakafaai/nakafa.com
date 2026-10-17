@@ -3,6 +3,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect } from "effect";
+import { readFooterActions } from "@/e2e/support/footer";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { compactViewport } from "@/e2e/support/viewport";
@@ -14,32 +15,6 @@ const promptOf = (page: Page) =>
 /** The actions of the prompt's footer, Decline and then Allow. */
 const actionsOf = (prompt: Locator) =>
   prompt.locator('[data-slot="card-footer"] button');
-
-/**
- * Measures each action of the prompt's footer: its label, whether the label is
- * cut off, whether the action lies inside the card that holds it, and its top
- * edge, so a test can tell whether the two actions share a row.
- */
-const measureActions = (prompt: Locator) =>
-  actionsOf(prompt).evaluateAll((elements) =>
-    elements.map((element) => {
-      const card = element
-        .closest('[data-slot="card"]')
-        ?.getBoundingClientRect();
-      const box = element.getBoundingClientRect();
-      return {
-        clipped: element.scrollWidth > element.clientWidth,
-        inside:
-          card !== undefined &&
-          box.left >= card.left &&
-          box.right <= card.right &&
-          box.top >= card.top &&
-          box.bottom <= card.bottom,
-        label: element.textContent?.trim() ?? "",
-        top: box.top,
-      };
-    })
-  );
 
 /** Waits for the prompt of a first visit, and for the page's fonts to load. */
 const openFirstVisit = Effect.fn("NakafaE2E.openUsageDataPrompt")(function* (
@@ -75,7 +50,9 @@ const verifyActionsAtLargeText = Effect.fn(
   const rootSize = yield* Effect.promise(() =>
     page.evaluate(() => getComputedStyle(document.documentElement).fontSize)
   );
-  const actions = yield* Effect.promise(() => measureActions(prompt));
+  const actions = yield* Effect.promise(() =>
+    readFooterActions(actionsOf(prompt))
+  );
 
   yield* Effect.sync(() => {
     expect(rootSize).toBe("32px");
@@ -108,7 +85,9 @@ const verifyActionsOnOneRow = Effect.fn(
   "NakafaE2E.verifyUsageDataActionsOnOneRow"
 )(function* (page: Page) {
   const prompt = yield* openFirstVisit(page);
-  const actions = yield* Effect.promise(() => measureActions(prompt));
+  const actions = yield* Effect.promise(() =>
+    readFooterActions(actionsOf(prompt))
+  );
 
   yield* Effect.sync(() => {
     expect(Arr.map(actions, ({ label }) => label)).toEqual([
