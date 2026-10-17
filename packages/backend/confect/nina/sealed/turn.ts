@@ -15,6 +15,8 @@ import {
   openMessage,
   sealMessage,
 } from "@repo/backend/confect/nina/sealed";
+import { storedBytes } from "@repo/backend/confect/nina/sealed/bytes";
+import type { NinaSealHold } from "@repo/backend/confect/nina/turns.spec";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { parse } from "convex-helpers/validators";
 import { Array as Arr, Clock, Effect, Order, Schema, Struct } from "effect";
@@ -22,6 +24,8 @@ import { Array as Arr, Clock, Effect, Order, Schema, Struct } from "effect";
 /** A settled turn, as the seal reads it. */
 type SettledTurn = Extract<NinaTurnsDoc, { phase: "settled" }>;
 type LearnerKeys = Effect.Success<ReturnType<typeof ensureLearnerKeys>>;
+/** Why the seal skips a turn on purpose: the turn is then never sealed by the sweep. */
+type SealHold = typeof NinaSealHold.Type;
 
 /**
  * The seal could not write the sealed rows at the steps it named. The whole seal
@@ -45,12 +49,15 @@ type PlacedRow = Effect.Success<ReturnType<typeof placeRows>>[number];
  * Reads the rows that a turn wrote above its prompt, opened for its learner. The
  * thread is read newest first from the prompt, `TURN_PAGE` rows at a time. The read
  * stops at the prompt, which is the lowest row of the turn, so no row of an older
- * turn is kept.
+ * turn is kept. Every page the read takes counts its rows once, and every row the
+ * seal will delete counts twice: the component reads it to delete it and writes it
+ * away (`cost`).
  */
 const readTurnRows = Effect.fn("nina.sealed.turn.rows")(function* (
   ctx: MutationCtx,
   turn: SettledTurn,
-  keys: LearnerKeys
+  keys: LearnerKeys,
+  cost: { bytes: number }
 ) {
   let rows: readonly MessageDoc[] = [];
   let cursor: string | null = null;
@@ -64,10 +71,12 @@ const readTurnRows = Effect.fn("nina.sealed.turn.rows")(function* (
         upToAndIncludingMessageId: turn.promptMessageId,
       })
     );
+    cost.bytes += storedBytes(page.page);
     const own = Arr.filter(
       page.page,
       (row) => row.order === turn.order && row._id !== turn.promptMessageId
     );
+    cost.bytes += 2 * storedBytes(own);
     const opened = yield* Effect.forEach(own, (row) =>
       openMessage(keys, identityOf(row), row)
     ).pipe(Effect.orDie);
@@ -80,11 +89,7 @@ const readTurnRows = Effect.fn("nina.sealed.turn.rows")(function* (
   return rows;
 });
 
-/**
- * Seals each row of a turn for the step it takes once written. The component numbers
- * the rows of one write from the step after the prompt, so the rows take 1, 2, 3, and
- * so on in the order they had. Sealed content opens only for that place (ADR 0024).
- */
+/** Seals each row of a turn for the step it takes once written, with its agent (ADR 0024). */
 const placeRows = Effect.fn("nina.sealed.turn.place")(function* (
   turn: SettledTurn,
   keys: LearnerKeys,
@@ -144,13 +149,35 @@ const writeRuns = Effect.fn("nina.sealed.turn.write")(function* (
 });
 
 /**
+ * Marks a settled turn that the seal skips on purpose, so the sweep never takes it
+ * again. Its plain rows stay readable. Returns the bytes of the write.
+ */
+const hold = Effect.fn("nina.sealed.turn.hold")(function* (
+  turn: SettledTurn,
+  reason: SealHold
+) {
+  const held = { ...turn, sealHold: reason };
+  yield* (yield* DatabaseWriter)
+    .table("ninaTurns")
+    .replace(turn._id, held)
+    .pipe(Effect.orDie);
+  return storedBytes(held);
+});
+
+/**
  * Seals the rows of one settled turn and deletes the deltas of its streams (ADR
  * 0024). Its assistant and tool rows are deleted and written again sealed, at the
  * steps they take now, with the same order, and the turn records `sealedAt` in the
- * same transaction. The deltas go page by page. A turn that is not settled, that
- * already carries `sealedAt`, whose chat is gone, or whose learner's account is
- * deleted is left alone, so a retry or a late sweep does no harm. The prompt is not
- * written again, because the admission sealed it (`sealed/save.ts`).
+ * same transaction. The deltas go page by page. A turn that is not settled, or that
+ * already carries `sealedAt`, is left alone, so a retry does no harm. A turn whose
+ * chat or learner is gone, or whose prompt is not at its order, is marked with a
+ * `sealHold`, so the sweep never takes it again. The prompt is not written again,
+ * because the admission sealed it (`sealed/save.ts`).
+ *
+ * Returns the bytes the seal read and wrote: every document it reads at its stored
+ * size, every row it deletes twice, and every row it writes once (`sealed/bytes.ts`).
+ * The keys of the learner, the deltas it deletes later and the component's index
+ * entries are not counted.
  */
 export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
   turnId: Docs["ninaTurns"]["_id"]
@@ -158,6 +185,7 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const ctx = yield* MutationCtx;
+  const cost = { bytes: 0 };
   const turn = yield* reader
     .table("ninaTurns")
     .get(turnId)
@@ -165,8 +193,9 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
       Effect.orDie
     );
+  cost.bytes += storedBytes(turn);
   if (turn?.phase !== "settled" || turn.sealedAt !== undefined) {
-    return null;
+    return cost.bytes;
   }
   const chat = yield* reader
     .table("chats")
@@ -175,6 +204,10 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
       Effect.orDie
     );
+  cost.bytes += storedBytes(chat);
+  if (!chat) {
+    return cost.bytes + (yield* hold(turn, "chatDeleted"));
+  }
   const user = yield* reader
     .table("users")
     .get(turn.userId)
@@ -182,8 +215,9 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
       Effect.orDie
     );
-  if (!(chat && user) || user.deletedAt !== undefined) {
-    return null;
+  cost.bytes += storedBytes(user);
+  if (!user || user.deletedAt !== undefined) {
+    return cost.bytes + (yield* hold(turn, "accountDeleted"));
   }
   const keys = yield* ensureLearnerKeys(turn.userId).pipe(Effect.orDie);
   // The prompt keeps its order in the clear, so the seal checks its place and does not
@@ -193,8 +227,9 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
       messageIds: [turn.promptMessageId],
     })
   );
+  cost.bytes += storedBytes(prompt);
   if (prompt?.order !== turn.order) {
-    return null;
+    return cost.bytes + (yield* hold(turn, "promptMissing"));
   }
   // A run that still streams at this order is stopped first, as a settlement stops
   // it, so no delta is written after the streams are read.
@@ -205,17 +240,16 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
       threadId: turn.threadId,
     })
   );
-  const streams = Arr.filter(
-    yield* Effect.promise(() =>
-      listStreams(ctx, components.nina, {
-        includeStatuses: ["streaming", "finished", "aborted"],
-        startOrder: turn.order,
-        threadId: turn.threadId,
-      })
-    ),
-    (stream) => stream.order === turn.order
+  const listed = yield* Effect.promise(() =>
+    listStreams(ctx, components.nina, {
+      includeStatuses: ["streaming", "finished", "aborted"],
+      startOrder: turn.order,
+      threadId: turn.threadId,
+    })
   );
-  const rows = yield* readTurnRows(ctx, turn, keys);
+  cost.bytes += storedBytes(listed);
+  const streams = Arr.filter(listed, (stream) => stream.order === turn.order);
+  const rows = yield* readTurnRows(ctx, turn, keys, cost);
   const placed = yield* placeRows(turn, keys, rows);
   if (Arr.isReadonlyArrayNonEmpty(rows)) {
     yield* Effect.promise(() =>
@@ -225,6 +259,7 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
     );
   }
   const written = yield* writeRuns(ctx, turn, placed);
+  cost.bytes += storedBytes(written);
   const sameSteps =
     written.length === placed.length &&
     Arr.every(
@@ -244,12 +279,11 @@ export const sealTurn = Effect.fn("nina.sealed.turn")(function* (
       ),
     { discard: true }
   );
-  yield* writer
-    .table("ninaTurns")
-    .replace(turn._id, {
-      ...turn,
-      sealedAt: yield* Clock.currentTimeMillis,
-    })
-    .pipe(Effect.orDie);
-  return null;
+  const sealed = {
+    ...turn,
+    sealedAt: yield* Clock.currentTimeMillis,
+  };
+  yield* writer.table("ninaTurns").replace(turn._id, sealed).pipe(Effect.orDie);
+  cost.bytes += storedBytes(sealed);
+  return cost.bytes;
 });

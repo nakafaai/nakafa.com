@@ -13,6 +13,22 @@ export class SealedReadError extends Schema.TaggedError<SealedReadError>()(
 /** The message statuses the component's list filters by. */
 const ListedStatus = Schema.Literals(["failed", "pending", "success"]);
 
+/** What one seal cost: the bytes its reads and writes counted (ADR 0024). */
+const SealCost = Schema.Struct({ bytes: Schema.Finite });
+
+/** One page of the settled turns that the sweep may still seal, oldest first. */
+const SealCandidates = Schema.Struct({
+  continueCursor: Schema.String,
+  ids: Schema.Array(Id("ninaTurns")),
+  isDone: Schema.Boolean,
+});
+
+/** What a failed seal left on its turn: the failures so far, and whether the sweep now holds it. */
+const SealFailure = Schema.Struct({
+  attempts: Schema.Int,
+  held: Schema.Boolean,
+});
+
 /** The arguments of one read of a thread's messages, newest first, with the owner whose key opens them. */
 export const ThreadArgs = Schema.Struct({
   excludeToolMessages: Schema.optionalKey(Schema.Boolean),
@@ -54,11 +70,39 @@ export default GroupSpec.make()
       error: () => Schema.Union([SealedReadError, VaultError]),
     })
   )
-  // Seals the rows of one settled turn (ADR 0024). Settlement and the sweep schedule it.
+  // Seals the rows of one settled turn (ADR 0024). Settlement and the drain schedule it.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "seal",
       args: () => ({ turnId: Id("ninaTurns") }),
+      returns: () => SealCost,
+    })
+  )
+  // Seals the settled turns that still hold plain rows, oldest first, within a byte
+  // budget. The sweep schedules it once a run (`sealed/drain.ts`).
+  .addFunction(
+    FunctionSpec.internalAction({
+      name: "drain",
+      args: () => ({ budget: Schema.Finite }),
       returns: () => Schema.Null,
+    })
+  )
+  // One page of the turns the drain may still seal, oldest first.
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "candidates",
+      args: () => ({
+        cursor: Schema.NullOr(Schema.String),
+        numItems: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+      }),
+      returns: () => SealCandidates,
+    })
+  )
+  // Counts one failed seal on its turn, and holds the turn once it has failed `SEAL_TRIES` times.
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "recordFailure",
+      args: () => ({ turnId: Id("ninaTurns") }),
+      returns: () => Schema.NullOr(SealFailure),
     })
   );

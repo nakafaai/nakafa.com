@@ -5,34 +5,31 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
-import {
-  createConvexTestWithBetterAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
 import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
-import {
-  createNinaTest,
-  ninaStream,
-  ninaToolInput,
-  ninaUsage,
-} from "@repo/backend/test/nina";
+import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
 import { contextFor } from "@repo/backend/test/nina/admission";
+import {
+  askedIn,
+  NOW,
+  PLANTED,
+  plantedIn,
+  plantedModel,
+} from "@repo/backend/test/nina/planted";
 import {
   earlierTurnIn,
   sealThreadIn,
   withoutRowIds,
 } from "@repo/backend/test/nina/seal";
 import { readThreadIn } from "@repo/backend/test/nina/sealed";
-import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
+import { storedRowsIn } from "@repo/backend/test/nina/stored";
 import {
   attachment,
   readyFileIdIn,
   saved,
 } from "@repo/backend/test/nina/uploads";
-import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
-import { Array as Arr, Effect, Record } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -53,117 +50,10 @@ vi.mock("@repo/backend/confect/vault/keys", async (importOriginal) => {
   return { ...actual, readLearnerKeys: vi.fn(actual.readLearnerKeys) };
 });
 
-const NOW = Date.UTC(2026, 8, 27, 12);
-
-/**
- * One text for each place the seal must keep out of the component tables: the
- * learner's message, the reasoning, the answer, a tool input, a tool output and a
- * source (ADR 0024), and the name of the learner's file. Each one is unique, so a
- * search finds only its own place.
- */
-const PLANTED = {
-  answer: "planted-answer-5c1e",
-  file: "planted-file-4a8c",
-  input: "planted-tool-input-3b9d",
-  output: "planted-tool-output-8a2f",
-  prompt: "planted-prompt-0e7a",
-  reasoning: "planted-reasoning-6d4c",
-  source: "planted-source-9f21",
-};
-
-const start = Ref.getFunctionReference(refs.public.nina.turns.start);
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const seal = Ref.getFunctionReference(refs.internal.nina.sealed.seal);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const readChat = Ref.getFunctionReference(refs.public.nina.messages.page);
-
-/** The planted texts that a stored value holds, in the order of `PLANTED`. */
-function plantedIn(value: unknown) {
-  const text = storedTextOf(value);
-  return Arr.filter(Record.values(PLANTED), (planted) =>
-    text.includes(planted)
-  );
-}
-
-/**
- * A model that calls the `nakafa` tool with a planted input, then answers with
- * planted reasoning, a planted answer and a planted source.
- */
-function plantedModel() {
-  return new MockLanguageModelV4({
-    doStream: [
-      ninaStream([
-        { type: "stream-start", warnings: [] },
-        {
-          type: "tool-call",
-          toolCallId: "read-1",
-          toolName: "nakafa",
-          input: encodeJsonText({ ...ninaToolInput, request: PLANTED.input }),
-        },
-        {
-          type: "finish",
-          usage: ninaUsage,
-          finishReason: { unified: "tool-calls", raw: "tool-calls" },
-        },
-      ]),
-      ninaStream([
-        { type: "stream-start", warnings: [] },
-        { type: "reasoning-start", id: "reason" },
-        { type: "reasoning-delta", id: "reason", delta: PLANTED.reasoning },
-        { type: "reasoning-end", id: "reason" },
-        { type: "text-start", id: "answer" },
-        { type: "text-delta", id: "answer", delta: PLANTED.answer },
-        { type: "text-end", id: "answer" },
-        {
-          type: "source",
-          sourceType: "url",
-          id: "source-1",
-          url: `https://example.com/${PLANTED.source}`,
-          title: PLANTED.source,
-        },
-        {
-          type: "finish",
-          usage: ninaUsage,
-          finishReason: { unified: "stop", raw: "stop" },
-        },
-      ]),
-    ],
-  });
-}
-
-/**
- * A learner who asks one question through `turns.start`, the admission a learner
- * uses, so the question is sealed as it is in production. The receipt names the
- * chat, the thread, the turn and the prompt.
- */
-async function askedIn(text: string) {
-  const t = createConvexTestWithBetterAuth();
-  const identity = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, { now: NOW, credits: 10 })
-  );
-  const owner = t.withIdentity({
-    subject: identity.authUserId,
-    sessionId: identity.sessionId,
-  });
-  const receipt = Ref.decodeReturnsSync(
-    refs.public.nina.turns.start,
-    await owner.mutation(start, {
-      input: {
-        kind: "message",
-        page: { locale: "en", slug: "home" },
-        prompt: { text },
-      },
-      requestId: "seal-request",
-    })
-  );
-  const turn = () => t.query((ctx) => ctx.db.get("ninaTurns", receipt.turnId));
-  /** When the seal ran, or undefined while the turn is open or still plain. */
-  const sealedAt = async () => {
-    const found = await turn();
-    return found?.phase === "settled" ? found.sealedAt : undefined;
-  };
-  return { owner, receipt, sealedAt, t, turn, userId: identity.userId };
-}
 
 /**
  * Seals the settled turn of a fixture whose component stores the seal's rows as
@@ -365,7 +255,7 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.sealedAt()).toBe(sealedAt);
   });
 
-  it("leaves a turn alone whose chat was deleted before its seal ran", async () => {
+  it("holds a turn whose chat was deleted before its seal ran, and leaves its plain rows", async () => {
     provider.languageModel.mockReturnValue(plantedModel());
     vi.mocked(runNakafaAgent).mockImplementation(() =>
       Effect.succeed({ text: PLANTED.output })
@@ -375,6 +265,9 @@ describe("Sealing a settled Nina turn", () => {
     await f.t.mutation((ctx) => ctx.db.delete("chats", f.receipt.chatId));
     await f.t.finishAllScheduledFunctions(() => undefined);
 
+    expect(await f.turn()).toMatchObject({
+      sealHold: "chatDeleted",
+    });
     expect(await f.sealedAt()).toBeUndefined();
     const stored = await storedRowsIn(f.t, f.receipt.threadId, []);
     expect(plantedIn(stored)).toEqual(
@@ -382,7 +275,7 @@ describe("Sealing a settled Nina turn", () => {
     );
   });
 
-  it("leaves a turn alone whose learner's account was deleted", async () => {
+  it("holds a turn whose learner's account was deleted, and leaves its plain rows", async () => {
     const f = await askedIn(PLANTED.prompt);
     await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
     await f.t.mutation((ctx) =>
@@ -390,6 +283,7 @@ describe("Sealing a settled Nina turn", () => {
     );
     await f.t.finishAllScheduledFunctions(() => undefined);
 
+    expect(await f.turn()).toMatchObject({ sealHold: "accountDeleted" });
     expect(await f.sealedAt()).toBeUndefined();
   });
 
@@ -427,7 +321,7 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.turn()).toBeNull();
   });
 
-  it("leaves a turn alone whose prompt is gone", async () => {
+  it("holds a turn whose prompt is gone", async () => {
     const f = await askedIn(PLANTED.prompt);
     await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
     await f.t.mutation((ctx) =>
@@ -438,16 +332,60 @@ describe("Sealing a settled Nina turn", () => {
 
     await f.t.mutation(seal, { turnId: f.receipt.turnId });
 
+    expect(await f.turn()).toMatchObject({ sealHold: "promptMissing" });
     expect(await f.sealedAt()).toBeUndefined();
   });
 
-  it("leaves a turn alone whose learner's account is gone", async () => {
+  it("holds a turn whose learner's account is gone", async () => {
     const f = await askedIn(PLANTED.prompt);
     await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
     await f.t.mutation((ctx) => ctx.db.delete("users", f.userId));
     await f.t.finishAllScheduledFunctions(() => undefined);
 
+    expect(await f.turn()).toMatchObject({ sealHold: "accountDeleted" });
     expect(await f.sealedAt()).toBeUndefined();
+  });
+
+  it("leaves a turn alone that is still running", async () => {
+    const f = await askedIn(PLANTED.prompt);
+
+    const cost = await f.t.mutation(seal, { turnId: f.receipt.turnId });
+
+    expect(await f.turn()).toMatchObject({ phase: "active" });
+    expect(await f.sealedAt()).toBeUndefined();
+    expect(cost.bytes).toBeGreaterThan(0);
+  });
+
+  it("seals a turn that wrote no rows above its prompt", async () => {
+    const f = await createNinaTest({ history: [{ steps: 0 }], now: NOW });
+    const turn = await earlierTurnIn(f.t);
+    const stored = await storedRowsIn(f.t, f.threadId, []);
+    const above = Arr.filter(
+      stored.messages.page,
+      (row) => row._id !== turn.promptMessageId
+    );
+    await f.t.mutation((ctx) =>
+      ctx.runMutation(components.nina.messages.deleteByIds, {
+        messageIds: Arr.map(above, (row) => row._id),
+      })
+    );
+
+    await f.t.mutation(seal, { turnId: turn._id });
+
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))
+    ).toMatchObject({ sealedAt: expect.any(Number) });
+  });
+
+  it("counts the bytes it reads and writes, and a sealed turn counts only its own document", async () => {
+    const f = await createNinaTest({ history: [{ steps: 2 }], now: NOW });
+    const earlier = await earlierTurnIn(f.t);
+
+    const first = await f.t.mutation(seal, { turnId: earlier._id });
+    const again = await f.t.mutation(seal, { turnId: earlier._id });
+
+    expect(first.bytes).toBeGreaterThan(again.bytes);
+    expect(again.bytes).toBeGreaterThan(0);
   });
 
   it("writes nothing when the component stores fewer rows than the seal wrote", () =>

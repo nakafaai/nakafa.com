@@ -77,6 +77,11 @@ const NinaActiveTurn = Schema.Struct({
   ...NinaCreditHold.fields,
   phase: Schema.Literal("active"),
   requestId: NinaRequestId,
+  /**
+   * A keyed hash of the request, under the learner's key (`nina/fingerprint.ts`).
+   * A stored value confirms no guessed message, and a fingerprint written before
+   * the key was used never matches a new one (ADR 0024).
+   */
   fingerprint: Schema.String,
   page: NinaPageSchema,
   user: NinaUserSchema,
@@ -84,16 +89,36 @@ const NinaActiveTurn = Schema.Struct({
   cancelRequestedAt: Schema.optionalKey(Schema.Finite),
 });
 
+/**
+ * Why the sweep never takes a settled turn again. The seal skipped the turn on
+ * purpose, because its chat, its learner or its prompt is gone, or the seal failed
+ * `SEAL_TRIES` times. Such a turn keeps its plain rows, which stay readable.
+ */
+export const NinaSealHold = Schema.Literals([
+  "accountDeleted",
+  "chatDeleted",
+  "failedAttempts",
+  "promptMissing",
+]);
+
 export const NinaSettledTurn = Schema.Struct({
   ...NinaTurnFacts.fields,
   phase: Schema.Literal("settled"),
   state: Schema.Union([NinaCompleteState, NinaFailedState, NinaCancelledState]),
   /**
    * When the turn's rows were sealed (ADR 0024). A settled turn without it still
-   * holds plain rows, and the sweep seals it, oldest first, `SEAL_TURNS_PER_SWEEP`
-   * turns a run (`sweep.ts`). Turns settled before sealing have none.
+   * holds plain rows, and the sweep seals it, oldest first, within the byte budget
+   * of a run (`sealed/drain.ts`). Turns settled before sealing have none.
    */
   sealedAt: Schema.optionalKey(Schema.Finite),
+  /** How many seals of this turn failed. The sweep holds the turn after `SEAL_TRIES`. */
+  sealAttempts: Schema.optionalKey(
+    Schema.Int.check(Schema.isGreaterThanOrEqualTo(1))
+  ),
+  /** When the last seal of this turn failed. */
+  sealFailedAt: Schema.optionalKey(Schema.Finite),
+  /** Why the sweep never takes this turn again (`NinaSealHold`). */
+  sealHold: Schema.optionalKey(NinaSealHold),
 });
 
 export const NinaTurn = Schema.Union([NinaActiveTurn, NinaSettledTurn]);
