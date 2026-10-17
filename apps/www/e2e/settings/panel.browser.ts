@@ -233,8 +233,8 @@ test.describe("Memory editor at the width where it changes layout", () => {
  * search is whole, the search keeps no slot for a clear button while it is
  * empty and gives one back with the first letter, and the button that adds a
  * memory is beside it inside the card. The explanation and the button of the
- * card that deletes every memory wrap, so that the button stays in the card and
- * the text keeps lines of a readable length.
+ * card that deletes every memory share one row, so the button stays beside the
+ * text in the card, and the text keeps at most three lines.
  */
 const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
   page: Page,
@@ -286,7 +286,7 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
     expect((add?.x ?? 0) + (add?.width ?? 0)).toBeLessThanOrEqual(
       (list?.x ?? 0) + (list?.width ?? 0)
     );
-    // The button is inside its card, and below the text when the line is full.
+    // The button is inside its card, and beside the text on the same row.
     expect(card).not.toBeNull();
     expect(button).not.toBeNull();
     expect(explanation).not.toBeNull();
@@ -294,7 +294,10 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
       (card?.x ?? 0) + (card?.width ?? 0)
     );
     expect(explanation?.height ?? 0).toBeLessThanOrEqual(LINES * LINE_HEIGHT);
-    expect(button?.y ?? 0).toBeGreaterThanOrEqual(
+    expect(
+      (explanation?.x ?? 0) + (explanation?.width ?? 0)
+    ).toBeLessThanOrEqual(button?.x ?? 0);
+    expect(button?.y ?? 0).toBeLessThan(
       (explanation?.y ?? 0) + (explanation?.height ?? 0)
     );
   });
