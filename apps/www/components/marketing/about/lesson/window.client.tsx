@@ -95,9 +95,10 @@ export function LessonWindow({
             </TabsTab>
           ))}
         </TabsList>
+        {/* The panel's cards are never skipped by content-visibility: a skipped card takes a fallback height until it is first drawn, so the window would change height when the reader reaches it. */}
         <div
           aria-labelledby={tabId(windowId, lesson)}
-          className="grid content-start gap-6"
+          className="grid content-start gap-6 [&_.content-auto-card]:[content-visibility:visible]!"
           id={panelId(windowId, lesson)}
           role="tabpanel"
         >
