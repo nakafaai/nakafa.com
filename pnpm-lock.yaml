@@ -393,9 +393,6 @@ importers:
       server-only:
         specifier: 'catalog:'
         version: 0.0.1
-      sonner:
-        specifier: 'catalog:'
-        version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       takumi-js:
         specifier: ^2.16.2
         version: 2.16.2(csstype@3.2.3)(preact@10.29.8)(react@19.3.1)
