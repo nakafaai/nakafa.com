@@ -4,7 +4,6 @@ import {
   ScrollBar,
 } from "@repo/design-system/components/ui/scroll-area";
 import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
-import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import katex from "katex";
 import type { HTMLAttributes } from "react";
@@ -122,40 +121,25 @@ export function BlockMath({
 }
 
 /**
- * How an inline formula sits in a line of text. KaTeX breaks a formula only
- * after a relation or a binary operator on its outer level, so a piece that
- * cannot break can be wider than the column. `scroll` puts the formula in a
- * box that is no wider than the column: a formula that can break wraps inside
- * it, and one that cannot scrolls sideways. A formula wider than the column
- * fills a line of its own, and the text after it goes on below.
- *
- * The box scrolls natively, with the thin scrollbar of the global styles,
- * because a `ScrollArea` is made of divs, which a paragraph cannot hold. It
- * is `inline-flex` because an `inline-block` with `overflow` takes its bottom
- * edge as its baseline and drops the formula off the text. Its padding and
- * negative margin cancel for layout and leave room for the ink that sticks out
- * of a formula's box, such as the tail of a root, which `overflow` would clip.
- */
-const inlineMathVariants = cva("", {
-  variants: {
-    overflow: {
-      scroll:
-        "-m-1 inline-flex max-w-full overflow-x-auto overflow-y-hidden p-1",
-      visible: "",
-    },
-  },
-  defaultVariants: { overflow: "visible" },
-});
-
-/**
  * Renders one inline KaTeX expression.
+ *
+ * KaTeX cuts the formula after each relation and binary operator on its outer
+ * level, and each piece is one `.katex-base`. The pieces are the boxes of the
+ * line, so the text after a formula continues after its last piece. A piece
+ * wider than the column scrolls sideways in its own box, which is `inline-flex`
+ * because an `inline-block` with `overflow` takes its bottom edge as its
+ * baseline. The padding and the negative margin cancel for layout and leave the
+ * ink of a root or an underbrace room, which `overflow` would otherwise clip.
+ * The strut KaTeX puts in each piece to hold the formula's height and depth is
+ * taken out of flow, so a piece keeps the baseline and the line height of the
+ * text around it.
  */
-export function InlineMath({
-  overflow,
-  ...props
-}: MathComponentProps & VariantProps<typeof inlineMathVariants>) {
+export function InlineMath(props: MathComponentProps) {
   return (
-    <span className={inlineMathVariants({ overflow })} data-markdown-ignore="">
+    <span
+      className="[&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base>.katex-strut]:absolute [&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:max-w-full [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1"
+      data-markdown-ignore=""
+    >
       <KatexMarkup displayMode={false} {...props} />
     </span>
   );
