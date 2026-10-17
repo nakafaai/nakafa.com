@@ -1,4 +1,5 @@
-import { Array as Arr, DateTime, Option, Schema } from "effect";
+import { namedTimeZone } from "@repo/utilities/timezone";
+import { Array as Arr, Option, Schema } from "effect";
 
 /**
  * A contract currency: three uppercase letters, as ISO 4217 writes them. This
@@ -33,14 +34,12 @@ export const TimeZone = Schema.String.check(
 );
 
 /**
- * A time zone that a school may be given: an IANA identifier that Effect's
- * `DateTime` parses as a named zone. A fixed offset such as `+07:00` is not
- * an IANA zone, so it is refused.
+ * A time zone that a school may be given: an IANA identifier that the platform
+ * knows as a named zone. A fixed offset such as `+07:00` is not an IANA zone,
+ * so it is refused.
  */
 export const NewTimeZone = TimeZone.check(
   Schema.makeFilter(
-    (id) =>
-      Option.exists(DateTime.zoneFromString(id), DateTime.isTimeZoneNamed) ||
-      "This is not an IANA time zone."
+    (id) => Option.isSome(namedTimeZone(id)) || "This is not an IANA time zone."
   )
 );
