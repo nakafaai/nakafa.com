@@ -10,11 +10,13 @@ import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
   readRecordedLayoutShifts,
-  readRecordedSizeChanges,
   recordLayoutShifts,
-  recordSizeChanges,
 } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import {
+  readRecordedSizeChanges,
+  recordSizeChanges,
+} from "@/e2e/support/resize";
 import { openRoute } from "@/e2e/support/route";
 import { TOASTER } from "@/e2e/support/selector";
 import {
