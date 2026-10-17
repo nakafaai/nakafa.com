@@ -8,8 +8,8 @@ import {
 } from "@repo/design-system/components/ui/stepper";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -37,7 +37,7 @@ export function Stage({ title, labels }: Props) {
     <VisualCard className="mb-4">
       <VisualCardHeader title={title} />
       <VisualCardBody>
-        <Stepper defaultValue={2}>
+        <Stepper className="p-(--card-spacing)" defaultValue={2}>
           {Arr.map(stages, (stage) => (
             <StepperItem
               className="relative flex-1 flex-col!"
@@ -57,9 +57,9 @@ export function Stage({ title, labels }: Props) {
           ))}
         </Stepper>
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }
