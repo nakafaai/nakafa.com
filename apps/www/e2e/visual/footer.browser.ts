@@ -10,92 +10,112 @@ import { VISUAL_CARD_TOOLBAR } from "@/e2e/support/selector";
 import { compactViewport } from "@/e2e/support/viewport";
 import { openVisualLesson, revealLab, revealScene } from "@/e2e/support/visual";
 
-/** A visual card's controls in its card body, directly under the scene. */
-const BODY_CONTROLS = `[data-slot="card-content"] > ${VISUAL_CARD_TOOLBAR}`;
+/** The bands a visual card may hold, in the only order it holds them. */
+const BAND_ORDER = [
+  "card-header",
+  "visual-card-toolbar",
+  "visual-card-body",
+  "visual-card-actions",
+  "visual-card-footer",
+];
 
 /**
- * Reads a visual card's footer as one band of the page. The band runs from the
- * lowest top to the highest bottom of the boxes of the footer's visible children
- * and of its buttons, so a button stacked under another leaves no common band.
- * An absolutely positioned child, such as a screen reader status, is not part
- * of the row. The right edge is that of the last visible child.
+ * Reads the slots of a visual card's bands in their order in the page, and
+ * whether the body holds anything but the visual: a button, a field, a table
+ * or a list of readouts.
  */
-function readFooterRow(footer: Locator) {
-  return footer.evaluate((element) => {
-    const children = Array.from(element.children).filter(
-      (child) => getComputedStyle(child).position !== "absolute"
-    );
-    const buttons = Array.from(element.querySelectorAll("button"));
-    const boxes = [...children, ...buttons].map((node) =>
-      node.getBoundingClientRect()
-    );
-    const last = children.at(-1)?.getBoundingClientRect();
-    const padding = Number.parseFloat(getComputedStyle(element).paddingRight);
-    return {
-      bandBottom: Math.min(...boxes.map((box) => box.bottom)),
-      bandTop: Math.max(...boxes.map((box) => box.top)),
-      boxCount: boxes.length,
-      contentRight: element.getBoundingClientRect().right - padding,
-      lastRight: last?.right ?? 0,
-    };
-  });
+function readBands(card: Locator) {
+  return card.evaluate((element) => ({
+    bodyControls: element.querySelectorAll(
+      '[data-slot="visual-card-body"] :is(button, input, select, textarea, table, dl)'
+    ).length,
+    slots: Array.from(element.children, (child) =>
+      child.getAttribute("data-slot")
+    ),
+  }));
 }
 
 /**
- * Proves a visual card's footer is one row. Every child and every button must
- * share one band of the page, so a button stacked under another fails even
- * when the actions are a single group. The last child, the actions, ends at the
- * footer's right padding.
+ * Proves a visual card is composed of its bands in order, with the visual alone
+ * in its body: controls above it, actions and readouts under it.
  */
-const expectFooterRow = Effect.fn("NakafaE2E.expectVisualFooterRow")(function* (
-  card: Locator
-) {
-  const row = yield* Effect.promise(() =>
-    readFooterRow(card.locator('[data-slot="card-footer"]'))
+const expectBandsInOrder = Effect.fn("NakafaE2E.expectVisualBandsInOrder")(
+  function* (card: Locator) {
+    const bands = yield* Effect.promise(() => readBands(card));
+    yield* Effect.sync(() => {
+      const known = bands.slots.filter(
+        (slot): slot is string => slot !== null && BAND_ORDER.includes(slot)
+      );
+      expect(known).toContain("visual-card-body");
+      expect(known).toEqual(
+        [...known].sort(
+          (left, right) => BAND_ORDER.indexOf(left) - BAND_ORDER.indexOf(right)
+        )
+      );
+      expect(bands.bodyControls).toBe(0);
+    });
+  }
+);
+
+/**
+ * Proves the full screen action ends a visual card's actions band, at the
+ * band's right padding.
+ */
+const expectFullscreenEndsActions = Effect.fn(
+  "NakafaE2E.expectFullscreenEndsActions"
+)(function* (card: Locator) {
+  const actions = card.locator('[data-slot="visual-card-actions"]');
+  const end = yield* Effect.promise(() =>
+    actions.evaluate((element) => {
+      const buttons = element.querySelectorAll("button");
+      const last = buttons[buttons.length - 1]?.getBoundingClientRect();
+      const padding = Number.parseFloat(getComputedStyle(element).paddingRight);
+      return {
+        lastRight: last?.right ?? 0,
+        right: element.getBoundingClientRect().right - padding,
+      };
+    })
   );
-  yield* Effect.sync(() => {
-    expect(row.boxCount).toBeGreaterThan(0);
-    expect(row.bandTop).toBeLessThan(row.bandBottom);
-    expect(Math.abs(row.lastRight - row.contentRight)).toBeLessThan(1);
-  });
+  yield* Effect.promise(() =>
+    expect(
+      actions.getByRole("button", { name: en.Common.fullscreen }).last()
+    ).toBeVisible()
+  );
+  yield* Effect.sync(() =>
+    expect(Math.abs(end.lastRight - end.right)).toBeLessThan(1)
+  );
 });
 
 /**
- * Opens the animated lab and proves its footer is one row, and that its
- * controls sit in the card body rather than after it.
+ * Opens the animated lab and proves its bands are in order, its controls in
+ * the toolbar above the visual, and its full screen action at the end.
  */
-const expectLabFooterInRow = Effect.fn("NakafaE2E.expectLabFooterInRow")(
-  function* (page: Page) {
-    yield* openVisualLesson(
-      page,
-      pinnedRoutes.exponent.en,
-      en.Common.fullscreen
-    );
-    const card = yield* revealLab(page);
-    yield* expectFooterRow(card);
-    yield* Effect.promise(() =>
-      expect(card.locator(BODY_CONTROLS)).toHaveCount(1)
-    );
-  }
-);
+const expectLabBands = Effect.fn("NakafaE2E.expectLabBands")(function* (
+  page: Page
+) {
+  yield* openVisualLesson(page, pinnedRoutes.exponent.en, en.Common.fullscreen);
+  const card = yield* revealLab(page);
+  yield* expectBandsInOrder(card);
+  yield* expectFullscreenEndsActions(card);
+  yield* Effect.promise(() =>
+    expect(card.locator(VISUAL_CARD_TOOLBAR)).toHaveCount(1)
+  );
+});
 
-/** Opens a 3D scene and proves its footer is one row. */
-const expectSceneFooterInRow = Effect.fn("NakafaE2E.expectSceneFooterInRow")(
-  function* (page: Page) {
-    yield* openVisualLesson(
-      page,
-      pinnedRoutes.material.en,
-      en.Common.fullscreen
-    );
-    const { card } = yield* revealScene(page);
-    yield* expectFooterRow(card);
-  }
-);
+/** Opens a 3D scene and proves its bands are in order. */
+const expectSceneBands = Effect.fn("NakafaE2E.expectSceneBands")(function* (
+  page: Page
+) {
+  yield* openVisualLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
+  const { card } = yield* revealScene(page);
+  yield* expectBandsInOrder(card);
+  yield* expectFullscreenEndsActions(card);
+});
 
 /**
- * Opens a 3D scene at 200 percent text and proves its three footer actions stay
- * inside the card that holds them. The card clips what lies beyond its edge, so
- * an action outside the card is cut off without any error.
+ * Opens a 3D scene at 200 percent text and proves its three actions stay inside
+ * the card that holds them. The card clips what lies beyond its edge, so an
+ * action outside the card is cut off without any error.
  */
 const expectSceneActionsInsideCardAtLargeText = Effect.fn(
   "NakafaE2E.expectSceneActionsInsideCardAtLargeText"
@@ -104,7 +124,7 @@ const expectSceneActionsInsideCardAtLargeText = Effect.fn(
   const { card } = yield* revealScene(page);
   const rootSize = yield* setLargeText(page);
   const actions = yield* Effect.promise(() =>
-    readFooterActions(card.locator('[data-slot="card-footer"] button'))
+    readFooterActions(card.locator('[data-slot="visual-card-actions"] button'))
   );
   yield* Effect.sync(() => {
     expect(rootSize).toBe("32px");
@@ -120,24 +140,28 @@ for (const viewport of [
   { height: 844, width: 390 },
   { height: 900, width: 1440 },
 ]) {
-  test.describe(`visual footers at ${viewport.width}px`, () => {
+  test.describe(`visual cards at ${viewport.width}px`, () => {
     test.use({ viewport });
 
-    test("keep an animated lab's footer in one row", async ({ page }) => {
+    test("compose an animated lab from its bands, its controls above the visual", async ({
+      page,
+    }) => {
       await Effect.runPromise(
-        withObservedPageErrors(page, expectLabFooterInRow(page))
+        withObservedPageErrors(page, expectLabBands(page))
       );
     });
 
-    test("keep a 3D scene's footer in one row", async ({ page }) => {
+    test("compose a 3D scene from its bands, full screen ending its actions", async ({
+      page,
+    }) => {
       await Effect.runPromise(
-        withObservedPageErrors(page, expectSceneFooterInRow(page))
+        withObservedPageErrors(page, expectSceneBands(page))
       );
     });
   });
 }
 
-test.describe("visual footer actions on the smallest phone", () => {
+test.describe("visual card actions on the smallest phone", () => {
   test.use({
     viewport: { height: compactViewport.height, width: compactViewport.width },
   });

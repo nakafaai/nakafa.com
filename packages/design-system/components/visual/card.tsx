@@ -89,7 +89,7 @@ const visualCardVariants = cva(
  * every band keeps the card's inset, so every visual reads the same way.
  */
 const visualBandVariants = cva(
-  "border-t px-(--card-spacing) group-data-fullscreen/visual:shrink-0 first:border-t-0",
+  "border-t px-(--card-spacing) first:border-t-0 group-data-fullscreen/visual:shrink-0",
   {
     variants: {
       kind: {
@@ -103,14 +103,16 @@ const visualBandVariants = cva(
 );
 
 /**
- * The body holds the visual alone, edge to edge. In full screen it takes the
- * free height and drops its aspect ratio, and size containment keeps a chart's
- * own aspect ratio from claiming more than the screen has, so the visual fills
- * the free height, or keeps its minimum while the card scrolls. The body keeps
- * its own display, so a drawing laid out as a grid stays a grid.
+ * The body holds the visual alone, edge to edge. In full screen the body of the
+ * card takes the free height and drops its aspect ratio, and size containment
+ * keeps a chart's own aspect ratio from claiming more than the screen has, so
+ * the visual fills the free height, or keeps its minimum while the card
+ * scrolls. The body keeps its own display, so a drawing laid out as a grid
+ * stays a grid. A body inside another body, such as a scene loaded into its
+ * frame, fills that body and adds no line.
  */
 const visualBodyVariants = cva(
-  "relative border-t first:border-t-0 group-data-fullscreen/visual:min-h-64 group-data-fullscreen/visual:flex-1 group-data-fullscreen/visual:aspect-auto group-data-fullscreen/visual:contain-size"
+  "relative border-t first:border-t-0 [[data-fullscreen]>&]:aspect-auto [[data-fullscreen]>&]:min-h-64 [[data-fullscreen]>&]:flex-1 [[data-fullscreen]>&]:contain-size [[data-slot=visual-card-body]>&]:size-full [[data-slot=visual-card-body]>&]:border-t-0"
 );
 
 /**
@@ -254,7 +256,7 @@ function VisualCardFooter(props: Omit<ComponentProps<"div">, "className">) {
 function VisualCardFacts(props: Omit<ComponentProps<"dl">, "className">) {
   return (
     <dl
-      className="grid grid-cols-2 gap-x-6 gap-y-3 @md/visual:grid-cols-3 @3xl/visual:grid-cols-4"
+      className="grid @3xl/visual:grid-cols-4 @md/visual:grid-cols-3 grid-cols-2 gap-x-6 gap-y-3"
       data-slot="visual-card-facts"
       {...props}
     />

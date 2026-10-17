@@ -163,14 +163,15 @@ export function readPlacement(card: Locator) {
  * Reads how the card is presented. A card that fills the screen covers the
  * viewport edge to edge, also where the root reserves scrollbar gutters, such
  * as on Linux and Windows. It is the topmost element at every corner and at
- * its footer, and its footer sits at the bottom because the scene took the
+ * its last band, and that band sits at the bottom because the body took the
  * free height, so the card never scrolls. The page behind is inert when every
  * link and button outside the card sits in an inert subtree.
  */
 export function readPresentation(card: Locator) {
   return card.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
-    const footer = element.querySelector('[data-slot="card-footer"]');
+    // The last band, the footer or the actions, closes the card.
+    const footer = element.lastElementChild;
     const paddingBottom = Number.parseFloat(
       getComputedStyle(element).paddingBottom
     );

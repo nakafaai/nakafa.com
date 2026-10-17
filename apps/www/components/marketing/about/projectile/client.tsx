@@ -114,10 +114,10 @@ interface ProjectileScenario {
 }
 
 interface ProjectileClientProps {
+  readonly chooseLabel: string;
   readonly lead: string;
   /** Every trajectory, the default one first, so the scene opens on it. */
   readonly scenarios: Arr.NonEmptyReadonlyArray<ProjectileScenario>;
-  readonly chooseLabel: string;
   readonly title: string;
   readonly viewLabel: string;
 }
