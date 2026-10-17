@@ -17,7 +17,7 @@ import { Deferred, Effect } from "effect";
  * cached answer (`convex/dist/esm/browser/sync/local_state.js`, lines 267 to
  * 268). The next server transition, or the response to a failed mutation,
  * replaces the cache with the answers of the queries that still have
- * subscribers (`convex/dist/esm/browser/sync/client.js`, lines 215 to 240 and
+ * subscribers (`convex/dist/esm/browser/sync/client.js`, lines 215 to 242 and
  * 301 to 318, and `optimistic_updates_impl.js`, lines 96 and 102 to 107). So
  * until one of those messages arrives, a reader that mounts again reads the
  * failure it had and throws before it subscribes, and nothing asks the server.
