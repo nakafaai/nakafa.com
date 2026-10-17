@@ -225,7 +225,7 @@ export function readPresentation(card: Locator) {
 /** Reads the height of the card's scene frame. */
 export function readSceneHeight(card: Locator) {
   return card
-    .locator('[data-slot="visual-card-scene"]')
+    .locator('[data-slot="visual-card-body"]')
     .first()
     .evaluate((element) => element.getBoundingClientRect().height);
 }

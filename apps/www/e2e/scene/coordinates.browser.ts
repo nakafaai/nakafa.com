@@ -16,7 +16,7 @@ import {
   CARD,
   COORDINATE_CONTROLS,
   LINE_SCENE,
-  VISUAL_CARD_CONTROLS,
+  VISUAL_CARD_TOOLBAR,
 } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -120,7 +120,7 @@ const expectBoundedTriangleZoom = Effect.fn(
   );
   yield* Effect.promise(() => expect(label).toBeVisible());
   yield* Effect.promise(() =>
-    expect(card.locator(VISUAL_CARD_CONTROLS)).toContainText("Hypotenuse")
+    expect(card.locator(VISUAL_CARD_TOOLBAR)).toContainText("Hypotenuse")
   );
   yield* waitForStableCanvas(canvas);
   yield* expectReadableLabel(label);
@@ -268,7 +268,7 @@ const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
       useGrouping: false,
     });
     const annotations = card.locator(
-      `${VISUAL_CARD_CONTROLS} annotation[encoding="application/x-tex"]`
+      `${VISUAL_CARD_TOOLBAR} annotation[encoding="application/x-tex"]`
     );
     for (const value of [31.5, -30.5, 390.5]) {
       const formatted = formatter.format(value);

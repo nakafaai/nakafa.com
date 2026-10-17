@@ -6,12 +6,12 @@ import { Effect } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { VISUAL_CARD_CONTROLS } from "@/e2e/support/selector";
+import { VISUAL_CARD_TOOLBAR } from "@/e2e/support/selector";
 import { compactViewport } from "@/e2e/support/viewport";
 import { openVisualLesson, revealLab, revealScene } from "@/e2e/support/visual";
 
 /** A visual card's controls in its card body, directly under the scene. */
-const BODY_CONTROLS = `[data-slot="card-content"] > ${VISUAL_CARD_CONTROLS}`;
+const BODY_CONTROLS = `[data-slot="card-content"] > ${VISUAL_CARD_TOOLBAR}`;
 
 /**
  * Reads a visual card's footer as one band of the page. The band runs from the
