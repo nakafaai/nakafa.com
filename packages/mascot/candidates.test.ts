@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
-import { candidates } from "@repo/mascot/candidates";
+import { anotherMascot, candidates } from "@repo/mascot/candidates";
 import { encode, type Mascot, MascotCode } from "@repo/mascot/code";
 import { contrast } from "@repo/mascot/ground";
 import { Array as Arr, Effect, Random, Schema } from "effect";
@@ -111,5 +111,32 @@ describe("mascot/candidates", () => {
           expect(read).toEqual(mascot);
         }
       })
+  );
+
+  it.effect(
+    "shuffles to an animal other than the current one, for every seed",
+    () =>
+      Effect.gen(function* () {
+        const shuffles = yield* Effect.forEach(SEEDS, (seed) =>
+          Effect.map(
+            anotherMascot(currentOf(seed)).pipe(Random.withSeed(seed)),
+            (mascot) => ({ current: currentOf(seed), mascot })
+          )
+        );
+        const clashes = Arr.filter(
+          shuffles,
+          ({ current, mascot }) => mascot.animal === current
+        );
+        expect(clashes).toEqual([]);
+      })
+  );
+
+  it.effect("gives the same shuffle again for the same seed", () =>
+    Effect.gen(function* () {
+      const first = yield* anotherMascot("cat").pipe(Random.withSeed(7));
+      expect(yield* anotherMascot("cat").pipe(Random.withSeed(7))).toEqual(
+        first
+      );
+    })
   );
 });

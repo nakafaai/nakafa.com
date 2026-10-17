@@ -12,6 +12,7 @@ const publicCommentUserValidator = Schema.Struct({
   image: userDataValidator.fields.image,
   mascot: userDataValidator.fields.mascot,
   name: userDataValidator.fields.name,
+  picture: userDataValidator.fields.picture,
 });
 const commentWithViewerVoteValidator = Schema.Struct({
   ...commentsTable.Doc.fields,
