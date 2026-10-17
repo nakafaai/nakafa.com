@@ -231,7 +231,7 @@ describe("memory page store", () => {
     expect(fresh.getState()).toMatchObject({ deleted: first.id, open: true });
   });
 
-  it("keeps the words an editor held for each deleted memory, so deleting another memory takes nothing from an Undo still offered", () => {
+  it("keeps the words an editor held for each deleted memory, so deleting another memory takes nothing from a delete the server may refuse", () => {
     const store = createMemoryStore();
 
     store.getState().openEdit(first);
@@ -241,7 +241,7 @@ describe("memory page store", () => {
     expect(store.getState().withheld).toEqual({ [first.id]: grade });
   });
 
-  it("lets go of the words kept for one memory when its Undo took them or its offer ended, and keeps the others", () => {
+  it("lets go of the words kept for one memory when the server deleted it, and keeps the others", () => {
     const store = createMemoryStore();
 
     store.getState().withhold(first.id, grade);
@@ -277,6 +277,19 @@ describe("memory page store", () => {
     expect(store.getState().deleted).toBe(first.id);
     store.getState().recall(first.id);
     expect(store.getState().deleted).toBeNull();
+  });
+
+  it("leaves the first saves the learner deleted out of the hidden list, and lets each go once its answer came", () => {
+    const store = createMemoryStore();
+    const typed = memoryId("pending-typed");
+
+    expect(store.getState().hidden).toEqual([]);
+    store.getState().hide(typed);
+    store.getState().hide(second.id);
+    expect(store.getState().hidden).toEqual([typed, second.id]);
+
+    store.getState().unhide(typed);
+    expect(store.getState().hidden).toEqual([second.id]);
   });
 
   it("takes back the count of a Delete all the server refused, so a first save on its way finds the count it started with", () => {
@@ -342,8 +355,8 @@ describe("memory page store", () => {
       session: 2,
     });
 
-    // An Undo pressed after the deletion writes a new memory in the opening
-    // that the deletion left.
+    // A failed save given back after the deletion opens a new memory in the
+    // opening that the deletion left.
     store.getState().reopen(2, plan, null);
     expect(store.getState()).toMatchObject({
       draft: plan,

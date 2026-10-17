@@ -6,14 +6,7 @@ import {
   type NinaMemoryView,
 } from "@repo/backend/confect/nina/memory.spec";
 import { plainText } from "@repo/design-system/components/editor/plain";
-import {
-  Array as Arr,
-  Option,
-  Order,
-  Schema,
-  String as Str,
-  Struct,
-} from "effect";
+import { Array as Arr, Option, Schema, String as Str, Struct } from "effect";
 
 /**
  * How many memories one page of the list holds. The settings route reads the
@@ -139,6 +132,17 @@ export function removeMemory(memories: readonly Memory[], id: Memory["id"]) {
 }
 
 /**
+ * Takes out the memories whose ids are in `hidden`: the memories the learner
+ * deleted before the server stored them. Every other memory stays, in order.
+ */
+export function withoutHidden(
+  memories: readonly Memory[],
+  hidden: readonly Memory["id"][]
+) {
+  return Arr.filter(memories, (memory) => !Arr.contains(hidden, memory.id));
+}
+
+/**
  * Returns one loaded page of the list after `memory` was confirmed just now,
  * the way the server will show it: the page that starts the list holds the
  * memory first, and no other page holds it. A page that has nothing to do with
@@ -156,61 +160,6 @@ export function pageWith(
   const others = removeMemory(page.page, memory.id);
 
   return { ...page, page: first ? Arr.prepend(others, memory) : others };
-}
-
-/**
- * Returns which of the loaded pages of the list a memory that comes back goes
- * in, as its place in `pages`, or nothing when it belongs beyond what is
- * loaded. The list runs from the memory confirmed last to the one confirmed
- * first, so the memory goes in the first page whose last memory was confirmed
- * at or before it, and in the page that ends the list when no page does. A page
- * with no memory has no end to compare, so it never takes the place of a page
- * that has one.
- */
-export function pageForRestored(
-  pages: readonly MemoryPage[],
-  memory: Memory
-): Option.Option<number> {
-  const reaching = Arr.flatMap(pages, (page, index) =>
-    Option.match(Arr.last(page.page), {
-      onNone: () => [],
-      onSome: (last) =>
-        last.confirmedAt <= memory.confirmedAt
-          ? [{ end: last.confirmedAt, index }]
-          : [],
-    })
-  );
-
-  return Option.orElse(
-    Option.map(
-      Arr.head(
-        Arr.sortWith(reaching, ({ end }) => end, Order.flip(Order.Number))
-      ),
-      ({ index }) => index
-    ),
-    () => Arr.findFirstIndex(pages, (page) => page.isDone)
-  );
-}
-
-/**
- * Returns one loaded page of the list with a memory that comes back in its
- * place: before the first memory confirmed at or before it, which is where the
- * server puts a memory that is newest among those confirmed at one moment, and
- * last when none was.
- */
-export function pageRestored(page: MemoryPage, memory: Memory): MemoryPage {
-  const [before, after] = Arr.splitAt(
-    page.page,
-    Option.getOrElse(
-      Arr.findFirstIndex(
-        page.page,
-        (other) => other.confirmedAt <= memory.confirmedAt
-      ),
-      () => Arr.length(page.page)
-    )
-  );
-
-  return { ...page, page: Arr.appendAll(Arr.append(before, memory), after) };
 }
 
 /** Returns one loaded page of the list without a memory, or as it is when it does not hold it. */

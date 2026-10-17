@@ -24,7 +24,7 @@ const isListAnswer = Schema.is(ListAnswer);
  * page then shows. The fields of the answer that are not memories go on as
  * they came, and so does any answer that is no page.
  */
-export const changeRows =
+const changeRows =
   (change: (memory: Row, index: number) => Row) => (value: unknown) =>
     isListAnswer(value)
       ? { ...value, page: Arr.map(value.page, change) }

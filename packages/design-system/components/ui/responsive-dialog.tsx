@@ -19,13 +19,16 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cn } from "cn";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 interface Props {
   children?: ReactNode;
   description?: ReactNode;
-  /** Where focus goes on close; `false` leaves it to the caller. */
-  finalFocus?: boolean;
+  /**
+   * Where focus goes on close: `true` for the default, `false` to leave it to
+   * the caller, or the element that a function returns.
+   */
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"];
   footer?: ReactNode;
   /** Runs after the open or close animation has finished. */
   onOpenChangeComplete?: (open: boolean) => void;

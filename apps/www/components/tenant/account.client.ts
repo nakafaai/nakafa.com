@@ -1,7 +1,7 @@
 "use client";
 
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Schema } from "effect";
-import { toast } from "sonner";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 
 /**
@@ -16,16 +16,22 @@ type SignOutDestination = typeof SignOutDestination.Type;
 
 /**
  * Signs the viewer out of the school. A finished sign-out answers `home`. A
- * failed one shows `failureMessage` as a toast, so the viewer learns that the
+ * failed one shows the sign-out failure as a toast, so the viewer learns that the
  * account is still signed in, and answers `stay`.
  */
 export const signOutSchoolAccount = Effect.fn("tenant.account.signOut")(
-  function* (failureMessage: string) {
+  function* () {
     return yield* signOutAccountBrowserIdentity().pipe(
       Effect.as<SignOutDestination>("home"),
       Effect.catchTag("AccountSignOutFailed", () =>
         Effect.sync((): SignOutDestination => {
-          toast.error(failureMessage, { position: "bottom-center" });
+          toast.error(
+            {
+              description: "sign-out-error.description",
+              title: "sign-out-error.title",
+            },
+            { position: "bottom-center" }
+          );
           return "stay";
         })
       )

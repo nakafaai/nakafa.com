@@ -15,7 +15,9 @@ vi.mock("@/lib/auth/identity/browser", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/identity/browser")>()),
   signOutAccountBrowserIdentity: doubles.signOut,
 }));
-vi.mock("sonner", () => ({ toast: { error: doubles.toastError } }));
+vi.mock("@repo/design-system/lib/toast/notify", () => ({
+  toast: { error: doubles.toastError },
+}));
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -28,7 +30,7 @@ describe("signOutSchoolAccount", () => {
       Effect.gen(function* () {
         doubles.signOut.mockReturnValue(Effect.void);
 
-        const destination = yield* signOutSchoolAccount("Could not sign out.");
+        const destination = yield* signOutSchoolAccount();
 
         expect(destination).toBe("home");
         expect(doubles.toastError).not.toHaveBeenCalled();
@@ -43,11 +45,14 @@ describe("signOutSchoolAccount", () => {
         )
       );
 
-      const destination = yield* signOutSchoolAccount("Could not sign out.");
+      const destination = yield* signOutSchoolAccount();
 
       expect(destination).toBe("stay");
       expect(doubles.toastError).toHaveBeenCalledExactlyOnceWith(
-        "Could not sign out.",
+        {
+          description: "sign-out-error.description",
+          title: "sign-out-error.title",
+        },
         { position: "bottom-center" }
       );
     })

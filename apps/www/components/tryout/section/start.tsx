@@ -6,11 +6,12 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
-import { toast } from "sonner";
+import { START_PART_ERROR } from "@/components/tryout/set/copy";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 interface StartSectionButtonProps {
@@ -47,18 +48,20 @@ export function StartSectionButton({
               Effect.flatMap(Effect.fromResult),
               Effect.tap(() =>
                 Effect.sync(() => {
-                  toast.success(tTryouts("start-part-success"), {
-                    position: "bottom-center",
-                  });
+                  toast.success(
+                    {
+                      description: "tryout-start-part-success.description",
+                      title: "tryout-start-part-success.title",
+                    },
+                    { position: "bottom-center" }
+                  );
                 })
               )
             )
           ),
           Effect.catch(() =>
             Effect.sync(() => {
-              toast.error(tTryouts("start-part-error"), {
-                position: "bottom-center",
-              });
+              toast.error(START_PART_ERROR, { position: "bottom-center" });
             })
           )
         )

@@ -1,7 +1,6 @@
 import {
   NINA_DOCUMENT_SIZE,
   NINA_FILE_COUNT,
-  NINA_FILE_MEBIBYTES,
 } from "@repo/backend/client/nina/uploads";
 import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
 import { Array as Arr, Match } from "effect";
@@ -28,34 +27,22 @@ export function exceedsDocumentLimit(
 }
 
 /**
- * The words that say why one pick was not attached in full: a title, and for
- * each reason the reason in a few words and every file it dropped, however
- * many. The title names no count, because the names show which files and how
- * many; no line counts the files either. The numbers in the reasons are the
- * limits the code checks.
+ * The short reason that a refused file shows in its chip, from the code that
+ * refused it. The count in the reason is the limit the code checks.
  */
-export function rejectionNotice(
-  rejections: readonly PromptInputFileConstraintError[],
+export function refusalReason(
+  code: PromptInputFileConstraintError["code"],
   t: ReturnType<typeof useTranslations<"Ai">>
 ) {
-  return {
-    reasons: Arr.map(rejections, (rejection) => ({
-      // Two files of one name are one line of the notice.
-      names: Arr.dedupe(rejection.files),
-      reason: Match.value(rejection.code).pipe(
-        Match.when("accept", () => t("attachment-rejections.type")),
-        Match.when("empty", () => t("attachment-rejections.empty")),
-        Match.when("max_file_size", () =>
-          t("attachment-rejections.size", { size: NINA_FILE_MEBIBYTES })
-        ),
-        Match.when("max_files", () =>
-          t("attachment-rejections.count", { count: NINA_FILE_COUNT })
-        ),
-        Match.exhaustive
-      ),
-    })),
-    title: t("attachment-rejections.title"),
-  };
+  return Match.value(code).pipe(
+    Match.when("accept", () => t("attachment-rejections.type")),
+    Match.when("empty", () => t("attachment-rejections.empty")),
+    Match.when("max_file_size", () => t("attachment-rejections.size")),
+    Match.when("max_files", () =>
+      t("attachment-rejections.count", { count: NINA_FILE_COUNT })
+    ),
+    Match.exhaustive
+  );
 }
 
 /**

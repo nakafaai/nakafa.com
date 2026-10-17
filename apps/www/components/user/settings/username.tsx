@@ -26,11 +26,11 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@repo/design-system/components/ui/input-group";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Option, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   CardSection,
   CardSectionActions,
@@ -52,7 +52,6 @@ const CHECK_DELAY_MILLISECONDS = 300;
  * taken.
  */
 export function UserSettingsUsername({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updateUsername = useUpdateUsernameMutation();
   const current = user.appUser.username;
@@ -83,7 +82,10 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),
