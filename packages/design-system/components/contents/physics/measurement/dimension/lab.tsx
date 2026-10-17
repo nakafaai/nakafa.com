@@ -29,6 +29,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -132,22 +133,25 @@ export function DimensionLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            <VisualFact
+              label={labels.formula}
+              value={<InlineMath math={selectedMode.formula} />}
+            />
+            <VisualFact
+              label={labels.unit}
+              value={<InlineMath math={selectedMode.unit} />}
+            />
+            <VisualFact
+              label={labels.dimension}
+              value={<InlineMath math={selectedMode.dimension} />}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
+
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <VisualFact
-            label={labels.formula}
-            value={<InlineMath math={selectedMode.formula} />}
-          />
-          <VisualFact
-            label={labels.unit}
-            value={<InlineMath math={selectedMode.unit} />}
-          />
-          <VisualFact
-            label={labels.dimension}
-            value={<InlineMath math={selectedMode.dimension} />}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

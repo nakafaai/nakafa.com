@@ -12,7 +12,12 @@ import {
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { CARD, COORDINATE_CONTROLS, LINE_SCENE } from "@/e2e/support/selector";
+import {
+  CARD,
+  COORDINATE_CONTROLS,
+  LINE_SCENE,
+  VISUAL_CARD_CONTROLS,
+} from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const LINEAR_SYSTEM_ROUTE =
@@ -115,7 +120,7 @@ const expectBoundedTriangleZoom = Effect.fn(
   );
   yield* Effect.promise(() => expect(label).toBeVisible());
   yield* Effect.promise(() =>
-    expect(card.locator(COORDINATE_CONTROLS)).toContainText("Hypotenuse")
+    expect(card.locator(VISUAL_CARD_CONTROLS)).toContainText("Hypotenuse")
   );
   yield* waitForStableCanvas(canvas);
   yield* expectReadableLabel(label);
@@ -263,7 +268,7 @@ const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
       useGrouping: false,
     });
     const annotations = card.locator(
-      '[data-coordinate-controls] annotation[encoding="application/x-tex"]'
+      `${VISUAL_CARD_CONTROLS} annotation[encoding="application/x-tex"]`
     );
     for (const value of [31.5, -30.5, 390.5]) {
       const formatted = formatter.format(value);

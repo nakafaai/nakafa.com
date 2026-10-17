@@ -5202,7 +5202,7 @@ export declare const api: {
                   text: string;
                 }
               | null;
-            version?: number;
+            version: number;
           },
           null
         >;

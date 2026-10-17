@@ -23,6 +23,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -138,16 +139,21 @@ export function MultipleProportionsLab({
         <p className="text-muted-foreground text-sm">
           {selectedLabels.helperCaption}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact
+              label={labels.fixedLabel}
+              value={selectedLabels.fixed}
+            />
+            <VisualFact
+              label={labels.changingLabel}
+              value={selectedLabels.changing}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact label={labels.fixedLabel} value={selectedLabels.fixed} />
-          <VisualFact
-            label={labels.changingLabel}
-            value={selectedLabels.changing}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

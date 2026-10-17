@@ -13,6 +13,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -144,19 +145,21 @@ export function AncientAtomLab({
                 </AnimatePresence>
               </div>
             </VisualCardScene>
+            <VisualCardControls>
+              <dl className="flex w-full flex-col gap-4 text-sm sm:flex-row">
+                <Perspective
+                  label={labels.aristotleLabel}
+                  value={labels.aristotleBody}
+                />
+                <Perspective
+                  label={labels.democritusLabel}
+                  value={labels.democritusBody}
+                />
+              </dl>
+            </VisualCardControls>
           </VisualCardBody>
 
           <VisualCardFooter>
-            <dl className="flex w-full flex-col gap-4 text-sm sm:flex-row">
-              <Perspective
-                label={labels.aristotleLabel}
-                value={labels.aristotleBody}
-              />
-              <Perspective
-                label={labels.democritusLabel}
-                value={labels.democritusBody}
-              />
-            </dl>
             <VisualCardFullscreen />
           </VisualCardFooter>
         </VisualCard>
