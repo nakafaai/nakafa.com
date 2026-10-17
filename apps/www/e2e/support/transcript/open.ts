@@ -80,27 +80,27 @@ const declineIfAsked = Effect.fn("NakafaE2E.declineIfAsked")(function* (
 /**
  * Serves the conversation that the returned reference holds, and signs a
  * learner in. Pages that open afterwards show whatever the reference holds then.
+ * The `stream` it returns puts new messages in front of a page that is open.
  */
-const startTranscript = Effect.fn("NakafaE2E.startTranscript")(function* (
-  page: Page,
-  baseURL: string
-) {
-  const shown = MutableRef.make<readonly ServedMessage[]>([]);
-  yield* seedAnalyticsConsent(page, "denied");
-  yield* serveIcons(page);
-  yield* serveConversation(page, shown);
-  const cookies = MutableRef.get(session);
-  if (Option.isSome(cookies)) {
-    yield* Effect.promise(() => page.context().addCookies(cookies.value));
-    return shown;
+export const startTranscript = Effect.fn("NakafaE2E.startTranscript")(
+  function* (page: Page, baseURL: string) {
+    const shown = MutableRef.make<readonly ServedMessage[]>([]);
+    yield* seedAnalyticsConsent(page, "denied");
+    yield* serveIcons(page);
+    const served = yield* serveConversation(page, shown);
+    const cookies = MutableRef.get(session);
+    if (Option.isSome(cookies)) {
+      yield* Effect.promise(() => page.context().addCookies(cookies.value));
+      return { shown, stream: served.stream };
+    }
+    yield* signInLearner(page.context(), baseURL);
+    MutableRef.set(
+      session,
+      Option.some(yield* Effect.promise(() => page.context().cookies()))
+    );
+    return { shown, stream: served.stream };
   }
-  yield* signInLearner(page.context(), baseURL);
-  MutableRef.set(
-    session,
-    Option.some(yield* Effect.promise(() => page.context().cookies()))
-  );
-  return shown;
-});
+);
 
 /**
  * A phone draws its scrollbars over the page and gives them no room. The root
@@ -121,7 +121,7 @@ const OVERLAY_SCROLLBARS =
  * for usage data is fixed to the bottom of a narrow page, where it covers the
  * rows that a test presses, so the page is shown without it.
  */
-const showChat = Effect.fn("NakafaE2E.showChat")(function* (
+export const showChat = Effect.fn("NakafaE2E.showChat")(function* (
   page: Page,
   shown: MutableRef.MutableRef<readonly ServedMessage[]>,
   locale: string,
@@ -252,7 +252,7 @@ export function onChat(
         page,
         Effect.gen(function* () {
           const origin = yield* Effect.fromNullishOr(baseURL);
-          const shown = yield* startTranscript(page, origin);
+          const { shown } = yield* startTranscript(page, origin);
           const scope = yield* showChat(
             page,
             shown,
@@ -286,7 +286,7 @@ export function onSheet(
         page,
         Effect.gen(function* () {
           const origin = yield* Effect.fromNullishOr(baseURL);
-          const shown = yield* startTranscript(page, origin);
+          const { shown } = yield* startTranscript(page, origin);
           const scope = yield* showSheet(
             page,
             shown,
