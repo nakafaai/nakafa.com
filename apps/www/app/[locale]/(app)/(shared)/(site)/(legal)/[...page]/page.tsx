@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { io } from "next/cache";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { applyContentCache } from "@/lib/content/cache";
 import {
   getPublishedPageCatalog,
   verifyPublishedPageCatalog,
@@ -55,6 +56,7 @@ async function readPagePreviewContent(input: PagePreviewInput) {
 /** Caches published Page metadata and its release-coherent counterparts. */
 async function readPublishedPageMetadata(input: CurrentPublishedPageInput) {
   "use cache";
+  applyContentCache("page");
 
   const [page, catalog] = await Promise.all([
     getCurrentPublishedPage(input),
