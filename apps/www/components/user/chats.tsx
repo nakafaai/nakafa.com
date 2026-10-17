@@ -24,7 +24,14 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Array as Arr, DateTime, Effect } from "effect";
+import {
+  Array as Arr,
+  DateTime,
+  Effect,
+  Option,
+  pipe,
+  String as Str,
+} from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useChatList } from "@/components/ai/chat/history.client";
@@ -138,6 +145,12 @@ function ChatRow({ canDelete, chat }: { canDelete: boolean; chat: ChatView }) {
   const account = useViewer((state) => state.account);
   const now = DateTime.toEpochMillis(DateTime.nowUnsafe());
   const isPrivate = chat.visibility === "private";
+  // A chat Nina has not named yet reads as a new chat, so its link has a name.
+  const title = pipe(
+    Option.fromUndefinedOr(chat.title),
+    Option.filter(Str.isNonEmpty),
+    Option.getOrElse(() => tAi("new-chat"))
+  );
   return (
     <FeedRow>
       {account && (
@@ -153,7 +166,7 @@ function ChatRow({ canDelete, chat }: { canDelete: boolean; chat: ChatView }) {
               className="after:absolute after:inset-0"
               href={`/chat/${chat._id}`}
             >
-              {chat.title}
+              {title}
             </NavigationLink>
           </FeedName>
           <HugeIcons
