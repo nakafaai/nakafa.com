@@ -40,6 +40,8 @@ const LIST_QUERY = "chats/queries:getOwnChats";
 export const START = "nina/turns:start";
 export const RENAME = "chats/mutations:updateChatTitle";
 export const DELETE = "chats/mutations:deleteChat";
+/** The mutation the composer of a profile's posts calls to write a post. */
+const POST_CREATE = "posts/mutations:create";
 /** The mutation the share dialog calls to turn sharing on, and the query it reads the token with. */
 const SHARE = "chats/mutations:updateChatVisibility";
 export const SHARE_TOKEN_QUERY = "chats/queries:getShareToken";
@@ -148,6 +150,10 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
     /** Deletes a chat of the learner, as the menu of the chat does. */
     deleteChat: Effect.fn("NakafaE2E.deleteChat")(function* (chatId: string) {
       yield* call("mutation", DELETE, { chatId });
+    }),
+    /** Writes a post of the learner, as the composer of their profile does, so a test can fill a list quickly. */
+    writePost: Effect.fn("NakafaE2E.writePost")(function* (text: string) {
+      yield* call("mutation", POST_CREATE, { text });
     }),
     /**
      * Adds `count` chats to the list, after the chats it has. They share the

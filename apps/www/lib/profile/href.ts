@@ -1,5 +1,14 @@
+import { Schema } from "effect";
+
 /** The sign that opens the address of a profile: `/@username`. */
 export const PROFILE_SIGN = "@";
+
+/**
+ * The tabs a profile adds below its address, each as one segment after the
+ * username. Posts is the address itself. The route check, the rewrites and the
+ * tabs all read this one list, so a tab added here is routed and shown alike.
+ */
+export const ProfileTab = Schema.Literals(["comments", "chat"]);
 
 /** The address of a profile below the locale. Its tabs add a segment. */
 export function profileHref(username: string) {

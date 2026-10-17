@@ -123,6 +123,9 @@ import operators_expiry from "../operators/expiry.spec";
 import operators_staff from "../operators/staff.spec";
 import operators_tenants from "../operators/tenants.spec";
 import operators_visits from "../operators/visits.spec";
+import posts_cleanup from "../posts/cleanup.spec";
+import posts_mutations from "../posts/mutations.spec";
+import posts_queries from "../posts/queries.spec";
 import privacy_recovery from "../privacy/recovery.spec";
 import routes_agent_quota from "../routes/agent/quota.spec";
 import storage from "../storage.spec";
@@ -192,6 +195,7 @@ const spec: Spec.Spec<{
   readonly notifications: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "notifications", never, GroupSpec.NamedAt<typeof notifications_consume, "consume"> | GroupSpec.NamedAt<typeof notifications_inbox, "inbox"> | GroupSpec.NamedAt<typeof notifications_purge, "purge"> | GroupSpec.NamedAt<typeof notifications_read, "read">>, "notifications">;
   readonly onboarding: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "onboarding", never, GroupSpec.NamedAt<typeof onboarding_mutations, "mutations"> | GroupSpec.NamedAt<typeof onboarding_queries, "queries">>, "onboarding">;
   readonly operators: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "operators", never, GroupSpec.NamedAt<typeof operators_expiry, "expiry"> | GroupSpec.NamedAt<typeof operators_staff, "staff"> | GroupSpec.NamedAt<typeof operators_tenants, "tenants"> | GroupSpec.NamedAt<typeof operators_visits, "visits">>, "operators">;
+  readonly posts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "posts", never, GroupSpec.NamedAt<typeof posts_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof posts_mutations, "mutations"> | GroupSpec.NamedAt<typeof posts_queries, "queries">>, "posts">;
   readonly privacy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "privacy", never, GroupSpec.NamedAt<typeof privacy_recovery, "recovery">>, "privacy">;
   readonly routes: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "routes", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "agent", never, GroupSpec.NamedAt<typeof routes_agent_quota, "quota">>, "agent">>, "routes">;
   readonly storage: GroupSpec.NamedAt<typeof storage, "storage">;
@@ -409,6 +413,11 @@ const spec: Spec.Spec<{
     ["staff"]: operators_staff,
     ["tenants"]: operators_tenants,
     ["visits"]: operators_visits,
+  }),
+  ["posts"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["cleanup"]: posts_cleanup,
+    ["mutations"]: posts_mutations,
+    ["queries"]: posts_queries,
   }),
   ["privacy"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["recovery"]: privacy_recovery,
