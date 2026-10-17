@@ -16,6 +16,8 @@ export const MEMORY_SEARCH_ID = "user-settings-memory-search";
 export const MEMORY_ADD_ID = "user-settings-memory-add";
 /** The list of memories, while it holds any. */
 export const MEMORY_LIST_ID = "user-settings-memory-list";
+/** The element that holds the open editor, which the page creates once. */
+export const MEMORY_EDITOR_ID = "user-settings-memory-editor";
 
 /** The id of the button that names one memory's row and opens it in the editor. */
 export function memoryRowId(id: Memory["id"]) {
@@ -46,15 +48,42 @@ export function memoryNeighbour(
 }
 
 /**
- * The element that takes the focus after a confirmed delete: the row of the
- * neighbour when it is on the page, else the Add memory button.
+ * Whether the focus is inside the open editor. A refused delete reopens the
+ * editor while its question is still closing, and the editor takes the focus then.
  */
-export function focusAfterDelete(neighbour: Option.Option<Memory["id"]>) {
-  return Option.getOrElse(
+function focusIsInEditor() {
+  return (
+    document
+      .getElementById(MEMORY_EDITOR_ID)
+      ?.contains(document.activeElement) === true
+  );
+}
+
+/**
+ * The row of the neighbour when it is on the page and can take the focus. A row
+ * of a memory the server has not stored yet is disabled, so it cannot.
+ */
+function neighbourRow(neighbour: Option.Option<Memory["id"]>) {
+  return Option.filter(
     Option.flatMap(neighbour, (id) =>
       Option.fromNullishOr(document.getElementById(memoryRowId(id)))
     ),
-    () => document.getElementById(MEMORY_ADD_ID)
+    (row) => !row.matches(":disabled")
+  );
+}
+
+/**
+ * The element that takes the focus after a confirmed delete: the row of the
+ * neighbour when it can take the focus, else the Add memory button. It is false,
+ * which leaves the focus where it is, while the focus is already in the editor.
+ */
+export function focusAfterDelete(neighbour: Option.Option<Memory["id"]>) {
+  if (focusIsInEditor()) {
+    return false;
+  }
+
+  return Option.getOrElse(neighbourRow(neighbour), () =>
+    document.getElementById(MEMORY_ADD_ID)
   );
 }
 

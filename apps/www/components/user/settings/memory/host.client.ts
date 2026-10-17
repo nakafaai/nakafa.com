@@ -2,6 +2,7 @@
 
 import { editorFrame } from "@repo/design-system/components/editor/frame";
 import { useCallback, useRef, useState } from "react";
+import { MEMORY_EDITOR_ID } from "@/components/user/settings/memory/focus";
 
 /**
  * The element the open editor lives in, one for the whole life of the page. The
@@ -14,17 +15,22 @@ export function createHost() {
 
   const host = document.createElement("div");
   host.className = editorFrame();
+  host.id = MEMORY_EDITOR_ID;
 
   return host;
 }
 
+/** The ends of a selection, copied out because the live selection moves with the editor. */
+type Ends = Pick<
+  Selection,
+  "anchorNode" | "anchorOffset" | "focusNode" | "focusOffset"
+>;
+
 /** Where the caret was in the editor that is about to move, to put it back. */
 interface Caret {
   active: HTMLElement;
-  anchorNode: Node | null;
-  anchorOffset: number;
-  focusNode: Node | null;
-  focusOffset: number;
+  /** None when the document has no selection to keep. */
+  ends: Ends | null;
 }
 
 /** Notes the focus and the selection when they are inside `host`, or nothing. */
@@ -38,26 +44,28 @@ function keepCaret(host: HTMLElement): Caret | null {
 
   return {
     active: activeElement,
-    anchorNode: selection?.anchorNode ?? null,
-    anchorOffset: selection?.anchorOffset ?? 0,
-    focusNode: selection?.focusNode ?? null,
-    focusOffset: selection?.focusOffset ?? 0,
+    ends: selection && {
+      anchorNode: selection.anchorNode,
+      anchorOffset: selection.anchorOffset,
+      focusNode: selection.focusNode,
+      focusOffset: selection.focusOffset,
+    },
   };
 }
 
 /** Puts back the selection and the focus that `keepCaret` noted. */
-function restoreCaret(caret: Caret) {
-  if (caret.anchorNode && caret.focusNode) {
+function restoreCaret({ active, ends }: Caret) {
+  if (ends?.anchorNode && ends.focusNode) {
     document
       .getSelection()
       ?.setBaseAndExtent(
-        caret.anchorNode,
-        caret.anchorOffset,
-        caret.focusNode,
-        caret.focusOffset
+        ends.anchorNode,
+        ends.anchorOffset,
+        ends.focusNode,
+        ends.focusOffset
       );
   }
-  caret.active.focus({ preventScroll: true });
+  active.focus({ preventScroll: true });
 }
 
 /**

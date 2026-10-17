@@ -5,6 +5,7 @@ import {
   focusAfterDelete,
   focusFirst,
   MEMORY_ADD_ID,
+  MEMORY_EDITOR_ID,
   memoryNeighbour,
   memoryRowId,
 } from "@/components/user/settings/memory/focus";
@@ -109,5 +110,20 @@ describe("focus after a delete", () => {
     expect(focusAfterDelete(Option.none())).toBe(
       document.getElementById(MEMORY_ADD_ID)
     );
+  });
+
+  it("gives the focus to the Add memory button while the neighbour's row is still waiting to be stored", () => {
+    document.body.innerHTML = `<button disabled id="${memoryRowId(memoryId("second"))}" type="button"></button><button id="${MEMORY_ADD_ID}" type="button"></button>`;
+
+    expect(focusAfterDelete(Option.some(memoryId("second")))).toBe(
+      document.getElementById(MEMORY_ADD_ID)
+    );
+  });
+
+  it("leaves the focus in the editor when the editor already holds it, as a refused delete reopens it", () => {
+    document.body.innerHTML = `<div id="${MEMORY_EDITOR_ID}"><button id="editing" type="button"></button></div><button id="${memoryRowId(memoryId("second"))}" type="button"></button>`;
+    document.getElementById("editing")?.focus();
+
+    expect(focusAfterDelete(Option.some(memoryId("second")))).toBe(false);
   });
 });
