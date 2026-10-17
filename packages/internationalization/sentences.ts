@@ -1,0 +1,61 @@
+import { Schema } from "effect";
+
+/**
+ * The messages that the one-sentence rule covers: each card description, card
+ * footer sentence, dialog description and empty-state description. A message is
+ * listed by the component that renders it, and its key is the dotted path of its
+ * dictionary entry, such as `Memory.empty-description`. In id, en and de each
+ * listed message is one concise sentence, and a question ends with a question
+ * mark. Titles, headings and metadata are not listed. `sentences.test.ts` checks
+ * every key in every locale.
+ */
+export const SentenceKeySchema = Schema.Literals([
+  "Ai.chat-failed-description",
+  "Ai.chat-unavailable",
+  "Ai.delete-chat-description",
+  "Ai.new-chat-description",
+  "Ai.share-chat-description",
+  "Ai.share-link-error",
+  "Ai.sheet-description",
+  "AnalyticsConsent.prompt-description",
+  "AnalyticsConsent.status-browser-signal",
+  "AnalyticsConsent.status-denied",
+  "AnalyticsConsent.status-granted",
+  "AnalyticsConsent.status-pending",
+  "AnalyticsConsent.status-prompt",
+  "Auth.bio-description",
+  "Auth.bio-footer",
+  "Auth.bio-too-long",
+  "Auth.curriculum-description",
+  "Auth.curriculum-footer",
+  "Auth.delete-account-description",
+  "Auth.delete-account-dialog-description",
+  "Auth.delete-account-footer",
+  "Auth.memory-description",
+  "Auth.name-description",
+  "Auth.name-footer",
+  "Auth.picture-description",
+  "Auth.picture-footer-animal",
+  "Auth.picture-footer-photo",
+  "Auth.role-description",
+  "Auth.role-footer",
+  "Auth.subscriptions-description",
+  "Auth.username-description",
+  "Auth.username-footer",
+  "Comments.delete-description",
+  "Error.description",
+  "Memory.clear-description",
+  "Memory.delete-description",
+  "Memory.empty-description",
+  "Memory.footer",
+  "NotFound.description",
+  "Posts.delete-description",
+  "Tryouts.complete-part-description",
+  "Tryouts.free-dialog-description",
+  "Tryouts.free-entry-dialog-description",
+  "Tryouts.paywall-description",
+  "Tryouts.restart-dialog-description",
+  "Tryouts.restart-entry-dialog-description",
+  "Tryouts.start-dialog-description",
+  "Tryouts.start-entry-dialog-description",
+]);
