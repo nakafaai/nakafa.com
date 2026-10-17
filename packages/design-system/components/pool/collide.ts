@@ -12,6 +12,16 @@ const PUSH_LIMIT = 6;
 const PASSES = 2;
 /** The share of an approach speed that a collision gives back to each ball. */
 const IMPULSE = 0.62;
+/**
+ * The most sliding that a contact stops, as a share of the push that presses two balls
+ * together. Measured on the three checked pools, 585, 823 and 1463 pixels wide: with
+ * no friction the pointer sweep at 300 pixels a second reached 319 pixels a second at
+ * 585, and with 0.1 it reached 63, 85 and 158. Friction slows the settle: a fresh pool
+ * rests after 194, 298 and 528 frames with 0.1, and after 268, 296 and 436 with none.
+ * Over six seconds after a settle, 0, 23 and 75 frames move a ball faster than 24
+ * pixels a second with 0.1, against 41, 0 and 0 with none.
+ */
+const FRICTION = 0.1;
 /** The distance that two balls on the very same point are treated as apart, in pixels. */
 const SAME_POINT_DISTANCE = 0.01;
 
@@ -84,4 +94,14 @@ function collidePair(
   first.vy += ny * impulse;
   second.vx -= nx * impulse;
   second.vy -= ny * impulse;
+  // Friction: the balls stop sliding over each other, up to a share of the push that pressed them.
+  const tx = -ny;
+  const ty = nx;
+  const slide = (second.vx - first.vx) * tx + (second.vy - first.vy) * ty;
+  const grip = FRICTION * Math.abs(impulse);
+  const friction = Math.max(-grip, Math.min(grip, slide / 2));
+  first.vx += tx * friction;
+  first.vy += ty * friction;
+  second.vx -= tx * friction;
+  second.vy -= ty * friction;
 }

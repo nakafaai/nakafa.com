@@ -31,11 +31,11 @@ describe("the push of the pointer", () => {
   });
 
   it("pushes a ball away from the pointer, with the spring of its reach", () => {
-    // The ball is 40 pixels from the pointer, and its reach is 64: (64 - 40) * 80.
+    // The ball is 40 pixels from the pointer, and its reach is 64: (64 - 40) * 40.
     expect(
       pointerPush(overBox(560, 300), ballAt({ x: 600 }), UNIT_STEP)
     ).toEqual({
-      vx: 1920,
+      vx: 960,
       vy: 0,
     });
   });
@@ -57,12 +57,10 @@ describe("the push of the pointer", () => {
 
   it("takes over the pointer's speed in pixels per second, one for one per second", () => {
     const fast = { ...overBox(560, 300), vx: 500 };
-    expect(pointerPush(fast, ballAt({ x: 600 }), UNIT_STEP).vx).toBe(
-      1920 + 500
-    );
+    expect(pointerPush(fast, ballAt({ x: 600 }), UNIT_STEP).vx).toBe(960 + 500);
     // A frame takes over its share of the speed: 500 pixels a second for one frame.
     expect(pointerPush(fast, ballAt({ x: 600 }), FRAME).vx).toBeCloseTo(
-      1920 * FRAME + 500 * FRAME,
+      960 * FRAME + 500 * FRAME,
       10
     );
   });
@@ -70,7 +68,7 @@ describe("the push of the pointer", () => {
   it("takes over no more than 1680 pixels a second, which is 28 pixels a frame", () => {
     const faster = { ...overBox(560, 300), vx: 5000 };
     expect(pointerPush(faster, ballAt({ x: 600 }), UNIT_STEP).vx).toBe(
-      1920 + 1680
+      960 + 1680
     );
   });
 
@@ -112,8 +110,8 @@ describe("the speed of the pointer", () => {
     expect(measure(enteredAt(300, 200), 0.05)).toMatchObject({ vx: 0, vy: 0 });
   });
 
-  it("gives a pointer that did not move in the frame no speed in it", () => {
-    const still = measure(overBox(130, 100), FRAME);
+  it("gives a pointer that did not move in the frame no speed in it, though it had speed before", () => {
+    const still = measure({ ...overBox(130, 100), vx: 300 }, FRAME);
     expect(still).toMatchObject({ vx: 0, vy: 0 });
   });
 

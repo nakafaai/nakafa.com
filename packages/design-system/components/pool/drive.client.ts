@@ -4,13 +4,13 @@ import { coverOf } from "@repo/design-system/components/pool/cover";
 import { poolStarts } from "@repo/design-system/components/pool/member";
 import {
   hop,
-  isResting,
   leave,
+  mayRest,
   move,
   press,
-  REST_FRAMES,
   release,
   resize,
+  restedFor,
   tick,
   type World,
 } from "@repo/design-system/components/pool/physics";
@@ -25,8 +25,6 @@ import {
 import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
 
-/** The time of a frame that has none before it, in seconds. */
-const FIRST_FRAME = 0.016;
 /**
  * Reduced motion settles a box again once it has been still this many
  * milliseconds. The search and the chat sidebar wait 500 milliseconds before they
@@ -64,13 +62,15 @@ export function createDrive(
 ) {
   const pointers = new AbortController();
   let members: readonly HTMLElement[] = [];
-  let world: World | undefined;
+  // The pool is empty until the box is first measured, and `fit` then gives it its balls.
+  let world: World = createWorld(0, 0, []);
+  let measured = false;
   let visible = false;
   let running = false;
-  let still = 0;
+  let rested = 0;
   let hopping: number | undefined;
   let quiet: number | undefined;
-  let settling: Settling | undefined;
+  let settling: Settling = startSettle(world);
   let settlingAnimals = 0;
 
   /** Writes where each member is and how it leans, straight onto its element. */
@@ -86,9 +86,6 @@ export function createDrive(
       Arr.fromIterable(element.children),
       (node): node is HTMLElement => node instanceof HTMLElement
     );
-    if (world === undefined) {
-      return;
-    }
     Arr.forEach(Arr.zip(members, world.balls), ([node, ball]) => {
       node.style.width = `${ball.r * 2}px`;
       node.style.height = `${ball.r * 2}px`;
@@ -103,13 +100,10 @@ export function createDrive(
    */
   function update(width: number, height: number) {
     const cover = coverOf(width, height);
-    const starts = poolStarts(cover);
-    const next =
-      world === undefined
-        ? createWorld(width, height, starts)
-        : fit(resize(world, width, height), starts);
+    const next = fit(resize(world, width, height), poolStarts(cover));
     if (!calm) {
       world = next;
+      measured = true;
       onAnimals(cover.animals);
       sync();
       wake();
@@ -123,26 +117,23 @@ export function createDrive(
 
   /** Runs one part of a reduced-motion settle, and shows the pile once it has come to rest. */
   function settleChunk() {
-    if (settling === undefined) {
-      return;
-    }
     settling = settleFor(settling, SETTLE_CHUNK_FRAMES);
     if (!isSettled(settling)) {
       frame.render(settleChunk);
       return;
     }
     world = finishSettle(settling);
-    settling = undefined;
+    measured = true;
     onAnimals(settlingAnimals);
     sync();
   }
 
   /** Starts the frame loop, unless it runs already, the box is out of view, or the person asked for less motion. */
   function wake() {
-    if (world === undefined || running || !visible || calm) {
+    if (!measured || running || !visible || calm) {
       return;
     }
-    still = 0;
+    rested = 0;
     running = true;
     frame.render(advance, true);
   }
@@ -155,13 +146,10 @@ export function createDrive(
 
   /** One frame: the pile moves and is painted, and the loop sleeps once the pile has rested. */
   function advance({ delta }: FrameData) {
-    if (world === undefined) {
-      return;
-    }
-    world = tick(world, delta / 1000 || FIRST_FRAME);
+    world = tick(world, delta / 1000);
     paint(world);
-    still = isResting(world) ? still + 1 : 0;
-    if (still >= REST_FRAMES && world.held === null) {
+    rested = restedFor(rested, world);
+    if (mayRest(rested, world)) {
       sleep();
     }
   }
@@ -173,24 +161,15 @@ export function createDrive(
   }
 
   function onMove(event: PointerEvent) {
-    if (world === undefined) {
-      return;
-    }
     world = move(world, locate(event));
     wake();
   }
 
   function onLeave() {
-    if (world === undefined) {
-      return;
-    }
     world = leave(world);
   }
 
   function onDown(event: PointerEvent) {
-    if (world === undefined) {
-      return;
-    }
     const holding = world.held !== null;
     world = press(world, locate(event));
     if (!holding && world.held !== null) {
@@ -200,9 +179,6 @@ export function createDrive(
   }
 
   function onUp() {
-    if (world === undefined) {
-      return;
-    }
     world = release(world);
     wake();
   }
@@ -214,7 +190,7 @@ export function createDrive(
 
   function hopNow() {
     hopAt(HOP_WAIT + draw() * HOP_SPREAD);
-    if (!visible || running || world === undefined || world.held !== null) {
+    if (!(measured && visible) || running || world.held !== null) {
       return;
     }
     const index = Effect.runSync(
@@ -240,7 +216,7 @@ export function createDrive(
     if (width === 0 || height === 0) {
       return;
     }
-    if (world === undefined || !calm) {
+    if (!(measured && calm)) {
       update(width, height);
       return;
     }

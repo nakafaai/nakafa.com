@@ -1,24 +1,27 @@
-import { TAILWIND_BREAKPOINT_PIXELS } from "@repo/design-system/lib/breakpoints";
+import {
+  ANIMAL_RADII,
+  THINGS_AREA,
+} from "@repo/design-system/components/pool/member";
 import { Animal } from "@repo/mascot/animal";
 import { Array as Arr, Number as Num, Schema } from "effect";
 
 /**
- * How many animals the pool holds and how big each one is. Their discs cover
- * about half of the pool's area on every screen. A bigger pool holds more
- * animals, and when the catalog runs out the animals grow instead of repeating.
+ * How many animals the pool holds and how big each one is. The animals and Nina's
+ * things together cover about half of the pool's area on every screen. A bigger
+ * pool holds more animals, and when the catalog runs out the animals grow instead
+ * of repeating.
  */
 
-/** The share of the pool's area that the discs of the animals cover. */
+/** The share of the pool's area that the animals and Nina's things cover together. */
 const COVER = 0.5;
 /**
- * The radius of each animal in turn, by its place in the pool, in pixels. Animals
- * come in six sizes, from 60 to 112 pixels across.
+ * The narrowest screen that shows the pool, in pixels: the lg breakpoint of
+ * `lib/breakpoints`, 64 rem at the default font size, where the artwork column appears.
+ * The value is written here so that the pool's own tests do not load that module.
  */
-export const ANIMAL_RADII: readonly number[] = [30, 38, 38, 46, 46, 56];
-/** The narrowest screen that shows the pool: the lg breakpoint, where the artwork column appears. */
-const NARROWEST_SCREEN = TAILWIND_BREAKPOINT_PIXELS.lg;
+const NARROWEST_SCREEN = 1024;
 /** The share of the width of the pool that the artwork takes: four of the seven columns from the lg breakpoint up. */
-const ARTWORK_SHARE = 4 / 7;
+export const ARTWORK_SHARE = 4 / 7;
 /** The shortest height that the sign-in page is checked at, in pixels. */
 const SHORTEST_HEIGHT = 640;
 /** The width of a 4K screen, the widest that the pool is sized for, in pixels. */
@@ -34,9 +37,12 @@ const MEAN_DISC =
     (total, radius) => total + Math.PI * radius * radius
   ) / ANIMAL_RADII.length;
 
-/** The animals whose discs cover the share of a pool of this size, before any limit. */
+/**
+ * The animals whose discs cover the share of a pool of this size, with Nina's things
+ * taking their own area first, before any limit.
+ */
 function wantedAnimals(width: number, height: number) {
-  return (COVER * width * height) / MEAN_DISC;
+  return (COVER * width * height - THINGS_AREA) / MEAN_DISC;
 }
 
 /**

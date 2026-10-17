@@ -55,6 +55,15 @@ describe("the balls that touch", () => {
     expect(first.x).toBeLessThan(600);
   });
 
+  it("stops part of the sliding of two balls that press together", () => {
+    // The first ball presses into the second, and slides down past it.
+    const [first, second] = pushApart(
+      [ballAt({ vx: 50, vy: 100, x: 590 }), ballAt({ x: 615 })],
+      null
+    );
+    expect(Math.abs(first.vy - second.vy)).toBeLessThan(100);
+  });
+
   it("leaves the balls it is given as they were, and returns copies", () => {
     const given = [ballAt({ vx: 300, x: 590 }), ballAt({ vx: -300, x: 615 })];
     const pushed = pushApart(given, null);

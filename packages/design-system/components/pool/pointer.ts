@@ -10,18 +10,17 @@ import { Number as Num, Schema } from "effect";
 const POINTER_REACH = 44;
 /**
  * How hard the pointer pushes a ball, per pixel that the ball is inside its reach.
- * Measured on the 1200 by 640 pool, with the pointer swept across 0.6 of its height
- * from a settled pile: at 300 pixels a second the fastest ball reached 195 pixels a
- * second, and at 1200 it reached 95.
+ * Measured on the three checked pools, 585, 823 and 1463 pixels wide, with the
+ * pointer swept across 0.6 of the height from a settled pile at 300 pixels a second:
+ * the fastest ball reached 63, 85 and 158 pixels a second, where 80 gave 272, 206
+ * and 297.
  */
-const POINTER_PUSH = 80;
+const POINTER_PUSH = 40;
 /**
  * The most of the pointer's speed that a ball takes over, in pixels per second.
  * This is 28 pixels a frame at 60 frames a second.
  */
 const POINTER_SPEED_LIMIT = 1680;
-/** The rate, per second, at which a ball in reach takes over the pointer's speed. */
-const POINTER_RATE = 1;
 /** Where the pointer waits before it has come near the box, in pixels. */
 const NOWHERE = -9999;
 
@@ -94,7 +93,8 @@ export function measure(pointer: Pointer, seconds: number): Pointer {
 /**
  * The change of velocity that the pointer gives a free ball in one step of `dt`
  * seconds. Only a pointer over the box, and near the ball, gives any. The spring
- * acts over the step, and the ball takes over the pointer's speed at a fixed rate.
+ * acts over the step, and the ball takes over the pointer's speed in proportion to the
+ * step: a second of steps takes over all of it.
  */
 export function pointerPush(pointer: Pointer, ball: Ball, dt: number) {
   if (!pointer.active) {
@@ -114,9 +114,8 @@ export function pointerPush(pointer: Pointer, ball: Ball, dt: number) {
     maximum: POINTER_SPEED_LIMIT,
     minimum: -POINTER_SPEED_LIMIT,
   };
-  const take = POINTER_RATE * dt;
   return {
-    vx: (dx / distance) * push * dt + Num.clamp(pointer.vx, limit) * take,
-    vy: (dy / distance) * push * dt + Num.clamp(pointer.vy, limit) * take,
+    vx: (dx / distance) * push * dt + Num.clamp(pointer.vx, limit) * dt,
+    vy: (dy / distance) * push * dt + Num.clamp(pointer.vy, limit) * dt,
   };
 }

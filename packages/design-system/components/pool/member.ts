@@ -1,7 +1,4 @@
-import {
-  ANIMAL_RADII,
-  type Cover,
-} from "@repo/design-system/components/pool/cover";
+import type { Cover } from "@repo/design-system/components/pool/cover";
 import type { Start } from "@repo/design-system/components/pool/place";
 import { Mascot } from "@repo/mascot/code";
 import { cast } from "@repo/mascot/seed";
@@ -29,6 +26,11 @@ export type PoolMember = typeof PoolMemberSchema.Type;
 
 /** The seed of the cast, so that the same animals come up on every visit. */
 const SEED = "masuk";
+/**
+ * The radius of each animal in turn, by its place in the pool, in pixels. Animals
+ * come in six sizes, from 60 to 112 pixels across.
+ */
+export const ANIMAL_RADII: readonly number[] = [30, 38, 38, 46, 46, 56];
 /** Nina's things, in the order in which they lie among the animals. */
 const THING_NAMES: readonly ThingName[] = [
   "book",
@@ -45,6 +47,9 @@ const THING_FIRST = 2;
 const THING_STEP = 4;
 /** The radius of each thing. */
 const THING_RADIUS = 27;
+/** The area of all of Nina's things together, in square pixels: they cover part of every pool. */
+export const THINGS_AREA =
+  THING_NAMES.length * Math.PI * THING_RADIUS * THING_RADIUS;
 /** A hashed text becomes a fraction from zero up to one, in this many steps. */
 const FRACTION_STEPS = 10_000;
 /** The first sideways speed of a member spreads over this many pixels per second, around zero. */
