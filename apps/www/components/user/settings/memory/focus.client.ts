@@ -5,8 +5,6 @@ import { useLayoutEffect, useRef } from "react";
 import {
   focusFirst,
   MEMORY_ADD_ID,
-  MEMORY_LIST_ID,
-  MEMORY_SEARCH_ID,
   memoryRowId,
 } from "@/components/user/settings/memory/focus";
 import type { Memory } from "@/components/user/settings/memory/list";
@@ -14,10 +12,10 @@ import type { Memory } from "@/components/user/settings/memory/list";
 /**
  * Gives the focus back when the learner closes the editor while the focus is in
  * it. The editor leaves the page with the focus, so it would fall to the body.
- * The focus goes to the row or the button that opened the editor, then to the
- * list, and to the search field when the list has left the page too. A sheet
- * may already have returned the focus itself, which this leaves alone. `opener`
- * is the memory the opening began with, or none for a new memory.
+ * The focus goes to the row that opened the editor, or to the Add memory button
+ * for a new memory, and to the Add memory button when that row has left the page.
+ * A sheet may already have returned the focus itself, which this leaves alone.
+ * `opener` is the memory the opening began with, or none for a new memory.
  */
 export function useFocusAfterClose(
   open: boolean,
@@ -39,9 +37,8 @@ export function useFocusAfterClose(
       return;
     }
     focusFirst([
-      document.getElementById(opener ? memoryRowId(opener) : MEMORY_ADD_ID),
-      document.getElementById(MEMORY_LIST_ID),
-      document.getElementById(MEMORY_SEARCH_ID),
+      opener ? document.getElementById(memoryRowId(opener)) : null,
+      document.getElementById(MEMORY_ADD_ID),
     ]);
   }, [host, opener, open]);
 }

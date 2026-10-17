@@ -19,7 +19,7 @@ import {
   CardSectionHint,
 } from "@/components/shared/card/section";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
-import { MEMORY_SEARCH_ID } from "@/components/user/settings/memory/focus";
+import { MEMORY_ADD_ID } from "@/components/user/settings/memory/focus";
 import { useMemory } from "@/components/user/settings/memory/provider";
 
 const REMEMBER_ID = "user-settings-memory-remember";
@@ -97,11 +97,11 @@ export function MemoryControl() {
           </>
         }
         // The button that opened the dialog is disabled once every memory is
-        // gone, so after a confirmed clear the focus goes to the search field.
+        // gone, so after a confirmed clear the focus goes to the Add memory button.
         onOpenChangeComplete={(open) => {
           if (!open && clearing.current) {
             clearing.current = false;
-            document.getElementById(MEMORY_SEARCH_ID)?.focus();
+            document.getElementById(MEMORY_ADD_ID)?.focus();
           }
         }}
         open={confirming}

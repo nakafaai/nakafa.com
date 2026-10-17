@@ -2,7 +2,7 @@
 
 import { useCallbackRef, useMergedRef } from "@mantine/hooks";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, type Option } from "effect";
 import { type CSSProperties, useLayoutEffect, useRef, useState } from "react";
 import {
   type CustomContainerComponentProps,
@@ -12,9 +12,12 @@ import {
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
+  focusAfterDelete,
   focusFirst,
   MEMORY_LIST_ID,
   MEMORY_SEARCH_ID,
+  memoryNeighbour,
+  NO_NEIGHBOUR,
 } from "@/components/user/settings/memory/focus";
 import {
   MEMORY_PAGE,
@@ -48,39 +51,34 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   const { remove } = useMemoryActions();
   // The memory a row asked to delete, until the learner confirms or cancels.
   const [pending, setPending] = useState<Memory | null>(null);
-  const frame = useRef<HTMLDivElement>(null);
-  // The list on the page when the learner asked, which the question compares
-  // with the list on the page when it closes.
-  const askedList = useRef<HTMLUListElement | null>(null);
+  // The memory after the one asked about, or before it when it was the last, read
+  // when the learner asked. It takes the focus once the delete is confirmed.
+  const neighbour = useRef<Option.Option<Memory["id"]>>(NO_NEIGHBOUR);
+  // Set when the learner confirms, so the question gives the focus to the neighbour.
+  const confirmed = useRef(false);
   // One function for every row, so a row renders again only when its memory changes.
   const askRow = useCallbackRef((memory: Memory) => {
-    askedList.current = frame.current?.querySelector("ul") ?? null;
+    neighbour.current = memoryNeighbour(memories, memory.id);
+    confirmed.current = false;
     setPending(memory);
   });
-  // The question hands the focus back to the list the learner asked from. When
-  // that list has left the page, the focus goes to the search field, which stays:
-  // the last memory went, or the list crossed `MEMORY_PAGE` and the window
-  // replaced it with its own.
-  const focusAfterDelete = useCallbackRef(() => {
-    const list = frame.current?.querySelector("ul") ?? null;
-
-    if (list !== null && list === askedList.current) {
-      return list;
-    }
-
-    return document.getElementById(MEMORY_SEARCH_ID);
-  });
+  // A confirmed delete hands the focus to the neighbour's row. A cancelled question
+  // returns it to the row that asked, as the dialog does on its own.
+  const focusAfterQuestion = useCallbackRef(() =>
+    confirmed.current ? focusAfterDelete(neighbour.current) : true
+  );
 
   /** Removes the memory the learner confirmed, and closes the question. */
   function confirmDelete() {
     if (pending !== null) {
+      confirmed.current = true;
       remove(pending);
     }
     setPending(null);
   }
 
   return (
-    <div ref={frame}>
+    <div>
       {Arr.length(memories) < MEMORY_PAGE ? (
         <MemoryItems>
           {Arr.map(memories, (memory, index) => (
@@ -103,7 +101,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
         </WindowVirtualizer>
       )}
       <MemoryDeleteDialog
-        finalFocus={focusAfterDelete}
+        finalFocus={focusAfterQuestion}
         onConfirm={confirmDelete}
         onOpenChange={(open) => {
           if (!open) {

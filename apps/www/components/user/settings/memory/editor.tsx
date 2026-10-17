@@ -14,6 +14,10 @@ import { useTranslations } from "next-intl";
 import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
+import {
+  MEMORY_ADD_ID,
+  memoryRowId,
+} from "@/components/user/settings/memory/focus";
 import { useFocusAfterClose } from "@/components/user/settings/memory/focus.client";
 import {
   createHost,
@@ -243,6 +247,7 @@ function MemoryEditorSheet({
 }) {
   const t = useTranslations("Memory");
   const close = useMemoryPage((state) => state.close);
+  const { opener } = useMemoryEditor();
 
   useLayoutEffect(() => remember, [remember]);
 
@@ -260,6 +265,14 @@ function MemoryEditorSheet({
     >
       <SheetContent
         className="w-full max-w-none gap-0 border-l-0"
+        finalFocus={() => {
+          if (opener === null) {
+            return document.getElementById(MEMORY_ADD_ID);
+          }
+          // A deleted memory has no row, and its delete question has placed the
+          // focus already, so the sheet leaves it where the question put it.
+          return document.getElementById(memoryRowId(opener)) ?? false;
+        }}
         id={SHEET_ID}
         initialFocus={() => document.getElementById(SHEET_ID)}
         ref={place}

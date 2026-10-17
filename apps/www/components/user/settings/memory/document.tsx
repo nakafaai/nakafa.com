@@ -15,7 +15,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { String as Str } from "effect";
+import { type Option, String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, Suspense, use, useRef, useState } from "react";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
@@ -25,6 +25,11 @@ import {
   MemoryOrigin,
 } from "@/components/user/settings/memory/facts";
 import {
+  focusAfterDelete,
+  memoryNeighbour,
+  NO_NEIGHBOUR,
+} from "@/components/user/settings/memory/focus";
+import {
   isBlank,
   type Memory,
   type MemoryDraft,
@@ -33,7 +38,10 @@ import {
   loadEditorPreviewModule,
   loadRichEditorModule,
 } from "@/components/user/settings/memory/module";
-import { useMemoryPage } from "@/components/user/settings/memory/provider";
+import {
+  useMemoryPage,
+  useShownMemories,
+} from "@/components/user/settings/memory/provider";
 
 /**
  * The rich editor, drawn once its code has loaded. The code loads when a learner
@@ -94,13 +102,24 @@ export function MemoryDocument({
   const common = useTranslations("Common");
   const close = useMemoryPage((state) => state.close);
   const restored = useMemoryPage((state) => state.draft);
+  const shown = useShownMemories();
   const { change, discard, starting } = useAutosave(memory, restored);
   const [draft, setDraft] = useState(starting);
   const [written, setWritten] = useState(() => !isBlank(starting));
   const [asking, setAsking] = useState(false);
+  // The memory after this one in the list, read when the learner confirms the
+  // delete. A new memory has none, so the focus goes to the Add memory button.
+  const neighbour = useRef<Option.Option<Memory["id"]>>(NO_NEIGHBOUR);
+  // Set when the learner confirms the delete, so the question gives the focus to
+  // the neighbour. Cleared each time the question opens.
+  const confirmed = useRef(false);
   const body = useRef<HTMLDivElement>(null);
   const length = Str.length(Str.trim(draft.text));
   const savedWords = <SavedWords markdown={starting.text} />;
+  // A confirmed delete hands the focus to the neighbour's row. A cancelled
+  // question returns it to where it was, as the dialog does on its own.
+  const focusAfterQuestion = () =>
+    confirmed.current ? focusAfterDelete(neighbour.current) : true;
 
   /** Shows what the learner wrote and hands it to the saving. */
   function write(next: MemoryDraft) {
@@ -210,14 +229,21 @@ export function MemoryDocument({
         </p>
         <Button
           disabled={memory === null && !written}
-          onClick={() => setAsking(true)}
+          onClick={() => {
+            confirmed.current = false;
+            setAsking(true);
+          }}
           variant="destructive"
         >
           {common("delete")}
         </Button>
       </footer>
       <MemoryDeleteDialog
+        finalFocus={focusAfterQuestion}
         onConfirm={() => {
+          neighbour.current =
+            memory === null ? NO_NEIGHBOUR : memoryNeighbour(shown, memory.id);
+          confirmed.current = true;
           setAsking(false);
           discard();
           close();
