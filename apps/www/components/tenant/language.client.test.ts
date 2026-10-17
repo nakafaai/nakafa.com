@@ -1,12 +1,11 @@
 // @vitest-environment node
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { changeSchoolLanguage } from "@/components/tenant/language.client";
 
 const doubles = vi.hoisted(() => ({
   isStaleAction: vi.fn(),
-  reload: vi.fn(),
   report: vi.fn(),
   save: vi.fn(),
 }));
@@ -24,12 +23,7 @@ vi.mock("next/navigation", () => ({
 describe("changeSchoolLanguage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("window", { location: { reload: doubles.reload } });
     doubles.report.mockReturnValue(Effect.void);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
   });
 
   it.effect(
@@ -42,13 +36,12 @@ describe("changeSchoolLanguage", () => {
 
         expect(render).toBe("refresh");
         expect(doubles.save).toHaveBeenCalledExactlyOnceWith("id");
-        expect(doubles.reload).not.toHaveBeenCalled();
         expect(doubles.report).not.toHaveBeenCalled();
       })
   );
 
   it.effect(
-    "reports a failed save and still renders the page again in place",
+    "reports a failed save and answers failed, so the page keeps its language",
     () =>
       Effect.gen(function* () {
         const failure = new Error("network");
@@ -57,11 +50,10 @@ describe("changeSchoolLanguage", () => {
 
         const render = yield* changeSchoolLanguage("de");
 
-        expect(render).toBe("refresh");
+        expect(render).toBe("failed");
         expect(doubles.report).toHaveBeenCalledExactlyOnceWith(failure, {
           source: "school-language",
         });
-        expect(doubles.reload).not.toHaveBeenCalled();
       })
   );
 
@@ -78,7 +70,6 @@ describe("changeSchoolLanguage", () => {
         expect(render).toBe("reload");
         expect(doubles.isStaleAction).toHaveBeenCalledExactlyOnceWith(stale);
         expect(doubles.report).not.toHaveBeenCalled();
-        expect(doubles.reload).not.toHaveBeenCalled();
       })
   );
 });

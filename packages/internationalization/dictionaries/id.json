@@ -5,6 +5,7 @@
     "for-you": "Untukmu",
     "home": "Beranda",
     "language": "Bahasa",
+    "language-error": "Kamu belum bisa mengubah bahasa.",
     "nina-memory": "Memori Nina",
     "role": {
       "admin": "Admin",
@@ -22,7 +23,8 @@
     },
     "sign-in-title": "Masuk ke {school}",
     "signed-in": "Kamu sudah masuk.",
-    "signed-in-as": "Kamu masuk sebagai {role}."
+    "signed-in-as": "Kamu masuk sebagai {role}.",
+    "try-again": "Coba lagi"
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",

@@ -5,6 +5,7 @@
     "for-you": "For you",
     "home": "Home",
     "language": "Language",
+    "language-error": "We could not change the language.",
     "nina-memory": "Nina memory",
     "role": {
       "admin": "Admin",
@@ -22,7 +23,8 @@
     },
     "sign-in-title": "Sign in to {school}",
     "signed-in": "You are signed in.",
-    "signed-in-as": "You are signed in as {role}."
+    "signed-in-as": "You are signed in as {role}.",
+    "try-again": "Try again"
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",

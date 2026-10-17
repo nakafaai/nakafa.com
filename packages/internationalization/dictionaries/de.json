@@ -5,6 +5,7 @@
     "for-you": "Für dich",
     "home": "Startseite",
     "language": "Sprache",
+    "language-error": "Die Sprache konnte nicht geändert werden.",
     "nina-memory": "Nina-Gedächtnis",
     "role": {
       "admin": "Admin",
@@ -22,7 +23,8 @@
     },
     "sign-in-title": "Anmelden bei {school}",
     "signed-in": "Du bist angemeldet.",
-    "signed-in-as": "Du bist als {role} angemeldet."
+    "signed-in-as": "Du bist als {role} angemeldet.",
+    "try-again": "Erneut versuchen"
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
