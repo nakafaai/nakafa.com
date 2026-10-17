@@ -13,13 +13,14 @@ import { MARKDOWN_MARKUP, NINA_SECTION } from "@/e2e/support/selector";
 import { promptWith } from "@/e2e/support/sheet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** What a learner writes first: lines that Markdown would read as markup, then a pasted set of exercises. */
+/** What a learner writes first: text that reads as HTML, a product with asterisks and lines of choices, then a pasted set of exercises. */
 const WORDS = `${LEARNER_TEXT.angle}\n${LEARNER_TEXT.product}\n${LEARNER_TEXT.choices}\n${PASTED}`;
 
 /**
  * What a surface shows while the first message of a learner is on its way:
- * every word as they wrote it, and a message as long as a pasted page folded.
- * A surface that read the words as Markdown, or showed them whole, fails here.
+ * every word and line as they wrote it, and a message as long as a pasted page
+ * folded. A surface that dropped text that reads as HTML, turned the asterisks
+ * into italics, joined the lines, or showed the words whole, fails here.
  */
 const showsWordsAsWritten = (page: Page, scope: Locator, changes: Changes) =>
   Effect.promise(async () => {
@@ -35,8 +36,13 @@ const showsWordsAsWritten = (page: Page, scope: Locator, changes: Changes) =>
     const words = bubble.locator("[id]");
 
     await expect(bubble).toBeVisible();
+    // Each line break is drawn as one, so the text a reader sees holds them.
     await expect
-      .poll(() => words.evaluate((box) => box.textContent))
+      .poll(() =>
+        words.evaluate((box) =>
+          box instanceof HTMLElement ? box.innerText : ""
+        )
+      )
       .toBe(WORDS);
     await expect(bubble.locator(MARKDOWN_MARKUP)).toHaveCount(0);
     await expect(
