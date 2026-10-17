@@ -3,8 +3,11 @@
 import { editorFrame } from "@repo/design-system/components/editor/frame";
 import { useCallback, useRef, useState } from "react";
 
-/** The element the open editor lives in: one for the whole life of the page. */
-function createHost() {
+/**
+ * The element the open editor lives in, one for the whole life of the page. The
+ * server has no page to hold it, so it creates none.
+ */
+export function createHost() {
   if (typeof document === "undefined") {
     return null;
   }
@@ -70,17 +73,12 @@ function restoreCaret(caret: Caret) {
  * code takes its elements out first and the focus is gone by the time its ref
  * lets go.
  */
-export function useEditorHost() {
-  const [host] = useState(createHost);
+export function useEditorHost(host: HTMLElement) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const caret = useRef<Caret | null>(null);
 
   const place = useCallback(
     (element: HTMLElement | null) => {
-      if (host === null) {
-        return;
-      }
-
       if (element === null) {
         setSlot(null);
         return;
@@ -99,10 +97,8 @@ export function useEditorHost() {
   );
 
   const remember = useCallback(() => {
-    if (host !== null) {
-      caret.current = keepCaret(host);
-    }
+    caret.current = keepCaret(host);
   }, [host]);
 
-  return { host, place, remember, slot };
+  return { place, remember, slot };
 }

@@ -11,11 +11,14 @@ import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
 import { Function as Fn } from "effect";
 import { useTranslations } from "next-intl";
-import { useLayoutEffect, useSyncExternalStore } from "react";
+import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
 import { useFocusAfterClose } from "@/components/user/settings/memory/focus.client";
-import { useEditorHost } from "@/components/user/settings/memory/host.client";
+import {
+  createHost,
+  useEditorHost,
+} from "@/components/user/settings/memory/host.client";
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
@@ -117,15 +120,26 @@ type Remember = ReturnType<typeof useEditorHost>["remember"];
  * changes loses nothing the learner wrote.
  */
 export function MemoryEditor() {
+  // The server renders no editor, because it has no page to hold one in.
+  const [host] = useState(createHost);
+
+  return host ? <HostedMemoryEditor host={host} /> : null;
+}
+
+/**
+ * The editor once the page has an element to hold it: the document, and the
+ * layout that shows it.
+ */
+function HostedMemoryEditor({ host }: { host: HTMLElement }) {
   const wide = useMediaQuery(WIDE);
   const { memory, open, opener, session } = useMemoryEditor();
-  const { host, place, remember, slot } = useEditorHost();
+  const { place, remember, slot } = useEditorHost(host);
 
   useFocusAfterClose(open, opener, host);
 
   return (
     <>
-      {host && (open || slot)
+      {open || slot
         ? createPortal(
             <MemoryDocument key={session} memory={memory} open={open} />,
             host

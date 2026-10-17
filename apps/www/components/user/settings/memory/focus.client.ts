@@ -22,7 +22,7 @@ import type { Memory } from "@/components/user/settings/memory/list";
 export function useFocusAfterClose(
   open: boolean,
   opener: Memory["id"] | null,
-  host: HTMLElement | null
+  host: HTMLElement
 ) {
   const wasOpen = useRef(false);
 
