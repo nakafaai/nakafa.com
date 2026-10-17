@@ -39,8 +39,12 @@ const cardSectionHintVariants = cva("flex-1 text-sm", {
   },
 });
 
+// A label wider than the row wraps inside its button, which grows taller: `h-auto`
+// lets the button grow, and `min-h-8` keeps the small size's height as its floor.
+// An action's minimum width is its full label, capped at the row, so the `share`
+// variant still stacks the actions that do not fit side by side.
 const cardSectionActionsVariants = cva(
-  "flex flex-wrap items-center justify-end gap-2",
+  "flex flex-wrap items-center justify-end gap-2 *:h-auto *:min-h-8 *:min-w-fit *:max-w-full *:whitespace-normal",
   {
     defaultVariants: {
       share: false,
@@ -113,11 +117,12 @@ export function CardSectionHint({
  * Holds a section's actions on the right of its footer, side by side at their
  * full size, so a footer with only actions keeps them on the right too. When
  * they have no room beside the sentence, they move to their own line and wrap
- * among their buttons. A button is clipped only when it is wider than the whole
- * row, so keep each label short enough for the row at large text sizes. A
- * footer with no sentence passes `share`: its actions split the row equally,
- * and when their labels do not fit side by side they stack, each across the
- * full width.
+ * among their buttons. An action wider than the row takes the row's width, and
+ * its label wraps onto more lines, so its button grows taller. When its icon and
+ * longest word do not fit the row either, it runs into the footer's padding, and
+ * past the card's edge when that is not enough, so keep labels short. A footer
+ * with no sentence passes `share`: its actions split the row equally, and when
+ * their labels do not fit side by side they stack, each across the full width.
  */
 export function CardSectionActions({
   share,
