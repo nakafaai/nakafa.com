@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "24.19.1",
+    "@types/node": "24.19.2",
     "@vercel/config": "catalog:",
     "typescript": "catalog:"
   }
