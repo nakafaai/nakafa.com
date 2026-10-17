@@ -33,6 +33,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -177,22 +178,25 @@ export function MeasurementToolsLab({
             value={selectedMeasurement}
           />
         </div>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            <VisualFact
+              label={labels.instrument}
+              value={selectedLabels.instrument}
+            />
+            <VisualFact
+              label={labels.measuredObject}
+              value={selectedLabels.object}
+            />
+            <VisualFact
+              label={labels.reading}
+              value={<InlineMath math={selectedReadingMath} />}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
+
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <VisualFact
-            label={labels.instrument}
-            value={selectedLabels.instrument}
-          />
-          <VisualFact
-            label={labels.measuredObject}
-            value={selectedLabels.object}
-          />
-          <VisualFact
-            label={labels.reading}
-            value={<InlineMath math={selectedReadingMath} />}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

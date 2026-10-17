@@ -18,6 +18,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -124,27 +125,31 @@ export function ElectronConfigurationLab({
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.note}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-4">
+            <VisualFact
+              label={labels.atomicNumber}
+              value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
+            />
+            <VisualFact
+              label={labels.electronTotal}
+              value={
+                <InlineMath math={`e^- = ${selectedSample.atomicNumber}`} />
+              }
+            />
+            <VisualFact
+              label={labels.configuration}
+              value={<InlineMath math={`${configurationMath}`} />}
+            />
+            <VisualFact
+              label={labels.outerShell}
+              value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-4">
-          <VisualFact
-            label={labels.atomicNumber}
-            value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
-          />
-          <VisualFact
-            label={labels.electronTotal}
-            value={<InlineMath math={`e^- = ${selectedSample.atomicNumber}`} />}
-          />
-          <VisualFact
-            label={labels.configuration}
-            value={<InlineMath math={`${configurationMath}`} />}
-          />
-          <VisualFact
-            label={labels.outerShell}
-            value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

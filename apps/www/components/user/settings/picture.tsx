@@ -18,13 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { anotherMascot } from "@repo/mascot/candidates";
 import { Array as Arr, Effect, Option, type Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import {
   useUpdateMascotMutation,
@@ -33,15 +35,18 @@ import {
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
+/** The copy of a save that the server refuses, which the Toaster shows in the reader's language. */
+const SAVE_ERROR: ToastCopy = {
+  description: "action-error.description",
+  title: "action-error.title",
+};
+
 /**
  * Runs one save of the account from a browser event. A save that the server
  * refuses is reported, and the person sees the error message; the optimistic copy
  * steps back by itself.
  */
-function saveAccount<A, E>(
-  write: () => Promise<Result.Result<A, E>>,
-  errorMessage: string
-) {
+function saveAccount<A, E>(write: () => Promise<Result.Result<A, E>>) {
   return Effect.runPromise(
     Effect.tryPromise(write).pipe(
       Effect.flatMap(Effect.fromResult),
@@ -53,7 +58,7 @@ function saveAccount<A, E>(
           }).pipe(
             Effect.andThen(
               Effect.sync(() => {
-                toast.error(errorMessage);
+                toast.error(SAVE_ERROR);
               })
             )
           ),
@@ -68,7 +73,6 @@ function saveAccount<A, E>(
  * button that shuffles the animal. A change takes effect at once.
  */
 export function UserSettingsPicture({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updatePicture = useUpdatePictureMutation();
   const updateMascot = useUpdateMascotMutation();
@@ -87,17 +91,14 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
   /** Shows and saves another animal, never the one that shows now. */
   const shuffle = () => {
     const mascot = Effect.runSync(anotherMascot(appUser.mascot.animal));
-    return saveAccount(() => updateMascot({ mascot }), actionErrorMessage);
+    return saveAccount(() => updateMascot({ mascot }));
   };
 
   /** Saves the choice of the Select. A value that is no picture, or the one that shows, saves nothing. */
   const choose = (value: string | null) => {
     const parsed = Schema.decodeUnknownOption(UserPicture)(value);
     if (Option.isSome(parsed) && parsed.value !== picture) {
-      saveAccount(
-        () => updatePicture({ picture: parsed.value }),
-        actionErrorMessage
-      );
+      saveAccount(() => updatePicture({ picture: parsed.value }));
     }
   };
 
@@ -139,22 +140,18 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
         ) : null}
       </CardContent>
       <CardSectionFooter>
-        <div className="flex w-full items-center justify-between gap-4">
-          {photo === undefined ? (
-            <>
-              <p className="text-muted-foreground text-sm">
-                {t("picture-footer-animal")}
-              </p>
+        {photo === undefined ? (
+          <>
+            <CardSectionHint>{t("picture-footer-animal")}</CardSectionHint>
+            <CardSectionActions>
               <Button onClick={shuffle} size="sm" type="button">
                 {t("animal-shuffle")}
               </Button>
-            </>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              {t("picture-footer-photo")}
-            </p>
-          )}
-        </div>
+            </CardSectionActions>
+          </>
+        ) : (
+          <CardSectionHint>{t("picture-footer-photo")}</CardSectionHint>
+        )}
       </CardSectionFooter>
     </CardSection>
   );

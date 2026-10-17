@@ -44,7 +44,7 @@ export const DELETE = "chats/mutations:deleteChat";
 const SHARE = "chats/mutations:updateChatVisibility";
 export const SHARE_TOKEN_QUERY = "chats/queries:getShareToken";
 /** What the pages say when a change fails. */
-export const FAILED = "We could not complete this action. Please try again.";
+export const FAILED = "We could not complete this action.";
 
 /** A call to the backend that did not succeed. */
 class ConvexCallError extends Schema.TaggedError<ConvexCallError>()(

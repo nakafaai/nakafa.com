@@ -32,6 +32,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -139,41 +140,43 @@ export function StoppingDistanceLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
+            <VisualFactIndicator
+              label={labels.speed}
+              value={<InlineMath math={formatRoundedSpeedMath(motion.speed)} />}
+            />
+            <VisualFactIndicator
+              indicatorColor={REACTION_DISTANCE_COLOR}
+              label={labels.reactionDistance}
+              value={
+                <InlineMath
+                  math={formatRoundedMeterMath(motion.reactionDistance)}
+                />
+              }
+            />
+            <VisualFactIndicator
+              indicatorColor={BRAKING_DISTANCE_COLOR}
+              label={labels.brakingDistance}
+              value={
+                <InlineMath
+                  math={formatRoundedMeterMath(motion.brakingDistance)}
+                />
+              }
+            />
+            <VisualFactIndicator
+              label={labels.stoppingDistance}
+              value={
+                <InlineMath
+                  math={formatRoundedMeterMath(motion.stoppingDistance)}
+                />
+              }
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
-          <VisualFactIndicator
-            label={labels.speed}
-            value={<InlineMath math={formatRoundedSpeedMath(motion.speed)} />}
-          />
-          <VisualFactIndicator
-            indicatorColor={REACTION_DISTANCE_COLOR}
-            label={labels.reactionDistance}
-            value={
-              <InlineMath
-                math={formatRoundedMeterMath(motion.reactionDistance)}
-              />
-            }
-          />
-          <VisualFactIndicator
-            indicatorColor={BRAKING_DISTANCE_COLOR}
-            label={labels.brakingDistance}
-            value={
-              <InlineMath
-                math={formatRoundedMeterMath(motion.brakingDistance)}
-              />
-            }
-          />
-          <VisualFactIndicator
-            label={labels.stoppingDistance}
-            value={
-              <InlineMath
-                math={formatRoundedMeterMath(motion.stoppingDistance)}
-              />
-            }
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

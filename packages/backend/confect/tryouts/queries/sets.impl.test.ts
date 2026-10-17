@@ -335,6 +335,7 @@ describe("tryouts/queries/sets", () => {
     "counts every visible section once and includes the hidden internal entry",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         for (const visibility of ["visible", "internal-entry"] as const) {
           const t = createConvexTestWithBetterAuth();
           const source = makeTryoutStartHierarchy("id", visibility);
@@ -387,10 +388,12 @@ describe("tryouts/queries/sets", () => {
           )(catalog).pipe(Effect.orDie);
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
-              activateTryoutSnapshot(ctx, {
-                catalog: signedCatalog,
-                placements: [makeTryoutStartPlacement("id")],
-              })
+              Effect.runPromiseWith(runtimeServices)(
+                activateTryoutSnapshot(ctx, {
+                  catalog: signedCatalog,
+                  placements: [makeTryoutStartPlacement("id")],
+                })
+              )
             )
           );
           const result = yield* Effect.promise(() =>

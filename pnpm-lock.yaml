@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@confect/core':
-      specifier: 10.2.0
-      version: 10.2.0
+      specifier: 10.3.1
+      version: 10.3.1
     '@convex-dev/agent':
       specifier: 0.7.8
       version: 0.7.8
@@ -16,11 +16,11 @@ catalogs:
       specifier: 0.3.0
       version: 0.3.0
     '@effect/platform-browser':
-      specifier: 4.0.2
-      version: 4.0.2
+      specifier: 4.0.5
+      version: 4.0.5
     '@effect/vitest':
-      specifier: 4.0.2
-      version: 4.0.2
+      specifier: 4.0.5
+      version: 4.0.5
     '@hugeicons/core-free-icons':
       specifier: ^4.3.5
       version: 4.3.5
@@ -58,8 +58,8 @@ catalogs:
       specifier: 0.5.0
       version: 0.5.0
     effect:
-      specifier: 4.0.2
-      version: 4.0.2
+      specifier: 4.0.5
+      version: 4.0.5
     motion:
       specifier: ^14.3.0
       version: 14.3.0
@@ -111,10 +111,10 @@ overrides:
   react-dom: 19.3.1
   '@types/react': 19.3.0
   '@types/react-dom': 19.3.0
-  '@effect/ai-openai-compat': 4.0.2
-  '@effect/ai-openrouter': 4.0.2
-  '@effect/platform-node': 4.0.2
-  '@effect/platform-node-shared': 4.0.2
+  '@effect/ai-openai-compat': 4.0.5
+  '@effect/ai-openrouter': 4.0.5
+  '@effect/platform-node': 4.0.5
+  '@effect/platform-node-shared': 4.0.5
   '@posthog/convex@2.1.5>posthog-node': 5.55.1
   '@react-email/ui@6.11.3>next': 16.4.2
   '@vercel/routing-utils@6.6.0>path-to-regexp': 6.3.0
@@ -146,14 +146,14 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       '@effect/platform-node':
-        specifier: 4.0.2
-        version: 4.0.2(effect@4.0.2)(redis@6.2.1)
+        specifier: 4.0.5
+        version: 4.0.5(effect@4.0.5)(redis@6.2.1)
       '@effect/tsgo':
-        specifier: 0.51.1
-        version: 0.51.1
+        specifier: 0.53.2
+        version: 0.53.2
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:packages/testing
@@ -171,7 +171,7 @@ importers:
         version: 24.19.2
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       esbuild:
         specifier: 0.28.2
         version: 0.28.2
@@ -267,13 +267,13 @@ importers:
     dependencies:
       '@confect/core':
         specifier: 'catalog:'
-        version: 10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2)
+        version: 10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5)
       '@confect/js':
-        specifier: 10.2.0
-        version: 10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(convex@1.47.0(react@19.3.1))(effect@4.0.2)
+        specifier: 10.3.1
+        version: 10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(convex@1.47.0(react@19.3.1))(effect@4.0.5)
       '@confect/react':
-        specifier: 10.2.0
-        version: 10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(convex@1.47.0(react@19.3.1))(effect@4.0.2)(react@19.3.1)
+        specifier: 10.3.1
+        version: 10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(convex@1.47.0(react@19.3.1))(effect@4.0.5)(react@19.3.1)
       '@convex-dev/agent':
         specifier: 'catalog:'
         version: 0.7.8(@ai-sdk/provider-utils@5.0.59(zod@4.6.5))(@ai-sdk/provider@4.0.27)(ai@7.0.140(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.47.0(react@19.3.1))(hono@4.13.13)(react@19.3.1)(typescript@7.0.2)(zod@4.6.5))(convex@1.47.0(react@19.3.1))(react@19.3.1)
@@ -293,8 +293,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1(supports-color@7.2.0)
       '@nakafa/aksara-contracts':
-        specifier: 0.49.0
-        version: 0.49.0(effect@4.0.2)
+        specifier: 0.51.0
+        version: 0.51.0(effect@4.0.5)
       '@paper-design/shaders-react':
         specifier: ^0.0.81
         version: 0.0.81(@types/react@19.3.0)(react@19.3.1)
@@ -372,7 +372,7 @@ importers:
         version: 1.6.20
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       feed:
         specifier: ^6.0.0
         version: 6.0.0
@@ -403,9 +403,6 @@ importers:
       server-only:
         specifier: 'catalog:'
         version: 0.0.1
-      sonner:
-        specifier: 'catalog:'
-        version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       takumi-js:
         specifier: ^2.16.3
         version: 2.16.3(csstype@3.2.3)(preact@10.29.8)(react@19.3.1)
@@ -417,11 +414,11 @@ importers:
         version: 5.0.15(@types/react@19.3.0)(immer@11.1.21)(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
     devDependencies:
       '@effect/platform-node':
-        specifier: 4.0.2
-        version: 4.0.2(effect@4.0.2)(redis@6.2.1)
+        specifier: 4.0.5
+        version: 4.0.5(effect@4.0.5)(redis@6.2.1)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@next/playwright':
         specifier: 16.4.2
         version: 16.4.2(@playwright/test@1.64.1)
@@ -472,7 +469,7 @@ importers:
         version: link:../utilities
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       posthog-js:
         specifier: 1.438.12
         version: 1.438.12(@types/react@19.3.0)(react@19.3.1)
@@ -485,7 +482,7 @@ importers:
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -503,10 +500,10 @@ importers:
     dependencies:
       '@confect/core':
         specifier: 'catalog:'
-        version: 10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2)
+        version: 10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5)
       '@confect/server':
-        specifier: 10.2.0
-        version: 10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.2)
+        specifier: 10.3.1
+        version: 10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.5)
       '@convex-dev/agent':
         specifier: 'catalog:'
         version: 0.7.8(@ai-sdk/provider-utils@5.0.59(zod@4.6.5))(@ai-sdk/provider@4.0.27)(ai@7.0.140(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.47.0(react@19.3.1))(hono@4.13.13)(react@19.3.1)(typescript@7.0.2)(zod@4.6.5))(convex@1.47.0(react@19.3.1))(react@19.3.1)
@@ -533,13 +530,13 @@ importers:
         version: 0.4.14(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.47.0(react@19.3.1))(hono@4.13.13)(react@19.3.1)(typescript@7.0.2)(zod@4.6.5))(convex@1.47.0(react@19.3.1))(react@19.3.1)
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)
+        version: 4.0.5(effect@4.0.5)
       '@effect/platform-node':
-        specifier: 4.0.2
-        version: 4.0.2(effect@4.0.2)(redis@6.2.1)
+        specifier: 4.0.5
+        version: 4.0.5(effect@4.0.5)(redis@6.2.1)
       '@nakafa/aksara-contracts':
-        specifier: 0.49.0
-        version: 0.49.0(effect@4.0.2)
+        specifier: 0.51.0
+        version: 0.51.0(effect@4.0.5)
       '@polar-sh/sdk':
         specifier: ^1.0.2
         version: 1.0.2
@@ -623,7 +620,7 @@ importers:
         version: 1.7.2
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       parse-domain:
         specifier: ^8.4.0
         version: 8.4.0
@@ -659,17 +656,17 @@ importers:
         version: 11.0.5
     devDependencies:
       '@confect/cli':
-        specifier: 10.2.0
-        version: 10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@confect/server@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.2))(effect@4.0.2)(redis@6.2.1)
+        specifier: 10.3.1
+        version: 10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@confect/server@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.5))(effect@4.0.5)(redis@6.2.1)
       '@confect/test':
-        specifier: 10.2.0
-        version: 10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@confect/server@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.2))(convex-test@0.0.62(convex@1.47.0(react@19.3.1)))(convex@1.47.0(react@19.3.1))(effect@4.0.2)
+        specifier: 10.3.1
+        version: 10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@confect/server@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.5))(convex-test@0.0.62(convex@1.47.0(react@19.3.1)))(convex@1.47.0(react@19.3.1))(effect@4.0.5)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -701,11 +698,11 @@ importers:
   packages/cli:
     devDependencies:
       '@effect/platform-node':
-        specifier: 4.0.2
-        version: 4.0.2(effect@4.0.2)(redis@6.2.1)
+        specifier: 4.0.5
+        version: 4.0.5(effect@4.0.5)(redis@6.2.1)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/contents':
         specifier: workspace:*
         version: link:../contents
@@ -720,7 +717,7 @@ importers:
         version: 5.0.5(vitest@5.0.5)
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       esbuild:
         specifier: 0.28.2
         version: 0.28.2
@@ -740,8 +737,8 @@ importers:
         specifier: 'catalog:'
         version: 4.3.5
       '@nakafa/aksara-contracts':
-        specifier: 0.49.0
-        version: 0.49.0(effect@4.0.2)
+        specifier: 0.51.0
+        version: 0.51.0(effect@4.0.5)
       '@repo/math':
         specifier: workspace:*
         version: link:../math
@@ -753,7 +750,7 @@ importers:
         version: link:../utilities
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       remark-mdx:
         specifier: 'catalog:'
         version: 3.1.1(supports-color@7.2.0)
@@ -766,7 +763,7 @@ importers:
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -892,7 +889,7 @@ importers:
         version: 0.2.1
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       frimousse:
         specifier: ^0.4.0
         version: 0.4.0(react@19.3.1)(typescript@7.0.2)
@@ -994,11 +991,11 @@ importers:
         version: 5.0.15(@types/react@19.3.0)(immer@11.1.21)(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
     devDependencies:
       '@effect/platform-node':
-        specifier: 4.0.2
-        version: 4.0.2(effect@4.0.2)(redis@6.2.1)
+        specifier: 4.0.5
+        version: 4.0.5(effect@4.0.5)(redis@6.2.1)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1061,11 +1058,11 @@ importers:
         version: 3.32.0
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1085,8 +1082,8 @@ importers:
   packages/email:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.49.0
-        version: 0.49.0(effect@4.0.2)
+        specifier: 0.51.0
+        version: 0.51.0(effect@4.0.5)
       '@react-email/render':
         specifier: 'catalog:'
         version: 2.1.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1101,7 +1098,7 @@ importers:
         version: link:../utilities
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -1114,7 +1111,7 @@ importers:
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1137,8 +1134,8 @@ importers:
   packages/internationalization:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.49.0
-        version: 0.49.0(effect@4.0.2)
+        specifier: 0.51.0
+        version: 0.51.0(effect@4.0.5)
       '@repo/next-config':
         specifier: workspace:*
         version: link:../next-config
@@ -1150,7 +1147,7 @@ importers:
         version: link:../utilities
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       next:
         specifier: 16.4.2
         version: 16.4.2(@babel/core@8.0.5)(@playwright/test@1.64.1)(@types/node@24.19.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1160,7 +1157,7 @@ importers:
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1178,11 +1175,11 @@ importers:
     dependencies:
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1206,11 +1203,11 @@ importers:
         version: link:../utilities
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1231,11 +1228,11 @@ importers:
         version: link:../utilities
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1255,8 +1252,8 @@ importers:
   packages/seo:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: 0.49.0
-        version: 0.49.0(effect@4.0.2)
+        specifier: 0.51.0
+        version: 0.51.0(effect@4.0.5)
       '@repo/next-config':
         specifier: workspace:*
         version: link:../next-config
@@ -1265,7 +1262,7 @@ importers:
         version: link:../utilities
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
       next:
         specifier: 16.4.2
         version: 16.4.2(@babel/core@8.0.5)(@playwright/test@1.64.1)(@types/node@24.19.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1281,7 +1278,7 @@ importers:
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1316,14 +1313,14 @@ importers:
     dependencies:
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)
+        version: 4.0.5(effect@4.0.5)
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -1899,57 +1896,57 @@ packages:
     resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
 
-  '@confect/cli@10.2.0':
-    resolution: {integrity: sha512-kiB6Z7apVV7SRf9n5k2EwoSOa2CcHrjq1iem22PuOt/KYfjPz0M7h/jwA0JhLqDaUSwyhNWTD+sO7qT46RbBWg==}
+  '@confect/cli@10.3.1':
+    resolution: {integrity: sha512-LTgOW25KoqS2jVBaFORBERH2m+TzNaj2C3lYFb64eTHQGkIGkYk88f4LOgaKJsPgqhPcRgzAdOtZODJS6T3+OA==}
     engines: {node: '>=24'}
     hasBin: true
     peerDependencies:
-      '@confect/core': ^10.2.0
-      '@confect/server': ^10.2.0
-      effect: ^4.0.1
+      '@confect/core': ^10.3.1
+      '@confect/server': ^10.3.1
+      effect: ^4.0.4
 
-  '@confect/core@10.2.0':
-    resolution: {integrity: sha512-TiI9OROumitmggGPd23qkr8P7V1BzNkzP5cRPyxBj+rfIfY7s3uASKWJS/zCl1IvrNetgBNDQvd2x5dTwoopag==}
+  '@confect/core@10.3.1':
+    resolution: {integrity: sha512-OlbTsC/qPKd0wIZqikghOUKR9EWBE+xSKw3Yz3lYsgVxGuLo4hier5XcLjME+Y+GFzlr177xuSMXQuapFyC1Ag==}
     engines: {node: '>=24'}
     peerDependencies:
       convex: ^1.32.0
       effect: ^4.0.0
 
-  '@confect/js@10.2.0':
-    resolution: {integrity: sha512-oG9Qud+sDce1yTUHemAjaNfgguDITxJSlS0IaK6Jp5cR9PZFhbxrnf/T4Rk8Vg8gU6mbFOUJhl66gj7+I/pibQ==}
+  '@confect/js@10.3.1':
+    resolution: {integrity: sha512-2CRiOziRCWDLZcMtb+lwvBGynESb0PiKOyPjXvjs5R53eeQaoi7ApoIhQ1JTm3/DGjOMxzWJq7jAi22jxiS05A==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@confect/core': ^10.2.0
+      '@confect/core': ^10.3.1
       convex: ^1.32.0
       effect: ^4.0.0
 
-  '@confect/react@10.2.0':
-    resolution: {integrity: sha512-g3efPUYE+R4q8N9auN/xIC5Lrkx/Pyx/T7D7snHi/mhp/+VatcxT7gF+ermhQa9kcDtHIvWn3HPqFJoXfFxduQ==}
+  '@confect/react@10.3.1':
+    resolution: {integrity: sha512-DqgGdZ94Cm0KhZywJSDTS1oGicGvJEN/13/AraQTqMBe7SnFd8bXoCtmCIsdNPQq7l5gcJZnRhKFKqr6wfWzJw==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@confect/core': ^10.2.0
+      '@confect/core': ^10.3.1
       convex: ^1.36.0
       effect: ^4.0.0
       react: 19.3.1
 
-  '@confect/server@10.2.0':
-    resolution: {integrity: sha512-U/ynrlBnB4dEIonA+a4H1ZJLf8BszBN0KFbpOsQ+ChDpQsJLlaEqrKrEJtGGOL9RompCfujs12bGpR7JwbBjOA==}
+  '@confect/server@10.3.1':
+    resolution: {integrity: sha512-Lu0QUm5F9KBqiRm8ttsjr85ovncnbzXNz9pe3GK42AIREjlnPv1/xEP9ItmFIFIG+y6NAk514+m9Zdv8MYo3IA==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@confect/core': ^10.2.0
-      '@effect/platform-node': 4.0.2
+      '@confect/core': ^10.3.1
+      '@effect/platform-node': 4.0.5
       convex: ^1.45.0
-      effect: ^4.0.1
+      effect: ^4.0.4
     peerDependenciesMeta:
       '@effect/platform-node':
         optional: true
 
-  '@confect/test@10.2.0':
-    resolution: {integrity: sha512-uVBnPQmbhKrlMQhZkdzYX76ZbRChz4geNHREe/7EpMD2oc5C8o3JmbXxjOicF4S8NdMKEsHc+BfW6jEtGbX1EA==}
+  '@confect/test@10.3.1':
+    resolution: {integrity: sha512-DhrrVbVHkVfAuiu1j2d683n1mdkQjt9DwFkcjOAlug6EQ7HaaSpDV/ah8bWmgmYnRKKuz6uYFpxt4MR8E9qtEg==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@confect/core': ^10.2.0
-      '@confect/server': ^10.2.0
+      '@confect/core': ^10.3.1
+      '@confect/server': ^10.3.1
       convex: ^1.32.0
       convex-test: '>=0.0.50 <0.1.0'
       effect: ^4.0.0
@@ -2095,77 +2092,77 @@ packages:
     resolution: {integrity: sha512-NKBGBSIKUG584qrS1tyxVpX/AKJKQw5HgjYEnPLC0QsTw79JrGn+qUr8CXFb955Iy7GUdiiUv1rJ6JBGvaKb6w==}
     engines: {node: '>=18'}
 
-  '@effect/ai-openai-compat@4.0.2':
-    resolution: {integrity: sha512-M4mg50Pe9gxkJRabnSEyNT6vlT9gsmpyXxoZ8yX8dQ7d5Xs8dw3Im6Sf6Ab/r0IU/IkT8pZgCoLsnbeb8QChBA==}
+  '@effect/ai-openai-compat@4.0.5':
+    resolution: {integrity: sha512-UuIXsrmMafHw9VSgER+Fql3GbUxpoiQ5tjsZmcRd+2DyjH/RXRYtamWwkXJquPwo7M7imXlq0hYbDjBwoAx2Aw==}
     peerDependencies:
-      effect: ^4.0.2
+      effect: ^4.0.5
 
-  '@effect/ai-openrouter@4.0.2':
-    resolution: {integrity: sha512-OUUIehB6TC81GS3Kge9Fy2ML1gY+VH04MBNSh33F3dSkt9tnfw/JSo4cGfk1jUhuR7GRDBIgoztlYhj2ViwSuA==}
+  '@effect/ai-openrouter@4.0.5':
+    resolution: {integrity: sha512-kyOL7mFFuYWiU4igg2eA8ySQ5wS9wxvEYHna9UpjNKZSPCCn8RgkGuFpRQzAHpqbV8C2p2Lrh/aJOu7eskU64Q==}
     peerDependencies:
-      effect: ^4.0.2
+      effect: ^4.0.5
 
-  '@effect/platform-browser@4.0.2':
-    resolution: {integrity: sha512-juVpWmx+2e5pw3MsMSMzwsQ7sut3exkeweaQToAcn+4PKGNWvItZ72+qAalgRNQE5luPiodP507oe44gC36Vsg==}
+  '@effect/platform-browser@4.0.5':
+    resolution: {integrity: sha512-o3H75xA91nkgIWOcp0XouIxxWxJEOFkTf7gG4qkQtZfy0tq46hJBI0U8jrUqsPruo2vCCNfM0yCoj5AG7F5BMQ==}
     peerDependencies:
-      effect: ^4.0.2
+      effect: ^4.0.5
 
-  '@effect/platform-node-shared@4.0.2':
-    resolution: {integrity: sha512-xn8aDw9p/QUPt1Yi0C3HUMcycT+MjHfAe19FDUDrUuzcwq0xxskkamVSqbdykF/Dsuus4aZTsCBZA/vkhHIfbQ==}
+  '@effect/platform-node-shared@4.0.5':
+    resolution: {integrity: sha512-a8rCdEkfZBGe9C6bsIjxVZuRp73svIyK5IHwHdDAVsvZXjrbkxusfI+rZ8WlX31RP1mKizwI/E72GQTNfdMWHw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.2
+      effect: ^4.0.5
 
-  '@effect/platform-node@4.0.2':
-    resolution: {integrity: sha512-RWesXBQStnFHdD465gR5thFKgXO7FSyCKRZ56nWXB7PedNVzr8vV0nb/3MULLdri493sMz/b/pmGBTb6K8cBjQ==}
+  '@effect/platform-node@4.0.5':
+    resolution: {integrity: sha512-v4KD5fWvEUa4QmWFpZFbBsRhmfnTP6ETCME2r9ifyXVDPjhfpxpTZl41prjgQFMqZBHdWWCl7YC5ImbXv5ui5g==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.2
+      effect: ^4.0.5
       redis: '>=5.0.0 <7.0.0'
 
-  '@effect/tsgo-darwin-arm64@0.51.1':
-    resolution: {integrity: sha512-Jx+1RB3pz1B2zYs1EmxybwDOq9KRpfdu/rn1XTULNMZmqUJZuvTQU9CRqB0g/ZgIa6MeNBZEYvmAu4Dq2/QVWA==}
+  '@effect/tsgo-darwin-arm64@0.53.2':
+    resolution: {integrity: sha512-2Vr9znhVd3NAixBFuliiaslLRkBHuZ8jHbBisvPhF+zcIN1OrpM2w/CTYYDObumH0qnfbTT85hmvPzxuM1zYrA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@effect/tsgo-darwin-x64@0.51.1':
-    resolution: {integrity: sha512-eRz7eHOOb2eJPUj66m89Zhzu924vGvNLDAXzcEAIaXVsWc4Zw29RVUsRnp/ozTmCbDVCvMqPSh8i9bkdAmt8mA==}
+  '@effect/tsgo-darwin-x64@0.53.2':
+    resolution: {integrity: sha512-OGz77iayhGP275oJK9ypXdkNdkvH6+hF+Sa/HrwOinmPHm1rpJXRfG5jQV9v8kDsXOjLzeYl4XkTx7DuSKzyfA==}
     cpu: [x64]
     os: [darwin]
 
-  '@effect/tsgo-linux-arm64@0.51.1':
-    resolution: {integrity: sha512-LqZKkEEgJcq7dOho+h0esioU/idlB/+VhPuMR7l9B5Y7mk17Eivs8TiJQHtxLVfrh/nizbvZih7O5GujRNG0bw==}
+  '@effect/tsgo-linux-arm64@0.53.2':
+    resolution: {integrity: sha512-pC1k5iFgNF49+4cgiPSJq/Oyw1IWOmmXt9TOWc3SgDpP9SCmHhUyaGUCTVDT4zc7WAXNxYQeNIN1FHQ+ZX+9XQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@effect/tsgo-linux-arm@0.51.1':
-    resolution: {integrity: sha512-vub6MCJIbczHp+Im1GTEUh5YyS+6YHcvH0ZmBdSjdvqzzBKbRnl5xUbO52tRJlty74f+3ey+uSh0nIO99NnggA==}
+  '@effect/tsgo-linux-arm@0.53.2':
+    resolution: {integrity: sha512-hsfGmSBnURiTkSXFnGRg/6JCMQx1g5mYBsbf/ZfV/zlKbEVYZnG2kCEiQNi14XRHeqTDkhbTD6KiHCcUIfrirw==}
     cpu: [arm]
     os: [linux]
 
-  '@effect/tsgo-linux-x64@0.51.1':
-    resolution: {integrity: sha512-zyKKcdL2Pr4C//9raggaEuxhsSUR7jT6517vHvPwykbBPjPnnmGtM1Kq7NKEIZnvXWzXcaK+4wAK/0FqSqMOmw==}
+  '@effect/tsgo-linux-x64@0.53.2':
+    resolution: {integrity: sha512-suU2YvrPTWM/J61qIahIxvUwsqainUd7VReMdp4pkjRkXOFHhR+1qvHYItfZKxI2fo0Xpue0TGA9vGPcFfsPdw==}
     cpu: [x64]
     os: [linux]
 
-  '@effect/tsgo-win32-arm64@0.51.1':
-    resolution: {integrity: sha512-yIF88Za3Bs793Mb8OShet8gc3kj/NNty6+ZoTdgiPXWlY6xh84bZZCOETqE7VcCmxXFT3NZSYQuDrU35/CTvRQ==}
+  '@effect/tsgo-win32-arm64@0.53.2':
+    resolution: {integrity: sha512-zAWZcwgVOmGRIRQLS+EKs6AxVXn7VV623YPZs7EHIixll3pUcEvDG6MOAptywydDEn5WeyuFTOSbDaaoyf/zMA==}
     cpu: [arm64]
     os: [win32]
 
-  '@effect/tsgo-win32-x64@0.51.1':
-    resolution: {integrity: sha512-5HO1TJkWMlErIXbfKKWEMzg0Jj0MPQAzs0g1k7wA3B1ZxNDoDY9iRu5eGM+G1a4HmKl3zA7hQZd0ch2Dh4MohQ==}
+  '@effect/tsgo-win32-x64@0.53.2':
+    resolution: {integrity: sha512-aLSDn6VNbUXJXz6IpsJLbtO1iHcvUxOLjT8YHFXrSsYBTKA+11dEUSgu54jwpScaTvBd5ErU0wyWvpalABJdnA==}
     cpu: [x64]
     os: [win32]
 
-  '@effect/tsgo@0.51.1':
-    resolution: {integrity: sha512-i6mA6cNah+0mkPdu8qZILCO3Pnd9kWo03/s82Ju+1DFhdL28HFagi+1PRGxqgq1uMaHziWQ+ciKvOmIoks2RdA==}
+  '@effect/tsgo@0.53.2':
+    resolution: {integrity: sha512-GfMMVfmCW5DYTMCqa7PHs41lD43bgs5qwgz391jDm5xb0q5+stZgY9qLSa9OQl+5fhDyjEOprj0E9aUSKj+E4A==}
     hasBin: true
 
-  '@effect/vitest@4.0.2':
-    resolution: {integrity: sha512-Zb72nu7iUy3rNdBp9J1Xu5oUQGwJ8cOYsUwmYgujj88aqyvASRDjOS01SjlcPViqf77csduetKdCJTVndMNfzw==}
+  '@effect/vitest@4.0.5':
+    resolution: {integrity: sha512-q64paZ/i4V2NiRhTyqCmT2KiDbFjlxc2EZrZca8GGt+Nf8844946HyJM5bPk/q+YeRkFSxIrlCs+J+LSfky/wA==}
     peerDependencies:
-      effect: ^4.0.2
+      effect: ^4.0.5
       vitest: '>=5.0.0 <6.0.0'
 
   '@eloqnt/config@0.1.1':
@@ -2927,11 +2924,11 @@ packages:
     resolution: {integrity: sha512-XyroGQXcHrZdvmrGJvsA9KNeOOgGMg1Vg9OlheUsBOSKznLMDl+YChxbkboRHvtFYJEMRYmlV3uoo/njCw05iw==}
     engines: {node: '>=16'}
 
-  '@nakafa/aksara-contracts@0.49.0':
-    resolution: {integrity: sha512-4RRA2k0MvwaPwMz04n5L0Kcitj6iiK15Bem1ooRQ13zX6TGkwXw9mD0M24S3+FVSruXmVl9r7BA61vEbIiyyUw==}
+  '@nakafa/aksara-contracts@0.51.0':
+    resolution: {integrity: sha512-Jp0FsyxIou3g5MK1UGmJ9LDZ2T33nc473Z7hXU0fYzQGHdUGNBiT4CpVR+OXxk1WlLnkuFnIUuDTsb0uE1Xh2g==}
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
-      effect: 4.0.2
+      effect: 4.0.5
 
   '@next/env@16.4.2':
     resolution: {integrity: sha512-nTUTFH7G5/J/fmpkjVLegOkqyKOP0CEsJcMsyO4UCYeN1su+YMW/MfaSErnJskL7XM+UDK6aTvslxsRCyya/sA==}
@@ -5181,8 +5178,8 @@ packages:
   draco3d@1.5.7:
     resolution: {integrity: sha512-m6WCKt/erDXcw+70IJXnG7M3awwQPAsZvJGX5zY7beBqpELw6RDGkYVU0W43AFxye4pDZ5i2Lbyc/NNGqwjUVQ==}
 
-  effect@4.0.2:
-    resolution: {integrity: sha512-YeYnLqSFrL4+tCOXRrfNP03w8FILoF/wDl+ukraJAGzXrjcS383W7LAAvGBbLatEyktmLxRq+9xJinx7QzXW5A==}
+  effect@4.0.5:
+    resolution: {integrity: sha512-BY4/28NlpOd99yzmV741xbVGmp+1U7tks4oB7F/Png64bTa5tm5eCA6W0RiXsnuLDDoJpjfVSo4Dnq4BZb/89Q==}
 
   electron-to-chromium@1.5.411:
     resolution: {integrity: sha512-gglkxzokjHfawpGxq75XdBV2/l3BAPzrsMs70qgaZdTW5rpV1tC4MdgJVP9fN126bODA4ZJQkn1wryEzJyQXIg==}
@@ -7500,10 +7497,6 @@ packages:
     resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
     engines: {node: '>=20.18.1'}
 
-  undici@8.11.2:
-    resolution: {integrity: sha512-u4UB2/IrKdU6lFxumHmmo1a3fCQO5tzQllRorfoRS63txhrB7xTpSn1PftwC4qEHkOaqP95fCWW4lJzwErwzhQ==}
-    engines: {node: '>=22.19.0'}
-
   undici@8.12.2:
     resolution: {integrity: sha512-XtuDWVdqTLr3NAxm2ly9/hU6kUsJOgGh1RASzMBbsw6aWCOaQzHdW+QQDfdERjfJ2V5vL5pRPa4RetO9UfivDg==}
     engines: {node: '>=22.19.0'}
@@ -8585,14 +8578,14 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@confect/cli@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@confect/server@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.2))(effect@4.0.2)(redis@6.2.1)':
+  '@confect/cli@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@confect/server@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.5))(effect@4.0.5)(redis@6.2.1)':
     dependencies:
-      '@confect/core': 10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2)
-      '@confect/server': 10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.2)
-      '@effect/platform-node': 4.0.2(effect@4.0.2)(redis@6.2.1)
+      '@confect/core': 10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5)
+      '@confect/server': 10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.5)
+      '@effect/platform-node': 4.0.5(effect@4.0.5)(redis@6.2.1)
       bundle-require: 5.1.0(esbuild@0.28.2)
       code-block-writer: 13.0.3
-      effect: 4.0.2
+      effect: 4.0.5
       esbuild: 0.28.2
       exsolve: 1.1.3
     transitivePeerDependencies:
@@ -8600,41 +8593,41 @@ snapshots:
       - redis
       - utf-8-validate
 
-  '@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2)':
+  '@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5)':
     dependencies:
       convex: 1.47.0(react@19.3.1)
-      effect: 4.0.2
+      effect: 4.0.5
 
-  '@confect/js@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(convex@1.47.0(react@19.3.1))(effect@4.0.2)':
+  '@confect/js@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(convex@1.47.0(react@19.3.1))(effect@4.0.5)':
     dependencies:
-      '@confect/core': 10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2)
+      '@confect/core': 10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5)
       convex: 1.47.0(react@19.3.1)
-      effect: 4.0.2
+      effect: 4.0.5
 
-  '@confect/react@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(convex@1.47.0(react@19.3.1))(effect@4.0.2)(react@19.3.1)':
+  '@confect/react@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(convex@1.47.0(react@19.3.1))(effect@4.0.5)(react@19.3.1)':
     dependencies:
-      '@confect/core': 10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2)
+      '@confect/core': 10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5)
       convex: 1.47.0(react@19.3.1)
-      effect: 4.0.2
+      effect: 4.0.5
       react: 19.3.1
 
-  '@confect/server@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.2)':
+  '@confect/server@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.5)':
     dependencies:
-      '@confect/core': 10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2)
-      '@effect/ai-openai-compat': 4.0.2(effect@4.0.2)
-      '@effect/ai-openrouter': 4.0.2(effect@4.0.2)
+      '@confect/core': 10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5)
+      '@effect/ai-openai-compat': 4.0.5(effect@4.0.5)
+      '@effect/ai-openrouter': 4.0.5(effect@4.0.5)
       convex: 1.47.0(react@19.3.1)
-      effect: 4.0.2
+      effect: 4.0.5
     optionalDependencies:
-      '@effect/platform-node': 4.0.2(effect@4.0.2)(redis@6.2.1)
+      '@effect/platform-node': 4.0.5(effect@4.0.5)(redis@6.2.1)
 
-  '@confect/test@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@confect/server@10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.2))(convex-test@0.0.62(convex@1.47.0(react@19.3.1)))(convex@1.47.0(react@19.3.1))(effect@4.0.2)':
+  '@confect/test@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@confect/server@10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.5))(convex-test@0.0.62(convex@1.47.0(react@19.3.1)))(convex@1.47.0(react@19.3.1))(effect@4.0.5)':
     dependencies:
-      '@confect/core': 10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2)
-      '@confect/server': 10.2.0(@confect/core@10.2.0(convex@1.47.0(react@19.3.1))(effect@4.0.2))(@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.2)
+      '@confect/core': 10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5)
+      '@confect/server': 10.3.1(@confect/core@10.3.1(convex@1.47.0(react@19.3.1))(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(convex@1.47.0(react@19.3.1))(effect@4.0.5)
       convex: 1.47.0(react@19.3.1)
       convex-test: 0.0.62(convex@1.47.0(react@19.3.1))
-      effect: 4.0.2
+      effect: 4.0.5
 
   '@convex-dev/agent@0.7.8(@ai-sdk/provider-utils@5.0.59(zod@4.6.5))(@ai-sdk/provider@4.0.27)(ai@7.0.140(zod@4.6.5))(convex-helpers@0.1.128(@standard-schema/spec@1.1.0)(convex@1.47.0(react@19.3.1))(hono@4.13.13)(react@19.3.1)(typescript@7.0.2)(zod@4.6.5))(convex@1.47.0(react@19.3.1))(react@19.3.1)':
     dependencies:
@@ -8815,71 +8808,71 @@ snapshots:
     dependencies:
       '@edge-runtime/primitives': 6.0.0
 
-  '@effect/ai-openai-compat@4.0.2(effect@4.0.2)':
+  '@effect/ai-openai-compat@4.0.5(effect@4.0.5)':
     dependencies:
-      effect: 4.0.2
+      effect: 4.0.5
 
-  '@effect/ai-openrouter@4.0.2(effect@4.0.2)':
+  '@effect/ai-openrouter@4.0.5(effect@4.0.5)':
     dependencies:
-      effect: 4.0.2
+      effect: 4.0.5
 
-  '@effect/platform-browser@4.0.2(effect@4.0.2)':
+  '@effect/platform-browser@4.0.5(effect@4.0.5)':
     dependencies:
-      effect: 4.0.2
+      effect: 4.0.5
 
-  '@effect/platform-node-shared@4.0.2(effect@4.0.2)':
+  '@effect/platform-node-shared@4.0.5(effect@4.0.5)':
     dependencies:
       '@types/ws': 8.18.2
-      effect: 4.0.2
+      effect: 4.0.5
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.0.2(effect@4.0.2)(redis@6.2.1)':
+  '@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.2(effect@4.0.2)
-      effect: 4.0.2
+      '@effect/platform-node-shared': 4.0.5(effect@4.0.5)
+      effect: 4.0.5
       redis: 6.2.1
-      undici: 8.11.2
+      undici: 8.12.2
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/tsgo-darwin-arm64@0.51.1':
+  '@effect/tsgo-darwin-arm64@0.53.2':
     optional: true
 
-  '@effect/tsgo-darwin-x64@0.51.1':
+  '@effect/tsgo-darwin-x64@0.53.2':
     optional: true
 
-  '@effect/tsgo-linux-arm64@0.51.1':
+  '@effect/tsgo-linux-arm64@0.53.2':
     optional: true
 
-  '@effect/tsgo-linux-arm@0.51.1':
+  '@effect/tsgo-linux-arm@0.53.2':
     optional: true
 
-  '@effect/tsgo-linux-x64@0.51.1':
+  '@effect/tsgo-linux-x64@0.53.2':
     optional: true
 
-  '@effect/tsgo-win32-arm64@0.51.1':
+  '@effect/tsgo-win32-arm64@0.53.2':
     optional: true
 
-  '@effect/tsgo-win32-x64@0.51.1':
+  '@effect/tsgo-win32-x64@0.53.2':
     optional: true
 
-  '@effect/tsgo@0.51.1':
+  '@effect/tsgo@0.53.2':
     optionalDependencies:
-      '@effect/tsgo-darwin-arm64': 0.51.1
-      '@effect/tsgo-darwin-x64': 0.51.1
-      '@effect/tsgo-linux-arm': 0.51.1
-      '@effect/tsgo-linux-arm64': 0.51.1
-      '@effect/tsgo-linux-x64': 0.51.1
-      '@effect/tsgo-win32-arm64': 0.51.1
-      '@effect/tsgo-win32-x64': 0.51.1
+      '@effect/tsgo-darwin-arm64': 0.53.2
+      '@effect/tsgo-darwin-x64': 0.53.2
+      '@effect/tsgo-linux-arm': 0.53.2
+      '@effect/tsgo-linux-arm64': 0.53.2
+      '@effect/tsgo-linux-x64': 0.53.2
+      '@effect/tsgo-win32-arm64': 0.53.2
+      '@effect/tsgo-win32-x64': 0.53.2
 
-  '@effect/vitest@4.0.2(effect@4.0.2)(vitest@5.0.5)':
+  '@effect/vitest@4.0.5(effect@4.0.5)(vitest@5.0.5)':
     dependencies:
-      effect: 4.0.2
+      effect: 4.0.5
       vitest: 5.0.5(@edge-runtime/vm@5.0.0)(@types/node@24.19.2)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(jsdom@30.1.3(@noble/hashes@2.3.0))(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
   '@eloqnt/config@0.1.1': {}
@@ -9450,9 +9443,9 @@ snapshots:
       chevrotain: 10.5.0
       lilconfig: 2.1.0
 
-  '@nakafa/aksara-contracts@0.49.0(effect@4.0.2)':
+  '@nakafa/aksara-contracts@0.51.0(effect@4.0.5)':
     dependencies:
-      effect: 4.0.2
+      effect: 4.0.5
 
   '@next/env@16.4.2': {}
 
@@ -11536,7 +11529,7 @@ snapshots:
 
   draco3d@1.5.7: {}
 
-  effect@4.0.2: {}
+  effect@4.0.5: {}
 
   electron-to-chromium@1.5.411: {}
 
@@ -14252,8 +14245,6 @@ snapshots:
   undici-types@7.24.6: {}
 
   undici@7.29.1: {}
-
-  undici@8.11.2: {}
 
   undici@8.12.2: {}
 

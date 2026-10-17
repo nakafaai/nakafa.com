@@ -48,6 +48,7 @@ export const NAKAFA_GET_TAXONOMY_TOOL = {
                   type: "integer",
                   minimum: 0,
                   description: "Indexed content count.",
+                  maximum: Number.MAX_SAFE_INTEGER,
                 },
                 locale: {
                   type: "string",
@@ -146,6 +147,7 @@ export const NAKAFA_GET_TAXONOMY_TOOL = {
                 type: "integer",
                 exclusiveMinimum: 0,
                 description: "Indexed Quran surah count.",
+                maximum: Number.MAX_SAFE_INTEGER,
               },
             },
             required: ["surah_count"],

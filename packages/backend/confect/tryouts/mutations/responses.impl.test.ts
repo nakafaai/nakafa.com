@@ -339,34 +339,30 @@ describe("tryouts/mutations/responses outcomes", () => {
       })
   );
   it.effect(
-    "writes an answer without a version as the next one, for a tab opened before versions",
+    "refuses an answer without a version at the argument validator, before any write",
     () =>
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* seedResponseFixture(t, "version-absent");
         yield* setResponseClock(5000);
-        const saveUnversioned = (optionKey: string) =>
-          Effect.promise(() =>
-            seeded.client.mutation(api.tryouts.mutations.responses.save, {
-              placementId: seeded.placementId,
-              selection: { kind: "single-choice", optionKey },
-            })
-          );
-        const versionStored = () =>
-          readResponseState(t, seeded).pipe(
-            Effect.map(({ responses }) =>
-              Option.map(Arr.head(responses), ({ version }) => version)
-            )
-          );
-        yield* saveUnversioned("option-1");
-        expect(yield* versionStored()).toEqual(Option.some(1));
-        yield* saveAnswer(
-          seeded,
-          { kind: "single-choice", optionKey: "option-2" },
-          5
+        // An untyped reference: the refusal under test is the validator of the
+        // deployed function, not the typed client.
+        const save = Ref.getFunctionReference(
+          refs.public.tryouts.mutations.responses.save
         );
-        yield* saveUnversioned("option-1");
-        expect(yield* versionStored()).toEqual(Option.some(6));
+        const refusal = yield* Effect.tryPromise(() =>
+          seeded.client.mutation(save, {
+            placementId: seeded.placementId,
+            selection: { kind: "single-choice", optionKey: "option-1" },
+          })
+        ).pipe(
+          Effect.match({
+            onFailure: ({ cause }) => String(cause),
+            onSuccess: () => "accepted",
+          })
+        );
+        expect(refusal).toContain("Missing required field `version`");
+        expect((yield* readResponseState(t, seeded)).responses).toEqual([]);
       })
   );
 });

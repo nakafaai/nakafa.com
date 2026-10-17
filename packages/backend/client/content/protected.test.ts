@@ -45,63 +45,70 @@ const target = {
 };
 const releaseId = ReleaseIdSchema.make("release-protected-client");
 const digest = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
-const snapshot = makeTryoutSnapshot({
-  activeAppLocales: ACTIVE_APP_LOCALES,
-  catalogDigest: digest,
-  counts: { country: 1, exam: 1, section: 1, set: 1, track: 1 },
-  placementCount: 1,
-  placementDigest: digest,
-  routeCount: 1,
-});
-const snapshotId = snapshot.snapshotId;
-const snapshots = {
-  ...inheritContentSnapshots(null),
-  tryout: replaceContentSnapshot({
-    baseSnapshotId: null,
-    resultSnapshotId: snapshotId,
-    rowCount: 1,
-    rowDigest: snapshotId,
-  }),
-};
-const release = testSignedRelease(
-  ContentReleaseManifestSchema.make({
-    ...testEmptyManifest(releaseId),
-    scope: testPublicationScope({ snapshots }),
-    snapshots,
-  })
+/** Builds the signed runtime request and its found response for one test. */
+const protectedFixture = Effect.fn("test.client.protectedFixture")(
+  function* () {
+    const snapshot = yield* makeTryoutSnapshot({
+      activeAppLocales: ACTIVE_APP_LOCALES,
+      catalogDigest: digest,
+      counts: { country: 1, exam: 1, section: 1, set: 1, track: 1 },
+      placementCount: 1,
+      placementDigest: digest,
+      routeCount: 1,
+    });
+    const snapshotId = snapshot.snapshotId;
+    const snapshots = {
+      ...inheritContentSnapshots(null),
+      tryout: replaceContentSnapshot({
+        baseSnapshotId: null,
+        resultSnapshotId: snapshotId,
+        rowCount: 1,
+        rowDigest: snapshotId,
+      }),
+    };
+    const emptyManifest = yield* testEmptyManifest(releaseId);
+    const release = yield* testSignedRelease(
+      ContentReleaseManifestSchema.make({
+        ...emptyManifest,
+        scope: testPublicationScope({ snapshots }),
+        snapshots,
+      })
+    );
+    const contentKey = ContentKeySchema.make(
+      "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question"
+    );
+    const artifact = yield* testSignedArtifact("snbt-quant", { contentKey });
+    const bundle = testSignedTryoutRuntimeBundle({
+      release,
+      rendererManifest: TEST_PROOF_RENDERER,
+      snapshot,
+    });
+    const request: ProtectedContentRuntimeRequest = {
+      bundleHash: bundle.bundleHash,
+      selectors: [
+        {
+          artifactHash: artifact.artifactHash,
+          contentKey,
+          delivery: "authenticated",
+        },
+      ],
+      snapshotId,
+    };
+    const found = {
+      bundle,
+      items: [
+        {
+          artifact,
+          delivery: "authenticated",
+          sourcePath: `packages/corpus/${contentKey}/en.mdx`,
+        },
+      ],
+      kind: "found",
+      rendererManifest: TEST_PROOF_RENDERER,
+    };
+    return { found, request };
+  }
 );
-const contentKey = ContentKeySchema.make(
-  "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question"
-);
-const artifact = testSignedArtifact("snbt-quant", { contentKey });
-const bundle = testSignedTryoutRuntimeBundle({
-  release,
-  rendererManifest: TEST_PROOF_RENDERER,
-  snapshot,
-});
-const request: ProtectedContentRuntimeRequest = {
-  bundleHash: bundle.bundleHash,
-  selectors: [
-    {
-      artifactHash: artifact.artifactHash,
-      contentKey,
-      delivery: "authenticated",
-    },
-  ],
-  snapshotId,
-};
-const found = {
-  bundle,
-  items: [
-    {
-      artifact,
-      delivery: "authenticated",
-      sourcePath: `packages/corpus/${contentKey}/en.mdx`,
-    },
-  ],
-  kind: "found",
-  rendererManifest: TEST_PROOF_RENDERER,
-};
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const verifyMock = vi.hoisted(() => vi.fn());
 
@@ -160,6 +167,7 @@ describe("protected content runtime client", () => {
     "preserves runtime failures and cryptographic verification failures",
     () =>
       Effect.gen(function* () {
+        const { found, request } = yield* protectedFixture();
         const failure = { kind: "failure", code: "CONTENT_RUNTIME_INTERNAL" };
         fetchMock.mockResolvedValueOnce(createResponse(failure, 500));
         expect(
@@ -191,6 +199,7 @@ describe("protected content runtime client", () => {
 
   it.effect("posts and verifies one retained-snapshot batch", () =>
     Effect.gen(function* () {
+      const { found, request } = yield* protectedFixture();
       fetchMock.mockResolvedValue(createResponse(found, 200, false));
 
       expect(
@@ -210,6 +219,7 @@ describe("protected content runtime client", () => {
 
   it.effect("returns a typed absence bound to the complete batch request", () =>
     Effect.gen(function* () {
+      const { request } = yield* protectedFixture();
       fetchMock.mockResolvedValue(createResponse({ kind: "missing" }, 404));
 
       expect(
@@ -224,6 +234,7 @@ describe("protected content runtime client", () => {
     "classifies valid JSON outside the protected response contract",
     () =>
       Effect.gen(function* () {
+        const { request } = yield* protectedFixture();
         fetchMock
           .mockResolvedValueOnce(
             createResponse({ unexpected: true }, 200, false)

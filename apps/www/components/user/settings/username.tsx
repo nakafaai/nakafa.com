@@ -26,14 +26,16 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@repo/design-system/components/ui/input-group";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Option, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateUsernameMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -50,7 +52,6 @@ const CHECK_DELAY_MILLISECONDS = 300;
  * taken.
  */
 export function UserSettingsUsername({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updateUsername = useUpdateUsernameMutation();
   const current = user.appUser.username;
@@ -81,7 +82,10 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),
@@ -140,14 +144,12 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
           </Field>
         </CardContent>
         <CardSectionFooter>
-          <div className="flex w-full items-center justify-between gap-4">
-            <p className="text-muted-foreground text-sm">
-              {t("username-footer")}
-            </p>
+          <CardSectionHint>{t("username-footer")}</CardSectionHint>
+          <CardSectionActions>
             <Button disabled={!reply.canSave} size="sm" type="submit">
               {t("save")}
             </Button>
-          </div>
+          </CardSectionActions>
         </CardSectionFooter>
       </CardSection>
     </form>

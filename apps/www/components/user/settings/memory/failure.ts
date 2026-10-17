@@ -1,6 +1,6 @@
 import { NinaMemoryRejected } from "@repo/backend/confect/nina/memory.spec";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Schema } from "effect";
-import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
@@ -16,7 +16,7 @@ import { reportClientException } from "@/lib/analytics/client";
 export const reportMemoryFailure = Effect.fn("www.memory.reportFailure")(
   function* (
     error: unknown,
-    messages: Record<"limit" | "missing" | "other", string>
+    messages: Record<"limit" | "missing" | "other", ToastCopy>
   ) {
     const failure =
       Schema.is(NinaMemoryRejected)(error) && error.reason !== "empty"

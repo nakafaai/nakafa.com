@@ -8,19 +8,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateBioMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -31,7 +29,6 @@ import type { CurrentUser } from "@/lib/identity/client";
  * says so in words, and Save waits until it fits.
  */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updateBio = useUpdateBioMutation();
   const current = user.appUser.bio ?? "";
@@ -52,7 +49,10 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),
@@ -89,16 +89,22 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
               placeholder={t("bio-placeholder")}
               value={typed}
             />
-            {fits ? null : <FieldError>{t("bio-too-long")}</FieldError>}
           </Field>
         </CardContent>
         <CardSectionFooter>
-          <div className="flex w-full items-center justify-between gap-4">
-            <p className="text-muted-foreground text-sm">{t("bio-footer")}</p>
+          {/* Only the too-long message is an alert, so only it is announced as it appears. */}
+          {fits ? (
+            <CardSectionHint>{t("bio-footer")}</CardSectionHint>
+          ) : (
+            <CardSectionHint role="alert" tone="destructive">
+              {t("bio-too-long")}
+            </CardSectionHint>
+          )}
+          <CardSectionActions>
             <Button disabled={!canSave} size="sm" type="submit">
               {t("save")}
             </Button>
-          </div>
+          </CardSectionActions>
         </CardSectionFooter>
       </CardSection>
     </form>

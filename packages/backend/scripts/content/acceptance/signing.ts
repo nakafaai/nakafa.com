@@ -8,7 +8,7 @@ import { Base64, Base64Url, Hex } from "effect/encoding";
 export const LocalSigningIdentitySchema = Schema.Struct({
   ...TrustedKeySchema.fields,
   privateKeyPath: Schema.String,
-  privateKeyInode: Schema.Finite,
+  privateKeyInode: Schema.BigIntFromString,
   privateKeyHash: Schema.String,
 });
 type LocalSigningIdentity = typeof LocalSigningIdentitySchema.Type;
@@ -129,7 +129,7 @@ export const createLocalSigningIdentity = Effect.fn(
     keyId,
     publicKeyPem: encodePem(PUBLIC_KEY_LABEL, new Uint8Array(publicDer)),
     privateKeyPath,
-    privateKeyInode: info.ino.value,
+    privateKeyInode: info.ino.value.toString(),
     privateKeyHash,
   });
   return { signing, publicationToken };

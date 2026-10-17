@@ -253,111 +253,129 @@ describe("contentRelease/snapshot/retention", () => {
         );
       })
   );
-  it("finds question and answer artifacts retained by try-out placements", async () => {
-    const t = convexTest(schema, convexModules);
-    const answerHash = `sha256:${"3".repeat(64)}`;
-    const placement = makeTryoutPlacementRow().record;
-    await t.mutation((ctx) =>
-      ctx.db.insert("tryoutPlacements", {
-        ...tryoutPlacementFacts(placement),
-        answerArtifactHash: answerHash,
-        index: 0,
-        questionArtifactHash: TEST_ARTIFACT_HASH,
-        rowHash: placement.rowHash,
-        rowJson: "{}",
-        snapshotId: `sha256:${"5".repeat(64)}`,
+  it.effect(
+    "finds question and answer artifacts retained by try-out placements",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const placement = (yield* makeTryoutPlacementRow()).record;
+        yield* Effect.promise(async () => {
+          const t = convexTest(schema, convexModules);
+          const answerHash = `sha256:${"3".repeat(64)}`;
+          await t.mutation((ctx) =>
+            ctx.db.insert("tryoutPlacements", {
+              ...tryoutPlacementFacts(placement),
+              answerArtifactHash: answerHash,
+              index: 0,
+              questionArtifactHash: TEST_ARTIFACT_HASH,
+              rowHash: placement.rowHash,
+              rowJson: "{}",
+              snapshotId: `sha256:${"5".repeat(64)}`,
+            })
+          );
+          await expect(
+            t.mutation((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                hasSnapshotArtifactReference(TEST_ARTIFACT_HASH).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              )
+            )
+          ).resolves.toBe(true);
+          await expect(
+            t.mutation((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                hasSnapshotArtifactReference(answerHash).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              )
+            )
+          ).resolves.toBe(true);
+          await expect(
+            t.mutation((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                hasSnapshotArtifactReference(`sha256:${"6".repeat(64)}`).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              )
+            )
+          ).resolves.toBe(false);
+        });
       })
-    );
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          hasSnapshotArtifactReference(TEST_ARTIFACT_HASH).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+  );
+  it.effect(
+    "protects try-out snapshots referenced by attempts and IRT scales",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        yield* Effect.promise(async () => {
+          const t = createConvexTestWithBetterAuth();
+          const seeded = await t.mutation(async (ctx) => {
+            const identity = await seedAuthenticatedUser(ctx, {
+              now: TRYOUT_START_NOW,
+              suffix: "snapshot-retention",
+            });
+            const fixture = await activateTryoutStartSource(
+              ctx,
+              "visible",
+              "irt"
+            );
+            return {
+              fixture,
+              identity,
+            };
+          });
+          const authed = t.withIdentity({
+            sessionId: seeded.identity.sessionId,
+            subject: seeded.identity.authUserId,
+          });
+          await authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
+            countryKey: TRYOUT_START_COUNTRY,
+            examKey: TRYOUT_START_EXAM,
+            locale: "id",
+            setKey: TRYOUT_START_SET,
+            trackKey: TRYOUT_START_TRACK,
+          });
+          await expect(
+            t.mutation((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                isSnapshotReferenced("tryout", seeded.fixture.snapshotId).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              )
             )
-          )
-        )
-      )
-    ).resolves.toBe(true);
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          hasSnapshotArtifactReference(answerHash).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+          ).resolves.toBe(true);
+          const scaleSnapshotId = `sha256:${"7".repeat(64)}`;
+          await t.mutation((ctx) =>
+            ctx.db.insert("irtScaleVersions", {
+              model: "2pl",
+              publishedAt: TRYOUT_START_NOW,
+              questionCount: 1,
+              setIdentity: seeded.fixture.setIdentity,
+              status: "provisional",
+              tryoutSnapshotId: scaleSnapshotId,
+            })
+          );
+          await expect(
+            t.mutation((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                isSnapshotReferenced("tryout", scaleSnapshotId).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              )
             )
-          )
-        )
-      )
-    ).resolves.toBe(true);
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          hasSnapshotArtifactReference(`sha256:${"6".repeat(64)}`).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-            )
-          )
-        )
-      )
-    ).resolves.toBe(false);
-  });
-  it("protects try-out snapshots referenced by attempts and IRT scales", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, {
-        now: TRYOUT_START_NOW,
-        suffix: "snapshot-retention",
-      });
-      const fixture = await activateTryoutStartSource(ctx, "visible", "irt");
-      return {
-        fixture,
-        identity,
-      };
-    });
-    const authed = t.withIdentity({
-      sessionId: seeded.identity.sessionId,
-      subject: seeded.identity.authUserId,
-    });
-    await authed.mutation(api.tryouts.mutations.attempts.startAttempt, {
-      countryKey: TRYOUT_START_COUNTRY,
-      examKey: TRYOUT_START_EXAM,
-      locale: "id",
-      setKey: TRYOUT_START_SET,
-      trackKey: TRYOUT_START_TRACK,
-    });
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          isSnapshotReferenced("tryout", seeded.fixture.snapshotId).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-            )
-          )
-        )
-      )
-    ).resolves.toBe(true);
-    const scaleSnapshotId = `sha256:${"7".repeat(64)}`;
-    await t.mutation((ctx) =>
-      ctx.db.insert("irtScaleVersions", {
-        model: "2pl",
-        publishedAt: TRYOUT_START_NOW,
-        questionCount: 1,
-        setIdentity: seeded.fixture.setIdentity,
-        status: "provisional",
-        tryoutSnapshotId: scaleSnapshotId,
+          ).resolves.toBe(true);
+        });
       })
-    );
-    await expect(
-      t.mutation((ctx) =>
-        Effect.runPromise(
-          isSnapshotReferenced("tryout", scaleSnapshotId).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-            )
-          )
-        )
-      )
-    ).resolves.toBe(true);
-  });
+  );
 });

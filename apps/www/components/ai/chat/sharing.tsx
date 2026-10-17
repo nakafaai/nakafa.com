@@ -17,11 +17,11 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -44,7 +44,6 @@ export function ChatSharing({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("Ai");
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const updateChatVisibility = useUpdateChatVisibilityMutation();
   // A retry gives the two readers of the link a new key. Each one subscribes to
   // the token again, which asks the server anew, while the dialog stays mounted.
@@ -74,7 +73,10 @@ export function ChatSharing({
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),
@@ -243,9 +245,10 @@ function ChatShareAction({
       return;
     }
     clipboard.copy(shareLink(chatId, token));
-    toast.success(t("link-copied"), {
-      position: "bottom-center",
-    });
+    toast.success(
+      { title: "link-copied.title" },
+      { position: "bottom-center" }
+    );
   };
 
   return (

@@ -72,6 +72,16 @@ beforeEach(() => {
   cacheMock.mockReset();
   runtimeQueryMock.mockReset();
 });
+/** Each malformed signed catalog, derived from the complete 114-surah catalog rows. */
+const MALFORMED_CATALOGS: readonly (readonly [
+  string,
+  (rows: readonly string[]) => readonly string[],
+])[] = [
+  ["empty", () => []],
+  ["incomplete", (rows) => Arr.take(rows, 1)],
+  ["out of order", (rows) => Arr.reverse(rows)],
+];
+
 describe("published Quran content", () => {
   it.effect("reads the active identity through the attribution query", () =>
     Effect.gen(function* () {
@@ -90,7 +100,8 @@ describe("published Quran content", () => {
   );
   it.effect("reads and caches the signed catalog", () =>
     Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValue(Effect.succeed(catalogResult()));
+      const signedCatalog = yield* catalogResult();
+      runtimeQueryMock.mockReturnValue(Effect.succeed(signedCatalog));
       const catalog = yield* readPublishedQuranCatalog();
       const cachedCatalog = yield* Effect.tryPromise(() =>
         getPublishedQuranCatalog()
@@ -105,25 +116,24 @@ describe("published Quran content", () => {
       expect(cacheMock).toHaveBeenCalledWith("quran");
     })
   );
-  it.effect.each([
-    ["empty", []],
-    ["incomplete", Arr.take(catalogResult().rowJson, 1)],
-    ["out of order", Arr.reverse(catalogResult().rowJson)],
-  ])("rejects an %s signed catalog", ([_label, rowJson]) =>
-    Effect.gen(function* () {
-      runtimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          ...catalogResult(),
-          rowJson,
-        })
-      );
-      expect(
-        yield* readPublishedQuranCatalog().pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "QuranPublicationError",
-        operation: "catalog",
-      });
-    })
+  it.effect.each(MALFORMED_CATALOGS)(
+    "rejects an %s signed catalog",
+    ([_label, select]) =>
+      Effect.gen(function* () {
+        const signedCatalog = yield* catalogResult();
+        runtimeQueryMock.mockReturnValueOnce(
+          Effect.succeed({
+            ...signedCatalog,
+            rowJson: select(signedCatalog.rowJson),
+          })
+        );
+        expect(
+          yield* readPublishedQuranCatalog().pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "QuranPublicationError",
+          operation: "catalog",
+        });
+      })
   );
   it.effect("reads the locale-specific signed markdown", () =>
     Effect.gen(function* () {
@@ -371,7 +381,7 @@ describe("immutable Quran application reads", () => {
     () =>
       Effect.gen(function* () {
         const inactive = yield* createTestPublication(
-          makeRuntimeSource().source
+          (yield* makeRuntimeSource()).source
         );
         runtimeQueryMock.mockImplementation(inactive.query);
         expect(
@@ -385,18 +395,15 @@ describe("immutable Quran application reads", () => {
   );
 });
 /** Builds the complete signed metadata catalog response. */
-function catalogResult(snapshotId = source.snapshotId) {
-  return {
-    ...source,
-    snapshotId,
-    rowJson: Array.from(
-      {
-        length: 114,
-      },
-      (_, index) => encodeTestQuranRow(snapshotId, makeQuranSurah(index + 1))
-    ),
-  };
-}
+const catalogResult = Effect.fn("test.www.quranCatalogResult")(function* (
+  snapshotId = source.snapshotId
+) {
+  const rowJson = yield* Effect.forEach(
+    Arr.makeBy(114, (index) => index),
+    (index) => encodeTestQuranRow(snapshotId, makeQuranSurah(index + 1))
+  );
+  return { ...source, rowJson, snapshotId };
+});
 
 /** Builds one locale-specific signed Quran markdown response. */
 function markdownResult() {

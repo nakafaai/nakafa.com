@@ -36,22 +36,27 @@ import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** Signs one genesis release that replaces the technical program snapshot. */
-function programRelease(data: ProgramSnapshotData, releaseId: string) {
-  return testSignedRelease(
-    ContentReleaseManifestSchema.make({
-      ...testEmptyManifest(ReleaseIdSchema.make(releaseId)),
-      scope: testPublicationScope({
+const programRelease = Effect.fn("test.contentRelease.programRelease")(
+  function* (data: ProgramSnapshotData, releaseId: string) {
+    const emptyManifest = yield* testEmptyManifest(
+      ReleaseIdSchema.make(releaseId)
+    );
+    return yield* testSignedRelease(
+      ContentReleaseManifestSchema.make({
+        ...emptyManifest,
+        scope: testPublicationScope({
+          snapshots: data.snapshots,
+        }),
         snapshots: data.snapshots,
-      }),
-      snapshots: data.snapshots,
-    })
-  );
-}
+      })
+    );
+  }
+);
 
 /** Inserts one completed signed release used as a recovery proof base. */
 function insertCompletedRelease(
   ctx: MutationCtx,
-  release: ReturnType<typeof programRelease>,
+  release: Effect.Success<ReturnType<typeof programRelease>>,
   stagedSnapshotRows: number
 ) {
   return ctx.db.insert("contentReleases", {
@@ -93,27 +98,28 @@ describe("contentRelease/proof/snapshot", () => {
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const snapshot = yield* makeQuranSnapshot();
-        yield* Effect.promise(async () => {
-          const snapshots = {
-            ...inheritContentSnapshots(null),
-            quran: replaceContentSnapshot({
-              baseSnapshotId: null,
-              resultSnapshotId: snapshot.manifest.snapshotId,
-              rowCount: snapshot.manifest.projectionCount,
-              rowDigest: snapshot.manifest.snapshotId,
-            }),
-          };
-          const release = testSignedRelease(
-            ContentReleaseManifestSchema.make({
-              ...testEmptyManifest(
-                ReleaseIdSchema.make("release-blocked-quran")
-              ),
-              scope: testPublicationScope({
-                snapshots,
-              }),
+        const snapshots = {
+          ...inheritContentSnapshots(null),
+          quran: replaceContentSnapshot({
+            baseSnapshotId: null,
+            resultSnapshotId: snapshot.manifest.snapshotId,
+            rowCount: snapshot.manifest.projectionCount,
+            rowDigest: snapshot.manifest.snapshotId,
+          }),
+        };
+        const blockedEmpty = yield* testEmptyManifest(
+          ReleaseIdSchema.make("release-blocked-quran")
+        );
+        const release = yield* testSignedRelease(
+          ContentReleaseManifestSchema.make({
+            ...blockedEmpty,
+            scope: testPublicationScope({
               snapshots,
-            })
-          );
+            }),
+            snapshots,
+          })
+        );
+        yield* Effect.promise(async () => {
           const t = convexTest(schema, convexModules);
           await t.mutation(async (ctx) => {
             await insertCompletedRelease(
@@ -160,7 +166,7 @@ describe("contentRelease/proof/snapshot", () => {
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
-      const release = programRelease(data, "release-test");
+      const release = yield* programRelease(data, "release-test");
       const t = convexTest(schema, convexModules);
       const batchSize = 3;
       const batchCount = Math.ceil(data.rowJson.length / batchSize);
@@ -222,7 +228,7 @@ describe("contentRelease/proof/snapshot", () => {
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
-      const release = programRelease(data, "release-test");
+      const release = yield* programRelease(data, "release-test");
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
@@ -283,12 +289,15 @@ describe("contentRelease/proof/snapshot", () => {
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
-        const base = programRelease(data, "release-base");
+        const base = yield* programRelease(data, "release-base");
         const rollbackSnapshots = invertContentSnapshots(
           base.manifest.snapshots
         );
+        const recoveryEmpty = yield* testEmptyManifest(
+          ReleaseIdSchema.make("release-recovery")
+        );
         const rollbackManifest = ContentReleaseManifestSchema.make({
-          ...testEmptyManifest(ReleaseIdSchema.make("release-recovery")),
+          ...recoveryEmpty,
           baseActiveAppLocales: base.manifest.activeAppLocales,
           baseManifestHash: base.manifestHash,
           baseReleaseId: base.manifest.releaseId,
@@ -303,9 +312,9 @@ describe("contentRelease/proof/snapshot", () => {
           }),
           snapshots: rollbackSnapshots,
         });
-        const rollback = testSignedRelease(rollbackManifest);
+        const rollback = yield* testSignedRelease(rollbackManifest);
         const driftSnapshots = inheritContentSnapshots(null);
-        const drift = testSignedRelease(
+        const drift = yield* testSignedRelease(
           ContentReleaseManifestSchema.make({
             ...rollbackManifest,
             scope: testPublicationScope({
@@ -390,11 +399,14 @@ describe("contentRelease/proof/snapshot", () => {
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
-        const base = programRelease(data, "release-base");
+        const base = yield* programRelease(data, "release-base");
         const snapshots = inheritContentSnapshots(base.manifest.snapshots);
-        const release = testSignedRelease(
+        const nextEmpty = yield* testEmptyManifest(
+          ReleaseIdSchema.make("release-next")
+        );
+        const release = yield* testSignedRelease(
           ContentReleaseManifestSchema.make({
-            ...testEmptyManifest(ReleaseIdSchema.make("release-next")),
+            ...nextEmpty,
             baseReleaseId: base.manifest.releaseId,
             baseManifestHash: base.manifestHash,
             baseActiveAppLocales: base.manifest.activeAppLocales,
@@ -406,6 +418,7 @@ describe("contentRelease/proof/snapshot", () => {
             snapshots,
           })
         );
+        const other = yield* programRelease(data, "release-other");
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
@@ -417,7 +430,7 @@ describe("contentRelease/proof/snapshot", () => {
             await ctx.db.patch("contentReleases", id, {
               releaseJson: Schema.encodeSync(
                 Schema.fromJsonString(SignedContentReleaseSchema)
-              )(programRelease(data, "release-other")),
+              )(other),
             });
             assert(await ctx.db.get("contentReleases", id));
           })

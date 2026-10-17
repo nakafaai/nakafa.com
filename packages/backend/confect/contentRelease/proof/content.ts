@@ -26,10 +26,11 @@ export const verifyContentStreams = Effect.fn(
       Effect.gen(function* () {
         const item = yield* parseStoredJson(row.itemJson);
         const rollback = yield* decodeRollbackJson(row.rollbackJson);
-        let projection = Option.none<unknown>();
-        if (row.projectionJson !== undefined) {
-          projection = Option.some(yield* parseStoredJson(row.projectionJson));
-        }
+        const projection = yield* Effect.transposeOption(
+          Option.map(Option.fromUndefinedOr(row.projectionJson), (json) =>
+            parseStoredJson(json)
+          )
+        );
         return {
           item,
           projection,

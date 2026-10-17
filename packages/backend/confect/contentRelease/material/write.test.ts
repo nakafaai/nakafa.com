@@ -15,46 +15,55 @@ import {
   writeMaterial,
 } from "@repo/backend/confect/contentRelease/material/write";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
-import { ingressProjection } from "@repo/backend/test/content/ingress";
+import { makeIngressFixture } from "@repo/backend/test/content/ingress";
 import { Effect } from "effect";
 
 type PublicProjection = Parameters<typeof writeMaterial>[1];
 /** Builds one resolved public material projection for the writer boundary. */
-function testResolved(
-  options?: {
-    readonly family?: PublicProjection["family"];
-    readonly projectionHash?: PublicProjection["projectionHash"];
-    readonly projectionJson?: string;
-    readonly publicPath?: PublicProjection["publicPath"];
-    readonly sequence?: number;
-    readonly sourcePath?: string;
-  },
-  projection: MaterialLessonProjection = ingressProjection
-): PublicProjection {
-  return {
-    appLocale: projection.appLocale,
-    artifactLocale: projection.artifactLocale,
-    contentKey: projection.contentKey,
-    family: options?.family ?? "material",
-    projectionHash:
-      options?.projectionHash ?? hashContentProjection(projection),
-    projectionJson:
-      options?.projectionJson ?? canonicalizeMaterialProjection(projection),
-    publicPath: options?.publicPath ?? projection.publicPath,
-    releaseId: "release-material-write",
-    rendererDomain: "mathematics",
-    sequence: options?.sequence ?? 1,
-    sourcePath: options?.sourcePath ?? "packages/corpus/test/head-0/en.mdx",
-  };
-}
+const testResolved = Effect.fn("test.contentRelease.resolvedMaterial")(
+  function* (
+    options?: {
+      readonly family?: PublicProjection["family"];
+      readonly projectionHash?: PublicProjection["projectionHash"];
+      readonly projectionJson?: string;
+      readonly publicPath?: PublicProjection["publicPath"];
+      readonly sequence?: number;
+      readonly sourcePath?: string;
+    },
+    projection?: MaterialLessonProjection
+  ) {
+    const subject =
+      projection ?? (yield* makeIngressFixture()).ingressProjection;
+    return {
+      appLocale: subject.appLocale,
+      artifactLocale: subject.artifactLocale,
+      contentKey: subject.contentKey,
+      family: options?.family ?? "material",
+      projectionHash:
+        options?.projectionHash ?? (yield* hashContentProjection(subject)),
+      projectionJson:
+        options?.projectionJson ?? canonicalizeMaterialProjection(subject),
+      publicPath: options?.publicPath ?? subject.publicPath,
+      releaseId: "release-material-write",
+      rendererDomain: "mathematics",
+      sequence: options?.sequence ?? 1,
+      sourcePath: options?.sourcePath ?? "packages/corpus/test/head-0/en.mdx",
+    } satisfies PublicProjection;
+  }
+);
 describe("contentRelease/material/write", () => {
   it.effect("replaces and deletes one localized material identity", () =>
     Effect.gen(function* () {
+      const { ingressProjection } = yield* makeIngressFixture();
       const t = yield* Confect.pipe(Effect.provide(confectLayer));
       yield* t.run(
         Effect.gen(function* () {
           const tCtx = yield* MutationCtx;
-          yield* writeMaterial("blue", testResolved(), ingressProjection);
+          yield* writeMaterial(
+            "blue",
+            yield* testResolved(),
+            ingressProjection
+          );
           const updated = {
             ...ingressProjection,
             metadata: {
@@ -67,7 +76,7 @@ describe("contentRelease/material/write", () => {
           };
           yield* writeMaterial(
             "blue",
-            testResolved(
+            yield* testResolved(
               {
                 sequence: 2,
               },
@@ -77,7 +86,7 @@ describe("contentRelease/material/write", () => {
           );
           yield* writeMaterial(
             "blue",
-            testResolved(
+            yield* testResolved(
               {
                 sequence: 2,
               },
@@ -118,23 +127,24 @@ describe("contentRelease/material/write", () => {
   );
   it.effect("rejects unsafe heads and oversized material metadata", () =>
     Effect.gen(function* () {
+      const { ingressProjection } = yield* makeIngressFixture();
       const t = yield* Confect.pipe(Effect.provide(confectLayer));
       yield* t.run(
         Effect.gen(function* () {
           for (const head of [
-            testResolved({
+            yield* testResolved({
               family: "article",
             }),
-            testResolved({
+            yield* testResolved({
               projectionHash: Sha256HashSchema.make(`sha256:${"0".repeat(64)}`),
             }),
-            testResolved({
+            yield* testResolved({
               projectionJson: "",
             }),
-            testResolved({
+            yield* testResolved({
               publicPath: PublicPathSchema.make("test/other"),
             }),
-            testResolved({
+            yield* testResolved({
               sourcePath: "",
             }),
           ]) {
@@ -157,7 +167,7 @@ describe("contentRelease/material/write", () => {
               };
               return yield* writeMaterial(
                 "blue",
-                testResolved(undefined, projection),
+                yield* testResolved(undefined, projection),
                 projection
               );
             }).pipe(Effect.flip)

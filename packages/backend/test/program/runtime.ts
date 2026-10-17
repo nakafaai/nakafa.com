@@ -31,14 +31,20 @@ export const makeProgramRuntimeSource = Effect.fn(
       { discard: true }
     )
   );
-  const signed = testSignedRelease({
-    ...testEmptyManifest(ReleaseIdSchema.make("program-active")),
+  const emptyManifest = yield* testEmptyManifest(
+    ReleaseIdSchema.make("program-active")
+  );
+  const signed = yield* testSignedRelease({
+    ...emptyManifest,
     scope: testPublicationScope({
       snapshots: data.snapshots,
     }),
     snapshots: data.snapshots,
   });
-  const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
+  const fixture = yield* makeRuntimeSource(
+    signed,
+    signed.manifest.scope.families
+  );
   MutableHashMap.set(fixture.source, "contentSnapshots", [
     {
       createdAt: 1,

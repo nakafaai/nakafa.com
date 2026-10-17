@@ -15,7 +15,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import {
   TEST_PROOF_RENDERER,
-  testEmptyManifest,
+  testSignedEmptyRelease,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import { testPublicationScope } from "@repo/backend/test/content/release";
@@ -27,7 +27,6 @@ import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-proof-commit");
-const release = testSignedRelease(testEmptyManifest(releaseId));
 const commit = internal.contentRelease.proof.commit.commitProof;
 const encodeProofJson = Schema.encodeSync(
   Schema.fromJsonString(ReleaseVerificationEvidenceSchema)
@@ -40,19 +39,24 @@ const encodeReleaseJson = Schema.encodeSync(
 );
 
 /** Obtains authentic proof bytes through the same verifier used by production. */
-async function prepare() {
+const prepare = Effect.fn("test.contentRelease.commitPrepare")(function* () {
+  const release = yield* testSignedEmptyRelease(releaseId);
   const t = convexTest(schema, convexModules);
-  await t.mutation((ctx) =>
-    insertSignedCandidate(
-      ctx,
-      releaseId,
-      release,
-      encodeRendererJson(TEST_PROOF_RENDERER)
+  yield* Effect.promise(() =>
+    t.mutation((ctx) =>
+      insertSignedCandidate(
+        ctx,
+        releaseId,
+        release,
+        encodeRendererJson(TEST_PROOF_RENDERER)
+      )
     )
   );
-  const proof = await recomputeContentProof(t, release.manifestHash, releaseId);
-  return { proof, proofJson: encodeJsonText(proof), t };
-}
+  const proof = yield* Effect.promise(() =>
+    recomputeContentProof(t, release.manifestHash, releaseId)
+  );
+  return { proof, proofJson: encodeJsonText(proof), release, t };
+});
 
 /** Selects the unique technical release for deliberate durability corruption. */
 async function storedRelease(ctx: MutationCtx) {
@@ -64,88 +68,106 @@ async function storedRelease(ctx: MutationCtx) {
 }
 
 describe("durable proof commit", () => {
-  it("replays exact proof bytes without rewriting the original timestamp", async () => {
-    const { t, proofJson } = await prepare();
-    const before = await t.run(storedRelease);
-    await expect(t.mutation(commit, { proofJson })).resolves.toMatchObject({
-      phase: "verifying",
-    });
-    await t.mutation(async (ctx) => {
-      const row = await storedRelease(ctx);
-      await ctx.db.patch("contentReleases", row._id, {
-        status: "verified",
-        verifiedAt: 10,
-      });
-    });
-    await expect(t.mutation(commit, { proofJson })).resolves.toMatchObject({
-      phase: "verified",
-    });
-    const after = await t.run(storedRelease);
-    expect(after.proofAt).toBe(before.proofAt);
-    expect(after.proofJson).toBe(before.proofJson);
-  });
-
-  it.each(["different bytes", "missing timestamp"] as const)(
-    "rejects an existing proof with %s",
-    async (corruption) => {
-      const { t, proofJson } = await prepare();
-      await t.mutation(async (ctx) => {
-        const row = await storedRelease(ctx);
-        await ctx.db.patch(
-          "contentReleases",
-          row._id,
-          corruption === "different bytes"
-            ? { proofJson: `${proofJson} ` }
-            : { proofAt: undefined }
-        );
-      });
-      await expect(t.mutation(commit, { proofJson })).rejects.toMatchObject({
-        data: { code: "CONTENT_RELEASE_CONFLICT" },
-      });
-    }
+  it.effect(
+    "replays exact proof bytes without rewriting the original timestamp",
+    () =>
+      Effect.gen(function* () {
+        const { t, proofJson } = yield* prepare();
+        yield* Effect.promise(async () => {
+          const before = await t.run(storedRelease);
+          await expect(
+            t.mutation(commit, { proofJson })
+          ).resolves.toMatchObject({
+            phase: "verifying",
+          });
+          await t.mutation(async (ctx) => {
+            const row = await storedRelease(ctx);
+            await ctx.db.patch("contentReleases", row._id, {
+              status: "verified",
+              verifiedAt: 10,
+            });
+          });
+          await expect(
+            t.mutation(commit, { proofJson })
+          ).resolves.toMatchObject({
+            phase: "verified",
+          });
+          const after = await t.run(storedRelease);
+          expect(after.proofAt).toBe(before.proofAt);
+          expect(after.proofJson).toBe(before.proofJson);
+        });
+      })
   );
 
-  it.each(["counter", "manifest", "unfrozen"] as const)(
-    "rejects a %s change before a new proof is committed",
-    async (corruption) => {
-      const { t, proof, proofJson } = await prepare();
-      await t.mutation(async (ctx) => {
-        const row = await storedRelease(ctx);
-        await ctx.db.patch("contentReleases", row._id, {
-          proofAt: undefined,
-          proofJson: undefined,
-          ...(corruption === "counter" ? { stagedArtifacts: 1 } : {}),
-          ...(corruption === "unfrozen" ? { status: "staging" } : {}),
+  it.effect.each(["different bytes", "missing timestamp"] as const)(
+    "rejects an existing proof with %s",
+    (corruption) =>
+      Effect.gen(function* () {
+        const { t, proofJson } = yield* prepare();
+        yield* Effect.promise(async () => {
+          await t.mutation(async (ctx) => {
+            const row = await storedRelease(ctx);
+            await ctx.db.patch(
+              "contentReleases",
+              row._id,
+              corruption === "different bytes"
+                ? { proofJson: `${proofJson} ` }
+                : { proofAt: undefined }
+            );
+          });
+          await expect(t.mutation(commit, { proofJson })).rejects.toMatchObject(
+            {
+              data: { code: "CONTENT_RELEASE_CONFLICT" },
+            }
+          );
         });
-      });
-      const input =
-        corruption === "manifest"
-          ? encodeProofJson({
-              ...proof,
-              resultDigest: release.manifest.itemsDigest,
-            })
-          : proofJson;
-      await expect(
-        t.mutation(commit, { proofJson: input })
-      ).rejects.toMatchObject({
-        data: {
-          code:
-            corruption === "unfrozen"
-              ? "CONTENT_RELEASE_STATE"
-              : "CONTENT_RELEASE_INTEGRITY",
-        },
-      });
-      expect((await t.run(storedRelease)).proofJson).toBeUndefined();
-    }
+      })
+  );
+
+  it.effect.each(["counter", "manifest", "unfrozen"] as const)(
+    "rejects a %s change before a new proof is committed",
+    (corruption) =>
+      Effect.gen(function* () {
+        const { proof, proofJson, release, t } = yield* prepare();
+        yield* Effect.promise(async () => {
+          await t.mutation(async (ctx) => {
+            const row = await storedRelease(ctx);
+            await ctx.db.patch("contentReleases", row._id, {
+              proofAt: undefined,
+              proofJson: undefined,
+              ...(corruption === "counter" ? { stagedArtifacts: 1 } : {}),
+              ...(corruption === "unfrozen" ? { status: "staging" } : {}),
+            });
+          });
+          const input =
+            corruption === "manifest"
+              ? encodeProofJson({
+                  ...proof,
+                  resultDigest: release.manifest.itemsDigest,
+                })
+              : proofJson;
+          await expect(
+            t.mutation(commit, { proofJson: input })
+          ).rejects.toMatchObject({
+            data: {
+              code:
+                corruption === "unfrozen"
+                  ? "CONTENT_RELEASE_STATE"
+                  : "CONTENT_RELEASE_INTEGRITY",
+            },
+          });
+          expect((await t.run(storedRelease)).proofJson).toBeUndefined();
+        });
+      })
   );
 
   it.effect.each(["new", "retained", "missing"] as const)(
     "retains verified replacement snapshots and rejects %s evidence loss",
     (mode) =>
       Effect.gen(function* () {
-        const { t, proof } = yield* Effect.promise(() => prepare());
+        const { t, proof, release } = yield* prepare();
         const data = yield* makeProgramSnapshotData();
-        const replacement = testSignedRelease(
+        const replacement = yield* testSignedRelease(
           ContentReleaseManifestSchema.make({
             ...release.manifest,
             scope: testPublicationScope({ snapshots: data.snapshots }),

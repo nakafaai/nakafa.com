@@ -61,23 +61,21 @@ describe("contentRelease/tryout/taxonomy", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            yield* Effect.promise(() =>
-              activateTryoutSnapshot(tCtx, {
-                catalog: [
-                  makeTryoutCatalogRow("en").record.row,
-                  makeTryoutExam("en"),
-                  makeTryoutCatalogRow("id").record.row,
-                  makeTryoutExam("id"),
-                  makeTryoutCatalogRow("de").record.row,
-                  makeTryoutExam("de"),
-                ],
-                placements: [
-                  makeTryoutPlacementRow("en").record.row,
-                  makeTryoutPlacementRow("id").record.row,
-                  makeTryoutPlacementRow("de").record.row,
-                ],
-              })
-            );
+            yield* activateTryoutSnapshot(tCtx, {
+              catalog: [
+                (yield* makeTryoutCatalogRow("en")).record.row,
+                makeTryoutExam("en"),
+                (yield* makeTryoutCatalogRow("id")).record.row,
+                makeTryoutExam("id"),
+                (yield* makeTryoutCatalogRow("de")).record.row,
+                makeTryoutExam("de"),
+              ],
+              placements: [
+                (yield* makeTryoutPlacementRow("en")).record.row,
+                (yield* makeTryoutPlacementRow("id")).record.row,
+                (yield* makeTryoutPlacementRow("de")).record.row,
+              ],
+            });
             expect(yield* readTryoutTaxonomy("id")).toEqual({
               countries: [
                 {

@@ -67,7 +67,7 @@ export const createLocalJwks = Effect.fn("contentAcceptance.createLocalJwks")(
   function* () {
     const createdAt = yield* Clock.currentTimeMillis;
     const random = yield* Crypto.Crypto;
-    const id = yield* random.randomUUIDv4;
+    const id = yield* random.randomUUIDv4();
     const [privateJwk, publicJwk] = yield* Effect.tryPromise({
       catch: () =>
         acceptanceRuntimeError(
