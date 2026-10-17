@@ -34,6 +34,12 @@ const unreadable = Schema.encodeSync(AuthFailure)(
   })
 );
 
+/**
+ * What the server throws when it fails in a way the query does not declare. The
+ * page cannot read it as the failure of the query, so the query itself breaks.
+ */
+const undeclared = { code: "SHARE_TOKEN_UNAVAILABLE" };
+
 test.describe("A share link at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
   test.describe.configure({ timeout: 180_000 });
@@ -112,6 +118,46 @@ test.describe("A share link at 1440px", () => {
             navigator.clipboard.readText()
           );
           expect(readLink(link).token).toMatch(SHARE_TOKEN);
+        });
+      })
+    );
+  });
+
+  test("the share dialog stays open when the link fails in a way the query does not declare", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const owner = yield* ownedChat(page, origin, {
+          prompt: PROMPT,
+          title: TITLE,
+        });
+
+        yield* Effect.promise(async () => {
+          const dialog = await openShareDialog(page);
+          const copy = dialog.getByRole("button", { name: "Copy link" });
+          // The dialog the learner opened is the one that shows the failure, so
+          // the element is tagged and read again after each step.
+          await dialog.evaluate((element) =>
+            Reflect.set(element, "kept", true)
+          );
+          const kept = () =>
+            dialog.evaluate((element) => Reflect.get(element, "kept"));
+
+          owner.changes.failQuery(SHARE_TOKEN_QUERY, undeclared);
+          await dialog.getByRole("button", { name: "Create link" }).click();
+
+          await expect(dialog.getByText(NOT_LOADED)).toBeVisible({
+            timeout: ANSWER_MILLISECONDS,
+          });
+          expect(await kept()).toBe(true);
+          await expect(promptOf(page, PROMPT)).toBeVisible();
+
+          owner.changes.recoverQuery();
+          await dialog.getByRole("button", { name: "Retry" }).click();
+          await expect(copy).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
+          expect(await kept()).toBe(true);
         });
       })
     );

@@ -27,72 +27,13 @@ import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.c
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * The share dialog of one chat. A link the server could not load shows in the
- * dialog's footer, which offers to load it again, and never takes the chat page
- * with it.
- */
-export function ChatSharing({
-  chat,
-  open,
-  onOpenChange,
-}: {
-  chat: ChatView;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  return (
-    <ErrorBoundary
-      fallbackRender={({ resetErrorBoundary }) => (
-        <ChatSharingError
-          onOpenChange={onOpenChange}
-          onRetry={resetErrorBoundary}
-          open={open}
-        />
-      )}
-    >
-      <ChatSharingDialog chat={chat} onOpenChange={onOpenChange} open={open} />
-    </ErrorBoundary>
-  );
-}
-
-/**
- * The share dialog while the page itself failed. It says so in one sentence and
- * offers to load the link again, which asks the server anew.
- */
-function ChatSharingError({
-  open,
-  onOpenChange,
-  onRetry,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onRetry: () => void;
-}) {
-  const t = useTranslations("Ai");
-
-  return (
-    <ResponsiveDialog
-      description={t("share-link-error")}
-      footer={
-        <Button onClick={onRetry}>
-          <HugeIcons icon={Refresh03Icon} />
-          {t("retry")}
-        </Button>
-      }
-      open={open}
-      setOpen={onOpenChange}
-      title={t("share-chat")}
-    />
-  );
-}
-
-/**
  * The share dialog of one chat. It stays mounted while its link loads, shows,
  * fails and loads again: only its footer changes between those states, so a
- * Retry does not open the dialog again. The visibility the learner chooses is
- * saved here, independently of title editing.
+ * Retry does not open the dialog again. A link the server could not load, for
+ * any reason, shows in the footer, which offers to load it again. The
+ * visibility the learner chooses is saved here, independently of title editing.
  */
-function ChatSharingDialog({
+export function ChatSharing({
   chat,
   open,
   onOpenChange,
@@ -106,6 +47,7 @@ function ChatSharingDialog({
   const updateChatVisibility = useUpdateChatVisibilityMutation();
   // Each retry gives the footer a new key, which subscribes to the link afresh.
   const [attempt, setAttempt] = useState(0);
+  const retry = () => setAttempt((count) => count + 1);
   /**
    * Persist the selected chat visibility. Choosing the visibility the chat
    * already has sends nothing.
@@ -144,12 +86,16 @@ function ChatSharingDialog({
     <ResponsiveDialog
       description={t("share-chat-description")}
       footer={
-        <ChatSharingAction
-          chat={chat}
+        <ErrorBoundary
+          fallbackRender={() => <ChatSharingFailure onRetry={retry} />}
           key={attempt}
-          onCreate={() => handleUpdateVisibility("public")}
-          onRetry={() => setAttempt((count) => count + 1)}
-        />
+        >
+          <ChatSharingAction
+            chat={chat}
+            onCreate={() => handleUpdateVisibility("public")}
+            onRetry={retry}
+          />
+        </ErrorBoundary>
       }
       open={open}
       setOpen={onOpenChange}
@@ -195,6 +141,24 @@ function ChatSharingDialog({
 }
 
 /**
+ * The footer while the link could not be loaded. It says so in one sentence and
+ * offers to load the link again, which asks the server anew.
+ */
+function ChatSharingFailure({ onRetry }: { onRetry: () => void }) {
+  const t = useTranslations("Ai");
+
+  return (
+    <div className="flex w-full items-center justify-between gap-4">
+      <p className="text-muted-foreground text-sm">{t("share-link-error")}</p>
+      <Button onClick={onRetry}>
+        <HugeIcons icon={Refresh03Icon} />
+        {t("retry")}
+      </Button>
+    </div>
+  );
+}
+
+/**
  * The one action of the share dialog and the token it needs. A private chat
  * creates its link. A shared chat copies the link once the server has drawn its
  * token. A token the server could not read is said in the footer, beside Retry.
@@ -218,15 +182,7 @@ function ChatSharingAction({
   );
 
   if (QueryResult.isFailure(tokenResult)) {
-    return (
-      <div className="flex w-full items-center justify-between gap-4">
-        <p className="text-muted-foreground text-sm">{t("share-link-error")}</p>
-        <Button onClick={onRetry}>
-          <HugeIcons icon={Refresh03Icon} />
-          {t("retry")}
-        </Button>
-      </div>
-    );
+    return <ChatSharingFailure onRetry={onRetry} />;
   }
 
   if (isPrivate) {
