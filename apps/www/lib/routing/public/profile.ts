@@ -30,16 +30,17 @@ const readRequestAccount = Effect.fn("www.routing.publicHtml.profileAccount")(
 
 /**
  * Decides, before the page renders, whether an address of a profile,
- * `/{locale}/@username` and its tabs, names a username that nobody holds. Anyone
- * may open a profile (`readProfile` reads it), so only such an address is
- * answered here, with the app's not-found page and a 404 status. The page never
- * starts a stream that it would have to end as not found. The answer is the
- * locale of that page, or null when the path is no profile address or the
- * username is held.
+ * `/{locale}/@username` and its tabs, is not found: a username that nobody
+ * holds, or the Chat tab of a profile that the request's account does not hold.
+ * Anyone may open a profile and its Posts and Comments (`readProfile` reads it),
+ * and its chats are its owner's alone. Such an address is answered here, with the
+ * app's not-found page and a 404 status, so the page never starts a stream that
+ * it would have to end as not found. The answer is the locale of that page, or
+ * null when the path is no profile address or the request may open it.
  */
 export const readProfileRefusal = Effect.fn(
   "www.routing.publicHtml.profileRefusal"
-)(function* (pathname: string) {
+)(function* (pathname: string, headers: Headers) {
   const [locale, root, ...tab] = Arr.filter(pathname.split("/"), Boolean);
   if (
     !(
@@ -62,7 +63,14 @@ export const readProfileRefusal = Effect.fn(
     ),
     Effect.provide(httpLayer())
   );
-  return profile === null ? locale : null;
+  if (profile === null) {
+    return locale;
+  }
+  if (tab[0] !== "chat") {
+    return null;
+  }
+  const account = yield* readRequestAccount(headers);
+  return account?.appUser.username === profile.username ? null : locale;
 });
 
 /**
