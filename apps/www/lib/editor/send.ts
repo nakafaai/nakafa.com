@@ -140,13 +140,58 @@ export const push = Effect.fn("editor.sync.push")(function* (
       version: sendable.version,
     }),
   }));
-  yield* session.transport.submit(fitted.text).pipe(
+  // The document would break the contract with this batch, so the batch is not accepted
+  // (ADR 0028). The round halves it below and sends the first half.
+  const refused = () => Effect.succeed(false);
+  const accepted = yield* session.transport.submit(fitted.text).pipe(
+    Effect.as(true),
     // A refused batch waits for the server's steps, and the next round sends nothing on
-    // this version. A failure of the call is not caught here: the batch stays unsent.
-    Effect.catchTag("VersionStale", () => Effect.void)
+    // this version. A failure of the call is not caught here: the batch stays unsent, and
+    // a batch that waits for a fold fails the round, so the next round sends it again.
+    Effect.catchTag("VersionStale", () => Effect.succeed(true)),
+    Effect.catchTags({
+      DocumentInvalid: refused,
+      DocumentTooLarge: refused,
+      FoldPending: () =>
+        Effect.fail(
+          new SyncFailed({
+            reason:
+              "The server is folding this document. The steps are sent again shortly.",
+          })
+        ),
+    })
   );
+  if (!accepted) {
+    yield* refusedBatch(session, fitted.count);
+    return yield* push(session);
+  }
   yield* Ref.update(session.memory, (current) => ({
     ...current,
     batch: Option.map(current.batch, (batch) => ({ ...batch, sent: true })),
+  }));
+});
+
+/**
+ * The server refused a batch because the document it would make breaks the contract
+ * (ADR 0028). A batch of more than one step is halved under a new id, so the next round
+ * sends the first half. A batch of one step is a step that the document refuses on its
+ * own, so the loop drops it and counts it, as it drops a step no call can carry.
+ */
+const refusedBatch = Effect.fn("editor.sync.refused")(function* (
+  session: SyncSession,
+  count: number
+) {
+  if (count === 1) {
+    return yield* dropUnsendable(session);
+  }
+  const id = yield* randomUuid;
+  yield* Ref.update(session.memory, (current) => ({
+    ...current,
+    batch: Option.map(current.batch, (batch) => ({
+      ...batch,
+      count: Math.floor(count / 2),
+      id,
+      sent: false,
+    })),
   }));
 });

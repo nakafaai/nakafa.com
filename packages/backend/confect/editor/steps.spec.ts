@@ -8,7 +8,15 @@ import {
   VersionSchema,
   VersionStale,
 } from "@repo/backend/confect/editor/batch";
-import { BatchInvalid, ClientTaken } from "@repo/backend/confect/editor/errors";
+import {
+  DocumentInvalid,
+  DocumentTooLarge,
+} from "@repo/backend/confect/editor/document";
+import {
+  BatchInvalid,
+  ClientTaken,
+  FoldPending,
+} from "@repo/backend/confect/editor/errors";
 import { SinceReply } from "@repo/backend/confect/editor/view";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -53,6 +61,9 @@ export default GroupSpec.make()
           BatchInvalid,
           BatchTooLarge,
           ClientTaken,
+          DocumentInvalid,
+          DocumentTooLarge,
+          FoldPending,
           VersionStale,
         ]),
     }).middleware(DocumentAccess, {

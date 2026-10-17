@@ -1,30 +1,22 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
-  Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import {
-  ensureRowSize,
-  storedDocument,
-} from "@repo/backend/confect/editor/document";
-import { foldSteps, snapshotNode } from "@repo/backend/confect/editor/fold";
+import { ensureRowSize } from "@repo/backend/confect/editor/document";
 import spec from "@repo/backend/confect/editor/fold.spec";
-import { assessmentModel } from "@repo/backend/confect/editor/model";
-import { decodeStep } from "@repo/backend/confect/editor/step";
-import { snapshotOf, stepsAfter } from "@repo/backend/confect/editor/store";
-import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Clock, Duration, Effect, Layer, Option } from "effect";
+import { decodedSteps, foldedText } from "@repo/backend/confect/editor/result";
+import { snapshotOf, stepsThrough } from "@repo/backend/confect/editor/store";
+import { Clock, Effect, Layer, Option } from "effect";
 
 /**
- * Folds one page of a document's log into its snapshot (ADR 0028). The fold reads the
- * snapshot and the page of steps after it, applies the steps in order as every editor
- * applies them, checks the result with the contract, and replaces the snapshot and its
- * version in one transaction. The page is one read of the log, so the fold reads no more
- * than that. A log that still holds steps after the page starts the next fold, so a
- * backlog is folded one page at a time.
+ * Folds every step that a document's snapshot lacks into the snapshot (ADR 0028). The fold
+ * reads the snapshot and the steps after it, applies them in order as every editor applies
+ * them, checks the result with the contract, and replaces the snapshot and its version in one
+ * transaction. A submit checked this result already, so a refused fold means a stored step
+ * that predates the rule, and the fold writes nothing for it. The steps are at most two reads
+ * (`pendingRows`), so the fold never schedules another fold for its own backlog.
  */
 const fold = FunctionImpl.make(
   databaseSchema,
@@ -48,27 +40,21 @@ const fold = FunctionImpl.make(
       Option.isNone(document) ||
       document.value.head === document.value.snapshotVersion
     ) {
-      return { done: true, folded: 0, skipped: 0 };
+      return { folded: 0, skipped: 0 };
     }
     const snapshot = yield* snapshotOf(documentId);
-    const rows = yield* stepsAfter(documentId, snapshot.version);
-    const last = yield* Effect.fromOption(Arr.last(rows)).pipe(Effect.orDie);
-    const start = yield* snapshotNode(assessmentModel, snapshot.content);
-    const steps = yield* Effect.forEach(rows, (row) =>
-      decodeStep(row.step).pipe(Effect.orDie)
-    );
-    const folded = yield* foldSteps(
-      assessmentModel,
-      start,
+    const rows = yield* stepsThrough(
+      documentId,
       snapshot.version,
-      steps
+      document.value.head
     );
-    const content = yield* storedDocument(encodeJsonText(folded.doc.toJSON()));
+    const steps = yield* decodedSteps(rows);
+    const folded = yield* foldedText(documentId, snapshot, steps);
     const row = {
       at: yield* Clock.currentTimeMillis,
-      content,
+      content: folded.content,
       documentId,
-      version: last.version,
+      version: document.value.head,
     };
     yield* ensureRowSize(row);
     yield* writer
@@ -77,17 +63,9 @@ const fold = FunctionImpl.make(
       .pipe(Effect.orDie);
     yield* writer
       .table("editorDocuments")
-      .patch(documentId, { snapshotVersion: last.version })
+      .patch(documentId, { snapshotVersion: document.value.head })
       .pipe(Effect.orDie);
-    const done = last.version >= document.value.head;
-    if (!done) {
-      yield* (yield* Scheduler).runAfter(
-        Duration.zero,
-        refs.internal.editor.fold.fold,
-        { documentId }
-      );
-    }
-    return { done, folded: rows.length, skipped: folded.skipped.length };
+    return { folded: rows.length, skipped: folded.skipped };
   })
 );
 

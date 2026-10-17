@@ -13,8 +13,19 @@ import { checkContent } from "@repo/backend/confect/editor/content";
 import { BatchInvalid, ClientTaken } from "@repo/backend/confect/editor/errors";
 import { foldDue } from "@repo/backend/confect/editor/fold";
 import { encodeStoredStep } from "@repo/backend/confect/editor/log";
+import {
+  decodedSteps,
+  foldedText,
+  pendingRows,
+  stepBytes,
+} from "@repo/backend/confect/editor/result";
+import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
 import spec from "@repo/backend/confect/editor/steps.spec";
-import { clientRecordOf, stepsAfter } from "@repo/backend/confect/editor/store";
+import {
+  clientRecordOf,
+  snapshotOf,
+  stepsAfter,
+} from "@repo/backend/confect/editor/store";
 import {
   type ClientRecordView,
   clientView,
@@ -60,7 +71,7 @@ const since = FunctionImpl.make(
     if (version >= document.head) {
       return stepsReply(client, []);
     }
-    const rows = yield* stepsAfter(document._id, version);
+    const rows = yield* stepsAfter(document._id, version, STEP_PAGE_STEPS);
     const run = Arr.takeWhile(
       rows,
       (row, index) => row.version === version + index + 1
@@ -76,11 +87,15 @@ const since = FunctionImpl.make(
  * Accepts a batch of steps made on the document's head. A batch the session has
  * had accepted before is answered without a write, so a retried batch is idempotent.
  * A session id that belongs to another author is refused with `ClientTaken`. Any other
- * batch is checked against the bounds, the content the contract accepts, and the head,
- * then each step is written as one row at the version it produces, the head
- * moves by the number of steps, and the session's record takes the batch. All of it
+ * batch is checked against the bounds, the content the contract accepts, and the head.
+ * The batch is then applied to the document as the server knows it, the snapshot with
+ * the steps it lacks, with the model and the contract check that the fold uses. A result
+ * the contract refuses fails with `DocumentInvalid` or `DocumentTooLarge`, and a backlog
+ * that one read does not hold fails with `FoldPending`, so the log only holds steps that
+ * fold (ADR 0028). Each step is then written as one row at the version it produces, the
+ * head moves by the number of steps, and the session's record takes the batch. All of it
  * is one transaction, so two clients never win one version: a stale batch writes
- * nothing and fails with `VersionStale`. When the steps the snapshot lacks reach the fold
+ * nothing and fails with `VersionStale`. When the steps the snapshot lacks reach a fold
  * limit with this batch, the batch also schedules the fold that writes the snapshot, so
  * the client never writes a snapshot (ADR 0028).
  */
@@ -109,6 +124,17 @@ const submit = FunctionImpl.make(
         clientId: admitted.batch.clientId,
         step,
       }).pipe(Effect.orDie)
+    );
+    const snapshot = yield* snapshotOf(document._id);
+    const pending = yield* pendingRows(
+      document._id,
+      snapshot.version,
+      document.head
+    );
+    yield* foldedText(
+      document._id,
+      snapshot,
+      Arr.appendAll(yield* decodedSteps(pending), admitted.batch.steps)
     );
     const writer = yield* DatabaseWriter;
     yield* Effect.forEach(
@@ -148,13 +174,15 @@ const submit = FunctionImpl.make(
         })
         .pipe(Effect.orDie);
     }
-    if (
-      foldDue({
-        after: admitted.version,
-        before: document.head,
-        snapshotVersion: document.snapshotVersion,
-      })
-    ) {
+    const before = {
+      bytes: stepBytes(pending),
+      steps: document.head - snapshot.version,
+    };
+    const after = {
+      bytes: before.bytes + stepBytes(rows),
+      steps: admitted.version - snapshot.version,
+    };
+    if (foldDue({ after, before })) {
       yield* (yield* Scheduler).runAfter(
         Duration.zero,
         refs.internal.editor.fold.fold,

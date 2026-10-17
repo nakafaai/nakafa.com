@@ -1,5 +1,12 @@
 import type { VersionStale } from "@repo/backend/confect/editor/batch";
-import type { ClientTaken } from "@repo/backend/confect/editor/errors";
+import type {
+  DocumentInvalid,
+  DocumentTooLarge,
+} from "@repo/backend/confect/editor/document";
+import type {
+  ClientTaken,
+  FoldPending,
+} from "@repo/backend/confect/editor/errors";
 import type {
   OpenedDocument,
   SinceReply,
@@ -52,7 +59,15 @@ export interface SyncTransport {
   ) => Effect.Effect<typeof SinceReply.Type, SyncFailed>;
   readonly submit: (
     batch: string
-  ) => Effect.Effect<null, SyncFailed | VersionStale | ClientTaken>;
+  ) => Effect.Effect<
+    null,
+    | SyncFailed
+    | VersionStale
+    | ClientTaken
+    | DocumentInvalid
+    | DocumentTooLarge
+    | FoldPending
+  >;
 }
 
 /**

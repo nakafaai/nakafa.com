@@ -18,6 +18,8 @@ program wave B (ADR 0013 describes the waves). The repository installs
 `prosemirror-collab` 1.3.1, and it installs none of `mathlive` and
 `@convex-dev/presence`.
 
+The amendment of 17 October 2026 changes the submit, which checks the document that a batch makes before it writes, and the fold, which writes once for a backlog of at most two reads. It also changes the limits of a batch and of a fold (Bounds), and the editor's schema, which the server derives from `packages/editor` instead of a second copy. The amendment is in The server folds the log, Bounds, and Implementation Status.
+
 ## Context
 
 The design system has one Tiptap editor, in
@@ -148,37 +150,17 @@ marks passes unmeasured.
 
 ### The server folds the log
 
-The server writes the snapshot, and no client does. A submit that brings the steps
-that the snapshot lacks to `FOLD_STEP_LIMIT` schedules `internal.editor.fold.fold`
-(`confect/editor/fold.ts` and `fold.impl.ts`). `FOLD_STEP_LIMIT` is `MAX_BATCH_STEPS`,
-200 steps, which is the page of one read of the log (ADR 0028 Bounds). A fold reads
-the snapshot and one page of the log after it, at most 200 steps and about 512 KiB,
-since a read stops at the row that reaches its budget. It
-applies the steps in order with the ProseMirror model of the assessment document
-(`confect/editor/model.ts`), whose node and mark specs are the editor's, in the
-editor's order. It checks the result the way a snapshot is checked (`storedDocument`:
-depth, types, and `MAX_DOCUMENT_BYTES`), and it replaces the snapshot and its version
-in one transaction. A log that still holds steps after the page schedules the next
-fold, so a backlog is folded one page at a time, and no fold reads more than a page.
+The server writes the snapshot, and no client does. A submit applies its batch to the document as the server knows it, the snapshot with the steps it lacks, with the same model and the same contract check that the fold uses, before it writes a step (ADR 0028). It reads the snapshot and those steps in one read of `FOLD_STEP_LIMIT` steps (`confect/editor/steps.impl.ts`, `confect/editor/result.ts`). A result that the contract refuses fails with `DocumentInvalid` or `DocumentTooLarge`, and the batch writes nothing. A backlog that one read does not hold fails with `FoldPending`, and the client sends the batch again. So the log holds only steps that fold: the fold applies the same steps to the same snapshot, so the document it writes is the one the submit checked, and no fold can stall on a batch that the submit accepted.
 
-The limit is one page, so a fold at the limit reads its steps in one read, and the
-steps behind a snapshot stay near one page. A near-bound document writes a snapshot of
-up to 1 MiB, so one write per 200 steps costs about 5 KiB of snapshot write per step
-(computed: 1 MiB divided by 200). The sweep, `internal.editor.prune.sweep`, runs every
-ten minutes, and it schedules a fold for each document whose steps the snapshot lacks.
-A document that stops below the limit is therefore folded within one sweep, and the
-sweep deletes only the steps that a snapshot covers.
+A submit that brings the steps the snapshot lacks to `FOLD_STEP_LIMIT` steps, or to `FOLD_BYTE_LIMIT` bytes of text, schedules `internal.editor.fold.fold` (`confect/editor/fold.ts` and `fold.impl.ts`). The fold reads every step the snapshot lacks with one `take` of at most twice `FOLD_STEP_LIMIT` steps, applies them in order with the ProseMirror model of the assessment document (`confect/editor/model.ts`), checks the result the way a snapshot is checked (`storedDocument`: depth, types, and `MAX_DOCUMENT_BYTES`), and replaces the snapshot and its version in one transaction. It writes once, at the head, so no intermediate state is written or checked, and it does not schedule another fold. The sweep, `internal.editor.prune.sweep`, schedules a fold for each document whose steps the snapshot lacks, so a fold that did not run is scheduled within one sweep.
 
-The fold skips a stored step the way every editor does (the skip rule of ADR 0028):
-ProseMirror does not apply the step, or the document it makes nests past
-`MAX_DOCUMENT_DEPTH`. The skip is logged with its version and its reason, and the
-version still counts the step. A step that the contract refuses is not skipped. The
-fold writes nothing, the snapshot stays where it was, and the fold fails with the
-contract's refusal, because an editor shares the step's effect and no snapshot can
-hold it (What Stays Open records the owner's decision on the attribute steps). The
-public snapshot write, `editor/snapshots:save`, and the client's snapshot rule
-(`snapshotDue`) are removed. No page imports the editor client, and the functions are
-not live (see Status), so no compatibility path is kept for the write.
+The limits are measured in Bounds. The backlog that a fold applies is at most two reads: a submit accepts a batch only on a backlog that one read holds (`FoldPending` refuses the rest), and a fold is due when the backlog reaches a limit, so the backlog stays near one read. A near-bound document writes a snapshot of up to 1 MiB per fold, so at the limit a fold costs about 32 KiB of snapshot write per step (computed: 1 MiB divided by 32). The sweep, `internal.editor.prune.sweep`, runs every ten minutes, and it deletes only the steps that a snapshot covers.
+
+The model is the editor's schema. `assessmentModel` is `documentSchema` of `@repo/editor/document` with the rules of the contract (`ASSESSMENT_RULES` in `confect/editor/model.ts`), and the editor builds its schema with the same function, so each node and mark spec is written once. The backend declares the Tiptap packages its bundle imports, because the Convex bundle resolves each bare import from the backend folder.
+
+The fold skips a stored step the way every editor does (the skip rule of ADR 0028): ProseMirror does not apply the step, or the document it makes nests past `MAX_DOCUMENT_DEPTH`. The version still counts the step. The skip is logged at error level with its document, its version, and its kind (the step's type), and not its text, because the text is the learner's content. An earlier draft of this rule (editorsync5) failed the fold on such a step. The owner decided the skip, as the editors do, because a failing fold keeps a snapshot that no editor shares and stalls the log for every editor. A step that the contract refuses is not skipped: the fold writes nothing, and it fails with the contract's refusal. A submit prevents that refusal, so only a stored step that predates the check reaches it, and the fold tests plant such a step. The public snapshot write, `editor/snapshots:save`, and the client's snapshot rule (`snapshotDue`) are removed. No page imports the editor client, and the functions are not live (see Status), so no compatibility path is kept for the write.
+
+The client sends its steps only (`apps/www/lib/editor/send.ts`). A batch that the server refuses with `DocumentInvalid` or `DocumentTooLarge` is halved under a new id and sent again, and a batch of one step drops that step and counts it (`SyncDropped`). A batch that waits for a fold fails the round, and the next round sends the same batch under the same id.
 
 ### Bounds
 
@@ -194,11 +176,11 @@ as the last column says.
 | The content of a document | JSON text in one string field, not an object. Its UTF-8 bytes are checked before the write, and at most `MAX_DOCUMENT_BYTES` (`confect/editor/size.ts`). | The largest text whose snapshot row, with its time, its version, and its document ID, stays below 1 MiB by Convex's size function (`getDocumentSize`). The document ID is taken at 32 characters, the estimate that `convex` uses for an `_id`. ProseMirror can nest deeper than Convex allows. |
 | A document as a whole | A node depth of at most 16, counted as `MAX_DOCUMENT_DEPTH` counts it: the `doc` node is level 1 and each node below it is one level, while its `content` array is not. The complete row stays under 1 MiB. | ADR 0031, and `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0 (`confect/editor/node.ts`) |
 | Attributes and attribute values | Each object and array of an attribute counts one level, and at most 16 levels are allowed (`AttributesSchema` and `AttributeValueSchema` in `confect/editor/node.ts`) | Target. This module reads generic ProseMirror attributes, which the contract's typed attributes do not cover, so the document's bound limits them too, and an admitted call can then be stored. |
-| Steps sent in one call | At most 128 KiB and 200 steps | Target |
+| Steps sent in one call | At most 128 KiB and 32 steps (`MAX_BATCH_STEPS` in `confect/editor/size.ts`) | Measured, see Snapshots |
 | A step that one call carries | At most `MAX_STEP_BYTES`: 128 KiB less the text that a call takes around its steps (its two ids and its version), measured at the longest ids and the largest safe version (`confect/editor/batch.ts`) | Computed by the encoder, and `batch.test.ts` pins it |
 | A client id and a batch id | At least one and at most 64 characters each (`MAX_ID_LENGTH` in `confect/editor/batch.ts`) | Target. A v4 UUID from `randomUuid` has 36 characters. Each stored step keeps its client id, and the session record keeps the batch id. |
-| Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. `STEP_READ_BYTES` in `confect/editor/store.ts` is the budget, and Convex's `maximumBytesRead` enforces it. A read stops at the row that reaches the budget, so one read may pass it by that row, which is at most one batch of 128 KiB. A read takes at most one batch of steps (`MAX_BATCH_STEPS`), and the client reads on from its last version. `steps.impl.test.ts` pins a read that stops and the reads that continue it. |
-| Snapshots | The server folds the log into the snapshot when the steps that the snapshot lacks reach `FOLD_STEP_LIMIT`, 200 steps (`confect/editor/fold.ts`), and the sweep folds each document whose steps the snapshot lacks. A fold reads one page of the log, at most 200 steps and about 512 KiB, and writes one snapshot. | Target, on the read bound of this table. One write of up to 1 MiB for each 200 steps is about 5 KiB of write per step (computed). Measured in convex-test on this machine, at load 20 to 30: three folds of a document of 49,906 hard breaks, about 1 MiB, took 94 to 105 ms, and folds of one text node of the same size took 7 to 44 ms over two runs. Convex allows one second of user code per mutation, which excludes database operations (limits page, read on 17 October 2026), and this measure includes them. |
+| Steps read in one call | At most 512 KiB | Target. 100 rows of nearly 1 MiB would pass the 16 MiB a transaction may read. `STEP_READ_BYTES` in `confect/editor/size.ts` is the budget, and Convex's `maximumBytesRead` enforces it. A read stops at the row that reaches the budget, so one read may pass it by that row, which is at most one batch of 128 KiB. A `since` reply reads at most `STEP_PAGE_STEPS`, 200 steps, and the client reads on from its last version. A submit reads at most `FOLD_STEP_LIMIT`, 32 steps, with one `.paginate()`, because Convex allows one paginated query per function. A fold reads its backlog with one `take` of at most 64 steps. `steps.impl.test.ts` pins a read that stops and the reads that continue it, and `result.test.ts` pins the refusal of a backlog that one read does not hold. |
+| Snapshots | The fold writes the snapshot in one transaction when the steps that the snapshot lacks reach `FOLD_STEP_LIMIT`, 32 steps, or `FOLD_BYTE_LIMIT`, 256 KiB of text (`confect/editor/fold.ts`). `MAX_BATCH_STEPS` is 32, so a fold applies at most 64 steps: 32 pending steps and one batch of 32. Measured in convex-test in Node, with temporary tests that were not committed, on a near-bound document of 49,700 hard breaks in one paragraph (1,044,410 bytes of text and a stored row of 1,044,623 bytes), the slowest shape measured. In five runs at a load of 13 to 15, a fold of 64 steps took 188, 188, 201, 306, and 244 ms (median 201), a fold of 32 steps took 148 to 265 ms (median 169), and a submit that reads 32 pending steps and applies a batch of 32 took 190 to 593 ms (median 220). Three earlier runs at 200 steps show why the limit is 32: a fold of 200 steps took 340 to 407 ms, a fold of 400 steps took 638 to 873 ms, and a submit with 200 pending steps and a batch of 200 took 589 to 799 ms. One run split into a contract check of 74 to 99 ms, a parse and read of the snapshot of 10 to 16 ms, a fold of one step of 2 to 9 ms, and about 1 ms for each further step, because ProseMirror copies the children of the paragraph it edits. One run in five had a spike of 250 to 600 ms with the same work, which the load and the garbage collector explain, so the slowest measured run is above a quarter second. A long text node and a document nested 16 levels, of the same size, took 9 to 30 ms per call. The 1 second limit of user code per mutation excludes database operations (limits page, read on 17 October 2026), and these figures include them. A submit reads one snapshot row and at most 32 step rows, under 2 MiB, and a fold reads one snapshot row and at most 64 step rows, under 2 MiB, both under the 16 MiB a transaction may read. The sweep reads no snapshot row. Each fold writes one snapshot of up to 1 MiB, so at the limit a near-bound document costs about 32 KiB of snapshot write per step (computed: 1 MiB divided by 32). | Target, and measured on the bounds of this table. |
 | An image file | At most 2 MB, with alternative text required | Target |
 | Presence | A heartbeat every 10 seconds and a limit of 25 seconds | Target. Three editors write about 1,080 times an hour (computed). |
 | Cursors | None in the first version | Three editors at one update a second would write about 10,800 times an hour for each document (computed). |
@@ -206,7 +188,7 @@ as the last column says.
 The size is checked where a whole document is written. A fold and the save to
 the bank each refuse a document whose complete row would pass 1 MiB, before the
 write (ADR 0031). A step carries no whole document, so a draft that grows past
-the limit is refused at its next fold and never reaches the bank.
+the limit is refused at submit, before its step is written, and never reaches the bank.
 
 The step log is bounded too: the fold of a document writes its snapshot, and the
 log is pruned behind the snapshot (What Stays Open records the refusals that stop
@@ -237,7 +219,7 @@ count.
 
 Acceptance: in `convex-test`, a submit at a stale version is refused, a document
 at the node depth bound of 16 is stored and read back, and a fold whose
-complete row would pass 1 MiB is refused and writes nothing. In Playwright,
+complete row would pass 1 MiB is refused and writes nothing, and a batch whose result would pass the bound or break the contract is refused before any write. In Playwright,
 three editors work on one question and no step is lost, and the one renderer of
 ADR 0018 draws a Nakafa question and a school question.
 
@@ -360,28 +342,18 @@ Drive copies come through the Drive connector (ADR 0015).
   before any write. A list, an item, or a quote that a step leaves empty at an open edge, or in the gap of a replace-around step, is read with one paragraph or item in its place, because the document holds the content that the snapshot reads (`confect/editor/slice.ts`). Two kinds of step hold no node that the check reads: an attribute
   step and a document attribute step. The editor writes neither, because Tiptap
   replaces a node with a replace step, but a crafted attribute step can set a heading
-  level that the contract refuses. The fold of such a document fails with
-  `DocumentInvalid` and writes nothing, so the snapshot stays where it was and the
-  step log is not pruned. The owner decides whether submit refuses the two kinds of attribute
-  step outright.
+  level that the contract refuses. Submit checks the document that the batch makes, so
+  such a batch is refused with `DocumentInvalid` before any write. The owner decides
+  whether a crafted attribute step that the contract accepts is refused too.
 - Tiptap's ordered list input rule turns `0. ` into a list whose start is 0, which the contract refuses (`PositiveIntSchema` in `@nakafa/aksara-contracts/assessment/scalar`). The sync drops that step and counts it, so the change it made is not kept. The owner decides whether the assessment editor offers no list that starts at 0.
-- A stored step that grows a document past `MAX_DOCUMENT_BYTES` is applied by every
-  editor, because the skip rule covers the depth of a document and not its bytes. The
-  editor refuses such an edit only where it is made. Skipping by bytes would measure
-  the whole document for each stored step, up to 200 steps in one reply, and the owner
-  decides whether the rule takes the bytes too. Until the owner decides, a fold of such
-  a document fails with `DocumentTooLarge`, and its snapshot stays where it was.
+- A step that grows a document past `MAX_DOCUMENT_BYTES` is refused at submit with `DocumentTooLarge`, so an accepted batch never grows a document past the bound. Only a stored step that predates the check reaches the fold, which then fails with `DocumentTooLarge` and writes nothing. The skip rule covers the depth of a document and not its bytes, so the owner decides whether it takes the bytes too: skipping by bytes would measure the whole document for each stored step, up to 32 steps in one fold.
 - A dropped step, or a step that the editor replays after it opens again, keeps
   its position in the document it is replayed on. A later step that depended on
   the dropped one can therefore land at another place, and the replay does not
   map it through the dropped step. The replay keeps each step that applies, and
   the count of dropped steps reports the loss. A mapping of the replay is open.
-- The server's model (`confect/editor/model.ts`) writes the node and mark specs of
-  the editor a second time, because the design system cannot import the backend.
-  `apps/www/lib/editor/assessment.test.ts` folds the steps of several of the editor's
-  own commands and compares the result with the editor's document, so a drift that
-  those commands reach fails that test. A new node or mark needs the same change in
-  both, and a command for it in that test.
+- The server's model (`confect/editor/model.ts`) and the editor's schema are one schema: both are built with `getSchema` from the extensions of `@repo/editor/document`, so a node or a mark has one declaration. `apps/www/lib/editor/assessment.test.ts` folds the steps of several of the editor's own commands on the server and compares the result with the editor's document, so the commands that reach each node and mark are pinned.
+- The cost of a step grows with the children of the node it edits, because ProseMirror copies the children of each node that it changes: a step in a paragraph of 49,700 hard breaks cost about 1 ms (Bounds, Snapshots). A bound on the children of a block in the contract (ADR 0031) would bound the fold and the submit too, and the owner decides whether to add one. At the limit of 32 steps a fold writes a snapshot of up to 1 MiB, which the owner may weigh against the time of the fold (Bounds, Snapshots).
 - The public function that deletes a document. `internal.editor.deletion.document`
   is the one owner of the deletion: it deletes the session records and the steps
   of the document in pages, then its snapshot and its document row. The first
@@ -424,8 +396,8 @@ Drive copies come through the Drive connector (ADR 0015).
 | `confect/editor` pure core: the document, step, batch, attribute, and stored-step schemas (the stored step is in `confect/editor/log.ts`), the storage form, the version rule (`admitBatch`), the size bounds, and the snapshot rule | In code. The depth bound is `MAX_DOCUMENT_DEPTH` of `@nakafa/aksara-contracts` 0.49.0. The tests pin the bounds that this code holds, and the read bound of 512 KiB is `STEP_READ_BYTES`. |
 | The tables `editorDocuments`, `editorSnapshots`, `editorSteps`, and `editorClients` (`confect/tables/editor*.ts`) | In code, not live. The head version and the snapshot version are on the document row, and the snapshot rows, the step rows, and the session records hold the rest. |
 | The functions `editor/documents` (`create`, `open`) and `editor/steps` (`since`, `submit`), the fold `internal.editor.fold.fold`, and the sweep `internal.editor.prune.sweep` | In code and tested in convex-test, not live: no page calls them yet. |
-| The server fold (`confect/editor/fold.ts`, `fold.impl.ts`, `fold.spec.ts`): the threshold `FOLD_STEP_LIMIT`, the skip rule of the editors, the contract check of the folded document, and the one-page reads. The public snapshot write is removed. | In code and tested in convex-test (`fold.impl.test.ts`, `fold.test.ts`, `steps.impl.test.ts`, `prune.impl.test.ts`): a fold equals the document the editors make, a stale batch changes nothing, a skipped step is counted, the depth bound and the byte bound hold at their edge, a contract refusal writes nothing, a backlog folds page by page, and a deleted document is a no-op. |
-| The server model (`confect/editor/model.ts`): the ProseMirror schema of the assessment document, with the editor's node and mark specs in the editor's order | In code. `apps/www/lib/editor/assessment.test.ts` folds the steps of the editor's own commands on the server and compares the result with the editor's document. |
+| The server fold (`confect/editor/fold.ts`, `fold.impl.ts`, `fold.spec.ts`): the limits `FOLD_STEP_LIMIT` and `FOLD_BYTE_LIMIT`, the skip rule of the editors (logged at error level), the contract check of the folded document, and the single write at the head. The submit checks the document that a batch makes (`confect/editor/result.ts`) and refuses a backlog with `FoldPending` (`steps.impl.ts`). The public snapshot write is removed. | In code and tested in convex-test (`result.test.ts`, `fold.impl.test.ts`, `fold.test.ts`, `steps.impl.test.ts`, `prune.impl.test.ts`): a fold equals the document the editors make, a stale batch changes nothing, a skipped step is counted and logged at error level, the depth bound and the byte bound hold at their edge, a batch the contract refuses writes nothing, a backlog of two batches folds in one run, a backlog that one read does not hold is refused, the byte limit schedules the fold, a planted stored step that the contract refuses fails the fold with nothing written, and a deleted document is a no-op. |
+| The server model (`confect/editor/model.ts`): the ProseMirror schema of the assessment document, built by `documentSchema` of `@repo/editor/document` from the rules of the contract | In code. `apps/www/lib/editor/assessment.test.ts` folds the steps of the editor's own commands on the server and compares the result with the editor's document. |
 | The session record and the idempotent batch: the batch id, a repeat of an accepted batch answered with its version, `ClientTaken` for another account's session, and the record that `open` and `since` answer for the caller's own session | In code, not live: `confect/editor/steps.impl.ts`, `confect/editor/documents.impl.ts`, and `confect/editor/store.ts`. Tested in convex-test. |
 | The behind replay: the confirmation of the in-flight batch that landed, the replay of the other unconfirmed steps onto the snapshot, and the one `SyncDropped` count | In code, not live: `apps/www/lib/editor/replay.ts`, tested with the fake server in `apps/www/lib/editor/replay.test.ts` and `apps/www/lib/editor/sync.test.ts`. |
 | The skip rule: a stored step that does not apply, or that nests the document past `MAX_DOCUMENT_DEPTH`, is skipped by every editor and logged once; an editor whose own step the server skips opens again from the snapshot | In code, not live: `apps/www/lib/editor/settle.ts`. Tested: three editors converge with a stored step that does not apply, and three editors converge within the bound when a rebased step nests past it (`settle.test.ts`). |
@@ -435,11 +407,13 @@ Drive copies come through the Drive connector (ADR 0015).
 | The stored snapshot is the contract's output (`encodeDocument` in `confect/editor/document.ts`): attributes the contract does not name, such as a link's `target` and `rel`, are not stored | In code, not live. Tested in `document.test.ts`. |
 | The sync modules: `apps/www/lib/editor/settle.ts` (settling and the skip rule), `replay.ts` (reopen, reseat, replay, and the drop), and `pull.ts` (the apply path) | In code, not live. `settle.ts` imports none of the other two, so no two modules import each other. `pull.ts` holds the apply path, which calls `reopen`. |
 | The Tiptap cohort: the dependency policy holds every Tiptap package of the design system, and `@tiptap/pm` of the web app, to `TIPTAP_COHORT_VERSION` (3.32.0) in `scripts/dependencies/policy.ts` | In code. The dependency policy test enforces it. |
-| The assessment rules: `documentSchema` takes the rules its caller gives, the marks in their order, the heading levels, and the link rule (`packages/design-system/components/editor/document.ts`). `apps/www/lib/editor/assessment.ts` gives it the contract's marks in the contract's order (`MarkTypeSchema`), the heading levels 1 to 3, and `isHttpsUrl`, and the editor holds no horizontal rule. The server admits the node and mark types that the editor reads (`NodeTypeSchema` and `MarkTypeSchema` in `confect/editor/node.ts`), in a step and in a snapshot. | In code, not live. Tested in the design system's `document.test.ts`, at the commands of a headless editor: a heading level, a horizontal rule, and a link address. Tested in `assessment.test.ts`: the node types, the heading levels pinned to the contract's check, and the link rule. Tested on the server in `batch.test.ts` and `document.test.ts`: a step or a snapshot with a type the editor does not read is refused. |
+| The assessment rules: `documentSchema` takes the rules its caller gives, the marks in their order, the heading levels, and the link rule (`packages/editor/document.ts`). `ASSESSMENT_RULES` in `confect/editor/model.ts` gives it the contract's marks in the contract's order (`MarkTypeSchema`), the heading levels 1 to 3, and `isHttpsUrl`, and the editor (`apps/www/lib/editor/assessment.ts`) builds its schema from the same rules and holds no horizontal rule. The server admits the node and mark types that the editor reads (`NodeTypeSchema` and `MarkTypeSchema` in `confect/editor/node.ts`), in a step and in a snapshot. | In code, not live. Tested in `packages/editor/document.test.ts`, at the commands of a headless editor: a heading level, a horizontal rule, and a link address. Tested in `assessment.test.ts`: the node types, the heading levels pinned to the contract's check, and the link rule. Tested on the server in `batch.test.ts` and `document.test.ts`: a step or a snapshot with a type the editor does not read is refused. |
 | The deletion of a document: its session records and its steps in pages, then its snapshot and its document row (`internal.editor.deletion.document`) | In code, not live: `confect/editor/deletion.impl.ts`, tested in convex-test. No public function deletes a document yet. |
 | The `document` access kind (`confect/editor/kinds.ts`), its authority, and its catalog entry | In code. ADR 0012 names it. |
 | The sync slice: the head version on the draft row, the step log and its pruning, the server fold that writes the snapshot, and the sync loop `apps/www/lib/editor/sync.ts`, which pulls and pushes steps and never writes a snapshot | In code, not live: `confect/editor/store.ts`, `confect/editor/prune.ts`, `confect/editor/fold.ts`, and the sync loop, which the fake-client tests drive. |
 | The client engine: the `Collab` extension in `packages/design-system/components/editor/collab.ts` and the sync loop in `apps/www/lib/editor` | In code. No page mounts the editor yet. |
+| The editor's shared schema (`packages/editor`, `@repo/editor`): the Tiptap extensions of the assessment document, from which the editor and the server both derive their schema with `getSchema` | In code, not live. The backend declares the Tiptap packages that its bundle imports, and `scripts/dependencies/policy.ts` holds every declaration to 3.32.0. The design system's Memory editor keeps its own extensions. |
+| The client's answer to a refused batch (`apps/www/lib/editor/send.ts`): the halving of a batch that the contract refuses, the drop of one step that it refuses alone (`SyncDropped`), and the next round for a batch that waits for a fold | In code, not live. `apps/www/lib/editor/send.test.ts` halves a refused batch and drops its refused step once, and it sends a batch that waited for a fold again. The fake server of `apps/www/test/sync.ts` refuses a batch as the server does. |
 | The formula node | Planned, program wave B |
 | Mermaid and content math under the forced KaTeX 0.19.0 | To be tested in program wave A |
 | `confect/files` and `fileRecords` | Planned, program wave B |

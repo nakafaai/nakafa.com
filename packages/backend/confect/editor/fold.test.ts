@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  FOLD_BYTE_LIMIT,
+  FOLD_STEP_LIMIT,
   foldDue,
   foldSteps,
   snapshotNode,
@@ -7,7 +9,7 @@ import {
 import { assessmentModel } from "@repo/backend/confect/editor/model";
 import type { Step } from "@repo/backend/confect/editor/step";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Logger, MutableList } from "effect";
 
 /** A document of one paragraph that holds `text`. */
 const paragraphDocument = (text: string) =>
@@ -28,33 +30,59 @@ describe("editor/fold due", () => {
   it.each([
     {
       due: true,
-      name: "a submit that reaches the limit makes a fold due",
-      input: { after: 200, before: 199, snapshotVersion: 0 },
+      name: "a submit that reaches the step limit makes a fold due",
+      input: {
+        after: { bytes: 0, steps: FOLD_STEP_LIMIT },
+        before: { bytes: 0, steps: FOLD_STEP_LIMIT - 1 },
+      },
     },
     {
       due: true,
-      name: "a submit that crosses the limit by several steps makes a fold due",
-      input: { after: 250, before: 150, snapshotVersion: 0 },
+      name: "a submit that crosses the step limit by several steps makes a fold due",
+      input: {
+        after: { bytes: 0, steps: FOLD_STEP_LIMIT + 50 },
+        before: { bytes: 0, steps: FOLD_STEP_LIMIT - 150 },
+      },
     },
     {
       due: false,
-      name: "a submit below the limit makes no fold due",
-      input: { after: 199, before: 0, snapshotVersion: 0 },
+      name: "a submit below the step limit makes no fold due",
+      input: {
+        after: { bytes: 0, steps: FOLD_STEP_LIMIT - 1 },
+        before: { bytes: 0, steps: 0 },
+      },
     },
     {
       due: false,
-      name: "a submit that starts at the limit does not make another fold due",
-      input: { after: 201, before: 200, snapshotVersion: 0 },
+      name: "a submit that starts at the step limit does not make another fold due",
+      input: {
+        after: { bytes: 0, steps: FOLD_STEP_LIMIT + 1 },
+        before: { bytes: 0, steps: FOLD_STEP_LIMIT },
+      },
     },
     {
       due: true,
-      name: "the limit counts the steps after the snapshot, not the whole log",
-      input: { after: 300, before: 299, snapshotVersion: 100 },
+      name: "a submit that crosses the byte limit makes a fold due",
+      input: {
+        after: { bytes: FOLD_BYTE_LIMIT, steps: 2 },
+        before: { bytes: FOLD_BYTE_LIMIT - 1, steps: 1 },
+      },
     },
     {
       due: false,
-      name: "steps the snapshot already covers do not count toward the limit",
-      input: { after: 150, before: 99, snapshotVersion: 100 },
+      name: "a submit that starts past the byte limit does not make another fold due",
+      input: {
+        after: { bytes: FOLD_BYTE_LIMIT + 1, steps: 2 },
+        before: { bytes: FOLD_BYTE_LIMIT, steps: 1 },
+      },
+    },
+    {
+      due: false,
+      name: "a submit below the byte limit makes no fold due",
+      input: {
+        after: { bytes: FOLD_BYTE_LIMIT - 1, steps: 2 },
+        before: { bytes: 0, steps: 1 },
+      },
     },
   ])("$name", ({ due, input }) => {
     expect(foldDue(input)).toBe(due);
@@ -68,6 +96,7 @@ describe("editor/fold steps", () => {
       Effect.gen(function* () {
         const folded = yield* foldSteps(
           assessmentModel,
+          "document",
           paragraphDocument("Soal"),
           0,
           [
@@ -91,6 +120,7 @@ describe("editor/fold steps", () => {
       Effect.gen(function* () {
         const folded = yield* foldSteps(
           assessmentModel,
+          "document",
           paragraphDocument("Soal"),
           40,
           [insertAt(999, "x")]
@@ -100,10 +130,49 @@ describe("editor/fold steps", () => {
       })
   );
 
+  it.effect(
+    "logs each skipped step at error level, with its document, its version, and its kind but not its text",
+    () =>
+      Effect.gen(function* () {
+        const logged = MutableList.make<{
+          level: string;
+          message: string;
+        }>();
+        yield* foldSteps(
+          assessmentModel,
+          "document-1",
+          paragraphDocument("Soal"),
+          40,
+          [insertAt(999, "secret text")]
+        ).pipe(
+          Effect.provide(
+            Logger.layer([
+              Logger.make(({ logLevel, message }) => {
+                MutableList.append(logged, {
+                  level: String(logLevel),
+                  message: String(message),
+                });
+              }),
+            ])
+          )
+        );
+        const errors = Arr.filter(
+          MutableList.toArray(logged),
+          (entry) => entry.level === "Error"
+        );
+        expect(errors).toHaveLength(1);
+        expect(errors[0]?.message).toContain("41");
+        expect(errors[0]?.message).toContain("document-1");
+        expect(errors[0]?.message).toContain("replace");
+        expect(errors[0]?.message).not.toContain("secret text");
+      })
+  );
+
   it.effect("returns the snapshot unchanged for no steps", () =>
     Effect.gen(function* () {
       const folded = yield* foldSteps(
         assessmentModel,
+        "document",
         paragraphDocument("Soal"),
         3,
         []

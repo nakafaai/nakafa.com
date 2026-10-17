@@ -12,6 +12,7 @@ import {
   storedDocument,
 } from "@repo/backend/confect/editor/document";
 import spec from "@repo/backend/confect/editor/documents.spec";
+import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
 import {
   clientRecordOf,
   snapshotOf,
@@ -70,7 +71,11 @@ const open = FunctionImpl.make(
     const document = yield* Document;
     const { appUser } = yield* requireAuth().pipe(Effect.orDie);
     const snapshot = yield* snapshotOf(document._id);
-    const steps = yield* stepsAfter(document._id, snapshot.version);
+    const steps = yield* stepsAfter(
+      document._id,
+      snapshot.version,
+      STEP_PAGE_STEPS
+    );
     const record = yield* clientRecordOf(document._id, clientId);
     return {
       client: clientView(

@@ -3,6 +3,8 @@ import {
   decodeBatch,
   VersionStale,
 } from "@repo/backend/confect/editor/batch";
+import type { DocumentInvalid } from "@repo/backend/confect/editor/document";
+import type { FoldPending } from "@repo/backend/confect/editor/errors";
 import { foldSteps, snapshotNode } from "@repo/backend/confect/editor/fold";
 import { decodeStep, encodeStep } from "@repo/backend/confect/editor/step";
 import type { SinceReply } from "@repo/backend/confect/editor/view";
@@ -86,14 +88,29 @@ const clientOf = (current: typeof FakeLog.Type, clientId: string) =>
   );
 
 /**
+ * A check that the fake server runs on a batch after the version rule, as the server runs its
+ * contract check before it writes. It fails the way the server refuses the batch: with
+ * `DocumentInvalid` for a document that breaks the contract, or with `FoldPending` for a backlog
+ * that waits for a fold (ADR 0028).
+ */
+export type Refusal = (
+  batch: Batch
+) => Effect.Effect<void, DocumentInvalid | FoldPending>;
+
+/** The check that accepts every batch, which a server with no refusal runs. */
+const acceptAll: Refusal = () => Effect.void;
+
+/**
  * A fake of the Convex functions that the loop calls. It applies the version rule
  * of the server, keeps one record per session as the server does, answers a repeat
  * of an accepted batch with its version, and stores each step as JSON text, with the
  * client that sent it. It does not apply the steps, so a test can store a step that
- * does not apply and see every editor skip it.
+ * does not apply and see every editor skip it. `refuse` is the check that the server
+ * runs before it writes, so a test can refuse a batch as the server does.
  */
 export const makeServer = Effect.fn("test.sync.server")(function* (
-  initialContent = EMPTY_DOCUMENT
+  initialContent = EMPTY_DOCUMENT,
+  refuse: Refusal = acceptAll
 ) {
   const log = yield* Ref.make<typeof FakeLog.Type>({
     clients: [],
@@ -149,6 +166,7 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
             head: current.head,
           });
         }
+        yield* refuse(batch);
         const stored = yield* Effect.forEach(batch.steps, (step) =>
           encodeStep(step).pipe(Effect.orDie)
         );
@@ -201,6 +219,7 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
       );
       const folded = yield* foldSteps(
         proseSchema,
+        "fake-document",
         start,
         current.snapshot.version,
         steps

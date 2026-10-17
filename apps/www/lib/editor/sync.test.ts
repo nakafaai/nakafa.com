@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
-import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
+import {
+  MAX_BATCH_BYTES,
+  MAX_BATCH_STEPS,
+} from "@repo/backend/confect/editor/size";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Ref } from "effect";
 import { getVersion, sendableSteps } from "prosemirror-collab";
@@ -133,13 +136,19 @@ describe("editor/sync refusals and waiting", () => {
         const server = yield* makeServer();
         const editor = yield* openEditor(server.transport);
         yield* Effect.forEach(
-          Arr.makeBy(201, (index) => index),
+          Arr.makeBy(MAX_BATCH_STEPS + 1, (index) => index),
           () => typeText(editor.state, "x")
         );
         yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({ head: 200, submits: 1 });
+        expect(yield* server.counts).toMatchObject({
+          head: MAX_BATCH_STEPS,
+          submits: 1,
+        });
         yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({ head: 201, submits: 2 });
+        expect(yield* server.counts).toMatchObject({
+          head: MAX_BATCH_STEPS + 1,
+          submits: 2,
+        });
       })
   );
 

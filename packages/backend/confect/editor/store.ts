@@ -1,14 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { MAX_BATCH_STEPS } from "@repo/backend/confect/editor/size";
+import { STEP_READ_BYTES } from "@repo/backend/confect/editor/size";
 import { Array as Arr, Effect, HashMap } from "effect";
-
-/**
- * The most bytes one read of steps may take: 512 KiB (ADR 0028 Bounds). The read
- * stops at the row that reaches the budget, so one read may pass it by that row,
- * and a step is at most one batch of `MAX_BATCH_BYTES`.
- */
-const STEP_READ_BYTES = 512 * 1024;
 
 /**
  * The snapshot of a document, its one row. A document gets its snapshot in the
@@ -62,13 +55,14 @@ export const clientRecordOf = Effect.fn("editor.store.client")(function* (
 });
 
 /**
- * The steps of a document after one version, in version order. A read takes at
- * most one batch of steps (`MAX_BATCH_STEPS`) and stops at `STEP_READ_BYTES`, so
- * the caller reads on from the last version it received.
+ * The steps of a document after one version, in version order: at most `numItems` steps,
+ * and at most `STEP_READ_BYTES`. The caller reads on from the last version it received. A
+ * transaction may paginate only once, so a caller reads one page.
  */
 export const stepsAfter = Effect.fn("editor.store.stepsAfter")(function* (
   documentId: GenericId.GenericId<"editorDocuments">,
-  version: number
+  version: number,
+  numItems: number
 ) {
   const page = yield* (yield* DatabaseReader)
     .table("editorSteps")
@@ -78,8 +72,29 @@ export const stepsAfter = Effect.fn("editor.store.stepsAfter")(function* (
     .paginate({
       cursor: null,
       maximumBytesRead: STEP_READ_BYTES,
-      numItems: MAX_BATCH_STEPS,
+      numItems,
     })
     .pipe(Effect.orDie);
   return page.page;
+});
+
+/**
+ * Every step after one version up to the head, in one read. A transaction may paginate
+ * only once (Convex's limit for `.paginate()`), so a fold takes its backlog with `take`. The
+ * backlog is one read of `stepsAfter` plus one batch, because a submit refuses a backlog
+ * that one read does not hold (`pendingRows`), so the read stays within the bounds of a
+ * transaction (ADR 0028 Bounds).
+ */
+export const stepsThrough = Effect.fn("editor.store.stepsThrough")(function* (
+  documentId: GenericId.GenericId<"editorDocuments">,
+  version: number,
+  head: number
+) {
+  return yield* (yield* DatabaseReader)
+    .table("editorSteps")
+    .index("by_documentId_and_version", (query) =>
+      query.eq("documentId", documentId).gt("version", version)
+    )
+    .take(head - version)
+    .pipe(Effect.orDie);
 });

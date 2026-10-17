@@ -37,8 +37,28 @@ export const MAX_DOCUMENT_BYTES =
     version: 0,
   });
 
-/** Most steps one call may send (ADR 0028 Bounds: 200 steps in one call). */
-export const MAX_BATCH_STEPS = 200;
+/**
+ * Most steps one call may send, and so the most steps one fold of a pending backlog applies
+ * (ADR 0028 Bounds). The steps a fold applies cost time in proportion to the nodes they change,
+ * and a backlog is one pending read of this many steps plus one batch of them, so the largest
+ * fold is twice this value. Measured in convex-test on a near-bound document of 49,700 hard
+ * breaks in one paragraph, a fold of 64 steps took a median of 201 ms over five runs (190, 188,
+ * 201, 306, and 244 ms), and a quarter of the 1 s user-code limit is 250 ms. A submit applies
+ * the steps of its call to check them, and the fold applies them again, so this value bounds
+ * both.
+ */
+export const MAX_BATCH_STEPS = 32;
+
+/** Most steps one `since` reply carries: one read of the log (ADR 0028 Bounds). */
+export const STEP_PAGE_STEPS = 200;
+
+/**
+ * The most bytes one read of steps may take: 512 KiB (ADR 0028 Bounds). The read stops at the
+ * row that reaches the budget, so one read may pass it by that row, and a step is at most one
+ * batch of `MAX_BATCH_BYTES`. A submit reads the steps that its snapshot lacks in one read, so
+ * this budget also bounds the backlog that a submit accepts.
+ */
+export const STEP_READ_BYTES = 512 * 1024;
 
 /** Largest JSON text of one call's batch in UTF-8 bytes (ADR 0028 Bounds: 128 KiB in one call). */
 export const MAX_BATCH_BYTES = 128 * 1024;

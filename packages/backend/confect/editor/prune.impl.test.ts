@@ -108,11 +108,16 @@ describe("editor/prune sweep", () => {
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
         });
-        yield* teacher.mutation(steps.submit, {
-          batch: yield* batchText(0, "rina", 70),
-          documentId: made.id,
-          slug: nf,
-        });
+        // Seventy steps in calls of the batch limit, with each fold run before the next call, so
+        // the log holds more than one page of covered steps.
+        for (const version of [0, 32, 64]) {
+          yield* teacher.mutation(steps.submit, {
+            batch: yield* batchText(version, "rina", version === 64 ? 6 : 32),
+            documentId: made.id,
+            slug: nf,
+          });
+          yield* fixture.finishScheduled();
+        }
         yield* fixture.internal.mutation(fold, { documentId: made.id });
         vi.setSystemTime(TENANCY_NOW + LONG_AGO);
         const firstPage = yield* fixture.internal.mutation(prune.sweep, {

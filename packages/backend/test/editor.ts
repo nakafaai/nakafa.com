@@ -7,7 +7,7 @@ import {
 import type { AccessDenied } from "@repo/backend/confect/access/errors";
 import { type Batch, encodeBatch } from "@repo/backend/confect/editor/batch";
 import { STEP_KEEP_DELAY } from "@repo/backend/confect/editor/prune";
-import type { Step } from "@repo/backend/confect/editor/step";
+import { encodeStep, type Step } from "@repo/backend/confect/editor/step";
 import { paragraphOf } from "@repo/backend/test/editor/nodes";
 import {
   grantRole,
@@ -88,6 +88,41 @@ export const batchText = Effect.fn("test.editor.batchText")(function* (
     steps: Arr.makeBy(count, () => insertStep(text)),
   };
   return yield* encodeBatch(batch).pipe(Effect.orDie);
+});
+
+/**
+ * Plants a stored step after the document's head, and moves the head to count it. A
+ * stored step that a submit would refuse can only reach the log this way, so a test uses
+ * it to prove the fold refuses such a step too (ADR 0028). The step is written by the
+ * teacher's account and the client `crafted`.
+ */
+export const plantStep = Effect.fn("test.editor.plantStep")(function* (
+  fixture: Effect.Success<typeof tenancyFixture>,
+  documentId: GenericId.GenericId<"editorDocuments">,
+  step: Step
+) {
+  yield* fixture.run(
+    Effect.gen(function* () {
+      const writer = yield* DatabaseWriter;
+      const document = yield* documentRowOf(documentId);
+      const version = document.head + 1;
+      const text = yield* encodeStep(step).pipe(Effect.orDie);
+      yield* writer
+        .table("editorSteps")
+        .insert({
+          author: fixture.users.teacher.userId,
+          clientId: "crafted",
+          documentId,
+          step: text,
+          version,
+        })
+        .pipe(Effect.orDie);
+      yield* writer
+        .table("editorDocuments")
+        .patch(documentId, { head: version })
+        .pipe(Effect.orDie);
+    })
+  );
 });
 
 /** The document row, read inside the fixture. */

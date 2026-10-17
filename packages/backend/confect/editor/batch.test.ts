@@ -9,7 +9,10 @@ import {
   MAX_ID_LENGTH,
   MAX_STEP_BYTES,
 } from "@repo/backend/confect/editor/batch";
-import { MAX_BATCH_BYTES } from "@repo/backend/confect/editor/size";
+import {
+  MAX_BATCH_BYTES,
+  MAX_BATCH_STEPS,
+} from "@repo/backend/confect/editor/size";
 import { encodeStep, type Step } from "@repo/backend/confect/editor/step";
 import { nested } from "@repo/backend/test/editor/nodes";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -86,27 +89,29 @@ describe("editor/batch version rule", () => {
 
   it.effect("refuses a call over the step bound on the version it names", () =>
     Effect.gen(function* () {
-      // One step more than the 200-step bound of ADR 0028, on the version the document is at, so only the bound refuses it.
+      // One step more than the bound of ADR 0028, on the version the document is at, so only the bound refuses it.
       const step = '{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}';
       const steps = Arr.join(
-        Arr.makeBy(201, () => step),
+        Arr.makeBy(MAX_BATCH_STEPS + 1, () => step),
         ","
       );
       const text = `{"baseVersion":40,"batch":"rina-40","clientId":"rina","steps":[${steps}]}`;
       const failure = yield* decodeBatch(text).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
-      expect(failure.message).toContain("at most 200 steps");
+      expect(failure.message).toContain(`at most ${MAX_BATCH_STEPS} steps`);
     })
   );
 });
 
 describe("editor/batch limits", () => {
   it.effect(
-    "reads a batch of one step, and a batch of 200 steps, the bound of ADR 0028",
+    "reads a batch of one step, and a batch of the most steps one call sends, the bound of ADR 0028",
     () =>
       Effect.gen(function* () {
         yield* Schema.decodeEffect(BatchSchema)(batchOf("rina", 0, 1));
-        yield* Schema.decodeEffect(BatchSchema)(batchOf("rina", 0, 200));
+        yield* Schema.decodeEffect(BatchSchema)(
+          batchOf("rina", 0, MAX_BATCH_STEPS)
+        );
       })
   );
 
@@ -123,9 +128,9 @@ describe("editor/batch limits", () => {
         expect(none._tag).toBe("SchemaError");
 
         const more = yield* Schema.decodeEffect(BatchSchema)(
-          batchOf("rina", 0, 201)
+          batchOf("rina", 0, MAX_BATCH_STEPS + 1)
         ).pipe(Effect.flip);
-        expect(more.message).toContain("at most 200 steps");
+        expect(more.message).toContain(`at most ${MAX_BATCH_STEPS} steps`);
       })
   );
 

@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
-import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
+import { FOLD_STEP_LIMIT } from "@repo/backend/confect/editor/fold";
+import {
+  MAX_BATCH_STEPS,
+  MAX_DOCUMENT_BYTES,
+} from "@repo/backend/confect/editor/size";
 import type { Step } from "@repo/backend/confect/editor/step";
 import {
   batchText,
@@ -9,6 +13,7 @@ import {
   newDocument,
   nf,
   paragraphText,
+  plantStep,
   snapshotRows,
   stepRows,
 } from "@repo/backend/test/editor";
@@ -75,7 +80,7 @@ describe("editor/fold", () => {
           slug: nf,
         });
         const folded = yield* fixture.internal.mutation(fold, { documentId });
-        expect(folded).toEqual({ done: true, folded: 2, skipped: 0 });
+        expect(folded).toEqual({ folded: 2, skipped: 0 });
         const [snapshot] = yield* fixture.run(snapshotRows);
         expect(snapshot.version).toBe(2);
         expect(jsonValue(snapshot.content)).toEqual(paragraphOf("?Soal!"));
@@ -133,7 +138,7 @@ describe("editor/fold", () => {
           slug: nf,
         });
         const folded = yield* fixture.internal.mutation(fold, { documentId });
-        expect(folded).toEqual({ done: true, folded: 3, skipped: 1 });
+        expect(folded).toEqual({ folded: 3, skipped: 1 });
         const [snapshot] = yield* fixture.run(snapshotRows);
         expect(snapshot.version).toBe(3);
         expect(jsonValue(snapshot.content)).toEqual(paragraphOf("?Soal!"));
@@ -159,7 +164,7 @@ describe("editor/fold", () => {
           slug: nf,
         });
         const folded = yield* fixture.internal.mutation(fold, { documentId });
-        expect(folded).toEqual({ done: true, folded: 2, skipped: 1 });
+        expect(folded).toEqual({ folded: 2, skipped: 1 });
         const [snapshot] = yield* fixture.run(snapshotRows);
         expect(snapshot.version).toBe(2);
         expect(jsonValue(snapshot.content)).toEqual({
@@ -173,7 +178,7 @@ describe("editor/fold", () => {
   );
 
   it.effect(
-    "refuses a snapshot the contract refuses, keeps the stored one, and leaves its steps in the log",
+    "refuses a stored step that the contract refuses, keeps the stored snapshot, and leaves its steps in the log",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -191,14 +196,12 @@ describe("editor/fold", () => {
           scope: { kind: "tenant" },
           slug: nf,
         });
-        // An attribute step sets a heading level the contract refuses. The editor
-        // writes no such step, but a crafted one reaches the log, so the fold refuses it.
-        yield* fixture.as("admin").mutation(steps.submit, {
-          batch: yield* batchOf("crafted", 0, [
-            { attr: "level", pos: 0, stepType: "attr", value: 4 },
-          ]),
-          documentId: made.id,
-          slug: nf,
+        // The submit refuses such a batch (`result.test.ts`), so only a planted step reaches the log.
+        yield* plantStep(fixture, made.id, {
+          attr: "level",
+          pos: 0,
+          stepType: "attr",
+          value: 4,
         });
         const refused = yield* fixture.internal
           .mutation(fold, { documentId: made.id })
@@ -212,32 +215,47 @@ describe("editor/fold", () => {
       })
   );
 
-  it.effect(
-    "folds a backlog one page of the log at a time, and the fold it leaves starts the next page",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const documentId = yield* newDocument(fixture);
-        const teacher = fixture.as("teacher");
-        // The first batch reaches the fold limit, so it schedules the fold.
-        yield* teacher.mutation(steps.submit, {
-          batch: yield* batchText(0, "rina", 200),
-          documentId,
-          slug: nf,
-        });
-        yield* teacher.mutation(steps.submit, {
-          batch: yield* batchText(200, "rina", 50),
-          documentId,
-          slug: nf,
-        });
-        const firstPage = yield* fixture.internal.mutation(fold, {
-          documentId,
-        });
-        expect(firstPage).toEqual({ done: false, folded: 200, skipped: 0 });
-        yield* fixture.finishScheduled();
-        const [snapshot] = yield* fixture.run(snapshotRows);
-        expect(snapshot.version).toBe(250);
-      })
+  it.effect("folds the backlog of two batches in one run", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const documentId = yield* newDocument(fixture);
+      const teacher = fixture.as("teacher");
+      // The first batch reaches the fold limit, so it schedules the fold. The second batch
+      // is accepted before that fold runs, because one read still holds the backlog.
+      yield* teacher.mutation(steps.submit, {
+        batch: yield* batchText(0, "rina", FOLD_STEP_LIMIT),
+        documentId,
+        slug: nf,
+      });
+      yield* teacher.mutation(steps.submit, {
+        batch: yield* batchText(FOLD_STEP_LIMIT, "rina", FOLD_STEP_LIMIT),
+        documentId,
+        slug: nf,
+      });
+      const folded = yield* fixture.internal.mutation(fold, { documentId });
+      expect(folded).toEqual({
+        folded: 2 * FOLD_STEP_LIMIT,
+        skipped: 0,
+      });
+      const [snapshot] = yield* fixture.run(snapshotRows);
+      expect(snapshot.version).toBe(2 * FOLD_STEP_LIMIT);
+    })
+  );
+
+  it.effect("folds a full batch of steps in one run", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const documentId = yield* newDocument(fixture);
+      yield* fixture.as("teacher").mutation(steps.submit, {
+        batch: yield* batchText(0, "rina", MAX_BATCH_STEPS),
+        documentId,
+        slug: nf,
+      });
+      const folded = yield* fixture.internal.mutation(fold, { documentId });
+      expect(folded).toEqual({ folded: MAX_BATCH_STEPS, skipped: 0 });
+      const [snapshot] = yield* fixture.run(snapshotRows);
+      expect(snapshot.version).toBe(MAX_BATCH_STEPS);
+    })
   );
 
   it.effect("does nothing when no step follows the snapshot", () =>
@@ -245,7 +263,7 @@ describe("editor/fold", () => {
       const fixture = yield* tenancyFixture;
       const documentId = yield* newDocument(fixture);
       const folded = yield* fixture.internal.mutation(fold, { documentId });
-      expect(folded).toEqual({ done: true, folded: 0, skipped: 0 });
+      expect(folded).toEqual({ folded: 0, skipped: 0 });
       const [snapshot] = yield* fixture.run(snapshotRows);
       expect(snapshot.version).toBe(0);
     })
@@ -262,7 +280,7 @@ describe("editor/fold", () => {
       });
       yield* fixture.internal.mutation(deletion.document, { documentId });
       const folded = yield* fixture.internal.mutation(fold, { documentId });
-      expect(folded).toEqual({ done: true, folded: 0, skipped: 0 });
+      expect(folded).toEqual({ folded: 0, skipped: 0 });
     })
   );
 
@@ -287,7 +305,7 @@ describe("editor/fold", () => {
         const folded = yield* fixture.internal.mutation(fold, {
           documentId: made.id,
         });
-        expect(folded).toEqual({ done: true, folded: 1, skipped: 0 });
+        expect(folded).toEqual({ folded: 1, skipped: 0 });
         const [snapshot] = yield* fixture.run(snapshotRows);
         expect(snapshot.version).toBe(1);
         expect(utf8Bytes(snapshot.content)).toBeLessThan(MAX_DOCUMENT_BYTES);
@@ -295,7 +313,7 @@ describe("editor/fold", () => {
   );
 
   it.effect(
-    "refuses a fold one byte past the bound, and keeps the stored snapshot",
+    "refuses a stored step that grows the document one byte past the bound, and keeps the stored snapshot",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -305,11 +323,8 @@ describe("editor/fold", () => {
           scope: { kind: "tenant" },
           slug: nf,
         });
-        yield* fixture.as("admin").mutation(steps.submit, {
-          batch: yield* batchOf("grow", 0, [insertAt(1, "b")]),
-          documentId: made.id,
-          slug: nf,
-        });
+        // The submit refuses this batch (`result.test.ts`), so only a planted step reaches the log.
+        yield* plantStep(fixture, made.id, insertAt(1, "b"));
         const refused = yield* fixture.internal
           .mutation(fold, { documentId: made.id })
           .pipe(Effect.flip);
@@ -330,22 +345,17 @@ describe("editor/fold", () => {
         const documentId = yield* newDocument(fixture);
         const teacher = fixture.as("teacher");
         yield* teacher.mutation(steps.submit, {
-          batch: yield* batchText(0, "rina", 150),
+          batch: yield* batchText(0, "rina", FOLD_STEP_LIMIT - 1),
           documentId,
           slug: nf,
         });
-        yield* teacher.mutation(steps.submit, {
-          batch: yield* batchText(150, "rina", 49),
-          documentId,
-          slug: nf,
-        });
-        // 199 steps are pending, one below the limit, so no fold is scheduled.
+        // One step below the limit, so no fold is scheduled.
         yield* fixture.finishScheduled();
         expect(
           Arr.map(yield* fixture.run(snapshotRows), (row) => row.version)
         ).toEqual([0]);
         yield* teacher.mutation(steps.submit, {
-          batch: yield* batchText(199, "rina", 1),
+          batch: yield* batchText(FOLD_STEP_LIMIT - 1, "rina", 1),
           documentId,
           slug: nf,
         });
@@ -353,7 +363,43 @@ describe("editor/fold", () => {
         yield* fixture.finishScheduled();
         expect(
           Arr.map(yield* fixture.run(snapshotRows), (row) => row.version)
-        ).toEqual([200]);
+        ).toEqual([FOLD_STEP_LIMIT]);
+      })
+  );
+
+  it.effect(
+    "schedules the fold once the steps the snapshot lacks reach the byte limit, and not before",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        const teacher = fixture.as("teacher");
+        const text = "x".repeat(100_000);
+        yield* teacher.mutation(steps.submit, {
+          batch: yield* batchText(0, "rina", 1, text),
+          documentId,
+          slug: nf,
+        });
+        yield* teacher.mutation(steps.submit, {
+          batch: yield* batchText(1, "rina", 1, text),
+          documentId,
+          slug: nf,
+        });
+        // 200 KB of text is pending, below the byte limit, so no fold is scheduled.
+        yield* fixture.finishScheduled();
+        expect(
+          Arr.map(yield* fixture.run(snapshotRows), (row) => row.version)
+        ).toEqual([0]);
+        yield* teacher.mutation(steps.submit, {
+          batch: yield* batchText(2, "rina", 1, text),
+          documentId,
+          slug: nf,
+        });
+        // The submit that crosses the byte limit schedules the fold, which writes the snapshot.
+        yield* fixture.finishScheduled();
+        expect(
+          Arr.map(yield* fixture.run(snapshotRows), (row) => row.version)
+        ).toEqual([3]);
       })
   );
 });
