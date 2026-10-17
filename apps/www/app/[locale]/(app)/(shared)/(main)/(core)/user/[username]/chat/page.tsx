@@ -1,5 +1,6 @@
 import { String as Str } from "effect";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense, use } from "react";
 import { UserChats } from "@/components/user/chats";
@@ -40,6 +41,11 @@ function UserChatsRoute({
   params,
 }: Pick<PageProps<"/[locale]/user/[username]/chat">, "params">) {
   const { username } = use(params);
-  const { account } = use(readProfile(username));
-  return <UserChats userId={account.appUser._id} />;
+  const { isOwner, profile } = use(readProfile(username));
+  // The chats of a profile are its owner's alone, so anyone else gets the
+  // not-found page.
+  if (!isOwner) {
+    notFound();
+  }
+  return <UserChats userId={profile._id} />;
 }

@@ -41,13 +41,13 @@ async function UserLayoutContent(
   const { children, params } = props;
   const { username: address, locale } = await params;
   getLocaleOrThrow(locale);
-  const { account, username } = await readProfile(address);
+  const { isOwner, profile } = await readProfile(address);
 
   return (
     <ErrorBoundary fallback={null}>
       <main className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-3xl flex-col px-6 pt-6 pb-24 lg:min-h-svh lg:pt-12">
-        <UserHeader initialAccount={account} username={username} />
-        <UserTabs username={username} />
+        <UserHeader isOwner={isOwner} profile={profile} />
+        <UserTabs isOwner={isOwner} username={profile.username} />
         {children}
       </main>
     </ErrorBoundary>

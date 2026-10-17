@@ -26,6 +26,7 @@ import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { START_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { requestFingerprint } from "@repo/backend/confect/nina/fingerprint";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
+import { answerRunFor } from "@repo/backend/confect/nina/runtime";
 import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import { savePrompt } from "@repo/backend/confect/nina/sealed/save";
 import { settleStopped } from "@repo/backend/confect/nina/settlement";
@@ -175,7 +176,7 @@ const start = FunctionImpl.make(
       .patch(chatId, { threadId, activeTurnId: turnId, updatedAt: now })
       .pipe(Effect.orDie);
     const scheduler = yield* Scheduler;
-    yield* scheduler.runAfter(Duration.zero, refs.internal.nina.response.run, {
+    yield* scheduler.runAfter(Duration.zero, answerRunFor(prompt.message), {
       turnId,
     });
     // The one check that follows a run, for the moment it must have started. A

@@ -50,10 +50,11 @@ export function failedView(first: readonly ListPost[] | null) {
 export type PostsView = ReturnType<typeof failedView>;
 
 /**
- * What the live list subscribes to. Convex answers a read that has no viewer
- * with an empty final page, so the list asks only once Convex confirms the
- * session. Until then the server's page stands in for the list.
+ * What the live list subscribes to. It asks once Convex has settled the session:
+ * at once for a visitor who has none, and after Convex's answer for a signed-in
+ * learner, so each row's liked state is right from the first answer. Until then
+ * the server's page stands in for the list.
  */
-export function livePostsArgs(authorId: Id<"users">, isAuthenticated: boolean) {
-  return isAuthenticated ? { authorId } : "skip";
+export function livePostsArgs(authorId: Id<"users">, isSettled: boolean) {
+  return isSettled ? { authorId } : "skip";
 }

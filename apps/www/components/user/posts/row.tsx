@@ -7,7 +7,6 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import posts from "@repo/backend/confect/_generated/refs/posts";
-import { photoOf } from "@repo/backend/confect/users/picture";
 import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -19,11 +18,13 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
 import { Effect } from "effect";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { formatShortAge } from "@/components/user/age";
 import {
   FeedActions,
@@ -46,6 +47,7 @@ import {
 } from "@/components/user/posts/provider";
 import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 
 /** The delete dialog loads when the learner opens the More menu of a post, before they can choose Delete. */
 const PostDeletion = dynamic(
@@ -58,31 +60,27 @@ const PostDeletion = dynamic(
 
 /**
  * One post of the list, in the anatomy every row of the profile shares: the
- * author's picture, the name and the age with the author's More menu at the end
+ * profile's picture, its name and the age, with the owner's More menu at the end
  * of that line, the text, and the like. The actions of a post that the server is
  * still saving are held back, because the server does not know its placeholder
  * id.
  */
 export function PostRow({ post }: { post: ListPost }) {
   const locale = useLocale();
-  // The rows show the profile's own account, never the signed-in viewer, so a
-  // row does not depend on who is looking at it.
-  const { account, author } = usePostsContext();
+  // The rows show the profile, whoever is looking at them.
+  const { isOwner, profile } = usePostsContext();
   const now = usePostsNow();
   const pending = usePostDraft((draft) => draft.savingPostId === post._id);
   return (
     <FeedRow>
-      <FeedAvatar
-        mascot={account.appUser.mascot}
-        photo={photoOf(account.appUser)}
-      />
+      <FeedAvatar mascot={profile.mascot} photo={profile.image} />
       <FeedBody>
         <FeedHeader>
-          <FeedName>{account.authUser.name}</FeedName>
+          <FeedName>{profile.name}</FeedName>
           <FeedAge at={post._creationTime}>
             {formatShortAge(post._creationTime, now, locale)}
           </FeedAge>
-          {author !== null && (
+          {isOwner && (
             <FeedEnd>
               <PostMoreMenu inert={pending} postId={post._id} />
             </FeedEnd>
@@ -99,12 +97,18 @@ export function PostRow({ post }: { post: ListPost }) {
 
 /**
  * The like toggle of a post, at its own width: the heart, and the count once it
- * is above zero. The change is made at once and the server answers after it.
- * The ghost variant recolors the icon on hover, so a liked heart keeps its color
- * with a rule of its own.
+ * is above zero. The change is made at once and the server answers after it. A
+ * visitor who has not signed in goes to the sign-in page, which returns to this
+ * profile. The ghost variant recolors the icon on hover, so a liked heart keeps
+ * its color with a rule of its own.
  */
 function PostLikeButton({ post }: { post: ListPost }) {
   const t = useTranslations("Common");
+  const router = useRouter();
+  const authNavigation = useCurrentAuthNavigation();
+  const signedOut = useConvexAuth(
+    (auth) => !(auth.isAuthenticated || auth.isLoading)
+  );
   const like = useMutation(posts.mutations.like).withOptimisticUpdate(
     likeInLists
   );
@@ -114,6 +118,10 @@ function PostLikeButton({ post }: { post: ListPost }) {
 
   /** Likes or unlikes the post, and tells the learner when the server refuses. */
   function toggle() {
+    if (signedOut) {
+      router.push(authNavigation.readHref());
+      return;
+    }
     const change = post.liked ? unlike : like;
     Effect.runPromise(
       Effect.tryPromise(() => change({ postId: post._id })).pipe(
@@ -164,7 +172,7 @@ function PostLikeButton({ post }: { post: ListPost }) {
 }
 
 /**
- * The menu of the author's own post. The delete dialog mounts with the first
+ * The menu of the owner's own post. The delete dialog mounts with the first
  * opening of the menu, so its code is loaded before Delete can be chosen.
  */
 function PostMoreMenu({

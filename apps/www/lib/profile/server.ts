@@ -1,6 +1,7 @@
 import "server-only";
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
+import users from "@repo/backend/confect/_generated/refs/users";
 import { Effect, String as Str } from "effect";
 import { notFound } from "next/navigation";
 import { cache } from "react";
@@ -11,28 +12,40 @@ import { httpLayer } from "@/lib/convex/http";
  * Reads the profile at `@username` once for a whole request, so the layout and
  * the page of one profile share a single query.
  *
- * A profile is public only for an adult who belongs to no school (K15 of the
- * owner's decisions), and the product stores neither an age nor a way to tell
- * one, so no profile is public yet. Its owner opens it, because it is the page
- * of their own chats and comments. Every other visitor ends the request as not
- * found, the same as for a username nobody holds, so the answer never tells
- * whether a username exists. A public profile needs a stored age first.
+ * Anyone may read a profile, signed in or not, so the profile is read by its
+ * username. A username nobody holds ends the request as not found, the same
+ * answer the proxy gives before the page renders. The owner is the signed-in
+ * account whose app user is the profile's, and only the owner sees the controls
+ * of their own profile.
  */
 export const readProfile = cache(async (address: string) => {
-  const token = await getToken();
-  const account = token
-    ? await Effect.runPromise(
-        HttpClient.HttpClient.pipe(
-          Effect.flatMap((client) =>
-            client.query(auth.queries.getCurrentUser, {})
-          ),
-          Effect.provide(httpLayer({ auth: token }))
-        )
-      )
-    : null;
   const username = Str.toLowerCase(address);
-  if (account === null || account.appUser.username !== username) {
+  const token = await getToken();
+  const [profile, account] = await Promise.all([
+    Effect.runPromise(
+      HttpClient.HttpClient.pipe(
+        Effect.flatMap((client) =>
+          client.query(users.queries.getProfileByUsername, { username })
+        ),
+        Effect.provide(httpLayer())
+      )
+    ),
+    token
+      ? Effect.runPromise(
+          HttpClient.HttpClient.pipe(
+            Effect.flatMap((client) =>
+              client.query(auth.queries.getCurrentUser, {})
+            ),
+            Effect.provide(httpLayer({ auth: token }))
+          )
+        )
+      : Promise.resolve(null),
+  ]);
+  if (profile === null) {
     notFound();
   }
-  return { account, username };
+  return {
+    isOwner: account !== null && account.appUser._id === profile._id,
+    profile,
+  };
 });
