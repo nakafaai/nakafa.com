@@ -85,7 +85,7 @@ describe("the settle of a pile", () => {
   });
 });
 
-describe("the pile when it first shows", () => {
+describe("the pile that a settle shows", () => {
   for (const pool of CHECKED_POOLS) {
     it(`shows a ${pool.width} by ${pool.height} pool with every ball inside the box, and at rest`, () => {
       const shown = settle(poolWorld(pool.width, pool.height));

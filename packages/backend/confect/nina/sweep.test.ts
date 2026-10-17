@@ -10,6 +10,7 @@ import {
 } from "@repo/backend/confect/nina/deadline";
 import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
+import { SEAL_BYTES_PER_SWEEP } from "@repo/backend/confect/nina/sweep";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { stubReport } from "@repo/backend/test/nina/report";
@@ -429,5 +430,68 @@ describe("Nina turn start check", () => {
     expect(
       Arr.filter(state.ledger, (row) => row.type === "refund")
     ).toHaveLength(1);
+  });
+});
+
+describe("Nina sweep seals settled turns", () => {
+  type Deployment = Awaited<ReturnType<typeof createNinaTest>>;
+
+  /** Each settled turn of the chat, by order, and whether its rows are sealed. */
+  const settledSeals = (t: Deployment["t"]) =>
+    t.query(async (ctx) =>
+      Arr.flatMap(await ctx.db.query("ninaTurns").collect(), (turn) =>
+        turn.phase === "settled"
+          ? [{ order: turn.order, sealed: turn.sealedAt !== undefined }]
+          : []
+      )
+    );
+
+  /** The ids of the stored rows of the chat's thread that were written at an order below `before`. */
+  const rowIdsBelow = (f: Deployment, before: number) =>
+    f.t
+      .query((ctx) =>
+        listMessages(ctx, components.nina, {
+          paginationOpts: { cursor: null, numItems: 200 },
+          threadId: f.threadId,
+        })
+      )
+      .then((rows) =>
+        Arr.flatMap(rows.page, (row) => (row.order < before ? [row._id] : []))
+      );
+
+  it("schedules one drain of the settled turns per run, within the byte budget of the run", async () => {
+    const f = await createNinaTest({ history: 1, now: NOW });
+    await f.t.mutation(sweep, {});
+
+    const jobs = await f.t.query((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(
+      Arr.map(
+        Arr.filter(jobs, (job) => job.name === "nina/sealed:drain"),
+        (job) => job.args[0]
+      )
+    ).toEqual([{ budget: SEAL_BYTES_PER_SWEEP }]);
+  });
+
+  it("reaches the old turns that still hold plain rows, and leaves a sealed turn alone", async () => {
+    const turns = 3;
+    const f = await createNinaTest({ history: turns, now: NOW });
+    await f.t.mutation(sweep, {});
+    await f.t.finishAllScheduledFunctions(() => undefined);
+
+    // Each turn is small, so the run's budget covers all of them.
+    expect(await settledSeals(f.t)).toEqual(
+      Arr.makeBy(turns, (order) => ({ order, sealed: true }))
+    );
+    const sealedBefore = await rowIdsBelow(f, turns);
+
+    await f.t.mutation(sweep, {});
+    await f.t.finishAllScheduledFunctions(() => undefined);
+
+    expect(await settledSeals(f.t)).toEqual(
+      Arr.makeBy(turns, (order) => ({ order, sealed: true }))
+    );
+    expect(await rowIdsBelow(f, turns)).toEqual(sealedBefore);
   });
 });

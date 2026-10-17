@@ -11236,12 +11236,12 @@ export declare const internal: {
         }
       >;
     };
-    documents: {
-      run: FunctionReference<
-        "action",
+    fingerprints: {
+      clear: FunctionReference<
+        "mutation",
         "internal",
-        { turnId: Id<"ninaTurns"> },
-        null
+        { cursor?: string; dryRun: boolean },
+        { activeOld: number; cleared: number; done: boolean; scanned: number }
       >;
     };
     focus: {
@@ -11547,6 +11547,14 @@ export declare const internal: {
             remembered?: number;
             requestId?: string;
             retryOf?: number;
+            sealAttempts?: number;
+            sealFailedAt?: number;
+            sealHold?:
+              | "accountDeleted"
+              | "chatDeleted"
+              | "failedAttempts"
+              | "promptMissing";
+            sealedAt?: number;
             state:
               | { finishedAt: number; status: "complete" }
               | {
@@ -11610,12 +11618,6 @@ export declare const internal: {
         "internal",
         { turnId: Id<"ninaTurns"> },
         null
-      >;
-      halted: FunctionReference<
-        "query",
-        "internal",
-        { turnId: Id<"ninaTurns"> },
-        boolean
       >;
       presentation: FunctionReference<
         "query",
@@ -11764,6 +11766,14 @@ export declare const internal: {
             remembered?: number;
             requestId?: string;
             retryOf?: number;
+            sealAttempts?: number;
+            sealFailedAt?: number;
+            sealHold?:
+              | "accountDeleted"
+              | "chatDeleted"
+              | "failedAttempts"
+              | "promptMissing";
+            sealedAt?: number;
             state:
               | { finishedAt: number; status: "complete" }
               | {
@@ -11957,6 +11967,14 @@ export declare const internal: {
         null
       >;
     };
+    phase: {
+      halted: FunctionReference<
+        "query",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        boolean
+      >;
+    };
     portrait: {
       build: {
         run: FunctionReference<
@@ -12026,11 +12044,30 @@ export declare const internal: {
       >;
     };
     sealed: {
+      candidates: FunctionReference<
+        "query",
+        "internal",
+        { cursor: string | null; numItems: number },
+        { continueCursor: string; ids: Array<Id<"ninaTurns">>; isDone: boolean }
+      >;
+      drain: FunctionReference<"action", "internal", { budget: number }, null>;
       message: FunctionReference<
         "query",
         "internal",
         { messageId: string; owner: Id<"users"> },
         any | null
+      >;
+      recordFailure: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        { attempts: number; held: boolean } | null
+      >;
+      seal: FunctionReference<
+        "mutation",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        { bytes: number }
       >;
       thread: FunctionReference<
         "query",

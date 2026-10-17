@@ -11,16 +11,16 @@ const WIDTH = 1200;
 const HEIGHT = 640;
 
 describe("the walls", () => {
-  it("turns a ball that hits the left wall back, with 0.45 of its speed", () => {
+  it("turns a ball that hits the left wall back, with 0.6 of its speed", () => {
     const next = fence(ballAt({ vx: -200, x: 5 }), WIDTH, HEIGHT);
     expect(next.x).toBe(20);
-    expect(next.vx).toBeCloseTo(90, 9);
+    expect(next.vx).toBeCloseTo(120, 9);
   });
 
-  it("turns a ball that hits the right wall back, with 0.45 of its speed", () => {
+  it("turns a ball that hits the right wall back, with 0.6 of its speed", () => {
     const next = fence(ballAt({ vx: 200, x: 1195 }), WIDTH, HEIGHT);
     expect(next.x).toBe(1180);
-    expect(next.vx).toBeCloseTo(-90, 9);
+    expect(next.vx).toBeCloseTo(-120, 9);
   });
 
   it("leaves a ball that is past a wall but moving away from it at its speed", () => {
@@ -29,10 +29,10 @@ describe("the walls", () => {
     expect(next.vx).toBe(200);
   });
 
-  it("turns a ball that lands on the floor back with 0.32 of its speed, and keeps 0.9 of its sideways speed", () => {
+  it("turns a ball that lands on the floor back with 0.45 of its speed, and keeps 0.9 of its sideways speed", () => {
     const next = fence(ballAt({ vx: 100, vy: 400, y: 635 }), WIDTH, HEIGHT);
     expect(next.y).toBe(620);
-    expect(next.vy).toBeCloseTo(-128, 9);
+    expect(next.vy).toBeCloseTo(-180, 9);
     expect(next.vx).toBeCloseTo(90, 9);
   });
 
@@ -63,10 +63,10 @@ describe("the walls", () => {
     expect(next.inside).toBe(true);
   });
 
-  it("turns back a ball that has been inside and rises into the top wall, with 0.4 of its speed", () => {
+  it("turns back a ball that has been inside and rises into the top wall, with 0.5 of its speed", () => {
     const next = fence(ballAt({ vy: -100, y: 5 }), WIDTH, HEIGHT);
     expect(next.y).toBe(20);
-    expect(next.vy).toBeCloseTo(40, 9);
+    expect(next.vy).toBeCloseTo(50, 9);
   });
 
   it("keeps the speed of a ball that has been inside and is already sinking at the top wall", () => {
@@ -77,10 +77,10 @@ describe("the walls", () => {
 });
 
 describe("the top speed", () => {
-  it("limits a fast velocity to 760 pixels per second, and keeps its direction", () => {
+  it("limits a fast velocity to 1400 pixels per second, and keeps its direction", () => {
     const capped = fastest(3000, 4000);
-    expect(capped.vx).toBeCloseTo(456, 9);
-    expect(capped.vy).toBeCloseTo(608, 9);
+    expect(capped.vx).toBeCloseTo(840, 9);
+    expect(capped.vy).toBeCloseTo(1120, 9);
   });
 
   it("leaves a velocity under the top speed as it is", () => {

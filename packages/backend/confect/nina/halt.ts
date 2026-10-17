@@ -26,7 +26,7 @@ export const turnHalted = Effect.fn("nina.halt.halted")(function* (
   turnId: Docs["ninaTurns"]["_id"]
 ) {
   const { runQuery } = yield* QueryRunner;
-  return yield* runQuery(refs.internal.nina.lifecycle.halted, { turnId }).pipe(
+  return yield* runQuery(refs.internal.nina.phase.halted, { turnId }).pipe(
     Effect.orDie,
     Effect.catchDefect(() =>
       Effect.as(Effect.logWarning("Nina halt check failed", { turnId }), false)
