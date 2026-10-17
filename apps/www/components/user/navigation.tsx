@@ -22,7 +22,7 @@ export function SharedTabs({ tabs, value }: Props) {
         <TabsList className="w-full" variant="underline">
           {Arr.map(tabs, (tab) => (
             <TabsTab
-              className="flex-1 text-muted-foreground data-active:text-foreground"
+              className="flex-1"
               key={tab.href}
               nativeButton={false}
               render={<Link href={tab.href}>{tab.label}</Link>}

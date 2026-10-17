@@ -12,7 +12,7 @@ import {
 } from "@repo/next-config/preview";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { readEnvironment } from "@repo/utilities/env";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import {
@@ -21,7 +21,7 @@ import {
 } from "@/lib/content/profile";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/discovery";
 import { createOgRouteAliasRewrites } from "@/lib/og/route";
-import { profileHref } from "@/lib/profile/href";
+import { ProfileTab, profileHref } from "@/lib/profile/href";
 import { readRuntimeConfig } from "@/runtime";
 
 const runtime = readRuntimeConfig();
@@ -96,14 +96,10 @@ function createAppRewrites() {
       source: `/${LOCALE_SEGMENT}${profileHref(":username")}`,
       destination: "/:locale/user/:username",
     },
-    {
-      source: `/${LOCALE_SEGMENT}${profileHref(":username")}/chat`,
-      destination: "/:locale/user/:username/chat",
-    },
-    {
-      source: `/${LOCALE_SEGMENT}${profileHref(":username")}/comments`,
-      destination: "/:locale/user/:username/comments",
-    },
+    ...Arr.map(ProfileTab.literals, (tab) => ({
+      source: `/${LOCALE_SEGMENT}${profileHref(":username")}/${tab}`,
+      destination: `/:locale/user/:username/${tab}`,
+    })),
   ];
   return {
     // PostHog requires the specific static and array rewrites to come before the
