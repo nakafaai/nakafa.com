@@ -26,21 +26,16 @@ import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
- * Each friend of the crowd is one animal drawn as an svg of 15 to 25 elements,
- * and every fourth friend also has a typing bubble of six elements. The ceilings
- * follow the friends that the section renders, read from the crowd's own
- * constants, so a new friend adds its share and a heavier drawing still breaks
- * the budget. The per-friend figures come from the trace snapshot of the home
- * page of commit d739c56bd6 on 17 October 2026: 18 friends, 5 of them typing,
- * 400 descendants, 73 non-SVG descendants, and 35,739 bytes once serialized,
- * which approximates the browser's outerHTML. The crowd's markup has since
- * changed without changing any element count, and the exact byte deltas are
- * added to the byte ceiling: the list became a labelled div with a role, which
- * adds 13 bytes to the fixed part, the English label is 13 bytes longer, also in
- * the fixed part, each friend's wrapper is a div rather than an li, which adds
- * two bytes per friend, and each typing bubble is hidden from assistive
- * technology, which adds 19 bytes per bubble. Each ceiling is about six percent
- * over its measure: a fixed part plus the friends and the bubbles.
+ * Each friend of the crowd is one animal in a round avatar: two spans around an
+ * svg of 15 to 25 elements, and every fourth friend also has a typing bubble of
+ * six elements. The ceilings follow the friends that the section renders, read
+ * from the crowd's own constants, so a new friend adds its share and a heavier
+ * drawing still breaks the budget. The figures are measured on a production
+ * build of commit 0923c41e34 on 17 October 2026, by the reader this test uses,
+ * at every target viewport: 18 friends, 5 of them typing, 436 descendants, 109
+ * of them outside the drawings, and 44,814 bytes once serialized. Each ceiling
+ * is about six percent over its measure: a fixed part plus the friends and the
+ * bubbles.
  */
 const COMMUNITY_MARGIN = 1.06;
 const COMMUNITY_FRIENDS = CROWD_HERD.length;
@@ -48,35 +43,24 @@ const COMMUNITY_TYPING_FRIENDS = Math.ceil(
   COMMUNITY_FRIENDS / CROWD_TYPING_EVERY
 );
 const COMMUNITY_MAX_CHROME_DESCENDANTS = Math.ceil(
-  COMMUNITY_MARGIN * (7 + 2 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
+  COMMUNITY_MARGIN * (7 + 4 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
 );
 const COMMUNITY_MAX_DESCENDANTS = Math.ceil(
   COMMUNITY_MARGIN *
-    (11 + 20 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
+    (10 + 22 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
 );
 const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
   COMMUNITY_MARGIN *
-    (2743 + 1657 * COMMUNITY_FRIENDS + 667 * COMMUNITY_TYPING_FRIENDS)
+    (2743 + 2152 * COMMUNITY_FRIENDS + 667 * COMMUNITY_TYPING_FRIENDS)
 );
 
 /**
- * The homepage ceiling, derived. The 17 October trace of this page, with the
- * 18-friend crowd, counted 1,919 body elements outside the lesson section at the
- * touch viewport, and 2,685 in all. The lesson section's server markup holds its
- * chat and heading, 21 elements, and the window, 745: its tabs and its four cards
- * from a static render, and four wrappers that held each card inert until its lab
- * mounted. The cards have no wrapper now: their controls are inert in place, so
- * the window is 741 and the page 2,681 (1,919 + 21 + 741). The window draws all
- * four cards in one grid cell, so it keeps one height through every tab, and only
- * the open lab mounts. Six percent over 2,681 is 2,842, and the ceiling stays at
- * 2,847 until the measure replaces it.
- *
- * PLACEHOLDER: the window's 741 comes from a static render of its markup, not from
- * a browser. Each run records the measured count as an annotation, and the
- * orchestrator replaces this constant with that measure, rounded up with the same
- * margin.
+ * The homepage ceiling: the body held 2,702 elements on the production build of
+ * commit 0923c41e34 on 17 October 2026, the same at every target viewport,
+ * because the lesson window draws all four cards in one grid cell and mounts
+ * only the open lab. Six percent over 2,702 is 2,865.
  */
-const HOMEPAGE_MAX_DESCENDANTS = 2847;
+const HOMEPAGE_MAX_DESCENDANTS = 2865;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 
 /**
