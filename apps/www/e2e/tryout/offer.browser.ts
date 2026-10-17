@@ -2,9 +2,10 @@ import { expect, type Page, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
-import { readFooterActions } from "@/e2e/support/footer";
+import { readFooterActions, setLargeText } from "@/e2e/support/footer";
+import { CONVEX_SOCKET, decodeSent } from "@/e2e/support/frames";
 import { activate, visibleLink } from "@/e2e/support/input";
 import {
   confirmFinish,
@@ -21,6 +22,30 @@ const ENGLISH_PREFIX = /^\/en\//;
 
 /** The review that a free learner sees once the whole attempt is finished. */
 const LOCKED_REVIEW = '[data-slot="tryout-review-locked"]';
+
+/** The checkout action that the Pro offer's button starts. */
+const CHECKOUT_ACTION = "customers/actions/sessions:generateCheckoutLink";
+
+/**
+ * Holds the checkout action open, so the offer's button stays pending, and
+ * passes every other frame through as it came.
+ */
+const holdCheckoutAction = (page: Page) =>
+  page.routeWebSocket(CONVEX_SOCKET, (socket) => {
+    const server = socket.connectToServer();
+    socket.onMessage((message) => {
+      const frame = decodeSent(message.toString());
+      if (
+        Option.isSome(frame) &&
+        frame.value.type === "Action" &&
+        frame.value.udfPath === CHECKOUT_ACTION
+      ) {
+        return;
+      }
+      server.send(message);
+    });
+    server.onMessage((message) => socket.send(message));
+  });
 
 /** The Pro offer's card: the card that holds the offer's heading. */
 const offerCard = (page: Page) =>
@@ -113,7 +138,8 @@ const finishOtherSections = Effect.fn("NakafaE2E.finishOtherTryoutSections")(
 /**
  * Finishes the sections of a set as a free learner, then opens the review of
  * the first section in Indonesian on a compact phone. The offer's two actions
- * must sit inside its card, and each label must fit its own action.
+ * must sit inside its card, and each label must fit its own action. At large
+ * text the offer's footer is narrow, and its checkout spinner must still show.
  */
 const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
   function* (page: Page, baseURL: string) {
@@ -129,6 +155,7 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
         width: compactViewport.width,
       })
     );
+    yield* Effect.promise(() => holdCheckoutAction(page));
     yield* Effect.promise(() =>
       page.goto(section.toString(), { waitUntil: "commit" })
     );
@@ -157,6 +184,23 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
         expect(action.clipped).toBe(false);
       }
     });
+
+    // Large text makes the offer's footer narrow. A narrow footer keeps the
+    // spinner of a pending checkout, so the learner sees that checkout started.
+    const rootSize = yield* setLargeText(page);
+    const checkout = offerCard(page).getByRole("button", {
+      exact: true,
+      name: app.Pricing["pro-cta"],
+    });
+    yield* activate(checkout, false);
+    yield* Effect.promise(() =>
+      expect(checkout.locator("svg.animate-spin")).toBeVisible({
+        timeout: readinessTimeoutMilliseconds,
+      })
+    );
+    yield* Effect.sync(() => {
+      expect(rootSize).toBe("32px");
+    });
   }
 );
 
@@ -165,7 +209,7 @@ test.describe("The Pro offer of a finished set, on a compact phone", () => {
   // flow runs each section in turn before it checks the offer.
   test.describe.configure({ timeout: 240_000 });
 
-  test("keeps the Pro offer's two actions inside its card on a compact phone", async ({
+  test("keeps the Pro offer's actions inside its card, and its checkout spinner visible at large text", async ({
     baseURL,
     page,
   }) => {

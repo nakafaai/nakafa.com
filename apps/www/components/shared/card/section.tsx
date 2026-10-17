@@ -40,19 +40,20 @@ const cardSectionHintVariants = cva("flex-1 text-sm", {
 });
 
 // In a footer narrower than the built-in `@3xs` container size, an action drops its
-// icon, wraps its label between words, grows with its content, and takes the row's
-// width. `min-h-8` keeps the small size's height as the floor of a one-line label,
-// and `min-w-fit` keeps a share footer's actions stacked when their labels do not
-// fit side by side.
+// icon, except a spinner, which shows progress. Its label wraps between words only,
+// and it shares the row with the other actions, wrapping onto its own line when their
+// labels cannot share one. A footer with no sentence gives its actions the whole row.
+// `min-h-8` keeps the small size's height as the floor of a one-line label, and
+// `min-w-fit` keeps each action as wide as its label needs, up to the room it has.
 const cardSectionActionsVariants = cva(
-  "@max-3xs/card-footer:*:wrap-normal flex flex-wrap items-center justify-end gap-2 @max-3xs/card-footer:*:h-auto @max-3xs/card-footer:*:min-h-8 @max-3xs/card-footer:*:w-full @max-3xs/card-footer:*:min-w-fit @max-3xs/card-footer:*:whitespace-normal @max-3xs/card-footer:[&_svg]:hidden",
+  "@max-3xs/card-footer:*:wrap-normal flex flex-wrap items-center justify-end gap-2 @max-3xs/card-footer:*:h-auto @max-3xs/card-footer:*:min-h-8 @max-3xs/card-footer:*:min-w-fit @max-3xs/card-footer:*:flex-1 @max-3xs/card-footer:*:whitespace-normal @max-3xs/card-footer:[&_svg:not(.animate-spin)]:hidden",
   {
     defaultVariants: {
       share: false,
     },
     variants: {
       share: {
-        false: "",
+        false: "@max-3xs/card-footer:only:w-full",
         true: "flex-1 *:flex-1",
       },
     },
@@ -120,10 +121,11 @@ export function CardSectionHint({
  * full size, so a footer with only actions keeps them on the right too. When
  * they have no room beside the sentence, they move to their own line and wrap
  * among their buttons. In a footer narrower than the built-in `@3xs` container
- * size, each action drops its icon, wraps its label between words, and takes the
- * row's width, so the actions stack. A footer with no sentence passes `share`:
- * its actions split the row equally, and when their labels do not fit side by
- * side they stack, each across the full width.
+ * size, each action drops its icon, except a spinner, and wraps its label between
+ * words. The actions share the row, and with no sentence beside them they fill
+ * it. A footer with no sentence passes `share`: its actions split the row
+ * equally, and when their labels do not fit side by side they stack, each across
+ * the full width.
  */
 export function CardSectionActions({
   share,
