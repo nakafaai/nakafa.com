@@ -3,14 +3,13 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr } from "effect";
 import { CommentComposer } from "@/components/comments/composer";
 import { usePostComment } from "@/components/comments/posting";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow, ReplyButton } from "@/components/comments/row";
 import { CommentThread } from "@/components/comments/thread";
 import { DataFailure } from "@/components/shared/failure";
-import { useAgeClock } from "@/components/user/clock.client";
 
 /** How many top-level comments a page holds, the first one and each one after it. */
 const PAGE_SIZE = 25;
@@ -21,7 +20,6 @@ const PAGE_SIZE = 25;
  * list reaches its end.
  */
 export function CommentsList({ slug }: { slug: string }) {
-  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
   const pagination = usePaginatedQuery(
     comments.queries.getCommentsBySlug,
     { slug },
@@ -30,7 +28,7 @@ export function CommentsList({ slug }: { slug: string }) {
   const postComment = usePostComment();
 
   return (
-    <CommentsProvider clock={clock} slug={slug}>
+    <CommentsProvider>
       <CommentComposer
         onPost={(text) => postComment({ parent: null, slug, text })}
       />
@@ -40,13 +38,12 @@ export function CommentsList({ slug }: { slug: string }) {
           <div key={comment._id}>
             <CommentRow
               author={comment.user}
-              clock={clock}
               comment={comment}
               replyAction={
                 <ReplyButton comment={comment} count={comment.replyCount} />
               }
             />
-            <CommentThread clock={clock} comment={comment} />
+            <CommentThread comment={comment} />
           </div>
         ))}
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (

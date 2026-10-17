@@ -19,23 +19,23 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Effect } from "effect";
+import { Effect, HashSet } from "effect";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { type MouseEvent, type ReactNode, useState } from "react";
-import type { StoreApi } from "zustand";
 import {
   likeInLists,
   unlikeInLists,
 } from "@/components/comments/mutation.client";
-import { useReplying } from "@/components/comments/provider";
+import {
+  useCommentDraft,
+  useCommentsNow,
+} from "@/components/comments/provider";
 import type {
   CommentAuthor,
   CommentRow as CommentItem,
 } from "@/components/comments/state";
 import { formatShortAge } from "@/components/user/age";
-import type { AgeClock } from "@/components/user/clock";
-import { useAgeNow } from "@/components/user/clock.client";
 import {
   FeedActions,
   FeedAge,
@@ -85,20 +85,21 @@ type RowAuthor = Pick<CommentAuthor, "image" | "mascot" | "name" | "picture">;
  */
 export function CommentRow({
   author,
-  clock,
   comment,
   replyAction,
   replyTo,
 }: {
   author: RowAuthor | null | undefined;
-  clock: StoreApi<AgeClock>;
   comment: RowComment;
   replyAction: ReactNode;
   replyTo?: ReactNode;
 }) {
   const t = useTranslations("Common");
   const locale = useLocale();
-  const now = useAgeNow(clock);
+  const now = useCommentsNow();
+  const saving = useCommentDraft((draft) =>
+    HashSet.has(draft.saving, comment._id)
+  );
   const viewerId = useViewer((state) => state.account?.appUser._id);
   return (
     <div id={comment._id}>
@@ -112,13 +113,13 @@ export function CommentRow({
             </FeedAge>
             {viewerId === comment.userId && (
               <FeedEnd>
-                <CommentMoreMenu comment={comment} />
+                <CommentMoreMenu comment={comment} inert={saving} />
               </FeedEnd>
             )}
           </FeedHeader>
           {replyTo}
           <FeedText>{comment.text}</FeedText>
-          <FeedActions>
+          <FeedActions inert={saving}>
             <CommentLikeButton comment={comment} />
             {replyAction}
           </FeedActions>
@@ -186,7 +187,7 @@ export function ReplyButton({
 }) {
   const t = useTranslations("Common");
   const whenSignedIn = useWhenSignedIn();
-  const open = useReplying((replying) => replying.open);
+  const open = useCommentDraft((draft) => draft.open);
 
   return (
     <Button
@@ -238,7 +239,13 @@ function scrollToComment(
  * The More menu of a comment, for its writer. Delete asks first, in the dialog that
  * says whether the replies go with it.
  */
-function CommentMoreMenu({ comment }: { comment: RowComment }) {
+function CommentMoreMenu({
+  comment,
+  inert,
+}: {
+  comment: RowComment;
+  inert: boolean;
+}) {
   const t = useTranslations("Common");
   const [menuOpened, setMenuOpened] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -254,7 +261,12 @@ function CommentMoreMenu({ comment }: { comment: RowComment }) {
       >
         <DropdownMenuTrigger
           render={
-            <Button aria-label={t("more")} size="icon-sm" variant="ghost">
+            <Button
+              aria-label={t("more")}
+              inert={inert}
+              size="icon-sm"
+              variant="ghost"
+            >
               <HugeIcons icon={MoreHorizontalIcon} />
               <span className="sr-only">{t("more")}</span>
             </Button>

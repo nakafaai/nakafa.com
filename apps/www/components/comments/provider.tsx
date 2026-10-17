@@ -1,60 +1,52 @@
 "use client";
 
+import { DateTime } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
-import { createReplying, type Replying } from "@/components/comments/replying";
+import {
+  type CommentDraft,
+  createCommentDraft,
+} from "@/components/comments/draft";
 import type { AgeClock } from "@/components/user/clock";
+import { useAgeClock, useAgeNow } from "@/components/user/clock.client";
 
-const CommentsContext = createContext<{
-  /** The clock that the ages of the comments count from. */
-  readonly clock: StoreApi<AgeClock>;
-  /** The slug whose comments the list shows. */
-  readonly slug: string;
-} | null>(null);
-const ReplyingContext = createContext<StoreApi<Replying> | null>(null);
+const ClockContext = createContext<StoreApi<AgeClock> | null>(null);
+const DraftContext = createContext<StoreApi<CommentDraft> | null>(null);
 
 /**
- * Gives the list and its threads the slug and the clock, which are render values.
- * The reply composer that is open lives in a store that this provider creates once
- * for the list, and only the list's own actions write it.
+ * Gives one list of comments, on a content page or on a profile, the clock its ages
+ * count from and the draft of what it is writing. Both are stores created once for
+ * the list: a timer moves the clock, and only the list's own actions write the
+ * draft, so only the rows that read a changed part render again.
  */
-export function CommentsProvider({
-  children,
-  clock,
-  slug,
-}: {
-  readonly children: ReactNode;
-  /** The clock that the ages of the comments count from. */
-  readonly clock: StoreApi<AgeClock>;
-  /** The slug whose comments the list shows. */
-  readonly slug: string;
-}) {
-  const [replying] = useState(() => createReplying());
+export function CommentsProvider({ children }: { children: ReactNode }) {
+  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
+  const [draft] = useState(() => createCommentDraft());
 
   return (
-    <ReplyingContext value={replying}>
-      <CommentsContext value={{ clock, slug }}>{children}</CommentsContext>
-    </ReplyingContext>
+    <ClockContext value={clock}>
+      <DraftContext value={draft}>{children}</DraftContext>
+    </ClockContext>
   );
 }
 
-/** Reads the slug and the clock that the list gives its comments. */
-export function useCommentsContext() {
-  const value = use(CommentsContext);
+/** The moment the ages of the comments count from, which the timer moves forward. */
+export function useCommentsNow() {
+  const clock = use(ClockContext);
 
-  if (!value) {
-    throw new Error("useCommentsContext must be used within CommentsProvider");
+  if (!clock) {
+    throw new Error("useCommentsNow must be used within CommentsProvider");
   }
 
-  return value;
+  return useAgeNow(clock);
 }
 
-/** Reads one selected part of the reply composer that is open in the list. */
-export function useReplying<T>(selector: (replying: Replying) => T) {
-  const store = use(ReplyingContext);
+/** Reads one selected part of what the list is writing. */
+export function useCommentDraft<T>(selector: (draft: CommentDraft) => T) {
+  const store = use(DraftContext);
 
   if (!store) {
-    throw new Error("useReplying must be used within CommentsProvider");
+    throw new Error("useCommentDraft must be used within CommentsProvider");
   }
 
   return useStore(store, selector);

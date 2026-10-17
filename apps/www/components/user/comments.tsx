@@ -14,11 +14,11 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow } from "@/components/comments/row";
 import { DataFailure } from "@/components/shared/failure";
-import { useAgeClock } from "@/components/user/clock.client";
 import { FeedCount, FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { getCleanHref } from "@/lib/routing/href";
 
@@ -42,7 +42,6 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
     }
   );
   const { results } = pagination;
-  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
   if (QueryResult.isFailure(userQuery)) {
     throw userQuery.error;
   }
@@ -66,33 +65,34 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
     return <FeedEmpty>{t("no-comments")}</FeedEmpty>;
   }
   return (
-    <div className="flex flex-col">
-      {PaginatedQueryResult.isFailure(pagination) && (
-        <FeedNotice>
-          <DataFailure />
-        </FeedNotice>
-      )}
-      {Arr.map(results, (comment) => (
-        <CommentRow
-          author={userQuery.value}
-          clock={clock}
-          comment={comment}
-          key={comment._id}
-          replyAction={
-            <NavigationLink
-              aria-label={tCommon("reply")}
-              className={buttonVariants({ size: "sm", variant: "ghost" })}
-              href={getCleanHref(comment.slug)}
-            >
-              <HugeIcons icon={ArrowTurnBackwardIcon} />
-              <FeedCount value={comment.replyCount} />
-            </NavigationLink>
-          }
-        />
-      ))}
-      {PaginatedQueryResult.isCanLoadMore(pagination) && (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      )}
-    </div>
+    <CommentsProvider>
+      <div className="flex flex-col">
+        {PaginatedQueryResult.isFailure(pagination) && (
+          <FeedNotice>
+            <DataFailure />
+          </FeedNotice>
+        )}
+        {Arr.map(results, (comment) => (
+          <CommentRow
+            author={userQuery.value}
+            comment={comment}
+            key={comment._id}
+            replyAction={
+              <NavigationLink
+                aria-label={tCommon("reply")}
+                className={buttonVariants({ size: "sm", variant: "ghost" })}
+                href={getCleanHref(comment.slug)}
+              >
+                <HugeIcons icon={ArrowTurnBackwardIcon} />
+                <FeedCount value={comment.replyCount} />
+              </NavigationLink>
+            }
+          />
+        ))}
+        {PaginatedQueryResult.isCanLoadMore(pagination) && (
+          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+        )}
+      </div>
+    </CommentsProvider>
   );
 }

@@ -30,3 +30,27 @@ export const threadOf: (
   }
   return yield* threadOf(parent);
 });
+
+/**
+ * The comment a reply hangs from once the top-level comment of its thread is gone
+ * and that comment's own replies stand as top-level comments: the first comment up
+ * its chain of parents that has no parent. A reply with no parent, or with a parent
+ * that is gone on the way, is the top of its own thread.
+ */
+export const rootAfterPromotion: (
+  comment: CommentDoc
+) => Effect.Effect<CommentDoc, never, DatabaseReader> = Effect.fn(
+  "comments.thread.rootAfterPromotion"
+)(function* (comment) {
+  if (comment.parentId === undefined) {
+    return comment;
+  }
+  const parent = yield* findComment(comment.parentId);
+  if (parent === null) {
+    return comment;
+  }
+  if (parent.parentId === undefined) {
+    return parent;
+  }
+  return yield* rootAfterPromotion(parent);
+});

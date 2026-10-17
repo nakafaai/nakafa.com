@@ -10,6 +10,7 @@ import {
   insertDraftComment,
   insertDraftReply,
 } from "@/components/comments/mutation.client";
+import { useCommentDraft } from "@/components/comments/provider";
 import {
   type CommentAuthor,
   type CommentRow,
@@ -21,13 +22,16 @@ import { useViewer } from "@/lib/identity/client";
 
 /**
  * Returns the function that posts a comment or a reply. The comment shows at once
- * where it will sit, and the server answers after it. A refused post shows its
+ * where it will sit, and the server answers after it; until then its row holds its
+ * actions back, because the server does not know its placeholder id. A refused post shows its
  * message, and the composer gives the text back, so the resolved value says whether
  * the server saved it.
  */
 export function usePostComment() {
   const viewer = useViewer((state) => state.account);
   const addComment = useMutation(comments.mutations.addComment);
+  const startSaving = useCommentDraft((draft) => draft.startSaving);
+  const finishSaving = useCommentDraft((draft) => draft.finishSaving);
 
   return function postComment(post: {
     /** The comment the post answers, or none for a top-level comment. */
@@ -63,13 +67,21 @@ export function usePostComment() {
               ? insertDraftComment(draft)
               : insertDraftReply(draft, threadOf(post.parent))
           );
-          return Effect.tryPromise(() =>
-            save({
-              slug: post.slug,
-              text: post.text,
-              ...(post.parent === null ? {} : { parentId: post.parent._id }),
-            })
-          ).pipe(Effect.flatMap(Effect.fromResult));
+          return Effect.sync(() => startSaving(id)).pipe(
+            Effect.andThen(
+              Effect.tryPromise(() =>
+                save({
+                  slug: post.slug,
+                  text: post.text,
+                  ...(post.parent === null
+                    ? {}
+                    : { parentId: post.parent._id }),
+                })
+              )
+            ),
+            Effect.flatMap(Effect.fromResult),
+            Effect.ensuring(Effect.sync(() => finishSaving(id)))
+          );
         }),
         Effect.matchEffect({
           onSuccess: () => Effect.succeed(true),
