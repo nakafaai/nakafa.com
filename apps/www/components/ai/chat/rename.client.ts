@@ -24,6 +24,9 @@ export function useChatRename(chat: ChatView) {
   const inputRef = useRef<HTMLInputElement>(null);
   const moreActions = useRef<HTMLButtonElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  // The number of the latest save sent. A refusal of an older save brings nothing
+  // back, because a newer save holds the learner's words.
+  const latestSave = useRef(0);
   // The focus that an event asks for. Each request is a new value, so the commit
   // that follows it always runs the request.
   const [focusStep, setFocusStep] = useState<{ focus: () => void } | null>(
@@ -70,7 +73,8 @@ export function useChatRename(chat: ChatView) {
 
   /**
    * Persist a non-empty edited chat title. The box closes at once, so the focus
-   * goes back to the chat's menu before the server answers.
+   * goes back to the chat's menu before the server answers. A refusal brings the
+   * box back only while no newer save has been sent.
    */
   const handleSave = () => {
     const nextTitle = chatTitle.trim();
@@ -81,6 +85,8 @@ export function useChatRename(chat: ChatView) {
     if (nextTitle === chat.title) {
       return;
     }
+    const saveNumber = latestSave.current + 1;
+    latestSave.current = saveNumber;
     Effect.runFork(
       Effect.tryPromise(() =>
         updateChatTitle({
@@ -97,6 +103,11 @@ export function useChatRename(chat: ChatView) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
+                  // A newer save holds the learner's words now, so this refusal only
+                  // reports. The box and the focus stay where that save left them.
+                  if (latestSave.current !== saveNumber) {
+                    return;
+                  }
                   // The box comes back with the words the learner wrote, and the
                   // focus moves to it once the commit has shown it.
                   setFocusStep({

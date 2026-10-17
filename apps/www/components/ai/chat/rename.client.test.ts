@@ -260,4 +260,43 @@ describe("useChatRename", () => {
     expect(hook().isEditing).toBe(true);
     expect(document.activeElement).toBe(element("#learner"));
   });
+
+  it("does not bring the box back for a refusal that a newer save has replaced", async () => {
+    // The first save waits for a refusal; the second save stays on its way.
+    let refuseFirst: (answer: Result.Result<null, Error>) => void = () =>
+      undefined;
+    mocks.updateTitle
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          refuseFirst = resolve;
+        })
+      )
+      .mockReturnValueOnce(new Promise(() => undefined));
+    act(() => hook().handleEdit());
+    act(() => hook().setChatTitle("First title"));
+    act(() => element("input").focus());
+    act(() => hook().handleSave());
+    act(() => hook().handleEdit());
+    act(() => hook().setChatTitle("Second title"));
+    act(() => element("input").focus());
+    act(() => hook().handleSave());
+    await act(async () => {
+      await vi.waitFor(() =>
+        expect(mocks.updateTitle).toHaveBeenCalledTimes(2)
+      );
+    });
+    expect(mocks.updateTitle).toHaveBeenNthCalledWith(1, {
+      chatId,
+      title: "First title",
+    });
+
+    await act(async () => {
+      refuseFirst(Result.fail(new Error("Refused by the test.")));
+      await vi.waitFor(() => expect(mocks.report).toHaveBeenCalledOnce());
+    });
+
+    expect(hook().isEditing).toBe(false);
+    expect(document.activeElement).toBe(element("#menu"));
+    expect(mocks.toastError).not.toHaveBeenCalled();
+  });
 });
