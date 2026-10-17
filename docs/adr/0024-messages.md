@@ -361,12 +361,11 @@ changes.
    because the learner's key stays the same. Every fingerprint that `turns.start`
    stores now is keyed. A fingerprint stored before this change is an unkeyed
    SHA-256 in lower-case hexadecimal, 64 characters, which a reader of the database
-   could use to confirm a guessed request. The one-off `clear`
-   (`nina/fingerprints`, `confect/nina/fingerprints.impl.ts`) removes that value from
-   each settled turn, counts the active turns that still hold it, and writes no active
-   turn. It runs on production after the deploy, and again after the longest turn has
-   settled (`TURN_DEADLINE`). The change that deletes it follows the second run, which
-   must show no active turn holding the value. A retry of an id whose turn has no
+   could use to confirm a guessed request. A one-off internal mutation removed that
+   value from every settled turn on production on 17 October 2026, and wrote no active
+   turn: the run after the deploy cleared 65 of 1,126 turns and found no active turn
+   holding it, and the run after the longest turn had settled (`TURN_DEADLINE`) found
+   none left. The one-off was deleted afterwards. A retry of an id whose turn has no
    fingerprint, or still holds the unkeyed one, is refused as a conflict, which the
    decision accepts, because a replay is bounded to the short window of its turn.
 
