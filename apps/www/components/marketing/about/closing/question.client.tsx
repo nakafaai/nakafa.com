@@ -59,11 +59,13 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   return (
     <h2 className="text-balance text-3xl tracking-tight sm:text-4xl" ref={ref}>
       {before}
-      <span className="inline-grid">
-        <span className="col-start-1 row-start-1">{shown}</span>
-        <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+      {/* The invisible longest topic holds the box and the baseline of the line,
+          so an empty or short typed topic never moves the words around it. */}
+      <span className="relative inline-block">
+        <span aria-hidden="true" className="invisible">
           {longest}
         </span>
+        <span className="absolute inset-0">{shown}</span>
       </span>
       {after}
     </h2>
