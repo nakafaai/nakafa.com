@@ -210,8 +210,8 @@ test("a bio of many lines shows three lines on the profile and clamps the rest",
         }).toPass({ timeout: readinessTimeoutMilliseconds });
         await page.goto(profile);
 
-        // The header clamps the bio to three lines, and the rest stays out of view.
-        const shown = page.locator("main header p", { hasText: "Line 1" });
+        // The profile clamps the bio, under its header, to three lines, and the rest stays out of view.
+        const shown = page.locator("main section > p", { hasText: "Line 1" });
         await expect(shown).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
