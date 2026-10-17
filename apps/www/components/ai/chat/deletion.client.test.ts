@@ -52,8 +52,15 @@ function client(connected: boolean) {
   };
 }
 
-/** One press of Delete on the chat, with the page's actions as spies. */
-function pressOn(convex: Client, deleteChat: Deletion["deleteChat"]) {
+/**
+ * One press of Delete on the chat, with the page's actions as spies. The learner
+ * still reads the chat unless `stillOnChat` says otherwise.
+ */
+function pressOn(
+  convex: Client,
+  deleteChat: Deletion["deleteChat"],
+  stillOnChat: () => boolean = () => true
+) {
   const page = {
     close: vi.fn(),
     deleted: vi.fn(),
@@ -61,7 +68,7 @@ function pressOn(convex: Client, deleteChat: Deletion["deleteChat"]) {
     refused: vi.fn(),
   };
   return {
-    deletion: { chatId, convex, deleteChat, ...page },
+    deletion: { chatId, convex, deleteChat, stillOnChat, ...page },
     page,
   };
 }
@@ -92,6 +99,26 @@ describe("deleteOnPress", () => {
 
         expect(deleteChat).toHaveBeenCalledExactlyOnceWith({ chatId });
         expect(page.deleted).toHaveBeenCalledOnce();
+        expect(page.refused).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "keeps the learner on the page they moved to when the server deletes a chat they have left",
+    () =>
+      Effect.gen(function* () {
+        const deleteChat = vi.fn<Deletion["deleteChat"]>();
+        deleteChat.mockResolvedValue(Result.succeed(null));
+        const { deletion, page } = pressOn(
+          client(true),
+          deleteChat,
+          () => false
+        );
+
+        yield* deleteOnPress(deletion);
+
+        expect(deleteChat).toHaveBeenCalledExactlyOnceWith({ chatId });
+        expect(page.deleted).not.toHaveBeenCalled();
         expect(page.refused).not.toHaveBeenCalled();
       })
   );

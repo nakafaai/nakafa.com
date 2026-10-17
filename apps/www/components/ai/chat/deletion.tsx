@@ -47,6 +47,9 @@ export function ChatDeletion({
       return;
     }
     const { username } = user.appUser;
+    // The page the learner pressed Delete on. If they open another page while the
+    // delete waits for the socket, the redirect after the delete leaves that page alone.
+    const { pathname } = window.location;
     Effect.runFork(
       deleteOnPress({
         chatId: chat._id,
@@ -59,6 +62,7 @@ export function ChatDeletion({
           stay();
           toast.error(actionErrorMessage);
         },
+        stillOnChat: () => window.location.pathname === pathname,
       })
     );
   };

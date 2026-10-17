@@ -16,12 +16,20 @@ interface ChatDeletion {
   convex: Parameters<typeof requireConvexOnline>[0];
   /** Sends the delete to the server. */
   deleteChat: ReturnType<typeof useDeleteChatMutation>;
-  /** Runs once the server has deleted the chat, so the page moves on. */
+  /**
+   * Runs once the server has deleted the chat and the learner still reads it,
+   * so the page moves on.
+   */
   deleted: () => void;
   /** Stops reading the chat at the press, because the server is about to delete it. */
   leave: () => void;
   /** Runs when the delete did not happen, so the chat shows again. */
   refused: () => void;
+  /**
+   * Whether the learner still reads the page of the press. The page moves on
+   * only while they do.
+   */
+  stillOnChat: () => boolean;
 }
 
 /**
@@ -52,7 +60,14 @@ export const deleteOnPress = Effect.fn("www.chat.deleteOnPress")(function* (
       )
     ),
     Effect.matchEffect({
-      onSuccess: () => Effect.sync(deletion.deleted),
+      onSuccess: () =>
+        Effect.sync(() => {
+          // The learner may have opened another page while the delete waited, and
+          // that page stays as it is.
+          if (deletion.stillOnChat()) {
+            deletion.deleted();
+          }
+        }),
       onFailure: () => Effect.sync(deletion.refused),
     })
   );
