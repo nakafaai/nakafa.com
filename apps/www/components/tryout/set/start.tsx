@@ -18,6 +18,11 @@ import { useTransition } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
+import {
+  START_ENTRY_SUCCESS,
+  START_ERROR,
+  START_PART_ERROR,
+} from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
 import {
@@ -121,27 +126,15 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
             Effect.andThen(
               startEntrySectionProgram({
                 attemptId: attempt.attemptId,
-                failureMessage: {
-                  description: "tryout-start-part-error.description",
-                  title: "tryout-start-part-error.title",
-                },
+                failureMessage: START_PART_ERROR,
                 mutation: startSection,
                 sectionKey,
-                successMessage: {
-                  description: "tryout-start-entry-success.description",
-                  title: "tryout-start-entry-success.title",
-                },
+                successMessage: START_ENTRY_SUCCESS,
               })
             ),
             Effect.catchTag("ConvexOfflineError", () =>
               Effect.sync(() => {
-                toast.error(
-                  {
-                    description: "tryout-start-part-error.description",
-                    title: "tryout-start-part-error.title",
-                  },
-                  { position: "bottom-center" }
-                );
+                toast.error(START_PART_ERROR, { position: "bottom-center" });
               })
             )
           )
@@ -158,10 +151,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       return;
     }
     const startedCopy: ToastCopy = directEntry
-      ? {
-          description: "tryout-start-entry-success.description",
-          title: "tryout-start-entry-success.title",
-        }
+      ? START_ENTRY_SUCCESS
       : {
           description: "tryout-start-success.description",
           title: "tryout-start-success.title",
@@ -184,10 +174,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         setKey: request.setKey,
         trackKey: request.trackKey,
       },
-      failureMessage: {
-        description: "tryout-start-error.description",
-        title: "tryout-start-error.title",
-      },
+      failureMessage: START_ERROR,
       mutation: startAttempt,
       onSuccess: (result) =>
         Effect.sync(() => {
@@ -210,13 +197,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
           Effect.andThen(program),
           Effect.catchTag("ConvexOfflineError", () =>
             Effect.sync(() => {
-              toast.error(
-                {
-                  description: "tryout-start-error.description",
-                  title: "tryout-start-error.title",
-                },
-                { position: "bottom-center" }
-              );
+              toast.error(START_ERROR, { position: "bottom-center" });
             })
           )
         )
