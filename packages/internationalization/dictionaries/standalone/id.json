@@ -1,12 +1,12 @@
 {
   "NotFound": {
     "title": "Halaman ini nggak ketemu",
-    "description": "Mungkin alamatnya salah ketik, atau halamannya sudah pindah",
+    "description": "Mungkin alamatnya salah ketik, atau halamannya sudah pindah.",
     "search-button": "Cari materi"
   },
   "Error": {
     "title": "Ada yang rusak",
-    "description": "Bukan salahmu, biar kami yang urus",
+    "description": "Bukan salahmu, biar kami yang urus.",
     "retry": "Coba lagi",
     "report": "Lapor"
   },
