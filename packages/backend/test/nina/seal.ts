@@ -6,7 +6,11 @@ import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
-import { identityOf, sealMessage } from "@repo/backend/confect/nina/sealed";
+import {
+  identityOf,
+  openMessage,
+  sealMessage,
+} from "@repo/backend/confect/nina/sealed";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { parse } from "convex-helpers/validators";
@@ -102,8 +106,16 @@ const sealThreadRows = Effect.fn("test.nina.seal.thread")(function* (
   );
   let replacements: readonly Replacement[] = [];
   for (const run of runsByOrder(page)) {
+    // A row the writers sealed already opens first, so its content is sealed once more, not its skeleton.
     const sealed = yield* Effect.forEach(run.rows, (row) =>
-      sealMessage(keys, identityOf(row), parse(vMessageWithMetadata, row))
+      Effect.gen(function* () {
+        const opened = yield* openMessage(keys, identityOf(row), row);
+        return yield* sealMessage(
+          keys,
+          identityOf(row),
+          parse(vMessageWithMetadata, opened)
+        );
+      })
     );
     const written = yield* Effect.promise(() =>
       saveMessages(ctx, components.nina, {

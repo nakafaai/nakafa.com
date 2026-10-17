@@ -18,12 +18,16 @@ import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import type { ModelMessage } from "ai";
 import { Array as Arr, Clock, Effect } from "effect";
 
-/** Reads one stored attachment: its model part and the storage entry that holds its bytes. */
+/**
+ * Reads one stored attachment for its owner: its model part, with the name the
+ * learner gave it, and the storage entry that holds its bytes.
+ */
 const readAttachment = Effect.fn("nina.attachments.read")(function* (
+  owner: Docs["users"]["_id"],
   fileId: string
 ) {
   const ctx = yield* MutationCtx;
-  const saved = yield* readFile(ctx, fileId).pipe(
+  const saved = yield* readFile(ctx, owner, fileId).pipe(
     Effect.mapError(
       () =>
         new NinaUploadError({
@@ -94,8 +98,10 @@ export const requirePromptLimit = Effect.fn("nina.attachments.prompt")(
  * sends them again. A message stored before the limit existed can exceed it.
  */
 export const requireStoredDocumentLimit = Effect.fn("nina.attachments.stored")(
-  function* (fileIds: readonly string[]) {
-    yield* requireDocumentLimit(yield* Effect.forEach(fileIds, readAttachment));
+  function* (owner: Docs["users"]["_id"], fileIds: readonly string[]) {
+    yield* requireDocumentLimit(
+      yield* Effect.forEach(fileIds, (fileId) => readAttachment(owner, fileId))
+    );
   }
 );
 
@@ -140,7 +146,10 @@ export const consumeAttachments = Effect.fn("nina.attachments.consume")(
             message: "This attachment is no longer available to send.",
           });
         }
-        return { uploadId, ...(yield* readAttachment(upload.state.fileId)) };
+        return {
+          uploadId,
+          ...(yield* readAttachment(userId, upload.state.fileId)),
+        };
       })
     );
     yield* requirePromptLimit({

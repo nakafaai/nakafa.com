@@ -29,6 +29,7 @@ const StoredFile = Schema.Struct({
 type StoredFile = typeof StoredFile.Type;
 type TestTransaction = ReturnType<typeof createConvexTestWithBetterAuth>;
 type UploadId = Docs["ninaUploads"]["_id"];
+type UploadOwner = Docs["users"]["_id"];
 
 /**
  * Stores each file in the Agent component from an action, as production does,
@@ -90,11 +91,15 @@ function storedFileIds(t: TestTransaction, uploadIds: UploadId[]) {
   });
 }
 
-/** Applies the limit to stored files and reports the refusal, if any. */
-function checkStored(t: TestTransaction, fileIds: readonly string[]) {
+/** Applies the limit to the stored files of `owner` and reports the refusal, if any. */
+function checkStored(
+  t: TestTransaction,
+  owner: UploadOwner,
+  fileIds: readonly string[]
+) {
   return t.run((ctx) =>
     Effect.runPromise(
-      requireStoredDocumentLimit(fileIds).pipe(
+      requireStoredDocumentLimit(owner, fileIds).pipe(
         Effect.match({
           onFailure: (error) => error.code,
           onSuccess: () => "accepted" as const,
@@ -202,25 +207,25 @@ describe("Nina attachment document limit", () => {
 
   it("refuses a stored message whose documents total 10.1 MiB before a retry sends it", async () => {
     const t = createConvexTestWithBetterAuth();
-    const { uploadIds } = await seedUploads(t, [
+    const { userId, uploadIds } = await seedUploads(t, [
       { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE - 2 * MiB },
       { mediaType: "text/plain", size: 2 * MiB + TENTH_MIB },
     ]);
 
-    expect(await checkStored(t, await storedFileIds(t, uploadIds))).toBe(
-      "NINA_UPLOAD_SIZE"
-    );
+    expect(
+      await checkStored(t, userId, await storedFileIds(t, uploadIds))
+    ).toBe("NINA_UPLOAD_SIZE");
   });
 
   it("accepts a stored message whose documents fit, whatever its images weigh", async () => {
     const t = createConvexTestWithBetterAuth();
-    const { uploadIds } = await seedUploads(t, [
+    const { userId, uploadIds } = await seedUploads(t, [
       { mediaType: "image/png", size: 12 * MiB },
       { mediaType: "application/pdf", size: NINA_DOCUMENT_SIZE },
     ]);
 
-    expect(await checkStored(t, await storedFileIds(t, uploadIds))).toBe(
-      "accepted"
-    );
+    expect(
+      await checkStored(t, userId, await storedFileIds(t, uploadIds))
+    ).toBe("accepted");
   });
 });
