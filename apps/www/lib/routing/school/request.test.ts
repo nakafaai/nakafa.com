@@ -3,7 +3,6 @@ import { Option } from "effect";
 import { NextRequest } from "next/server";
 import {
   readServedSchool,
-  rewriteToSchoolNotFound,
   routeSchoolRequest,
 } from "@/lib/routing/school/request";
 
@@ -214,26 +213,5 @@ describe("the school a request reaches", () => {
     "https://harapan.nakafa.com/robots.txt",
   ])("names no school for %s", (address) => {
     expect(readServedSchool(visit(address))).toEqual(Option.none());
-  });
-});
-
-describe("the school not-found rewrite", () => {
-  it("rewrites to the not-found route with the locale of the page, as a 404 that is not indexed", () => {
-    const response = rewriteToSchoolNotFound(
-      visit("https://harapan.nakafa.com/classes"),
-      "de"
-    );
-
-    expect(response.status).toBe(404);
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "https://harapan.nakafa.com/_not-found/de"
-    );
-    expect(
-      response.headers.get("x-middleware-request-x-next-intl-locale")
-    ).toBe("de");
-    expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expect(response.headers.get("vary")).toContain("Accept-Language");
-    expect(response.headers.get("vary")).toContain("Cookie");
-    expect(mockSchool.middleware).not.toHaveBeenCalled();
   });
 });

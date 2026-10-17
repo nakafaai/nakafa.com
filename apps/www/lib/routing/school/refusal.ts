@@ -6,11 +6,12 @@ import type { NextRequest } from "next/server";
 import { clientEnv } from "@/env.client";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpLayer } from "@/lib/convex/http";
+import { rewriteToNotFoundPage } from "@/lib/routing/answer";
 import {
   readSchoolLocale,
   readServedSchool,
-  rewriteToSchoolNotFound,
   routeSchoolRequest,
+  SCHOOL_VISITOR_VARY_FIELDS,
 } from "@/lib/routing/school/request";
 
 /** The header that Next sends on every Flight request. */
@@ -126,7 +127,11 @@ export const routeSchoolPage = Effect.fn("www.routing.school.page")(function* (
 ) {
   const refusal = yield* readSchoolRefusal(request);
   if (Option.isSome(refusal)) {
-    return rewriteToSchoolNotFound(request, refusal.value);
+    return rewriteToNotFoundPage(
+      request,
+      refusal.value,
+      SCHOOL_VISITOR_VARY_FIELDS
+    );
   }
   return routeSchoolRequest(request);
 });

@@ -1,4 +1,3 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { schoolRouting } from "@repo/internationalization/src/routing";
 import { SITE_ORIGIN } from "@repo/seo/origin";
@@ -7,11 +6,7 @@ import { Array as Arr, Option } from "effect";
 import { NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
-import {
-  CONTENT_NOT_FOUND_SEGMENT,
-  NEXT_INTL_LOCALE_HEADER,
-  plainTextAnswer,
-} from "@/lib/routing/answer";
+import { plainTextAnswer } from "@/lib/routing/answer";
 import { isLocaleBypassPath } from "@/lib/routing/bypass";
 import {
   isRefusedSchoolHost,
@@ -23,17 +18,20 @@ import { isSchoolTreePath, SCHOOL_SEGMENT } from "@/lib/routing/school/tree";
 const handleSchoolLocalizedRequest = createMiddleware(schoolRouting);
 
 /**
- * Sets Vary for the two headers that choose a school's language and answer, the
- * `NEXT_LOCALE` cookie and Accept-Language, so that caches keep one answer per
- * visitor kind.
+ * The request headers that choose a school's language and answer: the
+ * `NEXT_LOCALE` cookie and Accept-Language. Caches keep one answer per visitor
+ * kind for them, on the school page and on its not-found page alike.
  */
+export const SCHOOL_VISITOR_VARY_FIELDS = ["Accept-Language", "Cookie"];
+
+/** Sets Vary for the request headers that choose a school's language and answer. */
 function varyBySchoolVisitor(response: NextResponse) {
   response.headers.set(
     "Vary",
-    mergeVaryHeader(Option.fromNullOr(response.headers.get("Vary")), [
-      "Accept-Language",
-      "Cookie",
-    ])
+    mergeVaryHeader(
+      Option.fromNullOr(response.headers.get("Vary")),
+      SCHOOL_VISITOR_VARY_FIELDS
+    )
   );
 }
 
@@ -74,8 +72,10 @@ function readPathLocale(pathname: string) {
  * The locale that the school page of a request gets, which next-intl chooses for
  * the school rewrite: the `NEXT_LOCALE` cookie, then Accept-Language, then the
  * default. It is read from the path that next-intl rewrites the request to. None
- * means that next-intl rewrote the request to no locale path, so the refusal of
- * the school page does not apply to the request.
+ * means that next-intl did not rewrite the request, which it does not do for a
+ * path that it cannot decode. Such a path reaches the school tree for every
+ * visitor alike, so its answer does not depend on whether the school refuses the
+ * visitor (ADR 0026).
  */
 export function readSchoolLocale(request: NextRequest, slug: TenantSlug) {
   const rewrite = rewriteToSchool(request, slug);
@@ -83,36 +83,6 @@ export function readSchoolLocale(request: NextRequest, slug: TenantSlug) {
     Option.map((destination) => new URL(destination, request.url).pathname),
     Option.flatMap(readPathLocale)
   );
-}
-
-/**
- * Answers a school page that the school does not admit with the app's not-found
- * page and a 404 status. The answer is a rewrite to the not-found route, which
- * Next answers with a 404 status. The locale travels in the request headers, where
- * that page reads it, and the answer varies by the cookie and Accept-Language, as
- * the school page does.
- */
-export function rewriteToSchoolNotFound(
-  request: NextRequest,
-  locale: AppLocaleCode
-) {
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale);
-
-  const response = NextResponse.rewrite(
-    new URL(`/${CONTENT_NOT_FOUND_SEGMENT}/${locale}`, request.url),
-    {
-      headers: {
-        "X-Robots-Tag": "noindex",
-      },
-      request: {
-        headers: requestHeaders,
-      },
-      status: 404,
-    }
-  );
-  varyBySchoolVisitor(response);
-  return response;
 }
 
 /**

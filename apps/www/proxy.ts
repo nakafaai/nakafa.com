@@ -28,9 +28,9 @@ import {
 } from "@/lib/llms/routes";
 import { isOgRouteAliasPathname, readOgRouteAliasLocale } from "@/lib/og/route";
 import {
-  CONTENT_NOT_FOUND_SEGMENT,
   NEXT_INTL_LOCALE_HEADER,
   plainTextAnswer,
+  rewriteToNotFoundPage,
 } from "@/lib/routing/answer";
 import {
   isLocaleBypassPath,
@@ -114,7 +114,11 @@ export async function proxy(request: NextRequest) {
       previewConfigured &&
       (await Effect.runPromise(matchesPreviewPathname(pathname)));
     if (!previewOwnsPathname) {
-      return rewriteToContentNotFound(request, candidateLocale);
+      return rewriteToNotFoundPage(
+        request,
+        candidateLocale,
+        LLMS_REPRESENTATION_VARY_FIELDS
+      );
     }
   }
 
@@ -124,7 +128,11 @@ export async function proxy(request: NextRequest) {
     ogAliasLocale !== null &&
     !hasLocale(routing.locales, ogAliasLocale)
   ) {
-    return rewriteToContentNotFound(request, routing.defaultLocale);
+    return rewriteToNotFoundPage(
+      request,
+      routing.defaultLocale,
+      LLMS_REPRESENTATION_VARY_FIELDS
+    );
   }
 
   if (isOgRouteAliasPathname(pathname)) {
@@ -160,7 +168,11 @@ export async function proxy(request: NextRequest) {
     readProfileRefusal(pathname, request.headers)
   );
   if (profileRefusal !== null) {
-    return rewriteToContentNotFound(request, profileRefusal);
+    return rewriteToNotFoundPage(
+      request,
+      profileRefusal,
+      LLMS_REPRESENTATION_VARY_FIELDS
+    );
   }
 
   const routeDecision = await Effect.runPromise(
@@ -176,7 +188,11 @@ export async function proxy(request: NextRequest) {
   );
 
   if (routeDecision.kind === "not-found") {
-    return rewriteToContentNotFound(request, routeDecision.locale);
+    return rewriteToNotFoundPage(
+      request,
+      routeDecision.locale,
+      LLMS_REPRESENTATION_VARY_FIELDS
+    );
   }
 
   if (routeDecision.kind === "rewrite-markdown") {
@@ -264,28 +280,6 @@ function mergeRepresentationVary(response: Response) {
       LLMS_REPRESENTATION_VARY_FIELDS
     )
   );
-}
-
-/** Rewrites missing content to the styled app not-found route with 404 status. */
-function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale);
-  const rewriteUrl = new URL(
-    `/${CONTENT_NOT_FOUND_SEGMENT}/${locale}`,
-    request.url
-  );
-
-  const response = NextResponse.rewrite(rewriteUrl, {
-    headers: {
-      "X-Robots-Tag": "noindex",
-    },
-    request: {
-      headers: requestHeaders,
-    },
-    status: 404,
-  });
-  mergeRepresentationVary(response);
-  return response;
 }
 
 /**

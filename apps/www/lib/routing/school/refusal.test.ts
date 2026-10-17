@@ -26,12 +26,15 @@ import {
   readSchoolRefusal,
   routeSchoolPage,
 } from "@/lib/routing/school/refusal";
+import { proxy } from "@/proxy";
 
 const mocks = vi.hoisted(() => ({
   layerOptions: vi.fn(),
   query: vi.fn(),
   token: vi.fn(),
 }));
+/** A school page reads no server value, so the server environment is a stand-in here. */
+vi.mock("@/env", () => ({ env: {} }));
 vi.mock("@/lib/auth/token", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/token")>()),
   readSessionToken: mocks.token,
@@ -57,17 +60,25 @@ vi.mock("@confect/js", async (importOriginal) => {
 });
 
 vi.mock("@repo/internationalization/src/routing", () => ({
+  previewRouting: { defaultLocale: "en", locales: ["en", "id", "de"] },
+  routing: {
+    defaultLocale: "en",
+    locales: ["en", "id", "de"],
+    pathnames: {},
+  },
   schoolRouting: { defaultLocale: "en", locales: ["en", "id", "de"] },
 }));
 /**
  * The school routing picks the locale of a school page as next-intl does: the
  * `NEXT_LOCALE` cookie, then the Accept-Language tag, then the default. The library
- * does not load in this file's node environment, so the double follows its rule
- * and puts the locale in front of the path, as the library rewrites it. The
- * browser tests check the library itself on a server.
+ * does not load in this file's node environment, so the double follows its rules
+ * and puts the locale in front of the path, as the library rewrites it. Like the
+ * library, it passes on a path that it cannot decode, without a rewrite
+ * (`next-intl/dist/esm/production/middleware/middleware.js`). The browser tests
+ * check the library itself on a server.
  */
 vi.mock("next-intl/middleware", async () => {
-  const { Array: Arr } = await import("effect");
+  const { Array: Arr, Option } = await import("effect");
   const { NextResponse } = await import("next/server");
   const locales = ["en", "id", "de"];
   const negotiate = (request: NextRequest) => {
@@ -81,14 +92,20 @@ vi.mock("next-intl/middleware", async () => {
     }
     return "en";
   };
+  const decodes = (pathname: string) =>
+    Option.isSome(Option.liftThrowable(decodeURI)(pathname));
   return {
-    default: () => (request: NextRequest) =>
-      NextResponse.rewrite(
+    default: () => (request: NextRequest) => {
+      if (!decodes(request.nextUrl.pathname)) {
+        return NextResponse.next();
+      }
+      return NextResponse.rewrite(
         new URL(
           `/${negotiate(request)}${request.nextUrl.pathname}`,
           request.url
         )
-      ),
+      );
+    },
   };
 });
 
@@ -368,6 +385,51 @@ describe("the route of a school host", () => {
         expect(response?.headers.get("x-middleware-rewrite")).toBe(
           "https://harapan.nakafa.com/_not-found/de"
         );
+        expect(
+          response?.headers.get("x-middleware-request-x-next-intl-locale")
+        ).toBe("de");
+        expect(response?.headers.get("x-robots-tag")).toBe("noindex");
+        expect(response?.headers.get("vary")).toContain("Accept-Language");
+        expect(response?.headers.get("vary")).toContain("Cookie");
+      })
+  );
+
+  it.effect(
+    "answers a refused school page through the proxy with the not-found page and 404, before the school tree",
+    () =>
+      Effect.gen(function* () {
+        mocks.token.mockReturnValue(Effect.void);
+        mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+
+        const response = yield* Effect.promise(() => proxy(visit(SCHOOL_ROOT)));
+
+        expect(response.status).toBe(404);
+        expect(response.headers.get("x-middleware-rewrite")).toBe(
+          "https://harapan.nakafa.com/_not-found/en"
+        );
+        expect(response.headers.get("x-robots-tag")).toBe("noindex");
+      })
+  );
+
+  it.effect(
+    "answers a path that next-intl cannot decode the same for a refused school and an admitted one",
+    () =>
+      Effect.gen(function* () {
+        mocks.token.mockReturnValue(Effect.void);
+        mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+        const refused = yield* routeSchoolPage(
+          visit("https://harapan.nakafa.com/%")
+        );
+
+        mocks.query.mockReturnValue(Effect.succeed({ name: "Harapan" }));
+        const admitted = yield* routeSchoolPage(
+          visit("https://harapan.nakafa.com/%")
+        );
+
+        expect(refused?.headers.get("x-middleware-next")).toBe("1");
+        expect(refused?.headers.get("x-middleware-rewrite")).toBeNull();
+        expect(admitted?.headers.get("x-middleware-next")).toBe("1");
+        expect(admitted?.headers.get("x-middleware-rewrite")).toBeNull();
       })
   );
 
@@ -382,6 +444,24 @@ describe("the route of a school host", () => {
         "https://harapan.nakafa.com/en/school/harapan"
       );
     })
+  );
+
+  it.effect(
+    "rewrites an admitted school page through the proxy before the public routes read it",
+    () =>
+      Effect.gen(function* () {
+        mocks.token.mockReturnValue(Effect.void);
+        mocks.query.mockReturnValue(Effect.succeed({ name: "Harapan" }));
+
+        const response = yield* Effect.promise(() =>
+          proxy(visit("https://harapan.nakafa.com/classes"))
+        );
+
+        expect(response.headers.get("x-middleware-rewrite")).toBe(
+          "https://harapan.nakafa.com/en/school/harapan/classes"
+        );
+        expect(response.headers.get("x-robots-tag")).toBe("noindex");
+      })
   );
 
   it.effect("leaves a request of the main host to the public routes", () =>

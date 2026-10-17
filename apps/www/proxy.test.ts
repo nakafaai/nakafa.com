@@ -52,6 +52,7 @@ function expectHardNotFound(response: Response, locale: string) {
   expect(response.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
     locale
   );
+  expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
   expectNoLocaleProxy();
 }
 /**
@@ -197,17 +198,6 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe(
       "http://localhost:3000/en/search"
     );
-  });
-  it("rewrites a school host into the school tree before the public routes read it", async () => {
-    const response = await proxy(
-      new NextRequest("https://harapan.nakafa.com/classes", {
-        headers: { host: "harapan.nakafa.com" },
-      })
-    );
-
-    expect(mockLocaleRouting.activeMiddleware).toHaveBeenCalledOnce();
-    expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expect(runtimeMocks.readRedirect).not.toHaveBeenCalled();
   });
   it.each(redirectCases)("permanently redirects %s", async (...args) => {
     const [source, target, init] = args;
