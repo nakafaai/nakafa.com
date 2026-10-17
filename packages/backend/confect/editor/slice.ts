@@ -121,5 +121,7 @@ const fillOutside = (
  * Checks the slice of a step, when it holds one. The containers that the step leaves
  * open, or keeps as a gap, are filled first, so each node is read as a whole node.
  */
-export const checkSlice = (slice: StepSlice | undefined, gapDepth: number) =>
-  slice === undefined ? Effect.void : checkNodes(fillOutside(slice, gapDepth));
+export const checkSlice = Effect.fn("editor.slice.check")(
+  (slice: StepSlice | undefined, gapDepth: number) =>
+    slice === undefined ? Effect.void : checkNodes(fillOutside(slice, gapDepth))
+);
