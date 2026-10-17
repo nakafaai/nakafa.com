@@ -2,7 +2,6 @@
 
 import { Logout01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { photoOf } from "@repo/backend/confect/users/picture";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,50 +19,46 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { useRouter } from "@repo/internationalization/src/navigation";
-import { Effect, Result } from "effect";
+import type { Mascot } from "@repo/mascot/code";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect } from "react";
-import { clearAiDraftText } from "@/components/ai/store/draft";
-import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
-import type { CurrentUser } from "@/lib/identity/client";
 
 /**
- * The account menu every sidebar shares: the account button, the account at
- * the top of the menu and sign-out at its bottom. Each sidebar composes its
- * own sections between them.
+ * The account menu every sidebar shares: the account button, the account at the
+ * top of the menu and sign-out at its bottom. Each sidebar gives the name and the
+ * second line of its button, the account it shows, and its own sign-out, and
+ * composes its own sections between them.
  */
 export function AccountMenu({
+  account,
   children,
-  user,
+  description,
+  name,
+  onSignOut,
 }: {
+  account: {
+    /** The account's email, shown under its name at the top of the menu. A school's account has none. */
+    email?: string | undefined;
+    /** The animal that draws the account when it shows no photo. */
+    mascot: typeof Mascot.Type;
+    /** The account's name, shown at the top of the menu. */
+    name: string;
+    /** The photo the account shows, or none. */
+    photo?: string | undefined;
+  };
   children: ReactNode;
-  user: CurrentUser;
+  /** The second line of the account button, such as a plan or a role. Left out, the button has one line. */
+  description?: string | undefined;
+  /** The name on the account button: the school person's name in a school, the account's name on the main site. */
+  name: string;
+  /** Signs the viewer out, then leaves the page the way the sidebar needs. */
+  onSignOut: () => void;
 }) {
   const t = useTranslations("Auth");
-  const router = useRouter();
   const [open, { close, set }] = useDisclosure(false);
   const side = useSidebar((sidebar) => (sidebar.isMobile ? "bottom" : "right"));
-  const authNavigation = useCurrentAuthNavigation();
-  const planLabelByPlan = {
-    free: t("plan-free"),
-    pro: t("plan-pro"),
-  };
-  const planLabel = planLabelByPlan[user.appUser.plan];
 
   useLayoutEffect(() => close, [close]);
-
-  /** Signs the user out and leaves the shared authenticated app subtree on success. */
-  async function handleSignOut() {
-    const result = await Effect.runPromise(
-      Effect.result(signOutAccountBrowserIdentity())
-    );
-    if (Result.isSuccess(result)) {
-      Effect.runSync(clearAiDraftText);
-      router.replace(authNavigation.readHref());
-    }
-  }
 
   return (
     <SidebarMenuItem>
@@ -74,13 +69,12 @@ export function AccountMenu({
               className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
               size="lg"
             >
-              <PersonAvatar
-                mascot={user.appUser.mascot}
-                photo={photoOf(user.appUser)}
-              />
+              <PersonAvatar mascot={account.mascot} photo={account.photo} />
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                <span className="truncate">{user.authUser.name}</span>
-                <SidebarMenuDescription>{planLabel}</SidebarMenuDescription>
+                <span className="truncate">{name}</span>
+                {description === undefined ? null : (
+                  <SidebarMenuDescription>{description}</SidebarMenuDescription>
+                )}
               </div>
               <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
             </SidebarMenuButton>
@@ -95,17 +89,16 @@ export function AccountMenu({
           <DropdownMenuGroup>
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <PersonAvatar
-                  mascot={user.appUser.mascot}
-                  photo={photoOf(user.appUser)}
-                />
+                <PersonAvatar mascot={account.mascot} photo={account.photo} />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium text-foreground">
-                    {user.authUser.name}
+                    {account.name}
                   </span>
-                  <span className="truncate text-muted-foreground text-xs">
-                    {user.authUser.email}
-                  </span>
+                  {account.email === undefined ? null : (
+                    <span className="truncate text-muted-foreground text-xs">
+                      {account.email}
+                    </span>
+                  )}
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -114,10 +107,7 @@ export function AccountMenu({
           {children}
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={handleSignOut}
-            >
+            <DropdownMenuItem className="cursor-pointer" onClick={onSignOut}>
               <HugeIcons icon={Logout01Icon} />
               {t("logout")}
             </DropdownMenuItem>

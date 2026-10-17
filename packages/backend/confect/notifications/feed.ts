@@ -6,6 +6,7 @@ import {
   type HeldSchool,
 } from "@repo/backend/confect/notifications/held";
 import { notificationView } from "@repo/backend/confect/notifications/schema";
+import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
 import { Array as Arr, Effect, Option, Order, pipe, Schema } from "effect";
 
 /**
@@ -50,13 +51,15 @@ const encodeFeedCursor = (cursor: FeedCursor) =>
 /**
  * The newest rows of one school after the cursor, from one indexed range. It
  * reads `readAhead` rows, so the page and one row past it are always there, and
- * the rows at the cursor's time that the page must skip.
+ * the rows at the cursor's time that the page must skip. The school's profile is
+ * read once for all of its rows.
  */
 const streamOf = Effect.fn("notifications.feed.stream")(function* (
   school: HeldSchool,
   cursor: FeedCursor | null,
   readAhead: number
 ) {
+  const profile = yield* tenantProfile(school.tenant);
   return yield* (yield* DatabaseReader)
     .table("notifications")
     .index(
@@ -72,9 +75,7 @@ const streamOf = Effect.fn("notifications.feed.stream")(function* (
     .take(readAhead)
     .pipe(
       Effect.orDie,
-      Effect.map((rows) =>
-        Arr.map(rows, (row) => ({ row, school: school.tenant }))
-      )
+      Effect.map((rows) => Arr.map(rows, (row) => ({ row, school: profile })))
     );
 });
 
