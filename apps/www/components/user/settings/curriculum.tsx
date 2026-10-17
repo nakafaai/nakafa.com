@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
@@ -108,7 +109,13 @@ export function UserSettingsCurriculum({
     />
   );
 }
-/** Owns the curriculum preference form state after Convex data is ready. */
+/**
+ * Owns the curriculum preference form state after Convex data is ready. A save
+ * does not wait: the new choice is the form's saved one at once and the
+ * optimistic update shows it everywhere, so Save has nothing left to save. A
+ * refused save brings the stored choice back as the saved one and keeps the new
+ * choice, so Save offers it again beside the error toast.
+ */
 function UserSettingsCurriculumForm({
   initialProgramKey,
   programs,
@@ -135,33 +142,48 @@ function UserSettingsCurriculumForm({
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value, formApi }) => {
       if (!isActiveLocale(locale)) {
         return;
       }
-      const handleMutationError = (error: CurriculumPreferenceMutationError) =>
+      const stored =
+        formApi.options.defaultValues?.preferredCurriculumProgramKey;
+      // The new choice is the saved one at once, so Save has nothing to save.
+      formApi.reset(value);
+      const reportFailure = (error: CurriculumPreferenceMutationError) =>
         reportClientException(error, {
           source: "user-settings-curriculum",
-        }).pipe(Effect.as(false));
-      const handleValidationError = () => Effect.succeed(false);
-      const didSave = await Effect.runPromise(
+        }).pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              // The stored choice comes back as the saved one, and the new
+              // choice stays, so Save offers it again.
+              formApi.reset({ preferredCurriculumProgramKey: stored ?? "" });
+              formApi.setFieldValue(
+                "preferredCurriculumProgramKey",
+                value.preferredCurriculumProgramKey
+              );
+              toast.error({
+                description: "action-error.description",
+                title: "action-error.title",
+              });
+            })
+          )
+        );
+      const skipInvalid = () => Effect.void;
+      Effect.runPromise(
         submitCurriculumPreference({
           locale,
           programs,
           setPreferredCurriculum,
           value,
         }).pipe(
-          Effect.as(true),
           Effect.catchTags({
-            CurriculumPreferenceMutationError: handleMutationError,
-            CurriculumPreferenceValidationError: handleValidationError,
+            CurriculumPreferenceMutationError: reportFailure,
+            CurriculumPreferenceValidationError: skipInvalid,
           })
         )
       );
-      if (!didSave) {
-        return;
-      }
-      form.reset(value);
     },
   });
   return (
@@ -216,18 +238,14 @@ function UserSettingsCurriculumForm({
         </CardContent>
         <CardSectionFooter>
           <form.Subscribe
-            selector={(state) => [
-              state.isDirty,
-              state.isValid,
-              state.isSubmitting,
-            ]}
+            selector={(state) => [state.isDirty, state.isValid] as const}
           >
-            {([isDirty, isValid, isSubmitting]) => (
+            {([isDirty, isValid]) => (
               <>
                 <CardSectionHint>{t("curriculum-footer")}</CardSectionHint>
                 <CardSectionActions>
                   <Button
-                    disabled={!(isDirty && isValid) || isSubmitting}
+                    disabled={!(isDirty && isValid)}
                     size="sm"
                     type="submit"
                   >

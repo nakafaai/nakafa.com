@@ -39,7 +39,13 @@ const formSchema = Schema.toStandardSchemaV1(
     role: roleSchema,
   })
 );
-/** Renders the settings form that validates and saves the user's app role. */
+/**
+ * Renders the settings form that validates and saves the user's app role. A
+ * save does not wait: the new role is the form's saved one at once and the
+ * optimistic update shows it everywhere, so Save has nothing left to save. A
+ * refused save brings the stored role back as the saved one and keeps the
+ * chosen role, so Save offers it again beside the error toast.
+ */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const roleItems = Arr.map(roles, (role) => ({
@@ -65,20 +71,16 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) =>
+    onSubmit: ({ value, formApi }) => {
+      const stored = formApi.options.defaultValues?.role;
+      // The new role is the saved one at once, so Save has nothing to save.
+      formApi.reset(value);
       Effect.runPromise(
         Schema.decodeUnknownEffect(roleSchema)(value.role).pipe(
           Effect.flatMap((role) =>
             Effect.tryPromise(() => updateUserRole({ role }))
           ),
           Effect.flatMap(Effect.fromResult),
-          Effect.tap(() =>
-            Effect.sync(() => {
-              if (form.getFieldValue("role") === value.role) {
-                form.reset(value);
-              }
-            })
-          ),
           Effect.matchEffect({
             onSuccess: () => Effect.void,
             onFailure: (error) =>
@@ -87,6 +89,10 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
+                    // The stored role comes back as the saved one, and the
+                    // chosen role stays, so Save offers it again.
+                    formApi.reset({ role: stored });
+                    formApi.setFieldValue("role", value.role);
                     toast.error({
                       description: "action-error.description",
                       title: "action-error.title",
@@ -96,7 +102,8 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               ),
           })
         )
-      ),
+      );
+    },
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-role-form">
@@ -146,18 +153,12 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
           </form.Field>
         </CardContent>
         <CardSectionFooter>
-          <form.Subscribe
-            selector={(state) => [state.isDirty, state.isSubmitting]}
-          >
-            {([isDirty, isSubmitting]) => (
+          <form.Subscribe selector={(state) => state.isDirty}>
+            {(isDirty) => (
               <>
                 <CardSectionHint>{t("role-footer")}</CardSectionHint>
                 <CardSectionActions>
-                  <Button
-                    disabled={!isDirty || isSubmitting}
-                    size="sm"
-                    type="submit"
-                  >
+                  <Button disabled={!isDirty} size="sm" type="submit">
                     {t("save")}
                   </Button>
                 </CardSectionActions>
