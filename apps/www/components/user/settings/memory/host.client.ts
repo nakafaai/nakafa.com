@@ -1,5 +1,6 @@
 "use client";
 
+import { editorFrame } from "@repo/design-system/components/editor/frame";
 import { useCallback, useRef, useState } from "react";
 
 /** The element the open editor lives in: one for the whole life of the page. */
@@ -9,7 +10,7 @@ function createHost() {
   }
 
   const host = document.createElement("div");
-  host.className = "flex min-h-0 flex-1 flex-col";
+  host.className = editorFrame();
 
   return host;
 }

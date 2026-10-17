@@ -5,12 +5,8 @@ import {
   MEMORY_TEXT_LIMIT,
   MEMORY_TITLE_LIMIT,
 } from "@repo/backend/confect/nina/memory.spec";
-import {
-  editorBar,
-  editorDocument,
-  editorRow,
-  editorScroll,
-} from "@repo/design-system/components/editor/frame";
+import { editorFrame } from "@repo/design-system/components/editor/frame";
+import { EditorPane } from "@repo/design-system/components/editor/pane";
 import { plainText } from "@repo/design-system/components/editor/plain";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
@@ -59,16 +55,9 @@ function SavedWords({ markdown }: { markdown: string }) {
   const words = plainText(markdown);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div aria-hidden className={editorBar()}>
-        <div className={editorRow()} />
-      </div>
-      <div className={editorScroll()}>
-        <div className={editorDocument()} dir="auto">
-          <p dir="auto">{words === "" ? <br /> : words}</p>
-        </div>
-      </div>
-    </div>
+    <EditorPane>
+      <p dir="auto">{words === "" ? <br /> : words}</p>
+    </EditorPane>
   );
 }
 
@@ -154,7 +143,7 @@ export function MemoryDocument({
           <HugeIcons icon={Cancel01Icon} />
         </Button>
       </header>
-      <div className="flex min-h-0 flex-1 flex-col" ref={body}>
+      <div className={editorFrame()} ref={body}>
         <Suspense
           fallback={
             <ErrorBoundary fallback={savedWords}>

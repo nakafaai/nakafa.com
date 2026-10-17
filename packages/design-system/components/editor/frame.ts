@@ -7,6 +7,9 @@ import { cva } from "class-variance-authority";
  * here and nowhere else.
  */
 
+/** The column that fills the room of an editor: the rich text, its saved words, and the element that holds them. */
+export const editorFrame = cva("flex min-h-0 flex-1 flex-col");
+
 /** The bar of controls above the text: the editor's toolbar, and its place while the code loads. */
 export const editorBar = cva("flex items-center gap-1.5 border-b px-2 py-1.5");
 

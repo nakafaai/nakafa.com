@@ -4,15 +4,10 @@ import {
   keyed,
 } from "@repo/design-system/components/editor/blocks";
 import {
-  editorBar,
-  editorDocument,
-  editorRow,
-  editorScroll,
-} from "@repo/design-system/components/editor/frame";
-import {
   isEmptyDocument,
   isEmptyText,
 } from "@repo/design-system/components/editor/hint";
+import { EditorPane } from "@repo/design-system/components/editor/pane";
 import { itemTokens } from "@repo/design-system/components/editor/plain";
 import { decodeReferences } from "@repo/design-system/components/editor/references";
 import { Array as Arr, Match, String as Str } from "effect";
@@ -25,8 +20,9 @@ import type { Token, Tokens } from "marked-tiptap";
  * while the editor's code loads, so the editor replaces it without moving a
  * word. It cannot be edited, and a link keeps no address.
  *
- * The classes come from `frame.ts`. This module writes the element the editor
- * writes for each node and mark, with the `dir` the editor gives each block.
+ * The frame comes from `pane.tsx`, whose classes come from `frame.ts`. This
+ * module writes the element the editor writes for each node and mark, with the
+ * `dir` the editor gives each block.
  */
 export function EditorPreview({
   markdown,
@@ -44,20 +40,13 @@ export function EditorPreview({
     : undefined;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div aria-hidden className={editorBar()}>
-        <div className={editorRow()} />
-      </div>
-      <div className={editorScroll()}>
-        <div className={editorDocument()} dir="auto">
-          {Arr.isReadonlyArrayEmpty(blocks) ? (
-            <EmptyParagraph placeholder={placeholder} />
-          ) : (
-            <Blocks blocks={blocks} hint={hint} />
-          )}
-        </div>
-      </div>
-    </div>
+    <EditorPane>
+      {Arr.isReadonlyArrayEmpty(blocks) ? (
+        <EmptyParagraph placeholder={placeholder} />
+      ) : (
+        <Blocks blocks={blocks} hint={hint} />
+      )}
+    </EditorPane>
   );
 }
 

@@ -4,6 +4,7 @@ import { useCallbackRef } from "@mantine/hooks";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
 import {
   editorDocument,
+  editorFrame,
   editorScroll,
 } from "@repo/design-system/components/editor/frame";
 import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
@@ -113,7 +114,7 @@ export function RichEditor({
 
   return (
     <EditorContext value={context}>
-      <div className="flex min-h-0 flex-1 flex-col" data-slot="editor">
+      <div className={editorFrame()} data-slot="editor">
         <RichEditorToolbar labels={labels} />
         <EditorContent className={editorScroll()} editor={editor} />
       </div>
