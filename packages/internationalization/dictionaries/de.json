@@ -1091,6 +1091,8 @@
     "tryout-lead": "Jederzeit wiederholbar.",
     "tryout-ask": "Hab ich es schon verstanden?",
     "tryout-answer": "Probier erst eine Aufgabe.",
+    "tryout-right": "Richtig, das ist die Antwort.",
+    "tryout-wrong": "Noch nicht. Schau noch einmal hin.",
     "nina-title": "Nina weiß, welche Stelle du meinst",
     "nina-lead": "Frag direkt aus der Aufgabe oder Lektion, die du offen hast.",
     "nina-ask": "Die hier verstehe ich noch nicht.",

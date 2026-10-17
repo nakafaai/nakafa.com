@@ -1091,6 +1091,8 @@
     "tryout-lead": "You can repeat them any time.",
     "tryout-ask": "Do I get it yet?",
     "tryout-answer": "Try one question first.",
+    "tryout-right": "Right, that is the answer.",
+    "tryout-wrong": "Not yet. Take one more look.",
     "nina-title": "Nina knows which part you mean",
     "nina-lead": "Ask from the question or lesson you have open.",
     "nina-ask": "This one still confuses me.",
