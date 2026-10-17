@@ -49,7 +49,7 @@ describe("GitHub Action sources", () => {
     Effect.gen(function* () {
       const root = yield* makeWorkflows({
         "README.md": "uses: example/ignored@0123456789abcdef\n",
-        "ci.yml": Arr.join(
+        "release.yml": Arr.join(
           [
             "jobs:",
             "  build:",
@@ -70,24 +70,24 @@ describe("GitHub Action sources", () => {
       expect(yield* readWorkflowActionUses(root)).toEqual([
         {
           inputs: {},
+          reference: "example/reusable/.github/workflows/release.yml@main",
+          workflowPath: ".github/workflows/release.yaml",
+        },
+        {
+          inputs: {},
           reference:
             "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
-          workflowPath: ".github/workflows/ci.yml",
+          workflowPath: ".github/workflows/release.yml",
         },
         {
           inputs: {},
           reference: "./.github/actions/local",
-          workflowPath: ".github/workflows/ci.yml",
+          workflowPath: ".github/workflows/release.yml",
         },
         {
           inputs: { cache: true },
           reference: "pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
-          workflowPath: ".github/workflows/ci.yml",
-        },
-        {
-          inputs: {},
-          reference: "example/reusable/.github/workflows/release.yml@main",
-          workflowPath: ".github/workflows/release.yaml",
+          workflowPath: ".github/workflows/release.yml",
         },
       ]);
     }).pipe(Effect.provide(NodeServices.layer))
@@ -137,7 +137,7 @@ describe("GitHub Action sources", () => {
         ),
         "actions/nested/tool/action.yaml":
           "runs:\n  using: composite\n  steps:\n    - uses: example/tool@0123456789abcdef\n",
-        "workflows/ci.yml":
+        "workflows/release.yml":
           "jobs:\n  build:\n    steps:\n      - uses: example/workflow@0123456789abcdef\n",
       });
 
@@ -183,7 +183,7 @@ describe("GitHub Action sources", () => {
           ],
           "\n"
         ),
-        "workflows/ci.yml": "jobs: {}\n",
+        "workflows/release.yml": "jobs: {}\n",
       });
 
       expect(yield* inspectGithubActionPolicy(root)).toEqual(
@@ -199,7 +199,7 @@ describe("GitHub Action sources", () => {
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const unreadable = yield* makeGithubTree({
-        "workflows/ci.yml": "jobs: {}\n",
+        "workflows/release.yml": "jobs: {}\n",
       });
       yield* fileSystem.makeDirectory(
         `${unreadable}/.github/actions/broken/action.yml`,
@@ -207,7 +207,7 @@ describe("GitHub Action sources", () => {
       );
       const invalid = yield* makeGithubTree({
         "actions/invalid/action.yml": "runs: [\n",
-        "workflows/ci.yml": "jobs: {}\n",
+        "workflows/release.yml": "jobs: {}\n",
       });
 
       const problems = yield* Effect.forEach(

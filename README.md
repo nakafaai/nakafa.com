@@ -129,8 +129,7 @@ changed. To refresh the fixture, clean it and repeat preparation. Update the
 pinned Aksara revision deliberately when the acceptance contract needs new
 reviewed examples.
 
-CI runs the same isolated acceptance commands with `PORTLESS=0`. Protected
-Vercel builds run only after a protected main merge. The web build command
+Protected Vercel builds run only after a protected main merge. The web build command
 deploys Convex functions before building Next.js because prerendering queries
 those functions. Vercel supplies `NEXT_PUBLIC_CONVEX_URL`, which the runtime
 guard verifies against the protected production deployment. Convex's `--cmd`
@@ -219,7 +218,7 @@ implementations.
 Read [`AGENTS.md`](AGENTS.md) and
 [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md). Submit a ready pull request
 from a branch, keep it current with `main`, resolve review conversations, and
-run the relevant exact-head checks before merge.
+run the relevant checks on the exact head before merge.
 
 ## License
 

@@ -613,16 +613,8 @@
       "title": "Abschnitt nicht beendet.",
       "description": "Versuche es erneut."
     },
-    "tryout-complete-part-success": {
-      "title": "Abschnitt beendet.",
-      "description": "Wähle einen anderen Abschnitt oder kehre zum Set zurück."
-    },
     "tryout-preference-error": {
       "title": "Probetest-Wahl nicht gespeichert."
-    },
-    "tryout-start-entry-success": {
-      "title": "Probetest gestartet.",
-      "description": "Der Timer läuft jetzt."
     },
     "tryout-start-error": {
       "title": "Probetest nicht gestartet.",
@@ -631,14 +623,6 @@
     "tryout-start-part-error": {
       "title": "Abschnitt nicht gestartet.",
       "description": "Versuche es erneut."
-    },
-    "tryout-start-part-success": {
-      "title": "Abschnitt gestartet.",
-      "description": "Der Timer läuft jetzt."
-    },
-    "tryout-start-success": {
-      "title": "Probetest gestartet.",
-      "description": "Du kannst wählen, welchen Abschnitt du zuerst bearbeitest."
     },
     "tryout-submit-answer-error": {
       "title": "Antwort nicht gespeichert.",
