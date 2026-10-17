@@ -76,9 +76,7 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
         </span>
         <span className="col-start-1 row-start-1" key={current}>
           <span className="text-primary">{current.slice(0, shown)}</span>
-          <span className="invisible">
-            {current.slice(shown)}
-          </span>
+          <span className="invisible">{current.slice(shown)}</span>
           {after}
         </span>
       </span>
