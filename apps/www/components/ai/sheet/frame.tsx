@@ -1,5 +1,6 @@
 "use client";
 
+import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
@@ -7,6 +8,7 @@ import { Array as Arr, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Activity, useRef, useState } from "react";
+import { readChatArgs } from "@/components/ai/chat/access";
 import { useAi } from "@/components/ai/context";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
 import { Authenticated, Unauthenticated } from "@/components/auth/gate";
@@ -135,6 +137,13 @@ export function AiSheet() {
  */
 function SheetBody() {
   const activeChatId = useAi((state) => state.activeChatId);
+  // The open chat is read as SheetConversation reads it, with no share token.
+  const read = activeChatId
+    ? {
+        args: readChatArgs(activeChatId, undefined),
+        ref: nina.conversation.get,
+      }
+    : undefined;
 
   return (
     <>
@@ -142,7 +151,7 @@ function SheetBody() {
         <SheetNew />
       </Activity>
       <Activity mode={activeChatId ? "visible" : "hidden"}>
-        <ChatBoundary key={activeChatId}>
+        <ChatBoundary key={activeChatId} read={read}>
           <Authenticated>
             {!!activeChatId && <SheetConversation chatId={activeChatId} />}
           </Authenticated>
