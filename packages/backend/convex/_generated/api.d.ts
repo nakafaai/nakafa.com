@@ -10306,12 +10306,6 @@ export declare const internal: {
         { turnId: Id<"ninaTurns"> },
         null
       >;
-      halted: FunctionReference<
-        "query",
-        "internal",
-        { turnId: Id<"ninaTurns"> },
-        boolean
-      >;
       presentation: FunctionReference<
         "query",
         "internal",
@@ -10650,6 +10644,14 @@ export declare const internal: {
         "internal",
         { id: Id<"ninaMemoryRestores"> },
         null
+      >;
+    };
+    phase: {
+      halted: FunctionReference<
+        "query",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        boolean
       >;
     };
     portrait: {
