@@ -63,12 +63,12 @@ type PreviewRendererConfig = typeof PreviewRendererConfigSchema.Type;
 /** Local preview configuration exists but does not satisfy its strict shape. */
 export class PreviewConfigError extends Schema.TaggedError<PreviewConfigError>()(
   "PreviewConfigError",
-  { name: Schema.Literal("AKSARA_PREVIEW") }
+  { prefix: Schema.Literal("AKSARA_PREVIEW") }
 ) {}
 /** Local renderer credentials exist but do not satisfy their strict shape. */
 export class PreviewRendererConfigError extends Schema.TaggedError<PreviewRendererConfigError>()(
   "PreviewRendererConfigError",
-  { name: Schema.Literal("AKSARA_PREVIEW_RENDERER") }
+  { prefix: Schema.Literal("AKSARA_PREVIEW_RENDERER") }
 ) {}
 /** Decodes one complete child-process environment without starting a runtime. */
 export function decodePreviewEnvironment(
@@ -79,10 +79,10 @@ export function decodePreviewEnvironment(
     { onExcessProperty: "error" }
   );
   if (Result.isFailure(decoded)) {
-    return Result.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
+    return Result.fail(new PreviewConfigError({ prefix: "AKSARA_PREVIEW" }));
   }
   return Result.try({
-    catch: () => new PreviewConfigError({ name: "AKSARA_PREVIEW" }),
+    catch: () => new PreviewConfigError({ prefix: "AKSARA_PREVIEW" }),
     try: () => ({
       eventsPath: decoded.success.eventsPath,
       keyId: decoded.success.keyId,
@@ -97,11 +97,11 @@ export function decodePreviewEnvironment(
 export function decodePreviewUrl(config: PreviewConfig, path: string) {
   const decodedPath = Schema.decodeResult(PreviewPathSchema)(path);
   if (Result.isFailure(decodedPath)) {
-    return Result.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
+    return Result.fail(new PreviewConfigError({ prefix: "AKSARA_PREVIEW" }));
   }
   const target = new URL(decodedPath.success, config.origin);
   if (target.origin !== config.origin.origin) {
-    return Result.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
+    return Result.fail(new PreviewConfigError({ prefix: "AKSARA_PREVIEW" }));
   }
   return Result.succeed(target);
 }
@@ -165,7 +165,8 @@ export const readPreviewRendererConfig = Effect.fn(
       })
     ),
     Effect.mapError(
-      () => new PreviewRendererConfigError({ name: "AKSARA_PREVIEW_RENDERER" })
+      () =>
+        new PreviewRendererConfigError({ prefix: "AKSARA_PREVIEW_RENDERER" })
     )
   );
 });

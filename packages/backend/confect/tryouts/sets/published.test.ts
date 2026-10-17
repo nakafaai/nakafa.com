@@ -199,7 +199,7 @@ describe("tryouts/sets/published", () => {
                   ...snapshot.record.row,
                   setKey: TRYOUT_START_SET,
                 }).pipe(Effect.orDie);
-                const record = makeTryoutCatalogRecord(row);
+                const record = yield* makeTryoutCatalogRecord(row);
                 yield* Effect.promise(() =>
                   ctx.db.patch(stored._id, {
                     ...tryoutCatalogFacts(record),
@@ -340,12 +340,14 @@ describe("tryouts/sets/published", () => {
     const t = createConvexTestWithBetterAuth();
     const activate = async (locales: readonly ("de" | "id")[]) =>
       await t.mutation(async (ctx) => {
-        const snapshotId = await activateTryoutSnapshot(ctx, {
-          catalog: Arr.flatMap(locales, (locale) =>
-            makeTryoutStartHierarchy(locale, "visible")
-          ),
-          placements: Arr.map(locales, makeTryoutStartPlacement),
-        });
+        const snapshotId = await Effect.runPromise(
+          activateTryoutSnapshot(ctx, {
+            catalog: Arr.flatMap(locales, (locale) =>
+              makeTryoutStartHierarchy(locale, "visible")
+            ),
+            placements: Arr.map(locales, makeTryoutStartPlacement),
+          })
+        );
         await insertTestTryoutRuntimeBundle(ctx, snapshotId);
       });
     const identity = await t.mutation(

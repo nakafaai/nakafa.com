@@ -2,13 +2,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { readAssembly } from "@repo/backend/scripts/refs/assembly";
 import { Effect } from "effect";
 
-/** Wraps one `Spec.make()` chain in the imports that the assembled spec declares. */
+/** Wraps one `Spec.fromGroups` expression the way Confect's codegen writes a spec: asserted to `typeof spec`. */
 const assembled = (
   imports: string,
-  chain: string
+  groups: string
 ) => `import { GroupSpec, Spec } from "@confect/core";
 ${imports}
-const spec: Spec.Spec<{}> = ${chain};
+const spec: Spec.Spec<{}> = ${groups} as typeof spec;
 export default spec;
 `;
 
@@ -18,7 +18,7 @@ import nina_memory from "../nina/memory.spec";
 
 describe("readAssembly", () => {
   it.effect(
-    "reads each default import with the group path of its addAt and addGroupAt calls",
+    "reads each default import with the group path of its group objects",
     () =>
       Effect.gen(function* () {
         const source = assembled(
@@ -26,7 +26,18 @@ describe("readAssembly", () => {
 import auth_deletion_recovery from "../auth/deletion/recovery.spec";
 import storage from "../storage.spec";
 `,
-          `Spec.make().addAt("nina", GroupSpec.makeAt("nina").addGroupAt("turns", nina_turns).addGroupAt("memory", nina_memory)).addAt("auth", GroupSpec.makeAt("auth").addGroupAt("deletion", auth_deletion.addGroupAt("recovery", auth_deletion_recovery))).addAt("storage", storage)`
+          `Spec.fromGroups({
+  ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["turns"]: nina_turns,
+    ["memory"]: nina_memory,
+  }),
+  ["auth"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["deletion"]: GroupSpec.addGroupsAt(auth_deletion, {
+      ["recovery"]: auth_deletion_recovery,
+    }),
+  }),
+  ["storage"]: storage,
+})`
         );
 
         expect(yield* readAssembly(source)).toEqual([
@@ -59,11 +70,33 @@ import storage from "../storage.spec";
       })
   );
 
+  it.effect("reads a spec that is written without an assertion", () =>
+    Effect.gen(function* () {
+      const source = `import { GroupSpec, Spec } from "@confect/core";
+import storage from "../storage.spec";
+const spec = Spec.fromGroups({ ["storage"]: storage });
+export default spec;
+`;
+
+      expect(yield* readAssembly(source)).toEqual([
+        {
+          localName: "storage",
+          nestedSegments: ["storage"],
+          specifier: "../storage.spec",
+        },
+      ]);
+    })
+  );
+
   it.effect("fails when a default import is never nested", () =>
     Effect.gen(function* () {
       const source = assembled(
         NINA_IMPORTS,
-        `Spec.make().addAt("nina", GroupSpec.makeAt("nina").addGroupAt("turns", nina_turns))`
+        `Spec.fromGroups({
+  ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["turns"]: nina_turns,
+  }),
+})`
       );
 
       expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
@@ -79,7 +112,15 @@ import storage from "../storage.spec";
     Effect.gen(function* () {
       const source = assembled(
         NINA_IMPORTS,
-        `Spec.make().addAt("nina", GroupSpec.makeAt("nina").addGroupAt("turns", nina_turns).addGroupAt("memory", nina_memory)).addAt("other", GroupSpec.makeAt("other").addGroupAt("turns", nina_turns))`
+        `Spec.fromGroups({
+  ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["turns"]: nina_turns,
+    ["memory"]: nina_memory,
+  }),
+  ["other"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["turns"]: nina_turns,
+  }),
+})`
       );
 
       expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
@@ -95,7 +136,13 @@ import storage from "../storage.spec";
     Effect.gen(function* () {
       const source = assembled(
         NINA_IMPORTS,
-        `Spec.make().addAt("nina", GroupSpec.makeAt("nina").addGroupAt("turns", nina_turns).addGroupAt("memory", nina_memory).addGroupAt("ghost", ghost))`
+        `Spec.fromGroups({
+  ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["turns"]: nina_turns,
+    ["memory"]: nina_memory,
+    ["ghost"]: ghost,
+  }),
+})`
       );
 
       expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
@@ -118,41 +165,64 @@ ${NINA_IMPORTS}`;
     })
   );
 
-  it.effect("fails when the chain does not start from Spec.make()", () =>
+  it.effect("fails when the spec does not start from Spec.fromGroups()", () =>
     Effect.gen(function* () {
       const source = assembled(
         NINA_IMPORTS,
-        `Other.make().addAt("nina", GroupSpec.makeAt("nina").addGroupAt("turns", nina_turns).addGroupAt("memory", nina_memory))`
+        `Other.fromGroups({
+  ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["turns"]: nina_turns,
+    ["memory"]: nina_memory,
+  }),
+})`
       );
 
       expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
         _tag: "RefsSourceError",
-        message: "The assembled spec must start from Spec.make().",
+        message: "The assembled spec must start from Spec.fromGroups().",
       });
     })
+  );
+
+  it.effect("fails when Spec.fromGroups takes no group object", () =>
+    Effect.gen(function* () {
+      const source = assembled(NINA_IMPORTS, "Spec.fromGroups()");
+
+      expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
+        _tag: "RefsSourceError",
+        message: "Spec.fromGroups takes one object of groups.",
+      });
+    })
+  );
+
+  it.effect(
+    "fails when Spec.fromGroups takes a value that is not an object",
+    () =>
+      Effect.gen(function* () {
+        const source = assembled(NINA_IMPORTS, "Spec.fromGroups(groups)");
+
+        expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
+          _tag: "RefsSourceError",
+          message: "Spec.fromGroups takes one object of groups.",
+        });
+      })
   );
 
   it.effect("fails on a group name that is not a string literal", () =>
     Effect.gen(function* () {
       const source = assembled(
         NINA_IMPORTS,
-        `Spec.make().addAt("nina", GroupSpec.makeAt("nina").addGroupAt(name, nina_turns).addGroupAt("memory", nina_memory))`
+        `Spec.fromGroups({
+  [name]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["turns"]: nina_turns,
+    ["memory"]: nina_memory,
+  }),
+})`
       );
 
       expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
         _tag: "RefsSourceError",
         message: "Each nested group needs a string literal name.",
-      });
-    })
-  );
-
-  it.effect("fails on an addAt call with one argument", () =>
-    Effect.gen(function* () {
-      const source = assembled(NINA_IMPORTS, `Spec.make().addAt("nina")`);
-
-      expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
-        _tag: "RefsSourceError",
-        message: "addAt takes a name and a group.",
       });
     })
   );
@@ -163,7 +233,12 @@ ${NINA_IMPORTS}`;
       Effect.gen(function* () {
         const source = assembled(
           NINA_IMPORTS,
-          `Spec.make().addAt("nina", build("nina").addGroupAt("turns", nina_turns).addGroupAt("memory", nina_memory))`
+          `Spec.fromGroups({
+  ["nina"]: GroupSpec.addGroupsAt(build("nina"), {
+    ["turns"]: nina_turns,
+    ["memory"]: nina_memory,
+  }),
+})`
         );
 
         expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
@@ -171,5 +246,39 @@ ${NINA_IMPORTS}`;
           message: "Unexpected group expression under nina.",
         });
       })
+  );
+
+  it.effect(
+    "fails on a group expression that is not a GroupSpec.addGroupsAt call",
+    () =>
+      Effect.gen(function* () {
+        const source = assembled(
+          NINA_IMPORTS,
+          `Spec.fromGroups({
+  ["nina"]: GroupSpec.make(),
+})`
+        );
+
+        expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
+          _tag: "RefsSourceError",
+          message: "Unexpected group expression under nina.",
+        });
+      })
+  );
+
+  it.effect("fails on a group object that is not an object literal", () =>
+    Effect.gen(function* () {
+      const source = assembled(
+        NINA_IMPORTS,
+        `Spec.fromGroups({
+  ["nina"]: GroupSpec.addGroupsAt(GroupSpec.make(), nina_turns),
+})`
+      );
+
+      expect(yield* readAssembly(source).pipe(Effect.flip)).toMatchObject({
+        _tag: "RefsSourceError",
+        message: "Unexpected group expression under nina.",
+      });
+    })
   );
 });

@@ -172,20 +172,20 @@ export const consumeInboxPage = Effect.fn("notifications.inbox.consume")(
     const plan = planRun(now, cursor.value, page, numItems, HANDLED_LIMIT);
     yield* Effect.forEach(
       plan.handle,
+      // The journal's union holds a `person.invited` change only under a Person
+      // subject, so the subject decodes as a Person. Every inbox send of the
+      // invitation shows in the one row of the invitation, so the row is written
+      // once whatever the number of sends.
       (entry) =>
-        ObjectRef.matchOrElse(
-          entry.subject,
-          {
-            // Every inbox send of the invitation shows in the one row of the
-            // invitation, so the row is written once whatever the number of sends.
-            person: (subject) =>
-              Effect.forEach(
-                invitedInboxSends,
-                () => writeRow(tenantId, entry, subject.id),
-                { discard: true }
-              ),
-          },
-          () => Effect.void
+        Schema.decodeUnknownEffect(ObjectRef.cases.person)(entry.subject).pipe(
+          Effect.orDie,
+          Effect.flatMap((subject) =>
+            Effect.forEach(
+              invitedInboxSends,
+              () => writeRow(tenantId, entry, subject.id),
+              { discard: true }
+            )
+          )
         ),
       { discard: true }
     );

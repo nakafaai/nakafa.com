@@ -12,7 +12,7 @@ import {
   makeTryoutStartHierarchy,
   makeTryoutStartPlacement,
 } from "@repo/backend/test/tryout/source";
-import { Array as Arr, Match, Schema } from "effect";
+import { Array as Arr, Effect, Match, Schema } from "effect";
 
 const LANDING_SET_PATH = "try-out/indonesia/snbt/2027/set-1";
 const LANDING_SOURCE_ROOT =
@@ -38,12 +38,14 @@ export async function activateLandingSource(
   ctx: MutationCtx,
   visibility: "internal-entry" | "visible"
 ) {
-  const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-      makeLandingHierarchy(locale, visibility)
-    ),
-    placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeLandingPlacement),
-  });
+  const snapshotId = await Effect.runPromise(
+    activateTryoutSnapshot(ctx, {
+      catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+        makeLandingHierarchy(locale, visibility)
+      ),
+      placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeLandingPlacement),
+    })
+  );
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
   return snapshotId;
 }
@@ -180,14 +182,16 @@ export async function activateSnbtSource(
   ctx: MutationCtx,
   questionOrders: readonly number[] = Arr.range(1, LANDING_QUESTION_COUNT)
 ) {
-  const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, makeSnbtHierarchy),
-    placements: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
-      Arr.map(questionOrders, (order) =>
-        makeLandingQuestionPlacement(locale, order)
-      )
-    ),
-  });
+  const snapshotId = await Effect.runPromise(
+    activateTryoutSnapshot(ctx, {
+      catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, makeSnbtHierarchy),
+      placements: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+        Arr.map(questionOrders, (order) =>
+          makeLandingQuestionPlacement(locale, order)
+        )
+      ),
+    })
+  );
   await insertTestTryoutRuntimeBundle(ctx, snapshotId);
   return snapshotId;
 }

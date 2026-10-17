@@ -37,7 +37,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 23, 12);
 type RollbackFixtureFamily = "material" | "question";
@@ -213,7 +213,9 @@ export async function insertRollbackItem(
     options?.contentKey ?? ContentKeySchema.make(`test:head-${index}`);
   const rendererDomain = options?.rendererDomain ?? "mathematics";
   const signedArtifact = options?.authenticatedArtifact
-    ? testSignedArtifact(rendererDomain, { compiledCode, contentKey })
+    ? await Effect.runPromise(
+        testSignedArtifact(rendererDomain, { compiledCode, contentKey })
+      )
     : undefined;
   const currentHash =
     signedArtifact?.artifactHash ?? rollbackArtifactHash(index, "current");

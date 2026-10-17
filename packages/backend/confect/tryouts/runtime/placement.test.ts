@@ -43,10 +43,10 @@ const insertRuntime = Effect.fn("tryouts.runtime.placement.test.insertRuntime")(
       publicPath: ROUTE,
       questionSourcePath: `packages/corpus/${SOURCE}`,
     });
-    const signedSection = makeSignedTryoutSection(section, {
+    const signedSection = yield* makeSignedTryoutSection(section, {
       sourceRevision: "2027",
     });
-    const source = makeSignedTryoutSource(set, [signedSection]);
+    const source = yield* makeSignedTryoutSource(set, [signedSection]);
     const attemptId = yield* Effect.promise(() =>
       insertTryoutAttempt(ctx, {
         sectionSnapshots: [tryoutSectionSnapshot(signedSection)],

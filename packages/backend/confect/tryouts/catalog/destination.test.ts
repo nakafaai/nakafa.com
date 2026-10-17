@@ -120,22 +120,20 @@ describe("signed try-out attempt destinations", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            yield* Effect.promise(() =>
-              activateTryoutSnapshot(tCtx, {
-                catalog: Arr.map(
-                  makeTryoutStartHierarchy("id", "visible"),
-                  (row) =>
-                    row.kind === "section"
-                      ? {
-                          ...row,
-                          publicPath: undefined,
-                          visibility: "internal-entry",
-                        }
-                      : row
-                ),
-                placements: [makeTryoutStartPlacement("id")],
-              })
-            );
+            yield* activateTryoutSnapshot(tCtx, {
+              catalog: Arr.map(
+                makeTryoutStartHierarchy("id", "visible"),
+                (row) =>
+                  row.kind === "section"
+                    ? {
+                        ...row,
+                        publicPath: undefined,
+                        visibility: "internal-entry",
+                      }
+                    : row
+              ),
+              placements: [makeTryoutStartPlacement("id")],
+            });
             const result = yield* readActiveTryoutRestartTarget(identity);
             expect(result).toBeNull();
           })

@@ -333,19 +333,21 @@ export async function insertSignedHead(
     projectionJson
   );
   const rendererDomain = options?.rendererDomain ?? "mathematics";
-  const artifact = testSignedArtifact(rendererDomain, {
-    ...(options?.artifactLocale === undefined
-      ? {}
-      : {
-          artifactLocale: options?.artifactLocale,
-        }),
-    ...(options?.compiledCode === undefined
-      ? {}
-      : {
-          compiledCode: options?.compiledCode,
-        }),
-    contentKey,
-  });
+  const artifact = await Effect.runPromise(
+    testSignedArtifact(rendererDomain, {
+      ...(options?.artifactLocale === undefined
+        ? {}
+        : {
+            artifactLocale: options?.artifactLocale,
+          }),
+      ...(options?.compiledCode === undefined
+        ? {}
+        : {
+            compiledCode: options?.compiledCode,
+          }),
+      contentKey,
+    })
+  );
   await insertRuntimeHead(ctx, delivery, contentKey, {
     artifactHash: artifact.artifactHash,
     compiledCode: options?.compiledCode,
@@ -359,9 +361,12 @@ export async function insertSignedHead(
     ctx.db.query("contentArtifacts").unique(),
   ]);
   assert.ok(head && storedArtifact, "Expected one complete runtime head.");
+  const projectionHash = await Effect.runPromise(
+    hashContentProjection(projection)
+  );
   await Promise.all([
     ctx.db.patch("contentHeads", head._id, {
-      projectionHash: hashContentProjection(projection),
+      projectionHash,
       sourceHash: artifact.payload.sourceHash,
     }),
     ctx.db.patch("contentArtifacts", storedArtifact._id, {

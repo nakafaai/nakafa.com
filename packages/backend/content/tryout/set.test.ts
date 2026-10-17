@@ -53,10 +53,12 @@ async function activateSet(
     )
   );
   const snapshotId = await t.mutation((ctx) =>
-    activateTryoutSnapshot(ctx, {
-      catalog,
-      placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeTryoutStartPlacement),
-    })
+    Effect.runPromise(
+      activateTryoutSnapshot(ctx, {
+        catalog,
+        placements: Arr.map(ACTIVE_APP_LOCALE_CODES, makeTryoutStartPlacement),
+      })
+    )
   );
   return {
     snapshotId,

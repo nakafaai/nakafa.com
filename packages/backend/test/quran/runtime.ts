@@ -112,12 +112,15 @@ export const makeQuranRuntimeSource = Effect.fn(
       rowDigest: manifest.snapshotId,
     }),
   };
-  const signed = testSignedRelease({
-    ...testEmptyManifest(ReleaseIdSchema.make("quran-active")),
+  const emptyManifest = yield* testEmptyManifest(
+    ReleaseIdSchema.make("quran-active")
+  );
+  const signed = yield* testSignedRelease({
+    ...emptyManifest,
     scope: testPublicationScope({ snapshots }),
     snapshots,
   });
-  const fixture = makeRuntimeSource(signed);
+  const fixture = yield* makeRuntimeSource(signed);
   MutableHashMap.set(fixture.source, "contentSnapshots", [
     {
       createdAt: 1,

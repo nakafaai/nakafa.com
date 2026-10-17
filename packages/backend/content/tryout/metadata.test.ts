@@ -1,5 +1,5 @@
 import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import confectSchema from "@repo/backend/confect/_generated/schema";
@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/content/tryout/metadata";
 import schema from "@repo/backend/convex/schema";
 import {
+  activateTryoutCatalogPair,
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
@@ -27,376 +28,420 @@ import {
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Layer, Schema } from "effect";
 
-/** Activates the smallest coherent two-locale catalog. */
-async function activateCatalog() {
-  const t = convexTest(schema, convexModules);
-  await t.mutation((ctx) =>
-    activateTryoutSnapshot(ctx, {
-      catalog: [
-        makeTryoutCatalogRow("en").record.row,
-        makeTryoutCatalogRow("id").record.row,
-      ],
-      placements: [
-        makeTryoutPlacementRow("en").record.row,
-        makeTryoutPlacementRow("id").record.row,
-      ],
+describe("tryouts/catalog/metadata", () => {
+  it.effect("requires an active signed try-out publication", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(async () => {
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutMetadata({
+                kind: "country",
+                appLocale: "en",
+                publicPath: "try-out/indonesia",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_MISSING",
+        });
+      });
     })
   );
-  return t;
-}
-describe("tryouts/catalog/metadata", () => {
-  it("requires an active signed try-out publication", async () => {
-    const t = convexTest(schema, convexModules);
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutMetadata({
-            kind: "country",
-            appLocale: "en",
-            publicPath: "try-out/indonesia",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+  it.effect("returns signed copy and both localized canonical paths", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      yield* activateTryoutCatalogPair(t);
+      yield* Effect.promise(async () => {
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutMetadata({
+                kind: "country",
+                appLocale: "en",
+                publicPath: "try-out/indonesia",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_MISSING",
-    });
-  });
-  it("returns signed copy and both localized canonical paths", async () => {
-    const t = await activateCatalog();
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutMetadata({
-            kind: "country",
-            appLocale: "en",
-            publicPath: "try-out/indonesia",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      route: {
-        alternates: [
-          {
-            appLocale: "en",
+        ).resolves.toMatchObject({
+          route: {
+            alternates: [
+              {
+                appLocale: "en",
+                publicPath: "try-out/indonesia",
+              },
+              {
+                appLocale: "id",
+                publicPath: "try-out/indonesia",
+              },
+            ],
             publicPath: "try-out/indonesia",
           },
-          {
-            appLocale: "id",
-            publicPath: "try-out/indonesia",
-          },
-        ],
-        publicPath: "try-out/indonesia",
-      },
-    });
-  });
-  it("returns stable exam identity with a localized German route", async () => {
-    const t = convexTest(schema, convexModules);
-    const catalog = Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
-      Arr.map(makeTryoutStartHierarchy("de", "visible"), (row) => {
-        if (!row.publicPath) {
-          return row;
-        }
-        return {
-          ...row,
-          publicPath: PublicPathSchema.make(
-            row.publicPath.replace("try-out/indonesia", "try-out/indonesien")
-          ),
-        };
-      })
-    );
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog,
-        placements: [makeTryoutStartPlacement("de")],
-      })
-    );
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutMetadata({
-            kind: "exam",
-            appLocale: "de",
-            publicPath: "try-out/indonesien/tka",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      route: {
-        publicPath: "try-out/indonesien/tka",
-        socialImageIdentity: {
-          countryKey: "indonesia",
-          examKey: "tka",
-        },
-      },
-    });
-  });
-  it("reads exact alternates without loading another complete catalog", async () => {
-    const t = await activateCatalog();
-    await t.mutation(async (ctx) => {
-      const source = await ctx.db
-        .query("tryoutCatalog")
-        .filter((query) => query.eq(query.field("appLocale"), "id"))
-        .first();
-      if (!source) {
-        throw new Error("Expected an active Indonesian catalog row.");
-      }
-      await ctx.db.insert("tryoutCatalog", {
-        assetId: "asset:id:tryout:unreferenced-catalog-row",
-        identity: "unreferenced-catalog-row",
-        index: 100,
-        kind: "country",
-        appLocale: "id",
-        order: 100,
-        publicPath: "try-out/unreferenced",
-        rowHash: source.rowHash,
-        rowJson: source.rowJson,
-        snapshotId: source.snapshotId,
+        });
       });
-    });
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutMetadata({
-            kind: "country",
-            appLocale: "en",
-            publicPath: "try-out/indonesia",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+    })
+  );
+  it.effect("returns stable exam identity with a localized German route", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      const catalog = yield* Schema.decodeEffect(
+        Schema.Array(TryoutCatalogRowSchema)
+      )(
+        Arr.map(makeTryoutStartHierarchy("de", "visible"), (row) => {
+          if (!row.publicPath) {
+            return row;
+          }
+          return {
+            ...row,
+            publicPath: PublicPathSchema.make(
+              row.publicPath.replace("try-out/indonesia", "try-out/indonesien")
+            ),
+          };
+        })
+      );
+      yield* Effect.promise(async () => {
+        await t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateTryoutSnapshot(ctx, {
+              catalog,
+              placements: [makeTryoutStartPlacement("de")],
+            })
+          )
+        );
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutMetadata({
+                kind: "exam",
+                appLocale: "de",
+                publicPath: "try-out/indonesien/tka",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).resolves.toMatchObject({
-      route: {
-        alternates: [
-          {
-            appLocale: "en",
-            publicPath: "try-out/indonesia",
+        ).resolves.toMatchObject({
+          route: {
+            publicPath: "try-out/indonesien/tka",
+            socialImageIdentity: {
+              countryKey: "indonesia",
+              examKey: "tka",
+            },
           },
-          {
-            appLocale: "id",
-            publicPath: "try-out/indonesia",
-          },
-        ],
-      },
-    });
-  });
-  it("resolves one exact localized path through signed identity", async () => {
-    const t = convexTest(schema, convexModules);
-    const englishPath = PublicPathSchema.make("try-out/indonesia");
-    const english = makeTryoutCatalogRow("en").record.row;
-    const indonesian = {
-      ...makeTryoutCatalogRow("id").record.row,
-      publicPath: PublicPathSchema.make("try-out/indonesia-id"),
-    };
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog: [english, indonesian],
-        placements: [
-          makeTryoutPlacementRow("en").record.row,
-          makeTryoutPlacementRow("id").record.row,
-        ],
+        });
+      });
+    })
+  );
+  it.effect(
+    "reads exact alternates without loading another complete catalog",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const t = convexTest(schema, convexModules);
+        yield* activateTryoutCatalogPair(t);
+        yield* Effect.promise(async () => {
+          await t.mutation(async (ctx) => {
+            const source = await ctx.db
+              .query("tryoutCatalog")
+              .filter((query) => query.eq(query.field("appLocale"), "id"))
+              .first();
+            assert(source, "Expected an active Indonesian catalog row.");
+            await ctx.db.insert("tryoutCatalog", {
+              assetId: "asset:id:tryout:unreferenced-catalog-row",
+              identity: "unreferenced-catalog-row",
+              index: 100,
+              kind: "country",
+              appLocale: "id",
+              order: 100,
+              publicPath: "try-out/unreferenced",
+              rowHash: source.rowHash,
+              rowJson: source.rowJson,
+              snapshotId: source.snapshotId,
+            });
+          });
+          await expect(
+            t.query((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                readTryoutMetadata({
+                  kind: "country",
+                  appLocale: "en",
+                  publicPath: "try-out/indonesia",
+                }).pipe(
+                  Effect.provide(
+                    Layer.provideMerge(
+                      tryoutLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
+                )
+              )
+            )
+          ).resolves.toMatchObject({
+            route: {
+              alternates: [
+                {
+                  appLocale: "en",
+                  publicPath: "try-out/indonesia",
+                },
+                {
+                  appLocale: "id",
+                  publicPath: "try-out/indonesia",
+                },
+              ],
+            },
+          });
+        });
       })
-    );
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutLocalizedPath({
-            currentAppLocale: "en",
-            publicPath: englishPath,
-            targetAppLocale: "id",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+  );
+  it.effect("resolves one exact localized path through signed identity", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      const englishPath = PublicPathSchema.make("try-out/indonesia");
+      const [englishSource, indonesianSource] = yield* Effect.all([
+        makeTryoutCatalogRow("en"),
+        makeTryoutCatalogRow("id"),
+      ]);
+      const english = englishSource.record.row;
+      const indonesian = {
+        ...indonesianSource.record.row,
+        publicPath: PublicPathSchema.make("try-out/indonesia-id"),
+      };
+      const [placementEn, placementId] = yield* Effect.all([
+        makeTryoutPlacementRow("en"),
+        makeTryoutPlacementRow("id"),
+      ]);
+      yield* Effect.promise(async () => {
+        await t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateTryoutSnapshot(ctx, {
+              catalog: [english, indonesian],
+              placements: [placementEn.record.row, placementId.record.row],
+            })
+          )
+        );
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutLocalizedPath({
+                currentAppLocale: "en",
+                publicPath: englishPath,
+                targetAppLocale: "id",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).resolves.toBe(indonesian.publicPath);
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutLocalizedPath({
-            currentAppLocale: "en",
-            publicPath: "try-out/missing",
-            targetAppLocale: "id",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+        ).resolves.toBe(indonesian.publicPath);
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutLocalizedPath({
+                currentAppLocale: "en",
+                publicPath: "try-out/missing",
+                targetAppLocale: "id",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).resolves.toBeNull();
-  });
-  it("rejects a route requested through the wrong hierarchy kind", async () => {
-    const t = await activateCatalog();
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutMetadata({
-            kind: "exam",
-            appLocale: "en",
-            publicPath: "try-out/indonesia",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+        ).resolves.toBeNull();
+      });
+    })
+  );
+  it.effect("rejects a route requested through the wrong hierarchy kind", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      yield* activateTryoutCatalogPair(t);
+      yield* Effect.promise(async () => {
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutMetadata({
+                kind: "exam",
+                appLocale: "en",
+                publicPath: "try-out/indonesia",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).resolves.toEqual({
-      route: null,
-    });
-  });
-  it("omits an absent localized counterpart", async () => {
-    const t = await activateCatalog();
-    await t.mutation(async (ctx) => {
-      const alternate = await ctx.db
-        .query("tryoutCatalog")
-        .filter((query) => query.eq(query.field("appLocale"), "id"))
-        .first();
-      if (!alternate) {
-        throw new Error("Expected an Indonesian catalog row.");
-      }
-      await ctx.db.delete("tryoutCatalog", alternate._id);
-    });
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutMetadata({
-            kind: "country",
-            appLocale: "en",
-            publicPath: "try-out/indonesia",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+        ).resolves.toEqual({
+          route: null,
+        });
+      });
+    })
+  );
+  it.effect("omits an absent localized counterpart", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      yield* activateTryoutCatalogPair(t);
+      yield* Effect.promise(async () => {
+        await t.mutation(async (ctx) => {
+          const alternate = await ctx.db
+            .query("tryoutCatalog")
+            .filter((query) => query.eq(query.field("appLocale"), "id"))
+            .first();
+          assert(alternate, "Expected an Indonesian catalog row.");
+          await ctx.db.delete("tryoutCatalog", alternate._id);
+        });
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutMetadata({
+                kind: "country",
+                appLocale: "en",
+                publicPath: "try-out/indonesia",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).resolves.toMatchObject({
-      route: {
-        alternates: [
-          {
-            appLocale: "en",
-            publicPath: "try-out/indonesia",
+        ).resolves.toMatchObject({
+          route: {
+            alternates: [
+              {
+                appLocale: "en",
+                publicPath: "try-out/indonesia",
+              },
+            ],
           },
-        ],
-      },
-    });
-  });
-  it("omits a localized internal section without a public path", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog: [
-          ...makeTryoutStartHierarchy("en", "visible"),
-          ...makeTryoutStartHierarchy("id", "internal-entry"),
-        ],
-        placements: [
-          makeTryoutStartPlacement("en"),
-          makeTryoutStartPlacement("id"),
-        ],
-      })
-    );
-    const publicPath = Arr.join(
-      [
-        "try-out",
-        TRYOUT_START_COUNTRY,
-        TRYOUT_START_EXAM,
-        TRYOUT_START_TRACK,
-        TRYOUT_START_SET,
-        TRYOUT_START_SECTION,
-      ],
-      "/"
-    );
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutMetadata({
-            kind: "section",
-            appLocale: "en",
-            publicPath,
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+        });
+      });
+    })
+  );
+  it.effect("omits a localized internal section without a public path", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(async () => {
+        await t.mutation((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            activateTryoutSnapshot(ctx, {
+              catalog: [
+                ...makeTryoutStartHierarchy("en", "visible"),
+                ...makeTryoutStartHierarchy("id", "internal-entry"),
+              ],
+              placements: [
+                makeTryoutStartPlacement("en"),
+                makeTryoutStartPlacement("id"),
+              ],
+            })
+          )
+        );
+        const publicPath = Arr.join(
+          [
+            "try-out",
+            TRYOUT_START_COUNTRY,
+            TRYOUT_START_EXAM,
+            TRYOUT_START_TRACK,
+            TRYOUT_START_SET,
+            TRYOUT_START_SECTION,
+          ],
+          "/"
+        );
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutMetadata({
+                kind: "section",
+                appLocale: "en",
+                publicPath,
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).resolves.toMatchObject({
-      route: {
-        alternates: [
-          {
-            appLocale: "en",
-            publicPath,
+        ).resolves.toMatchObject({
+          route: {
+            alternates: [
+              {
+                appLocale: "en",
+                publicPath,
+              },
+            ],
           },
-        ],
-      },
-    });
-  });
-  it("rejects unknown paths after signed ownership activates", async () => {
-    const t = await activateCatalog();
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutMetadata({
-            kind: "country",
-            appLocale: "id",
-            publicPath: "try-out/missing",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+        });
+      });
+    })
+  );
+  it.effect("rejects unknown paths after signed ownership activates", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      yield* activateTryoutCatalogPair(t);
+      yield* Effect.promise(async () => {
+        await expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutMetadata({
+                kind: "country",
+                appLocale: "id",
+                publicPath: "try-out/missing",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).resolves.toEqual({
-      route: null,
-    });
-  });
+        ).resolves.toEqual({
+          route: null,
+        });
+      });
+    })
+  );
 });

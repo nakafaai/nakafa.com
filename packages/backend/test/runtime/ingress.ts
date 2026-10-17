@@ -47,7 +47,7 @@ export const makeRuntimeIngressFixture = Effect.fn(
 ) {
   const technicalSnapshot = (yield* makeTryoutSnapshotManifest()).manifest;
   const resultSnapshot = options?.snapshotRouteCountDelta
-    ? makeTryoutSnapshot({
+    ? yield* makeTryoutSnapshot({
         activeAppLocales: technicalSnapshot.activeAppLocales,
         catalogDigest: technicalSnapshot.catalogDigest,
         counts: technicalSnapshot.counts,
@@ -57,7 +57,7 @@ export const makeRuntimeIngressFixture = Effect.fn(
           technicalSnapshot.routeCount + options.snapshotRouteCountDelta,
       })
     : technicalSnapshot;
-  const baseSnapshot = makeTryoutSnapshot({
+  const baseSnapshot = yield* makeTryoutSnapshot({
     activeAppLocales: technicalSnapshot.activeAppLocales,
     catalogDigest: technicalSnapshot.catalogDigest,
     counts: technicalSnapshot.counts,
@@ -74,8 +74,8 @@ export const makeRuntimeIngressFixture = Effect.fn(
       rowDigest: resultSnapshot.snapshotId,
     }),
   };
-  const emptyManifest = testEmptyManifest(releaseId);
-  const release = testSignedRelease(
+  const emptyManifest = yield* testEmptyManifest(releaseId);
+  const release = yield* testSignedRelease(
     ContentReleaseManifestSchema.make({
       ...emptyManifest,
       baseActiveAppLocales: options?.hasBaseSnapshot

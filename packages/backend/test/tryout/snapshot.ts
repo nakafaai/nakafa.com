@@ -43,11 +43,13 @@ import {
 } from "@repo/backend/confect/contentRelease/tryout/facts";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type schema from "@repo/backend/convex/schema";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import type { TestConvex } from "convex-test";
 import { Array as Arr, Effect, Order, Schema, Stream } from "effect";
 
 const artifactHash = Sha256HashSchema.make(`sha256:${"8".repeat(64)}`);
@@ -72,14 +74,9 @@ const technicalCopy = {
   Record<"choice" | "contentHashCharacter" | "country", string>
 >;
 
-/** Creates one hashed technical try-out country row. */
-export function makeTryoutCatalogRow(
-  appLocale: ActiveAppLocaleCode = "en"
-): Extract<
-  ContentSnapshotRow,
-  { readonly family: "tryout"; readonly rowKind: "catalog" }
-> {
-  const row = Schema.decodeSync(TryoutCatalogRowSchema)({
+/** Decodes the technical try-out country row for one app locale. */
+function technicalCatalogRow(appLocale: ActiveAppLocaleCode) {
+  return Schema.decodeSync(TryoutCatalogRowSchema)({
     countryCode: "ID",
     countryKey: "indonesia",
     graph: {
@@ -96,25 +93,17 @@ export function makeTryoutCatalogRow(
     sourceRevision: "technical-revision",
     title: technicalCopy[appLocale].country,
   });
-  return {
-    family: "tryout",
-    record: makeTryoutCatalogRecord(row),
-    rowKind: "catalog",
-  };
 }
 
-/** Creates one hashed technical try-out question placement. */
-export function makeTryoutPlacementRow(
-  appLocale: ActiveAppLocaleCode = "en",
+/** Decodes the technical try-out question placement for one app locale. */
+function technicalPlacementRow(
+  appLocale: ActiveAppLocaleCode,
   artifacts?: Pick<
     TryoutPlacement,
     "answerArtifactHash" | "questionArtifactHash"
   >
-): Extract<
-  ContentSnapshotRow,
-  { readonly family: "tryout"; readonly rowKind: "placement" }
-> {
-  const row = Schema.decodeSync(TryoutPlacementSchema)({
+) {
+  return Schema.decodeSync(TryoutPlacementSchema)({
     answerArtifactHash: artifacts?.answerArtifactHash ?? artifactHash,
     answerArtifactLocale: appLocale,
     answerContentKey:
@@ -158,33 +147,64 @@ export function makeTryoutPlacementRow(
     sourceRevision: "technical-revision",
     trackKey: "2027",
   });
-  return {
-    family: "tryout",
-    record: makeTryoutPlacementRecord(row),
-    rowKind: "placement",
-  };
 }
+
+/** Creates one hashed technical try-out country row. */
+export const makeTryoutCatalogRow = Effect.fn("test.tryout.catalogRow")(
+  function* (appLocale: ActiveAppLocaleCode = "en") {
+    return {
+      family: "tryout",
+      record: yield* makeTryoutCatalogRecord(technicalCatalogRow(appLocale)),
+      rowKind: "catalog",
+    } satisfies Extract<
+      ContentSnapshotRow,
+      { readonly family: "tryout"; readonly rowKind: "catalog" }
+    >;
+  }
+);
+
+/** Creates one hashed technical try-out question placement. */
+export const makeTryoutPlacementRow = Effect.fn("test.tryout.placementRow")(
+  function* (
+    appLocale: ActiveAppLocaleCode = "en",
+    artifacts?: Pick<
+      TryoutPlacement,
+      "answerArtifactHash" | "questionArtifactHash"
+    >
+  ) {
+    return {
+      family: "tryout",
+      record: yield* makeTryoutPlacementRecord(
+        technicalPlacementRow(appLocale, artifacts)
+      ),
+      rowKind: "placement",
+    } satisfies Extract<
+      ContentSnapshotRow,
+      { readonly family: "tryout"; readonly rowKind: "placement" }
+    >;
+  }
+);
 
 /** Creates one self-authenticating technical try-out snapshot manifest. */
 export const makeTryoutSnapshotManifest = Effect.fn(
   "backendTest.makeTryoutSnapshotManifest"
 )(function* () {
+  const catalogRows = yield* Effect.forEach(ACTIVE_APP_LOCALES, (appLocale) =>
+    makeTryoutCatalogRow(appLocale)
+  );
   const catalog = Arr.sort(
-    Arr.map(ACTIVE_APP_LOCALES, (appLocale) => makeTryoutCatalogRow(appLocale)),
-    Order.mapInput(
-      Order.String,
-      (entry: ReturnType<typeof makeTryoutCatalogRow>) =>
-        tryoutCatalogIdentity(entry.record.row)
+    catalogRows,
+    Order.mapInput(Order.String, (entry: (typeof catalogRows)[number]) =>
+      tryoutCatalogIdentity(entry.record.row)
     )
   );
+  const placementRows = yield* Effect.forEach(ACTIVE_APP_LOCALES, (appLocale) =>
+    makeTryoutPlacementRow(appLocale)
+  );
   const placements = Arr.sort(
-    Arr.map(ACTIVE_APP_LOCALES, (appLocale) =>
-      makeTryoutPlacementRow(appLocale)
-    ),
-    Order.mapInput(
-      Order.String,
-      (entry: ReturnType<typeof makeTryoutPlacementRow>) =>
-        tryoutPlacementIdentity(entry.record.row)
+    placementRows,
+    Order.mapInput(Order.String, (entry: (typeof placementRows)[number]) =>
+      tryoutPlacementIdentity(entry.record.row)
     )
   );
   const catalogEvidence = yield* digestTryoutCatalog(
@@ -193,7 +213,7 @@ export const makeTryoutSnapshotManifest = Effect.fn(
   const placementEvidence = yield* digestTryoutPlacements(
     Stream.fromIterable(Arr.map(placements, ({ record }) => record))
   );
-  const manifest = makeTryoutSnapshot({
+  const manifest = yield* makeTryoutSnapshot({
     activeAppLocales: ACTIVE_APP_LOCALES,
     catalogDigest: catalogEvidence.digest,
     counts: {
@@ -219,111 +239,128 @@ export const makeTryoutSnapshotManifest = Effect.fn(
  * Callers own the technical row values; this helper only applies the real
  * contract hashing, canonical storage, and active-release proof chain.
  */
-export async function activateTryoutSnapshot(
-  ctx: MutationCtx,
-  input: {
-    readonly catalog: readonly TryoutCatalogRow[];
-    readonly placements: readonly TryoutPlacement[];
-    readonly releaseId?: string;
-  }
-) {
-  const activeAppLocales = Schema.decodeUnknownSync(ActiveAppLocaleListSchema)(
-    Arr.filter(APP_LOCALE_CODES, (appLocale) =>
-      Arr.some(input.catalog, (row) => row.appLocale === appLocale)
-    )
-  );
-  const catalog = Arr.map(
-    Arr.sort(
-      input.catalog,
-      Order.mapInput(Order.String, (row: TryoutCatalogRow) =>
-        tryoutCatalogIdentity(row)
-      )
-    ),
-    makeTryoutCatalogRecord
-  );
-  const placements = Arr.map(
-    Arr.sort(
-      input.placements,
-      Order.mapInput(Order.String, (row: (typeof input.placements)[number]) =>
-        tryoutPlacementIdentity(row)
-      )
-    ),
-    makeTryoutPlacementRecord
-  );
-  const [catalogEvidence, placementEvidence] = await Effect.runPromise(
-    Effect.all([
+export const activateTryoutSnapshot = Effect.fn("test.tryout.activateSnapshot")(
+  function* (
+    ctx: MutationCtx,
+    input: {
+      readonly catalog: readonly TryoutCatalogRow[];
+      readonly placements: readonly TryoutPlacement[];
+      readonly releaseId?: string;
+    }
+  ) {
+    const activeAppLocales = activeLocalesOf(input.catalog);
+    const catalog = yield* Effect.forEach(
+      Arr.sort(
+        input.catalog,
+        Order.mapInput(Order.String, (row: TryoutCatalogRow) =>
+          tryoutCatalogIdentity(row)
+        )
+      ),
+      makeTryoutCatalogRecord
+    );
+    const placements = yield* Effect.forEach(
+      Arr.sort(
+        input.placements,
+        Order.mapInput(Order.String, (row: (typeof input.placements)[number]) =>
+          tryoutPlacementIdentity(row)
+        )
+      ),
+      makeTryoutPlacementRecord
+    );
+    const [catalogEvidence, placementEvidence] = yield* Effect.all([
       digestTryoutCatalog(Stream.fromIterable(catalog)),
       digestTryoutPlacements(Stream.fromIterable(placements)),
-    ])
-  );
-  const manifest: ContentSnapshotManifest = {
-    family: "tryout",
-    manifest: makeTryoutSnapshot({
-      activeAppLocales,
-      catalogDigest: catalogEvidence.digest,
-      counts: countCatalog(input.catalog),
-      placementCount: placementEvidence.count,
-      placementDigest: placementEvidence.digest,
-      routeCount: Arr.filter(
-        input.catalog,
-        (row) => "publicPath" in row && row.publicPath !== undefined
-      ).length,
-    }),
-  };
-  const snapshotId = manifest.manifest.snapshotId;
-  const snapshots = {
-    ...inheritContentSnapshots(null),
-    tryout: replaceContentSnapshot({
-      baseSnapshotId: null,
-      resultSnapshotId: snapshotId,
-      rowCount: catalog.length + placements.length,
-      rowDigest: snapshotId,
-    }),
-  };
-  const releaseId = input.releaseId ?? TEST_RELEASE_ID;
-  await insertTestRelease(ctx, { activeAppLocales, releaseId, snapshots });
-  await ctx.db.insert("contentSnapshots", {
-    createdAt: 1,
-    family: "tryout",
-    retainUntil: Number.MAX_SAFE_INTEGER,
-    snapshotId,
-    snapshotJson: encodeSnapshotJson(manifest),
-    verifiedAt: 1,
-  });
-  const catalogRows = Arr.map(catalog, (record, index) => ({ index, record }));
-  for (const { index, record } of catalogRows) {
-    await insertCatalogRecord(ctx, snapshotId, index, record);
-  }
-  const placementRows = Arr.map(placements, (record, offset) => ({
-    offset,
-    record,
-  }));
-  for (const { offset, record } of placementRows) {
-    await insertPlacementRecord(
-      ctx,
-      snapshotId,
-      catalog.length + offset,
-      record
+    ]);
+    const manifest: ContentSnapshotManifest = {
+      family: "tryout",
+      manifest: yield* makeTryoutSnapshot({
+        activeAppLocales,
+        catalogDigest: catalogEvidence.digest,
+        counts: countCatalog(input.catalog),
+        placementCount: placementEvidence.count,
+        placementDigest: placementEvidence.digest,
+        routeCount: Arr.filter(
+          input.catalog,
+          (row) => "publicPath" in row && row.publicPath !== undefined
+        ).length,
+      }),
+    };
+    const snapshotId = manifest.manifest.snapshotId;
+    const snapshots = {
+      ...inheritContentSnapshots(null),
+      tryout: replaceContentSnapshot({
+        baseSnapshotId: null,
+        resultSnapshotId: snapshotId,
+        rowCount: catalog.length + placements.length,
+        rowDigest: snapshotId,
+      }),
+    };
+    const releaseId = input.releaseId ?? TEST_RELEASE_ID;
+    yield* Effect.promise(() =>
+      insertTestRelease(ctx, { activeAppLocales, releaseId, snapshots })
     );
+    yield* Effect.promise(() =>
+      ctx.db.insert("contentSnapshots", {
+        createdAt: 1,
+        family: "tryout",
+        retainUntil: Number.MAX_SAFE_INTEGER,
+        snapshotId,
+        snapshotJson: encodeSnapshotJson(manifest),
+        verifiedAt: 1,
+      })
+    );
+    const catalogRows = Arr.map(catalog, (record, index) => ({
+      index,
+      record,
+    }));
+    for (const { index, record } of catalogRows) {
+      yield* Effect.promise(() =>
+        insertCatalogRecord(ctx, snapshotId, index, record)
+      );
+    }
+    const placementRows = Arr.map(placements, (record, offset) => ({
+      offset,
+      record,
+    }));
+    for (const { offset, record } of placementRows) {
+      yield* Effect.promise(() =>
+        insertPlacementRecord(ctx, snapshotId, catalog.length + offset, record)
+      );
+    }
+    const [release, state] = yield* Effect.promise(() =>
+      Promise.all([
+        ctx.db.query("contentReleases").unique(),
+        ctx.db.query("contentState").unique(),
+      ])
+    );
+    assert.ok(release && state, "Expected one technical content release.");
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentReleases", release._id, {
+        completedAt: 1,
+        status: "completed",
+      })
+    );
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentState", state._id, {
+        activeManifestHash: TEST_MANIFEST_HASH,
+        activeReleaseId: releaseId,
+        activeSequence: 1,
+        candidateManifestHash: undefined,
+        candidateReleaseId: undefined,
+        candidateSequence: undefined,
+      })
+    );
+    return snapshotId;
   }
-  const [release, state] = await Promise.all([
-    ctx.db.query("contentReleases").unique(),
-    ctx.db.query("contentState").unique(),
-  ]);
-  assert.ok(release && state, "Expected one technical content release.");
-  await ctx.db.patch("contentReleases", release._id, {
-    completedAt: 1,
-    status: "completed",
-  });
-  await ctx.db.patch("contentState", state._id, {
-    activeManifestHash: TEST_MANIFEST_HASH,
-    activeReleaseId: releaseId,
-    activeSequence: 1,
-    candidateManifestHash: undefined,
-    candidateReleaseId: undefined,
-    candidateSequence: undefined,
-  });
-  return snapshotId;
+);
+
+/** Lists the active app locales that own at least one catalog row. */
+function activeLocalesOf(rows: readonly TryoutCatalogRow[]) {
+  return Schema.decodeUnknownSync(ActiveAppLocaleListSchema)(
+    Arr.filter(APP_LOCALE_CODES, (appLocale) =>
+      Arr.some(rows, (row) => row.appLocale === appLocale)
+    )
+  );
 }
 
 /** Counts each catalog kind for the signed technical manifest. */
@@ -342,7 +379,7 @@ function insertCatalogRecord(
   ctx: MutationCtx,
   snapshotId: string,
   index: number,
-  record: ReturnType<typeof makeTryoutCatalogRecord>
+  record: Effect.Success<ReturnType<typeof makeTryoutCatalogRecord>>
 ) {
   return ctx.db.insert("tryoutCatalog", {
     ...tryoutCatalogFacts(record),
@@ -362,7 +399,7 @@ function insertPlacementRecord(
   ctx: MutationCtx,
   snapshotId: string,
   index: number,
-  record: ReturnType<typeof makeTryoutPlacementRecord>
+  record: Effect.Success<ReturnType<typeof makeTryoutPlacementRecord>>
 ) {
   return ctx.db.insert("tryoutPlacements", {
     ...tryoutPlacementFacts(record),
@@ -376,3 +413,38 @@ function insertPlacementRecord(
     snapshotId,
   });
 }
+
+/** Activates the smallest coherent two-locale catalog in the given Convex test. */
+export const activateTryoutCatalogPair = Effect.fn("test.tryout.catalogPair")(
+  function* (t: TestConvex<typeof schema>) {
+    const runtimeServices = yield* Effect.context<never>();
+    const [countryEn, countryId] = yield* Effect.all([
+      makeTryoutCatalogRow("en"),
+      makeTryoutCatalogRow("id"),
+    ]);
+    const [placementEn, placementId] = yield* Effect.all([
+      makeTryoutPlacementRow("en"),
+      makeTryoutPlacementRow("id"),
+    ]);
+    return yield* Effect.promise(() =>
+      t.mutation((ctx) =>
+        Effect.runPromiseWith(runtimeServices)(
+          activateTryoutSnapshot(ctx, {
+            catalog: [countryEn.record.row, countryId.record.row],
+            placements: [placementEn.record.row, placementId.record.row],
+          })
+        )
+      )
+    );
+  }
+);
+
+/** Creates the catalog row and the placement row that one technical try-out snapshot stages. */
+export const makeTryoutSnapshotRows = Effect.fn("test.tryout.snapshotRows")(
+  function* () {
+    return [
+      yield* makeTryoutCatalogRow("en"),
+      yield* makeTryoutPlacementRow("en"),
+    ];
+  }
+);

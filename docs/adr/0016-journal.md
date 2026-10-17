@@ -39,6 +39,35 @@ caller passes an owner, so an entry is filed only under its subject's space.
 Each kind's authority accepts only that kind's change types, so a change of
 another kind does not compile.
 
+### Entry shape
+
+`JournalEntry` is a union by kind: one member for each kind that holds changes
+(`journal/schema.ts`). Each member is an entry with the actor, that kind's own
+change union, the owner, and the kind's own reference as its subject. The
+catalog's `Kind.changes` joins each kind's changes, its own and every
+extension's, so a subject can carry only the changes of its own kind. `record`
+decodes each entry against this union before it inserts, and the audit list's
+`ChangeView` is the same union of kinds plus one unknown member.
+
+The split is forced by Confect 10.3.0, which types a stored document's union
+member by member and fails with TS2589 above about 40 members. Measured on
+Confect 10.3.0 with throwaway tables, a flat union of 40 rich structs passes and
+45 fail. The journal once stored every change of every kind in one union of 58,
+and the table failed to typecheck. With one member per kind, each member holds
+the changes of one kind. The limit is checked at its owner, in
+`access/catalog.test.ts`: no kind may hold more than 40 changes, and no more
+than 40 kinds may hold changes. A kind past the limit is split, or its kinds are
+grouped one level higher.
+
+The kinds are listed by hand in `journal/schema.ts`. A member whose changes come
+from a generic kind, which is what a union mapped over the catalog at run time
+uses, fails the table with TS2589 on Confect 10.3.0: measured with one member
+of the same shape, the failure disappears when the member's change union is
+taken from the literal kind. Each member therefore names its kind literally, so
+its change union stays concrete. The catalog test checks that the list holds
+exactly the kinds that hold changes, so a new kind with changes fails the test
+until it is listed.
+
 ### What is recorded
 
 Privileged and record-of-truth changes: access, membership, claims, grades,
@@ -123,6 +152,8 @@ things that delete tenant entries.
   `journal/audit:list`, the tenant audit log for `audit.view`, newest first,
   at most 100 entries a page, with each Person named on a page read once and
   all of them read concurrently.
+- `JournalEntry` holds one union member per kind that holds changes, and
+  `access/catalog.test.ts` checks that list and the limit of the entry shape.
 - Wire views `ChangeView` and `SubjectView` decode a change type or kind added
   after a client was built as `unknown`.
 

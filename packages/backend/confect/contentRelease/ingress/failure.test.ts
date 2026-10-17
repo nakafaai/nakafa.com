@@ -22,8 +22,7 @@ import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_PROOF_RENDERER,
-  testEmptyManifest,
-  testSignedRelease,
+  testSignedEmptyRelease,
   testSignedTryoutRuntimeBundle,
 } from "@repo/backend/test/content/proof";
 import {
@@ -165,7 +164,7 @@ const makeRuntimeBundleRequest = Effect.fn(
   "contentReleaseTest.makeRuntimeBundleRequest"
 )(function* () {
   const snapshot = (yield* makeTryoutSnapshotManifest()).manifest;
-  const signedRelease = testSignedRelease(testEmptyManifest(TEST_RELEASE_ID));
+  const signedRelease = yield* testSignedEmptyRelease(TEST_RELEASE_ID);
   const decoded = request({
     bundle: testSignedTryoutRuntimeBundle({
       release: signedRelease,
