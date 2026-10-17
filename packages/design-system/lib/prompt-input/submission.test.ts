@@ -163,6 +163,42 @@ describe("prompt input submission", () => {
       })
   );
 
+  it.effect("takes the refusals of a press with text and no file", () =>
+    Effect.gen(function* () {
+      const dismissRefusals = vi.fn();
+
+      yield* submitPromptInput({
+        dismissRefusals,
+        event: "submit-event",
+        files: [],
+        onSubmit: () => true,
+        onSuccess: vi.fn(),
+        refusals: [createRefusal()],
+        text: "Explain this lesson.",
+      });
+
+      expect(dismissRefusals).toHaveBeenCalledWith([createRefusal()]);
+    })
+  );
+
+  it.effect("takes the refusals of a press with a file and no text", () =>
+    Effect.gen(function* () {
+      const dismissRefusals = vi.fn();
+
+      yield* submitPromptInput({
+        dismissRefusals,
+        event: "submit-event",
+        files: [createPromptFile()],
+        onSubmit: () => true,
+        onSuccess: vi.fn(),
+        refusals: [createRefusal()],
+        text: "",
+      });
+
+      expect(dismissRefusals).toHaveBeenCalledWith([createRefusal()]);
+    })
+  );
+
   it.effect("types synchronous consumer failures", () =>
     Effect.gen(function* () {
       const cause = new Error("Submit failed immediately.");
