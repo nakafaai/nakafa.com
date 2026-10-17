@@ -3,6 +3,14 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 import { createSchool, hostAddress } from "@/e2e/support/school";
 
+/**
+ * The address where the app's standalone not-found page answers, and the
+ * request header in which the proxy names its language, as e2e/state/missing
+ * explains.
+ */
+const STANDALONE_ADDRESS = "/_not-found";
+const LOCALE_HEADER = "x-next-intl-locale";
+
 /** A school address that no school holds, so the school host answers not found. */
 const UNKNOWN_SCHOOL = "zz-unknown";
 
@@ -63,7 +71,15 @@ test("the not-found page of an unknown school links to Nakafa, because the schoo
   page,
   baseURL,
 }) => {
-  await page.goto(hostAddress(baseURL, `${UNKNOWN_SCHOOL}.localhost`, "/"));
+  // The proxy rewrites the unknown school to the standalone not-found page.
+  // On Vercel the rewrite reaches the app's page; a local production build
+  // draws the app's page only at its own address and answers the rewrite with
+  // the framework's built-in page. So the page is opened at its address on the
+  // school host, with the language header the proxy sets.
+  await page.setExtraHTTPHeaders({ [LOCALE_HEADER]: "en" });
+  await page.goto(
+    hostAddress(baseURL, `${UNKNOWN_SCHOOL}.localhost`, STANDALONE_ADDRESS)
+  );
 
   await expect(
     page.getByRole("link", { exact: true, name: "Go home" })

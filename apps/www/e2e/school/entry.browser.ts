@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { createSchool, hostAddress } from "@/e2e/support/school";
@@ -34,9 +33,9 @@ test("a learner who is not a member of an existing school gets not found", async
 
   const response = await page.goto(schoolHome);
 
+  // The page the 404 shows is checked at its own address in host.browser.ts:
+  // a local production build answers the proxy's rewrite with the framework's
+  // built-in page.
   expect(response?.status()).toBe(404);
-  await expect(
-    page.getByRole("link", { exact: true, name: "Go home" })
-  ).toHaveAttribute("href", new URL("/en", SITE_ORIGIN).href);
   await context.close();
 });
