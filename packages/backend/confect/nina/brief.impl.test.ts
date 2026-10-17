@@ -2,7 +2,11 @@ import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";
-import { copyOf, sealThreadIn } from "@repo/backend/test/nina/seal";
+import {
+  copyOf,
+  sealThreadIn,
+  writtenThreadIn,
+} from "@repo/backend/test/nina/seal";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { Array as Arr } from "effect";
 
@@ -72,19 +76,30 @@ describe("the brief of a Nina turn", () => {
   });
 
   it("tells what the turn knows of the learner from a sealed message as from a plain one", async () => {
-    /** The brief of a turn whose prompt is plain, or sealed in place, with the same memory. */
-    const briefWith = async (sealed: boolean) => {
+    /** The brief of a turn whose prompt is plain, written by the writers, or sealed in place, with the same memory. */
+    const briefWith = async (copy: "plain" | "written" | "sealed") => {
       const f = await fixture();
       await f.seed({ text: "Mau ikut SNBT 2027." });
       // The newer memory comes first when the words of the prompt are not read.
       await f.seed({ text: "Suka contoh soal dulu." });
-      const replacements = sealed
-        ? await sealThreadIn(f.t, f.threadId, f.identity.userId)
-        : [];
-      return briefOf(f, copyOf(replacements, f.promptMessageId));
+      let promptId = f.promptMessageId;
+      if (copy !== "plain") {
+        promptId = copyOf(
+          await writtenThreadIn(f.t, f.threadId, f.identity.userId),
+          promptId
+        );
+      }
+      if (copy === "sealed") {
+        promptId = copyOf(
+          await sealThreadIn(f.t, f.threadId, f.identity.userId),
+          promptId
+        );
+      }
+      return briefOf(f, promptId);
     };
-    const plain = await briefWith(false);
-    const sealed = await briefWith(true);
+    const plain = await briefWith("plain");
+    expect(await briefWith("written")).toEqual(plain);
+    const sealed = await briefWith("sealed");
     expect(sealed).toEqual(plain);
     expect(sealed.learner.recalled[0]).toMatchObject({
       text: "Mau ikut SNBT 2027.",

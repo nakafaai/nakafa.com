@@ -26,9 +26,10 @@ afterEach(() => {
 
 /**
  * The writer's model input and the summary that one fold leaves, over the same
- * nine turns, with the chat plain or with every row sealed in place (ADR 0024).
+ * nine turns, with the chat plain, with its prompts written by the writers, or with
+ * every row sealed in place (ADR 0024).
  */
-async function foldOf(sealed: boolean) {
+async function foldOf(copy: "plain" | "written" | "sealed") {
   const model = summaryModel("- A tidy fold.");
   provider.languageModel.mockReturnValue(model);
   // Order 2 was cancelled after it wrote some text, and order 3 asks the question of order 1 again.
@@ -40,7 +41,7 @@ async function foldOf(sealed: boolean) {
       }
       return order === 3 ? { ...BIG, retryOf: 1 } : BIG;
     },
-    { sealed }
+    { copy }
   );
   await f.refresh(8);
   return {
@@ -409,8 +410,9 @@ describe("Nina rolling summary", () => {
   });
 
   it("folds a sealed thread into the same writer input and summary as a plain one", async () => {
-    const plain = await foldOf(false);
-    const sealed = await foldOf(true);
+    const plain = await foldOf("plain");
+    expect(await foldOf("written")).toEqual(plain);
+    const sealed = await foldOf("sealed");
     expect(sealed).toEqual(plain);
     expect(sealed.text).toBe("- A tidy fold.");
     expect(sealed.summary).toEqual([
