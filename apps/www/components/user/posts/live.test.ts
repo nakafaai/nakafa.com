@@ -99,11 +99,11 @@ describe("posts list view", () => {
 describe("posts live subscription", () => {
   const authorId = Schema.decodeUnknownSync(Id("users"))("author");
 
-  it("asks for the author's posts once Convex confirms the session", () => {
+  it("asks for the author's posts once Convex has settled the session, signed in or not", () => {
     expect(livePostsArgs(authorId, true)).toEqual({ authorId });
   });
 
-  it("asks for nothing before Convex confirms the session, so no empty answer replaces the server's page", () => {
+  it("asks for nothing while Convex has not settled the session, so the server's page stands in", () => {
     expect(livePostsArgs(authorId, false)).toBe("skip");
   });
 });

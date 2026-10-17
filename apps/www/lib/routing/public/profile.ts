@@ -1,5 +1,6 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
+import users from "@repo/backend/confect/_generated/refs/users";
 import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, Option } from "effect";
 import { hasLocale } from "next-intl";
@@ -28,13 +29,14 @@ const readRequestAccount = Effect.fn("www.routing.publicHtml.profileAccount")(
 );
 
 /**
- * Decides, before the page renders, who opens the address of a profile,
- * `/{locale}/@username` and its tabs: only the account that holds the
- * username (`readProfile` says why). Every other request is answered here with
- * the app's not-found page and a 404 status, the answer for a username nobody
- * holds, so the page never starts a stream that it would have to end as not
- * found. The answer is the locale of that page, or null when the path is no
- * profile address or its owner asks.
+ * Decides, before the page renders, whether an address of a profile,
+ * `/{locale}/@username` and its tabs, is not found: a username that nobody
+ * holds, or the Chat tab of a profile that the request's account does not hold.
+ * Anyone may open a profile and its Posts and Comments (`readProfile` reads it),
+ * and its chats are its owner's alone. Such an address is answered here, with the
+ * app's not-found page and a 404 status, so the page never starts a stream that
+ * it would have to end as not found. The answer is the locale of that page, or
+ * null when the path is no profile address or the request may open it.
  */
 export const readProfileRefusal = Effect.fn(
   "www.routing.publicHtml.profileRefusal"
@@ -53,8 +55,22 @@ export const readProfileRefusal = Effect.fn(
   if (Option.isNone(username)) {
     return null;
   }
+  const profile = yield* HttpClient.HttpClient.pipe(
+    Effect.flatMap((client) =>
+      client.query(users.queries.getProfileByUsername, {
+        username: username.value,
+      })
+    ),
+    Effect.provide(httpLayer())
+  );
+  if (profile === null) {
+    return locale;
+  }
+  if (tab[0] !== "chat") {
+    return null;
+  }
   const account = yield* readRequestAccount(headers);
-  return account?.appUser.username === username.value ? null : locale;
+  return account?.appUser.username === profile.username ? null : locale;
 });
 
 /**
@@ -63,12 +79,12 @@ export const readProfileRefusal = Effect.fn(
  * address is retired for good, so the answer is permanent (308) even though the
  * username it names can change.
  *
- * Only the account itself opens its profile (see `readProfile`), so only a
- * request that carries the session of the account in the path is sent on. Any
- * other request, and the id of an account that holds no username yet, is no
- * retired address: the path falls to route ownership and is not found, and the
- * answer never tells whether an id exists. A path that is no profile address,
- * and `settings`, the one fixed page below `user`, ask nobody.
+ * Only the request of the account itself is sent on: a retired id address is
+ * answered for its own account alone. Any other request, and the id of an
+ * account that holds no username yet, is no retired address: the path falls to
+ * route ownership and is not found, and the answer never tells whether an id
+ * exists. A path that is no profile address, and `settings`, the one fixed page
+ * below `user`, ask nobody.
  */
 export const readProfileRedirect = Effect.fn(
   "www.routing.publicHtml.profileRedirect"

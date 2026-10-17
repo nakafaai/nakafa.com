@@ -40,6 +40,6 @@ function UserCommentsRoute({
   params,
 }: Pick<PageProps<"/[locale]/user/[username]/comments">, "params">) {
   const { username } = use(params);
-  const { account } = use(readProfile(username));
-  return <UserComments userId={account.appUser._id} />;
+  const { profile } = use(readProfile(username));
+  return <UserComments userId={profile._id} />;
 }

@@ -100,7 +100,7 @@ test("the retired id address leads its own learner to the username address for g
   );
 });
 
-test("a visitor finds neither the profile of a learner nor the retired id address", async ({
+test("a visitor reads the profile of a learner but finds neither its chats nor the retired id address", async ({
   baseURL,
   browser,
   page,
@@ -112,16 +112,18 @@ test("a visitor finds neither the profile of a learner nor the retired id addres
 
       yield* withReader(browser, origin, (visitor) =>
         Effect.promise(async () => {
-          // Nothing tells the visitor whether the username exists, and the
-          // answer is a real 404, decided before the page renders. `next
-          // start` draws the framework's own 404 for an address the proxy
-          // rewrites, where Vercel draws the app's page, so the status is the
-          // contract here.
+          // Anyone may read a profile.
           const answer = await visitor.goto(`/en/@${learner.username}`);
-          expect(answer?.status()).toBe(404);
+          expect(answer?.status()).toBe(200);
           await expect(
-            visitor.getByText(LEARNER_NAME, { exact: true })
-          ).toHaveCount(0);
+            visitor
+              .locator("main header")
+              .getByText(LEARNER_NAME, { exact: true })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+          // Its chats are its owner's alone, and the answer is a real 404,
+          // decided before the page renders. `next start` draws the
+          // framework's own 404 for an address the proxy rewrites, where
+          // Vercel draws the app's page, so the status is the contract here.
           const chats = await visitor.goto(`/en/@${learner.username}/chat`);
           expect(chats?.status()).toBe(404);
         })

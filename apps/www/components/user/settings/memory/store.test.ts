@@ -385,4 +385,37 @@ describe("memory page store", () => {
     newer.getState().leave(1);
     expect(newer.getState()).toMatchObject({ open: true, target: second });
   });
+
+  it("names the memory an opening began with, and none for a new memory", () => {
+    const store = createMemoryStore();
+
+    store.getState().openEdit(first);
+    expect(store.getState().opener).toBe(first.id);
+
+    store.getState().openNew();
+    expect(store.getState().opener).toBeNull();
+  });
+
+  it("keeps no memory as the opener of a new memory, though its first save stores one", () => {
+    const store = createMemoryStore();
+
+    store.getState().openNew();
+    store.getState().adopt(store.getState().session, first);
+
+    expect(store.getState()).toMatchObject({ opener: null, target: first });
+  });
+
+  it("names the memory of a draft that opens again, not the memory the editor held before", () => {
+    const store = createMemoryStore();
+
+    store.getState().openEdit(second);
+    store.getState().close();
+    store.getState().reopen(store.getState().session, grade, first);
+
+    expect(store.getState()).toMatchObject({
+      opener: first.id,
+      open: true,
+      target: first,
+    });
+  });
 });

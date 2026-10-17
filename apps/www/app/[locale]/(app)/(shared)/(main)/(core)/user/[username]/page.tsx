@@ -50,7 +50,7 @@ async function UserPostsRoute({
   params,
 }: Pick<PageProps<"/[locale]/user/[username]">, "params">) {
   const { username } = await params;
-  const [{ account }, token] = await Promise.all([
+  const [{ isOwner, profile }, token] = await Promise.all([
     readProfile(username),
     getToken(),
   ]);
@@ -59,7 +59,7 @@ async function UserPostsRoute({
       first: HttpClient.HttpClient.pipe(
         Effect.flatMap((client) =>
           client.query(posts.queries.list, {
-            authorId: account.appUser._id,
+            authorId: profile._id,
             paginationOpts: { cursor: null, numItems: POST_PAGE_SIZE },
           })
         ),
@@ -74,5 +74,7 @@ async function UserPostsRoute({
       now: Clock.currentTimeMillis,
     })
   );
-  return <UserPosts account={account} first={first} now={now} />;
+  return (
+    <UserPosts first={first} isOwner={isOwner} now={now} profile={profile} />
+  );
 }
