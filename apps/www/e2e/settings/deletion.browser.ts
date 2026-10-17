@@ -7,7 +7,7 @@ import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { compactViewport } from "@/e2e/support/viewport";
+import { compactViewport, touchViewport } from "@/e2e/support/viewport";
 
 /** The destructive card that holds the account deletion, the only one on the page. */
 const deletionCard = (page: Page) =>
@@ -23,6 +23,9 @@ const deleteAction = (page: Page) =>
     exact: true,
     name: app.Auth["delete-account"],
   });
+
+/** The icon inside the delete action, which a narrow footer hides. */
+const deleteIcon = (page: Page) => deleteAction(page).locator("svg");
 
 /**
  * The top edge of each line that a button's label takes. A label on one line has
@@ -59,6 +62,16 @@ const verifyActionAtLargeText = Effect.fn(
   const actions = yield* Effect.promise(() =>
     readFooterActions(actionsOf(page))
   );
+  const tops = yield* Effect.promise(() => labelTops(deleteAction(page)));
+  const overflowWrap = yield* Effect.promise(() =>
+    deleteAction(page).evaluate(
+      (element) => getComputedStyle(element).overflowWrap
+    )
+  );
+  yield* Effect.promise(async () => {
+    await expect(deleteIcon(page)).toHaveCount(1);
+    await expect(deleteIcon(page)).toBeHidden();
+  });
 
   yield* Effect.sync(() => {
     expect(rootSize).toBe("32px");
@@ -69,6 +82,37 @@ const verifyActionAtLargeText = Effect.fn(
       expect(action.inside).toBe(true);
       expect(action.clipped).toBe(false);
     }
+    // A narrow footer wraps the label between words, never inside a word.
+    expect(overflowWrap).toBe("normal");
+    expect(Arr.dedupe(tops).length).toBeLessThanOrEqual(2);
+  });
+});
+
+const verifyActionWithIconAtDefaultText = Effect.fn(
+  "NakafaE2E.verifyDeleteActionWithIconAtDefaultText"
+)(function* (page: Page, origin: string) {
+  yield* openSettings(page, origin);
+  const actions = yield* Effect.promise(() =>
+    readFooterActions(actionsOf(page))
+  );
+  const tops = yield* Effect.promise(() => labelTops(deleteAction(page)));
+  const box = yield* Effect.promise(() => deleteAction(page).boundingBox());
+  yield* Effect.promise(async () => {
+    await expect(deleteIcon(page)).toHaveCount(1);
+    await expect(deleteIcon(page)).toBeVisible();
+  });
+
+  yield* Effect.sync(() => {
+    expect(Arr.map(actions, ({ label }) => label)).toEqual([
+      app.Auth["delete-account"],
+    ]);
+    for (const action of actions) {
+      expect(action.inside).toBe(true);
+      expect(action.clipped).toBe(false);
+    }
+    expect(Arr.dedupe(tops)).toHaveLength(1);
+    // The default size is h-9, which is 36 px at the default root font size.
+    expect(box?.height).toBe(36);
   });
 });
 
@@ -99,7 +143,7 @@ test.describe("the account deletion card on the smallest phone", () => {
     viewport: { height: compactViewport.height, width: compactViewport.width },
   });
 
-  test("keeps the delete action inside its card at 200% text", async ({
+  test("keeps the delete action inside its card at 200% text, in whole words", async ({
     baseURL,
     page,
   }) => {
@@ -114,6 +158,21 @@ test.describe("the account deletion card on the smallest phone", () => {
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       verifyActionOnOneLine(page, origin)
+    );
+  });
+});
+
+test.describe("the account deletion card on a standard phone", () => {
+  test.use({
+    viewport: { height: touchViewport.height, width: touchViewport.width },
+  });
+
+  test("shows the delete icon and a one-line label at the default text size", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      verifyActionWithIconAtDefaultText(page, origin)
     );
   });
 });
