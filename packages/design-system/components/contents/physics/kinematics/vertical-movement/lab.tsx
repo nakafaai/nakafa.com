@@ -19,6 +19,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -127,43 +128,47 @@ export function VerticalMovementLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <LabFact
+              label={labels.initialCondition}
+              value={<InlineMath math={formatInitialConditionMath(motion)} />}
+            />
+            <LabFact
+              label={labels.maxHeight}
+              value={
+                <InlineMath
+                  math={formatTrimmedMeterMath(
+                    motion.maxHeight,
+                    decimalSeparator
+                  )}
+                />
+              }
+            />
+            <LabFact
+              label={labels.time}
+              value={
+                <InlineMath
+                  math={formatTrimmedSecondMath(
+                    motion.motionTime,
+                    decimalSeparator
+                  )}
+                />
+              }
+            />
+            <LabFact
+              label={labels.finalVelocity}
+              value={
+                <InlineMath
+                  math={formatRoundedSpeedMath(motion.finalVelocity)}
+                />
+              }
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <LabFact
-            label={labels.initialCondition}
-            value={<InlineMath math={formatInitialConditionMath(motion)} />}
-          />
-          <LabFact
-            label={labels.maxHeight}
-            value={
-              <InlineMath
-                math={formatTrimmedMeterMath(
-                  motion.maxHeight,
-                  decimalSeparator
-                )}
-              />
-            }
-          />
-          <LabFact
-            label={labels.time}
-            value={
-              <InlineMath
-                math={formatTrimmedSecondMath(
-                  motion.motionTime,
-                  decimalSeparator
-                )}
-              />
-            }
-          />
-          <LabFact
-            label={labels.finalVelocity}
-            value={
-              <InlineMath math={formatRoundedSpeedMath(motion.finalVelocity)} />
-            }
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

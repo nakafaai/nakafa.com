@@ -23,6 +23,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -141,19 +142,21 @@ export function MatterParticleReaderLab({
         <p className="text-muted-foreground text-sm">
           {selectedLabels.helperCaption}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact
+              label={labels.categoryLabel}
+              value={selectedLabels.category}
+            />
+            <VisualFact
+              label={labels.readingLabel}
+              value={selectedLabels.reading}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact
-            label={labels.categoryLabel}
-            value={selectedLabels.category}
-          />
-          <VisualFact
-            label={labels.readingLabel}
-            value={selectedLabels.reading}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

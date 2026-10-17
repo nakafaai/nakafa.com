@@ -23,6 +23,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -139,19 +140,21 @@ export function MassConservationLab({
         <p className="text-muted-foreground text-sm">
           {selectedLabels.helperCaption}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact
+              label={labels.systemLabel}
+              value={selectedLabels.system}
+            />
+            <VisualFact
+              label={labels.calculationLabel}
+              value={selectedLabels.calculation}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact
-            label={labels.systemLabel}
-            value={selectedLabels.system}
-          />
-          <VisualFact
-            label={labels.calculationLabel}
-            value={selectedLabels.calculation}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
