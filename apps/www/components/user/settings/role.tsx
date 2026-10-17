@@ -39,7 +39,12 @@ const formSchema = Schema.toStandardSchemaV1(
     role: roleSchema,
   })
 );
-/** Renders the settings form that validates and saves the user's app role. */
+/**
+ * Renders the settings form that validates and saves the user's app role. A
+ * save does not wait: the optimistic update shows the new role at once, so
+ * Save has nothing left to save, and a refused save returns the stored role,
+ * so Save offers the chosen role again beside the error toast.
+ */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const roleItems = Arr.map(roles, (role) => ({
@@ -65,20 +70,13 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) =>
+    onSubmit: ({ value }) => {
       Effect.runPromise(
         Schema.decodeUnknownEffect(roleSchema)(value.role).pipe(
           Effect.flatMap((role) =>
             Effect.tryPromise(() => updateUserRole({ role }))
           ),
           Effect.flatMap(Effect.fromResult),
-          Effect.tap(() =>
-            Effect.sync(() => {
-              if (form.getFieldValue("role") === value.role) {
-                form.reset(value);
-              }
-            })
-          ),
           Effect.matchEffect({
             onSuccess: () => Effect.void,
             onFailure: (error) =>
@@ -96,7 +94,8 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               ),
           })
         )
-      ),
+      );
+    },
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-role-form">
@@ -146,15 +145,13 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
           </form.Field>
         </CardContent>
         <CardSectionFooter>
-          <form.Subscribe
-            selector={(state) => [state.isDirty, state.isSubmitting]}
-          >
-            {([isDirty, isSubmitting]) => (
+          <form.Subscribe selector={(state) => state.values.role}>
+            {(role) => (
               <>
                 <CardSectionHint>{t("role-footer")}</CardSectionHint>
                 <CardSectionActions>
                   <Button
-                    disabled={!isDirty || isSubmitting}
+                    disabled={role === undefined || role === initialRole}
                     size="sm"
                     type="submit"
                   >

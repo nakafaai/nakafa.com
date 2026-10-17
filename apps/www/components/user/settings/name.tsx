@@ -11,7 +11,7 @@ import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import {
   CardSection,
@@ -33,7 +33,12 @@ const formSchema = Schema.toStandardSchemaV1(
     ),
   })
 );
-/** Render the validated optimistic user-name settings form. */
+/**
+ * Render the validated user-name settings form. A save does not wait: the
+ * optimistic update shows the new name at once, so Save has nothing left to
+ * save, and a refused save returns the stored name, so Save offers the typed
+ * name again beside the error toast.
+ */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const updateUserName = useUpdateUserNameMutation();
@@ -44,21 +49,12 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) =>
+    onSubmit: ({ value }) => {
       Effect.runPromise(
         Effect.tryPromise(() =>
-          updateUserName({
-            name: value.name,
-          })
+          updateUserName({ name: Str.trim(value.name) })
         ).pipe(
           Effect.flatMap(Effect.fromResult),
-          Effect.tap(() =>
-            Effect.sync(() => {
-              if (form.getFieldValue("name") === value.name) {
-                form.reset(value);
-              }
-            })
-          ),
           Effect.matchEffect({
             onSuccess: () => Effect.void,
             onFailure: (error) =>
@@ -76,7 +72,8 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               ),
           })
         )
-      ),
+      );
+    },
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-name-form">
@@ -113,26 +110,22 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
         </CardContent>
         <CardSectionFooter>
           <form.Subscribe
-            selector={(state) => [
-              state.isDirty,
-              state.isValid,
-              state.isSubmitting,
-            ]}
+            selector={(state) => [state.values.name, state.isValid] as const}
           >
-            {([isDirty, isValid, isSubmitting]) => {
-              const canSubmit = Boolean(isDirty) && Boolean(isValid);
-              const isDisabled = !canSubmit || Boolean(isSubmitting);
-              return (
-                <>
-                  <CardSectionHint>{t("name-footer")}</CardSectionHint>
-                  <CardSectionActions>
-                    <Button disabled={isDisabled} size="sm" type="submit">
-                      {t("save")}
-                    </Button>
-                  </CardSectionActions>
-                </>
-              );
-            }}
+            {([name, isValid]) => (
+              <>
+                <CardSectionHint>{t("name-footer")}</CardSectionHint>
+                <CardSectionActions>
+                  <Button
+                    disabled={!isValid || Str.trim(name) === user.authUser.name}
+                    size="sm"
+                    type="submit"
+                  >
+                    {t("save")}
+                  </Button>
+                </CardSectionActions>
+              </>
+            )}
           </form.Subscribe>
         </CardSectionFooter>
       </CardSection>
