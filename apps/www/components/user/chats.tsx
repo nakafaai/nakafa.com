@@ -117,8 +117,8 @@ function OwnChatsList() {
 /**
  * One chat, as a post of the owner: the owner's picture, then the name, the age,
  * whether the chat is private or shared, and its More menu on one line, then
- * the title on up to two lines. The title is the row's link, and the whole row
- * opens the chat.
+ * the whole title, which holds at most 80 characters. The title is the row's
+ * link, and the whole row opens the chat.
  */
 function ChatRow({
   chat,
@@ -164,7 +164,7 @@ function ChatRow({
           </FeedEnd>
         </FeedHeader>
         <NavigationLink
-          className="wrap-anywhere line-clamp-2 rounded-sm outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="wrap-anywhere rounded-sm outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           dir="auto"
           href={`/chat/${chat._id}`}
         >

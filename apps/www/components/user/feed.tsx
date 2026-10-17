@@ -91,7 +91,9 @@ export function FeedText({ children }: { children: string }) {
 
 /**
  * The actions of a row, side by side at their own widths. The row moves in by
- * the first button's padding, so the first icon starts on the content's edge.
+ * the first button's padding, so the first icon starts on the content's edge,
+ * and down by the buttons' lower padding, so the icons end as far above the
+ * row's border as the avatar starts below the row above.
  */
 export function FeedActions({
   children,
@@ -101,7 +103,7 @@ export function FeedActions({
   inert?: boolean;
 }) {
   return (
-    <div className="-ms-2.5 mt-1 flex items-center" inert={inert}>
+    <div className="-ms-2.5 -mb-2 flex items-center" inert={inert}>
       {children}
     </div>
   );
