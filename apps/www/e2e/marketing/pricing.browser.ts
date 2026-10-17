@@ -57,11 +57,8 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   );
   const freePlan = page.locator('[data-pricing-plan="free"]');
   yield* Effect.promise(() =>
-    expect(freePlan.getByText("No card.", { exact: true })).toBeVisible()
-  );
-  yield* Effect.promise(() =>
     expect(
-      freePlan.getByText("No trial period.", { exact: true })
+      freePlan.getByText("No card. No trial period.", { exact: true })
     ).toBeVisible()
   );
   yield* Effect.promise(() =>

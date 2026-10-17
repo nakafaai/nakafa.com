@@ -54,7 +54,7 @@ export function Header() {
           className="flex self-end"
           data-slot="header-nina"
         >
-          <Nina act="greeting" label="" lean="peek" size={52} />
+          <Nina act="greeting" label="" lean="peek" size={60} />
         </div>
 
         <div className="flex items-center justify-end gap-2">

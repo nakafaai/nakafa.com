@@ -24,8 +24,8 @@ function Comparison({
   title: string;
 }) {
   return (
-    <div className="grid justify-items-center gap-2 text-center">
-      <span className="flex h-6 items-center justify-center">{picture}</span>
+    <div className="grid content-start justify-items-center gap-2 text-center">
+      <span className="flex h-12 items-center justify-center">{picture}</span>
       <p className="mt-2 font-medium text-xl tabular-nums tracking-tight">
         {title}
       </p>
@@ -36,12 +36,12 @@ function Comparison({
   );
 }
 
-/** The coin of a price: its currency symbol in a round yellow badge the size of an icon. */
+/** The coin of a price: its currency symbol in a round yellow badge as tall as the other pictures. */
 function PriceCoin({ symbol }: { symbol: string }) {
   return (
     <span
       aria-hidden="true"
-      className="inline-flex size-6 items-center justify-center rounded-full bg-pop-yellow font-bold text-[10px] text-nina-ink"
+      className="inline-flex size-11 items-center justify-center rounded-full bg-pop-yellow font-bold text-base text-nina-ink"
     >
       {symbol}
     </span>
@@ -77,7 +77,7 @@ function ResolvedComparison() {
           picture={
             <span className="flex gap-1">
               {Arr.makeBy(sums.drinks, (index) => (
-                <Thing key={index} name="coffee" size={20} />
+                <Thing key={index} name="coffee" size={40} />
               ))}
             </span>
           }
@@ -96,7 +96,7 @@ function ResolvedComparison() {
         <Comparison
           note={t("answers-note", { perDay: sums.answersPerDay })}
           picture={
-            <Nina label="" lean="right" mood="aha" size={24} tile="cream" />
+            <Nina label="" lean="right" mood="aha" size={44} tile="cream" />
           }
           title={t("answers-title", { answers: sums.answersPerMonth })}
         />
