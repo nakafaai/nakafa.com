@@ -9,4 +9,8 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["thread"]: RegisteredConvexFunction.register({ ...definitions["thread"], handler: forward(definitions["thread"].handler) }),
 ["message"]: RegisteredConvexFunction.register({ ...definitions["message"], handler: forward(definitions["message"].handler) }),
+["seal"]: RegisteredConvexFunction.register({ ...definitions["seal"], handler: forward(definitions["seal"].handler) }),
+["drain"]: RegisteredConvexFunction.register({ ...definitions["drain"], handler: forward(definitions["drain"].handler) }),
+["candidates"]: RegisteredConvexFunction.register({ ...definitions["candidates"], handler: forward(definitions["candidates"].handler) }),
+["recordFailure"]: RegisteredConvexFunction.register({ ...definitions["recordFailure"], handler: forward(definitions["recordFailure"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../nina/sealed.spec")["default"]>;

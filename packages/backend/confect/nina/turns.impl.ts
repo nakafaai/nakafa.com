@@ -24,14 +24,14 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { requireOpenCapacity } from "@repo/backend/confect/nina/capacity";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { START_DEADLINE } from "@repo/backend/confect/nina/deadline";
+import { requestFingerprint } from "@repo/backend/confect/nina/fingerprint";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import { savePrompt } from "@repo/backend/confect/nina/sealed/save";
 import { settleStopped } from "@repo/backend/confect/nina/settlement";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
-import { sha256Hex } from "@repo/utilities/digest";
-import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Clock, Duration, Effect, Layer, Schema } from "effect";
+import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
+import { Array as Arr, Clock, Duration, Effect, Layer } from "effect";
 
 const writeFailure = () =>
   new NinaTurnError({
@@ -61,13 +61,15 @@ const start = FunctionImpl.make(
     }
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const fingerprintText = yield* Schema.encodeEffect(JsonTextSchema)([
-      args.chatId ?? null,
-      args.input,
-    ]).pipe(Effect.mapError(writeFailure));
-    const fingerprint = yield* sha256Hex(fingerprintText).pipe(
+    // The learner's keys seal the prompt and key the fingerprint, so one read serves both.
+    const keys = yield* ensureLearnerKeys(appUser._id).pipe(
       Effect.mapError(writeFailure)
     );
+    const fingerprint = yield* requestFingerprint(
+      keys,
+      args.chatId ?? null,
+      args.input
+    ).pipe(Effect.mapError(writeFailure));
     const existing = yield* reader
       .table("ninaTurns")
       .get("by_userId_and_requestId", appUser._id, args.requestId)
@@ -144,7 +146,7 @@ const start = FunctionImpl.make(
           updatedAt: now,
         })
         .pipe(Effect.orDie));
-    const saved = yield* savePrompt(ctx, appUser._id, {
+    const saved = yield* savePrompt(ctx, keys, {
       fileIds: prompt.fileIds,
       message: prompt.message,
       threadId,

@@ -1,6 +1,7 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import schema from "@repo/backend/confect/_generated/schema";
 import type { QueryRunner } from "@repo/backend/confect/_generated/services";
+import { requestFingerprint } from "@repo/backend/confect/nina/fingerprint";
 import { readFile, sealFileName } from "@repo/backend/confect/nina/sealed/file";
 import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import { savePrompt } from "@repo/backend/confect/nina/sealed/save";
@@ -8,15 +9,20 @@ import {
   readThread,
   type ThreadRead,
 } from "@repo/backend/confect/nina/sealed/thread";
+import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import {
   type createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { BLIND_BYTES } from "@repo/backend/confect/vault/cipher";
 import {
   ensureLearnerKeys,
   readLearnerKeys,
 } from "@repo/backend/confect/vault/keys";
+import { sha256 } from "@repo/utilities/digest";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
+import { Base64Url } from "effect/encoding";
 
 /** A test deployment of the backend, as the sealed reads are run against it. */
 type Deployment = ReturnType<typeof createConvexTestWithBetterAuth>;
@@ -33,7 +39,8 @@ type Prompt = Parameters<typeof savePrompt>[2];
 export function savePromptIn(t: Deployment, owner: Owner, prompt: Prompt) {
   return t.mutation((ctx) =>
     Effect.runPromise(
-      savePrompt(ctx, owner, prompt).pipe(
+      ensureLearnerKeys(owner).pipe(
+        Effect.flatMap((keys) => savePrompt(ctx, keys, prompt)),
         Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
       )
     )
@@ -48,7 +55,8 @@ export function savePromptFailureIn(
 ) {
   return t.mutation((ctx) =>
     Effect.runPromise(
-      savePrompt(ctx, owner, prompt).pipe(
+      ensureLearnerKeys(owner).pipe(
+        Effect.flatMap((keys) => savePrompt(ctx, keys, prompt)),
         Effect.flip,
         Effect.map((failure) => failure._tag),
         Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
@@ -202,6 +210,46 @@ export function inAction<A, E>(
   return t.action((ctx) =>
     Effect.runPromise(
       body.pipe(Effect.provide(RegisteredFunction.actionLayer(schema, ctx)))
+    )
+  );
+}
+
+/**
+ * The unkeyed fingerprint of a request: the SHA-256 of the same JSON that
+ * `requestFingerprint` keys, cut to the length of a blind value and written in the same
+ * URL-safe Base64. A value stored without a key would hold this one, so a test that
+ * compares a stored or computed fingerprint with it fails when the key is removed.
+ */
+export const unkeyedFingerprint = Effect.fn("test.nina.sealed.unkeyed")(
+  function* (chatId: string | null, input: typeof NinaInput.Type) {
+    const digest = yield* sha256(
+      new TextEncoder().encode(encodeJsonText([chatId, input]))
+    );
+    return Base64Url.encode(digest.slice(0, BLIND_BYTES));
+  }
+);
+
+/**
+ * The fingerprint that `turns.start` stores for a request of a learner, keyed as the
+ * admission keys it, next to the unkeyed fingerprint of the same request, in a mutation
+ * of the test deployment.
+ */
+export function fingerprintsIn(
+  t: Deployment,
+  learner: Owner,
+  input: typeof NinaInput.Type
+) {
+  return t.mutation((ctx) =>
+    Effect.runPromise(
+      ensureLearnerKeys(learner).pipe(
+        Effect.flatMap((keys) =>
+          Effect.all({
+            keyed: requestFingerprint(keys, null, input),
+            unkeyed: unkeyedFingerprint(null, input),
+          })
+        ),
+        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+      )
     )
   );
 }

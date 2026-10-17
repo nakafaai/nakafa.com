@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { readRing } from "@repo/backend/confect/vault/ring";
 import { Array as Arr, ConfigProvider, Effect, HashMap, Order } from "effect";
 import { Base64 } from "effect/encoding";
@@ -54,4 +54,20 @@ describe("vault root keys", () => {
       }
     })
   );
+
+  it.effect(
+    "reports a root key that the platform cannot derive as a configuration fault",
+    () =>
+      Effect.gen(function* () {
+        vi.spyOn(crypto.subtle, "importKey").mockRejectedValueOnce(
+          new Error("platform")
+        );
+        const error = yield* Effect.flip(read(`new1:${key(1)}`));
+        expect(error.reason).toBe("configuration");
+      })
+  );
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
