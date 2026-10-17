@@ -10,6 +10,7 @@ import {
   routing,
 } from "@repo/internationalization/src/routing";
 import { hasPreviewProvider } from "@repo/next-config/preview";
+import { Option } from "effect";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { hasLocale } from "next-intl";
@@ -17,6 +18,7 @@ import { Suspense } from "react";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 import { Stage } from "@/components/state/stage";
+import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 import { appViewport } from "@/lib/theme/viewport";
 
 /** Global 404 viewport contract shared with localized app documents. */
@@ -62,24 +64,50 @@ async function getNotFoundLocale() {
 /** Renders the global not-found boundary with the default locale fallback. */
 export default function GlobalNotFound() {
   return (
-    <Suspense fallback={<NotFoundDocument locale={routing.defaultLocale} />}>
+    <Suspense
+      fallback={
+        <NotFoundDocument isSchoolHost={false} locale={routing.defaultLocale} />
+      }
+    >
       <LocalizedNotFoundDocument />
     </Suspense>
   );
 }
 
-/** Renders the localized not-found document after request headers are available. */
+/**
+ * Renders the localized not-found document after request headers are available,
+ * with the links of a school host when the request came to one.
+ */
 async function LocalizedNotFoundDocument() {
-  return <NotFoundDocument locale={await getNotFoundLocale()} />;
+  const [locale, isSchoolHost] = await Promise.all([
+    getNotFoundLocale(),
+    readIsSchoolHost(),
+  ]);
+  return <NotFoundDocument isSchoolHost={isSchoolHost} locale={locale} />;
+}
+
+/** Whether the request came to a school host, which has a home and no search page. */
+async function readIsSchoolHost() {
+  const requestHeaders = await headers();
+  return Option.isSome(
+    readRequestHostname(requestHeaders).pipe(Option.flatMap(readSchoolSlug))
+  );
 }
 
 /**
  * Renders the complete global 404 document from one locale dictionary. It is
  * its own document and has no app around it, so it reads only the small
  * dictionary of the standalone pages, with plain links, and no provider that
- * needs the app.
+ * needs the app. On a school host the home link is the root of that host, and
+ * the search link is left out, because a school has no search page.
  */
-function NotFoundDocument({ locale }: { locale: keyof typeof dictionaries }) {
+function NotFoundDocument({
+  isSchoolHost,
+  locale,
+}: {
+  isSchoolHost: boolean;
+  locale: keyof typeof dictionaries;
+}) {
   const messages = dictionaries[locale];
 
   return (
@@ -97,15 +125,17 @@ function NotFoundDocument({ locale }: { locale: keyof typeof dictionaries }) {
               title={messages.NotFound.title}
             >
               <ActionLink
-                href={`/${locale}`}
+                href={isSchoolHost ? "/" : `/${locale}`}
                 label={messages.State["home-button"]}
                 variant="default"
               />
-              <ActionLink
-                href={`/${locale}/search`}
-                label={messages.NotFound["search-button"]}
-                variant="ghost"
-              />
+              {isSchoolHost ? null : (
+                <ActionLink
+                  href={`/${locale}/search`}
+                  label={messages.NotFound["search-button"]}
+                  variant="ghost"
+                />
+              )}
             </Missing>
           </Stage>
         </DesignSystemProvider>

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 import { createSchool, hostAddress } from "@/e2e/support/school";
 
@@ -7,9 +8,9 @@ const UNKNOWN_SCHOOL = "zz-unknown";
 
 /**
  * A visitor whose browser prefers Indonesian. Playwright sets the Accept-Language
- * header of every page request from the context `locale`, so that header
- * replaces an Accept-Language in `extraHTTPHeaders`, which never reaches the
- * server.
+ * header of the page request from the context `locale`, which replaces an
+ * Accept-Language given in `extraHTTPHeaders` for that request, so the locale is
+ * set through the context.
  */
 const INDONESIAN_VISITOR = { locale: "id-ID" };
 
@@ -56,6 +57,17 @@ test("an unknown school answers not found on its own host", async ({
   );
 
   expect(response?.status()).toBe(404);
+});
+
+test("the not-found page of an unknown school links to Nakafa, because the school's own home is not found too", async ({
+  page,
+  baseURL,
+}) => {
+  await page.goto(hostAddress(baseURL, `${UNKNOWN_SCHOOL}.localhost`, "/"));
+
+  await expect(
+    page.getByRole("link", { exact: true, name: "Go home" })
+  ).toHaveAttribute("href", new URL("/en", SITE_ORIGIN).href);
 });
 
 test("a school root keeps its address with no locale prefix, even for a visitor who prefers another language", async ({

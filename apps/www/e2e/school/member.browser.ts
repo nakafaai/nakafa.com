@@ -67,3 +67,29 @@ test("the school shell does not move the page while it loads", async ({
   expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
   await context.close();
 });
+
+test("an address below a school that no page answers shows the school's not-found page, with a way back to the school", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, schoolHome));
+  const page = await context.newPage();
+
+  await page.goto(
+    hostAddress(baseURL, `${school.slug}.localhost`, "/classes/fisika")
+  );
+
+  await expect(
+    page.getByRole("heading", { level: 1, name: "We can't find this page" })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { exact: true, name: "Go home" })
+  ).toHaveAttribute("href", "/");
+  await expect(
+    page.getByRole("link", { name: "Search materials" })
+  ).toHaveCount(0);
+  await context.close();
+});
