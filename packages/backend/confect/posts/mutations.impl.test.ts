@@ -133,10 +133,18 @@ describe("posts write contracts", () => {
       ctx.db.insert("postLikes", { postId, userId: author.userId })
     );
     await author.session.mutation(remove, { postId });
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    // Removing the post schedules exactly one pass, which stays pending until it runs.
+    const scheduledPasses = () =>
+      t
+        .run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
+        .then((jobs) => jobs.length);
+    expect(await scheduledPasses()).toBe(1);
+    await t.mutation(cleanupDeletedPost, { postId });
     expect(await t.query((ctx) => ctx.db.query("postLikes").collect())).toEqual(
       []
     );
+    // The pass took every like, fewer than one batch, so it scheduled no pass of its own.
+    expect(await scheduledPasses()).toBe(1);
   });
 
   it("keeps the like count exact when a like or an unlike repeats", async () => {

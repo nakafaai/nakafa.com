@@ -31,7 +31,7 @@ export function UserTabs({ username }: { username: string }) {
   const activeTab = Arr.findFirst(tabs, (tab) => pathname === tab.href);
   const value = Option.match(activeTab, {
     onNone: () => tabs[0]?.href,
-    onSome: (tab) => tab.href || tabs[0]?.href,
+    onSome: (tab) => tab.href,
   });
 
   return <SharedTabs tabs={tabs} value={value} />;

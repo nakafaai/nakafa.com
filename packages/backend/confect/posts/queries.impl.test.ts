@@ -16,8 +16,8 @@ type ListPage = Ref.Returns<typeof refs.public.posts.queries.list>;
 
 const now = Date.UTC(2026, 8, 1);
 
-/** The page size the profile asks for: twenty posts the first time. */
-const PAGE = { cursor: null, numItems: 20 };
+/** The first page the profile asks for, at the size the profile asks with. */
+const PAGE = { cursor: null, numItems: POST_PAGE_SIZE };
 
 afterEach(() => vi.useRealTimers());
 
@@ -63,18 +63,21 @@ function writePosts(
 }
 
 describe("posts list contract", () => {
-  it("lists the author's posts newest first, twenty to a page, and each row shows only its own fields", async () => {
+  it("lists the author's posts newest first, one page at a time, and each row shows only its own fields", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(now);
     const { author } = await createReaders();
-    const texts = Arr.makeBy(21, (index) => `Post ${index + 1}`);
+    const texts = Arr.makeBy(
+      POST_PAGE_SIZE + 1,
+      (index) => `Post ${index + 1}`
+    );
     await writePosts(author, texts);
     const first: ListPage = await author.session.query(list, {
       authorId: author.userId,
       paginationOpts: PAGE,
     });
     expect(Arr.map(first.page, (post) => post.text)).toEqual(
-      Arr.take(Arr.reverse(texts), 20)
+      Arr.take(Arr.reverse(texts), POST_PAGE_SIZE)
     );
     expect(first.isDone).toBe(false);
     expect(
@@ -86,7 +89,10 @@ describe("posts list contract", () => {
     );
     const second: ListPage = await author.session.query(list, {
       authorId: author.userId,
-      paginationOpts: { cursor: first.continueCursor, numItems: 20 },
+      paginationOpts: {
+        cursor: first.continueCursor,
+        numItems: POST_PAGE_SIZE,
+      },
     });
     expect(Arr.map(second.page, (post) => post.text)).toEqual(["Post 1"]);
     expect(second.isDone).toBe(true);
