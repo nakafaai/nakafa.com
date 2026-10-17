@@ -1061,11 +1061,11 @@ importers:
         version: 3.32.0
       effect:
         specifier: 'catalog:'
-        version: 4.0.2
+        version: 4.0.5
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.5)
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
