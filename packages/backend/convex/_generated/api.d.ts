@@ -11249,6 +11249,14 @@ export declare const internal: {
         }
       >;
     };
+    documents: {
+      run: FunctionReference<
+        "action",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
+      >;
+    };
     focus: {
       read: FunctionReference<
         "query",

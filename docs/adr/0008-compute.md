@@ -137,6 +137,40 @@ intermediate integers. This leaves headroom in the verified standard 2 GiB
 production instance. Process startup adds latency, so normal arithmetic,
 calculus, and matrix results are part of worker acceptance.
 
+## Runtime Of The Answer Run
+
+The answer run of a turn uses the Convex default runtime, which has no cold start,
+unless the turn's message carries a document. A Node action started cold in 3.0 to
+5.9 seconds before its first statement in production on 12 October 2026. A turn
+whose message carries a PDF or a text file runs in the Node action
+`nina/documents`, which runs the same program as `nina/response`
+(`confect/nina/answer.ts`). On the cloud dev deployment on 17 October 2026, a
+default-runtime action that loaded only the AI SDK, the OpenAI-compatible provider
+and Convex sent a 2 MiB PDF through the SDK's document path (download, base64, JSON
+body) and ran out of memory at 3 MiB and above, with `JavaScript execution ran out
+of memory (maximum memory usage: 64 MB)`. Images and earlier documents travel as
+URLs and never put bytes in the action, so only the current message's PDF and text
+files do. `answerRunFor` in `confect/nina/runtime.ts` chooses the run when the turn
+is admitted, from the file parts of its message. Moving the run's spec to a default
+group changes only that spec and its generated bindings, and no Node built-in stays
+reachable from the run.
+
+A temporary default-runtime action on the cloud dev deployment, removed afterwards,
+measured this on 17 October 2026. It loaded the whole run closure of `nina/response`
+and called `generateText` through the gateway provider with the zero retention
+options. The gateway answered with a canned completion, so no model call was billed
+and the answer of the gateway was not measured.
+
+| Call | Input | Result | Time |
+| --- | --- | --- | --- |
+| Text only, at the call limit | 362,440 characters of Indonesian prose, four characters a token of `NINA_CALL_LIMIT` | ok | 55 ms |
+| One PDF of 1 MiB through the document path | 1,048,576 bytes | ok | 124 ms |
+
+The text call at the call limit ran in the default runtime without running out of
+memory. The 1 MiB PDF also passed, but the probe did not measure larger documents,
+and the measured out-of-memory case above is a document of 3 MiB and more. So
+documents keep the Node action, and text-only answers keep the default runtime.
+
 ## Convex Ownership
 
 Popularity counter operations own their Aggregate insert, replace, and delete in
