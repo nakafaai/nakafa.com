@@ -10,10 +10,9 @@ import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { deleteOnPress } from "@/components/ai/chat/deletion.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { useChatStore } from "@/components/ai/chat/store.client";
-import { reportClientException } from "@/lib/analytics/client";
-import { requireConvexOnline } from "@/lib/convex/online";
 import { useViewer } from "@/lib/identity/client";
 import { ownChatsHref } from "@/lib/profile/href";
 
@@ -49,35 +48,18 @@ export function ChatDeletion({
     }
     const { username } = user.appUser;
     Effect.runFork(
-      requireConvexOnline(convex).pipe(
-        Effect.tap(() =>
-          Effect.sync(() => {
-            onOpenChange(false);
-            leave();
-          })
-        ),
-        Effect.andThen(
-          Effect.tryPromise(() => deleteChat({ chatId: chat._id })).pipe(
-            Effect.flatMap(Effect.fromResult),
-            Effect.tapError((error) =>
-              reportClientException(error, {
-                source: "components/ai/chat/deletion",
-              })
-            )
-          )
-        ),
-        Effect.tap(() =>
-          Effect.sync(() => router.replace(ownChatsHref(username)))
-        ),
-        Effect.matchEffect({
-          onSuccess: () => Effect.void,
-          onFailure: () =>
-            Effect.sync(() => {
-              stay();
-              toast.error(actionErrorMessage);
-            }),
-        })
-      )
+      deleteOnPress({
+        chatId: chat._id,
+        close: () => onOpenChange(false),
+        convex,
+        deleteChat,
+        deleted: () => router.replace(ownChatsHref(username)),
+        leave,
+        refused: () => {
+          stay();
+          toast.error(actionErrorMessage);
+        },
+      })
     );
   };
   return (
