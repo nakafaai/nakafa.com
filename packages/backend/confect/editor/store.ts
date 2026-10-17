@@ -62,26 +62,6 @@ export const clientRecordOf = Effect.fn("editor.store.client")(function* (
 });
 
 /**
- * The last step of a document, the one at its head. Its creation time is the time
- * the document last changed, which the snapshot rule reads. A document whose head
- * is above zero has such a step, so a document without one is a defect.
- */
-export const lastStepOf = Effect.fn("editor.store.lastStep")(function* (
-  documentId: GenericId.GenericId<"editorDocuments">
-) {
-  const last = yield* (yield* DatabaseReader)
-    .table("editorSteps")
-    .index(
-      "by_documentId_and_version",
-      (query) => query.eq("documentId", documentId),
-      "desc"
-    )
-    .first()
-    .pipe(Effect.orDie);
-  return yield* Effect.fromOption(last).pipe(Effect.orDie);
-});
-
-/**
  * The steps of a document after one version, in version order. A read takes at
  * most one batch of steps (`MAX_BATCH_STEPS`) and stops at `STEP_READ_BYTES`, so
  * the caller reads on from the last version it received.

@@ -7,7 +7,6 @@ import {
   denied,
   documentRowOf,
   documentRows,
-  IDLE,
   jsonValue,
   nf,
   otherSchoolTeacher,
@@ -28,7 +27,7 @@ const other = slugOf("other");
 
 describe("editor/documents open from a snapshot", () => {
   const { submit } = refs.public.editor.steps;
-  const { save } = refs.public.editor.snapshots;
+  const fold = refs.internal.editor.fold.fold;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -51,13 +50,7 @@ describe("editor/documents open from a snapshot", () => {
           documentId: made.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(save, {
-          content: paragraphText("Soal"),
-          documentId: made.id,
-          slug: nf,
-          version: 2,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: made.id });
         yield* teacher.mutation(submit, {
           batch: yield* batchText(2, "rina", 1),
           documentId: made.id,

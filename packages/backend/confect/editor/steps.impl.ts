@@ -1,12 +1,17 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { Document } from "@repo/backend/confect/editor/access";
 import { documentAccess } from "@repo/backend/confect/editor/authority";
 import { admitBatch, decodeBatch } from "@repo/backend/confect/editor/batch";
 import { checkContent } from "@repo/backend/confect/editor/content";
 import { BatchInvalid, ClientTaken } from "@repo/backend/confect/editor/errors";
+import { foldDue } from "@repo/backend/confect/editor/fold";
 import { encodeStoredStep } from "@repo/backend/confect/editor/log";
 import spec from "@repo/backend/confect/editor/steps.spec";
 import { clientRecordOf, stepsAfter } from "@repo/backend/confect/editor/store";
@@ -19,7 +24,7 @@ import {
 } from "@repo/backend/confect/editor/view";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { Array as Arr, Effect, Layer, Option } from "effect";
+import { Array as Arr, Duration, Effect, Layer, Option } from "effect";
 
 /** The reply that carries the head and the steps the log still keeps after the version. */
 const stepsReply = (
@@ -78,7 +83,9 @@ const since = FunctionImpl.make(
  * the version it produces, the head
  * moves by the number of steps, and the session's record takes the batch. All of it
  * is one transaction, so two clients never win one version: a stale batch writes
- * nothing and fails with `VersionStale`.
+ * nothing and fails with `VersionStale`. When the steps the snapshot lacks reach the fold
+ * limit with this batch, the batch also schedules the fold that writes the snapshot, so
+ * the client never writes a snapshot (ADR 0028).
  */
 const submit = FunctionImpl.make(
   databaseSchema,
@@ -143,6 +150,19 @@ const submit = FunctionImpl.make(
           version: admitted.version,
         })
         .pipe(Effect.orDie);
+    }
+    if (
+      foldDue({
+        after: admitted.version,
+        before: document.head,
+        snapshotVersion: document.snapshotVersion,
+      })
+    ) {
+      yield* (yield* Scheduler).runAfter(
+        Duration.zero,
+        refs.internal.editor.fold.fold,
+        { documentId: document._id }
+      );
     }
     return { head: admitted.version };
   })

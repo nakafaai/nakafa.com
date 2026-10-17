@@ -9,13 +9,11 @@ import {
   clientRows,
   denied,
   documentRowOf,
-  IDLE,
   insertStep,
   LONG_AGO,
   newDocument,
   nf,
   otherSchoolTeacher,
-  paragraphText,
   stepRows,
 } from "@repo/backend/test/editor";
 import {
@@ -27,7 +25,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect } from "effect";
 
 const { since, submit } = refs.public.editor.steps;
-const snapshots = refs.public.editor.snapshots;
+const fold = refs.internal.editor.fold.fold;
 const prune = refs.internal.editor.prune;
 const other = slugOf("other");
 
@@ -334,13 +332,7 @@ describe("editor/steps since", () => {
           documentId,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId,
-          slug: nf,
-          version: 3,
-        });
+        yield* fixture.internal.mutation(fold, { documentId });
         yield* teacher.mutation(submit, {
           batch: yield* batchText(3, "rina", 2),
           documentId,
@@ -386,13 +378,7 @@ describe("editor/steps since", () => {
           documentId,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId,
-          slug: nf,
-          version: 3,
-        });
+        yield* fixture.internal.mutation(fold, { documentId });
         vi.setSystemTime(TENANCY_NOW + LONG_AGO);
         yield* fixture.internal.mutation(prune.sweep, { cursor: null });
         expect(yield* fixture.run(stepRows)).toEqual([]);

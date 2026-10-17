@@ -4,7 +4,6 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
   batchText,
   clientRows,
-  IDLE,
   LONG_AGO,
   nf,
   paragraphText,
@@ -16,8 +15,8 @@ import { Array as Arr, Effect } from "effect";
 
 const documents = refs.public.editor.documents;
 const steps = refs.public.editor.steps;
-const snapshots = refs.public.editor.snapshots;
 const prune = refs.internal.editor.prune;
+const fold = refs.internal.editor.fold.fold;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -41,13 +40,7 @@ describe("editor/prune sweep", () => {
           documentId: made.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId: made.id,
-          slug: nf,
-          version: 3,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: made.id });
         yield* teacher.mutation(steps.submit, {
           batch: yield* batchText(3, "rina", 2),
           documentId: made.id,
@@ -69,6 +62,42 @@ describe("editor/prune sweep", () => {
   );
 
   it.effect(
+    "never prunes a step that no snapshot covers, and folds its document so a later sweep can prune it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const made = yield* teacher.mutation(documents.create, {
+          content: paragraphText("Soal"),
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+        });
+        yield* teacher.mutation(steps.submit, {
+          batch: yield* batchText(0, "rina", 3),
+          documentId: made.id,
+          slug: nf,
+        });
+        vi.setSystemTime(TENANCY_NOW + LONG_AGO);
+        const firstSweep = yield* fixture.internal.mutation(prune.sweep, {
+          cursor: null,
+        });
+        expect(firstSweep).toEqual({ deleted: 0, done: true, scanned: 3 });
+        expect(
+          Arr.map(yield* fixture.run(stepRows), (row) => row.version)
+        ).toEqual([1, 2, 3]);
+        // The sweep scheduled the fold of the document, and the fold writes the snapshot.
+        yield* fixture.finishScheduled();
+        expect(
+          Arr.map(yield* fixture.run(snapshotRows), (row) => row.version)
+        ).toEqual([3]);
+        const secondSweep = yield* fixture.internal.mutation(prune.sweep, {
+          cursor: null,
+        });
+        expect(secondSweep).toEqual({ deleted: 3, done: true, scanned: 3 });
+      })
+  );
+
+  it.effect(
     "reads a log longer than one page in pages, starting the next page until the log is read",
     () =>
       Effect.gen(function* () {
@@ -84,13 +113,7 @@ describe("editor/prune sweep", () => {
           documentId: made.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId: made.id,
-          slug: nf,
-          version: 70,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: made.id });
         vi.setSystemTime(TENANCY_NOW + LONG_AGO);
         const firstPage = yield* fixture.internal.mutation(prune.sweep, {
           cursor: null,
@@ -117,13 +140,7 @@ describe("editor/prune sweep", () => {
           documentId: made.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId: made.id,
-          slug: nf,
-          version: 3,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: made.id });
         // The sweep reads the snapshot version of the document row. With the snapshot
         // row gone it still prunes, and a sweep that read the row would fail here.
         const [snapshot] = yield* fixture.run(snapshotRows);
@@ -157,13 +174,7 @@ describe("editor/prune sweep", () => {
           documentId: made.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId: made.id,
-          slug: nf,
-          version: 3,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: made.id });
         vi.setSystemTime(TENANCY_NOW + LONG_AGO);
         yield* fixture.internal.mutation(prune.sweep, { cursor: null });
         expect(yield* fixture.run(stepRows)).toEqual([]);

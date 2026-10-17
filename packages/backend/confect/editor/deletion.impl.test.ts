@@ -4,7 +4,6 @@ import {
   batchText,
   clientRows,
   documentRows,
-  IDLE,
   nf,
   paragraphText,
   snapshotRows,
@@ -15,7 +14,7 @@ import { Array as Arr, Effect } from "effect";
 
 const documents = refs.public.editor.documents;
 const steps = refs.public.editor.steps;
-const snapshots = refs.public.editor.snapshots;
+const fold = refs.internal.editor.fold.fold;
 const deletion = refs.internal.editor.deletion;
 
 beforeEach(() => {
@@ -55,13 +54,7 @@ describe("editor/deletion document", () => {
           documentId: kept.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId: removed.id,
-          slug: nf,
-          version: 3,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: removed.id });
         expect(yield* fixture.run(clientRows)).toHaveLength(3);
         const done = yield* fixture.internal.mutation(deletion.document, {
           documentId: removed.id,

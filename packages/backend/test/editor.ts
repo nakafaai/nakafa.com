@@ -7,7 +7,6 @@ import {
 import type { AccessDenied } from "@repo/backend/confect/access/errors";
 import { type Batch, encodeBatch } from "@repo/backend/confect/editor/batch";
 import { STEP_KEEP_DELAY } from "@repo/backend/confect/editor/prune";
-import { SNAPSHOT_IDLE_DELAY } from "@repo/backend/confect/editor/snapshot";
 import type { Step } from "@repo/backend/confect/editor/step";
 import { paragraphOf } from "@repo/backend/test/editor/nodes";
 import {
@@ -31,11 +30,6 @@ export const denied = (reason: AccessDenied["reason"]) => ({
   code: "ACCESS_DENIED",
   reason,
 });
-
-/** Past the snapshot rule's idle delay by one second, so a snapshot is due at once. */
-export const IDLE = Duration.toMillis(
-  Duration.sum(SNAPSHOT_IDLE_DELAY, Duration.seconds(1))
-);
 
 /** Past the step keep delay by one minute, so every step a snapshot covers is old enough to prune. */
 export const LONG_AGO = Duration.toMillis(
@@ -64,8 +58,9 @@ export const paragraphText = (text: string) =>
   encodeJsonText(paragraphOf(text));
 
 /**
- * A replace step that inserts one text node at the start of a document. The step
- * is well formed; the server stores it and does not apply it.
+ * A replace step that inserts one text node at position 1, which is the start of the
+ * first paragraph of a document of paragraphs. The step is well formed, and the fold
+ * applies it, so the text lands in that paragraph.
  */
 export const insertStep = (text: string): Step => ({
   from: 1,

@@ -60,8 +60,25 @@ const sweep = FunctionImpl.make(
       (step) => writer.table("editorSteps").delete(step._id),
       { discard: true }
     );
+    const scheduler = yield* Scheduler;
+    // A step that no snapshot covers yet stays in the log. Its document is folded now, so
+    // a later sweep can prune the step once a snapshot holds it (ADR 0028).
+    const unfolded = Arr.filter(page.page, (step) =>
+      Option.exists(
+        HashMap.get(versions, step.documentId),
+        (snapshotVersion) => step.version > snapshotVersion
+      )
+    );
+    yield* Effect.forEach(
+      Arr.dedupe(Arr.map(unfolded, (step) => step.documentId)),
+      (documentId) =>
+        scheduler.runAfter(Duration.zero, refs.internal.editor.fold.fold, {
+          documentId,
+        }),
+      { discard: true }
+    );
     if (!page.isDone) {
-      yield* (yield* Scheduler).runAfter(
+      yield* scheduler.runAfter(
         Duration.zero,
         refs.internal.editor.prune.sweep,
         { cursor: page.continueCursor }
