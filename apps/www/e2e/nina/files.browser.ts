@@ -19,6 +19,8 @@ import {
   WORD_TYPE,
   write,
 } from "@/e2e/support/attachment";
+import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { inTheSheet, openSheet } from "@/e2e/support/sheet";
 
 /** The English reasons a refused chip gives, as the site words them. */
 const REJECTIONS = en.Ai["attachment-rejections"];
@@ -149,6 +151,33 @@ test.describe("Files that a pick does not attach", () => {
           await composer.getByRole("button", { name: ENGLISH.send }).click();
           // The refused chip leaves with the message it was picked for.
           await expect(refusedChipsIn(composer)).toHaveCount(0);
+        });
+      })
+    );
+  });
+
+  test("a suggestion that sends takes the refused chips with it", async ({
+    baseURL,
+    page,
+  }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        yield* openChatPage(page, origin);
+        yield* openSheet(page);
+        const sheet = inTheSheet(page);
+        yield* pickFiles(sheet, [fileOf("essay.docx", WORD_TYPE, 20)]);
+
+        yield* Effect.promise(async () => {
+          await expect(refusedChipsIn(sheet)).toHaveCount(1);
+          await sheet
+            .getByRole("button", { name: en.Ai["suggestion-explain"] })
+            .click();
+          // The suggestion started a chat. A new chat shows the composer again,
+          // and its refused chip must not have come back with it.
+          await sheet
+            .getByRole("button", { exact: true, name: en.Ai["new-chat"] })
+            .click();
+          await expect(refusedChipsIn(sheet)).toHaveCount(0);
         });
       })
     );

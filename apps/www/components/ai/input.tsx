@@ -24,11 +24,15 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
+import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import {
+  type PromptInputMessage,
+  submitPromptInput,
+} from "@repo/design-system/lib/prompt-input/submission";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useOptimistic, useTransition } from "react";
 import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
@@ -169,6 +173,12 @@ export function NinaSuggestions({
   const hasFiles = usePromptInputAttachments(
     (attachments) => attachments.files.length > 0
   );
+  const dismissRefusals = usePromptInputAttachments(
+    (attachments) => attachments.dismissRefusals
+  );
+  const refusals = usePromptInputAttachments(
+    (attachments) => attachments.refusals
+  );
   if (text.trim() || hasFiles) {
     return null;
   }
@@ -198,7 +208,21 @@ export function NinaSuggestions({
           className="group h-auto min-h-9 w-full justify-start whitespace-normal py-1.5 font-normal shadow-none"
           disabled={disabled}
           key={suggestion.label}
-          onClick={() => onSubmit({ text: suggestion.prompt })}
+          onClick={(event) => {
+            // A suggestion is a send from this composer, so it takes the refused
+            // chips in the tray the same way the composer's own Send does.
+            runPromptInputProgram(
+              submitPromptInput({
+                dismissRefusals,
+                event,
+                files: [],
+                onSubmit,
+                onSuccess: Fn.constVoid,
+                refusals,
+                text: suggestion.prompt,
+              })
+            );
+          }}
           type="button"
           variant="outline"
         >
