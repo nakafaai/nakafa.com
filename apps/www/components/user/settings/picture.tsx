@@ -145,12 +145,7 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
           <>
             <CardSectionHint>{t("picture-footer-animal")}</CardSectionHint>
             <CardSectionActions>
-              <Button
-                onClick={shuffle}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
+              <Button onClick={shuffle} size="sm" type="button">
                 {t("animal-shuffle")}
               </Button>
             </CardSectionActions>
