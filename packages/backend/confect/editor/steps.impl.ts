@@ -26,18 +26,16 @@ import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Array as Arr, Duration, Effect, Layer, Option } from "effect";
 
-/** The reply that carries the head and the steps the log still keeps after the version. */
+/** The reply that carries the steps the log still keeps after the version. */
 const stepsReply = (
-  head: number,
   client: typeof ClientRecordView.Type,
   steps: readonly (typeof StepView.Type)[]
-): typeof SinceReply.Type => ({ _tag: "steps", client, head, steps });
+): typeof SinceReply.Type => ({ _tag: "steps", client, steps });
 
 /** The reply when the log has pruned a step the client needs: the client opens again from the snapshot. */
 const behindReply = (
-  head: number,
   client: typeof ClientRecordView.Type
-): typeof SinceReply.Type => ({ _tag: "behind", client, head });
+): typeof SinceReply.Type => ({ _tag: "behind", client });
 
 /**
  * The steps after a version, in order, one read's worth. The log keeps every step
@@ -60,7 +58,7 @@ const since = FunctionImpl.make(
       Option.filter(record, (own) => own.author === appUser._id)
     );
     if (version >= document.head) {
-      return stepsReply(document.head, client, []);
+      return stepsReply(client, []);
     }
     const rows = yield* stepsAfter(document._id, version);
     const run = Arr.takeWhile(
@@ -68,19 +66,18 @@ const since = FunctionImpl.make(
       (row, index) => row.version === version + index + 1
     );
     if (run.length === 0) {
-      return behindReply(document.head, client);
+      return behindReply(client);
     }
-    return stepsReply(document.head, client, Arr.map(run, stepView));
+    return stepsReply(client, Arr.map(run, stepView));
   })
 );
 
 /**
  * Accepts a batch of steps made on the document's head. A batch the session has
- * had accepted before is answered with the version it produced, and writes nothing,
- * so a retried batch is idempotent. A session id that belongs to another author is
- * refused with `ClientTaken`. Any other batch is checked against the bounds, the
- * content the contract accepts, and the head, then each step is written as one row at
- * the version it produces, the head
+ * had accepted before is answered without a write, so a retried batch is idempotent.
+ * A session id that belongs to another author is refused with `ClientTaken`. Any other
+ * batch is checked against the bounds, the content the contract accepts, and the head,
+ * then each step is written as one row at the version it produces, the head
  * moves by the number of steps, and the session's record takes the batch. All of it
  * is one transaction, so two clients never win one version: a stale batch writes
  * nothing and fails with `VersionStale`. When the steps the snapshot lacks reach the fold
@@ -103,7 +100,7 @@ const submit = FunctionImpl.make(
       return yield* new ClientTaken();
     }
     if (Option.isSome(record) && record.value.batch === batch.batch) {
-      return { head: record.value.version };
+      return null;
     }
     const admitted = yield* admitBatch(document.head, batch);
     const rows = yield* Effect.forEach(admitted.batch.steps, (step) =>
@@ -164,7 +161,7 @@ const submit = FunctionImpl.make(
         { documentId: document._id }
       );
     }
-    return { head: admitted.version };
+    return null;
   })
 );
 

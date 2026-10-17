@@ -13,6 +13,7 @@ import {
   paragraphText,
   snapshotRows,
 } from "@repo/backend/test/editor";
+import { nestBlockquotes } from "@repo/backend/test/editor/nodes";
 import {
   slugOf,
   TENANCY_NOW,
@@ -35,7 +36,7 @@ describe("editor/documents open from a snapshot", () => {
   });
 
   it.effect(
-    "opens the snapshot with only the steps after it, the head of the log, and the session's record",
+    "opens the snapshot with only the steps after it, and the session's record",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -61,7 +62,6 @@ describe("editor/documents open from a snapshot", () => {
           documentId: made.id,
           slug: nf,
         });
-        expect(opened.head).toBe(3);
         expect(opened.snapshot.version).toBe(2);
         expect(Arr.map(opened.steps, (step) => step.version)).toEqual([3]);
         expect(opened.client).toEqual({ batch: "rina-2-1-1", version: 3 });
@@ -100,12 +100,6 @@ describe("editor/documents open from a snapshot", () => {
   );
 });
 
-/** `count` blockquotes nested around `inner`, each one a level of the document. */
-const nestBlockquotes = (count: number, inner: unknown): unknown =>
-  count === 0
-    ? inner
-    : { content: [nestBlockquotes(count - 1, inner)], type: "blockquote" };
-
 /**
  * A document `levels` levels deep: the `doc`, the blockquotes around it, and a
  * paragraph at the bottom. The paragraph is the deepest node.
@@ -132,7 +126,7 @@ describe("editor/documents create", () => {
           .as("teacher")
           .query(open, { clientId: "rina", documentId: made.id, slug: nf });
         expect(jsonValue(opened.snapshot.content)).toEqual(jsonValue(content));
-        expect(opened).toMatchObject({ head: 0, snapshot: { version: 0 } });
+        expect(opened).toMatchObject({ snapshot: { version: 0 } });
       })
   );
 

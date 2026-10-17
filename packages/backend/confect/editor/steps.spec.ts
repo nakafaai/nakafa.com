@@ -46,7 +46,7 @@ export default GroupSpec.make()
         documentId: Id("editorDocuments"),
         slug: TenantSlug,
       }),
-      returns: () => Schema.Struct({ head: VersionSchema }),
+      returns: () => Schema.Null,
       error: () =>
         Schema.Union([
           AccessDenied,

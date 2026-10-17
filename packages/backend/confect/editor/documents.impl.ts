@@ -57,10 +57,10 @@ const create = FunctionImpl.make(
 );
 
 /**
- * Reads a document for its editor: its head, its snapshot, the steps after the
- * snapshot, one read's worth, and the editor session's own record. The editor reads
- * on with `steps:since` from the last version it received, so a long document takes
- * more than one read. The record answers only the session's own author.
+ * Reads a document for its editor: its snapshot, the steps after the snapshot, one
+ * read's worth, and the editor session's own record. The editor reads on with
+ * `steps:since` from the last version it received, so a long document takes more
+ * than one read. The record answers only the session's own author.
  */
 const open = FunctionImpl.make(
   databaseSchema,
@@ -76,7 +76,6 @@ const open = FunctionImpl.make(
       client: clientView(
         Option.filter(record, (own) => own.author === appUser._id)
       ),
-      head: document.head,
       snapshot: { content: snapshot.content, version: snapshot.version },
       steps: Arr.map(steps, stepView),
     };

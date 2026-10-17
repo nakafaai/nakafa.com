@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
-import type { DocumentNode } from "@repo/backend/confect/editor/node";
 import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import type { Step } from "@repo/backend/confect/editor/step";
 import {
@@ -13,7 +12,7 @@ import {
   snapshotRows,
   stepRows,
 } from "@repo/backend/test/editor";
-import { paragraphOf } from "@repo/backend/test/editor/nodes";
+import { nestBlockquotes, paragraphOf } from "@repo/backend/test/editor/nodes";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { utf8Bytes } from "@repo/utilities/text";
@@ -46,13 +45,6 @@ const blockquotesAtStart = (count: number): Step => ({
   stepType: "replace",
   to: 0,
 });
-
-/** `count` blockquotes nested around `inner`, each one a level of the document. */
-function nestBlockquotes(count: number, inner: DocumentNode): DocumentNode {
-  return count === 0
-    ? inner
-    : { content: [nestBlockquotes(count - 1, inner)], type: "blockquote" };
-}
 
 /** A batch of steps made on `baseVersion`, from the client `rina`, as its JSON text. */
 const batchOf = (

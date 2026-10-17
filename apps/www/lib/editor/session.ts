@@ -52,10 +52,7 @@ export interface SyncTransport {
   ) => Effect.Effect<typeof SinceReply.Type, SyncFailed>;
   readonly submit: (
     batch: string
-  ) => Effect.Effect<
-    { readonly head: number },
-    SyncFailed | VersionStale | ClientTaken
-  >;
+  ) => Effect.Effect<null, SyncFailed | VersionStale | ClientTaken>;
 }
 
 /**

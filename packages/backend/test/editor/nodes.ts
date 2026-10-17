@@ -63,3 +63,18 @@ export function paragraphOf(text: string): Document {
     type: "doc",
   };
 }
+
+/**
+ * `count` blockquotes nested around `inner`, each one a level of the document. It is built
+ * in a loop, as the chains above are.
+ */
+export function nestBlockquotes(
+  count: number,
+  inner: DocumentNode
+): DocumentNode {
+  let node = inner;
+  for (let level = 0; level < count; level += 1) {
+    node = { content: [node], type: "blockquote" };
+  }
+  return node;
+}

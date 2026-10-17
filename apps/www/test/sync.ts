@@ -32,7 +32,10 @@ const proseSchema = new ProseSchema({
   },
 });
 
-/** A paragraph inside `levels - 1` blockquotes, so the top node is `levels` levels deep. */
+/**
+ * A paragraph of text inside `levels - 1` blockquotes. The top node nests `levels + 1`
+ * levels: the text, the paragraph, and each blockquote are one level each.
+ */
 export const nestedQuote = (levels: number): Node => {
   let node = proseSchema.node("paragraph", null, [proseSchema.text("x")]);
   for (let level = 1; level < levels; level += 1) {
@@ -106,7 +109,6 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
     open: (clientId) =>
       Effect.map(Ref.get(log), (current) => ({
         client: clientOf(current, clientId),
-        head: current.head,
         snapshot: current.snapshot,
         steps: Arr.filter(
           current.steps,
@@ -121,13 +123,11 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
           return {
             _tag: "behind",
             client,
-            head: current.head,
           } satisfies typeof SinceReply.Type;
         }
         return {
           _tag: "steps",
           client,
-          head: current.head,
           steps: Arr.filter(current.steps, (step) => step.version > version),
         } satisfies typeof SinceReply.Type;
       }),
@@ -141,7 +141,7 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
         const current = yield* Ref.get(log);
         const record = clientOf(current, batch.clientId);
         if (record !== null && record.batch === batch.batch) {
-          return { head: record.version };
+          return null;
         }
         if (batch.baseVersion !== current.head) {
           return yield* new VersionStale({
@@ -173,7 +173,7 @@ export const makeServer = Effect.fn("test.sync.server")(function* (
           ],
           submits: state.submits + 1,
         }));
-        return { head };
+        return null;
       }),
   };
 
@@ -309,15 +309,10 @@ export const silentEditor = (
   transport: {
     ...server.transport,
     since: () =>
-      Effect.map(
-        server.counts,
-        ({ head }) =>
-          ({
-            _tag: "steps",
-            client: null,
-            head,
-            steps: [],
-          }) satisfies typeof SinceReply.Type
-      ),
+      Effect.succeed({
+        _tag: "steps",
+        client: null,
+        steps: [],
+      } satisfies typeof SinceReply.Type),
   },
 });

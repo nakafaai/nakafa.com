@@ -364,7 +364,7 @@ describe("editor/content at submit", () => {
         const accepted = yield* fixture
           .as("teacher")
           .mutation(submit, { batch: text, documentId, slug: nf });
-        expect(accepted).toEqual({ head: 1 });
+        expect(accepted).toBeNull();
         expect(yield* fixture.run(stepRows)).toHaveLength(1);
       })
   );
@@ -398,7 +398,7 @@ describe("editor/content at submit", () => {
         const accepted = yield* fixture
           .as("teacher")
           .mutation(submit, { batch: text, documentId, slug: nf });
-        expect(accepted).toEqual({ head: 1 });
+        expect(accepted).toBeNull();
         expect(yield* fixture.run(stepRows)).toHaveLength(1);
       })
   );
