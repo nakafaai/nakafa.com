@@ -12,6 +12,7 @@ const LEARNER_NAME = "Acceptance Learner";
 const RENAMED = "Optimistic Learner";
 const REFUSED = "Refused Learner";
 const NAME_MUTATION = "users/mutations:updateUserName";
+const CURRENT_USER = "auth/queries:getCurrentUser";
 
 test("a learner renames themselves in settings: the new name shows before the server answers, and a refused save comes back", async ({
   baseURL,
@@ -30,8 +31,10 @@ test("a learner renames themselves in settings: the new name shows before the se
         await page.goto(appRoutes.settings);
         // A reload opens a connection that signs in a moment after the page
         // shows, and a change sent before that is refused, so the steps wait.
+        // The held answers below would also hold the learner's own query, which
+        // the shown name is drawn from, so the steps wait for its first answer.
         await expect
-          .poll(() => changes.signedIn, {
+          .poll(() => changes.signedIn && changes.hasAnswered(CURRENT_USER), {
             timeout: readinessTimeoutMilliseconds,
           })
           .toBe(true);
