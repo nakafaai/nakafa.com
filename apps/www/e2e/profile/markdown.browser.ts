@@ -22,6 +22,8 @@ const MARKDOWN = Arr.join(
     "",
     String.raw`Paragraf kedua dengan rumus \(x^2 + 1\).`,
     "",
+    "Hitung 2*3 + 4*5 di List<String>.",
+    "",
     "![Foto kelas](https://example.com/foto.png)",
   ],
   "\n"
@@ -80,6 +82,14 @@ test("a learner's post draws its Markdown as Nina's answers do", async ({
           post.locator("p").filter({ hasText: "Paragraf kedua" })
         ).toHaveCount(1);
         await expect(post.locator(".katex")).toHaveCount(1);
+
+        // Asterisks inside a product and text that reads as HTML stay as written.
+        await expect(
+          post
+            .locator("p")
+            .filter({ hasText: "Hitung 2*3 + 4*5 di List<String>." })
+        ).toHaveCount(1);
+        await expect(post.locator("em")).toHaveCount(0);
 
         // An image line is a link to its address, and no image loads.
         const photo = post.locator("a", { hasText: "Foto kelas" });
