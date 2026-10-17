@@ -49,13 +49,27 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   // The memory a row asked to delete, until the learner confirms or cancels.
   const [pending, setPending] = useState<Memory | null>(null);
   const frame = useRef<HTMLDivElement>(null);
+  // The list on the page when the learner asked, which the question compares
+  // with the list on the page when it closes.
+  const askedList = useRef<HTMLUListElement | null>(null);
   // One function for every row, so a row renders again only when its memory changes.
-  const askRow = useCallbackRef((memory: Memory) => setPending(memory));
-  // The row the learner deleted leaves the page while the question closes, and
-  // the focus was in the question, so the question hands the focus to the list.
-  const focusList = useCallbackRef(
-    () => frame.current?.querySelector("ul") ?? null
-  );
+  const askRow = useCallbackRef((memory: Memory) => {
+    askedList.current = frame.current?.querySelector("ul") ?? null;
+    setPending(memory);
+  });
+  // The question hands the focus back to the list the learner asked from. When
+  // that list has left the page, the focus goes to the search field, which stays:
+  // the last memory went, or the list crossed `MEMORY_PAGE` and the window
+  // replaced it with its own.
+  const focusAfterDelete = useCallbackRef(() => {
+    const list = frame.current?.querySelector("ul") ?? null;
+
+    if (list !== null && list === askedList.current) {
+      return list;
+    }
+
+    return document.getElementById(MEMORY_SEARCH_ID);
+  });
 
   /** Removes the memory the learner confirmed, and closes the question. */
   function confirmDelete() {
@@ -89,7 +103,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
         </WindowVirtualizer>
       )}
       <MemoryDeleteDialog
-        finalFocus={focusList}
+        finalFocus={focusAfterDelete}
         onConfirm={confirmDelete}
         onOpenChange={(open) => {
           if (!open) {
@@ -112,9 +126,9 @@ type Placed<Props extends { style: CSSProperties }> = Omit<Props, "style"> &
 /**
  * The list the rows stand in. It can take the focus from a row that leaves the
  * page, but no press or Tab stops on it. When the list itself leaves the page
- * with the focus in it, the focus goes to the search field, which stays: that
- * happens when the last memory goes, and when the list crosses `MEMORY_PAGE`
- * and the window replaces this element with its own.
+ * with the focus in it, the focus goes to the search field, which stays, so a
+ * focus that a row handed to the list is not lost. A delete question gives the
+ * focus back on its own.
  */
 function MemoryItems({
   children,
