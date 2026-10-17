@@ -13,7 +13,11 @@ import {
 } from "@repo/backend/confect/nina/uncovered";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest } from "@repo/backend/test/nina";
-import { sealThreadIn, withoutRowIds } from "@repo/backend/test/nina/seal";
+import {
+  sealThreadIn,
+  withoutRowIds,
+  writtenThreadIn,
+} from "@repo/backend/test/nina/seal";
 import {
   BIG,
   createSummaryTest,
@@ -393,6 +397,8 @@ describe("Nina fold wait from the cost its prompt stored", () => {
   it("reads the same turns and messages from a sealed thread as from a plain one", async () => {
     const nina = await createNinaTest({ history: 3 });
     const plain = await read(nina);
+    await writtenThreadIn(nina.t, nina.threadId, nina.identity.userId);
+    expect(withoutRowIds(await read(nina))).toEqual(withoutRowIds(plain));
     await sealThreadIn(nina.t, nina.threadId, nina.identity.userId);
     const sealed = await read(nina);
     expect(plain.turns.length).toBeGreaterThan(0);

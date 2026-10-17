@@ -7,12 +7,14 @@ import {
 } from "@repo/backend/confect/nina/memory.spec";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { isComposingKey } from "@repo/utilities/composition";
 import { String as Str } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
+import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
   MemoryEnds,
   MemoryOrigin,
@@ -51,6 +53,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
   const { change, discard, starting } = useAutosave(memory, restored);
   const [draft, setDraft] = useState(starting);
   const [written, setWritten] = useState(() => !isBlank(starting));
+  const [asking, setAsking] = useState(false);
   const body = useRef<HTMLDivElement>(null);
   const length = Str.length(Str.trim(draft.text));
 
@@ -74,7 +77,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
             onKeyDown={(event) => {
               // Enter leaves the title for the text, as in a document. While
               // the learner composes a character, Enter belongs to the keyboard.
-              if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
                 event.preventDefault();
                 body.current
                   ?.querySelector<HTMLElement>("[contenteditable]")
@@ -135,7 +138,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
           limit={MEMORY_TEXT_LIMIT}
           onChange={(text) => write({ ...draft, text })}
           onClose={close}
-          onRefuse={() => toast.error(t("too-long"))}
+          onRefuse={() => toast.error({ title: "memory-too-long.title" })}
           placeholder={t("placeholder")}
         />
       </div>
@@ -148,15 +151,21 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
         </p>
         <Button
           disabled={memory === null && !written}
-          onClick={() => {
-            discard();
-            close();
-          }}
+          onClick={() => setAsking(true)}
           variant="destructive"
         >
           {common("delete")}
         </Button>
       </footer>
+      <MemoryDeleteDialog
+        onConfirm={() => {
+          setAsking(false);
+          discard();
+          close();
+        }}
+        onOpenChange={setAsking}
+        open={asking}
+      />
     </>
   );
 }

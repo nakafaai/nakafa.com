@@ -1,4 +1,29 @@
 {
+  "School": {
+    "account-settings": "Pengaturan akun",
+    "back-to-learning": "Pindah ke Nakafa belajar",
+    "for-you": "Untukmu",
+    "home": "Beranda",
+    "language": "Bahasa",
+    "nina-memory": "Memori Nina",
+    "role": {
+      "admin": "Admin",
+      "auditor": "Auditor",
+      "counselor": "Konselor",
+      "deputy": "Wakil kepala sekolah",
+      "guardian": "Wali",
+      "integration": "Integrasi",
+      "owner": "Pemilik",
+      "principal": "Kepala sekolah",
+      "proctor": "Pengawas",
+      "staff": "Staf",
+      "student": "Siswa",
+      "teacher": "Guru"
+    },
+    "sign-in-title": "Masuk ke {school}",
+    "signed-in": "Kamu sudah masuk.",
+    "signed-in-as": "Kamu masuk sebagai {role}."
+  },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
     "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",
@@ -9,7 +34,6 @@
   },
   "Common": {
     "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
-    "action-error": "Tindakan ini belum berhasil. Silakan coba lagi.",
     "copyright": "Hak Cipta © {year} {companyName}. Seluruh hak dilindungi.",
     "made-with-love": "Dibuat dengan cinta",
     "version": "Versi {version}",
@@ -85,7 +109,6 @@
     "decrease-angle": "Perkecil sudut",
     "number-field": "Isian angka",
     "share": "Bagikan",
-    "share-copied": "Link berhasil disalin!",
     "contributor": "Kontributor",
     "search": "Cari",
     "select": "Pilih",
@@ -97,8 +120,6 @@
     "copy-content": "Salin Konten",
     "content-actions": "Aksi konten",
     "copy": "Salin",
-    "copy-success": "Udah disalin!",
-    "copy-error": "Gagal nyalin nih",
     "open": "Buka",
     "open-in": "Buka di",
     "open-in-github": "Buka di GitHub",
@@ -136,7 +157,6 @@
     "curriculum-index-title": "Kurikulum sekolah",
     "curriculum-index-action": "Pilih jenjang",
     "curriculum-route-action": "Lihat pilihan",
-    "preference-save-error": "Preferensi kurikulummu belum bisa disimpan.",
     "onboarding": {
       "progress": "Pertanyaan {current} dari {total}",
       "role-title": "Kamu siapa?",
@@ -190,10 +210,7 @@
       "back": "Kembali",
       "continue": "Lanjut",
       "finish": "Selesai",
-      "required-error": "Pilih satu jawaban.",
-      "invalid-selection": "Jawab semua pertanyaan.",
-      "save-error": "Jawaban belum tersimpan. Coba lagi.",
-      "finish-error": "Onboarding belum selesai. Coba lagi."
+      "required-error": "Pilih satu jawaban."
     },
     "kind": {
       "school-curriculum": "Kurikulum"
@@ -251,8 +268,6 @@
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
-    "interpretation-error": "Tafsir ayat ini belum dapat dimuat. Coba lagi.",
-    "interpretation-refreshing": "Al-Qur'an telah diperbarui. Memuat ulang halaman ini...",
     "meaning": "Makna nama",
     "revelation": "Tempat turun",
     "revelation-place": "{place, select, Meccan {Makkiyah} Medinan {Madaniyah} other {Tidak diketahui}}",
@@ -274,7 +289,6 @@
     "open-exam-cta": "Lihat pilihan",
     "open-set-cta": "Lihat set",
     "list-empty": "Belum ada try out yang tampil sekarang.",
-    "preference-save-error": "Preferensi try out belum bisa disimpan.",
     "start-cta": "Mulai",
     "restart-cta": "Ulangi",
     "free-cta": "Mulai gratis",
@@ -289,14 +303,11 @@
     "restart-dialog-title": "Mulai try out ini dari awal?",
     "restart-dialog-description": "Kamu akan mulai dari awal. Hasil sebelumnya tetap tersimpan.",
     "restart-entry-dialog-description": "Kamu akan mulai dari awal, dan waktu set langsung berjalan. Hasil sebelumnya tetap tersimpan.",
-    "start-success": "Try out dimulai. Sekarang kamu bisa pilih bagian yang mau dikerjakan dulu.",
     "start-entry-dialog-description": "Waktu set langsung berjalan setelah kamu mulai.",
-    "start-entry-success": "Try out dimulai. Waktu sudah berjalan.",
     "paywall-title": "Lihat pembahasan {count} soal ini",
     "paywall-description": "Pahami langkah dan alasan di balik setiap jawaban, lalu tanya Nina kalau masih bingung.",
-    "paywall-compare": "Bandingkan paket",
+    "paywall-compare": "Lihat paket",
     "ask-nina-prompt": "Bantu aku pahami soal nomor {number} ini.",
-    "start-error": "Try out belum bisa dimulai. Coba lagi ya.",
     "score-label-irt": "Nilai IRT",
     "score-label-standard": "Nilai",
     "correct-answers-label": "Jawaban benar",
@@ -331,13 +342,9 @@
     "time-minutes-short": "menit",
     "time-seconds-short": "detik",
     "start-part-cta": "Mulai",
-    "start-part-success": "Bagian dimulai. Waktu sudah berjalan.",
-    "start-part-error": "Bagian belum bisa dimulai. Coba lagi ya.",
     "complete-part-cta": "Selesaikan",
     "complete-part-title": "Selesaikan bagian ini?",
     "complete-part-description": "Kalau kamu selesaikan sekarang, jawaban di bagian ini langsung dikunci.",
-    "complete-part-success": "Bagian selesai. Sekarang kamu bisa pilih bagian lain atau kembali ke set.",
-    "complete-part-error": "Bagian belum bisa diselesaikan. Coba lagi ya.",
     "back-to-set-cta": "Kembali",
     "set-column-duration": "Durasi",
     "set-duration-minutes": "{minutes, number} menit",
@@ -352,9 +359,7 @@
     "incorrect": "Salah",
     "reset": "Ulangi",
     "explanation": "Pembahasan",
-    "number-count": "Nomor {count}",
-    "attempt-not-in-progress": "Mulai sesi baru dulu ya untuk lanjut latihan.",
-    "submit-answer-error": "Ada masalah saat menyimpan jawaban. Coba lagi ya."
+    "number-count": "Nomor {count}"
   },
   "Player": {
     "navigator": "Soal",
@@ -365,7 +370,6 @@
     "mode": "Tampilan",
     "mode-list": "Daftar",
     "mode-single": "Satu soal",
-    "mode-error": "Tampilanmu belum bisa disimpan. Coba lagi ya.",
     "cell": "{state, select, answered {Soal {number}, terjawab} other {Soal {number}, belum dijawab}}",
     "unanswered": "Belum dijawab",
     "time-left": "Sisa waktu {hours, plural, =0 {} other {# jam }}{minutes} menit {seconds} detik",
@@ -425,7 +429,6 @@
   "Auth": {
     "continue-with-google": "Masuk dengan Google",
     "opening-google": "Membuka Google...",
-    "provider-error": "Kami tidak dapat melanjutkan dengan Google. Coba lagi.",
     "sign-in-title": "Masuk ke Nakafa",
     "sign-in-description": "Biar progres belajarmu tersimpan.",
     "logout": "Keluar",
@@ -448,24 +451,23 @@
     "chat-description": "Terhubung dengan asisten AI belajar untuk bimbingan personal, bantuan PR, penjelasan konsep, dan percakapan edukasi interaktif yang disesuaikan dengan kebutuhan belajarmu.",
     "subscriptions": "Langganan",
     "subscriptions-description": "Kelola Nakafa Pro, 3.000 kredit AI bulanan, dan portal pembayaranmu.",
-    "get-pro": "Dapatkan Pro",
     "manage": "Kelola",
-    "checkout-error": "Checkout Pro belum bisa dibuka. Coba lagi.",
-    "portal-error": "Portal langganan belum bisa dibuka. Coba lagi.",
     "plan-free": "Free",
     "plan-pro": "Pro",
     "name": "Nama",
     "name-description": "Namamu akan muncul di profil dan komentar.",
     "name-footer": "Gunakan 3 sampai 32 karakter ya.",
     "name-placeholder": "Masukkan namamu...",
-    "animal": "Hewan profil",
-    "animal-description": "Hewanmu muncul di profil, komentar, dan di samping namamu.",
-    "animal-footer": "Pilih salah satu, atau acak lagi.",
-    "animal-pick": "Pilih {animal}",
+    "picture": "Foto profil",
+    "picture-description": "Tampil di samping namamu, di profil, dan di komentarmu.",
+    "picture-animal": "Hewan",
+    "picture-photo": "Foto Google",
+    "picture-footer-animal": "Setiap acak memberi hewan lain.",
+    "picture-footer-photo": "Foto Google-mu tampil di mana pun namamu tampil.",
     "animal-shuffle": "Acak hewan",
     "username": "Username",
-    "username-description": "Alamatmu di Nakafa: {address}",
-    "username-footer": "Alamat lama langsung berhenti berfungsi saat kamu menyimpan.",
+    "username-description": "Alamatmu di Nakafa: {address}.",
+    "username-footer": "Alamat lama berhenti berfungsi saat kamu menyimpan.",
     "username-available": "Bisa dipakai.",
     "username-characters": "Hanya huruf kecil, angka, dan garis bawah.",
     "username-letter-first": "Harus diawali huruf.",
@@ -473,9 +475,10 @@
     "username-taken": "Sudah dipakai orang lain.",
     "username-too-short": "Minimal 3 karakter.",
     "bio": "Bio",
-    "bio-count": "{count} dari {max} karakter",
-    "bio-description": "Satu baris tentang dirimu, tampil di profil.",
-    "bio-placeholder": "Tulis satu baris tentang dirimu...",
+    "bio-description": "Beberapa baris tentang dirimu, tampil di profil.",
+    "bio-placeholder": "Tulis beberapa baris tentang dirimu...",
+    "bio-footer": "Menyimpan akan mengganti bio-mu yang sekarang.",
+    "bio-too-long": "Persingkat bio-mu agar bisa disimpan.",
     "edit-profile": "Edit profil",
     "role": "Peran",
     "role-description": "Peranmu membantu kami menyesuaikan pengalaman belajarmu.",
@@ -486,12 +489,12 @@
     "curriculum-footer": "Kamu bisa mengubah kurikulum kapan saja.",
     "curriculum-placeholder": "Pilih kurikulum",
     "memory": "Memori",
-    "memory-description": "Hal tentang kamu yang Nina tahu dan pakai di setiap obrolan",
+    "memory-description": "Hal tentang kamu yang Nina tahu dan pakai di setiap obrolan.",
     "delete-account": "Hapus akun",
     "delete-account-description": "Hapus profil dan data pribadimu dari Nakafa secara permanen.",
     "delete-account-footer": "Tindakan ini tidak bisa dibatalkan.",
     "delete-account-dialog-title": "Hapus akun?",
-    "delete-account-dialog-description": "Profil dan data pribadimu akan dihapus permanen. Langganan aktif akan dibatalkan dan akses Nakafa Pro berakhir.",
+    "delete-account-dialog-description": "Profil dan data pribadimu akan dihapus permanen, dan langganan aktif, termasuk Nakafa Pro, akan dibatalkan.",
     "delete-account-session-expired": "Sesi ini sudah terlalu lama. Masuk lagi untuk melanjutkan.",
     "delete-account-error": "Akunmu belum bisa dihapus. Tunggu sebentar, lalu coba lagi.",
     "delete-account-sign-in-again": "Masuk lagi",
@@ -531,10 +534,10 @@
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",
-    "footer": "Memori tetap ada sampai kamu menghapusnya, juga saat kamu menghapus obrolan",
+    "footer": "Memori tetap ada sampai kamu menghapusnya.",
     "clear": "Hapus semua",
     "clear-title": "Hapus semua memori?",
-    "clear-description": "Ini tidak bisa dibatalkan",
+    "clear-description": "Ini tidak bisa dibatalkan.",
     "search": "Cari memori",
     "add": "Tambah memori",
     "memory": "Memori",
@@ -544,20 +547,186 @@
     "no-result": "Memori tidak ditemukan",
     "edit": "Ubah memori",
     "delete": "Hapus memori",
-    "deleted": "Memori dihapus",
-    "undo": "Urungkan",
-    "undo-failed": "Gagal mengurungkan",
+    "delete-title": "Hapus memori ini?",
+    "delete-description": "Nina tidak akan mengingatnya lagi.",
     "written-by-you": "Ditulis olehmu {time}",
     "saved-by-nina": "Disimpan Nina {time}",
     "ends": "Berakhir {date}",
     "text": "Teks memori",
     "placeholder": "Tulis yang perlu Nina ingat",
-    "missing": "Memori ini sudah tidak ada",
-    "limit": "Tunggu sebentar sebelum menyimpan lagi",
-    "too-long": "Teks itu terlalu panjang untuk satu memori",
     "title": "Judul",
     "untitled": "Tanpa judul",
     "count": "{count, number} / {limit, number}"
+  },
+  "Toast": {
+    "action-error": {
+      "title": "Tindakan ini belum berhasil.",
+      "description": "Silakan coba lagi."
+    },
+    "copy-error": { "title": "Gagal nyalin nih" },
+    "copy-success": { "title": "Udah disalin!" },
+    "curriculum-preference-error": {
+      "title": "Preferensi kurikulum gagal disimpan.",
+      "description": "Coba lagi ya."
+    },
+    "onboarding-finish-error": {
+      "title": "Onboarding belum selesai.",
+      "description": "Coba lagi."
+    },
+    "onboarding-invalid-selection": { "title": "Jawab semua pertanyaan." },
+    "onboarding-save-error": {
+      "title": "Jawaban belum tersimpan.",
+      "description": "Coba lagi."
+    },
+    "link-copied": { "title": "Link berhasil disalin!" },
+    "provider-error": {
+      "title": "Tidak bisa lanjut dengan Google.",
+      "description": "Coba lagi ya."
+    },
+    "checkout-error": {
+      "title": "Checkout Pro belum bisa dibuka.",
+      "description": "Coba lagi ya."
+    },
+    "portal-error": {
+      "title": "Portal langganan belum bisa dibuka.",
+      "description": "Coba lagi ya."
+    },
+    "mode-error": {
+      "title": "Tampilanmu belum bisa disimpan.",
+      "description": "Coba lagi ya."
+    },
+    "tryout-attempt-not-in-progress": {
+      "title": "Sesi ini sudah berakhir.",
+      "description": "Mulai sesi baru dulu ya untuk lanjut latihan."
+    },
+    "tryout-complete-part-error": {
+      "title": "Bagian belum bisa diselesaikan.",
+      "description": "Coba lagi ya."
+    },
+    "tryout-complete-part-success": {
+      "title": "Bagian selesai.",
+      "description": "Kamu bisa pilih bagian lain atau kembali ke set."
+    },
+    "tryout-preference-error": {
+      "title": "Preferensi try out belum tersimpan."
+    },
+    "tryout-start-entry-success": {
+      "title": "Try out dimulai.",
+      "description": "Waktu sudah berjalan."
+    },
+    "tryout-start-error": {
+      "title": "Try out belum bisa dimulai.",
+      "description": "Coba lagi ya."
+    },
+    "tryout-start-part-error": {
+      "title": "Bagian belum bisa dimulai.",
+      "description": "Coba lagi ya."
+    },
+    "tryout-start-part-success": {
+      "title": "Bagian dimulai.",
+      "description": "Waktu sudah berjalan."
+    },
+    "tryout-start-success": {
+      "title": "Try out dimulai.",
+      "description": "Kamu bisa pilih bagian yang mau dikerjakan dulu."
+    },
+    "tryout-submit-answer-error": {
+      "title": "Jawabanmu belum bisa disimpan.",
+      "description": "Coba lagi ya."
+    },
+    "memory-limit": { "title": "Tunggu sebentar, lalu simpan lagi." },
+    "memory-missing": { "title": "Memori ini sudah tidak ada." },
+    "memory-too-long": { "title": "Teks terlalu panjang untuk memori." },
+    "interpretation-error": {
+      "title": "Tafsir ayat ini belum dapat dimuat.",
+      "description": "Coba lagi."
+    },
+    "interpretation-refreshing": {
+      "title": "Al-Qur'an telah diperbarui.",
+      "description": "Memuat ulang halaman ini..."
+    },
+    "failure-account": {
+      "title": "Akun ini belum bisa memakai Nina.",
+      "description": "Masuk lagi atau hubungi dukungan Nakafa jika masih terjadi."
+    },
+    "failure-admission": {
+      "title": "Permintaan belum bisa disimpan Nina.",
+      "description": "Coba lagi."
+    },
+    "failure-attachment-failed": {
+      "title": "Lampiran belum bisa diproses.",
+      "description": "Coba unggah lagi."
+    },
+    "failure-attachment-invalid": {
+      "title": "Lampiran tidak valid atau hilang.",
+      "description": "Pilih lagi dan cek jenis serta ukuran filenya."
+    },
+    "failure-attachment-limit": {
+      "title": "Batas lampiran sudah tercapai.",
+      "description": "Kirim file yang sudah diunggah atau tunggu dulu."
+    },
+    "failure-attachment-size": {
+      "title": "Dokumen terlalu besar.",
+      "description": "Dokumen dalam satu pesan total maksimal {size, number} MiB."
+    },
+    "failure-authentication": {
+      "title": "Sesimu belum bisa diverifikasi.",
+      "description": "Coba lagi."
+    },
+    "failure-busy": {
+      "title": "Nina masih menjawab di chat ini.",
+      "description": "Tunggu jawabannya atau hentikan sebelum mengirim lagi."
+    },
+    "failure-chat-access": {
+      "title": "Tidak bisa mengirim di chat ini.",
+      "description": "Mulai chat sendiri untuk melanjutkan."
+    },
+    "failure-connection": {
+      "title": "Permintaan belum bisa dipastikan.",
+      "description": "Cek koneksimu lalu coba lagi."
+    },
+    "failure-context": {
+      "title": "Materi belajar belum bisa dimuat.",
+      "description": "Nina belum bisa memuat materinya untuk chat ini. Coba lagi."
+    },
+    "failure-credits": {
+      "title": "Kredit belum cukup untuk jawaban.",
+      "description": "Cek jatah dan reset berikutnya di pengaturan langganan."
+    },
+    "failure-message-size": {
+      "title": "Terlalu panjang untuk satu jawaban.",
+      "description": "Persingkat, atau kirim sisanya di pesan baru."
+    },
+    "failure-missing-chat": {
+      "title": "Chat ini sudah tidak tersedia.",
+      "description": "Kamu bisa mulai chat baru."
+    },
+    "failure-rate-limit": {
+      "title": "Batas pesan sementara tercapai.",
+      "description": "Tunggu sebentar, lalu kirim pesanmu lagi."
+    },
+    "failure-request-conflict": {
+      "title": "Permintaan ini sudah dipakai.",
+      "description": "Sudah dipakai untuk pesan lain. Kirim lagi pertanyaanmu."
+    },
+    "failure-retry-unavailable": {
+      "title": "Pesan ini tidak bisa dicoba lagi.",
+      "description": "Kirim pertanyaanmu sebagai pesan baru."
+    },
+    "failure-session": {
+      "title": "Sesimu sudah berakhir.",
+      "description": "Masuk lagi untuk melanjutkan."
+    },
+    "admitted-elsewhere": { "title": "Nina sedang menjawab di chat baru" },
+    "open-chat": { "title": "Buka chat" },
+    "school-language-error": {
+      "title": "Kamu belum bisa mengubah bahasa.",
+      "description": "Silakan coba lagi."
+    },
+    "sign-out-error": {
+      "title": "Kamu belum bisa keluar.",
+      "description": "Periksa koneksimu, lalu coba lagi."
+    }
   },
   "Ai": {
     "attachment": "Lampiran",
@@ -571,11 +740,10 @@
     "attach-files": "Lampirkan file",
     "remove-attachment": "Hapus {filename}",
     "attachment-rejections": {
-      "title": "File tidak dilampirkan",
-      "type": "Hanya file PNG, JPEG, WebP, GIF, PDF, dan teks",
+      "type": "File tidak didukung",
       "empty": "File kosong",
-      "size": "Lebih besar dari {size, number}\u00a0MiB",
-      "count": "Paling banyak {count, number}\u00a0file per pesan"
+      "size": "Melebihi batas ukuran",
+      "count": "Melebihi batas {count, number} file"
     },
     "ask-nina": "Tanya Nina",
     "text-placeholder": "Tanya Nina apa saja...",
@@ -725,7 +893,7 @@
     "search-older": "Cari obrolan yang lebih lama",
     "rename-chat": "Ubah nama obrolan",
     "delete-chat": "Hapus obrolan",
-    "delete-chat-description": "Yakin ingin menghapus obrolan ini? Nggak bisa dikembalikan lho.",
+    "delete-chat-description": "Obrolan ini nggak bisa dikembalikan setelah dihapus.",
     "confirm": "Konfirmasi",
     "share-chat": "Bagikan obrolan",
     "share-chat-description": "Hati-hati saat membagikan link ke orang asing ya.",
@@ -735,10 +903,11 @@
     "public-description": "Obrolan dapat dilihat oleh siapa saja yang punya link.",
     "create-link": "Buat link",
     "copy-link": "Salin link",
-    "link-copied": "Link berhasil disalin!",
-    "share-link-error": "Link belum bisa dimuat",
+    "share-link-error": "Link belum bisa dimuat.",
     "private-chat-error": "Akses ditolak",
-    "private-chat-error-description": "Ini bukan obrolanmu. Minta akses ke pemiliknya dulu ya.",
+    "chat-unavailable": "Chat ini tidak tersedia untukmu.",
+    "chat-failed": "Terjadi kesalahan",
+    "chat-failed-description": "Nakafa belum bisa memuat chat ini.",
     "credits-label": "Kredit",
     "token-usage": "Penggunaan Token",
     "input-tokens": "Input",
@@ -756,24 +925,6 @@
     "review-credits": "Lihat kredit",
     "sign-in-again": "Masuk kembali",
     "failures": {
-      "connection": "Permintaan belum bisa dikonfirmasi. Periksa koneksimu, lalu coba lagi.",
-      "credits": "Kreditmu belum cukup untuk jawaban ini. Lihat sisa kredit dan jadwal reset di pengaturan langganan.",
-      "rate-limit": "Batas pengiriman pesan sementara sudah tercapai. Tunggu sebentar, lalu kirim lagi.",
-      "session": "Sesi masukmu sudah berakhir. Masuk kembali untuk melanjutkan.",
-      "account": "Akun ini belum bisa menggunakan Nina. Masuk kembali atau hubungi dukungan Nakafa jika masalah berlanjut.",
-      "authentication": "Sesi masukmu belum bisa diverifikasi. Silakan coba lagi.",
-      "missing-chat": "Chat ini sudah tidak tersedia. Kamu bisa memulai chat baru.",
-      "chat-access": "Kamu tidak punya akses untuk mengirim pesan di chat ini. Mulai chat milikmu sendiri untuk melanjutkan.",
-      "admission": "Nina belum bisa menyimpan permintaan ini. Silakan coba lagi.",
-      "busy": "Nina masih menjawab di chat ini. Tunggu jawabannya selesai atau hentikan sebelum mengirim pesan berikutnya.",
-      "retry-unavailable": "Pesan ini sudah tidak bisa dicoba ulang. Kirim pertanyaanmu sebagai pesan baru.",
-      "request-conflict": "Pengiriman ini sudah digunakan untuk pesan lain. Kirim pertanyaanmu lagi sebagai pesan baru.",
-      "context": "Nina belum bisa memuat materi belajar untuk percakapan ini. Silakan coba lagi.",
-      "attachment-invalid": "Ada lampiran yang tidak valid atau sudah tidak tersedia. Pilih ulang berkasnya dan periksa jenis serta ukurannya.",
-      "attachment-limit": "Batas lampiran sudah tercapai. Kirim berkas yang sudah diunggah atau tunggu sebelum mengunggah lagi.",
-      "attachment-size": "Total ukuran dokumen dalam satu pesan paling banyak {size, number}\u00a0MiB",
-      "message-size": "Pesan ini terlalu panjang untuk dibaca Nina dalam satu giliran. Persingkat, atau kirim sisanya dalam pesan baru.",
-      "attachment-failed": "Nina belum bisa membaca atau menyimpan lampiran. Coba unggah lagi.",
       "provider-busy": "Layanan AI sedang menerima terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.",
       "provider-unavailable": "Layanan AI sedang mengalami gangguan sementara. Coba lagi sebentar lagi.",
       "service-configuration": "Nina belum bisa mengakses layanan AI. Coba lagi nanti. Jika masalah berlanjut, hubungi dukungan Nakafa.",
@@ -991,72 +1142,5 @@
       "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Qur'an.",
       "keywords": "Surat {name}, Al-Qur'an{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
     }
-  },
-  "Animals": {
-    "cat": "kucing",
-    "bear": "beruang",
-    "rabbit": "kelinci",
-    "sheep": "domba",
-    "fox": "rubah",
-    "panda": "panda",
-    "koala": "koala",
-    "frog": "katak",
-    "chicken": "ayam",
-    "owl": "burung hantu",
-    "penguin": "penguin",
-    "hamster": "hamster",
-    "mouse": "tikus",
-    "cow": "sapi",
-    "tiger": "harimau",
-    "lion": "singa",
-    "bee": "lebah",
-    "seal": "anjing laut",
-    "axolotl": "aksolotl",
-    "whale": "paus",
-    "octopus": "gurita",
-    "komodo": "komodo",
-    "orangutan": "orang utan",
-    "tarsier": "tarsius",
-    "elephant": "gajah",
-    "rhino": "badak",
-    "anoa": "anoa",
-    "turtle": "kura-kura",
-    "dog": "anjing",
-    "pig": "babi",
-    "monkey": "monyet",
-    "proboscis": "bekantan",
-    "deer": "rusa",
-    "giraffe": "jerapah",
-    "zebra": "zebra",
-    "hippo": "kuda nil",
-    "horse": "kuda",
-    "goat": "kambing",
-    "duck": "bebek",
-    "cockatoo": "kakatua",
-    "hornbill": "rangkong",
-    "eagle": "elang",
-    "parrot": "nuri",
-    "bat": "kelelawar",
-    "porcupine": "landak",
-    "civet": "musang",
-    "squirrel": "tupai",
-    "crab": "kepiting",
-    "jellyfish": "ubur-ubur",
-    "pufferfish": "ikan buntal",
-    "snail": "siput",
-    "beetle": "kumbang",
-    "crocodile": "buaya",
-    "raccoon": "rakun",
-    "flamingo": "flamingo",
-    "peacock": "merak",
-    "clownfish": "ikan badut",
-    "alpaca": "alpaka",
-    "dragonfly": "capung",
-    "spider": "laba-laba",
-    "cassowary": "kasuari",
-    "butterfly": "kupu-kupu",
-    "starfish": "bintang laut",
-    "walrus": "walrus",
-    "snake": "ular"
   }
 }

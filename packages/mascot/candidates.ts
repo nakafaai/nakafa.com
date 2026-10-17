@@ -42,3 +42,14 @@ export const candidates = Effect.fn("mascot.candidates")(function* (
   const animals = Arr.take(yield* Random.shuffle(others), count);
   return yield* Effect.forEach(animals, drawMascot);
 });
+
+/**
+ * One mascot for a shuffle: an animal other than `current`, with its own palette,
+ * ground and pose. The Random service draws it, so a seeded service gives the same
+ * mascot again.
+ */
+export const anotherMascot = Effect.fn("mascot.another")(function* (
+  current: typeof Animal.Type
+) {
+  return Arr.getUnsafe(yield* candidates(1, current), 0);
+});

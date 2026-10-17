@@ -7,11 +7,11 @@ import {
   LocalAttachmentsContext,
   usePromptInputAttachments,
 } from "@repo/design-system/lib/prompt-input/context";
-import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
 import {
   type PromptInputMessage,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
+import { isComposingKey } from "@repo/utilities/composition";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import {
@@ -27,9 +27,9 @@ import {
 } from "react";
 
 /**
- * Props for a prompt form with locally owned attachments. `onPick` reports
- * every pick, once it is made: the reasons the pick did not attach its files in
- * full, and an empty list when it attached all of them.
+ * Props for a prompt form with locally owned attachments. The refused files of
+ * the last pick show in the caller's composer, which reads them from the
+ * attachments it renders.
  */
 type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit"> & {
   accept?: string;
@@ -38,7 +38,6 @@ type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit"> & {
   maxFiles?: number;
   maxFileSize?: number;
   multiple?: boolean;
-  onPick?: (rejections: readonly PromptInputFileConstraintError[]) => void;
   onSubmit: (
     message: PromptInputMessage,
     event: FormEvent<HTMLFormElement>
@@ -58,7 +57,6 @@ export function PromptInput({
   multiple,
   maxFiles,
   maxFileSize,
-  onPick,
   onSubmit,
   children,
   ...props
@@ -70,7 +68,6 @@ export function PromptInput({
     inputRef,
     maxFiles,
     ...(maxFileSize === undefined ? {} : { maxFileSize }),
-    onPick,
   });
   const addFiles = attachments.add;
 
@@ -125,6 +122,7 @@ export function PromptInput({
     // accepted files so returning to the draft cannot resend old attachments.
     runPromptInputProgram(
       submitPromptInput({
+        dismissRefusals: attachments.dismissRefusals,
         event,
         files: submittedFiles,
         onSubmit,
@@ -136,6 +134,7 @@ export function PromptInput({
             attachments.remove(file.id);
           }
         },
+        refusals: attachments.refusals,
         text,
       })
     );
@@ -173,7 +172,8 @@ const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
   if (event.key !== "Enter") {
     return;
   }
-  if (event.nativeEvent.isComposing) {
+  // The key that confirms a composition is not a send.
+  if (isComposingKey(event.nativeEvent)) {
     return;
   }
   if (event.shiftKey) {

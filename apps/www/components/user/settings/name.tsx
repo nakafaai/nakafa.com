@@ -9,13 +9,15 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -33,7 +35,6 @@ const formSchema = Schema.toStandardSchemaV1(
 );
 /** Render the validated optimistic user-name settings form. */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updateUserName = useUpdateUserNameMutation();
   const form = useForm({
@@ -66,7 +67,10 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(actionErrorMessage);
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
+                    });
                   })
                 )
               ),
@@ -119,14 +123,14 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               const canSubmit = Boolean(isDirty) && Boolean(isValid);
               const isDisabled = !canSubmit || Boolean(isSubmitting);
               return (
-                <div className="flex w-full items-center justify-between gap-4">
-                  <p className="text-muted-foreground text-sm">
-                    {t("name-footer")}
-                  </p>
-                  <Button disabled={isDisabled} size="sm" type="submit">
-                    {t("save")}
-                  </Button>
-                </div>
+                <>
+                  <CardSectionHint>{t("name-footer")}</CardSectionHint>
+                  <CardSectionActions>
+                    <Button disabled={isDisabled} size="sm" type="submit">
+                      {t("save")}
+                    </Button>
+                  </CardSectionActions>
+                </>
               );
             }}
           </form.Subscribe>

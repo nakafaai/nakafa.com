@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  BIO_MAX_LENGTH,
-  readBio,
-  tidyBio,
-} from "@repo/backend/confect/users/bio";
+import { readBio, tidyBio } from "@repo/backend/confect/users/bio";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -13,29 +9,31 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { Input } from "@repo/design-system/components/ui/input";
-import { cn } from "cn";
-import { Array as Arr, Effect, Result } from "effect";
+import { Textarea } from "@repo/design-system/components/ui/textarea";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateBioMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
-/** Renders the bio card: one line about the account, with its count of characters. */
+/**
+ * Renders the bio card: a few lines about the account. A bio that is too long
+ * says so in words, and Save waits until it fits.
+ */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const updateBio = useUpdateBioMutation();
   const current = user.appUser.bio ?? "";
   const [typed, setTyped] = useState(current);
   const text = tidyBio(typed);
-  const count = Arr.fromIterable(text).length;
   const fits = Result.isSuccess(readBio(typed));
   const canSave = fits && text !== current;
 
@@ -51,7 +49,10 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),
@@ -79,7 +80,7 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             <FieldLabel className="sr-only" htmlFor="user-settings-bio">
               {t("bio")}
             </FieldLabel>
-            <Input
+            <Textarea
               aria-invalid={!fits}
               className="max-w-md"
               id="user-settings-bio"
@@ -91,19 +92,19 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
           </Field>
         </CardContent>
         <CardSectionFooter>
-          <div className="flex w-full items-center justify-between gap-4">
-            <p
-              className={cn(
-                "text-sm",
-                fits ? "text-muted-foreground" : "text-destructive"
-              )}
-            >
-              {t("bio-count", { count, max: BIO_MAX_LENGTH })}
-            </p>
+          {/* Only the too-long message is an alert, so only it is announced as it appears. */}
+          {fits ? (
+            <CardSectionHint>{t("bio-footer")}</CardSectionHint>
+          ) : (
+            <CardSectionHint role="alert" tone="destructive">
+              {t("bio-too-long")}
+            </CardSectionHint>
+          )}
+          <CardSectionActions>
             <Button disabled={!canSave} size="sm" type="submit">
               {t("save")}
             </Button>
-          </div>
+          </CardSectionActions>
         </CardSectionFooter>
       </CardSection>
     </form>

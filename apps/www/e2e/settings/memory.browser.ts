@@ -7,6 +7,8 @@ import {
   saved,
 } from "@/e2e/support/changes";
 import {
+  confirmDelete,
+  deleteQuestion,
   EMPTY,
   editorOf,
   memoryRow,
@@ -168,22 +170,37 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     const row = memoryRow(page, NAMED);
     const editor = editorOf(page);
 
-    // The editor deletes the memory it shows, and Undo puts it back as the
-    // server stored it: its title and its words, written by the learner.
+    // The editor asks before it deletes the memory it shows. Cancel keeps the
+    // memory with the title and words the learner wrote.
     await row.getByText(NAMED).click();
     await opened(page, REWRITTEN);
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
+    const question = deleteQuestion(page);
+    await expect(question).toBeVisible();
+    await question.getByRole("button", { name: "Cancel" }).click();
+    await expect(question).toHaveCount(0);
+    // The editor still shows the memory's words. At 390px the editor is a dialog
+    // over the list, which hides the list from the accessibility tree, so the
+    // list is checked by its markup: the memory is still in it, with its title.
+    await expect(editor).toBeVisible();
+    await expect(editor).toHaveText(REWRITTEN);
+    await expect(
+      page.locator("main ul > li").filter({ hasText: NAMED })
+    ).toBeAttached();
+    // Closing the editor shows the row, and the learner opens the editor on it
+    // again to delete the memory.
+    await page.getByRole("button", { exact: true, name: "Close" }).click();
     await expect(editor).toHaveCount(0);
-    await expect(row).toHaveCount(0);
-    await page.getByRole("button", { name: "Undo" }).click();
     await expect(row).toBeVisible();
-    await expect(row.getByText("Written by you")).toBeVisible();
+    await row.getByText(NAMED).click();
+    await opened(page, REWRITTEN);
 
-    // The server deletes the memory at once: it is gone after a reload made
-    // while the toast still offers the Undo.
+    // A confirmed delete removes the memory from the editor and the list at
+    // once, and the server deletes it: it is gone after a reload.
     const before = changes.sent;
-    await row.hover();
-    await row.getByRole("button", { name: "Delete memory" }).click();
+    await page.getByRole("button", { exact: true, name: "Delete" }).click();
+    await confirmDelete(page);
+    await expect(editor).toHaveCount(0);
     await expect(row).toHaveCount(0);
     await saved(changes, before);
     await reloadUntil(page, () =>
@@ -195,7 +212,7 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
 /**
  * Signs a synthetic learner in and walks the Memory page: it writes a memory
  * in the editor, which saves by itself, gives it a title and new words, turns
- * memory off and on, and deletes the memory once with Undo and once for real.
+ * memory off and on, and deletes the memory after a cancelled and a confirmed delete.
  */
 const verifyMemoryPage = Effect.fn("NakafaE2E.verifyMemoryPage")(function* (
   page: Page,

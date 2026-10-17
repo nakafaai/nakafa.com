@@ -25,6 +25,7 @@ import {
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
+  firstRow,
   hydratesInPlace,
   hydratesInPlaceAtLargeText,
   isHydrated,
@@ -38,9 +39,6 @@ const EXTENDED = " and the Oort cloud";
 const searchOf = (page: Page) =>
   page.getByRole("searchbox", { name: "Search memories" });
 
-/** The first row of the list. */
-const firstRow = (page: Page) => page.locator("main ul > li").first();
-
 /**
  * Reloads the page so that only its first page of the list is loaded, and
  * waits until React has taken the page over, because words typed before that
@@ -52,7 +50,9 @@ const reloadFresh = (page: Page, changes: Changes) =>
     await expect(memoryRow(page, NEWEST)).toBeVisible();
     await expect(memoryRow(page, OLDEST)).toHaveCount(0);
     await expect
-      .poll(() => isHydrated(page), { timeout: readinessTimeoutMilliseconds })
+      .poll(() => isHydrated(firstRow(page)), {
+        timeout: readinessTimeoutMilliseconds,
+      })
       .toBe(true);
     await live(changes);
   });

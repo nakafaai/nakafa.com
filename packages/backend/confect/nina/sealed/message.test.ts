@@ -4,6 +4,7 @@ import {
   copyOf,
   sealThreadIn,
   withoutRowIds,
+  writtenThreadIn,
 } from "@repo/backend/test/nina/seal";
 import {
   messageFailureIn,
@@ -16,11 +17,16 @@ describe("reading one message through the sealed module", () => {
     const f = await createThreadTest();
     const owner = f.identity.userId;
     const plain = await readMessageIn(f.t, owner, f.promptMessageId);
+    const written = await writtenThreadIn(f.t, f.identity.threadId, owner);
+    const writtenPrompt = copyOf(written, f.promptMessageId);
+    expect(
+      withoutRowIds(await readMessageIn(f.t, owner, writtenPrompt))
+    ).toEqual(withoutRowIds(plain));
     const replacements = await sealThreadIn(f.t, f.identity.threadId, owner);
     const sealed = await readMessageIn(
       f.t,
       owner,
-      copyOf(replacements, f.promptMessageId)
+      copyOf(replacements, writtenPrompt)
     );
     expect(withoutRowIds(sealed)).toEqual(withoutRowIds(plain));
     expect(sealed?.text).toBe("Explain a limit.");

@@ -15,6 +15,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -158,20 +159,22 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
             />
           </dl>
         </div>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            <VisualFact
+              label={labels.protons}
+              value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
+            />
+            <VisualFact
+              label={labels.electrons}
+              value={<InlineMath math={`${electronCount}`} />}
+            />
+            <VisualFact label={labels.neutrons} value={selectedLabels.note} />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <VisualFact
-            label={labels.protons}
-            value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
-          />
-          <VisualFact
-            label={labels.electrons}
-            value={<InlineMath math={`${electronCount}`} />}
-          />
-          <VisualFact label={labels.neutrons} value={selectedLabels.note} />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

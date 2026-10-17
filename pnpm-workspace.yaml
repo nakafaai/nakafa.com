@@ -22,6 +22,24 @@ update:
     - '@effect/vitest'
     - '@nakafa/aksara-contracts'
     - '@react-three/fiber'
+    - '@tiptap/core'
+    - '@tiptap/extension-bold'
+    - '@tiptap/extension-code'
+    - '@tiptap/extension-document'
+    - '@tiptap/extension-highlight'
+    - '@tiptap/extension-italic'
+    - '@tiptap/extension-link'
+    - '@tiptap/extension-list'
+    - '@tiptap/extension-paragraph'
+    - '@tiptap/extension-subscript'
+    - '@tiptap/extension-superscript'
+    - '@tiptap/extension-text'
+    - '@tiptap/extension-underline'
+    - '@tiptap/extensions'
+    - '@tiptap/markdown'
+    - '@tiptap/pm'
+    - '@tiptap/react'
+    - '@tiptap/starter-kit'
     - afdocs
     - '@next/third-parties'
     - '@turbo/gen'
@@ -37,6 +55,9 @@ update:
     - next
     - node
     - pnpm
+    - prosemirror-collab
+    - prosemirror-model
+    - prosemirror-transform
     - turbo
     - typescript
     - ultracite
@@ -52,7 +73,7 @@ catalog:
   '@hugeicons/core-free-icons': ^4.3.5
   '@hugeicons/react': ^1.1.10
   '@mantine/hooks': ^9.7.2
-  '@react-email/render': 2.1.0
+  '@react-email/render': 2.1.1
   '@shadcn/react': 0.3.1
   '@tailwindcss/postcss': ^4.3.3
   '@vercel/config': ^0.12.0
@@ -60,12 +81,12 @@ catalog:
   '@vitest/ui': 5.0.5
   ai: 7.0.140
   class-variance-authority: ^0.7.1
-  cn: 0.4.0
+  cn: 0.5.0
   effect: 4.0.2
   motion: ^14.3.0
   next-intl: ^4.14.9
   next-themes: ^0.4.6
-  react-email: 6.11.2
+  react-email: 6.11.3
   remark-mdx: 3.1.1
   remark-parse: 11.0.0
   server-only: 0.0.1
@@ -87,7 +108,11 @@ overrides:
   "@effect/ai-openrouter": "4.0.2"
   "@effect/platform-node": "4.0.2"
   "@effect/platform-node-shared": "4.0.2"
-  "@react-email/ui@6.11.2>next": "16.4.2"
+  # posthog-node 5.56 imports @opentelemetry/api, an optional peer that is not
+  # installed. Convex cannot bundle the PostHog component with it, so the
+  # component keeps the release it bundles with: 5.55.1, as on main.
+  "@posthog/convex@2.1.5>posthog-node": "5.55.1"
+  "@react-email/ui@6.11.3>next": "16.4.2"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
   "auth@1.6.33>@babel/core": "7.29.7"
   "axios": "1.20.0"

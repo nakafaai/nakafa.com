@@ -322,7 +322,7 @@ describe("users/mutations", () => {
   });
 
   describe("bio", () => {
-    it("stores one trimmed line and clears the bio when the text holds nothing", async () => {
+    it("stores the trimmed lines of the bio and clears the bio when the text holds nothing", async () => {
       const t = createConvexTestWithBetterAuth();
       const identity = await t.mutation(
         async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
@@ -334,9 +334,11 @@ describe("users/mutations", () => {
       const read = () => t.query((ctx) => ctx.db.get("users", identity.userId));
 
       await as.mutation(api.users.mutations.updateBio, {
-        bio: "  Belajar fisika\nsambil minum teh.  ",
+        bio: "  Belajar fisika  \nsambil minum teh.\r\n\r\n\r\nBesok lagi.  ",
       });
-      expect((await read())?.bio).toBe("Belajar fisika sambil minum teh.");
+      expect((await read())?.bio).toBe(
+        "Belajar fisika\nsambil minum teh.\n\nBesok lagi."
+      );
 
       await as.mutation(api.users.mutations.updateBio, { bio: " \n " });
       expect(await read()).not.toHaveProperty("bio");
@@ -428,6 +430,47 @@ describe("users/mutations", () => {
 
       await expect(
         t.mutation(setMascot, { mascot: CODE })
+      ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
+    });
+  });
+
+  describe("picture", () => {
+    const setPicture = Ref.getFunctionReference(
+      refs.public.users.mutations.setPicture
+    );
+
+    it("stores the picture the caller chooses, and keeps the rest of the account", async () => {
+      const t = createConvexTestWithBetterAuth();
+      const identity = await t.mutation(async (ctx) => {
+        const user = await seedAuthenticatedUser(ctx, { now: NOW });
+        await ctx.db.patch("users", user.userId, {
+          bio: "Belajar fisika.",
+          username: "rubah",
+        });
+        return user;
+      });
+      const as = t.withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      });
+      const read = () => t.query((ctx) => ctx.db.get("users", identity.userId));
+
+      await as.mutation(setPicture, { picture: "photo" });
+      expect(await read()).toMatchObject({
+        bio: "Belajar fisika.",
+        picture: "photo",
+        username: "rubah",
+      });
+
+      await as.mutation(setPicture, { picture: "animal" });
+      expect((await read())?.picture).toBe("animal");
+    });
+
+    it("answers a visitor without a session as unauthenticated", async () => {
+      const t = createConvexTestWithBetterAuth();
+
+      await expect(
+        t.mutation(setPicture, { picture: "photo" })
       ).rejects.toMatchObject({ data: { _tag: "SessionRequired" } });
     });
   });

@@ -6,6 +6,11 @@ export function sidebarAvatar(page: Page) {
   return page.locator('[data-sidebar="footer"] [data-slot="avatar"]');
 }
 
+/** The Select of the profile picture card that chooses the animal or the Google photo. */
+export function pictureChoice(page: Page) {
+  return page.locator("#user-settings-picture");
+}
+
 /** The animal that an avatar draws in its fallback. */
 export function animalOf(avatar: Locator) {
   return avatar.locator('[data-slot="avatar-fallback"] svg');

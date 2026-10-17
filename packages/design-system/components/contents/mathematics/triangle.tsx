@@ -11,6 +11,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
@@ -112,13 +113,11 @@ function Content({
             <ScenePlaceholder />
           )}
         </VisualCardScene>
-      </VisualCardBody>
-      <CoordinateControls>
-        <div className="flex w-full flex-col gap-4">
+        <VisualCardControls>
           {isNearViewport ? (
             <TriangleReadout angle={angleValue} labels={labels} />
           ) : null}
-          <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
+          <div className="mx-auto flex w-full max-w-md flex-col gap-4">
             <NumberField
               decrementAriaLabel={t("decrease-angle")}
               incrementAriaLabel={t("increase-angle")}
@@ -158,8 +157,9 @@ function Content({
               </Group>
             </NumberField>
           </div>
-        </div>
-      </CoordinateControls>
+        </VisualCardControls>
+      </VisualCardBody>
+      <CoordinateControls />
     </>
   );
 }

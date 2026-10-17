@@ -22,7 +22,6 @@ import {
   MutableHashMap,
   Result,
 } from "effect";
-import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useAi } from "@/components/ai/context";
 import {
@@ -71,7 +70,6 @@ export function useNinaSubmission(
   const uploadOf = useAi((state) => state.uploadOf);
   const inFlight = useRef(false);
   const uncertain = useRef<Ref.Args<Start> | null>(null);
-  const t = useTranslations("Ai");
 
   /**
    * Admits one message or retry as one Effect, started now. It settles with
@@ -93,50 +91,53 @@ export function useNinaSubmission(
       : randomUuid;
     return Effect.runPromise(
       draftKey.pipe(
-        Effect.tap((key) =>
+        Effect.flatMap((key) =>
+          // The chat draft and the in-flight guard are released on every exit,
+          // a defect of the store included, so no later send is held back.
           Effect.sync(() => {
             if (key) {
               addChatDraft(key);
             }
-          })
-        ),
-        Effect.flatMap((key) =>
-          inputProgram.pipe(
-            Effect.tap(() => requireNinaConnection(convex)),
-            Effect.flatMap((input) => {
-              const payload = {
-                ...(chatId ? { chatId } : {}),
-                input,
-              };
-              const previous = uncertain.current;
-              const same =
-                previous &&
-                encodeJsonText({ ...previous, requestId: undefined }) ===
-                  encodeJsonText(payload);
-              const requestId: Effect.Effect<string> = same
-                ? Effect.succeed(previous.requestId)
-                : randomUuid;
-              return requestId.pipe(
-                Effect.flatMap((id) => {
-                  const args = { ...payload, requestId: id };
-                  uncertain.current = args;
-                  const submit = start.withOptimisticUpdate(
-                    optimisticPrompt(
-                      HashMap.fromIterable(previews),
-                      DateTime.toEpochMillis(DateTime.nowUnsafe())
-                    )
+          }).pipe(
+            Effect.andThen(
+              inputProgram.pipe(
+                Effect.tap(() => requireNinaConnection(convex)),
+                Effect.flatMap((input) => {
+                  const payload = {
+                    ...(chatId ? { chatId } : {}),
+                    input,
+                  };
+                  const previous = uncertain.current;
+                  const same =
+                    previous &&
+                    encodeJsonText({ ...previous, requestId: undefined }) ===
+                      encodeJsonText(payload);
+                  const requestId: Effect.Effect<string> = same
+                    ? Effect.succeed(previous.requestId)
+                    : randomUuid;
+                  return requestId.pipe(
+                    Effect.flatMap((id) => {
+                      const args = { ...payload, requestId: id };
+                      uncertain.current = args;
+                      const submit = start.withOptimisticUpdate(
+                        optimisticPrompt(
+                          HashMap.fromIterable(previews),
+                          DateTime.toEpochMillis(DateTime.nowUnsafe())
+                        )
+                      );
+                      return Effect.tryPromise({
+                        try: () => submit(args),
+                        catch: () =>
+                          new NinaConnectionError({
+                            code: "NINA_CONNECTION_FAILED",
+                            message: "Nina admission could not be confirmed.",
+                          }),
+                      }).pipe(Effect.flatMap(Effect.fromResult));
+                    })
                   );
-                  return Effect.tryPromise({
-                    try: () => submit(args),
-                    catch: () =>
-                      new NinaConnectionError({
-                        code: "NINA_CONNECTION_FAILED",
-                        message: "Nina admission could not be confirmed.",
-                      }),
-                  }).pipe(Effect.flatMap(Effect.fromResult));
                 })
-              );
-            }),
+              )
+            ),
             Effect.onExit((exit) =>
               Effect.sync(() => {
                 if (!key) {
@@ -170,13 +171,13 @@ export function useNinaSubmission(
               uncertain.current = null;
             }
             onFailure?.(result.failure);
-            const report = reportNinaFailure(
-              result.failure,
-              t(
-                `failures.${ninaFailureFeedback[result.failure.code].message}`,
-                ninaFailureLimits
-              )
-            ).pipe(Effect.as(undefined));
+            const feedbackKey =
+              ninaFailureFeedback[result.failure.code].message;
+            const report = reportNinaFailure(result.failure, {
+              description: `failure-${feedbackKey}.description`,
+              title: `failure-${feedbackKey}.title`,
+              values: ninaFailureLimits,
+            }).pipe(Effect.as(undefined));
             if (
               result.failure._tag === "NinaUploadError" &&
               result.failure.code === "NINA_UPLOAD_INVALID"

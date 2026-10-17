@@ -24,44 +24,42 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
+import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
-import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import { randomUuid } from "@repo/utilities/uuid";
+import {
+  type PromptInputMessage,
+  submitPromptInput,
+} from "@repo/design-system/lib/prompt-input/submission";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useOptimistic, useTransition } from "react";
-import { toast } from "sonner";
-import {
-  NinaAttach,
-  NinaAttachments,
-  RejectedFiles,
-} from "@/components/ai/attachment";
-import { rejectionNotice } from "@/components/ai/attachments";
-import { REJECTION_NOTICE, useAi } from "@/components/ai/context";
-import {
-  NINA_NOTICE_POSITION,
-  promptRefusal,
-  reportNinaFailure,
-} from "@/components/ai/feedback";
+import { type ReactNode, useState } from "react";
+import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
+import { useAi } from "@/components/ai/context";
+import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
 
 interface Props {
   autoFocus?: boolean;
   children?: ReactNode;
   className?: string;
   disabled?: boolean;
+  onStop?: () => void;
   onSubmit: (message: PromptInputMessage) => boolean | Promise<boolean>;
   status?: ChatStatus;
 }
 
-/** One attachment-capable composer for Nina's home, conversation and sheet. */
+/**
+ * One attachment-capable composer for Nina's home, conversation and sheet. While
+ * Nina streams, the button stops the answer through `onStop` and never submits,
+ * so a key press in the text field cannot stop it.
+ */
 export function NinaInput({
   autoFocus,
   children,
   className,
   disabled,
+  onStop,
   onSubmit,
   status,
 }: Props) {
@@ -69,19 +67,19 @@ export function NinaInput({
   const composerKey = useAi((state) => state.composerKey);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
-  const [submittedFiles, hideSubmittedFiles] = useOptimistic<readonly string[]>(
-    []
-  );
-  const [, startTransition] = useTransition();
-
+  const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
   // While Nina answers, the button stops the reply and a press sends no text.
   const answering = status === "streaming";
+  const stopping = answering && !disabled;
 
   function handleSubmit(message: PromptInputMessage) {
     const refusal = promptRefusal(message.text, answering);
     if (Option.isSome(refusal)) {
       Effect.runFork(
-        reportNinaFailure(refusal.value, t("failures.message-size"))
+        reportNinaFailure(refusal.value, {
+          description: "failure-message-size.description",
+          title: "failure-message-size.title",
+        })
       );
       return false;
     }
@@ -89,46 +87,11 @@ export function NinaInput({
     if (admission === false) {
       return false;
     }
-    startTransition(async () => {
-      hideSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
-      // Once the message is sent, the notice about the files an earlier pick
-      // did not attach has done its work.
-      if (await admission) {
-        toast.dismiss(REJECTION_NOTICE);
-      }
-    });
-    return admission;
-  }
-
-  /**
-   * Says why a pick was not attached in full: one notice for the pick, naming
-   * the files it dropped and the reason of each. Two notices would stack, and
-   * the one in front would hide the other, so the notice has one id, and a new
-   * pick replaces it. A learner needs time to read a list of names, and a list
-   * that scrolls cannot be used in a notice that is about to leave, so it stays
-   * until the learner closes it, picks again, or sends the message. A pick that
-   * attached every file takes the notice away, since its names are no longer a
-   * problem.
-   */
-  function handlePick(rejections: readonly PromptInputFileConstraintError[]) {
-    if (!Arr.isReadonlyArrayNonEmpty(rejections)) {
-      toast.dismiss(REJECTION_NOTICE);
-      return;
-    }
-    const notice = rejectionNotice(rejections, t);
-    toast.error(notice.title, {
-      // A new pick is a new list. With a key of its own it starts at its top,
-      // not where the list it replaces was scrolled to.
-      description: (
-        <RejectedFiles
-          key={Effect.runSync(randomUuid)}
-          reasons={notice.reasons}
-        />
-      ),
-      duration: Number.POSITIVE_INFINITY,
-      id: REJECTION_NOTICE,
-      position: NINA_NOTICE_POSITION,
-    });
+    // The submitted files leave the tray while the message is admitted, and
+    // come back if it is refused. No transition holds them: one that waits for
+    // the admission would hold every navigation the learner makes meanwhile.
+    setSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
+    return Promise.resolve(admission).finally(() => setSubmittedFiles([]));
   }
 
   // The files of a composer live in the state of its PromptInput, and a new key
@@ -143,7 +106,6 @@ export function NinaInput({
       maxFileSize={NINA_FILE_SIZE}
       maxFiles={NINA_FILE_COUNT}
       multiple
-      onPick={handlePick}
       onSubmit={handleSubmit}
     >
       {children}
@@ -181,18 +143,15 @@ export function NinaInput({
           <NinaAttach />
           <div className="flex items-center gap-1">
             <InputGroupButton
-              aria-label={
-                answering && !disabled ? t("stop-response") : t("send-message")
-              }
+              aria-label={stopping ? t("stop-response") : t("send-message")}
               className="rounded-full"
               disabled={disabled}
+              onClick={stopping ? onStop : undefined}
               size="icon"
-              type="submit"
+              type={stopping ? "button" : "submit"}
               variant="default"
             >
-              <HugeIcons
-                icon={answering && !disabled ? StopIcon : ArrowUp02Icon}
-              />
+              <HugeIcons icon={stopping ? StopIcon : ArrowUp02Icon} />
             </InputGroupButton>
           </div>
         </InputGroupAddon>
@@ -211,6 +170,12 @@ export function NinaSuggestions({
   const text = useAi((state) => state.text);
   const hasFiles = usePromptInputAttachments(
     (attachments) => attachments.files.length > 0
+  );
+  const dismissRefusals = usePromptInputAttachments(
+    (attachments) => attachments.dismissRefusals
+  );
+  const refusals = usePromptInputAttachments(
+    (attachments) => attachments.refusals
   );
   if (text.trim() || hasFiles) {
     return null;
@@ -237,11 +202,24 @@ export function NinaSuggestions({
     <div className="flex flex-col gap-2 pb-4">
       {Arr.map(suggestions, (suggestion) => (
         <Button
-          aria-label={suggestion.prompt}
           className="group h-auto min-h-9 w-full justify-start whitespace-normal py-1.5 font-normal shadow-none"
           disabled={disabled}
           key={suggestion.label}
-          onClick={() => onSubmit({ text: suggestion.prompt })}
+          onClick={(event) => {
+            // A suggestion is a send from this composer, so it takes the refused
+            // chips in the tray the same way the composer's own Send does.
+            runPromptInputProgram(
+              submitPromptInput({
+                dismissRefusals,
+                event,
+                files: [],
+                onSubmit,
+                onSuccess: Fn.constVoid,
+                refusals,
+                text: suggestion.prompt,
+              })
+            );
+          }}
           type="button"
           variant="outline"
         >

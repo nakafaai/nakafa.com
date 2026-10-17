@@ -279,12 +279,11 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     );
     const nina = page.getByRole("dialog", { name: NINA_DIALOG_NAME });
     yield* Effect.promise(() => expect(nina).toBeVisible());
+    // The button's name is the label it shows. Its prompt, which names the
+    // page's title, is sent on a click and is not part of the name.
     yield* Effect.promise(() =>
       expect(
-        nina.getByRole("button", {
-          name: `Explain ${titleText} in simple student-friendly language.`,
-          exact: true,
-        })
+        nina.getByRole("button", { name: "Explain this", exact: true })
       ).toBeVisible()
     );
     yield* Effect.promise(() => expect(page.getByRole("menu")).toHaveCount(0));

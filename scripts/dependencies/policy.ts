@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** The exact specs one reviewed dependency may declare. */
 const ApprovedSpecsSchema = Schema.Union([
@@ -53,6 +53,76 @@ export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
   ai: "7.0.140",
 } as const;
+/**
+ * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
+ * each manifest pins it exactly. Every Tiptap package that a workspace declares is
+ * held to this one version (ADR 0028). A bump changes this line and then every
+ * manifest that pins the cohort: the policy test reports each declaration that still
+ * holds the old version, so none is missed.
+ */
+const TIPTAP_COHORT_VERSION = "3.32.0";
+/**
+ * The Tiptap packages each manifest declares. The editor package holds the schema of
+ * an assessment document, the design system holds the Memory editor, and the web app
+ * declares `@tiptap/pm` alone. The backend declares the packages that its bundle imports
+ * by name: the Convex bundle resolves each one from the backend, and pnpm does not link a
+ * workspace package's dependencies into another workspace (ADR 0028).
+ */
+const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
+  ["apps/www/package.json", ["@tiptap/pm"]],
+  [
+    "packages/backend/package.json",
+    [
+      "@tiptap/core",
+      "@tiptap/extension-bold",
+      "@tiptap/extension-code",
+      "@tiptap/extension-italic",
+      "@tiptap/extension-link",
+      "@tiptap/extension-list",
+      "@tiptap/extension-subscript",
+      "@tiptap/extension-superscript",
+      "@tiptap/extension-underline",
+      "@tiptap/starter-kit",
+    ],
+  ],
+  [
+    "packages/design-system/package.json",
+    [
+      "@tiptap/core",
+      "@tiptap/extension-document",
+      "@tiptap/extension-highlight",
+      "@tiptap/extension-list",
+      "@tiptap/extension-paragraph",
+      "@tiptap/extension-text",
+      "@tiptap/extension-underline",
+      "@tiptap/extensions",
+      "@tiptap/markdown",
+      "@tiptap/pm",
+      "@tiptap/react",
+      "@tiptap/starter-kit",
+    ],
+  ],
+  [
+    "packages/editor/package.json",
+    [
+      "@tiptap/core",
+      "@tiptap/extension-bold",
+      "@tiptap/extension-code",
+      "@tiptap/extension-italic",
+      "@tiptap/extension-link",
+      "@tiptap/extension-list",
+      "@tiptap/extension-subscript",
+      "@tiptap/extension-superscript",
+      "@tiptap/extension-underline",
+      "@tiptap/pm",
+      "@tiptap/starter-kit",
+    ],
+  ],
+];
+/** Every Tiptap package that a manifest declares, each named once. */
+const TIPTAP_PACKAGES = Arr.dedupe(
+  Arr.flatMap(TIPTAP_DECLARATIONS, ([, packages]) => packages)
+);
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   { approved: "19.3.1", dependency: "react", minimumDeclarations: 1 },
@@ -168,6 +238,42 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.32.0 does not
+  // ship it. It is MIT, depends on prosemirror-state alone, and its last
+  // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
+  // design system installs its extension, and the sync loop of the web app
+  // reads the same plugin's state.
+  {
+    approved: "1.3.1",
+    declarationPaths: [
+      "apps/www/package.json",
+      "packages/design-system/package.json",
+    ],
+    dependency: "prosemirror-collab",
+  },
+  // The model and the transform that the server folds stored steps with (ADR
+  // 0028). They are the versions that `@tiptap/pm` 3.32.0 resolves in
+  // `pnpm-lock.yaml`, so the server applies a step with the code the editors run.
+  {
+    approved: "1.25.12",
+    declarationPaths: ["packages/backend/package.json"],
+    dependency: "prosemirror-model",
+  },
+  {
+    approved: "1.12.2",
+    declarationPaths: ["packages/backend/package.json"],
+    dependency: "prosemirror-transform",
+  },
+  ...Arr.map(TIPTAP_PACKAGES, (dependency) => ({
+    approved: TIPTAP_COHORT_VERSION,
+    declarationPaths: Arr.map(
+      Arr.filter(TIPTAP_DECLARATIONS, ([, packages]) =>
+        Arr.contains(packages, dependency)
+      ),
+      ([path]) => path
+    ),
+    dependency,
+  })),
 ];
 
 export const REGISTRY_REVIEWS = [
@@ -282,6 +388,11 @@ export const REGISTRY_REVIEWS = [
     "@convex-dev/better-auth@latest",
     "0.12.5",
     "The adapter defines the accepted Better Auth peer range.",
+  ],
+  [
+    "posthog-node@latest",
+    "5.56.2",
+    "posthog-node 5.56 imports @opentelemetry/api, an optional peer that is not installed, and Convex's bundler cannot resolve it. The PostHog Convex component therefore stays on 5.55.1 through the override for @posthog/convex in pnpm-workspace.yaml, and the analytics package keeps 5.56.2. Review this again when a posthog-node or @posthog/convex release bundles for Convex without the import.",
   ],
   ["@biomejs/biome@latest", "2.5.15", "Formatting is reviewed with Ultracite."],
   [
