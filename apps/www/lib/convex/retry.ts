@@ -29,9 +29,10 @@ interface OpenWait {
 }
 
 /**
- * Starts the wait for a share link's answer, and holds the one wait that is open.
- * Each wait is forked detached, so the caller that started it can finish while
- * the wait goes on. A new retry or a dispose ends the open wait first.
+ * Starts the wait for the server's answer to a query, and holds the one wait
+ * that is open. Each wait is forked detached, so the caller that started it can
+ * finish while the wait goes on. A new retry or a dispose ends the open wait
+ * first.
  *
  * The controller runs nothing. Its functions return effects, and the caller
  * decides where they run.
@@ -54,7 +55,7 @@ export function makeAnswerRetry() {
      * the wait fails, it calls `on.ended`. A wait that a new retry replaces calls
      * neither, so the state its caller keeps stays with the new wait.
      */
-    retry: Effect.fn("chat.share.retry")(function* <E>(
+    retry: Effect.fn("www.convex.retry.retry")(function* <E>(
       wait: Effect.Effect<void, E, Scope.Scope>,
       on: AnswerCallbacks
     ) {
@@ -91,7 +92,7 @@ export function makeAnswerRetry() {
      * Ends the subscription of an answered wait, and returns once it has ended.
      * It does nothing while the wait is still pending, or when no wait is open.
      */
-    release: Effect.fn("chat.share.release")(function* () {
+    release: Effect.fn("www.convex.retry.release")(function* () {
       const open = MutableRef.get(openWait);
       if (
         Option.isNone(open) ||
@@ -106,7 +107,7 @@ export function makeAnswerRetry() {
      * Ends the open wait, and returns once it has ended. A wait that has not
      * answered calls `ended`. An answered wait ends without a callback.
      */
-    dispose: Effect.fn("chat.share.dispose")(function* () {
+    dispose: Effect.fn("www.convex.retry.dispose")(function* () {
       const open = yield* takeOpenWait;
       if (Option.isNone(open)) {
         return;

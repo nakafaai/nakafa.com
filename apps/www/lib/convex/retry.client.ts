@@ -4,16 +4,16 @@ import type { Ref } from "@confect/core";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { startTransition, useEffect, useState } from "react";
-import { makeAnswerRetry } from "@/components/ai/chat/retry";
 import { awaitServerAnswer } from "@/lib/convex/answer";
+import { makeAnswerRetry } from "@/lib/convex/retry";
 
 /**
- * Retries a share link that the server could not load in a way the query does
- * not declare. Its readers have unmounted, so nothing subscribes to the query.
- * Until the next server message replaces the cache, a remount would read the
- * failure that the cache still holds, so the retry waits for the server's answer
- * first. The wait keeps its subscription until the remounted readers have
- * subscribed, so they join it, and the server runs the query once.
+ * Retries a query that the server could not answer in a way the query does not
+ * declare. Its readers have unmounted, so nothing subscribes to the query. Until
+ * the next server message replaces the cache, a remount would read the failure
+ * that the cache still holds, so the retry waits for the server's answer first.
+ * The wait keeps its subscription until the remounted readers have subscribed,
+ * so they join it, and the server runs the query once.
  */
 export function useAnswerRetry<Query extends Ref.AnyPublicQuery>(
   ref: Query,
@@ -28,8 +28,9 @@ export function useAnswerRetry<Query extends Ref.AnyPublicQuery>(
   const [waiting, setWaiting] = useState(false);
   const [controller] = useState(() => makeAnswerRetry());
 
-  // Unmounting ChatSharing ends the open wait, which ends its subscription.
-  // Closing the dialog keeps ChatSharing mounted, so the wait goes on.
+  // Unmounting the component that holds this hook ends the open wait, which ends
+  // its subscription. Closing the share dialog keeps ChatSharing mounted, so the
+  // wait goes on.
   useEffect(
     () => () => {
       Effect.runFork(controller.dispose());
@@ -37,10 +38,10 @@ export function useAnswerRetry<Query extends Ref.AnyPublicQuery>(
     [controller]
   );
 
-  // React runs the passive effects of the remounted readers, which subscribe to
-  // the query, before the effects of this component. So once the answer's
-  // remount is committed, ending the wait's subscription leaves the query with
-  // the readers, and the server does not run it again.
+  // The remounted readers subscribe to the query in their passive effects. A
+  // component that stays mounted, as ChatSharing does, ends the wait after them,
+  // so the query keeps the readers and the server does not run it again. A
+  // component that the remount unmounts ends its wait in the cleanup above.
   useEffect(() => {
     if (!waiting) {
       Effect.runFork(controller.release());

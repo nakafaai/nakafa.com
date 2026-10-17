@@ -1,12 +1,12 @@
 import { expect, it } from "@effect/vitest";
 import { Deferred, Effect, Ref } from "effect";
-import { makeAnswerRetry } from "@/components/ai/chat/retry";
+import { makeAnswerRetry } from "@/lib/convex/retry";
 
 /**
  * The two callbacks of one wait. Each call counts, and releases `done`, so a
  * test can wait until the wait has reported its outcome.
  */
-const makeOutcome = Effect.fn("chat.share.test.outcome")(function* () {
+const makeOutcome = Effect.fn("www.convex.retry.test.outcome")(function* () {
   const done = yield* Deferred.make<void>();
   const release = () => Deferred.doneUnsafe(done, Effect.void);
   return {
@@ -21,7 +21,7 @@ const makeOutcome = Effect.fn("chat.share.test.outcome")(function* () {
  * the subscriptions that are open now. `lastOpenAtStart` is the count of open
  * subscriptions when the latest one started.
  */
-const makeSubscriptions = Effect.fn("chat.share.test.subscriptions")(
+const makeSubscriptions = Effect.fn("www.convex.retry.test.subscriptions")(
   function* () {
     const open = yield* Ref.make(0);
     const lastOpenAtStart = yield* Ref.make(0);

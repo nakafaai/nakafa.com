@@ -20,13 +20,16 @@ import { AuthGoogle } from "@/components/auth/google";
  * The card a chat shows in place of its content when it cannot be read. A
  * declared access failure says the chat is not available to this viewer, and a
  * signed-out viewer can sign in. Any other failure says Nakafa could not load
- * the chat, and retrying runs the read again.
+ * the chat, and retrying runs the read again. While `isPending` is true, the
+ * retry button is disabled.
  */
 export function ChatFailure({
   error,
+  isPending = false,
   onRetry,
 }: {
   error: unknown;
+  isPending?: boolean;
   onRetry: () => void;
 }) {
   const t = useTranslations("Ai");
@@ -60,7 +63,12 @@ export function ChatFailure({
         <EmptyDescription>{t("chat-failed-description")}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button onClick={onRetry} size="sm" variant="outline">
+        <Button
+          disabled={isPending}
+          onClick={onRetry}
+          size="sm"
+          variant="outline"
+        >
           {t("retry")}
         </Button>
       </EmptyContent>
