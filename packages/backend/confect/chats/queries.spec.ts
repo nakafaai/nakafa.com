@@ -1,7 +1,10 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
+import {
+  ChatAccessError,
+  ChatShareReadError,
+} from "@repo/backend/confect/chats/access/spec";
 import {
   chatTypeValidator,
   chatVisibilityValidator,
@@ -55,6 +58,6 @@ export default GroupSpec.make()
         chatId: IdSchema("chats"),
       }),
       returns: () => Schema.NullOr(shareTokenValidator),
-      error: () => AuthFailure,
+      error: () => Schema.Union([AuthFailure, ChatShareReadError]),
     }).middleware(Session)
   );
