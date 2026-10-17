@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Option } from "effect";
 import { NextRequest } from "next/server";
-import { routeSchoolRequest } from "@/lib/routing/school/request";
+import {
+  readServedSchool,
+  rewriteToSchoolNotFound,
+  routeSchoolRequest,
+} from "@/lib/routing/school/request";
 
 const mockSchool = vi.hoisted(() => ({
   middleware: vi.fn(
@@ -190,6 +195,45 @@ describe("school requests", () => {
     const response = routeSchoolRequest(visit("https://nakafa.com/en/classes"));
 
     expect(response).toBeNull();
+    expect(mockSchool.middleware).not.toHaveBeenCalled();
+  });
+});
+
+describe("the school a request reaches", () => {
+  it.each([
+    ["https://harapan.nakafa.com/classes", "harapan"],
+    ["http://harapan.localhost:3000/", "harapan"],
+  ])("names the school of the host of %s", (address, slug) => {
+    expect(readServedSchool(visit(address))).toEqual(Option.some(slug));
+  });
+
+  it.each([
+    "https://nakafa.com/en/classes",
+    "https://www.nakafa.com/classes",
+    "http://127.0.0.1:3000/",
+    "https://harapan.nakafa.com/robots.txt",
+  ])("names no school for %s", (address) => {
+    expect(readServedSchool(visit(address))).toEqual(Option.none());
+  });
+});
+
+describe("the school not-found rewrite", () => {
+  it("rewrites to the not-found route with the locale of the page, as a 404 that is not indexed", () => {
+    const response = rewriteToSchoolNotFound(
+      visit("https://harapan.nakafa.com/classes"),
+      "de"
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "https://harapan.nakafa.com/_not-found/de"
+    );
+    expect(
+      response.headers.get("x-middleware-request-x-next-intl-locale")
+    ).toBe("de");
+    expect(response.headers.get("x-robots-tag")).toBe("noindex");
+    expect(response.headers.get("vary")).toContain("Accept-Language");
+    expect(response.headers.get("vary")).toContain("Cookie");
     expect(mockSchool.middleware).not.toHaveBeenCalled();
   });
 });

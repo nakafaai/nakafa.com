@@ -10,6 +10,7 @@ import {
   routing,
 } from "@repo/internationalization/src/routing";
 import { hasPreviewProvider } from "@repo/next-config/preview";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Option } from "effect";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -98,8 +99,10 @@ async function readIsSchoolHost() {
  * Renders the complete global 404 document from one locale dictionary. It is
  * its own document and has no app around it, so it reads only the small
  * dictionary of the standalone pages, with plain links, and no provider that
- * needs the app. On a school host the home link is the root of that host, and
- * the search link is left out, because a school has no search page.
+ * needs the app. On a school host the home link is Nakafa's home, because the
+ * proxy sends an unknown school and a viewer who is not a member here, and the
+ * root of that school would answer not found again. The search link is left out,
+ * because a school has no search page.
  */
 function NotFoundDocument({
   isSchoolHost,
@@ -125,7 +128,11 @@ function NotFoundDocument({
               title={messages.NotFound.title}
             >
               <ActionLink
-                href={isSchoolHost ? "/" : `/${locale}`}
+                href={
+                  isSchoolHost
+                    ? new URL(`/${locale}`, SITE_ORIGIN).href
+                    : `/${locale}`
+                }
                 label={messages.State["home-button"]}
                 variant="default"
               />

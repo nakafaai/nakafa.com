@@ -27,7 +27,11 @@ import {
   readLlmsMarkdownPathname,
 } from "@/lib/llms/routes";
 import { isOgRouteAliasPathname, readOgRouteAliasLocale } from "@/lib/og/route";
-import { plainTextAnswer } from "@/lib/routing/answer";
+import {
+  CONTENT_NOT_FOUND_SEGMENT,
+  NEXT_INTL_LOCALE_HEADER,
+  plainTextAnswer,
+} from "@/lib/routing/answer";
 import {
   isLocaleBypassPath,
   isUnsupportedSystemPath,
@@ -35,21 +39,20 @@ import {
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
-import { routeSchoolRequest } from "@/lib/routing/school/request";
+import { routeSchoolPage } from "@/lib/routing/school/refusal";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
 const TRAILING_SLASH_PATTERN = /\/+$/;
-const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
-const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
  *
  * The proxy keeps platform concerns here: PostHog bypasses, canonical slash
- * redirects, school host rewrites (ADR 0026), public discovery bypasses, locale
- * middleware, and response rewrites. The llms route seam handles Markdown negotiation, while the route
- * handler owns content lookup and final response status.
+ * redirects, school page refusals and school host rewrites (ADR 0026), public
+ * discovery bypasses, locale middleware, and response rewrites. The llms route
+ * seam handles Markdown negotiation, while the route handler owns content lookup
+ * and final response status.
  *
  * References:
  * https://nextjs.org/docs/app/api-reference/file-conventions/proxy
@@ -67,7 +70,7 @@ export async function proxy(request: NextRequest) {
     return slashRedirect;
   }
 
-  const schoolResponse = routeSchoolRequest(request);
+  const schoolResponse = await Effect.runPromise(routeSchoolPage(request));
   if (schoolResponse) {
     return schoolResponse;
   }

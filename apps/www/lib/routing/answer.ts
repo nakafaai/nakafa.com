@@ -11,3 +11,9 @@ export function plainTextAnswer(status: 404 | 410, body: string) {
     status,
   });
 }
+
+/** The request header that carries the locale of a not-found page to the page that renders it. */
+export const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
+
+/** The route that renders the app's not-found page when the proxy rewrites a request to it. */
+export const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
