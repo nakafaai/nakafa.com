@@ -145,12 +145,16 @@ const verifyFirstSave = Effect.fn("NakafaE2E.verifyFirstSave")(function* (
     await expect.poll(() => changes.sent).toBeGreaterThan(before);
     await expect(row).toBeVisible();
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
+    const confirmed = changes.sent;
     await confirmDelete(page);
     await expect(editorOf(page)).toHaveCount(0);
 
     changes.release();
     await expect(row).toHaveCount(0);
     await expect(page.getByText(EMPTY)).toBeVisible();
+    // The delete goes out once the server has stored the memory. A reload drops
+    // a change that is still on its way, so the page waits for the server's answer.
+    await saved(changes, confirmed);
     await reloadUntil(page, () =>
       expect(page.getByText(EMPTY)).toBeVisible({ timeout: 3000 })
     );
