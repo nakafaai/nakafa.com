@@ -50,13 +50,12 @@ const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
 );
 
 /**
- * The homepage ceiling: the body held 3,078 elements at four target viewports
- * and 3,080 at desktop on the production build of commit 2fd0dd3647 on 17
- * October 2026, and the closing question holds one element more since. The
+ * The homepage ceiling: the body held 3,079 elements at every target viewport
+ * on the production build of commit 4eed1d1a95 on 17 October 2026, because the
  * lesson window draws all four cards in one grid cell and mounts only the open
- * lab. Six percent over 3,081 is 3,266.
+ * lab. Six percent over 3,079 is 3,264.
  */
-const HOMEPAGE_MAX_DESCENDANTS = 3266;
+const HOMEPAGE_MAX_DESCENDANTS = 3264;
 
 /**
  * Records one measured count on the running test, so every run reports the number
