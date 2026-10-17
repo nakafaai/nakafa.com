@@ -16,6 +16,7 @@ import {
 } from "@repo/backend/confect/classroom/class";
 import { create } from "@repo/backend/confect/classroom/classes/create";
 import { mine } from "@repo/backend/confect/classroom/classes/mine";
+import { resolve } from "@repo/backend/confect/classroom/classes/resolve";
 import spec from "@repo/backend/confect/classroom/classes.spec";
 import { ClassNameTaken } from "@repo/backend/confect/classroom/errors";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -124,7 +125,7 @@ const list = FunctionImpl.make(
   })
 );
 
-/** The classes of a school: create, rename, archive, read, list, and the classes a Person teaches or attends. */
+/** The classes of a school: create, rename, archive, read, list, resolve by address, and the classes a Person teaches or attends. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(create),
   Layer.provide(rename),
@@ -132,6 +133,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(get),
   Layer.provide(list),
   Layer.provide(mine),
+  Layer.provide(resolve),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(cohortAccess),

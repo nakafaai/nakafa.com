@@ -5,14 +5,10 @@ import {
   Cancel01Icon,
   Login01Icon,
 } from "@hugeicons/core-free-icons";
-import { Animal } from "@repo/design-system/components/ui/animal";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/design-system/components/ui/avatar";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
@@ -135,12 +131,11 @@ function UserAvatar() {
       className="flex min-w-0 items-center gap-2 px-2"
       title={user.authUser.name}
     >
-      <Avatar className="size-8">
-        <AvatarImage alt={user.authUser.name} src={user.authUser.image ?? ""} />
-        <AvatarFallback>
-          <Animal mascot={user.appUser.mascot} />
-        </AvatarFallback>
-      </Avatar>
+      <PersonAvatar
+        className="size-8"
+        mascot={user.appUser.mascot}
+        photo={photoOf(user.appUser)}
+      />
       <p className="max-w-36 truncate text-muted-foreground text-sm">
         {user.authUser.name}
       </p>

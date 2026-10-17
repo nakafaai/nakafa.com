@@ -105,6 +105,7 @@ describe("public route ownership", () => {
     ["de", "auth/error"],
     ["de", "onboarding"],
     ["de", "chat/new"],
+    ["de", "user/settings/learning"],
     ["de", "user/settings/subscriptions"],
     ["de", "user/settings/memory"],
     ["de", "@nabil"],

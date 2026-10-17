@@ -28,7 +28,7 @@ const unreadable = () => new NinaGenerationError({ reason: "unknown" });
 export const readInput = Effect.fn("nina.input.read")(function* (
   turn: Pick<
     NinaTurnsDoc,
-    "chatId" | "order" | "promptMessageId" | "retryOf" | "threadId"
+    "chatId" | "order" | "promptMessageId" | "retryOf" | "threadId" | "userId"
   >,
   {
     context,

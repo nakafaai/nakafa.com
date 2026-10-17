@@ -123,6 +123,7 @@ export declare const api: {
             image?: string;
             mascot: string;
             name: string;
+            picture?: "animal" | "photo";
             plan: "free" | "pro";
             planCreditGrantId?: Id<"creditTransactions">;
             role?: "teacher" | "student" | "parent" | "administrator";
@@ -140,7 +141,12 @@ export declare const api: {
         "query",
         "public",
         { userId: Id<"users"> },
-        { image?: string; mascot: string; name: string } | null
+        {
+          image?: string;
+          mascot: string;
+          name: string;
+          picture?: "animal" | "photo";
+        } | null
       >;
     };
   };
@@ -333,6 +339,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      resolve: FunctionReference<
+        "query",
+        "public",
+        { classSlug: string; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
     };
     teachers: {
       assign: FunctionReference<
@@ -423,6 +443,7 @@ export declare const api: {
               image?: string | null;
               mascot: string;
               name: string;
+              picture?: "animal" | "photo";
             } | null;
             replyToUserId?: Id<"users">;
             slug: string;
@@ -433,6 +454,7 @@ export declare const api: {
               image?: string | null;
               mascot: string;
               name: string;
+              picture?: "animal" | "photo";
             } | null;
             userId: Id<"users">;
             viewerVote: -1 | 1 | null;
@@ -7028,6 +7050,12 @@ export declare const api: {
         { mascot: string },
         { mascot: string }
       >;
+      setPicture: FunctionReference<
+        "mutation",
+        "public",
+        { picture: "animal" | "photo" },
+        null
+      >;
       syncUserInfoForChat: FunctionReference<
         "mutation",
         "public",
@@ -10548,6 +10576,34 @@ export declare const internal: {
         null
       >;
     };
+    sealed: {
+      message: FunctionReference<
+        "query",
+        "internal",
+        { messageId: string; owner: Id<"users"> },
+        any | null
+      >;
+      thread: FunctionReference<
+        "query",
+        "internal",
+        {
+          excludeToolMessages?: boolean;
+          owner: Id<"users">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          statuses?: Array<"failed" | "pending" | "success">;
+          threadId: string;
+          upToAndIncludingMessageId?: string;
+        },
+        { continueCursor: string; isDone: boolean; page: Array<any> }
+      >;
+    };
     summaries: {
       anchor: FunctionReference<
         "query",
@@ -10999,6 +11055,7 @@ export declare const internal: {
           image?: string;
           mascot: string;
           name: string;
+          picture?: "animal" | "photo";
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
@@ -11024,6 +11081,7 @@ export declare const internal: {
           image?: string;
           mascot: string;
           name: string;
+          picture?: "animal" | "photo";
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";

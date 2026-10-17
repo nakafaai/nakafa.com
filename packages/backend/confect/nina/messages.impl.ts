@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { listUIMessages } from "@convex-dev/agent";
-import { components } from "@repo/backend/confect/_generated/components";
+import { toUIMessages } from "@convex-dev/agent";
 import schema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -20,6 +19,7 @@ import {
   readerMessage,
   readerStreams,
 } from "@repo/backend/confect/nina/reader";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { readStreams } from "@repo/backend/confect/nina/streams";
 import { Array as Arr, Effect, HashMap, Layer, Option, Schema } from "effect";
 
@@ -54,12 +54,18 @@ const list = FunctionImpl.make(
           : readerStreams(args.streamArgs),
       };
     }
-    // The component SDK owns message projection and the resumable delta protocol.
-    const page = yield* Effect.tryPromise({
-      try: () => listUIMessages(ctx, components.nina, args),
-      catch: () =>
-        new NinaReadError({ message: "Unable to read Nina messages." }),
-    });
+    // The sealed module reads and opens the rows, and the component SDK owns
+    // their projection and the resumable delta protocol.
+    const result = yield* readThread(ctx, {
+      owner: chat.userId,
+      paginationOpts: args.paginationOpts,
+      threadId: args.threadId,
+    }).pipe(
+      Effect.mapError(
+        () => new NinaReadError({ message: "Unable to read Nina messages." })
+      )
+    );
+    const page = { ...result, page: toUIMessages(result.page) };
     const reader = yield* DatabaseReader;
     // Hydrate only the orders present in this bounded message page. Agent keeps
     // ownership of parts and stream cursors; app facts come from their own turn.
