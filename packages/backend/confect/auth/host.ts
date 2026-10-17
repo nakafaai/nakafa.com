@@ -1,5 +1,6 @@
+import { readHostname } from "@repo/utilities/http/host";
 import { getCookies } from "better-auth/cookies";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 /**
  * Whether a host name is a loopback name, which only this machine can serve: a
@@ -59,14 +60,13 @@ export function sharedCookieReaches(hostname: string, cookieDomain: string) {
  * The hostname that the browser asked for. The Next.js proxy forwards it as
  * `x-forwarded-host`, and Convex restores that header before Better Auth reads
  * the request. Without it, the response answers the backend's own host, which no
- * shared cookie of the site reaches, so the answer is `undefined`.
+ * shared cookie of the site reaches, so the answer names no host.
  */
 function readBrowserHostname(request: Request) {
-  const host = request.headers.get("x-forwarded-host");
-  if (host === null || !URL.canParse(`http://${host}`)) {
-    return;
-  }
-  return new URL(`http://${host}`).hostname;
+  return Option.flatMap(
+    Option.fromNullOr(request.headers.get("x-forwarded-host")),
+    readHostname
+  );
 }
 
 /**
@@ -134,13 +134,13 @@ export function hostOnlySessionCookieHandler(
     Effect.promise(() => handler(request)).pipe(
       Effect.map((response) => {
         const hostname = readBrowserHostname(request);
-        if (hostname === undefined) {
+        if (Option.isNone(hostname)) {
           return response;
         }
         return (
           expireHostOnlySessionCookie(response, {
             cookieDomain: siteUrl.hostname,
-            hostname,
+            hostname: hostname.value,
             name,
           }) ?? response
         );

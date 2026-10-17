@@ -271,19 +271,28 @@ describe("host-only session handler", () => {
     expect(response).toBe(answered);
   });
 
-  it("leaves an answer alone when the forwarded host is not a host", async () => {
-    const answered = new Response(null, { headers: { "set-cookie": shared } });
-    const handler = hostOnlySessionCookieHandler(
-      () => Promise.resolve(answered),
-      siteUrl
-    );
+  it.each([
+    "not a host",
+    "harapan.nakafa.com/classes",
+    "evil.example@harapan.nakafa.com",
+  ])(
+    "leaves an answer alone when the forwarded value names no host: %s",
+    async (forwarded) => {
+      const answered = new Response(null, {
+        headers: { "set-cookie": shared },
+      });
+      const handler = hostOnlySessionCookieHandler(
+        () => Promise.resolve(answered),
+        siteUrl
+      );
 
-    const response = await handler(
-      new Request("https://nakafa.com/api/auth/get-session", {
-        headers: { "x-forwarded-host": "not a host" },
-      })
-    );
+      const response = await handler(
+        new Request("https://nakafa.com/api/auth/get-session", {
+          headers: { "x-forwarded-host": forwarded },
+        })
+      );
 
-    expect(response).toBe(answered);
-  });
+      expect(response).toBe(answered);
+    }
+  );
 });
