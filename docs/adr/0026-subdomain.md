@@ -67,14 +67,14 @@ finds the right data.
   the edge. A page request on a school host makes the one Convex query of the next
   bullets, and only to decide the page's status.
 - The proxy's redirects name the host that the visitor asked for, read from the
-  Host header (`lib/routing/visitor.ts`). Its rewrites name the request URL, which
-  is the origin that the middleware sees, because Next proxies a rewrite to any
-  other origin: a school page is never rewritten to the visitor's host. The
-  middleware reads a loopback address as `localhost`, so on a local or
-  self-hosted run the request URL can name another host than the visitor's, and
-  next-intl builds its own redirects, such as `/` to `/en` on the main site, from
-  that URL. Vercel builds the request URL from the Host header, so the limit
-  applies to a local or self-hosted run only.
+  Host header (`lib/routing/visitor.ts`). Its rewrites name the request URL, the
+  origin of the server, because Next proxies a rewrite to any other origin: a
+  school page is never rewritten to the visitor's host, and the school rewrite
+  reads the request URL and not `nextUrl`, which maps a loopback address to
+  `localhost`. A self-hosted run builds the request URL from the server's own
+  address, so the redirects of next-intl, such as `/` to `/en` on the main site,
+  still name that address. Vercel builds the request URL from the Host header, so
+  that limit applies to a local or self-hosted run only.
 - A school page's status is decided by the proxy before the page streams, in
   `lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
   the proxy (`lib/routing/public/profile.ts`). A visitor with no session is refused

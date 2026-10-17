@@ -40,11 +40,13 @@ function varyBySchoolVisitor(response: NextResponse) {
  * locale from the `NEXT_LOCALE` cookie, then `Accept-Language`, then the default,
  * and puts it in front of the rewritten path, so the page renders in that
  * language. The address keeps the host and the path, and school pages are not
- * indexed.
+ * indexed. The rewrite names the request URL and not `nextUrl`, which maps a
+ * loopback address to `localhost`, so a server bound to 127.0.0.1 would have Next
+ * proxy the rewrite (see `readVisitorUrl`).
  */
 function rewriteToSchool(request: NextRequest, slug: TenantSlug) {
   const { pathname } = request.nextUrl;
-  const schoolUrl = request.nextUrl.clone();
+  const schoolUrl = new URL(request.url);
   schoolUrl.pathname = `/${SCHOOL_SEGMENT}/${slug}${pathname === "/" ? "" : pathname}`;
 
   const response = handleSchoolLocalizedRequest(

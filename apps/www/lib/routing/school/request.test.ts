@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import { NextRequest } from "next/server";
 import {
@@ -37,6 +37,9 @@ function visit(
 describe("school requests", () => {
   beforeEach(() => {
     mockSchool.middleware.mockClear();
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("rewrites a school path into the school tree and keeps the address", () => {
@@ -98,6 +101,18 @@ describe("school requests", () => {
     expect(response?.headers.get("x-robots-tag")).toBe("noindex");
     const [[rewritten]] = mockSchool.middleware.mock.calls;
     expect(rewritten.nextUrl.href).toBe("http://localhost:3000/school/harapan");
+  });
+
+  it("rewrites a school host onto the request URL's origin, as the proxy build serves it", () => {
+    vi.stubEnv("__NEXT_NO_MIDDLEWARE_URL_NORMALIZE", "1");
+    routeSchoolRequest(
+      new NextRequest("http://127.0.0.1:3000/", {
+        headers: { host: "harapan.localhost:3000" },
+      })
+    );
+
+    const [[rewritten]] = mockSchool.middleware.mock.calls;
+    expect(rewritten.url).toBe("http://127.0.0.1:3000/school/harapan");
   });
 
   it("sends a refused host to the main site with its path and query, as a 307", () => {
