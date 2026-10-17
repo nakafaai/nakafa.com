@@ -26,9 +26,9 @@ const ActionSchema = Schema.Struct({
 });
 
 /**
- * The answer of a server that could not take a change, as the protocol words
- * it. `errorData` is the typed failure a function throws on purpose, which the
- * page decodes; a server that broke sends none.
+ * The answer of a server that could not take a change or an action, as the
+ * protocol words it. `errorData` is the typed failure a function throws on
+ * purpose, which the page decodes; a server that broke sends none.
  */
 const RefusalSchema = Schema.Struct({
   errorData: Schema.optionalKey(Schema.Unknown),
@@ -36,7 +36,7 @@ const RefusalSchema = Schema.Struct({
   requestId: Schema.Finite,
   result: Schema.String,
   success: Schema.Literal(false),
-  type: Schema.Literal("MutationResponse"),
+  type: Schema.Literals(["MutationResponse", "ActionResponse"]),
 });
 
 /**
@@ -107,7 +107,10 @@ export const decodeGiven = Schema.decodeOption(
 export const encodeRefusal = Schema.encodeSync(
   Schema.fromJsonString(RefusalSchema)
 );
+/** A change the page sends, which the server answers with a `MutationResponse`. */
 export const isMutation = Schema.is(MutationSchema);
+/** A call the server answers: a change or an action. */
+export const isCall = Schema.is(Schema.Union([MutationSchema, ActionSchema]));
 
 /** The moment of the database that a `ts` names: eight bytes, the least significant first. */
 export const momentOf = (bytes: Uint8Array) =>

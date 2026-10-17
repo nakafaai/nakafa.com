@@ -140,7 +140,7 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   notification.
 - The Resend component makes the email request and retries a failed batch in its
   own workpool. Its defaults are 5 attempts and a first backoff of 30 seconds
-  that doubles (`@convex-dev/resend` 0.2.8, `src/client/index.ts`), and the
+  that doubles (`@convex-dev/resend` 0.2.9, `src/client/index.ts`), and the
   options in `confect/emails/client.ts` set only `testMode` today. Its request
   carries no deadline (`callResendAPIWithBatch` in the package), and the options
   of the component hold no setting for one (`ResendOptions`), so the deadline of
@@ -150,7 +150,7 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   included: two retries after about 500 milliseconds and one second, because a
   workpool counts the first try as an attempt, and the nth retry waits the first
   backoff times 2 to the power n minus 1 (`RetryBehavior` and the README of
-  `@convex-dev/workpool` 0.4.13, the version in `pnpm-lock.yaml`). A repeated
+  `@convex-dev/workpool` 0.4.14, the version in `pnpm-lock.yaml`). A repeated
   request does not send an email twice, because the component dedupes on the
   idempotency key of the send and sends the id of the first email of a batch as
   the `Idempotency-Key` header (`src/component/lib.ts`).

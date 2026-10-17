@@ -4,6 +4,7 @@ import {
   ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
 } from "@repo/backend/confect/auth/deletion/constants";
+import { PRUNE_INTERVAL } from "@repo/backend/confect/editor/prune";
 import { SWEEP_INTERVAL } from "@repo/backend/confect/nina/deadline";
 import { Cron, Duration } from "effect";
 
@@ -223,6 +224,18 @@ export default CronJobs.make()
       Duration.hours(VISIT_EXPIRY_SWEEP_INTERVAL_HOURS),
       internal.operators.expiry.sweep,
       {}
+    )
+  )
+  .add(
+    /**
+     * Deletes the editor steps that a snapshot covers, once they are older than the
+     * keep delay, and the log keeps the rest.
+     */
+    CronJob.make(
+      "prune covered editor steps",
+      PRUNE_INTERVAL,
+      internal.editor.prune.sweep,
+      { cursor: null }
     )
   )
   .add(

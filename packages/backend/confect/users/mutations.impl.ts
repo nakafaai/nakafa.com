@@ -129,6 +129,29 @@ const setMascot = FunctionImpl.make(
     return { mascot: args.mascot };
   })
 );
+
+/**
+ * Stores which picture draws the caller, the animal or the Google photo. The row
+ * that the session loaded is replaced, as `setMascot` does, so the write reads no
+ * row again. A photo the account no longer holds shows its animal instead.
+ */
+const setPicture = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "setPicture",
+  Effect.fn("users.mutations.setPicture")(function* (args) {
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAuth();
+    yield* writer
+      .table("users")
+      .replace(user.appUser._id, {
+        ...Struct.omit(user.appUser, ["_id", "_creationTime"]),
+        picture: args.picture,
+      })
+      .pipe(Effect.orDie);
+    return null;
+  })
+);
 const syncUserInfoForChat = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -178,6 +201,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(updateUsername),
   Layer.provide(updateBio),
   Layer.provide(setMascot),
+  Layer.provide(setPicture),
   Layer.provide(syncUserInfoForChat),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),

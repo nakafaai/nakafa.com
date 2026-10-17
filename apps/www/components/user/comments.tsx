@@ -13,16 +13,12 @@ import {
 } from "@hugeicons/core-free-icons";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import comments from "@repo/backend/confect/_generated/refs/comments";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
-import { Animal } from "@repo/design-system/components/ui/animal";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   Tooltip,
   TooltipContent,
@@ -41,6 +37,9 @@ import {
 import { DataFailure } from "@/components/shared/failure";
 import { getCleanHref } from "@/lib/routing/href";
 
+/** How many comments a page of the profile holds, the first one and each one after it. */
+const PAGE_SIZE = 25;
+
 /** Render the incrementally loaded comments for one user profile. */
 export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
@@ -53,7 +52,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
       userId,
     },
     {
-      initialNumItems: 25,
+      initialNumItems: PAGE_SIZE,
     }
   );
   const { results } = pagination;
@@ -91,6 +90,16 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
           />
         ))}
       </div>
+      {PaginatedQueryResult.isCanLoadMore(pagination) && (
+        <div className="flex justify-center">
+          <Button
+            onClick={() => pagination.loadMore(PAGE_SIZE)}
+            variant="outline"
+          >
+            {t("load-more")}
+          </Button>
+        </div>
+      )}
     </>
   );
 }
@@ -108,15 +117,13 @@ function CommentThread({
 }) {
   const t = useTranslations("Common");
   const userName = user?.name ?? t("anonymous");
-  const userImage = user?.image ?? "";
   return (
     <div className="flex items-start gap-3 p-4 text-left">
-      <Avatar className="size-10">
-        <AvatarImage alt={userName} role="presentation" src={userImage} />
-        <AvatarFallback>
-          <Animal mascot={user?.mascot} />
-        </AvatarFallback>
-      </Avatar>
+      <PersonAvatar
+        className="size-10"
+        mascot={user?.mascot}
+        photo={photoOf(user ?? {})}
+      />
       <div className="grid w-full gap-2">
         <div className="grid gap-1">
           <span className="truncate font-medium text-sm">{userName}</span>

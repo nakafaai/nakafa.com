@@ -20,6 +20,7 @@ import { type ComponentProps, Suspense, use, useState } from "react";
 import {
   WeatherCard,
   WeatherCardHeader,
+  WeatherGap,
   WeatherSkeleton,
 } from "@/components/ai/home/weather/card";
 import { readWeatherSummary, type WeatherRead } from "@/lib/weather/request";
@@ -61,13 +62,16 @@ export function WeatherWidget() {
   );
 }
 
-/** Shows the summary once its request settles. A failed request shows nothing. */
+/**
+ * Shows the summary once its request settles. A failed request shows an empty
+ * cell of the same size, so the grid keeps its shape.
+ */
 function WeatherSummary({ weather }: { weather: Promise<WeatherRead> }) {
   const t = useTranslations("Weather");
   const read = use(weather);
 
   if (Option.isNone(read)) {
-    return null;
+    return <WeatherGap />;
   }
 
   const data = read.value;
@@ -77,20 +81,27 @@ function WeatherSummary({ weather }: { weather: Promise<WeatherRead> }) {
   const condition = data.condition || "Clear";
   const conditionTitle = condition.charAt(0).toUpperCase() + condition.slice(1);
   const iconCode = data.icon || "01d";
+  const place = `${city}, ${country}`;
 
   return (
     <WeatherCard>
-      <WeatherCardHeader>
-        <div className="flex flex-col">
-          <p className="font-mono text-xl tracking-tight">{currentTemp}° C</p>
-          <p className="text-card-foreground text-xs">{conditionTitle}</p>
-        </div>
+      <div className="flex flex-col gap-1">
+        <WeatherCardHeader>
+          <p className="whitespace-nowrap font-mono text-xl tracking-tight">
+            {currentTemp}° C
+          </p>
+          <HugeIcons
+            className="size-6 shrink-0"
+            icon={getWeatherIcon(iconCode)}
+          />
+        </WeatherCardHeader>
+        <p className="line-clamp-2 text-card-foreground text-xs">
+          {conditionTitle}
+        </p>
+      </div>
 
-        <HugeIcons className="size-8" icon={getWeatherIcon(iconCode)} />
-      </WeatherCardHeader>
-
-      <p className="text-pretty text-xs">
-        {city}, {country}
+      <p className="line-clamp-2 text-pretty text-xs" title={place}>
+        {place}
       </p>
     </WeatherCard>
   );

@@ -5,6 +5,7 @@ import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { BioTooLong } from "@repo/backend/confect/users/bio";
+import { UserPicture } from "@repo/backend/confect/users/picture";
 import {
   selfSelectableUserRoleValidator,
   userRoleValidator,
@@ -71,6 +72,18 @@ export default GroupSpec.make()
         mascot: MascotCode,
       }),
       returns: () => Schema.Struct({ mascot: MascotCode }),
+      error: () => AuthFailure,
+    })
+      .middleware(Session)
+      .middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "setPicture",
+      args: () => ({
+        picture: UserPicture,
+      }),
+      returns: () => Schema.Null,
       error: () => AuthFailure,
     })
       .middleware(Session)

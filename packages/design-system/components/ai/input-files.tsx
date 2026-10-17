@@ -12,7 +12,6 @@ import {
   HashSet,
   MutableHashMap,
   Option,
-  Result,
   Schema,
 } from "effect";
 import {
@@ -30,7 +29,14 @@ const PromptInputFilesLimitsSchema = Schema.Struct({
   maxFiles: Schema.optional(Schema.Finite),
 });
 type PromptInputFilesLimits = typeof PromptInputFilesLimitsSchema.Type;
-type OnPromptInputFileError = (error: PromptInputFileConstraintError) => void;
+/**
+ * Reports every pick, once it is made: the reasons the pick did not attach its
+ * files in full, each naming its files, and an empty list when it attached all
+ * of them.
+ */
+type OnPromptInputPick = (
+  rejections: readonly PromptInputFileConstraintError[]
+) => void;
 
 /** Owns selected files and the lifetime of their browser preview URLs. */
 export function usePromptInputFiles({
@@ -38,10 +44,10 @@ export function usePromptInputFiles({
   inputRef,
   maxFiles,
   maxFileSize,
-  onError,
+  onPick,
 }: PromptInputFilesLimits & {
   inputRef: RefObject<HTMLInputElement | null>;
-  onError?: OnPromptInputFileError | undefined;
+  onPick?: OnPromptInputPick | undefined;
 }) {
   const [items, setItems] = useState<PromptInputFile[]>([]);
   const localItemsRef = useRef<PromptInputFile[]>([]);
@@ -107,31 +113,23 @@ export function usePromptInputFiles({
   }, [localUrls]);
   const add = useCallback(
     (fileList: File[] | FileList) => {
-      const result = Effect.runSync(
-        Effect.result(
-          validatePromptInputFiles({
-            ...(accept === undefined ? {} : { accept }),
-            currentFileCount: fileCountRef.current,
-            files: Array.from(fileList),
-            maxFileSize,
-            maxFiles,
-          })
-        )
+      const selection = Effect.runSync(
+        validatePromptInputFiles({
+          ...(accept === undefined ? {} : { accept }),
+          currentFileCount: fileCountRef.current,
+          files: Array.from(fileList),
+          maxFileSize,
+          maxFiles,
+        })
       );
-      if (Result.isFailure(result)) {
-        onError?.(result.failure);
+      onPick?.(selection.rejections);
+      if (selection.files.length === 0) {
         return;
       }
-      if (result.success.warning) {
-        onError?.(result.success.warning);
-      }
-      if (result.success.files.length === 0) {
-        return;
-      }
-      addLocal(result.success.files);
-      fileCountRef.current += result.success.files.length;
+      addLocal(selection.files);
+      fileCountRef.current += selection.files.length;
     },
-    [accept, addLocal, maxFileSize, maxFiles, onError]
+    [accept, addLocal, maxFileSize, maxFiles, onPick]
   );
   const remove = useCallback(
     (id: string) => {

@@ -1,9 +1,16 @@
 import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/browser";
+import {
+  isPromptWithinLimit,
+  NINA_PROMPT_LENGTH_MESSAGE,
+  NinaPromptError,
+} from "@repo/backend/client/nina/prompt";
+import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { toast } from "sonner";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 /**
  * A transport failure leaves the mutation's outcome unconfirmed. A call refused
@@ -17,6 +24,21 @@ export class NinaConnectionError extends Schema.TaggedError<NinaConnectionError>
     message: Schema.String,
   }
 ) {}
+
+/** A call refused while offline shows the connection failure and its retry, without a report. */
+export function requireNinaConnection(
+  convex: Parameters<typeof requireConvexOnline>[0]
+) {
+  return requireConvexOnline(convex).pipe(
+    Effect.mapError(
+      (offline) =>
+        new NinaConnectionError({
+          code: "NINA_OFFLINE",
+          message: offline.message,
+        })
+    )
+  );
+}
 
 export type NinaFailure =
   | Ref.Error<typeof nina.turns.start>
@@ -129,10 +151,45 @@ export const ninaFailureFeedback = {
     action: "edit",
     report: true,
   },
+  // A message over the length limit and a message over the turn budget are
+  // both too long for one turn, and the learner reads one sentence for them.
+  NINA_PROMPT_LENGTH: {
+    message: "message-size",
+    action: "edit",
+    report: false,
+  },
 } as const satisfies Record<
   NinaFailure["code"],
   typeof FailureFeedbackRowSchema.Type
 >;
+
+/**
+ * The numbers the sentences of `Ai.failures` name, from the limits the code
+ * checks. Every place that words a failure passes them, so a sentence never
+ * says a limit the code does not check.
+ */
+export const ninaFailureLimits = {
+  size: NINA_DOCUMENT_MEBIBYTES,
+};
+
+/**
+ * The refusal of a press on the send button, or nothing. A prompt over the
+ * limit stays in the composer, the learner is told it is too long for one
+ * turn, and nothing is asked of the server. Every composer sends the text
+ * trimmed, so the trimmed length is the one that counts. While a reply streams,
+ * a press sends no text, so the limit does not apply to it.
+ */
+export function promptRefusal(text: string | undefined, answering: boolean) {
+  if (answering || isPromptWithinLimit(text?.trim() ?? "")) {
+    return Option.none();
+  }
+  return Option.some(
+    new NinaPromptError({
+      code: "NINA_PROMPT_LENGTH",
+      message: NINA_PROMPT_LENGTH_MESSAGE,
+    })
+  );
+}
 
 /** Persisted failures retain their own recovery policy when history is reopened. */
 export const ninaResponseFeedback = {
@@ -151,15 +208,31 @@ export const ninaResponseFeedback = {
   typeof ResponseFeedbackRowSchema.Type
 >;
 
-/** Report operational failures and show only the caller's localized message. */
+/**
+ * Where a notice about the composer shows: at the top, so the text box and the
+ * send button stay in reach while it does. The composer sits at the bottom of
+ * the page and of the sheet, where a notice would cover it on a phone.
+ */
+export const NINA_NOTICE_POSITION = "top-center";
+
+/**
+ * Report operational failures and show only the caller's localized message.
+ * A sentence has one notice: a failure that says the same thing again, such as
+ * Enter pressed again on a prompt that is too long, updates the notice in
+ * place instead of stacking a copy of it.
+ */
 export const reportNinaFailure = Effect.fn("nina.feedback")(function* (
   error: NinaFailure,
   message: string
 ) {
   yield* Effect.sync(() => {
-    if (ninaFailureFeedback[error.code].report) {
+    const feedback = ninaFailureFeedback[error.code];
+    if (feedback.report) {
       captureException(error, { source: "nina-admission" });
     }
-    toast.error(message, { position: "bottom-center" });
+    toast.error(message, {
+      id: `nina-failure-${feedback.message}`,
+      position: NINA_NOTICE_POSITION,
+    });
   });
 });

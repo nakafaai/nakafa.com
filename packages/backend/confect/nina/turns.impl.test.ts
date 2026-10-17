@@ -2,6 +2,7 @@ import { Ref } from "@confect/core";
 import { saveMessage, toUIMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
+import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { activeTurns } from "@repo/backend/confect/nina/capacity";
@@ -24,6 +25,9 @@ import {
   start,
 } from "@repo/backend/test/nina/admission";
 import { homePage } from "@repo/backend/test/nina/page";
+import { plainThreadIn, sealThreadIn } from "@repo/backend/test/nina/seal";
+import { readMessageIn } from "@repo/backend/test/nina/sealed";
+import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import { showsText } from "@repo/backend/test/seal";
 import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -46,8 +50,15 @@ vi.mock("@convex-dev/agent", async (load) => {
   };
 });
 
+/** A string the tests plant at the start of a learner's message, so one search finds any copy of it. */
+const PLANTED_PROMPT = "PLANT-ADMISSION-TEXT";
 const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+/** The admission of a prompt with this text. */
+const withText = (text: string) => ({
+  ...args,
+  input: { ...args.input, prompt: { text } },
+});
 
 describe("native Nina admission", () => {
   beforeEach(() => {
@@ -170,6 +181,31 @@ describe("native Nina admission", () => {
     expect(turns).toHaveLength(2);
   });
 
+  it("replays the prompt of a saved request the same from the writer's sealed row, a plain row and the seal in place", async () => {
+    const { t, identity, owner } = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    const written = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    await plainThreadIn(t, first.threadId, identity.userId);
+    const plain = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    await sealThreadIn(t, first.threadId, identity.userId);
+    const sealed = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    expect(written.prompt).toEqual(plain.prompt);
+    expect(sealed.prompt).toEqual(plain.prompt);
+    expect(sealed.prompt.text).not.toBe("");
+  });
+
   it("begins a chat with its default title sealed for the learner", async () => {
     const { t, owner } = await fixture();
     const receipt = Ref.decodeReturnsSync(
@@ -182,6 +218,31 @@ describe("native Nina admission", () => {
     expect(
       await owner.query(getChat, { chatId: receipt.chatId })
     ).toMatchObject({ title: DEFAULT_TITLE });
+  });
+
+  it("seals the learner's message as the admission writes it, so no table of the component holds its text", async () => {
+    const { t, identity, owner } = await fixture();
+    const text = `${PLANTED_PROMPT} Jelaskan limit.`;
+    const receipt = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, withText(text))
+    );
+    expect(receipt.prompt.text).toBe(text);
+
+    const stored = await storedRowsIn(t, receipt.threadId, []);
+    expect(storedTextOf(stored)).not.toContain(PLANTED_PROMPT);
+    expect(
+      await t.query((ctx) =>
+        ctx.runQuery(components.nina.messages.textSearch, {
+          limit: 10,
+          text: PLANTED_PROMPT,
+          threadId: receipt.threadId,
+        })
+      )
+    ).toEqual([]);
+    expect(
+      await readMessageIn(t, identity.userId, receipt.promptMessageId)
+    ).toMatchObject({ text });
   });
 
   it("rejects changed payloads sharing a request key and a concurrent turn on the same chat", async () => {
@@ -203,6 +264,43 @@ describe("native Nina admission", () => {
         chatId: first.chatId,
       })
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
+  });
+
+  it("refuses a prompt over the length limit before anything is held, and leaves one at the limit to the turn budget", async () => {
+    const { t, owner, identity } = await fixture();
+
+    await expect(
+      owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH + 1)))
+    ).rejects.toMatchObject({ data: { code: "NINA_PROMPT_LENGTH" } });
+    const refused = await t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      chats: await ctx.db.query("chats").collect(),
+      turns: await ctx.db.query("ninaTurns").collect(),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+    }));
+    expect(refused.user?.credits).toBe(10);
+    expect(refused.chats).toEqual([]);
+    expect(refused.turns).toEqual([]);
+    expect(refused.ledger).toEqual([]);
+
+    // A prompt this long passes the length limit and is over the turn budget.
+    await expect(
+      owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH)))
+    ).rejects.toMatchObject({ data: { code: "NINA_MESSAGE_SIZE" } });
+  });
+
+  it("counts a character once however many code units it takes", async () => {
+    const { owner } = await fixture();
+    const emoji = "😀";
+
+    await expect(
+      owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH + 1)))
+    ).rejects.toMatchObject({ data: { code: "NINA_PROMPT_LENGTH" } });
+    // Twice as many code units as the limit, and as many code points: the
+    // length limit takes it, and only the turn budget refuses it.
+    await expect(
+      owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH)))
+    ).rejects.toMatchObject({ data: { code: "NINA_MESSAGE_SIZE" } });
   });
 
   it("refuses a third open turn before any credit is held, and frees a place when one settles", async () => {

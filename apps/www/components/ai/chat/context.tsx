@@ -2,7 +2,6 @@
 
 import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DateTime, Effect, Fiber } from "effect";
 import {
@@ -10,10 +9,8 @@ import {
   type PropsWithChildren,
   use,
   useLayoutEffect,
-  useOptimistic,
   useRef,
   useState,
-  useTransition,
 } from "react";
 import { useStore } from "zustand";
 import { readChatAccess } from "@/components/ai/chat/access";
@@ -28,7 +25,9 @@ import {
 } from "@/components/ai/chat/store.client";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
+import { restoreRefusedText } from "@/components/ai/store/draft";
 import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
+import { useAuthSessionStore } from "@/components/auth/session";
 import { useViewer } from "@/lib/identity/client";
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -45,12 +44,24 @@ function useChatState(
   store: ChatStoreApi
 ) {
   const leaving = useStore(store, (state) => state.leaving);
-  const { chat, loadMoreTurns, turn, turnAt, turnsLoading, turnsStatus } =
-    useConversation(chatId, shareToken, leaving);
+  const {
+    chat,
+    current,
+    loadMoreTurns,
+    turn,
+    turnAt,
+    turnsLoading,
+    turnsStatus,
+  } = useConversation(chatId, shareToken, leaving);
   const submission = useNinaSubmission(store.getState().setSubmissionFailure);
-  const [isPending, startTransition] = useTransition();
-  const [cancelling, optimisticallyCancel] = useOptimistic(false);
-  const [draft, showDraft] = useOptimistic<NinaMessage | null>(null);
+  const session = useAuthSessionStore();
+  // A send, stop or retry on its way is held by the chat store as plain state. A
+  // transition would hold it until the server answers, and React makes every
+  // transition started meanwhile wait for a pending one: the learner's next
+  // navigation would wait for the answer too.
+  const isPending = useStore(store, (state) => state.isPending);
+  const cancelling = useStore(store, (state) => state.cancelling);
+  const draft = useStore(store, (state) => state.draft);
   const setText = useAi((state) => state.setText);
   const opening = useAi(
     (state) => state.openingChat?.receipt.chatId === chatId
@@ -58,7 +69,7 @@ function useChatState(
   const viewerId = useViewer((state) => state.viewer?.id);
   const cancelChat = useMutation(nina.lifecycle.cancel);
 
-  const loading = !chat;
+  const loading = !current;
   const busy = isChatBusy({
     cancelling,
     loading,
@@ -80,10 +91,8 @@ function useChatState(
     chat,
     chatId,
     isPending,
-    optimisticallyCancel,
+    loading,
     setText,
-    showDraft,
-    startTransition,
     submission,
     turn,
   };
@@ -95,70 +104,84 @@ function useChatState(
   const [actions] = useState(() => ({
     cancel() {
       const now = latest.current;
-      if (now.isPending) {
+      if (now.isPending || now.loading) {
         return;
       }
-      const { setStopFailure } = store.getState();
+      const { setCancelling, setPending, setStopFailure } = store.getState();
       setStopFailure(null);
       const stoppedOrder = now.turn?.order;
       const cancelTurn = now.cancelChat.withOptimisticUpdate(
         optimisticCancel(DateTime.toEpochMillis(DateTime.nowUnsafe()))
       );
-      // The stop starts before the transition, so Convex shows the cancelled
-      // turn at once: an update made inside a transition waits for its end.
-      const stopping = Effect.runPromise(
-        Effect.tryPromise({
-          try: () => cancelTurn({ chatId: now.chatId }),
-          catch: () =>
-            new NinaConnectionError({
-              code: "NINA_CONNECTION_FAILED",
-              message: "Nina cancellation could not be confirmed.",
-            }),
-        }).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.matchEffect({
-            onFailure: (failure) =>
-              Effect.sync(() =>
-                setStopFailure({ failure, order: stoppedOrder })
-              ),
-            onSuccess: () => Effect.void,
+      // The stop holds `cancelling` and `isPending` until the server answers, so
+      // the turn shows as cancelled at once. Convex applies the optimistic
+      // update when the stop starts, and no transition holds the navigation.
+      const stopping = Effect.tryPromise({
+        try: () => cancelTurn({ chatId: now.chatId }),
+        catch: () =>
+          new NinaConnectionError({
+            code: "NINA_CONNECTION_FAILED",
+            message: "Nina cancellation could not be confirmed.",
+          }),
+      }).pipe(
+        Effect.flatMap(Effect.fromResult),
+        Effect.matchEffect({
+          onFailure: (failure) =>
+            Effect.sync(() => setStopFailure({ failure, order: stoppedOrder })),
+          onSuccess: () => Effect.void,
+        }),
+        Effect.ensuring(
+          Effect.sync(() => {
+            setCancelling(false);
+            setPending(false);
           })
         )
       );
-      now.startTransition(() => {
-        now.optimisticallyCancel(true);
-        return stopping;
-      });
+      setCancelling(true);
+      setPending(true);
+      Effect.runFork(stopping);
     },
     /** Sends the same prompt again, or the latest one when no turn is named. */
     retry(order?: number) {
       const now = latest.current;
+      const { setPending } = store.getState();
       const target = order ?? now.turn?.order;
-      if (target === undefined || !now.chat || now.busy || now.isPending) {
+      if (
+        target === undefined ||
+        !now.chat ||
+        now.busy ||
+        now.isPending ||
+        now.loading
+      ) {
         return;
       }
-      // The retry starts before the transition, for the same reason as a stop.
+      // The retry holds `isPending` until it settles, for the same reason as a stop.
       const retrying = now.submission.retry(target, now.chatId);
-      now.startTransition(() =>
-        Effect.runPromise(Effect.asVoid(Effect.promise(() => retrying)))
+      setPending(true);
+      Effect.runFork(
+        Effect.promise(() => retrying).pipe(
+          Effect.ensuring(Effect.sync(() => setPending(false)))
+        )
       );
     },
     /**
      * Sends a prompt. The send starts at once and its one outcome has two
-     * readers: the transition that holds the optimistic prompt, and the
-     * composer, which keeps the learner's text and files until it knows the
-     * prompt was admitted. A prompt that was not admitted returns to the
-     * composer, unless the learner has typed something else since. The text
-     * is one draft for every chat, so a prompt that fails after the learner
-     * opened another chat returns to the composer open then, and its files
-     * stay with the composer they were added in.
+     * readers: the optimistic prompt, which shows until the admission settles,
+     * and the composer, which keeps the learner's text and files until it knows
+     * the prompt was admitted. A prompt that was not admitted returns to the
+     * composer ahead of anything the learner has typed since, and only to the
+     * learner who sent it. The text is one draft for every chat, so a prompt
+     * that fails after the learner opened another chat returns to the composer
+     * open then, and its files stay with the composer they were added in.
      */
     send(prompt: NinaDraft) {
       const now = latest.current;
       const chat = now.chat;
-      if (!chat || now.busy || now.isPending) {
+      if (!chat || now.busy || now.isPending || now.loading) {
         return false;
       }
+      const { setDraft, setPending } = store.getState();
+      const sentBy = session.getState().userId;
       now.setText((previous) =>
         previous.trim() === prompt.text.trim() ? "" : previous
       );
@@ -169,24 +192,38 @@ function useChatState(
             admitted
               ? Effect.void
               : Effect.sync(() =>
-                  now.setText((previous) => previous || prompt.text)
+                  now.setText((typed) =>
+                    restoreRefusedText({
+                      refused: prompt.text,
+                      sentBy,
+                      signedInAs: session.getState().userId,
+                      typed,
+                    })
+                  )
                 )
           )
         )
       );
-      now.startTransition(() => {
-        now.showDraft(
-          draftMessage({
-            chatId: now.chatId,
-            createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-            prompt,
-            threadId: chat.threadId,
-            turnOrder: now.turn?.order,
-          })
-        );
-        return Effect.runPromise(Effect.asVoid(Fiber.join(admission)));
-      });
-      return Effect.runPromise(Fiber.join(admission));
+      setPending(true);
+      setDraft(
+        draftMessage({
+          chatId: now.chatId,
+          createdAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+          prompt,
+          threadId: chat.threadId,
+          turnOrder: now.turn?.order,
+        })
+      );
+      return Effect.runPromise(
+        Fiber.join(admission).pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              setDraft(null);
+              setPending(false);
+            })
+          )
+        )
+      );
     },
   }));
 

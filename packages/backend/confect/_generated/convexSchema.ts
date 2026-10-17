@@ -37,6 +37,10 @@ import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
 import customerDeletionTombstones from "./tables/customerDeletionTombstones";
 import customers from "./tables/customers";
+import editorClients from "./tables/editorClients";
+import editorDocuments from "./tables/editorDocuments";
+import editorSnapshots from "./tables/editorSnapshots";
+import editorSteps from "./tables/editorSteps";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -135,6 +139,10 @@ export default $defineSchema({
   curriculumRoutes: $Table.tableDefinition(curriculumRoutes),
   customerDeletionTombstones: $Table.tableDefinition(customerDeletionTombstones),
   customers: $Table.tableDefinition(customers),
+  editorClients: $Table.tableDefinition(editorClients),
+  editorDocuments: $Table.tableDefinition(editorDocuments),
+  editorSnapshots: $Table.tableDefinition(editorSnapshots),
+  editorSteps: $Table.tableDefinition(editorSteps),
   integrationClients: $Table.tableDefinition(integrationClients),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),

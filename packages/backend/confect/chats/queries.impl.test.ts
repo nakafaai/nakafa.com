@@ -7,6 +7,8 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { sealedTitle } from "@repo/backend/test/seal";
 import { Array as Arr, Order, Schema } from "effect";
 
@@ -167,7 +169,77 @@ describe("chats/queries", () => {
     }
     expect(await tokenOf(asOwner, missingId)).toBeNull();
   });
+
+  it("answers a share whose vault key is gone with the declared read failure, not a defect", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { chatId, owner, userId } = await sharedChatOf(t, "token-gone");
+
+    // Sharing sealed the token with the owner's key. Without that key the token
+    // cannot be opened, and the owner is told the link could not be read.
+    await t.mutation(async (ctx) => {
+      const key = await keyRowOf(ctx, userId);
+      await ctx.db.delete(key._id);
+    });
+
+    await expect(owner.query(getShareToken, { chatId })).rejects.toMatchObject({
+      data: { _tag: "ChatShareReadError" },
+    });
+  });
+
+  it("answers a share whose vault key row does not decode with the declared read failure, not a defect", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const { chatId, owner, userId } = await sharedChatOf(t, "token-corrupt");
+
+    // A root that no key of the vault names does not decode, so the vault dies
+    // on the row, and the owner is still told the link could not be read.
+    await t.mutation(async (ctx) => {
+      const key = await keyRowOf(ctx, userId);
+      await ctx.db.patch(key._id, { root: "NOT A ROOT" });
+    });
+
+    await expect(owner.query(getShareToken, { chatId })).rejects.toMatchObject({
+      data: { _tag: "ChatShareReadError" },
+    });
+  });
 });
+
+/** Creates a learner and a public chat of theirs, which sharing sealed a key for. */
+async function sharedChatOf(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  suffix: string
+) {
+  const identity = await t.mutation((ctx) =>
+    seedAuthenticatedUser(ctx, { now: NOW, suffix })
+  );
+  const owner = t.withIdentity({
+    sessionId: identity.sessionId,
+    subject: identity.authUserId,
+  });
+  const chatId = await t.mutation((ctx) =>
+    ctx.db.insert("chats", {
+      threadId: "fixture-thread",
+      type: "study",
+      updatedAt: NOW,
+      userId: identity.userId,
+      visibility: "private",
+    })
+  );
+  await owner.mutation(api.chats.mutations.updateChatVisibility, {
+    chatId,
+    visibility: "public",
+  });
+  return { chatId, owner, userId: identity.userId };
+}
+
+/** The vault key row of one learner, which the share token is sealed with. */
+async function keyRowOf(ctx: MutationCtx, userId: Id<"users">) {
+  const key = await ctx.db
+    .query("vaultKeys")
+    .withIndex("by_userId", (query) => query.eq("userId", userId))
+    .unique();
+  assert(key !== null);
+  return key;
+}
 
 it("keeps search and every optional list filter scoped to the right owner and visibility", async () => {
   const t = createConvexTestWithBetterAuth();

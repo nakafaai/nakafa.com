@@ -1,42 +1,25 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
+import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import {
   LESSON_PATH,
+  OPENED_CHAT,
+  onThePage,
   openChatPage,
   runOnPage,
   START,
 } from "@/e2e/support/chat";
+import { PROMPT, pageOpensChat, promptIn, write } from "@/e2e/support/prompt";
 import { BUBBLE } from "@/e2e/support/selector";
 import {
-  composerOf,
   inTheSheet,
   openSheet,
-  promptWith,
   UNAVAILABLE,
   UNCONFIRMED,
 } from "@/e2e/support/sheet";
 import { mostCopies, watchCopies } from "@/e2e/support/shown";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-
-const PROMPT = "Why is the derivative of sine the cosine?";
-/** The curriculum context a lesson link carries. */
-const CONTEXT = "high-school~functions";
-/** The Convex name of `nina.messages.page`, the query that reads the messages of a chat. */
-const MESSAGES = "nina/messages:page";
-/** The address of a chat that the page moves to once its first prompt is admitted. */
-const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
-
-/** The prompt a surface shows as a message: the composer holds the same words as text. */
-const promptIn = (scope: Locator) => promptWith(scope, PROMPT);
-
-/** Writes the prompt, and waits until the surface knows who is signed in and lets it be sent. */
-const write = async (scope: Locator) => {
-  await composerOf(scope).fill(PROMPT);
-  await expect(scope.getByRole("button", { name: "Send message" })).toBeEnabled(
-    { timeout: readinessTimeoutMilliseconds }
-  );
-};
 
 /**
  * The prompt shows at once, Nina types after it and the composer is empty. Then
@@ -82,25 +65,6 @@ const givesBackWhenRefused = (page: Page, scope: Locator, changes: Changes) =>
     await expect(composerOf(scope)).toHaveValue(PROMPT);
     await expect(page).not.toHaveURL(OPENED_CHAT);
   });
-
-/**
- * The part of a chat page that holds the conversation, beside the sidebar. The
- * new chat page and the page of the chat it opens share it, and the page the
- * learner left stays in it, hidden, until React renders that page again.
- * `promptWith` counts only the bubbles a reader can see, so the left page
- * never counts.
- */
-const onThePage = (page: Page) => page.locator("main main");
-
-/** Waits until the page of the chat that the new chat page moved to holds the prompt. */
-const pageOpensChat = (page: Page) => async () => {
-  await expect(page).toHaveURL(OPENED_CHAT, {
-    timeout: readinessTimeoutMilliseconds,
-  });
-  await expect(promptIn(onThePage(page))).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
-};
 
 /** Waits until the sheet shows the chat its prompt opened, with the answer that failed. */
 const sheetOpensChat = (page: Page) => async () => {
@@ -217,85 +181,6 @@ test.describe("New chat in a sheet closed before the server answers at 1440px", 
   }) => {
     await runOnPage(page, baseURL, (origin) =>
       givesBackAfterClosingTheSheet(page, origin)
-    );
-  });
-});
-
-/** The arguments of one start: the page the prompt names. */
-const StartArguments = Schema.Tuple([
-  Schema.Struct({
-    input: Schema.Struct({
-      kind: Schema.String,
-      page: Schema.Struct({
-        locale: Schema.String,
-        materialContextHint: Schema.optionalKey(Schema.String),
-        slug: Schema.String,
-      }),
-    }),
-  }),
-]);
-
-/**
- * Asked from a lesson that a curriculum link opened, the first try names that
- * context, and a retry from the same lesson names it again.
- */
-const retriesWithTheLessonContext = Effect.fn(
-  "NakafaE2E.retriesWithTheLessonContext"
-)(function* (page: Page, baseURL: string) {
-  const { changes } = yield* openChatPage(page, baseURL);
-
-  yield* Effect.promise(async () => {
-    const sheet = inTheSheet(page);
-
-    await page.goto(`${LESSON_PATH}?ctx=${CONTEXT}`);
-    await page.getByRole("button", { exact: true, name: "Ask Nina" }).click();
-    await write(sheet);
-    await composerOf(sheet).press("Enter");
-    await expect(sheet.getByText(UNAVAILABLE)).toBeVisible({
-      timeout: readinessTimeoutMilliseconds,
-    });
-    // A chat just started shows its first prompt from the receipt until its
-    // messages arrive, and a retry can show its own prompt only among them.
-    await expect
-      .poll(() => changes.hasAnswered(MESSAGES), {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(true);
-
-    // The retried prompt shows at once, before the server has answered.
-    await expect(promptIn(sheet)).toHaveCount(1);
-    changes.hold();
-    await sheet.getByRole("button", { name: "Retry message" }).click();
-    await expect(promptIn(sheet)).toHaveCount(2);
-    changes.release();
-    await expect
-      .poll(() => changes.argumentsOf(START).length, {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(2);
-  });
-  const [first, retry] = yield* Effect.forEach(
-    changes.argumentsOf(START),
-    (args) => Schema.decodeUnknownEffect(StartArguments)(args)
-  );
-  yield* Effect.sync(() => {
-    expect(first?.[0].input.kind).toBe("message");
-    expect(first?.[0].input.page.materialContextHint).toBe(CONTEXT);
-    expect(retry?.[0].input.kind).toBe("retry");
-    expect(retry?.[0].input.page).toEqual(first?.[0].input.page);
-  });
-});
-
-test.describe("Retry from a lesson at 1440px", () => {
-  test.use({ viewport: { height: 900, width: 1440 } });
-  test.describe.configure({ timeout: 180_000 });
-
-  test("names the lesson context the first try named", async ({
-    baseURL,
-    page,
-  }) => {
-    await runOnPage(page, baseURL, (origin) =>
-      retriesWithTheLessonContext(page, origin)
     );
   });
 });

@@ -1,16 +1,28 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import {
+  animalOf,
+  drawnAnimal,
+  pictureChoice,
+  sidebarAvatar,
+} from "@/e2e/support/avatar";
 import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** A picture of the site that loads, and an address that answers with no picture. */
+/** A picture of the site that loads, and an address that holds no picture. */
 const LOADING_PHOTO = "/logo.png";
+/**
+ * An address that holds no picture. The site answers any `.png` address with
+ * its social image (`apps/www/lib/og/route.ts`), so the photo test answers this
+ * one with a 404 itself, as a real missing image answers.
+ */
 const MISSING_PHOTO = "/animal-photo-that-does-not-exist.png";
 /** The names an account can hold from its provider: sixty letters with no space, one letter, and another script. */
 const SIXTY_LETTERS = "Maria".repeat(12);
@@ -24,36 +36,11 @@ const OTHER_SCRIPT = "Наталья Петровна Иванова";
  */
 const AUTHOR_AVATAR = ':scope > div > [data-slot="avatar"]';
 
-/** The avatar of the account button in the sidebar footer, which holds the animal until a photo loads. */
-function sidebarAvatar(page: Page) {
-  return page.locator('[data-sidebar="footer"] [data-slot="avatar"]');
-}
-
 /** The name the sidebar footer shows for the account. */
 function sidebarName(page: Page, name: string) {
   return page
     .locator('[data-sidebar="footer"]')
     .getByText(name, { exact: true });
-}
-
-/** The animal that an avatar draws in its fallback. */
-function animalOf(avatar: Locator) {
-  return avatar.locator('[data-slot="avatar-fallback"] svg');
-}
-
-/**
- * The animal that an avatar draws, as the markup inside its picture, and the box
- * the avatar takes on the page. The same animal has the same markup wherever it
- * is drawn, so two avatars of one learner must give equal markup.
- */
-async function drawnAnimal(avatar: Locator) {
-  await expect(animalOf(avatar)).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
-  return {
-    box: await avatar.boundingBox(),
-    markup: await animalOf(avatar).innerHTML(),
-  };
 }
 
 /**
@@ -107,7 +94,7 @@ test("a learner without a photo is drawn as an animal on the account button and 
   );
 });
 
-test("a photo that loads replaces the animal, and a photo that fails keeps the animal at the same size", async ({
+test("a photo shows once the learner chooses it, and a photo that fails keeps the animal at the same size", async ({
   baseURL,
   page,
 }) => {
@@ -122,12 +109,30 @@ test("a photo that loads replaces the animal, and a photo that fails keeps the a
         image: `${origin}${LOADING_PHOTO}`,
       });
       yield* Effect.promise(async () => {
+        await page.goto(appRoutes.settings);
+        await expect(pictureChoice(page)).toBeVisible({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        // The Google photo waits until the learner chooses it.
+        await expect(avatar.locator('[data-slot="avatar-image"]')).toHaveCount(
+          0
+        );
+
+        await pictureChoice(page).click();
+        await page
+          .getByRole("option", { name: app.Auth["picture-photo"] })
+          .click();
         await expect(avatar.locator('[data-slot="avatar-image"]')).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
         await expect(animalOf(avatar)).toHaveCount(0);
       });
 
+      yield* Effect.promise(() =>
+        page.route(`**${MISSING_PHOTO}`, (route) =>
+          route.fulfill({ status: 404 })
+        )
+      );
       yield* setProfile(learner.authId, {
         image: `${origin}${MISSING_PHOTO}`,
       });
@@ -146,11 +151,12 @@ test("a comment by a learner without a photo shows the animal of the learner", a
   baseURL,
   page,
 }) => {
-  const text = "Pertanyaan tentang fungsi invers.";
   const placeholder = app.Comments["add-comment-placeholder"];
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      yield* openChatPage(page, origin);
+      const { learner } = yield* openChatPage(page, origin);
+      // The text names the learner, so no comment of another learner on the same lesson has it.
+      const text = `Pertanyaan tentang fungsi invers dari ${learner.username}.`;
       // The account button holds the animal of the learner before the lesson opens.
       const account = yield* Effect.promise(() =>
         drawnAnimal(sidebarAvatar(page))
@@ -171,8 +177,7 @@ test("a comment by a learner without a photo shows the animal of the learner", a
 
         const comment = page
           .locator("div[id]")
-          .filter({ has: page.getByText(text, { exact: true }) })
-          .last();
+          .filter({ has: page.getByText(text, { exact: true }) });
         const drawn = await drawnAnimal(comment.locator(AUTHOR_AVATAR));
         expect(drawn.markup).toBe(account.markup);
       });

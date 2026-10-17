@@ -97,6 +97,9 @@ export const readLearnerKeys = Effect.fn("vault.keys.read")(function* (
  * first key together with the school, so a school without one is a defect in
  * its data (ADR 0030).
  */
+/** The keys of one learner, as `readLearnerKeys` and `ensureLearnerKeys` return them. */
+export type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
+
 export const readTenantKeys = Effect.fn("vault.keys.readTenant")(function* (
   tenantId: TenantId
 ) {

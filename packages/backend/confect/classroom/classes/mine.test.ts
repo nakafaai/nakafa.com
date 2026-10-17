@@ -12,7 +12,8 @@ import {
 import { grantRole, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { archive, mine } = refs.public.classroom.classes;
+const { archive, get, mine } = refs.public.classroom.classes;
+const grants = refs.public.access.grants;
 const periods = refs.public.tenancy.periods;
 const placements = refs.public.tenancy.placements;
 
@@ -169,6 +170,45 @@ describe("classroom/classes mine", () => {
           .as("teacher")
           .query(mine, { periodId: term.id, slug: nf });
         expect(Arr.map(listed, (row) => row.id)).toEqual([fisika.id]);
+      })
+  );
+
+  it.effect(
+    "lists a taught class only while the teacher grant over its unit stands",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        const fisika = yield* classOf(fixture, x1.id, "Fisika");
+        const { grantId, personId } = fixture.people.teacher;
+        yield* teach(fixture, fisika.id, personId);
+        const before = yield* fixture
+          .as("teacher")
+          .query(mine, { periodId: term.id, slug: nf });
+        yield* fixture
+          .as("owner")
+          .mutation(grants.revoke, { grantId, slug: nf });
+        const revoked = yield* fixture
+          .as("teacher")
+          .query(mine, { periodId: term.id, slug: nf });
+        const refused = yield* fixture
+          .as("teacher")
+          .query(get, { classId: fisika.id, slug: nf })
+          .pipe(Effect.flip);
+        yield* fixture.as("owner").mutation(grants.assign, {
+          personId,
+          role: "teacher",
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+        });
+        const restored = yield* fixture
+          .as("teacher")
+          .query(mine, { periodId: term.id, slug: nf });
+        expect(Arr.map(before, (row) => row.id)).toEqual([fisika.id]);
+        expect(revoked).toEqual([]);
+        expect(refused).toMatchObject(denied("role"));
+        expect(Arr.map(restored, (row) => row.id)).toEqual([fisika.id]);
       })
   );
 });

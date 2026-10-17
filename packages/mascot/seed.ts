@@ -1,15 +1,9 @@
 import { Animal, DESIGNS } from "@repo/mascot/animal";
-import { encode, Mascot } from "@repo/mascot/code";
+import { Mascot } from "@repo/mascot/code";
 import { groundsFor } from "@repo/mascot/ground";
 import { Eyes } from "@repo/mascot/kit";
 import { POSE_ORDER } from "@repo/mascot/pose";
 import { Array as Arr, Hash, Order } from "effect";
-
-/**
- * How many shifts of a seed `reroll` tries, and so how far it looks for animals
- * other than the current one.
- */
-const REROLL_TRIES = 200;
 
 /**
  * The number that a text stands for. `Hash.string` can be negative, so a pick
@@ -21,7 +15,7 @@ function hashed(text: string) {
 }
 
 /** The grounds that the body of one palette of an animal stands out from. */
-function groundsOf(animal: typeof Animal.Type, palette: number) {
+export function groundsOf(animal: typeof Animal.Type, palette: number) {
   const [body] = Arr.getUnsafe(DESIGNS[animal].colors, palette);
   return groundsFor(body);
 }
@@ -45,30 +39,6 @@ export function forSeed(seed: string) {
     palette,
     pose: Arr.getUnsafe(POSE_ORDER, hashed(`${seed}#pose`) % POSE_ORDER.length),
   });
-}
-
-/**
- * Other mascots for the same person, never the same animal as the current one.
- * It tries shifted seeds in turn, so asking again gives the same answer.
- */
-export function reroll(
-  seed: string,
-  current: typeof Mascot.Type,
-  count: number
-) {
-  const prefix = `${seed}:${encode(current)}`;
-  const gather = (
-    shift: number,
-    found: readonly (typeof Mascot.Type)[]
-  ): readonly (typeof Mascot.Type)[] => {
-    if (found.length >= count || shift >= REROLL_TRIES) {
-      return found;
-    }
-    const next = forSeed(`${prefix}#${shift}`);
-    const fresh = next.animal !== current.animal && !Arr.contains(found, next);
-    return gather(shift + 1, fresh ? Arr.append(found, next) : found);
-  };
-  return gather(1, []);
 }
 
 /**

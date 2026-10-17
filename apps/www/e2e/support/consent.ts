@@ -10,6 +10,15 @@ import {
   createAnonymousAnalyticsConsent,
   encodeAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
+import de from "@repo/internationalization/dictionaries/de.json" with {
+  type: "json",
+};
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
+import id from "@repo/internationalization/dictionaries/id.json" with {
+  type: "json",
+};
 import { Effect, MutableList, pipe, Schema, String as Str } from "effect";
 import {
   ANSWER_MILLISECONDS,
@@ -76,17 +85,35 @@ const describePage = Effect.fn("NakafaE2E.describeUsageDataPage")(function* (
   return `Page ${page.url()}, signed in ${changes.signedIn}, learner read ${changes.hasAnswered(CURRENT_USER)}, choice read ${changes.hasAnswered(CURRENT_CHOICE)}, text "${pipe(text, Str.replaceAll(/\s+/gu, " "), Str.trim, Str.slice(0, 300))}".`;
 });
 
-/** A button of the usage-data prompt, by its name. */
-const promptButton = (page: Page, name: "Allow" | "Decline") =>
-  page.getByRole("button", { exact: true, name });
+/** What the usage-data prompt calls its buttons, in each language of the site. */
+const PROMPT_LABELS = {
+  de: de.AnalyticsConsent,
+  en: en.AnalyticsConsent,
+  id: id.AnalyticsConsent,
+};
+
+/** A language of the site whose usage-data prompt a test can answer. */
+export type PromptLocale = keyof typeof PROMPT_LABELS;
+
+/** A button of the usage-data prompt, by its choice, in the language of the page. */
+const promptButton = (
+  page: Page,
+  choice: "allow" | "decline",
+  locale: PromptLocale
+) =>
+  page.getByRole("button", {
+    exact: true,
+    name: PROMPT_LABELS[locale][choice],
+  });
 
 /** Presses one button of the usage-data prompt and waits until the prompt is gone. */
 const pressPromptButton = Effect.fn("NakafaE2E.pressPromptButton")(function* (
   page: Page,
-  name: "Allow" | "Decline",
-  hasTouch: boolean
+  choice: "allow" | "decline",
+  hasTouch: boolean,
+  locale: PromptLocale
 ) {
-  const button = promptButton(page, name);
+  const button = promptButton(page, choice, locale);
 
   yield* activate(button, hasTouch);
   yield* Effect.promise(() =>
@@ -100,13 +127,15 @@ const pressPromptButton = Effect.fn("NakafaE2E.pressPromptButton")(function* (
  * so the denial a suite seeds in the browser is not the choice the prompt
  * reads, and the first page of each learner shows it. The prompt hides at once,
  * before the server has the choice: a test that loads another page next waits
- * for the server with `declineUsageData`.
+ * for the server with `declineUsageData`. The page is the English one unless
+ * `locale` names another language of the site.
  */
 export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
   page: Page,
-  hasTouch: boolean
+  hasTouch: boolean,
+  locale: PromptLocale = "en"
 ) {
-  yield* pressPromptButton(page, "Decline", hasTouch);
+  yield* pressPromptButton(page, "decline", hasTouch, locale);
 });
 
 /**
@@ -119,15 +148,17 @@ export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
  * the prompt would cover what the test presses at a phone's width.
  *
  * The prompt must show within the readiness bound of the suite, or the helper
- * fails with what the page showed.
+ * fails with what the page showed. The page is the English one unless `locale`
+ * names another language of the site.
  */
 const answerUsageData = Effect.fn("NakafaE2E.answerUsageData")(function* (
   page: Page,
   changes: Changes,
-  name: "Allow" | "Decline"
+  choice: "allow" | "decline",
+  locale: PromptLocale
 ) {
   yield* Effect.tryPromise(() =>
-    expect(promptButton(page, name)).toBeVisible({
+    expect(promptButton(page, choice, locale)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     })
   ).pipe(
@@ -138,7 +169,7 @@ const answerUsageData = Effect.fn("NakafaE2E.answerUsageData")(function* (
     )
   );
   const before = changes.sent;
-  yield* pressPromptButton(page, name, false);
+  yield* pressPromptButton(page, choice, false, locale);
   yield* Effect.promise(async () => {
     await expect
       .poll(() => changes.took(SAVE_CHOICE), {
@@ -151,8 +182,8 @@ const answerUsageData = Effect.fn("NakafaE2E.answerUsageData")(function* (
 
 /** Declines the usage data of a signed-in learner until the server has the choice. */
 export const declineUsageData = Effect.fn("NakafaE2E.declineUsageData")(
-  function* (page: Page, changes: Changes) {
-    yield* answerUsageData(page, changes, "Decline");
+  function* (page: Page, changes: Changes, locale: PromptLocale = "en") {
+    yield* answerUsageData(page, changes, "decline", locale);
   }
 );
 
@@ -165,7 +196,7 @@ export const allowUsageData = Effect.fn("NakafaE2E.allowUsageData")(function* (
   page: Page,
   changes: Changes
 ) {
-  yield* answerUsageData(page, changes, "Allow");
+  yield* answerUsageData(page, changes, "allow", "en");
 });
 
 /** The footer control that opens the usage-data preferences. */

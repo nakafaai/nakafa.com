@@ -1,10 +1,12 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import {
   AttachmentIcon,
   Cancel01Icon,
   FileIcon,
 } from "@hugeicons/core-free-icons";
+import nina from "@repo/backend/confect/_generated/refs/nina";
 import {
   Attachment,
   AttachmentAction,
@@ -18,34 +20,115 @@ import {
 } from "@repo/design-system/components/ui/attachment";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupButton } from "@repo/design-system/components/ui/input-group";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Array as Arr, HashSet } from "effect";
+import { cn } from "cn";
+import { Array as Arr, Effect, HashSet } from "effect";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import {
+  type rejectionNotice,
+  splitFileName,
+} from "@/components/ai/attachments";
+import { useAi } from "@/components/ai/context";
+import { releaseUploads } from "@/components/ai/uploads";
 
 const imageVariants = cva("", {
   variants: { variant: { message: "w-48", preview: "w-24" } },
   defaultVariants: { variant: "message" },
 });
 
+/**
+ * The width of a document chip: 10rem to 16rem. In the composer the row is as
+ * wide as the composer, and on a narrow screen both give way to it, so a chip
+ * never runs past the composer's edge. A sent message's row is as wide as its
+ * files and scrolls, so there the chip keeps its own sizes.
+ */
+const documentVariants = cva("", {
+  variants: {
+    variant: {
+      message: "max-w-64",
+      preview:
+        "min-w-[min(100%,--spacing(40))] max-w-[min(100%,--spacing(64))]",
+    },
+  },
+  defaultVariants: { variant: "message" },
+});
+
+/**
+ * The two parts of a file name for a flex row: the start gives way first, so
+ * the version and the extension stay in view. The end never takes more than
+ * the row: where the characters at the end are wider than the row, it shortens
+ * with an ellipsis.
+ */
+function FileNameParts({ name }: { name: string }) {
+  const { head, tail } = splitFileName(name);
+  return (
+    <>
+      <span className="truncate">{head}</span>
+      <span className="max-w-full shrink-0 overflow-hidden text-ellipsis whitespace-pre">
+        {tail}
+      </span>
+    </>
+  );
+}
+
+/** The name of a file in its chip. */
+function NinaFileName({ name }: { name: string }) {
+  return (
+    <AttachmentTitle className="flex" dir="auto">
+      <FileNameParts name={name} />
+    </AttachmentTitle>
+  );
+}
+
+/** The icon of a document, or a spinner while the document uploads. */
+function NinaFileMedia({ uploading }: { uploading: boolean }) {
+  return uploading ? <Spinner /> : <HugeIcons icon={FileIcon} />;
+}
+
+/**
+ * A file a prompt shows: a saved one, or one the learner just picked. A picked
+ * file holds the id the composer gave it, which is the key of its upload state,
+ * and a prompt that is still on its way shows it with that id.
+ */
+type NinaFile = FileUIPart | PromptInputFile;
+
 /** Shadcn owns attachment composition; Nina supplies the native Agent file. */
 export function NinaAttachment({
   children,
   file,
   variant = "message",
-}: { children?: ReactNode; file: FileUIPart } & VariantProps<
+}: { children?: ReactNode; file: NinaFile } & VariantProps<
   typeof imageVariants
 >) {
   const t = useTranslations("Ai");
   const name = file.filename ?? t("attachment");
   const isImage = file.mediaType.startsWith("image/");
+  // A saved file has no id and is never uploading. A picked file that is
+  // neither uploading nor failed has no entry and shows as done.
+  const fileId = "id" in file ? file.id : undefined;
+  const state =
+    useAi((store) =>
+      fileId === undefined ? undefined : store.uploads[fileId]
+    ) ?? "done";
   return (
     <Attachment
-      className={isImage ? imageVariants({ variant }) : "max-w-64"}
+      // A chip in the composer sits inside the border of the composer, so it
+      // draws none of its own: a box with a border inside a box with a border
+      // reads as a card in a card. A failed upload keeps the border that
+      // marks it. A transparent border keeps the size of the chip.
+      className={cn(
+        isImage ? imageVariants({ variant }) : documentVariants({ variant }),
+        variant === "preview" && "border-transparent"
+      )}
       orientation={isImage ? "vertical" : "horizontal"}
+      state={state}
     >
       <AttachmentMedia
         className={isImage && variant === "message" ? "aspect-3/2" : undefined}
@@ -54,19 +137,18 @@ export function NinaAttachment({
         {isImage ? (
           <Image
             alt={name}
-            className="object-contain!"
             fill
             sizes={variant === "preview" ? "96px" : "192px"}
             src={file.url}
             unoptimized
           />
         ) : (
-          <HugeIcons icon={FileIcon} />
+          <NinaFileMedia uploading={state === "uploading"} />
         )}
       </AttachmentMedia>
       {isImage ? null : (
         <AttachmentContent>
-          <AttachmentTitle>{name}</AttachmentTitle>
+          <NinaFileName name={name} />
           <AttachmentDescription>{file.mediaType}</AttachmentDescription>
         </AttachmentContent>
       )}
@@ -78,10 +160,62 @@ export function NinaAttachment({
             href={file.url}
             rel="noopener noreferrer"
             target="_blank"
+            title={name}
           />
         }
       />
     </Attachment>
+  );
+}
+
+/**
+ * The files one pick did not attach, grouped by the reason that dropped them.
+ * Each reason heads its group in the quiet color of a description, and every
+ * dropped file is named on a line of its own with its end in view.
+ *
+ * The list scrolls inside itself past ten lines, or seven on a screen at most
+ * 34rem tall, so a pick of many files never makes the notice taller than the
+ * page. While it scrolls, the reason of the group in view stays at the top of
+ * the list, on the error background the toaster gives the notice, so that no
+ * name shows through it. Every line is as tall as the height counts it, and the
+ * list snaps to them, so it comes to rest with whole names under the reason,
+ * never half of one.
+ *
+ * The end of the list fades while more follows, which tells the learner that
+ * the list goes on without a count. Its start does not fade, because the
+ * reason that stays there would fade with it.
+ */
+export function RejectedFiles({
+  reasons,
+}: {
+  reasons: ReturnType<typeof rejectionNotice>["reasons"];
+}) {
+  return (
+    <ScrollArea
+      scrollFade="end"
+      viewportClassName="max-h-[10lh] snap-y snap-mandatory leading-4.5 [@media(max-height:34rem)]:max-h-[7lh]"
+    >
+      {/* Names are the only other places to rest, and the first of them rests
+          under the first reason, so this empty line lets the list return to its top. */}
+      <div aria-hidden="true" className="snap-start" />
+      <dl>
+        {Arr.map(reasons, (entry) => (
+          <div key={entry.reason}>
+            <dt className="sticky top-0 bg-(--error-bg)">{entry.reason}</dt>
+            {Arr.map(entry.names, (name) => (
+              <dd
+                className="flex snap-start text-popover-foreground"
+                dir="auto"
+                key={name}
+                title={name}
+              >
+                <FileNameParts name={name} />
+              </dd>
+            ))}
+          </div>
+        ))}
+      </dl>
+    </ScrollArea>
   );
 }
 
@@ -97,6 +231,10 @@ export function NinaAttachments({
   const removeAttachment = usePromptInputAttachments(
     (attachments) => attachments.remove
   );
+  const clearUpload = useAi((state) => state.clearUpload);
+  const forgetUploads = useAi((state) => state.forgetUploads);
+  const readUploads = useAi((state) => state.readUploads);
+  const release = useMutation(nina.uploads.release);
   const t = useTranslations("Ai");
   const submitted = HashSet.fromIterable(submittedFiles);
   const files = Arr.filter(
@@ -113,7 +251,19 @@ export function NinaAttachments({
           <AttachmentActions>
             <AttachmentAction
               aria-label={t("remove-attachment", { filename: file.file.name })}
-              onClick={() => removeAttachment(file.id)}
+              onClick={() => {
+                removeAttachment(file.id);
+                clearUpload(file.id);
+                // The upload the file holds goes back at once, not at expiry,
+                // and its hold is forgotten once the server gave its place back.
+                Effect.runFork(
+                  releaseUploads(readUploads([file.id]), release).pipe(
+                    Effect.tap((given) =>
+                      Effect.sync(() => forgetUploads(given))
+                    )
+                  )
+                );
+              }}
               type="button"
               variant="secondary"
             >

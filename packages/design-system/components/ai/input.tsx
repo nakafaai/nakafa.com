@@ -12,6 +12,7 @@ import {
   type PromptInputMessage,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
+import { isComposingKey } from "@repo/utilities/composition";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import {
@@ -26,13 +27,19 @@ import {
   useRef,
 } from "react";
 
-/** Props for a prompt form with locally owned attachments. */
+/**
+ * Props for a prompt form with locally owned attachments. `onPick` reports
+ * every pick, once it is made: the reasons the pick did not attach its files in
+ * full, and an empty list when it attached all of them.
+ */
 type PromptInputProps = Omit<HTMLAttributes<HTMLFormElement>, "onSubmit"> & {
   accept?: string;
+  /** The name of the hidden file input, in the language of the caller. */
+  fileInputLabel: string;
   maxFiles?: number;
   maxFileSize?: number;
   multiple?: boolean;
-  onError?: (error: PromptInputFileConstraintError) => void;
+  onPick?: (rejections: readonly PromptInputFileConstraintError[]) => void;
   onSubmit: (
     message: PromptInputMessage,
     event: FormEvent<HTMLFormElement>
@@ -48,10 +55,11 @@ function readPromptInputText(form: HTMLFormElement) {
 export function PromptInput({
   className,
   accept,
+  fileInputLabel,
   multiple,
   maxFiles,
   maxFileSize,
-  onError,
+  onPick,
   onSubmit,
   children,
   ...props
@@ -63,7 +71,7 @@ export function PromptInput({
     inputRef,
     maxFiles,
     ...(maxFileSize === undefined ? {} : { maxFileSize }),
-    onError,
+    onPick,
   });
   const addFiles = attachments.add;
 
@@ -138,16 +146,18 @@ export function PromptInput({
     <LocalAttachmentsContext value={attachments}>
       <input
         accept={accept}
-        aria-label="Upload files"
+        aria-label={fileInputLabel}
         className="hidden"
         multiple={multiple}
         onChange={addSelectedFiles}
         ref={inputRef}
-        title="Upload files"
+        title={fileInputLabel}
         type="file"
       />
+      {/* The form is the item of a grid in every composer: without a minimum width of
+          its own, one long word makes the grid track as wide as the word. */}
       <form
-        className={cn("w-full", className)}
+        className={cn("w-full min-w-0", className)}
         onSubmit={handleSubmit}
         ref={formRef}
         {...props}
@@ -164,7 +174,8 @@ const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
   if (event.key !== "Enter") {
     return;
   }
-  if (event.nativeEvent.isComposing) {
+  // The key that confirms a composition is not a send.
+  if (isComposingKey(event.nativeEvent)) {
     return;
   }
   if (event.shiftKey) {
@@ -175,14 +186,19 @@ const submitTextareaOnEnter: KeyboardEventHandler<HTMLTextAreaElement> = (
   event.currentTarget.form?.requestSubmit();
 };
 
-/** Props for the prompt input textarea. */
-type PromptInputTextareaProps = ComponentProps<typeof InputGroupTextarea>;
+/**
+ * Props for the prompt input textarea. The placeholder is the caller's words in
+ * the caller's language, so the component has none of its own.
+ */
+type PromptInputTextareaProps = ComponentProps<typeof InputGroupTextarea> & {
+  placeholder: string;
+};
 
 /** Renders prompt text with submit-on-enter and pasted-file support. */
 export function PromptInputTextarea({
   onChange,
   className,
-  placeholder = "What would you like to know?",
+  placeholder,
   ...props
 }: PromptInputTextareaProps) {
   const addAttachments = usePromptInputAttachments(

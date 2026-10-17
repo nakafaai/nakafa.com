@@ -56,8 +56,10 @@ const removeRow = Effect.fn("contentAcceptance.removeLearnerRow")(function* <
  * Creates the rows of one synthetic learner through `run`: the Better Auth
  * account, a session that expires after `lifetime`, and the app profile that
  * the app's own creation trigger writes. Each call creates a new learner, so
- * every caller starts from a learner without history. Returns the secret
- * session token and the ids Better Auth gave the user and the session.
+ * every caller starts from a learner without history. An `address` replaces the
+ * synthetic email, so the account holds that address, such as the Owner address
+ * of a school. Returns the secret session token and the ids Better Auth gave the
+ * user and the session.
  *
  * The profile goes last because it is the one row that only the app's own
  * deletion can remove again. A step that fails therefore leaves Better Auth
@@ -67,14 +69,18 @@ const removeRow = Effect.fn("contentAcceptance.removeLearnerRow")(function* <
  */
 export const createLearnerAccount = Effect.fn(
   "contentAcceptance.createLearnerAccount"
-)(function* <E, R>(run: RunConvex<E, R>, lifetime: Duration.Duration) {
+)(function* <E, R>(
+  run: RunConvex<E, R>,
+  lifetime: Duration.Duration,
+  address?: string
+) {
   const now = yield* Clock.currentTimeMillis;
   const crypto = yield* Crypto.Crypto;
   const id = Hex.encode(yield* crypto.randomBytes(8));
   const token = Base64Url.encode(yield* crypto.randomBytes(32));
   const user = {
     createdAt: now,
-    email: `learner-${id}@acceptance.invalid`,
+    email: address ?? `learner-${id}@acceptance.invalid`,
     emailVerified: true,
     name: "Acceptance Learner",
     updatedAt: now,

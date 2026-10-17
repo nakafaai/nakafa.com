@@ -1,11 +1,11 @@
 import { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/analytics";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
   discardSignedResponses,
   initializeLocalRuntime,
-  leaseLocalRuntime,
+  leaseReservedLocalRuntime,
   localApplicationEnvironment,
-  readLocalRuntime,
   releaseLocalRuntime,
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
@@ -14,7 +14,7 @@ import {
   withLocalBackend,
 } from "@repo/backend/scripts/content/acceptance/process";
 import { publishAcceptanceSource } from "@repo/backend/scripts/content/acceptance/publication";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, Option } from "effect";
 
 /** Creates one signed local acceptance database without touching a cloud deployment. */
 export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
@@ -55,13 +55,13 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
   operation: "build" | "start",
   args: readonly string[]
 ) {
-  const runtime = yield* readLocalRuntime(root);
-  if (runtime === undefined) {
+  const reserved = yield* leaseReservedLocalRuntime(root);
+  if (Option.isNone(reserved)) {
     return yield* acceptanceRuntimeError(
       "Run pnpm acceptance:prepare before building or starting acceptance."
     );
   }
-  yield* leaseLocalRuntime(root);
+  const runtime = reserved.value;
   const command = runBuildCommand(
     root,
     [...applicationCommands[operation], ...args],
