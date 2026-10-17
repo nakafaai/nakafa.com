@@ -62,6 +62,7 @@ const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
   yield* Effect.promise(async () => {
     const dialog = await openShareDialog(page);
     const copy = dialog.getByRole("button", { name: "Copy link" });
+    await dialog.evaluate((node) => Reflect.set(node, "shareDialogKept", true));
 
     // The server fails to answer the query for the token of the link.
     owner.changes.failQuery(SHARE_TOKEN_QUERY, failure);
@@ -79,6 +80,10 @@ const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
     owner.changes.recoverQuery();
     await dialog.getByRole("button", { name: en.Ai.retry }).click();
     await expect(copy).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
+    // The failure and the retry changed what the dialog says, never the dialog.
+    expect(
+      await dialog.evaluate((node) => Reflect.get(node, "shareDialogKept"))
+    ).toBe(true);
     await copy.click();
     const link = await page.evaluate(() => navigator.clipboard.readText());
     expect(readLink(link).token).toMatch(SHARE_TOKEN);

@@ -27,8 +27,11 @@ import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.c
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
- * The share dialog of one chat. A link the server could not load shows in the
- * dialog, which offers to load it again, and never takes the chat page with it.
+ * The share dialog of one chat. The dialog mounts once and stays in place while
+ * its description and its action change between the warning, the link and the
+ * link error, so a retry or an answer never replays its enter animation. A link
+ * the server could not load shows in the dialog, which offers to load it again,
+ * and never takes the chat page with it.
  */
 export function ChatSharing({
   chat,
@@ -39,114 +42,15 @@ export function ChatSharing({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  // Each retry gives the dialog a new key, which mounts its query afresh.
-  const [attempt, setAttempt] = useState(0);
-
-  return (
-    <ErrorBoundary
-      fallbackRender={({ resetErrorBoundary }) => (
-        <ChatSharingError
-          onOpenChange={onOpenChange}
-          onRetry={resetErrorBoundary}
-          open={open}
-        />
-      )}
-    >
-      <ChatSharingDialog
-        chat={chat}
-        key={attempt}
-        onOpenChange={onOpenChange}
-        onRetry={() => setAttempt((count) => count + 1)}
-        open={open}
-      />
-    </ErrorBoundary>
-  );
-}
-
-/**
- * The share dialog while the link could not be loaded. It says so in one
- * sentence and offers to load the link again, which asks the server anew.
- */
-function ChatSharingError({
-  open,
-  onOpenChange,
-  onRetry,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onRetry: () => void;
-}) {
-  const t = useTranslations("Ai");
-
-  return (
-    <ResponsiveDialog
-      description={t("share-link-error")}
-      footer={
-        <Button onClick={onRetry}>
-          <HugeIcons icon={Refresh03Icon} />
-          {t("retry")}
-        </Button>
-      }
-      open={open}
-      setOpen={onOpenChange}
-      title={t("share-chat")}
-    />
-  );
-}
-
-/**
- * Owns sharing state and visibility admission independently of title editing.
- * The link carries a token the server draws when the chat is shared, so the
- * link can be copied once the token arrives. A token the server fails to read
- * shows the link error, and Retry mounts this dialog afresh to ask again.
- *
- * The server declares the failures of the token read, and the dialog returns
- * each one rather than throwing it. Convex keeps a failed answer until the
- * server answers again after its last subscriber leaves, and a render that
- * throws that answer never subscribes again, so a retry that threw it would
- * find the same error.
- */
-function ChatSharingDialog({
-  chat,
-  open,
-  onOpenChange,
-  onRetry,
-}: {
-  chat: ChatView;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onRetry: () => void;
-}) {
   const t = useTranslations("Ai");
   const actionErrorMessage = useTranslations("Common")("action-error");
-  const clipboard = useClipboard({ timeout: 500 });
   const updateChatVisibility = useUpdateChatVisibilityMutation();
+  // A retry gives the two readers of the link a new key. Each one subscribes to
+  // the token again, which asks the server anew, while the dialog stays mounted.
+  const [attempt, setAttempt] = useState(0);
   const isPrivate = chat.visibility === "private";
-  const tokenResult = useQuery(
-    chats.queries.getShareToken,
-    isPrivate ? "skip" : { chatId: chat._id }
-  );
-  // A declared failure shows inline and never reaches the error boundary, which
-  // would have reported it, so the dialog reports each answer that carries one.
-  useEffect(() => {
-    if (QueryResult.isFailure(tokenResult)) {
-      Effect.runFork(
-        reportClientException(tokenResult.error, {
-          source: "components/ai/chat/sharing",
-        })
-      );
-    }
-  }, [tokenResult]);
-  if (QueryResult.isFailure(tokenResult)) {
-    return (
-      <ChatSharingError
-        onOpenChange={onOpenChange}
-        onRetry={onRetry}
-        open={open}
-      />
-    );
-  }
-  const token = QueryResult.isSuccess(tokenResult) ? tokenResult.value : null;
+  const retry = () => setAttempt((count) => count + 1);
+
   /** Persist the selected chat visibility, unless the chat already has it. */
   const handleUpdateVisibility = (visibility: ChatVisibility) => {
     if (visibility === chat.visibility) {
@@ -177,32 +81,29 @@ function ChatSharingDialog({
       )
     );
   };
-  /** Copy the link once the server has drawn its token. */
-  const handleCopy = () => {
-    if (token === null) {
-      return;
-    }
-    clipboard.copy(shareLink(chat._id, token));
-    toast.success(t("link-copied"), {
-      position: "bottom-center",
-    });
-  };
 
   return (
     <ResponsiveDialog
-      description={t("share-chat-description")}
+      description={
+        <ErrorBoundary
+          fallbackRender={() => t("share-link-error")}
+          key={attempt}
+        >
+          <ChatShareDescription chatId={chat._id} isPrivate={isPrivate} />
+        </ErrorBoundary>
+      }
       footer={
-        isPrivate ? (
-          <Button onClick={() => handleUpdateVisibility("public")}>
-            <HugeIcons icon={Link04Icon} />
-            {t("create-link")}
-          </Button>
-        ) : (
-          <Button disabled={token === null} onClick={handleCopy}>
-            <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
-            {t("copy-link")}
-          </Button>
-        )
+        <ErrorBoundary
+          fallbackRender={() => <ChatShareRetry onRetry={retry} />}
+          key={attempt}
+        >
+          <ChatShareAction
+            chatId={chat._id}
+            isPrivate={isPrivate}
+            onCreate={() => handleUpdateVisibility("public")}
+            onRetry={retry}
+          />
+        </ErrorBoundary>
       }
       open={open}
       setOpen={onOpenChange}
@@ -244,5 +145,107 @@ function ChatSharingDialog({
         })}
       </div>
     </ResponsiveDialog>
+  );
+}
+
+/**
+ * Reads the share token of a chat that is public. A private chat has no token
+ * to read, so its query is skipped.
+ */
+function useChatShareToken(chatId: ChatView["_id"], isPrivate: boolean) {
+  return useQuery(chats.queries.getShareToken, isPrivate ? "skip" : { chatId });
+}
+
+/**
+ * The description of the share dialog: the warning, or the link error while the
+ * server cannot load the link. A declared failure returns here and never throws.
+ */
+function ChatShareDescription({
+  chatId,
+  isPrivate,
+}: {
+  chatId: ChatView["_id"];
+  isPrivate: boolean;
+}) {
+  const t = useTranslations("Ai");
+  const link = useChatShareToken(chatId, isPrivate);
+  if (QueryResult.isFailure(link)) {
+    return t("share-link-error");
+  }
+  return t("share-chat-description");
+}
+
+/**
+ * The action of the share dialog: create the link, copy it, or load it again.
+ * A declared failure shows inline and never reaches the error boundary. Convex
+ * keeps a failed answer until the server answers again after its last subscriber
+ * leaves, and a render that throws that answer never subscribes again, so a retry
+ * that threw it would find the same error. The action reports each answer that
+ * carries a declared failure, because the boundary would not have reported it.
+ */
+function ChatShareAction({
+  chatId,
+  isPrivate,
+  onCreate,
+  onRetry,
+}: {
+  chatId: ChatView["_id"];
+  isPrivate: boolean;
+  onCreate: () => void;
+  onRetry: () => void;
+}) {
+  const t = useTranslations("Ai");
+  const clipboard = useClipboard({ timeout: 500 });
+  const link = useChatShareToken(chatId, isPrivate);
+  useEffect(() => {
+    if (QueryResult.isFailure(link)) {
+      Effect.runFork(
+        reportClientException(link.error, {
+          source: "components/ai/chat/sharing",
+        })
+      );
+    }
+  }, [link]);
+
+  if (isPrivate) {
+    return (
+      <Button onClick={onCreate}>
+        <HugeIcons icon={Link04Icon} />
+        {t("create-link")}
+      </Button>
+    );
+  }
+  if (QueryResult.isFailure(link)) {
+    return <ChatShareRetry onRetry={onRetry} />;
+  }
+  const token = QueryResult.isSuccess(link) ? link.value : null;
+  /** Copy the link once the server has drawn its token. */
+  const handleCopy = () => {
+    if (token === null) {
+      return;
+    }
+    clipboard.copy(shareLink(chatId, token));
+    toast.success(t("link-copied"), {
+      position: "bottom-center",
+    });
+  };
+
+  return (
+    <Button disabled={token === null} onClick={handleCopy}>
+      <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
+      {t("copy-link")}
+    </Button>
+  );
+}
+
+/** Asks the server for the link again, in place of the link action. */
+function ChatShareRetry({ onRetry }: { onRetry: () => void }) {
+  const t = useTranslations("Ai");
+
+  return (
+    <Button onClick={onRetry}>
+      <HugeIcons icon={Refresh03Icon} />
+      {t("retry")}
+    </Button>
   );
 }
