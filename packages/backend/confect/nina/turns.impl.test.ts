@@ -2,8 +2,10 @@ import { Ref } from "@confect/core";
 import { saveMessage, toUIMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
+import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { activeTurns } from "@repo/backend/confect/nina/capacity";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import {
   START_DEADLINE,
@@ -23,10 +25,19 @@ import {
   start,
 } from "@repo/backend/test/nina/admission";
 import { homePage } from "@repo/backend/test/nina/page";
+import { plainThreadIn, sealThreadIn } from "@repo/backend/test/nina/seal";
+import { readMessageIn } from "@repo/backend/test/nina/sealed";
+import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import { showsText } from "@repo/backend/test/seal";
+import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Duration, Effect } from "effect";
 
+vi.mock("@repo/backend/confect/nina/capacity", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/capacity")>();
+  return { ...actual, activeTurns: vi.fn(actual.activeTurns) };
+});
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
@@ -39,7 +50,15 @@ vi.mock("@convex-dev/agent", async (load) => {
   };
 });
 
+/** A string the tests plant at the start of a learner's message, so one search finds any copy of it. */
+const PLANTED_PROMPT = "PLANT-ADMISSION-TEXT";
 const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
+const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+/** The admission of a prompt with this text. */
+const withText = (text: string) => ({
+  ...args,
+  input: { ...args.input, prompt: { text } },
+});
 
 describe("native Nina admission", () => {
   beforeEach(() => {
@@ -140,6 +159,53 @@ describe("native Nina admission", () => {
     expect(state.messages.page).toHaveLength(1);
   });
 
+  it("starts a turn for a context hint of the longest length a page writes, and for a longer one", async () => {
+    const { t, owner } = await fixture();
+    const withHint = (requestId: string, length: number) => ({
+      requestId,
+      input: {
+        ...args.input,
+        page: { ...args.input.page, materialContextHint: "x".repeat(length) },
+      },
+    });
+    await owner.mutation(
+      start,
+      withHint("request-longest", MATERIAL_CONTEXT_HINT_LENGTH)
+    );
+    // A client built before the page bounded its hint may send a longer one.
+    await owner.mutation(
+      start,
+      withHint("request-longer", MATERIAL_CONTEXT_HINT_LENGTH + 1)
+    );
+    const turns = await t.query((ctx) => ctx.db.query("ninaTurns").collect());
+    expect(turns).toHaveLength(2);
+  });
+
+  it("replays the prompt of a saved request the same from the writer's sealed row, a plain row and the seal in place", async () => {
+    const { t, identity, owner } = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    const written = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    await plainThreadIn(t, first.threadId, identity.userId);
+    const plain = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    await sealThreadIn(t, first.threadId, identity.userId);
+    const sealed = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    expect(written.prompt).toEqual(plain.prompt);
+    expect(sealed.prompt).toEqual(plain.prompt);
+    expect(sealed.prompt.text).not.toBe("");
+  });
+
   it("begins a chat with its default title sealed for the learner", async () => {
     const { t, owner } = await fixture();
     const receipt = Ref.decodeReturnsSync(
@@ -152,6 +218,31 @@ describe("native Nina admission", () => {
     expect(
       await owner.query(getChat, { chatId: receipt.chatId })
     ).toMatchObject({ title: DEFAULT_TITLE });
+  });
+
+  it("seals the learner's message as the admission writes it, so no table of the component holds its text", async () => {
+    const { t, identity, owner } = await fixture();
+    const text = `${PLANTED_PROMPT} Jelaskan limit.`;
+    const receipt = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, withText(text))
+    );
+    expect(receipt.prompt.text).toBe(text);
+
+    const stored = await storedRowsIn(t, receipt.threadId, []);
+    expect(storedTextOf(stored)).not.toContain(PLANTED_PROMPT);
+    expect(
+      await t.query((ctx) =>
+        ctx.runQuery(components.nina.messages.textSearch, {
+          limit: 10,
+          text: PLANTED_PROMPT,
+          threadId: receipt.threadId,
+        })
+      )
+    ).toEqual([]);
+    expect(
+      await readMessageIn(t, identity.userId, receipt.promptMessageId)
+    ).toMatchObject({ text });
   });
 
   it("rejects changed payloads sharing a request key and a concurrent turn on the same chat", async () => {
@@ -173,6 +264,43 @@ describe("native Nina admission", () => {
         chatId: first.chatId,
       })
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
+  });
+
+  it("refuses a prompt over the length limit before anything is held, and leaves one at the limit to the turn budget", async () => {
+    const { t, owner, identity } = await fixture();
+
+    await expect(
+      owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH + 1)))
+    ).rejects.toMatchObject({ data: { code: "NINA_PROMPT_LENGTH" } });
+    const refused = await t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      chats: await ctx.db.query("chats").collect(),
+      turns: await ctx.db.query("ninaTurns").collect(),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+    }));
+    expect(refused.user?.credits).toBe(10);
+    expect(refused.chats).toEqual([]);
+    expect(refused.turns).toEqual([]);
+    expect(refused.ledger).toEqual([]);
+
+    // A prompt this long passes the length limit and is over the turn budget.
+    await expect(
+      owner.mutation(start, withText("a".repeat(NINA_PROMPT_LENGTH)))
+    ).rejects.toMatchObject({ data: { code: "NINA_MESSAGE_SIZE" } });
+  });
+
+  it("counts a character once however many code units it takes", async () => {
+    const { owner } = await fixture();
+    const emoji = "😀";
+
+    await expect(
+      owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH + 1)))
+    ).rejects.toMatchObject({ data: { code: "NINA_PROMPT_LENGTH" } });
+    // Twice as many code units as the limit, and as many code points: the
+    // length limit takes it, and only the turn budget refuses it.
+    await expect(
+      owner.mutation(start, withText(emoji.repeat(NINA_PROMPT_LENGTH)))
+    ).rejects.toMatchObject({ data: { code: "NINA_MESSAGE_SIZE" } });
   });
 
   it("refuses a third open turn before any credit is held, and frees a place when one settles", async () => {
@@ -207,6 +335,25 @@ describe("native Nina admission", () => {
     expect(
       (await t.query((ctx) => ctx.db.query("ninaTurns").collect())).length
     ).toBe(3);
+  });
+
+  it("reads the learner's open turns once for an admission, and once more only after it settled a stopped turn", async () => {
+    const { t, owner } = await fixture(20);
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, { ...args, requestId: "one" })
+    );
+    await owner.mutation(start, { ...args, requestId: "two" });
+    // Nothing was stopped, so each of the two admissions read them once.
+    expect(activeTurns).toHaveBeenCalledTimes(2);
+
+    // A run took the first turn, so stopping it leaves it open until it settles.
+    await t.mutation(claim, { turnId: first.turnId });
+    await owner.mutation(cancel, { chatId: first.chatId });
+    vi.mocked(activeTurns).mockClear();
+    await owner.mutation(start, { ...args, requestId: "three" });
+    // The stopped turn settled, so the places that were open were counted again.
+    expect(activeTurns).toHaveBeenCalledTimes(2);
   });
 
   it("holds no place for an open turn past its deadline, so a settlement that keeps failing cannot lock the learner out", async () => {

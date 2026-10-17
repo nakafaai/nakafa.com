@@ -18,13 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -39,7 +41,6 @@ const formSchema = Schema.toStandardSchemaV1(
 );
 /** Renders the settings form that validates and saves the user's app role. */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
   const roleItems = Arr.map(roles, (role) => ({
     label: (
@@ -86,7 +87,10 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    toast.error(actionErrorMessage);
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
+                    });
                   })
                 )
               ),
@@ -146,18 +150,18 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
             selector={(state) => [state.isDirty, state.isSubmitting]}
           >
             {([isDirty, isSubmitting]) => (
-              <div className="flex w-full items-center justify-between gap-4">
-                <p className="text-muted-foreground text-sm">
-                  {t("role-footer")}
-                </p>
-                <Button
-                  disabled={!isDirty || isSubmitting}
-                  size="sm"
-                  type="submit"
-                >
-                  {t("save")}
-                </Button>
-              </div>
+              <>
+                <CardSectionHint>{t("role-footer")}</CardSectionHint>
+                <CardSectionActions>
+                  <Button
+                    disabled={!isDirty || isSubmitting}
+                    size="sm"
+                    type="submit"
+                  >
+                    {t("save")}
+                  </Button>
+                </CardSectionActions>
+              </>
             )}
           </form.Subscribe>
         </CardSectionFooter>

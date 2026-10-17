@@ -1,3 +1,4 @@
+import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
 import type {
   ShellModelSample,
@@ -173,7 +174,9 @@ function ShellRing({
 }
 
 /**
- * Animates all electrons on one shell with deterministic spacing.
+ * Animates all electrons on one shell with deterministic spacing. With reduced
+ * motion the electrons stand still on their shell, where their positions place
+ * them.
  */
 function OrbitingShellElectrons({
   colors,
@@ -191,6 +194,7 @@ function OrbitingShellElectrons({
   speed: number;
 }) {
   const groupRef = useRef<Group>(null);
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
   const electronRadius = isOuterShell ? OUTER_ELECTRON_RADIUS : ELECTRON_RADIUS;
   const orbitExtent = radius + electronRadius;
   const electrons = Array.from(
@@ -199,7 +203,7 @@ function OrbitingShellElectrons({
   );
 
   useFrame((_, delta) => {
-    if (!groupRef.current) {
+    if (calm || !groupRef.current) {
       return;
     }
 

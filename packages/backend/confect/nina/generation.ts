@@ -16,10 +16,6 @@ import {
   restoreHeld,
 } from "@repo/backend/confect/nina/capability/held";
 import { registry } from "@repo/backend/confect/nina/capability/registry";
-import {
-  createNinaAgentContext,
-  readNinaLearningPage,
-} from "@repo/backend/confect/nina/contract/turn";
 import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import {
   abortFailure,
@@ -27,21 +23,21 @@ import {
   NinaGenerationError,
 } from "@repo/backend/confect/nina/failure";
 import { boundStep } from "@repo/backend/confect/nina/history";
-import { readInput } from "@repo/backend/confect/nina/input";
-import { readInstructions } from "@repo/backend/confect/nina/instructions";
-import { formatTurnContext } from "@repo/backend/confect/nina/prompt/runtime";
+import { prepareTurn } from "@repo/backend/confect/nina/prepare";
 import { repairToolCall } from "@repo/backend/confect/nina/repair";
 import { startNinaStep } from "@repo/backend/confect/nina/step";
 import type { RunTiming } from "@repo/backend/confect/nina/timing";
 import { createUsageHandler } from "@repo/backend/confect/nina/usage";
 import { isStepCount } from "ai";
-import { DateTime, Effect, MutableHashMap } from "effect";
+import { Effect, MutableHashMap } from "effect";
 
 /**
  * The scheduled Confect action owns generation; Agent owns its persistent
  * stream. Aborting `halt` ends the generation early and lets Agent clean up its
  * stream before this returns. `timing` notes when the model is first called and
- * when its stream first shows something to the learner.
+ * when its stream first shows something to the learner. An answer that ended
+ * well returns what the history of its prompt cost, which the turn stores when
+ * the run exits.
  */
 export const generateResponse = Effect.fn("nina.generate")(function* (
   turn: Extract<NinaTurnsDoc, { phase: "active" }>,
@@ -53,29 +49,8 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
   // SDK callbacks are framework boundaries. Domain programs keep composing Effects.
   const runPromise = Effect.runPromiseWith(services);
   const usageHandler = yield* createUsageHandler(turn._id);
-  const runtime = {
-    currentDate: DateTime.formatIso(DateTime.makeUnsafe(turn._creationTime)),
-  };
-  const { capabilities, instructions, memories, paused, summary } =
-    yield* readInstructions(turn, readNinaLearningPage(turn.page).url);
-  // The turn reads once whether the learner paused memory: the prompt, the tools
-  // Nina is offered and the policy of each call all follow it.
-  const context = createNinaAgentContext({
-    memory: !paused,
-    page: turn.page,
-    user: turn.user,
-    runtime,
-  });
-  // Nina reads its own turns, so the Agent fetches no history and sends this as is.
-  const input = yield* readInput(turn, {
-    context: formatTurnContext({
-      memories,
-      page: turn.page,
-      runtime,
-      user: turn.user,
-    }),
-    through: summary?.throughOrder ?? null,
-  });
+  const { capabilities, context, history, input, instructions } =
+    yield* prepareTurn(turn);
   // The chat step's timer covers Nina's own call and the tools it starts, so
   // each step marks its start here and the tools count their time from it.
   const chatStep = yield* makeChatStep();
@@ -159,7 +134,7 @@ export const generateResponse = Effect.fn("nina.generate")(function* (
     catch: generationFailure,
   });
   if (completed[0] === "stop" && completed[1].trim()) {
-    return;
+    return history;
   }
   if (completed[0] === "content-filter") {
     return yield* new NinaGenerationError({ reason: "content-blocked" });

@@ -11,10 +11,15 @@ import { NinaTurn } from "@repo/backend/confect/nina/turns.spec";
  * `by_chatId_and_retryOf_and_state_status_and_order` finds the newest complete
  * turn that asked one question again in one read, however far apart the
  * askings are and however many of them failed or were stopped.
+ * `by_chatId_and_phase_and_order` lists the turns of a chat that ended, the
+ * newest first. The turn that runs has another phase, so it lies outside the
+ * range, and a write to the running turn (its usage after every model
+ * response) does not run a query that reads the range again.
  */
 export default Table.make(() => NinaTurn)
   .index("by_userId_and_requestId", ["userId", "requestId"])
   .index("by_chatId_and_order", ["chatId", "order"])
+  .index("by_chatId_and_phase_and_order", ["chatId", "phase", "order"])
   .index("by_phase", ["phase"])
   .index("by_userId_and_phase", ["userId", "phase"])
   .index("by_chatId_and_state_status_and_order", [

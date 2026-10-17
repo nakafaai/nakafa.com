@@ -1,11 +1,12 @@
 import { Ref } from "@confect/core";
 import { QueryRunner } from "@confect/server";
-import { listMessages } from "@convex-dev/agent";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { turnHalted, watchHalt } from "@repo/backend/confect/nina/halt";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
@@ -22,14 +23,14 @@ import {
 } from "effect";
 import { TestClock } from "effect/testing";
 
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
 }));
-
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual, listMessages: vi.fn(actual.listMessages) };
-});
 
 // Admission freezes the page facts of a prompt; the stop and resend test needs
 // no signed content for them.
@@ -85,8 +86,8 @@ describe("A running Nina turn that the learner stops", () => {
     }
   }, 30_000);
 
-  // The run asks about its turn once a second, so these tests wait in real time
-  // and get a longer limit than the default.
+  // The run asks about its turn every two seconds (`HALT_POLL` in `halt.ts`), so
+  // these tests wait in real time and get a longer limit than the default.
   it("stops a silent provider call when the learner cancels, and pays back only after the run exits", async () => {
     const report = stubReport();
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
@@ -160,17 +161,16 @@ describe("A running Nina turn that the learner stops", () => {
   it("reports a settlement that failed after the learner stopped the turn", async () => {
     const report = stubReport();
     const f = await createSilentTest();
-    const actual =
-      await vi.importActual<typeof import("@convex-dev/agent")>(
-        "@convex-dev/agent"
-      );
+    const actual = await vi.importActual<
+      typeof import("@repo/backend/confect/nina/sealed/thread")
+    >("@repo/backend/confect/nina/sealed/thread");
     try {
       const { running } = await f.begin();
       // The stop reads the journal once and succeeds. The settlement that the
       // run's exit makes reads it next, and that read fails.
-      vi.mocked(listMessages)
-        .mockImplementationOnce(actual.listMessages)
-        .mockRejectedValueOnce(new Error("Private component failure"));
+      vi.mocked(readThread)
+        .mockImplementationOnce(actual.readThread)
+        .mockReturnValueOnce(Effect.fail(new SealedReadError()));
       await f.owner.mutation(cancel, { chatId: f.chatId });
       await running;
 
@@ -233,6 +233,22 @@ describe("A tool-call repair of a turn that the learner stops", () => {
 describe("The halt watch of a running turn", () => {
   const turnId = Schema.decodeUnknownSync(Id("ninaTurns"))("turn");
   const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
+  const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
+  const recover = Ref.getFunctionReference(
+    refs.internal.nina.lifecycle.recover
+  );
+
+  it("tells a run to halt once its turn was stopped, settled or removed", async () => {
+    const f = await createNinaTest();
+    await f.t.mutation(claim, { turnId: f.turnId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(false);
+    await f.owner.mutation(cancel, { chatId: f.chatId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+    await f.t.mutation(recover, { turnId: f.turnId });
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+    await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
+    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
+  });
 
   it.effect(
     "keeps asking after one check fails, and aborts the run once a check finds its turn halted",
@@ -249,10 +265,10 @@ describe("The halt watch of a running turn", () => {
           Effect.provide(QueryRunner.layer(runQuery))
         );
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("2 seconds");
         expect(halt.aborted).toBe(false);
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("2 seconds");
         expect(halt.aborted).toBe(true);
         expect(runQuery).toHaveBeenCalledTimes(3);
         expect(runQuery).toHaveBeenLastCalledWith(halted, { turnId });

@@ -23,6 +23,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -151,24 +152,29 @@ export function ChemicalReactionTypesLab({
         <p className="text-muted-foreground text-sm">
           {selectedLabels.helperCaption}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact
+              label={labels.equationLabel}
+              value={selectedLabels.equation}
+            />
+            <VisualFact
+              label={labels.visibleCueLabel}
+              value={selectedLabels.visibleCue}
+            />
+            <VisualFact
+              label={labels.readingLabel}
+              value={selectedLabels.reading}
+            />
+            <VisualFact
+              label={labels.checkLabel}
+              value={selectedLabels.check}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact
-            label={labels.equationLabel}
-            value={selectedLabels.equation}
-          />
-          <VisualFact
-            label={labels.visibleCueLabel}
-            value={selectedLabels.visibleCue}
-          />
-          <VisualFact
-            label={labels.readingLabel}
-            value={selectedLabels.reading}
-          />
-          <VisualFact label={labels.checkLabel} value={selectedLabels.check} />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

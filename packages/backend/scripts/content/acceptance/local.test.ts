@@ -1,10 +1,11 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
   cleanLocalRuntime,
   discardSignedResponses,
   initializeLocalRuntime,
-  leaseLocalRuntime,
+  LocalRuntimeJson,
   localApplicationEnvironment,
   readLocalRuntime,
   releaseLocalRuntime,
@@ -14,6 +15,7 @@ import {
   anonymousConvexCommand,
   fixture,
   isPortOccupied,
+  leaseClaims,
   occupyPort,
   ticking,
   versionServiceError,
@@ -33,6 +35,7 @@ vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
   runAcceptanceCommand: mocks.command,
 }));
 const encodeJson = Schema.encodeEffect(JsonTextSchema);
+const encodeRuntime = Schema.encodeEffect(LocalRuntimeJson);
 const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
 const LOCAL_JWKS_LINE =
@@ -196,7 +199,7 @@ describe("owned signed acceptance runtime", () => {
   );
 
   it.live(
-    "refuses duplicate preparation and cleanup during an active lease",
+    "refuses duplicate preparation and cleanup during an active lease, with or without a manifest",
     () =>
       Effect.gen(function* () {
         initialize();
@@ -216,6 +219,13 @@ describe("owned signed acceptance runtime", () => {
           });
         }).pipe(Effect.scoped);
         yield* cleanLocalRuntime(root);
+        // A reservation whose run has not recorded its manifest yet is still held.
+        yield* reserveLocalRuntime(root);
+        yield* leaseLocalRuntime(root);
+        expect(yield* cleanLocalRuntime(root).pipe(Effect.flip)).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message: expect.stringContaining("in use"),
+        });
       }).pipe(Effect.provide(nodeServicesLayer))
   );
 
@@ -231,10 +241,9 @@ describe("owned signed acceptance runtime", () => {
               `:${port}`
             )
           );
-          const { fs, root } = yield* fixture;
+          const { root } = yield* fixture;
           yield* reserveLocalRuntime(root);
           const runtime = yield* initializeLocalRuntime(root);
-          expect(yield* fs.exists(`${runtime.directory}/using`)).toBe(false);
           expect(
             yield* cleanLocalRuntime(root).pipe(Effect.scoped, Effect.flip)
           ).toMatchObject({
@@ -243,7 +252,7 @@ describe("owned signed acceptance runtime", () => {
           });
           expect(yield* isPortOccupied(port)).toBe(true);
           expect(yield* readLocalRuntime(root)).toEqual(runtime);
-          expect(yield* fs.exists(`${runtime.directory}/using`)).toBe(false);
+          expect(yield* leaseClaims(runtime.directory)).toEqual([]);
         }).pipe(Effect.provide(nodeServicesLayer))
     );
   }
@@ -296,7 +305,7 @@ describe("owned signed acceptance runtime", () => {
                   fs.stat(path).pipe(
                     Effect.map((info) => ({
                       ...info,
-                      ino: Option.none<number>(),
+                      ino: Option.none<bigint>(),
                     }))
                   ),
               }
@@ -332,7 +341,7 @@ describe("owned signed acceptance runtime", () => {
                 .pipe(
                   Effect.map((info) =>
                     path.endsWith("/.convex")
-                      ? { ...info, ino: Option.none<number>() }
+                      ? { ...info, ino: Option.none<bigint>() }
                       : info
                   )
                 ),
@@ -392,25 +401,25 @@ describe("owned signed acceptance runtime", () => {
         if (change === "database") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeJson({ ...runtime, databaseInode: -1 })
+            yield* encodeRuntime({ ...runtime, databaseInode: -1n })
           );
         }
         if (change === "directory") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeJson({ ...runtime, directory: "foreign" })
+            yield* encodeRuntime({ ...runtime, directory: "foreign" })
           );
         }
         if (change === "foreign-backend") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeJson({ ...runtime, backend: "foreign" })
+            yield* encodeRuntime({ ...runtime, backend: "foreign" })
           );
         }
         if (change === "foreign-inode") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeJson({ ...runtime, directoryInode: -1 })
+            yield* encodeRuntime({ ...runtime, directoryInode: -1n })
           );
         }
         if (change === "environment-link" || change === "database-link") {

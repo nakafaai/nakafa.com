@@ -10,8 +10,8 @@
   "dependencies": {
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
-    "posthog-js": "1.438.3",
-    "posthog-node": "^5.55.1",
+    "posthog-js": "1.438.12",
+    "posthog-node": "^5.56.2",
     "server-only": "catalog:"
   },
   "devDependencies": {

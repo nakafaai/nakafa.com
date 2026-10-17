@@ -19,6 +19,7 @@ import {
   MEMORY_FILL,
   MEMORY_PAGE,
   shownMemories,
+  withoutHidden,
 } from "@/components/user/settings/memory/list";
 import {
   useMemory,
@@ -28,25 +29,29 @@ import { MemoryWindow } from "@/components/user/settings/memory/window";
 
 /**
  * The body of the list: the loaded memories that match the search, newest
- * first. The browser's own filter is the whole search, so it can only find
- * what is loaded. While the search box holds text, the rest loads, and a row
- * that matches appears as its page arrives. With nothing to list, the body says
- * why once it can: the learner has no memory, or every memory is loaded and
- * none matches.
+ * first, without the ones the learner deleted before the server stored them.
+ * The browser's own filter is the whole search, so it can only find what is
+ * loaded. While the search box holds text, the rest loads, and a row that
+ * matches appears as its page arrives. With nothing to list, the body says why
+ * once it can: the learner has no memory, or every memory is loaded and none
+ * matches.
  */
 export function MemoryRows() {
   const query = useMemoryPage((state) => state.query);
-  const { empty, fetched, loaded, more, whole } = useMemory(
-    (reading) => reading
-  );
-  const shown = shownMemories(loaded, query);
+  const hidden = useMemoryPage((state) => state.hidden);
+  const { fetched, loaded, more, whole } = useMemory((reading) => reading);
+  const listed = withoutHidden(loaded, hidden);
+  const shown = shownMemories(listed, query);
 
   return (
     <CardContent className="border-t px-0">
       {Arr.isReadonlyArrayNonEmpty(shown) ? (
         <MemoryWindow memories={shown} />
       ) : (
-        <MemoryEmpty empty={empty} whole={whole} />
+        <MemoryEmpty
+          empty={Arr.isReadonlyArrayEmpty(listed) && whole}
+          whole={whole}
+        />
       )}
       {more ? (
         <MemoryMore

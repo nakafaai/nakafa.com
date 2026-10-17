@@ -3,10 +3,11 @@ import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
 import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The Memory page of the English site. */
-export const MEMORY_PATH = "/en/user/settings/memory";
+export const MEMORY_PATH = `${appRoutes.settings}/memory`;
 const MEMORY_TITLE = /Memory/;
 /**
  * The Convex name of `nina.memory.list`, the query that reads a page of the
@@ -15,24 +16,35 @@ const MEMORY_TITLE = /Memory/;
  * resolve outside the bundler.
  */
 export const LIST_QUERY = "nina/memory:list";
-/**
- * The Convex name of `nina.memory.restore`, the mutation that puts a deleted
- * memory back when the learner presses Undo.
- */
-export const RESTORE_MUTATION = "nina/memory:restore";
-
 /** What the Memory page says when the learner has no memory. */
 export const EMPTY = "No memories yet";
 /** What the Memory page says when every memory is loaded and none matches the search. */
 export const NO_RESULT = "No memory found";
 /** What the Memory page says when a change names a memory that is gone. */
 export const MISSING = "This memory no longer exists";
-/** What the Memory page says when the Undo of a deleted memory could not put it back. */
-export const UNDO_FAILED = "Undo failed";
+/** The title of the question that asks before one memory is deleted. */
+const DELETE_TITLE = "Delete this memory?";
+/** The button that confirms the delete which the question asks about. */
+const DELETE_CONFIRM = "Delete memory";
 
 /** One memory on the page, found by its title or its words. */
 export const memoryRow = (page: Page, text: string) =>
   page.locator("main").getByRole("listitem").filter({ hasText: text });
+
+/**
+ * The question asked before one memory is deleted: a dialog on desktop and a
+ * drawer on a phone, where the editor is a dialog too, so it is found by its title.
+ */
+export const deleteQuestion = (page: Page) =>
+  page.getByRole("dialog").filter({
+    has: page.getByRole("heading", { exact: true, name: DELETE_TITLE }),
+  });
+
+/** Confirms the delete that the question asks about. */
+export const confirmDelete = (page: Page) =>
+  deleteQuestion(page)
+    .getByRole("button", { exact: true, name: DELETE_CONFIRM })
+    .click();
 
 /** The text of a memory in its editor. The editor's code loads when the learner opens it. */
 export const editorOf = (page: Page) =>

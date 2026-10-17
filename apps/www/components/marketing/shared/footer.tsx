@@ -54,13 +54,7 @@ export function Footer({
   const locale = useLocale();
 
   return (
-    <footer className="relative w-full border-t" id="footer">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute end-6 -top-14 hidden lg:end-10 lg:block"
-      >
-        <Nina act="greeting" label="" lean="peek" size={56} />
-      </div>
+    <footer className="w-full border-t" id="footer">
       <div className="mx-auto w-full max-w-7xl px-6">
         <div className="grid scroll-mt-28 pt-24">
           <section className="flex flex-col justify-between gap-8 md:flex-row">
@@ -174,7 +168,15 @@ export function Footer({
         </span>
       </a>
 
-      <section className="w-full border-t">
+      <section className="relative w-full border-t">
+        {/* Nina looks over the line under the large name, which is the edge
+            that cuts her off. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute end-6 bottom-full lg:end-10"
+        >
+          <Nina act="greeting" label="" lean="peek" size={56} />
+        </div>
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 p-6 lg:flex-row">
           <p className="text-center text-sm">
             {tCommon("copyright", {

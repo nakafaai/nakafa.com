@@ -100,7 +100,7 @@ describe("published try-out sitemap", () => {
     () =>
       Effect.gen(function* () {
         const inactive = yield* createTestPublication(
-          makeRuntimeSource().source
+          (yield* makeRuntimeSource()).source
         );
         runtimeQueryMock.mockImplementation(inactive.query);
         expect(

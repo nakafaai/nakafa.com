@@ -2,107 +2,61 @@ import { ConvexConfigProvider, RegisteredFunction } from "@confect/server";
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { isActionCtx } from "@convex-dev/better-auth/utils";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { MutationRunner } from "@repo/backend/confect/_generated/services";
-import { ensurePostHogErasureConfigured } from "@repo/backend/confect/analytics/erasure/action";
 import authConfig from "@repo/backend/confect/auth";
-import type { UserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { authComponent } from "@repo/backend/confect/auth/client";
 import { readGoogleAuthConfig } from "@repo/backend/confect/auth/config";
+import { ACCOUNT_DELETION_ATTEMPT_HEADER } from "@repo/backend/confect/auth/deletion/constants";
 import {
-  ACCOUNT_DELETION_ATTEMPT_HEADER,
-  ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-} from "@repo/backend/confect/auth/deletion/constants";
+  deletionUnavailableError,
+  ensureAccountDeletionReady,
+} from "@repo/backend/confect/auth/deletion/readiness";
 import {
-  type AccountDeletionPreparationOutcome,
-  accountDeletionPreparationOutcome,
-} from "@repo/backend/confect/auth/deletion/spec";
+  hostOnlySessionCookieHandler,
+  readSchoolTrustedOrigins,
+} from "@repo/backend/confect/auth/host";
+import { sanitizeProviderErrorRedirectResponse } from "@repo/backend/confect/auth/redirect";
 import {
+  disabledSignInPaths,
   disabledTokenPaths,
+  passwordSignInRoutesDisabled,
   tokenRoutesDisabled,
+  usernameUpdatesDisabled,
 } from "@repo/backend/confect/auth/routes";
 import {
   accountTokenHooks,
   googleSignIn,
 } from "@repo/backend/confect/auth/tokens";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
-import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { APIError } from "better-auth/api";
-import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
-import { openAPI } from "better-auth/plugins";
 import {
-  Array as Arr,
-  Config,
-  Effect,
-  HashSet,
-  Layer,
-  Option,
-  Redacted,
-  Schema,
-} from "effect";
+  readUsername,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from "@repo/backend/confect/users/username";
+import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { type BetterAuthOptions, betterAuth } from "better-auth/minimal";
+import { openAPI, username } from "better-auth/plugins";
+import { Config, Effect, Layer, Option, Redacted, Result } from "effect";
 
-const deletionUnavailableError = () =>
-  APIError.from("INTERNAL_SERVER_ERROR", {
-    code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-    message: "Account deletion is temporarily unavailable.",
-  });
-const providerErrorRoutePathnames = HashSet.fromIterable(
-  Arr.map(ACTIVE_APP_LOCALE_CODES, (locale) => `/${locale}/auth/error`)
-);
+/**
+ * Better Auth's paths for password accounts. Each one stays closed on every
+ * host: sign-in with a school username opens later, on the school host alone
+ * (ADR 0009). The sign-in paths are in `disabledSignInPaths`, which also closes
+ * them for server code. `/is-username-available` is closed too, because it would
+ * tell any visitor which school usernames exist.
+ */
 const disabledCredentialPaths = [
   "/change-password",
+  "/is-username-available",
   "/request-password-reset",
   "/reset-password",
   "/set-password",
-  "/sign-in/email",
-  "/sign-in/username",
   "/sign-up/email",
   "/verify-password",
 ] as const;
 const resetPasswordCallbackPath = "/reset-password/";
 const trailingSlashPattern = /\/$/;
 
-/**
- * Removes provider-owned diagnostics before the redirect crosses into the app.
- *
- * Better Auth appends `error` and `error_description` to `errorCallbackURL`.
- * The app error landing needs only its validated continuation intent, so every
- * other query value and fragment is discarded at the auth response boundary.
- */
-export function sanitizeProviderErrorRedirectResponse(
-  response: Response,
-  siteUrl: URL
-) {
-  const rawLocation = response.headers.get("location");
-  if (!(rawLocation && response.status >= 300 && response.status < 400)) {
-    return;
-  }
-  if (!URL.canParse(rawLocation, siteUrl)) {
-    return;
-  }
-  const location = new URL(rawLocation, siteUrl);
-  if (
-    location.origin !== siteUrl.origin ||
-    !HashSet.has(providerErrorRoutePathnames, location.pathname)
-  ) {
-    return;
-  }
-  const intent = location.searchParams.get("intent");
-  location.search = "";
-  location.hash = "";
-  if (intent !== null) {
-    location.searchParams.set("intent", intent);
-  }
-  const headers = new Headers(response.headers);
-  headers.set("location", location.href);
-  return new Response(response.body, {
-    headers,
-    status: response.status,
-    statusText: response.statusText,
-  });
-}
 const credentialSurfaceDisabled = {
   id: "credential-surface-disabled",
   onRequest: (
@@ -126,43 +80,6 @@ const credentialSurfaceDisabled = {
     });
   },
 } satisfies NonNullable<BetterAuthOptions["plugins"]>[number];
-/** Requires the server-side claim to confirm deletion readiness. */
-export const verifyAccountDeletionPreparation = Effect.fn(
-  "auth.verifyAccountDeletionPreparation"
-)(function* (
-  preparation: Effect.Effect<
-    AccountDeletionPreparationOutcome,
-    UserCleanupError | Schema.SchemaError
-  >
-) {
-  const preparationOutcome = yield* preparation.pipe(
-    Effect.mapError(deletionUnavailableError),
-    Effect.catchDefect(() => Effect.fail(deletionUnavailableError()))
-  );
-  if (
-    preparationOutcome ===
-    accountDeletionPreparationOutcome.temporarilyUnavailable
-  ) {
-    return yield* Effect.fail(deletionUnavailableError());
-  }
-});
-const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
-  function* (authId: string, rawAttemptId: string | null) {
-    yield* ensurePostHogErasureConfigured().pipe(
-      Effect.mapError(deletionUnavailableError)
-    );
-    const attemptId = yield* Schema.decodeUnknownEffect(
-      Schema.String.check(Schema.isUUID())
-    )(rawAttemptId).pipe(Effect.mapError(deletionUnavailableError));
-    const { runMutation } = yield* MutationRunner;
-    yield* verifyAccountDeletionPreparation(
-      runMutation(refs.internal.auth.deletion.claimAccountDeletion, {
-        attemptId,
-        authId,
-      })
-    );
-  }
-);
 /**
  * Supplies Better Auth's synchronous schema and adapter callback.
  * The component calls this during registration without request credentials.
@@ -183,9 +100,17 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       encryptOAuthTokens: true,
     },
     databaseHooks: accountTokenHooks,
-    disabledPaths: [...disabledCredentialPaths, ...disabledTokenPaths],
+    disabledPaths: [
+      ...disabledCredentialPaths,
+      ...disabledSignInPaths,
+      ...disabledTokenPaths,
+    ],
+    // Passwords are a store for school accounts only: nobody signs up with one,
+    // and a password reset (a card redemption) ends every session it replaces.
     emailAndPassword: {
-      enabled: false,
+      disableSignUp: true,
+      enabled: true,
+      revokeSessionsOnPasswordReset: true,
     },
     user: {
       deleteUser: {
@@ -212,7 +137,18 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     plugins: [
       credentialSurfaceDisabled,
       tokenRoutesDisabled,
+      passwordSignInRoutesDisabled,
+      usernameUpdatesDisabled,
       openAPI(),
+      // The plugin holds the global username of the account (ADR 0009), which is
+      // the same value as `users.username`. A school login name lives in
+      // `schoolLogins` and is separate from the username.
+      username({
+        maxUsernameLength: USERNAME_MAX_LENGTH,
+        minUsernameLength: USERNAME_MIN_LENGTH,
+        usernameValidator: (value) => Result.isSuccess(readUsername(value)),
+        validationOrder: { username: "post-normalization" },
+      }),
       convex({
         authConfig,
         ...(Option.isNone(jwks) ? {} : { jwks: jwks.value }),
@@ -229,9 +165,15 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
   const google = yield* readGoogleAuthConfig();
   return yield* Effect.sync(() => {
     const options = createAuthOptions(ctx);
-    return betterAuth({
+    const auth = betterAuth({
       ...options,
+      advanced: {
+        // The cookie domain is the host of `SITE_URL`, so every school host
+        // under it shares the session (ADR 0026).
+        crossSubDomainCookies: { enabled: true },
+      },
       baseURL: siteUrl.href,
+      trustedOrigins: readSchoolTrustedOrigins(siteUrl),
       socialProviders: {
         google: {
           clientId: google.clientId,
@@ -259,6 +201,11 @@ export const createAuth = Effect.fn("auth.createAuth")(function* (
         },
       ],
     });
+    // A plugin's response hook receives no request, so the host rule wraps the handler.
+    return {
+      ...auth,
+      handler: hostOnlySessionCookieHandler(auth.handler, siteUrl),
+    };
   });
 });
 

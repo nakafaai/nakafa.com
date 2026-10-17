@@ -2,7 +2,9 @@
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import {
   type PromptInputFile,
-  type PromptInputFileConstraintError,
+  type PromptInputRefusal,
+  refusalsAfterSend,
+  refusedFiles,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
 import { randomUuid } from "@repo/utilities/uuid";
@@ -12,7 +14,6 @@ import {
   HashSet,
   MutableHashMap,
   Option,
-  Result,
   Schema,
 } from "effect";
 import {
@@ -30,20 +31,23 @@ const PromptInputFilesLimitsSchema = Schema.Struct({
   maxFiles: Schema.optional(Schema.Finite),
 });
 type PromptInputFilesLimits = typeof PromptInputFilesLimitsSchema.Type;
-type OnPromptInputFileError = (error: PromptInputFileConstraintError) => void;
 
-/** Owns selected files and the lifetime of their browser preview URLs. */
+/**
+ * Owns selected files, the lifetime of their browser preview URLs, and the files
+ * that the last pick refused. Each pick replaces the refused files of the pick
+ * before it, so a refused file shows until its learner removes it, picks again,
+ * or the composer's message goes.
+ */
 export function usePromptInputFiles({
   accept,
   inputRef,
   maxFiles,
   maxFileSize,
-  onError,
 }: PromptInputFilesLimits & {
   inputRef: RefObject<HTMLInputElement | null>;
-  onError?: OnPromptInputFileError | undefined;
 }) {
   const [items, setItems] = useState<PromptInputFile[]>([]);
+  const [refusals, setRefusals] = useState<readonly PromptInputRefusal[]>([]);
   const localItemsRef = useRef<PromptInputFile[]>([]);
   const localUrls = useStableMutableValue(() =>
     MutableHashMap.empty<string, string>()
@@ -107,31 +111,28 @@ export function usePromptInputFiles({
   }, [localUrls]);
   const add = useCallback(
     (fileList: File[] | FileList) => {
-      const result = Effect.runSync(
-        Effect.result(
-          validatePromptInputFiles({
-            ...(accept === undefined ? {} : { accept }),
-            currentFileCount: fileCountRef.current,
-            files: Array.from(fileList),
-            maxFileSize,
-            maxFiles,
-          })
-        )
+      const selection = Effect.runSync(
+        validatePromptInputFiles({
+          ...(accept === undefined ? {} : { accept }),
+          currentFileCount: fileCountRef.current,
+          files: Array.from(fileList),
+          maxFileSize,
+          maxFiles,
+        })
       );
-      if (Result.isFailure(result)) {
-        onError?.(result.failure);
+      setRefusals(
+        Arr.map(refusedFiles(selection.rejections), (refusal) => ({
+          ...refusal,
+          id: Effect.runSync(randomUuid),
+        }))
+      );
+      if (selection.files.length === 0) {
         return;
       }
-      if (result.success.warning) {
-        onError?.(result.success.warning);
-      }
-      if (result.success.files.length === 0) {
-        return;
-      }
-      addLocal(result.success.files);
-      fileCountRef.current += result.success.files.length;
+      addLocal(selection.files);
+      fileCountRef.current += selection.files.length;
     },
-    [accept, addLocal, maxFileSize, maxFiles, onError]
+    [accept, addLocal, maxFileSize, maxFiles]
   );
   const remove = useCallback(
     (id: string) => {
@@ -140,13 +141,22 @@ export function usePromptInputFiles({
         fileCountRef.current = Math.max(0, fileCountRef.current - 1);
       }
       removeLocal(id);
+      setRefusals((current) =>
+        Arr.filter(current, (refusal) => refusal.id !== id)
+      );
     },
     [removeLocal]
+  );
+  const dismissRefusals = useCallback(
+    (sent: readonly PromptInputRefusal[]) =>
+      setRefusals((current) => refusalsAfterSend(current, sent)),
+    []
   );
   const clear = useCallback(() => {
     fileCountRef.current = 0;
     fileIdsRef.current = HashSet.empty();
     clearLocal();
+    setRefusals([]);
   }, [clearLocal]);
   const openFileDialog = openFileDialogLocal;
   useLayoutEffect(() => {
@@ -176,13 +186,24 @@ export function usePromptInputFiles({
   const attachments = useMemo(
     () => ({
       files,
+      refusals,
       add,
+      dismissRefusals,
       remove,
       clear,
       openFileDialog,
       fileInputRef: inputRef,
     }),
-    [files, add, remove, clear, openFileDialog, inputRef]
+    [
+      files,
+      refusals,
+      add,
+      dismissRefusals,
+      remove,
+      clear,
+      openFileDialog,
+      inputRef,
+    ]
   );
   return { attachments, files };
 }

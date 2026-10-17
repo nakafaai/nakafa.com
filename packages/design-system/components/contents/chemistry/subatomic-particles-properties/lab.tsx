@@ -24,6 +24,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -156,14 +157,16 @@ export function SubatomicParticlePropertiesLab({
         <div className="max-w-3xl text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.summary}
         </div>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            {Arr.map(selectedLabels.facts, (fact) => (
+              <PropertyFact fact={fact} key={fact.label} />
+            ))}
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          {Arr.map(selectedLabels.facts, (fact) => (
-            <PropertyFact fact={fact} key={fact.label} />
-          ))}
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

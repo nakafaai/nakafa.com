@@ -10,16 +10,11 @@ import {
   PROJECTILE_INSTANT_TIME,
   PROJECTILE_SCENARIOS,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
-import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import {
-  Message,
-  MessageContent,
-} from "@repo/design-system/components/ui/message";
 import { Array as Arr } from "effect";
 import { getLocale, getTranslations } from "next-intl/server";
-import { NinaPrompt } from "@/components/ai/message/prompt";
 import { ProjectileClient } from "@/components/marketing/about/projectile/client";
+import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { decimalSeparators } from "@/lib/marketing/decimal";
 
@@ -119,18 +114,11 @@ export async function ProjectileStage() {
       lead={tHome("scene-lead")}
       scenarios={scenarios}
       talk={
-        <>
-          <Message align="end">
-            <NinaPrompt text={tHome("scene-ask")} />
-          </Message>
-          <Message>
-            <MessageContent>
-              <MarkdownContent id="home-scene-answer" variant="chat">
-                {tHome("scene-answer")}
-              </MarkdownContent>
-            </MessageContent>
-          </Message>
-        </>
+        <Talk ask={tHome("scene-ask")} tone="sky">
+          <TalkReply act="gripping" mood="proud">
+            {tHome("scene-answer")}
+          </TalkReply>
+        </Talk>
       }
       title={tHome("scene-title")}
       viewLabel={tHome("scene-label")}

@@ -3,6 +3,7 @@
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
+import { cn } from "cn";
 import { Array as Arr, Option, Schema } from "effect";
 import { useEffect, useState } from "react";
 
@@ -48,11 +49,24 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
   return (
     <div className="grid w-full justify-items-center gap-6" ref={ref}>
       <div className="grid justify-items-center gap-4">
+        {/* Every fact lies in the same cell, so the bubble keeps the size of
+            the longest one and a new fact moves nothing; only the latest shows. */}
         <p
           aria-live="polite"
-          className="min-h-24 max-w-md text-pretty rounded-xl bg-muted px-4 py-3 text-base"
+          className="grid max-w-md rounded-[1.25rem] rounded-ee-md bg-muted px-4 py-2.5 font-medium text-xl leading-7 tracking-tight"
         >
-          {latest?.said}
+          {Arr.map(facts, (fact) => (
+            <span
+              aria-hidden={fact !== latest}
+              className={cn(
+                "col-start-1 row-start-1 self-center text-balance",
+                fact !== latest && "invisible"
+              )}
+              key={fact.said}
+            >
+              {fact.said}
+            </span>
+          ))}
         </p>
         <Nina act="writing" label="" size={260} whole />
       </div>

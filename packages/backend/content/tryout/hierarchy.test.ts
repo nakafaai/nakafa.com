@@ -46,10 +46,12 @@ const loadCatalog = Effect.fn("tryout.hierarchy.test.loadCatalog")(function* (
   const t = convexTest(schema, convexModules);
   yield* Effect.promise(() =>
     t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog,
-        placements: [makeTryoutStartPlacement("id")],
-      })
+      Effect.runPromiseWith(runtimeServices)(
+        activateTryoutSnapshot(ctx, {
+          catalog,
+          placements: [makeTryoutStartPlacement("id")],
+        })
+      )
     )
   );
   return yield* Effect.promise(() =>

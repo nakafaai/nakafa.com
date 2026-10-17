@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  formatTrimmedMeterMath,
-  formatTrimmedSecondMath,
-  formatTrimmedSpeedMath,
-} from "@repo/design-system/components/contents/physics/kinematics/math";
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import {
   DEFAULT_PARABOLIC_LAUNCH_ID,
@@ -12,13 +7,11 @@ import {
   getParabolicMotionState,
   isParabolicLaunchId,
   PARABOLIC_LAUNCHES,
-  PARABOLIC_SCENE,
   type ParabolicLaunchId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
-import { ProjectileBallScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/scene";
+import { getParabolicFacts } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/facts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
   ToggleGroup,
@@ -27,19 +20,31 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
-import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { type ReactNode, useMemo, useState } from "react";
+
+/** The scene loads once the lab asks for it, and its frame holds the place meanwhile. */
+const ParabolicMovementStage = dynamic(
+  () =>
+    import(
+      "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"
+    ).then(({ ParabolicMovementStage }) => ParabolicMovementStage),
+  { loading: SceneSpinner }
+);
 
 interface ParabolicMovementLabProps {
   decimalSeparator?: DecimalSeparator;
-  description: ReactNode;
+  /** The launch the lab opens on. It starts at the default launch when none is given. */
+  defaultLaunchId?: ParabolicLaunchId | undefined;
+  description?: ReactNode;
   labels: {
     chooseLaunch: string;
     factLabels: {
@@ -50,44 +55,30 @@ interface ParabolicMovementLabProps {
     };
     viewLabel: string;
   };
-  title: ReactNode;
+  live?: boolean;
+  /**
+   * Whether the three-dimensional scene is mounted. A lab that is not live keeps
+   * its whole card in place, with an empty frame where the scene goes.
+   */
+  /** Reports each launch the reader picks, so a window can keep it while this lab is unmounted. */
+  onLaunchIdChange?: (launchId: ParabolicLaunchId) => void;
+  title?: ReactNode;
 }
 
 export function ParabolicMovementLab({
   decimalSeparator,
+  defaultLaunchId,
+  onLaunchIdChange,
   title,
   description,
   labels,
+  live = true,
 }: ParabolicMovementLabProps) {
   const [launchId, setLaunchId] = useState<ParabolicLaunchId>(
-    DEFAULT_PARABOLIC_LAUNCH_ID
+    defaultLaunchId ?? DEFAULT_PARABOLIC_LAUNCH_ID
   );
   const motion = useMemo(() => getParabolicMotionState(launchId), [launchId]);
-  const facts = [
-    {
-      id: "initial-speed",
-      label: labels.factLabels.initialSpeed,
-      math: `v_0=${formatTrimmedSpeedMath(
-        motion.scenario.initialSpeed,
-        decimalSeparator
-      )}`,
-    },
-    {
-      id: "flight-time",
-      label: labels.factLabels.flightTime,
-      math: `T=${formatTrimmedSecondMath(motion.flightTime, decimalSeparator)}`,
-    },
-    {
-      id: "range",
-      label: labels.factLabels.range,
-      math: `R=${formatTrimmedMeterMath(motion.range, decimalSeparator)}`,
-    },
-    {
-      id: "peak-height",
-      label: labels.factLabels.peakHeight,
-      math: `h_{\\max}=${formatTrimmedMeterMath(motion.peakHeight, decimalSeparator)}`,
-    },
-  ];
+  const facts = getParabolicFacts(motion, decimalSeparator, labels.factLabels);
 
   function handleLaunchChange(value: string) {
     if (!isParabolicLaunchId(value)) {
@@ -95,6 +86,7 @@ export function ParabolicMovementLab({
     }
 
     setLaunchId(value);
+    onLaunchIdChange?.(value);
   }
 
   return (
@@ -122,49 +114,22 @@ export function ParabolicMovementLab({
           className={threeSceneFrameVariants()}
           render={<section />}
         >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.72} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE", 400)}
-                intensity={0.68}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[4.2, 5.5, 4.8]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <directionalLight intensity={0.28} position={[-4, 3.2, -3.5]} />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={PARABOLIC_SCENE.cameraPosition}
-                cameraTarget={PARABOLIC_SCENE.cameraTarget}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={PARABOLIC_SCENE.cameraFov}
-              />
-              <ProjectileBallScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
+          {live ? <ParabolicMovementStage motion={motion} /> : null}
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            {Arr.map(facts, (fact) => (
+              <VisualFactTabular
+                key={fact.id}
+                label={fact.label}
+                value={<InlineMath math={fact.math} />}
+              />
+            ))}
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          {Arr.map(facts, (fact) => (
-            <VisualFactTabular
-              key={fact.id}
-              label={fact.label}
-              value={<InlineMath math={fact.math} />}
-            />
-          ))}
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

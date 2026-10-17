@@ -31,7 +31,7 @@ interface CurriculumListProps {
 }
 
 /**
- * The curricula as a list of capitals. One name is bright at a time and the
+ * The curricula as a list in large letters. One name is bright at a time and the
  * others are dim; a pointer or a keyboard on a name makes it the bright one.
  * The lighting moves on by itself while the list is on screen. It waits while
  * a pointer or focus is on the list, and holds on the first name with reduced
@@ -63,7 +63,7 @@ export function CurriculumList({ curricula, label }: CurriculumListProps) {
       {Arr.map(curricula, (curriculum, position) => (
         <NavigationLink
           className={cn(
-            "flex w-fit items-center gap-4 text-xl uppercase tracking-tight transition-opacity duration-300 sm:text-3xl",
+            "flex w-fit items-center gap-4 text-xl tracking-tight transition-opacity duration-300 sm:text-3xl",
             position === bright ? "opacity-100" : "opacity-40"
           )}
           href={curriculum.href}

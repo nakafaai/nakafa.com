@@ -31,6 +31,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -135,41 +136,47 @@ export function UniformCircularMotionLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
+            <VisualFactTabular
+              label={labels.period}
+              value={
+                <InlineMath math={formatRoundedSecondMath(motion.period)} />
+              }
+            />
+            <VisualFactTabular
+              label={labels.radius}
+              value={
+                <InlineMath math={formatRoundedMeterMath(motion.radius)} />
+              }
+            />
+            <VisualFactTabular
+              label={labels.speed}
+              value={
+                <InlineMath
+                  math={`${formatCircularMotionDecimal(
+                    motion.speed,
+                    decimalSeparator
+                  )}\\text{ m/s}`}
+                />
+              }
+            />
+            <VisualFactTabular
+              label={labels.acceleration}
+              value={
+                <InlineMath
+                  math={`${formatCircularMotionDecimal(
+                    motion.acceleration,
+                    decimalSeparator
+                  )}\\text{ m/s}^2`}
+                />
+              }
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
-          <VisualFactTabular
-            label={labels.period}
-            value={<InlineMath math={formatRoundedSecondMath(motion.period)} />}
-          />
-          <VisualFactTabular
-            label={labels.radius}
-            value={<InlineMath math={formatRoundedMeterMath(motion.radius)} />}
-          />
-          <VisualFactTabular
-            label={labels.speed}
-            value={
-              <InlineMath
-                math={`${formatCircularMotionDecimal(
-                  motion.speed,
-                  decimalSeparator
-                )}\\text{ m/s}`}
-              />
-            }
-          />
-          <VisualFactTabular
-            label={labels.acceleration}
-            value={
-              <InlineMath
-                math={`${formatCircularMotionDecimal(
-                  motion.acceleration,
-                  decimalSeparator
-                )}\\text{ m/s}^2`}
-              />
-            }
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

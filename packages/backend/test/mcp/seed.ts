@@ -12,8 +12,11 @@ import {
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
-import { Array as Arr } from "effect";
+import {
+  TEST_RUNTIME_RELEASE,
+  testRuntimeRelease,
+} from "@repo/backend/test/runtime/values";
+import { Array as Arr, Effect } from "effect";
 
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 
@@ -25,10 +28,11 @@ export async function seedArticle(test: BackendTest) {
     await insertRuntimeIndex(ctx, article.contentKey, {
       plainText: "rational function grade eleven asymptote",
     });
+    const runtime = await Effect.runPromise(testRuntimeRelease());
     const state = await ctx.db.query("contentState").unique();
     assert.ok(state, "Expected one active content state.");
     await ctx.db.patch("contentState", state._id, {
-      searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+      searchManifestHash: runtime.manifestHash,
       searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
       searchSequence: TEST_RUNTIME_RELEASE.sequence,
     });

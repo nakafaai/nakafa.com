@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { BLUE_MARBLE_EARTH_TEXTURE_ASSET } from "@repo/design-system/components/contents/biology/assets";
@@ -15,6 +16,7 @@ import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -95,12 +97,15 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
             value={gasLevel}
           />
         </div>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact label={labels.heatFlowLabel} value={labels.heatFlow} />
+            <VisualFact label={labels.meaningLabel} value={labels.meaning} />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
+
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact label={labels.heatFlowLabel} value={labels.heatFlow} />
-          <VisualFact label={labels.meaningLabel} value={labels.meaning} />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
@@ -116,8 +121,13 @@ function GreenhouseScene({
 }) {
   const earthRef = useRef<Group>(null);
   const heatRef = useRef<Group>(null);
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
   useFrame((_, delta) => {
+    if (calm) {
+      return;
+    }
+
     if (earthRef.current) {
       earthRef.current.rotation.y += delta * 0.12;
     }

@@ -4,6 +4,7 @@ import {
   ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
 } from "@repo/backend/confect/auth/deletion/constants";
+import { PRUNE_INTERVAL } from "@repo/backend/confect/editor/prune";
 import { SWEEP_INTERVAL } from "@repo/backend/confect/nina/deadline";
 import { Cron, Duration } from "effect";
 
@@ -12,6 +13,7 @@ const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
+const INBOX_SWEEP_INTERVAL_MINUTES = 1;
 const INVITE_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
 const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
@@ -221,6 +223,30 @@ export default CronJobs.make()
       "sweep visit expiry",
       Duration.hours(VISIT_EXPIRY_SWEEP_INTERVAL_HOURS),
       internal.operators.expiry.sweep,
+      {}
+    )
+  )
+  .add(
+    /**
+     * Deletes the editor steps that a snapshot covers, once they are older than the
+     * keep delay, and the log keeps the rest.
+     */
+    CronJob.make(
+      "prune covered editor steps",
+      PRUNE_INTERVAL,
+      internal.editor.prune.sweep,
+      { cursor: null }
+    )
+  )
+  .add(
+    /**
+     * Starts a run for each inbox cursor that a change left pending, if the run
+     * that the change scheduled never happened.
+     */
+    CronJob.make(
+      "sweep inbox runs",
+      Duration.minutes(INBOX_SWEEP_INTERVAL_MINUTES),
+      internal.notifications.consume.sweep,
       {}
     )
   );

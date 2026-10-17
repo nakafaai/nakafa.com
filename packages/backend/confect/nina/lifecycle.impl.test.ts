@@ -3,21 +3,23 @@ import { listMessages, listStreams, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { STOP_GRACE, settleTurn } from "@repo/backend/confect/nina/settlement";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Duration, Effect, Option, pipe } from "effect";
 
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@repo/backend/confect/nina/settlement", async (load) => {
   const actual =
     await load<typeof import("@repo/backend/confect/nina/settlement")>();
   return { ...actual, settleTurn: vi.fn(actual.settleTurn) };
-});
-
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual, listMessages: vi.fn(actual.listMessages) };
 });
 
 const NOW = Date.UTC(2026, 8, 27, 12);
@@ -117,6 +119,17 @@ describe("native Nina settlement", () => {
         }),
       ],
     ]);
+  });
+
+  it("claims a turn by reading the turn, its learner and its chat once, and the turn one more time to write it", async () => {
+    const f = await fixture();
+    const metrics = await f.t.mutation(async (ctx) => {
+      await ctx.runMutation(claim, { turnId: f.turnId });
+      return ctx.meta.getTransactionMetrics();
+    });
+    // A `patch` of the turn read it once more, which made five.
+    expect(metrics.documentsRead.used).toBe(4);
+    expect(metrics.documentsWritten.used).toBe(1);
   });
 
   it("adds the stages a run reached to its claim when the turn settles", async () => {
@@ -371,18 +384,6 @@ describe("native Nina settlement", () => {
     expect((await f.inspect()).turn).toMatchObject({ cancelRequestedAt: NOW });
   });
 
-  it("tells a run to halt once its turn was stopped, settled or removed", async () => {
-    const f = await fixture();
-    await f.t.mutation(claim, { turnId: f.turnId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(false);
-    await f.owner.mutation(cancel, { chatId: f.chatId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-    await f.t.mutation(recover, { turnId: f.turnId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-    await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-  });
-
   it("refunds a stopped generation with no final text and never enlarges the next credit period", async () => {
     const f = await fixture();
     await f.t.mutation((ctx) =>
@@ -474,8 +475,8 @@ describe("native Nina settlement", () => {
   });
   it("settles twice safely and rolls back when the component journal is unavailable", async () => {
     const { t, ...f } = await fixture();
-    vi.mocked(listMessages).mockRejectedValueOnce(
-      new Error("Private component failure")
+    vi.mocked(readThread).mockReturnValueOnce(
+      Effect.fail(new SealedReadError())
     );
     await expect(
       f.owner.mutation(cancel, { chatId: f.chatId })

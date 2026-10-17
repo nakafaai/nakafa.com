@@ -1,9 +1,26 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, MutableList, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableList,
+  Number as Num,
+  Schema,
+} from "effect";
+import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { withBrowserContext } from "@/e2e/support/context";
-import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import {
+  readRecordedLayoutShifts,
+  recordLayoutShifts,
+} from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import {
+  readRecordedSizeChanges,
+  recordSizeChanges,
+} from "@/e2e/support/resize";
 import { openRoute } from "@/e2e/support/route";
+import { isKnownSceneDiagnostic } from "@/e2e/support/scene";
+import { scrollThroughPage } from "@/e2e/support/scroll";
+import { TOASTER } from "@/e2e/support/selector";
 import {
   desktopViewport,
   tabletPortraitViewport,
@@ -14,7 +31,7 @@ import {
 /** The parts of the home page, in the order of the page. */
 const HOME_PARTS = [
   "hero",
-  "lesson",
+  LESSON_SECTION_ID,
   "tryout",
   "nina",
   "scene",
@@ -37,38 +54,36 @@ const HOME_VIEWPORTS = [touchViewport, tabletPortraitViewport, desktopViewport];
 const COLOR_SCHEMES = Schema.Literals(["light", "dark"]).literals;
 
 /**
- * Scrolls the whole page one screen at a time, so every part reaches the
- * viewport and every observer runs, then returns to the top.
+ * The page global that holds the layout shifts the page makes, with the elements
+ * that moved, so a failure names them. A fixed toaster's shifts are left out.
  */
-const scrollThroughPage = Effect.fn("NakafaE2E.scrollThroughPage")(function* (
-  page: Page
-) {
-  const height = yield* Effect.promise(() =>
-    page.evaluate(() => window.innerHeight)
-  );
-  const documentHeight = yield* Effect.promise(() =>
-    page.evaluate(() => document.documentElement.scrollHeight)
-  );
-  for (
-    let offset = 0;
-    offset < documentHeight;
-    offset += Math.round(height * 0.8)
-  ) {
-    yield* Effect.promise(() =>
-      page.evaluate((top) => window.scrollTo(0, top), offset)
-    );
-    yield* Effect.promise(() => page.waitForTimeout(120));
-  }
-  yield* Effect.promise(() => page.evaluate(() => window.scrollTo(0, 0)));
-});
+const LAYOUT_SHIFTS_KEY = "nakafaHomeLayoutShifts";
+
+/** The page global that holds the size changes of the sections and the lesson window's panels. */
+const SIZE_CHANGES_KEY = "nakafaHomeSizeChanges";
+
+/** The sections of the page and the panels of the lesson window, whose sizes a failure names. */
+const SIZED_ELEMENTS = "section[id], [role='tabpanel']";
+
+/**
+ * How far apart a resize and a layout shift may be and still be named together
+ * in a failure. Timestamps cannot place a resize in its frame exactly, so this is
+ * about three frames at 60 Hz: a resize in the frame before a shift is named too,
+ * and the message lists candidate causes, not proven ones.
+ */
+const SHIFT_TOLERANCE_MILLISECONDS = 50;
 
 /** Collects the console errors and warnings a page writes, hydration warnings included. */
 function observeConsole(page: Page) {
   const issues = MutableList.make<string>();
   page.on("console", (message) => {
     const type = message.type();
-    if (type === "error" || type === "warning") {
-      MutableList.append(issues, `${type}: ${message.text()}`);
+    const text = message.text();
+    if (
+      (type === "error" || type === "warning") &&
+      !isKnownSceneDiagnostic(text)
+    ) {
+      MutableList.append(issues, `${type}: ${text}`);
     }
   });
   return issues;
@@ -96,6 +111,18 @@ for (const viewport of HOME_VIEWPORTS) {
             Effect.gen(function* () {
               const page = yield* Effect.promise(() => context.newPage());
               const issues = observeConsole(page);
+              yield* Effect.promise(() =>
+                page.addInitScript(recordLayoutShifts, {
+                  key: LAYOUT_SHIFTS_KEY,
+                  overlay: TOASTER,
+                })
+              );
+              yield* Effect.promise(() =>
+                page.addInitScript(recordSizeChanges, {
+                  key: SIZE_CHANGES_KEY,
+                  selector: SIZED_ELEMENTS,
+                })
+              );
               yield* withObservedPageErrors(
                 page,
                 Effect.gen(function* () {
@@ -104,8 +131,43 @@ for (const viewport of HOME_VIEWPORTS) {
                     page.waitForLoadState("networkidle")
                   );
                   yield* scrollThroughPage(page);
-                  const shift = yield* readCumulativeLayoutShift(page);
-                  expect(shift).toBe(0);
+                  const shifts = yield* readRecordedLayoutShifts(
+                    page,
+                    LAYOUT_SHIFTS_KEY
+                  );
+                  const resizes = yield* readRecordedSizeChanges(
+                    page,
+                    SIZE_CHANGES_KEY
+                  );
+                  // The number and the failure message read the same shifts: the
+                  // ones that no press or key caused, with the elements they moved
+                  // and the elements that changed size near them in time.
+                  const counted = Arr.filter(
+                    shifts,
+                    (shift) => !shift.hadRecentInput
+                  );
+                  const shift = Num.sumAll(
+                    Arr.map(counted, ({ value }) => value)
+                  );
+                  const moved = Arr.map(counted, (entry) => {
+                    const resized = Arr.filter(
+                      resizes,
+                      (resize) =>
+                        Math.abs(resize.time - entry.time) <=
+                        SHIFT_TOLERANCE_MILLISECONDS
+                    );
+                    const sized = Arr.map(
+                      resized,
+                      (resize) =>
+                        `${resize.element} ${resize.width}x${resize.height} at ${Math.round(resize.time)} ms`
+                    );
+                    const named =
+                      sized.length === 0
+                        ? ""
+                        : `; resized: ${Arr.join(sized, ", ")}`;
+                    return `${entry.value} at ${Math.round(entry.time)} ms: ${Arr.join(entry.sources, "; ")}${named}`;
+                  });
+                  expect(shift, Arr.join(moved, "\n")).toBe(0);
                   expect(MutableList.toArray(issues)).toEqual([]);
                 })
               );

@@ -4,11 +4,18 @@ import { Array as Arr } from "effect";
 /** The seed that names the animals of the marketing pages. */
 const HOME_SEED = "nakafa-home";
 
-/** How many animals the toys beside the parts of the home page take. */
-const TOY_COUNT = 17;
+/**
+ * How many animals the toys of the page take: seven around the hero's title,
+ * one where each of twelve parts begins, two in the privacy room and two
+ * beside the founder's letter.
+ */
+const TOY_COUNT = 23;
 
 /** How many friends stand in the crowd of the community part. */
 const CROWD_COUNT = 18;
+
+/** Every this many friends of the crowd, one of them is typing, so a bubble of dots rises above it. */
+export const CROWD_TYPING_EVERY = 4;
 
 /** How many animals sit in the class photo of the school part. */
 const CLASS_COUNT = 7;

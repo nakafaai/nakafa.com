@@ -2,6 +2,7 @@ import { Kind } from "@repo/backend/confect/access/kind";
 import { access } from "@repo/backend/confect/access/kinds";
 import type { Rule, RuleRole } from "@repo/backend/confect/access/schema";
 import { classroom } from "@repo/backend/confect/classroom/kinds";
+import { editor } from "@repo/backend/confect/editor/kinds";
 import { integrations } from "@repo/backend/confect/integrations/kinds";
 import { operators } from "@repo/backend/confect/operators/kinds";
 import { tenancy } from "@repo/backend/confect/tenancy/kinds";
@@ -14,6 +15,7 @@ export const kinds = [
   ...integrations.kinds,
   ...classroom.kinds,
   ...operators.kinds,
+  ...editor.kinds,
 ] as const;
 
 /** Every lane's extensions of another lane's kinds. */
@@ -23,6 +25,7 @@ const extensions = [
   ...integrations.extensions,
   ...classroom.extensions,
   ...operators.extensions,
+  ...editor.extensions,
 ] as const;
 
 /** Every declaration and extension; each kind's actions, rules, and changes join from these. */
@@ -31,11 +34,6 @@ export const entries = [...kinds, ...extensions] as const;
 /** A typed `{ kind, id }` pointer; permission is checked whenever it is read. */
 export const ObjectRef = Schema.Union(Arr.map(kinds, (kind) => kind.ref)).pipe(
   Schema.toTaggedUnion("kind")
-);
-
-/** Every audited change of every kind. */
-export const Change = Schema.Union(
-  Arr.flatten(Arr.map(entries, (entry) => entry.changes))
 );
 
 /**

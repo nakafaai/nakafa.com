@@ -35,10 +35,12 @@ import { inspectGatewaySource } from "#scripts/check/gateway";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
+import { inspectSealedSource } from "#scripts/check/sealed";
 import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 import { inspectModuleSize } from "#scripts/check/size";
 import { openRepositoryCompiler, parseSources } from "#scripts/check/source";
 import { inspectTailwindSource } from "#scripts/check/tailwind";
+import { inspectToastSource } from "#scripts/check/toasts";
 import { runEntry } from "#scripts/entry";
 import { writeError, writeOutput } from "#scripts/output";
 
@@ -62,8 +64,8 @@ function lineReport(lines: readonly string[]) {
 }
 
 /**
- * Applies the Effect-native, array, gateway, React, state, refs, and class
- * source policies to authored modules. The array rules read each module's types
+ * Applies the Effect-native, array, gateway, React, state, refs, sealed message,
+ * and class source policies to authored modules. The array rules read each module's types
  * from its project on disk, and their findings join the Effect-native findings
  * before the list is sorted. Every finding is a violation: no baseline or
  * allowlist holds one back.
@@ -92,9 +94,11 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
     Arr.flatMap(parsed.modules, ({ file, sourceFile }) =>
       Arr.flatten([
         inspectGatewaySource(file, sourceFile),
+        inspectToastSource(file, sourceFile),
         inspectReactSource(file, sourceFile),
         inspectStateSource(file, sourceFile),
         inspectRefsSource(file, sourceFile),
+        inspectSealedSource(file, sourceFile),
         inspectModuleSize(file, sourceFile),
         inspectDeploySource(file, sourceFile),
       ])

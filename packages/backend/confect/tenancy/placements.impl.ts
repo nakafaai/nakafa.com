@@ -19,10 +19,12 @@ import {
 } from "@repo/backend/confect/tenancy/authority";
 import {
   PersonAlreadyPlaced,
+  PersonGraduated,
   PersonNotPlaced,
   PersonNotStudent,
   PersonPlacementLimit,
 } from "@repo/backend/confect/tenancy/errors";
+import { graduationOf } from "@repo/backend/confect/tenancy/graduate";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
 import spec from "@repo/backend/confect/tenancy/placements.spec";
 import { Effect, Layer, Option, Struct } from "effect";
@@ -46,6 +48,9 @@ const place = FunctionImpl.make(
     const person = yield* personAuthority.authorize("person.manage", personId);
     if (!(yield* studentOf(person._id, cohort.unitId))) {
       return yield* new PersonNotStudent();
+    }
+    if (Option.isSome(yield* graduationOf(cohort.unitId, person._id))) {
+      return yield* new PersonGraduated();
     }
     const reader = yield* DatabaseReader;
     if (Option.isSome(yield* placementOf(cohort.periodId, person._id))) {

@@ -6,6 +6,7 @@ import {
   MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
+import { renameAuthUsername } from "@repo/backend/confect/auth/username";
 import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
@@ -65,19 +66,22 @@ const updateUserName = FunctionImpl.make(
 /**
  * Renames the caller's profile address. The old username is free the moment the
  * new one is stored, in the same transaction that checks the new one, so two
- * accounts that ask for the same name at once cannot both win.
+ * accounts that ask for the same name at once cannot both win. A school
+ * account's Better Auth username changes with it, so the two stay one value.
  */
 const updateUsername = FunctionImpl.make(
   databaseSchema,
   spec,
   "updateUsername",
   Effect.fn("users.mutations.updateUsername")(function* (args) {
+    const ctx = yield* MutationCtxService;
     const writer = yield* DatabaseWriter;
     const user = yield* requireAuth();
     const inspected = yield* inspectUsername(args.username, user.appUser._id);
     if (Result.isFailure(inspected)) {
       return yield* new UsernameRejected({ reason: inspected.failure });
     }
+    yield* renameAuthUsername(ctx, user.authId, inspected.success);
     yield* writer
       .table("users")
       .patch(user.appUser._id, { username: inspected.success })
@@ -123,6 +127,29 @@ const setMascot = FunctionImpl.make(
       })
       .pipe(Effect.orDie);
     return { mascot: args.mascot };
+  })
+);
+
+/**
+ * Stores which picture draws the caller, the animal or the Google photo. The row
+ * that the session loaded is replaced, as `setMascot` does, so the write reads no
+ * row again. A photo the account no longer holds shows its animal instead.
+ */
+const setPicture = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "setPicture",
+  Effect.fn("users.mutations.setPicture")(function* (args) {
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAuth();
+    yield* writer
+      .table("users")
+      .replace(user.appUser._id, {
+        ...Struct.omit(user.appUser, ["_id", "_creationTime"]),
+        picture: args.picture,
+      })
+      .pipe(Effect.orDie);
+    return null;
   })
 );
 const syncUserInfoForChat = FunctionImpl.make(
@@ -174,6 +201,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(updateUsername),
   Layer.provide(updateBio),
   Layer.provide(setMascot),
+  Layer.provide(setPicture),
   Layer.provide(syncUserInfoForChat),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),

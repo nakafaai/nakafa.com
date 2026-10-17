@@ -4,9 +4,12 @@
 
 Accepted on 13 October 2026 with owner decision K10. The owner approved decisions
 K1 to K20 on that day. Notifications are planned for program wave B
-(ADR 0013 describes the waves). Nothing in this ADR is live. The repository has
-no inbox table, no push code, and no service worker. It sends two emails: the
-welcome email (`packages/backend/confect/emails/welcome/internal.ts`) and the
+(ADR 0013 describes the waves). The invitation rows, the journal cursor, and its
+sweep are built. The cursor passes only settled entries behind a commit-lag
+window, so it needs no Convex ordering proof (ADR 0016), and the rest of the
+notification system is not live either. The repository has no push code and
+no service worker. It sends two emails: the welcome email
+(`packages/backend/confect/emails/welcome/internal.ts`) and the
 invitation email (`packages/backend/confect/emails/invite`), which the invite
 mutation starts (ADR 0011).
 
@@ -93,9 +96,25 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
 
 - The consumer follows ADR 0016. It adds an index on the owner and the change
   type to `journalEntries`, reads in creation order with its own cursor
-  (`journalCursors`, planned), checks permission again when it loads the
-  subject, and proves its ordering assumption on Convex before it relies on a
-  creation-time cursor. An entry holds IDs and codes, never a name or a message.
+  (`journalCursors`), and checks permission again when it loads the subject. A
+  mutation takes its entry's creation time while it runs, and the entry becomes
+  visible at its commit, so the cursor does not rely on a proof of that order. It
+  passes an entry only once the entry has settled, five seconds behind the clock,
+  so an entry that commits late is still read. It holds each unsettled entry it
+  handles early, at most one page of them with one slot kept free, until its
+  position passes that entry, and it skips them when it reads again. A run that
+  leaves entries unread schedules the next run: at once when the next entry has
+  settled or the list has room for it, and for the moment the oldest unread entry
+  settles otherwise. So a burst drains without the minute sweep. An invitation
+  schedules a run only when its cursor is not pending already, so a burst starts
+  one chain of runs. A cursor with nothing left to read is not pending. A cursor
+  starts five seconds before the entry that makes it, not at a clock reading, so an
+  invitation created up to that long before the entry gets a row, and an earlier
+  one gets none. An entry holds IDs and codes, never a name or a message.
+- An invitation has one inbox row for each recipient Person, found by the Person
+  and the invitation. A resend refreshes that row to the resend's time and marks
+  it unread. Revoking the invitation deletes the row, and a revoked invitation
+  that a run reads later gets none.
 - Preferences are kept for each kind and each channel (`notificationPreferences`,
   planned). The email for an invitation and for the account is always sent.
 - The fan-out is never one transaction. A workpool (`@convex-dev/workpool`, a
@@ -121,7 +140,7 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   notification.
 - The Resend component makes the email request and retries a failed batch in its
   own workpool. Its defaults are 5 attempts and a first backoff of 30 seconds
-  that doubles (`@convex-dev/resend` 0.2.8, `src/client/index.ts`), and the
+  that doubles (`@convex-dev/resend` 0.2.9, `src/client/index.ts`), and the
   options in `confect/emails/client.ts` set only `testMode` today. Its request
   carries no deadline (`callResendAPIWithBatch` in the package), and the options
   of the component hold no setting for one (`ResendOptions`), so the deadline of
@@ -131,7 +150,7 @@ quiet hours. They write the inbox row, then a workpool sends push and email.
   included: two retries after about 500 milliseconds and one second, because a
   workpool counts the first try as an attempt, and the nth retry waits the first
   backoff times 2 to the power n minus 1 (`RetryBehavior` and the README of
-  `@convex-dev/workpool` 0.4.13, the version in `pnpm-lock.yaml`). A repeated
+  `@convex-dev/workpool` 0.4.14, the version in `pnpm-lock.yaml`). A repeated
   request does not send an email twice, because the component dedupes on the
   idempotency key of the send and sends the id of the first email of a batch as
   the `Idempotency-Key` header (`src/component/lib.ts`).
@@ -315,11 +334,18 @@ sitting does not show.
 | The welcome email through `confect/emails` and the Resend component | Live |
 | The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
 | `apps/www/app/manifest.ts` with `display: "standalone"` | Live |
-| `notifications`, `notificationPreferences`, `notificationReminders`, `pushSubscriptions`, and `journalCursors` | Planned, program wave B |
-| The notify consumer, and the published list with `person.invited` | Planned, program wave B |
+| `journalCursors`, which start five seconds before the entry that makes them, pass only settled entries, hold at most one page of handled ids with one slot kept free, and schedule their next run when a run leaves entries unread; and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Built |
+| `notifications`, one row for each Person and invitation (`by_recipientPersonId_and_inviteId`), with the purge of a released Person's rows and of a revoked invitation's row | Built |
+| The invitation rows: `person.invited` is published, written by the invite, and refreshed by the resend; the inbox consumer writes them from the start of its cursor; an invitation revoked before its run gets no row, and a revoked invitation loses its row | Built |
+| The bounds of the inbox: one request reads at most `HELD_SCHOOL_LIMIT`, 100 schools, and is refused past it with `NotificationScopeTooLarge`; each page of the consumer, the read-all, and the purge holds 50, half of the 100-entry list page of ADR 0016; a page cursor that names more than `HELD_SCHOOL_LIMIT` rows is refused with `NotificationCursorInvalid` | Live |
+| The minute sweep that starts a run for each pending journal cursor | Built |
+| `notificationPreferences`, `notificationReminders`, and `pushSubscriptions` | Planned, program wave B |
+| The notify consumer for the change types other than `person.invited` | Planned, program wave B |
 | The reminder cron | Planned, program wave B |
-| The notification rules and the zone of a notice, `confect/notifications/rules.ts`, `confect/notifications/delivery.ts`, and `confect/notifications/zone.ts`: the channel table as data, recipients by relation, the sends of a notice as rules whose instants are derived from the zone at send time, and the zone that carries a notice | Built as pure functions, not called yet (program wave B) |
+| The channel table as data, `confect/notifications/rules.ts`: the routes of each kind and relation | Called: the inbox consumer asks `deliveriesOf`, which reads `routeOf`, for the invitee's inbox row. `recipientsOf` and `canSwitchOff` wait for the preferences (program wave B) |
+| The sends of a notice, `confect/notifications/delivery.ts`: `deliveriesOf` and `deliveryInstant` | `deliveriesOf` is called by the inbox consumer. `deliveryInstant` waits for the reminders, which need the zone of their school (program wave B) |
+| The zone that carries a notice, `confect/notifications/zone.ts` | Built as pure functions, not called yet (program wave B) |
 | The zone clock, `confect/notifications/clock.ts`: quiet hours, the 17:00 digest, and local send times in an IANA zone | Built as pure functions, not called yet (program wave B) |
 | A service worker and Web Push | Planned, program wave B |
-| The inbox panel and `nakafa.com/id/notifications` | Planned, program wave B |
+| The inbox panel and `nakafa.com/id/notifications`, the next reader of `notifications:list`, `notifications:read`, and `notifications:readAll` | Planned, program wave B |
 | WhatsApp | Planned, after the first channels |

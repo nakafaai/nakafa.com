@@ -7,6 +7,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
+import { sealThreadIn, writtenThreadIn } from "@repo/backend/test/nina/seal";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -118,6 +119,93 @@ describe("Nina presentation after an answer", () => {
     expect(
       (await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId)))?.suggestions
     ).toEqual(["How does this relate to continuity?"]);
+  });
+
+  /**
+   * The model calls of one answered turn with its follow-up, and the input of each.
+   * With `copy` other than plain, the rows of the chat are written by the writers
+   * after the answer, and with `sealed` they are then sealed in place, both before
+   * the follow-up reads them, so every row the follow-up reads is opened.
+   */
+  async function followUpInput(
+    history: number,
+    copy: "plain" | "written" | "sealed"
+  ) {
+    const f = await createNinaTest({ history });
+    const model = ninaModel();
+    provider.languageModel.mockReturnValue(model);
+    await f.t.action(run, { turnId: f.turnId });
+    if (copy !== "plain") {
+      await writtenThreadIn(f.t, f.threadId, f.identity.userId);
+    }
+    if (copy === "sealed") {
+      await sealThreadIn(f.t, f.threadId, f.identity.userId);
+    }
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    return Arr.map(model.doGenerateCalls, (call) => call.prompt);
+  }
+
+  it("sends the model the same follow-up input for a sealed chat as for a plain one", async () => {
+    const plain = await followUpInput(2, "plain");
+    expect(await followUpInput(2, "written")).toEqual(plain);
+    const sealed = await followUpInput(2, "sealed");
+    expect(sealed).toEqual(plain);
+    expect(encodeJsonText(sealed)).toContain("Earlier question 1");
+  });
+
+  it("sends the model the same title input and follow-up input for a sealed first turn as for a plain one", async () => {
+    const plain = await followUpInput(0, "plain");
+    expect(await followUpInput(0, "written")).toEqual(plain);
+    const sealed = await followUpInput(0, "sealed");
+    expect(sealed).toEqual(plain);
+    expect(encodeJsonText(sealed)).toContain("Explain a limit.");
+  });
+
+  it("sends the model the same follow-up input for a sealed long chat as for a plain one", async () => {
+    const plain = await followUpInput(30, "plain");
+    expect(await followUpInput(30, "written")).toEqual(plain);
+    const sealed = await followUpInput(30, "sealed");
+    expect(sealed).toEqual(plain);
+    expect(encodeJsonText(sealed)).toContain("Earlier question 23");
+  });
+
+  it("keeps the answer and the default title when the learner's key is gone before the follow-up reads the chat", async () => {
+    const f = await createNinaTest();
+    const model = ninaModel();
+    provider.languageModel.mockReturnValue(model);
+    await f.t.action(run, { turnId: f.turnId });
+    const titleBefore = await readTitle(f);
+    await writtenThreadIn(f.t, f.threadId, f.identity.userId);
+    await sealThreadIn(f.t, f.threadId, f.identity.userId);
+    await f.t.mutation(async (ctx) => {
+      const keys = await ctx.db.query("vaultKeys").collect();
+      for (const key of keys) {
+        if (key.userId === f.identity.userId) {
+          await ctx.db.delete(key._id);
+        }
+      }
+    });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    expect(
+      encodeJsonText(Arr.map(model.doGenerateCalls, (call) => call.prompt))
+    ).not.toContain("Generate follow-up suggestions");
+    expect(await readTitle(f)).toBe(titleBefore);
+    expect((await f.inspect()).turn?.state.status).toBe("complete");
+  });
+
+  it("gives the follow-up suggestions the latest exchanges of a long chat and no older one", async () => {
+    const f = await createNinaTest({ history: 30 });
+    const model = ninaModel();
+    provider.languageModel.mockReturnValue(model);
+    await f.t.action(run, { turnId: f.turnId });
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
+    const prompt = model.doGenerateCalls[0]?.prompt ?? [];
+    // Sixteen messages are eight exchanges, the one just answered included,
+    // and the request for suggestions is one more message of the learner. The
+    // call read all 50 messages it was allowed before, which made 26.
+    expect(Arr.filter(prompt, ({ role }) => role === "user")).toHaveLength(9);
+    expect(encodeJsonText(prompt)).toContain("Earlier question 23");
+    expect(encodeJsonText(prompt)).not.toContain("Earlier question 22");
   });
 
   it("releases the chat before metadata, anchors its context and accounts for late usage", async () => {
@@ -259,6 +347,30 @@ describe("Nina presentation after an answer", () => {
     expect(
       await f.t.query((ctx) => ctx.db.get("ninaTurns", f.turnId))
     ).toMatchObject({ suggestions: ["A relevant follow-up?"] });
+  });
+
+  it("saves follow-up suggestions with the turn and the chat read once and the turn read once more to write it", async () => {
+    const f = await createNinaTest();
+    const metrics = await f.t.mutation(async (ctx) => {
+      await ctx.runMutation(save, {
+        turnId: f.turnId,
+        suggestions: ["A relevant follow-up?"],
+      });
+      return ctx.meta.getTransactionMetrics();
+    });
+    // A `patch` of the turn read it once more, which made four.
+    expect(metrics.documentsRead.used).toBe(3);
+  });
+
+  it("saves a generated title with the chat read once more to write it", async () => {
+    const f = await createNinaTest();
+    const metrics = await f.t.mutation(async (ctx) => {
+      await ctx.runMutation(save, { turnId: f.turnId, title: "Generated" });
+      return ctx.meta.getTransactionMetrics();
+    });
+    // The turn, the chat, the learner's key, and the chat again to write it. A
+    // `patch` of the chat read it once more, which made five.
+    expect(metrics.documentsRead.used).toBe(4);
   });
 
   it("keeps a title the learner chose before the generated one arrives", async () => {

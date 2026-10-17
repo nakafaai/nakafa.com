@@ -3,7 +3,7 @@ import consents_current from "../../consents/current.spec";
 
 const spec: Spec.Spec<{
   readonly consents: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "consents", never, GroupSpec.NamedAt<typeof consents_current, "current">>, "consents">;
-}> = Spec.make().addAt("consents", GroupSpec.makeAt("consents").addGroupAt("current", consents_current));
+}> = Spec.fromGroups({ ["consents"]: GroupSpec.addGroupsAt(GroupSpec.make(), { ["current"]: consents_current }) }) as typeof spec;
 
 const refs: Refs.FromSpec<typeof spec> = Refs.make(spec);
 

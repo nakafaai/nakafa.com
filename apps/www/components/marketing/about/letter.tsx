@@ -27,9 +27,7 @@ export function Letter() {
             <p>{t("letter-slow")}</p>
             <div className="flex flex-wrap items-end justify-between gap-6 pt-4">
               <div className="flex items-center gap-4">
-                <div className="size-16 overflow-hidden rounded-full">
-                  <Nina label="" size={64} tile="cream" />
-                </div>
+                <Nina label="" size={64} tile="cream" />
                 <div className="grid">
                   <p className="font-medium">Nabil</p>
                   <p className="text-muted-foreground text-sm">

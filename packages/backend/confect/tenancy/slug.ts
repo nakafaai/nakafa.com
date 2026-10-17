@@ -89,3 +89,10 @@ export const NewTenantSlug = TenantSlug.check(
     (slug) => !HashSet.has(reservedSlugs, slug) || "This address is reserved."
   )
 );
+
+/**
+ * Whether a label names a school that Nakafa does not reserve. The routing of
+ * school hosts and the origins that the shared sign-in trusts both ask this
+ * question, so the rule has one owner.
+ */
+export const isSchoolLabel = Schema.is(NewTenantSlug);

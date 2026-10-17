@@ -51,10 +51,12 @@ describe("try-out reference visibility", () => {
         ).toBeNull();
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            activateTryoutSnapshot(ctx, {
-              catalog,
-              placements: [makeTryoutStartPlacement("id")],
-            })
+            Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog,
+                placements: [makeTryoutStartPlacement("id")],
+              })
+            )
           )
         );
         expect(
@@ -118,10 +120,12 @@ it.effect(
       assert(Option.isSome(country));
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          activateTryoutSnapshot(ctx, {
-            catalog,
-            placements: [makeTryoutStartPlacement("id")],
-          })
+          Effect.runPromiseWith(runtimeServices)(
+            activateTryoutSnapshot(ctx, {
+              catalog,
+              placements: [makeTryoutStartPlacement("id")],
+            })
+          )
         )
       );
       const input = yield* resolveReferenceInput({

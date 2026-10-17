@@ -36,10 +36,15 @@ import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
 import customerDeletionTombstones from "./tables/customerDeletionTombstones";
 import customers from "./tables/customers";
+import editorClients from "./tables/editorClients";
+import editorDocuments from "./tables/editorDocuments";
+import editorSnapshots from "./tables/editorSnapshots";
+import editorSteps from "./tables/editorSteps";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
 import learningPopularityCounters from "./tables/learningPopularityCounters";
@@ -48,6 +53,7 @@ import learningPopularitySignals from "./tables/learningPopularitySignals";
 import learningPopularityViewerSignals from "./tables/learningPopularityViewerSignals";
 import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
+import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
@@ -57,21 +63,27 @@ import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
+import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
+import tenantGraduates from "./tables/tenantGraduates";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
 import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
 import tenantPeriods from "./tables/tenantPeriods";
+import tenantPromotionMoves from "./tables/tenantPromotionMoves";
+import tenantPromotions from "./tables/tenantPromotions";
 import tenantUnits from "./tables/tenantUnits";
 import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
@@ -126,10 +138,15 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly curriculumRoutes: typeof curriculumRoutes;
   readonly customerDeletionTombstones: typeof customerDeletionTombstones;
   readonly customers: typeof customers;
+  readonly editorClients: typeof editorClients;
+  readonly editorDocuments: typeof editorDocuments;
+  readonly editorSnapshots: typeof editorSnapshots;
+  readonly editorSteps: typeof editorSteps;
   readonly integrationClients: typeof integrationClients;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
+  readonly journalCursors: typeof journalCursors;
   readonly journalEntries: typeof journalEntries;
   readonly learningEngagementQueue: typeof learningEngagementQueue;
   readonly learningPopularityCounters: typeof learningPopularityCounters;
@@ -138,6 +155,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly learningPopularityViewerSignals: typeof learningPopularityViewerSignals;
   readonly learningPreferences: typeof learningPreferences;
   readonly learningViews: typeof learningViews;
+  readonly loginCards: typeof loginCards;
   readonly materialBuckets: typeof materialBuckets;
   readonly materialCatalog: typeof materialCatalog;
   readonly ninaMemories: typeof ninaMemories;
@@ -147,21 +165,27 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly ninaSummaries: typeof ninaSummaries;
   readonly ninaTurns: typeof ninaTurns;
   readonly ninaUploads: typeof ninaUploads;
+  readonly notifications: typeof notifications;
   readonly onboardingProfiles: typeof onboardingProfiles;
   readonly operators: typeof operators;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
   readonly quranRows: typeof quranRows;
   readonly quranSearch: typeof quranSearch;
+  readonly schoolLogins: typeof schoolLogins;
   readonly snapshotBatches: typeof snapshotBatches;
   readonly subscriptions: typeof subscriptions;
+  readonly tenantAssignments: typeof tenantAssignments;
   readonly tenantCohortMembers: typeof tenantCohortMembers;
   readonly tenantCohorts: typeof tenantCohorts;
+  readonly tenantGraduates: typeof tenantGraduates;
   readonly tenantGrants: typeof tenantGrants;
   readonly tenantInvites: typeof tenantInvites;
   readonly tenantKeys: typeof tenantKeys;
   readonly tenantPeople: typeof tenantPeople;
   readonly tenantPeriods: typeof tenantPeriods;
+  readonly tenantPromotionMoves: typeof tenantPromotionMoves;
+  readonly tenantPromotions: typeof tenantPromotions;
   readonly tenantUnits: typeof tenantUnits;
   readonly tenantVisits: typeof tenantVisits;
   readonly tenants: typeof tenants;
@@ -215,10 +239,15 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   curriculumRoutes,
   customerDeletionTombstones,
   customers,
+  editorClients,
+  editorDocuments,
+  editorSnapshots,
+  editorSteps,
   integrationClients,
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,
+  journalCursors,
   journalEntries,
   learningEngagementQueue,
   learningPopularityCounters,
@@ -227,6 +256,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   learningPopularityViewerSignals,
   learningPreferences,
   learningViews,
+  loginCards,
   materialBuckets,
   materialCatalog,
   ninaMemories,
@@ -236,21 +266,27 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   ninaSummaries,
   ninaTurns,
   ninaUploads,
+  notifications,
   onboardingProfiles,
   operators,
   programBuckets,
   programCatalog,
   quranRows,
   quranSearch,
+  schoolLogins,
   snapshotBatches,
   subscriptions,
+  tenantAssignments,
   tenantCohortMembers,
   tenantCohorts,
+  tenantGraduates,
   tenantGrants,
   tenantInvites,
   tenantKeys,
   tenantPeople,
   tenantPeriods,
+  tenantPromotionMoves,
+  tenantPromotions,
   tenantUnits,
   tenantVisits,
   tenants,

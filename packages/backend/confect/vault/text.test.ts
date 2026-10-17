@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
   createTenantKey,
@@ -19,28 +18,16 @@ import {
   scenario,
   school,
 } from "@repo/backend/test/owner";
-import { Effect, Result, Schema } from "effect";
+import { bytes, GOLDEN_WRAPPED, goldenUser } from "@repo/backend/test/vault";
+import { Effect } from "effect";
 import { Hex } from "effect/encoding";
 
 const summary = { field: "text", table: "ninaSummaries" };
 const title = { field: "title", table: "ninaMemories" };
 const BLIND = /^[\w-]{22}$/u;
-/**
- * A learner whose stored form the golden values below were written for. The
- * test database accepts an ID made of digits and the table name only.
- */
-const GOLDEN_USER = "1users";
-const goldenUser = Schema.decodeUnknownSync(Id("users"))(GOLDEN_USER);
-/** The learner's key under the test root key, as the code wrote it before school keys. */
-const GOLDEN_WRAPPED =
-  "0132f26fc9be7efd3b0c3840e3209fd9c71d5e151771c32b7dff0825effa85289411a2ae84127036bf2b6ed993451fff581f3fcddbce36fdf71eb6eed6";
-/** `fact` sealed under that learner's key, as the code wrote it before school keys. */
+/** `fact` sealed under the golden learner's key, as the code wrote it before school keys. */
 const GOLDEN_SEALED =
   "01a2f710347047a93050de3b46e57dc6c74a4994390fd30a7a3f341538b1cabf1d5958fdaf390956073052fca5cd13aced4ff8483c0cc40c058809e1e35dc2d178e0484ae540fc83";
-
-/** The bytes of a stored value, written as hex. */
-const bytes = (hex: string) =>
-  new Uint8Array(Result.getOrThrow(Hex.decode(hex))).buffer;
 
 describe("vault learner text", () => {
   it.effect(
@@ -63,6 +50,28 @@ describe("vault learner text", () => {
           }
         })
       )
+  );
+
+  it.effect("opens a text only for the row it was sealed for", () =>
+    scenario(
+      Effect.gen(function* () {
+        const owner = yield* ensureLearnerKeys(yield* learner("owner"));
+        const inRow = { ...memory, row: ["thread-a", 2, 1] };
+        const sealed = yield* sealText(owner, inRow, fact);
+        expect(yield* openText(owner, inRow, sealed)).toBe(fact);
+        for (const field of [
+          memory,
+          { ...memory, row: ["thread-b", 2, 1] },
+          { ...memory, row: ["thread-a", 3, 1] },
+          { ...memory, row: ["thread-a", 2, 2] },
+          { ...memory, row: ["thread-a", "2", 1] },
+        ]) {
+          expect(
+            (yield* Effect.flip(openText(owner, field, sealed))).reason
+          ).toBe("cipher");
+        }
+      })
+    )
   );
 
   it.effect(

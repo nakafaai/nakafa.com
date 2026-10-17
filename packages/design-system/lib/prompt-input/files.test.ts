@@ -2,12 +2,20 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   PromptInputFileConstraintError,
   PromptInputFileSchema,
+  type PromptInputRefusal,
+  refusalsAfterSend,
+  refusedFiles,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
 import { Effect, Schema } from "effect";
 
 const image = new File(["image"], "lesson.png", { type: "image/png" });
 const text = new File(["lesson"], "lesson.txt", { type: "text/plain" });
+const empty = new File([], "empty.txt", { type: "text/plain" });
+const large = new File(["larger"], "large.txt", { type: "text/plain" });
+const essay = new File(["essay"], "essay.docx", {
+  type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+});
 
 describe("prompt input file selection", () => {
   it.effect("keeps unconstrained and MIME-matched selections", () =>
@@ -22,8 +30,8 @@ describe("prompt input file selection", () => {
         files: [text],
       });
 
-      expect(result).toEqual({ files: [image, text] });
-      expect(explicitlyAccepted).toEqual({ files: [text] });
+      expect(result).toEqual({ files: [image, text], rejections: [] });
+      expect(explicitlyAccepted).toEqual({ files: [text], rejections: [] });
     })
   );
 
@@ -35,61 +43,123 @@ describe("prompt input file selection", () => {
         files: [image, text],
       });
 
-      expect(result).toEqual({ files: [image, text] });
+      expect(result).toEqual({ files: [image, text], rejections: [] });
     })
   );
 
-  it.effect("rejects a selection without an accepted file type", () =>
+  it.effect("names a file whose type is not accepted", () =>
     Effect.gen(function* () {
-      const error = yield* validatePromptInputFiles({
+      const result = yield* validatePromptInputFiles({
         accept: "image/*",
         currentFileCount: 0,
         files: [text],
-      }).pipe(Effect.flip);
+      });
 
-      expect(error).toBeInstanceOf(PromptInputFileConstraintError);
-      expect(error.code).toBe("accept");
+      expect(result.files).toEqual([]);
+      expect(result.rejections).toHaveLength(1);
+      expect(result.rejections[0]).toBeInstanceOf(
+        PromptInputFileConstraintError
+      );
+      expect(result.rejections[0]).toMatchObject({
+        code: "accept",
+        files: ["lesson.txt"],
+      });
     })
   );
 
-  it.effect("rejects a selection whose accepted files are all oversized", () =>
+  it.effect("names an empty file as empty, not as too large", () =>
     Effect.gen(function* () {
-      const error = yield* validatePromptInputFiles({
+      const result = yield* validatePromptInputFiles({
+        currentFileCount: 0,
+        files: [empty],
+        maxFileSize: 8,
+      });
+
+      expect(result.files).toEqual([]);
+      expect(result.rejections).toMatchObject([
+        { code: "empty", files: ["empty.txt"] },
+      ]);
+    })
+  );
+
+  it.effect("names a file that is larger than the size limit", () =>
+    Effect.gen(function* () {
+      const result = yield* validatePromptInputFiles({
         currentFileCount: 0,
         files: [image],
         maxFileSize: 1,
-      }).pipe(Effect.flip);
+      });
 
-      expect(error.code).toBe("max_file_size");
+      expect(result.files).toEqual([]);
+      expect(result.rejections).toMatchObject([
+        { code: "max_file_size", files: ["lesson.png"] },
+      ]);
     })
   );
 
   it.effect(
-    "retains valid files when only part of a selection is oversized",
+    "keeps the files that fit and names each file it drops with its own reason",
     () =>
       Effect.gen(function* () {
-        const small = new File(["a"], "small.txt", { type: "text/plain" });
         const result = yield* validatePromptInputFiles({
+          accept: "image/*, text/plain",
           currentFileCount: 0,
-          files: [small, text],
-          maxFileSize: 2,
+          files: [image, essay, large, empty],
+          maxFileSize: 5,
         });
 
-        expect(result).toEqual({ files: [small] });
+        expect(result.files).toEqual([image]);
+        expect(result.rejections).toMatchObject([
+          { code: "accept", files: ["essay.docx"] },
+          { code: "empty", files: ["empty.txt"] },
+          { code: "max_file_size", files: ["large.txt"] },
+        ]);
       })
   );
 
-  it.effect("caps available capacity and returns a typed warning", () =>
+  it.effect("reports an empty file of an unaccepted type by its type", () =>
     Effect.gen(function* () {
       const result = yield* validatePromptInputFiles({
-        currentFileCount: 1,
-        files: [image, text],
+        accept: "image/*",
+        currentFileCount: 0,
+        files: [empty],
+      });
+
+      expect(result.rejections).toMatchObject([
+        { code: "accept", files: ["empty.txt"] },
+      ]);
+    })
+  );
+
+  it.effect(
+    "keeps the room that is left and names the files that did not fit",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* validatePromptInputFiles({
+          currentFileCount: 1,
+          files: [image, text, large],
+          maxFiles: 2,
+        });
+
+        expect(result.files).toEqual([image]);
+        expect(result.rejections).toMatchObject([
+          { code: "max_files", files: ["lesson.txt", "large.txt"] },
+        ]);
+      })
+  );
+
+  it.effect("attaches nothing when no room is left", () =>
+    Effect.gen(function* () {
+      const result = yield* validatePromptInputFiles({
+        currentFileCount: 2,
+        files: [image],
         maxFiles: 2,
       });
 
-      expect(result.files).toEqual([image]);
-      expect(result.warning).toBeInstanceOf(PromptInputFileConstraintError);
-      expect(result.warning?.code).toBe("max_files");
+      expect(result.files).toEqual([]);
+      expect(result.rejections).toMatchObject([
+        { code: "max_files", files: ["lesson.png"] },
+      ]);
     })
   );
 });
@@ -127,4 +197,50 @@ describe("prompt input file schema", () => {
       expect(error).toBeInstanceOf(Schema.SchemaError);
     })
   );
+});
+
+describe("refused files", () => {
+  it("names each refused file once, with the reason that refused it, in the order of the reasons", () => {
+    expect(
+      refusedFiles([
+        new PromptInputFileConstraintError({
+          code: "accept",
+          files: ["essay.docx", "essay.docx"],
+        }),
+        new PromptInputFileConstraintError({
+          code: "max_files",
+          files: ["photo-11.png"],
+        }),
+      ])
+    ).toEqual([
+      { code: "accept", name: "essay.docx" },
+      { code: "accept", name: "essay.docx" },
+      { code: "max_files", name: "photo-11.png" },
+    ]);
+  });
+
+  it("refuses nothing when the pick refused nothing", () => {
+    expect(refusedFiles([])).toEqual([]);
+  });
+});
+
+describe("refusals after a send", () => {
+  function refusal(id: string): PromptInputRefusal {
+    return { code: "accept", id, name: `${id}.docx` };
+  }
+
+  it("takes the refusals the send was picked with and keeps one picked while it was admitted", () => {
+    expect(
+      refusalsAfterSend(
+        [refusal("sent"), refusal("picked-later")],
+        [refusal("sent")]
+      )
+    ).toEqual([refusal("picked-later")]);
+  });
+
+  it("keeps every refusal when the send was picked with none", () => {
+    expect(refusalsAfterSend([refusal("picked-later")], [])).toEqual([
+      refusal("picked-later"),
+    ]);
+  });
 });

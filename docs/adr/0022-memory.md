@@ -375,7 +375,7 @@ deletes its key rows with it:
 - A daily job deletes the situations whose end day has passed, 25 per call, and
   schedules itself again while a call is full.
 - Account deletion removes the learner's memories in bounded batches, and
-  their portrait and the records that keep a deleted memory for its Undo,
+  their portrait and the records that keep a deleted memory for `restore`,
   before the learner's vault key goes. Every pass looks for memories, the
   portrait and the records first, so a capture still running when the deletion
   starts is swept by the next pass, and one that lands after the key is gone
@@ -758,7 +758,7 @@ nobody tries them again without a new reason.
   numeral, for a number, so `Dr. Budi sakit` opened as a list item `Budi sakit`
   and the next save wrote `1. Budi sakit` (ueberdosis/tiptap issues 8376 and
   8395; the fix merged for 8376 stops mixed-case titles only and is not in
-  3.31.4, the latest release). The editor lexes a numbered list with `marked`,
+  any release up to 3.32.0). The editor lexes a numbered list with `marked`,
   as it does a bullet list, and the reader does too. Both lex the underline and
   the highlight with the one rule of `marks.ts`: a mark is a pair of delimiters
   around words, so `C++ and C++20` and `a == b == c` are text. A pair with no
@@ -810,18 +810,18 @@ nobody tries them again without a new reason.
   save that failed the editor opens again with the words the server never took,
   and the next close writes them, whatever the memory on the page shows. When
   the learner removes the title and every word of a stored memory and closes
-  the editor, the memory is deleted as the Delete button deletes it, with the
-  same Undo, because nothing written would leave the last words on the server
-  and in the list. A new memory that was never given a word creates nothing. A
-  new memory that the learner deletes or empties while its first save is on its
-  way has a row from the moment that save goes out, so it is deleted when the
-  server has stored it, with the same Undo. The Undo asks the server to put
-  the memory back (`restore`, below), so it gives back what the learner saw:
-  a situation keeps its end day and a memory Nina saved keeps Nina as its
-  author. Words that an open editor held and had not saved when the learner
-  deleted the memory were never part of it, so the Undo does not bring them
-  back. They open in the editor again only when the server does not delete the
-  memory. A paste that would take the Markdown past 2,000 characters is
+  the editor, nothing is written, because the server keeps the last words it was
+  handed: only a confirmed delete removes a memory. A new memory that was never
+  given a word creates nothing. A new memory that the learner deletes while its
+  first save is on its way has a row from the moment that save goes out, and
+  the row leaves the list at once; the memory is deleted when the server has
+  stored it. No page offers an Undo: a delete
+  asks first, with the design system's `ResponsiveDialog`. The `restore`
+  mutation below stays only for an older web build that still calls it during
+  the deploy skew window, and it gives back what that build deleted. Words that
+  an open editor held and had not saved when the learner deleted the memory were
+  never part of it. They open in the editor again only when the server does not
+  delete the memory. A paste that would take the Markdown past 2,000 characters is
   refused as a whole, and the page says so. The panel beside the page never
   takes the room the list needs: the list keeps a card of 20rem between its
   padding, whatever width the learner dragged the panel to and whatever the
@@ -853,35 +853,22 @@ nobody tries them again without a new reason.
   the browser draws the field from (`e2e/support/placeholder.ts`).
 - Every change shows at once on every loaded page and rolls back when it fails.
   A change made before the live list has answered shows when it answers,
-  because the browser has no page of its own to change until then. The Undo
-  shows the memory again at once, as the learner saw it, in the one page that
-  holds its place (`pageForRestored`): the first page whose last memory was
-  confirmed at or before it. Until the server answers it carries an id the
-  server has not stored, like a memory that is being added, because the id the
-  memory had is gone and Convex gives the restored memory another. When the
-  server cannot put it back, the row goes and a toast says that the Undo
-  failed, whether the server refused or broke. If it broke the learner can try
-  again, so the memory's words open in the editor as a new memory and nothing
-  they wrote is lost. A refusal means there is nothing left to put back, so no
-  editor opens.
-- `remove` keeps what it deletes for the length of the Undo, and `restore` gives
-  it back as it was. The table `ninaMemoryRestores` (index by user and the id
-  the memory had, index by user and confirmation time) holds one record for each
-  memory the learner deleted whose Undo has not ended. A record holds every
+  because the browser has no page of its own to change until then. A deleted
+  memory leaves the page at once. When the server keeps it, the memory comes
+  back, and an editor that was open on it reopens with the words it held.
+- `remove` keeps what it deletes for `MEMORY_UNDO`, and `restore` gives it back
+  as it was, for a web build from before the Undo toast went. The table
+  `ninaMemoryRestores` (index by user and the id the memory had, index by user
+  and confirmation time) holds one record for each memory the learner deleted
+  whose window has not ended. A record holds every
   stored field of the memory, sealed as stored and never opened (author,
   confirmation time, kind, topics, end day, words and title), the id the memory
-  had (`memoryId`), the keys it had in the memory index, and the moment its Undo
-  ends (`expiresAt`). `remove` writes it in the transaction that deletes the
+  had (`memoryId`), the keys it had in the memory index, and the moment its
+  window ends (`expiresAt`). `remove` writes it in the transaction that deletes the
   memory and its keys, and schedules the internal `purge` for that moment, which
   deletes the record if it is still there. The window is `MEMORY_UNDO`, 5
-  seconds, in `memory.spec`, which the Memory page reads for its toast too, so
-  one number owns both. A toast waits while the pointer rests on it or the tab
-  is hidden, so the page closes it when the window ends and offers no Undo after
-  the server stopped keeping the memory. The page's window starts when the toast
-  shows and the server's when it has deleted the memory, so the page's ends
-  first, but an Undo that travels slower than the delete did can still arrive
-  late: the server then answers `missing` and the page says that the Undo
-  failed. `restore({ id })` takes the id the memory had. It fails with
+  seconds, in `memory.spec`, and a call that arrives after it answers `missing`.
+  `restore({ id })` takes the id the memory had. It fails with
   `NinaMemoryRejected` and `missing` when the learner has no record under it:
   the id is another learner's, the window ended, the memory was put back
   already, or "Delete all" took the memory (it was confirmed at or before the
@@ -907,8 +894,10 @@ nobody tries them again without a new reason.
   for a memory the learner deleted one at a time (`restore` refuses the record
   from the end of the window, whether or not the job has run). The words stay
   because `add` cannot give a memory back: it takes no kind, no end day and no
-  author, so a situation that was undone no longer ended and a memory Nina saved
-  came back as one the learner wrote.
+  author, so only `restore` gives back a situation with its end day, or a memory
+  Nina saved with Nina as its author. The Memory page never calls `restore` now:
+  it stays for a web build from before the Undo toast went, until the follow-up
+  named at its seam in `memory.impl.ts` deletes it.
 - `read` gives a turn the account profile, the portrait when the learner has
   one, and the at most 8 memories that the learner's words and the topics of
   the open page recall. `known` gives the capture call the account profile and

@@ -27,6 +27,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -133,43 +134,45 @@ export function RelativeMovementLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFactIndicator
+              indicatorColor={OBSERVER_COLOR}
+              label={labels.factLabels.observer}
+              value={
+                <InlineMath
+                  math={formatSignedRoundedSpeedMath(motion.observerSpeed)}
+                />
+              }
+            />
+            <VisualFactIndicator
+              indicatorColor={TARGET_COLOR}
+              label={labels.factLabels.target}
+              value={
+                <InlineMath
+                  math={formatSignedRoundedSpeedMath(motion.targetSpeed)}
+                />
+              }
+            />
+            <VisualFactIndicator
+              label={labels.factLabels.relativeVelocity}
+              value={
+                <InlineMath
+                  math={`v_{B/A}=${formatSignedRoundedSpeedMath(
+                    motion.relativeVelocity
+                  )}`}
+                />
+              }
+            />
+            <VisualFactIndicator
+              label={labels.factLabels.visibleDirection}
+              value={labels.directionLabels[motion.relativeDirection]}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFactIndicator
-            indicatorColor={OBSERVER_COLOR}
-            label={labels.factLabels.observer}
-            value={
-              <InlineMath
-                math={formatSignedRoundedSpeedMath(motion.observerSpeed)}
-              />
-            }
-          />
-          <VisualFactIndicator
-            indicatorColor={TARGET_COLOR}
-            label={labels.factLabels.target}
-            value={
-              <InlineMath
-                math={formatSignedRoundedSpeedMath(motion.targetSpeed)}
-              />
-            }
-          />
-          <VisualFactIndicator
-            label={labels.factLabels.relativeVelocity}
-            value={
-              <InlineMath
-                math={`v_{B/A}=${formatSignedRoundedSpeedMath(
-                  motion.relativeVelocity
-                )}`}
-              />
-            }
-          />
-          <VisualFactIndicator
-            label={labels.factLabels.visibleDirection}
-            value={labels.directionLabels[motion.relativeDirection]}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

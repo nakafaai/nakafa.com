@@ -5,59 +5,53 @@ import { NINA_BUDGET } from "@repo/backend/confect/nina/budget";
 import { sentTurn } from "@repo/backend/confect/nina/history";
 import { provider } from "@repo/backend/test/gateway";
 import {
+  BIG,
   createSummaryTest,
+  EARLIER,
+  EARLIER_THROUGH,
+  EARLIER_USAGE,
+  expectEarlier,
   failingModel,
+  readsOf,
   summaryModel,
 } from "@repo/backend/test/nina/summary";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Predicate } from "effect";
 
-/** A turn whose answer costs about 6,000 tokens, so six of them outweigh the history budget. */
-const BIG = { tokens: 6000 } as const;
-/** The summary that a failed fold must leave as it was, covering the turns through order 1. */
-const EARLIER = "- Earlier study.";
-const EARLIER_THROUGH = 1;
-
-type SummaryTest = Awaited<ReturnType<typeof createSummaryTest>>;
-
 afterEach(() => {
   vi.restoreAllMocks();
   provider.languageModel.mockReset();
 });
 
-/** Sorts the queries of a refresh by what they read, from the shape of their arguments. */
-function readsOf(queries: readonly unknown[]) {
-  const having = (key: string) =>
-    Arr.filter(queries, (args) => Predicate.hasProperty(args, key));
-  const pages = having("paginationOpts");
+/**
+ * The writer's model input and the summary that one fold leaves, over the same
+ * nine turns, with the chat plain, with its prompts written by the writers, or with
+ * every row sealed in place (ADR 0024).
+ */
+async function foldOf(copy: "plain" | "written" | "sealed") {
+  const model = summaryModel("- A tidy fold.");
+  provider.languageModel.mockReturnValue(model);
+  // Order 2 was cancelled after it wrote some text, and order 3 asks the question of order 1 again.
+  const f = await createSummaryTest(
+    9,
+    (order) => {
+      if (order === 2) {
+        return { ...BIG, cancelled: true };
+      }
+      return order === 3 ? { ...BIG, retryOf: 1 } : BIG;
+    },
+    { copy }
+  );
+  await f.refresh(8);
   return {
-    anchors: Arr.filter(
-      having("order"),
-      (args) =>
-        Predicate.hasProperty(args, "order") && Predicate.isNumber(args.order)
-    ),
-    asked: having("questions"),
-    pages,
-    uncovered: having("through"),
-    window: Arr.filter(
-      pages,
-      (args) =>
-        Predicate.hasProperty(args, "excludeToolMessages") &&
-        args.excludeToolMessages === true
-    ),
+    prompt: model.doGenerateCalls[0]?.prompt,
+    summary: Arr.map(await f.summary(), ({ throughOrder, usage }) => ({
+      throughOrder,
+      usage,
+    })),
+    text: await f.text(),
   };
-}
-
-/** What the summary that `seed` stores has cost. */
-const EARLIER_USAGE = { calls: 1, input: 900, output: 120 };
-
-/** The summary stays as `seed` stored it: its text and what it covers, and it has cost `usage`. */
-async function expectEarlier(f: SummaryTest, usage = EARLIER_USAGE) {
-  expect(await f.text()).toBe(EARLIER);
-  expect(await f.summary()).toEqual([
-    expect.objectContaining({ throughOrder: EARLIER_THROUGH, usage }),
-  ]);
 }
 
 describe("Nina rolling summary", () => {
@@ -411,7 +405,20 @@ describe("Nina rolling summary", () => {
     provider.languageModel.mockReturnValue(summaryModel("unused"));
     const f = await createSummaryTest(9, () => BIG);
     await f.seed(EARLIER_THROUGH, EARLIER);
-    await f.refresh(8, "missing-thread");
+    await f.refresh(8, { threadId: "missing-thread" });
     await expectEarlier(f);
+  });
+
+  it("folds a sealed thread into the same writer input and summary as a plain one", async () => {
+    const plain = await foldOf("plain");
+    expect(await foldOf("written")).toEqual(plain);
+    const sealed = await foldOf("sealed");
+    expect(sealed).toEqual(plain);
+    expect(sealed.text).toBe("- A tidy fold.");
+    expect(sealed.summary).toEqual([
+      expect.objectContaining({ throughOrder: 6 }),
+    ]);
+    expect(encodeJsonText(sealed.prompt)).toContain("Nina: Answer 6");
+    expect(encodeJsonText(sealed.prompt)).toContain("Learner: Question 0");
   });
 });

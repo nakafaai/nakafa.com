@@ -8,17 +8,19 @@ import {
   START_DEADLINE,
   TURN_DEADLINE,
 } from "@repo/backend/confect/nina/deadline";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { stubReport } from "@repo/backend/test/nina/report";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Duration, pipe, Struct } from "effect";
+import { Array as Arr, Duration, Effect, pipe, Struct } from "effect";
 
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual, listMessages: vi.fn(actual.listMessages) };
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
 });
-
 const NOW = Date.UTC(2026, 8, 27, 12);
 const DEADLINE = Duration.toMillis(TURN_DEADLINE);
 const START = Duration.toMillis(START_DEADLINE);
@@ -279,8 +281,8 @@ describe("Nina turn sweep", () => {
     await f.t.mutation(claim, { turnId: f.turnId });
     vi.setSystemTime(NOW + DEADLINE + 1);
     await f.t.mutation(sweep, {});
-    vi.mocked(listMessages).mockRejectedValueOnce(
-      new Error("Private component failure")
+    vi.mocked(readThread).mockReturnValueOnce(
+      Effect.fail(new SealedReadError())
     );
     await expect(f.settle()).rejects.toMatchObject({
       data: { code: "NINA_WRITE_FAILED" },

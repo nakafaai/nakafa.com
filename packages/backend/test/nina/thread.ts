@@ -80,12 +80,12 @@ export const SEARCHING_TURN: Turn = [
 /**
  * A private chat of a learner, with the thread the Agent component keeps for it:
  * the learner's prompt, and the messages of one turn. It returns the test
- * backend, the learner's own session, the chat, and the arguments that read the
- * chat's first page of messages.
+ * backend, the learner's own session, the chat, the id of the prompt that the
+ * Agent saved, and the arguments that read the chat's first page of messages.
  */
 export async function createThreadTest(turn: Turn = MATH_TURN) {
   const t = createConvexTestWithBetterAuth();
-  const identity = await t.mutation(async (ctx) => {
+  const { identity, promptMessageId } = await t.mutation(async (ctx) => {
     const user = await seedAuthenticatedUser(ctx, { now: NOW });
     const threadId = await createThread(ctx, components.nina, {
       userId: user.userId,
@@ -106,7 +106,10 @@ export async function createThreadTest(turn: Turn = MATH_TURN) {
       promptMessageId: prompt.messageId,
       messages: turn,
     });
-    return { ...user, chatId, threadId };
+    return {
+      identity: { ...user, chatId, threadId },
+      promptMessageId: prompt.messageId,
+    };
   });
   const owner = t.withIdentity({
     subject: identity.authUserId,
@@ -116,10 +119,31 @@ export async function createThreadTest(turn: Turn = MATH_TURN) {
     t,
     owner,
     identity,
+    promptMessageId,
     args: {
       chatId: identity.chatId,
       threadId: identity.threadId,
       paginationOpts: { cursor: null, numItems: 20 },
     },
   };
+}
+
+/** Starts a stream on the thread of the chat, as a running turn does, and writes "Live" to it. */
+export function startStream(f: Awaited<ReturnType<typeof createThreadTest>>) {
+  return f.t.mutation(async (ctx) => {
+    const streamId = await ctx.runMutation(components.nina.streams.create, {
+      threadId: f.identity.threadId,
+      userId: f.identity.userId,
+      order: 1,
+      stepOrder: 0,
+      format: "UIMessageChunk",
+    });
+    await ctx.runMutation(components.nina.streams.addDelta, {
+      streamId,
+      start: 0,
+      end: 1,
+      parts: [{ type: "text-delta", id: "text-1", delta: "Live" }],
+    });
+    return streamId;
+  });
 }

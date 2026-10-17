@@ -3,9 +3,10 @@
 ## Status
 
 Accepted after the sealing spike of 12 October 2026. It decides the design and
-the order of work. The title, the summary, and the memory are sealed and live.
-The other stages in Decision are planned for program wave A, the first delivery
-wave of the School program, and are not live yet.
+the order of work. The title, the summary, the memory, the learner's message at
+send, and the file name of a new upload are sealed and live. The other stages in
+Decision are planned for program wave A, the first delivery wave of the School
+program, and are not live yet.
 
 ## Context
 
@@ -31,7 +32,7 @@ are not in the repository.
 | Table | Rows for one turn | Holds text | Written by |
 | --- | --- | --- | --- |
 | `threads` | one per chat | No. Nakafa sets no title or summary (`turns.impl.ts:126`). | `createThread` |
-| `messages` | the learner's message; a pending assistant row when generation starts (`saveInputMessages.ts:88-93`), which the first step replaces; then one assistant row per step and one tool row per step that called tools | Yes, in the fields below | The learner's message by Nakafa (`turns.impl.ts:144`). Every later row by the Agent client at the end of each step (`start.ts:384`, `messages.ts:224-433`). |
+| `messages` | the learner's message; a pending assistant row when generation starts (`saveInputMessages.ts:88-93`), which the first step replaces; then one assistant row per step and one tool row per step that called tools | Yes, in the fields below | The learner's message by Nakafa (`turns.impl.ts:147`). Every later row by the Agent client at the end of each step (`start.ts:384`, `messages.ts:224-433`). |
 | `streamingMessages` | one per step stream | No | `DeltaStreamer` |
 | `streamDeltas` | many per stream | Yes. `parts` hold the text, reasoning and source deltas. | `DeltaStreamer` (`streams.ts:77-119`) |
 | `files` | one per upload | `filename` | `storeFile` |
@@ -72,8 +73,8 @@ The deltas stay for five minutes after a stream finishes (`streams.ts:69`,
 | Suggestions | `presentation.ts:42-66` | The Agent's own fetch: `recentMessages: 50` without tool rows (`search.ts:154-190`). |
 | Title | `presentation.ts:106-113` | The same fetch of 50 rows, and it uses one: `inputPrompt`. |
 | Settlement | `settlement.ts:28-53` | The newest row, to see whether it holds a non-empty answer. It runs only for an active turn (`:95`). |
-| The page of messages | `messages.impl.ts:103-107`, `:108-144` | `listUIMessages`, which lists rows and runs `toUIMessages`, and the turn facts for each `order`. |
-| Streaming | `messages.impl.ts:28-69` | `listStreams` and `syncStreams`, which carry the deltas to the owner's browser. A reader of a shared chat is told no stream (ADR 0001). |
+| The page of messages | `messages/page.ts` (`nina/messages:page`) | `listUIMessages`, which lists rows and runs `toUIMessages`. The page tells no turn facts: `conversation.turns` tells them. `messages.impl.ts` keeps the old `list` for clients opened before `page`, until its contract step. |
+| Streaming | `streams.ts` | `listStreams` and `syncStreams`, which carry the deltas to the owner's browser. A reader of a shared chat is told no stream (ADR 0001). |
 | Attachments | `nina/attachments.ts:22-31` | `getFile`, whose file or image part carries the component's `files.filename`, for the model's file part and the admission receipt. |
 | Deletion | `triggers/chats/chats.ts:45` | `deleteAllForThreadIdAsync`, which deletes row by row (`threads.ts:184-247`, `messages.ts:59-71`) without reading content. |
 | Recovery inside the component | `messages.ts:484-551`, `streams.ts:662-741` | `finalizeMessage` rebuilds a row from the deltas when a pending row has no content, and writes it from inside the component. |
@@ -225,7 +226,7 @@ threads, the rows, the order and the streams. Only the content of its rows
 changes.
 
 1. **The learner's message is written sealed.** `turns.start` already writes it
-   (`turns.impl.ts:144`). No plain copy of the learner's message ever rests in
+   (`turns.impl.ts:147`). No plain copy of the learner's message ever rests in
    the component. Its row can also be sealed in place later, because it has no
    `reasoning`, `sources` or other field to scrub.
 2. **The Agent's rows are replaced after the turn settles.** Settlement stays as
@@ -258,8 +259,23 @@ changes.
    attachments reader takes the file through it and gets the part with its name
    opened, so neither the model's file part, the admission receipt, nor the page
    sees the sealed form. A file part inside a message row is sealed and opened
-   with its row. The dry run reports how many attachments and bytes it would copy. The
-   stored file is removed within two days of its chat's deletion, as
+   with its row. Wave one kept the name plain: `getFile` moved into the module
+   (`confect/nina/sealed/file.ts`), which returned the stored name. In wave two
+   (S2b) the module seals a name and opens it. `sealFileName` seals the name
+   with the learner's key, under the field `{ table: "files", field: "filename" }`
+   with no row, because the component gives a file its id only after it stores
+   the name. The stored form is the prefix `nakafa.sealed.v1:` followed by the
+   sealed bytes in URL-safe Base64. A seal is deterministic for one learner and
+   one name, so the Agent still reuses a file that the same learner stores again,
+   and two learners never share a name, so the Agent never reuses one learner's
+   file for another. The upload that stores a file records that it sealed the
+   name, in `nameSealed`, when it reserves the upload. `readFile` opens a name only
+   for such an upload, and it reads any other name as it is, because a name stored
+   before sealing can begin with the prefix. A send reads the learner's keys once,
+   and only when a name is sealed. A retry reads no name, because its size check
+   reads the storage entry alone. The dry run reports how many attachments and bytes it
+   would copy. The stored file is removed within two days of its chat's
+   deletion, as
    the live policy already says (ADR 0001). The cleanup runs once a day, and it
    removes a file once no chat refers to it and 24 hours have passed since its
    last reference changed. This plan does not seal the bytes of an upload. A new
@@ -271,13 +287,14 @@ The stages, and the key that seals each one (owner decisions K2, K3, and K10):
 | Stage | Sealed with | Status |
 | --- | --- | --- |
 | Title, summary, and memory | The learner's key | Live |
-| The learner's message, at send | The learner's key | Planned, wave A |
+| The learner's message, at send | The learner's key | Live (order of work, step 2) |
 | The rows of a running turn | Not sealed while the turn runs | Plain, by design |
 | The private reply and tool rows, once the turn settles, in one transaction | The learner's key | Planned, wave A |
 | A failed or cancelled prompt, at turn end by the sweep | The learner's key | Planned, wave A |
 | Stream deltas | Not sealed; deleted after the turn | Planned, wave A |
 | Old messages, by migration | The learner's key | Planned, wave A |
-| Chat attachment file names | The learner's key | Planned, wave A |
+| Chat attachment file names, new uploads | The learner's key | Live (order of work, step 2) |
+| Chat attachment file names, uploads before step 2 | The learner's key | Planned, step 4 (migration) |
 | School Nina thread, from the class's creation; no personal memory (K3) | The school's key | Planned |
 
 Cost, in documents: a turn of n rows costs n - 1 deletes and n - 1 inserts at
@@ -292,26 +309,37 @@ A sealed row keeps in the clear what the component, the index and the
 settlement need: `threadId`, `userId`, `order`, `stepOrder`, `status`, `tool`,
 `model`, `provider`, `finishReason`, `usage`, `warnings`, `fileIds`. The
 content moves into one sealed payload for the learner who owns the chat, bound
-to the field `{ table: "ninaMessages", field: "message" }`. The payload holds
-`message`, `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and
-`error`, encoded with Convex's value-to-JSON so that bytes survive. The prompt
+to the field `{ table: "ninaMessages", field: "message", row: [threadId, order,
+stepOrder] }`, so a payload opens only in the row it was sealed for. The payload
+holds `message`, `reasoning`, `reasoningDetails`, `sources`, `providerMetadata`
+and `error`, encoded with Convex's value-to-JSON so that bytes survive. The prompt
 that a cancelled or failed turn marks failed keeps its `error`, which Nakafa
 sets to `cancelled` or `failed` (`settlement.ts:75-82`). The row keeps a
 skeleton of `message` that is valid for the component:
 
 - the role is kept;
-- a text row has empty `content`, so `text` is empty and `text_search` indexes
-  nothing;
+- every part keeps its type. A text or reasoning part keeps an empty text, so
+  `text` is empty and `text_search` indexes nothing;
+- a file or image part keeps its media type and, when it has one, its provider
+  reference. Its address and its bytes stay in the payload, because an address of
+  a stored file opens the file for anyone who holds it. A custom part keeps its
+  kind, a source keeps its id and its source type, and a tool approval keeps its
+  ids, with `approved` on a response;
 - a tool-call part keeps `toolCallId` and `toolName` with an empty `input`, and
-  a tool-result part keeps both with a `null` `output`, so the `tool` flag, the
-  pairing of calls with results (`filterOutOrphanedToolMessages`) and
-  `excludeToolMessages` keep working;
-- the sealed bytes sit in `message.providerOptions.nakafa.sealed`.
+  a tool-result part keeps both with no `output`, because the Agent's validator
+  rejects `null`, so the `tool` flag, the pairing of calls with results
+  (`filterOutOrphanedToolMessages`) and `excludeToolMessages` keep working;
+- the sealed bytes sit in `message.providerOptions.nakafa.sealed` as bytes,
+  which the component's options validator (`v.any()`) holds, so a sealed row
+  stays about as long as the plain row.
 
 `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and `error` are
-not passed to `addMessages`, so the row has none. A row that has no sealed
-bytes is read as plain. It is a running turn's row, or a row of a settled turn
-that the seal has not reached yet, and the module passes it through, so a read
+not passed to `addMessages`, so the row has none. A field of that list that a row
+keeps in the clear beside its sealed bytes comes back as stored, such as the error
+that a cut-off turn writes onto a prompt row (`journal.ts`). A field that both the
+row and its sealed content hold fails the read, because neither value can be the
+right one. A row that has no sealed bytes is read as plain. It is a running
+turn's row, or a row of a settled turn that the seal has not reached yet, and the module passes it through, so a read
 does not fail before its turn is sealed. The seal writes `sealedAt` in the same
 transaction as the sealed rows, so a turn that carries it has no plain row unless
 a write came from outside the seal. Such a row fails the read, because the read
@@ -346,8 +374,9 @@ read for the whole function.
 | The next turn | 50 rows a page, back to the oldest uncovered turn | 1 | rows read |
 | The summary job | 100 rows a page, text rows | 1 | rows read |
 | Capture, retry, replay | 1 row | 1 | 1 |
-| Attachments | 1 file row for each attachment | 1 | 1 name for each |
-| Suggestions | up to 50 rows | 1 | up to 50 |
+| Attachments, a send | 1 file row for each attachment | 1, when a name is sealed | 1 name for each sealed name |
+| Attachments, a retry's size check | 1 file row for each attachment | 0 | 0 |
+| Suggestions | up to 16 rows, the window of `SUGGESTION_MESSAGES` (`presentation.ts`) | 1 | up to 16 |
 | Title | 1 row: it runs for the first turn only (`presentation.ts:102`) | 1 | 1 |
 
 A sealed row has an empty `text`, so the readers that used it take the text of
@@ -422,7 +451,7 @@ migrates them, with a dry pass, as the migrations before it did:
    so production can be counted before anything is rewritten, and the assumed
    sizes above can be replaced with real ones.
 
-It runs on dev and on production until a whole pass finds no settled turn that
+Its file names are plain too: a plain row refers only to files whose uploads predate sealing, so the migration reads each name as it is and never opens a name by its prefix. It runs on dev and on production until a whole pass finds no settled turn that
 still has a plain row, and it is deleted afterwards with its tests. The reader
 rule of the Sealed Row section holds through the migration: a plain row of a turn
 that carries `sealedAt` fails the read, and the plain rows of a running turn and
@@ -438,10 +467,12 @@ runs a whole turn and searches every component table.
    above, suggestions and title off the Agent's fetch, the source rule. No
    behavior changes. Gate: each reader gives the same result for plain rows and
    for sealed rows.
-2. **Seal the learner's message and the file name at write.** `turns.start`,
-   replay, retry and capture seal the message. The upload seals the file name
-   before `storeFile`: `nina/uploads.impl.ts` passes the plain name to `storeFile`
-   today, and the Agent forwards it unchanged to the component. Gate: after
+2. **Seal the learner's message and the file name at write.** `turns.start`
+   seals the learner's message, and its retry writes through the same path. A
+   replay reads its stored row and writes nothing, and capture writes no learner
+   message. The upload seals the file name before `storeFile`:
+   `nina/uploads.impl.ts` seals it at reservation and records `nameSealed`, so the
+   Agent stores the sealed name and never the plain one. Gate: after
    admission the message appears in no table, and a test that uploads a file with
    a planted name finds the name in no table, `files` included.
 3. **Seal the settled turn.** The `seal` mutation, the `sealedAt` marker, the
@@ -469,9 +500,21 @@ module then keeps only the opening.
   in that window holds them.
 - The bytes of an uploaded file are not sealed by this plan. The file name of a
   chat attachment is sealed in program wave A (Decision 4).
+- A file name stored before sealing that begins with the prefix looks sealed to a reader that has no upload record. No reader does this today: a send reads a name only for its own upload, and a retry reads none. A reader added later takes a name's state from a record, never from its prefix.
 - Searching earlier chats for text is not possible over sealed rows. The summary
   and the memories carry what Nina recalls. If a search is wanted later, it
   follows ADR 0022: blind keys for words, no embeddings, because an embedding
   can be turned back into text.
 - The model provider sees plain text for the length of a call. ADR 0019 covers
   retention.
+
+## Implementation Status
+
+| Part | Status |
+| --- | --- |
+| `packages/backend/confect/nina/sealed.ts`: seals a message's content into a skeleton row, and opens it only for its own thread, order and step. The field binds the row through `row` in `vault/text.ts`, so existing learner bindings do not change. | Built in program wave A, order of work step 1 (slice S1a). The readers open through it in S1b and S1c, and the writers seal in wave two. |
+| `packages/backend/confect/nina/sealed/`: the reads of stored rows and files, and the two writers of the row below, `save.ts` (`savePrompt`) and `file.ts` (`sealFileName`). `thread.ts` reads a page of a thread, `message.ts` one message by id, `file.ts` a stored file (`getStoredFile`, `readFile`), whose name opens only when its upload sealed it, `model.ts` converts opened rows to model messages, `action.ts` reads from an action through the module's own internal queries (`sealed.spec.ts`, `sealed.impl.ts`), and `context.ts` gives the recent context of suggestions and the prompt of the title. `open.ts` opens the rows of one read for the owner it is given: a read of plain rows reads no key, and a read with a sealed row reads the owner's key once. | Built in S1b. Each read names the owner whose key opens it: the chat's owner, the turn's learner, or the learner who asks for a memory. |
+| Readers that open through the module. Each has a parity test, in which the same thread gives the same result plain, written by the writers (`writtenThreadIn`), and sealed in place (`sealThreadIn`, `test/nina/seal.ts`). The replay of a turn start and the attachment retry also run a plain copy of the chat (`plainThreadIn`): the page (`messages/page.ts`), the list (`messages.impl.ts`), the next turn's history (`uncovered.ts`), the summary's writer input and its summary (`summary.ts`), memory capture's words of a turn (`memory/said.ts`), the replay of a turn start (`turns.impl.ts`), the settlement check of the newest row (`journal.ts`), retry of a sealed prompt with its attachment (`prompt.ts`, `attachments.ts`), the brief's prompt (`brief.impl.ts`), and the suggestions' and the title's model input (`presentation.ts`, with the sealed window of `sealed/context.ts`). Attachment file names are sealed from step 2 for every new upload; the names stored before step 2 stay plain until the migration (step 4). The admission opens the row that the writer stores, through `savePrompt` (`sealed/save.ts`, the row below). The CLI journal gate (`packages/backend/scripts/nina/deployment.ts`) stays as it is: it reads only the status, the agent name, the finish reason, the usage and the role of each row (`scripts/nina/verdict.ts`), none of them sealed. | Built in S1b and S1c. |
+| Agent audit. Suggestions and title set `recentMessages: 0` and take their input from the module through `contextHandler`, as `generation.ts` already did. Every other Agent call (`math/agent.ts`, `math/repair.ts`, `memory/capture.ts`, `nakafa/agent.ts`, `portrait/build.ts`, `repair.ts`, the two calls of `research/agent.ts`, `summary.ts`, and the test helper `test/nina/capability.ts`) passes `userId` and no `threadId`, so its fetch of recent messages cannot run. Every `generateText`, `streamText`, `generateObject` and `streamObject` call of the backend goes through one of these Agents. | Built in S1b. |
+| `scripts/check/sealed.ts`, the source rule of ADR 0021 (Sealed message readers): no load of the Agent package that reaches one of its readers of stored rows and files (an import, a re-export, a namespace import, or a dynamic import), and no read of the component's messages that returns sealed rows as they are (a property, an element, a destructuring, or the messages taken as a value), in every authored module outside the sealed module. Type-only specifiers read nothing. Tests and the helpers under `packages/backend/test/` read the stored form on purpose and are not judged. | Built in S1b, with its tests and a planted violation of each form. |
+| The writers of step 2. `sealed/save.ts` (`savePrompt`) seals a learner's message at its place: it reads the newest row of the thread across every status and tool flag, and takes the next order with step 0, as the Agent does for a user message. It serializes the message, seals it with the learner's key bound to that row, saves it through the Agent's `saveMessage` with the explicit order, and opens the stored row. `turns.start` is its only caller: the admission, and the retry, which sends the stored prompt again. A replayed request reads its row and writes nothing, and `memory/capture.ts` writes no learner message (it reads one through `memory/said.ts`). `sealed/file.ts` (`sealFileName`) seals a new upload's name, and `nina/uploads.impl.ts` seals it inside `reserve`, before `storeFile` stores the file, and records `nameSealed` on the upload, so the component never sees the plain name. `sealed/file.ts` (`readFile`) opens a name only for an upload that sealed it, and the retry's size check reads the storage entry alone. Built in step 2. | Built in step 2. Gates: `turns.impl.test.ts` (no table of the component holds the planted prompt after admission), `uploads.impl.test.ts` (no table holds a planted name, `files` included), `sealed/save.test.ts`, `sealed/file.test.ts`, and `attachments.test.ts` (a retry opens no name, and a send opens a name only for a sealed upload, with one key read). |

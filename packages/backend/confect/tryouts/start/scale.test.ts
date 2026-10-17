@@ -1,5 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -76,9 +76,7 @@ describe("tryouts/start/scale", () => {
       );
       const second = await t.mutation(async (ctx) => {
         const oldScale = await ctx.db.query("irtScaleVersions").unique();
-        if (!oldScale) {
-          throw new Error("Expected the first scale.");
-        }
+        assert(oldScale, "Expected the first scale.");
         if (official) {
           await ctx.db.patch(oldScale._id, {
             status: "official",
@@ -88,9 +86,10 @@ describe("tryouts/start/scale", () => {
           ctx.db.query("contentReleases").unique(),
           ctx.db.query("contentState").unique(),
         ]);
-        if (!(release && state)) {
-          throw new Error("Expected the first active technical release.");
-        }
+        assert(
+          release && state,
+          "Expected the first active technical release."
+        );
         await ctx.db.delete("contentReleases", release._id);
         await ctx.db.delete("contentState", state._id);
         const locales = ACTIVE_APP_LOCALE_CODES;
@@ -113,11 +112,13 @@ describe("tryouts/start/scale", () => {
               }
             : placement;
         });
-        const snapshotId = await activateTryoutSnapshot(ctx, {
-          catalog,
-          placements,
-          releaseId: "release-test-second-scale",
-        });
+        const snapshotId = await Effect.runPromise(
+          activateTryoutSnapshot(ctx, {
+            catalog,
+            placements,
+            releaseId: "release-test-second-scale",
+          })
+        );
         await insertTestTryoutRuntimeBundle(ctx, snapshotId);
         const identity = await seedAuthenticatedUser(ctx, {
           now: NOW,
@@ -139,9 +140,10 @@ describe("tryouts/start/scale", () => {
       const proof = await t.query(async (ctx) => {
         const firstAttempt = await ctx.db.get(firstResult.attemptId);
         const secondAttempt = await ctx.db.get(secondResult.attemptId);
-        if (!(firstAttempt?.scaleVersionId && secondAttempt?.scaleVersionId)) {
-          throw new Error("Expected both signed attempts to freeze a scale.");
-        }
+        assert(
+          firstAttempt?.scaleVersionId && secondAttempt?.scaleVersionId,
+          "Expected both signed attempts to freeze a scale."
+        );
         const firstScaleVersionId = firstAttempt.scaleVersionId;
         const secondScaleVersionId = secondAttempt.scaleVersionId;
         const firstScale = await ctx.db.get(firstScaleVersionId);
@@ -256,129 +258,131 @@ describe("tryouts/start/scale", () => {
       )
     ).not.toHaveProperty("history");
   });
-  it.each([
+  it.effect.each([
     "duplicate scales",
     "wrong question count",
     "stale item",
     "duplicate item",
     "incomplete source",
     "missing cached placements",
-  ])("rejects $0 before choosing a scale", async (kind) => {
-    const t = createConvexTestWithBetterAuth();
-    await expect(
-      t.mutation(async (ctx) => {
-        await activateTryoutStartSource(ctx, "visible", "irt");
-        const active = await Effect.runPromise(
-          loadTryoutStartSource(startArgs).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-            )
-          )
-        );
-        const source = {
-          ...active,
-          ...makeSignedTryoutSource(
-            {
-              ...makeTryoutSet({
-                questionCount: 2,
-              }),
-              scoringStrategy: "irt",
-            },
-            [
-              makeSignedTryoutSection(
-                makeTryoutSection({
-                  questionCount: 2,
-                })
-              ),
-            ]
-          ),
-        };
-        if (kind === "incomplete source") {
-          return Effect.runPromise(
-            selectAttemptScale(
-              {
-                ...source,
-                snapshot: {
-                  ...source.snapshot,
-                  sections: [],
-                },
-              },
-              NOW
-            ).pipe(
-              Effect.provide(
-                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+  ])("rejects $0 before choosing a scale", (kind) =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const signedSection = yield* makeSignedTryoutSection(
+        makeTryoutSection({
+          questionCount: 2,
+        })
+      );
+      const signedSource = yield* makeSignedTryoutSource(
+        {
+          ...makeTryoutSet({
+            questionCount: 2,
+          }),
+          scoringStrategy: "irt",
+        },
+        [signedSection]
+      );
+      const t = createConvexTestWithBetterAuth();
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation(async (ctx) => {
+            await activateTryoutStartSource(ctx, "visible", "irt");
+            const active = await Effect.runPromiseWith(runtimeServices)(
+              loadTryoutStartSource(startArgs).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
               )
-            )
-          );
-        }
-        const scale = await Effect.runPromise(
-          selectAttemptScale(source, NOW).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-            )
-          )
-        );
-        if (!scale) {
-          throw new Error("Expected an IRT scale.");
-        }
-        if (kind === "missing cached placements") {
-          return Effect.runPromise(
-            selectAttemptScale(
-              {
-                ...source,
-                snapshot: {
-                  ...source.snapshot,
-                  sections: [],
-                },
-              },
-              NOW
-            ).pipe(
-              Effect.provide(
-                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+            );
+            const source = {
+              ...active,
+              ...signedSource,
+            };
+            if (kind === "incomplete source") {
+              return Effect.runPromiseWith(runtimeServices)(
+                selectAttemptScale(
+                  {
+                    ...source,
+                    snapshot: {
+                      ...source.snapshot,
+                      sections: [],
+                    },
+                  },
+                  NOW
+                ).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              );
+            }
+            const scale = await Effect.runPromiseWith(runtimeServices)(
+              selectAttemptScale(source, NOW).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
               )
-            )
-          );
-        }
-        if (kind === "duplicate scales") {
-          const { _id, _creationTime, ...values } = scale;
-          await ctx.db.insert("irtScaleVersions", values);
-        }
-        if (kind === "wrong question count") {
-          await ctx.db.patch(scale._id, {
-            questionCount: 3,
-          });
-        }
-        const items = await ctx.db.query("irtScaleItems").collect();
-        const first = items[0];
-        const second = items[1];
-        if (!(first && second)) {
-          throw new Error("Expected two IRT scale items.");
-        }
-        if (kind === "stale item") {
-          await ctx.db.patch(first._id, {
-            placementRowHash: "stale-hash",
-          });
-        }
-        if (kind === "duplicate item") {
-          await ctx.db.patch(second._id, {
-            placementIdentity: first.placementIdentity,
-          });
-        }
-        return Effect.runPromise(
-          selectAttemptScale(source, NOW + 1).pipe(
-            Effect.provide(
-              RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
-            )
-          )
-        );
-      })
-    ).rejects.toMatchObject({
-      code: "TRYOUT_IRT_SCALE_REQUIRED",
-    });
-    expect(
-      await t.query((ctx) => ctx.db.query("irtScaleVersions").collect())
-    ).toEqual([]);
-  });
+            );
+            assert(scale, "Expected an IRT scale.");
+            if (kind === "missing cached placements") {
+              return Effect.runPromiseWith(runtimeServices)(
+                selectAttemptScale(
+                  {
+                    ...source,
+                    snapshot: {
+                      ...source.snapshot,
+                      sections: [],
+                    },
+                  },
+                  NOW
+                ).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              );
+            }
+            if (kind === "duplicate scales") {
+              const { _id, _creationTime, ...values } = scale;
+              await ctx.db.insert("irtScaleVersions", values);
+            }
+            if (kind === "wrong question count") {
+              await ctx.db.patch(scale._id, {
+                questionCount: 3,
+              });
+            }
+            const items = await ctx.db.query("irtScaleItems").collect();
+            const first = items[0];
+            const second = items[1];
+            assert(first && second, "Expected two IRT scale items.");
+            if (kind === "stale item") {
+              await ctx.db.patch(first._id, {
+                placementRowHash: "stale-hash",
+              });
+            }
+            if (kind === "duplicate item") {
+              await ctx.db.patch(second._id, {
+                placementIdentity: first.placementIdentity,
+              });
+            }
+            return Effect.runPromiseWith(runtimeServices)(
+              selectAttemptScale(source, NOW + 1).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            );
+          })
+        ).rejects.toMatchObject({
+          code: "TRYOUT_IRT_SCALE_REQUIRED",
+        })
+      );
+      const remaining = yield* Effect.promise(() =>
+        t.query((ctx) => ctx.db.query("irtScaleVersions").collect())
+      );
+      expect(remaining).toEqual([]);
+    })
+  );
   it("reuses the exact authenticated scale without creating another publication", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {

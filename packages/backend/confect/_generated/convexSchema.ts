@@ -37,10 +37,15 @@ import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
 import customerDeletionTombstones from "./tables/customerDeletionTombstones";
 import customers from "./tables/customers";
+import editorClients from "./tables/editorClients";
+import editorDocuments from "./tables/editorDocuments";
+import editorSnapshots from "./tables/editorSnapshots";
+import editorSteps from "./tables/editorSteps";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
+import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
 import learningPopularityCounters from "./tables/learningPopularityCounters";
@@ -49,6 +54,7 @@ import learningPopularitySignals from "./tables/learningPopularitySignals";
 import learningPopularityViewerSignals from "./tables/learningPopularityViewerSignals";
 import learningPreferences from "./tables/learningPreferences";
 import learningViews from "./tables/learningViews";
+import loginCards from "./tables/loginCards";
 import materialBuckets from "./tables/materialBuckets";
 import materialCatalog from "./tables/materialCatalog";
 import ninaMemories from "./tables/ninaMemories";
@@ -58,21 +64,27 @@ import ninaMemoryRestores from "./tables/ninaMemoryRestores";
 import ninaSummaries from "./tables/ninaSummaries";
 import ninaTurns from "./tables/ninaTurns";
 import ninaUploads from "./tables/ninaUploads";
+import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
+import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
 import subscriptions from "./tables/subscriptions";
+import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
+import tenantGraduates from "./tables/tenantGraduates";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
 import tenantKeys from "./tables/tenantKeys";
 import tenantPeople from "./tables/tenantPeople";
 import tenantPeriods from "./tables/tenantPeriods";
+import tenantPromotionMoves from "./tables/tenantPromotionMoves";
+import tenantPromotions from "./tables/tenantPromotions";
 import tenantUnits from "./tables/tenantUnits";
 import tenantVisits from "./tables/tenantVisits";
 import tenants from "./tables/tenants";
@@ -127,10 +139,15 @@ export default $defineSchema({
   curriculumRoutes: $Table.tableDefinition(curriculumRoutes),
   customerDeletionTombstones: $Table.tableDefinition(customerDeletionTombstones),
   customers: $Table.tableDefinition(customers),
+  editorClients: $Table.tableDefinition(editorClients),
+  editorDocuments: $Table.tableDefinition(editorDocuments),
+  editorSnapshots: $Table.tableDefinition(editorSnapshots),
+  editorSteps: $Table.tableDefinition(editorSteps),
   integrationClients: $Table.tableDefinition(integrationClients),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
+  journalCursors: $Table.tableDefinition(journalCursors),
   journalEntries: $Table.tableDefinition(journalEntries),
   learningEngagementQueue: $Table.tableDefinition(learningEngagementQueue),
   learningPopularityCounters: $Table.tableDefinition(learningPopularityCounters),
@@ -139,6 +156,7 @@ export default $defineSchema({
   learningPopularityViewerSignals: $Table.tableDefinition(learningPopularityViewerSignals),
   learningPreferences: $Table.tableDefinition(learningPreferences),
   learningViews: $Table.tableDefinition(learningViews),
+  loginCards: $Table.tableDefinition(loginCards),
   materialBuckets: $Table.tableDefinition(materialBuckets),
   materialCatalog: $Table.tableDefinition(materialCatalog),
   ninaMemories: $Table.tableDefinition(ninaMemories),
@@ -148,21 +166,27 @@ export default $defineSchema({
   ninaSummaries: $Table.tableDefinition(ninaSummaries),
   ninaTurns: $Table.tableDefinition(ninaTurns),
   ninaUploads: $Table.tableDefinition(ninaUploads),
+  notifications: $Table.tableDefinition(notifications),
   onboardingProfiles: $Table.tableDefinition(onboardingProfiles),
   operators: $Table.tableDefinition(operators),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),
+  schoolLogins: $Table.tableDefinition(schoolLogins),
   snapshotBatches: $Table.tableDefinition(snapshotBatches),
   subscriptions: $Table.tableDefinition(subscriptions),
+  tenantAssignments: $Table.tableDefinition(tenantAssignments),
   tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),
   tenantCohorts: $Table.tableDefinition(tenantCohorts),
+  tenantGraduates: $Table.tableDefinition(tenantGraduates),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),
   tenantKeys: $Table.tableDefinition(tenantKeys),
   tenantPeople: $Table.tableDefinition(tenantPeople),
   tenantPeriods: $Table.tableDefinition(tenantPeriods),
+  tenantPromotionMoves: $Table.tableDefinition(tenantPromotionMoves),
+  tenantPromotions: $Table.tableDefinition(tenantPromotions),
   tenantUnits: $Table.tableDefinition(tenantUnits),
   tenantVisits: $Table.tableDefinition(tenantVisits),
   tenants: $Table.tableDefinition(tenants),

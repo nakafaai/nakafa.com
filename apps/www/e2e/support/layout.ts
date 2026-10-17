@@ -1,17 +1,17 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Array as Arr, Effect, Number as Num } from "effect";
+import { Array as Arr, Effect, Number as Num, Schema } from "effect";
 import { VISUAL_CARD } from "@/e2e/support/selector";
 
 /**
- * Records, from the first script on, the start time and value of every layout
- * shift the browser reports, in the page global `key`, with one line per
+ * Records, from the first script on, the start time, value and input of every
+ * layout shift the browser reports, in the page global `key`, with one line per
  * element that moved: what it is, where it was, and where it went. A shift is
  * left out when everything that moved sits inside a fixed element that matches
  * `overlay`, such as the list that holds the toasts: a toast stacks over the
  * page and animates its own height, which is not the page moving. An element
  * that stays in the flow of the page is the page, so its shifts count.
  * Pass it to `page.addInitScript` before the page loads, with the global's name
- * and the selector.
+ * and the selector. `readRecordedLayoutShifts` reads what it holds.
  */
 export function recordLayoutShifts({
   key,
@@ -20,7 +20,12 @@ export function recordLayoutShifts({
   key: string;
   overlay: string;
 }) {
-  const shifts: { sources: string[]; time: number; value: number }[] = [];
+  const shifts: {
+    hadRecentInput: boolean;
+    sources: string[];
+    time: number;
+    value: number;
+  }[] = [];
   Object.defineProperty(window, key, { value: shifts });
   const box = (rect: unknown) =>
     rect instanceof DOMRectReadOnly
@@ -61,6 +66,8 @@ export function recordLayoutShifts({
           sources.every((source) => insideOverlay(source.node));
         if (!movedOnlyTheOverlay) {
           shifts.push({
+            hadRecentInput:
+              "hadRecentInput" in entry && entry.hadRecentInput === true,
             sources: sources.map(
               (source) =>
                 `${name(source.node)}: ${box(source.previousRect)} to ${box(source.currentRect)}`
@@ -73,6 +80,31 @@ export function recordLayoutShifts({
     }
   }).observe({ buffered: true, type: "layout-shift" });
 }
+
+/** One layout shift the recorder kept: whether input caused it, and what it moved. */
+const RecordedLayoutShift = Schema.Struct({
+  hadRecentInput: Schema.Boolean,
+  sources: Schema.Array(Schema.String),
+  time: Schema.Finite,
+  value: Schema.Finite,
+});
+
+/**
+ * Reads the shifts that `recordLayoutShifts` kept under `key`. The read fails
+ * when the recorder did not start on the page, so a missing record never reads
+ * as a still page.
+ */
+export const readRecordedLayoutShifts = Effect.fn(
+  "NakafaE2E.readRecordedLayoutShifts"
+)(function* (page: Page, key: string) {
+  return yield* Effect.promise(() =>
+    page.evaluate((name) => Reflect.get(window, name), key)
+  ).pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(Schema.Array(RecordedLayoutShift))
+    )
+  );
+});
 
 /**
  * Reads every layout shift the page has recorded since navigation, and whether

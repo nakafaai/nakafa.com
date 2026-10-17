@@ -1,6 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { NinaMemoryView } from "@repo/backend/confect/nina/memory.spec";
-import { Record as Rec, Schema } from "effect";
+import { Array as Arr, Record as Rec, Schema } from "effect";
 import { createStore } from "zustand";
 import {
   editedMemory,
@@ -30,6 +30,13 @@ const MemoryStateSchema = Schema.Struct({
   deleted: Schema.NullOr(Id("ninaMemories")),
   /** The title and words of a save that failed, which the editor shows when it opens again. */
   draft: Schema.NullOr(DraftSchema),
+  /**
+   * The memories the learner deleted before the server stored them, by the id
+   * they had while they waited. The list leaves them out at once. The server
+   * deletes each one once it stores it, and its id leaves this list when that
+   * first save is answered.
+   */
+  hidden: Schema.Array(Id("ninaMemories")),
   /** Whether the editor panel is open. */
   open: Schema.Boolean,
   /** The words the learner typed to search. */
@@ -48,9 +55,9 @@ const MemoryStateSchema = Schema.Struct({
    * The words an editor still held when the learner deleted its memory, by the
    * id of the memory. The editor does not save them. They come back in an
    * editor when the server does not delete the memory, and each deletion keeps
-   * its own. They go when the server has deleted the memory, because from then
-   * on the server keeps the memory for the Undo and the words were never part
-   * of it, or when an editor opens on the memory again.
+   * its own. They go once the server has deleted the memory, because the words
+   * were never part of what the server stores, or when an editor opens on the
+   * memory again.
    */
   withheld: Schema.Record(Schema.String, DraftSchema),
 });
@@ -77,6 +84,11 @@ interface MemoryActions {
    * `cleared`.
    */
   forgetAll: () => void;
+  /**
+   * Leaves the memory `id` out of the list, because the learner deleted it
+   * before the server stored it. The list shows the memory as gone at once.
+   */
+  hide: (id: Memory["id"]) => void;
   /**
    * Closes the editor of the opening `session`, because the server answered
    * that its memory is missing. It leaves an editor the learner opened since.
@@ -115,6 +127,11 @@ interface MemoryActions {
   rewrite: (id: Memory["id"], draft: MemoryDraft, now: number) => void;
   /** Sets the words the learner searches for. */
   search: (query: string) => void;
+  /**
+   * Lets go of the memory `hide` left out, because the server answered its first
+   * save. The row that carried its id is gone, and the stored memory has its own id.
+   */
+  unhide: (id: Memory["id"]) => void;
   /**
    * Keeps the words the editor on the deleted memory `id` still held, in case
    * the server does not delete it.
@@ -158,6 +175,8 @@ export function createMemoryStore() {
         cleared: state.cleared + 1,
         ...(state.target ? forgetting(state, state.target.id) : {}),
       })),
+    hidden: [],
+    hide: (id) => set((state) => ({ hidden: Arr.append(state.hidden, id) })),
     recall: (id) =>
       set((state) => (state.deleted === id ? { deleted: null } : state)),
     recallAll: () => set((state) => ({ cleared: state.cleared - 1 })),
@@ -210,6 +229,10 @@ export function createMemoryStore() {
     search: (query) => set({ query }),
     session: 0,
     target: null,
+    unhide: (id) =>
+      set((state) => ({
+        hidden: Arr.filter(state.hidden, (hiddenId) => hiddenId !== id),
+      })),
     withheld: {},
     withhold: (id, draft) =>
       set((state) => ({ withheld: Rec.set(state.withheld, id, draft) })),

@@ -2,8 +2,9 @@ import {
   classify,
   GatewayFailure,
 } from "@repo/backend/confect/gateway/failure";
+import { NinaUpkeepCall } from "@repo/backend/confect/nina/contract/usage";
 import { NoObjectGeneratedError } from "ai";
-import { Effect, Schema } from "effect";
+import { Effect, Option, pipe, Schema } from "effect";
 
 /**
  * Why a background memory call saved nothing: the capture of what a learner
@@ -11,8 +12,9 @@ import { Effect, Schema } from "effect";
  * reading the prompt, judging the words with the decision model, asking the
  * model, or `unknown` for any other failure, such as a query or a write that
  * died. `rejected` marks an answer that did not fit the asked object, and
- * `gateway` classifies a failed call. None of them holds the message, a memory,
- * or the answer.
+ * `gateway` classifies a failed call. `spent` holds the tokens a rejected answer
+ * cost, which the call spent all the same, as far as the provider counted them.
+ * None of them holds the message, a memory, or the answer.
  */
 export class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
   "NinaMemoryError",
@@ -20,13 +22,25 @@ export class NinaMemoryError extends Schema.TaggedError<NinaMemoryError>()(
     gateway: Schema.optional(GatewayFailure),
     operation: Schema.Literals(["read", "judge", "generate", "unknown"]),
     rejected: Schema.Boolean,
+    spent: Schema.optional(NinaUpkeepCall),
   }
 ) {}
 
-/** Turns what a model call raised into the typed error: a rejected answer, or the gateway's routing facts. */
+/** Turns what a model call raised into the typed error: a rejected answer with its tokens, or the gateway's routing facts. */
 export function generationFailure(error: unknown) {
   return NoObjectGeneratedError.isInstance(error)
-    ? new NinaMemoryError({ operation: "generate", rejected: true })
+    ? new NinaMemoryError({
+        operation: "generate",
+        rejected: true,
+        spent: pipe(
+          Option.fromNullishOr(error.usage),
+          Option.map(({ inputTokens, outputTokens }) => ({
+            input: inputTokens ?? 0,
+            output: outputTokens ?? 0,
+          })),
+          Option.getOrUndefined
+        ),
+      })
     : new NinaMemoryError({
         gateway: classify(error),
         operation: "generate",

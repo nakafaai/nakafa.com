@@ -1,4 +1,29 @@
 {
+  "School": {
+    "account-settings": "Kontoeinstellungen",
+    "back-to-learning": "Zu Nakafa Lernen wechseln",
+    "for-you": "Für dich",
+    "home": "Startseite",
+    "language": "Sprache",
+    "nina-memory": "Nina-Gedächtnis",
+    "role": {
+      "admin": "Admin",
+      "auditor": "Prüfer:in",
+      "counselor": "Beratungslehrkraft",
+      "deputy": "Stellvertretende Schulleitung",
+      "guardian": "Erziehungsberechtigte Person",
+      "integration": "Integration",
+      "owner": "Inhaber:in",
+      "principal": "Schulleitung",
+      "proctor": "Aufsicht",
+      "staff": "Personal",
+      "student": "Schüler:in",
+      "teacher": "Lehrkraft"
+    },
+    "sign-in-title": "Anmelden bei {school}",
+    "signed-in": "Du bist angemeldet.",
+    "signed-in-as": "Du bist als {role} angemeldet."
+  },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
     "description": "Lerne auf Nakafa Mathematik, Naturwissenschaften, Informatik, KI und bereite dich auf Prüfungen vor. Kostenlose Lerninhalte von der Grundschule bis zur Universität mit Übungsaufgaben und Erklärungen.",
@@ -9,7 +34,6 @@
   },
   "Common": {
     "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
-    "action-error": "Diese Aktion konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
     "copyright": "Copyright © {year} {companyName}. Alle Rechte vorbehalten.",
     "made-with-love": "Mit Liebe gemacht",
     "version": "Version {version}",
@@ -85,7 +109,6 @@
     "decrease-angle": "Winkel verkleinern",
     "number-field": "Zahlenfeld",
     "share": "Teilen",
-    "share-copied": "Link kopiert!",
     "contributor": "Mitwirkende Person",
     "search": "Suchen",
     "select": "Auswählen",
@@ -97,8 +120,6 @@
     "copy-content": "Inhalt kopieren",
     "content-actions": "Aktionen zum Inhalt",
     "copy": "Kopieren",
-    "copy-success": "Kopiert!",
-    "copy-error": "Kopieren nicht möglich",
     "open": "Öffnen",
     "open-in": "Öffnen in",
     "open-in-github": "In GitHub öffnen",
@@ -136,7 +157,6 @@
     "curriculum-index-title": "Schullehrpläne",
     "curriculum-index-action": "Stufe auswählen",
     "curriculum-route-action": "Optionen anzeigen",
-    "preference-save-error": "Deine Lehrplaneinstellung konnte nicht gespeichert werden.",
     "onboarding": {
       "progress": "Frage {current} von {total}",
       "role-title": "Wer bist du?",
@@ -190,10 +210,7 @@
       "back": "Zurück",
       "continue": "Weiter",
       "finish": "Fertig",
-      "required-error": "Wähle eine Antwort.",
-      "invalid-selection": "Beantworte jede Frage.",
-      "save-error": "Deine Antwort wurde nicht gespeichert. Versuch es erneut.",
-      "finish-error": "Das Onboarding wurde nicht abgeschlossen. Versuch es erneut."
+      "required-error": "Wähle eine Antwort."
     },
     "kind": {
       "school-curriculum": "Lehrplan"
@@ -202,7 +219,8 @@
   "Comments": {
     "add-comment-placeholder": "Kommentar hinzufügen...",
     "comment": "Kommentieren",
-    "no-comments": "Noch keine Kommentare."
+    "no-comments": "Noch keine Kommentare.",
+    "load-more": "Mehr laden"
   },
   "Subject": {
     "elementary-school": "Grundschule",
@@ -250,8 +268,6 @@
     "verse": "Vers",
     "verse-count": "Vers {count}",
     "interpretation": "Tafsir",
-    "interpretation-error": "Der Tafsir zu diesem Vers konnte nicht geladen werden. Versuche es erneut.",
-    "interpretation-refreshing": "Der Koran wurde aktualisiert. Die Seite wird neu geladen...",
     "meaning": "Namensbedeutung",
     "revelation": "Offenbarungsort",
     "revelation-place": "{place, select, Meccan {mekkanisch} Medinan {medinensisch} other {unbekannt}}",
@@ -273,7 +289,6 @@
     "open-exam-cta": "Optionen anzeigen",
     "open-set-cta": "Aufgabensätze anzeigen",
     "list-empty": "Zurzeit werden keine Probetests angezeigt.",
-    "preference-save-error": "Deine Probetest-Einstellung konnte noch nicht gespeichert werden.",
     "start-cta": "Starten",
     "restart-cta": "Wiederholen",
     "free-cta": "Kostenlos starten",
@@ -288,14 +303,11 @@
     "restart-dialog-title": "Diesen Probetest von vorn beginnen?",
     "restart-dialog-description": "Du beginnst von vorn. Dein vorheriges Ergebnis bleibt gespeichert.",
     "restart-entry-dialog-description": "Du beginnst von vorn und der Timer dieses Aufgabensatzes startet sofort. Dein vorheriges Ergebnis bleibt gespeichert.",
-    "start-success": "Der Probetest wurde gestartet. Du kannst wählen, welchen Abschnitt du zuerst bearbeitest.",
     "start-entry-dialog-description": "Der Timer dieses Aufgabensatzes startet, sobald du beginnst.",
-    "start-entry-success": "Der Probetest wurde gestartet. Der Timer läuft jetzt.",
     "paywall-title": "{count, plural, one {Lösung zu dieser Aufgabe ansehen} other {Lösungen zu allen # Aufgaben ansehen}}",
     "paywall-description": "Verstehe die Schritte und Gründe hinter jeder Antwort und frag Nina, wenn etwas unklar bleibt.",
-    "paywall-compare": "Tarife vergleichen",
+    "paywall-compare": "Tarife prüfen",
     "ask-nina-prompt": "Hilf mir, Aufgabe {number} zu verstehen.",
-    "start-error": "Der Probetest konnte noch nicht gestartet werden. Versuche es erneut.",
     "score-label-irt": "IRT-Punktzahl",
     "score-label-standard": "Punktzahl",
     "correct-answers-label": "Richtige Antworten",
@@ -330,13 +342,9 @@
     "time-minutes-short": "Min.",
     "time-seconds-short": "Sek.",
     "start-part-cta": "Starten",
-    "start-part-success": "Der Abschnitt wurde gestartet. Der Timer läuft jetzt.",
-    "start-part-error": "Dieser Abschnitt konnte noch nicht gestartet werden. Versuche es erneut.",
     "complete-part-cta": "Beenden",
     "complete-part-title": "Diesen Abschnitt beenden?",
     "complete-part-description": "Wenn du jetzt abschließt, werden die Antworten in diesem Abschnitt gesperrt.",
-    "complete-part-success": "Der Abschnitt ist beendet. Du kannst einen anderen Abschnitt auswählen oder zum Aufgabensatz zurückkehren.",
-    "complete-part-error": "Dieser Abschnitt konnte noch nicht beendet werden. Versuche es erneut.",
     "back-to-set-cta": "Zurück",
     "set-column-duration": "Dauer",
     "set-duration-minutes": "{minutes, number} Min.",
@@ -351,9 +359,7 @@
     "incorrect": "Falsch",
     "reset": "Zurücksetzen",
     "explanation": "Lösungserklärung",
-    "number-count": "Nummer {count}",
-    "attempt-not-in-progress": "Starte eine neue Sitzung, um weiterzuüben.",
-    "submit-answer-error": "Deine Antwort konnte nicht gespeichert werden. Versuche es erneut."
+    "number-count": "Nummer {count}"
   },
   "Player": {
     "navigator": "Aufgaben",
@@ -364,7 +370,6 @@
     "mode": "Ansicht",
     "mode-list": "Liste",
     "mode-single": "Eine Aufgabe",
-    "mode-error": "Deine Ansicht konnte nicht gespeichert werden. Versuche es erneut.",
     "cell": "{state, select, answered {Aufgabe {number}, beantwortet} other {Aufgabe {number}, offen}}",
     "unanswered": "Noch offen",
     "time-left": "Noch {hours, plural, =0 {} one {# Stunde } other {# Stunden }}{minutes, plural, one {# Minute} other {# Minuten}} {seconds, plural, one {# Sekunde} other {# Sekunden}}",
@@ -424,7 +429,6 @@
   "Auth": {
     "continue-with-google": "Mit Google fortfahren",
     "opening-google": "Google wird geöffnet...",
-    "provider-error": "Mit Google konnte nicht fortgefahren werden. Bitte versuche es erneut.",
     "sign-in-title": "Bei Nakafa anmelden",
     "sign-in-description": "Damit dein Fortschritt gespeichert bleibt.",
     "logout": "Abmelden",
@@ -434,6 +438,8 @@
     "login-cta-action": "Anmelden",
     "pricing-cta": "Pakete und Preise ansehen",
     "account": "Konto",
+    "learning": "Lernen",
+    "learning-description": "Wähle deine Rolle und deinen Lehrplan, die dein Lernerlebnis prägen.",
     "billing": "Abrechnung",
     "personal": "Persönlich",
     "ai": "KI",
@@ -445,16 +451,35 @@
     "chat-description": "Nutze die KI-Lernassistenz für Hausaufgaben, verständliche Erklärungen und Lerngespräche.",
     "subscriptions": "Abonnements",
     "subscriptions-description": "Verwalte Nakafa Pro, 3.000 monatliche KI-Credits und dein Zahlungsportal.",
-    "get-pro": "Pro holen",
     "manage": "Verwalten",
-    "checkout-error": "Der Pro-Checkout konnte nicht geöffnet werden. Versuche es erneut.",
-    "portal-error": "Das Abo-Portal konnte nicht geöffnet werden. Versuche es erneut.",
     "plan-free": "Kostenlos",
     "plan-pro": "Pro",
     "name": "Name",
     "name-description": "Dieser Name wird in deinem Profil und deinen Kommentaren angezeigt.",
     "name-footer": "Verwende bitte zwischen 3 und 32 Zeichen.",
     "name-placeholder": "Namen eingeben...",
+    "picture": "Profilbild",
+    "picture-description": "Erscheint neben deinem Namen, im Profil und bei deinen Kommentaren.",
+    "picture-animal": "Tier",
+    "picture-photo": "Google-Foto",
+    "picture-footer-animal": "Jedes Würfeln zeigt ein anderes Tier.",
+    "picture-footer-photo": "Dein Google-Foto erscheint überall, wo dein Name steht.",
+    "animal-shuffle": "Tier würfeln",
+    "username": "Benutzername",
+    "username-description": "Deine Adresse bei Nakafa: {address}.",
+    "username-footer": "Die alte Adresse gilt nach dem Speichern nicht mehr.",
+    "username-available": "Verfügbar.",
+    "username-characters": "Nur Kleinbuchstaben, Zahlen und Unterstriche.",
+    "username-letter-first": "Muss mit einem Buchstaben beginnen.",
+    "username-not-allowed": "Dieser Name geht nicht.",
+    "username-taken": "Schon vergeben.",
+    "username-too-short": "Mindestens 3 Zeichen.",
+    "bio": "Bio",
+    "bio-description": "Ein paar Zeilen über dich, im Profil zu sehen.",
+    "bio-placeholder": "Schreib ein paar Zeilen über dich...",
+    "bio-footer": "Beim Speichern wird deine aktuelle Bio ersetzt.",
+    "bio-too-long": "Kürze deine Bio, damit du sie speichern kannst.",
+    "edit-profile": "Profil bearbeiten",
     "role": "Rolle",
     "role-description": "Mit deiner Rolle können wir dein Lernerlebnis besser anpassen.",
     "role-footer": "Du kannst deine Rolle jederzeit ändern.",
@@ -464,12 +489,12 @@
     "curriculum-footer": "Du kannst deinen Lehrplan jederzeit ändern.",
     "curriculum-placeholder": "Lehrplan auswählen",
     "memory": "Erinnerungen",
-    "memory-description": "Was Nina über dich weiß und in jedem Chat nutzt",
+    "memory-description": "Was Nina über dich weiß und in jedem Chat nutzt.",
     "delete-account": "Konto löschen",
     "delete-account-description": "Lösche dein Profil und deine personenbezogenen Daten dauerhaft von Nakafa.",
     "delete-account-footer": "Diese Aktion kann nicht rückgängig gemacht werden.",
     "delete-account-dialog-title": "Konto löschen?",
-    "delete-account-dialog-description": "Dein Profil und deine personenbezogenen Daten werden dauerhaft gelöscht. Aktive Abonnements werden gekündigt und Nakafa Pro endet.",
+    "delete-account-dialog-description": "Dein Profil und deine personenbezogenen Daten werden dauerhaft gelöscht, und aktive Abonnements, einschließlich Nakafa Pro, werden gekündigt.",
     "delete-account-session-expired": "Diese Sitzung ist zu alt. Melde dich erneut an, um fortzufahren.",
     "delete-account-error": "Dein Konto konnte nicht gelöscht werden. Warte einen Moment und versuche es erneut.",
     "delete-account-sign-in-again": "Erneut anmelden",
@@ -509,10 +534,10 @@
   },
   "Memory": {
     "remember": "Nina darf Erinnerungen speichern und nutzen",
-    "footer": "Erinnerungen bleiben, bis du sie löschst, auch wenn du einen Chat löschst",
+    "footer": "Erinnerungen bleiben, bis du sie löschst.",
     "clear": "Alle löschen",
     "clear-title": "Alle Erinnerungen löschen?",
-    "clear-description": "Das lässt sich nicht rückgängig machen",
+    "clear-description": "Das lässt sich nicht rückgängig machen.",
     "search": "Erinnerungen suchen",
     "add": "Erinnerung hinzufügen",
     "memory": "Erinnerung",
@@ -522,19 +547,204 @@
     "no-result": "Keine Erinnerung gefunden",
     "edit": "Erinnerung bearbeiten",
     "delete": "Erinnerung löschen",
-    "deleted": "Erinnerung gelöscht",
-    "undo": "Rückgängig",
-    "undo-failed": "Rückgängig machen fehlgeschlagen",
+    "delete-title": "Diese Erinnerung löschen?",
+    "delete-description": "Nina wird sie nicht mehr verwenden.",
     "written-by-you": "Von dir {time} geschrieben",
     "saved-by-nina": "Von Nina {time} gespeichert",
     "ends": "Endet {date}",
     "text": "Text der Erinnerung",
     "placeholder": "Schreib, was Nina sich merken soll",
-    "missing": "Diese Erinnerung gibt es nicht mehr",
-    "too-long": "Dieser Text ist zu lang für eine Erinnerung",
     "title": "Titel",
     "untitled": "Ohne Titel",
     "count": "{count, number} / {limit, number}"
+  },
+  "Toast": {
+    "action-error": {
+      "title": "Aktion nicht abgeschlossen.",
+      "description": "Bitte versuche es erneut."
+    },
+    "copy-error": {
+      "title": "Kopieren nicht möglich"
+    },
+    "copy-success": {
+      "title": "Kopiert!"
+    },
+    "curriculum-preference-error": {
+      "title": "Lehrplanwahl nicht gespeichert.",
+      "description": "Versuche es erneut."
+    },
+    "onboarding-finish-error": {
+      "title": "Onboarding nicht abgeschlossen.",
+      "description": "Versuch es erneut."
+    },
+    "onboarding-invalid-selection": {
+      "title": "Beantworte jede Frage."
+    },
+    "onboarding-save-error": {
+      "title": "Antwort nicht gespeichert.",
+      "description": "Versuch es erneut."
+    },
+    "link-copied": {
+      "title": "Link kopiert!"
+    },
+    "provider-error": {
+      "title": "Mit Google nicht fortgefahren.",
+      "description": "Bitte versuche es erneut."
+    },
+    "checkout-error": {
+      "title": "Pro-Checkout nicht geöffnet.",
+      "description": "Versuche es erneut."
+    },
+    "portal-error": {
+      "title": "Abo-Portal nicht geöffnet.",
+      "description": "Versuche es erneut."
+    },
+    "mode-error": {
+      "title": "Ansicht nicht gespeichert.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-attempt-not-in-progress": {
+      "title": "Diese Sitzung ist beendet.",
+      "description": "Starte eine neue Sitzung, um weiterzuüben."
+    },
+    "tryout-complete-part-error": {
+      "title": "Abschnitt nicht beendet.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-complete-part-success": {
+      "title": "Abschnitt beendet.",
+      "description": "Wähle einen anderen Abschnitt oder kehre zum Set zurück."
+    },
+    "tryout-preference-error": {
+      "title": "Probetest-Wahl nicht gespeichert."
+    },
+    "tryout-start-entry-success": {
+      "title": "Probetest gestartet.",
+      "description": "Der Timer läuft jetzt."
+    },
+    "tryout-start-error": {
+      "title": "Probetest nicht gestartet.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-start-part-error": {
+      "title": "Abschnitt nicht gestartet.",
+      "description": "Versuche es erneut."
+    },
+    "tryout-start-part-success": {
+      "title": "Abschnitt gestartet.",
+      "description": "Der Timer läuft jetzt."
+    },
+    "tryout-start-success": {
+      "title": "Probetest gestartet.",
+      "description": "Du kannst wählen, welchen Abschnitt du zuerst bearbeitest."
+    },
+    "tryout-submit-answer-error": {
+      "title": "Antwort nicht gespeichert.",
+      "description": "Versuche es erneut."
+    },
+    "memory-limit": {
+      "title": "Warte kurz, dann speichere erneut."
+    },
+    "memory-missing": {
+      "title": "Erinnerung nicht mehr vorhanden."
+    },
+    "memory-too-long": {
+      "title": "Text zu lang für eine Erinnerung."
+    },
+    "interpretation-error": {
+      "title": "Tafsir konnte nicht geladen werden.",
+      "description": "Versuche es erneut."
+    },
+    "interpretation-refreshing": {
+      "title": "Der Koran wurde aktualisiert.",
+      "description": "Die Seite wird neu geladen..."
+    },
+    "failure-account": {
+      "title": "Konto kann Nina gerade nicht nutzen.",
+      "description": "Melde dich erneut an oder kontaktiere den Nakafa-Support."
+    },
+    "failure-admission": {
+      "title": "Anfrage nicht gespeichert.",
+      "description": "Bitte versuche es erneut."
+    },
+    "failure-attachment-failed": {
+      "title": "Anhang nicht lesen oder speichern.",
+      "description": "Bitte lade ihn erneut hoch."
+    },
+    "failure-attachment-invalid": {
+      "title": "Ein Anhang ist ungültig oder fehlt.",
+      "description": "Wähle ihn erneut aus und prüfe Dateityp und Größe."
+    },
+    "failure-attachment-limit": {
+      "title": "Anhang-Limit erreicht.",
+      "description": "Sende die hochgeladenen Dateien oder warte, bevor du mehr hochlädst."
+    },
+    "failure-attachment-size": {
+      "title": "Dokumente sind zu groß.",
+      "description": "Zusammen höchstens {size, number} MiB pro Nachricht."
+    },
+    "failure-authentication": {
+      "title": "Sitzung konnte nicht geprüft werden.",
+      "description": "Bitte versuche es erneut."
+    },
+    "failure-busy": {
+      "title": "Nina antwortet noch in diesem Chat.",
+      "description": "Warte auf die Antwort oder stoppe sie vor dem Senden."
+    },
+    "failure-chat-access": {
+      "title": "Keine Berechtigung zum Senden hier.",
+      "description": "Starte einen eigenen Chat, um fortzufahren."
+    },
+    "failure-connection": {
+      "title": "Anfrage nicht bestätigt.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
+    },
+    "failure-context": {
+      "title": "Lernmaterial nicht geladen.",
+      "description": "Nina konnte es hier nicht laden. Versuche es erneut."
+    },
+    "failure-credits": {
+      "title": "Nicht genug Credits für die Antwort.",
+      "description": "Prüfe dein Kontingent und den Reset in den Abo-Einstellungen."
+    },
+    "failure-message-size": {
+      "title": "Zu lang für Nina in einem Durchgang.",
+      "description": "Kürze sie oder sende den Rest als neue Nachricht."
+    },
+    "failure-missing-chat": {
+      "title": "Chat nicht mehr verfügbar.",
+      "description": "Du kannst einen neuen Chat starten."
+    },
+    "failure-rate-limit": {
+      "title": "Kurzes Nachrichtenlimit erreicht.",
+      "description": "Warte kurz und sende deine Nachricht dann erneut."
+    },
+    "failure-request-conflict": {
+      "title": "Diese Anfrage wurde schon verwendet.",
+      "description": "Sie gehörte zu einer anderen Nachricht. Sende die Frage neu."
+    },
+    "failure-retry-unavailable": {
+      "title": "Nachricht nicht wiederholbar.",
+      "description": "Sende deine Frage als neue Nachricht."
+    },
+    "failure-session": {
+      "title": "Deine Sitzung ist abgelaufen.",
+      "description": "Melde dich erneut an, um fortzufahren."
+    },
+    "admitted-elsewhere": {
+      "title": "Nina antwortet in einem neuen Chat"
+    },
+    "open-chat": {
+      "title": "Chat öffnen"
+    },
+    "school-language-error": {
+      "title": "Sprache nicht geändert.",
+      "description": "Bitte versuche es erneut."
+    },
+    "sign-out-error": {
+      "title": "Abmelden ist fehlgeschlagen.",
+      "description": "Prüfe deine Verbindung und versuche es erneut."
+    }
   },
   "Ai": {
     "attachment": "Anhang",
@@ -547,7 +757,12 @@
     "stop-response": "Antwort anhalten",
     "attach-files": "Dateien anhängen",
     "remove-attachment": "{filename} entfernen",
-    "attachment-rejected": "Wähle bis zu 10 PNG-, JPEG-, WebP-, GIF-, PDF- oder Textdateien mit jeweils höchstens 8 MiB.",
+    "attachment-rejections": {
+      "type": "Dateityp nicht unterstützt",
+      "empty": "Leere Datei",
+      "size": "Über der Größenbegrenzung",
+      "count": "Über dem Limit von {count, number} Dateien"
+    },
     "ask-nina": "Nina fragen",
     "text-placeholder": "Frag Nina etwas...",
     "error-message": "Nina konnte diese Antwort nicht abschließen. Bitte versuche es erneut. Falls das Problem bestehen bleibt, kontaktiere den Nakafa-Support.",
@@ -693,9 +908,10 @@
     "sheet-description": "Frag Nina, die KI-Tutorin von Nakafa, zu dem, was du gerade lernst.",
     "chats": "Chats",
     "search-chats": "Chats durchsuchen...",
+    "search-older": "Ältere Chats durchsuchen",
     "rename-chat": "Chat umbenennen",
     "delete-chat": "Chat löschen",
-    "delete-chat-description": "Bist du sicher? Dieser Chat kann nach dem Löschen nicht wiederhergestellt werden.",
+    "delete-chat-description": "Dieser Chat kann nach dem Löschen nicht wiederhergestellt werden.",
     "confirm": "Bestätigen",
     "share-chat": "Chat teilen",
     "share-chat-description": "Sei vorsichtig, wenn du diesen Link mit unbekannten Personen teilst.",
@@ -705,10 +921,11 @@
     "public-description": "Alle mit dem Link können den Chat sehen.",
     "create-link": "Link erstellen",
     "copy-link": "Link kopieren",
-    "link-copied": "Link kopiert!",
-    "share-link-error": "Der Link konnte nicht geladen werden",
+    "share-link-error": "Der Link konnte nicht geladen werden.",
     "private-chat-error": "Zugriff verweigert",
-    "private-chat-error-description": "Dieser Chat gehört dir nicht. Bitte die besitzende Person um Zugriff.",
+    "chat-unavailable": "Dieser Chat ist für dich nicht verfügbar.",
+    "chat-failed": "Etwas ist schiefgelaufen",
+    "chat-failed-description": "Nakafa konnte diesen Chat nicht laden.",
     "credits-label": "Credits",
     "token-usage": "Token-Nutzung",
     "input-tokens": "Eingabe",
@@ -726,24 +943,6 @@
     "review-credits": "Credits ansehen",
     "sign-in-again": "Erneut anmelden",
     "failures": {
-      "connection": "Die Anfrage konnte nicht bestätigt werden. Prüfe deine Verbindung und versuche es erneut.",
-      "credits": "Deine Credits reichen für diese Antwort nicht aus. In deinen Abonnement-Einstellungen siehst du dein Guthaben und den nächsten Rücksetztermin.",
-      "rate-limit": "Du hast das vorübergehende Nachrichtenlimit erreicht. Warte kurz und sende deine Nachricht dann erneut.",
-      "session": "Deine Sitzung ist abgelaufen. Melde dich erneut an, um fortzufahren.",
-      "account": "Dieses Konto kann Nina gerade nicht nutzen. Melde dich erneut an oder kontaktiere den Nakafa-Support, falls das Problem bestehen bleibt.",
-      "authentication": "Deine Sitzung konnte nicht überprüft werden. Bitte versuche es erneut.",
-      "missing-chat": "Dieser Chat ist nicht mehr verfügbar. Du kannst einen neuen Chat starten.",
-      "chat-access": "Du hast keine Berechtigung, in diesem Chat Nachrichten zu senden. Starte einen eigenen Chat, um fortzufahren.",
-      "admission": "Nina konnte diese Anfrage nicht speichern. Bitte versuche es erneut.",
-      "busy": "Nina antwortet noch in diesem Chat. Warte auf die Antwort oder stoppe sie, bevor du eine weitere Nachricht sendest.",
-      "retry-unavailable": "Diese Nachricht kann nicht erneut verarbeitet werden. Sende deine Frage als neue Nachricht.",
-      "request-conflict": "Diese Übermittlung wurde bereits für eine andere Nachricht verwendet. Sende deine Frage als neue Nachricht.",
-      "context": "Nina konnte das Lernmaterial für dieses Gespräch nicht laden. Bitte versuche es erneut.",
-      "attachment-invalid": "Ein Anhang ist ungültig oder nicht mehr verfügbar. Wähle die Datei erneut aus und prüfe ihren Typ und ihre Größe.",
-      "attachment-limit": "Du hast das Limit für Anhänge erreicht. Sende die bereits hochgeladenen Dateien oder warte, bevor du weitere hochlädst.",
-      "attachment-size": "Die Dokumente einer Nachricht dürfen zusammen höchstens 10 MB groß sein. Entferne ein Dokument oder sende sie in getrennten Nachrichten.",
-      "message-size": "Diese Nachricht ist zu lang, damit Nina sie in einem Durchgang lesen kann. Kürze sie oder sende den Rest in einer neuen Nachricht.",
-      "attachment-failed": "Nina konnte den Anhang nicht lesen oder speichern. Lade ihn bitte erneut hoch.",
       "provider-busy": "Der KI-Dienst erhält gerade zu viele Anfragen. Warte kurz und versuche es dann erneut.",
       "provider-unavailable": "Der KI-Dienst ist vorübergehend nicht verfügbar. Versuche es in Kürze erneut.",
       "service-configuration": "Nina kann gerade nicht auf den KI-Dienst zugreifen. Versuche es später erneut. Falls das Problem bestehen bleibt, kontaktiere den Nakafa-Support.",
@@ -845,9 +1044,10 @@
     "lesson-answer": "Lies erst das hier.",
     "lesson-tabs": "Lektionen",
     "lab": {
+      "circle": {
+        "view": "Visualisierung des Einheitskreises"
+      },
       "projectile": {
-        "title": "Flugbahn eines geworfenen Balls",
-        "description": "Verändere den Abwurfwinkel. Der Ball bewegt sich horizontal weiter, während die Schwerkraft seine Höhe verändert.",
         "choose": "Abwurfwinkel wählen",
         "view": "Visualisierung der Flugbahn eines geworfenen Balls",
         "initial-speed": "Anfangsgeschwindigkeitsbetrag",
@@ -855,95 +1055,40 @@
         "range": "Wurfweite",
         "peak-height": "Maximale Höhe"
       },
-      "quadratic": {
-        "title": "Nullstellen und Scheitel",
-        "description": "Der Scheitel liegt genau in der Mitte zwischen den Nullstellen, bei x = {vertex}."
-      },
       "atom": {
-        "title": "Atomhüllenmodell",
-        "description": "Das Diagramm zeigt das vereinfachte Schalenmodell für neutrale Atome bis Calcium. Unterscheide dabei die tatsächliche Belegung einer Schale von ihrer maximalen Kapazität nach <math>2n^2</math>.",
         "choose": "Neutrales Atom auswählen",
         "atomic-number": "Ordnungszahl",
         "configuration": "Konfiguration",
         "electron-total": "Anzahl der Elektronen",
         "capacity": "Kapazität",
-        "outer-shell": "Äußerste Schale",
-        "samples": {
-          "neon": {
-            "name": "Neon",
-            "note": "Die Konfiguration lautet <math>2, 8</math>. Die Schale <math>\\mathrm L</math> ist die äußerste Schale."
-          },
-          "magnesium": {
-            "name": "Magnesium",
-            "note": "Nach dem Füllen der Schalen <math>\\mathrm K</math> und <math>\\mathrm L</math> kommen die verbleibenden <math>2</math> Elektronen in die Schale <math>\\mathrm M</math>."
-          },
-          "chlorine": {
-            "name": "Chlor",
-            "note": "Im vereinfachten Schalenmodell enthält die äußerste Schale <math>7</math> Elektronen."
-          },
-          "argon": {
-            "name": "Argon",
-            "note": "Das einführende Muster lautet <math>2, 8, 8</math>. Die Schale <math>\\mathrm M</math> enthält also <math>8</math> Elektronen."
-          },
-          "potassium": {
-            "name": "Kalium",
-            "note": "Kalium besitzt das Elementsymbol <math>\\mathrm K</math>. Das ist nicht dasselbe wie der Schalenname <math>\\mathrm K</math>. Nach <math>2, 8, 8</math> kommt das verbleibende <math>1</math> Elektron in die Schale <math>\\mathrm N</math>."
-          },
-          "calcium": {
-            "name": "Calcium",
-            "note": "Calcium besitzt <math>20</math> Elektronen. Sein vereinfachtes Schalenmuster lautet daher <math>2, 8, 8, 2</math>."
-          }
-        }
+        "outer-shell": "Äußerste Schale"
       },
       "bacteria": {
-        "title": "Bakterien von der äußeren Form bis zur Zellwand untersuchen",
-        "description": "Das Modell trennt die äußere Form, den Inhalt der prokaryotischen Zelle und die Schichten der Zellwand. Drehe das Modell, um die Anordnung jedes Teils von verschiedenen Seiten zu sehen.",
         "choose": "Ansicht auswählen",
-        "focus": "Beobachteter Bereich",
-        "takeaway": "Funktion der Teile",
         "view": "Modell einer Bakterienzelle",
         "shape": {
-          "tab": "Form",
-          "coccus": "Kokken",
-          "bacillus": "Stäbchen",
-          "spiral": "Spiralform",
-          "caption": "Von links nach rechts sind Kokken, Stäbchen und spiralförmige Bakterien als erste Erkennungsmerkmale zu sehen.",
-          "focus": "Die Form beschreibt die Morphologie, aber nicht die gesamte Identität eines Bakteriums.",
-          "takeaway": "Für eine sichere Bestimmung werden neben der äußeren Form weitere Merkmale benötigt."
+          "tab": "Form"
         },
         "inside": {
-          "tab": "Zellinneres",
-          "nucleoid-dna": "Nukleoid-DNA",
-          "caption": "Im Nukleoid liegt die bakterielle DNA. Ribosomen sind im Zytoplasma verteilt und stellen Proteine her.",
-          "focus": "Ein membranumhüllter Zellkern fehlt, DNA und Ribosomen sind jedoch vorhanden.",
-          "takeaway": "Eine Bakterienzelle bleibt nur lebensfähig, weil Membran, Zytoplasma, DNA, Ribosomen und Stoffwechsel zusammenwirken."
+          "tab": "Zellinneres"
         },
         "wall": {
-          "tab": "Wand",
-          "gram-positive": "grampositiv",
-          "gram-negative": "gramnegativ",
-          "caption": "Links ist die dickere Zellwand grampositiver Bakterien zu sehen, rechts die dünnere Zellwand gramnegativer Bakterien mit Außenmembran.",
-          "focus": "Vergleiche die Dicke der Peptidoglykan-Schicht und das Vorhandensein einer Außenmembran.",
-          "takeaway": "Der Aufbau der Zellhülle beeinflusst Form, Schutz, Gramfärbung und Empfindlichkeit gegenüber bestimmten Antibiotika."
+          "tab": "Wand"
         }
       }
     },
-    "lesson-projectile": "Schiefer Wurf",
-    "lesson-quadratic": "Quadratische Funktionen",
-    "lesson-atom": "Das Atom",
-    "lesson-cell": "Die Zelle",
-    "lesson-projectile-text": "Die Kugel wird mit {speed} m/s unter {angle} Grad geworfen. Ihre Bahn ist eine Parabel.",
-    "lesson-quadratic-text": "Der Graph schneidet die x-Achse bei x = {left} und x = {right}.",
-    "lesson-atom-text": "{name} hat {atomicNumber} Elektronen. Seine äußere Schale {outerShell} enthält davon {electrons}.",
-    "lesson-cell-text": "Ein Bakterium ist eine einzige Zelle ohne Zellkern, und seine DNA liegt im Nukleoid.",
     "tryout-title": "Probetests mit sofortigem Ergebnis",
     "tryout-lead": "Jederzeit wiederholbar.",
     "tryout-ask": "Hab ich es schon verstanden?",
     "tryout-answer": "Probier erst eine Aufgabe.",
+    "tryout-right": "Richtig, das ist die Antwort.",
+    "tryout-wrong": "Noch nicht. Schau noch einmal hin.",
     "nina-title": "Nina weiß, welche Stelle du meinst",
     "nina-lead": "Frag direkt aus der Aufgabe oder Lektion, die du offen hast.",
     "nina-ask": "Die hier verstehe ich noch nicht.",
     "nina-answer": "Komm, wir nehmen sie zusammen auseinander.",
+    "nina-chat-ask": "Warum ist 13 falsch?",
+    "nina-chat-answer": "### 13 kommt heraus, wenn m gleich 3 ist\n\nDann rechnest du $5(2) + 9/3 = 13$. Nur passt $m = 3$ nicht zur Aufgabe.\n\n#### Prüf es mit dem, was gegeben ist\n\n$$\n\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\n$$\n\nMit $m = 1$ passt es: $2(2) + 4/1 = 8$. Also ist $m$ gleich 1, und die Antwort ist 19.",
     "scene-label": "Dreidimensionale Szene zum schiefen Wurf, eine Kanonenkugel",
     "scene-title": "Was schwer vorstellbar ist, kannst du sehen",
     "scene-lead": "Eine Szene aus der Lektion zum schiefen Wurf.",
@@ -981,6 +1126,18 @@
     "school-cta": "Erzähl von eurer Schule",
     "school-class": "Eine Klasse aus Tieren",
     "faq-title": "Häufig gefragt",
+    "faq-subjects-question": "Welche Fächer und Klassen gibt es?",
+    "faq-subjects-answer": "Von der Grundschule bis zur Universität: Mathematik, Physik, Chemie, Biologie, Informatik und mehr.",
+    "faq-account-question": "Kann ich ohne Konto lernen?",
+    "faq-account-answer": "Ja. Öffentliche Lernmaterialien kannst du ohne Konto lesen. Melde dich an, um deinen Fortschritt zu speichern, Nina zu fragen und Probetests zu machen.",
+    "faq-phone-question": "Geht das auf dem Smartphone?",
+    "faq-phone-answer": "Ja. Nakafa läuft im Browser auf Smartphone, Tablet und Computer, ohne Installation.",
+    "faq-credits-question": "Was sind KI-Credits?",
+    "faq-credits-answer": "KI-Credits werden genutzt, wenn Nina deine Frage beantwortet. Eine Antwort kostet {cost} Credits.",
+    "faq-empty-question": "Was passiert, wenn meine Credits aufgebraucht sind?",
+    "faq-empty-answer": "Nina ist wieder verfügbar, sobald deine Credits erneuert werden. Lernmaterialien, Übungen und Probetests bleiben nutzbar.",
+    "faq-accuracy-question": "Wie sorgt Nakafa für richtige Inhalte?",
+    "faq-accuracy-answer": "Alle Inhalte schreiben qualifizierte Autorinnen und Autoren. Weil der Quellcode einsehbar ist, kann jede Person ein Lernmaterial prüfen und eine Korrektur vorschlagen.",
     "faq-languages-question": "In welchen Sprachen gibt es Nakafa?",
     "faq-languages-answer": "Auf Deutsch, Englisch und Indonesisch.",
     "faq-nina-question": "Hat Nina immer recht?",
@@ -992,9 +1149,9 @@
     "community-title": "Zusammen lernt es sich besser",
     "community-lead": "Fragen, antworten und einander helfen.",
     "community-cta": "Discord beitreten",
-    "community-crowd": "Mitlernende auf Discord",
-    "closing-ask": "Was willst du {topic} verstehen?",
-    "closing-topic-0": "heute",
+    "community-crowd": "Tierische Mitlernende, manche tippen gerade",
+    "closing-ask": "Willst du heute {topic} verstehen?",
+    "closing-topic-0": "etwas",
     "closing-topic-1": "den schiefen Wurf",
     "closing-topic-2": "quadratische Funktionen",
     "closing-topic-3": "das Mol",

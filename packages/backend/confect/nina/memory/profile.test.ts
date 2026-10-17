@@ -1,10 +1,8 @@
-import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
-import refs from "@repo/backend/confect/_generated/refs";
 import { createNinaTest } from "@repo/backend/test/nina";
+import { readLearner } from "@repo/backend/test/nina/memory";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 
-const read = Ref.getFunctionReference(refs.internal.nina.memory.read);
 /** The time the turn reads at. These learners keep no memory, so it changes nothing. */
 const NOW = Date.UTC(2026, 9, 10, 12);
 
@@ -49,7 +47,7 @@ describe("learner profile", () => {
       return owner;
     });
     expect(
-      await f.t.query(read, { now: NOW, said: "", topics: [], userId })
+      await readLearner(f, { now: NOW, said: "", topics: [], userId })
     ).toEqual({
       paused: false,
       profile: {
@@ -100,7 +98,7 @@ describe("learner profile", () => {
       return runtime.identity.userId;
     });
     expect(
-      await f.t.query(read, { now: NOW, said: "", topics: [], userId })
+      await readLearner(f, { now: NOW, said: "", topics: [], userId })
     ).toEqual({
       paused: false,
       profile: {},

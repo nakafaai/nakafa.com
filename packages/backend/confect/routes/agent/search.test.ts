@@ -9,10 +9,10 @@ import {
 } from "@repo/backend/test/agent/http";
 import {
   insertRuntimeArticles,
+  patchRuntimeSearchState,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 
 setupApiTest();
 
@@ -42,15 +42,7 @@ describe("public agent search", () => {
       await insertRuntimeIndex(ctx, article.contentKey, {
         plainText: "rational function grade eleven asymptote",
       });
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        expect.fail("Expected one active content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-        searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-        searchSequence: TEST_RUNTIME_RELEASE.sequence,
-      });
+      await patchRuntimeSearchState(ctx);
     });
     const response = await fetchApi(
       test,

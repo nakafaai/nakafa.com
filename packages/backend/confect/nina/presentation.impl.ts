@@ -40,10 +40,12 @@ const save = FunctionImpl.make(
     if (!chat) {
       return null;
     }
+    // Both rows are loaded already, so each is written back whole: a `patch`
+    // would read it once more.
     if (args.suggestions) {
       yield* writer
         .table("ninaTurns")
-        .patch(turn._id, { suggestions: args.suggestions })
+        .replace(turn._id, { ...turn, suggestions: args.suggestions })
         .pipe(Effect.orDie);
     }
     if (!args.title) {
@@ -54,7 +56,10 @@ const save = FunctionImpl.make(
     if (!current || current === DEFAULT_TITLE) {
       yield* writer
         .table("chats")
-        .patch(chat._id, { title: yield* sealTitle(chat.userId, args.title) })
+        .replace(chat._id, {
+          ...chat,
+          title: yield* sealTitle(chat.userId, args.title),
+        })
         .pipe(Effect.orDie);
     }
     return null;

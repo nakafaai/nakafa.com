@@ -4,7 +4,7 @@ import {
   zoneOfNotice,
 } from "@repo/backend/confect/notifications/zone";
 import type { UnitStatus } from "@repo/backend/confect/tenancy/schema";
-import { Effect, Option, Schema } from "effect";
+import { DateTime, Effect, Option, Schema } from "effect";
 
 /** A unit row as the caller reads it from the tenant's units. */
 const unit = (fields: {
@@ -112,6 +112,23 @@ describe("notifications/zone zoneOfNotice", () => {
         );
         expect(error.reason).toBe("NO_ACTIVE_UNIT");
       })
+  );
+
+  it.effect("gives a notice of a unit in GMT the zero offset of GMT", () =>
+    Effect.gen(function* () {
+      const gmtUnit = unit({
+        created: 6,
+        id: "unit-gmt",
+        status: "active",
+        timeZone: "GMT",
+      });
+      const zone = yield* zoneOfNotice(Option.some(gmtUnit._id), [gmtUnit]);
+      const instant = DateTime.setZone(
+        DateTime.makeUnsafe("2026-10-16T18:30:00Z"),
+        zone
+      );
+      expect(DateTime.zonedOffset(instant)).toBe(0);
+    })
   );
 
   it.effect("fails when the stored zone of the unit is not an IANA zone", () =>

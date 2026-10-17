@@ -1,4 +1,7 @@
-import { MATERIAL_CONTEXT_QUERY_PARAM } from "@repo/contents/route/material/context";
+import {
+  MATERIAL_CONTEXT_HINT_LENGTH,
+  MATERIAL_CONTEXT_QUERY_PARAM,
+} from "@repo/contents/route/material/context";
 import { splitLocalePathname } from "@repo/internationalization/src/href";
 import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr } from "effect";
@@ -38,11 +41,16 @@ export function getPathname() {
   return pathname || "/";
 }
 
-/** Reads the raw material context hint for server-side Nina validation. */
+/**
+ * Reads the raw material context hint for server-side Nina validation. A hint
+ * longer than the server accepts is left out, as the material page leaves it
+ * out.
+ */
 export function getMaterialContextHint() {
-  return (
-    new URLSearchParams(window.location.search).get(
-      MATERIAL_CONTEXT_QUERY_PARAM
-    ) ?? undefined
+  const hint = new URLSearchParams(window.location.search).get(
+    MATERIAL_CONTEXT_QUERY_PARAM
   );
+  return hint !== null && hint.length <= MATERIAL_CONTEXT_HINT_LENGTH
+    ? hint
+    : undefined;
 }

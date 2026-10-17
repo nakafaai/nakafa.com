@@ -19,7 +19,10 @@ import {
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import {
+  TEST_RUNTIME_RELEASE,
+  testRuntimeRelease,
+} from "@repo/backend/test/runtime/values";
 import { Effect, Option } from "effect";
 
 describe("search result publication integrity", () => {
@@ -43,8 +46,9 @@ describe("search result publication integrity", () => {
               .index("by_key", (q) => q.eq("key", "primary"))
               .first();
             assert(Option.isSome(state));
+            const runtime = yield* testRuntimeRelease();
             yield* writer.table("contentState").patch(state.value._id, {
-              searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+              searchManifestHash: runtime.manifestHash,
               searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
               searchSequence: TEST_RUNTIME_RELEASE.sequence,
             });

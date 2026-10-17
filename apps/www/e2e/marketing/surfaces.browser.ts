@@ -1,5 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Array as Arr, Effect, Order, Record as Rec } from "effect";
+import {
+  CROWD_HERD,
+  CROWD_TYPING_EVERY,
+} from "@/components/marketing/about/toys/herd";
 import { activateUntilVisible } from "@/e2e/support/input";
 import {
   loadMarketingPage,
@@ -14,26 +21,76 @@ import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
- * Each contributor sits in the design system's Avatar with its AvatarFallback,
- * the same anatomy as every other avatar, and the gallery takes its animals from
- * one cast. Raw Community markup therefore grew from the single svg per
- * contributor that the earlier ceilings measured. Measured in the browser on a
- * production build on 14 October 2026, at all five target viewports (the same
- * at each), the section counts 74 non-SVG descendants, 340 descendants, and
- * 39,335 bytes, and the 16 animals are all different. These ceilings leave about
- * six percent regression room over that measure: 79, 361, and 41,700 bytes.
- *
- * The homepage ceiling stays at 2063. The same build measured 1,813 homepage
- * descendants at each viewport.
+ * Each friend of the crowd is one animal in a round avatar: two spans around an
+ * svg of 15 to 25 elements, and every fourth friend also has a typing bubble of
+ * six elements. The ceilings follow the friends that the section renders, read
+ * from the crowd's own constants, so a new friend adds its share and a heavier
+ * drawing still breaks the budget. The figures are measured on a production
+ * build of commit 0923c41e34 on 17 October 2026, by the reader this test uses,
+ * at every target viewport: 18 friends, 5 of them typing, 436 descendants, 109
+ * of them outside the drawings, and 44,814 bytes once serialized. Each ceiling
+ * is about six percent over its measure: a fixed part plus the friends and the
+ * bubbles.
  */
-const COMMUNITY_MAX_CHROME_DESCENDANTS = 79;
-const COMMUNITY_MAX_DESCENDANTS = 361;
-const COMMUNITY_MAX_HTML_BYTES = 41_700;
-const HOMEPAGE_MAX_DESCENDANTS = 2063;
+const COMMUNITY_MARGIN = 1.06;
+const COMMUNITY_FRIENDS = CROWD_HERD.length;
+const COMMUNITY_TYPING_FRIENDS = Math.ceil(
+  COMMUNITY_FRIENDS / CROWD_TYPING_EVERY
+);
+const COMMUNITY_MAX_CHROME_DESCENDANTS = Math.ceil(
+  COMMUNITY_MARGIN * (7 + 4 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
+);
+const COMMUNITY_MAX_DESCENDANTS = Math.ceil(
+  COMMUNITY_MARGIN *
+    (10 + 22 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
+);
+const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
+  COMMUNITY_MARGIN *
+    (2743 + 2152 * COMMUNITY_FRIENDS + 667 * COMMUNITY_TYPING_FRIENDS)
+);
+
+/**
+ * The homepage ceiling: the body held 2,702 elements on the production build of
+ * commit 0923c41e34 on 17 October 2026, the same at every target viewport,
+ * because the lesson window draws all four cards in one grid cell and mounts
+ * only the open lab. Six percent over 2,702 is 2,865.
+ */
+const HOMEPAGE_MAX_DESCENDANTS = 2865;
+
+/**
+ * Records one measured count on the running test, so every run reports the number
+ * that a ceiling of this file is derived from, even when the check passes.
+ */
+function recordMeasure(name: string, value: number) {
+  const info = test.info();
+  info.annotations = Arr.append(info.annotations, {
+    description: String(value),
+    type: name,
+  });
+}
+
 const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/en");
     const measurements = yield* measureMarketingPage(page);
+    recordMeasure(
+      "community-chrome-descendants",
+      measurements.communityChromeDescendants
+    );
+    recordMeasure("community-descendants", measurements.communityDescendants);
+    recordMeasure("community-html-bytes", measurements.communityHtmlBytes);
+    recordMeasure("homepage-descendants", measurements.homepageDescendants);
+
+    // The crowd is one picture to assistive technology: one named image, and no list of friends.
+    const community = page.locator("#community");
+    yield* Effect.promise(() =>
+      expect(
+        community.getByRole("img", { name: en.Landing["community-crowd"] })
+      ).toHaveCount(1)
+    );
+    yield* Effect.promise(() =>
+      expect(community.getByRole("listitem")).toHaveCount(0)
+    );
 
     yield* Effect.sync(() => {
       expect(measurements.duplicateIds).toEqual([]);

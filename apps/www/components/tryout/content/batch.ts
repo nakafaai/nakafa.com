@@ -30,8 +30,8 @@ export function planTryoutContentBatches<Question, Answer>(
 /** Restores question and answer partitions after ordered batch rendering. */
 export const restoreTryoutContentOrder = Effect.fn(
   "NakafaContent.restoreTryoutContentOrder"
-)(function* <Entry>(
-  plan: TryoutContentBatchPlan<unknown>,
+)(function* <Selector, Entry>(
+  plan: TryoutContentBatchPlan<Selector>,
   renderedBatches: readonly (readonly Entry[])[]
 ) {
   if (renderedBatches.length !== plan.batches.length) {

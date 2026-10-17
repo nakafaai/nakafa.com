@@ -1,5 +1,5 @@
-import { RegisteredConvexFunction, RegisteredFunctions } from "@confect/server";
+import { RegisteredFunctions } from "@confect/server";
 import databaseSchema from "../../schema";
-import lifecycle from "../../../auth/lifecycle.impl";
+import groupLayer from "../../../auth/lifecycle.impl";
 
-export default RegisteredFunctions.buildForGroup<typeof import("../../../auth/lifecycle.spec")["default"]>(databaseSchema, lifecycle, RegisteredConvexFunction.make);
+export default RegisteredFunctions.buildForGroup<typeof import("../../../auth/lifecycle.spec")["default"]>(databaseSchema, groupLayer);

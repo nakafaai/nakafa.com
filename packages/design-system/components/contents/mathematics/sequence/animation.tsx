@@ -8,9 +8,12 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
+  VisualCardGroup,
   VisualCardHeader,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
@@ -224,35 +227,8 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             </div>
           </div>
         </VisualCardScene>
-      </VisualCardBody>
-
-      <VisualCardFooter className="flex-col items-stretch px-0">
-        <div className="flex w-full flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <div className="flex justify-between gap-2">
-            <Button
-              aria-label={labels.reset}
-              onClick={resetAnimation}
-              size="icon"
-              variant="outline"
-            >
-              <HugeIcons icon={Clock04Icon} />
-              <span className="sr-only">{labels.reset}</span>
-            </Button>
-            <Button
-              aria-label={isPlaying ? labels.pause : labels.play}
-              onClick={togglePlayPause}
-              size="icon"
-              variant={isPlaying ? "outline" : "default"}
-            >
-              <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
-              <span className="sr-only">
-                {isPlaying ? labels.pause : labels.play}
-              </span>
-            </Button>
-            <VisualCardFullscreen />
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2">
+        <VisualCardControls>
+          <VisualCardGroup>
             {Arr.map(SPEED_VALUES, (speedValue) => (
               <Choice
                 aria-label={`${labels.setSpeed} ${speedValue}x`}
@@ -263,11 +239,9 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                 {speedValue}x
               </Choice>
             ))}
-          </div>
-        </div>
+          </VisualCardGroup>
 
-        <div className="w-full border-t px-6 pt-4">
-          <div className="flex flex-wrap justify-center gap-2">
+          <VisualCardGroup>
             {Arr.map(
               Array.from({ length: maxTables }, (_, index) => index + 1),
               (count) => (
@@ -284,8 +258,34 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                 </Choice>
               )
             )}
-          </div>
-        </div>
+          </VisualCardGroup>
+        </VisualCardControls>
+      </VisualCardBody>
+
+      <VisualCardFooter>
+        <VisualCardActions>
+          <Button
+            aria-label={labels.reset}
+            onClick={resetAnimation}
+            size="icon"
+            variant="outline"
+          >
+            <HugeIcons icon={Clock04Icon} />
+            <span className="sr-only">{labels.reset}</span>
+          </Button>
+          <Button
+            aria-label={isPlaying ? labels.pause : labels.play}
+            onClick={togglePlayPause}
+            size="icon"
+            variant={isPlaying ? "outline" : "default"}
+          >
+            <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
+            <span className="sr-only">
+              {isPlaying ? labels.pause : labels.play}
+            </span>
+          </Button>
+          <VisualCardFullscreen />
+        </VisualCardActions>
       </VisualCardFooter>
     </VisualCard>
   );

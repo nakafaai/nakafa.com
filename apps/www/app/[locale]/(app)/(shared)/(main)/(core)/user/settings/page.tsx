@@ -1,12 +1,10 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
-import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -40,37 +38,15 @@ async function AuthenticatedSettings({
 }: {
   params: PageProps<"/[locale]/user/settings">["params"];
 }) {
-  const { locale, token } = await admitUserSettingsRoute((await params).locale);
-  const data = await Effect.runPromise(
+  const { token } = await admitUserSettingsRoute((await params).locale);
+  const account = await Effect.runPromise(
     HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) =>
-        Effect.all(
-          {
-            account: client.query(auth.queries.getCurrentUser, {}),
-            preference: client.query(learningPreferences.queries.getCurrent, {
-              locale,
-            }),
-            programs: client.query(
-              learningPreferences.queries.listCurriculumPrograms,
-              { locale }
-            ),
-          },
-          { concurrency: "unbounded" }
-        )
-      ),
+      Effect.flatMap((client) => client.query(auth.queries.getCurrentUser, {})),
       Effect.provide(httpLayer(token ? { auth: token } : {}))
     )
   );
-  if (!data.account) {
+  if (!account) {
     notFound();
   }
-  return (
-    <UserSettingsProfilePage initialAccount={data.account}>
-      <UserSettingsCurriculum
-        initialPreference={data.preference}
-        initialPrograms={data.programs}
-        locale={locale}
-      />
-    </UserSettingsProfilePage>
-  );
+  return <UserSettingsProfilePage initialAccount={account} />;
 }

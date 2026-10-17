@@ -4,7 +4,6 @@ import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import { Array as Arr } from "effect";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { locale as rootLocale } from "next/root-params";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -23,6 +22,7 @@ import { Privacy } from "@/components/marketing/about/privacy";
 import { ProjectileStage } from "@/components/marketing/about/projectile/stage";
 import { Schools } from "@/components/marketing/about/schools";
 import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
+import { HomeToys } from "@/components/marketing/about/toys/intent.client";
 import { Tryout } from "@/components/marketing/about/tryout";
 import {
   getSubjectMenuHref,
@@ -33,16 +33,6 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
-
-/**
- * The toys of the page load after the page renders, so their drag code is not
- * part of the first JavaScript of the home page.
- */
-const HomeToys = dynamic(() =>
-  import("@/components/marketing/about/toys/layer.client").then(
-    (module) => module.HomeToys
-  )
-);
 
 export async function generateMetadata({
   params,
@@ -109,15 +99,12 @@ export default async function Page() {
  * navigation data that powers the app entry points.
  */
 async function MarketingHomePageContent({ locale }: { locale: Locale }) {
-  const [tMetadata, tSubject, tHome, tPricing, tFaq, featuredTryout] =
-    await Promise.all([
-      getTranslations({ locale, namespace: "Metadata" }),
-      getTranslations({ locale, namespace: "Subject" }),
-      getTranslations({ locale, namespace: "Landing" }),
-      getTranslations({ locale, namespace: "PricingPage" }),
-      getTranslations({ locale, namespace: "Faq" }),
-      readFeaturedTryout(locale),
-    ]);
+  const [tMetadata, tSubject, tHome, featuredTryout] = await Promise.all([
+    getTranslations({ locale, namespace: "Metadata" }),
+    getTranslations({ locale, namespace: "Subject" }),
+    getTranslations({ locale, namespace: "Landing" }),
+    readFeaturedTryout(locale),
+  ]);
 
   const collectionItems = [
     ...Arr.flatMap(subjectMenu, (category) =>
@@ -136,28 +123,28 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
     ),
   ];
 
-  /** The ten questions of the home page. Each one is answered in one place of the dictionaries. */
-  const faqItems: MarketingFaqItem[] = [
-    { answer: tPricing("a6"), question: tPricing("q6") },
-    { answer: tPricing("a20"), question: tPricing("q20") },
-    {
-      answer: tHome("faq-languages-answer"),
-      question: tHome("faq-languages-question"),
-    },
-    { answer: tHome("faq-nina-answer"), question: tHome("faq-nina-question") },
-    {
-      answer: tPricing("a9", { cost: NINA_RESPONSE_CREDITS }),
-      question: tPricing("q9"),
-    },
-    { answer: tPricing("a12"), question: tPricing("q12") },
-    {
-      answer: tHome("faq-memory-answer"),
-      question: tHome("faq-memory-question"),
-    },
-    { answer: tHome("faq-data-answer"), question: tHome("faq-data-question") },
-    { answer: tFaq("a4"), question: tFaq("q4") },
-    { answer: tFaq("a7"), question: tFaq("q7") },
-  ];
+  /**
+   * The ten questions of the home page, in the order the page asks them, the
+   * first one open. They are the questions no other part of the page answers.
+   */
+  const faqItems: MarketingFaqItem[] = Arr.map(
+    [
+      "subjects",
+      "account",
+      "phone",
+      "languages",
+      "nina",
+      "credits",
+      "empty",
+      "memory",
+      "data",
+      "accuracy",
+    ] as const,
+    (key) => ({
+      answer: tHome(`faq-${key}-answer`, { cost: NINA_RESPONSE_CREDITS }),
+      question: tHome(`faq-${key}-question`),
+    })
+  );
 
   const url = `${COMPANY_IDENTITY.url}/${locale}`;
 
@@ -180,25 +167,24 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         }))}
         url={url}
       />
-      <HomeToys>
-        <div className="relative grid">
-          <Hero />
-          <Lesson />
-          <Tryout value={featuredTryout} />
-          <NinaSection />
-          <ProjectileStage />
-          <Memory />
-          <Privacy />
-          <Curricula locale={locale} />
-          <Letter />
-          <Medals />
-          <Pricing />
-          <Schools herd={CLASS_HERD} />
-          <Faq faqs={faqItems} />
-          <Community />
-          <Closing />
-        </div>
-      </HomeToys>
+      <div className="relative grid">
+        <Hero />
+        <Lesson />
+        <Tryout value={featuredTryout} />
+        <NinaSection />
+        <ProjectileStage />
+        <Memory />
+        <Privacy />
+        <Curricula locale={locale} />
+        <Letter />
+        <Medals />
+        <Pricing />
+        <Schools herd={CLASS_HERD} />
+        <Faq faqs={faqItems} />
+        <Community />
+        <Closing />
+        <HomeToys />
+      </div>
     </>
   );
 }

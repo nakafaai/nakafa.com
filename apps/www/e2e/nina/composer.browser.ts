@@ -1,12 +1,13 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, HashSet } from "effect";
+import { GERMAN, openComposer, runPage } from "@/e2e/support/attachment";
+import { CHAT_PATH, chatPathOf } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { waitForSlide } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { NINA_SECTION, SHEET_POPUP } from "@/e2e/support/selector";
+import { openSheet } from "@/e2e/support/sheet";
 
-const LESSON =
-  "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
 const SAMPLE_IMAGE = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=",
   "base64"
@@ -105,13 +106,10 @@ const verifySurfaces = Effect.fn("NakafaE2E.verifyNinaSurfaces")(function* (
   yield* Effect.promise(() => page.goto("/en"));
   yield* verifyComposer(page.locator(NINA_SECTION));
 
-  yield* Effect.promise(() => page.goto("/en/chat"));
+  yield* Effect.promise(() => page.goto(CHAT_PATH));
   yield* verifyComposer(page.locator("main"));
 
-  yield* Effect.promise(() => page.goto(LESSON));
-  yield* Effect.promise(() =>
-    page.getByRole("button", { name: "Ask Nina", exact: true }).click()
-  );
+  yield* openSheet(page);
   // The composer is in the sheet from its first frame, so its geometry is
   // read once the sheet has stopped sliding.
   yield* waitForSlide(page.locator(SHEET_POPUP));
@@ -134,3 +132,31 @@ for (const width of [390, 1440]) {
     });
   });
 }
+
+test.describe("The file picker of the composer in German", () => {
+  test("is named in German, and the attach button opens it", async ({
+    page,
+  }) => {
+    await runPage(
+      page,
+      Effect.gen(function* () {
+        // The new chat page in German, where the composer's labels are German.
+        const composer = yield* openComposer(page, chatPathOf("de"), GERMAN);
+
+        yield* Effect.promise(async () => {
+          const chooser = page.waitForEvent("filechooser");
+          await composer.getByRole("button", { name: GERMAN.attach }).click();
+          await chooser;
+        });
+        // The picker is hidden, so its accessible name is the aria-label it
+        // carries, which Playwright's name matcher does not read while hidden.
+        yield* Effect.promise(() =>
+          expect(composer.locator('input[type="file"]')).toHaveAttribute(
+            "aria-label",
+            GERMAN.attach
+          )
+        );
+      })
+    );
+  });
+});

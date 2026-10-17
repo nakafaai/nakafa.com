@@ -17,12 +17,15 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 /**
- * What a sealed text is bound to: its owner, one stored table and one field. A
- * learner's text and a school's text bind under different labels, so a text
- * opens only for the owner it was sealed for. The parts are encoded as a JSON
- * list, so no two different bindings share a value.
+ * What a sealed text is bound to: its owner, one stored table, one field and,
+ * when the field belongs to a row, the values that name the row. A learner's text
+ * and a school's text bind under different labels, so a text opens only for the
+ * owner it was sealed for. The parts are encoded as a JSON list, so no two
+ * different bindings share a value, and a field without a row binds as it did
+ * before rows were named.
  */
 function fieldBinding(keys: OwnerKeys, field: typeof VaultField.Type) {
+  const row = field.row ?? [];
   if (Predicate.hasProperty(keys, "tenantId")) {
     return encodeJsonText([
       "nakafa/vault/school-text/v1",
@@ -30,6 +33,7 @@ function fieldBinding(keys: OwnerKeys, field: typeof VaultField.Type) {
       keys.generation,
       field.table,
       field.field,
+      ...row,
     ]);
   }
   return encodeJsonText([
@@ -37,6 +41,7 @@ function fieldBinding(keys: OwnerKeys, field: typeof VaultField.Type) {
     keys.userId,
     field.table,
     field.field,
+    ...row,
   ]);
 }
 

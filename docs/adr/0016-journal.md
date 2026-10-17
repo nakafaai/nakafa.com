@@ -3,7 +3,9 @@
 ## Status
 
 Accepted. Amended on 13 October 2026: forum posts are not journaled per message,
-and journal retention is set per organisation.
+and journal retention is set per organisation. Amended on 16 October 2026: a
+creation-time consumer passes only settled entries behind a commit-lag window and
+drains a burst in bounded runs, instead of proving the order of the journal.
 
 ## Context
 
@@ -36,6 +38,35 @@ middleware provided, and derives the entry's reference and owner from it. No
 caller passes an owner, so an entry is filed only under its subject's space.
 Each kind's authority accepts only that kind's change types, so a change of
 another kind does not compile.
+
+### Entry shape
+
+`JournalEntry` is a union by kind: one member for each kind that holds changes
+(`journal/schema.ts`). Each member is an entry with the actor, that kind's own
+change union, the owner, and the kind's own reference as its subject. The
+catalog's `Kind.changes` joins each kind's changes, its own and every
+extension's, so a subject can carry only the changes of its own kind. `record`
+decodes each entry against this union before it inserts, and the audit list's
+`ChangeView` is the same union of kinds plus one unknown member.
+
+The split is forced by Confect 10.3.0, which types a stored document's union
+member by member and fails with TS2589 above about 40 members. Measured on
+Confect 10.3.0 with throwaway tables, a flat union of 40 rich structs passes and
+45 fail. The journal once stored every change of every kind in one union of 58,
+and the table failed to typecheck. With one member per kind, each member holds
+the changes of one kind. The limit is checked at its owner, in
+`access/catalog.test.ts`: no kind may hold more than 40 changes, and no more
+than 40 kinds may hold changes. A kind past the limit is split, or its kinds are
+grouped one level higher.
+
+The kinds are listed by hand in `journal/schema.ts`. A member whose changes come
+from a generic kind, which is what a union mapped over the catalog at run time
+uses, fails the table with TS2589 on Confect 10.3.0: measured with one member
+of the same shape, the failure disappears when the member's change union is
+taken from the literal kind. Each member therefore names its kind literally, so
+its change union stays concrete. The catalog test checks that the list holds
+exactly the kinds that hold changes, so a new kind with changes fails the test
+until it is listed.
 
 ### What is recorded
 
@@ -70,9 +101,26 @@ removing a kind that rows reference is a stored-data migration.
 Consumers read published change types from the journal itself; there is no
 outbox copy and no dispatcher. A kind's declaration lists which of its change
 types are published. The first consumer adds an index on the owner and change
-type, reads in creation order with its own cursor per subscription, re-checks
-permission when it loads the subject, and proves its ordering assumption on
-Convex before relying on a creation-time cursor.
+type, reads in creation order with its own cursor per subscription, and re-checks
+permission when it loads the subject. A creation-time cursor does not rely on a
+proof of ordering. A mutation takes its entry's creation time while it runs, and
+the entry becomes visible only when the mutation commits, so no proof can show
+that an entry never commits after a later one was read. Instead the cursor
+passes an entry only once it has settled: an entry created at or before the clock
+less five seconds counts as committed. That window covers the one second of user
+code that a Convex mutation may run (the limits page, read on 16 October 2026,
+which does not count database operations), with a margin for the rest. A run
+handles an unsettled entry early and holds its ID. The cursor holds at most one
+page of IDs, fifty entries, half of the 100-entry list page, so its state stays
+bounded, and one of the fifty stays free for the record of a settled entry that a
+late commit may need. A run that leaves entries unread schedules the next run: at
+once when the next entry has settled or the list has room for it, and for the
+moment the oldest of them settles otherwise. So a burst drains without the minute
+sweep and nothing is refused, and a burst starts one chain of runs, because an
+invitation schedules a run only when none is owed. Entries that share one creation
+time each keep a record, so the design assumes such groups stay small. A cursor
+starts five seconds before the entry that makes it, so an entry created up to that
+long before the first one is read.
 
 ### Retention
 
@@ -104,6 +152,8 @@ things that delete tenant entries.
   `journal/audit:list`, the tenant audit log for `audit.view`, newest first,
   at most 100 entries a page, with each Person named on a page read once and
   all of them read concurrently.
+- `JournalEntry` holds one union member per kind that holds changes, and
+  `access/catalog.test.ts` checks that list and the limit of the entry shape.
 - Wire views `ChangeView` and `SubjectView` decode a change type or kind added
   after a client was built as `unknown`.
 

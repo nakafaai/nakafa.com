@@ -6,6 +6,8 @@ export const CARD = '[data-slot="card"]';
 export const BUBBLE = '[data-slot="bubble"]';
 /** The box inside a bubble that holds its words. */
 export const BUBBLE_CONTENT = '[data-slot="bubble-content"]';
+/** A row of a chat transcript: one for each message, and the alert of a failed turn. */
+export const TRANSCRIPT_ROW = '[data-slot="message-scroller-item"]';
 /**
  * What Markdown makes of text: emphasis, code, links, lists and headings. The
  * words of a learner, shown as they wrote them, make none of these.
@@ -31,7 +33,7 @@ export const DRAWER_PANEL = '[data-slot="drawer-panel"]';
 export const SHEET_POPUP = '[data-slot="sheet-popup"][data-open]';
 /** A deferred 3D line scene inside a lesson card. */
 export const LINE_SCENE = '[data-slot="line-scene"]';
-/** The controls below a 3D scene: its grid, its rotation, and its readout. */
+/** The footer of a 3D scene: its grid and its automatic rotation. */
 export const COORDINATE_CONTROLS = "[data-coordinate-controls]";
 /** The sidebar trigger in a Quran surah's header, which opens its outline. */
 export const SURAH_SIDEBAR_TRIGGER =
@@ -44,6 +46,8 @@ export const MARKETING_PAGE = 'main[data-marketing-page="true"]';
 export const NINA_SECTION = "#nina";
 /** A visual card, which wraps a lesson's lab, chart, or 3D scene. */
 export const VISUAL_CARD = '[data-slot="visual-card"]';
+/** The controls and readouts in a visual card's body, under its scene. */
+export const VISUAL_CARD_CONTROLS = '[data-slot="visual-card-controls"]';
 /** The place of Nina on a full-page state, which holds her and the things beside her. */
 export const STATE_FIGURE = '[data-slot="empty-icon"]';
 /** A link to a subject lesson, such as the neighbors that lesson pagination shows. */

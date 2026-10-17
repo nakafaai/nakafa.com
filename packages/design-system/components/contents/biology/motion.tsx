@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { type ReactNode, useRef } from "react";
@@ -7,6 +8,7 @@ import type { Group } from "three";
 
 /**
  * Rotates an educational model slowly without hiding the first-read structure.
+ * With reduced motion the model keeps its first pose.
  */
 export function RotatingGroup({
   children,
@@ -16,9 +18,10 @@ export function RotatingGroup({
   speed?: number;
 }) {
   const ref = useRef<Group>(null);
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
   useFrame((_, delta) => {
-    if (!ref.current) {
+    if (calm || !ref.current) {
       return;
     }
 
@@ -34,7 +37,8 @@ export function RotatingGroup({
 
 /**
  * Makes a structure gently expand and contract so active biological material
- * reads as alive without needing state updates.
+ * reads as alive without needing state updates. With reduced motion the
+ * structure keeps its first size.
  */
 export function PulsingGroup({
   children,
@@ -49,9 +53,10 @@ export function PulsingGroup({
 }) {
   const ref = useRef<Group>(null);
   const timeRef = useRef(phase);
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
   useFrame((_, delta) => {
-    if (!ref.current) {
+    if (calm || !ref.current) {
       return;
     }
 
@@ -71,7 +76,8 @@ export function PulsingGroup({
 
 /**
  * Moves a nested structure up and down to make spores, droplets, and heat
- * indicators readable as processes instead of frozen icons.
+ * indicators readable as processes instead of frozen icons. With reduced motion
+ * the structure stays where it starts.
  */
 export function FloatingGroup({
   children,
@@ -86,9 +92,10 @@ export function FloatingGroup({
 }) {
   const ref = useRef<Group>(null);
   const timeRef = useRef(phase);
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
   useFrame((_, delta) => {
-    if (!ref.current) {
+    if (calm || !ref.current) {
       return;
     }
 

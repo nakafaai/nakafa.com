@@ -33,9 +33,8 @@ import {
   TEST_STAGE_SNAPSHOT_BATCH,
 } from "@repo/backend/test/snapshot/routes";
 import {
-  makeTryoutCatalogRow,
-  makeTryoutPlacementRow,
   makeTryoutSnapshotManifest,
+  makeTryoutSnapshotRows,
 } from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Struct } from "effect";
@@ -107,7 +106,7 @@ describe("contentRelease/snapshot/batch", () => {
         const rows =
           family === "quran"
             ? [yield* makeQuranSnapshotRow(snapshotId)]
-            : [makeTryoutCatalogRow("en"), makeTryoutPlacementRow("en")];
+            : yield* makeTryoutSnapshotRows();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>

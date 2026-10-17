@@ -52,9 +52,9 @@ const fixture = Effect.gen(function* () {
     analytics: "http://127.0.0.1:43312",
     backend: directory,
     configurationHash: "config",
-    databaseInode: 1,
+    databaseInode: 1n,
     directory,
-    directoryInode: 2,
+    directoryInode: 2n,
     environmentHash: "env",
     query: "http://127.0.0.1:43310",
     site: "http://127.0.0.1:43311",
@@ -199,6 +199,7 @@ describe("application process ownership", () => {
                 ...localConvexEnvironment,
                 AKSARA_AGENT_SIGNING_KEY_ID: runtime.signing.keyId,
                 AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
+                DATABASE_UDF_USER_TIMEOUT_SECONDS: "5",
                 FUNRUN_ISOLATE_ACTIVE_THREADS: String(
                   navigator.hardwareConcurrency
                 ),

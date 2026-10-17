@@ -123,6 +123,7 @@ export declare const api: {
             image?: string;
             mascot: string;
             name: string;
+            picture?: "animal" | "photo";
             plan: "free" | "pro";
             planCreditGrantId?: Id<"creditTransactions">;
             role?: "teacher" | "student" | "parent" | "administrator";
@@ -140,7 +141,12 @@ export declare const api: {
         "query",
         "public",
         { userId: Id<"users"> },
-        { image?: string; mascot: string; name: string } | null
+        {
+          image?: string;
+          mascot: string;
+          name: string;
+          picture?: "animal" | "photo";
+        } | null
       >;
     };
   };
@@ -333,6 +339,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      resolve: FunctionReference<
+        "query",
+        "public",
+        { classSlug: string; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
     };
     teachers: {
       assign: FunctionReference<
@@ -423,6 +443,7 @@ export declare const api: {
               image?: string | null;
               mascot: string;
               name: string;
+              picture?: "animal" | "photo";
             } | null;
             replyToUserId?: Id<"users">;
             slug: string;
@@ -433,6 +454,7 @@ export declare const api: {
               image?: string | null;
               mascot: string;
               name: string;
+              picture?: "animal" | "photo";
             } | null;
             userId: Id<"users">;
             viewerVote: -1 | 1 | null;
@@ -2552,6 +2574,87 @@ export declare const api: {
       };
     };
   };
+  editor: {
+    documents: {
+      create: FunctionReference<
+        "mutation",
+        "public",
+        {
+          content: string;
+          scope:
+            { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+          slug: string;
+        },
+        { id: Id<"editorDocuments"> }
+      >;
+      open: FunctionReference<
+        "query",
+        "public",
+        { clientId: string; documentId: Id<"editorDocuments">; slug: string },
+        {
+          client: { batch: string; version: number } | null;
+          snapshot: { content: string; version: number };
+          steps: Array<{ clientId: string; step: string; version: number }>;
+        }
+      >;
+    };
+    steps: {
+      since: FunctionReference<
+        "query",
+        "public",
+        {
+          clientId: string;
+          documentId: Id<"editorDocuments">;
+          slug: string;
+          version: number;
+        },
+        | {
+            _tag: "steps";
+            client: { batch: string; version: number } | null;
+            steps: Array<{ clientId: string; step: string; version: number }>;
+          }
+        | { _tag: "behind"; client: { batch: string; version: number } | null }
+      >;
+      submit: FunctionReference<
+        "mutation",
+        "public",
+        { batch: string; documentId: Id<"editorDocuments">; slug: string },
+        null
+      >;
+    };
+  };
+  identity: {
+    cards: {
+      issue: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; personId: Id<"tenantPeople">; slug: string },
+        { code: string; expiresAt: number; loginName: string }
+      >;
+      redeem: FunctionReference<
+        "mutation",
+        "public",
+        { code: string; deviceId: string; password: string; slug: string },
+        | { loginName: string; outcome: "redeemed" }
+        | {
+            outcome: "refused";
+            reason:
+              | "expired"
+              | "invalid"
+              | "passwordTooLong"
+              | "passwordTooShort"
+              | "rateLimited"
+              | "used";
+          }
+      >;
+      reissue: FunctionReference<
+        "mutation",
+        "public",
+        { personId: Id<"tenantPeople">; slug: string },
+        { code: string; expiresAt: number; loginName: string }
+      >;
+    };
+  };
   integrations: {
     clients: {
       create: FunctionReference<
@@ -2564,6 +2667,7 @@ export declare const api: {
             | "tenant.view"
             | "unit.manage"
             | "unit.view"
+            | "card.issue"
             | "person.invite"
             | "person.manage"
             | "person.view"
@@ -2571,6 +2675,10 @@ export declare const api: {
             | "period.view"
             | "cohort.manage"
             | "cohort.view"
+            | "promotion.apply"
+            | "promotion.approve"
+            | "promotion.prepare"
+            | "promotion.view"
             | "grant.revoke"
             | "grant.view"
             | "integration.manage"
@@ -2578,6 +2686,8 @@ export declare const api: {
             | "class.manage"
             | "class.view"
             | "visit.end"
+            | "document.edit"
+            | "document.view"
             | "invite.view"
             | "person.manage"
             | "person.view"
@@ -2593,6 +2703,8 @@ export declare const api: {
             | "class.create"
             | "class.list"
             | "visit.approve"
+            | "document.edit"
+            | "document.edit"
           >;
           name: string;
           scope:
@@ -2625,6 +2737,7 @@ export declare const api: {
               | "tenant.view"
               | "unit.manage"
               | "unit.view"
+              | "card.issue"
               | "person.invite"
               | "person.manage"
               | "person.view"
@@ -2632,6 +2745,10 @@ export declare const api: {
               | "period.view"
               | "cohort.manage"
               | "cohort.view"
+              | "promotion.apply"
+              | "promotion.approve"
+              | "promotion.prepare"
+              | "promotion.view"
               | "grant.revoke"
               | "grant.view"
               | "integration.manage"
@@ -2639,6 +2756,8 @@ export declare const api: {
               | "class.manage"
               | "class.view"
               | "visit.end"
+              | "document.edit"
+              | "document.view"
               | "invite.view"
               | "person.manage"
               | "person.view"
@@ -2654,6 +2773,8 @@ export declare const api: {
               | "class.create"
               | "class.list"
               | "visit.approve"
+              | "document.edit"
+              | "document.edit"
             >;
             createdAt: number;
             id: Id<"integrationClients">;
@@ -2708,55 +2829,24 @@ export declare const api: {
               | { kind: "system" };
             at: number;
             change:
-              | {
-                  contract: {
-                    contentLicense: string;
-                    dpaVersion: string;
-                    modules: Array<
-                      "classes" | "exams" | "bank" | "grades" | "reports"
-                    >;
-                    plan: "tenant" | "unit";
-                  };
-                  type: "tenant.provisioned";
-                }
-              | { country: string; currency: string; type: "tenant.locale.set" }
-              | {
-                  key: "emailDomains" | "nina" | "studentThreads";
-                  type: "tenant.policy.set";
-                }
-              | { type: "unit.created" }
-              | {
-                  contentLanguage: "en" | "id" | "de";
-                  timeZone: string;
-                  type: "unit.locale.set";
-                }
-              | { type: "unit.archived" }
-              | { type: "unit.unarchived" }
-              | { type: "person.created" }
-              | {
-                  invite: Id<"tenantInvites">;
-                  reason?: "break-glass";
-                  type: "person.invited";
-                }
-              | { method: "invite" | "operator"; type: "person.claimed" }
-              | { type: "person.released" }
-              | { reason?: "break-glass"; type: "person.removed" }
-              | { type: "person.renamed" }
-              | { cohort: Id<"tenantCohorts">; type: "person.placed" }
-              | {
-                  from: Id<"tenantCohorts">;
-                  to: Id<"tenantCohorts">;
-                  type: "person.moved";
-                }
-              | { invite: Id<"tenantInvites">; type: "invite.expired" }
-              | { invite: Id<"tenantInvites">; type: "invite.resent" }
-              | { invite: Id<"tenantInvites">; type: "invite.revoked" }
-              | { type: "period.created" }
-              | { type: "period.opened" }
-              | { type: "period.archived" }
+              | { type: "class.created" }
+              | { type: "class.renamed" }
+              | { type: "class.archived" }
+              | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
+              | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
+              | {
+                  assignment: "homeroom";
+                  person: Id<"tenantPeople">;
+                  type: "assignment.created";
+                }
+              | {
+                  assignment: "homeroom";
+                  person: Id<"tenantPeople">;
+                  type: "assignment.removed";
+                }
               | {
                   client: Id<"integrationClients">;
                   scope:
@@ -2772,23 +2862,35 @@ export declare const api: {
                   client: Id<"integrationClients">;
                   type: "integration.revoked";
                 }
-              | { type: "class.created" }
-              | { type: "class.renamed" }
-              | { type: "class.archived" }
-              | { teacher: Id<"tenantPeople">; type: "class.teacherAssigned" }
-              | { teacher: Id<"tenantPeople">; type: "class.teacherRemoved" }
+              | { type: "period.created" }
+              | { type: "period.opened" }
+              | { type: "period.archived" }
+              | { type: "person.created" }
               | {
-                  minutes: number;
-                  reason: "support" | "onboarding" | "incident";
-                  type: "visit.requested";
+                  invite: Id<"tenantInvites">;
+                  reason?: "break-glass";
+                  type: "person.invited";
                 }
               | {
-                  grant: Id<"tenantGrants">;
-                  person: Id<"tenantPeople">;
-                  type: "visit.approved";
+                  method: "card" | "invite" | "operator";
+                  type: "person.claimed";
                 }
-              | { type: "visit.declined" }
-              | { reason: "expired" | "left" | "revoked"; type: "visit.ended" }
+              | { type: "person.released" }
+              | { reason?: "break-glass"; type: "person.removed" }
+              | { type: "person.renamed" }
+              | { cohort: Id<"tenantCohorts">; type: "person.placed" }
+              | {
+                  from: Id<"tenantCohorts">;
+                  to: Id<"tenantCohorts">;
+                  type: "person.moved";
+                }
+              | { promotion: Id<"tenantPromotions">; type: "person.graduated" }
+              | { invite: Id<"tenantInvites">; type: "invite.expired" }
+              | { invite: Id<"tenantInvites">; type: "invite.resent" }
+              | { invite: Id<"tenantInvites">; type: "invite.revoked" }
+              | { card: Id<"loginCards">; type: "card.issued" }
+              | { card: Id<"loginCards">; type: "card.reissued" }
+              | { card: Id<"loginCards">; type: "card.redeemed" }
               | {
                   grant: Id<"tenantGrants">;
                   role: {
@@ -2820,10 +2922,62 @@ export declare const api: {
                   reason: "revoked" | "expired" | "replaced" | "left";
                   type: "grant.ended";
                 }
-              | { type: "tenant.suspended" }
-              | { type: "tenant.reactivated" }
               | { type: "person.reactivated" }
               | { type: "person.suspended" }
+              | { type: "promotion.applied" }
+              | { type: "promotion.approved" }
+              | { type: "promotion.cancelled" }
+              | { type: "promotion.created" }
+              | { type: "promotion.opened" }
+              | { type: "promotion.planned" }
+              | { person: Id<"tenantPeople">; type: "promotion.studentPlanned" }
+              | { type: "promotion.submitted" }
+              | {
+                  reason: "cohorts" | "students" | "homeroom" | "other";
+                  type: "promotion.returned";
+                }
+              | {
+                  step: "archive" | "cohorts" | "place" | "homeroom";
+                  type: "promotion.undone";
+                }
+              | {
+                  contract: {
+                    contentLicense: string;
+                    dpaVersion: string;
+                    modules: Array<
+                      "classes" | "exams" | "bank" | "grades" | "reports"
+                    >;
+                    plan: "tenant" | "unit";
+                  };
+                  type: "tenant.provisioned";
+                }
+              | { country: string; currency: string; type: "tenant.locale.set" }
+              | {
+                  key: "emailDomains" | "nina" | "studentThreads";
+                  type: "tenant.policy.set";
+                }
+              | { type: "tenant.suspended" }
+              | { type: "tenant.reactivated" }
+              | { type: "unit.created" }
+              | {
+                  contentLanguage: "en" | "id" | "de";
+                  timeZone: string;
+                  type: "unit.locale.set";
+                }
+              | { type: "unit.archived" }
+              | { type: "unit.unarchived" }
+              | {
+                  minutes: number;
+                  reason: "support" | "onboarding" | "incident";
+                  type: "visit.requested";
+                }
+              | {
+                  grant: Id<"tenantGrants">;
+                  person: Id<"tenantPeople">;
+                  type: "visit.approved";
+                }
+              | { type: "visit.declined" }
+              | { reason: "expired" | "left" | "revoked"; type: "visit.ended" }
               | { type: string };
             id: Id<"journalEntries">;
             subject:
@@ -2832,10 +2986,12 @@ export declare const api: {
               | { id: Id<"tenantPeople">; kind: "person" }
               | { id: Id<"tenantPeriods">; kind: "period" }
               | { id: Id<"tenantCohorts">; kind: "cohort" }
+              | { id: Id<"tenantPromotions">; kind: "promotion" }
               | { id: Id<"tenantGrants">; kind: "grant" }
               | { id: Id<"integrationClients">; kind: "integration" }
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"tenantVisits">; kind: "visit" }
+              | { id: Id<"editorDocuments">; kind: "document" }
               | { kind: string };
             subjectName: string | null;
           }>;
@@ -2985,6 +3141,77 @@ export declare const api: {
               reasoning?: number;
             }>;
           } | null;
+        }
+      >;
+      turns: FunctionReference<
+        "query",
+        "public",
+        {
+          chatId: Id<"chats">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          shareToken?: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            credits?: number;
+            order: number;
+            promptMessageId: string;
+            promptedAt?: number;
+            remembered?: number;
+            state:
+              | { status: "queued" }
+              | { startedAt: number; status: "running" }
+              | { finishedAt: number; status: "complete" }
+              | {
+                  finishedAt: number;
+                  reason?:
+                    | "provider-busy"
+                    | "provider-unavailable"
+                    | "service-configuration"
+                    | "request-rejected"
+                    | "input-too-large"
+                    | "response-timeout"
+                    | "content-blocked"
+                    | "response-limit"
+                    | "interrupted"
+                    | "unknown";
+                  status: "failed";
+                }
+              | { finishedAt: number; status: "cancelled" };
+            suggestions?: Array<string>;
+            tokens?: { input?: number; output?: number; total?: number };
+            usage: Array<{
+              agent:
+                | "nina"
+                | "nakafa"
+                | "research"
+                | "math"
+                | "math-repair"
+                | "suggestions"
+                | "title"
+                | "nina-repair"
+                | "memory";
+              cached?: number;
+              calls: number;
+              cost?: number;
+              input: number;
+              model: string;
+              output: number;
+              provider: string;
+              reasoning?: number;
+            }>;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
         }
       >;
     };
@@ -3184,6 +3411,73 @@ export declare const api: {
               };
         }
       >;
+      page: FunctionReference<
+        "query",
+        "public",
+        {
+          chatId: Id<"chats">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          shareToken?: string;
+          streamArgs?:
+            | { kind: "list"; startOrder?: number }
+            | {
+                cursors: Array<{ cursor: number; streamId: string }>;
+                kind: "deltas";
+              };
+          threadId: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            agentName?: string;
+            id: string;
+            key: string;
+            order: number;
+            parts: Array<any>;
+            role: "user" | "assistant" | "system";
+            status: "streaming" | "pending" | "success" | "failed";
+            stepOrder: number;
+            text: string;
+            userId?: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+          streams:
+            | {
+                kind: "list";
+                messages: Array<{
+                  agentName?: string;
+                  format?: "UIMessageChunk" | "TextStreamPart";
+                  model?: string;
+                  order: number;
+                  provider?: string;
+                  providerOptions?: Record<string, Record<string, any>>;
+                  status: "streaming" | "finished" | "aborted";
+                  stepOrder: number;
+                  streamId: string;
+                  userId?: string;
+                }>;
+              }
+            | {
+                deltas: Array<{
+                  end: number;
+                  parts: Array<any>;
+                  start: number;
+                  streamId: string;
+                }>;
+                kind: "deltas";
+              };
+        }
+      >;
     };
     turns: {
       start: FunctionReference<
@@ -3241,6 +3535,12 @@ export declare const api: {
       >;
     };
     uploads: {
+      release: FunctionReference<
+        "mutation",
+        "public",
+        { uploadId: Id<"ninaUploads"> },
+        null
+      >;
       save: FunctionReference<
         "action",
         "public",
@@ -3257,6 +3557,86 @@ export declare const api: {
         },
         Id<"ninaUploads">
       >;
+    };
+  };
+  notifications: {
+    inbox: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            changeType: "person.invited";
+            createdAt: number;
+            id: Id<"notifications">;
+            readAt?: number;
+            subject:
+              | { id: Id<"tenants">; kind: "tenant" }
+              | { id: Id<"tenantUnits">; kind: "unit" }
+              | { id: Id<"tenantPeople">; kind: "person" }
+              | { id: Id<"tenantPeriods">; kind: "period" }
+              | { id: Id<"tenantCohorts">; kind: "cohort" }
+              | { id: Id<"tenantPromotions">; kind: "promotion" }
+              | { id: Id<"tenantGrants">; kind: "grant" }
+              | { id: Id<"integrationClients">; kind: "integration" }
+              | { id: Id<"classes">; kind: "class" }
+              | { id: Id<"tenantVisits">; kind: "visit" }
+              | { id: Id<"editorDocuments">; kind: "document" }
+              | { kind: string };
+            tenant: {
+              kind: "school" | "foundation";
+              name: string;
+              slug: string;
+              status: "active" | "suspended";
+            };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      read: FunctionReference<
+        "mutation",
+        "public",
+        { notificationId: Id<"notifications"> },
+        {
+          changeType: "person.invited";
+          createdAt: number;
+          id: Id<"notifications">;
+          readAt?: number;
+          subject:
+            | { id: Id<"tenants">; kind: "tenant" }
+            | { id: Id<"tenantUnits">; kind: "unit" }
+            | { id: Id<"tenantPeople">; kind: "person" }
+            | { id: Id<"tenantPeriods">; kind: "period" }
+            | { id: Id<"tenantCohorts">; kind: "cohort" }
+            | { id: Id<"tenantPromotions">; kind: "promotion" }
+            | { id: Id<"tenantGrants">; kind: "grant" }
+            | { id: Id<"integrationClients">; kind: "integration" }
+            | { id: Id<"classes">; kind: "class" }
+            | { id: Id<"tenantVisits">; kind: "visit" }
+            | { id: Id<"editorDocuments">; kind: "document" }
+            | { kind: string };
+          tenant: {
+            kind: "school" | "foundation";
+            name: string;
+            slug: string;
+            status: "active" | "suspended";
+          };
+        }
+      >;
+      readAll: FunctionReference<"mutation", "public", {}, null>;
     };
   };
   onboarding: {
@@ -3685,6 +4065,34 @@ export declare const api: {
     };
   };
   tenancy: {
+    assignments: {
+      assign: FunctionReference<
+        "mutation",
+        "public",
+        {
+          cohortId: Id<"tenantCohorts">;
+          personId: Id<"tenantPeople">;
+          slug: string;
+        },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"tenantAssignments">;
+          kind: "homeroom";
+          personId: Id<"tenantPeople">;
+        }
+      >;
+      unassign: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"tenantAssignments">;
+          kind: "homeroom";
+          personId: Id<"tenantPeople">;
+        } | null
+      >;
+    };
     cohorts: {
       archive: FunctionReference<
         "mutation",
@@ -4042,6 +4450,586 @@ export declare const api: {
         }
       >;
     };
+    promotion: {
+      apply: {
+        apply: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+      draft: {
+        create: FunctionReference<
+          "mutation",
+          "public",
+          {
+            periodId: Id<"tenantPeriods">;
+            slug: string;
+            targetPeriodId: Id<"tenantPeriods">;
+          },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+        get: FunctionReference<
+          "query",
+          "public",
+          { periodId: Id<"tenantPeriods">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          } | null
+        >;
+        plan: FunctionReference<
+          "mutation",
+          "public",
+          {
+            promotionId: Id<"tenantPromotions">;
+            slug: string;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            targets: Array<{ grade: number; name: string }>;
+          },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+      moves: {
+        moves: FunctionReference<
+          "query",
+          "public",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            promotionId: Id<"tenantPromotions">;
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              personId: Id<"tenantPeople">;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        setMove: FunctionReference<
+          "mutation",
+          "public",
+          {
+            personId: Id<"tenantPeople">;
+            promotionId: Id<"tenantPromotions">;
+            slug: string;
+            to:
+              | { kind: "cohort"; name: string }
+              | { kind: "graduate" }
+              | { kind: "stay" }
+              | null;
+          },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+      review: {
+        approve: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+        cancel: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+        returnToDraft: FunctionReference<
+          "mutation",
+          "public",
+          {
+            promotionId: Id<"tenantPromotions">;
+            reason: "cohorts" | "students" | "homeroom" | "other";
+            slug: string;
+          },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+        submit: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+      undo: {
+        undo: FunctionReference<
+          "mutation",
+          "public",
+          { promotionId: Id<"tenantPromotions">; slug: string },
+          {
+            id: Id<"tenantPromotions">;
+            progress: {
+              cursor: string | null;
+              direction: "apply" | "undo" | null;
+              done: Array<"archive" | "cohorts" | "place" | "homeroom">;
+              failure:
+                | "AccessDenied"
+                | "CohortHasHomeroom"
+                | "CohortLimit"
+                | "CohortNameTaken"
+                | "PeriodActive"
+                | "PersonAlreadyPlaced"
+                | "PersonGraduated"
+                | "PersonNotStudent"
+                | "PersonNotTeacher"
+                | "PersonPlacementLimit"
+                | "PromotionCohortOccupied"
+                | "PromotionPlanInvalid"
+                | "SourcePeriodInvalid"
+                | "TeacherHasHomeroom"
+                | null;
+              movedAt: number;
+              running: boolean;
+              step: "archive" | "cohorts" | "place" | "homeroom" | null;
+            };
+            returnReason: "cohorts" | "students" | "homeroom" | "other" | null;
+            sourcePeriodId: Id<"tenantPeriods">;
+            sources: Array<{
+              cohortId: Id<"tenantCohorts">;
+              homeroom: boolean;
+              to:
+                | { kind: "cohort"; name: string }
+                | { kind: "graduate" }
+                | { kind: "stay" };
+            }>;
+            state:
+              | "draft"
+              | "submitted"
+              | "approved"
+              | "applied"
+              | "opened"
+              | "cancelled";
+            targetPeriodId: Id<"tenantPeriods">;
+            targets: Array<{ grade: number; name: string }>;
+          }
+        >;
+      };
+    };
     settings: {
       setLocale: FunctionReference<
         "mutation",
@@ -4214,7 +5202,7 @@ export declare const api: {
                   text: string;
                 }
               | null;
-            version?: number;
+            version: number;
           },
           null
         >;
@@ -6121,6 +7109,12 @@ export declare const api: {
         "public",
         { mascot: string },
         { mascot: string }
+      >;
+      setPicture: FunctionReference<
+        "mutation",
+        "public",
+        { picture: "animal" | "photo" },
+        null
       >;
       syncUserInfoForChat: FunctionReference<
         "mutation",
@@ -8649,6 +9643,32 @@ export declare const internal: {
       };
     };
   };
+  editor: {
+    deletion: {
+      document: FunctionReference<
+        "mutation",
+        "internal",
+        { documentId: Id<"editorDocuments"> },
+        { done: boolean }
+      >;
+    };
+    fold: {
+      fold: FunctionReference<
+        "mutation",
+        "internal",
+        { documentId: Id<"editorDocuments"> },
+        { folded: number; skipped: number }
+      >;
+    };
+    prune: {
+      sweep: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null },
+        { deleted: number; done: boolean; scanned: number }
+      >;
+    };
+  };
   emails: {
     invite: {
       delivery: {
@@ -8807,6 +9827,60 @@ export declare const internal: {
     };
   };
   nina: {
+    brief: {
+      read: FunctionReference<
+        "query",
+        "internal",
+        {
+          chatId: Id<"chats">;
+          now: number;
+          order: number;
+          promptMessageId: string;
+          topics: Array<string>;
+          userId: Id<"users">;
+        },
+        {
+          learner: {
+            paused: boolean;
+            portrait?: string;
+            profile: {
+              focus?: "learning" | "tryout";
+              region?:
+                | "indonesia"
+                | "singapore"
+                | "united-kingdom"
+                | "germany"
+                | "united-states"
+                | "international";
+              tryout?: {
+                correct: number;
+                exam: string;
+                finishedAt: number;
+                score: number;
+                sections: Array<{
+                  correct: number;
+                  key: string;
+                  total: number;
+                }>;
+                set: string;
+                status: "provisional" | "official";
+                total: number;
+              };
+              tryoutCountry?: string;
+            };
+            recalled: Array<{
+              confirmedAt: number;
+              id: Id<"ninaMemories">;
+              kind?: "level" | "goal" | "style" | "struggle" | "situation";
+              text: string;
+              title?: string;
+            }>;
+          };
+          summary: { text: string; throughOrder: number } | null;
+          uncovered: Array<{ order: number; retryOf?: number }>;
+        }
+      >;
+    };
     focus: {
       read: FunctionReference<
         "query",
@@ -8975,6 +10049,7 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
+            history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -9065,6 +10140,7 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
+            history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9190,6 +10266,7 @@ export declare const internal: {
             credits: number;
             creditsResetAt: number;
             fingerprint: string;
+            history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -9280,6 +10357,7 @@ export declare const internal: {
             chatId: Id<"chats">;
             credits?: number;
             fingerprint?: string;
+            history?: { tokens: number; turns: number; unread?: number };
             order: number;
             page?: {
               locale: "en" | "id" | "de";
@@ -9396,6 +10474,7 @@ export declare const internal: {
             | "response-limit"
             | "interrupted"
             | "unknown";
+          history?: { tokens: number; turns: number; unread?: number };
           timing?: {
             claimedMs?: number;
             progressMs?: number;
@@ -9514,48 +10593,6 @@ export declare const internal: {
         { id: Id<"ninaMemoryRestores"> },
         null
       >;
-      read: FunctionReference<
-        "query",
-        "internal",
-        {
-          now: number;
-          said: string;
-          topics: Array<string>;
-          userId: Id<"users">;
-        },
-        {
-          paused: boolean;
-          portrait?: string;
-          profile: {
-            focus?: "learning" | "tryout";
-            region?:
-              | "indonesia"
-              | "singapore"
-              | "united-kingdom"
-              | "germany"
-              | "united-states"
-              | "international";
-            tryout?: {
-              correct: number;
-              exam: string;
-              finishedAt: number;
-              score: number;
-              sections: Array<{ correct: number; key: string; total: number }>;
-              set: string;
-              status: "provisional" | "official";
-              total: number;
-            };
-            tryoutCountry?: string;
-          };
-          recalled: Array<{
-            confirmedAt: number;
-            id: Id<"ninaMemories">;
-            kind?: "level" | "goal" | "style" | "struggle" | "situation";
-            text: string;
-            title?: string;
-          }>;
-        }
-      >;
     };
     portrait: {
       build: {
@@ -9625,6 +10662,34 @@ export declare const internal: {
         null
       >;
     };
+    sealed: {
+      message: FunctionReference<
+        "query",
+        "internal",
+        { messageId: string; owner: Id<"users"> },
+        any | null
+      >;
+      thread: FunctionReference<
+        "query",
+        "internal",
+        {
+          excludeToolMessages?: boolean;
+          owner: Id<"users">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          statuses?: Array<"failed" | "pending" | "success">;
+          threadId: string;
+          upToAndIncludingMessageId?: string;
+        },
+        { continueCursor: string; isDone: boolean; page: Array<any> }
+      >;
+    };
     summaries: {
       anchor: FunctionReference<
         "query",
@@ -9675,7 +10740,12 @@ export declare const internal: {
         { uploadId: Id<"ninaUploads"> },
         null
       >;
-      reserve: FunctionReference<"mutation", "internal", {}, Id<"ninaUploads">>;
+      reserve: FunctionReference<
+        "mutation",
+        "internal",
+        { filename: string },
+        { storedFilename: string; uploadId: Id<"ninaUploads"> }
+      >;
     };
     usage: {
       record: FunctionReference<
@@ -9730,6 +10800,33 @@ export declare const internal: {
             turns: number;
           }>;
         }
+      >;
+    };
+  };
+  notifications: {
+    consume: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { tenantId: Id<"tenants"> },
+        null
+      >;
+      sweep: FunctionReference<"mutation", "internal", {}, null>;
+    };
+    purge: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { personId: Id<"tenantPeople"> },
+        null
+      >;
+    };
+    read: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; personId: Id<"tenantPeople">; readAt: number },
+        null
       >;
     };
   };
@@ -9905,6 +11002,16 @@ export declare const internal: {
         null
       >;
     };
+    promotion: {
+      run: {
+        run: FunctionReference<
+          "mutation",
+          "internal",
+          { actorId: Id<"tenantPeople">; promotionId: Id<"tenantPromotions"> },
+          null
+        >;
+      };
+    };
     provision: {
       open: FunctionReference<
         "mutation",
@@ -10039,6 +11146,7 @@ export declare const internal: {
           image?: string;
           mascot: string;
           name: string;
+          picture?: "animal" | "photo";
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
@@ -10064,6 +11172,7 @@ export declare const internal: {
           image?: string;
           mascot: string;
           name: string;
+          picture?: "animal" | "photo";
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";

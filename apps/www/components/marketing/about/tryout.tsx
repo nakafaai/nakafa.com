@@ -1,21 +1,20 @@
-import { MarkdownContent } from "@repo/design-system/components/markdown/content";
-import {
-  Message,
-  MessageContent,
-} from "@repo/design-system/components/ui/message";
 import { useTranslations } from "next-intl";
-import { NinaPrompt } from "@/components/ai/message/prompt";
+import { Talk } from "@/components/marketing/about/talk.client";
+import {
+  TryoutDemo,
+  TryoutDemoQuestion,
+  TryoutDemoReply,
+} from "@/components/marketing/about/tryout/demo.client";
 import type { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
-import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
 
 /** The featured question and its response, as the catalog reads them. */
 type FeaturedTryout = Awaited<ReturnType<typeof readFeaturedTryout>>;
 
 /**
- * The practice test row: a real question with its real choices and response
- * on one side, and a short chat with Nina on the other. On a phone the chat
- * comes first.
+ * The practice test row: a real question with its real choices on one side,
+ * which answers itself once it is on screen, and a short talk with Nina on the
+ * other, whose answer follows the question's. On a phone the talk comes first.
  */
 export function Tryout({ value }: { value: FeaturedTryout }) {
   const t = useTranslations("Landing");
@@ -23,40 +22,39 @@ export function Tryout({ value }: { value: FeaturedTryout }) {
 
   return (
     <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="tryout">
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
-        <div className="grid min-w-0 content-center gap-8">
-          <div className="grid gap-4">
-            <Message align="end">
-              <NinaPrompt text={t("tryout-ask")} />
-            </Message>
-            <Message>
-              <MessageContent>
-                <MarkdownContent id="home-tryout-answer" variant="chat">
-                  {t("tryout-answer")}
-                </MarkdownContent>
-              </MessageContent>
-            </Message>
+      <TryoutDemo>
+        <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
+          <div className="grid min-w-0 content-center gap-8">
+            <Talk ask={t("tryout-ask")}>
+              <TryoutDemoReply
+                words={{
+                  right: t("tryout-right"),
+                  waiting: t("tryout-answer"),
+                  wrong: t("tryout-wrong"),
+                }}
+              />
+            </Talk>
+            <div className="grid gap-2">
+              <h2 className="text-balance text-2xl tracking-tight">
+                {t("tryout-title")}
+              </h2>
+              <p className="max-w-md text-pretty text-base text-muted-foreground">
+                {t("tryout-lead")}
+              </p>
+            </div>
           </div>
-          <div className="grid gap-3">
-            <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
-              {t("tryout-title")}
-            </h2>
-            <p className="max-w-xl text-pretty text-base text-muted-foreground">
-              {t("tryout-lead")}
-            </p>
+          <div className="min-w-0 lg:order-first">
+            <section className="my-6">{value.question}</section>
+            <section className="my-8">
+              <TryoutDemoQuestion
+                id={responseId}
+                labels={renderTryoutResponseLabels(responseId, value.response)}
+                responseSpec={value.response}
+              />
+            </section>
           </div>
         </div>
-        <div className="min-w-0 lg:order-first">
-          <section className="my-6">{value.question}</section>
-          <section className="my-8">
-            <TryoutResponsePreview
-              id={responseId}
-              labels={renderTryoutResponseLabels(responseId, value.response)}
-              responseSpec={value.response}
-            />
-          </section>
-        </div>
-      </div>
+      </TryoutDemo>
     </section>
   );
 }

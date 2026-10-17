@@ -8,7 +8,7 @@ import { Effect, Schema } from "effect";
 // @vitest-environment node
 
 import workflowTest from "@convex-dev/workflow/test";
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { cleanupProofWorkflow } from "@repo/backend/confect/contentRelease/proof/coordinator";
@@ -18,74 +18,77 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
   TEST_PROOF_RENDERER,
-  testEmptyManifest,
-  testSignedRelease,
+  testSignedEmptyRelease,
 } from "@repo/backend/test/content/proof";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
 
 const releaseId = ReleaseIdSchema.make("release-proof-coordinator");
-const release = testSignedRelease(testEmptyManifest(releaseId));
 const abort = internal.contentRelease.manifest.abort;
 const poll = internal.contentRelease.proof.poll.poll;
 afterEach(() => {
   vi.useRealTimers();
 });
 describe("contentRelease/proof/coordinator", () => {
-  it.each([false, true])(
+  it.effect.each([false, true])(
     "retains running evidence and aborts with prior cancellation %s",
-    async (cancelFirst) => {
-      vi.useFakeTimers();
-      const t = convexTest(schema, convexModules);
-      workflowTest.register(t);
-      await t.mutation((ctx) =>
-        insertSignedCandidate(
-          ctx,
-          releaseId,
-          release,
-          Schema.encodeSync(
-            Schema.fromJsonString(RendererManifestEnvelopeSchema)
-          )(TEST_PROOF_RENDERER)
-        )
-      );
-      await t.mutation(poll, {
-        manifestHash: release.manifestHash,
-        releaseId,
-      });
-      const stored = await t.query((ctx) =>
-        Effect.runPromise(
-          loadRelease(releaseId).pipe(
-            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
-          )
-        )
-      );
-      const workflowId = stored?.proofWorkflowId;
-      if (!workflowId) {
-        throw new Error("Expected proof workflow.");
-      }
-      await expect(
-        t.mutation((ctx) =>
-          Effect.runPromise(
-            cleanupProofWorkflow(workflowId).pipe(
-              Effect.provide(
-                RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+    (cancelFirst) =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const release = yield* testSignedEmptyRelease(releaseId);
+        yield* Effect.promise(async () => {
+          vi.useFakeTimers();
+          const t = convexTest(schema, convexModules);
+          workflowTest.register(t);
+          await t.mutation((ctx) =>
+            insertSignedCandidate(
+              ctx,
+              releaseId,
+              release,
+              Schema.encodeSync(
+                Schema.fromJsonString(RendererManifestEnvelopeSchema)
+              )(TEST_PROOF_RENDERER)
+            )
+          );
+          await t.mutation(poll, {
+            manifestHash: release.manifestHash,
+            releaseId,
+          });
+          const stored = await t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              loadRelease(releaseId).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
               )
             )
-          )
-        )
-      ).rejects.toMatchObject({
-        code: "CONTENT_RELEASE_INTEGRITY",
-      });
-      if (cancelFirst) {
-        await t.mutation((ctx) => workflow.cancel(ctx, workflowId));
-      }
-      await expect(
-        t.mutation(abort, {
-          releaseId,
-        })
-      ).resolves.toMatchObject({
-        complete: true,
-      });
-    }
+          );
+          const workflowId = stored?.proofWorkflowId;
+          assert(workflowId, "Expected proof workflow.");
+          await expect(
+            t.mutation((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                cleanupProofWorkflow(workflowId).pipe(
+                  Effect.provide(
+                    RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                  )
+                )
+              )
+            )
+          ).rejects.toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
+          if (cancelFirst) {
+            await t.mutation((ctx) => workflow.cancel(ctx, workflowId));
+          }
+          await expect(
+            t.mutation(abort, {
+              releaseId,
+            })
+          ).resolves.toMatchObject({
+            complete: true,
+          });
+        });
+      })
   );
 });

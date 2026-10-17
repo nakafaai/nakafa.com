@@ -24,62 +24,88 @@ import {
   InputGroupAddon,
   InputGroupButton,
 } from "@repo/design-system/components/ui/input-group";
+import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
 import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import {
+  type PromptInputMessage,
+  submitPromptInput,
+} from "@repo/design-system/lib/prompt-input/submission";
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useOptimistic, useTransition } from "react";
-import { toast } from "sonner";
+import { type ReactNode, useState } from "react";
 import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
+import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
 
 interface Props {
   autoFocus?: boolean;
   children?: ReactNode;
   className?: string;
   disabled?: boolean;
+  onStop?: () => void;
   onSubmit: (message: PromptInputMessage) => boolean | Promise<boolean>;
   status?: ChatStatus;
 }
 
-/** One attachment-capable composer for Nina's home, conversation and sheet. */
+/**
+ * One attachment-capable composer for Nina's home, conversation and sheet. While
+ * Nina streams, the button stops the answer through `onStop` and never submits,
+ * so a key press in the text field cannot stop it.
+ */
 export function NinaInput({
   autoFocus,
   children,
   className,
   disabled,
+  onStop,
   onSubmit,
   status,
 }: Props) {
   const t = useTranslations("Ai");
+  const composerKey = useAi((state) => state.composerKey);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
-  const [submittedFiles, hideSubmittedFiles] = useOptimistic<readonly string[]>(
-    []
-  );
-  const [, startTransition] = useTransition();
+  const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
+  // While Nina answers, the button stops the reply and a press sends no text.
+  const answering = status === "streaming";
+  const stopping = answering && !disabled;
 
   function handleSubmit(message: PromptInputMessage) {
+    const refusal = promptRefusal(message.text, answering);
+    if (Option.isSome(refusal)) {
+      Effect.runFork(
+        reportNinaFailure(refusal.value, {
+          description: "failure-message-size.description",
+          title: "failure-message-size.title",
+        })
+      );
+      return false;
+    }
     const admission = onSubmit(message);
     if (admission === false) {
       return false;
     }
-    startTransition(async () => {
-      hideSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
-      await admission;
-    });
-    return admission;
+    // The submitted files leave the tray while the message is admitted, and
+    // come back if it is refused. No transition holds them: one that waits for
+    // the admission would hold every navigation the learner makes meanwhile.
+    setSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
+    return Promise.resolve(admission).finally(() => setSubmittedFiles([]));
   }
 
+  // The files of a composer live in the state of its PromptInput, and a new key
+  // is how React starts that state over. The key changes with the text of the
+  // draft, when the draft stops belonging to the learner who is signed in, so
+  // every surface of this composer drops the files the previous learner picked.
   return (
     <PromptInput
       accept={Arr.join(NinaFileType.literals, ",")}
+      fileInputLabel={t("attach-files")}
+      key={composerKey}
       maxFileSize={NINA_FILE_SIZE}
       maxFiles={NINA_FILE_COUNT}
       multiple
-      onError={() => toast.error(t("attachment-rejected"))}
       onSubmit={handleSubmit}
     >
       {children}
@@ -93,7 +119,8 @@ export function NinaInput({
         <PromptInputTextarea
           aria-label={t("text-placeholder")}
           autoFocus={autoFocus}
-          className="text-(length:--text-chat) md:text-(length:--text-chat) px-3 py-3"
+          className="text-(length:--text-chat) md:text-(length:--text-chat) max-h-[min(12rem,35dvh)] px-3 py-3"
+          dir="auto"
           onChange={(event) => setText(event.target.value)}
           onFocus={() =>
             // Load the stylesheet's math faces before streamed formulas arrive.
@@ -116,22 +143,15 @@ export function NinaInput({
           <NinaAttach />
           <div className="flex items-center gap-1">
             <InputGroupButton
-              aria-label={
-                status === "streaming" && !disabled
-                  ? t("stop-response")
-                  : t("send-message")
-              }
+              aria-label={stopping ? t("stop-response") : t("send-message")}
               className="rounded-full"
               disabled={disabled}
+              onClick={stopping ? onStop : undefined}
               size="icon"
-              type="submit"
+              type={stopping ? "button" : "submit"}
               variant="default"
             >
-              <HugeIcons
-                icon={
-                  status === "streaming" && !disabled ? StopIcon : ArrowUp02Icon
-                }
-              />
+              <HugeIcons icon={stopping ? StopIcon : ArrowUp02Icon} />
             </InputGroupButton>
           </div>
         </InputGroupAddon>
@@ -150,6 +170,12 @@ export function NinaSuggestions({
   const text = useAi((state) => state.text);
   const hasFiles = usePromptInputAttachments(
     (attachments) => attachments.files.length > 0
+  );
+  const dismissRefusals = usePromptInputAttachments(
+    (attachments) => attachments.dismissRefusals
+  );
+  const refusals = usePromptInputAttachments(
+    (attachments) => attachments.refusals
   );
   if (text.trim() || hasFiles) {
     return null;
@@ -176,11 +202,24 @@ export function NinaSuggestions({
     <div className="flex flex-col gap-2 pb-4">
       {Arr.map(suggestions, (suggestion) => (
         <Button
-          aria-label={suggestion.prompt}
-          className="group w-full justify-start font-normal shadow-none"
+          className="group h-auto min-h-9 w-full justify-start whitespace-normal py-1.5 font-normal shadow-none"
           disabled={disabled}
           key={suggestion.label}
-          onClick={() => onSubmit({ text: suggestion.prompt })}
+          onClick={(event) => {
+            // A suggestion is a send from this composer, so it takes the refused
+            // chips in the tray the same way the composer's own Send does.
+            runPromptInputProgram(
+              submitPromptInput({
+                dismissRefusals,
+                event,
+                files: [],
+                onSubmit,
+                onSuccess: Fn.constVoid,
+                refusals,
+                text: suggestion.prompt,
+              })
+            );
+          }}
           type="button"
           variant="outline"
         >

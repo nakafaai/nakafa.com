@@ -1,5 +1,5 @@
 import type { JSONValue } from "ai";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, HashSet, Result, Schema } from "effect";
 
 /** JSON value typed exactly as the AI SDK's `JSONValue`. */
 const JsonValueSchema: Schema.Codec<JSONValue> = Schema.suspend(() =>
@@ -36,12 +36,26 @@ export const PromptInputFileSchema = Schema.Struct({
 });
 /** A selected browser file with an input-owned preview. */
 export type PromptInputFile = typeof PromptInputFileSchema.Type;
-/** A local file constraint reported before an attachment is accepted. */
+/**
+ * Why a chosen file is not attached: its type is not accepted, it is empty, it
+ * is larger than the size limit, or the files already attached leave no room.
+ */
+const PromptInputFileConstraintCode = Schema.Literals([
+  "accept",
+  "empty",
+  "max_file_size",
+  "max_files",
+]);
+/**
+ * A local file constraint reported when files are not attached. `files` names
+ * the files that broke it, so one pick reports each reason once. The words that
+ * say the reason belong to the caller, in its language, not to this module.
+ */
 export class PromptInputFileConstraintError extends Schema.TaggedError<PromptInputFileConstraintError>()(
   "PromptInputFileConstraintError",
   {
-    code: Schema.Literals(["max_files", "max_file_size", "accept"]),
-    message: Schema.String,
+    code: PromptInputFileConstraintCode,
+    files: Schema.Array(Schema.String),
   }
 ) {}
 const ValidatePromptInputFilesOptionsSchema = Schema.Struct({
@@ -54,11 +68,24 @@ const ValidatePromptInputFilesOptionsSchema = Schema.Struct({
 /** Inputs used to validate one picker, paste, or drop operation. */
 type ValidatePromptInputFilesOptions =
   typeof ValidatePromptInputFilesOptionsSchema.Type;
+/**
+ * A file that a pick refused: its name, the reason, and the id of its chip. A
+ * refused file is never attached, so it never uploads and it never blocks the
+ * files that were attached.
+ */
+export const PromptInputRefusalSchema = Schema.Struct({
+  code: PromptInputFileConstraintCode,
+  id: Schema.String,
+  name: Schema.String,
+});
+/** A refused file a composer shows until its learner removes it, picks again, or sends. */
+export type PromptInputRefusal = typeof PromptInputRefusalSchema.Type;
+
 const PromptInputFileSelectionSchema = Schema.Struct({
   files: Schema.Array(Schema.instanceOf(File)),
-  warning: Schema.optionalKey(PromptInputFileConstraintError),
+  rejections: Schema.Array(PromptInputFileConstraintError),
 });
-/** Files accepted from one picker, paste, or drop operation. */
+/** The files attached from one picker, paste, or drop, and why the others are not. */
 type PromptInputFileSelection = typeof PromptInputFileSelectionSchema.Type;
 /** Matches HTML accept syntax for extensions, exact MIME types, and MIME wildcards. */
 function matchesAccept(file: File, accept?: string) {
@@ -81,7 +108,35 @@ function matchesAccept(file: File, accept?: string) {
     return mediaType === specifier;
   });
 }
-/** Validates and caps one incoming prompt-file selection. */
+/** Splits files into the ones a check keeps and the ones it drops. */
+function split(files: readonly File[], isKept: (file: File) => boolean) {
+  const [kept, dropped] = Arr.partition(files, (file) =>
+    isKept(file) ? Result.succeed(file) : Result.fail(file)
+  );
+  return { dropped, kept };
+}
+
+/** The one rejection that names the dropped files, or none when no file was dropped. */
+function reject(
+  code: typeof PromptInputFileConstraintCode.Type,
+  dropped: readonly File[]
+) {
+  return Arr.isReadonlyArrayNonEmpty(dropped)
+    ? [
+        new PromptInputFileConstraintError({
+          code,
+          files: Arr.map(dropped, (file) => file.name),
+        }),
+      ]
+    : [];
+}
+
+/**
+ * Validates one incoming prompt-file selection. A file is dropped for the
+ * first reason that applies, in this order: its type, an empty file, its size,
+ * then the room the attached files leave. The files that pass are kept, and
+ * each reason names the files it dropped.
+ */
 export const validatePromptInputFiles = Effect.fn(
   "designSystem.promptInput.validateFiles"
 )(function* ({
@@ -91,35 +146,49 @@ export const validatePromptInputFiles = Effect.fn(
   maxFileSize,
   maxFiles,
 }: ValidatePromptInputFilesOptions) {
-  const accepted = Arr.filter(files, (file) => matchesAccept(file, accept));
-  if (files.length > 0 && accepted.length === 0) {
-    return yield* new PromptInputFileConstraintError({
-      code: "accept",
-      message: "No files match the accepted types.",
-    });
-  }
-  const sized = Arr.filter(
-    accepted,
+  const typed = split(files, (file) => matchesAccept(file, accept));
+  const filled = split(typed.kept, (file) => file.size > 0);
+  const sized = split(
+    filled.kept,
     (file) => maxFileSize === undefined || file.size <= maxFileSize
   );
-  if (accepted.length > 0 && sized.length === 0) {
-    return yield* new PromptInputFileConstraintError({
-      code: "max_file_size",
-      message: "All files exceed the maximum size.",
-    });
-  }
   const capacity =
     typeof maxFiles === "number"
       ? Math.max(0, maxFiles - currentFileCount)
-      : undefined;
-  if (capacity === undefined || sized.length <= capacity) {
-    return { files: sized } satisfies PromptInputFileSelection;
-  }
+      : sized.kept.length;
   return {
-    files: Arr.take(sized, capacity),
-    warning: new PromptInputFileConstraintError({
-      code: "max_files",
-      message: "Too many files. Some were not added.",
-    }),
+    files: Arr.take(sized.kept, capacity),
+    rejections: [
+      ...reject("accept", typed.dropped),
+      ...reject("empty", filled.dropped),
+      ...reject("max_file_size", sized.dropped),
+      ...reject("max_files", Arr.drop(sized.kept, capacity)),
+    ],
   } satisfies PromptInputFileSelection;
 });
+
+/**
+ * The refused files of one pick: one entry for each file that a reason dropped,
+ * in the order of the reasons, with the reason of that file. The entries have
+ * no id yet, because the composer gives each chip one when it shows it.
+ */
+export function refusedFiles(
+  rejections: readonly PromptInputFileConstraintError[]
+) {
+  return Arr.flatMap(rejections, (rejection) =>
+    Arr.map(rejection.files, (name) => ({ code: rejection.code, name }))
+  );
+}
+
+/**
+ * The refused files a composer keeps when a send takes `sent`: every refusal
+ * except the ones the send was picked with. A refusal picked while the send was
+ * admitted belongs to the next message, so it stays until that message is sent.
+ */
+export function refusalsAfterSend(
+  refusals: readonly PromptInputRefusal[],
+  sent: readonly PromptInputRefusal[]
+) {
+  const sentIds = HashSet.fromIterable(Arr.map(sent, (refusal) => refusal.id));
+  return Arr.filter(refusals, (refusal) => !HashSet.has(sentIds, refusal.id));
+}
