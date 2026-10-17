@@ -15,6 +15,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   arrive,
+  arriveLocked,
   LOCKED_SHELL,
   onPath,
   openHub,
@@ -29,15 +30,6 @@ const isSet = (pathname: string) => pathname === setHref;
 
 /** Whether a pathname is one of the walked set's sections. */
 const isSection = (pathname: string) => pathname.startsWith(`${setHref}/`);
-
-/** Waits until the browser shows a page of an attempt, with the shell locked. */
-const arriveLocked = (page: Page, matches: (pathname: string) => boolean) =>
-  arrive(
-    page,
-    (url) => matches(url.pathname) && url.searchParams.has("attemptId"),
-    page.locator(LOCKED_SHELL),
-    "attached"
-  );
 
 /**
  * Runs one navigation step while recording every frame, then requires a

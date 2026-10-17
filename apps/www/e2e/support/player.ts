@@ -9,7 +9,7 @@ import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   arrive,
-  LOCKED_SHELL,
+  arriveLocked,
   onPath,
   openHub,
   openTrack,
@@ -170,14 +170,7 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
       page.getByRole("dialog").getByRole("button", { name: "Start free" }),
       hasTouch
     );
-    yield* arrive(
-      page,
-      (url) =>
-        url.pathname.startsWith(`${setHref}/`) &&
-        url.searchParams.has("attemptId"),
-      page.locator(LOCKED_SHELL),
-      "attached"
-    );
+    yield* arriveLocked(page, (pathname) => pathname.startsWith(`${setHref}/`));
     // Questions render math, whose fonts load on first use. A font swapping in
     // late moves text, which is not what these suites measure.
     yield* loadMathFonts(page);
@@ -193,10 +186,10 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
 );
 
 /**
- * Finishes the running section, then waits until the attempt's set shows again,
- * still locked, so the server has stored the finish before the page moves on.
+ * Opens the running section's finish dialog and confirms it. It does not wait
+ * for the page that follows, because each caller knows which page that is.
  */
-export const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(
+export const confirmFinish = Effect.fn("NakafaE2E.confirmTryoutFinish")(
   function* (page: Page, hasTouch: boolean) {
     yield* activate(
       page.getByRole("button", { exact: true, name: "Finish" }),
@@ -208,12 +201,17 @@ export const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(
         .getByRole("button", { exact: true, name: "Finish" }),
       hasTouch
     );
-    yield* arrive(
-      page,
-      (url) => onPath(setHref)(url) && url.searchParams.has("attemptId"),
-      page.locator(LOCKED_SHELL),
-      "attached"
-    );
+  }
+);
+
+/**
+ * Finishes the running section, then waits until the attempt's set shows again,
+ * still locked, so the server has stored the finish before the page moves on.
+ */
+export const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(
+  function* (page: Page, hasTouch: boolean) {
+    yield* confirmFinish(page, hasTouch);
+    yield* arriveLocked(page, (pathname) => pathname === setHref);
   }
 );
 

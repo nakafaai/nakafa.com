@@ -92,6 +92,21 @@ export const arrive = Effect.fn("NakafaE2E.arriveAtTryoutPage")(function* (
   );
 });
 
+/**
+ * Waits until the browser shows a page of an attempt, with the shell locked by
+ * that attempt. Only a running attempt locks the shell.
+ */
+export const arriveLocked = Effect.fn("NakafaE2E.arriveLockedTryoutPage")(
+  function* (page: Page, matches: (pathname: string) => boolean) {
+    yield* arrive(
+      page,
+      (url) => matches(url.pathname) && url.searchParams.has("attemptId"),
+      page.locator(LOCKED_SHELL),
+      "attached"
+    );
+  }
+);
+
 /** Loads the try-out hub and waits until it is ready for the next click. */
 export const openHub = Effect.fn("NakafaE2E.openTryoutHub")(function* (
   page: Page

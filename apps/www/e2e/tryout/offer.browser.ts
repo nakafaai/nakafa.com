@@ -5,10 +5,14 @@ import app from "@repo/internationalization/dictionaries/id.json" with {
 import { Array as Arr, Effect } from "effect";
 import { activate, visibleLink } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { finishSection, runFirstSection } from "@/e2e/support/player";
+import {
+  confirmFinish,
+  finishSection,
+  runFirstSection,
+} from "@/e2e/support/player";
 import { CARD } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { arrive, LOCKED_SHELL, setHref } from "@/e2e/support/tryout";
+import { arrive, arriveLocked, setHref } from "@/e2e/support/tryout";
 import { compactViewport } from "@/e2e/support/viewport";
 
 /** The English route prefix that the walked set's addresses start with. */
@@ -70,12 +74,7 @@ const finishSectionRow = Effect.fn("NakafaE2E.finishTryoutSectionRow")(
     const finish = page.getByRole("button", { exact: true, name: "Finish" });
 
     yield* activate(visibleLink(page, href, "main"), false);
-    yield* arrive(
-      page,
-      (url) => url.pathname === path && url.searchParams.has("attemptId"),
-      page.locator(LOCKED_SHELL),
-      "attached"
-    );
+    yield* arriveLocked(page, (pathname) => pathname === path);
     yield* Effect.promise(() =>
       expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
     );
@@ -87,13 +86,7 @@ const finishSectionRow = Effect.fn("NakafaE2E.finishTryoutSectionRow")(
       yield* finishSection(page, false);
       return;
     }
-    yield* activate(finish, false);
-    yield* activate(
-      page
-        .getByRole("dialog")
-        .getByRole("button", { exact: true, name: "Finish" }),
-      false
-    );
+    yield* confirmFinish(page, false);
     // A completed attempt unlocks the shell, and this set's page shows no
     // review, so wait for its section rows instead.
     yield* arrive(
