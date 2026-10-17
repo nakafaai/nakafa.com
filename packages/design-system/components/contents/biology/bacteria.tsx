@@ -1,12 +1,14 @@
 "use client";
 
-import type { BacteriaLabItemProps } from "@repo/design-system/components/contents/biology/bacteria-scene";
+import {
+  type BacteriaLabItemProps,
+  BacteriaStructureScene,
+} from "@repo/design-system/components/contents/biology/bacteria-scene";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
 } from "@repo/design-system/components/contents/biology/lab-frame";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import dynamic from "next/dynamic";
 
 const BACTERIA_VIEW = {
   cameraPosition: [2.28, 1.58, 3.3],
@@ -14,15 +16,10 @@ const BACTERIA_VIEW = {
   narrowCameraPosition: [2.64, 1.82, 3.9],
 } satisfies NarrowCameraPose;
 
-/** The bacterial scene loads with the lab's stage, so the lab's card loads without it. */
-const BacteriaStructureScene = dynamic(() =>
-  import("@repo/design-system/components/contents/biology/bacteria-scene").then(
-    ({ BacteriaStructureScene }) => BacteriaStructureScene
-  )
-);
-
 /**
- * Renders bacterial shape, structure, and cell-wall comparison views.
+ * Renders bacterial shape, structure, and cell-wall comparison views. The scene
+ * comes with the lab's module rather than in a lazy chunk of its own, so the
+ * stage draws the scene in its first frame, as the other labs' stages do.
  */
 export function BacteriaStructureLab(
   props: BiologyLabProps<BacteriaLabItemProps>
