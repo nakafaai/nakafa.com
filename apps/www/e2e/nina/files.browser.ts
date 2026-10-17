@@ -169,8 +169,11 @@ test.describe("Files that a pick does not attach", () => {
 
         yield* Effect.promise(async () => {
           await expect(refusedChipsIn(sheet)).toHaveCount(1);
+          // A suggestion's accessible name is its whole prompt, so the button is
+          // found by the label it shows.
           await sheet
-            .getByRole("button", { name: en.Ai["suggestion-explain"] })
+            .getByRole("button")
+            .filter({ hasText: en.Ai["suggestion-explain"] })
             .click();
           // The suggestion started a chat. A new chat shows the composer again,
           // and its refused chip must not have come back with it.
