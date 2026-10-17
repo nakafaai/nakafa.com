@@ -66,9 +66,11 @@ finds the right data.
   school. A request that reads nothing keeps the target of under 1 ms, measured at
   the edge. A page request on a school host makes the one Convex query of the next
   bullets, and only to decide the page's status.
-- The proxy's redirects name the host that the visitor asked for, read from the
-  Host header (`lib/routing/visitor.ts`). Its rewrites name the request URL, the
-  origin of the server, because Next proxies a rewrite to any other origin: a
+- The proxy's redirects name the host and port that the visitor asked for, read
+  from the Host header (`lib/routing/visitor.ts`): the port of the header, or the
+  default port of the protocol when the header names none. Only the protocol comes
+  from the request URL. Its rewrites name the request URL, the origin of the
+  server, because Next proxies a rewrite to any other origin: a
   school page is never rewritten to the visitor's host, and the school rewrite
   reads the request URL and not `nextUrl`, which maps a loopback address to
   `localhost`. A self-hosted run builds the request URL from the server's own

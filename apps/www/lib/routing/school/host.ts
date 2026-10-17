@@ -59,6 +59,17 @@ export function isRefusedSchoolHost(hostname: string) {
 }
 
 /**
+ * The host that the visitor asked for, with its port when the `host` header names
+ * one, such as `harapan.localhost:3000`. The value must name a host (see
+ * `readHostname`), so a missing header, or a value that is not a host, names none.
+ */
+export function readRequestHost(headers: Headers) {
+  return Option.fromNullOr(headers.get("host")).pipe(
+    Option.filter((host) => Option.isSome(readHostname(host)))
+  );
+}
+
+/**
  * The hostname that the visitor asked for, read from the `host` header and not
  * from the request URL. A local run, or any server that builds its request URL
  * from its own address, names that address for every host, so only the header
@@ -67,5 +78,5 @@ export function isRefusedSchoolHost(hostname: string) {
  * is dropped, and a missing header or a value that is not a host names no host.
  */
 export function readRequestHostname(headers: Headers) {
-  return Option.flatMap(Option.fromNullOr(headers.get("host")), readHostname);
+  return Option.flatMap(readRequestHost(headers), readHostname);
 }

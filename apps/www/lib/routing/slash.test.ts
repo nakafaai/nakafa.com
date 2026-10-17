@@ -26,6 +26,18 @@ describe("trailing slash redirect", () => {
     );
   });
 
+  it("redirects to the port that the visitor asked for, although the server listens on another", () => {
+    const response = redirectTrailingSlash(
+      new NextRequest("http://localhost:3400/classes/", {
+        headers: { host: "harapan.localhost" },
+      })
+    );
+
+    expect(response?.headers.get("location")).toBe(
+      "http://harapan.localhost/classes"
+    );
+  });
+
   it("keeps an IP host that the visitor asked for", () => {
     const response = redirectTrailingSlash(
       new NextRequest("http://localhost:3000/en/search/", {

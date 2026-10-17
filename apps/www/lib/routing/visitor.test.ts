@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { readVisitorUrl } from "@/lib/routing/visitor";
 
 describe("visitor URL", () => {
-  it("names the host of the Host header, with the protocol, port, path and query of the request", () => {
+  it("names the host and port of the Host header, with the protocol, path and query of the request", () => {
     const url = readVisitorUrl(
       new NextRequest("http://localhost:3000/classes/fisika?tab=grades", {
         headers: { host: "harapan.localhost:3000" },
@@ -51,5 +51,25 @@ describe("visitor URL", () => {
     );
 
     expect(url.href).toBe("http://localhost:3000/en/search");
+  });
+
+  it("names the default port of the protocol when the Host header names no port, although the server listens on another", () => {
+    const url = readVisitorUrl(
+      new NextRequest("http://localhost:3400/classes/", {
+        headers: { host: "harapan.localhost" },
+      })
+    );
+
+    expect(url.href).toBe("http://harapan.localhost/classes/");
+  });
+
+  it("names the port of the Host header, although the server listens on another", () => {
+    const url = readVisitorUrl(
+      new NextRequest("http://localhost:3000/classes/", {
+        headers: { host: "harapan.localhost:8080" },
+      })
+    );
+
+    expect(url.href).toBe("http://harapan.localhost:8080/classes/");
   });
 });
