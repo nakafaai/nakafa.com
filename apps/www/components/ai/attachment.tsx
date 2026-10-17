@@ -68,15 +68,15 @@ const documentVariants = cva("", {
 });
 
 /**
- * The picture of an image chip in the composer is the chip itself: it takes
- * the chip's corners and shows no backdrop, so no white square sits inside the
- * chip's frame.
+ * The picture of an image chip in the composer is the chip itself: it takes the
+ * chip's corners, and a transparent picture sits on the media's own backdrop, so
+ * its ink keeps its contrast in both themes.
  */
 const imageMediaVariants = cva("", {
   variants: {
     variant: {
       message: "aspect-3/2",
-      preview: "rounded-md bg-transparent dark:bg-transparent",
+      preview: "rounded-md",
     },
   },
   defaultVariants: { variant: "message" },
