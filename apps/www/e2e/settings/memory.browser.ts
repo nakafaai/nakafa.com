@@ -15,6 +15,7 @@ import {
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { isTakenOver } from "@/e2e/support/window";
 
 const WRITTEN = "Prefers worked examples before the formula";
 const REWRITTEN = "Prefers a short summary before the examples";
@@ -28,12 +29,13 @@ const titleOf = (page: Page) =>
   page.getByRole("textbox", { exact: true, name: "Title" });
 
 /**
- * Presses a switch after a reload until it shows `checked`. It waits for the
- * page's connection to sign in first, because a change pressed before that is
- * refused. The page also shows the switch before its code runs, and a press in
- * that moment is lost, so the press is repeated until the switch moves.
+ * Sets a switch after a reload to `checked`. It waits for the page's connection
+ * to sign in first, because a change pressed before that is refused, and for
+ * React to take the switch over, because React can drop a press on a switch it
+ * has not taken over yet. Then it presses the switch once, if it shows the other
+ * state.
  */
-const switchUntil = async (
+const switchTo = async (
   changes: Changes,
   control: Locator,
   checked: boolean
@@ -41,12 +43,13 @@ const switchUntil = async (
   await expect
     .poll(() => changes.signedIn, { timeout: ANSWER_MILLISECONDS })
     .toBe(true);
-  await expect(async () => {
-    if ((await control.isChecked()) !== checked) {
-      await control.click();
-    }
-    await expect(control).toBeChecked({ checked, timeout: 1000 });
-  }).toPass({ timeout: ANSWER_MILLISECONDS });
+  await expect
+    .poll(() => isTakenOver(control), { timeout: ANSWER_MILLISECONDS })
+    .toBe(true);
+  if ((await control.isChecked()) !== checked) {
+    await control.click();
+  }
+  await expect(control).toBeChecked({ checked });
 };
 
 const addMemory = Effect.fn("NakafaE2E.addMemory")(function* (
@@ -156,7 +159,7 @@ const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (
       expect(remember).not.toBeChecked({ timeout: 3000 })
     );
     await expect(row).toBeVisible();
-    await switchUntil(changes, remember, true);
+    await switchTo(changes, remember, true);
   });
 });
 

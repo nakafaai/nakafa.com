@@ -8,6 +8,7 @@ import {
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { LIST_QUERY, MEMORY_PATH, runMemory } from "@/e2e/support/memory";
+import { isTakenOver } from "@/e2e/support/window";
 
 /** The Convex name of `nina.memory.pause`, the mutation behind the switch. */
 const PAUSE_MUTATION = "nina/memory:pause";
@@ -39,18 +40,16 @@ const pausesBeforeTheAnswer = Effect.fn("NakafaE2E.memoryPausesBeforeAnswer")(
 
       await expect(remember).toBeChecked();
       // A press before the page signs in is refused by the server, so the test
-      // waits for the sign-in first. The page also shows the switch before its
-      // code runs, and a press in that moment is lost, so the press is repeated
-      // until the switch moves.
+      // waits for the sign-in first. React can drop a press on a switch that it
+      // has not taken over yet, so the test waits for that too and presses once.
       await expect
         .poll(() => changes.signedIn, { timeout: ANSWER_MILLISECONDS })
         .toBe(true);
-      await expect(async () => {
-        if (await remember.isChecked()) {
-          await remember.click();
-        }
-        await expect(remember).not.toBeChecked({ timeout: 1000 });
-      }).toPass({ timeout: ANSWER_MILLISECONDS });
+      await expect
+        .poll(() => isTakenOver(remember), { timeout: ANSWER_MILLISECONDS })
+        .toBe(true);
+      await remember.click();
+      await expect(remember).not.toBeChecked();
 
       changes.release();
       await saved(changes, before);

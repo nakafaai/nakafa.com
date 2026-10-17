@@ -1,4 +1,4 @@
-import { expect, type Page, type Route } from "@playwright/test";
+import { expect, type Locator, type Page, type Route } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { LAST_SERVER, NEWEST } from "@/e2e/support/list";
 import { MEMORY_PATH, memoryRow } from "@/e2e/support/memory";
@@ -40,6 +40,16 @@ export const isHydrated = (page: Page) =>
     Object.keys(document.querySelector("main ul > li") ?? {}).some((key) =>
       key.startsWith("__reactFiber")
     )
+  );
+
+/**
+ * Whether React has taken over one element, which it does when it hydrates the
+ * element. Until then React cannot run the element's handlers, and a press on it
+ * can be lost.
+ */
+export const isTakenOver = (element: Locator) =>
+  element.evaluate((node) =>
+    Object.keys(node).some((key) => key.startsWith("__reactFiber"))
   );
 
 /**
