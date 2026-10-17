@@ -18,6 +18,7 @@ import {
 } from "@/components/marketing/about/lesson/placeholder";
 import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
 import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
+import { MarketingSection } from "@/components/marketing/shared/section";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { decimalSeparators } from "@/lib/marketing/decimal";
 
@@ -60,17 +61,9 @@ export async function Lesson() {
   };
 
   return (
-    <section
-      className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32"
-      id={LESSON_SECTION_ID}
-    >
+    <MarketingSection id={LESSON_SECTION_ID}>
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div className="grid min-w-0 content-center gap-8">
-          <Talk ask={t("lesson-ask")}>
-            <TalkReply act="greeting" mood="hello">
-              {t("lesson-answer")}
-            </TalkReply>
-          </Talk>
           <div className="grid gap-2">
             <h2 className="text-balance text-2xl tracking-tight">
               {t("lesson-title")}
@@ -79,6 +72,11 @@ export async function Lesson() {
               {t("lesson-lead")}
             </p>
           </div>
+          <Talk ask={t("lesson-ask")}>
+            <TalkReply act="greeting" mood="hello">
+              {t("lesson-answer")}
+            </TalkReply>
+          </Talk>
         </div>
         <div className="min-w-0">
           <LessonWindow
@@ -89,6 +87,6 @@ export async function Lesson() {
           />
         </div>
       </div>
-    </section>
+    </MarketingSection>
   );
 }
