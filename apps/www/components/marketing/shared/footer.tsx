@@ -15,7 +15,6 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { AnalyticsConsentFooterItem } from "@/components/analytics/consent/actions";
 import { FooterAction } from "@/components/marketing/shared/footer/action";
-import { FooterArt } from "@/components/marketing/shared/footer/art";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,
@@ -201,8 +200,6 @@ export function Footer({
           </div>
         </div>
       </section>
-
-      <FooterArt />
     </footer>
   );
 }
