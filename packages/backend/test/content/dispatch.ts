@@ -6,16 +6,9 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import { dispatchPublication } from "@repo/backend/confect/contentRelease/ingress/dispatch";
 import type schema from "@repo/backend/convex/schema";
 import {
-  ingressArtifact,
-  ingressItem,
-  ingressProjection,
-  ingressRecovery,
   ingressRecoveryId,
-  ingressRecoveryItem,
-  ingressRecoveryRoute,
-  ingressRelease,
   ingressReleaseId,
-  ingressRoute,
+  makeIngressFixture,
 } from "@repo/backend/test/content/ingress";
 import {
   TEST_KEY_ID,
@@ -81,6 +74,13 @@ async function verifyPublication(
 export async function publishIngressCandidate(
   target: TestConvex<typeof schema>
 ) {
+  const {
+    ingressArtifact,
+    ingressItem,
+    ingressProjection,
+    ingressRelease,
+    ingressRoute,
+  } = await Effect.runPromise(makeIngressFixture());
   const stagedRequests = [
     {
       batchIndex: 0,
@@ -161,6 +161,12 @@ export async function publishIngressCandidate(
 export async function publishIngressRecovery(
   target: TestConvex<typeof schema>
 ) {
+  const {
+    ingressRecovery,
+    ingressRecoveryItem,
+    ingressRecoveryRoute,
+    ingressRelease,
+  } = await Effect.runPromise(makeIngressFixture());
   const stagedRequests = [
     {
       batchIndex: 0,

@@ -24,7 +24,7 @@ const decodeRuntime = Schema.decodeUnknownSync(
 );
 
 const readFixture = Effect.fn("test.publicationExchange")(function* () {
-  const fixture = makePageRuntimeSource();
+  const fixture = yield* makePageRuntimeSource();
   const runtime = yield* createTestPublication(fixture.source);
   const row = yield* runtime.query(
     refs.internal.contentRelease.runtime.publication.internal.read,

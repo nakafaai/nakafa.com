@@ -18,10 +18,10 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
 import {
-  ingressRecovery,
   ingressRecoveryId,
-  ingressRelease,
   ingressReleaseId,
+  itWithIngressFixture,
+  makeIngressFixture,
 } from "@repo/backend/test/content/ingress";
 import {
   TEST_KEY_RESOLVER,
@@ -87,22 +87,25 @@ function current(stored: unknown) {
   });
 }
 describe("authenticated current publication evidence", () => {
-  it("rejects individually authentic releases that form an incoherent current pair", async () => {
-    await expect(
-      current({
-        active: completed(ingressRelease),
-        candidate: {
-          ...completed(ingressRelease),
-          phase: "verified",
-        },
-        recovery: null,
-        tryoutRuntimeBundleJson: null,
-      })
-    ).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_INTEGRITY",
-      message: "Current release state violates its exact contract.",
-    });
-  });
+  itWithIngressFixture(
+    "rejects individually authentic releases that form an incoherent current pair",
+    async ({ ingressRelease }) => {
+      await expect(
+        current({
+          active: completed(ingressRelease),
+          candidate: {
+            ...completed(ingressRelease),
+            phase: "verified",
+          },
+          recovery: null,
+          tryoutRuntimeBundleJson: null,
+        })
+      ).rejects.toMatchObject({
+        code: "CONTENT_RELEASE_INTEGRITY",
+        message: "Current release state violates its exact contract.",
+      });
+    }
+  );
   it.effect(
     "authenticates the permanent runtime bundle with its active renderer",
     () =>
@@ -171,64 +174,76 @@ describe("authenticated current publication evidence", () => {
       );
     })
   );
-  it("rejects an authenticated candidate with an invalid durable phase", async () => {
-    await expect(
-      current({
-        active: null,
-        candidate: {
-          ...completed(ingressRelease),
-          phase: "completed",
-        },
-        recovery: null,
-        tryoutRuntimeBundleJson: null,
-      })
-    ).rejects.toMatchObject({
-      _tag: "SchemaError",
-      message: expect.stringContaining('["candidate"]["phase"]'),
-    });
-  });
-  it.each(["identity", "receipt"] as const)(
-    "rejects recovery %s that no longer binds the original candidate",
-    async (corruption) => {
-      const value = completed(ingressRecovery);
-      const t = convexTest(schema, convexModules);
+  itWithIngressFixture(
+    "rejects an authenticated candidate with an invalid durable phase",
+    async ({ ingressRelease }) => {
       await expect(
-        t.action((ctx) => {
-          vi.spyOn(ctx, "runQuery").mockResolvedValue({
-            kind: "completed",
-            value: {
-              ...value,
-              receipt:
-                corruption === "receipt"
-                  ? {
-                      ...value.receipt,
-                      manifestHash: ingressRelease.manifestHash,
-                    }
-                  : value.receipt,
-            },
-          });
-          return Effect.runPromise(
-            readRecovery({
-              recoveryId: ingressRecoveryId,
-              releaseId:
-                corruption === "identity" ? "release-other" : ingressReleaseId,
-            }).pipe(
-              Effect.provideService(
-                ContentVerificationKeyResolver,
-                TEST_KEY_RESOLVER
-              ),
-              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
-            )
-          );
+        current({
+          active: null,
+          candidate: {
+            ...completed(ingressRelease),
+            phase: "completed",
+          },
+          recovery: null,
+          tryoutRuntimeBundleJson: null,
         })
       ).rejects.toMatchObject({
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: expect.stringContaining(
-          corruption === "identity"
-            ? "does not bind candidate"
-            : "lost terminal evidence"
-        ),
+        _tag: "SchemaError",
+        message: expect.stringContaining('["candidate"]["phase"]'),
       });
     }
+  );
+  it.effect.each(["identity", "receipt"] as const)(
+    "rejects recovery %s that no longer binds the original candidate",
+    (corruption) =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const { ingressRecovery, ingressRelease } = yield* makeIngressFixture();
+        yield* Effect.promise(async () => {
+          const value = completed(ingressRecovery);
+          const t = convexTest(schema, convexModules);
+          await expect(
+            t.action((ctx) => {
+              vi.spyOn(ctx, "runQuery").mockResolvedValue({
+                kind: "completed",
+                value: {
+                  ...value,
+                  receipt:
+                    corruption === "receipt"
+                      ? {
+                          ...value.receipt,
+                          manifestHash: ingressRelease.manifestHash,
+                        }
+                      : value.receipt,
+                },
+              });
+              return Effect.runPromiseWith(runtimeServices)(
+                readRecovery({
+                  recoveryId: ingressRecoveryId,
+                  releaseId:
+                    corruption === "identity"
+                      ? "release-other"
+                      : ingressReleaseId,
+                }).pipe(
+                  Effect.provideService(
+                    ContentVerificationKeyResolver,
+                    TEST_KEY_RESOLVER
+                  ),
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
+              );
+            })
+          ).rejects.toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: expect.stringContaining(
+              corruption === "identity"
+                ? "does not bind candidate"
+                : "lost terminal evidence"
+            ),
+          });
+        });
+      })
   );
 });

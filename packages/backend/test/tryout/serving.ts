@@ -39,6 +39,7 @@ export const makeTryoutRuntimeSource = Effect.fn(
     readonly placements: readonly TryoutPlacement[];
   }
 ) {
+  const runtimeServices = yield* Effect.context<never>();
   const t = convexTest(schema, convexModules);
   const catalog =
     input?.catalog ??
@@ -48,20 +49,24 @@ export const makeTryoutRuntimeSource = Effect.fn(
   const sourcePlacements =
     input?.placements ??
     Arr.map(ACTIVE_APP_LOCALE_CODES, makeTryoutStartPlacement);
-  const artifacts = Arr.flatMap(sourcePlacements, (placement) => [
-    testSignedArtifact(placement.rendererDomain, {
-      contentKey: placement.questionContentKey,
-      artifactLocale: placement.questionArtifactLocale,
-      compiledCode:
-        compiledCode ??
-        'return { default: function TechnicalQuestion() { return "Technical question"; } };',
-    }),
-    testSignedArtifact(placement.rendererDomain, {
-      contentKey: placement.answerContentKey,
-      artifactLocale: placement.answerArtifactLocale,
-      ...(compiledCode === undefined ? {} : { compiledCode }),
-    }),
-  ]);
+  const artifacts = Arr.flatten(
+    yield* Effect.forEach(sourcePlacements, (placement) =>
+      Effect.all([
+        testSignedArtifact(placement.rendererDomain, {
+          contentKey: placement.questionContentKey,
+          artifactLocale: placement.questionArtifactLocale,
+          compiledCode:
+            compiledCode ??
+            'return { default: function TechnicalQuestion() { return "Technical question"; } };',
+        }),
+        testSignedArtifact(placement.rendererDomain, {
+          contentKey: placement.answerContentKey,
+          artifactLocale: placement.answerArtifactLocale,
+          ...(compiledCode === undefined ? {} : { compiledCode }),
+        }),
+      ])
+    )
+  );
   const placements = Arr.map(sourcePlacements, (placement) => {
     const question = Arr.findFirst(
       artifacts,
@@ -87,10 +92,12 @@ export const makeTryoutRuntimeSource = Effect.fn(
   });
   const snapshotId = yield* Effect.promise(() =>
     t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog,
-        placements,
-      })
+      Effect.runPromiseWith(runtimeServices)(
+        activateTryoutSnapshot(ctx, {
+          catalog,
+          placements,
+        })
+      )
     )
   );
   const stored = yield* Effect.promise(() =>
@@ -111,19 +118,25 @@ export const makeTryoutRuntimeSource = Effect.fn(
       rowDigest: snapshot.manifest.snapshotId,
     }),
   };
-  const origin = testSignedRelease({
-    ...testEmptyManifest(ReleaseIdSchema.make("tryout-origin")),
+  const originManifest = yield* testEmptyManifest(
+    ReleaseIdSchema.make("tryout-origin")
+  );
+  const origin = yield* testSignedRelease({
+    ...originManifest,
     scope: testPublicationScope({ snapshots }),
     snapshots,
   });
-  const signed = testSignedRelease({
-    ...testEmptyManifest(ReleaseIdSchema.make("tryout-active")),
+  const activeManifest = yield* testEmptyManifest(
+    ReleaseIdSchema.make("tryout-active")
+  );
+  const signed = yield* testSignedRelease({
+    ...activeManifest,
     baseActiveAppLocales: origin.manifest.activeAppLocales,
     baseManifestHash: origin.manifestHash,
     baseReleaseId: origin.manifest.releaseId,
     snapshots: inheritContentSnapshots(snapshots),
   });
-  const fixture = makeRuntimeSource(signed);
+  const fixture = yield* makeRuntimeSource(signed);
   const bundle = testSignedTryoutRuntimeBundle({
     release: origin,
     rendererManifest: TEST_PROOF_RENDERER,

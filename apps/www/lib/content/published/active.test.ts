@@ -8,7 +8,7 @@ import {
 import {
   createTestPublication,
   makeRuntimeSource,
-  TEST_PUBLICATION_RELEASE,
+  testPublicationRelease,
 } from "@repo/backend/test/content/publication";
 import { Effect, Layer, MutableHashMap } from "effect";
 import {
@@ -62,13 +62,14 @@ describe("published active identity", () => {
     "reads the active identity through the native publication query",
     () =>
       Effect.gen(function* () {
+        const publication = yield* testPublicationRelease();
         const context = yield* createTestPublication(
-          makeRuntimeSource().source
+          (yield* makeRuntimeSource()).source
         );
         fetchQueryMock.mockImplementation(context.query);
         expect(yield* loadActiveContentIdentity()).toEqual({
-          manifestHash: TEST_PUBLICATION_RELEASE.manifestHash,
-          releaseId: TEST_PUBLICATION_RELEASE.manifest.releaseId,
+          manifestHash: publication.manifestHash,
+          releaseId: publication.manifest.releaseId,
           sequence: 9,
         });
       })

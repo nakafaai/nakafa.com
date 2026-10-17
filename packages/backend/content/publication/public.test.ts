@@ -19,7 +19,7 @@ describe("active public body selection", () => {
     "preserves selected absence and rejects invalid artifact, source, and release provenance",
     () =>
       Effect.gen(function* () {
-        const fixture = makePageRuntimeSource();
+        const fixture = yield* makePageRuntimeSource();
         const published = HashMap.set(
           HashMap.fromIterable(fixture.source),
           "contentReleases",
@@ -117,7 +117,7 @@ describe("active public body selection", () => {
     "rejects a route whose stored binding or active body is incomplete",
     () =>
       Effect.gen(function* () {
-        const fixture = makePageRuntimeSource();
+        const fixture = yield* makePageRuntimeSource();
         const incomplete: readonly PublicationRow<"contentHeads">[] = [
           Struct.omit(fixture.head, ["artifactHash"]),
           Struct.omit(fixture.head, ["compilerConfigHash"]),

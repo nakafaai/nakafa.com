@@ -50,12 +50,12 @@ function seedSectionIrtSource(ctx: MutationCtx, corruption: SourceCorruption) {
     const set = makeTryoutSet({
       questionCount: 2,
     });
-    const signedSection = makeSignedTryoutSection(
+    const signedSection = yield* makeSignedTryoutSection(
       makeTryoutSection({
         questionCount: 2,
       })
     );
-    const source = makeSignedTryoutSource(set, [signedSection]);
+    const source = yield* makeSignedTryoutSource(set, [signedSection]);
     const firstPlacement = signedSection.signed.placements[0];
     const secondPlacement = signedSection.signed.placements[1];
     if (!(firstPlacement && secondPlacement)) {

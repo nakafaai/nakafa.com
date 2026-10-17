@@ -6,6 +6,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
+  patchRuntimeSearchState,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
 import {
@@ -15,7 +16,6 @@ import {
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
@@ -41,35 +41,36 @@ async function activateArticleSearch(
         plainText: textAt(index),
       });
     }
-    const state = await ctx.db.query("contentState").unique();
-    if (!state) {
-      throw new Error("Expected one active content state.");
-    }
-    await ctx.db.patch("contentState", state._id, {
-      searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-      searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-      searchSequence: TEST_RUNTIME_RELEASE.sequence,
-    });
+    await patchRuntimeSearchState(ctx);
   });
   return t;
 }
 /** Activates a signed Tryout catalog whose one entry is named "Technical country". */
-async function activateTryoutSearch() {
-  const t = createConvexTestWithBetterAuth();
-  await t.mutation((ctx) =>
-    activateTryoutSnapshot(ctx, {
-      catalog: [
-        makeTryoutCatalogRow("en").record.row,
-        makeTryoutCatalogRow("id").record.row,
-      ],
-      placements: [
-        makeTryoutPlacementRow("en").record.row,
-        makeTryoutPlacementRow("id").record.row,
-      ],
-    })
-  );
-  return t;
-}
+const activateTryoutSearch = Effect.fn("test.contents.tryoutSearch")(
+  function* () {
+    const t = createConvexTestWithBetterAuth();
+    const runtimeServices = yield* Effect.context<never>();
+    const [countryEn, countryId] = yield* Effect.all([
+      makeTryoutCatalogRow("en"),
+      makeTryoutCatalogRow("id"),
+    ]);
+    const [placementEn, placementId] = yield* Effect.all([
+      makeTryoutPlacementRow("en"),
+      makeTryoutPlacementRow("id"),
+    ]);
+    yield* Effect.promise(() =>
+      t.mutation((ctx) =>
+        Effect.runPromiseWith(runtimeServices)(
+          activateTryoutSnapshot(ctx, {
+            catalog: [countryEn.record.row, countryId.record.row],
+            placements: [placementEn.record.row, placementId.record.row],
+          })
+        )
+      )
+    );
+    return t;
+  }
+);
 describe("contents/queries/search:search", () => {
   it.each([
     {
@@ -265,46 +266,58 @@ describe("contents/queries/search:search", () => {
       },
     ]);
   });
-  it("reads every term of a query for a Tryout, which is matched in memory", async () => {
-    const t = await activateTryoutSearch();
-    const result = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "en",
-      offset: 0,
-      queries: [
-        Arr.join(
-          Arr.makeBy(17, (index) =>
-            index % 2 === 0 ? "Technical" : "country"
-          ),
-          " "
-        ),
-      ],
-      section: "tryout",
-    });
-    expect(result.items).toEqual([
-      expect.objectContaining({
-        content_id: "asset:en:tryout:technical:country",
-      }),
-    ]);
-  });
-  it("returns bodyless Tryout catalog refs without claiming markdown", async () => {
-    const t = await activateTryoutSearch();
-    const result = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "en",
-      offset: 0,
-      queries: ["Technical country"],
-      section: "tryout",
-    });
-    expect(result.items).toEqual([
-      expect.objectContaining({
-        content_id: "asset:en:tryout:technical:country",
-        route: "try-out/indonesia",
-        section: "tryout",
-      }),
-    ]);
-    expect(result.items[0]).not.toHaveProperty("markdown_url");
-  });
+  it.effect(
+    "reads every term of a query for a Tryout, which is matched in memory",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* activateTryoutSearch();
+        yield* Effect.promise(async () => {
+          const result = await t.query(api.contents.queries.search.search, {
+            limit: 10,
+            locale: "en",
+            offset: 0,
+            queries: [
+              Arr.join(
+                Arr.makeBy(17, (index) =>
+                  index % 2 === 0 ? "Technical" : "country"
+                ),
+                " "
+              ),
+            ],
+            section: "tryout",
+          });
+          expect(result.items).toEqual([
+            expect.objectContaining({
+              content_id: "asset:en:tryout:technical:country",
+            }),
+          ]);
+        });
+      })
+  );
+  it.effect(
+    "returns bodyless Tryout catalog refs without claiming markdown",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* activateTryoutSearch();
+        yield* Effect.promise(async () => {
+          const result = await t.query(api.contents.queries.search.search, {
+            limit: 10,
+            locale: "en",
+            offset: 0,
+            queries: ["Technical country"],
+            section: "tryout",
+          });
+          expect(result.items).toEqual([
+            expect.objectContaining({
+              content_id: "asset:en:tryout:technical:country",
+              route: "try-out/indonesia",
+              section: "tryout",
+            }),
+          ]);
+          expect(result.items[0]).not.toHaveProperty("markdown_url");
+        });
+      })
+  );
   it("caps the shared signed search window", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation((ctx) =>

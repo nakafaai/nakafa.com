@@ -18,9 +18,9 @@ import {
   sendPublication,
 } from "@repo/backend/test/content/dispatch";
 import {
-  ingressItem,
-  ingressRelease,
   ingressReleaseId,
+  itWithIngressFixture,
+  makeIngressFixture,
 } from "@repo/backend/test/content/ingress";
 import {
   TEST_PROOF_RENDERER,
@@ -35,7 +35,7 @@ import {
   type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_ID, TEST_KEY_RESOLVER } = await import(
@@ -56,83 +56,93 @@ const ResponsesJsonSchema = Schema.fromJsonString(
 );
 
 describe("content publication Node dispatch", () => {
-  it("reports explicit active absence when a candidate assumes a nonexistent base", async () => {
-    const t = convexTest(schema, convexModules);
-    const release = testSignedRelease({
-      ...ingressRelease.manifest,
-      baseReleaseId: ReleaseIdSchema.make("release-missing-base"),
-      baseManifestHash: ingressRelease.manifestHash,
-      baseActiveAppLocales: ingressRelease.manifest.activeAppLocales,
-    });
-    await expect(
-      sendPublication(t, {
-        operation: "stageRelease",
-        release,
-        rendererManifest: TEST_PROOF_RENDERER,
+  it.effect(
+    "reports explicit active absence when a candidate assumes a nonexistent base",
+    () =>
+      Effect.gen(function* () {
+        const { ingressRelease } = yield* makeIngressFixture();
+        const release = yield* testSignedRelease({
+          ...ingressRelease.manifest,
+          baseReleaseId: ReleaseIdSchema.make("release-missing-base"),
+          baseManifestHash: ingressRelease.manifestHash,
+          baseActiveAppLocales: ingressRelease.manifest.activeAppLocales,
+        });
+        yield* Effect.promise(async () => {
+          const t = convexTest(schema, convexModules);
+          await expect(
+            sendPublication(t, {
+              operation: "stageRelease",
+              release,
+              rendererManifest: TEST_PROOF_RENDERER,
+            })
+          ).resolves.toMatchObject({
+            ok: false,
+            failure: { kind: "stale-base", activeReleaseId: null },
+          });
+        });
       })
-    ).resolves.toMatchObject({
-      ok: false,
-      failure: { kind: "stale-base", activeReleaseId: null },
-    });
-  });
+  );
 
-  it("publishes one authenticated release through every lifecycle boundary", async () => {
-    const t = convexTest(schema, convexModules);
-    const candidateResponses = await publishIngressCandidate(t);
-    expect(
-      Arr.every(candidateResponses, ({ ok }) => ok),
-      Schema.encodeSync(ResponsesJsonSchema)(candidateResponses)
-    ).toBe(true);
-    expect(
-      Arr.map(
-        candidateResponses,
-        (response) => response.ok && response.operation
-      )
-    ).toEqual([
-      "stageRelease",
-      "current",
-      "stageGroup",
-      "status",
-      "verify",
-      "rollbackPage",
-      "routePage",
-    ]);
+  itWithIngressFixture(
+    "publishes one authenticated release through every lifecycle boundary",
+    async ({ ingressRelease }) => {
+      const t = convexTest(schema, convexModules);
+      const candidateResponses = await publishIngressCandidate(t);
+      expect(
+        Arr.every(candidateResponses, ({ ok }) => ok),
+        Schema.encodeSync(ResponsesJsonSchema)(candidateResponses)
+      ).toBe(true);
+      expect(
+        Arr.map(
+          candidateResponses,
+          (response) => response.ok && response.operation
+        )
+      ).toEqual([
+        "stageRelease",
+        "current",
+        "stageGroup",
+        "status",
+        "verify",
+        "rollbackPage",
+        "routePage",
+      ]);
 
-    const recoveryResponses = await publishIngressRecovery(t);
-    expect(
-      Arr.every(recoveryResponses, ({ ok }) => ok),
-      Schema.encodeSync(ResponsesJsonSchema)(recoveryResponses)
-    ).toBe(true);
-    expect(recoveryResponses[3]).toMatchObject({
-      ok: true,
-      value: { kind: "missing" },
-    });
-    expect(recoveryResponses[8]).toMatchObject({
-      ok: true,
-      value: { kind: "completed" },
-    });
-    expect(recoveryResponses[10]).toMatchObject({
-      ok: true,
-      value: { heads: [] },
-    });
-    await expect(
-      sendPublication(t, {
-        activeManifestHash: ingressRelease.manifestHash,
-        activeReleaseId: ingressReleaseId,
-        cursor: "invalid-cursor",
-        family: "material",
-        limit: 10,
-        operation: "headPage",
-      })
-    ).resolves.toMatchObject({
-      failure: {
-        code: "CONTENT_RELEASE_STATE",
-        kind: "rejected",
-        operation: "headPage",
-      },
-      ok: false,
-    });
-  });
+      const recoveryResponses = await publishIngressRecovery(t);
+      expect(
+        Arr.every(recoveryResponses, ({ ok }) => ok),
+        Schema.encodeSync(ResponsesJsonSchema)(recoveryResponses)
+      ).toBe(true);
+      expect(recoveryResponses[3]).toMatchObject({
+        ok: true,
+        value: { kind: "missing" },
+      });
+      expect(recoveryResponses[8]).toMatchObject({
+        ok: true,
+        value: { kind: "completed" },
+      });
+      expect(recoveryResponses[10]).toMatchObject({
+        ok: true,
+        value: { heads: [] },
+      });
+      await expect(
+        sendPublication(t, {
+          activeManifestHash: ingressRelease.manifestHash,
+          activeReleaseId: ingressReleaseId,
+          cursor: "invalid-cursor",
+          family: "material",
+          limit: 10,
+          operation: "headPage",
+        })
+      ).resolves.toMatchObject({
+        failure: {
+          code: "CONTENT_RELEASE_STATE",
+          kind: "rejected",
+          operation: "headPage",
+        },
+        ok: false,
+      });
+    }
+  );
 
   it("dispatches cleanup without accepting a caller-owned cursor", async () => {
     const t = convexTest(schema, convexModules);
@@ -199,49 +209,55 @@ describe("content publication Node dispatch", () => {
     });
   });
 
-  it("returns the authoritative active release for a stale base", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertActiveRelease(ctx, "release-active"));
+  itWithIngressFixture(
+    "returns the authoritative active release for a stale base",
+    async ({ ingressRelease }) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) => insertActiveRelease(ctx, "release-active"));
 
-    const response = await sendPublication(t, {
-      operation: "stageRelease",
-      release: ingressRelease,
-      rendererManifest: TEST_PROOF_RENDERER,
-    });
-    expect(response).toMatchObject({
-      failure: {
-        activeReleaseId: "release-active",
-        code: "CONTENT_RELEASE_STALE_BASE",
-        kind: "stale-base",
-      },
-      ok: false,
-    });
-  });
+      const response = await sendPublication(t, {
+        operation: "stageRelease",
+        release: ingressRelease,
+        rendererManifest: TEST_PROOF_RENDERER,
+      });
+      expect(response).toMatchObject({
+        failure: {
+          activeReleaseId: "release-active",
+          code: "CONTENT_RELEASE_STALE_BASE",
+          kind: "stale-base",
+        },
+        ok: false,
+      });
+    }
+  );
 
-  it("fails closed when durable current state violates the contract", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      ctx.db.insert("contentState", {
-        activeReleaseId: "",
-        articleSlot: "blue",
-        key: "primary",
-        materialSlot: "blue",
-        nextSequence: 1,
-        searchSlot: "blue",
-        updatedAt: 1,
-      })
-    );
+  itWithIngressFixture(
+    "fails closed when durable current state violates the contract",
+    async ({ ingressRelease }) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) =>
+        ctx.db.insert("contentState", {
+          activeReleaseId: "",
+          articleSlot: "blue",
+          key: "primary",
+          materialSlot: "blue",
+          nextSequence: 1,
+          searchSlot: "blue",
+          updatedAt: 1,
+        })
+      );
 
-    const response = await sendPublication(t, {
-      operation: "stageRelease",
-      release: ingressRelease,
-      rendererManifest: TEST_PROOF_RENDERER,
-    });
-    expect(response).toMatchObject({
-      failure: { code: "CONTENT_RELEASE_INTEGRITY", kind: "rejected" },
-      ok: false,
-    });
-  });
+      const response = await sendPublication(t, {
+        operation: "stageRelease",
+        release: ingressRelease,
+        rendererManifest: TEST_PROOF_RENDERER,
+      });
+      expect(response).toMatchObject({
+        failure: { code: "CONTENT_RELEASE_INTEGRITY", kind: "rejected" },
+        ok: false,
+      });
+    }
+  );
 
   it("rejects tampered active release and renderer recovery bytes", async () => {
     for (const corruption of ["release", "renderer"] as const) {
@@ -338,27 +354,32 @@ describe("content publication Node dispatch", () => {
     });
   });
 
-  it("sanitizes a non-stale domain rejection", async () => {
-    const t = convexTest(schema, convexModules);
-    const response = await sendPublication(t, {
-      batchIndex: 0,
-      items: [ingressItem],
-      operation: "stageItemBatch",
-      releaseId: ingressReleaseId,
-    });
-    expect(response).toMatchObject({
-      failure: { code: "CONTENT_RELEASE_MISSING", kind: "rejected" },
-      ok: false,
-    });
+  it.effect("sanitizes a non-stale domain rejection", () =>
+    Effect.gen(function* () {
+      const { ingressItem, ingressRelease } = yield* makeIngressFixture();
+      yield* Effect.promise(async () => {
+        const t = convexTest(schema, convexModules);
+        const response = await sendPublication(t, {
+          batchIndex: 0,
+          items: [ingressItem],
+          operation: "stageItemBatch",
+          releaseId: ingressReleaseId,
+        });
+        expect(response).toMatchObject({
+          failure: { code: "CONTENT_RELEASE_MISSING", kind: "rejected" },
+          ok: false,
+        });
 
-    const missing = await sendPublication(t, {
-      manifestHash: ingressRelease.manifestHash,
-      operation: "status",
-      releaseId: "release-missing",
-    });
-    expect(missing).toMatchObject({
-      ok: true,
-      value: { phase: "missing", releaseId: "release-missing" },
-    });
-  });
+        const missing = await sendPublication(t, {
+          manifestHash: ingressRelease.manifestHash,
+          operation: "status",
+          releaseId: "release-missing",
+        });
+        expect(missing).toMatchObject({
+          ok: true,
+          value: { phase: "missing", releaseId: "release-missing" },
+        });
+      });
+    })
+  );
 });

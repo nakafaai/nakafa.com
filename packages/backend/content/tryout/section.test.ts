@@ -1,11 +1,14 @@
 import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
-import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
+import {
+  type TryoutPlacement,
+  TryoutPlacementSchema,
+} from "@nakafa/aksara-contracts/tryout/placement";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { tryoutLayer } from "@repo/backend/content/tryout/confect";
@@ -64,10 +67,9 @@ function makeTechnicalSection(locale: ActiveAppLocaleCode, questionCount = 1) {
 
 /** Moves one technical placement to another valid authored order. */
 function makeTechnicalPlacement(
-  locale: ActiveAppLocaleCode,
+  placement: TryoutPlacement,
   questionOrder: number
 ) {
-  const placement = makeTryoutPlacementRow(locale).record.row;
   const questionRoot = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${questionOrder}`;
   return Schema.decodeSync(TryoutPlacementSchema)({
     ...placement,
@@ -78,35 +80,48 @@ function makeTechnicalPlacement(
   });
 }
 
+/** Creates the signed country and question placement rows of one locale. */
+const makeLocaleRows = Effect.fn("test.tryout.section.localeRows")(function* (
+  locale: ActiveAppLocaleCode
+) {
+  return {
+    country: (yield* makeTryoutCatalogRow(locale)).record.row,
+    placement: (yield* makeTryoutPlacementRow(locale)).record.row,
+  };
+});
+
 /** Activates one complete technical section in every active locale. */
-async function activateSection(questionCount = 1) {
+const activateSection = Effect.fn("test.tryout.section.activate")(function* (
+  questionCount = 1
+) {
   const t = convexTest(schema, convexModules);
-  const snapshotId = await t.mutation((ctx) =>
-    activateTryoutSnapshot(ctx, {
-      catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
-        makeTryoutCatalogRow(locale).record.row,
-        makeTechnicalSection(locale, questionCount),
-      ]),
-      placements: Arr.map(
-        ACTIVE_APP_LOCALE_CODES,
-        (locale) => makeTryoutPlacementRow(locale).record.row
-      ),
-    })
+  const runtimeServices = yield* Effect.context<never>();
+  const rows = yield* Effect.forEach(ACTIVE_APP_LOCALE_CODES, makeLocaleRows);
+  const snapshotId = yield* Effect.promise(() =>
+    t.mutation((ctx) =>
+      Effect.runPromiseWith(runtimeServices)(
+        activateTryoutSnapshot(ctx, {
+          catalog: Arr.flatMap(rows, ({ country }) => [
+            country,
+            makeTechnicalSection(country.appLocale, questionCount),
+          ]),
+          placements: Arr.map(rows, ({ placement }) => placement),
+        })
+      )
+    )
   );
   return {
     snapshotId,
     t,
   };
-}
+});
 describe("contentRelease/tryout/section", () => {
   it.effect(
     "rejects an authenticated country row at the section-only boundary",
     () =>
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
-        const { snapshotId, t } = yield* Effect.promise(() =>
-          activateSection()
-        );
+        const { snapshotId, t } = yield* activateSection();
         yield* Effect.promise(() =>
           expect(
             t.query(async (ctx) => {
@@ -140,158 +155,191 @@ describe("contentRelease/tryout/section", () => {
         );
       })
   );
-  it("returns one verified server-only section with signed placements", async () => {
-    const { snapshotId, t } = await activateSection();
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutSection(identity).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+  it.effect(
+    "returns one verified server-only section with signed placements",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const { snapshotId, t } = yield* activateSection();
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                readTryoutSection(identity).pipe(
+                  Effect.provide(
+                    Layer.provideMerge(
+                      tryoutLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
+                )
               )
             )
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      placements: [
-        {
-          row: {
-            countryKey: "indonesia",
-            questionOrder: 1,
-            scope: "server",
-          },
-        },
-      ],
-      section: {
-        row: {
-          kind: "section",
-          questionCount: 1,
-        },
-      },
-      snapshotId,
-    });
-  });
-  it("fails closed until try-out ownership becomes active", async () => {
-    const t = convexTest(schema, convexModules);
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutSection(identity).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_MISSING",
-    });
-  });
-  it("fails closed for a missing section or placement", async () => {
-    const missingSection = await activateSection();
-    await expect(
-      missingSection.t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutSection({
-            ...identity,
-            sectionKey: "missing",
-          }).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_MISSING",
-    });
-    const missingPlacement = await activateSection();
-    await missingPlacement.t.mutation(async (ctx) => {
-      const placements = await ctx.db.query("tryoutPlacements").collect();
-      const placement = Arr.findFirst(
-        placements,
-        ({ appLocale }) => appLocale === "en"
-      );
-      if (Option.isNone(placement)) {
-        throw new Error("Expected one technical placement.");
-      }
-      await ctx.db.delete(placement.value._id);
-    });
-    await expect(
-      missingPlacement.t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutSection(identity).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_INTEGRITY",
-    });
-  });
-  it("rejects a section above the bounded placement limit", async () => {
-    const { t } = await activateSection(257);
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutSection(identity).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
-              )
-            )
-          )
-        )
-      )
-    ).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_LIMIT",
-    });
-  });
-  it("rejects a signed placement that breaks contiguous section order", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog: Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
-          makeTryoutCatalogRow(locale).record.row,
-          makeTechnicalSection(locale),
-        ]),
-        placements: Arr.map(ACTIVE_APP_LOCALE_CODES, (locale) =>
-          locale === "en"
-            ? makeTechnicalPlacement(locale, 2)
-            : makeTryoutPlacementRow(locale).record.row
-        ),
+          ).resolves.toMatchObject({
+            placements: [
+              {
+                row: {
+                  countryKey: "indonesia",
+                  questionOrder: 1,
+                  scope: "server",
+                },
+              },
+            ],
+            section: {
+              row: {
+                kind: "section",
+                questionCount: 1,
+              },
+            },
+            snapshotId,
+          })
+        );
       })
-    );
-    await expect(
-      t.query((ctx) =>
-        Effect.runPromise(
-          readTryoutSection(identity).pipe(
-            Effect.provide(
-              Layer.provideMerge(
-                tryoutLayer,
-                ConfectDatabaseReader.layer(confectSchema, ctx.db)
+  );
+  it.effect("fails closed until try-out ownership becomes active", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutSection(identity).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
               )
             )
           )
-        )
-      )
-    ).rejects.toMatchObject({
-      code: "CONTENT_RELEASE_INTEGRITY",
-    });
-  });
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_MISSING",
+        })
+      );
+    })
+  );
+  it.effect("fails closed for a missing section or placement", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const missingSection = yield* activateSection();
+      const missingPlacement = yield* activateSection();
+      yield* Effect.promise(async () => {
+        await expect(
+          missingSection.t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutSection({
+                ...identity,
+                sectionKey: "missing",
+              }).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_MISSING",
+        });
+        await missingPlacement.t.mutation(async (ctx) => {
+          const placements = await ctx.db.query("tryoutPlacements").collect();
+          const placement = Arr.findFirst(
+            placements,
+            ({ appLocale }) => appLocale === "en"
+          );
+          assert(Option.isSome(placement), "Expected one technical placement.");
+          await ctx.db.delete(placement.value._id);
+        });
+        await expect(
+          missingPlacement.t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutSection(identity).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_INTEGRITY",
+        });
+      });
+    })
+  );
+  it.effect("rejects a section above the bounded placement limit", () =>
+    Effect.gen(function* () {
+      const runtimeServices = yield* Effect.context<never>();
+      const { t } = yield* activateSection(257);
+      yield* Effect.promise(() =>
+        expect(
+          t.query((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              readTryoutSection(identity).pipe(
+                Effect.provide(
+                  Layer.provideMerge(
+                    tryoutLayer,
+                    ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                  )
+                )
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          code: "CONTENT_RELEASE_LIMIT",
+        })
+      );
+    })
+  );
+  it.effect(
+    "rejects a signed placement that breaks contiguous section order",
+    () =>
+      Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
+        const t = convexTest(schema, convexModules);
+        const rows = yield* Effect.forEach(
+          ACTIVE_APP_LOCALE_CODES,
+          makeLocaleRows
+        );
+        yield* Effect.promise(async () => {
+          await t.mutation((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog: Arr.flatMap(rows, ({ country }) => [
+                  country,
+                  makeTechnicalSection(country.appLocale),
+                ]),
+                placements: Arr.map(rows, ({ placement }) =>
+                  placement.appLocale === "en"
+                    ? makeTechnicalPlacement(placement, 2)
+                    : placement
+                ),
+              })
+            )
+          );
+          await expect(
+            t.query((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                readTryoutSection(identity).pipe(
+                  Effect.provide(
+                    Layer.provideMerge(
+                      tryoutLayer,
+                      ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                    )
+                  )
+                )
+              )
+            )
+          ).rejects.toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          });
+        });
+      })
+  );
 });

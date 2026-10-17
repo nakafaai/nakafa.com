@@ -38,7 +38,7 @@ const storeAuthenticatedRelease = Effect.fn(
   ctx: MutationCtx,
   itemCount: number,
   routeCount: number,
-  release: ReturnType<typeof testSignedRelease>
+  release: Effect.Success<ReturnType<typeof testSignedRelease>>
 ) {
   yield* Effect.promise(() =>
     activateRollbackFixture(ctx, itemCount, routeCount)
@@ -93,7 +93,7 @@ export const activateAuthenticatedRelease = Effect.fn(
       routeCount,
     })
   );
-  const release = testSignedRelease(unsigned.manifest);
+  const release = yield* testSignedRelease(unsigned.manifest);
   yield* Effect.promise(() =>
     target.mutation((ctx) =>
       Effect.runPromiseWith(runtimeServices)(

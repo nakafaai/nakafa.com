@@ -32,7 +32,7 @@ describe("signed Quran passage decoder", () => {
   it.live("selects exact verses with locale-matched signed sources", () =>
     Effect.gen(function* () {
       const reference = yield* decodePublishedQuranReference(
-        referenceResult(),
+        yield* referenceResult(),
         { appLocale: "en", surahNumber: 1 }
       );
 
@@ -52,7 +52,7 @@ describe("signed Quran passage decoder", () => {
       const missing = yield* Effect.result(
         decodePublishedQuranReference(
           {
-            ...referenceResult(),
+            ...(yield* referenceResult()),
             chunkJson: [],
             searchJson: null,
             sources: null,
@@ -63,7 +63,7 @@ describe("signed Quran passage decoder", () => {
         )
       );
       const inconsistent = yield* Effect.result(
-        decodePublishedQuranReference(referenceResult(), {
+        decodePublishedQuranReference(yield* referenceResult(), {
           appLocale: "de",
           surahNumber: 1,
         })
@@ -83,14 +83,14 @@ describe("signed Quran passage decoder", () => {
       Effect.gen(function* () {
         const pastSurahEnd = yield* Effect.result(
           decodePublishedQuranReference(
-            { ...referenceResult(), toVerse: 7 },
+            { ...(yield* referenceResult()), toVerse: 7 },
             { appLocale: "en", surahNumber: 1 }
           )
         );
         const unownedBismillah = yield* Effect.result(
           decodePublishedQuranReference(
             {
-              ...referenceResult(),
+              ...(yield* referenceResult()),
               preBismillah: {
                 arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
                 translation: {
@@ -116,7 +116,7 @@ describe("signed Quran passage decoder", () => {
 });
 
 /** Builds one complete bounded passage response. */
-function referenceResult() {
+const referenceResult = Effect.fn("test.quran.referenceResult")(function* () {
   const chunk = makeQuranChunk({
     firstQuranNumber: 1,
     firstVerse: 1,
@@ -125,13 +125,19 @@ function referenceResult() {
   });
   return {
     ...source,
-    chunkJson: [encodeTestQuranRow(source.snapshotId, chunk)],
+    chunkJson: [yield* encodeTestQuranRow(source.snapshotId, chunk)],
     fromVerse: 2,
     preBismillah: null,
-    searchJson: encodeTestQuranRow(source.snapshotId, makeQuranSearch("en", 1)),
+    searchJson: yield* encodeTestQuranRow(
+      source.snapshotId,
+      makeQuranSearch("en", 1)
+    ),
     sources: makeQuranLocaleSources("en"),
-    surahJson: encodeTestQuranRow(source.snapshotId, makeQuranSurah(1, 6)),
+    surahJson: yield* encodeTestQuranRow(
+      source.snapshotId,
+      makeQuranSurah(1, 6)
+    ),
     tafsirAccess: makeQuranTafsirProjection("en"),
     toVerse: 3,
   };
-}
+});

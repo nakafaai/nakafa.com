@@ -5,25 +5,31 @@ import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { testProofRenderer } from "@repo/backend/test/content/proof";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import {
+  itWithRuntimeRelease,
+  TEST_RUNTIME_RELEASE,
+} from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
 
 const readActive = api.contentRelease.runtime.active.read;
 
 describe("contentRelease/runtime/active", () => {
-  it("distinguishes an empty publication from one complete active identity", async () => {
-    const empty = convexTest(schema, convexModules);
-    await expect(empty.query(readActive, {})).resolves.toBeNull();
+  itWithRuntimeRelease(
+    "distinguishes an empty publication from one complete active identity",
+    async (runtime) => {
+      const empty = convexTest(schema, convexModules);
+      await expect(empty.query(readActive, {})).resolves.toBeNull();
 
-    const active = convexTest(schema, convexModules);
-    await active.mutation((ctx) => insertRuntimeRelease(ctx));
-    await expect(active.query(readActive, {})).resolves.toMatchObject({
-      manifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-      releaseId: TEST_RUNTIME_RELEASE.releaseId,
-      sequence: TEST_RUNTIME_RELEASE.sequence,
-    });
-  });
+      const active = convexTest(schema, convexModules);
+      await active.mutation((ctx) => insertRuntimeRelease(ctx));
+      await expect(active.query(readActive, {})).resolves.toMatchObject({
+        manifestHash: runtime.manifestHash,
+        releaseId: TEST_RUNTIME_RELEASE.releaseId,
+        sequence: TEST_RUNTIME_RELEASE.sequence,
+      });
+    }
+  );
 
   it("fails visibly when active state or release identity is partial", async () => {
     const partial = convexTest(schema, convexModules);
