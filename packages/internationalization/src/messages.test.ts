@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import appDe from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
@@ -47,7 +48,7 @@ describe("loadLocaleMessages", () => {
   );
 
   // The crowd picture's accessible name is read from this key, so a language without it would name the picture nothing.
-  it.each(["de", "en", "id"] as const)(
+  it.each(APP_LOCALE_CODES)(
     "names the community crowd picture in %s",
     async (locale) => {
       const messages = await loadLocaleMessages(locale);
