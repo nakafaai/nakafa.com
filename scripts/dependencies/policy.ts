@@ -41,7 +41,7 @@ export const EFFECT_COHORT_OVERRIDES = [
   "@effect/platform-node-shared",
 ] as const;
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
-export const VITEST_COHORT_VERSION = "5.0.3";
+export const VITEST_COHORT_VERSION = "5.0.5";
 /**
  * The AI SDK core and the Convex AI gateway provider move as one catalog
  * cohort, and each bump rechecks the gateway module's provider contracts
@@ -51,7 +51,7 @@ export const VITEST_COHORT_VERSION = "5.0.3";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.136",
+  ai: "7.0.140",
 } as const;
 /**
  * Tiptap moves as one exact cohort, and the workspace catalog does not hold it, so
@@ -60,7 +60,7 @@ export const AI_SDK_COHORT = {
  * A bump changes this line and then every manifest that pins the cohort: the policy
  * test reports each declaration that still holds the old version, so none is missed.
  */
-const TIPTAP_COHORT_VERSION = "3.31.4";
+const TIPTAP_COHORT_VERSION = "3.32.0";
 /** The Tiptap packages the design system declares. The web app also declares `@tiptap/pm`. */
 const TIPTAP_PACKAGES = [
   "@tiptap/core",
@@ -84,8 +84,8 @@ const TIPTAP_PACKAGES = [
 ];
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
-  { approved: "19.3.0", dependency: "react", minimumDeclarations: 1 },
-  { approved: "19.3.0", dependency: "react-dom", minimumDeclarations: 1 },
+  { approved: "19.3.1", dependency: "react", minimumDeclarations: 1 },
+  { approved: "19.3.1", dependency: "react-dom", minimumDeclarations: 1 },
   { approved: "19.3.0", dependency: "@types/react", minimumDeclarations: 1 },
   {
     approved: "19.3.0",
@@ -130,13 +130,13 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.4.0", dependency: "next", minimumDeclarations: 1 },
+  { approved: "16.4.2", dependency: "next", minimumDeclarations: 1 },
   {
-    approved: "16.4.0",
+    approved: "16.4.2",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
-  { approved: "1.46.0", dependency: "convex", minimumDeclarations: 1 },
+  { approved: "1.47.0", dependency: "convex", minimumDeclarations: 1 },
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
   {
     approved: "catalog:",
@@ -172,19 +172,19 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "24.19.1",
+    approved: "24.19.2",
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "7.12.4", dependency: "ultracite", minimumDeclarations: 1 },
-  { approved: "2.11.7", dependency: "turbo", minimumDeclarations: 1 },
+  { approved: "8.0.1", dependency: "ultracite", minimumDeclarations: 1 },
+  { approved: "2.11.8", dependency: "turbo", minimumDeclarations: 1 },
   {
-    approved: "2.11.7",
+    approved: "2.11.8",
     dependency: "@turbo/gen",
     minimumDeclarations: 1,
   },
   {
-    approved: "9.8.1",
+    approved: "9.8.2",
     dependency: "@react-three/fiber",
     minimumDeclarations: 1,
   },
@@ -197,7 +197,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
-  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.31.4 does not
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.32.0 does not
   // ship it. It is MIT, depends on prosemirror-state alone, and its last
   // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
   // design system installs its extension, and the sync loop of the web app
@@ -211,7 +211,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "prosemirror-collab",
   },
   // The model and the transform that the server folds stored steps with (ADR
-  // 0028). They are the versions that `@tiptap/pm` 3.31.4 resolves in
+  // 0028). They are the versions that `@tiptap/pm` 3.32.0 resolves in
   // `pnpm-lock.yaml`, so the server applies a step with the code the editors run.
   {
     approved: "1.25.12",
@@ -236,23 +236,23 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
 export const REGISTRY_REVIEWS = [
   [
     "react@latest",
-    "19.3.0",
-    "The declared React is 19.3.0, the latest 19.3 release. Fiber 9.8.1 accepts React 19.3 (its peer range is >=19 <19.4), and scene labels no longer use drei's Html, so no second React root is created per label.",
+    "19.3.1",
+    'The declared React is 19.3.1, the latest 19.3 release (checked 16 October 2026). Its release lists one entry, "Improve transport protocol" (facebook/react#37845), which adds a development-mode warning for an empty Flight or Fizz chunk where ArrayBuffer.prototype.detached is missing. Fiber 9.8.2 accepts React 19.3 (its peer range is >=19 <19.4), and scene labels no longer use drei\'s Html, so no second React root is created per label.',
   ],
   [
     "react-dom@latest",
-    "19.3.0",
-    "React DOM is 19.3.0, the same release as React. react-dom 19.3.0 requires react ^19.3.0, and the overrides pin both to 19.3.0.",
+    "19.3.1",
+    "React DOM is 19.3.1, the same release as React. react-dom 19.3.1 requires react ^19.3.1, and the overrides pin both to 19.3.1.",
   ],
   [
     "@types/react@latest",
     "19.3.0",
-    "The React declarations match the React runtime at 19.3.0.",
+    "19.3.0 is the newest published React declarations (checked 16 October 2026), so they stay on it while the runtime is 19.3.1.",
   ],
   [
     "@types/react-dom@latest",
     "19.3.0",
-    "The React DOM declarations match the React DOM runtime at 19.3.0.",
+    "19.3.0 is the newest published React DOM declarations (checked 16 October 2026), so they stay on it while the runtime is 19.3.1.",
   ],
   [
     "mermaid@latest",
@@ -296,18 +296,18 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.51.1",
-    "Compiler patching moves with TypeScript and Effect; 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), and 0.51 adds declaration locations to it.",
+    "0.52.0",
+    "Compiler patching moves with TypeScript and Effect; 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), and 0.51 adds declaration locations to it. 0.52 turns on schemaClassMissingBrand for Effect v4 schema classes by default. Its first typecheck run failed with TS377141 in packages/utilities alone, and about 340 lines in the repository declare Schema.Class, Schema.TaggedError or Schema.Opaque, so the compiler stays on 0.51.1 until those brands are adopted or the rule is decided in docs/adr/0021-rules.md.",
   ],
-  ["vitest@latest", "5.0.3", "The Effect 4 test adapter requires Vitest 5."],
+  ["vitest@latest", "5.0.5", "The Effect 4 test adapter requires Vitest 5."],
   [
     "@vitest/coverage-istanbul@latest",
-    "5.0.3",
+    "5.0.5",
     "Coverage must match the supported Vitest runner.",
   ],
   [
     "@vitest/ui@latest",
-    "5.0.3",
+    "5.0.5",
     "The test UI must match the supported Vitest runner.",
   ],
   [
@@ -318,18 +318,18 @@ export const REGISTRY_REVIEWS = [
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
     "next@latest",
-    "16.4.0",
-    "Next.js 16.4 recommends Cache Components with partial prefetching for every app, which Nakafa already runs, adds `ensureStatic` and the `navigation()` and `prefetch()` deferral APIs, and ships one shared Turbopack runtime chunk with export mangling. It follows the 16.3.8 security release.",
+    "16.4.2",
+    "Next.js 16.4 recommends Cache Components with partial prefetching for every app, which Nakafa already runs, adds `ensureStatic` and the `navigation()` and `prefetch()` deferral APIs, and ships one shared Turbopack runtime chunk with export mangling. It follows the 16.3.8 security release. 16.4.1 fixes three advisories that affect 16.4.0: GHSA-673q-mjm6-r5xr (typed arrays returned from `use cache` functions, critical, with no workaround), GHSA-2464-fhr4-w9xw (Image Optimization with SVG inputs, critical, fixed by sharp 0.35.5 or later, which the lock resolves), and GHSA-p3m5-59mp-jv5r (Server Actions in the App Router, high). 16.4.2 fixes Turbopack and Pages Router issues, and its release notes name no App Router, caching, prefetching or config change.",
   ],
   [
     "convex@latest",
-    "1.46.0",
-    "Additive validator `.optional()` and `FunctionReference_future`; acceptance uses an isolated deployment.",
+    "1.47.0",
+    "Convex 1.47 adds `.staged()` schema validation, `ctx.meta.getSnapshotTs()` and `getServiceUrl`, all additive. Its `convex deploy` asks before it creates or changes a non-staged index on a table of 100,000 documents or more, and a non-interactive deploy fails there unless `--skip-large-indexes-check` is passed, so a production build that adds such an index fails without that flag. Acceptance uses an isolated deployment.",
   ],
   [
     "ai@latest",
-    AI_SDK_COHORT.ai,
-    "AI SDK packages move as one reviewed cohort.",
+    "7.0.142",
+    "AI SDK packages move as one reviewed cohort. 7.0.142 stays out: with it, `new Agent(...)` in confect/nina fails the backend typecheck with TS2590 (16 October 2026, with @convex-dev/agent 0.7.8 and with 0.7.7; 7.0.140 passes). Its release notes change the streamed input of OpenAI custom tools and the workflow telemetry context, and Nakafa uses neither.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
@@ -346,9 +346,18 @@ export const REGISTRY_REVIEWS = [
     "0.12.5",
     "The adapter defines the accepted Better Auth peer range.",
   ],
+  [
+    "posthog-node@latest",
+    "5.56.2",
+    "posthog-node 5.56 imports @opentelemetry/api, an optional peer that is not installed, and Convex's bundler cannot resolve it. The PostHog Convex component therefore stays on 5.55.1 through the override for @posthog/convex in pnpm-workspace.yaml, and the analytics package keeps 5.56.2. Review this again when a posthog-node or @posthog/convex release bundles for Convex without the import.",
+  ],
   ["@biomejs/biome@latest", "2.5.15", "Formatting is reviewed with Ultracite."],
-  ["ultracite@latest", "7.12.4", "Formatting is reviewed with Biome."],
-  ["@types/node@24", "24.19.1", "Declarations remain on the Node 24 line."],
+  [
+    "ultracite@latest",
+    "8.0.1",
+    "Ultracite 8 keeps the Biome presets. Its Biome core turns noForIn, noUndeclaredDependencies and three JSX rules into errors, and the repository passes them without code changes. Its ESLint, Oxlint and Zed changes do not apply to this Biome setup.",
+  ],
+  ["@types/node@24", "24.19.2", "Declarations remain on the Node 24 line."],
   ["node@24", "24.21.0", "The repository supports the Node 24 runtime line."],
   [
     "pnpm@latest",
@@ -357,18 +366,18 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "react-doctor@latest",
-    "0.9.17",
-    "The local and CI scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled.",
+    "0.9.18",
+    "The local and CI scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled. 0.9.18 narrows existing rules to reduce false positives and adds the opt-in --scope contextual mode, which this repository does not use.",
   ],
   [
     "turbo@latest",
-    "2.11.7",
-    "Turbo and its generator move together; 2.11 adds hash and scope-filtering performance work, and 2.11.4 respects negated global dependencies in affected detection, with no config change for this repository.",
+    "2.11.8",
+    "Turbo and its generator move together; 2.11 adds hash and scope-filtering performance work, 2.11.4 respects negated global dependencies in affected detection, and 2.11.8 hashes the Ruff and pytest configuration of the Python app and fixes affected listings, with no config change for this repository.",
   ],
   [
     "@react-three/fiber@latest",
-    "9.8.1",
-    "Fiber 9.8.1 accepts React 19.3 (its peer range is >=19 <19.4) and mounts a scene inside the React DOM commit that renders its canvas. Scene labels draw in one DOM overlay per canvas (components/three/overlay.tsx) and no longer use drei's Html, which created a second React root per label. That root's replacement during Fiber's mount cleared the first label of every scene and made a label's removal throw on lesson navigation (pmndrs/drei#2867). drei 10.7.9 peers Fiber ^9.0.0, which 9.8.1 satisfies. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
+    "9.8.2",
+    "Fiber 9.8.2 accepts React 19.3 (its peer range is >=19 <19.4) and mounts a scene inside the React DOM commit that renders its canvas. Its 9.8.2 release notes keep pointer capture when an object's args change during a drag, request a frame when an object is removed with frameloop demand, fix the createPortal memory leaks with Activity, and make roots follow devicePixelRatio changes. Scene labels draw in one DOM overlay per canvas (components/three/overlay.tsx) and no longer use drei's Html, which created a second React root per label. That root's replacement during Fiber's mount cleared the first label of every scene and made a label's removal throw on lesson navigation (pmndrs/drei#2867). drei 10.7.9 peers Fiber ^9.0.0, which 9.8.2 satisfies. Fiber 10, still prerelease, removes THREE.Clock: its upgrade drops the Clock allowance in apps/www/e2e/scene/lines.browser.ts and rechecks SceneTime in packages/design-system/components/three/canvas.tsx, which relies on Fiber 9 restarting the clock on frameloop changes and on internal.frames.",
   ],
   [
     "afdocs@latest",
@@ -383,7 +392,7 @@ export const SCRIPT_DEPENDENCY_HOLDS = [
     // throwaway install took versions npm was still propagating: a 4-minute-old
     // electron-to-chromium tarball returned 404 and failed Doctor. The pnpm 11
     // default of one day keeps that install on settled releases.
-    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17",
+    approved: "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18",
     manifestPath: "apps/www/package.json",
     script: "doctor",
   },

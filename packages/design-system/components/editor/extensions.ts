@@ -70,10 +70,11 @@ function held(tokens: MarkdownToken[] | undefined) {
  * one or two letters, or a roman numeral, for a number. A line such as `Dr. Budi
  * sakit` or `ok. saya` then opens as a list item and loses its first word, and
  * the next save writes `1. Budi sakit` in its place (ueberdosis/tiptap issues
- * 8376 and 8395). The fix merged upstream for 8376 is not in 3.31.4, the version
- * this editor pins. Here `marked` lexes the list, as it lexes a bullet list, and its
- * items are parsed the way a bullet list's items are, so the words of a learner stay
- * the words of a learner.
+ * 8376 and 8395). The fix merged upstream for 8376 only stops mixed-case titles
+ * such as `Dr.` and is in no release up to 3.32.0, the version this editor pins.
+ * Here `marked` lexes the list, as it lexes a bullet list, and its items are parsed
+ * the way a bullet list's items are, so the words of a learner stay the words of a
+ * learner.
  * Tiptap offers a `list` token to the bullet list first, so this parser only
  * sees ordered lists.
  *

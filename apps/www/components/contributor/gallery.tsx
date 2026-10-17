@@ -7,11 +7,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useMounted } from "@mantine/hooks";
 import type { Contributor } from "@repo/contents/contributor";
-import { Animal } from "@repo/design-system/components/ui/animal";
-import {
-  Avatar,
-  AvatarFallback,
-} from "@repo/design-system/components/ui/avatar";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -25,6 +20,7 @@ import {
   DrawerTrigger,
 } from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   Tooltip,
   TooltipContent,
@@ -48,7 +44,7 @@ const galleryVariants = cva("flex flex-wrap", {
   },
 });
 
-const avatarVariants = cva("shadow-sm", {
+const avatarVariants = cva("", {
   defaultVariants: {
     variant: "page",
   },
@@ -109,11 +105,10 @@ export function ContributorGallery({
                   payload={entry}
                   title={entry.contributor.name}
                 >
-                  <Avatar className={avatarVariants({ variant })}>
-                    <AvatarFallback>
-                      <Animal mascot={entry.mascot} />
-                    </AvatarFallback>
-                  </Avatar>
+                  <PersonAvatar
+                    className={avatarVariants({ variant })}
+                    mascot={entry.mascot}
+                  />
                 </DrawerTrigger>
               }
             />
@@ -153,11 +148,7 @@ function ContributorDrawer({ contributor, mascot }: Entry) {
       showBar
     >
       <DrawerHeader className="items-center">
-        <Avatar className="size-16 shadow-sm">
-          <AvatarFallback>
-            <Animal mascot={mascot} />
-          </AvatarFallback>
-        </Avatar>
+        <PersonAvatar className="size-16" mascot={mascot} />
         <DrawerTitle className="text-center">{contributor.name}</DrawerTitle>
         <DrawerDescription className="text-center">
           <Badge>{t(contributor.type)}</Badge>
