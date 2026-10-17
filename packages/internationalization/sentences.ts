@@ -14,6 +14,8 @@ export const SentenceKeySchema = Schema.Literals([
   "Ai.chat-unavailable",
   "Ai.delete-chat-description",
   "Ai.new-chat-description",
+  "Ai.private-description",
+  "Ai.public-description",
   "Ai.share-chat-description",
   "Ai.share-link-error",
   "Ai.sheet-description",
