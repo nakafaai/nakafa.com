@@ -4,6 +4,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import spec from "@repo/backend/confect/auth/queries.spec";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import { Effect, Layer, Struct } from "effect";
 
 /**
@@ -47,13 +48,12 @@ const getUserById = FunctionImpl.make(
     if (!user) {
       return null;
     }
+    // The photo leaves the server only while the account shows it, so an animal
+    // hides the photo from every reader.
+    const photo = photoOf(user);
     return {
-      ...Struct.pick(user, ["mascot"]),
-      ...(user.image === null || user.image === undefined
-        ? {}
-        : {
-            image: user.image,
-          }),
+      ...Struct.pick(user, ["mascot", "picture"]),
+      ...(photo === undefined ? {} : { image: photo }),
       name: user.name,
     };
   })
