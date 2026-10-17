@@ -1,29 +1,16 @@
 "use client";
 
 import type { ChatView } from "@repo/backend/confect/chats/view";
-import { focusIsLost } from "@repo/design-system/lib/focus";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useUpdateChatTitleMutation } from "@/components/ai/chat/mutation.client";
+import {
+  focusBoxAfterRefusal,
+  returnFocusAfterClose,
+} from "@/components/ai/chat/rename";
 import { reportClientException } from "@/lib/analytics/client";
-
-/**
- * Gives the focus to the control that opened the box, or to the title when that
- * control is gone. The focus moves only while it is still lost, so a control the
- * learner chose keeps it.
- */
-function returnFocus(
-  box: HTMLElement | null,
-  opener: HTMLElement | null,
-  title: HTMLElement | null
-) {
-  if (focusIsLost(box)) {
-    (opener ?? title)?.focus();
-  }
-}
 
 /**
  * The rename of a chat's title in its header: the box that replaces the title
@@ -40,18 +27,28 @@ export function useChatRename(chat: ChatView) {
   const inputRef = useRef<HTMLInputElement>(null);
   const moreActions = useRef<HTMLButtonElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  // The focus that an event asks for. Each request is a new value, so the commit
+  // that follows it always runs the request.
+  const [focusStep, setFocusStep] = useState<{ focus: () => void } | null>(
+    null
+  );
   const updateChatTitle = useUpdateChatTitleMutation();
+
+  // The box shows or hides in the commit that follows an event, and the focus
+  // moves only after that commit: the control that held the focus can be the
+  // one the commit removes, and a hidden box has no ref until it shows again.
+  useLayoutEffect(() => {
+    focusStep?.focus();
+  }, [focusStep]);
 
   /**
    * Opens the box with the current title. The menu item that calls this closes
    * the menu after it, and the menu gives the focus to the box once it has closed.
    */
   const handleEdit = () => {
-    flushSync(() => {
-      setMenuReturnsToBox(true);
-      setChatTitle(chat.title ?? "");
-      setIsEditing(true);
-    });
+    setMenuReturnsToBox(true);
+    setChatTitle(chat.title ?? "");
+    setIsEditing(true);
   };
 
   /**
@@ -67,8 +64,11 @@ export function useChatRename(chat: ChatView) {
   /** Closes the box and returns the focus to the control that opened it, or to the title. */
   const closeEditor = () => {
     const box = inputRef.current;
-    flushSync(() => setIsEditing(false));
-    returnFocus(box, moreActions.current, titleRef.current);
+    setFocusStep({
+      focus: () =>
+        returnFocusAfterClose(box, moreActions.current, titleRef.current),
+    });
+    setIsEditing(false);
   };
 
   /**
@@ -100,18 +100,16 @@ export function useChatRename(chat: ChatView) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  // The box comes back with the words the learner wrote. It takes the
-                  // focus unless a control the learner chose has it. The menu that the
-                  // save gave the focus back to is not such a control. A hidden box has
-                  // no ref, so the box is read once it shows again.
-                  flushSync(() => setIsEditing(true));
-                  const box = inputRef.current;
-                  if (
-                    focusIsLost(box) ||
-                    document.activeElement === moreActions.current
-                  ) {
-                    box?.focus();
-                  }
+                  // The box comes back with the words the learner wrote, and the
+                  // focus moves to it once the commit has shown it.
+                  setFocusStep({
+                    focus: () =>
+                      focusBoxAfterRefusal(
+                        inputRef.current,
+                        moreActions.current
+                      ),
+                  });
+                  setIsEditing(true);
                   toast.error(actionErrorMessage);
                 })
               )

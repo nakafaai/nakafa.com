@@ -1,13 +1,24 @@
 /**
+ * Whether a key press is the learner's own key press for the field, and not a
+ * key that belongs to a composed character, such as the Enter that confirms a
+ * Japanese conversion or the Escape that cancels it. Browsers report such a key
+ * press while the composition runs, with `isComposing` set. Some Safari versions
+ * send it after the composition has ended, with `isComposing` unset, and key
+ * code 229 is what browsers report for a key press of an input method, so the
+ * key code is checked as well.
+ */
+export function isOutsideComposition(
+  event: Pick<KeyboardEvent, "isComposing" | "keyCode">
+) {
+  return !event.isComposing && event.keyCode !== 229;
+}
+
+/**
  * Whether a key press is an Enter the learner means for the field, and not the
- * Enter that ends a composed character, such as the one that confirms a Japanese
- * conversion. Browsers report that Enter while the composition runs, with
- * `isComposing` set. Some Safari versions send it after the composition has
- * ended, with `isComposing` unset, and key code 229 is what browsers report for
- * a key press of an input method, so the key code is checked as well.
+ * Enter of a composed character. See `isOutsideComposition`.
  */
 export function isEnterOutsideComposition(
   event: Pick<KeyboardEvent, "isComposing" | "key" | "keyCode">
 ) {
-  return event.key === "Enter" && !event.isComposing && event.keyCode !== 229;
+  return event.key === "Enter" && isOutsideComposition(event);
 }
