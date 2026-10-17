@@ -24,6 +24,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -155,14 +156,16 @@ export function SubatomicParticlesLab({
         <div className="max-w-3xl text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.description}
         </div>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
+            {Arr.map(selectedLabels.facts, (fact) => (
+              <LabFact fact={fact} key={fact.label} />
+            ))}
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
-          {Arr.map(selectedLabels.facts, (fact) => (
-            <LabFact fact={fact} key={fact.label} />
-          ))}
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

@@ -4,10 +4,8 @@ import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
@@ -15,6 +13,11 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
+import {
+  CardSection,
+  CardSectionActions,
+  CardSectionFooter,
+} from "@/components/shared/card/section";
 import {
   type AnalyticsConsentContextValue,
   useAnalyticsConsent,
@@ -80,7 +83,10 @@ export function AnalyticsConsentControls() {
           aria-label={t("title")}
           className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md"
         >
-          <Card className="max-h-[calc(100dvh-2rem)] shadow-lg" size="sm">
+          <CardSection
+            className="max-h-[calc(100dvh-2rem)] shadow-lg"
+            size="sm"
+          >
             <CardHeader>
               <CardTitle>{t("title")}</CardTitle>
               <CardDescription>{t("prompt-description")}</CardDescription>
@@ -88,10 +94,10 @@ export function AnalyticsConsentControls() {
             <CardContent className="min-h-0 flex-1 overflow-y-auto">
               <ConsentDetails error={consent.error} />
             </CardContent>
-            <CardFooter className="flex-col gap-2 sm:flex-row sm:justify-end max-sm:[&>[data-slot=button]]:w-full">
-              {actions}
-            </CardFooter>
-          </Card>
+            <CardSectionFooter>
+              <CardSectionActions>{actions}</CardSectionActions>
+            </CardSectionFooter>
+          </CardSection>
         </section>
       ) : null}
 

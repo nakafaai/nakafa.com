@@ -15,6 +15,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -133,30 +134,32 @@ export function AtomSymbolLab({
             />
           </dl>
         </div>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+            <VisualFact
+              label={labels.protonCount}
+              value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
+            />
+            <VisualFact
+              label={labels.neutronCount}
+              value={<InlineMath math={`${neutronCount}`} />}
+            />
+            <VisualFact
+              label={labels.electronCount}
+              value={
+                <>
+                  <InlineMath math={`${selectedSample.atomicNumber}`} />{" "}
+                  <span className="text-muted-foreground">
+                    {labels.neutralAtom}
+                  </span>
+                </>
+              }
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <VisualFact
-            label={labels.protonCount}
-            value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
-          />
-          <VisualFact
-            label={labels.neutronCount}
-            value={<InlineMath math={`${neutronCount}`} />}
-          />
-          <VisualFact
-            label={labels.electronCount}
-            value={
-              <>
-                <InlineMath math={`${selectedSample.atomicNumber}`} />{" "}
-                <span className="text-muted-foreground">
-                  {labels.neutralAtom}
-                </span>
-              </>
-            }
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
