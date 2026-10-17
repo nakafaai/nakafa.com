@@ -42,14 +42,6 @@ function requireHash(
       );
 }
 
-/** Safely evaluates a synchronous contract-owned hashing operation. */
-function contractHash<A>(evaluate: () => A) {
-  return Effect.try({
-    catch: contractFailure,
-    try: evaluate,
-  });
-}
-
 /** Recomputes one manifest self-hash before its global row is written. */
 export const verifySnapshotManifest = Effect.fn(
   "contentRelease.verifySnapshotManifest"
@@ -75,10 +67,14 @@ export const verifySnapshotManifest = Effect.fn(
     );
   }
   const { snapshotId, ...identity } = snapshot.manifest;
-  const actual = yield* contractHash(
-    () => makeTryoutSnapshot(identity).snapshotId
+  const hashed = yield* makeTryoutSnapshot(identity).pipe(
+    Effect.mapError(contractFailure)
   );
-  return yield* requireHash(actual, snapshotId, "Try-out snapshot manifest");
+  return yield* requireHash(
+    hashed.snapshotId,
+    snapshotId,
+    "Try-out snapshot manifest"
+  );
 });
 
 /** Recomputes one row's intrinsic hash and immutable snapshot binding. */
@@ -121,8 +117,8 @@ const verifySnapshotRow = Effect.fn("contentRelease.verifySnapshotRow")(
       );
     }
     if (row.rowKind === "catalog") {
-      const actual = yield* contractHash(() =>
-        makeTryoutCatalogRecord(row.record.row)
+      const actual = yield* makeTryoutCatalogRecord(row.record.row).pipe(
+        Effect.mapError(contractFailure)
       );
       return yield* requireHash(
         actual.rowHash,
@@ -130,8 +126,8 @@ const verifySnapshotRow = Effect.fn("contentRelease.verifySnapshotRow")(
         "Try-out snapshot row"
       );
     }
-    const actual = yield* contractHash(() =>
-      makeTryoutPlacementRecord(row.record.row)
+    const actual = yield* makeTryoutPlacementRecord(row.record.row).pipe(
+      Effect.mapError(contractFailure)
     );
     return yield* requireHash(
       actual.rowHash,

@@ -62,13 +62,15 @@ describe("retained attempt navigation", () => {
           }
         )
       );
-      const snapshotId = await activateTryoutSnapshot(ctx, {
-        catalog,
-        placements: [
-          makeTryoutStartPlacement("id"),
-          makeTryoutStartPlacement("en"),
-        ],
-      });
+      const snapshotId = await Effect.runPromise(
+        activateTryoutSnapshot(ctx, {
+          catalog,
+          placements: [
+            makeTryoutStartPlacement("id"),
+            makeTryoutStartPlacement("en"),
+          ],
+        })
+      );
       await insertTestTryoutRuntimeBundle(ctx, snapshotId);
       return identity;
     });

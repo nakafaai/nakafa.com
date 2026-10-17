@@ -1,5 +1,11 @@
-import { RegisteredConvexFunction, RegisteredFunctions } from "@confect/server";
+import { ConvexFunctionDefinitions, RegisteredConvexFunction, type RegisteredFunctions } from "@confect/server";
 import databaseSchema from "../../../schema";
-import attempts from "../../../../tryouts/mutations/attempts.impl";
+import groupLayer from "../../../../tryouts/mutations/attempts.impl";
 
-export default RegisteredFunctions.buildForGroup<typeof import("../../../../tryouts/mutations/attempts.spec")["default"]>(databaseSchema, attempts, RegisteredConvexFunction.make);
+const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<Returns>) => (ctx: Ctx, args: Args) => handler(ctx, args);
+
+const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../../tryouts/mutations/attempts.spec")["default"]>(databaseSchema, groupLayer);
+
+export default {
+["startAttempt"]: RegisteredConvexFunction.register({ ...definitions["startAttempt"], handler: forward(definitions["startAttempt"].handler) }),
+} as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../tryouts/mutations/attempts.spec")["default"]>;

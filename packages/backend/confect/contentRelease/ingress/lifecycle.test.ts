@@ -10,28 +10,24 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { advancePublication } from "@repo/backend/confect/contentRelease/ingress/lifecycle";
-import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
-import {
-  encodeReleaseJson,
-  encodeRendererJson,
-} from "@repo/backend/confect/contentRelease/wire";
+import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { workflow } from "@repo/backend/confect/workflow";
-import type {
-  ActionCtx,
-  MutationCtx,
-} from "@repo/backend/convex/_generated/server";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import {
   insertActivationPair,
   makeActivationPair,
 } from "@repo/backend/test/content/activation";
 import {
+  insertRelease,
+  markProofFailed,
+} from "@repo/backend/test/content/lifecycle";
+import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
-  testEmptyManifest,
   testProofRenderer,
-  testSignedRelease,
+  testSignedEmptyRelease,
 } from "@repo/backend/test/content/proof";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import {
@@ -40,7 +36,7 @@ import {
   recomputeContentProof,
 } from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
-import { Data, Effect, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
@@ -51,7 +47,12 @@ vi.mock("@repo/backend/content/trust", async () => {
   };
 });
 const releaseId = ReleaseIdSchema.make("release-lifecycle-ingress");
-const release = testSignedRelease(testEmptyManifest(releaseId));
+/** Signs the empty lifecycle release; each test signs its own copy. */
+const signedLifecycleRelease = Effect.fn(
+  "test.contentRelease.lifecycleRelease"
+)(function* () {
+  return yield* testSignedEmptyRelease(releaseId);
+});
 const recoveryReleaseId = ReleaseIdSchema.make(
   "release-lifecycle-ingress-recovery"
 );
@@ -61,81 +62,6 @@ class ObservedLifecycleActionFailure extends Schema.TaggedError<ObservedLifecycl
     cause: Schema.Unknown,
   }
 ) {}
-class UnexpectedLifecycleTestState extends Data.TaggedError(
-  "UnexpectedLifecycleTestState"
-)<{
-  readonly operation: "mark-proof-failed";
-}> {}
-
-/** Inserts one verified release with explicit frozen renderer bytes. */
-const insertRelease = Effect.fn("test.contentRelease.insertLifecycleRelease")(
-  function* (ctx: MutationCtx, rendererJson: string) {
-    const now = Date.UTC(2026, 6, 22, 12, 0, 0);
-    yield* Effect.promise(() =>
-      ctx.db.insert("contentReleases", {
-        ...releaseReachability(release),
-        baseFamilies: [],
-        checkedIndex: -1,
-        checkedItems: 0,
-        createdAt: now,
-        proofAt: now,
-        proofJson: "{}",
-        releaseId,
-        releaseJson: encodeReleaseJson(release),
-        rendererJson,
-        resultFamilies: [...release.manifest.scope.families],
-        role: "candidate",
-        sequence: 1,
-        stagedArtifacts: 0,
-        stagedDeletes: 0,
-        stagedItems: 0,
-        stagedProjections: 0,
-        stagedRoutes: 0,
-        stagedSnapshotBatches: 0,
-        stagedSnapshotRows: 0,
-        stagedUpserts: 0,
-        status: "verified",
-        updatedAt: now,
-        verifiedAt: now,
-      })
-    );
-    yield* Effect.promise(() =>
-      ctx.db.insert("contentState", {
-        articleSlot: "blue",
-        candidateManifestHash: release.manifestHash,
-        candidateReleaseId: releaseId,
-        candidateSequence: 1,
-        key: "primary",
-        materialSlot: "blue",
-        nextSequence: 2,
-        searchSlot: "blue",
-        updatedAt: now,
-      })
-    );
-  }
-);
-
-/** Marks one stored proof as terminally failed for ingress observation. */
-const markProofFailed = Effect.fn("test.contentRelease.markProofFailed")(
-  function* (ctx: MutationCtx) {
-    const stored = yield* Effect.promise(() =>
-      ctx.db.query("contentReleases").unique()
-    );
-    if (!stored) {
-      return yield* Effect.die(
-        new UnexpectedLifecycleTestState({
-          operation: "mark-proof-failed",
-        })
-      );
-    }
-    yield* Effect.promise(() =>
-      ctx.db.patch("contentReleases", stored._id, {
-        proofFailure: "failed",
-        status: "verifying",
-      })
-    );
-  }
-);
 
 /** Runs one lifecycle program through the explicit technical verification key. */
 const runLifecycle = Effect.fn("test.contentRelease.runLifecycle")(function* <
@@ -180,6 +106,7 @@ describe("content release lifecycle ingress", () => {
     "returns in-progress verification without claiming terminal proof",
     () =>
       Effect.gen(function* () {
+        const release = yield* signedLifecycleRelease();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
@@ -223,6 +150,7 @@ describe("content release lifecycle ingress", () => {
     "returns authenticated evidence after durable proof completion",
     () =>
       Effect.gen(function* () {
+        const release = yield* signedLifecycleRelease();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
@@ -258,6 +186,7 @@ describe("content release lifecycle ingress", () => {
   );
   it.effect("runs the poll mutation once after the workflow has finished", () =>
     Effect.gen(function* () {
+      const release = yield* signedLifecycleRelease();
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
@@ -304,6 +233,7 @@ describe("content release lifecycle ingress", () => {
   );
   it.effect("surfaces only the stable terminal proof category", () =>
     Effect.gen(function* () {
+      const release = yield* signedLifecycleRelease();
       const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
@@ -342,12 +272,17 @@ describe("content release lifecycle ingress", () => {
     "aborts through the server-owned cursor and returns exact evidence",
     () =>
       Effect.gen(function* () {
+        const release = yield* signedLifecycleRelease();
         const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              insertRelease(ctx, encodeRendererJson(TEST_PROOF_RENDERER)).pipe(
+              insertRelease(
+                ctx,
+                release,
+                encodeRendererJson(TEST_PROOF_RENDERER)
+              ).pipe(
                 Effect.provide(
                   RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
                 )
@@ -377,6 +312,7 @@ describe("content release lifecycle ingress", () => {
     "rejects activation when the frozen renderer identity drifted",
     () =>
       Effect.gen(function* () {
+        const release = yield* signedLifecycleRelease();
         const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
@@ -384,6 +320,7 @@ describe("content release lifecycle ingress", () => {
             Effect.runPromiseWith(runtimeServices)(
               insertRelease(
                 ctx,
+                release,
                 encodeRendererJson(testProofRenderer("h1"))
               ).pipe(
                 Effect.provide(
@@ -406,6 +343,7 @@ describe("content release lifecycle ingress", () => {
   );
   it.effect("rejects a tampered release before any lifecycle read", () =>
     Effect.gen(function* () {
+      const release = yield* signedLifecycleRelease();
       const t = convexTest(schema, convexModules);
       const prefix = release.signature.startsWith("A") ? "B" : "A";
       const tampered = {
@@ -429,7 +367,7 @@ describe("content release lifecycle ingress", () => {
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const t = convexTest(schema, convexModules);
-      const pair = makeActivationPair();
+      const pair = yield* makeActivationPair();
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           Effect.runPromiseWith(runtimeServices)(

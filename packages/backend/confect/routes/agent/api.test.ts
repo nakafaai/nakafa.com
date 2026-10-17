@@ -18,11 +18,11 @@ import {
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
+  patchRuntimeSearchState,
   testArticleProjection,
 } from "@repo/backend/test/content/runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 
 setupApiTest();
 describe("public agent API routes", () => {
@@ -272,15 +272,7 @@ describe("public agent API routes", () => {
       await insertRuntimeIndex(ctx, article.contentKey, {
         plainText: "rational function grade eleven asymptote",
       });
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        expect.fail("Expected one active content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-        searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-        searchSequence: TEST_RUNTIME_RELEASE.sequence,
-      });
+      await patchRuntimeSearchState(ctx);
     });
     const response = await fetchApi(
       test,

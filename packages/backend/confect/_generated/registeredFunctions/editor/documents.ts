@@ -1,5 +1,12 @@
-import { RegisteredConvexFunction, RegisteredFunctions } from "@confect/server";
+import { ConvexFunctionDefinitions, RegisteredConvexFunction, type RegisteredFunctions } from "@confect/server";
 import databaseSchema from "../../schema";
-import documents from "../../../editor/documents.impl";
+import groupLayer from "../../../editor/documents.impl";
 
-export default RegisteredFunctions.buildForGroup<typeof import("../../../editor/documents.spec")["default"]>(databaseSchema, documents, RegisteredConvexFunction.make);
+const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<Returns>) => (ctx: Ctx, args: Args) => handler(ctx, args);
+
+const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../editor/documents.spec")["default"]>(databaseSchema, groupLayer);
+
+export default {
+["create"]: RegisteredConvexFunction.register({ ...definitions["create"], handler: forward(definitions["create"].handler) }),
+["open"]: RegisteredConvexFunction.register({ ...definitions["open"], handler: forward(definitions["open"].handler) }),
+} as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../editor/documents.spec")["default"]>;

@@ -3,7 +3,7 @@ import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog"
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/hash/catalog";
 import { tryoutCatalogFacts } from "@repo/backend/confect/contentRelease/tryout/facts";
 import { makeTryoutCatalogRow } from "@repo/backend/test/tryout/snapshot";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Creates one schema-decoded technical set or section row. */
 function makeSetChild(kind: "section" | "set") {
@@ -49,27 +49,31 @@ function makeSetChild(kind: "section" | "set") {
 }
 
 describe("contentRelease/tryout/facts", () => {
-  it("derives one stable set identity for set and section rows", () => {
-    const set = makeSetChild("set");
-    const section = makeSetChild("section");
-    const setIdentity = tryoutCatalogFacts(
-      makeTryoutCatalogRecord(set)
-    ).setIdentity;
+  it.effect("derives one stable set identity for set and section rows", () =>
+    Effect.gen(function* () {
+      const set = makeSetChild("set");
+      const section = makeSetChild("section");
+      const setIdentity = tryoutCatalogFacts(
+        yield* makeTryoutCatalogRecord(set)
+      ).setIdentity;
 
-    expect(tryoutCatalogFacts(makeTryoutCatalogRecord(set)).setIdentity).toBe(
-      setIdentity
-    );
-    expect(
-      tryoutCatalogFacts(makeTryoutCatalogRecord(section)).setIdentity
-    ).toBe(setIdentity);
-  });
+      expect(
+        tryoutCatalogFacts(yield* makeTryoutCatalogRecord(set)).setIdentity
+      ).toBe(setIdentity);
+      expect(
+        tryoutCatalogFacts(yield* makeTryoutCatalogRecord(section)).setIdentity
+      ).toBe(setIdentity);
+    })
+  );
 
-  it("stores no set identity for rows outside a set", () => {
-    const country = makeTryoutCatalogRow().record;
+  it.effect("stores no set identity for rows outside a set", () =>
+    Effect.gen(function* () {
+      const country = (yield* makeTryoutCatalogRow()).record;
 
-    expect(tryoutCatalogFacts(country).setIdentity).toBeUndefined();
-    expect(tryoutCatalogFacts(country).assetId).toBe(
-      "asset:en:tryout:technical:country"
-    );
-  });
+      expect(tryoutCatalogFacts(country).setIdentity).toBeUndefined();
+      expect(tryoutCatalogFacts(country).assetId).toBe(
+        "asset:en:tryout:technical:country"
+      );
+    })
+  );
 });

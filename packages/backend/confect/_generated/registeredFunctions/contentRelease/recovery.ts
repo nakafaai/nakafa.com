@@ -1,5 +1,11 @@
-import { RegisteredConvexFunction, RegisteredFunctions } from "@confect/server";
+import { ConvexFunctionDefinitions, RegisteredConvexFunction, type RegisteredFunctions } from "@confect/server";
 import databaseSchema from "../../schema";
-import recovery from "../../../contentRelease/recovery.impl";
+import groupLayer from "../../../contentRelease/recovery.impl";
 
-export default RegisteredFunctions.buildForGroup<typeof import("../../../contentRelease/recovery.spec")["default"]>(databaseSchema, recovery, RegisteredConvexFunction.make);
+const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<Returns>) => (ctx: Ctx, args: Args) => handler(ctx, args);
+
+const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../contentRelease/recovery.spec")["default"]>(databaseSchema, groupLayer);
+
+export default {
+["lookup"]: RegisteredConvexFunction.register({ ...definitions["lookup"], handler: forward(definitions["lookup"].handler) }),
+} as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../contentRelease/recovery.spec")["default"]>;

@@ -10,5 +10,5 @@ import { Crypto, Effect } from "effect";
  */
 export const randomUuid = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;
-  return yield* crypto.randomUUIDv4;
+  return yield* crypto.randomUUIDv4();
 }).pipe(Effect.orDie, Effect.provide(WebCryptoLayer));

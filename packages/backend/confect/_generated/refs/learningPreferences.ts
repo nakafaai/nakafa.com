@@ -4,7 +4,7 @@ import learningPreferences_queries from "../../learningPreferences/queries.spec"
 
 const spec: Spec.Spec<{
   readonly learningPreferences: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "learningPreferences", never, GroupSpec.NamedAt<typeof learningPreferences_mutations, "mutations"> | GroupSpec.NamedAt<typeof learningPreferences_queries, "queries">>, "learningPreferences">;
-}> = Spec.make().addAt("learningPreferences", GroupSpec.makeAt("learningPreferences").addGroupAt("mutations", learningPreferences_mutations).addGroupAt("queries", learningPreferences_queries));
+}> = Spec.fromGroups({ ["learningPreferences"]: GroupSpec.addGroupsAt(GroupSpec.make(), { ["mutations"]: learningPreferences_mutations, ["queries"]: learningPreferences_queries }) }) as typeof spec;
 
 const refs: Refs.FromSpec<typeof spec> = Refs.make(spec);
 

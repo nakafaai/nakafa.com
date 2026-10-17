@@ -417,7 +417,7 @@ describe("immutable try-out application catalog", () => {
     () =>
       Effect.gen(function* () {
         const context = yield* createTestPublication(
-          makeRuntimeSource().source
+          (yield* makeRuntimeSource()).source
         );
         fetchQueryMock.mockImplementation(context.query);
         yield* Effect.promise(() =>

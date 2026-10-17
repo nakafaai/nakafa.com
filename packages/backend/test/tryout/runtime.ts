@@ -115,8 +115,12 @@ export async function seedTryoutContentAccessState(
   const attemptTerminal = args.attemptStatus !== "in-progress";
   const sectionTerminal = args.sectionStatus !== "in-progress";
   const fixtureLocale: ActiveAppLocaleCode = "id";
-  const signedSection = makeSignedTryoutSection(section);
-  const signedSource = makeSignedTryoutSource(set, [signedSection]);
+  const signedSection = await Effect.runPromise(
+    makeSignedTryoutSection(section)
+  );
+  const signedSource = await Effect.runPromise(
+    makeSignedTryoutSource(set, [signedSection])
+  );
   const signedPlacement = signedSection.signed.placements[0];
   assert.ok(signedPlacement, "Expected one signed try-out placement fixture.");
   const englishSet = Schema.decodeSync(TryoutCatalogRowSchema)({
@@ -138,18 +142,20 @@ export async function seedTryoutContentAccessState(
         questionArtifactLocale: "en",
       })
   );
-  const snapshotId = await activateTryoutSnapshot(ctx, {
-    catalog: [
-      signedSource.snapshot.set.row,
-      englishSet,
-      signedSection.signed.section.row,
-      englishSection,
-    ],
-    placements: [
-      ...Arr.map(signedSection.signed.placements, ({ row }) => row),
-      ...englishPlacements,
-    ],
-  });
+  const snapshotId = await Effect.runPromise(
+    activateTryoutSnapshot(ctx, {
+      catalog: [
+        signedSource.snapshot.set.row,
+        englishSet,
+        signedSection.signed.section.row,
+        englishSection,
+      ],
+      placements: [
+        ...Arr.map(signedSection.signed.placements, ({ row }) => row),
+        ...englishPlacements,
+      ],
+    })
+  );
   const runtime = await insertTestTryoutRuntimeBundle(ctx, snapshotId);
   const setIdentity = tryoutCatalogNodeIdentity({
     appLocale: AppLocaleSchema.make("id"),

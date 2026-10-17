@@ -9,7 +9,10 @@ import {
 import { loadSearchOwner } from "@repo/backend/confect/contentRelease/search/owner";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { insertRuntimeArticles } from "@repo/backend/test/content/runtime";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import {
+  TEST_RUNTIME_RELEASE,
+  testRuntimeRelease,
+} from "@repo/backend/test/runtime/values";
 import { Effect, Option } from "effect";
 
 describe("active search publication ownership", () => {
@@ -25,8 +28,9 @@ describe("active search publication ownership", () => {
             expect(yield* loadSearchOwner()).toBeNull();
             const ctx = yield* MutationCtx;
             yield* Effect.promise(() => insertRuntimeArticles(ctx, 1));
+            const runtime = yield* testRuntimeRelease();
             const identity = {
-              searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+              searchManifestHash: runtime.manifestHash,
               searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
               searchSequence: TEST_RUNTIME_RELEASE.sequence,
             };
@@ -57,7 +61,7 @@ describe("active search publication ownership", () => {
               .patch(state.value._id, identity);
             expect(yield* loadSearchOwner()).toMatchObject({
               families: ContentFamilySchema.literals,
-              manifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+              manifestHash: runtime.manifestHash,
               releaseId: TEST_RUNTIME_RELEASE.releaseId,
               sequence: TEST_RUNTIME_RELEASE.sequence,
             });
