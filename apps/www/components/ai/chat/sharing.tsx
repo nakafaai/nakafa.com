@@ -20,11 +20,12 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
+import { isNewLinkFailure } from "@/lib/share/failure";
 
 /**
  * The share dialog of one chat. The dialog mounts once and stays in place while
@@ -93,9 +94,12 @@ export function ChatSharing({
         </ErrorBoundary>
       }
       footer={
+        // The description's boundary reports an undeclared failure of the read
+        // that both of them make, so this boundary recovers it without a report.
         <ErrorBoundary
           fallbackRender={() => <ChatShareRetry onRetry={retry} />}
           key={attempt}
+          report={false}
         >
           <ChatShareAction
             chatId={chat._id}
@@ -109,13 +113,13 @@ export function ChatSharing({
       setOpen={onOpenChange}
       title={t("share-chat")}
     >
-      <div className="flex flex-col divide-y overflow-hidden rounded-lg border">
+      <div className="flex flex-col divide-y">
         {Arr.map(["public", "private"] as const, (visibility) => {
           const isSelected = visibility === chat.visibility;
           const isPublic = visibility === "public";
           return (
             <button
-              className="group flex cursor-pointer items-start gap-4 bg-card p-4 text-card-foreground transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+              className="group flex cursor-pointer items-start gap-4 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
               key={visibility}
               onClick={() => handleUpdateVisibility(visibility)}
               type="button"
@@ -156,6 +160,11 @@ function useChatShareToken(chatId: ChatView["_id"], isPrivate: boolean) {
   return useQuery(chats.queries.getShareToken, isPrivate ? "skip" : { chatId });
 }
 
+/** The tag of the failure that one read of the link shows, or null when it did not fail. */
+function linkFailure(link: ReturnType<typeof useChatShareToken>) {
+  return QueryResult.isFailure(link) ? link.error._tag : null;
+}
+
 /**
  * The description of the share dialog: the warning, or the link error while the
  * server cannot load the link. A declared failure returns here and never throws.
@@ -180,8 +189,9 @@ function ChatShareDescription({
  * A declared failure shows inline and never reaches the error boundary. Convex
  * keeps a failed answer until the server answers again after its last subscriber
  * leaves, and a render that throws that answer never subscribes again, so a retry
- * that threw it would find the same error. The action reports each answer that
- * carries a declared failure, because the boundary would not have reported it.
+ * that threw it would find the same error. The action reports a failure that
+ * appears while it is mounted. A retry mounts it afresh, and the failure that the
+ * cache still holds then is not new, so it is not reported again.
  */
 function ChatShareAction({
   chatId,
@@ -197,15 +207,23 @@ function ChatShareAction({
   const t = useTranslations("Ai");
   const clipboard = useClipboard({ timeout: 500 });
   const link = useChatShareToken(chatId, isPrivate);
+  const failure = linkFailure(link);
+  // The failure at the mount is the cache's answer, which a retry shows until the
+  // server answers, so only a failure that appears after the mount is reported.
+  const seenFailure = useRef(failure);
   useEffect(() => {
-    if (QueryResult.isFailure(link)) {
+    if (
+      isNewLinkFailure(seenFailure.current, failure) &&
+      QueryResult.isFailure(link)
+    ) {
       Effect.runFork(
         reportClientException(link.error, {
           source: "components/ai/chat/sharing",
         })
       );
     }
-  }, [link]);
+    seenFailure.current = failure;
+  }, [failure, link]);
 
   if (isPrivate) {
     return (
