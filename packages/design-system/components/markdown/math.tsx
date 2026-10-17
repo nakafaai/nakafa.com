@@ -137,7 +137,7 @@ export function BlockMath({
 export function InlineMath(props: MathComponentProps) {
   return (
     <span
-      className="[&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:max-w-full [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1 [&_.katex-html>.katex-base>.katex-strut]:absolute"
+      className="[&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base>.katex-strut]:absolute [&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:max-w-full [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1"
       data-markdown-ignore=""
     >
       <KatexMarkup displayMode={false} {...props} />
