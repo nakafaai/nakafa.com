@@ -1,7 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import {
+  AccountUnavailable,
+  AuthReadError,
+  SessionRequired,
+} from "@repo/backend/confect/auth/spec";
+import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import { Schema } from "effect";
-import { readChatAccess, readChatArgs } from "@/components/ai/chat/access";
+import {
+  readChatAccess,
+  readChatArgs,
+  readChatFailureKind,
+} from "@/components/ai/chat/access";
 
 const learner = Schema.decodeUnknownSync(Id("users"))("user_1");
 const stranger = Schema.decodeUnknownSync(Id("users"))("user_2");
@@ -92,5 +102,54 @@ describe("chat/access arguments", () => {
       chatId,
       shareToken: token,
     });
+  });
+});
+
+describe("chat/access failure card", () => {
+  it("reads each declared access failure as the chat not being available to the viewer", () => {
+    expect(
+      readChatFailureKind(
+        new SessionRequired({
+          code: "UNAUTHENTICATED",
+          message: "Unauthenticated",
+        })
+      )
+    ).toBe("access");
+    expect(
+      readChatFailureKind(
+        new AccountUnavailable({
+          code: "UNAUTHORIZED",
+          message: "User not found.",
+        })
+      )
+    ).toBe("access");
+    expect(
+      readChatFailureKind(
+        new ChatAccessError({ code: "FORBIDDEN", message: "Not yours." })
+      )
+    ).toBe("access");
+    expect(
+      readChatFailureKind(
+        new ChatAccessError({ code: "CHAT_NOT_FOUND", message: "Gone." })
+      )
+    ).toBe("access");
+  });
+
+  it("reads a declared failure of Nakafa's own as a failure to retry, never as access", () => {
+    expect(
+      readChatFailureKind(
+        new AuthReadError({
+          code: "AUTH_READ_FAILED",
+          message: "Unable to read authentication state.",
+        })
+      )
+    ).toBe("retry");
+  });
+
+  it("reads a defect as a failure to retry, whatever its text says", () => {
+    expect(
+      readChatFailureKind(new Error("You do not have access to this chat"))
+    ).toBe("retry");
+    expect(readChatFailureKind(undefined)).toBe("retry");
   });
 });
