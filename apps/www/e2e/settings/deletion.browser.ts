@@ -4,7 +4,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Array as Arr, Effect } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { readFooterActions } from "@/e2e/support/footer";
+import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { compactViewport } from "@/e2e/support/viewport";
@@ -55,18 +55,7 @@ const verifyActionAtLargeText = Effect.fn(
 )(function* (page: Page, origin: string) {
   yield* openSettings(page, origin);
 
-  // Browser text at 200 percent doubles the root font size, and every rem with it.
-  yield* Effect.promise(() =>
-    page.addStyleTag({ content: "html { font-size: 200% !important; }" })
-  );
-  yield* Effect.promise(() =>
-    page.evaluate(async () => {
-      await document.fonts.ready;
-    })
-  );
-  const rootSize = yield* Effect.promise(() =>
-    page.evaluate(() => getComputedStyle(document.documentElement).fontSize)
-  );
+  const rootSize = yield* setLargeText(page);
   const actions = yield* Effect.promise(() =>
     readFooterActions(actionsOf(page))
   );

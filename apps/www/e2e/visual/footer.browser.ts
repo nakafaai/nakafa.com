@@ -4,7 +4,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import { readFooterActions } from "@/e2e/support/footer";
+import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { VISUAL_CARD_CONTROLS } from "@/e2e/support/selector";
 import { compactViewport } from "@/e2e/support/viewport";
@@ -102,19 +102,12 @@ const expectSceneActionsInsideCardAtLargeText = Effect.fn(
 )(function* (page: Page) {
   yield* openVisualLesson(page, pinnedRoutes.material.en, en.Common.fullscreen);
   const { card } = yield* revealScene(page);
-  // Browser text at 200 percent doubles the root font size, and every rem with it.
-  yield* Effect.promise(() =>
-    page.addStyleTag({ content: "html { font-size: 200% !important; }" })
-  );
-  yield* Effect.promise(() =>
-    page.evaluate(async () => {
-      await document.fonts.ready;
-    })
-  );
+  const rootSize = yield* setLargeText(page);
   const actions = yield* Effect.promise(() =>
     readFooterActions(card.locator('[data-slot="card-footer"] button'))
   );
   yield* Effect.sync(() => {
+    expect(rootSize).toBe("32px");
     expect(actions).toHaveLength(3);
     for (const action of actions) {
       expect(action.inside).toBe(true);

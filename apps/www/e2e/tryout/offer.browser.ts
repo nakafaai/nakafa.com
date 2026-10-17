@@ -3,8 +3,9 @@ import app from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
 import { Array as Arr, Effect } from "effect";
+import { runOnPage } from "@/e2e/support/chat";
+import { readFooterActions } from "@/e2e/support/footer";
 import { activate, visibleLink } from "@/e2e/support/input";
-import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   confirmFinish,
   finishSection,
@@ -25,26 +26,11 @@ const LOCKED_REVIEW = '[data-slot="tryout-review-locked"]';
 const offerCard = (page: Page) =>
   page.locator(CARD).filter({ has: page.locator("#tryout-review-offer") });
 
-/** Measures each action of the offer's footer against its card and its own box. */
-const measureOfferActions = (page: Page) =>
-  offerCard(page)
-    .locator('[data-slot="card-footer"] a, [data-slot="card-footer"] button')
-    .evaluateAll(
-      (elements, cardSelector) =>
-        elements.map((element) => {
-          const card = element.closest(cardSelector)?.getBoundingClientRect();
-          const box = element.getBoundingClientRect();
-          return {
-            clipped: element.scrollWidth > element.clientWidth,
-            inside:
-              card !== undefined &&
-              box.left >= card.left &&
-              box.right <= card.right,
-            label: element.textContent?.trim() ?? "",
-          };
-        }),
-      CARD
-    );
+/** The links and buttons of the offer's footer, which the offer's card holds. */
+const offerActions = (page: Page) =>
+  offerCard(page).locator(
+    '[data-slot="card-footer"] a, [data-slot="card-footer"] button'
+  );
 
 /**
  * The section rows of the learner's attempt on its set page. Each one carries
@@ -158,7 +144,9 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
       })
     );
 
-    const actions = yield* Effect.promise(() => measureOfferActions(page));
+    const actions = yield* Effect.promise(() =>
+      readFooterActions(offerActions(page))
+    );
     yield* Effect.sync(() => {
       expect(Arr.map(actions, ({ label }) => label)).toEqual([
         app.Tryouts["paywall-compare"],
@@ -181,13 +169,8 @@ test.describe("The Pro offer of a finished set, on a compact phone", () => {
     baseURL,
     page,
   }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(
-        page,
-        Effect.fromNullishOr(baseURL).pipe(
-          Effect.flatMap((origin) => verifyOfferActions(page, origin))
-        )
-      )
+    await runOnPage(page, baseURL, (origin) =>
+      verifyOfferActions(page, origin)
     );
   });
 });

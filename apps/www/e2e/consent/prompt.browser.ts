@@ -3,7 +3,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect } from "effect";
-import { readFooterActions } from "@/e2e/support/footer";
+import { readFooterActions, setLargeText } from "@/e2e/support/footer";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { compactViewport } from "@/e2e/support/viewport";
@@ -38,18 +38,7 @@ const verifyActionsAtLargeText = Effect.fn(
 )(function* (page: Page) {
   const prompt = yield* openFirstVisit(page);
 
-  // Browser text at 200 percent doubles the root font size, and every rem with it.
-  yield* Effect.promise(() =>
-    page.addStyleTag({ content: "html { font-size: 200% !important; }" })
-  );
-  yield* Effect.promise(() =>
-    page.evaluate(async () => {
-      await document.fonts.ready;
-    })
-  );
-  const rootSize = yield* Effect.promise(() =>
-    page.evaluate(() => getComputedStyle(document.documentElement).fontSize)
-  );
+  const rootSize = yield* setLargeText(page);
   const actions = yield* Effect.promise(() =>
     readFooterActions(actionsOf(prompt))
   );
