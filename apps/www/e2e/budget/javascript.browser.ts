@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
+import { MEMORY_PATH } from "@/e2e/support/memory";
 import { measureRouteJavascript } from "@/e2e/support/resources";
 import { appRoutes } from "@/e2e/support/route";
 
@@ -25,6 +26,11 @@ const QURAN_MAX_DECODED_BYTES = 3_381_000;
 const AUTH_MAX_ENCODED_BYTES = 547_000;
 const AUTH_MAX_DECODED_BYTES = 1_638_000;
 
+// The Memory page, signed in: measured at 954,412 encoded / 2,810,521 decoded
+// bytes. Limits keep the ~6% margin.
+const MEMORY_MAX_ENCODED_BYTES = 1_012_000;
+const MEMORY_MAX_DECODED_BYTES = 2_980_000;
+
 const routeBudgets = [
   {
     decodedBodySize: HOMEPAGE_MAX_DECODED_BYTES,
@@ -32,6 +38,7 @@ const routeBudgets = [
     href: "/en",
     name: "English homepage no-scroll graph",
     prefetches: true,
+    signedIn: false,
   },
   {
     decodedBodySize: PRICING_MAX_DECODED_BYTES,
@@ -39,6 +46,7 @@ const routeBudgets = [
     href: "/en/pricing",
     name: "English pricing no-scroll graph",
     prefetches: true,
+    signedIn: false,
   },
   {
     decodedBodySize: QURAN_MAX_DECODED_BYTES,
@@ -46,6 +54,7 @@ const routeBudgets = [
     href: appRoutes.quranSurahId,
     name: "Indonesian Quran normal-prefetch graph",
     prefetches: true,
+    signedIn: false,
   },
   {
     decodedBodySize: AUTH_MAX_DECODED_BYTES,
@@ -53,6 +62,15 @@ const routeBudgets = [
     href: "/en/auth",
     name: "English sign-in no-scroll graph",
     prefetches: false,
+    signedIn: false,
+  },
+  {
+    decodedBodySize: MEMORY_MAX_DECODED_BYTES,
+    encodedBodySize: MEMORY_MAX_ENCODED_BYTES,
+    href: MEMORY_PATH,
+    name: "English Memory signed-in graph",
+    prefetches: true,
+    signedIn: true,
   },
 ] as const;
 
@@ -67,7 +85,8 @@ for (const budget of routeBudgets) {
         browser,
         baseURL ?? "",
         budget.href,
-        budget.prefetches
+        budget.prefetches,
+        { signedIn: budget.signedIn }
       )
     );
     const measurementEvidence = encodeJsonText(measurement);

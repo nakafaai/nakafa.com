@@ -11,7 +11,7 @@ import { Label } from "@repo/design-system/components/ui/label";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   CardSection,
   CardSectionActions,
@@ -19,6 +19,7 @@ import {
   CardSectionHint,
 } from "@/components/shared/card/section";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
+import { MEMORY_ADD_ID } from "@/components/user/settings/memory/focus";
 import { useMemory } from "@/components/user/settings/memory/provider";
 
 const REMEMBER_ID = "user-settings-memory-remember";
@@ -39,6 +40,8 @@ export function MemoryControl() {
   }));
   const { clear, pause } = useMemoryActions();
   const [confirming, setConfirming] = useState(false);
+  // Set by a confirmed "Delete all", which leaves its button disabled.
+  const clearing = useRef(false);
 
   return (
     <CardSection>
@@ -82,6 +85,7 @@ export function MemoryControl() {
             </Button>
             <Button
               onClick={() => {
+                clearing.current = true;
                 setConfirming(false);
                 clear();
               }}
@@ -92,6 +96,14 @@ export function MemoryControl() {
             </Button>
           </>
         }
+        // The button that opened the dialog is disabled once every memory is
+        // gone, so after a confirmed clear the focus goes to the Add memory button.
+        onOpenChangeComplete={(open) => {
+          if (!open && clearing.current) {
+            clearing.current = false;
+            document.getElementById(MEMORY_ADD_ID)?.focus();
+          }
+        }}
         open={confirming}
         setOpen={setConfirming}
         title={t("clear-title")}

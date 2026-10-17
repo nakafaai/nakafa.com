@@ -11,6 +11,7 @@ import {
   type School,
   schools,
 } from "@/components/marketing/about/constants/schools";
+import { MarketingSection } from "@/components/marketing/shared/section";
 
 /** The fill of a ribbon. Each fill is a token, so both themes keep it. */
 const ribbonFill = cva("", {
@@ -67,7 +68,7 @@ function Ribbon({ tone }: { tone: RibbonTone }) {
   );
 }
 
-/** One school on its ribbon, with its logo when the wall has one, and its mark when not. */
+/** One school on its ribbon, its logo on the medal and its name under it. */
 function Medal({
   index,
   paused,
@@ -92,21 +93,19 @@ function Medal({
         }}
       >
         <Ribbon tone={tone} />
-        <span className="-mt-3 grid size-16 place-items-center rounded-full border bg-background">
-          {school.logo === undefined ? (
-            <span className="font-medium text-xs">{school.mark}</span>
-          ) : (
-            <Image
-              alt=""
-              className="size-8 object-contain"
-              height={32}
-              src={school.logo}
-              width={32}
-            />
-          )}
+        {/* The medal's face is white in every theme, so every logo reads on it. */}
+        <span className="-mt-3 grid size-16 place-items-center rounded-full bg-white ring-1 ring-black/10 dark:ring-white/10">
+          <Image
+            alt=""
+            className="size-10 object-contain"
+            height={40}
+            src={school.logo}
+            unoptimized
+            width={40}
+          />
         </span>
       </span>
-      <span className="max-w-28 text-balance text-center text-xs leading-4">
+      <span className="max-w-28 text-balance text-center text-sm leading-5">
         {school.name}
       </span>
     </li>
@@ -125,7 +124,7 @@ export function Medals() {
   const paused = !(entry?.isIntersecting ?? false);
 
   return (
-    <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="medals">
+    <MarketingSection id="medals">
       <div className="mx-auto grid w-full max-w-4xl gap-12">
         <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
           {t("medals-title")}
@@ -152,12 +151,12 @@ export function Medals() {
             >
               <HugeIcons className="size-5" icon={FavouriteIcon} />
             </span>
-            <span className="text-center text-muted-foreground text-xs leading-4">
+            <span className="text-center text-muted-foreground text-sm leading-5">
               {t("medals-hook")}
             </span>
           </li>
         </ul>
       </div>
-    </section>
+    </MarketingSection>
   );
 }

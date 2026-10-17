@@ -18,12 +18,12 @@ import {
   isSearching,
   MEMORY_FILL,
   MEMORY_PAGE,
-  shownMemories,
   withoutHidden,
 } from "@/components/user/settings/memory/list";
 import {
   useMemory,
   useMemoryPage,
+  useShownMemories,
 } from "@/components/user/settings/memory/provider";
 import { MemoryWindow } from "@/components/user/settings/memory/window";
 
@@ -41,7 +41,7 @@ export function MemoryRows() {
   const hidden = useMemoryPage((state) => state.hidden);
   const { fetched, loaded, more, whole } = useMemory((reading) => reading);
   const listed = withoutHidden(loaded, hidden);
-  const shown = shownMemories(listed, query);
+  const shown = useShownMemories();
 
   return (
     <CardContent className="border-t px-0">
