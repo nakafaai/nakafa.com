@@ -1,3 +1,4 @@
+import { isSchoolLabel } from "@repo/backend/confect/tenancy/slug";
 import { readHostname } from "@repo/utilities/http/host";
 import { getCookies } from "better-auth/cookies";
 import { Array as Arr, Effect, Option } from "effect";
@@ -16,22 +17,61 @@ export function isLoopbackHostname(hostname: string) {
 }
 
 /**
- * The origins that a site trusts for its sign-in: each school host of the site,
- * such as `https://*.nakafa.com`, so that a school host may post to the shared
- * sign-in (ADR 0009). A local site with a port also trusts its own host on any
- * port, because a local run serves on a port that `SITE_URL` does not name. Any
- * other site with a port trusts its school hosts on that port alone. The site's
- * own origin is already trusted as the base URL.
+ * Whether a host is a school host of the site: `<label>.<site host>`, where the
+ * label is a school label (ADR 0026). The label rule refuses a reserved label
+ * such as `cas`, a label of two levels such as `a.b`, and an invalid label.
+ */
+function isSchoolHostname(hostname: string, siteHostname: string) {
+  const suffix = `.${siteHostname}`;
+  return (
+    hostname.endsWith(suffix) &&
+    isSchoolLabel(hostname.slice(0, -suffix.length))
+  );
+}
+
+/**
+ * Whether the shared sign-in trusts an origin. The origin must be written as a
+ * browser writes it: lowercase, with no path and no default port, so a spelling
+ * that the URL parser would rewrite names no trusted host. The protocol is the
+ * site's own. A local site with a port trusts its own host and its school hosts
+ * on any port, because a local run serves on a port that `SITE_URL` does not
+ * name. Any other site trusts its school hosts on its own port alone. The site's
+ * own origin is also the base URL, which Better Auth trusts already.
+ */
+function isSchoolOrigin(origin: string, siteUrl: URL) {
+  if (!URL.canParse(origin)) {
+    return false;
+  }
+  const url = new URL(origin);
+  if (url.origin !== origin || url.protocol !== siteUrl.protocol) {
+    return false;
+  }
+  const anyPort = isLoopbackHostname(siteUrl.hostname) && siteUrl.port !== "";
+  if (!anyPort && url.port !== siteUrl.port) {
+    return false;
+  }
+  if (url.hostname === siteUrl.hostname) {
+    return anyPort;
+  }
+  return isSchoolHostname(url.hostname, siteUrl.hostname);
+}
+
+/**
+ * The origins that the shared sign-in trusts for one request, for Better Auth's
+ * `trustedOrigins` (ADR 0009, ADR 0026). Better Auth calls it with the request,
+ * and once with no request at start, so the answer holds the request's own
+ * origin only when the sign-in trusts that origin (`isSchoolOrigin`), and nothing
+ * otherwise. A script on a service host such as `cas.nakafa.com` therefore fails
+ * the origin check of a request that carries the shared session cookie.
  */
 export function readSchoolTrustedOrigins(siteUrl: URL) {
-  const { hostname, port, protocol } = siteUrl;
-  if (port === "") {
-    return [`${protocol}//*.${hostname}`];
-  }
-  if (!isLoopbackHostname(hostname)) {
-    return [`${protocol}//*.${hostname}:${port}`];
-  }
-  return [`${protocol}//*.${hostname}:*`, `${protocol}//${hostname}:*`];
+  return (request?: Request): string[] =>
+    Option.toArray(
+      Option.filter(
+        Option.fromNullishOr(request?.headers.get("origin")),
+        (origin) => isSchoolOrigin(origin, siteUrl)
+      )
+    );
 }
 
 /**

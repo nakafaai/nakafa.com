@@ -235,6 +235,56 @@ describe("auth/runtime", () => {
       }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
   it.effect(
+    "hands Better Auth the school origin rule, which refuses a reserved service host",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("SITE_URL", "https://nakafa.com");
+        vi.stubEnv("AUTH_GOOGLE_ID", "test-google-client");
+        vi.stubEnv("AUTH_GOOGLE_SECRET", "test-google-secret");
+        const runtimeServices = yield* Effect.context<never>();
+        const test = createConvexTestWithBetterAuth();
+        // The test runtime skips Better Auth's origin check, so this asks the
+        // trusted origins that Better Auth calls for each request. The test
+        // runtime returns plain values only, so the answers are read inside it.
+        const answers = yield* Effect.promise(() =>
+          test.run((ctx) =>
+            Effect.runPromiseWith(runtimeServices)(
+              Effect.gen(function* () {
+                const auth = yield* createAuth(ctx);
+                const { trustedOrigins } = auth.options;
+                if (typeof trustedOrigins !== "function") {
+                  return { rule: "static" };
+                }
+                const answerFor = (origin: string) =>
+                  Effect.promise(async () =>
+                    trustedOrigins(
+                      new Request("https://nakafa.com/api/auth/sign-out", {
+                        headers: { origin },
+                        method: "POST",
+                      })
+                    )
+                  );
+                return {
+                  rule: "request",
+                  cas: yield* answerFor("https://cas.nakafa.com"),
+                  harapan: yield* answerFor("https://harapan.nakafa.com"),
+                };
+              }).pipe(
+                Effect.provide(
+                  RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+                )
+              )
+            )
+          )
+        );
+        expect(answers).toEqual({
+          rule: "request",
+          cas: [],
+          harapan: ["https://harapan.nakafa.com"],
+        });
+      }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
+  );
+  it.effect(
     "never looks a Google ID token up, so a copied one cannot sign anyone in",
     () =>
       Effect.gen(function* () {

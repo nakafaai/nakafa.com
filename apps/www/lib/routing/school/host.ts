@@ -1,10 +1,10 @@
 import {
-  NewTenantSlug,
+  isSchoolLabel,
   type TenantSlug,
 } from "@repo/backend/confect/tenancy/slug";
 import { SCHOOL_CELL_DOMAINS } from "@repo/next-config/domains";
 import { readHostname } from "@repo/utilities/http/host";
-import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 
 /**
  * The domain of a local development server. Browsers resolve every
@@ -15,9 +15,6 @@ const LOCAL_DOMAIN = "localhost";
 
 /** The cell domains of production, then the local domain for development. */
 const SCHOOL_DOMAINS = [...Rec.values(SCHOOL_CELL_DOMAINS), LOCAL_DOMAIN];
-
-/** Whether a label is a valid school address that Nakafa does not reserve. */
-const isSchoolSlug = Schema.is(NewTenantSlug);
 
 /** The single label in front of a domain, or none when the host is not one label under it. */
 function readLabel(hostname: string, domain: string): Option.Option<string> {
@@ -34,7 +31,7 @@ function readSchoolLabel(
   hostname: string,
   domain: string
 ): Option.Option<TenantSlug> {
-  return readLabel(hostname, domain).pipe(Option.filter(isSchoolSlug));
+  return readLabel(hostname, domain).pipe(Option.filter(isSchoolLabel));
 }
 
 /**
