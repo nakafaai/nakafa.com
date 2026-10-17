@@ -9,7 +9,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   VisualCard,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardScene,
 } from "@repo/design-system/components/visual/card";
@@ -222,9 +221,9 @@ export function ProjectileClient({
         </div>
       </div>
 
-      <VisualCardFooter className="absolute end-6 top-6 border-0 bg-transparent p-0 lg:end-10 lg:top-10">
+      <div className="absolute end-6 top-6 lg:end-10 lg:top-10">
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </div>
 
       <dl className="pointer-events-none absolute inset-x-0 bottom-0 grid grid-cols-2 gap-x-6 gap-y-3 p-6 text-sm sm:grid-cols-3 lg:p-10 xl:grid-cols-6">
         {Arr.map(active.facts, (fact) => (
