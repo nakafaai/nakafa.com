@@ -90,7 +90,7 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
           </Field>
         </CardContent>
         <CardSectionFooter>
-          {/* A screen reader announces the sentence as it appears. */}
+          {/* Only the too-long message is an alert, so only it is announced as it appears. */}
           {fits ? (
             <CardSectionHint>{t("bio-footer")}</CardSectionHint>
           ) : (

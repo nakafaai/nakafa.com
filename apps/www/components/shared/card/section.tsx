@@ -76,10 +76,10 @@ export function CardSection({
 /**
  * Holds a section's sentence and actions in one row, the sentence on the left
  * and the actions on the right. When the two cannot share the row, the actions
- * move to the next line, end-aligned, so no action is clipped. The bar is as
- * tall with a line of text alone as with a button, so every card ends the
- * same way. `bottomSheet` ends a phone's bottom sheet with square bottom
- * corners and the safe area below its actions.
+ * move to the next line, end-aligned. The bar is as tall with a line of text
+ * alone as with a button, so every card ends the same way. `bottomSheet` ends
+ * a phone's bottom sheet with square bottom corners and the safe area below
+ * its actions.
  */
 export function CardSectionFooter({
   bottomSheet,
@@ -112,10 +112,12 @@ export function CardSectionHint({
 /**
  * Holds a section's actions on the right of its footer, side by side at their
  * full size, so a footer with only actions keeps them on the right too. When
- * they have no room beside the sentence, they move to their own line, and wrap
- * within it, so none is clipped. A footer with no sentence passes `share`: its
- * actions split the row equally, and when their labels do not fit side by side
- * they stack, each across the full width.
+ * they have no room beside the sentence, they move to their own line and wrap
+ * among their buttons. A button is clipped only when it is wider than the whole
+ * row, so keep each label short enough for the row at large text sizes. A
+ * footer with no sentence passes `share`: its actions split the row equally,
+ * and when their labels do not fit side by side they stack, each across the
+ * full width.
  */
 export function CardSectionActions({
   share,
