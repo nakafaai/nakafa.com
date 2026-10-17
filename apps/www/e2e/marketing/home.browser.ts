@@ -2,9 +2,13 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect, MutableList, Schema } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { withBrowserContext } from "@/e2e/support/context";
-import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import {
+  readCumulativeLayoutShift,
+  recordLayoutShifts,
+} from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
+import { TOASTER } from "@/e2e/support/selector";
 import {
   desktopViewport,
   tabletPortraitViewport,
@@ -36,6 +40,9 @@ const HOME_VIEWPORTS = [touchViewport, tabletPortraitViewport, desktopViewport];
 
 /** The two colour schemes the home page must hold in. */
 const COLOR_SCHEMES = Schema.Literals(["light", "dark"]).literals;
+
+/** The page global that records each layout shift with the elements that moved, so a failure names them. */
+const LAYOUT_SHIFTS_KEY = "nakafaHomeLayoutShifts";
 
 /**
  * Scrolls the whole page one screen at a time, so every part reaches the
@@ -97,6 +104,12 @@ for (const viewport of HOME_VIEWPORTS) {
             Effect.gen(function* () {
               const page = yield* Effect.promise(() => context.newPage());
               const issues = observeConsole(page);
+              yield* Effect.promise(() =>
+                page.addInitScript(recordLayoutShifts, {
+                  key: LAYOUT_SHIFTS_KEY,
+                  overlay: TOASTER,
+                })
+              );
               yield* withObservedPageErrors(
                 page,
                 Effect.gen(function* () {
@@ -106,7 +119,13 @@ for (const viewport of HOME_VIEWPORTS) {
                   );
                   yield* scrollThroughPage(page);
                   const shift = yield* readCumulativeLayoutShift(page);
-                  expect(shift).toBe(0);
+                  const shifts = yield* Effect.promise(() =>
+                    page.evaluate(
+                      (key) => JSON.stringify(Reflect.get(window, key) ?? []),
+                      LAYOUT_SHIFTS_KEY
+                    )
+                  );
+                  expect(shift, shifts).toBe(0);
                   expect(MutableList.toArray(issues)).toEqual([]);
                 })
               );
