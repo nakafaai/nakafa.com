@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, expectTypeOf, it } from "@effect/vitest";
 import { ToastMessage } from "@repo/design-system/lib/toast/message";
-import { toast } from "@repo/design-system/lib/toast/notify";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect } from "effect";
 import { NextIntlClientProvider } from "next-intl";
@@ -60,6 +60,18 @@ describe("toast", () => {
         }),
       }
     );
+  });
+
+  it("takes a message that interpolates only with the values that fill it", () => {
+    expectTypeOf<{
+      description: "failure-attachment-size.description";
+      title: "failure-attachment-size.title";
+    }>().not.toExtend<ToastCopy>();
+    expectTypeOf<{
+      description: "failure-attachment-size.description";
+      title: "failure-attachment-size.title";
+      values: { size: number };
+    }>().toExtend<ToastCopy>();
   });
 
   it("shows a title alone, with no description", () => {

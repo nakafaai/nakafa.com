@@ -35,6 +35,19 @@ export const ToastValuesSchema = Schema.Struct({ size: Schema.Finite });
 export type ToastValues = typeof ToastValuesSchema.Type;
 
 /**
+ * The keys of the toast messages that interpolate a value, such as the size in
+ * `failure-attachment-size.description`. A copy that names one of them must pass
+ * its values, and the type of the copy checks it. The dictionaries are JSON,
+ * whose types hold no placeholders, so `toast.test.ts` checks this list against
+ * the placeholders of every locale.
+ */
+export const ToastValueKeySchema = Schema.Literals([
+  "failure-attachment-size.description",
+]);
+/** A key of a toast message that interpolates a value, so its copy must pass the values. */
+export type ToastValueKey = typeof ToastValueKeySchema.Type;
+
+/**
  * How many characters one line of a toast title holds at 320px.
  *
  * Sonner 2.0.8 (`dist/index.mjs`, `dist/styles.css`) sets the toast to the

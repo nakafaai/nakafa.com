@@ -18,6 +18,7 @@ import {
   TOAST_TITLE_LINE_CHARACTERS,
   TOAST_TITLE_LINES,
   type ToastCopyText,
+  ToastValueKeySchema,
   ToastValuesSchema,
 } from "@repo/internationalization/src/toast";
 import { Array as Arr, Record as Rec } from "effect";
@@ -25,13 +26,34 @@ import { Array as Arr, Record as Rec } from "effect";
 /** A placeholder of a message, such as `{size, number}`, with its name in the first group. */
 const PLACEHOLDER = /\{(\w+)(?:,[^}]*)?\}/gu;
 
+/** The names of the placeholders in one message, such as `size` in `{size, number}`. */
+function placeholdersIn(text: string) {
+  return Arr.flatMap(Arr.fromIterable(text.matchAll(PLACEHOLDER)), (match) => [
+    match[1],
+  ]);
+}
+
 /** The placeholder names of every title and description in a toast namespace. */
 function placeholdersOf(namespace: Readonly<Record<string, ToastCopyText>>) {
   return Arr.flatMap(Rec.values(namespace), (copy) =>
-    Arr.flatMap([copy.title, copy.description ?? ""], (text) =>
-      Arr.flatMap(Arr.fromIterable(text.matchAll(PLACEHOLDER)), (match) =>
-        match[1] === undefined ? [] : [match[1]]
-      )
+    Arr.flatMap([copy.title, copy.description ?? ""], placeholdersIn)
+  );
+}
+
+/**
+ * The keys of the messages in a toast namespace that interpolate a value: each
+ * title or description that has a placeholder.
+ */
+function interpolatingKeysOf(
+  namespace: Readonly<Record<string, ToastCopyText>>
+) {
+  return Arr.flatMap(Rec.toEntries(namespace), ([name, copy]) =>
+    Arr.flatMap(
+      [
+        { key: `${name}.title`, text: copy.title },
+        { key: `${name}.description`, text: copy.description ?? "" },
+      ],
+      ({ key, text }) => (placeholdersIn(text).length > 0 ? [key] : [])
     )
   );
 }
@@ -137,5 +159,21 @@ describe("toast copy at 320px", () => {
     expect(Arr.difference(names, Rec.keys(ToastValuesSchema.fields))).toEqual(
       []
     );
+  });
+
+  it("lists exactly the messages that interpolate a value as the keys that take values, in every locale", () => {
+    const unlisted = Arr.flatMap(
+      [de.Toast, en.Toast, id.Toast],
+      (namespace) => {
+        const keys = interpolatingKeysOf(namespace);
+
+        return [
+          ...Arr.difference(keys, ToastValueKeySchema.literals),
+          ...Arr.difference(ToastValueKeySchema.literals, keys),
+        ];
+      }
+    );
+
+    expect(unlisted).toEqual([]);
   });
 });
