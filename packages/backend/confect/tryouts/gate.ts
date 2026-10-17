@@ -255,7 +255,7 @@ export const tryoutGate = {
         owner,
         placement: args.placementId,
         selection: Option.fromNullOr(args.selection),
-        version: Option.fromNullishOr(args.version),
+        version: args.version,
       });
     },
     Effect.catchTags({
