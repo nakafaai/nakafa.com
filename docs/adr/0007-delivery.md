@@ -173,9 +173,9 @@ section again. Signed set inventory and placement verification remain intact.
 Validate signed content in the isolated local acceptance runtime. Check the
 production build's prerender manifest and rendered HTML, delayed Convex context,
 canonical metadata, hard missing-page status, Markdown, responsive reading, and
-the repository's full production acceptance workflow. Use exact-head CI and a
-protected merge before the Git integration creates production. Do not create a
-Vercel Preview deployment.
+the repository's full production acceptance run. Verify the exact head locally,
+then merge it to protected `main` before the Git integration creates production.
+Do not create a Vercel Preview deployment.
 
 Billing comparisons require the same period and project. ISR reads and writes
 are 8 KB units, not request counts or a cache hit ratio. PostHog visitors are not
@@ -186,6 +186,18 @@ Vercel spend management applies after included credits and can pause all team
 projects. Checks occur periodically, so it is not an instantaneous hard cap.
 Do not increase a budget or resume a paused site as an incidental deployment
 step without reconciling the operator's current spending constraint.
+
+## Amendment: Local Verification Replaces CI, 17 October 2026
+
+GitHub Actions CI is deleted: `.github/workflows/ci.yml`, the `pnpm ci:gate` and
+`pnpm ci:production-acceptance` scripts that it ran, and their tests. Waiting for
+CI was the bottleneck of every pull request, so CI is removed for good. The
+release workflow `cli-publish.yml` is delivery, not CI, and stays.
+
+Each pull request is verified locally on its exact head instead: every browser
+suite on a local production build, the unit suites at 100% per-file coverage,
+the typechecks, `pnpm check:tests`, Ultracite, and React Doctor. A pull request
+merges by squash once that verification passes, as `AGENTS.md` describes.
 
 ## References
 

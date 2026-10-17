@@ -36,7 +36,7 @@ const messages = {
   "mixed-production":
     "The content runtime query and HTTP targets cannot mix deployments.",
   "untrusted-production":
-    "Production content is restricted to the protected Vercel production build. Use an isolated Convex deployment for local or CI builds.",
+    "Production content is restricted to the protected Vercel production build. Use an isolated Convex deployment for local builds.",
 } satisfies Record<Failure, string>;
 
 /** One Next process attempted to cross the protected production-content seam. */

@@ -95,15 +95,13 @@ runtime verification, run `pnpm start` after a successful root build.
 1. Branch from current `main`.
 2. Keep commits small and cohesive.
 3. Open a ready pull request with an accurate title and body.
-4. Wait for exact-head CI and review.
+4. Verify the exact head with the checks in Verification, then wait for review.
 5. Reply concisely to each review finding, fix valid findings, and resolve every
    conversation.
 6. Re-run affected checks after the final change.
 
-Protected `main` merges through a squash merge queue. Once a pull request's
-required checks pass, the maintainer adds it to the queue, which reruns them on
-the latest `main` together with the changes queued ahead of it before it lands.
-`main` rejects merge commits, force pushes, and unresolved required checks.
+Protected `main` merges by squash once the exact head of a pull request has passed
+the checks in Verification. `main` rejects merge commits and force pushes.
 
 ## Help
 
