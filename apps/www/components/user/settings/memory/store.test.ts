@@ -392,13 +392,17 @@ describe("memory page store", () => {
     expect(store.getState()).toMatchObject({ opener: null, target: first });
   });
 
-  it("names the memory of a draft that opens again", () => {
+  it("names the memory of a draft that opens again, not the memory the editor held before", () => {
     const store = createMemoryStore();
 
-    store.getState().openEdit(first);
+    store.getState().openEdit(second);
     store.getState().close();
     store.getState().reopen(store.getState().session, grade, first);
 
-    expect(store.getState()).toMatchObject({ opener: first.id, open: true });
+    expect(store.getState()).toMatchObject({
+      opener: first.id,
+      open: true,
+      target: first,
+    });
   });
 });
