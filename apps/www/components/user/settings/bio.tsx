@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { Input } from "@repo/design-system/components/ui/input";
+import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -24,7 +24,10 @@ import { useUpdateBioMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
-/** Renders the bio card: one line about the account. */
+/**
+ * Renders the bio card: a few lines about the account. A bio that is too long
+ * says so in words, and Save waits until it fits.
+ */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
   const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Auth");
@@ -75,7 +78,7 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             <FieldLabel className="sr-only" htmlFor="user-settings-bio">
               {t("bio")}
             </FieldLabel>
-            <Input
+            <Textarea
               aria-invalid={!fits}
               className="max-w-md"
               id="user-settings-bio"
@@ -88,7 +91,9 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
         </CardContent>
         <CardSectionFooter>
           {/* A screen reader announces the sentence as it appears. */}
-          {fits ? null : (
+          {fits ? (
+            <CardSectionHint>{t("bio-footer")}</CardSectionHint>
+          ) : (
             <CardSectionHint role="alert" tone="destructive">
               {t("bio-too-long")}
             </CardSectionHint>

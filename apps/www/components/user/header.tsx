@@ -1,21 +1,17 @@
 "use client";
 
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
-import { Animal } from "@repo/design-system/components/ui/animal";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/design-system/components/ui/avatar";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { useTranslations } from "next-intl";
 import { type CurrentUser, useViewer } from "@/lib/identity/client";
 
 /**
  * The header of the owner's own profile: the name and the address on the left,
- * the animal on the right, the bio under them, and the button that edits the
+ * the picture on the right, the bio under them, and the button that edits the
  * profile. A profile opens only for its owner, so the header shows nothing
  * about anyone else.
  */
@@ -46,19 +42,16 @@ export function UserHeader({
             @{username}
           </p>
         </div>
-        <Avatar className="size-24 shrink-0">
-          <AvatarImage
-            alt={authUser.name}
-            role="presentation"
-            src={authUser.image ?? appUser.image ?? ""}
-          />
-          <AvatarFallback>
-            <Animal mascot={appUser.mascot} />
-          </AvatarFallback>
-        </Avatar>
+        <PersonAvatar
+          className="size-14 shrink-0 md:size-21"
+          mascot={appUser.mascot}
+          photo={photoOf(appUser)}
+        />
       </header>
       {appUser.bio ? (
-        <p className="text-pretty text-base">{appUser.bio}</p>
+        <p className="wrap-break-word line-clamp-3 whitespace-pre-line text-pretty text-base">
+          {appUser.bio}
+        </p>
       ) : null}
       <div>
         <Button

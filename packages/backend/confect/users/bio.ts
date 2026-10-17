@@ -1,4 +1,4 @@
-import { pipe, Result, Schema, String as Str } from "effect";
+import { Array as Arr, pipe, Result, Schema, String as Str } from "effect";
 
 /**
  * The most characters a bio holds. A character is a Unicode code point, so an
@@ -6,7 +6,8 @@ import { pipe, Result, Schema, String as Str } from "effect";
  */
 export const BIO_MAX_LENGTH = 160;
 
-const WHITE_SPACE = /\s+/g;
+const LINE_BREAK = /\r\n?/g;
+const BLANK_LINES = /\n{3,}/g;
 
 /** Whether a text holds at most `BIO_MAX_LENGTH` code points. */
 const fitsBio = Schema.is(
@@ -20,12 +21,22 @@ export class BioTooLong extends Schema.TaggedError<BioTooLong>()(
 ) {}
 
 /**
- * Tidies what a person typed into the text of a bio. A bio is one line, so every
- * run of white space becomes one space and the ends are trimmed. The settings
- * page checks and saves with this same text, so both agree.
+ * Tidies what a person typed into a bio. Every line break becomes `\n`, each line
+ * loses the white space at its ends, and three or more line breaks in a row
+ * become two, so the lines of a bio stay apart and at most one blank line sits
+ * between them. The ends of the whole text are trimmed too. The settings page
+ * checks and saves with this same text, so both agree.
  */
 export function tidyBio(input: string): string {
-  return pipe(input, Str.replaceAll(WHITE_SPACE, " "), Str.trim);
+  return pipe(
+    input,
+    Str.replaceAll(LINE_BREAK, "\n"),
+    Str.split("\n"),
+    Arr.map((line) => Str.trim(line)),
+    Arr.join("\n"),
+    Str.replaceAll(BLANK_LINES, "\n\n"),
+    Str.trim
+  );
 }
 
 /**
