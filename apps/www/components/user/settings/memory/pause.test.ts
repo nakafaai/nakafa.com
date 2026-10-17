@@ -40,7 +40,7 @@ describe("a pause choice the server refuses", () => {
     "tells the learner of the refusal before the choice goes back",
     () =>
       Effect.gen(function* () {
-        const events = MutableList.make<unknown>();
+        const events = MutableList.make<boolean | null | Error>();
 
         yield* revertRefusedPause(
           (paused) => {

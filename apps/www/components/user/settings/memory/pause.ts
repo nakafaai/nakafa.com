@@ -8,10 +8,10 @@ import { Effect } from "effect";
  * first, as it does for every change that fails.
  */
 export const revertRefusedPause = Effect.fn("www.memory.revertRefusedPause")(
-  function* <E>(
+  function* <A, E, B>(
     setPaused: (paused: boolean | null) => void,
-    change: Effect.Effect<unknown, E>,
-    refused: (error: E) => Effect.Effect<unknown>
+    change: Effect.Effect<A, E>,
+    refused: (error: E) => Effect.Effect<B>
   ) {
     yield* Effect.matchEffect(change, {
       onFailure: (error) =>

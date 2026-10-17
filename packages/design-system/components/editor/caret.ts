@@ -12,7 +12,7 @@ const FIELD =
  * holds no field, so the control that opened the editor hands its focus over.
  */
 export function placeCaret(
-  editor: { commands: { focus: (position: "end") => unknown } },
+  editor: { commands: { focus: (position: "end") => void } },
   active: Element | null
 ) {
   if (active?.matches(FIELD) === true) {
