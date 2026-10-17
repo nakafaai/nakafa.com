@@ -102,9 +102,10 @@ export function useChatRename(chat: ChatView) {
                 Effect.sync(() => {
                   // The box comes back with the words the learner wrote. It takes the
                   // focus unless a control the learner chose has it. The menu that the
-                  // save gave the focus back to is not such a control.
-                  const box = inputRef.current;
+                  // save gave the focus back to is not such a control. A hidden box has
+                  // no ref, so the box is read once it shows again.
                   flushSync(() => setIsEditing(true));
+                  const box = inputRef.current;
                   if (
                     focusIsLost(box) ||
                     document.activeElement === moreActions.current
