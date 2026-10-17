@@ -339,6 +339,20 @@ export declare const api: {
           subject?: string;
         }
       >;
+      resolve: FunctionReference<
+        "query",
+        "public",
+        { classSlug: string; slug: string },
+        {
+          cohortId: Id<"tenantCohorts">;
+          id: Id<"classes">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
+          slug: string;
+          status: "active" | "archived";
+          subject?: string;
+        }
+      >;
     };
     teachers: {
       assign: FunctionReference<
