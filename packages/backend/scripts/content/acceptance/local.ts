@@ -47,9 +47,9 @@ const RuntimeManifest = Schema.Struct({
   analytics: LoopbackUrl,
   backend: Schema.String,
   configurationHash: Schema.String,
-  databaseInode: Schema.Finite,
+  databaseInode: Schema.BigIntFromString,
   directory: Schema.String,
-  directoryInode: Schema.Finite,
+  directoryInode: Schema.BigIntFromString,
   environmentHash: Schema.String,
   query: LoopbackUrl,
   publicationToken: Schema.String,
@@ -57,6 +57,8 @@ const RuntimeManifest = Schema.Struct({
   site: LoopbackUrl,
 });
 export type LocalRuntime = typeof RuntimeManifest.Type;
+/** The runtime manifest as JSON text. Inode numbers are exact bigints, written as decimal strings. */
+export const LocalRuntimeJson = Schema.fromJsonString(RuntimeManifest);
 const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 
 /**
@@ -302,7 +304,7 @@ export const initializeLocalRuntime = Effect.fn(
   };
   yield* fs.writeFileString(
     `${directory}/manifest.json`,
-    yield* Schema.encodeEffect(JsonTextSchema)(runtime),
+    yield* Schema.encodeEffect(LocalRuntimeJson)(runtime),
     { mode: 0o600, flag: "wx" }
   );
   return runtime;
@@ -318,7 +320,7 @@ const readReservedLocalRuntime = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   const directory = `${root}/.cache/acceptance`;
   const runtime = yield* fs.readFileString(`${directory}/manifest.json`).pipe(
-    Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(RuntimeManifest))),
+    Effect.flatMap(Schema.decodeEffect(LocalRuntimeJson)),
     Effect.mapError(() =>
       acceptanceRuntimeError(
         "The build runtime manifest is missing or invalid; existing state is preserved. Stop its services, delete .cache/acceptance, and run pnpm acceptance:prepare."

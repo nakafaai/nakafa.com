@@ -73,6 +73,7 @@ export const activateTryoutSetCatalog = Effect.fn(
 )(function* (
   setDefinitions: readonly (typeof defaultSets)[number][] = defaultSets
 ) {
+  const runtimeServices = yield* Effect.context<never>();
   vi.setSystemTime(TRYOUT_START_NOW);
   const t = createConvexTestWithBetterAuth();
   const { identity, snapshotId } = yield* Effect.promise(() =>
@@ -155,12 +156,14 @@ export const activateTryoutSetCatalog = Effect.fn(
           }
         )
       );
-      const snapshotId = await activateTryoutSnapshot(ctx, {
-        catalog: Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))(
-          [...parents, ...children]
-        ),
-        placements,
-      });
+      const snapshotId = await Effect.runPromiseWith(runtimeServices)(
+        activateTryoutSnapshot(ctx, {
+          catalog: Schema.decodeUnknownSync(
+            Schema.Array(TryoutCatalogRowSchema)
+          )([...parents, ...children]),
+          placements,
+        })
+      );
       await insertTestTryoutRuntimeBundle(ctx, snapshotId);
       return {
         identity: user,

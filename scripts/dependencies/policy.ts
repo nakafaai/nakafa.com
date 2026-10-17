@@ -26,9 +26,9 @@ export const PACKAGE_MANAGER = "pnpm@11.28.5";
  * release and the workflow checks compare it with this value.
  */
 export const NODE_RUNTIME_VERSION = "24.21.0";
-const CONTRACT_PACKAGE_VERSION = "0.49.0";
+const CONTRACT_PACKAGE_VERSION = "0.51.0";
 /** Effect and its platform and test packages move as one exact cohort. */
-export const EFFECT_COHORT_VERSION = "4.0.2";
+export const EFFECT_COHORT_VERSION = "4.0.5";
 /**
  * Effect packages that only dependencies declare: the Confect CLI's platform
  * packages and the Confect server's AI providers. An override keeps each one
@@ -162,7 +162,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.51.1",
+    approved: "0.53.2",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -339,8 +339,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.52.0",
-    "Compiler patching moves with TypeScript and Effect; 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), and 0.51 adds declaration locations to it. 0.52 turns on schemaClassMissingBrand for Effect v4 schema classes by default. Its first typecheck run failed with TS377141 in packages/utilities alone, and about 340 lines in the repository declare Schema.Class, Schema.TaggedError or Schema.Opaque, so the compiler stays on 0.51.1 until those brands are adopted or the rule is decided in docs/adr/0021-rules.md.",
+    "0.53.2",
+    "Compiler patching moves with TypeScript and Effect. 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), 0.51 adds declaration locations to it, 0.52 adds schemaClassMissingBrand (default severity suggestion; base.json keeps it off until every Schema error class carries a brand, see docs/adr/0021-rules.md), effectSleepZeroToYieldNow and flatMapToTap (default severity suggestion; base.json sets error), and the opt-in preferEffectArray, preferEffectRecord, and preferSchemaTaggedError (default off). 0.53 adds errorPayloadShadowsName (default severity suggestion; base.json sets error) and the opt-in preferBarrelImport and preferNamespaceImport (default off). Every rule is decided in packages/typescript-config/base.json.",
   ],
   ["vitest@latest", "5.0.5", "The Effect 4 test adapter requires Vitest 5."],
   [

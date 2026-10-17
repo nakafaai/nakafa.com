@@ -1,5 +1,11 @@
-import { RegisteredConvexFunction, RegisteredFunctions } from "@confect/server";
+import { ConvexFunctionDefinitions, RegisteredConvexFunction, type RegisteredFunctions } from "@confect/server";
 import databaseSchema from "../../schema";
-import usage from "../../../nina/usage.impl";
+import groupLayer from "../../../nina/usage.impl";
 
-export default RegisteredFunctions.buildForGroup<typeof import("../../../nina/usage.spec")["default"]>(databaseSchema, usage, RegisteredConvexFunction.make);
+const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<Returns>) => (ctx: Ctx, args: Args) => handler(ctx, args);
+
+const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../../nina/usage.spec")["default"]>(databaseSchema, groupLayer);
+
+export default {
+["record"]: RegisteredConvexFunction.register({ ...definitions["record"], handler: forward(definitions["record"].handler) }),
+} as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../nina/usage.spec")["default"]>;

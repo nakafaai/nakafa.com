@@ -88,28 +88,31 @@ export const insertActivationPair = Effect.fn(
 });
 
 /** Creates signed zero-impact manifests that complete read models immediately. */
-export function makeActivationPair() {
-  const scope = PublicationScopeSchema.make({
-    families: ["page"],
-    snapshots: [],
-  });
-  const candidateManifest = ContentReleaseManifestSchema.make({
-    ...testEmptyManifest(releaseId),
-    scope,
-  });
-  const candidate = testSignedRelease(candidateManifest);
-  const recoveryManifest = ContentReleaseManifestSchema.make({
-    ...testEmptyManifest(recoveryReleaseId),
-    baseActiveAppLocales: candidateManifest.activeAppLocales,
-    baseManifestHash: candidate.manifestHash,
-    baseReleaseId: releaseId,
-    origin: { kind: "rollback", releaseId },
-    scope,
-  });
-  return {
-    candidate,
-    recovery: RollbackSignedContentReleaseSchema.make(
-      testSignedRelease(recoveryManifest)
-    ),
-  };
-}
+export const makeActivationPair = Effect.fn("test.content.activationPair")(
+  function* () {
+    const scope = PublicationScopeSchema.make({
+      families: ["page"],
+      snapshots: [],
+    });
+    const candidateEmpty = yield* testEmptyManifest(releaseId);
+    const candidateManifest = ContentReleaseManifestSchema.make({
+      ...candidateEmpty,
+      scope,
+    });
+    const candidate = yield* testSignedRelease(candidateManifest);
+    const recoveryEmpty = yield* testEmptyManifest(recoveryReleaseId);
+    const recoveryManifest = ContentReleaseManifestSchema.make({
+      ...recoveryEmpty,
+      baseActiveAppLocales: candidateManifest.activeAppLocales,
+      baseManifestHash: candidate.manifestHash,
+      baseReleaseId: releaseId,
+      origin: { kind: "rollback", releaseId },
+      scope,
+    });
+    const recovery = yield* testSignedRelease(recoveryManifest);
+    return {
+      candidate,
+      recovery: RollbackSignedContentReleaseSchema.make(recovery),
+    };
+  }
+);

@@ -17,7 +17,10 @@ import {
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material/catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
+import {
+  itWithRuntimeRelease,
+  TEST_RUNTIME_RELEASE,
+} from "@repo/backend/test/runtime/values";
 import { Array as Arr, Effect, Order } from "effect";
 
 /** Reads one published article window through the production owner boundary. */
@@ -55,7 +58,8 @@ function readArticles(
 
 /** Activates the release-owned search identity used by published read tests. */
 async function activateSearch(
-  t: ReturnType<typeof createConvexTestWithBetterAuth>
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  runtime: { readonly manifestHash: string }
 ) {
   await t.mutation(async (ctx) => {
     const state = await ctx.db.query("contentState").unique();
@@ -63,69 +67,76 @@ async function activateSearch(
       throw new Error("Expected one active content state.");
     }
     await ctx.db.patch("contentState", state._id, {
-      searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+      searchManifestHash: runtime.manifestHash,
       searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
       searchSequence: TEST_RUNTIME_RELEASE.sequence,
     });
   });
 }
 describe("readPublishedSearchDocuments", () => {
-  it("keeps smaller pages stable across empty and overlapping queries", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const queries = [
-      "/",
-      "articles/no-such-route",
-      "missing",
-      "alpha",
-      "beta",
-      "gamma",
-    ];
-    const texts = Array.from(
-      {
-        length: 20,
-      },
-      (_, index) =>
-        index < 10 ? "alpha beta bounded search" : "gamma bounded search"
-    );
-    await t.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, texts.length);
-      const indexRows = Arr.map(texts, (plainText, index) => ({
-        contentKey: testArticleProjection(index).contentKey,
-        plainText,
-      }));
-      for (const { contentKey, plainText } of indexRows) {
-        await insertRuntimeIndex(ctx, contentKey, { plainText });
-      }
-    });
-    await activateSearch(t);
-    const firstPage = await readArticles(t, queries, 2);
-    const fullWindow = await readArticles(t, queries, 4);
-    expect(firstPage).toHaveLength(2);
-    expect(firstPage).toEqual(Arr.take(fullWindow, firstPage.length));
-    expect(
-      Arr.dedupe(Arr.map(fullWindow, (document) => document.content_id)).length
-    ).toBe(fullWindow.length);
-  });
-  it("fills the window when an exact route repeats in search hits", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const exact = testArticleProjection(0);
-    await t.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, 4);
-      for (let index = 0; index < 4; index += 1) {
-        const projection = testArticleProjection(index);
-        await insertRuntimeIndex(ctx, projection.contentKey, {
-          plainText: `${exact.publicPath} related article`,
-        });
-      }
-    });
-    await activateSearch(t);
-    const documents = await readArticles(t, [exact.publicPath], 3);
-    expect(documents).toHaveLength(3);
-    expect(documents[0]?.content_id).toBe(exact.graph.assetId);
-    expect(
-      Arr.dedupe(Arr.map(documents, (document) => document.content_id)).length
-    ).toBe(documents.length);
-  });
+  itWithRuntimeRelease(
+    "keeps smaller pages stable across empty and overlapping queries",
+    async (runtime) => {
+      const t = createConvexTestWithBetterAuth();
+      const queries = [
+        "/",
+        "articles/no-such-route",
+        "missing",
+        "alpha",
+        "beta",
+        "gamma",
+      ];
+      const texts = Array.from(
+        {
+          length: 20,
+        },
+        (_, index) =>
+          index < 10 ? "alpha beta bounded search" : "gamma bounded search"
+      );
+      await t.mutation(async (ctx) => {
+        await insertRuntimeArticles(ctx, texts.length);
+        const indexRows = Arr.map(texts, (plainText, index) => ({
+          contentKey: testArticleProjection(index).contentKey,
+          plainText,
+        }));
+        for (const { contentKey, plainText } of indexRows) {
+          await insertRuntimeIndex(ctx, contentKey, { plainText });
+        }
+      });
+      await activateSearch(t, runtime);
+      const firstPage = await readArticles(t, queries, 2);
+      const fullWindow = await readArticles(t, queries, 4);
+      expect(firstPage).toHaveLength(2);
+      expect(firstPage).toEqual(Arr.take(fullWindow, firstPage.length));
+      expect(
+        Arr.dedupe(Arr.map(fullWindow, (document) => document.content_id))
+          .length
+      ).toBe(fullWindow.length);
+    }
+  );
+  itWithRuntimeRelease(
+    "fills the window when an exact route repeats in search hits",
+    async (runtime) => {
+      const t = createConvexTestWithBetterAuth();
+      const exact = testArticleProjection(0);
+      await t.mutation(async (ctx) => {
+        await insertRuntimeArticles(ctx, 4);
+        for (let index = 0; index < 4; index += 1) {
+          const projection = testArticleProjection(index);
+          await insertRuntimeIndex(ctx, projection.contentKey, {
+            plainText: `${exact.publicPath} related article`,
+          });
+        }
+      });
+      await activateSearch(t, runtime);
+      const documents = await readArticles(t, [exact.publicPath], 3);
+      expect(documents).toHaveLength(3);
+      expect(documents[0]?.content_id).toBe(exact.graph.assetId);
+      expect(
+        Arr.dedupe(Arr.map(documents, (document) => document.content_id)).length
+      ).toBe(documents.length);
+    }
+  );
   it("browses current materials in stable public-path order", async () => {
     const t = createConvexTestWithBetterAuth();
     const projections = Array.from(
@@ -198,29 +209,32 @@ describe("readPublishedSearchDocuments", () => {
     expect(Arr.map(documents, ({ route }) => route)).toEqual(expected);
   });
 });
-it("keeps the signed description in published search documents", async () => {
-  const t = createConvexTestWithBetterAuth();
-  await t.mutation((ctx) =>
-    insertRuntimeArticles(ctx, 1, (index) => {
-      const projection = testArticleProjection(index);
-      return {
-        ...projection,
-        metadata: {
-          ...projection.metadata,
-          description: "Signed summary",
-        },
-      };
-    })
-  );
-  await t.mutation((ctx) =>
-    insertRuntimeIndex(ctx, testArticleProjection(0).contentKey, {
-      plainText: "article",
-    })
-  );
-  await activateSearch(t);
-  expect(await readArticles(t, ["article"], 10)).toMatchObject([
-    {
-      description: "Signed summary",
-    },
-  ]);
-});
+itWithRuntimeRelease(
+  "keeps the signed description in published search documents",
+  async (runtime) => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation((ctx) =>
+      insertRuntimeArticles(ctx, 1, (index) => {
+        const projection = testArticleProjection(index);
+        return {
+          ...projection,
+          metadata: {
+            ...projection.metadata,
+            description: "Signed summary",
+          },
+        };
+      })
+    );
+    await t.mutation((ctx) =>
+      insertRuntimeIndex(ctx, testArticleProjection(0).contentKey, {
+        plainText: "article",
+      })
+    );
+    await activateSearch(t, runtime);
+    expect(await readArticles(t, ["article"], 10)).toMatchObject([
+      {
+        description: "Signed summary",
+      },
+    ]);
+  }
+);

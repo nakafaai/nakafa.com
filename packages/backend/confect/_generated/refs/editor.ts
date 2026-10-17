@@ -4,7 +4,7 @@ import editor_steps from "../../editor/steps.spec";
 
 const spec: Spec.Spec<{
   readonly editor: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "editor", never, GroupSpec.NamedAt<typeof editor_documents, "documents"> | GroupSpec.NamedAt<typeof editor_steps, "steps">>, "editor">;
-}> = Spec.make().addAt("editor", GroupSpec.makeAt("editor").addGroupAt("documents", editor_documents).addGroupAt("steps", editor_steps));
+}> = Spec.fromGroups({ ["editor"]: GroupSpec.addGroupsAt(GroupSpec.make(), { ["documents"]: editor_documents, ["steps"]: editor_steps }) }) as typeof spec;
 
 const refs: Refs.FromSpec<typeof spec> = Refs.make(spec);
 

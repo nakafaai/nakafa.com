@@ -104,13 +104,16 @@ describe("public try-out catalog queries", () => {
     "does not substitute another locale and keeps set selection within its read budget",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            activateTryoutSnapshot(ctx, {
-              catalog: makeTryoutStartHierarchy("id", "visible"),
-              placements: [makeTryoutStartPlacement("id")],
-            })
+            Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog: makeTryoutStartHierarchy("id", "visible"),
+                placements: [makeTryoutStartPlacement("id")],
+              })
+            )
           )
         );
         expect(
@@ -139,10 +142,12 @@ describe("public try-out catalog queries", () => {
         );
         yield* Effect.promise(() =>
           oversized.mutation((ctx) =>
-            activateTryoutSnapshot(ctx, {
-              catalog,
-              placements: [makeTryoutStartPlacement("id")],
-            })
+            Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog,
+                placements: [makeTryoutStartPlacement("id")],
+              })
+            )
           )
         );
         yield* Effect.promise(() =>
@@ -211,17 +216,20 @@ describe("public try-out catalog queries", () => {
     "fails closed at each missing level of the featured hierarchy",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         for (const kind of ["country", "exam", "track", "set"] as const) {
           const t = convexTest(schema, convexModules);
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
-              activateTryoutSnapshot(ctx, {
-                catalog: Arr.filter(
-                  makeLandingHierarchy("id", "visible"),
-                  (row) => row.kind !== kind
-                ),
-                placements: [makeLandingPlacement("id")],
-              })
+              Effect.runPromiseWith(runtimeServices)(
+                activateTryoutSnapshot(ctx, {
+                  catalog: Arr.filter(
+                    makeLandingHierarchy("id", "visible"),
+                    (row) => row.kind !== kind
+                  ),
+                  placements: [makeLandingPlacement("id")],
+                })
+              )
             )
           );
           yield* Effect.promise(() =>
@@ -255,10 +263,12 @@ describe("public try-out catalog queries", () => {
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation((ctx) =>
-            activateTryoutSnapshot(ctx, {
-              catalog: makeLandingHierarchy("id", "visible"),
-              placements: [makeLandingPlacement("id")],
-            })
+            Effect.runPromiseWith(runtimeServices)(
+              activateTryoutSnapshot(ctx, {
+                catalog: makeLandingHierarchy("id", "visible"),
+                placements: [makeLandingPlacement("id")],
+              })
+            )
           )
         );
         yield* Effect.promise(() =>
@@ -280,6 +290,7 @@ describe("public try-out catalog queries", () => {
     "rejects set pages whose signed parent or section relationships are incomplete",
     () =>
       Effect.gen(function* () {
+        const runtimeServices = yield* Effect.context<never>();
         for (const kind of [
           "country",
           "exam",
@@ -290,13 +301,15 @@ describe("public try-out catalog queries", () => {
           const t = convexTest(schema, convexModules);
           yield* Effect.promise(() =>
             t.mutation((ctx) =>
-              activateTryoutSnapshot(ctx, {
-                catalog: Arr.filter(
-                  makeTryoutStartHierarchy("id", "visible"),
-                  (row) => row.kind !== kind
-                ),
-                placements: [makeTryoutStartPlacement("id")],
-              })
+              Effect.runPromiseWith(runtimeServices)(
+                activateTryoutSnapshot(ctx, {
+                  catalog: Arr.filter(
+                    makeTryoutStartHierarchy("id", "visible"),
+                    (row) => row.kind !== kind
+                  ),
+                  placements: [makeTryoutStartPlacement("id")],
+                })
+              )
             )
           );
           const publicPath =
@@ -325,10 +338,12 @@ it("preserves optional signed descriptions across every public catalog level", a
     description,
   }));
   await t.mutation((ctx) =>
-    activateTryoutSnapshot(ctx, {
-      catalog,
-      placements: [makeTryoutStartPlacement("en")],
-    })
+    Effect.runPromise(
+      activateTryoutSnapshot(ctx, {
+        catalog,
+        placements: [makeTryoutStartPlacement("en")],
+      })
+    )
   );
   const countryPath = `try-out/${TRYOUT_START_COUNTRY}`;
   const country = await t.query(api.tryouts.queries.catalog.getCountryPage, {

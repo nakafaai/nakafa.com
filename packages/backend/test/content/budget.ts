@@ -17,7 +17,7 @@ import {
 } from "@repo/backend/test/content/release";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
 import { getDocumentSize, type Value } from "convex/values";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 type ArtifactHash = TryoutPlacement["questionArtifactHash"];
 
@@ -114,15 +114,17 @@ export function insertCeilingItem(
 }
 
 /** Inserts one try-out placement naming an artifact as question and answer. */
-function insertCeilingPlacement(
+async function insertCeilingPlacement(
   ctx: MutationCtx,
   artifactHash: ArtifactHash,
   index: number
 ) {
-  const { record } = makeTryoutPlacementRow("en", {
-    answerArtifactHash: artifactHash,
-    questionArtifactHash: artifactHash,
-  });
+  const { record } = await Effect.runPromise(
+    makeTryoutPlacementRow("en", {
+      answerArtifactHash: artifactHash,
+      questionArtifactHash: artifactHash,
+    })
+  );
   const rowJson = canonicalizeContentSnapshotRow({
     family: "tryout",
     record,

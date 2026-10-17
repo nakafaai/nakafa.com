@@ -174,43 +174,41 @@ export function insertProofRoute(ctx: MutationCtx, index: number) {
   });
 }
 /** Creates an authenticated empty manifest with every catalog proof bound. */
-export function testEmptyManifest(releaseId: ReleaseId) {
-  const items = Effect.runSync(digestItems(releaseId, Stream.empty));
-  const projections = Effect.runSync(
-    digestProjections(releaseId, Stream.empty)
-  );
-  const rollback = Effect.runSync(
-    digestRollbackSnapshot(releaseId, Stream.empty)
-  );
-  const routes = Effect.runSync(digestRoutes(releaseId, Stream.empty));
-  const snapshots = inheritContentSnapshots(null);
-  return ContentReleaseManifestSchema.make({
-    activeAppLocales: ACTIVE_APP_LOCALES,
-    baseActiveAppLocales: null,
-    baseManifestHash: null,
-    baseReleaseId: null,
-    baseResultCount: 0,
-    baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
-    deleteCount: 0,
-    format: CONTENT_RELEASE_FORMAT,
-    itemCount: 0,
-    itemsDigest: items.digest,
-    origin: { kind: "git", sha: GitCommitShaSchema.make("a".repeat(40)) },
-    projectionCount: 0,
-    projectionDigest: projections.digest,
-    releaseId,
-    rendererManifestHash: TEST_PROOF_RENDERER.hash,
-    resultCount: 0,
-    resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
-    rollbackCount: 0,
-    rollbackDigest: rollback.digest,
-    routeCount: 0,
-    routeDigest: routes.digest,
-    scope: testPublicationScope({ snapshots }),
-    snapshots,
-    upsertCount: 0,
-  });
-}
+export const testEmptyManifest = Effect.fn("test.content.emptyManifest")(
+  function* (releaseId: ReleaseId) {
+    const items = yield* digestItems(releaseId, Stream.empty);
+    const projections = yield* digestProjections(releaseId, Stream.empty);
+    const rollback = yield* digestRollbackSnapshot(releaseId, Stream.empty);
+    const routes = yield* digestRoutes(releaseId, Stream.empty);
+    const snapshots = inheritContentSnapshots(null);
+    return ContentReleaseManifestSchema.make({
+      activeAppLocales: ACTIVE_APP_LOCALES,
+      baseActiveAppLocales: null,
+      baseManifestHash: null,
+      baseReleaseId: null,
+      baseResultCount: 0,
+      baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
+      deleteCount: 0,
+      format: CONTENT_RELEASE_FORMAT,
+      itemCount: 0,
+      itemsDigest: items.digest,
+      origin: { kind: "git", sha: GitCommitShaSchema.make("a".repeat(40)) },
+      projectionCount: 0,
+      projectionDigest: projections.digest,
+      releaseId,
+      rendererManifestHash: TEST_PROOF_RENDERER.hash,
+      resultCount: 0,
+      resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
+      rollbackCount: 0,
+      rollbackDigest: rollback.digest,
+      routeCount: 0,
+      routeDigest: routes.digest,
+      scope: testPublicationScope({ snapshots }),
+      snapshots,
+      upsertCount: 0,
+    });
+  }
+);
 export const TEST_KEY_RESOLVER = ContentVerificationKeyResolver.of({
   /** Resolves only the explicit technical test key. */
   resolve: (requestedKeyId) => {
@@ -221,55 +219,69 @@ export const TEST_KEY_RESOLVER = ContentVerificationKeyResolver.of({
   },
 });
 /** Produces one fully authenticated technical artifact. */
-export function testSignedArtifact(
-  rendererDomain: RendererDomain = "mathematics",
-  options?: {
-    readonly artifactLocale?: ArtifactLocaleCode;
-    readonly compiledCode?: string | undefined;
-    readonly contentKey?: string;
-    readonly plainText?: string;
-    readonly rawMdx?: string;
+export const testSignedArtifact = Effect.fn("test.content.signedArtifact")(
+  function* (
+    rendererDomain: RendererDomain = "mathematics",
+    options?: {
+      readonly artifactLocale?: ArtifactLocaleCode;
+      readonly compiledCode?: string | undefined;
+      readonly contentKey?: string;
+      readonly plainText?: string;
+      readonly rawMdx?: string;
+    }
+  ) {
+    const rawMdx = options?.rawMdx ?? "## Technical proof";
+    const compiledCode = options?.compiledCode ?? "return {};";
+    const payload = CompiledContentPayloadSchema.make({
+      artifactLocale: ArtifactLocaleSchema.make(
+        options?.artifactLocale ?? "en"
+      ),
+      byteLength: new TextEncoder().encode(compiledCode).byteLength,
+      compiledCode,
+      compilerConfigHash: digest,
+      compilerVersion: "0.1.0",
+      contentKey: ContentKeySchema.make(options?.contentKey ?? "test:head-0"),
+      format: "mdx-function-body",
+      mdxCompilerVersion: "3.1.1",
+      plainText: options?.plainText ?? "Technical proof",
+      rawMdx,
+      rendererDomain,
+      requiredComponents: [],
+      sourceHash: testTextHash(rawMdx),
+    });
+    const artifactHash = yield* hashCompiledContentPayload(payload);
+    return SignedContentArtifactSchema.make({
+      artifactHash,
+      keyId: TEST_KEY_ID,
+      payload,
+      signature: signTestMessage(
+        canonicalizeContentArtifactSigningInput(artifactHash, payload)
+      ),
+    });
   }
-) {
-  const rawMdx = options?.rawMdx ?? "## Technical proof";
-  const compiledCode = options?.compiledCode ?? "return {};";
-  const payload = CompiledContentPayloadSchema.make({
-    artifactLocale: ArtifactLocaleSchema.make(options?.artifactLocale ?? "en"),
-    byteLength: new TextEncoder().encode(compiledCode).byteLength,
-    compiledCode,
-    compilerConfigHash: digest,
-    compilerVersion: "0.1.0",
-    contentKey: ContentKeySchema.make(options?.contentKey ?? "test:head-0"),
-    format: "mdx-function-body",
-    mdxCompilerVersion: "3.1.1",
-    plainText: options?.plainText ?? "Technical proof",
-    rawMdx,
-    rendererDomain,
-    requiredComponents: [],
-    sourceHash: testTextHash(rawMdx),
-  });
-  const artifactHash = hashCompiledContentPayload(payload);
-  return SignedContentArtifactSchema.make({
-    artifactHash,
-    keyId: TEST_KEY_ID,
-    payload,
-    signature: signTestMessage(
-      canonicalizeContentArtifactSigningInput(artifactHash, payload)
-    ),
-  });
-}
+);
 /** Produces one fully authenticated technical release envelope. */
-export function testSignedRelease(manifest: ContentReleaseManifest) {
-  const manifestHash = Effect.runSync(hashContentReleaseManifest(manifest));
-  return SignedContentReleaseSchema.make({
-    keyId: TEST_KEY_ID,
-    manifest,
-    manifestHash,
-    signature: signTestMessage(
-      canonicalizeContentReleaseSigningInput(manifestHash, manifest)
-    ),
-  });
-}
+export const testSignedRelease = Effect.fn("test.content.signedRelease")(
+  function* (manifest: ContentReleaseManifest) {
+    const manifestHash = yield* hashContentReleaseManifest(manifest);
+    return SignedContentReleaseSchema.make({
+      keyId: TEST_KEY_ID,
+      manifest,
+      manifestHash,
+      signature: signTestMessage(
+        canonicalizeContentReleaseSigningInput(manifestHash, manifest)
+      ),
+    });
+  }
+);
+
+/** Produces one authenticated release of the empty manifest with the given id. */
+export const testSignedEmptyRelease = Effect.fn(
+  "test.content.signedEmptyRelease"
+)(function* (releaseId: ReleaseId) {
+  const manifest = yield* testEmptyManifest(releaseId);
+  return yield* testSignedRelease(manifest);
+});
 
 /** Produces one authenticated permanent bundle from exact release provenance. */
 export function testSignedTryoutRuntimeBundle(input: {

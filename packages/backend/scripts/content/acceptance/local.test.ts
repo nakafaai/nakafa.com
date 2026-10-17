@@ -5,6 +5,7 @@ import {
   cleanLocalRuntime,
   discardSignedResponses,
   initializeLocalRuntime,
+  LocalRuntimeJson,
   localApplicationEnvironment,
   readLocalRuntime,
   releaseLocalRuntime,
@@ -34,6 +35,7 @@ vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
   runAcceptanceCommand: mocks.command,
 }));
 const encodeJson = Schema.encodeEffect(JsonTextSchema);
+const encodeRuntime = Schema.encodeEffect(LocalRuntimeJson);
 const environment =
   "VITE_CONVEX_URL=http://127.0.0.1:43120\nVITE_CONVEX_SITE_URL=http://127.0.0.1:43121\n";
 const LOCAL_JWKS_LINE =
@@ -303,7 +305,7 @@ describe("owned signed acceptance runtime", () => {
                   fs.stat(path).pipe(
                     Effect.map((info) => ({
                       ...info,
-                      ino: Option.none<number>(),
+                      ino: Option.none<bigint>(),
                     }))
                   ),
               }
@@ -339,7 +341,7 @@ describe("owned signed acceptance runtime", () => {
                 .pipe(
                   Effect.map((info) =>
                     path.endsWith("/.convex")
-                      ? { ...info, ino: Option.none<number>() }
+                      ? { ...info, ino: Option.none<bigint>() }
                       : info
                   )
                 ),
@@ -399,25 +401,25 @@ describe("owned signed acceptance runtime", () => {
         if (change === "database") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeJson({ ...runtime, databaseInode: -1 })
+            yield* encodeRuntime({ ...runtime, databaseInode: -1n })
           );
         }
         if (change === "directory") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeJson({ ...runtime, directory: "foreign" })
+            yield* encodeRuntime({ ...runtime, directory: "foreign" })
           );
         }
         if (change === "foreign-backend") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeJson({ ...runtime, backend: "foreign" })
+            yield* encodeRuntime({ ...runtime, backend: "foreign" })
           );
         }
         if (change === "foreign-inode") {
           yield* fs.writeFileString(
             manifest,
-            yield* encodeJson({ ...runtime, directoryInode: -1 })
+            yield* encodeRuntime({ ...runtime, directoryInode: -1n })
           );
         }
         if (change === "environment-link" || change === "database-link") {
