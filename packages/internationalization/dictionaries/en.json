@@ -603,10 +603,6 @@
       "title": "Could not finish this section yet.",
       "description": "Please try again."
     },
-    "tryout-complete-part-success": {
-      "title": "Section finished.",
-      "description": "You can choose another section or go back to the set."
-    },
     "tryout-preference-error": {
       "title": "Tryout preference not saved yet."
     },

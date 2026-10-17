@@ -603,10 +603,6 @@
       "title": "Bagian belum bisa diselesaikan.",
       "description": "Coba lagi ya."
     },
-    "tryout-complete-part-success": {
-      "title": "Bagian selesai.",
-      "description": "Kamu bisa pilih bagian lain atau kembali ke set."
-    },
     "tryout-preference-error": {
       "title": "Preferensi try out belum tersimpan."
     },
