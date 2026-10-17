@@ -7217,6 +7217,19 @@ export declare const api: {
         | "notAllowed"
         | "taken"
       >;
+      getProfileByUsername: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          _id: Id<"users">;
+          bio?: string;
+          image?: string;
+          mascot: string;
+          name: string;
+          username: string;
+        } | null
+      >;
     };
   };
 };
