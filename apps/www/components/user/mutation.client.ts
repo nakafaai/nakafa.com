@@ -8,7 +8,11 @@ import { readBio } from "@repo/backend/confect/users/bio";
 import { readUsername } from "@repo/backend/confect/users/username";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Option, Result } from "effect";
-import { patchUser, withoutBio } from "@/components/user/state";
+import {
+  patchUser,
+  publicPictureFields,
+  withoutBio,
+} from "@/components/user/state";
 
 /** Patch the public projection of one account in the store, when the store holds it. */
 function patchPublicUser(
@@ -93,6 +97,33 @@ export function useUpdateMascotMutation() {
         })
       );
       patchPublicUser(localStore, current.appUser._id, { mascot });
+    }
+  );
+}
+
+/** Return a picture mutation that draws the chosen picture everywhere the account shows it at once. */
+export function useUpdatePictureMutation() {
+  return useMutation(users.mutations.setPicture).withOptimisticUpdate(
+    (localStore, { picture }) => {
+      const current = Option.getOrUndefined(
+        localStore.getQuery(auth.queries.getCurrentUser, {})
+      );
+      if (!current) {
+        return;
+      }
+      localStore.setQuery(
+        auth.queries.getCurrentUser,
+        {},
+        Option.some({
+          ...current,
+          appUser: patchUser(current.appUser, { picture }),
+        })
+      );
+      patchPublicUser(
+        localStore,
+        current.appUser._id,
+        publicPictureFields(current.appUser, picture)
+      );
     }
   );
 }

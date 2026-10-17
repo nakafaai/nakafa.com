@@ -39,7 +39,7 @@ describe("authenticated user query contracts", () => {
     expect(await authed.query(api.auth.queries.getCurrentUser)).toBeNull();
   });
 
-  it("exposes only public profile fields and handles absent images and users", async () => {
+  it("exposes only public profile fields and sends the photo only when the account shows it", async () => {
     const t = createConvexTestWithBetterAuth();
     const user = await t.mutation((ctx) =>
       seedAuthenticatedUser(ctx, {
@@ -58,10 +58,19 @@ describe("authenticated user query contracts", () => {
         mascot: "crab.1.6d4b78.left.smile",
       })
     );
+    // An account that keeps its animal does not send the Google photo.
+    expect(await t.query(api.auth.queries.getUserById, args)).toEqual({
+      mascot: "crab.1.6d4b78.left.smile",
+      name: "User public-profile",
+    });
+    await t.mutation((ctx) =>
+      ctx.db.patch("users", user.userId, { picture: "photo" })
+    );
     expect(await t.query(api.auth.queries.getUserById, args)).toEqual({
       image: "https://example.com/user.png",
       mascot: "crab.1.6d4b78.left.smile",
       name: "User public-profile",
+      picture: "photo",
     });
     await t.mutation((ctx) => ctx.db.delete("users", user.userId));
     expect(await t.query(api.auth.queries.getUserById, args)).toBeNull();

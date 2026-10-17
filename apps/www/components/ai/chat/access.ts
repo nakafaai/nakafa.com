@@ -1,4 +1,35 @@
+import {
+  AccountUnavailable,
+  SessionRequired,
+} from "@repo/backend/confect/auth/spec";
+import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Schema } from "effect";
+
+/**
+ * The declared failures that say the chat is not available to this viewer: the
+ * viewer is signed out, the account cannot use Nina, or the chat is missing or
+ * is not the viewer's. Every other failure is Nakafa's own.
+ */
+const UnavailableChatSchema = Schema.Union([
+  SessionRequired,
+  AccountUnavailable,
+  ChatAccessError,
+]);
+
+/** The card a chat that could not be read shows: its access, or Nakafa's own failure. */
+type ChatFailureKind = "access" | "retry";
+
+/**
+ * Reads the card of a failed read from the typed failure it threw. Only a
+ * declared access failure says the chat is not available to this viewer. Any
+ * other failure, a declared one of Nakafa's own or a defect, says Nakafa could
+ * not load the chat, and trying again runs the read again. The text of an error
+ * never decides it.
+ */
+export function readChatFailureKind(error: unknown): ChatFailureKind {
+  return Schema.is(UnavailableChatSchema)(error) ? "access" : "retry";
+}
 
 /**
  * The arguments of a query that reads one chat. The owner reads by the chat id.

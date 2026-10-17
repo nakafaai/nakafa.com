@@ -18,10 +18,12 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
-import { sealThreadIn } from "@repo/backend/test/nina/seal";
+import { readFileIn, readMessageIn } from "@repo/backend/test/nina/sealed";
+import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import {
   admission,
   attachment,
+  readyFileIdIn,
   reserve,
   reserved,
   save,
@@ -31,6 +33,8 @@ import {
   uploadFixture,
 } from "@repo/backend/test/nina/uploads";
 import { Duration } from "effect";
+
+const reserving = { filename: attachment.filename };
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
@@ -81,11 +85,7 @@ describe("native Nina attachment ownership", () => {
   it("saves original bytes with the SDK and atomically transfers the owned grant to the prompt", async () => {
     const { t, owner, identity } = await uploadFixture();
     const uploadId = await saved(owner);
-    const grant = await t.query((ctx) => ctx.db.get("ninaUploads", uploadId));
-    if (grant?.state.status !== "ready") {
-      throw new Error("Expected ready upload");
-    }
-    const fileId = grant.state.fileId;
+    const fileId = await readyFileIdIn(t, uploadId);
     const args = sending([uploadId]);
     const first = await started(owner, args);
     const repeated = await started(owner, args);
@@ -104,17 +104,51 @@ describe("native Nina attachment ownership", () => {
     expect(state.grant).toBeNull();
     expect(state.user?.credits).toBe(5);
     expect(state.file).toMatchObject({ refcount: 1, mediaType: "image/png" });
-    expect(state.prompt[0]).toMatchObject({
-      fileIds: [fileId],
+    // The component holds the message sealed: no text, and the learner reads it back.
+    expect(state.prompt[0]).toMatchObject({ fileIds: [fileId] });
+    expect(storedTextOf(state.prompt)).not.toContain(
+      admission.input.prompt.text
+    );
+    expect(
+      await readMessageIn(t, identity.userId, first.promptMessageId)
+    ).toMatchObject({
       message: {
-        role: "user",
         content: [
-          { type: "text", text: admission.input.prompt.text },
-          expect.objectContaining({ type: "image", mediaType: "image/png" }),
+          { text: admission.input.prompt.text },
+          { mediaType: "image/png" },
         ],
       },
     });
     expect(storeFile).toHaveBeenCalledOnce();
+  });
+
+  it("seals an upload's name before the component stores the file, so the planted name is in no table", async () => {
+    const f = await uploadFixture();
+    const planted = "PLANT-Soal-Rahasia.pdf";
+    const uploadId = await saved(f.owner, {
+      ...attachment,
+      filename: planted,
+      mediaType: "application/pdf",
+    });
+    const fileId = await readyFileIdIn(f.t, uploadId);
+
+    // The component keeps the file under a sealed name, and the learner's own read opens it.
+    const file = await f.t.query((ctx) =>
+      ctx.runQuery(components.nina.files.get, { fileId })
+    );
+    expect(storedTextOf(file)).not.toContain(planted);
+    expect(
+      await readFileIn(f.t, f.identity.userId, fileId, true)
+    ).toMatchObject({
+      filename: planted,
+    });
+
+    const sent = await started(f.owner, sending([uploadId]));
+    expect(sent.prompt.files).toEqual([
+      expect.objectContaining({ filename: planted, type: "file" }),
+    ]);
+    const stored = await storedRowsIn(f.t, sent.threadId, [fileId]);
+    expect(storedTextOf(stored)).not.toContain(planted);
   });
 
   it("rejects another owner's grant, duplicates, and expiry without consuming credits or the original upload", async () => {
@@ -164,9 +198,9 @@ describe("native Nina attachment ownership", () => {
     ).toEqual([]);
     vi.setSystemTime(NOW + 60_000);
     for (let count = 0; count < NINA_FILE_COUNT; count += 1) {
-      await owner.mutation(reserve, {});
+      await owner.mutation(reserve, reserving);
     }
-    await expect(owner.mutation(reserve, {})).rejects.toMatchObject({
+    await expect(owner.mutation(reserve, reserving)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_LIMIT" },
     });
     expect(
@@ -201,7 +235,7 @@ describe("native Nina attachment ownership", () => {
   });
 
   it("retries only an owned stored prompt and reuses its file references and context", async () => {
-    const { t, owner } = await uploadFixture();
+    const { t, owner, identity } = await uploadFixture();
     const uploadId = await saved(owner);
     const first = await started(owner, sending([uploadId]));
     await owner.mutation(cancel, { chatId: first.chatId });
@@ -219,7 +253,12 @@ describe("native Nina attachment ownership", () => {
         messageIds: [first.promptMessageId, second.promptMessageId],
       })
     );
-    expect(retry?.message).toEqual(original?.message);
+    // Each prompt is sealed at its own place, so the messages the learner reads match.
+    const read = (messageId: string) =>
+      readMessageIn(t, identity.userId, messageId);
+    expect((await read(second.promptMessageId))?.message).toEqual(
+      (await read(first.promptMessageId))?.message
+    );
     expect(retry?.fileIds).toEqual(original?.fileIds);
     const fileId = original?.fileIds?.[0];
     if (!fileId) {
@@ -239,53 +278,13 @@ describe("native Nina attachment ownership", () => {
       })
     ).rejects.toMatchObject({ data: { code: "NINA_RETRY_UNAVAILABLE" } });
   });
-  it("retries a sealed prompt with its attachment as a plain prompt does", async () => {
-    /** The retry of a prompt with an image, with the chat plain, or sealed in place once the prompt is asked. */
-    const retried = async (sealed: boolean) => {
-      const { t, owner, identity } = await uploadFixture();
-      const uploadId = Ref.decodeReturnsSync(
-        refs.public.nina.uploads.save,
-        await owner.action(save, attachment)
-      );
-      const first = Ref.decodeReturnsSync(
-        refs.public.nina.turns.start,
-        await owner.mutation(start, {
-          ...admission,
-          input: {
-            ...admission.input,
-            prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
-          },
-        })
-      );
-      await owner.mutation(cancel, { chatId: first.chatId });
-      if (sealed) {
-        await sealThreadIn(t, first.threadId, identity.userId);
-      }
-      const second = Ref.decodeReturnsSync(
-        refs.public.nina.turns.start,
-        await owner.mutation(start, {
-          requestId: "retry",
-          chatId: first.chatId,
-          input: { kind: "retry", order: first.order },
-        })
-      );
-      return { order: second.order, prompt: second.prompt };
-    };
-    const plain = await retried(false);
-    const sealed = await retried(true);
-    expect(sealed).toEqual(plain);
-    expect(sealed.prompt.files).toEqual([
-      expect.objectContaining({ type: "file", mediaType: "image/png" }),
-    ]);
-  });
-
   it("limits repeated discarded uploads without counting them as pending files", async () => {
     const f = await uploadFixture();
     for (let i = 0; i < NINA_FILE_COUNT; i += 1) {
       const uploadId = await reserved(f.owner);
       await f.t.mutation(discard, { uploadId });
     }
-    await expect(f.owner.mutation(reserve, {})).rejects.toMatchObject({
+    await expect(f.owner.mutation(reserve, reserving)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_LIMIT" },
     });
     expect(
@@ -337,9 +336,9 @@ describe("native Nina attachment ownership", () => {
     const f = await uploadFixture();
     const uploadId = await saved(f.owner);
     for (let count = 1; count < NINA_FILE_COUNT; count += 1) {
-      await f.owner.mutation(reserve, {});
+      await f.owner.mutation(reserve, reserving);
     }
-    await expect(f.owner.mutation(reserve, {})).rejects.toMatchObject({
+    await expect(f.owner.mutation(reserve, reserving)).rejects.toMatchObject({
       data: { code: "NINA_UPLOAD_LIMIT" },
     });
 
@@ -351,7 +350,7 @@ describe("native Nina attachment ownership", () => {
     // The quota gives one place back every MINUTE / NINA_FILE_COUNT, so once it
     // has, only the pending count is left to refuse the next upload.
     vi.setSystemTime(NOW + MINUTE / NINA_FILE_COUNT + 1);
-    await expect(f.owner.mutation(reserve, {})).resolves.toBeDefined();
+    await expect(f.owner.mutation(reserve, reserving)).resolves.toBeDefined();
     await expect(f.owner.mutation(release, { uploadId })).rejects.toMatchObject(
       { data: { code: "NINA_UPLOAD_INVALID" } }
     );
@@ -413,11 +412,7 @@ describe("native Nina attachment ownership", () => {
   it("refuses an upload that a sent message took, and leaves the message with its file", async () => {
     const f = await uploadFixture();
     const uploadId = await saved(f.owner);
-    const grant = await f.t.query((ctx) => ctx.db.get("ninaUploads", uploadId));
-    if (grant?.state.status !== "ready") {
-      throw new Error("Expected ready upload");
-    }
-    const fileId = grant.state.fileId;
+    const fileId = await readyFileIdIn(f.t, uploadId);
     const sent = await started(f.owner, sending([uploadId]));
 
     await expect(f.owner.mutation(release, { uploadId })).rejects.toMatchObject(

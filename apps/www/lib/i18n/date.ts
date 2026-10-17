@@ -5,6 +5,10 @@ import {
 import { Array as Arr, DateTime, Duration } from "effect";
 import { hasLocale } from "next-intl";
 
+// Dates of content and of the viewer. School times are not written here: they
+// go through `formatSchoolTime` in `@repo/internationalization/src/school/time`,
+// which reads the school's own time zone instead of the viewer's.
+
 const MINUTES_IN_HOUR = Duration.toMinutes(Duration.hours(1));
 const MINUTES_IN_DAY = Duration.toMinutes(Duration.days(1));
 const MINUTES_IN_MONTH = Duration.toMinutes(Duration.days(30));
