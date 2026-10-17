@@ -75,7 +75,7 @@
     "@edge-runtime/vm": "^5.0.0",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
-    "@scalar/openapi-parser": "0.29.13",
+    "@scalar/openapi-parser": "0.29.14",
     "@vitest/coverage-istanbul": "catalog:",
     "auth": "1.6.33",
     "convex-test": "^0.0.62",
