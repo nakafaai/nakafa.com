@@ -61,6 +61,15 @@ export class ClassAddressEmpty extends Schema.TaggedError<ClassAddressEmpty>()(
   )
 ) {}
 
+/** A class address that more than one active class of the school holds, so it names no one class. */
+export class ClassAmbiguous extends Schema.TaggedError<ClassAmbiguous>()(
+  "ClassAmbiguous",
+  refusal(
+    "CLASS_AMBIGUOUS",
+    "More than one active class of this school has this address."
+  )
+) {}
+
 /** Assigning a Person who holds no active teacher grant over the class's unit or the whole school. */
 export class PersonNotTeacher extends Schema.TaggedError<PersonNotTeacher>()(
   "PersonNotTeacher",

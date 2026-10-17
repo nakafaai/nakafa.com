@@ -1,3 +1,4 @@
+import { photoOf, type UserPicture } from "@repo/backend/confect/users/picture";
 import { Struct } from "effect";
 
 /**
@@ -6,6 +7,18 @@ import { Struct } from "effect";
  */
 export function patchUser<T extends object>(user: T, fields: Partial<T>): T {
   return { ...user, ...fields };
+}
+
+/**
+ * The public copy of an account once it chooses a picture: the choice, and the
+ * Google photo when that choice shows it, as the server sends them.
+ */
+export function publicPictureFields(
+  account: { readonly image?: string | null | undefined },
+  picture: typeof UserPicture.Type
+) {
+  const photo = photoOf({ image: account.image, picture });
+  return { picture, ...(photo === undefined ? {} : { image: photo }) };
 }
 
 /**

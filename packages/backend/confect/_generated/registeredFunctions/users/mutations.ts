@@ -12,5 +12,6 @@ export default {
 ["updateUsername"]: RegisteredConvexFunction.register({ ...definitions["updateUsername"], handler: forward(definitions["updateUsername"].handler) }),
 ["updateBio"]: RegisteredConvexFunction.register({ ...definitions["updateBio"], handler: forward(definitions["updateBio"].handler) }),
 ["setMascot"]: RegisteredConvexFunction.register({ ...definitions["setMascot"], handler: forward(definitions["setMascot"].handler) }),
+["setPicture"]: RegisteredConvexFunction.register({ ...definitions["setPicture"], handler: forward(definitions["setPicture"].handler) }),
 ["syncUserInfoForChat"]: RegisteredConvexFunction.register({ ...definitions["syncUserInfoForChat"], handler: forward(definitions["syncUserInfoForChat"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../users/mutations.spec")["default"]>;
