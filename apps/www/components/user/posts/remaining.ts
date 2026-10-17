@@ -1,7 +1,7 @@
 import {
-  countPostCharacters,
-  POST_TEXT_MAX_LENGTH,
-} from "@repo/backend/confect/posts/schema";
+  countLearnerCharacters,
+  LEARNER_TEXT_MAX_LENGTH,
+} from "@repo/backend/confect/writing/text";
 import { Option, String as Str } from "effect";
 
 /** The characters left at which the composer starts to show how many remain. */
@@ -14,7 +14,8 @@ const SHOW_REMAINING_FROM = 50;
  * left to show, so nothing shows.
  */
 export function remainingToShow(input: string): Option.Option<number> {
-  const remaining = POST_TEXT_MAX_LENGTH - countPostCharacters(Str.trim(input));
+  const remaining =
+    LEARNER_TEXT_MAX_LENGTH - countLearnerCharacters(Str.trim(input));
   return remaining >= 0 && remaining <= SHOW_REMAINING_FROM
     ? Option.some(remaining)
     : Option.none();

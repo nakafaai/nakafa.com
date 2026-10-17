@@ -5,45 +5,66 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { LEARNER_TEXT_MAX_LENGTH } from "@repo/backend/confect/writing/text";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Array as Arr, Option } from "effect";
 
 const now = Date.UTC(2026, 8, 1);
+const likeComment = Ref.getFunctionReference(
+  refs.public.comments.mutations.likeComment
+);
+const unlikeComment = Ref.getFunctionReference(
+  refs.public.comments.mutations.unlikeComment
+);
+const getCommentReplies = Ref.getFunctionReference(
+  refs.public.comments.queries.getCommentReplies
+);
+/** A page of replies as the server answers it, decoded with the schema of the function. */
+const decodeReplies = (answer: unknown) =>
+  Ref.decodeReturnsSync(refs.public.comments.queries.getCommentReplies, answer);
+const paginationOpts = { cursor: null, numItems: 20 };
+
+/** An author and a reader, both signed in, with the clients that act as each of them. */
+async function createLearners() {
+  const t = createConvexTestWithBetterAuth();
+  const [author, reader] = await t.mutation(async (ctx) =>
+    Promise.all([
+      seedAuthenticatedUser(ctx, { now, suffix: "comment-author" }),
+      seedAuthenticatedUser(ctx, { now, suffix: "comment-reader" }),
+    ])
+  );
+  return {
+    t,
+    author: {
+      session: t.withIdentity({
+        subject: author.authUserId,
+        sessionId: author.sessionId,
+      }),
+      userId: author.userId,
+    },
+    reader: {
+      session: t.withIdentity({
+        subject: reader.authUserId,
+        sessionId: reader.sessionId,
+      }),
+      userId: reader.userId,
+    },
+  };
+}
 
 describe("comment write and read contracts", () => {
-  it("keeps reply identities and viewer votes coherent across account removal", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const [author, reader] = await t.mutation(async (ctx) =>
-      Promise.all([
-        seedAuthenticatedUser(ctx, {
-          now,
-          suffix: "comment-author",
-        }),
-        seedAuthenticatedUser(ctx, {
-          now,
-          suffix: "comment-reader",
-        }),
-      ])
-    );
-    const owner = t.withIdentity({
-      subject: author.authUserId,
-      sessionId: author.sessionId,
-    });
-    const viewer = t.withIdentity({
-      subject: reader.authUserId,
-      sessionId: reader.sessionId,
-    });
+  it("keeps reply identities and viewer likes coherent across account removal", async () => {
+    const { t, author, reader } = await createLearners();
     const slug = "articles/example";
-    const root = await owner.mutation(api.comments.mutations.addComment, {
-      slug,
-      text: "Question",
-    });
-    const reply = await viewer.mutation(api.comments.mutations.addComment, {
-      slug,
-      text: "Answer",
-      parentId: root,
-    });
-    const rejected = await viewer
+    const root = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { slug, text: "Question" }
+    );
+    const reply = await reader.session.mutation(
+      api.comments.mutations.addComment,
+      { slug, text: "Answer", parentId: root }
+    );
+    const rejected = await reader.session
       .mutation(api.comments.mutations.addComment, {
         slug: "articles/other",
         text: "Wrong parent",
@@ -69,7 +90,7 @@ describe("comment write and read contracts", () => {
       replyCount: 1,
     });
     await expect(
-      viewer.mutation(api.comments.mutations.deleteComment, {
+      reader.session.mutation(api.comments.mutations.deleteComment, {
         commentId: root,
       })
     ).rejects.toMatchObject({
@@ -77,48 +98,53 @@ describe("comment write and read contracts", () => {
         code: "FORBIDDEN",
       },
     });
-    await viewer.mutation(api.comments.mutations.voteOnComment, {
+    await reader.session.mutation(likeComment, {
       commentId: root,
-      vote: 1,
     });
-    const paginationOpts = {
-      cursor: null,
-      numItems: 20,
-    };
-    const page = await viewer.query(api.comments.queries.getCommentsBySlug, {
-      slug,
-      paginationOpts,
-    });
+    const page = await reader.session.query(
+      api.comments.queries.getCommentsBySlug,
+      { slug, paginationOpts }
+    );
     expect(
       Option.getOrUndefined(Arr.findFirst(page.page, (row) => row._id === root))
     ).toMatchObject({
-      viewerVote: 1,
+      liked: true,
+      likeCount: 1,
       replyToUser: null,
       user: {
         _id: author.userId,
       },
+      viewerVote: 1,
     });
-    expect(
-      Option.getOrUndefined(
-        Arr.findFirst(page.page, (row) => row._id === reply)
-      )
-    ).toMatchObject({
-      viewerVote: null,
-      replyToUser: {
-        _id: author.userId,
+    const thread = decodeReplies(
+      await reader.session.query(getCommentReplies, {
+        threadId: root,
+        paginationOpts,
+      })
+    );
+    expect(thread.page).toMatchObject([
+      {
+        _id: reply,
+        liked: false,
+        likeCount: 0,
+        replyToUser: {
+          _id: author.userId,
+        },
+        user: {
+          _id: reader.userId,
+        },
+        viewerVote: null,
       },
-      user: {
-        _id: reader.userId,
-      },
-    });
+    ]);
     expect(
-      await viewer.query(api.comments.queries.getCommentsByUserId, {
+      await reader.session.query(api.comments.queries.getCommentsByUserId, {
         userId: author.userId,
         paginationOpts,
       })
     ).toMatchObject({
       page: [
         {
+          liked: true,
           viewerVote: 1,
         },
       ],
@@ -131,19 +157,16 @@ describe("comment write and read contracts", () => {
     ).toMatchObject({
       page: [
         {
+          liked: false,
           viewerVote: null,
         },
       ],
     });
-    await viewer.mutation(api.comments.mutations.voteOnComment, {
+    await reader.session.mutation(unlikeComment, {
       commentId: root,
-      vote: -1,
-    });
-    await viewer.mutation(api.comments.mutations.voteOnComment, {
-      commentId: root,
-      vote: 0,
     });
     expect(await t.query((ctx) => ctx.db.get("comments", root))).toMatchObject({
+      likeCount: 0,
       upvoteCount: 0,
       downvoteCount: 0,
     });
@@ -157,16 +180,18 @@ describe("comment write and read contracts", () => {
         Arr.findFirst(after.page, (row) => row._id === root)
       )?.user
     ).toBeNull();
-    expect(
-      Option.getOrUndefined(
-        Arr.findFirst(after.page, (row) => row._id === reply)
-      )?.replyToUser
-    ).toBeNull();
-    await viewer.mutation(api.comments.mutations.deleteComment, {
+    const afterThread = decodeReplies(
+      await t.query(getCommentReplies, {
+        threadId: root,
+        paginationOpts,
+      })
+    );
+    expect(afterThread.page[0]?.replyToUser).toBeNull();
+    await reader.session.mutation(api.comments.mutations.deleteComment, {
       commentId: reply,
     });
     await expect(
-      viewer.mutation(api.comments.mutations.deleteComment, {
+      reader.session.mutation(api.comments.mutations.deleteComment, {
         commentId: reply,
       })
     ).rejects.toMatchObject({
@@ -175,9 +200,8 @@ describe("comment write and read contracts", () => {
       },
     });
     await expect(
-      viewer.mutation(api.comments.mutations.voteOnComment, {
+      reader.session.mutation(likeComment, {
         commentId: reply,
-        vote: 1,
       })
     ).rejects.toMatchObject({
       data: {
@@ -185,7 +209,7 @@ describe("comment write and read contracts", () => {
       },
     });
     await expect(
-      viewer.mutation(api.comments.mutations.addComment, {
+      reader.session.mutation(api.comments.mutations.addComment, {
         slug,
         text: "Missing reply",
         parentId: reply,
@@ -195,5 +219,184 @@ describe("comment write and read contracts", () => {
         code: "COMMENT_PARENT_NOT_FOUND",
       },
     });
+  });
+
+  it("places a reply to a reply in the thread of its top-level comment, and reads the thread oldest first", async () => {
+    const { t, author, reader } = await createLearners();
+    const slug = "articles/threads";
+    const root = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { slug, text: "Root" }
+    );
+    const first = await reader.session.mutation(
+      api.comments.mutations.addComment,
+      { slug, text: "First reply", parentId: root }
+    );
+    const nested = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { slug, text: "Reply to the reply", parentId: first }
+    );
+    expect(await t.query((ctx) => ctx.db.get("comments", first))).toMatchObject(
+      { parentId: root, threadId: root }
+    );
+    expect(
+      await t.query((ctx) => ctx.db.get("comments", nested))
+    ).toMatchObject({
+      parentId: first,
+      replyToUserId: reader.userId,
+      threadId: root,
+    });
+    const rootAfterReplies = await t.query((ctx) =>
+      ctx.db.get("comments", root)
+    );
+    expect(rootAfterReplies).toMatchObject({ replyCount: 2 });
+    expect(rootAfterReplies).not.toHaveProperty("threadId");
+    const thread = decodeReplies(
+      await t.query(getCommentReplies, {
+        threadId: root,
+        paginationOpts,
+      })
+    );
+    expect(Arr.map(thread.page, (row) => row._id)).toEqual([first, nested]);
+    const top = await t.query(api.comments.queries.getCommentsBySlug, {
+      slug,
+      paginationOpts,
+    });
+    expect(Arr.map(top.page, (row) => row._id)).toEqual([root]);
+  });
+
+  it("stores the trimmed text of a comment, and refuses an empty or an over-long text", async () => {
+    const { t, author } = await createLearners();
+    const slug = "articles/text";
+    const commentId = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { slug, text: "  Halo.  " }
+    );
+    expect(
+      await t.query((ctx) => ctx.db.get("comments", commentId))
+    ).toMatchObject({ text: "Halo." });
+    await expect(
+      author.session.mutation(api.comments.mutations.addComment, {
+        slug,
+        text: " \n ",
+      })
+    ).rejects.toMatchObject({
+      data: { code: "POST_TEXT_EMPTY" },
+    });
+    await expect(
+      author.session.mutation(api.comments.mutations.addComment, {
+        slug,
+        text: "a".repeat(LEARNER_TEXT_MAX_LENGTH + 1),
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "POST_TEXT_TOO_LONG",
+        message: `The comment must hold 1 to ${LEARNER_TEXT_MAX_LENGTH} characters.`,
+      },
+    });
+  });
+
+  it("keeps the like count and the like rows exact when a like or an unlike repeats", async () => {
+    const { t, author, reader } = await createLearners();
+    const commentId = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { slug: "articles/likes", text: "Liked" }
+    );
+    const count = () =>
+      t
+        .query((ctx) => ctx.db.get("comments", commentId))
+        .then((comment) => comment?.likeCount);
+    const likeRows = () =>
+      t
+        .query((ctx) => ctx.db.query("commentLikes").collect())
+        .then((rows) => rows.length);
+    await reader.session.mutation(likeComment, {
+      commentId,
+    });
+    await reader.session.mutation(likeComment, {
+      commentId,
+    });
+    expect(await count()).toBe(1);
+    expect(await likeRows()).toBe(1);
+    await author.session.mutation(likeComment, {
+      commentId,
+    });
+    expect(await count()).toBe(2);
+    await reader.session.mutation(unlikeComment, {
+      commentId,
+    });
+    await reader.session.mutation(unlikeComment, {
+      commentId,
+    });
+    expect(await count()).toBe(1);
+    expect(await likeRows()).toBe(1);
+  });
+
+  it("maps the vote mutation of an open web build onto likes, and writes no vote row", async () => {
+    const { t, author, reader } = await createLearners();
+    const commentId = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { slug: "articles/votes", text: "Voted" }
+    );
+    const state = () =>
+      t
+        .query((ctx) => ctx.db.get("comments", commentId))
+        .then((comment) => ({
+          downvoteCount: comment?.downvoteCount,
+          likeCount: comment?.likeCount,
+          upvoteCount: comment?.upvoteCount,
+        }));
+    await reader.session.mutation(api.comments.mutations.voteOnComment, {
+      commentId,
+      vote: 1,
+    });
+    expect(await state()).toEqual({
+      downvoteCount: 0,
+      likeCount: 1,
+      upvoteCount: 0,
+    });
+    await reader.session.mutation(api.comments.mutations.voteOnComment, {
+      commentId,
+      vote: 1,
+    });
+    expect(await state()).toMatchObject({ likeCount: 1 });
+    await reader.session.mutation(api.comments.mutations.voteOnComment, {
+      commentId,
+      vote: -1,
+    });
+    expect(await state()).toMatchObject({ likeCount: 0 });
+    await reader.session.mutation(api.comments.mutations.voteOnComment, {
+      commentId,
+      vote: 0,
+    });
+    expect(await state()).toMatchObject({ likeCount: 0 });
+    expect(
+      await t.query((ctx) => ctx.db.query("commentVotes").collect())
+    ).toEqual([]);
+  });
+
+  it("refuses a like, an unlike and a vote on a comment that is gone", async () => {
+    const { author, reader } = await createLearners();
+    const commentId = await author.session.mutation(
+      api.comments.mutations.addComment,
+      { slug: "articles/gone", text: "Removed" }
+    );
+    await author.session.mutation(api.comments.mutations.deleteComment, {
+      commentId,
+    });
+    await expect(
+      reader.session.mutation(likeComment, { commentId })
+    ).rejects.toMatchObject({ data: { code: "COMMENT_NOT_FOUND" } });
+    await expect(
+      reader.session.mutation(unlikeComment, {
+        commentId,
+      })
+    ).rejects.toMatchObject({ data: { code: "COMMENT_NOT_FOUND" } });
+    await expect(
+      reader.session.mutation(api.comments.mutations.voteOnComment, {
+        commentId,
+        vote: 1,
+      })
+    ).rejects.toMatchObject({ data: { code: "COMMENT_NOT_FOUND" } });
   });
 });

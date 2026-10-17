@@ -3,6 +3,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { COMMENT_REPLY_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/triggers/comments/cleanup";
 import { api } from "@repo/backend/convex/_generated/api";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { Array as Arr } from "effect";
@@ -82,7 +83,7 @@ describe("triggers/comments/comments", () => {
     ).toHaveLength(3);
   });
 
-  it("keeps parent reply counts in sync through comment mutations", async () => {
+  it("keeps the reply count of the thread through replies at any depth, and a deleted reply takes its replies", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
 
@@ -90,12 +91,12 @@ describe("triggers/comments/comments", () => {
     const users = await t.mutation(async (ctx) => ({
       author: await seedAuthenticatedUser(ctx, {
         now: NOW,
-        suffix: "comment-author",
+        suffix: "thread-author",
       }),
       replier: await seedAuthenticatedUser(ctx, {
         now: NOW,
-        sessionToken: "session-comment-replier",
-        suffix: "comment-replier",
+        sessionToken: "session-thread-replier",
+        suffix: "thread-replier",
       }),
     }));
     const author = t.withIdentity({
@@ -107,41 +108,87 @@ describe("triggers/comments/comments", () => {
       subject: users.replier.authUserId,
     });
 
-    const parentId = await author.mutation(api.comments.mutations.addComment, {
-      slug: "/en/articles/politics/example",
-      text: "Parent comment",
+    const slug = "/en/articles/politics/thread";
+    const rootId = await author.mutation(api.comments.mutations.addComment, {
+      slug,
+      text: "Root comment",
     });
-    const created = await t.query((ctx) => ctx.db.get("comments", parentId));
     const replyId = await replier.mutation(api.comments.mutations.addComment, {
-      slug: "en/articles/politics/example",
-      text: "Reply comment",
-      parentId,
+      slug,
+      text: "Reply to the root",
+      parentId: rootId,
+    });
+    const nestedId = await author.mutation(api.comments.mutations.addComment, {
+      slug,
+      text: "Reply to the reply",
+      parentId: replyId,
     });
 
-    const replyState = await t.query(async (ctx) => ({
-      parent: await ctx.db.get("comments", parentId),
-      reply: await ctx.db.get("comments", replyId),
-    }));
-
-    expect(replyState.parent).toEqual({ ...created, replyCount: 1 });
-    expect(replyState.reply).toMatchObject({
-      parentId,
-      replyToText: "Parent comment",
-      replyToUserId: users.author.userId,
-    });
+    expect(
+      await t.query((ctx) => ctx.db.get("comments", rootId))
+    ).toMatchObject({ replyCount: 2 });
+    expect(
+      await t.query((ctx) => ctx.db.get("comments", nestedId))
+    ).toMatchObject({ parentId: replyId, threadId: rootId });
 
     await replier.mutation(api.comments.mutations.deleteComment, {
       commentId: replyId,
     });
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const deleteState = await t.query(async (ctx) => ({
-      parent: await ctx.db.get("comments", parentId),
-      reply: await ctx.db.get("comments", replyId),
+    const state = await t.query(async (ctx) => ({
+      comments: await ctx.db.query("comments").collect(),
+      root: await ctx.db.get("comments", rootId),
     }));
+    expect(Arr.map(state.comments, (comment) => comment._id)).toEqual([rootId]);
+    expect(state.root).toMatchObject({ replyCount: 0 });
+  });
 
-    expect(deleteState.parent).toEqual(created);
-    expect(deleteState.reply).toBeNull();
+  it("deletes a whole thread and the likes on its comments, a batch at a time", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    const t = createConvexTestWithBetterAuth();
+    const author = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "thread-batches" })
+    );
+    const client = t.withIdentity({
+      subject: author.authUserId,
+      sessionId: author.sessionId,
+    });
+    const slug = "en/articles/politics/thread-batches";
+    const rootId = await client.mutation(api.comments.mutations.addComment, {
+      slug,
+      text: "Root with a long thread",
+    });
+    // More replies and likes than one batch holds, so each takes several passes.
+    const members = COMMENT_REPLY_CLEANUP_BATCH_SIZE + 1;
+    await t.mutation(async (ctx) => {
+      for (let index = 0; index < members; index += 1) {
+        await ctx.db.insert("comments", {
+          parentId: rootId,
+          replyCount: 0,
+          slug,
+          text: `Reply ${index}`,
+          threadId: rootId,
+          upvoteCount: 0,
+          downvoteCount: 0,
+          userId: author.userId,
+        });
+        await ctx.db.insert("commentLikes", {
+          commentId: rootId,
+          userId: author.userId,
+        });
+      }
+    });
+    await client.mutation(api.comments.mutations.deleteComment, {
+      commentId: rootId,
+    });
+    await t.finishAllScheduledFunctions(vi.runAllTimers, 150);
+    const state = await t.query(async (ctx) => ({
+      comments: await ctx.db.query("comments").collect(),
+      likes: await ctx.db.query("commentLikes").collect(),
+    }));
+    expect(state).toEqual({ comments: [], likes: [] });
   });
 
   it("tolerates deleting a reply after its parent was removed", async () => {

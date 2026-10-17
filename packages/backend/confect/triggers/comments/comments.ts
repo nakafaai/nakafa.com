@@ -11,11 +11,11 @@ import { Duration, Effect, Struct } from "effect";
 /**
  * Trigger handler for comments table changes.
  *
- * Manages comment thread relationships and schedules bounded cleanup:
- * - On insert: Increments parent comment's reply count
- * - On delete: Schedules dependent cleanup, decrements parent count
+ * Keeps the reply count of each thread and schedules bounded cleanup:
+ * - On insert of a reply: increments the count of its thread's top-level comment
+ * - On delete: schedules the cleanup of the deleted comment, and decrements the
+ *   count of its thread when it is a reply
  *
- * @param ctx - The Convex mutation context with database access
  * @param change - The change object containing operation details and document state
  */
 export const commentsHandler = Effect.fn(
@@ -25,21 +25,21 @@ export const commentsHandler = Effect.fn(
   const database = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   if (change.operation === "insert") {
-    const comment = change.newDoc;
-    if (!comment.parentId) {
+    const threadId = change.newDoc.threadId;
+    if (threadId === undefined) {
       return;
     }
-    const parentComment = yield* database
+    const thread = yield* database
       .table("comments")
-      .get(comment.parentId)
+      .get(threadId)
       .pipe(Effect.orDie);
     // Confect patch re-reads the whole row before replacing it, so replace
     // the row loaded above with every stored field kept.
     yield* writer
       .table("comments")
-      .replace(parentComment._id, {
-        ...Struct.omit(parentComment, ["_id", "_creationTime"]),
-        replyCount: parentComment.replyCount + 1,
+      .replace(thread._id, {
+        ...Struct.omit(thread, ["_id", "_creationTime"]),
+        replyCount: thread.replyCount + 1,
       })
       .pipe(Effect.orDie);
     return;
@@ -55,24 +55,24 @@ export const commentsHandler = Effect.fn(
       commentId: change.id,
     }
   );
-  if (!oldComment.parentId) {
+  if (oldComment.threadId === undefined) {
     return;
   }
-  const parentComment = yield* database
+  const thread = yield* database
     .table("comments")
-    .get(oldComment.parentId)
+    .get(oldComment.threadId)
     .pipe(
       Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
       Effect.orDie
     );
-  if (!parentComment) {
+  if (!thread) {
     return;
   }
   yield* writer
     .table("comments")
-    .replace(parentComment._id, {
-      ...Struct.omit(parentComment, ["_id", "_creationTime"]),
-      replyCount: Math.max(parentComment.replyCount - 1, 0),
+    .replace(thread._id, {
+      ...Struct.omit(thread, ["_id", "_creationTime"]),
+      replyCount: Math.max(thread.replyCount - 1, 0),
     })
     .pipe(Effect.orDie);
 });
