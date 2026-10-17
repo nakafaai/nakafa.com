@@ -11236,14 +11236,6 @@ export declare const internal: {
         }
       >;
     };
-    fingerprints: {
-      clear: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor?: string; dryRun: boolean },
-        { activeOld: number; cleared: number; done: boolean; scanned: number }
-      >;
-    };
     focus: {
       read: FunctionReference<
         "query",
