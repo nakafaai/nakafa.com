@@ -14,7 +14,7 @@ const at = (iso: string) => DateTime.makeUnsafe(iso);
 
 /** 6 October 2026, 15:30 UTC: 10:30 PM in Jakarta, 5:30 PM in Berlin, 6:30 PM in Riyadh. */
 const EVENING = at("2026-10-06T15:30:00Z");
-/** 16 October 2026, 18:30 UTC: 1:30 AM on 17 October in Jakarta, 8:30 PM on 16 October in Berlin and Riyadh. */
+/** 16 October 2026, 18:30 UTC: 1:30 AM on 17 October in Jakarta, 8:30 PM on 16 October in Berlin, and 9:30 PM on 16 October in Riyadh. */
 const ACROSS_MIDNIGHT = at("2026-10-16T18:30:00Z");
 /** A reading of the clock well after the instants above, so that it names no relative day. */
 const LATER = at("2026-10-20T03:00:00Z");
@@ -61,6 +61,16 @@ describe("formatSchoolTime", () => {
       Effect.gen(function* () {
         expect(yield* schoolTime("time", "en", timeZone, EVENING)).toBe(
           TIME_IN_ZONE[timeZone]
+        );
+      })
+  );
+
+  it.effect.each(["GMT", "GMT0", "GMT+0", "GMT-0"])(
+    "writes a school in %s at the UTC time, since the platform keeps it as a zone",
+    (timeZone) =>
+      Effect.gen(function* () {
+        expect(yield* schoolTime("time", "en", timeZone, EVENING)).toBe(
+          "3:30 PM"
         );
       })
   );
@@ -162,7 +172,7 @@ describe("formatSchoolTime", () => {
       })
   );
 
-  it.effect.each(["Mars/Olympus", "+07:00", ""])(
+  it.effect.each(["Mars/Olympus", "+07:00", "+0700", ""])(
     "refuses %j, which is not an IANA time zone",
     (timeZone) =>
       Effect.gen(function* () {

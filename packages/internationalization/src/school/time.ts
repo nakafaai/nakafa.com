@@ -1,4 +1,5 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { namedTimeZone } from "@repo/utilities/timezone";
 import { DateTime, Effect, Option, Schema } from "effect";
 
 /**
@@ -59,7 +60,7 @@ export class SchoolTimeZoneError extends Schema.TaggedError<SchoolTimeZoneError>
 export const formatSchoolTime = Effect.fn(
   "internationalization.school.formatTime"
 )(function* (request: SchoolTimeRequest) {
-  const zone = yield* Effect.fromOption(namedZone(request.timeZone)).pipe(
+  const zone = yield* Effect.fromOption(namedTimeZone(request.timeZone)).pipe(
     Effect.mapError(
       () => new SchoolTimeZoneError({ timeZone: request.timeZone })
     )
@@ -76,17 +77,6 @@ export const formatSchoolTime = Effect.fn(
 
   return Option.getOrElse(relativeDay(request, zone), () => date);
 });
-
-/**
- * The school's zone when it is an IANA name. The tenancy schema refuses a fixed
- * offset for the same reason, so a school gets the same answer in both places.
- */
-function namedZone(timeZone: string) {
-  return Option.filter(
-    DateTime.zoneFromString(timeZone),
-    DateTime.isTimeZoneNamed
-  );
-}
 
 /**
  * Names the day of the instant `today` or `yesterday` when it falls on the
