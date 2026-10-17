@@ -77,7 +77,11 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
         <span className="col-start-1 row-start-1" key={current}>
           <span className="text-primary">{current.slice(0, shown)}</span>
           <span className="invisible">{current.slice(shown)}</span>
-          {after}
+          {/* The words after the topic show once it is typed, so the question
+              mark never waits at the end of letters not typed yet. */}
+          <span className={shown < current.length ? "invisible" : undefined}>
+            {after}
+          </span>
         </span>
       </span>
     </h2>

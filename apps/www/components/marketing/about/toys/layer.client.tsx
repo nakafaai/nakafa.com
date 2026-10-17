@@ -69,16 +69,17 @@ function heroAnimals(
 /**
  * The small group of toys in the space where the part `part` begins, around
  * `x`, a fraction of the part's width: the animal at the herd's `index` in the
- * middle, and two things beside it. Each spot is in the part's top padding,
- * which no text or window reaches. Below 1024 px only the animal stays, and a
- * phone has none.
+ * middle, and one or two things beside it. Each spot is in the part's top
+ * padding, which no text or window reaches. Below 1024 px only the animal
+ * stays, and a phone has none.
  */
 function gap(
   part: string,
   x: number,
   index: number,
-  [before, after]: readonly [ThingName, ThingName]
+  things: readonly [ThingName] | readonly [ThingName, ThingName]
 ): ToyPlacement[] {
+  const [before, after] = things;
   return [
     {
       key: `${part}-gap-animal`,
@@ -96,17 +97,21 @@ function gap(
         y: 0,
       }),
     },
-    {
-      key: `${part}-gap-${after}`,
-      picture: thing(after),
-      place: within(part, {
-        dx: -24,
-        dy: 20,
-        minWidth: 1024,
-        x: x + 0.07,
-        y: 0,
-      }),
-    },
+    ...(after === undefined
+      ? []
+      : [
+          {
+            key: `${part}-gap-${after}`,
+            picture: thing(after),
+            place: within(part, {
+              dx: -24,
+              dy: 20,
+              minWidth: 1024,
+              x: x + 0.07,
+              y: 0,
+            }),
+          },
+        ]),
   ];
 }
 
@@ -171,7 +176,7 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   ...gap(LESSON_SECTION_ID, 0.5, 7, ["ruler", "highlighter"]),
   ...gap("tryout", 0.3, 8, ["stopwatch", "board"]),
   ...gap("nina", 0.7, 9, ["bubble", "magnifier"]),
-  ...gap("memory", 0.5, 10, ["calendar", "note"]),
+  ...gap("memory", 0.5, 10, ["calendar"]),
   // The dark room of privacy holds its own: a key and a shield beside Nina,
   // and two animals keeping watch.
   {

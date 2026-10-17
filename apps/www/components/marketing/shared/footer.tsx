@@ -169,13 +169,13 @@ export function Footer({
       </a>
 
       <section className="relative w-full border-t">
-        {/* Nina looks over the line under the large name, which is the edge
-            that cuts her off. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute end-6 bottom-full lg:end-10"
-        >
-          <Nina act="greeting" label="" lean="peek" size={56} />
+        {/* Nina looks over the line under the large name, at the end of the
+            page's own width, as the identity's Footer card draws her: the line
+            is the edge that cuts her off. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-full mx-auto flex w-full max-w-7xl justify-end px-6 lg:px-10">
+          <div aria-hidden="true">
+            <Nina act="greeting" label="" lean="peek" size={150} />
+          </div>
         </div>
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 p-6 lg:flex-row">
           <p className="text-center text-sm">

@@ -31,7 +31,9 @@ interface MemoryDeskProps {
 export function MemoryDesk({ facts }: MemoryDeskProps) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
   const shouldReduceMotion = useReducedMotion();
-  const [written, setWritten] = useState(0);
+  // The first thing is written as the desk opens, so the bubble never shows
+  // empty.
+  const [written, setWritten] = useState(1);
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
   const shown = shouldReduceMotion ? facts.length : written;
   const latest = Option.getOrNull(Arr.get(facts, shown - 1));
