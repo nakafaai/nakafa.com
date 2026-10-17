@@ -16,7 +16,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -157,9 +157,7 @@ function CommentRow({
               <CommentMoreMenu />
             </FeedEnd>
           </FeedHeader>
-          <MarkdownContent className="wrap-anywhere" id={comment._id}>
-            {comment.text}
-          </MarkdownContent>
+          <LearnerText>{comment.text}</LearnerText>
           <FeedActions>
             <CommentVotes />
             <NavigationLink

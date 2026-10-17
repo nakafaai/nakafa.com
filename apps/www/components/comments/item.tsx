@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type comments from "@repo/backend/confect/_generated/refs/comments";
 import { photoOf } from "@repo/backend/confect/users/picture";
-import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
@@ -123,7 +123,7 @@ export function CommentContent({
           <ReplyToIndicator comment={comment} />
 
           <div className="wrap-break-word min-w-0">
-            <MarkdownContent id={comment._id}>{comment.text}</MarkdownContent>
+            <LearnerText>{comment.text}</LearnerText>
           </div>
         </div>
 

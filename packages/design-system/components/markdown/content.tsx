@@ -41,8 +41,12 @@ export function MarkdownBlock({
   allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
   allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
   children,
+  components = reactMdxComponents,
   defaultOrigin = SITE_ORIGIN,
-}: MarkdownSecurityProps & { readonly children: string }) {
+}: MarkdownSecurityProps & {
+  readonly children: string;
+  readonly components?: ComponentProps<typeof ReactMarkdown>["components"];
+}) {
   const parsedContent = preprocessLaTeX(children.trim());
 
   if (!parsedContent.trim()) {
@@ -51,7 +55,7 @@ export function MarkdownBlock({
 
   return (
     <ReactMarkdown
-      components={reactMdxComponents}
+      components={components}
       rehypePlugins={[
         [harden, { allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin }],
         rehypeDirection,

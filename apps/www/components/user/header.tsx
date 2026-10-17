@@ -2,6 +2,7 @@
 
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { photoOf } from "@repo/backend/confect/users/picture";
+import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -49,9 +50,7 @@ export function UserHeader({
         />
       </header>
       {appUser.bio ? (
-        <p className="wrap-anywhere whitespace-pre-line text-pretty text-base">
-          {appUser.bio}
-        </p>
+        <LearnerText className="text-base">{appUser.bio}</LearnerText>
       ) : null}
       <Button
         className="w-full"

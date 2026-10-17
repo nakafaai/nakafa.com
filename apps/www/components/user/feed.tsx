@@ -80,15 +80,6 @@ export function FeedEnd({ children }: { children: ReactNode }) {
   );
 }
 
-/** Text a learner wrote, kept as written and broken anywhere a word does not fit. */
-export function FeedText({ children }: { children: string }) {
-  return (
-    <p className="wrap-anywhere whitespace-pre-wrap text-pretty" dir="auto">
-      {children}
-    </p>
-  );
-}
-
 /**
  * The actions of a row, side by side at their own widths. The row moves in by
  * the first button's padding, so the first icon starts on the content's edge,

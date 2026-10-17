@@ -2,6 +2,7 @@
 
 import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
+import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
@@ -9,9 +10,11 @@ import { useTranslations } from "next-intl";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 
 /**
- * A learner's own words, shown as they wrote them: no Markdown, no formulas,
- * no HTML. Line breaks and spaces stay, a long word breaks where it must, and
- * the text takes the direction of its own content.
+ * A learner's own words, drawn as Markdown by LearnerText: bold text, lists and
+ * formulas draw as they do in Nina's answers, and the line breaks the learner
+ * wrote stay. Links open in a new tab, and an image draws as a link to its
+ * address. A long word breaks where it must, and the text takes the direction
+ * of its own content.
  *
  * A message taller than twelve lines shows its first twelve, and the learner
  * opens the rest. Twelve lines are 292.5 pixels at the chat text size, which
@@ -59,8 +62,8 @@ export function NinaWords({ children }: { children: string }) {
         id={id}
         ref={box}
       >
-        <div className="whitespace-pre-wrap" ref={text}>
-          {children}
+        <div ref={text}>
+          <LearnerText>{children}</LearnerText>
         </div>
       </div>
       {tall ? (

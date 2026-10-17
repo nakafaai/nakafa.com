@@ -8,6 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { photoOf } from "@repo/backend/confect/users/picture";
+import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -33,7 +34,6 @@ import {
   FeedHeader,
   FeedName,
   FeedRow,
-  FeedText,
 } from "@/components/user/feed";
 import {
   likeInLists,
@@ -88,7 +88,7 @@ export function PostRow({ post }: { post: ListPost }) {
             </FeedEnd>
           )}
         </FeedHeader>
-        <FeedText>{post.text}</FeedText>
+        <LearnerText>{post.text}</LearnerText>
         <FeedActions inert={pending}>
           <PostLikeButton post={post} />
         </FeedActions>
