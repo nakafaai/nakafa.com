@@ -614,16 +614,8 @@
       "title": "Bagian belum bisa diselesaikan.",
       "description": "Coba lagi ya."
     },
-    "tryout-complete-part-success": {
-      "title": "Bagian selesai.",
-      "description": "Kamu bisa pilih bagian lain atau kembali ke set."
-    },
     "tryout-preference-error": {
       "title": "Preferensi try out belum tersimpan."
-    },
-    "tryout-start-entry-success": {
-      "title": "Try out dimulai.",
-      "description": "Waktu sudah berjalan."
     },
     "tryout-start-error": {
       "title": "Try out belum bisa dimulai.",
@@ -632,14 +624,6 @@
     "tryout-start-part-error": {
       "title": "Bagian belum bisa dimulai.",
       "description": "Coba lagi ya."
-    },
-    "tryout-start-part-success": {
-      "title": "Bagian dimulai.",
-      "description": "Waktu sudah berjalan."
-    },
-    "tryout-start-success": {
-      "title": "Try out dimulai.",
-      "description": "Kamu bisa pilih bagian yang mau dikerjakan dulu."
     },
     "tryout-submit-answer-error": {
       "title": "Jawabanmu belum bisa disimpan.",

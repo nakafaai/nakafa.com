@@ -51,7 +51,7 @@ export const startAttemptProgram = Effect.fn("tryout.startAttempt")(
     )
 );
 
-/** Starts one section and preserves the existing success and fallback feedback. */
+/** Starts one section and shows the localized fallback when the start fails. */
 export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
   (input: {
     readonly attemptId: Id<"tryoutAttempts">;
@@ -61,7 +61,6 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
       sectionKey: string;
     }) => InvokeReturn<typeof tryouts.mutations.sections.start>;
     readonly sectionKey: string;
-    readonly successMessage: ToastCopy;
   }) =>
     Effect.tryPromise({
       try: () =>
@@ -76,7 +75,6 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
           Effect.mapError((cause) => new TryoutClientRequestError({ cause }))
         )
       ),
-      Effect.tap(() => showSuccess(input.successMessage)),
       Effect.catchTag("TryoutClientRequestError", (error) =>
         reportRequestFailure(
           error,
@@ -101,11 +99,4 @@ function reportRequestFailure(
       })
     )
   );
-}
-
-/** Shows one successful try-out action at the established screen position. */
-function showSuccess(message: ToastCopy) {
-  return Effect.sync(() => {
-    toast.success(message, { position: "bottom-center" });
-  });
 }
