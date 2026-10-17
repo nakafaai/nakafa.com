@@ -7,7 +7,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
 import { deployment, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaModel } from "@repo/backend/test/nina";
-import { sealThreadIn } from "@repo/backend/test/nina/seal";
+import { sealThreadIn, writtenThreadIn } from "@repo/backend/test/nina/seal";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { showsText } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -123,15 +123,22 @@ describe("Nina presentation after an answer", () => {
 
   /**
    * The model calls of one answered turn with its follow-up, and the input of each.
-   * With `sealed`, the rows of the chat are sealed after the answer and before the
-   * follow-up reads them, so every row the follow-up reads is opened.
+   * With `copy` other than plain, the rows of the chat are written by the writers
+   * after the answer, and with `sealed` they are then sealed in place, both before
+   * the follow-up reads them, so every row the follow-up reads is opened.
    */
-  async function followUpInput(history: number, sealed: boolean) {
+  async function followUpInput(
+    history: number,
+    copy: "plain" | "written" | "sealed"
+  ) {
     const f = await createNinaTest({ history });
     const model = ninaModel();
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
-    if (sealed) {
+    if (copy !== "plain") {
+      await writtenThreadIn(f.t, f.threadId, f.identity.userId);
+    }
+    if (copy === "sealed") {
       await sealThreadIn(f.t, f.threadId, f.identity.userId);
     }
     await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
@@ -139,22 +146,25 @@ describe("Nina presentation after an answer", () => {
   }
 
   it("sends the model the same follow-up input for a sealed chat as for a plain one", async () => {
-    const plain = await followUpInput(2, false);
-    const sealed = await followUpInput(2, true);
+    const plain = await followUpInput(2, "plain");
+    expect(await followUpInput(2, "written")).toEqual(plain);
+    const sealed = await followUpInput(2, "sealed");
     expect(sealed).toEqual(plain);
     expect(encodeJsonText(sealed)).toContain("Earlier question 1");
   });
 
   it("sends the model the same title input and follow-up input for a sealed first turn as for a plain one", async () => {
-    const plain = await followUpInput(0, false);
-    const sealed = await followUpInput(0, true);
+    const plain = await followUpInput(0, "plain");
+    expect(await followUpInput(0, "written")).toEqual(plain);
+    const sealed = await followUpInput(0, "sealed");
     expect(sealed).toEqual(plain);
     expect(encodeJsonText(sealed)).toContain("Explain a limit.");
   });
 
   it("sends the model the same follow-up input for a sealed long chat as for a plain one", async () => {
-    const plain = await followUpInput(30, false);
-    const sealed = await followUpInput(30, true);
+    const plain = await followUpInput(30, "plain");
+    expect(await followUpInput(30, "written")).toEqual(plain);
+    const sealed = await followUpInput(30, "sealed");
     expect(sealed).toEqual(plain);
     expect(encodeJsonText(sealed)).toContain("Earlier question 23");
   });
@@ -165,6 +175,7 @@ describe("Nina presentation after an answer", () => {
     provider.languageModel.mockReturnValue(model);
     await f.t.action(run, { turnId: f.turnId });
     const titleBefore = await readTitle(f);
+    await writtenThreadIn(f.t, f.threadId, f.identity.userId);
     await sealThreadIn(f.t, f.threadId, f.identity.userId);
     await f.t.mutation(async (ctx) => {
       const keys = await ctx.db.query("vaultKeys").collect();

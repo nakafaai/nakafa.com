@@ -36,12 +36,37 @@ describe("tenancy/locale", () => {
     expect(accepted).toEqual([true, true, true, true, true]);
   });
 
+  it("gives a school the GMT names, which the platform keeps as zones", () => {
+    const accepted = Arr.map(["GMT", "GMT0", "GMT+0", "GMT-0"], (id) =>
+      Schema.is(NewTimeZone)(id)
+    );
+    expect(accepted).toEqual([true, true, true, true]);
+  });
+
   it("refuses a fixed offset, an abbreviation, and a region that does not exist", () => {
     const accepted = Arr.map(
-      ["+07:00", "GMT+7", "WIB", "Mars/Base", "Asia/Nowhere", ""],
+      [
+        "+07:00",
+        "+0700",
+        "-07",
+        "GMT+7",
+        "WIB",
+        "Mars/Base",
+        "Asia/Nowhere",
+        "",
+      ],
       (id) => Schema.is(NewTimeZone)(id)
     );
-    expect(accepted).toEqual([false, false, false, false, false, false]);
+    expect(accepted).toEqual([
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
   });
 
   it("keeps a stored value to the rules that never change", () => {

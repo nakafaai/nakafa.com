@@ -1,12 +1,17 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { saveMessages } from "@convex-dev/agent";
+import { saveMessages, toModelMessage } from "@convex-dev/agent";
 import type { MessageDoc } from "@convex-dev/agent/validators";
 import { vMessageWithMetadata } from "@convex-dev/agent/validators";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
-import { identityOf, sealMessage } from "@repo/backend/confect/nina/sealed";
+import {
+  identityOf,
+  openMessage,
+  sealMessage,
+} from "@repo/backend/confect/nina/sealed";
+import { savePrompt } from "@repo/backend/confect/nina/sealed/save";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { parse } from "convex-helpers/validators";
@@ -76,6 +81,87 @@ async function repointTurns(ctx: MutationCtx, replacement: Replacement) {
 }
 
 /**
+ * Writes every row of a thread again, in the same orders and steps, after opening
+ * each row. A learner's row is written plain, or by `savePrompt` as `turns.start`
+ * writes it (ADR 0024), which seals it for the learner who owns the thread. Every
+ * other row is written plain, through the Agent's writer. The turns that name a
+ * replaced learner's row point at its copy. Returns each replaced row with the id
+ * of its copy.
+ */
+const rewriteThreadRows = Effect.fn("test.nina.seal.rewrite")(function* (
+  threadId: string,
+  owner: LearnerId,
+  learnerRows: "plain" | "writer"
+) {
+  const ctx = yield* MutationCtx;
+  const keys = yield* ensureLearnerKeys(owner);
+  const { page } = yield* Effect.promise(() =>
+    ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
+      order: "asc",
+      paginationOpts: { cursor: null, numItems: WHOLE_THREAD },
+      threadId,
+    })
+  );
+  yield* Effect.promise(() =>
+    ctx.runMutation(components.nina.messages.deleteByIds, {
+      messageIds: Arr.map(page, (row) => row._id),
+    })
+  );
+  let replacements: readonly Replacement[] = [];
+  // In writer mode a learner's message is saved by `savePrompt`, which takes the
+  // next order of the thread. The learner's message shares its order with the rows
+  // of its turn, so it is written first, and the rest of its run keeps the order
+  // and the steps that it had.
+  const writesPrompt = (row: MessageDoc) =>
+    learnerRows === "writer" && row.message?.role === "user";
+  for (const run of runsByOrder(page)) {
+    // A row the writers sealed already opens first, so its content is written once more, not its skeleton.
+    const opened = yield* Effect.forEach(run.rows, (row) =>
+      openMessage(keys, identityOf(row), row)
+    );
+    for (const row of Arr.filter(opened, writesPrompt)) {
+      const message = yield* Effect.fromNullishOr(row.message).pipe(
+        Effect.orDie
+      );
+      const saved = yield* savePrompt(ctx, owner, {
+        fileIds: row.fileIds ?? [],
+        message: toModelMessage(message),
+        threadId,
+      });
+      replacements = Arr.append(replacements, {
+        next: saved.messageId,
+        previous: row._id,
+      });
+    }
+    const rest = Arr.filter(opened, (row) => !writesPrompt(row));
+    if (rest.length === 0) {
+      continue;
+    }
+    const plain = Arr.map(rest, (row) => parse(vMessageWithMetadata, row));
+    const written = yield* Effect.promise(() =>
+      saveMessages(ctx, components.nina, {
+        ...(run.agentName === undefined ? {} : { agentName: run.agentName }),
+        messages: Arr.map(plain, (row) => row.message),
+        metadata: Arr.map(plain, (row) => Struct.omit(row, ["message"])),
+        order: run.order,
+        threadId,
+      })
+    );
+    replacements = Arr.appendAll(
+      replacements,
+      Arr.map(Arr.zip(rest, written.messages), ([previous, next]) => ({
+        next: next._id,
+        previous: previous._id,
+      }))
+    );
+  }
+  for (const replacement of replacements) {
+    yield* Effect.promise(() => repointTurns(ctx, replacement));
+  }
+  return replacements;
+});
+
+/**
  * Seals every row of a thread in place, as a settled turn does (ADR 0024). Each
  * order is deleted and written back sealed, at the same order and steps, through
  * the Agent's own writer. A learner's prompt keeps its order and step, but its
@@ -102,8 +188,16 @@ const sealThreadRows = Effect.fn("test.nina.seal.thread")(function* (
   );
   let replacements: readonly Replacement[] = [];
   for (const run of runsByOrder(page)) {
+    // A row the writers sealed already opens first, so its content is sealed once more, not its skeleton.
     const sealed = yield* Effect.forEach(run.rows, (row) =>
-      sealMessage(keys, identityOf(row), parse(vMessageWithMetadata, row))
+      Effect.gen(function* () {
+        const opened = yield* openMessage(keys, identityOf(row), row);
+        return yield* sealMessage(
+          keys,
+          identityOf(row),
+          parse(vMessageWithMetadata, opened)
+        );
+      })
     );
     const written = yield* Effect.promise(() =>
       saveMessages(ctx, components.nina, {
@@ -146,12 +240,59 @@ export function sealThreadIn(
   );
 }
 
+/**
+ * Writes a thread's learner rows through the writers, in a mutation of the test
+ * deployment: each learner's row is saved by `savePrompt`, so it is sealed as
+ * `turns.start` seals it, and every other row is written plain. Returns the
+ * replaced rows (`rewriteThreadRows`).
+ */
+export function writtenThreadIn(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  threadId: string,
+  owner: LearnerId
+) {
+  return t.mutation((ctx) =>
+    Effect.runPromise(
+      rewriteThreadRows(threadId, owner, "writer").pipe(
+        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+      )
+    )
+  );
+}
+
+/**
+ * Writes a thread's rows plain, in a mutation of the test deployment, as chats were
+ * kept before sealing. Every sealed row opens first. Returns the replaced rows
+ * (`rewriteThreadRows`).
+ */
+export function plainThreadIn(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  threadId: string,
+  owner: LearnerId
+) {
+  return t.mutation((ctx) =>
+    Effect.runPromise(
+      rewriteThreadRows(threadId, owner, "plain").pipe(
+        Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+      )
+    )
+  );
+}
+
 /** The fields that a row changes when a sealed copy of it replaces it: its id and creation time. */
 const ROW_IDENTITY_FIELDS = HashSet.make("_creationTime", "_id", "id");
 
 /**
+ * Whether a field is an empty list of files. The writers store one for a message
+ * that has no files, while a fixture row holds none, so the two read the same.
+ */
+const isNoFiles = (key: string, value: unknown) =>
+  key === "fileIds" && Arr.isArray(value) && value.length === 0;
+
+/**
  * A read value without the ids and creation times of its rows, which a sealed
- * copy changes. Every other field of a read must stay the same.
+ * copy changes, and without an empty list of files (`isNoFiles`). Every other field
+ * of a read must stay the same.
  */
 export function withoutRowIds(value: unknown): unknown {
   if (Arr.isArray(value)) {
@@ -159,7 +300,11 @@ export function withoutRowIds(value: unknown): unknown {
   }
   if (Predicate.isObject(value)) {
     return Rec.map(
-      Rec.filter(value, (_, key) => !HashSet.has(ROW_IDENTITY_FIELDS, key)),
+      Rec.filter(
+        value,
+        (field, key) =>
+          !(HashSet.has(ROW_IDENTITY_FIELDS, key) || isNoFiles(key, field))
+      ),
       withoutRowIds
     );
   }

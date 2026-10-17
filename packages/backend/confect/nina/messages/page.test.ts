@@ -14,16 +14,21 @@ import {
   ninaStream,
   ninaUsage,
 } from "@repo/backend/test/nina";
-import { sealThreadIn, withoutRowIds } from "@repo/backend/test/nina/seal";
+import {
+  sealThreadIn,
+  withoutRowIds,
+  writtenThreadIn,
+} from "@repo/backend/test/nina/seal";
 import {
   createThreadTest,
   MEMORY_TURN,
   SEARCH,
   SEARCHING_TURN,
 } from "@repo/backend/test/nina/thread";
+import { kindsOf } from "@repo/backend/test/nina/told";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { FunctionArgs } from "convex/server";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 vi.mock("@repo/backend/confect/gateway/live", async () => ({
   GatewayLive: (await import("@repo/backend/test/gateway")).GatewayTest,
@@ -114,21 +119,6 @@ function askAll(
       streamArgs: { kind: "deltas", cursors: [{ streamId, cursor: 0 }] },
     }),
   ]);
-}
-
-const PartKinds = Schema.Array(Schema.Struct({ type: Schema.String }));
-
-/** The kinds of the parts of the assistant's message in what a reader was told, in order. */
-function kindsOf(told: Awaited<ReturnType<typeof tell>>) {
-  const assistant = Arr.findFirst(
-    told.page,
-    ({ role }) => role === "assistant"
-  );
-  assert(Option.isSome(assistant));
-  return Arr.map(
-    Schema.decodeUnknownSync(PartKinds)(assistant.value.parts),
-    ({ type }) => type
-  );
 }
 
 describe("Nina message page", () => {
@@ -398,6 +388,10 @@ describe("Nina message page", () => {
   it("gives the owner the same page of a sealed thread as of the plain thread, with every row opened", async () => {
     const { t, owner, identity, args } = await createThreadTest();
     const plain = await owner.query(query, args);
+    await writtenThreadIn(t, identity.threadId, identity.userId);
+    expect(withoutRowIds(await owner.query(query, args))).toEqual(
+      withoutRowIds(plain)
+    );
     await sealThreadIn(t, identity.threadId, identity.userId);
     const sealed = await owner.query(query, args);
     expect(withoutRowIds(sealed)).toEqual(withoutRowIds(plain));
