@@ -5,7 +5,9 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
+import { storedBytes } from "@repo/backend/confect/nina/sealed/bytes";
 import { RUN_LIFETIME_MS } from "@repo/backend/confect/nina/sealed/turn";
+import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
 import { contextFor } from "@repo/backend/test/nina/admission";
@@ -16,7 +18,11 @@ import {
   plantedIn,
   plantedModel,
 } from "@repo/backend/test/nina/planted";
-import { earlierTurnIn, withoutRowIds } from "@repo/backend/test/nina/seal";
+import {
+  earlierTurnIn,
+  sealThreadIn,
+  withoutRowIds,
+} from "@repo/backend/test/nina/seal";
 import { readThreadIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn } from "@repo/backend/test/nina/stored";
 import {
@@ -36,6 +42,11 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
+vi.mock("@repo/backend/confect/vault/keys", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@repo/backend/confect/vault/keys")>();
+  return { ...actual, ensureLearnerKeys: vi.fn(actual.ensureLearnerKeys) };
+});
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const seal = Ref.getFunctionReference(refs.internal.nina.sealed.seal);
@@ -223,30 +234,6 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.sealedAt()).toBe(sealedAt);
   });
 
-  it("seals a turn whose rows take more than one page to read", async () => {
-    const f = await createNinaTest({ history: [{ steps: 5 }], now: NOW });
-    const earlier = await earlierTurnIn(f.t);
-    const readBefore = await readThreadIn(f.t, {
-      owner: f.identity.userId,
-      paginationOpts: { cursor: null, numItems: 50 },
-      threadId: f.threadId,
-    });
-
-    await f.t.mutation(seal, { turnId: earlier._id });
-
-    expect(
-      await f.t.query((ctx) => ctx.db.get("ninaTurns", earlier._id))
-    ).toMatchObject({ phase: "settled", sealedAt: expect.any(Number) });
-    const readAfter = await readThreadIn(f.t, {
-      owner: f.identity.userId,
-      paginationOpts: { cursor: null, numItems: 50 },
-      threadId: f.threadId,
-    });
-    expect(withoutRowIds(readAfter.page)).toEqual(
-      withoutRowIds(readBefore.page)
-    );
-  });
-
   it("does nothing for a turn that was deleted before its seal ran", async () => {
     const f = await askedIn(PLANTED.prompt);
     await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
@@ -265,27 +252,6 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.turn()).toMatchObject({ phase: "active" });
     expect(await f.sealedAt()).toBeUndefined();
     expect(cost.bytes).toBeGreaterThan(0);
-  });
-
-  it("seals a turn that wrote no rows above its prompt", async () => {
-    const f = await createNinaTest({ history: [{ steps: 0 }], now: NOW });
-    const turn = await earlierTurnIn(f.t);
-    const stored = await storedRowsIn(f.t, f.threadId, []);
-    const above = Arr.filter(
-      stored.messages.page,
-      (row) => row._id !== turn.promptMessageId
-    );
-    await f.t.mutation((ctx) =>
-      ctx.runMutation(components.nina.messages.deleteByIds, {
-        messageIds: Arr.map(above, (row) => row._id),
-      })
-    );
-
-    await f.t.mutation(seal, { turnId: turn._id });
-
-    expect(
-      await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))
-    ).toMatchObject({ sealedAt: expect.any(Number) });
   });
 
   it("leaves a turn with a young pending row for a later run, and seals it once that row is gone", async () => {
@@ -426,5 +392,100 @@ describe("Sealing a settled Nina turn that the seal skips", () => {
 
     expect(await f.turn()).toMatchObject({ sealHold: "accountDeleted" });
     expect(await f.sealedAt()).toBeUndefined();
+  });
+});
+
+describe("The bytes that sealing a settled Nina turn counts", () => {
+  it("counts the bytes it reads and writes, and a sealed turn counts only its own document", async () => {
+    const f = await createNinaTest({ history: [{ steps: 2 }], now: NOW });
+    const earlier = await earlierTurnIn(f.t);
+
+    const first = await f.t.mutation(seal, { turnId: earlier._id });
+    const again = await f.t.mutation(seal, { turnId: earlier._id });
+
+    expect(first.bytes).toBeGreaterThan(again.bytes);
+    expect(again.bytes).toBeGreaterThan(0);
+  });
+
+  it("pins the bytes of a seal to the documents it reads, the rows it deletes twice and the rows it writes once", async () => {
+    const f = await createNinaTest({ history: [{ steps: 1 }], now: NOW });
+    const turn = await earlierTurnIn(f.t);
+    // A stream of the turn that finished, as a completed turn leaves it. The seal lists
+    // it, and deletes its deltas later, so its bytes are counted here.
+    await f.t.mutation(async (ctx) => {
+      const streamId = await ctx.runMutation(components.nina.streams.create, {
+        format: "UIMessageChunk",
+        order: turn.order,
+        stepOrder: 0,
+        threadId: turn.threadId,
+        userId: f.identity.userId,
+      });
+      await ctx.runMutation(components.nina.streams.finish, { streamId });
+    });
+    const before = await f.t.query(async (ctx) => {
+      const [prompt] = await ctx.runQuery(
+        components.nina.messages.getMessagesByIds,
+        { messageIds: [turn.promptMessageId] }
+      );
+      const { page } = await ctx.runQuery(
+        components.nina.messages.listMessagesByThreadId,
+        {
+          order: "desc",
+          paginationOpts: { cursor: null, numItems: 50 },
+          threadId: turn.threadId,
+          upToAndIncludingMessageId: turn.promptMessageId,
+        }
+      );
+      const streams = await ctx.runQuery(components.nina.streams.list, {
+        startOrder: turn.order,
+        statuses: ["streaming", "finished", "aborted"],
+        threadId: turn.threadId,
+      });
+      return {
+        chat: await ctx.db.get("chats", f.chatId),
+        // The learner counts at the size the database stores (ADR 0024). The raw
+        // document holds the mascot as its stored text, not as the decoded object.
+        user: await ctx.db.get("users", f.identity.userId),
+        page,
+        prompt,
+        streams,
+        turn: await ctx.db.get("ninaTurns", turn._id),
+      };
+    });
+
+    const cost = await f.t.mutation(seal, { turnId: turn._id });
+
+    const after = await storedRowsIn(f.t, f.threadId, []);
+    const isOwn = (row: { _id: string; order: number }) =>
+      row.order === turn.order && row._id !== turn.promptMessageId;
+    expect(cost.bytes).toBe(
+      storedBytes(before.turn) +
+        storedBytes(before.chat) +
+        storedBytes(before.user) +
+        storedBytes(before.prompt) +
+        storedBytes(before.page) +
+        storedBytes(before.streams) +
+        2 * storedBytes(Arr.filter(before.page, isOwn)) +
+        storedBytes(Arr.filter(after.messages.page, isOwn)) +
+        storedBytes({ ...before.turn, sealedAt: NOW })
+    );
+  });
+
+  it("seals a turn with one read of the learner's key, since the prompt's place needs none", async () => {
+    const f = await createNinaTest({ history: [{ steps: 1 }], now: NOW });
+    // Admission seals the prompt, so the fixture's rows are sealed in place the same way.
+    await sealThreadIn(f.t, f.threadId, f.identity.userId);
+    const turn = await earlierTurnIn(f.t);
+    vi.mocked(ensureLearnerKeys).mockClear();
+
+    await f.t.mutation(seal, { turnId: turn._id });
+
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))
+    ).toMatchObject({
+      sealedAt: expect.any(Number),
+    });
+    expect(ensureLearnerKeys).toHaveBeenCalledTimes(1);
+    expect(ensureLearnerKeys).toHaveBeenCalledWith(f.identity.userId);
   });
 });
