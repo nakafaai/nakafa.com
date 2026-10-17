@@ -6,6 +6,7 @@ import type { Mascot } from "@repo/mascot/code";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import { MarketingSection } from "@/components/marketing/shared/section";
 
 /**
  * The school part: a dark band with rounded corners, the words for a whole
@@ -16,7 +17,7 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
   const t = useTranslations("Landing");
 
   return (
-    <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="school">
+    <MarketingSection id="school">
       <div className="mx-auto w-full max-w-7xl">
         <div className="grid gap-10 rounded-xl bg-nina-ink px-6 py-16 text-nina-face lg:grid-cols-2 lg:items-center lg:px-16">
           <div className="grid justify-items-start gap-6">
@@ -41,7 +42,7 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
                   {t("school-cta")}
                 </a>
               }
-              variant="secondary"
+              variant="inverse"
             />
           </div>
           <ul
@@ -56,6 +57,6 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
           </ul>
         </div>
       </div>
-    </section>
+    </MarketingSection>
   );
 }

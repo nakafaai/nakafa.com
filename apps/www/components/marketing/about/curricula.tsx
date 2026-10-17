@@ -2,6 +2,7 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { CurriculumList } from "@/components/marketing/about/curricula/list.client";
+import { MarketingSection } from "@/components/marketing/shared/section";
 import {
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,
@@ -21,10 +22,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
   const curricula = readRuntimeCurriculumOptions(catalog, locale);
 
   return (
-    <section
-      className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32"
-      id="curricula"
-    >
+    <MarketingSection id="curricula">
       <div className="mx-auto grid w-full max-w-5xl justify-items-center gap-12">
         <h2 className="max-w-2xl text-balance text-center text-3xl tracking-tight sm:text-4xl">
           {t("curricula-title")}
@@ -36,6 +34,6 @@ export async function Curricula({ locale }: { locale: Locale }) {
           <CurriculumList curricula={curricula} label={t("curricula-list")} />
         </div>
       </div>
-    </section>
+    </MarketingSection>
   );
 }

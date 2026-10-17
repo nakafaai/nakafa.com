@@ -5,6 +5,7 @@ import {
   TryoutDemoQuestion,
   TryoutDemoReply,
 } from "@/components/marketing/about/tryout/demo.client";
+import { MarketingSection } from "@/components/marketing/shared/section";
 import type { readFeaturedTryout } from "@/components/tryout/catalog/server";
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 
@@ -21,10 +22,18 @@ export function Tryout({ value }: { value: FeaturedTryout }) {
   const responseId = "home-tryout-response";
 
   return (
-    <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="tryout">
+    <MarketingSection id="tryout">
       <TryoutDemo>
         <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
           <div className="grid min-w-0 content-center gap-8">
+            <div className="grid gap-2">
+              <h2 className="text-balance text-2xl tracking-tight">
+                {t("tryout-title")}
+              </h2>
+              <p className="max-w-md text-pretty text-base text-muted-foreground">
+                {t("tryout-lead")}
+              </p>
+            </div>
             <Talk ask={t("tryout-ask")}>
               <TryoutDemoReply
                 words={{
@@ -34,14 +43,6 @@ export function Tryout({ value }: { value: FeaturedTryout }) {
                 }}
               />
             </Talk>
-            <div className="grid gap-2">
-              <h2 className="text-balance text-2xl tracking-tight">
-                {t("tryout-title")}
-              </h2>
-              <p className="max-w-md text-pretty text-base text-muted-foreground">
-                {t("tryout-lead")}
-              </p>
-            </div>
           </div>
           <div className="min-w-0 lg:order-first">
             <section className="my-6">{value.question}</section>
@@ -55,6 +56,6 @@ export function Tryout({ value }: { value: FeaturedTryout }) {
           </div>
         </div>
       </TryoutDemo>
-    </section>
+    </MarketingSection>
   );
 }
