@@ -101,7 +101,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Do not unit-test `.tsx` or mock children to verify static markup. Move testable behavior into an owning `.ts` seam with independent production value and verify rendered behavior through production-mode Browser or E2E acceptance.
 - Tests reach HTTP through `FetchHttpClient.Fetch`: one `vi.fn<typeof fetch>()` per file, provided with `Effect.provideService(FetchHttpClient.Fetch, fetcher)`. Effect's client keeps the first global `fetch` it reads, so a fresh global stub per test only works for the first one; a seam that ends in a Promise stubs that one file-level double globally and resets it between tests.
 - No `.only` or `.skip`. Run the nearest test first, then the workspace suite when risk warrants it.
-- React Doctor: `pnpm run doctor --verbose --scope changed --base main --include-untracked` for changed React code, `--scope full` for a whole-codebase audit; not the deprecated `--diff` alias or plain `npx react-doctor@latest`.
+- React Doctor: `pnpm run doctor --verbose --scope changed --base main --include-untracked --blocking warning` for changed React code, `--scope full` for a whole-codebase audit; not the deprecated `--diff` alias or plain `npx react-doctor@latest`.
 
 ## Content Rendering
 
@@ -111,7 +111,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 - Root commands: `pnpm dev`, `pnpm dev:web`, `pnpm dev:all`, `pnpm start`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format`, `pnpm security:audit`, `pnpm analyze`, and `pnpm boundaries`. Prefer `pnpm start` after a build; use `pnpm dev` only for hot reload, development-mode diagnostics, devtools, or Convex live development.
 - There is no root typecheck: run `pnpm --filter <workspace> typecheck` for every changed workspace; the full verification runs `pnpm -r --no-bail run typecheck`. Judge it by its exit code, because the Effect-patched compiler reports suggestions that fail the typecheck and the build without the word "error". The shared configurations turn off `unstableApiUsage` and `experimentalApiUsage`: Effect moves as one exact cohort that is reviewed at every upgrade.
-- The `www` typecheck and build validate environment variables while Next.js loads its config. Run the build through `pnpm acceptance:build`, which supplies inert values, and pass inert local values to the typecheck; never copy deployment values.
+- The `www` typecheck and build validate environment variables while Next.js loads its config. Run the build through `pnpm acceptance:build`, which supplies its inert values from `localApplicationEnvironment` in `packages/backend/scripts/content/acceptance/local.ts`. The typecheck takes the same names; where that file takes a URL from the prepared runtime, use a loopback address such as `CONVEX_URL=http://127.0.0.1:3210` and `CONVEX_SITE_URL=http://127.0.0.1:3211`. Never copy deployment values.
 - One test: `pnpm --filter <workspace> exec vitest run <relative-test-path>`. One suite: `pnpm --filter <workspace> test`.
 - Run the smallest useful verification first, then expand by risk: format, `pnpm lint`, affected tests and typechecks, `pnpm build` for build-critical changes, and `pnpm security:audit` after dependency or lockfile changes. Report any verification that could not run.
 - `pnpm security:audit` reads live OSV advisories, so a new advisory can fail it with no code change. Bump the version-keyed override in `pnpm-workspace.yaml` in its own change, then merge `main` into waiting pull requests.

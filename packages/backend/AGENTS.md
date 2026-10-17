@@ -31,7 +31,10 @@ owns the authored contract generation; Convex owns `convex/_generated`, includin
 the static client API. `pnpm --filter @repo/backend codegen` also writes the
 per-domain refs under `confect/_generated/refs`, and the web app imports only
 those. `pnpm acceptance:prepare` and `pnpm acceptance:build`
-refresh these bindings against the owned local backend. Use the repository's pnpm CLI
+refresh these bindings against the owned local backend. After
+`pnpm --dir packages/backend codegen` and the Convex binding refresh, commit
+every change under `confect/_generated` and `convex/_generated`; a branch whose
+bindings are stale is not ready. Use the repository's pnpm CLI
 and never print secrets. Never copy `CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`,
 or generated Convex URL values out of this checkout. The root guide owns the
 deployment policy; the configured production build deploys Convex before

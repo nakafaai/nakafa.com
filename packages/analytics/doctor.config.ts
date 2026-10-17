@@ -9,8 +9,8 @@ export default {
   },
   surfaces: {
     ciFailure: {
-      // CI blocks every warning. Exclude only this reviewed advisory from CI
-      // failure while keeping it visible in the CLI, PR report, and score.
+      // The local React Doctor run blocks every warning. Exclude only this
+      // reviewed advisory from that failure. It stays visible in the CLI and score.
       // https://www.react.doctor/docs/configuration/config-files#common-keys
       excludeRules: ["socket/low-supply-chain-score"],
     },

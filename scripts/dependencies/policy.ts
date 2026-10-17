@@ -18,7 +18,7 @@ type DependencyHold = typeof ApprovedSpecsSchema.Type &
   typeof DeclarationOwnersSchema.Type &
   typeof DependencyNameSchema.Type;
 
-/** The exact package manager the root manifest pins for every checkout and CI job. */
+/** The exact package manager the root manifest pins for every checkout and workflow job. */
 export const PACKAGE_MANAGER = "pnpm@11.28.5";
 /**
  * The exact Node release the root manifest downloads. A workflow job that does
@@ -410,7 +410,7 @@ export const REGISTRY_REVIEWS = [
   [
     "react-doctor@latest",
     "0.9.18",
-    "The local and CI scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled. 0.9.18 narrows existing rules to reduce false positives and adds the opt-in --scope contextual mode, which this repository does not use.",
+    "The local scanners move as one reviewed cohort. The doctor script installs only releases older than a day, so it takes a release once that release has settled. 0.9.18 narrows existing rules to reduce false positives and adds the opt-in --scope contextual mode, which this repository does not use.",
   ],
   [
     "turbo@latest",

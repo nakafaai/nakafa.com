@@ -8,7 +8,7 @@ import { runAfdocs } from "@/checks/afdocs";
 const TIMEOUT_MS = 600_000;
 const ALLOWED_SKIPS = HashSet.make("auth-alternative-access");
 
-/** Keeps a failed CI check actionable without dumping every passing page. */
+/** Keeps a failed site check actionable without dumping every passing page. */
 function formatFailureDetails(details: Record<string, unknown> | undefined) {
   if (!details) {
     return "";
