@@ -1,4 +1,5 @@
 import { Ref } from "@confect/core";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   createConvexTestWithBetterAuth,
@@ -6,6 +7,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { NOW, start } from "@repo/backend/test/nina/admission";
 import type { FunctionArgs } from "convex/server";
+import { Effect } from "effect";
 
 export const save = Ref.getFunctionReference(refs.public.nina.uploads.save);
 export const reserve = Ref.getFunctionReference(
@@ -63,12 +65,23 @@ export const saved = async (
     await owner.action(save, args)
   );
 
-/** Reserves a place for an upload, and returns the upload that holds it. */
+/** The file of a ready upload, read from the test deployment. A test fails when the upload is not ready. */
+export async function readyFileIdIn(
+  t: ReturnType<typeof createConvexTestWithBetterAuth>,
+  uploadId: Docs["ninaUploads"]["_id"]
+) {
+  const grant = await t.query((ctx) => ctx.db.get("ninaUploads", uploadId));
+  const fileId =
+    grant?.state.status === "ready" ? grant.state.fileId : undefined;
+  return Effect.runPromise(Effect.fromNullishOr(fileId).pipe(Effect.orDie));
+}
+
+/** Reserves a place for an upload of the attachment, and returns the upload that holds it. */
 export const reserved = async (owner: Owner) =>
   Ref.decodeReturnsSync(
     refs.internal.nina.uploads.reserve,
-    await owner.mutation(reserve, {})
-  );
+    await owner.mutation(reserve, { filename: attachment.filename })
+  ).uploadId;
 
 /** Starts a turn as a learner does, and returns what the server answered. */
 export const started = async (owner: Owner, args: FunctionArgs<typeof start>) =>

@@ -1,34 +1,14 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { BIO_MAX_LENGTH } from "@repo/backend/confect/users/bio";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Array as Arr, Effect, String as Str } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { animalOf, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-
-/** The settings page, where the Profile cards are. */
-const SETTINGS = "/en/user/settings";
-
-/**
- * The buttons that pick an animal: one for each animal the card offers, each
- * named by its animal, so they share the words of the label before the name.
- */
-function animalPicks(page: Page) {
-  const before = Arr.headNonEmpty(
-    Str.split(app.Auth["animal-pick"], "{animal}")
-  );
-  return page.getByRole("button", { name: new RegExp(`^${before}`) });
-}
-
-/** The markup of the animal that each button draws, in the order the card shows them. */
-function offeredMarkup(picks: Locator) {
-  return picks.evaluateAll((buttons) =>
-    buttons.map((button) => button.querySelector("svg")?.innerHTML ?? null)
-  );
-}
 
 /** The username field, which the form labels with the word Username. */
 function usernameField(page: Page) {
@@ -40,38 +20,41 @@ function bioField(page: Page) {
   return page.getByRole("textbox", { name: app.Auth.bio });
 }
 
-test("a learner picks another animal in settings, and the account button and the profile draw it", async ({
+test("a learner shuffles the animal in settings, and the account button and the profile draw it", async ({
   baseURL,
   page,
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
       const { learner } = yield* openChatPage(page, origin);
+      const shuffle = page.getByRole("button", {
+        name: app.Auth["animal-shuffle"],
+      });
 
       yield* Effect.promise(async () => {
-        await page.goto(SETTINGS);
-        const picks = animalPicks(page);
-        await expect(picks).toHaveCount(4, {
+        await page.goto(appRoutes.settings);
+        await expect(shuffle).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
-        const pick = picks.first();
-        const pickedMarkup = await animalOf(pick).innerHTML();
-        await pick.click();
+        const before = await animalOf(sidebarAvatar(page)).innerHTML();
+        await shuffle.click();
 
+        // A shuffle shows another animal at once, and never the one that showed.
         await expect
           .poll(() => animalOf(sidebarAvatar(page)).innerHTML(), {
             timeout: readinessTimeoutMilliseconds,
           })
-          .toBe(pickedMarkup);
+          .not.toBe(before);
+        const shuffled = await animalOf(sidebarAvatar(page)).innerHTML();
 
-        // The pick is stored, which a second tab shows once it loads the page. This
-        // tab stays where it is: a navigation here would cut the pick short on its
+        // The shuffle is stored, which a second tab shows once it loads the page. This
+        // tab stays where it is: a navigation here would cut the shuffle short on its
         // way to the server, and the reloads would never store it.
         const stored = await page.context().newPage();
         await expect(async () => {
-          await stored.goto(SETTINGS);
+          await stored.goto(appRoutes.settings);
           expect(await animalOf(sidebarAvatar(stored)).innerHTML()).toBe(
-            pickedMarkup
+            shuffled
           );
         }).toPass({ timeout: readinessTimeoutMilliseconds });
 
@@ -80,21 +63,8 @@ test("a learner picks another animal in settings, and the account button and the
         const header = stored
           .locator("main header")
           .locator('[data-slot="avatar"]');
-        expect((await drawnAnimal(header)).markup).toBe(pickedMarkup);
+        expect((await drawnAnimal(header)).markup).toBe(shuffled);
         await stored.close();
-
-        // Drawing again offers four other animals.
-        await expect(animalPicks(page)).toHaveCount(4, {
-          timeout: readinessTimeoutMilliseconds,
-        });
-        const offered = await offeredMarkup(animalPicks(page));
-        await page
-          .getByRole("button", { name: app.Auth["animal-shuffle"] })
-          .click();
-        await expect
-          .poll(() => offeredMarkup(animalPicks(page)))
-          .not.toEqual(offered);
-        await expect(animalPicks(page)).toHaveCount(4);
       });
     })
   );
@@ -114,7 +84,7 @@ test("a learner takes a new username in settings: a taken or invalid name says w
       const save = form.getByRole("button", { name: app.Auth.save });
 
       yield* Effect.promise(async () => {
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         await usernameField(page).fill("1abc");
         await expect(
           page.getByText(app.Auth["username-letter-first"], { exact: true })
@@ -146,7 +116,7 @@ test("a learner takes a new username in settings: a taken or invalid name says w
         const old = await page.request.get(`${origin}/en/@${learner.username}`);
         expect(old.status()).toBe(404);
 
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         const address = `${MAIN_DOMAIN}/@${renamed}`;
         await expect(
           page.getByText(
@@ -172,13 +142,17 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
       const save = form.getByRole("button", { name: app.Auth.save });
 
       yield* Effect.promise(async () => {
-        await page.goto(SETTINGS);
-        await bioField(page).fill(bio);
+        await page.goto(appRoutes.settings);
+        // A bio that is too long says so in words, and Save waits for a bio that fits.
+        await bioField(page).fill("a".repeat(BIO_MAX_LENGTH + 1));
         await expect(
-          page.getByText(`${bio.length} of ${BIO_MAX_LENGTH} characters`, {
-            exact: true,
-          })
+          page.getByText(app.Auth["bio-too-long"], { exact: true })
         ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        await expect(save).toBeDisabled();
+        await bioField(page).fill(bio);
+        await expect(save).toBeEnabled({
+          timeout: readinessTimeoutMilliseconds,
+        });
         await save.click();
 
         await expect(async () => {
@@ -190,7 +164,7 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
           timeout: readinessTimeoutMilliseconds,
         });
 
-        await page.goto(SETTINGS);
+        await page.goto(appRoutes.settings);
         await bioField(page).fill("");
         await save.click();
 
@@ -200,6 +174,54 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
         }).toPass({ timeout: readinessTimeoutMilliseconds });
         await page.goto(profile);
         await expect(page.getByText(bio, { exact: true })).toHaveCount(0);
+      });
+    })
+  );
+});
+
+test("a bio of many lines shows three lines on the profile and clamps the rest", async ({
+  baseURL,
+  page,
+}) => {
+  // Ten lines, which run past the three that the header shows.
+  const bio = Arr.join(
+    Arr.makeBy(10, (index) => `Line ${index + 1}`),
+    "\n"
+  );
+  await runOnPage(page, baseURL, (origin) =>
+    Effect.gen(function* () {
+      const { learner } = yield* openChatPage(page, origin);
+      const profile = `/en/@${learner.username}`;
+      const save = page
+        .locator("#user-settings-bio-form")
+        .getByRole("button", { name: app.Auth.save });
+
+      yield* Effect.promise(async () => {
+        await page.goto(appRoutes.settings);
+        await bioField(page).fill(bio);
+        await expect(save).toBeEnabled({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        await save.click();
+
+        await expect(async () => {
+          const answer = await page.request.get(`${origin}${profile}`);
+          expect(await answer.text()).toContain("Line 10");
+        }).toPass({ timeout: readinessTimeoutMilliseconds });
+        await page.goto(profile);
+
+        // The profile clamps the bio, under its header, to three lines, and the rest stays out of view.
+        const shown = page.locator("main section > p", { hasText: "Line 1" });
+        await expect(shown).toBeVisible({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        const box = await shown.evaluate((node) => ({
+          clipped: node.scrollHeight > node.clientHeight,
+          height: node.getBoundingClientRect().height,
+          line: Number.parseFloat(getComputedStyle(node).lineHeight),
+        }));
+        expect(box.clipped).toBe(true);
+        expect(box.height).toBeLessThanOrEqual(box.line * 3 + 1);
       });
     })
   );
