@@ -17,13 +17,24 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
-import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
-import { DateTime, Effect } from "effect";
+import { Effect } from "effect";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { formatShortAge } from "@/components/user/age";
+import {
+  FeedActions,
+  FeedAge,
+  FeedAvatar,
+  FeedBody,
+  FeedEnd,
+  FeedHeader,
+  FeedName,
+  FeedRow,
+  FeedText,
+} from "@/components/user/feed";
 import {
   likeInLists,
   unlikeInLists,
@@ -34,7 +45,6 @@ import {
   usePostsNow,
 } from "@/components/user/posts/provider";
 import type { ListPost } from "@/components/user/posts/state";
-import { formatPostAge } from "@/components/user/posts/time";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** The delete dialog loads when the learner opens the More menu of a post, before they can choose Delete. */
@@ -47,13 +57,13 @@ const PostDeletion = dynamic(
 );
 
 /**
- * One post of the list: the author's picture, the author's name and the age of
- * the post, the text, and the actions of the post. Only the author sees the
- * More menu. Separate posts have no line between their pictures, because a
- * post has no replies to join. The actions of a post that the server is still
- * saving are held back, because the server does not know its placeholder id.
+ * One post of the list, in the anatomy every row of the profile shares: the
+ * author's picture, the name and the age with the author's More menu at the end
+ * of that line, the text, and the like. The actions of a post that the server is
+ * still saving are held back, because the server does not know its placeholder
+ * id.
  */
-export function PostRow({ isLast, post }: { isLast: boolean; post: ListPost }) {
+export function PostRow({ post }: { post: ListPost }) {
   const locale = useLocale();
   // The rows show the profile's own account, never the signed-in viewer, so a
   // row does not depend on who is looking at it.
@@ -61,48 +71,37 @@ export function PostRow({ isLast, post }: { isLast: boolean; post: ListPost }) {
   const now = usePostsNow();
   const pending = usePostDraft((draft) => draft.savingPostId === post._id);
   return (
-    <article
-      className={cn("flex gap-3 py-4", !isLast && "border-b")}
-      data-slot="post-row"
-    >
-      <PersonAvatar
-        className="size-10 shrink-0"
+    <FeedRow>
+      <FeedAvatar
         mascot={account.appUser.mascot}
         photo={photoOf(account.appUser)}
       />
-      <div className="grid min-w-0 flex-1 gap-1">
-        <div className="flex min-w-0 items-baseline gap-2 text-sm">
-          <span className="truncate font-medium">{account.authUser.name}</span>
-          <time
-            className="shrink-0 text-muted-foreground"
-            dateTime={DateTime.formatIso(
-              DateTime.makeUnsafe(post._creationTime)
-            )}
-          >
-            {formatPostAge(post._creationTime, now, locale)}
-          </time>
-        </div>
-        <p
-          className="wrap-break-word whitespace-pre-wrap text-pretty"
-          dir="auto"
-        >
-          {post.text}
-        </p>
-        <div className="flex -translate-x-2 items-center" inert={pending}>
+      <FeedBody>
+        <FeedHeader>
+          <FeedName>{account.authUser.name}</FeedName>
+          <FeedAge at={post._creationTime}>
+            {formatShortAge(post._creationTime, now, locale)}
+          </FeedAge>
+          {author !== null && (
+            <FeedEnd>
+              <PostMoreMenu inert={pending} postId={post._id} />
+            </FeedEnd>
+          )}
+        </FeedHeader>
+        <FeedText>{post.text}</FeedText>
+        <FeedActions inert={pending}>
           <PostLikeButton post={post} />
-          {author !== null && <PostMoreMenu postId={post._id} />}
-        </div>
-      </div>
-    </article>
+        </FeedActions>
+      </FeedBody>
+    </FeedRow>
   );
 }
 
 /**
- * The like toggle of a post, with its count once the count is above zero. The
- * button keeps its width, so a like never moves the More menu beside it. The
- * change is made at once and the server answers after it. The ghost variant
- * recolors the icon on hover, so a liked heart keeps its color with a rule of
- * its own.
+ * The like toggle of a post, at its own width: the heart, and the count once it
+ * is above zero. The change is made at once and the server answers after it.
+ * The ghost variant recolors the icon on hover, so a liked heart keeps its color
+ * with a rule of its own.
  */
 function PostLikeButton({ post }: { post: ListPost }) {
   const t = useTranslations("Common");
@@ -143,10 +142,7 @@ function PostLikeButton({ post }: { post: ListPost }) {
     <Button
       aria-label={t("like")}
       aria-pressed={post.liked}
-      className={cn(
-        "w-16 gap-1.5",
-        post.liked && "hover:[&_svg]:text-destructive"
-      )}
+      className={cn(post.liked && "hover:[&_svg]:text-destructive")}
       onClick={toggle}
       size="sm"
       variant="ghost"
@@ -155,15 +151,14 @@ function PostLikeButton({ post }: { post: ListPost }) {
         className={cn(post.liked && "text-destructive [&_path]:fill-current")}
         icon={FavouriteIcon}
       />
-      <NumberFormat
-        className={cn(
-          "text-xs tabular-nums tracking-tight",
-          post.likeCount === 0 && "invisible"
-        )}
-        format={{ notation: "compact", maximumFractionDigits: 1 }}
-        isolate={true}
-        value={post.likeCount}
-      />
+      {post.likeCount > 0 && (
+        <NumberFormat
+          className="text-xs tabular-nums"
+          format={{ notation: "compact", maximumFractionDigits: 1 }}
+          isolate={true}
+          value={post.likeCount}
+        />
+      )}
     </Button>
   );
 }
@@ -172,7 +167,13 @@ function PostLikeButton({ post }: { post: ListPost }) {
  * The menu of the author's own post. The delete dialog mounts with the first
  * opening of the menu, so its code is loaded before Delete can be chosen.
  */
-function PostMoreMenu({ postId }: { postId: ListPost["_id"] }) {
+function PostMoreMenu({
+  inert,
+  postId,
+}: {
+  inert: boolean;
+  postId: ListPost["_id"];
+}) {
   const t = useTranslations("Common");
   const [menuOpened, setMenuOpened] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -188,7 +189,12 @@ function PostMoreMenu({ postId }: { postId: ListPost["_id"] }) {
       >
         <DropdownMenuTrigger
           render={
-            <Button aria-label={t("more")} size="icon-sm" variant="ghost">
+            <Button
+              aria-label={t("more")}
+              inert={inert}
+              size="icon-sm"
+              variant="ghost"
+            >
               <HugeIcons icon={MoreHorizontalIcon} />
               <span className="sr-only">{t("more")}</span>
             </Button>
@@ -198,6 +204,7 @@ function PostMoreMenu({ postId }: { postId: ListPost["_id"] }) {
           <DropdownMenuItem
             className="cursor-pointer"
             onClick={() => setDeleting(true)}
+            variant="destructive"
           >
             <HugeIcons icon={Delete02Icon} />
             {t("delete")}

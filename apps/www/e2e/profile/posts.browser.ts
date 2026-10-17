@@ -35,7 +35,7 @@ const composerOf = (page: Page) =>
   page.getByRole("textbox", { name: app.Posts.placeholder });
 
 /** The rows of the list, newest first. */
-const rowsOf = (page: Page) => page.locator('[data-slot="post-row"]');
+const rowsOf = (page: Page) => page.locator('[data-slot="feed-row"]');
 
 /** The post with this text in the list. */
 const postOf = (page: Page, text: string) =>

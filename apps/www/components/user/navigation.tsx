@@ -14,12 +14,16 @@ interface Props {
   value: string;
 }
 
-/** The tabs of a profile: underlined, of equal width, with their labels only. */
+/**
+ * The tabs of a profile: underlined, of equal width, with their labels only, on
+ * a hairline that runs the width of the column, as in Threads. They stay right
+ * under the app's header while the rows scroll beneath them.
+ */
 export function SharedTabs({ tabs, value }: Props) {
   return (
-    <nav className="sticky top-18 z-40 bg-background lg:top-2">
+    <nav className="sticky top-[var(--app-header-top,4rem)] z-10 bg-background lg:top-0">
       <Tabs className="contents" value={value}>
-        <TabsList className="w-full" variant="underline">
+        <TabsList className="w-full border-b" variant="underline">
           {Arr.map(tabs, (tab) => (
             <TabsTab
               className="flex-1"

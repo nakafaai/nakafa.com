@@ -12,6 +12,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
+import { AGE_TICK_MILLISECONDS } from "@/components/user/age";
+import { FeedEmpty, FeedMore, FeedNotice } from "@/components/user/feed";
 import {
   createPostsClock,
   type PostsClock,
@@ -29,7 +31,6 @@ import {
   usePostsContext,
 } from "@/components/user/posts/provider";
 import { PostRow } from "@/components/user/posts/row";
-import { AGE_TICK_MILLISECONDS } from "@/components/user/posts/time";
 import { type CurrentUser, useViewer } from "@/lib/identity/client";
 
 /**
@@ -136,30 +137,22 @@ function PostsPanel({
       {author && (
         <PostComposer appUser={author.appUser} disabled={!view.ready} />
       )}
-      {view.failed && <DataFailure onRetry={onRetry} />}
+      {view.failed && (
+        <FeedNotice>
+          <DataFailure onRetry={onRetry} />
+        </FeedNotice>
+      )}
       <div className="flex flex-col" inert={!view.ready}>
-        {view.rows.length > 0 && (
-          <div className="flex flex-col">
-            {Arr.map(view.rows, (post, index) => (
-              <PostRow
-                isLast={index === view.rows.length - 1}
-                key={post._id}
-                post={post}
-              />
-            ))}
-          </div>
-        )}
-        {view.empty && (
-          <p className="text-center text-muted-foreground text-sm">
-            {t("empty")}
-          </p>
-        )}
+        {Arr.map(view.rows, (post) => (
+          <PostRow key={post._id} post={post} />
+        ))}
+        {view.empty && <FeedEmpty>{t("empty")}</FeedEmpty>}
         {onLoadMore && (
-          <div className="flex justify-center">
+          <FeedMore>
             <Button onClick={onLoadMore} variant="outline">
               {t("load-more")}
             </Button>
-          </div>
+          </FeedMore>
         )}
       </div>
     </div>

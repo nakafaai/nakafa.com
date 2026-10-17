@@ -143,7 +143,7 @@
     "see": "Lihat",
     "chat": "Obrolan",
     "no-chats": "Belum ada obrolan.",
-    "chats-by-link": "Obrolan yang dibagikan dibuka lewat tautannya",
+    "chats-by-link": "Obrolan yang dibagikan dibuka lewat tautannya.",
     "try-out": "Try out",
     "try-out-short": "Tryout",
     "search-country-placeholder": "Cari negara...",
@@ -231,6 +231,8 @@
     "add-comment-placeholder": "Tambahkan komentar...",
     "comment": "Komentar",
     "no-comments": "Belum ada komentar.",
+    "delete-title": "Hapus komentar?",
+    "delete-description": "Komentar ini dihapus permanen.",
     "load-more": "Muat lebih banyak"
   },
   "Subject": {

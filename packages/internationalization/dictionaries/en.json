@@ -143,7 +143,7 @@
     "see": "See",
     "chat": "Chat",
     "no-chats": "No chats yet.",
-    "chats-by-link": "A shared chat opens with its link",
+    "chats-by-link": "A shared chat opens with its link.",
     "try-out": "Try out",
     "try-out-short": "Tryout",
     "search-country-placeholder": "Search country...",
@@ -231,6 +231,8 @@
     "add-comment-placeholder": "Add a comment...",
     "comment": "Comment",
     "no-comments": "No comments yet.",
+    "delete-title": "Delete comment?",
+    "delete-description": "The comment is deleted for good.",
     "load-more": "Load more"
   },
   "Subject": {

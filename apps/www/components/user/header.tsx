@@ -32,7 +32,7 @@ export function UserHeader({
 
   const { appUser, authUser } = account;
   return (
-    <section className="grid gap-4">
+    <section className="grid gap-4 pb-6">
       <header className="flex items-start justify-between gap-4">
         <div className="grid min-w-0 gap-1">
           <h1 className="truncate font-semibold text-2xl sm:text-3xl">

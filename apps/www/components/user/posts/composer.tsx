@@ -7,12 +7,12 @@ import { readPostText } from "@repo/backend/confect/posts/schema";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
-import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { type SubmitEventHandler, useState } from "react";
+import type { SubmitEventHandler } from "react";
+import { FeedAvatar, FeedForm } from "@/components/user/feed";
 import { insertDraftPost } from "@/components/user/posts/mutation.client";
 import { usePostDraft } from "@/components/user/posts/provider";
 import { remainingToShow } from "@/components/user/posts/remaining";
@@ -21,10 +21,12 @@ import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
 /**
- * Writes a new post at the top of the owner's posts. The post shows at once,
- * and the text is locked while the server saves it, so a refused post gives its
- * text back to the composer with a message. The words and the lock live in the
- * draft store, so they survive a Retry of the list.
+ * Writes a new post at the top of the owner's posts, in the first row of the
+ * list. Post stays at the end of the row and turns on once the text can be
+ * posted. The post shows at once, and the text is locked while the server saves
+ * it, so a refused post gives its text back to the composer with a message. The
+ * words and the lock live in the draft store, so they survive a Retry of the
+ * list.
  */
 export function PostComposer({
   appUser,
@@ -40,7 +42,6 @@ export function PostComposer({
   const startSaving = usePostDraft((draft) => draft.startSaving);
   const finishSaving = usePostDraft((draft) => draft.finishSaving);
   const refuseSaving = usePostDraft((draft) => draft.refuseSaving);
-  const [focused, setFocused] = useState(false);
   const startPost = useMutation(posts.mutations.create);
   const body = readPostText(text);
   const remaining = remainingToShow(text);
@@ -96,42 +97,32 @@ export function PostComposer({
   };
 
   return (
-    <form className="flex gap-3 border-b py-4" onSubmit={handleSubmit}>
-      <PersonAvatar
-        className="size-10 shrink-0"
-        mascot={appUser.mascot}
-        photo={photoOf(appUser)}
+    <FeedForm onSubmit={handleSubmit}>
+      <FeedAvatar mascot={appUser.mascot} photo={photoOf(appUser)} />
+      <InputGroupTextarea
+        aria-label={t("placeholder")}
+        className="min-h-10 min-w-0 flex-1 px-0 py-2"
+        disabled={disabled}
+        name="text"
+        onChange={(event) => setText(event.target.value)}
+        placeholder={t("placeholder")}
+        readOnly={saving}
+        value={text}
       />
-      <div className="grid min-w-0 flex-1 gap-2">
-        <InputGroupTextarea
-          aria-label={t("placeholder")}
-          className="min-h-10 px-0 py-2"
-          disabled={disabled}
-          name="text"
-          onBlur={() => setFocused(false)}
-          onChange={(event) => setText(event.target.value)}
-          onFocus={() => setFocused(true)}
-          placeholder={t("placeholder")}
-          readOnly={saving}
-          value={text}
-        />
-        {(focused || text.length > 0) && (
-          <div className="flex items-center justify-end gap-3">
-            {Option.isSome(remaining) && (
-              <span className="text-muted-foreground text-sm tabular-nums">
-                {remaining.value}
-              </span>
-            )}
-            <Button
-              disabled={disabled || Result.isFailure(body)}
-              size="sm"
-              type="submit"
-            >
-              {t("post")}
-            </Button>
-          </div>
+      <div className="flex shrink-0 items-center gap-3 pt-1">
+        {Option.isSome(remaining) && (
+          <span className="text-muted-foreground text-sm tabular-nums">
+            {remaining.value}
+          </span>
         )}
+        <Button
+          disabled={disabled || Result.isFailure(body)}
+          size="sm"
+          type="submit"
+        >
+          {t("post")}
+        </Button>
       </div>
-    </form>
+    </FeedForm>
   );
 }
