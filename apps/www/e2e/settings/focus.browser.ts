@@ -1,12 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { MEMORY_LIST_ID } from "@/components/user/settings/memory/focus";
 import { reloadUntil, saved } from "@/e2e/support/changes";
 import { runOnPage } from "@/e2e/support/chat";
 import {
   LAST_SERVER,
   NEWEST,
   OLDEST,
+  SECOND_NEWEST,
   writeLongList,
   writeMemory,
 } from "@/e2e/support/list";
@@ -23,10 +23,6 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const WRITTEN = "Prefers worked examples before the formula";
 const SECOND = "Revises the proofs on Sundays";
-
-/** The search field of the list, which stays on the page whatever the list holds. */
-const searchOf = (page: Page) =>
-  page.getByRole("searchbox", { name: "Search memories" });
 
 /** Opens the memory that a row names, and waits until its editor holds the words and the focus. */
 const openRow = async (page: Page, text: string) => {
@@ -57,10 +53,10 @@ const closesToTheRow = Effect.fn("NakafaE2E.memoryClosesToRow")(function* (
 });
 
 /**
- * Deleting from the editor while other memories remain moves the focus to the
- * list, because the row the editor held is gone.
+ * Deleting from the editor while other memories remain gives the focus to the
+ * memory that took the deleted one's place in the list.
  */
-const deletesToTheList = Effect.fn("NakafaE2E.memoryDeletesToList")(function* (
+const deletesToNext = Effect.fn("NakafaE2E.memoryDeletesToNext")(function* (
   page: Page,
   baseURL: string
 ) {
@@ -75,7 +71,7 @@ const deletesToTheList = Effect.fn("NakafaE2E.memoryDeletesToList")(function* (
     await confirmDelete(page);
     await expect(editorOf(page)).toHaveCount(0);
     await expect(memoryRow(page, SECOND)).toHaveCount(0);
-    await expect(page.locator(`#${MEMORY_LIST_ID}`)).toBeFocused();
+    await expect(nameOf(page, WRITTEN)).toBeFocused();
     await saved(changes, before);
   });
 });
@@ -108,9 +104,9 @@ const closesNewToAdd = Effect.fn("NakafaE2E.memoryClosesNewToAdd")(function* (
 
 /**
  * Deleting the only memory from its row leaves the list empty, so the focus goes
- * to the search field, which is still on the page.
+ * to the Add memory button.
  */
-const deletesLastToSearch = Effect.fn("NakafaE2E.memoryDeletesLast")(function* (
+const deletesLastToAdd = Effect.fn("NakafaE2E.memoryDeletesLast")(function* (
   page: Page,
   baseURL: string
 ) {
@@ -126,14 +122,17 @@ const deletesLastToSearch = Effect.fn("NakafaE2E.memoryDeletesLast")(function* (
     await confirmDelete(page);
     await expect(row).toHaveCount(0);
     await expect(page.getByText(EMPTY)).toBeVisible();
-    await expect(searchOf(page)).toBeFocused();
+    await expect(
+      page.getByRole("button", { name: "Add memory" })
+    ).toBeFocused();
   });
 });
 
 /**
- * A long list shows its first page in a window. Deleting the memory that takes
- * the list below the window's threshold replaces the list element, and the focus
- * must not fall to the body: it goes to the search field instead.
+ * A long list shows its first page in a window. Deleting the newest memory takes
+ * the list below the window's threshold, which replaces the list element. The
+ * focus must not fall to the body: it goes to the memory that took the newest
+ * one's place, the second on the list.
  */
 const deletesAcrossTheThreshold = Effect.fn(
   "NakafaE2E.memoryDeletesAcrossThreshold"
@@ -154,16 +153,16 @@ const deletesAcrossTheThreshold = Effect.fn(
     await row.getByRole("button", { name: "Delete memory" }).click();
     await confirmDelete(page);
     await expect(row).toHaveCount(0);
-    await expect(searchOf(page)).toBeFocused();
+    await expect(nameOf(page, SECOND_NEWEST)).toBeFocused();
     await expect(memoryRow(page, LAST_SERVER)).toBeVisible();
   });
 });
 
 /**
  * "Delete all" asks first. Once the learner confirms, the button that opened the
- * dialog is disabled, so the focus goes to the search field instead.
+ * dialog is disabled, so the focus goes to the Add memory button instead.
  */
-const clearsToSearch = Effect.fn("NakafaE2E.memoryClearsToSearch")(function* (
+const clearsToAdd = Effect.fn("NakafaE2E.memoryClearsToAdd")(function* (
   page: Page,
   baseURL: string
 ) {
@@ -182,7 +181,9 @@ const clearsToSearch = Effect.fn("NakafaE2E.memoryClearsToSearch")(function* (
       .click();
     await expect(dialog).toBeHidden();
     await expect(page.getByText(EMPTY)).toBeVisible();
-    await expect(searchOf(page)).toBeFocused();
+    await expect(
+      page.getByRole("button", { name: "Add memory" })
+    ).toBeFocused();
   });
 });
 
@@ -202,13 +203,11 @@ test.describe("Memory editor focus at 390px and 1440px", () => {
         );
       });
 
-      test("moves the focus to the list when the editor deletes its memory", async ({
+      test("moves the focus to the next memory when the editor deletes its memory", async ({
         baseURL,
         page,
       }) => {
-        await runOnPage(page, baseURL, (origin) =>
-          deletesToTheList(page, origin)
-        );
+        await runOnPage(page, baseURL, (origin) => deletesToNext(page, origin));
       });
     });
   }
@@ -225,16 +224,14 @@ test.describe("Memory focus at 1440px", () => {
     await runOnPage(page, baseURL, (origin) => closesNewToAdd(page, origin));
   });
 
-  test("moves the focus to the search field when the last memory goes", async ({
+  test("moves the focus to the Add button when the last memory goes", async ({
     baseURL,
     page,
   }) => {
-    await runOnPage(page, baseURL, (origin) =>
-      deletesLastToSearch(page, origin)
-    );
+    await runOnPage(page, baseURL, (origin) => deletesLastToAdd(page, origin));
   });
 
-  test("keeps the focus when a delete crosses the window threshold", async ({
+  test("moves the focus to the next memory when a delete crosses the window threshold", async ({
     baseURL,
     page,
   }) => {
@@ -243,10 +240,10 @@ test.describe("Memory focus at 1440px", () => {
     );
   });
 
-  test("moves the focus to the search field once Delete all is confirmed", async ({
+  test("moves the focus to the Add button once Delete all is confirmed", async ({
     baseURL,
     page,
   }) => {
-    await runOnPage(page, baseURL, (origin) => clearsToSearch(page, origin));
+    await runOnPage(page, baseURL, (origin) => clearsToAdd(page, origin));
   });
 });
