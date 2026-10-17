@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
+import type {
+  PromptInputFile,
+  PromptInputRefusal,
+} from "@repo/design-system/lib/prompt-input/files";
 import {
   PromptInputCompletionError,
   type PromptInputMessage,
@@ -19,6 +22,10 @@ function createPromptFile(): PromptInputFile {
   };
 }
 
+function createRefusal(): PromptInputRefusal {
+  return { code: "accept", id: "refusal-1", name: "essay.docx" };
+}
+
 describe("prompt input submission", () => {
   it.effect("submits synchronously and applies success state", () =>
     Effect.gen(function* () {
@@ -26,10 +33,12 @@ describe("prompt input submission", () => {
       const onSuccess = vi.fn(() => true);
 
       yield* submitPromptInput({
+        dismissRefusals: vi.fn(),
         event: "submit-event",
         files: [createPromptFile()],
         onSubmit,
         onSuccess,
+        refusals: [],
         text: "Explain this lesson.",
       });
 
@@ -49,6 +58,7 @@ describe("prompt input submission", () => {
       const order = MutableList.make<string>();
 
       yield* submitPromptInput({
+        dismissRefusals: vi.fn(),
         event: "submit-event",
         files: [],
         onSubmit: () =>
@@ -59,6 +69,7 @@ describe("prompt input submission", () => {
         onSuccess: () => {
           MutableList.append(order, "completed");
         },
+        refusals: [],
         text: "Hello",
       });
 
@@ -75,15 +86,61 @@ describe("prompt input submission", () => {
         return Promise.resolve(false);
       });
       yield* submitPromptInput({
+        dismissRefusals: vi.fn(),
         event: "submit-event",
         files: [file],
-        text: "Hello",
         onSubmit,
         onSuccess,
+        refusals: [],
+        text: "Hello",
       });
 
       expect(onSuccess).not.toHaveBeenCalled();
     })
+  );
+
+  it.effect(
+    "takes the refusals of the press when the consumer admits the message",
+    () =>
+      Effect.gen(function* () {
+        const dismissRefusals = vi.fn();
+        const onSuccess = vi.fn();
+
+        yield* submitPromptInput({
+          dismissRefusals,
+          event: "submit-event",
+          files: [createPromptFile()],
+          onSubmit: () => true,
+          onSuccess,
+          refusals: [createRefusal()],
+          text: "Explain this lesson.",
+        });
+
+        expect(dismissRefusals).toHaveBeenCalledWith([createRefusal()]);
+        expect(onSuccess).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect(
+    "takes the refusals of the press when the consumer refuses the message",
+    () =>
+      Effect.gen(function* () {
+        const dismissRefusals = vi.fn();
+        const onSuccess = vi.fn();
+
+        yield* submitPromptInput({
+          dismissRefusals,
+          event: "submit-event",
+          files: [createPromptFile()],
+          onSubmit: () => Promise.resolve(false),
+          onSuccess,
+          refusals: [createRefusal()],
+          text: "Explain this lesson.",
+        });
+
+        expect(dismissRefusals).toHaveBeenCalledWith([createRefusal()]);
+        expect(onSuccess).not.toHaveBeenCalled();
+      })
   );
 
   it.effect("types synchronous consumer failures", () =>
@@ -91,12 +148,14 @@ describe("prompt input submission", () => {
       const cause = new Error("Submit failed immediately.");
       const onSuccess = vi.fn(() => true);
       const error = yield* submitPromptInput({
+        dismissRefusals: vi.fn(),
         event: "submit-event",
         files: [],
         onSubmit: () => {
           throw cause;
         },
         onSuccess,
+        refusals: [],
         text: "Hello",
       }).pipe(Effect.flip);
 
@@ -111,10 +170,12 @@ describe("prompt input submission", () => {
       const cause = new Error("Submit promise rejected.");
       const onSuccess = vi.fn(() => true);
       const error = yield* submitPromptInput({
+        dismissRefusals: vi.fn(),
         event: "submit-event",
         files: [],
         onSubmit: () => Promise.reject(cause),
         onSuccess,
+        refusals: [],
         text: "Hello",
       }).pipe(Effect.flip);
 
@@ -128,12 +189,14 @@ describe("prompt input submission", () => {
     Effect.gen(function* () {
       const cause = new Error("Completion state failed.");
       const error = yield* submitPromptInput({
+        dismissRefusals: vi.fn(),
         event: "submit-event",
         files: [],
         onSubmit: vi.fn(() => true),
         onSuccess: () => {
           throw cause;
         },
+        refusals: [],
         text: "Hello",
       }).pipe(Effect.flip);
 

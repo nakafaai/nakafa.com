@@ -1,4 +1,8 @@
-import { PromptInputFileSchema } from "@repo/design-system/lib/prompt-input/files";
+import {
+  PromptInputFileSchema,
+  type PromptInputRefusal,
+  PromptInputRefusalSchema,
+} from "@repo/design-system/lib/prompt-input/files";
 import { Effect, Schema } from "effect";
 
 const PromptInputMessageSchema = Schema.Struct({
@@ -25,9 +29,13 @@ export type PromptInputError =
   | PromptInputCompletionError
   | PromptInputSubmitError;
 
-/** Prompt text and original files that one submission passes on. */
+/**
+ * Prompt text, the original files that one submission passes on, and the
+ * refusals in the tray when the submission was pressed.
+ */
 const PromptInputSubmissionSchema = Schema.Struct({
   files: Schema.Array(PromptInputFileSchema),
+  refusals: Schema.Array(PromptInputRefusalSchema),
   text: Schema.String,
 });
 
@@ -40,19 +48,32 @@ type PromptInputSubmitHandler<TEvent> = (
 /** Applies the local success state after the consumer admits a prompt. */
 type PromptInputSuccessHandler = () => void;
 
-/** Passes original files to the consumer and applies success state once. */
+/** Takes the refusals that a press was made with out of the tray. */
+type PromptInputDismissHandler = (sent: readonly PromptInputRefusal[]) => void;
+
+/**
+ * Passes original files to the consumer and applies success state once. The
+ * press takes its refusals out of the tray before the consumer answers, so a
+ * refused file leaves whether or not the consumer admits the message.
+ */
 export const submitPromptInput = Effect.fn("designSystem.promptInput.submit")(
   function* <TEvent>({
+    dismissRefusals,
     event,
     files,
     onSubmit,
     onSuccess,
+    refusals,
     text,
   }: typeof PromptInputSubmissionSchema.Type & {
+    dismissRefusals: PromptInputDismissHandler;
     event: TEvent;
     onSubmit: PromptInputSubmitHandler<TEvent>;
     onSuccess: PromptInputSuccessHandler;
   }) {
+    // A refusal picked after this press is not in `refusals`, so it stays for
+    // the next message.
+    yield* Effect.sync(() => dismissRefusals(refusals));
     const accepted = yield* Effect.tryPromise({
       try: () => Promise.resolve(onSubmit({ text, files: [...files] }, event)),
       catch: (cause) => new PromptInputSubmitError({ cause }),

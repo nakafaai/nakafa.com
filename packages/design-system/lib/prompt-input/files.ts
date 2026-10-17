@@ -73,7 +73,7 @@ type ValidatePromptInputFilesOptions =
  * refused file is never attached, so it never uploads and it never blocks the
  * files that were attached.
  */
-const PromptInputRefusalSchema = Schema.Struct({
+export const PromptInputRefusalSchema = Schema.Struct({
   code: PromptInputFileConstraintCode,
   id: Schema.String,
   name: Schema.String,
