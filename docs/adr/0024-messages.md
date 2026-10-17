@@ -4,9 +4,9 @@
 
 Accepted after the sealing spike of 12 October 2026. It decides the design and
 the order of work. The title, the summary, the memory, the learner's message at
-send, and the file name of a new upload are sealed and live. The other stages in
-Decision are planned for program wave A, the first delivery wave of the School
-program, and are not live yet.
+send, the file name of a new upload, and the rows and deltas of a settled turn
+are sealed and live. The other stages in Decision are planned for program wave
+A, the first delivery wave of the School program, and are not live yet.
 
 ## Context
 
@@ -146,6 +146,38 @@ migration below reports the real rows and bytes before anything is rewritten.
 The measurements cover the cost of the cipher only. The cost of reading and
 writing documents is counted in documents, because the test database says
 nothing about it.
+
+### The Seal And The Sweep Bound (order of work step 3)
+
+A temporary probe ran one seal through `sealTurn` in the repository's Convex test
+runtime, and deleted itself afterwards. The database and the component calls of
+the seal were wrapped, so each document the seal reads or writes is counted once,
+at its stored size: a string at its UTF-8 length, binary at its byte length, and a
+key or a number at a fixed cost. The component's own reads of the rows it deletes
+are counted too.
+
+| Turn | Documents read | Bytes read | Write calls | Bytes written |
+| --- | --- | --- | --- | --- |
+| Short: a question, one tool step with a 200-character output, and an answer (4 rows) | 13 | 5,198 | 5 | 4,190 |
+| Long: a question, 20 tool steps with 24,000-character outputs, and a 2,000-character answer (42 rows) | 93 | 1,010,610 | 4 | 1,006,245 |
+
+The long turn has the most rows the step limit allows: 20 steps
+(`generation.ts:121`), and each step writes an assistant row and a tool row. Its
+24,000-character tool outputs are an assumption of the probe, close to the
+6,000-token shortening of what the model reads (`budget.ts:10-11`), and not a
+measured maximum of what a tool stores. The probe does not count index entries,
+the index scans that the component's merged message stream makes beyond the rows
+it returns, or the newest-message read of each write. The margin left for them is
+the gap between one seal, about 2.02 MB, and one run's budget of 3.47 MB, which
+is 1.45 MB.
+
+The bound. A sweep runs every five minutes (`deadline.ts:24`), 288 times a day.
+One gigabyte a day divided by 288 is 3.47 MB a run. Two seals of the long turn
+would take about 4.03 MB a run, above the budget, and one takes about 2.02 MB a
+run, which is about 0.58 GB a day. So `SEAL_TURNS_PER_SWEEP` is 1. At that
+worst case, 10,000 old turns take 10,000 / 288, about 35 days. A short turn costs
+about 9.4 KB in this measurement, so a backlog of short turns clears in far fewer
+runs. The constant is a worst-case bound, not a forecast.
 
 ## Designs
 
@@ -289,9 +321,9 @@ The stages, and the key that seals each one (owner decisions K2, K3, and K10):
 | Title, summary, and memory | The learner's key | Live |
 | The learner's message, at send | The learner's key | Live (order of work, step 2) |
 | The rows of a running turn | Not sealed while the turn runs | Plain, by design |
-| The private reply and tool rows, once the turn settles, in one transaction | The learner's key | Planned, wave A |
-| A failed or cancelled prompt, at turn end by the sweep | The learner's key | Planned, wave A |
-| Stream deltas | Not sealed; deleted after the turn | Planned, wave A |
+| The private reply and tool rows, once the turn settles, in one transaction | The learner's key | Live (order of work, step 3) |
+| The reply and tool rows of a failed or cancelled turn, at settlement, the sweep as backstop | The learner's key | Live (step 3). Its prompt is sealed at admission (step 2). |
+| Stream deltas | Not sealed; deleted at settlement by the seal | Live (order of work, step 3) |
 | Old messages, by migration | The learner's key | Planned, wave A |
 | Chat attachment file names, new uploads | The learner's key | Live (order of work, step 2) |
 | Chat attachment file names, uploads before step 2 | The learner's key | Planned, step 4 (migration) |
@@ -507,6 +539,15 @@ module then keeps only the opening.
   can be turned back into text.
 - The model provider sees plain text for the length of a call. ADR 0019 covers
   retention.
+- A seal that fails stays first in line for the sweep, which seals the oldest
+  unsealed settled turn. With the bound at 1, a turn that never seals holds the
+  whole backlog until it is fixed. Convex logs each failed scheduled `seal` with
+  its turn id, and such a failure is a defect to fix, not a state to accept.
+- A run that writes a row into a turn after the seal leaves that row plain. A
+  cancelled or failed settlement cuts off the turn's streams (`journal.ts`), and
+  the seal aborts any stream still open at the turn's order before it reads the
+  streams, which stops the known writers. Step 5 makes a plain row of a sealed
+  turn fail the read. Until step 5, nothing detects such a row.
 
 ## Implementation Status
 
@@ -518,3 +559,4 @@ module then keeps only the opening.
 | Agent audit. Suggestions and title set `recentMessages: 0` and take their input from the module through `contextHandler`, as `generation.ts` already did. Every other Agent call (`math/agent.ts`, `math/repair.ts`, `memory/capture.ts`, `nakafa/agent.ts`, `portrait/build.ts`, `repair.ts`, the two calls of `research/agent.ts`, `summary.ts`, and the test helper `test/nina/capability.ts`) passes `userId` and no `threadId`, so its fetch of recent messages cannot run. Every `generateText`, `streamText`, `generateObject` and `streamObject` call of the backend goes through one of these Agents. | Built in S1b. |
 | `scripts/check/sealed.ts`, the source rule of ADR 0021 (Sealed message readers): no load of the Agent package that reaches one of its readers of stored rows and files (an import, a re-export, a namespace import, or a dynamic import), and no read of the component's messages that returns sealed rows as they are (a property, an element, a destructuring, or the messages taken as a value), in every authored module outside the sealed module. Type-only specifiers read nothing. Tests and the helpers under `packages/backend/test/` read the stored form on purpose and are not judged. | Built in S1b, with its tests and a planted violation of each form. |
 | The writers of step 2. `sealed/save.ts` (`savePrompt`) seals a learner's message at its place: it reads the newest row of the thread across every status and tool flag, and takes the next order with step 0, as the Agent does for a user message. It serializes the message, seals it with the learner's key bound to that row, saves it through the Agent's `saveMessage` with the explicit order, and opens the stored row. `turns.start` is its only caller: the admission, and the retry, which sends the stored prompt again. A replayed request reads its row and writes nothing, and `memory/capture.ts` writes no learner message (it reads one through `memory/said.ts`). `sealed/file.ts` (`sealFileName`) seals a new upload's name, and `nina/uploads.impl.ts` seals it inside `reserve`, before `storeFile` stores the file, and records `nameSealed` on the upload, so the component never sees the plain name. `sealed/file.ts` (`readFile`) opens a name only for an upload that sealed it, and the retry's size check reads the storage entry alone. Built in step 2. | Built in step 2. Gates: `turns.impl.test.ts` (no table of the component holds the planted prompt after admission), `uploads.impl.test.ts` (no table holds a planted name, `files` included), `sealed/save.test.ts`, `sealed/file.test.ts`, and `attachments.test.ts` (a retry opens no name, and a send opens a name only for a sealed upload, with one key read). |
+| The settled turn's seal, order of work step 3. `sealed/turn.ts` (`sealTurn`) seals the assistant and tool rows of a settled turn at the steps they take, with the same order, and deletes its streams' deltas with `deleteStreamAsync`, in one transaction that records `sealedAt`. `sealed.spec.ts` and `sealed.impl.ts` expose it as the internal mutation `seal`, which `settlement.ts` schedules at zero delay for every outcome. `sweep.ts` seals up to `SEAL_TURNS_PER_SWEEP` (1) unsealed settled turns on the first call of each sweep run, found through the index `by_phase_and_sealedAt` (`tables/ninaTurns.ts`). `turns.spec.ts` adds the optional `sealedAt` of a settled turn. A stream that still streams at the turn's order is aborted first, as settlement aborts it. Gates: `sealed/turn.test.ts` (the gate: planted strings in the learner's message, the reasoning, the answer, a tool input, a tool output and a source, and no planted string in any component table after settlement and the deletion of the deltas, with the learner's page and the module's thread reader unchanged; a failed and a cancelled turn; a retried seal; a deleted turn, chat, account and prompt; a turn of more than one page of rows; and a component that stores other steps, where nothing is written), `sweep.test.ts` (the bound, and a sealed turn left alone), and `generation.test.ts`, whose transcript read goes through the learner's page. Built in step 3 and verified against `@convex-dev/agent` 0.7.8, the installed version; the spike read 0.7.7. |

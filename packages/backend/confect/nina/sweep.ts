@@ -18,9 +18,9 @@ const SWEEP_PAGE = 50;
 
 /**
  * How many settled turns that still hold plain rows one sweep run seals. ADR 0024
- * derives it from the measured cost of one seal of the largest turn the model may
- * write, and from the sweep's cadence, so that sealing every old turn stays under
- * 1 GB of database I/O a day.
+ * derives it from the measured cost of one seal of a turn with the most rows the
+ * step limit allows, and from the sweep's cadence, so that sealing every old turn
+ * stays under 1 GB of database I/O a day.
  */
 export const SEAL_TURNS_PER_SWEEP = 1;
 
