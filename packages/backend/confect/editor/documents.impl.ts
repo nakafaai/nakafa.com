@@ -1,16 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { Document } from "@repo/backend/confect/editor/access";
-import {
-  authorizeScope,
-  documentAccess,
-} from "@repo/backend/confect/editor/authority";
-import {
-  ensureRowSize,
-  storedDocument,
-} from "@repo/backend/confect/editor/document";
+import { documentAccess } from "@repo/backend/confect/editor/authority";
+import { createDocument } from "@repo/backend/confect/editor/create";
+import { storedDocument } from "@repo/backend/confect/editor/document";
 import spec from "@repo/backend/confect/editor/documents.spec";
 import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
 import {
@@ -22,12 +16,13 @@ import { clientView, stepView } from "@repo/backend/confect/editor/view";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { Array as Arr, Clock, Effect, Layer, Option } from "effect";
+import { authorizeScope } from "@repo/backend/confect/tenancy/authority";
+import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /**
  * Creates a document at head 0, with its snapshot at version 0. The scope is
  * decided first, then the content is read with the contract's Schema and checked
- * against the bounds, and only then are the rows written. A refused document
+ * against the bounds, and only then is the document written. A refused document
  * writes nothing, because the transaction rolls back.
  */
 const create = FunctionImpl.make(
@@ -36,23 +31,13 @@ const create = FunctionImpl.make(
   "create",
   Effect.fn("editor.documents.create")(function* ({ content, scope }) {
     const { tenant } = yield* Member;
-    yield* authorizeScope(scope);
+    yield* authorizeScope("document.edit", scope);
     const text = yield* storedDocument(content);
-    const at = yield* Clock.currentTimeMillis;
-    const writer = yield* DatabaseWriter;
-    const documentId = yield* writer
-      .table("editorDocuments")
-      .insert({
-        createdAt: at,
-        head: 0,
-        scope,
-        snapshotVersion: 0,
-        tenantId: tenant._id,
-      })
-      .pipe(Effect.orDie);
-    const snapshot = { at, content: text, documentId, version: 0 };
-    yield* ensureRowSize(snapshot);
-    yield* writer.table("editorSnapshots").insert(snapshot).pipe(Effect.orDie);
+    const documentId = yield* createDocument({
+      scope,
+      tenantId: tenant._id,
+      text,
+    });
     return { id: documentId };
   })
 );
