@@ -227,10 +227,11 @@
   },
   "Comments": {
     "add-comment-placeholder": "Tambahkan komentar...",
-    "comment": "Komentar",
     "no-comments": "Belum ada komentar.",
     "delete-title": "Hapus komentar?",
-    "delete-description": "Komentar ini dihapus permanen."
+    "delete-description": "Komentar dan balasannya dihapus permanen.",
+    "delete-reply-description": "Balasan ini dan balasan untuknya dihapus permanen.",
+    "replying-to": "Membalas {name}"
   },
   "Subject": {
     "elementary-school": "SD",

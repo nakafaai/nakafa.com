@@ -1,0 +1,144 @@
+"use client";
+
+import { Login01Icon } from "@hugeicons/core-free-icons";
+import { photoOf } from "@repo/backend/confect/users/picture";
+import { readLearnerText } from "@repo/backend/confect/writing/text";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
+import { buttonVariants } from "@repo/design-system/lib/button";
+import { Link } from "@repo/internationalization/src/navigation";
+import { cn } from "cn";
+import { Effect, Option, Result } from "effect";
+import { useTranslations } from "next-intl";
+import {
+  type FocusEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  useState,
+} from "react";
+import { FeedAvatar, FeedForm } from "@/components/user/feed";
+import { remainingToShow } from "@/components/user/posts/remaining";
+import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useViewer } from "@/lib/identity/client";
+
+/** Props of the composer: how it posts, and how it closes when it is a reply. */
+interface Props {
+  /** Whether the text field takes the focus when the composer appears. */
+  readonly autoFocus?: boolean;
+  /** Closes a reply composer on Escape, and when the learner leaves it empty. */
+  readonly onClose?: () => void;
+  /** Posts the text, and resolves to whether the server saved it. */
+  readonly onPost: (text: string) => Promise<boolean>;
+}
+
+/** Takes the focus when the text field appears. */
+function focusOnMount(node: HTMLTextAreaElement | null) {
+  node?.focus();
+}
+
+/**
+ * Writes a comment or a reply in the composer of the posts. The text clears on
+ * Post and stays usable while the server saves, so nothing waits. A refused post
+ * gives its text back to the field, and the list says why.
+ */
+export function CommentComposer({ autoFocus = false, onClose, onPost }: Props) {
+  const t = useTranslations("Comments");
+  const tPosts = useTranslations("Posts");
+  const user = useViewer((state) => state.account);
+  const [text, setText] = useState("");
+  const body = readLearnerText(text);
+  const remaining = remainingToShow(text);
+
+  /** Posts the trimmed text, and gives it back to the field when the server refuses it. */
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!user || Result.isFailure(body)) {
+      return;
+    }
+    const posted = body.success;
+    setText("");
+    Effect.runPromise(
+      Effect.promise(() => onPost(posted)).pipe(
+        Effect.flatMap((saved) =>
+          Effect.sync(() => {
+            if (!saved) {
+              setText((previous) => previous || posted);
+            }
+          })
+        )
+      )
+    );
+  }
+
+  /** Closes a reply composer that the learner leaves while it is empty. */
+  function closeWhenEmpty(event: FocusEvent<HTMLFormElement>) {
+    const next = event.relatedTarget;
+    const staysInside =
+      next instanceof Node && event.currentTarget.contains(next);
+    if (text === "" && !staysInside) {
+      onClose?.();
+    }
+  }
+
+  /** Closes a reply composer on Escape. */
+  function closeOnEscape(event: KeyboardEvent<HTMLFormElement>) {
+    if (event.key === "Escape") {
+      onClose?.();
+    }
+  }
+
+  return (
+    <FeedForm
+      onBlur={closeWhenEmpty}
+      onKeyDown={closeOnEscape}
+      onSubmit={submit}
+    >
+      {user ? (
+        <FeedAvatar
+          mascot={user.appUser.mascot}
+          photo={photoOf(user.appUser)}
+        />
+      ) : null}
+      <InputGroupTextarea
+        aria-label={t("add-comment-placeholder")}
+        className="min-h-10 min-w-0 flex-1 px-0 py-2"
+        name="text"
+        onChange={(event) => setText(event.target.value)}
+        placeholder={t("add-comment-placeholder")}
+        ref={autoFocus ? focusOnMount : undefined}
+        value={text}
+      />
+      <div className="flex shrink-0 items-center gap-3 pt-1">
+        {Option.isSome(remaining) && (
+          <span className="text-muted-foreground text-sm tabular-nums">
+            {remaining.value}
+          </span>
+        )}
+        {user ? (
+          <Button disabled={Result.isFailure(body)} size="sm" type="submit">
+            {tPosts("post")}
+          </Button>
+        ) : (
+          <SignInLink />
+        )}
+      </div>
+    </FeedForm>
+  );
+}
+
+/** The link to the sign-in page, which returns to the page of the comments. */
+function SignInLink() {
+  const t = useTranslations("Auth");
+  const authNavigation = useCurrentAuthNavigation();
+
+  return (
+    <Link
+      className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
+      {...authNavigation.linkProps}
+    >
+      <HugeIcons icon={Login01Icon} />
+      {t("login")}
+    </Link>
+  );
+}
