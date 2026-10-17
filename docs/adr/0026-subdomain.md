@@ -309,7 +309,7 @@ A move runs in this order:
 | Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
 | Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Proven on `localhost` alone. Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so sign-in sharing across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |
 | School URL tree, root (`/`, Beranda) | Live |
-| The proxy decides the 404 of a school page (Hosts) | Built on #1072, not yet live |
+| The proxy decides the 404 of a school page (Hosts) | Live |
 | School URL tree, every other address | Planned |
 | `us` data cell | Live |
 | `eu` data cell, with its own `www` project and Convex deployment | Planned, created by K5 |
