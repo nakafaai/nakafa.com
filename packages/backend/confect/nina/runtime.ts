@@ -26,7 +26,7 @@ const carriesDocument = (message: ModelMessage) =>
  * The run that answers the turn of a message. A message with a document runs
  * in the Node runtime, which reads the document in memory (`nina/documents`).
  * Every other message, images included, runs in the default runtime, which has
- * no cold start (`nina/response`). ADR 0019 holds the measurements.
+ * no cold start (`nina/response`). ADR 0008 holds the measurements.
  */
 export const answerRunFor = (message: ModelMessage) =>
   carriesDocument(message)
