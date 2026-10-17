@@ -54,7 +54,7 @@ export function CommentsList({ slug }: { slug: string }) {
       slug,
       user: {
         _id: user.appUser._id,
-        ...Struct.pick(user.appUser, ["mascot"]),
+        ...Struct.pick(user.appUser, ["mascot", "picture"]),
         name: user.authUser.name,
         image: user.authUser.image ?? null,
       },

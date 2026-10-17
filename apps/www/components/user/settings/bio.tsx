@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  BIO_MAX_LENGTH,
-  readBio,
-  tidyBio,
-} from "@repo/backend/confect/users/bio";
+import { readBio, tidyBio } from "@repo/backend/confect/users/bio";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -12,11 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
-import { Input } from "@repo/design-system/components/ui/input";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
+import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { cn } from "cn";
-import { Array as Arr, Effect, Result } from "effect";
+import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
@@ -27,14 +26,16 @@ import { useUpdateBioMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
-/** Renders the bio card: one line about the account, with its count of characters. */
+/**
+ * Renders the bio card: a few lines about the account. A bio that is too long
+ * says so in words, and Save waits until it fits.
+ */
 export function UserSettingsBio({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const updateBio = useUpdateBioMutation();
   const current = user.appUser.bio ?? "";
   const [typed, setTyped] = useState(current);
   const text = tidyBio(typed);
-  const count = Arr.fromIterable(text).length;
   const fits = Result.isSuccess(readBio(typed));
   const canSave = fits && text !== current;
 
@@ -81,7 +82,7 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             <FieldLabel className="sr-only" htmlFor="user-settings-bio">
               {t("bio")}
             </FieldLabel>
-            <Input
+            <Textarea
               aria-invalid={!fits}
               className="max-w-md"
               id="user-settings-bio"
@@ -90,18 +91,12 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
               placeholder={t("bio-placeholder")}
               value={typed}
             />
+            {fits ? null : <FieldError>{t("bio-too-long")}</FieldError>}
           </Field>
         </CardContent>
         <CardSectionFooter>
           <div className="flex w-full items-center justify-between gap-4">
-            <p
-              className={cn(
-                "text-sm",
-                fits ? "text-muted-foreground" : "text-destructive"
-              )}
-            >
-              {t("bio-count", { count, max: BIO_MAX_LENGTH })}
-            </p>
+            <p className="text-muted-foreground text-sm">{t("bio-footer")}</p>
             <Button disabled={!canSave} size="sm" type="submit">
               {t("save")}
             </Button>

@@ -4,10 +4,24 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { getViewerVotes } from "@repo/backend/confect/comments/queries";
 import spec from "@repo/backend/confect/comments/queries.spec";
+import type { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, HashMap, Layer, Option, Struct } from "effect";
+
+/**
+ * The public face of an author or a reply target: the animal, and the photo only
+ * while the author shows it, so a hidden photo never leaves the server.
+ */
+function publicAuthor(user: typeof userDataValidator.Type) {
+  const photo = photoOf(user);
+  return {
+    ...Struct.pick(user, ["_id", "mascot", "name", "picture"]),
+    ...(photo === undefined ? {} : { image: photo }),
+  };
+}
 
 const getCommentsBySlug = FunctionImpl.make(
   databaseSchema,
@@ -44,12 +58,8 @@ const getCommentsBySlug = FunctionImpl.make(
         return {
           ...comment,
           viewerVote: Option.getOrNull(HashMap.get(viewerVotes, comment._id)),
-          user: user
-            ? Struct.pick(user, ["_id", "image", "mascot", "name"])
-            : null,
-          replyToUser: replyToUser
-            ? Struct.pick(replyToUser, ["_id", "image", "mascot", "name"])
-            : null,
+          user: user ? publicAuthor(user) : null,
+          replyToUser: replyToUser ? publicAuthor(replyToUser) : null,
         };
       }),
     };
