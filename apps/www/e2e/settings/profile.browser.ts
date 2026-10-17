@@ -193,11 +193,11 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
   );
 });
 
-test("a bio of many lines shows three lines on the profile and clamps the rest", async ({
+test("a bio of many lines shows every line on the profile", async ({
   baseURL,
   page,
 }) => {
-  // Ten lines, which run past the three that the header shows.
+  // Ten lines, which a bio of at most 160 characters can hold.
   const bio = Arr.join(
     Arr.makeBy(10, (index) => `Line ${index + 1}`),
     "\n"
@@ -224,7 +224,7 @@ test("a bio of many lines shows three lines on the profile and clamps the rest",
         }).toPass({ timeout: readinessTimeoutMilliseconds });
         await page.goto(profile);
 
-        // The profile clamps the bio, under its header, to three lines, and the rest stays out of view.
+        // The profile shows the whole bio under its header, one line for each line written.
         const shown = page.locator("main section > p", { hasText: "Line 1" });
         await expect(shown).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
@@ -234,8 +234,8 @@ test("a bio of many lines shows three lines on the profile and clamps the rest",
           height: node.getBoundingClientRect().height,
           line: Number.parseFloat(getComputedStyle(node).lineHeight),
         }));
-        expect(box.clipped).toBe(true);
-        expect(box.height).toBeLessThanOrEqual(box.line * 3 + 1);
+        expect(box.clipped).toBe(false);
+        expect(box.height).toBeGreaterThanOrEqual(box.line * 10 - 1);
       });
     })
   );
