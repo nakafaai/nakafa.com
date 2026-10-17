@@ -49,7 +49,7 @@ export function UserHeader({
         />
       </header>
       {appUser.bio ? (
-        <p className="wrap-break-word whitespace-pre-line text-pretty text-base">
+        <p className="wrap-break-word line-clamp-3 whitespace-pre-line text-pretty text-base">
           {appUser.bio}
         </p>
       ) : null}

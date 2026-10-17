@@ -4,7 +4,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { animalOf, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { appRoutes } from "@/e2e/support/route";
@@ -143,12 +143,16 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
 
       yield* Effect.promise(async () => {
         await page.goto(appRoutes.settings);
-        await bioField(page).fill(bio);
+        // A bio that is too long says so in words, and Save waits for a bio that fits.
+        await bioField(page).fill("a".repeat(BIO_MAX_LENGTH + 1));
         await expect(
-          page.getByText(`${bio.length} of ${BIO_MAX_LENGTH} characters`, {
-            exact: true,
-          })
+          page.getByText(app.Auth["bio-too-long"], { exact: true })
         ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        await expect(save).toBeDisabled();
+        await bioField(page).fill(bio);
+        await expect(save).toBeEnabled({
+          timeout: readinessTimeoutMilliseconds,
+        });
         await save.click();
 
         await expect(async () => {
@@ -170,6 +174,54 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
         }).toPass({ timeout: readinessTimeoutMilliseconds });
         await page.goto(profile);
         await expect(page.getByText(bio, { exact: true })).toHaveCount(0);
+      });
+    })
+  );
+});
+
+test("a bio of many lines shows three lines on the profile and clamps the rest", async ({
+  baseURL,
+  page,
+}) => {
+  // Ten lines, which run past the three that the header shows.
+  const bio = Arr.join(
+    Arr.makeBy(10, (index) => `Line ${index + 1}`),
+    "\n"
+  );
+  await runOnPage(page, baseURL, (origin) =>
+    Effect.gen(function* () {
+      const { learner } = yield* openChatPage(page, origin);
+      const profile = `/en/@${learner.username}`;
+      const save = page
+        .locator("#user-settings-bio-form")
+        .getByRole("button", { name: app.Auth.save });
+
+      yield* Effect.promise(async () => {
+        await page.goto(appRoutes.settings);
+        await bioField(page).fill(bio);
+        await expect(save).toBeEnabled({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        await save.click();
+
+        await expect(async () => {
+          const answer = await page.request.get(`${origin}${profile}`);
+          expect(await answer.text()).toContain("Line 10");
+        }).toPass({ timeout: readinessTimeoutMilliseconds });
+        await page.goto(profile);
+
+        // The header clamps the bio to three lines, and the rest stays out of view.
+        const shown = page.locator("main header p", { hasText: "Line 1" });
+        await expect(shown).toBeVisible({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        const box = await shown.evaluate((node) => ({
+          clipped: node.scrollHeight > node.clientHeight,
+          height: node.getBoundingClientRect().height,
+          line: Number.parseFloat(getComputedStyle(node).lineHeight),
+        }));
+        expect(box.clipped).toBe(true);
+        expect(box.height).toBeLessThanOrEqual(box.line * 3 + 1);
       });
     })
   );

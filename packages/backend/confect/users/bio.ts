@@ -2,8 +2,7 @@ import { Array as Arr, pipe, Result, Schema, String as Str } from "effect";
 
 /**
  * The most characters a bio holds. A character is a Unicode code point, so an
- * emoji counts once and a bio of 160 emoji is allowed. A count shown beside the
- * field must count the same way.
+ * emoji counts once and a bio of 160 emoji is allowed.
  */
 export const BIO_MAX_LENGTH = 160;
 
@@ -26,7 +25,7 @@ export class BioTooLong extends Schema.TaggedError<BioTooLong>()(
  * loses the white space at its ends, and three or more line breaks in a row
  * become two, so the lines of a bio stay apart and at most one blank line sits
  * between them. The ends of the whole text are trimmed too. The settings page
- * counts and saves with this same text, so both agree.
+ * checks and saves with this same text, so both agree.
  */
 export function tidyBio(input: string): string {
   return pipe(
