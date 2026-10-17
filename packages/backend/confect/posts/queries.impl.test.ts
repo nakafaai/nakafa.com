@@ -1,5 +1,6 @@
 import { Ref } from "@confect/core";
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   createConvexTestWithBetterAuth,
@@ -89,6 +90,28 @@ describe("posts list contract", () => {
     });
     expect(Arr.map(second.page, (post) => post.text)).toEqual(["Post 1"]);
     expect(second.isDone).toBe(true);
+  });
+
+  it("holds at most one page of posts, however many the caller asks for, and reaches the rest after it", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(now);
+    const { author } = await createReaders();
+    await writePosts(
+      author,
+      Arr.makeBy(POST_PAGE_SIZE + 1, (index) => `Post ${index + 1}`)
+    );
+    const asked: ListPage = await author.session.query(list, {
+      authorId: author.userId,
+      paginationOpts: { cursor: null, numItems: 1_000_000 },
+    });
+    expect(asked.page).toHaveLength(POST_PAGE_SIZE);
+    expect(asked.isDone).toBe(false);
+    const rest: ListPage = await author.session.query(list, {
+      authorId: author.userId,
+      paginationOpts: { cursor: asked.continueCursor, numItems: 1_000_000 },
+    });
+    expect(rest.page).toHaveLength(1);
+    expect(rest.isDone).toBe(true);
   });
 
   it("tells the author which posts they have liked, and counts each like", async () => {
