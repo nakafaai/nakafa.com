@@ -10,8 +10,3 @@ export const START_ERROR: ToastCopy = {
   description: "tryout-start-error.description",
   title: "tryout-start-error.title",
 };
-/** The copy of a direct entry into a section whose timer has started. */
-export const START_ENTRY_SUCCESS: ToastCopy = {
-  description: "tryout-start-entry-success.description",
-  title: "tryout-start-entry-success.title",
-};
