@@ -1,8 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  classify,
-  GatewayFailure,
-} from "@repo/backend/confect/gateway/failure";
+import { classify } from "@repo/backend/confect/gateway/classify";
+import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { APICallError, NoOutputGeneratedError, RetryError } from "ai";
 import { Schema } from "effect";
 

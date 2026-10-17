@@ -112,7 +112,7 @@ describe("the request fingerprint of an admission", () => {
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
     );
-    // The one-off clears the unkeyed fingerprint of a settled turn (`fingerprints.impl.ts`).
+    // A settled turn may hold no fingerprint: the unkeyed ones were cleared on 17 October 2026.
     await owner.mutation(cancel, { chatId: first.chatId });
     await t.finishAllScheduledFunctions(() => undefined);
     await t.mutation((ctx) =>

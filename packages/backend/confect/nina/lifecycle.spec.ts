@@ -76,13 +76,6 @@ export default GroupSpec.make()
     }).middleware(Atomic)
   )
   .addFunction(
-    FunctionSpec.internalQuery({
-      name: "halted",
-      args: () => ({ turnId: Id("ninaTurns") }),
-      returns: () => Schema.Boolean,
-    })
-  )
-  .addFunction(
     FunctionSpec.internalMutation({
       name: "sweep",
       args: () => ({ resume: Schema.optionalKey(NinaSweepResume) }),

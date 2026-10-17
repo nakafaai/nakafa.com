@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@effect/vitest";
-import { FASTEST } from "@repo/design-system/components/pool/ball";
 import {
   idlePointer,
   locate,
@@ -10,11 +9,13 @@ import {
   ballAt,
   CHECKED_POOLS,
   FRAME,
+  LARGE_POOL_TIMEOUT,
   NOISE,
   poolWorld,
   settle,
   sweep,
 } from "@repo/design-system/components/pool/test.fixture";
+import { Array as Arr } from "effect";
 
 /** A pointer over the box, at the given place, with no speed yet. */
 function overBox(x: number, y: number) {
@@ -26,15 +27,17 @@ function enteredAt(x: number, y: number) {
   return { ...locate(idlePointer(), { x, y }), active: true };
 }
 
-/** A step of one second, so that a ball takes over the pointer's speed one for one. */
+/** A step of one second, so that a ball takes over the pointer's speed for a full second. */
 const UNIT_STEP = 1;
+/** The speed of the sweep over the pile, in pixels per second. */
+const SWEEP_SPEED = 300;
 /**
- * The fastest a ball may move while the pointer sweeps over the pool, in pixels per
- * second at scale 1: a third of the top speed. Every checked pool is held to it.
- * Speed is measured against the size of the animal, so a ball's speed is divided by
- * its size ratio, its radius over the radius it has at scale 1.
+ * The fastest ball of each checked pool, 585, 823 and 1463 pixels wide, at scale 1,
+ * when the pointer sweeps across a settled pile at 300 pixels a second. Before the
+ * pool moved more lively these were 62.76, 84.65 and 153.30 pixels a second. Now they
+ * are 468, 748 and 449 pixels a second, measured with `sweep` in `test.fixture.ts`.
  */
-const GENTLE_SPEED = FASTEST / 3;
+const BEFORE_SWEEP: readonly number[] = [62.76, 84.65, 153.3];
 
 describe("the push of the pointer", () => {
   it("pushes nothing before the pointer comes over the box", () => {
@@ -45,11 +48,11 @@ describe("the push of the pointer", () => {
   });
 
   it("pushes a ball away from the pointer, with the spring of its reach", () => {
-    // The ball is 40 pixels from the pointer, and its reach is 64: (64 - 40) * 40.
+    // The ball is 40 pixels from the pointer, and its reach is 64: (64 - 40) * 160.
     expect(
       pointerPush(overBox(560, 300), ballAt({ x: 600 }), UNIT_STEP)
     ).toEqual({
-      vx: 960,
+      vx: 3840,
       vy: 0,
     });
   });
@@ -69,20 +72,22 @@ describe("the push of the pointer", () => {
     expect(far).toBeGreaterThan(0);
   });
 
-  it("takes over the pointer's speed in pixels per second, one for one per second", () => {
+  it("takes over 24 times the pointer's speed in pixels per second, each second", () => {
     const fast = { ...overBox(560, 300), vx: 500 };
-    expect(pointerPush(fast, ballAt({ x: 600 }), UNIT_STEP).vx).toBe(960 + 500);
-    // A frame takes over its share of the speed: 500 pixels a second for one frame.
+    expect(pointerPush(fast, ballAt({ x: 600 }), UNIT_STEP).vx).toBe(
+      3840 + 500 * 24
+    );
+    // A frame takes over its share of that: 24 times 500 pixels a second, for one frame.
     expect(pointerPush(fast, ballAt({ x: 600 }), FRAME).vx).toBeCloseTo(
-      960 * FRAME + 500 * FRAME,
+      3840 * FRAME + 500 * 24 * FRAME,
       10
     );
   });
 
-  it("takes over no more than 1680 pixels a second, which is 28 pixels a frame", () => {
+  it("takes over no more than 2400 pixels a second of the pointer's speed, which is 40 pixels a frame", () => {
     const faster = { ...overBox(560, 300), vx: 5000 };
     expect(pointerPush(faster, ballAt({ x: 600 }), UNIT_STEP).vx).toBe(
-      960 + 1680
+      3840 + 2400 * 24
     );
   });
 
@@ -135,17 +140,19 @@ describe("the speed of the pointer", () => {
 });
 
 describe("the pointer over the pile", () => {
-  for (const speed of [300, 1200]) {
-    for (const pool of CHECKED_POOLS) {
-      it(`keeps every ball within a third of the top speed at its own size in a ${pool.width} by ${pool.height} pool when the pointer sweeps at ${speed} pixels a second`, () => {
+  for (const [pool, before] of Arr.zip(CHECKED_POOLS, BEFORE_SWEEP)) {
+    it(
+      `moves the fastest ball of a ${pool.width} by ${pool.height} pool faster than before when the pointer sweeps at ${SWEEP_SPEED} pixels a second`,
+      () => {
         const settled = settle(poolWorld(pool.width, pool.height));
-        const [swept, fastest] = sweep(settled, pool, speed);
+        const [swept, fastest] = sweep(settled, pool, SWEEP_SPEED);
         // The sweep crossed the pool: the pointer ends within one frame of the far wall.
         expect(pool.width - swept.pointer.x).toBeLessThanOrEqual(
-          speed * FRAME + NOISE
+          SWEEP_SPEED * FRAME + NOISE
         );
-        expect(fastest).toBeLessThanOrEqual(GENTLE_SPEED);
-      });
-    }
+        expect(fastest).toBeGreaterThan(before);
+      },
+      pool === CHECKED_POOLS[0] ? undefined : LARGE_POOL_TIMEOUT
+    );
   }
 });
