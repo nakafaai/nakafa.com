@@ -3,6 +3,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { ChatShareReadError } from "@repo/backend/confect/chats/access/spec";
 import {
   ensureLearnerKeys,
   readLearnerKeys,
@@ -16,7 +17,13 @@ type Chat = Docs["chats"];
 /** The stored field a share token is sealed for, besides the chat owner. */
 const CHAT_SHARE = { field: "token", table: "chatShares" } as const;
 
-/** Finds the share of one chat, when the chat is shared. */
+/** A share that could not be read or opened, as the one declared failure of a read. */
+const shareReadFailure = () => new ChatShareReadError();
+
+/**
+ * Finds the share of one chat, when the chat is shared. A row that does not
+ * decode is the declared share failure. A failed database read still dies.
+ */
 export const findShare = Effect.fn("chats.share.find")(function* (
   chatId: Chat["_id"]
 ) {
@@ -25,7 +32,7 @@ export const findShare = Effect.fn("chats.share.find")(function* (
     .get("by_chatId", chatId)
     .pipe(
       Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
-      Effect.orDie
+      Effect.mapError(shareReadFailure)
     );
 });
 
@@ -60,12 +67,9 @@ export const stopSharing = Effect.fn("chats.share.stop")(function* (
 ) {
   const share = yield* findShare(chatId);
   if (share) {
-    yield* (yield* DatabaseWriter)
-      .table("chatShares")
-      .delete(share._id)
-      .pipe(Effect.orDie);
+    yield* (yield* DatabaseWriter).table("chatShares").delete(share._id);
   }
-});
+}, Effect.orDie);
 
 /**
  * Whether `token` is the token of the chat's share, compared through its digest
@@ -79,13 +83,20 @@ export const matchesShare = Effect.fn("chats.share.matches")(function* (
   return share !== null && (yield* matchesToken(token, share.hash));
 }, Effect.orDie);
 
-/** Opens the token of a share with the keys of the chat owner who made it. */
-export const openShareToken = Effect.fn("chats.share.open")(function* (
-  share: Docs["chatShares"]
-) {
-  return yield* openText(
-    yield* readLearnerKeys(share.userId),
-    CHAT_SHARE,
-    share.token
-  );
-}, Effect.orDie);
+/**
+ * Opens the token of a share with the keys of the chat owner who made it. A key
+ * that is gone, and a token that does not open, are the declared share failure.
+ * The vault dies on a key row that does not decode, so the read declares that
+ * defect too: the link must still say it could not be read.
+ */
+export const openShareToken = Effect.fn("chats.share.open")(
+  function* (share: Docs["chatShares"]) {
+    return yield* openText(
+      yield* readLearnerKeys(share.userId),
+      CHAT_SHARE,
+      share.token
+    );
+  },
+  Effect.mapError(shareReadFailure),
+  Effect.catchDefect(() => Effect.fail(shareReadFailure()))
+);

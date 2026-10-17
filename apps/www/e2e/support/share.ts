@@ -1,4 +1,12 @@
-import { expect, type Page, type Request } from "@playwright/test";
+import {
+  expect,
+  type Locator,
+  type Page,
+  type Request,
+} from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
 import {
   ANSWER_MILLISECONDS,
@@ -6,12 +14,16 @@ import {
   live,
   saved,
 } from "@/e2e/support/changes";
-import { openChatPage } from "@/e2e/support/chat";
+import { onThePage, openChatPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 
 /** The shape of a share token: 32 random bytes in URL-safe Base64, 43 characters. */
 export const SHARE_TOKEN = /^[A-Za-z0-9_-]{43}$/u;
+/** The title of the card a chat the viewer may not read shows, on the page and in the sheet. */
+export const ACCESS_TITLE = en.Ai["private-chat-error"];
+/** The description of that card, which says the chat is not available to this viewer. */
+export const UNAVAILABLE_COPY = en.Ai["chat-unavailable"];
 /** The path of the proxy that forwards a page's analytics to the runtime's stand-in. */
 const ANALYTICS_PATH = "/_nakafa/";
 
@@ -27,9 +39,7 @@ const chatMenu = (page: Page) =>
 
 /** The box where the learner writes to Nina, which only the owner has. */
 const composer = (page: Page) =>
-  page
-    .locator("main main")
-    .getByRole("textbox", { name: "Ask Nina anything..." });
+  onThePage(page).getByRole("textbox", { name: "Ask Nina anything..." });
 
 /** The prompt a chat shows as a message. */
 export const promptOf = (page: Page, text: string) =>
@@ -39,9 +49,9 @@ export const promptOf = (page: Page, text: string) =>
 const retryButtons = (page: Page) =>
   page.getByRole("button", { name: "Retry message" });
 
-/** What a chat page shows in place of a chat the reader cannot open. */
-export const notAvailable = (page: Page) =>
-  page.locator('[data-slot="empty"]').filter({ hasText: "Access denied" });
+/** What a chat page or sheet shows in place of a chat the reader cannot open. */
+export const notAvailable = (scope: Page | Locator) =>
+  scope.locator('[data-slot="empty"]').filter({ hasText: ACCESS_TITLE });
 
 /** The link the dialog copied, read apart. */
 export function readLink(link: string) {
