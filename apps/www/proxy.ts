@@ -40,10 +40,11 @@ import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 import { routeSchoolPage } from "@/lib/routing/school/refusal";
+import { redirectTrailingSlash } from "@/lib/routing/slash";
+import { readVisitorUrl } from "@/lib/routing/visitor";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
-const TRAILING_SLASH_PATTERN = /\/+$/;
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
@@ -153,7 +154,7 @@ export async function proxy(request: NextRequest) {
     })
   );
   if (urlMigrationRedirect) {
-    const redirectUrl = new URL(request.url);
+    const redirectUrl = readVisitorUrl(request);
     redirectUrl.pathname = `${urlMigrationRedirect.destination}${migrationSuffix}`;
 
     const response = NextResponse.redirect(
@@ -234,7 +235,10 @@ function routeLocalizedRequest(
   return response;
 }
 
-/** Rewrites a localized route to the source-backed markdown handler. */
+/**
+ * Rewrites a localized route to the source-backed markdown handler. The rewrite
+ * names the request URL (see `readVisitorUrl`).
+ */
 function rewriteToLlmsMdx(
   request: NextRequest,
   localizedRoute: LocalizedLlmsRoute
@@ -245,19 +249,6 @@ function rewriteToLlmsMdx(
   const response = NextResponse.rewrite(rewriteUrl);
   mergeRepresentationVary(response);
   return response;
-}
-
-/** Redirects a path with a trailing slash to its one canonical spelling, as a 308. */
-function redirectTrailingSlash(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  if (pathname.length <= 1 || !pathname.endsWith("/")) {
-    return null;
-  }
-
-  const redirectUrl = new URL(request.url);
-  redirectUrl.pathname = pathname.replace(TRAILING_SLASH_PATTERN, "");
-
-  return NextResponse.redirect(redirectUrl, 308);
 }
 
 /** Returns a hard 406 when neither public page representation is acceptable. */

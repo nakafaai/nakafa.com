@@ -214,15 +214,17 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe(targetUrl.toString());
     expectMigrationAsked(sourceUrl.pathname);
   });
-  it("answers a temporary redirect with the status of its rule", async () => {
+  it("answers a temporary redirect with the status of its rule on the visitor's host", async () => {
     const destination = "/en/try-out/indonesia/snbt/2027/set-1";
     runtimeMocks.readRedirect.mockReturnValueOnce(
       Effect.succeed({ destination, status: 307 })
     );
-    const response = await requestProxy("/en/try-out/indonesia/snbt/set-1");
+    const response = await requestProxy("/en/try-out/indonesia/snbt/set-1", {
+      headers: { host: "127.0.0.1:3000" },
+    });
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      `http://localhost:3000${destination}`
+      `http://127.0.0.1:3000${destination}`
     );
   });
   it("tells the migration resolver when a URL carries a try-out attempt", async () => {

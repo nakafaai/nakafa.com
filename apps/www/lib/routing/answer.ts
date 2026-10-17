@@ -26,7 +26,8 @@ const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
 /**
  * Rewrites a request to the app's not-found page, with a 404 status, the locale
  * of the page, and a noindex header. The Vary fields name the request headers
- * that the answer depends on, and they merge with the ones the response has.
+ * that the answer depends on, and they merge with the ones the response has. The
+ * rewrite names the request URL (see `readVisitorUrl`).
  */
 export function rewriteToNotFoundPage(
   request: NextRequest,
