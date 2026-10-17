@@ -66,6 +66,7 @@ describe("tenancy/viewer", () => {
         expect(Arr.sort(view.can, Order.String)).toEqual([
           "audit.view",
           "document.edit",
+          "exam.edit",
           "grant.manage",
           "integration.manage",
           "integration.view",

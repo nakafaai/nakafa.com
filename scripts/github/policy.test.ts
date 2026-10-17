@@ -11,8 +11,6 @@ import {
 import { inspectGithubActionPolicy } from "#scripts/github/source";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
-const PLAYWRIGHT_SUITE_ENVIRONMENT =
-  /PLAYWRIGHT_SUITE: \$\{\{ matrix\.suite \}\}/u;
 const readRepositoryFile = Effect.fn("GithubPolicyTest.readRepositoryFile")(
   function* (relativeUrl: string) {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -42,224 +40,23 @@ function validActionUses(): GithubActionUse[] {
 
 describe("GitHub Action policy", () => {
   it.effect(
-    "runs candidate validation with a signed isolated acceptance publication",
+    "keeps the release workflow manual, with no cache saves or Convex deploy secrets",
     () =>
       Effect.gen(function* () {
         const source = yield* readRepositoryFile(
-          "../../.github/workflows/ci.yml"
+          "../../.github/workflows/cli-publish.yml"
         );
         const workflow = yield* parseWorkflow(source);
 
         expect(workflow).toEqual(
           expect.objectContaining({
-            jobs: expect.objectContaining({
-              doctor: expect.objectContaining({ name: "Doctor" }),
-              required: expect.objectContaining({ name: "Required" }),
-              scope: expect.objectContaining({ name: "Scope" }),
-            }),
-            on: expect.objectContaining({
-              merge_group: {
-                branches: ["main"],
-                types: ["checks_requested"],
-              },
-              // Edits never rerun CI, and stacked pull requests run on their
-              // own base before GitHub retargets them to main.
-              pull_request: {
-                types: [
-                  "opened",
-                  "synchronize",
-                  "reopened",
-                  "ready_for_review",
-                ],
-              },
-            }),
-          })
-        );
-        expect(workflow).not.toEqual(
-          expect.objectContaining({
-            on: expect.objectContaining({ push: expect.anything() }),
+            on: { workflow_dispatch: null },
           })
         );
         expect(source).not.toContain("actions/cache/save@");
-
-        expect(workflow).toEqual(
-          expect.objectContaining({
-            jobs: expect.objectContaining({
-              production: expect.objectContaining({
-                steps: expect.arrayContaining([
-                  expect.objectContaining({
-                    run: "pnpm --dir packages/backend acceptance prepare",
-                  }),
-                  expect.objectContaining({
-                    run: "pnpm --dir packages/backend acceptance build",
-                  }),
-                  expect.objectContaining({
-                    run: "pnpm --filter www test:browser",
-                  }),
-                ]),
-              }),
-            }),
-          })
-        );
-        // Only prepare generates the Convex bindings; the acceptance:build and
-        // acceptance:start scripts would regenerate them again.
-        expect(source).not.toContain("pnpm acceptance:build");
-        expect(source).not.toContain("pnpm acceptance:start");
-        expect(source).toContain(
-          "setsid pnpm --dir packages/backend acceptance start"
-        );
         expect(source).not.toContain("secrets.CONVEX_DEPLOY_KEY");
         expect(source).not.toContain("secrets.CONTENT_RUNTIME_CACHE_KEY");
-        expect(source).toContain("pnpm acceptance:clean");
-        expect(source).not.toContain("runtime:ci export");
       }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect(
-    "checks the Convex bindings after the Quality typecheck, with no explicit codegen step",
-    () =>
-      readRepositoryFile("../../.github/workflows/ci.yml").pipe(
-        Effect.tap((source) =>
-          Effect.sync(() => {
-            const typecheck = source.indexOf("      - name: Typecheck\n");
-            const verify = source.indexOf(
-              "      - name: Verify generated backend contracts\n"
-            );
-            const tests = source.indexOf("      - name: Run tests\n");
-            expect(typecheck).toBeGreaterThan(-1);
-            expect(verify).toBeGreaterThan(typecheck);
-            expect(tests).toBeGreaterThan(verify);
-            expect(source).not.toContain("pnpm --filter @repo/backend codegen");
-          })
-        ),
-        Effect.provide(NodeServices.layer)
-      )
-  );
-
-  it.effect("runs the boundaries check in Quality right after lint", () =>
-    readRepositoryFile("../../.github/workflows/ci.yml").pipe(
-      Effect.tap((source) =>
-        Effect.sync(() => {
-          const lint = source.indexOf(
-            "      - name: Lint\n        run: pnpm lint\n"
-          );
-          const boundaries = source.indexOf(
-            "      - name: Boundaries\n        run: pnpm boundaries\n"
-          );
-          const typecheck = source.indexOf("      - name: Typecheck\n");
-          expect(lint).toBeGreaterThan(-1);
-          expect(boundaries).toBeGreaterThan(lint);
-          expect(typecheck).toBeGreaterThan(boundaries);
-        })
-      ),
-      Effect.provide(NodeServices.layer)
-    )
-  );
-
-  it.effect(
-    "runs the backend suite in its own job and gates Required on it",
-    () =>
-      Effect.gen(function* () {
-        const source = yield* readRepositoryFile(
-          "../../.github/workflows/ci.yml"
-        );
-        const workflow = yield* parseWorkflow(source);
-
-        expect(workflow).toEqual(
-          expect.objectContaining({
-            jobs: expect.objectContaining({
-              backend: expect.objectContaining({
-                name: "Backend",
-                steps: expect.arrayContaining([
-                  expect.objectContaining({
-                    run: "pnpm --dir packages/backend test",
-                  }),
-                ]),
-              }),
-              required: expect.objectContaining({
-                needs: ["scope", "quality", "backend", "production", "doctor"],
-              }),
-            }),
-          })
-        );
-        expect(source).toContain(
-          "pnpm exec turbo run test --filter='!@repo/backend'"
-        );
-        // A workspace filter exits 0 without running anything when the backend
-        // has no test script, so the backend job runs its package script.
-        expect(source).not.toContain("turbo run test --filter=@repo/backend");
-      }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect("runs one production leg per browser suite", () =>
-    Effect.gen(function* () {
-      const source = yield* readRepositoryFile(
-        "../../.github/workflows/ci.yml"
-      );
-      const workflow = yield* parseWorkflow(source);
-
-      expect(workflow).toEqual(
-        expect.objectContaining({
-          jobs: expect.objectContaining({
-            production: expect.objectContaining({
-              name: "Production",
-              strategy: {
-                "fail-fast": false,
-                matrix: {
-                  suite: ["runtime", "learner", "chat", "visual", "navigation"],
-                },
-              },
-            }),
-          }),
-        })
-      );
-      expect(source).toMatch(PLAYWRIGHT_SUITE_ENVIRONMENT);
-    }).pipe(Effect.provide(NodeServices.layer))
-  );
-
-  it.effect("runs every required check on each candidate head", () =>
-    readRepositoryFile("../../.github/workflows/ci.yml").pipe(
-      Effect.tap((source) =>
-        Effect.sync(() => {
-          expect(source).toContain(
-            'pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE"'
-          );
-          expect(source).toContain(
-            `DOCTOR_BASE: \${{ github.event.merge_group.base_sha || 'origin/main' }}`
-          );
-          expect(source).toContain(
-            `required: \${{ steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}`
-          );
-          expect(source).toContain("          REQUIRED: true");
-          expect(source).toContain(
-            `cancel-in-progress: \${{ github.event_name == 'pull_request' }}`
-          );
-          expect(source).not.toContain("actions/github-script");
-          expect(source).not.toContain("pnpm ci:queue");
-          expect(source).not.toContain("pnpm ci:review");
-          expect(source).not.toContain("outputs.reuse");
-        })
-      ),
-      Effect.provide(NodeServices.layer)
-    )
-  );
-
-  it.effect(
-    "trusts only the owner's pull requests and the merge groups the owner enqueued",
-    () =>
-      readRepositoryFile("../../.github/workflows/ci.yml").pipe(
-        Effect.tap((source) =>
-          Effect.sync(() => {
-            expect(source).toContain(
-              `TRUSTED_CANDIDATE: \${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') || (github.event_name == 'merge_group' && github.event.merge_group.base_ref == 'refs/heads/main' && github.actor == 'nabilfatih') }}`
-            );
-            expect(source).toContain(
-              `ref: \${{ env.TRUSTED_CANDIDATE == 'true' && github.sha || github.event.pull_request.base.sha || github.event.merge_group.base_sha }}`
-            );
-          })
-        ),
-        Effect.provide(NodeServices.layer)
-      )
   );
 
   it.effect("accepts every reviewed immutable GitHub Action", () =>

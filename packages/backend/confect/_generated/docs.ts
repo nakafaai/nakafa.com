@@ -41,6 +41,8 @@ export type EditorClientsDoc = Document.Document<typeof schemaDefinition, "edito
 export type EditorDocumentsDoc = Document.Document<typeof schemaDefinition, "editorDocuments">;
 export type EditorSnapshotsDoc = Document.Document<typeof schemaDefinition, "editorSnapshots">;
 export type EditorStepsDoc = Document.Document<typeof schemaDefinition, "editorSteps">;
+export type ExamQuestionsDoc = Document.Document<typeof schemaDefinition, "examQuestions">;
+export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
@@ -145,6 +147,8 @@ export interface Docs {
   editorDocuments: EditorDocumentsDoc;
   editorSnapshots: EditorSnapshotsDoc;
   editorSteps: EditorStepsDoc;
+  examQuestions: ExamQuestionsDoc;
+  exams: ExamsDoc;
   integrationClients: IntegrationClientsDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
