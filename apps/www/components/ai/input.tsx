@@ -32,7 +32,7 @@ import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useOptimistic, useTransition } from "react";
+import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import {
   NinaAttach,
@@ -52,16 +52,22 @@ interface Props {
   children?: ReactNode;
   className?: string;
   disabled?: boolean;
+  onStop?: () => void;
   onSubmit: (message: PromptInputMessage) => boolean | Promise<boolean>;
   status?: ChatStatus;
 }
 
-/** One attachment-capable composer for Nina's home, conversation and sheet. */
+/**
+ * One attachment-capable composer for Nina's home, conversation and sheet. While
+ * Nina streams, the button stops the answer through `onStop` and never submits,
+ * so a key press in the text field cannot stop it.
+ */
 export function NinaInput({
   autoFocus,
   children,
   className,
   disabled,
+  onStop,
   onSubmit,
   status,
 }: Props) {
@@ -69,13 +75,10 @@ export function NinaInput({
   const composerKey = useAi((state) => state.composerKey);
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
-  const [submittedFiles, hideSubmittedFiles] = useOptimistic<readonly string[]>(
-    []
-  );
-  const [, startTransition] = useTransition();
-
+  const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
   // While Nina answers, the button stops the reply and a press sends no text.
   const answering = status === "streaming";
+  const stopping = answering && !disabled;
 
   function handleSubmit(message: PromptInputMessage) {
     const refusal = promptRefusal(message.text, answering);
@@ -89,15 +92,20 @@ export function NinaInput({
     if (admission === false) {
       return false;
     }
-    startTransition(async () => {
-      hideSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
-      // Once the message is sent, the notice about the files an earlier pick
-      // did not attach has done its work.
-      if (await admission) {
-        toast.dismiss(REJECTION_NOTICE);
-      }
-    });
-    return admission;
+    // The submitted files leave the tray while the message is admitted, and
+    // come back if it is refused. No transition holds them: one that waits for
+    // the admission would hold every navigation the learner makes meanwhile.
+    setSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
+    return Promise.resolve(admission)
+      .then((admitted) => {
+        // Once the message is sent, the notice about the files an earlier pick
+        // did not attach has done its work.
+        if (admitted) {
+          toast.dismiss(REJECTION_NOTICE);
+        }
+        return admitted;
+      })
+      .finally(() => setSubmittedFiles([]));
   }
 
   /**
@@ -181,18 +189,15 @@ export function NinaInput({
           <NinaAttach />
           <div className="flex items-center gap-1">
             <InputGroupButton
-              aria-label={
-                answering && !disabled ? t("stop-response") : t("send-message")
-              }
+              aria-label={stopping ? t("stop-response") : t("send-message")}
               className="rounded-full"
               disabled={disabled}
+              onClick={stopping ? onStop : undefined}
               size="icon"
-              type="submit"
+              type={stopping ? "button" : "submit"}
               variant="default"
             >
-              <HugeIcons
-                icon={answering && !disabled ? StopIcon : ArrowUp02Icon}
-              />
+              <HugeIcons icon={stopping ? StopIcon : ArrowUp02Icon} />
             </InputGroupButton>
           </div>
         </InputGroupAddon>

@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { createThread, saveMessage, toUIMessages } from "@convex-dev/agent";
+import { createThread, toUIMessages } from "@convex-dev/agent";
 import { DEFAULT_TITLE } from "@repo/backend/client/nina/presentation";
 import {
   isPromptWithinLimit,
@@ -26,6 +26,7 @@ import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { START_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
 import { readMessage } from "@repo/backend/confect/nina/sealed/message";
+import { savePrompt } from "@repo/backend/confect/nina/sealed/save";
 import { settleStopped } from "@repo/backend/confect/nina/settlement";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { sha256Hex } from "@repo/utilities/digest";
@@ -143,16 +144,11 @@ const start = FunctionImpl.make(
           updatedAt: now,
         })
         .pipe(Effect.orDie));
-    const saved = yield* Effect.tryPromise({
-      try: () =>
-        saveMessage(ctx, components.nina, {
-          threadId,
-          userId: appUser._id,
-          message: prompt.message,
-          metadata: { fileIds: prompt.fileIds },
-        }),
-      catch: writeFailure,
-    });
+    const saved = yield* savePrompt(ctx, appUser._id, {
+      fileIds: prompt.fileIds,
+      message: prompt.message,
+      threadId,
+    }).pipe(Effect.mapError(writeFailure));
     const turnId = yield* writer
       .table("ninaTurns")
       .insert({

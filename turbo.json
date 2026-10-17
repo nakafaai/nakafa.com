@@ -65,6 +65,19 @@
           "deny": ["app", "backend", "contents", "design-system", "mail"]
         }
       },
+      "editor": {
+        "dependencies": {
+          "deny": [
+            "app",
+            "analytics",
+            "backend",
+            "contents",
+            "design-system",
+            "mail",
+            "math"
+          ]
+        }
+      },
       "design-system": {
         "dependencies": {
           "deny": ["app", "backend", "contents", "mail"]

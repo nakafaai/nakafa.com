@@ -25,7 +25,9 @@ import {
   start,
 } from "@repo/backend/test/nina/admission";
 import { homePage } from "@repo/backend/test/nina/page";
-import { sealThreadIn } from "@repo/backend/test/nina/seal";
+import { plainThreadIn, sealThreadIn } from "@repo/backend/test/nina/seal";
+import { readMessageIn } from "@repo/backend/test/nina/sealed";
+import { storedRowsIn, storedTextOf } from "@repo/backend/test/nina/stored";
 import { showsText } from "@repo/backend/test/seal";
 import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -48,6 +50,8 @@ vi.mock("@convex-dev/agent", async (load) => {
   };
 });
 
+/** A string the tests plant at the start of a learner's message, so one search finds any copy of it. */
+const PLANTED_PROMPT = "PLANT-ADMISSION-TEXT";
 const getChat = Ref.getFunctionReference(refs.public.chats.queries.getChat);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 /** The admission of a prompt with this text. */
@@ -177,12 +181,17 @@ describe("native Nina admission", () => {
     expect(turns).toHaveLength(2);
   });
 
-  it("replays the prompt of a saved request from its sealed copy as from the plain copy", async () => {
+  it("replays the prompt of a saved request the same from the writer's sealed row, a plain row and the seal in place", async () => {
     const { t, identity, owner } = await fixture();
     const first = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
     );
+    const written = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    await plainThreadIn(t, first.threadId, identity.userId);
     const plain = Ref.decodeReturnsSync(
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
@@ -192,6 +201,7 @@ describe("native Nina admission", () => {
       refs.public.nina.turns.start,
       await owner.mutation(start, args)
     );
+    expect(written.prompt).toEqual(plain.prompt);
     expect(sealed.prompt).toEqual(plain.prompt);
     expect(sealed.prompt.text).not.toBe("");
   });
@@ -208,6 +218,31 @@ describe("native Nina admission", () => {
     expect(
       await owner.query(getChat, { chatId: receipt.chatId })
     ).toMatchObject({ title: DEFAULT_TITLE });
+  });
+
+  it("seals the learner's message as the admission writes it, so no table of the component holds its text", async () => {
+    const { t, identity, owner } = await fixture();
+    const text = `${PLANTED_PROMPT} Jelaskan limit.`;
+    const receipt = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, withText(text))
+    );
+    expect(receipt.prompt.text).toBe(text);
+
+    const stored = await storedRowsIn(t, receipt.threadId, []);
+    expect(storedTextOf(stored)).not.toContain(PLANTED_PROMPT);
+    expect(
+      await t.query((ctx) =>
+        ctx.runQuery(components.nina.messages.textSearch, {
+          limit: 10,
+          text: PLANTED_PROMPT,
+          threadId: receipt.threadId,
+        })
+      )
+    ).toEqual([]);
+    expect(
+      await readMessageIn(t, identity.userId, receipt.promptMessageId)
+    ).toMatchObject({ text });
   });
 
   it("rejects changed payloads sharing a request key and a concurrent turn on the same chat", async () => {
