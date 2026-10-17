@@ -36,8 +36,11 @@ function PricingFeature({ text }: { text: string }) {
 }
 
 /**
- * The two plan cards. Pro stands out with the brand ring, and Nina looks over
- * its top edge. The prices come from the slots of each plan.
+ * The two plan cards. Pro stands out with the brand ring, and Nina peeks from
+ * behind its top edge: the card is drawn over her, so its line cuts her body.
+ * From `md` the cards share four rows (heading, price, list, action), so the
+ * lists start on one line and the two actions sit on one line at the bottom,
+ * whichever plan holds more lines. The prices come from the slots of each plan.
  */
 export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
@@ -45,24 +48,24 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
   const credits = getPlanCreditConfig("pro").amount;
 
   return (
-    <div className="mx-auto mt-20 grid w-full max-w-4xl gap-x-4 gap-y-18 md:grid-cols-2">
-      <Card data-pricing-plan="free">
+    <div className="mx-auto mt-20 grid w-full max-w-4xl gap-x-4 gap-y-18 md:grid-cols-2 md:grid-rows-[auto_auto_1fr_auto] md:gap-y-6">
+      <Card
+        className="md:row-span-4 md:grid md:grid-rows-subgrid"
+        data-pricing-plan="free"
+      >
         <CardHeader>
           <PlanHeading className="font-medium text-xl tracking-tight">
             {t("free-title")}
           </PlanHeading>
           <p className="text-muted-foreground">{t("free-description")}</p>
         </CardHeader>
-        <CardContent className="grid flex-1 content-start gap-6">
-          <div className="grid gap-1">
-            <PricingPrice Price={Price} plan="free" />
-            <p className="text-muted-foreground text-sm">
-              {t("free-worth-card")}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {t("free-worth-trial")}
-            </p>
-          </div>
+        <CardContent className="grid content-start gap-1">
+          <PricingPrice Price={Price} plan="free" />
+          <p className="text-muted-foreground text-sm">
+            {t("free-worth-card")} {t("free-worth-trial")}
+          </p>
+        </CardContent>
+        <CardContent>
           <ul className="grid gap-3">
             {Arr.map(freePlanFeatures, (key) => (
               <PricingFeature key={key} text={t(key)} />
@@ -88,8 +91,8 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
         </CardFooter>
       </Card>
 
-      <div className="relative grid">
-        <span className="absolute right-6 bottom-full">
+      <div className="relative grid md:row-span-4 md:grid-rows-subgrid">
+        <span className="absolute right-6 bottom-[calc(100%-0.5rem)]">
           <Nina
             fidget={["greeting"]}
             label=""
@@ -98,15 +101,20 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
             size={72}
           />
         </span>
-        <Card className="ring-2 ring-primary" data-pricing-plan="pro">
+        <Card
+          className="relative ring-2 ring-primary md:row-span-4 md:grid md:grid-rows-subgrid"
+          data-pricing-plan="pro"
+        >
           <CardHeader>
             <PlanHeading className="font-medium text-xl tracking-tight">
               {t("pro-title")}
             </PlanHeading>
             <p className="text-muted-foreground">{t("pro-description")}</p>
           </CardHeader>
-          <CardContent className="grid flex-1 content-start gap-6">
+          <CardContent className="grid content-start">
             <PricingPrice Price={Price} period={t("pro-period")} plan="pro" />
+          </CardContent>
+          <CardContent>
             <ul className="grid gap-3">
               {Arr.map(proPlanFeatures, (key) => (
                 <PricingFeature key={key} text={t(key, { credits })} />

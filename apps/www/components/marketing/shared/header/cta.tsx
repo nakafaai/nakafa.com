@@ -3,32 +3,13 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Link } from "@repo/internationalization/src/navigation";
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useViewer } from "@/lib/identity/client";
 
 /**
- * Renders the shared Nakafa mark used by both logo destinations. The visible
- * name beside the mark already names the link, so the mark is decorative.
- */
-function LogoContent() {
-  return (
-    <>
-      <Image
-        alt=""
-        className="size-8 rounded-full border"
-        height={32}
-        src="/logo.svg"
-        width={32}
-      />
-      <span className="font-medium">Nakafa</span>
-    </>
-  );
-}
-
-/**
- * Routes authenticated users home and clears stale marketing fragments for
- * signed-out visitors.
+ * The name of the header, written as text: the identity's Header card keeps the
+ * letter logo out of the header. It routes a signed-in learner home and clears
+ * stale marketing fragments for a signed-out visitor.
  */
 export function LogoCta() {
   const currentUser = useViewer((state) => state.account);
@@ -36,15 +17,15 @@ export function LogoCta() {
 
   if (!currentUser) {
     return (
-      <a className="flex items-center gap-2" href={`/${locale}`}>
-        <LogoContent />
+      <a className="font-medium" href={`/${locale}`}>
+        Nakafa
       </a>
     );
   }
 
   return (
-    <Link className="flex items-center gap-2" href="/home">
-      <LogoContent />
+    <Link className="font-medium" href="/home">
+      Nakafa
     </Link>
   );
 }

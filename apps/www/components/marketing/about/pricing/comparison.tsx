@@ -1,5 +1,6 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
+import { Array as Arr } from "effect";
 import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -12,7 +13,7 @@ import {
 } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
 
-/** One comparison: its picture, its sum in bold, and the sentence that says what it means. */
+/** One comparison: its picture, its sum, and the sentence that says what it means, centred in its column. */
 function Comparison({
   note,
   picture,
@@ -65,15 +66,21 @@ function ResolvedComparison() {
   return (
     <>
       <h2
-        className="text-balance text-3xl tracking-tight sm:text-4xl"
+        className="text-balance text-center text-3xl tracking-tight sm:text-4xl"
         id="comparison-heading"
       >
         {t("comparison-title", { price: formatter.format(price.amount) })}
       </h2>
-      <div className="grid gap-10 md:grid-cols-3">
+      <div className="mx-auto grid w-full max-w-4xl gap-10 md:grid-cols-3">
         <Comparison
           note={t("drink-note")}
-          picture={<Thing name="coffee" size={24} />}
+          picture={
+            <span className="flex gap-1">
+              {Arr.makeBy(sums.drinks, (index) => (
+                <Thing key={index} name="coffee" size={20} />
+              ))}
+            </span>
+          }
           title={t("drink-title", {
             count: sums.drinks,
             item: t(drinkKey(price.currency), { count: sums.drinks }),

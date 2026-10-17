@@ -2,28 +2,33 @@ import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { useLocale, useTranslations } from "next-intl";
-import { HeaderContainer } from "@/components/marketing/shared/header/container";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header/cta";
 import { HeaderFeaturesLink } from "@/components/marketing/shared/header/features";
 import { Language } from "@/components/marketing/shared/language";
 
 /**
- * The marketing header in three parts: the name with its links, Nina peeking in
- * the middle, and the language and the sign-up action on the right. The name
- * stands apart from the links, which read as one group. The links and Nina join
- * from `lg`: on a portrait tablet the German labels would not fit beside them.
+ * The marketing header in three parts, as the identity's Header card draws it:
+ * the name with its links on the left, Nina in the middle, the language and
+ * the sign-up action on the right. The two outer columns share the rest of the
+ * width equally, so Nina stands in the middle of the page, not of the gap
+ * between the groups. The line under the header is always drawn, and Nina
+ * stands on it, so it is the line that cuts her body. The links are ghost
+ * buttons side by side, so their own padding is the space between them; the
+ * name stands apart from them. The links join from `lg`, where the German
+ * labels fit beside the name, and the language button leaves below 440 px,
+ * where the action needs the room; both are in the footer too.
  */
 export function Header() {
   const t = useTranslations("Marketing");
   const locale = useLocale();
 
   return (
-    <HeaderContainer>
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-6">
-        <div className="flex items-center">
+    <header className="sticky top-0 z-10 h-16 shrink-0 border-b bg-background">
+      <div className="mx-auto grid h-full w-full max-w-7xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 px-6">
+        <div className="flex min-w-0 items-center gap-11">
           <LogoCta />
 
-          <nav className="hidden items-center gap-6.5 ps-14 lg:flex">
+          <nav className="hidden items-center gap-0.5 lg:flex">
             <Button
               nativeButton={false}
               render={<a href={`/${locale}`}>{t("about")}</a>}
@@ -44,15 +49,21 @@ export function Header() {
           </nav>
         </div>
 
-        <div aria-hidden="true" className="hidden lg:block">
-          <Nina act="greeting" label="" lean="peek" size={40} />
+        <div
+          aria-hidden="true"
+          className="flex self-end"
+          data-slot="header-nina"
+        >
+          <Nina act="greeting" label="" lean="peek" size={52} />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Language compact />
+        <div className="flex items-center justify-end gap-2">
+          <span className="max-[440px]:hidden">
+            <Language compact />
+          </span>
           <HeaderCta />
         </div>
       </div>
-    </HeaderContainer>
+    </header>
   );
 }
