@@ -1,6 +1,7 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { formatTrigRatioMath } from "@repo/design-system/components/contents/mathematics/trig";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   CoordinateControls,
@@ -18,7 +19,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
-import { Array as Arr, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
@@ -134,28 +134,18 @@ function Content({
   const exactValues = angleValue === angle ? trigValues : undefined;
 
   function formatRatio(value: number, exactValue?: string) {
-    if (exactValue !== undefined) {
-      return `= ${exactValue}`;
-    }
-    if (Math.abs(value) < 1e-10) {
-      return "= 0";
-    }
-    const commonValues = [
-      { value: 0.5, display: "\\frac{1}{2}" },
-      { value: Math.SQRT1_2, display: "\\frac{\\sqrt{2}}{2}" },
-      { value: Math.sqrt(3) / 2, display: "\\frac{\\sqrt{3}}{2}" },
-      { value: 1, display: "1" },
-      { value: Math.sqrt(3), display: "\\sqrt{3}" },
-      { value: Math.sqrt(3) / 3, display: "\\frac{\\sqrt{3}}{3}" },
-    ];
-    const exact = Arr.findFirst(
-      commonValues,
-      (candidate) => Math.abs(Math.abs(value) - candidate.value) < 1e-10
+    return formatTrigRatioMath(
+      value,
+      (approximation) =>
+        format
+          .number(approximation, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            useGrouping: false,
+          })
+          .replaceAll(",", "{,}"),
+      exactValue
     );
-    if (Option.isSome(exact)) {
-      return `= ${value < 0 ? "-" : ""}${exact.value.display}`;
-    }
-    return `\\approx ${format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).replaceAll(",", "{,}")}`;
   }
 
   return (

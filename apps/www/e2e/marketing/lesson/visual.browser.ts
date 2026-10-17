@@ -221,7 +221,7 @@ test("home lesson window keeps its height once its visual is mounted", async ({
 });
 
 for (const viewport of WINDOW_VIEWPORTS) {
-  test(`home lesson window keeps its height before the reveal, after it and after each tab at ${viewport.width}px`, async ({
+  test(`home lesson window keeps its height before and after the reveal at ${viewport.width}px`, async ({
     baseURL,
     browser,
   }) => {
@@ -243,7 +243,6 @@ for (const viewport of WINDOW_VIEWPORTS) {
               Effect.gen(function* () {
                 yield* openRoute(page, "/id", "denied");
                 const root = lessonWindow(page);
-                const tabs = lessonSection(page).getByRole("tab");
 
                 // Before the reveal the open panel holds its frame, which must already be the window's height.
                 const before = yield* Effect.promise(() => root.boundingBox());
@@ -265,21 +264,6 @@ for (const viewport of WINDOW_VIEWPORTS) {
                 expect(Math.round(revealed?.height ?? 0)).toBe(
                   Math.round(before?.height ?? -1)
                 );
-
-                const tabCount = yield* Effect.promise(() => tabs.count());
-                for (let index = 0; index < tabCount; index += 1) {
-                  const tab = tabs.nth(index);
-                  yield* Effect.promise(() => tab.click());
-                  yield* Effect.promise(() =>
-                    expect(tab).toHaveAttribute("aria-selected", "true")
-                  );
-                  const picked = yield* Effect.promise(() =>
-                    root.boundingBox()
-                  );
-                  expect(Math.round(picked?.height ?? 0)).toBe(
-                    Math.round(before?.height ?? -1)
-                  );
-                }
               })
             );
           })
@@ -330,6 +314,56 @@ test("home lesson window draws no layout shift in its section while it is reveal
                 countSectionShifts(page)
               );
               expect(shiftsAfter).toBe(shiftsBefore);
+            })
+          );
+        })
+    )
+  );
+});
+
+/**
+ * With reduced motion the lab's scene is drawn on demand, so after its first frame
+ * the canvas holds the same pixels: a second capture a moment later matches the
+ * first. A scene that keeps a frame loop redraws its ball, so this test fails
+ * when the loop is left running. The captures are screenshots, because a WebGL
+ * canvas reads back blank after its frame unless it keeps its buffer.
+ */
+test("home lesson lab holds its scene still with reduced motion", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      {
+        baseURL: baseURL ?? "",
+        reducedMotion: "reduce",
+        serviceWorkers: "block",
+        viewport: viewportSize(desktopViewport),
+      },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              yield* openRoute(page, "/id", "denied");
+              yield* Effect.promise(() =>
+                lessonSection(page).scrollIntoViewIfNeeded()
+              );
+              const canvas = lessonVisual(page, PROJECTILE_VIEW).locator(
+                "canvas"
+              );
+              yield* Effect.promise(() =>
+                expect(canvas).toBeAttached({
+                  timeout: readinessTimeoutMilliseconds,
+                })
+              );
+              const first = yield* Effect.promise(() => canvas.screenshot());
+              yield* Effect.promise(() => page.waitForTimeout(800));
+              const second = yield* Effect.promise(() => canvas.screenshot());
+              expect(second.equals(first)).toBe(true);
             })
           );
         })

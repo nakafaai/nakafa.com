@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  formatTrimmedMeterMath,
-  formatTrimmedSecondMath,
-  formatTrimmedSpeedMath,
-} from "@repo/design-system/components/contents/physics/kinematics/math";
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import {
   DEFAULT_PARABOLIC_LAUNCH_ID,
@@ -14,6 +9,7 @@ import {
   PARABOLIC_LAUNCHES,
   type ParabolicLaunchId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
+import { getParabolicFacts } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/facts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
@@ -75,31 +71,7 @@ export function ParabolicMovementLab({
     DEFAULT_PARABOLIC_LAUNCH_ID
   );
   const motion = useMemo(() => getParabolicMotionState(launchId), [launchId]);
-  const facts = [
-    {
-      id: "initial-speed",
-      label: labels.factLabels.initialSpeed,
-      math: `v_0=${formatTrimmedSpeedMath(
-        motion.scenario.initialSpeed,
-        decimalSeparator
-      )}`,
-    },
-    {
-      id: "flight-time",
-      label: labels.factLabels.flightTime,
-      math: `T=${formatTrimmedSecondMath(motion.flightTime, decimalSeparator)}`,
-    },
-    {
-      id: "range",
-      label: labels.factLabels.range,
-      math: `R=${formatTrimmedMeterMath(motion.range, decimalSeparator)}`,
-    },
-    {
-      id: "peak-height",
-      label: labels.factLabels.peakHeight,
-      math: `h_{\\max}=${formatTrimmedMeterMath(motion.peakHeight, decimalSeparator)}`,
-    },
-  ];
+  const facts = getParabolicFacts(motion, decimalSeparator, labels.factLabels);
 
   function handleLaunchChange(value: string) {
     if (!isParabolicLaunchId(value)) {

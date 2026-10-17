@@ -5,9 +5,19 @@ import {
   MessageContent,
 } from "@repo/design-system/components/ui/message";
 import { Effect } from "effect";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { NinaPrompt } from "@/components/ai/message/prompt";
-import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
+import {
+  LESSON_SECTION_ID,
+  type Lesson as LessonId,
+} from "@/components/marketing/about/lesson/id";
+import {
+  AtomPlaceholder,
+  CellPlaceholder,
+  CirclePlaceholder,
+  ProjectilePlaceholder,
+} from "@/components/marketing/about/lesson/placeholder";
 import { readHomeLessons } from "@/components/marketing/about/lesson/published";
 import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
 import { applyContentCache } from "@/lib/content/cache";
@@ -40,8 +50,67 @@ async function readLessons(locale: AppLocaleCode) {
  */
 export async function Lesson() {
   const locale = getLocaleOrThrow(await getLocale());
-  const t = await getTranslations({ locale, namespace: "Landing" });
-  const lessons = await readLessons(locale);
+  const [t, tCommon, format, lessons] = await Promise.all([
+    getTranslations({ locale, namespace: "Landing" }),
+    getTranslations({ locale, namespace: "Common" }),
+    getFormatter({ locale }),
+    readLessons(locale),
+  ]);
+  const decimalSeparator = decimalSeparators[locale];
+  const placeholders: Record<LessonId, ReactNode> = {
+    atom: (
+      <AtomPlaceholder
+        labels={{
+          atomicNumber: t("lab.atom.atomic-number"),
+          chooseAtom: t("lab.atom.choose"),
+          configuration: t("lab.atom.configuration"),
+          electronTotal: t("lab.atom.electron-total"),
+          maximumCapacity: t("lab.atom.capacity"),
+          outerShell: t("lab.atom.outer-shell"),
+        }}
+      />
+    ),
+    cell: (
+      <CellPlaceholder
+        labels={{
+          chooseMode: t("lab.bacteria.choose"),
+          tabs: [
+            t("lab.bacteria.shape.tab"),
+            t("lab.bacteria.inside.tab"),
+            t("lab.bacteria.wall.tab"),
+          ],
+          viewLabel: t("lab.bacteria.view"),
+        }}
+      />
+    ),
+    circle: (
+      <CirclePlaceholder
+        formatNumber={(value) =>
+          format.number(value, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            useGrouping: false,
+          })
+        }
+        labels={{ radian: tCommon("radian") }}
+      />
+    ),
+    projectile: (
+      <ProjectilePlaceholder
+        decimalSeparator={decimalSeparator}
+        labels={{
+          chooseLaunch: t("lab.projectile.choose"),
+          factLabels: {
+            flightTime: t("lab.projectile.flight-time"),
+            initialSpeed: t("lab.projectile.initial-speed"),
+            peakHeight: t("lab.projectile.peak-height"),
+            range: t("lab.projectile.range"),
+          },
+          viewLabel: t("lab.projectile.view"),
+        }}
+      />
+    ),
+  };
 
   return (
     <section
@@ -73,10 +142,11 @@ export async function Lesson() {
         </div>
         <div className="min-w-0">
           <LessonWindow
-            decimalSeparator={decimalSeparators[locale]}
+            decimalSeparator={decimalSeparator}
             label={t("lesson-tabs")}
             lessons={lessons}
             openLabel={t("lesson-open")}
+            placeholders={placeholders}
           />
         </div>
       </div>

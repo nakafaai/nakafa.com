@@ -5,10 +5,9 @@ import {
   ATOM_SHELL_SAMPLES,
   type AtomShellSampleId,
   CALCIUM_ID,
-  getEarlyElementShellConfiguration,
-  getOuterOccupiedShell,
   isAtomShellSampleId,
 } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
+import { getAtomShellReadings } from "@repo/design-system/components/contents/chemistry/atom-shell/readings";
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
@@ -23,7 +22,7 @@ import {
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
-import { Array as Arr, Result } from "effect";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -64,18 +63,11 @@ export function AtomShellLab({
     useState<AtomShellSampleId>(CALCIUM_ID);
   const selectedSample = ATOM_SHELL_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
-  const shellConfiguration = Result.getOrThrow(
-    getEarlyElementShellConfiguration(selectedSample.atomicNumber)
-  );
-  const visibleShells = Arr.filter(
-    shellConfiguration,
-    (shell) => shell.electronCount > 0
-  );
-  const outerShell = getOuterOccupiedShell(shellConfiguration);
-  const configurationMath = Arr.join(
-    Arr.map(visibleShells, (shell) => String(shell.electronCount)),
-    ", "
-  );
+  const {
+    configurationMath,
+    outerShell,
+    shells: shellConfiguration,
+  } = getAtomShellReadings(selectedSample.atomicNumber);
 
   /** Keeps the current atom selected when ToggleGroup emits an empty value. */
   function handleSampleChange(value: string) {
