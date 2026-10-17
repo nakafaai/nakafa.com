@@ -9,6 +9,7 @@ import {
 import type { Step } from "@repo/backend/confect/editor/step";
 import {
   batchText,
+  blockquotesAtStart,
   jsonValue,
   newDocument,
   nf,
@@ -39,16 +40,6 @@ const insertAt = (position: number, text: string): Step => ({
   slice: { content: [{ text, type: "text" }] },
   stepType: "replace",
   to: position,
-});
-
-/** A replace step that inserts `count` blockquotes around a paragraph at the start of a document. */
-const blockquotesAtStart = (count: number): Step => ({
-  from: 0,
-  slice: {
-    content: [nestBlockquotes(count, { type: "paragraph" })],
-  },
-  stepType: "replace",
-  to: 0,
 });
 
 /** A batch of steps made on `baseVersion`, from the client `rina`, as its JSON text. */
@@ -146,23 +137,19 @@ describe("editor/fold", () => {
   );
 
   it.effect(
-    "accepts a document at the depth bound, and skips a step that nests the document one level past it",
+    "accepts a document at the depth bound, and skips a stored step that nests it one level past the bound",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const documentId = yield* newDocument(fixture);
-        const teacher = fixture.as("teacher");
         // The document is 16 levels deep after the first step, the bound of the contract.
-        yield* teacher.mutation(steps.submit, {
+        yield* fixture.as("teacher").mutation(steps.submit, {
           batch: yield* batchOf("inside", 0, [blockquotesAtStart(14)]),
           documentId,
           slug: nf,
         });
-        yield* teacher.mutation(steps.submit, {
-          batch: yield* batchOf("beyond", 1, [blockquotesAtStart(15)]),
-          documentId,
-          slug: nf,
-        });
+        // The submit refuses such a batch (`result.test.ts`), so only a planted step reaches the log.
+        yield* plantStep(fixture, documentId, blockquotesAtStart(15));
         const folded = yield* fixture.internal.mutation(fold, { documentId });
         expect(folded).toEqual({ folded: 2, skipped: 1 });
         const [snapshot] = yield* fixture.run(snapshotRows);

@@ -10,6 +10,7 @@ import { Document } from "@repo/backend/confect/editor/access";
 import { documentAccess } from "@repo/backend/confect/editor/authority";
 import { admitBatch, decodeBatch } from "@repo/backend/confect/editor/batch";
 import { checkContent } from "@repo/backend/confect/editor/content";
+import { DocumentInvalid } from "@repo/backend/confect/editor/document";
 import { BatchInvalid, ClientTaken } from "@repo/backend/confect/editor/errors";
 import { foldDue } from "@repo/backend/confect/editor/fold";
 import { encodeStoredStep } from "@repo/backend/confect/editor/log";
@@ -90,12 +91,13 @@ const since = FunctionImpl.make(
  * batch is checked against the bounds, the content the contract accepts, and the head.
  * The batch is then applied to the document as the server knows it, the snapshot with
  * the steps it lacks, with the model and the contract check that the fold uses. A result
- * the contract refuses fails with `DocumentInvalid` or `DocumentTooLarge`, and a backlog
- * that one read does not hold fails with `FoldPending`, so the log only holds steps that
- * fold (ADR 0028). Each step is then written as one row at the version it produces, the
- * head moves by the number of steps, and the session's record takes the batch. All of it
- * is one transaction, so two clients never win one version: a stale batch writes
- * nothing and fails with `VersionStale`. When the steps the snapshot lacks reach a fold
+ * the contract refuses fails with `DocumentInvalid` or `DocumentTooLarge`. So does a batch
+ * step that nests the document past the bound, so the log holds no such step (ADR 0028).
+ * A backlog that one read does not hold fails with `FoldPending`. Each step is then written
+ * as one row at the version it produces, the head moves by the number of steps, and the
+ * session's record takes the batch. All of it is one transaction, so two clients never win
+ * one version: a stale batch writes nothing and fails with `VersionStale`. When the steps the
+ * snapshot lacks reach a fold
  * limit with this batch, the batch also schedules the fold that writes the snapshot, so
  * the client never writes a snapshot (ADR 0028).
  */
@@ -131,11 +133,17 @@ const submit = FunctionImpl.make(
       snapshot.version,
       document.head
     );
-    yield* foldedText(
+    const folded = yield* foldedText(
       document._id,
       snapshot,
       Arr.appendAll(yield* decodedSteps(pending), admitted.batch.steps)
     );
+    // A batch step that nests the document past the bound is refused, so the log holds no step
+    // that every editor would skip for its depth (ADR 0028). A step that the schema cannot read,
+    // or that ProseMirror does not apply, is stored and skipped, as every editor skips it.
+    if (Arr.some(folded.tooDeep, (version) => version > document.head)) {
+      return yield* new DocumentInvalid();
+    }
     const writer = yield* DatabaseWriter;
     yield* Effect.forEach(
       rows,

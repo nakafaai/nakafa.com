@@ -8,7 +8,7 @@ import type { AccessDenied } from "@repo/backend/confect/access/errors";
 import { type Batch, encodeBatch } from "@repo/backend/confect/editor/batch";
 import { STEP_KEEP_DELAY } from "@repo/backend/confect/editor/prune";
 import { encodeStep, type Step } from "@repo/backend/confect/editor/step";
-import { paragraphOf } from "@repo/backend/test/editor/nodes";
+import { nestBlockquotes, paragraphOf } from "@repo/backend/test/editor/nodes";
 import {
   grantRole,
   slugOf,
@@ -67,6 +67,18 @@ export const insertStep = (text: string): Step => ({
   slice: { content: [{ text, type: "text" }] },
   stepType: "replace",
   to: 1,
+});
+
+/**
+ * A replace step that inserts `count` blockquotes around a paragraph at the start of a
+ * document of one paragraph. Its first step of 14 blockquotes takes the document to the depth
+ * bound, and a step of 15 takes it one level past the bound.
+ */
+export const blockquotesAtStart = (count: number): Step => ({
+  from: 0,
+  slice: { content: [nestBlockquotes(count, { type: "paragraph" })] },
+  stepType: "replace",
+  to: 0,
 });
 
 /**

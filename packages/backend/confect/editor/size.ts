@@ -38,14 +38,10 @@ export const MAX_DOCUMENT_BYTES =
   });
 
 /**
- * Most steps one call may send, and so the most steps one fold of a pending backlog applies
- * (ADR 0028 Bounds). The steps a fold applies cost time in proportion to the nodes they change,
- * and a backlog is one pending read of this many steps plus one batch of them, so the largest
- * fold is twice this value. Measured in convex-test on a near-bound document of 49,700 hard
- * breaks in one paragraph, a fold of 64 steps took a median of 201 ms over five runs (190, 188,
- * 201, 306, and 244 ms), and a quarter of the 1 s user-code limit is 250 ms. A submit applies
- * the steps of its call to check them, and the fold applies them again, so this value bounds
- * both.
+ * Most steps one call may send (ADR 0028 Bounds). A submit applies the steps of its call to
+ * check them, and a fold applies them again, so one batch adds this many steps to the backlog
+ * a fold runs. The limit of a pending backlog, `FOLD_STEP_LIMIT`, and the time a fold of the
+ * largest backlog takes are measured beside that constant in `fold.ts`.
  */
 export const MAX_BATCH_STEPS = 32;
 

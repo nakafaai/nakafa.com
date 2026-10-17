@@ -1,15 +1,10 @@
-import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
+import { applyStoredStep } from "@repo/backend/confect/editor/apply";
 import { VersionSchema } from "@repo/backend/confect/editor/batch";
-import {
-  MAX_BATCH_STEPS,
-  STEP_READ_BYTES,
-} from "@repo/backend/confect/editor/size";
+import { STEP_READ_BYTES } from "@repo/backend/confect/editor/size";
 import type { Step } from "@repo/backend/confect/editor/step";
-import { nodeDepth } from "@repo/utilities/depth";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 import type { Node, Schema as ProseSchema } from "prosemirror-model";
-import { Step as ProseStep } from "prosemirror-transform";
 
 /**
  * The steps that a snapshot lacks, the count and the text in UTF-8 bytes. A submit reads
@@ -24,11 +19,16 @@ type Pending = typeof PendingSchema.Type;
 
 /**
  * The count of steps that a snapshot lacks which makes a fold due, and the most steps a
- * submit reads as the backlog it checks (ADR 0028). It is one call's worth of steps
- * (`MAX_BATCH_STEPS`, measured in `size.ts`). A submit applies at most this backlog and one
- * batch, so a fold applies at most twice this many steps.
+ * submit reads as the backlog it checks (ADR 0028). It is set from the measured fold in the
+ * Bounds table of ADR 0028: convex-test in Node, on a near-bound document of each shape (hard
+ * breaks, one long text node, and a deep nesting), five runs per backlog. A fold of 24 steps
+ * took at most 189 ms in any run of any shape, under a quarter of the 1 s user-code limit
+ * (250 ms). A fold of 32 steps took at most 391 ms (deep nesting), so the limit is 24.
+ * A submit adds one batch of `MAX_BATCH_STEPS` to the backlog it checks, so the worst backlog
+ * a fold runs is 56 steps. That backlog took at most 255 ms (deep nesting; 245 ms for hard
+ * breaks), so one run of five is above a quarter second by 5 ms.
  */
-export const FOLD_STEP_LIMIT = MAX_BATCH_STEPS;
+export const FOLD_STEP_LIMIT = 24;
 
 /**
  * The text, in bytes, that the steps a snapshot lacks may reach before a fold is due: half
@@ -57,49 +57,14 @@ export function foldDue(input: {
 }
 
 /**
- * A stored step that the editors skip. ProseMirror does not apply it, or the document
- * it makes nests past the bound of the contract.
- */
-class StepSkipped extends Schema.TaggedError<StepSkipped>()("StepSkipped", {
-  reason: Schema.String,
-}) {}
-
-/**
- * The document after one stored step, or the reason the editors skip the step (ADR
- * 0028). ProseMirror answers a step that does not apply with a failure, and it throws on
- * a position past the end of the document, so both are skipped. A document that nests
- * past `MAX_DOCUMENT_DEPTH` is skipped too, so the fold never holds a document that the
- * contract refuses for its depth.
- */
-const applyStep = Effect.fn("editor.fold.applyStep")(function* (
-  schema: ProseSchema,
-  doc: Node,
-  step: Step
-) {
-  const result = yield* Effect.try({
-    try: () => ProseStep.fromJSON(schema, step).apply(doc),
-    catch: (cause) => new StepSkipped({ reason: String(cause) }),
-  });
-  if (result.failed !== null) {
-    return yield* new StepSkipped({ reason: result.failed });
-  }
-  const next = yield* Effect.fromNullishOr(result.doc).pipe(Effect.orDie);
-  const depth = nodeDepth(next);
-  if (depth > MAX_DOCUMENT_DEPTH) {
-    return yield* new StepSkipped({
-      reason: `The document it makes would nest ${depth} levels, past the ${MAX_DOCUMENT_DEPTH} the contract allows.`,
-    });
-  }
-  return next;
-});
-
-/**
  * The document after the steps, applied in order from the snapshot's version. The steps
  * after a snapshot are contiguous from its version, so the step at index `i` makes the
  * version `startVersion + i + 1`, and a skipped step still counts in the version. A step
  * that the editors skip is logged at error level with its document, its version, and its
  * kind, and the result names each skipped version, so the skip is never silent (ADR 0028).
- * The kind is logged and not the text, because the text is the learner's content.
+ * `tooDeep` names the skipped versions whose document nests past the bound, so a submit can
+ * refuse its own batch for that reason. The kind is logged and not the text, because the
+ * text is the learner's content.
  */
 export const foldSteps = Effect.fn("editor.fold.steps")(function* (
   schema: ProseSchema,
@@ -113,10 +78,14 @@ export const foldSteps = Effect.fn("editor.fold.steps")(function* (
       steps,
       Arr.makeBy(steps.length, (index) => startVersion + index + 1)
     ),
-    () => ({ doc: start, skipped: Arr.empty<number>() }),
+    () => ({
+      doc: start,
+      skipped: Arr.empty<number>(),
+      tooDeep: Arr.empty<number>(),
+    }),
     (folded, [step, version]) =>
-      applyStep(schema, folded.doc, step).pipe(
-        Effect.map((doc) => ({ doc, skipped: folded.skipped })),
+      applyStoredStep(schema, folded.doc, step).pipe(
+        Effect.map(({ doc }) => ({ ...folded, doc })),
         Effect.catchTag("StepSkipped", (skip) =>
           Effect.logError(
             `Skipped the stored step ${version} (${step.stepType}) of document ${documentId}, as every editor skips it: ${skip.reason}`
@@ -124,6 +93,9 @@ export const foldSteps = Effect.fn("editor.fold.steps")(function* (
             Effect.as({
               doc: folded.doc,
               skipped: Arr.append(folded.skipped, version),
+              tooDeep: skip.tooDeep
+                ? Arr.append(folded.tooDeep, version)
+                : folded.tooDeep,
             })
           )
         )

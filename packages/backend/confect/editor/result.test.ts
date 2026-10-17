@@ -6,6 +6,7 @@ import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import type { Step } from "@repo/backend/confect/editor/step";
 import {
   batchText,
+  blockquotesAtStart,
   documentRowOf,
   newDocument,
   nf,
@@ -81,6 +82,36 @@ describe("editor/result submit", () => {
         expect(yield* fixture.run(stepRows)).toEqual([]);
         const document = yield* fixture.run(documentRowOf(made.id));
         expect(document.head).toBe(0);
+      })
+  );
+
+  it.effect(
+    "refuses a batch whose step nests the document past the depth bound, with DocumentInvalid, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const documentId = yield* newDocument(fixture);
+        const teacher = fixture.as("teacher");
+        // The first step takes the document to the depth bound, which the contract accepts.
+        yield* teacher.mutation(steps.submit, {
+          batch: yield* batchOf("inside", 0, [blockquotesAtStart(14)]),
+          documentId,
+          slug: nf,
+        });
+        // One more level passes the bound, so the batch is refused before any write.
+        const refused = yield* teacher
+          .mutation(steps.submit, {
+            batch: yield* batchOf("beyond", 1, [blockquotesAtStart(15)]),
+            documentId,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "DocumentInvalid" });
+        expect(
+          Arr.map(yield* fixture.run(stepRows), (row) => row.version)
+        ).toEqual([1]);
+        const document = yield* fixture.run(documentRowOf(documentId));
+        expect(document.head).toBe(1);
       })
   );
 

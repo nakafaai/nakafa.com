@@ -22,6 +22,8 @@ import { Array as Arr, Effect } from "effect";
  * contract as a snapshot is checked (ADR 0028). The submit and the fold both make it, so a
  * batch that the submit accepts makes the same document that the fold stores. A result that
  * the contract refuses fails with `DocumentInvalid` or `DocumentTooLarge`, and nothing is written.
+ * `tooDeep` names the skipped steps whose document nests past the bound, so the submit can
+ * refuse its own batch for that reason.
  */
 export const foldedText = Effect.fn("editor.result.folded")(function* (
   documentId: GenericId.GenericId<"editorDocuments">,
@@ -37,7 +39,11 @@ export const foldedText = Effect.fn("editor.result.folded")(function* (
     steps
   );
   const content = yield* storedDocument(encodeJsonText(folded.doc.toJSON()));
-  return { content, skipped: folded.skipped.length };
+  return {
+    content,
+    skipped: folded.skipped.length,
+    tooDeep: folded.tooDeep,
+  };
 });
 
 /**

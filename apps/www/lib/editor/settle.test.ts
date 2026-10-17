@@ -153,7 +153,7 @@ const wrapParagraph = (state: EditorState) => {
 
 describe("editor/sync document bounds", () => {
   it.effect(
-    "converges three editors on one document within the bound when a rebased step nests it past the bound, and the editor that made that step opens again",
+    "converges three editors on one document within the bound when a stored step nests it past the bound, and the editor that made that step opens again",
     () =>
       Effect.gen(function* () {
         const server = yield* makeServer(DEEP_DOCUMENT);
@@ -162,7 +162,9 @@ describe("editor/sync document bounds", () => {
         const observer = yield* openEditor(server.transport);
         // The writer nests the document to the bound, and the second editor nests the
         // paragraph one level deeper on the version before the writer's step: once the
-        // writer's step lands, the second editor's step, rebased, is past the bound.
+        // writer's step lands, the second editor's step, rebased, is past the bound. The
+        // server refuses such a batch now (`result.test.ts`), so this fake log holds the
+        // step as a log written before that refusal does, and every editor skips it.
         yield* Ref.update(writer.state, wrapDocument);
         yield* Ref.update(rebased.state, wrapParagraph);
         yield* tick(writer.session);

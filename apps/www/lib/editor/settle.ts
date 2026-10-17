@@ -1,12 +1,11 @@
-import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
+import { applyStoredStep } from "@repo/backend/confect/editor/apply";
 import { decodeStep } from "@repo/backend/confect/editor/step";
 import type { StepView } from "@repo/backend/confect/editor/view";
-import { nodeDepth } from "@repo/utilities/depth";
 import { JsonTextSchema } from "@repo/utilities/json";
 import type { Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { Slice } from "@tiptap/pm/model";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
-import { ReplaceStep, Step, type StepResult } from "@tiptap/pm/transform";
+import { ReplaceStep, type Step, type StepResult } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Schema } from "effect";
 import { receiveTransaction } from "prosemirror-collab";
 import { StepRejected, SyncFailed } from "@/lib/editor/session";
@@ -33,18 +32,6 @@ export const readDocument = Effect.fn("editor.sync.document")(function* (
   });
 });
 
-/** Reads one stored step into a ProseMirror step of the schema. */
-const readStep = Effect.fn("editor.sync.step")(function* (
-  schema: ProseSchema,
-  text: string
-) {
-  const json = yield* decodeStep(text).pipe(Effect.orDie);
-  return yield* Effect.try({
-    try: () => Step.fromJSON(schema, json),
-    catch: () => new SyncFailed({ reason: "A step does not fit the schema." }),
-  });
-});
-
 /**
  * Calls ProseMirror for one step and turns its answer into the step's outcome. A
  * refusal by ProseMirror, and a throw of ProseMirror, such as a position outside the
@@ -65,37 +52,17 @@ const stepOutcome = Effect.fn("editor.sync.outcome")(function* (
 });
 
 /**
- * The document after one stored step, or the reason the step does not apply. ProseMirror
- * gives a document for every step that does not fail, so a missing document is a defect.
- * A document that nests past the bound of the contract is refused the same way: every
- * editor refuses it, so no editor holds a document that no snapshot can save (ADR 0028).
- */
-const applyStep = Effect.fn("editor.sync.applyStep")(function* (
-  doc: Node,
-  step: Step
-) {
-  const result = yield* stepOutcome(() => step.apply(doc));
-  const next = yield* Effect.fromNullishOr(result.doc).pipe(Effect.orDie);
-  const depth = nodeDepth(next);
-  if (depth > MAX_DOCUMENT_DEPTH) {
-    return yield* new StepRejected({
-      reason: `The document it makes would nest ${depth} levels, past the ${MAX_DOCUMENT_DEPTH} the contract allows.`,
-    });
-  }
-  return next;
-});
-
-/**
  * The server's document after the steps, and the steps the collab plugin receives in
- * their place. A step that does not apply to the server's document, or that nests it
- * past the bound, is skipped for every editor, so they all keep the same document, and
- * the skip is logged with its reason. The skipped step stays in the list as a step that
+ * their place. Each stored step is read and applied by the rule that the server's fold
+ * uses (`applyStoredStep`), so a step that every editor skips is skipped here too, and
+ * the skip is logged with its reason. A skipped step stays in the list as a step that
  * changes nothing, so the version counts it. `skipped` names the skipped steps, so the
  * caller can tell when the server skipped one of its own steps.
  */
 const settle = Effect.fn("editor.sync.settle")(function* (
+  schema: ProseSchema,
   server: Node,
-  steps: readonly (readonly [Step, typeof StepView.Type])[]
+  steps: readonly (typeof StepView.Type)[]
 ) {
   return yield* Effect.reduce(
     steps,
@@ -104,16 +71,18 @@ const settle = Effect.fn("editor.sync.settle")(function* (
       received: Arr.empty<Step>(),
       skipped: Arr.empty<typeof StepView.Type>(),
     }),
-    (settled, [step, view]) =>
-      applyStep(settled.doc, step).pipe(
-        Effect.map((doc) => ({
+    (settled, view) =>
+      decodeStep(view.step).pipe(
+        Effect.orDie,
+        Effect.flatMap((json) => applyStoredStep(schema, settled.doc, json)),
+        Effect.map(({ doc, step }) => ({
           doc,
           received: Arr.append(settled.received, step),
           skipped: settled.skipped,
         })),
-        Effect.catchTag("StepRejected", (refusal) =>
+        Effect.catchTag("StepSkipped", (skip) =>
           Effect.logWarning(
-            `The stored step at version ${view.version} is skipped by every editor: ${refusal.reason}`
+            `The stored step at version ${view.version} is skipped by every editor: ${skip.reason}`
           ).pipe(
             Effect.as({
               doc: settled.doc,
@@ -136,10 +105,7 @@ export const settleSteps = Effect.fn("editor.sync.settleSteps")(function* (
   server: Node,
   steps: readonly (typeof StepView.Type)[]
 ) {
-  const parsed = yield* Effect.forEach(steps, (view) =>
-    readStep(schema, view.step)
-  );
-  return yield* settle(server, Arr.zip(parsed, steps));
+  return yield* settle(schema, server, steps);
 });
 
 /**

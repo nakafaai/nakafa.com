@@ -208,7 +208,7 @@ describe("editor/sync failures", () => {
   );
 
   it.effect(
-    "refuses a stored step the editor's schema cannot read, and keeps the document",
+    "skips a stored step the editor's schema cannot read, as the server does, and keeps the document",
     () =>
       Effect.gen(function* () {
         const server = yield* makeServer();
@@ -227,9 +227,10 @@ describe("editor/sync failures", () => {
           ],
         }).pipe(Effect.orDie);
         yield* server.transport.submit(text).pipe(Effect.orDie);
-        const failure = yield* tick(editor.session).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "SyncFailed" });
-        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("");
+        yield* tick(editor.session).pipe(Effect.orDie);
+        const state = yield* Ref.get(editor.state);
+        expect(textOf(state.doc)).toBe("");
+        expect(getVersion(state)).toBe(1);
       })
   );
 

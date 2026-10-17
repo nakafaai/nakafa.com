@@ -156,8 +156,8 @@ export function fitsDocument(value: unknown): boolean {
 /**
  * Whether the content of a slice, read as unchecked input, is at most
  * `MAX_DOCUMENT_DEPTH` levels deep. This holds the slice's own nodes to the
- * bound. Where a slice lands in a document can add levels, so a document that
- * a step makes too deep is refused when it is snapshotted (ADR 0028), not here.
+ * bound. Where a slice lands in a document can add levels, so a batch whose step
+ * makes a document too deep is refused at submit (ADR 0028), not here.
  */
 export function fitsSlice(value: unknown): boolean {
   return fitsContent(value, MAX_DOCUMENT_DEPTH);
