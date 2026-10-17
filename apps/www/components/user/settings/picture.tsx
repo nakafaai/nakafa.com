@@ -24,7 +24,9 @@ import { Array as Arr, Effect, Option, type Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import {
   useUpdateMascotMutation,
@@ -138,22 +140,18 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
         ) : null}
       </CardContent>
       <CardSectionFooter>
-        <div className="flex w-full items-center justify-between gap-4">
-          {photo === undefined ? (
-            <>
-              <p className="text-muted-foreground text-sm">
-                {t("picture-footer-animal")}
-              </p>
+        {photo === undefined ? (
+          <>
+            <CardSectionHint>{t("picture-footer-animal")}</CardSectionHint>
+            <CardSectionActions>
               <Button onClick={shuffle} size="sm" type="button">
                 {t("animal-shuffle")}
               </Button>
-            </>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              {t("picture-footer-photo")}
-            </p>
-          )}
-        </div>
+            </CardSectionActions>
+          </>
+        ) : (
+          <CardSectionHint>{t("picture-footer-photo")}</CardSectionHint>
+        )}
       </CardSectionFooter>
     </CardSection>
   );

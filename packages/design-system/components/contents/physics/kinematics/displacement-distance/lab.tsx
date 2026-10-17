@@ -29,6 +29,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -129,41 +130,45 @@ export function DisplacementDistanceLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFactIndicator
+              indicatorColor={ROUTE_COLOR}
+              label={labels.factLabels.distance}
+              value={
+                <InlineMath
+                  math={`s=${formatKeptZeroMeterMath(motion.distance)}`}
+                />
+              }
+            />
+            <VisualFactIndicator
+              indicatorColor={DISPLACEMENT_COLOR}
+              label={labels.factLabels.displacement}
+              value={
+                <InlineMath
+                  math={`|\\Delta\\vec{r}|=${formatKeptZeroMeterMath(
+                    motion.displacement
+                  )}`}
+                />
+              }
+            />
+            <VisualFactIndicator
+              label={labels.factLabels.vector}
+              value={
+                <InlineMath
+                  math={formatVectorMath(motion.displacementVector)}
+                />
+              }
+            />
+            <VisualFactIndicator
+              label={labels.factLabels.meaning}
+              value={labels.meanings[motion.caseId]}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFactIndicator
-            indicatorColor={ROUTE_COLOR}
-            label={labels.factLabels.distance}
-            value={
-              <InlineMath
-                math={`s=${formatKeptZeroMeterMath(motion.distance)}`}
-              />
-            }
-          />
-          <VisualFactIndicator
-            indicatorColor={DISPLACEMENT_COLOR}
-            label={labels.factLabels.displacement}
-            value={
-              <InlineMath
-                math={`|\\Delta\\vec{r}|=${formatKeptZeroMeterMath(
-                  motion.displacement
-                )}`}
-              />
-            }
-          />
-          <VisualFactIndicator
-            label={labels.factLabels.vector}
-            value={
-              <InlineMath math={formatVectorMath(motion.displacementVector)} />
-            }
-          />
-          <VisualFactIndicator
-            label={labels.factLabels.meaning}
-            value={labels.meanings[motion.caseId]}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

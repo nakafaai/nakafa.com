@@ -258,28 +258,6 @@ describe("notifications/inbox run", () => {
     })
   );
 
-  it.effect("skips an entry whose subject is not a Person", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const { inviteId } = yield* fixture.run(
-        invitePerson(fixture.tenants.nf, lain)
-      );
-      const entryId = yield* fixture.run(
-        Effect.flatMap(DatabaseWriter, (writer) =>
-          writer.table("journalEntries").insert({
-            actor: { kind: "system" },
-            change: { invite: inviteId, type: "person.invited" },
-            owner: { kind: "tenant", tenantId: fixture.tenants.nf },
-            subject: { id: fixture.units.sma, kind: "unit" },
-          })
-        )
-      );
-      yield* fixture.run(noteInvite(fixture.tenants.nf, entryId));
-      yield* consumeSchool(fixture, fixture.tenants.nf);
-      expect(yield* storedRows(fixture)).toEqual([]);
-    })
-  );
-
   it.effect("does nothing for a school that no invite has reached", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

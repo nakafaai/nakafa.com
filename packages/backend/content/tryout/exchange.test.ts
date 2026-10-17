@@ -175,7 +175,7 @@ describe("protected try-out exchange", () => {
               code: "CONTENT_RELEASE_INTEGRITY",
               message: "Protected runtime request is invalid.",
             });
-            const artifact = testSignedArtifact("snbt-quant", {
+            const artifact = yield* testSignedArtifact("snbt-quant", {
               contentKey: fixture.question.contentKey,
               rawMdx: "## Replaced signed question",
             });

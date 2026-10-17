@@ -20,7 +20,7 @@ import { Effect } from "effect";
 describe("activation identity validation", () => {
   it.effect("rejects activation using another manifest identity", () =>
     Effect.gen(function* () {
-      const { candidate, recovery } = makeActivationPair();
+      const { candidate, recovery } = yield* makeActivationPair();
       const rendererJson = encodeRendererJson(TEST_PROOF_RENDERER);
       expect(
         yield* validateActivationRenderer(
@@ -43,7 +43,7 @@ describe("activation identity validation", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            const { candidate, recovery } = makeActivationPair();
+            const { candidate, recovery } = yield* makeActivationPair();
             yield* insertActivationPair(tCtx, candidate, recovery);
             const row = yield* Effect.promise(() =>
               tCtx.db
@@ -82,7 +82,7 @@ describe("activation identity validation", () => {
         yield* t.run(
           Effect.gen(function* () {
             const tCtx = yield* MutationCtx;
-            const { candidate, recovery } = makeActivationPair();
+            const { candidate, recovery } = yield* makeActivationPair();
             yield* insertActivationPair(tCtx, candidate, recovery);
             expect(
               yield* validateRecovery(

@@ -1,6 +1,4 @@
-import { QURAN_REFERENCE_ENGLISH_OUTPUT } from "@repo/backend/test/mcp/descriptors/english";
-import { QURAN_REFERENCE_GERMAN_OUTPUT } from "@repo/backend/test/mcp/descriptors/german";
-import { QURAN_REFERENCE_INDONESIAN_OUTPUT } from "@repo/backend/test/mcp/descriptors/indonesian";
+import { quranReferenceOutput } from "@repo/backend/test/mcp/descriptors/quran/output";
 
 export const NAKAFA_GET_QURAN_REFERENCE_TOOL = {
   name: "nakafa_get_quran_reference",
@@ -12,7 +10,14 @@ export const NAKAFA_GET_QURAN_REFERENCE_TOOL = {
     $defs: {},
     properties: {
       from_verse: {
-        anyOf: [{ type: "integer", exclusiveMinimum: 0 }, { type: "null" }],
+        anyOf: [
+          {
+            type: "integer",
+            exclusiveMinimum: 0,
+            maximum: Number.MAX_SAFE_INTEGER,
+          },
+          { type: "null" },
+        ],
       },
       include_tafsir: { anyOf: [{ type: "boolean" }, { type: "null" }] },
       locale: {
@@ -28,6 +33,7 @@ export const NAKAFA_GET_QURAN_REFERENCE_TOOL = {
         type: "integer",
         exclusiveMinimum: 0,
         description: "Last verse number to include; defaults to from_verse.",
+        maximum: Number.MAX_SAFE_INTEGER,
       },
     },
     required: ["surah"],
@@ -57,9 +63,9 @@ export const NAKAFA_GET_QURAN_REFERENCE_TOOL = {
     anyOf: [
       {
         anyOf: [
-          QURAN_REFERENCE_ENGLISH_OUTPUT,
-          QURAN_REFERENCE_INDONESIAN_OUTPUT,
-          QURAN_REFERENCE_GERMAN_OUTPUT,
+          quranReferenceOutput("en"),
+          quranReferenceOutput("id"),
+          quranReferenceOutput("de"),
         ],
         description:
           "Nakafa Quran reference with semantic notes and signed source attribution.",

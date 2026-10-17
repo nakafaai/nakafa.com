@@ -4,8 +4,14 @@
 "@repo/design-system": patch
 ---
 
-Dependencies move to their latest releases. No application code changes.
+Dependencies move to their latest releases. The backend's generated function
+references follow the named group form that Confect 10.3.0 writes.
 
-- `www`: @confect/core, @confect/js, and @confect/react 10.1.0, the AI SDK 7.0.136.
-- `@repo/backend`: @confect/core, @confect/server, @confect/cli, and @confect/test 10.1.0, the AI SDK 7.0.136.
+- `www`: @confect/core, @confect/js, and @confect/react 10.3.0, the AI SDK 7.0.136.
+- `@repo/backend`: @confect/core, @confect/server, @confect/cli, and @confect/test 10.3.0, the AI SDK 7.0.136.
 - `@repo/design-system`: the AI SDK 7.0.136.
+
+The audit journal stores one union member for each kind that holds changes,
+instead of one flat union of every change, so the stored document stays within
+the union size that Confect 10.3.0 typechecks. Each entry keeps its stored shape,
+and a subject carries only the changes of its own kind.

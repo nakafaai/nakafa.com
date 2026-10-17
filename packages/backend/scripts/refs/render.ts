@@ -49,23 +49,25 @@ const groupType = (
   });
 };
 
-/** The assembly expression that Confect writes for one group and its children. */
-const assemblyOf = (
-  segment: string,
-  leaves: readonly Leaf[],
-  depth: number
-): string => {
+/**
+ * The group expression that Confect writes for one group and its children: the
+ * leaf that the group is, or an unnamed group, with each child named by its key.
+ */
+const assemblyOf = (leaves: readonly Leaf[], depth: number): string => {
   const { children, leaf } = splitGroup(leaves, depth);
   const base = Option.match(leaf, {
-    onNone: () => `GroupSpec.makeAt("${segment}")`,
+    onNone: () => "GroupSpec.make()",
     onSome: (found) => found.localName,
   });
-  const calls = Arr.map(
+  if (children.length === 0) {
+    return base;
+  }
+  const entries = Arr.map(
     children,
     ([childSegment, childLeaves]) =>
-      `.addGroupAt("${childSegment}", ${assemblyOf(childSegment, childLeaves, depth + 1)})`
+      `["${childSegment}"]: ${assemblyOf(childLeaves, depth + 1)}`
   );
-  return `${base}${Arr.join(calls, "")}`;
+  return `GroupSpec.addGroupsAt(${base}, { ${Arr.join(entries, ", ")} })`;
 };
 
 /**
@@ -92,7 +94,7 @@ export const renderDomainModule = (
       "",
       "const spec: Spec.Spec<{",
       `  readonly ${domain}: GroupSpec.NamedAt<${groupType(domain, leaves, 0)}, "${domain}">;`,
-      `}> = Spec.make().addAt("${domain}", ${assemblyOf(domain, leaves, 0)});`,
+      `}> = Spec.fromGroups({ ["${domain}"]: ${assemblyOf(leaves, 0)} }) as typeof spec;`,
       "",
       "const refs: Refs.FromSpec<typeof spec> = Refs.make(spec);",
       "",

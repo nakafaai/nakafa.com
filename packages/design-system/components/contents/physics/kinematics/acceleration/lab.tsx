@@ -25,6 +25,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -148,21 +149,23 @@ export function AccelerationLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            {Arr.map(facts, (fact) => (
+              <VisualFactIndicator
+                indicatorColor={
+                  "indicatorColor" in fact ? fact.indicatorColor : undefined
+                }
+                key={fact.id}
+                label={fact.label}
+                value={<InlineMath math={fact.math} />}
+              />
+            ))}
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          {Arr.map(facts, (fact) => (
-            <VisualFactIndicator
-              indicatorColor={
-                "indicatorColor" in fact ? fact.indicatorColor : undefined
-              }
-              key={fact.id}
-              label={fact.label}
-              value={<InlineMath math={fact.math} />}
-            />
-          ))}
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

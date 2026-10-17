@@ -50,11 +50,17 @@ const SignedArtifactJsonSchema = Schema.fromJsonString(
 export const makeArticleRuntimeSource = Effect.fn(
   "TestContent.articleRuntimeSource"
 )(function* () {
-  const signed = testSignedRelease({
-    ...testEmptyManifest(ReleaseIdSchema.make("app-article-snapshot")),
+  const empty = yield* testEmptyManifest(
+    ReleaseIdSchema.make("app-article-snapshot")
+  );
+  const signed = yield* testSignedRelease({
+    ...empty,
     scope: testPublicationScope({ families: ["article"] }),
   });
-  const fixture = makeRuntimeSource(signed, signed.manifest.scope.families);
+  const fixture = yield* makeRuntimeSource(
+    signed,
+    signed.manifest.scope.families
+  );
   const projections = Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) => [
     testLocalizedArticleProjection(1, locale),
     testLocalizedArticleProjection(2, locale),
@@ -72,11 +78,11 @@ export const makeArticleRuntimeSource = Effect.fn(
     projections,
     (projection, index) =>
       Effect.gen(function* () {
-        const artifact = testSignedArtifact("politics", {
+        const artifact = yield* testSignedArtifact("politics", {
           artifactLocale: activeAppLocaleCode(projection.appLocale),
           contentKey: projection.contentKey,
         });
-        const projectionHash = hashContentProjection(projection);
+        const projectionHash = yield* hashContentProjection(projection);
         const identity = {
           contentKey: projection.contentKey,
           projectionHash,

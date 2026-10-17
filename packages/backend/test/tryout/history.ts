@@ -93,15 +93,17 @@ async function retainChoicesSnapshot(
       digestLine: `${canonical}\0${rowHash}\n`,
     });
   }
-  const snapshot = makeTryoutSnapshot({
-    ...decoded.payload.snapshot,
-    placementDigest: testTextHash(
-      `${PLACEMENT_DOMAIN}${Arr.join(
-        Arr.map(MutableList.toArray(records), ({ digestLine }) => digestLine),
-        ""
-      )}`
-    ),
-  });
+  const snapshot = await Effect.runPromise(
+    makeTryoutSnapshot({
+      ...decoded.payload.snapshot,
+      placementDigest: testTextHash(
+        `${PLACEMENT_DOMAIN}${Arr.join(
+          Arr.map(MutableList.toArray(records), ({ digestLine }) => digestLine),
+          ""
+        )}`
+      ),
+    })
+  );
   const release = await ctx.db.query("contentReleases").unique();
   const storedSnapshot = await ctx.db
     .query("contentSnapshots")
@@ -117,23 +119,25 @@ async function retainChoicesSnapshot(
     decodeReleaseJson(release.releaseJson)
   );
   const bundle = testSignedTryoutRuntimeBundle({
-    release: testSignedRelease({
-      ...signedRelease.manifest,
-      snapshots: {
-        ...signedRelease.manifest.snapshots,
-        tryout: replaceContentSnapshot({
-          baseSnapshotId: null,
-          resultSnapshotId: snapshot.snapshotId,
-          rowCount:
-            Arr.reduce(
-              Rec.values(snapshot.counts),
-              0,
-              (sum, count) => sum + count
-            ) + snapshot.placementCount,
-          rowDigest: snapshot.snapshotId,
-        }),
-      },
-    }),
+    release: await Effect.runPromise(
+      testSignedRelease({
+        ...signedRelease.manifest,
+        snapshots: {
+          ...signedRelease.manifest.snapshots,
+          tryout: replaceContentSnapshot({
+            baseSnapshotId: null,
+            resultSnapshotId: snapshot.snapshotId,
+            rowCount:
+              Arr.reduce(
+                Rec.values(snapshot.counts),
+                0,
+                (sum, count) => sum + count
+              ) + snapshot.placementCount,
+            rowDigest: snapshot.snapshotId,
+          }),
+        },
+      })
+    ),
     rendererManifest: TEST_PROOF_RENDERER,
     snapshot,
   });

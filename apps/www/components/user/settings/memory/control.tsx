@@ -14,7 +14,9 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
 import { useMemory } from "@/components/user/settings/memory/provider";
@@ -54,16 +56,18 @@ export function MemoryControl() {
           />
         </div>
       </CardContent>
-      <CardSectionFooter className="flex-wrap justify-between gap-4">
-        <p className="text-muted-foreground text-sm">{t("footer")}</p>
-        <Button
-          disabled={empty}
-          onClick={() => setConfirming(true)}
-          size="sm"
-          variant="destructive"
-        >
-          {t("clear")}
-        </Button>
+      <CardSectionFooter>
+        <CardSectionHint>{t("footer")}</CardSectionHint>
+        <CardSectionActions>
+          <Button
+            disabled={empty}
+            onClick={() => setConfirming(true)}
+            size="sm"
+            variant="destructive"
+          >
+            {t("clear")}
+          </Button>
+        </CardSectionActions>
       </CardSectionFooter>
       <ResponsiveDialog
         description={t("clear-description")}

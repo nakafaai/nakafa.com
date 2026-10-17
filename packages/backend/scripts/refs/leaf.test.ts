@@ -8,11 +8,9 @@ const publicQuery = (name: string) =>
 const internalMutation = (name: string) =>
   FunctionSpec.internalMutation({ name, returns: () => Schema.Boolean });
 
-const publicOnly = GroupSpec.makeAt("access").addFunction(publicQuery("list"));
-const internalOnly = GroupSpec.makeAt("storage").addFunction(
-  internalMutation("sweep")
-);
-const mixed = GroupSpec.makeAt("auth")
+const publicOnly = GroupSpec.make().addFunction(publicQuery("list"));
+const internalOnly = GroupSpec.make().addFunction(internalMutation("sweep"));
+const mixed = GroupSpec.make()
   .addFunction(publicQuery("get"))
   .addFunction(internalMutation("claim"));
 
@@ -57,13 +55,17 @@ describe("isPublicLeaf", () => {
 
   it("counts a leaf whose public function sits in a nested group", () => {
     expect(
-      isPublicLeaf(GroupSpec.makeAt("outer").addGroupAt("inner", publicOnly))
+      isPublicLeaf(
+        GroupSpec.addGroupsAt(GroupSpec.make(), { inner: publicOnly })
+      )
     ).toBe(true);
   });
 
   it("does not count a leaf whose nested group has only internal functions", () => {
     expect(
-      isPublicLeaf(GroupSpec.makeAt("outer").addGroupAt("inner", internalOnly))
+      isPublicLeaf(
+        GroupSpec.addGroupsAt(GroupSpec.make(), { inner: internalOnly })
+      )
     ).toBe(false);
   });
 });

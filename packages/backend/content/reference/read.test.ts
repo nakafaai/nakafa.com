@@ -183,16 +183,14 @@ describe("contentRelease/reference/read", () => {
       yield* target.run(
         Effect.gen(function* () {
           const targetCtx = yield* MutationCtx;
-          const tryout = makeTryoutCatalogRow("en").record.row;
-          yield* Effect.promise(() =>
-            activateTryoutSnapshot(targetCtx, {
-              catalog: [tryout, makeTryoutCatalogRow("id").record.row],
-              placements: [
-                makeTryoutPlacementRow("en").record.row,
-                makeTryoutPlacementRow("id").record.row,
-              ],
-            })
-          );
+          const tryout = (yield* makeTryoutCatalogRow("en")).record.row;
+          yield* activateTryoutSnapshot(targetCtx, {
+            catalog: [tryout, (yield* makeTryoutCatalogRow("id")).record.row],
+            placements: [
+              (yield* makeTryoutPlacementRow("en")).record.row,
+              (yield* makeTryoutPlacementRow("id")).record.row,
+            ],
+          });
           for (const input of [
             {
               contentId: tryout.graph.assetId,

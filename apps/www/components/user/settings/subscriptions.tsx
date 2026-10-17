@@ -35,6 +35,7 @@ export function UserSettingsSubscriptions({
 }: UserSettingsSubscriptionsProps) {
   const locale = useLocale();
   const t = useTranslations("Auth");
+  const tPricing = useTranslations("Pricing");
 
   const billing = useBillingNavigation();
 
@@ -93,7 +94,7 @@ export function UserSettingsSubscriptions({
               onClick={handleCheckout}
             >
               <Spinner icon={PartyIcon} isLoading={billing.isPending} />
-              {t("get-pro")}
+              {tPricing("pro-cta")}
             </Button>
           </Activity>
         </div>

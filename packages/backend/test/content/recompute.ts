@@ -51,7 +51,7 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
         const sourcePath = CorpusSourcePathSchema.make(
           `packages/corpus/test/proof-${index}/en.mdx`
         );
-        const artifact = testSignedArtifact("mathematics", {
+        const artifact = yield* testSignedArtifact("mathematics", {
           contentKey,
         });
         const projectionJson = testProjectionJson({
@@ -148,9 +148,10 @@ export const stagePagedRelease = Effect.fn("backendTest.stagePagedRelease")(
       ),
       routes: digestRoutes(releaseId, Stream.fromIterable(routes)),
     });
-    const signed = testSignedRelease(
+    const emptyManifest = yield* testEmptyManifest(releaseId);
+    const signed = yield* testSignedRelease(
       ContentReleaseManifestSchema.make({
-        ...testEmptyManifest(releaseId),
+        ...emptyManifest,
         itemCount: count,
         itemsDigest: digests.items.digest,
         projectionCount: count,

@@ -1,5 +1,5 @@
-import { RegisteredConvexFunction, RegisteredFunctions } from "@confect/server";
+import { RegisteredFunctions } from "@confect/server";
 import databaseSchema from "../../../schema";
-import cleanup from "../../../../customers/deletion/cleanup.impl";
+import groupLayer from "../../../../customers/deletion/cleanup.impl";
 
-export default RegisteredFunctions.buildForGroup<typeof import("../../../../customers/deletion/cleanup.spec")["default"]>(databaseSchema, cleanup, RegisteredConvexFunction.make);
+export default RegisteredFunctions.buildForGroup<typeof import("../../../../customers/deletion/cleanup.spec")["default"]>(databaseSchema, groupLayer);

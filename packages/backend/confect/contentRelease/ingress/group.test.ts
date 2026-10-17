@@ -138,9 +138,10 @@ describe("content release staging groups", () => {
           })
         );
       }
-      const release = testSignedRelease(
+      const emptyManifest = yield* testEmptyManifest(releaseId);
+      const release = yield* testSignedRelease(
         ContentReleaseManifestSchema.make({
-          ...testEmptyManifest(releaseId),
+          ...emptyManifest,
           scope: testPublicationScope({
             snapshots: data.snapshots,
           }),

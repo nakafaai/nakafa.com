@@ -15,6 +15,7 @@ import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -95,12 +96,15 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
             value={gasLevel}
           />
         </div>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact label={labels.heatFlowLabel} value={labels.heatFlow} />
+            <VisualFact label={labels.meaningLabel} value={labels.meaning} />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
+
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact label={labels.heatFlowLabel} value={labels.heatFlow} />
-          <VisualFact label={labels.meaningLabel} value={labels.meaning} />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
