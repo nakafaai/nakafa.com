@@ -1,6 +1,6 @@
 "use client";
 
-import { type OptimisticUpdate, useMutation } from "@confect/react";
+import type { OptimisticUpdate } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Option } from "effect";
@@ -14,7 +14,7 @@ import {
 } from "@/components/user/posts/state";
 
 /** Changes the page of every loaded list of posts, so each open list shows the change. */
-function changeLists(
+export function changeLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   change: (page: readonly ListPost[]) => ListPost[]
 ) {
@@ -59,26 +59,20 @@ export function insertDraftPost(
   };
 }
 
-/** Return a like mutation that shows the like on the post at once. */
-export function useLikePostMutation() {
-  return useMutation(posts.mutations.like).withOptimisticUpdate(
-    (localStore, { postId }) =>
-      changeLists(localStore, (page) => updatePost(page, postId, likePost))
-  );
-}
+/** The change that shows a like on the post at once, in every loaded list. */
+export const likeInLists: OptimisticUpdate<typeof posts.mutations.like> = (
+  localStore,
+  { postId }
+) => changeLists(localStore, (page) => updatePost(page, postId, likePost));
 
-/** Return an unlike mutation that takes the like off the post at once. */
-export function useUnlikePostMutation() {
-  return useMutation(posts.mutations.unlike).withOptimisticUpdate(
-    (localStore, { postId }) =>
-      changeLists(localStore, (page) => updatePost(page, postId, unlikePost))
-  );
-}
+/** The change that takes a like off the post at once, in every loaded list. */
+export const unlikeInLists: OptimisticUpdate<typeof posts.mutations.unlike> = (
+  localStore,
+  { postId }
+) => changeLists(localStore, (page) => updatePost(page, postId, unlikePost));
 
-/** Return a delete mutation that takes the post off every loaded list at once. */
-export function useRemovePostMutation() {
-  return useMutation(posts.mutations.remove).withOptimisticUpdate(
-    (localStore, { postId }) =>
-      changeLists(localStore, (page) => removePost(page, postId))
-  );
-}
+/** The change that takes the post off every loaded list at once. */
+export const removeFromLists: OptimisticUpdate<
+  typeof posts.mutations.remove
+> = (localStore, { postId }) =>
+  changeLists(localStore, (page) => removePost(page, postId));

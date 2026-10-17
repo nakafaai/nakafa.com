@@ -1,11 +1,17 @@
 import { Array as Arr, Option } from "effect";
 
+/**
+ * How often the list reads the clock again, which is the smallest unit a post's
+ * age is written in, so no age changes between two readings.
+ */
+export const AGE_TICK_MILLISECONDS = 60_000;
+
 /** The units a post's age is written in, from the largest that a post can show to the smallest. */
 const AGE_UNITS: ReadonlyArray<readonly [Intl.RelativeTimeFormatUnit, number]> =
   [
     ["day", 86_400_000],
     ["hour", 3_600_000],
-    ["minute", 60_000],
+    ["minute", AGE_TICK_MILLISECONDS],
   ];
 
 /**

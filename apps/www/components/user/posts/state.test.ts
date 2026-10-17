@@ -52,8 +52,19 @@ describe("posts list state", () => {
     expect(likePost(first)).toEqual({ ...first, liked: true, likeCount: 1 });
   });
 
+  it("counts a repeated like once, so a double press changes the count once", () => {
+    expect(likePost(likePost(first))).toEqual(likePost(first));
+    expect(likePost(likePost(first)).likeCount).toBe(1);
+  });
+
   it("takes a like back, which is the reverse of a like", () => {
     const liked = likePost(first);
     expect(unlikePost(liked)).toEqual(first);
+  });
+
+  it("takes a repeated unlike back once, and keeps a count of zero", () => {
+    const liked = likePost(first);
+    expect(unlikePost(unlikePost(liked))).toEqual(first);
+    expect(unlikePost(unlikePost(liked)).likeCount).toBe(0);
   });
 });

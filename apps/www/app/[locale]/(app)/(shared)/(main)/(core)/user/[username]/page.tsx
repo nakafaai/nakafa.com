@@ -43,7 +43,8 @@ export default function Page({
 /**
  * Resolves the profile and its first page of posts inside the streaming
  * boundary, with the moment the server read them. The browser shows that page
- * until its own live list answers, so the two show the same posts.
+ * until its own live list answers, so the two show the same posts. A failed
+ * read leaves the page to the live list, so the header and the tabs still render.
  */
 async function UserPostsRoute({
   params,
@@ -54,18 +55,24 @@ async function UserPostsRoute({
     getToken(),
   ]);
   const { first, now } = await Effect.runPromise(
-    HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) =>
-        client.query(posts.queries.list, {
-          authorId: account.appUser._id,
-          paginationOpts: { cursor: null, numItems: POST_PAGE_SIZE },
-        })
+    Effect.all({
+      first: HttpClient.HttpClient.pipe(
+        Effect.flatMap((client) =>
+          client.query(posts.queries.list, {
+            authorId: account.appUser._id,
+            paginationOpts: { cursor: null, numItems: POST_PAGE_SIZE },
+          })
+        ),
+        Effect.provide(httpLayer(token ? { auth: token } : {})),
+        Effect.catch((error) =>
+          Effect.logWarning(
+            "The first page of posts could not be read on the server.",
+            error
+          ).pipe(Effect.as(null))
+        )
       ),
-      Effect.flatMap((first) =>
-        Effect.map(Clock.currentTimeMillis, (now) => ({ first, now }))
-      ),
-      Effect.provide(httpLayer(token ? { auth: token } : {}))
-    )
+      now: Clock.currentTimeMillis,
+    })
   );
   return <UserPosts account={account} first={first} now={now} />;
 }

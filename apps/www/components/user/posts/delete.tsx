@@ -1,14 +1,15 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
+import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition } from "react";
 import { toast } from "sonner";
-import { useRemovePostMutation } from "@/components/user/posts/mutation.client";
+import { removeFromLists } from "@/components/user/posts/mutation.client";
 import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -27,29 +28,29 @@ export function PostDeletion({
 }) {
   const t = useTranslations("Posts");
   const tCommon = useTranslations("Common");
-  const removePost = useRemovePostMutation();
+  const removePost = useMutation(posts.mutations.remove).withOptimisticUpdate(
+    removeFromLists
+  );
 
   /** Closes the question and deletes the post. */
   function confirm() {
     onOpenChange(false);
-    startTransition(() =>
-      Effect.runPromise(
-        Effect.tryPromise(() => removePost({ postId })).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/user/posts/delete",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(tCommon("action-error"));
-                  })
-                )
-              ),
-          })
-        )
+    Effect.runPromise(
+      Effect.tryPromise(() => removePost({ postId })).pipe(
+        Effect.flatMap(Effect.fromResult),
+        Effect.matchEffect({
+          onSuccess: () => Effect.void,
+          onFailure: (error) =>
+            reportClientException(error, {
+              source: "components/user/posts/delete",
+            }).pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  toast.error(tCommon("action-error"));
+                })
+              )
+            ),
+        })
       )
     );
   }

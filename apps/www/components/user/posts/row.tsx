@@ -1,10 +1,12 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import {
   Delete02Icon,
   FavouriteIcon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
+import posts from "@repo/backend/confect/_generated/refs/posts";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -17,18 +19,27 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cn } from "cn";
 import { DateTime, Effect } from "effect";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import { startTransition, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { PostDeletion } from "@/components/user/posts/delete";
 import {
-  useLikePostMutation,
-  useUnlikePostMutation,
+  likeInLists,
+  unlikeInLists,
 } from "@/components/user/posts/mutation.client";
 import type { ListPost } from "@/components/user/posts/state";
 import { formatPostAge } from "@/components/user/posts/time";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
+
+/** The delete dialog loads when the learner opens the More menu of a post, before they can choose Delete. */
+const PostDeletion = dynamic(
+  () =>
+    import("@/components/user/posts/delete").then(
+      (module) => module.PostDeletion
+    ),
+  { loading: () => null, ssr: false }
+);
 
 /**
  * One post of the list: the author's picture with a line down to the next post,
@@ -89,33 +100,38 @@ export function PostRow({
   );
 }
 
-/** The like toggle of a post, with its count once the count is above zero. */
+/**
+ * The like toggle of a post, with its count once the count is above zero. The
+ * change is made at once and the server answers after it.
+ */
 function PostLikeButton({ post }: { post: ListPost }) {
   const t = useTranslations("Common");
-  const like = useLikePostMutation();
-  const unlike = useUnlikePostMutation();
+  const like = useMutation(posts.mutations.like).withOptimisticUpdate(
+    likeInLists
+  );
+  const unlike = useMutation(posts.mutations.unlike).withOptimisticUpdate(
+    unlikeInLists
+  );
 
   /** Likes or unlikes the post, and tells the learner when the server refuses. */
   function toggle() {
     const change = post.liked ? unlike : like;
-    startTransition(() =>
-      Effect.runPromise(
-        Effect.tryPromise(() => change({ postId: post._id })).pipe(
-          Effect.flatMap(Effect.fromResult),
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/user/posts/row",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(t("action-error"));
-                  })
-                )
-              ),
-          })
-        )
+    Effect.runPromise(
+      Effect.tryPromise(() => change({ postId: post._id })).pipe(
+        Effect.flatMap(Effect.fromResult),
+        Effect.matchEffect({
+          onSuccess: () => Effect.void,
+          onFailure: (error) =>
+            reportClientException(error, {
+              source: "components/user/posts/row",
+            }).pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  toast.error(t("action-error"));
+                })
+              )
+            ),
+        })
       )
     );
   }
@@ -140,14 +156,24 @@ function PostLikeButton({ post }: { post: ListPost }) {
   );
 }
 
-/** The menu of the author's own post, which asks before it deletes the post. */
+/**
+ * The menu of the author's own post. The delete dialog mounts with the first
+ * opening of the menu, so its code is loaded before Delete can be chosen.
+ */
 function PostMoreMenu({ postId }: { postId: ListPost["_id"] }) {
   const t = useTranslations("Common");
+  const [menuOpened, setMenuOpened] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu
+        onOpenChange={(open) => {
+          if (open) {
+            setMenuOpened(true);
+          }
+        }}
+      >
         <DropdownMenuTrigger
           render={
             <Button aria-label={t("more")} size="icon-sm" variant="ghost">
@@ -166,11 +192,13 @@ function PostMoreMenu({ postId }: { postId: ListPost["_id"] }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <PostDeletion
-        onOpenChange={setDeleting}
-        open={deleting}
-        postId={postId}
-      />
+      {menuOpened && (
+        <PostDeletion
+          onOpenChange={setDeleting}
+          open={deleting}
+          postId={postId}
+        />
+      )}
     </>
   );
 }
