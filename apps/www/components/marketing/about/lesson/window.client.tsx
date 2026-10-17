@@ -37,6 +37,9 @@ interface LessonWindowProps {
   readonly placeholders: Record<Lesson, ReactNode>;
 }
 
+/** The share of the window that must be on the screen before the open lab's code loads. */
+const LAB_VISIBLE_SHARE = 0.5;
+
 /** The DOM id of one lesson's tab, which names its panel for assistive technology. */
 function tabId(windowId: string, lesson: Lesson) {
   return `${windowId}-tab-${lesson}`;
@@ -160,13 +163,14 @@ export function LessonWindow({
     <LessonSelectionContext value={selections}>
       <Intersection
         className="grid gap-6"
+        minimumRatio={LAB_VISIBLE_SHARE}
         once
         onFocus={reveal}
         onIntersect={reveal}
         onPointerDown={reveal}
         onPointerEnter={reveal}
         rootMargin="0px"
-        threshold={0.5}
+        threshold={LAB_VISIBLE_SHARE}
       >
         <Tabs onValueChange={handleChange} value={lesson}>
           <TabsList

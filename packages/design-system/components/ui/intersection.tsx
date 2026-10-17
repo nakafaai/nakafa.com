@@ -2,6 +2,7 @@ import { useIntersection } from "@mantine/hooks";
 import { type ComponentProps, useEffect, useEffectEvent, useRef } from "react";
 
 export function Intersection({
+  minimumRatio,
   onIntersect,
   root = null,
   rootMargin = "400px",
@@ -9,6 +10,12 @@ export function Intersection({
   once = false,
   ...props
 }: {
+  /**
+   * The share of the element that must be on the screen before `onIntersect`
+   * fires. Left out, any part on the screen counts, which is what the observer
+   * reports as intersecting.
+   */
+  minimumRatio?: number;
   onIntersect: () => void;
   /**
    * Keep `root` aligned with Mantine's `useIntersection`, which forwards to the
@@ -32,7 +39,11 @@ export function Intersection({
 
   // useEffect ensures side effect runs AFTER render (React rules)
   useEffect(() => {
-    if (!entry?.isIntersecting) {
+    const onScreen =
+      minimumRatio === undefined
+        ? entry?.isIntersecting
+        : (entry?.intersectionRatio ?? 0) >= minimumRatio;
+    if (!onScreen) {
       return;
     }
 
@@ -43,7 +54,7 @@ export function Intersection({
 
     hasTriggered.current = true;
     handleIntersect();
-  }, [entry, once]);
+  }, [entry, minimumRatio, once]);
 
   return <div ref={ref} {...props} />;
 }
