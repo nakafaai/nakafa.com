@@ -104,12 +104,13 @@ const visualBandVariants = cva(
 
 /**
  * The body holds the visual alone, edge to edge. In full screen it takes the
- * free height, and size containment keeps a chart's aspect ratio from claiming
- * more than the screen has, so the visual fills the free height, or keeps its
- * minimum while the card scrolls.
+ * free height and drops its aspect ratio, and size containment keeps a chart's
+ * own aspect ratio from claiming more than the screen has, so the visual fills
+ * the free height, or keeps its minimum while the card scrolls. The body keeps
+ * its own display, so a drawing laid out as a grid stays a grid.
  */
 const visualBodyVariants = cva(
-  "relative border-t first:border-t-0 group-data-fullscreen/visual:flex group-data-fullscreen/visual:min-h-64 group-data-fullscreen/visual:flex-1 group-data-fullscreen/visual:flex-col group-data-fullscreen/visual:contain-size"
+  "relative border-t first:border-t-0 group-data-fullscreen/visual:min-h-64 group-data-fullscreen/visual:flex-1 group-data-fullscreen/visual:aspect-auto group-data-fullscreen/visual:contain-size"
 );
 
 /**
