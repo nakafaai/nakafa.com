@@ -28,18 +28,16 @@ import { Array as Arr, Number as Num, Option, Schema } from "effect";
 const GRAVITY = 1500;
 /**
  * How much speed a free ball keeps each second: its speed is multiplied by `exp(-DAMPING * dt)`.
- * With the friction of `collide.ts`, a fresh pool rests after 194, 298 and 528 frames
+ * With the friction of `collide.ts`, a fresh pool rests after 153, 214 and 443 frames
  * on the three checked pools, 585, 823 and 1463 pixels wide.
  */
-const DAMPING = 3;
+const DAMPING = 0.8;
 /** A held ball sits on its target at once. This share of its speed over half a frame is what it carries into a collision, its release, and its lean. */
 const HOLD_SHARE = 0.35;
 /**
  * The pile is at rest while no ball moves faster than this over a frame, in pixels
- * per second, counting each axis. Read per step instead, a resting pile can stay
- * above this speed, because the contacts move a ball back and forth from one step
- * to the next. Measured at commit ec767b9198, the 823 by 900 pool did not come to
- * rest within 3000 frames when it was read per step.
+ * per second, counting each axis. Read per step instead, the 823 by 900 pool still
+ * rests, after 214 frames, the same as when it is read per frame.
  */
 const REST_SPEED = 24;
 /**
