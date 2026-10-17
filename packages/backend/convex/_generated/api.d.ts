@@ -2623,6 +2623,1292 @@ export declare const api: {
       >;
     };
   };
+  exams: {
+    exams: {
+      create: FunctionReference<
+        "mutation",
+        "public",
+        {
+          language: "en" | "id" | "de";
+          scope:
+            { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+          slug: string;
+          title: string;
+        },
+        { id: Id<"exams"> }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"exams">;
+            language: "en" | "id" | "de";
+            title: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      open: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        {
+          id: Id<"exams">;
+          language: "en" | "id" | "de";
+          questions: Array<{
+            answers: Array<
+              | {
+                  id: string;
+                  kind: "choice";
+                  label: string;
+                  maxChoices: number;
+                  minChoices: number;
+                  options: Array<{ id: string; label: any }>;
+                  shuffle: boolean;
+                }
+              | {
+                  columns: Array<{ id: string; label: any }>;
+                  id: string;
+                  kind: "matrix";
+                  label: string;
+                  shuffle: boolean;
+                  statements: Array<{ id: string; label: any }>;
+                }
+              | {
+                  id: string;
+                  kind: "match";
+                  label: string;
+                  shuffle: boolean;
+                  sources: Array<{
+                    id: string;
+                    label: any;
+                    maxMatches: number;
+                  }>;
+                  targets: Array<{
+                    id: string;
+                    label: any;
+                    maxMatches: number;
+                  }>;
+                }
+              | {
+                  id: string;
+                  items: Array<{ id: string; label: any }>;
+                  kind: "order";
+                  label: string;
+                  maxChoices: number;
+                  minChoices: number;
+                  shuffle: boolean;
+                }
+              | {
+                  id: string;
+                  kind: "inlineChoice";
+                  label: string;
+                  options: Array<{
+                    id: string;
+                    label: Array<
+                      | {
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          text: string;
+                          type: "text";
+                        }
+                      | { attrs: { latex: string }; type: "mathInline" }
+                    >;
+                  }>;
+                  shuffle: boolean;
+                }
+              | {
+                  expectedLength?: number;
+                  id: string;
+                  kind: "textEntry";
+                  label: string;
+                }
+              | {
+                  acceptsFractions: boolean;
+                  id: string;
+                  kind: "numericEntry";
+                  label: string;
+                  unit?: string;
+                }
+              | { id: string; kind: "mathEntry"; label: string }
+              | {
+                  areas: Array<
+                    | {
+                        coords: Array<number | number | number | number>;
+                        id: string;
+                        label: string;
+                        shape: "rect";
+                      }
+                    | {
+                        coords: Array<number | number | number>;
+                        id: string;
+                        label: string;
+                        shape: "circle";
+                      }
+                    | {
+                        coords: Array<number | number | number | number>;
+                        id: string;
+                        label: string;
+                        shape: "ellipse";
+                      }
+                    | {
+                        coords: Array<
+                          number | number | number | number | number | number
+                        >;
+                        id: string;
+                        label: string;
+                        shape: "poly";
+                      }
+                    | { id: string; label: string; shape: "default" }
+                  >;
+                  id: string;
+                  image: {
+                    alt: string;
+                    asset: string;
+                    height: number;
+                    width: number;
+                  };
+                  kind: "hotspot";
+                  label: string;
+                  maxChoices: number;
+                  minChoices: number;
+                }
+              | {
+                  choices: Array<{
+                    id: string;
+                    label: Array<
+                      | {
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          text: string;
+                          type: "text";
+                        }
+                      | { attrs: { latex: string }; type: "mathInline" }
+                    >;
+                    maxMatches: number;
+                  }>;
+                  gaps: Array<{ id: string }>;
+                  id: string;
+                  kind: "gapMatch";
+                  label: string;
+                  shuffle: boolean;
+                }
+              | {
+                  count: number;
+                  frame: {
+                    kind: "cartesian";
+                    x: { max: number; min: number };
+                    y: { max: number; min: number };
+                  };
+                  id: string;
+                  kind: "graphPoint";
+                  label: string;
+                  placing: "points" | "lines";
+                  snap?: number;
+                }
+              | {
+                  expectedLines?: number;
+                  id: string;
+                  kind: "extendedText";
+                  label: string;
+                }
+            >;
+            id: Id<"examQuestions">;
+            key: Array<
+              | { correct: Array<string>; interaction: string; kind: "choice" }
+              | {
+                  answers: Array<{ column: string; statement: string }>;
+                  interaction: string;
+                  kind: "matrix";
+                }
+              | {
+                  interaction: string;
+                  kind: "match";
+                  pairs: Array<{ source: string; target: string }>;
+                }
+              | { interaction: string; kind: "order"; sequence: Array<string> }
+              | { correct: string; interaction: string; kind: "inlineChoice" }
+              | {
+                  accepted: {
+                    acceptedAnswers: Array<string>;
+                    collapseWhitespace: boolean;
+                    ignoreCase: boolean;
+                    kind: "text";
+                  };
+                  interaction: string;
+                  kind: "textEntry";
+                }
+              | {
+                  interaction: string;
+                  kind: "numericEntry";
+                  tolerance?: { kind: "absolute" | "relative"; value: string };
+                  value: string;
+                }
+              | { expression: string; interaction: string; kind: "mathEntry" }
+              | { correct: Array<string>; interaction: string; kind: "hotspot" }
+              | {
+                  interaction: string;
+                  kind: "gapMatch";
+                  pairs: Array<{ choice: string; gap: string }>;
+                }
+              | {
+                  interaction: string;
+                  kind: "graphPoint";
+                  target:
+                    | {
+                        kind: "points";
+                        points: Array<{ x: number; y: number }>;
+                      }
+                    | {
+                        kind: "lines";
+                        lines: Array<{
+                          through: Array<
+                            { x: number; y: number } | { x: number; y: number }
+                          >;
+                        }>;
+                      };
+                  tolerance: number;
+                }
+              | {
+                  criteria: Array<{
+                    criterion: string;
+                    levels: Array<{ descriptor: string; level: string }>;
+                  }>;
+                  interaction: string;
+                  kind: "extendedText";
+                }
+            > | null;
+            prompt: Id<"editorDocuments">;
+            revision: number;
+            template: "choice";
+          }>;
+          title: string;
+        }
+      >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { examId: Id<"exams">; slug: string; title: string },
+        { id: Id<"exams">; language: "en" | "id" | "de"; title: string }
+      >;
+    };
+    questions: {
+      add: FunctionReference<
+        "mutation",
+        "public",
+        {
+          after: Id<"examQuestions"> | null;
+          examId: Id<"exams">;
+          slug: string;
+        },
+        {
+          answers: Array<
+            | {
+                id: string;
+                kind: "choice";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                options: Array<{ id: string; label: any }>;
+                shuffle: boolean;
+              }
+            | {
+                columns: Array<{ id: string; label: any }>;
+                id: string;
+                kind: "matrix";
+                label: string;
+                shuffle: boolean;
+                statements: Array<{ id: string; label: any }>;
+              }
+            | {
+                id: string;
+                kind: "match";
+                label: string;
+                shuffle: boolean;
+                sources: Array<{ id: string; label: any; maxMatches: number }>;
+                targets: Array<{ id: string; label: any; maxMatches: number }>;
+              }
+            | {
+                id: string;
+                items: Array<{ id: string; label: any }>;
+                kind: "order";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                shuffle: boolean;
+              }
+            | {
+                id: string;
+                kind: "inlineChoice";
+                label: string;
+                options: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                }>;
+                shuffle: boolean;
+              }
+            | {
+                expectedLength?: number;
+                id: string;
+                kind: "textEntry";
+                label: string;
+              }
+            | {
+                acceptsFractions: boolean;
+                id: string;
+                kind: "numericEntry";
+                label: string;
+                unit?: string;
+              }
+            | { id: string; kind: "mathEntry"; label: string }
+            | {
+                areas: Array<
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "rect";
+                    }
+                  | {
+                      coords: Array<number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "circle";
+                    }
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "ellipse";
+                    }
+                  | {
+                      coords: Array<
+                        number | number | number | number | number | number
+                      >;
+                      id: string;
+                      label: string;
+                      shape: "poly";
+                    }
+                  | { id: string; label: string; shape: "default" }
+                >;
+                id: string;
+                image: {
+                  alt: string;
+                  asset: string;
+                  height: number;
+                  width: number;
+                };
+                kind: "hotspot";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+              }
+            | {
+                choices: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                  maxMatches: number;
+                }>;
+                gaps: Array<{ id: string }>;
+                id: string;
+                kind: "gapMatch";
+                label: string;
+                shuffle: boolean;
+              }
+            | {
+                count: number;
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                id: string;
+                kind: "graphPoint";
+                label: string;
+                placing: "points" | "lines";
+                snap?: number;
+              }
+            | {
+                expectedLines?: number;
+                id: string;
+                kind: "extendedText";
+                label: string;
+              }
+          >;
+          id: Id<"examQuestions">;
+          key: Array<
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              }
+          > | null;
+          prompt: Id<"editorDocuments">;
+          revision: number;
+          template: "choice";
+        }
+      >;
+      answer: FunctionReference<
+        "mutation",
+        "public",
+        {
+          answers: Array<
+            | {
+                id: string;
+                kind: "choice";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                options: Array<{ id: string; label: any }>;
+                shuffle: boolean;
+              }
+            | {
+                columns: Array<{ id: string; label: any }>;
+                id: string;
+                kind: "matrix";
+                label: string;
+                shuffle: boolean;
+                statements: Array<{ id: string; label: any }>;
+              }
+            | {
+                id: string;
+                kind: "match";
+                label: string;
+                shuffle: boolean;
+                sources: Array<{ id: string; label: any; maxMatches: number }>;
+                targets: Array<{ id: string; label: any; maxMatches: number }>;
+              }
+            | {
+                id: string;
+                items: Array<{ id: string; label: any }>;
+                kind: "order";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                shuffle: boolean;
+              }
+            | {
+                id: string;
+                kind: "inlineChoice";
+                label: string;
+                options: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                }>;
+                shuffle: boolean;
+              }
+            | {
+                expectedLength?: number;
+                id: string;
+                kind: "textEntry";
+                label: string;
+              }
+            | {
+                acceptsFractions: boolean;
+                id: string;
+                kind: "numericEntry";
+                label: string;
+                unit?: string;
+              }
+            | { id: string; kind: "mathEntry"; label: string }
+            | {
+                areas: Array<
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "rect";
+                    }
+                  | {
+                      coords: Array<number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "circle";
+                    }
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "ellipse";
+                    }
+                  | {
+                      coords: Array<
+                        number | number | number | number | number | number
+                      >;
+                      id: string;
+                      label: string;
+                      shape: "poly";
+                    }
+                  | { id: string; label: string; shape: "default" }
+                >;
+                id: string;
+                image: {
+                  alt: string;
+                  asset: string;
+                  height: number;
+                  width: number;
+                };
+                kind: "hotspot";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+              }
+            | {
+                choices: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                  maxMatches: number;
+                }>;
+                gaps: Array<{ id: string }>;
+                id: string;
+                kind: "gapMatch";
+                label: string;
+                shuffle: boolean;
+              }
+            | {
+                count: number;
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                id: string;
+                kind: "graphPoint";
+                label: string;
+                placing: "points" | "lines";
+                snap?: number;
+              }
+            | {
+                expectedLines?: number;
+                id: string;
+                kind: "extendedText";
+                label: string;
+              }
+          >;
+          examId: Id<"exams">;
+          key: Array<
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              }
+          > | null;
+          questionId: Id<"examQuestions">;
+          revision: number;
+          slug: string;
+        },
+        {
+          answers: Array<
+            | {
+                id: string;
+                kind: "choice";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                options: Array<{ id: string; label: any }>;
+                shuffle: boolean;
+              }
+            | {
+                columns: Array<{ id: string; label: any }>;
+                id: string;
+                kind: "matrix";
+                label: string;
+                shuffle: boolean;
+                statements: Array<{ id: string; label: any }>;
+              }
+            | {
+                id: string;
+                kind: "match";
+                label: string;
+                shuffle: boolean;
+                sources: Array<{ id: string; label: any; maxMatches: number }>;
+                targets: Array<{ id: string; label: any; maxMatches: number }>;
+              }
+            | {
+                id: string;
+                items: Array<{ id: string; label: any }>;
+                kind: "order";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                shuffle: boolean;
+              }
+            | {
+                id: string;
+                kind: "inlineChoice";
+                label: string;
+                options: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                }>;
+                shuffle: boolean;
+              }
+            | {
+                expectedLength?: number;
+                id: string;
+                kind: "textEntry";
+                label: string;
+              }
+            | {
+                acceptsFractions: boolean;
+                id: string;
+                kind: "numericEntry";
+                label: string;
+                unit?: string;
+              }
+            | { id: string; kind: "mathEntry"; label: string }
+            | {
+                areas: Array<
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "rect";
+                    }
+                  | {
+                      coords: Array<number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "circle";
+                    }
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "ellipse";
+                    }
+                  | {
+                      coords: Array<
+                        number | number | number | number | number | number
+                      >;
+                      id: string;
+                      label: string;
+                      shape: "poly";
+                    }
+                  | { id: string; label: string; shape: "default" }
+                >;
+                id: string;
+                image: {
+                  alt: string;
+                  asset: string;
+                  height: number;
+                  width: number;
+                };
+                kind: "hotspot";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+              }
+            | {
+                choices: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                  maxMatches: number;
+                }>;
+                gaps: Array<{ id: string }>;
+                id: string;
+                kind: "gapMatch";
+                label: string;
+                shuffle: boolean;
+              }
+            | {
+                count: number;
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                id: string;
+                kind: "graphPoint";
+                label: string;
+                placing: "points" | "lines";
+                snap?: number;
+              }
+            | {
+                expectedLines?: number;
+                id: string;
+                kind: "extendedText";
+                label: string;
+              }
+          >;
+          id: Id<"examQuestions">;
+          key: Array<
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              }
+          > | null;
+          prompt: Id<"editorDocuments">;
+          revision: number;
+          template: "choice";
+        }
+      >;
+      copy: FunctionReference<
+        "mutation",
+        "public",
+        { examId: Id<"exams">; questionId: Id<"examQuestions">; slug: string },
+        {
+          answers: Array<
+            | {
+                id: string;
+                kind: "choice";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                options: Array<{ id: string; label: any }>;
+                shuffle: boolean;
+              }
+            | {
+                columns: Array<{ id: string; label: any }>;
+                id: string;
+                kind: "matrix";
+                label: string;
+                shuffle: boolean;
+                statements: Array<{ id: string; label: any }>;
+              }
+            | {
+                id: string;
+                kind: "match";
+                label: string;
+                shuffle: boolean;
+                sources: Array<{ id: string; label: any; maxMatches: number }>;
+                targets: Array<{ id: string; label: any; maxMatches: number }>;
+              }
+            | {
+                id: string;
+                items: Array<{ id: string; label: any }>;
+                kind: "order";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+                shuffle: boolean;
+              }
+            | {
+                id: string;
+                kind: "inlineChoice";
+                label: string;
+                options: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                }>;
+                shuffle: boolean;
+              }
+            | {
+                expectedLength?: number;
+                id: string;
+                kind: "textEntry";
+                label: string;
+              }
+            | {
+                acceptsFractions: boolean;
+                id: string;
+                kind: "numericEntry";
+                label: string;
+                unit?: string;
+              }
+            | { id: string; kind: "mathEntry"; label: string }
+            | {
+                areas: Array<
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "rect";
+                    }
+                  | {
+                      coords: Array<number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "circle";
+                    }
+                  | {
+                      coords: Array<number | number | number | number>;
+                      id: string;
+                      label: string;
+                      shape: "ellipse";
+                    }
+                  | {
+                      coords: Array<
+                        number | number | number | number | number | number
+                      >;
+                      id: string;
+                      label: string;
+                      shape: "poly";
+                    }
+                  | { id: string; label: string; shape: "default" }
+                >;
+                id: string;
+                image: {
+                  alt: string;
+                  asset: string;
+                  height: number;
+                  width: number;
+                };
+                kind: "hotspot";
+                label: string;
+                maxChoices: number;
+                minChoices: number;
+              }
+            | {
+                choices: Array<{
+                  id: string;
+                  label: Array<
+                    | {
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        text: string;
+                        type: "text";
+                      }
+                    | { attrs: { latex: string }; type: "mathInline" }
+                  >;
+                  maxMatches: number;
+                }>;
+                gaps: Array<{ id: string }>;
+                id: string;
+                kind: "gapMatch";
+                label: string;
+                shuffle: boolean;
+              }
+            | {
+                count: number;
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                id: string;
+                kind: "graphPoint";
+                label: string;
+                placing: "points" | "lines";
+                snap?: number;
+              }
+            | {
+                expectedLines?: number;
+                id: string;
+                kind: "extendedText";
+                label: string;
+              }
+          >;
+          id: Id<"examQuestions">;
+          key: Array<
+            | { correct: Array<string>; interaction: string; kind: "choice" }
+            | {
+                answers: Array<{ column: string; statement: string }>;
+                interaction: string;
+                kind: "matrix";
+              }
+            | {
+                interaction: string;
+                kind: "match";
+                pairs: Array<{ source: string; target: string }>;
+              }
+            | { interaction: string; kind: "order"; sequence: Array<string> }
+            | { correct: string; interaction: string; kind: "inlineChoice" }
+            | {
+                accepted: {
+                  acceptedAnswers: Array<string>;
+                  collapseWhitespace: boolean;
+                  ignoreCase: boolean;
+                  kind: "text";
+                };
+                interaction: string;
+                kind: "textEntry";
+              }
+            | {
+                interaction: string;
+                kind: "numericEntry";
+                tolerance?: { kind: "absolute" | "relative"; value: string };
+                value: string;
+              }
+            | { expression: string; interaction: string; kind: "mathEntry" }
+            | { correct: Array<string>; interaction: string; kind: "hotspot" }
+            | {
+                interaction: string;
+                kind: "gapMatch";
+                pairs: Array<{ choice: string; gap: string }>;
+              }
+            | {
+                interaction: string;
+                kind: "graphPoint";
+                target:
+                  | { kind: "points"; points: Array<{ x: number; y: number }> }
+                  | {
+                      kind: "lines";
+                      lines: Array<{
+                        through: Array<
+                          { x: number; y: number } | { x: number; y: number }
+                        >;
+                      }>;
+                    };
+                tolerance: number;
+              }
+            | {
+                criteria: Array<{
+                  criterion: string;
+                  levels: Array<{ descriptor: string; level: string }>;
+                }>;
+                interaction: string;
+                kind: "extendedText";
+              }
+          > | null;
+          prompt: Id<"editorDocuments">;
+          revision: number;
+          template: "choice";
+        }
+      >;
+      move: FunctionReference<
+        "mutation",
+        "public",
+        {
+          examId: Id<"exams">;
+          index: number;
+          questionId: Id<"examQuestions">;
+          slug: string;
+        },
+        { questions: Array<Id<"examQuestions">> }
+      >;
+      remove: FunctionReference<
+        "mutation",
+        "public",
+        { examId: Id<"exams">; questionId: Id<"examQuestions">; slug: string },
+        { questions: Array<Id<"examQuestions">> }
+      >;
+    };
+  };
   identity: {
     cards: {
       issue: FunctionReference<
@@ -2688,6 +3974,8 @@ export declare const api: {
             | "visit.end"
             | "document.edit"
             | "document.view"
+            | "exam.edit"
+            | "exam.view"
             | "invite.view"
             | "person.manage"
             | "person.view"
@@ -2705,6 +3993,8 @@ export declare const api: {
             | "visit.approve"
             | "document.edit"
             | "document.edit"
+            | "exam.edit"
+            | "exam.edit"
           >;
           name: string;
           scope:
@@ -2758,6 +4048,8 @@ export declare const api: {
               | "visit.end"
               | "document.edit"
               | "document.view"
+              | "exam.edit"
+              | "exam.view"
               | "invite.view"
               | "person.manage"
               | "person.view"
@@ -2775,6 +4067,8 @@ export declare const api: {
               | "visit.approve"
               | "document.edit"
               | "document.edit"
+              | "exam.edit"
+              | "exam.edit"
             >;
             createdAt: number;
             id: Id<"integrationClients">;
@@ -2992,6 +4286,7 @@ export declare const api: {
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { id: Id<"editorDocuments">; kind: "document" }
+              | { id: Id<"exams">; kind: "exam" }
               | { kind: string };
             subjectName: string | null;
           }>;
@@ -3594,6 +4889,7 @@ export declare const api: {
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { id: Id<"editorDocuments">; kind: "document" }
+              | { id: Id<"exams">; kind: "exam" }
               | { kind: string };
             tenant: {
               kind: "school" | "foundation";
@@ -3627,6 +4923,7 @@ export declare const api: {
             | { id: Id<"classes">; kind: "class" }
             | { id: Id<"tenantVisits">; kind: "visit" }
             | { id: Id<"editorDocuments">; kind: "document" }
+            | { id: Id<"exams">; kind: "exam" }
             | { kind: string };
           tenant: {
             kind: "school" | "foundation";

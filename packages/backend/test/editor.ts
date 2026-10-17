@@ -137,6 +137,23 @@ export const plantStep = Effect.fn("test.editor.plantStep")(function* (
   );
 });
 
+/**
+ * Plants `count` stored steps after a document's head, one plant per step. A submit refuses a
+ * batch of more than `MAX_BATCH_STEPS` steps, and a backlog that one fold read does not hold, so
+ * a test that needs a long log plants it.
+ */
+export const plantSteps = Effect.fn("test.editor.plantSteps")(function* (
+  fixture: Effect.Success<typeof tenancyFixture>,
+  documentId: GenericId.GenericId<"editorDocuments">,
+  count: number
+) {
+  yield* Effect.forEach(
+    Arr.makeBy(count, () => insertStep("x")),
+    (step) => plantStep(fixture, documentId, step),
+    { discard: true }
+  );
+});
+
 /** The document row, read inside the fixture. */
 export const documentRowOf = Effect.fn("test.editor.documentRowOf")(function* (
   documentId: GenericId.GenericId<"editorDocuments">

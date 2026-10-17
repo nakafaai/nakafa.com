@@ -14,7 +14,7 @@ import {
   type BuiltinRole,
   GrantScope,
 } from "@repo/backend/confect/access/schema";
-import type { Member } from "@repo/backend/confect/middleware/member.spec";
+import { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   Cohort,
   CohortAccess,
@@ -48,9 +48,9 @@ export const tenantAuthority = Authority.make(tenant, Authority.load(tenant), {
 
 /**
  * Whether a unit is locked. An archived unit is locked, and every row placed in
- * it is locked with it, so the other modules call this rule too.
+ * it is locked with it, so the unit's own authority and `scopePlace` read this rule.
  */
-export const unitLocked = (row: Pick<TenantUnitsDoc, "status">) =>
+const unitLocked = (row: Pick<TenantUnitsDoc, "status">) =>
   row.status === "archived";
 
 /** An archived unit is locked; unit grants cover it. */
@@ -68,6 +68,50 @@ const readUnit = Effect.fnUntraced(function* (
     .table("tenantUnits")
     .get(unitId)
     .pipe(Effect.orDie);
+});
+
+/**
+ * Where a row sits when its scope is one unit or the whole school. A unit row sits in
+ * its unit, so an archived unit locks it. A school-wide row sits in no unit, so nothing
+ * locks it but the school's suspension, which the decision already reads.
+ */
+export const scopePlace = Effect.fn("tenancy.authority.place")(function* (
+  scope: GrantScope
+) {
+  return yield* GrantScope.match(scope, {
+    tenant: () => Effect.succeed({ locked: false, units: [] }),
+    unit: ({ unitId }) =>
+      readUnit(unitId).pipe(
+        Effect.map((unit) => ({
+          locked: unitLocked(unit),
+          units: [unitId],
+        }))
+      ),
+  });
+});
+
+/**
+ * An action that a tenant and a unit both take, such as `exam.edit`. A scope decides
+ * its action on the tenant or on the unit, so the type holds the actions both take.
+ */
+type ScopeAction = Parameters<typeof tenantAuthority.check>[0] &
+  Parameters<typeof unitAuthority.authorize>[0];
+
+/**
+ * Decides one action on the scope a new row covers, as a row of that scope is decided:
+ * the member's tenant for a school-wide row, and the unit for a unit row, which the
+ * unit's own rules then decide.
+ */
+export const authorizeScope = Effect.fn("tenancy.authority.scope")(function* (
+  action: ScopeAction,
+  scope: GrantScope
+) {
+  const { tenant } = yield* Member;
+  yield* GrantScope.match(scope, {
+    tenant: () => tenantAuthority.check(action, tenant),
+    unit: ({ unitId }) =>
+      Effect.asVoid(unitAuthority.authorize(action, unitId)),
+  });
 });
 
 /** Reads one period by ID, for a subject whose lock depends on it. */

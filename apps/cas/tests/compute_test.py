@@ -227,8 +227,9 @@ def test_worker_fails_closed_if_linux_cannot_install_memory_budget(monkeypatch) 
         worker._limit_memory()
 
 
-# Ubuntu CI collects the excessive-allocation case. Never run it on macOS,
-# where RLIMIT_AS is not the production Linux memory guarantee.
+# The excessive-allocation case runs only on Linux, where RLIMIT_AS is the
+# production memory guarantee, and no current verification runs it. Never run
+# it on macOS, where RLIMIT_AS is not that guarantee.
 WORKER_REQUESTS = [
     {"operation": "factor", "expression": "x^4-1"},
     {"operation": "integrate", "expression": "x^2", "variable": "x"},
