@@ -36,16 +36,26 @@ export type MarkdownContentProps = {
 } & MarkdownSecurityProps &
   MarkdownFrameVariant;
 
-/** Renders one normalized, hardened markdown block. */
+/**
+ * Renders one normalized, hardened markdown block. A surface that draws other
+ * text than Nina's answers adds its own rehype plugins after the hardening, and
+ * may show raw HTML as the text it was written as instead of dropping it.
+ */
 export function MarkdownBlock({
   allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
   allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
   children,
   components = reactMdxComponents,
   defaultOrigin = SITE_ORIGIN,
+  rehypePlugins = [],
+  skipHtml = true,
 }: MarkdownSecurityProps & {
   readonly children: string;
   readonly components?: ComponentProps<typeof ReactMarkdown>["components"];
+  readonly rehypePlugins?: ComponentProps<
+    typeof ReactMarkdown
+  >["rehypePlugins"];
+  readonly skipHtml?: boolean;
 }) {
   const parsedContent = preprocessLaTeX(children.trim());
 
@@ -59,9 +69,10 @@ export function MarkdownBlock({
       rehypePlugins={[
         [harden, { allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin }],
         rehypeDirection,
+        ...(rehypePlugins ?? []),
       ]}
       remarkPlugins={REMARK_PLUGINS}
-      skipHtml
+      skipHtml={skipHtml}
     >
       {parsedContent}
     </ReactMarkdown>

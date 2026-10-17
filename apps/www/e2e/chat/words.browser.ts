@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, Record as Rec } from "effect";
+import { Effect, Record as Rec, Struct } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { LEARNER_TEXT, learnerMessage } from "@/e2e/support/prose";
 import type { StoredMessage } from "@/e2e/support/query";
@@ -40,9 +40,14 @@ const shownText = (page: Page, message: StoredMessage) =>
     return bubble instanceof HTMLElement ? bubble.innerText : "";
   }, BUBBLE_CONTENT);
 
-/** Nothing the learner wrote is read as Markdown or as a link, and every word stays. */
+/**
+ * A learner's words are Markdown, and plain words stay as written: text that
+ * reads as HTML, asterisks inside a product and each line break keep their
+ * place, with no markup around them. A link they paste becomes a link, and
+ * lines they indent become a code block, as Markdown draws them.
+ */
 const showsAsWritten = async (page: Page) => {
-  for (const message of Rec.values(WORDS)) {
+  for (const message of Rec.values(Struct.omit(WORDS, ["indented", "link"]))) {
     await expect.soft
       .poll(() => shownText(page, message), message.text)
       .toBe(message.text);
@@ -50,6 +55,16 @@ const showsAsWritten = async (page: Page) => {
       .soft((await bubbleOf(page, message)).locator(MARKDOWN_MARKUP))
       .toHaveCount(0);
   }
+  await expect.soft
+    .poll(() => shownText(page, WORDS.link), WORDS.link.text)
+    .toBe(WORDS.link.text);
+  await expect
+    .soft((await bubbleOf(page, WORDS.link)).getByRole("link"))
+    .toHaveCount(1);
+  const indented = (await bubbleOf(page, WORDS.indented)).locator("pre");
+  await expect.soft(indented).toHaveCount(1);
+  await expect.soft(indented).toContainText("A. 2");
+  await expect.soft(indented).toContainText("B. 3");
 
   // A message of one word is one line tall, as it was: its box adds nothing around its text.
   const one = await (await bubbleOf(page, WORDS.one)).evaluate((element) => {

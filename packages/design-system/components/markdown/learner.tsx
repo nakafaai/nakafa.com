@@ -1,6 +1,7 @@
 import { MarkdownBlock } from "@repo/design-system/components/markdown/content";
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react/mdx";
 import type { ReactMarkdownComponents } from "@repo/design-system/components/markdown/react/node";
+import { rehypeLearnerText } from "@repo/design-system/lib/markdown/learner";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
@@ -46,64 +47,39 @@ function LearnerImage({ alt, src }: ComponentProps<"img">) {
 
 /**
  * The components of learner text. They are the parts of Nina's answers, with
- * the spacing, the headings and the links that learner text needs: one gap of
- * `mt-3` between blocks, none above the first, and every heading at the body
- * size. A paragraph keeps the line breaks the learner wrote.
+ * the headings, the bold and the links that learner text needs: every heading
+ * at the body size, and bold as plain semibold, so a post never shouts.
  */
 const learnerComponents: ReactMarkdownComponents = {
   ...reactMdxComponents,
   a: ({ node: _node, ...props }) => <LearnerLink {...props} />,
   blockquote: ({ node: _node, ...props }) => (
     <blockquote
-      className="mt-3 rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic first:mt-0"
+      className="rounded-r-xl border-foreground border-l-2 bg-muted p-4 italic *:mt-3 *:first:mt-0"
       data-nakafa="quote"
       {...props}
     />
   ),
   h1: ({ node: _node, ...props }) => (
-    <h1
-      className="mt-3 font-semibold first:mt-0"
-      data-nakafa="heading-1"
-      {...props}
-    />
+    <h1 className="font-semibold" data-nakafa="heading-1" {...props} />
   ),
   h2: ({ node: _node, ...props }) => (
-    <h2
-      className="mt-3 font-semibold first:mt-0"
-      data-nakafa="heading-2"
-      {...props}
-    />
+    <h2 className="font-semibold" data-nakafa="heading-2" {...props} />
   ),
   h3: ({ node: _node, ...props }) => (
-    <h3
-      className="mt-3 font-semibold first:mt-0"
-      data-nakafa="heading-3"
-      {...props}
-    />
+    <h3 className="font-semibold" data-nakafa="heading-3" {...props} />
   ),
   h4: ({ node: _node, ...props }) => (
-    <h4
-      className="mt-3 font-semibold first:mt-0"
-      data-nakafa="heading-4"
-      {...props}
-    />
+    <h4 className="font-semibold" data-nakafa="heading-4" {...props} />
   ),
   h5: ({ node: _node, ...props }) => (
-    <h5
-      className="mt-3 font-semibold first:mt-0"
-      data-nakafa="heading-5"
-      {...props}
-    />
+    <h5 className="font-semibold" data-nakafa="heading-5" {...props} />
   ),
   h6: ({ node: _node, ...props }) => (
-    <h6
-      className="mt-3 font-semibold first:mt-0"
-      data-nakafa="heading-6"
-      {...props}
-    />
+    <h6 className="font-semibold" data-nakafa="heading-6" {...props} />
   ),
   hr: ({ node: _node, ...props }) => (
-    <hr className="mt-3 border-border first:mt-0" data-nakafa="hr" {...props} />
+    <hr className="border-border" data-nakafa="hr" {...props} />
   ),
   img: ({ node: _node, ...props }) => <LearnerImage {...props} />,
   li: ({ node: _node, ...props }) => (
@@ -114,32 +90,33 @@ const learnerComponents: ReactMarkdownComponents = {
     />
   ),
   ol: ({ node: _node, ...props }) => (
-    <ol
-      className="mt-3 list-decimal first:mt-0"
-      data-nakafa="ordered-list"
-      {...props}
-    />
+    <ol className="list-decimal" data-nakafa="ordered-list" {...props} />
+  ),
+  strong: ({ node: _node, ...props }) => (
+    <strong className="font-semibold" data-nakafa="strong" {...props} />
   ),
   p: ({ node: _node, ...props }) => (
     <p
-      className="mt-3 whitespace-pre-line text-pretty leading-relaxed first:mt-0"
+      className="text-pretty leading-relaxed"
       data-nakafa="paragraph"
       {...props}
     />
   ),
   ul: ({ node: _node, ...props }) => (
-    <ul
-      className="mt-3 list-disc first:mt-0"
-      data-nakafa="unordered-list"
-      {...props}
-    />
+    <ul className="list-disc" data-nakafa="unordered-list" {...props} />
   ),
 };
 
+/** The rehype plugins of learner text, after the hardening of Nina's answers. */
+const LEARNER_PLUGINS = [rehypeLearnerText];
+
 /**
  * Draws text a learner wrote as Markdown, through the pipeline of Nina's
- * answers, so a formula reads the same in both. The text takes the size and
- * the color of the place it is drawn in.
+ * answers, so a formula reads the same in both. Every block, a code block, a
+ * formula and a table included, sits one gap of `mt-3` below the one before
+ * it, with none above the first or below the last. Each line break the learner
+ * wrote stays, asterisks inside words stay, and text that reads as HTML shows
+ * as written. The text takes the size and the color of the place it is in.
  */
 export function LearnerText({
   children,
@@ -149,8 +126,17 @@ export function LearnerText({
   readonly className?: string | undefined;
 }) {
   return (
-    <div className={cn("wrap-anywhere", className)} dir="auto">
-      <MarkdownBlock components={learnerComponents}>{children}</MarkdownBlock>
+    <div
+      className={cn("wrap-anywhere *:mt-3 *:mb-0 *:first:mt-0", className)}
+      dir="auto"
+    >
+      <MarkdownBlock
+        components={learnerComponents}
+        rehypePlugins={LEARNER_PLUGINS}
+        skipHtml={false}
+      >
+        {children}
+      </MarkdownBlock>
     </div>
   );
 }
