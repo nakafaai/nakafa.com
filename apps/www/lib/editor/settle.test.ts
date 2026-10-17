@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
-import { nodeDepth } from "@repo/design-system/components/editor/depth";
+import { nodeDepth } from "@repo/utilities/depth";
 import { encodeJsonText } from "@repo/utilities/json";
 import type { Node } from "@tiptap/pm/model";
 import type { EditorState } from "@tiptap/pm/state";

@@ -1,8 +1,8 @@
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import { VersionSchema } from "@repo/backend/confect/editor/batch";
-import { nodeDepth } from "@repo/backend/confect/editor/model";
 import { MAX_BATCH_STEPS } from "@repo/backend/confect/editor/size";
 import type { Step } from "@repo/backend/confect/editor/step";
+import { nodeDepth } from "@repo/utilities/depth";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 import type { Node, Schema as ProseSchema } from "prosemirror-model";

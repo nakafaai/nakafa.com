@@ -1,21 +1,6 @@
+import { nodeDepth } from "@repo/utilities/depth";
 import { Extension } from "@tiptap/core";
-import type { Node } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
-import { Array as Arr, Number as Num } from "effect";
-
-/**
- * How many levels a node nests, counting the node itself: a text node is one level,
- * a paragraph of text is two, and a `doc` holding that paragraph is three. A
- * document's depth is the depth of its `doc` node, which the server bounds (ADR 0028).
- */
-export function nodeDepth(node: Node): number {
-  return (
-    1 +
-    Arr.reduce(node.content.content, 0, (deepest, child) =>
-      Num.max(deepest, nodeDepth(child))
-    )
-  );
-}
 
 /**
  * Refuses an edit that would nest the document deeper than `maxDepth` levels, so the

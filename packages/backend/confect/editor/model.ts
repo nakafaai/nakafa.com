@@ -2,10 +2,8 @@ import type {
   MarkTypeSchema,
   NodeTypeSchema,
 } from "@repo/backend/confect/editor/node";
-import { Array as Arr, Number as Num } from "effect";
 import {
   type MarkSpec,
-  type Node,
   type NodeSpec,
   Schema as ProseSchema,
 } from "prosemirror-model";
@@ -20,9 +18,9 @@ type ModelMarkType = typeof MarkTypeSchema.Type;
  * The node specs of an assessment document, written as the editor's schema writes them:
  * the content, the group, and the attributes with the defaults that ProseMirror applies
  * when a step leaves an attribute out (ADR 0028). The keys follow the editor's order,
- * because the order of the types decides which type a fill or a wrap picks, so a step
- * makes the same document on the server as in every editor. `assessment.test.ts` pins
- * each spec and the order against the editor's own schema.
+ * because the order of the types decides which type a fill or a wrap picks. The design
+ * system cannot import this package, so these specs are a second copy of the editor's,
+ * which ADR 0028 accepts.
  */
 const NODE_SPECS: Record<ModelNodeType, NodeSpec> = {
   paragraph: { content: "inline*", group: "block" },
@@ -59,9 +57,11 @@ const NODE_SPECS: Record<ModelNodeType, NodeSpec> = {
 };
 
 /**
- * The mark specs of an assessment document, in the editor's order: the plain marks, then
- * the link. A code mark excludes every other mark, and a link takes one attribute, its
- * address, which the contract names and the editor keeps (ADR 0028).
+ * The mark specs of an assessment document, in the contract's order (`MarkTypeSchema`),
+ * which the editor's schema takes too. A mark's rank is its place in this order, so a
+ * text stores its marks in the order the contract accepts, and `model.test.ts` pins it.
+ * A code mark excludes every other mark, and a link takes one attribute, its address,
+ * which the contract names and the editor keeps (ADR 0028).
  */
 const MARK_SPECS: Record<ModelMarkType, MarkSpec> = {
   bold: {},
@@ -81,17 +81,3 @@ export const assessmentModel = new ProseSchema<ModelNodeType, ModelMarkType>({
   marks: MARK_SPECS,
   nodes: NODE_SPECS,
 });
-
-/**
- * How many levels a node nests, counting the node itself: a text node is one level, a
- * paragraph of text is two, and a `doc` holding that paragraph is three. This is the
- * count that `MAX_DOCUMENT_DEPTH` bounds, and the one the editor's depth check uses.
- */
-export function nodeDepth(node: Node): number {
-  return (
-    1 +
-    Arr.reduce(node.content.content, 0, (deepest, child) =>
-      Num.max(deepest, nodeDepth(child))
-    )
-  );
-}

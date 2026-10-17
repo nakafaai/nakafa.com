@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { assessmentModel, nodeDepth } from "@repo/backend/confect/editor/model";
+import { assessmentModel } from "@repo/backend/confect/editor/model";
+import { MarkTypeSchema } from "@repo/backend/confect/editor/node";
+import { nodeDepth } from "@repo/utilities/depth";
+import { Record } from "effect";
 
 describe("editor/model content rules", () => {
   it("accepts a list whose items open with a paragraph, and refuses an item that holds none", () => {
@@ -31,6 +34,12 @@ describe("editor/model content rules", () => {
       });
     expect(() => code([]).check()).not.toThrow();
     expect(() => code([{ type: "bold" }]).check()).toThrow();
+  });
+});
+
+describe("editor/model marks", () => {
+  it("keeps the marks in the contract's order, which ranks them in a text", () => {
+    expect(Record.keys(assessmentModel.marks)).toEqual(MarkTypeSchema.literals);
   });
 });
 

@@ -1,7 +1,7 @@
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import { decodeStep } from "@repo/backend/confect/editor/step";
 import type { StepView } from "@repo/backend/confect/editor/view";
-import { nodeDepth } from "@repo/design-system/components/editor/depth";
+import { nodeDepth } from "@repo/utilities/depth";
 import { JsonTextSchema } from "@repo/utilities/json";
 import type { Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import { Slice } from "@tiptap/pm/model";
