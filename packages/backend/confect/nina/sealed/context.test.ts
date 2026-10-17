@@ -10,6 +10,7 @@ import {
   type Replacement,
   sealThreadIn,
   withoutRowIds,
+  writtenThreadIn,
 } from "@repo/backend/test/nina/seal";
 import { inAction } from "@repo/backend/test/nina/sealed";
 import { createThreadTest } from "@repo/backend/test/nina/thread";
@@ -80,10 +81,19 @@ describe("the recent context of a turn through the sealed module", () => {
       threadId: f.identity.threadId,
     };
     const plain = await inAction(f.t, readRecentContext(owner, read));
+    const written = await writtenThreadIn(f.t, f.identity.threadId, owner);
+    expect(
+      withoutRowIds(
+        await inAction(f.t, readRecentContext(owner, afterSeal(read, written)))
+      )
+    ).toEqual(withoutRowIds(plain));
     const replacements = await sealThreadIn(f.t, f.identity.threadId, owner);
     const sealed = await inAction(
       f.t,
-      readRecentContext(owner, afterSeal(read, replacements))
+      readRecentContext(
+        owner,
+        afterSeal(afterSeal(read, written), replacements)
+      )
     );
     expect(withoutRowIds(sealed)).toEqual(withoutRowIds(plain));
     expect(sealed.inputPrompt).toHaveLength(1);
@@ -100,10 +110,19 @@ describe("the recent context of a turn through the sealed module", () => {
       threadId: f.identity.threadId,
     };
     const plain = await inAction(f.t, readRecentContext(owner, read));
+    const written = await writtenThreadIn(f.t, f.identity.threadId, owner);
+    expect(
+      withoutRowIds(
+        await inAction(f.t, readRecentContext(owner, afterSeal(read, written)))
+      )
+    ).toEqual(withoutRowIds(plain));
     const replacements = await sealThreadIn(f.t, f.identity.threadId, owner);
     const sealed = await inAction(
       f.t,
-      readRecentContext(owner, afterSeal(read, replacements))
+      readRecentContext(
+        owner,
+        afterSeal(afterSeal(read, written), replacements)
+      )
     );
     expect(withoutRowIds(sealed)).toEqual(withoutRowIds(plain));
     expect(sealed.inputPrompt).toHaveLength(1);
@@ -181,10 +200,20 @@ describe("the prompt input of a turn through the sealed module", () => {
     const owner = f.identity.userId;
     const promptMessageId = f.promptMessageId;
     const plain = await inAction(f.t, readPromptInput(owner, promptMessageId));
+    const written = await writtenThreadIn(f.t, f.identity.threadId, owner);
+    expect(
+      await inAction(
+        f.t,
+        readPromptInput(owner, copyOf(written, promptMessageId))
+      )
+    ).toEqual(plain);
     const replacements = await sealThreadIn(f.t, f.identity.threadId, owner);
     const sealed = await inAction(
       f.t,
-      readPromptInput(owner, copyOf(replacements, promptMessageId))
+      readPromptInput(
+        owner,
+        copyOf(replacements, copyOf(written, promptMessageId))
+      )
     );
     expect(sealed).toEqual(plain);
     expect(sealed).toHaveLength(1);

@@ -22,7 +22,9 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { sealFileName } from "@repo/backend/confect/nina/sealed/file";
 import spec from "@repo/backend/confect/nina/uploads.spec";
+import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { Clock, Duration, Effect, Exit, Layer } from "effect";
 
 const uploadQuota = new RateLimiter(components.agentRateLimiter, {
@@ -69,7 +71,11 @@ const save = FunctionImpl.make(
         });
       }
       const { runMutation: mutate } = yield* MutationRunner;
-      const uploadId = yield* mutate(refs.internal.nina.uploads.reserve, {});
+      // The reservation seals the name first, so the component never stores the plain name.
+      const { storedFilename, uploadId } = yield* mutate(
+        refs.internal.nina.uploads.reserve,
+        { filename: args.filename }
+      );
       const ctx = yield* ActionCtx;
       yield* Effect.gen(function* () {
         // The Agent SDK owns storage, hashing, deduplication and file references.
@@ -79,7 +85,7 @@ const save = FunctionImpl.make(
               ctx,
               components.nina,
               new Blob([args.bytes], { type: args.mediaType }),
-              { filename: args.filename }
+              { filename: storedFilename }
             ),
           catch: uploadFailure,
         });
@@ -107,7 +113,7 @@ const reserve = FunctionImpl.make(
   schema,
   spec,
   "reserve",
-  Effect.fn("nina.uploads.reserve")(function* () {
+  Effect.fn("nina.uploads.reserve")(function* (args) {
     const { appUser } = yield* requireAuth();
     const now = yield* Clock.currentTimeMillis;
     const pending = yield* (yield* DatabaseReader)
@@ -135,11 +141,16 @@ const reserve = FunctionImpl.make(
         message: "Too many uploads. Try again shortly.",
       });
     }
+    const keys = yield* ensureLearnerKeys(appUser._id).pipe(Effect.orDie);
+    const storedFilename = yield* sealFileName(keys, args.filename).pipe(
+      Effect.orDie
+    );
     const uploadId = yield* (yield* DatabaseWriter)
       .table("ninaUploads")
       .insert({
         userId: appUser._id,
         expiresAt: now + Duration.toMillis(NINA_UPLOAD_LIFETIME),
+        nameSealed: true,
         state: { status: "uploading" },
       })
       .pipe(Effect.orDie);
@@ -148,7 +159,7 @@ const reserve = FunctionImpl.make(
       refs.internal.nina.uploads.discard,
       { uploadId }
     );
-    return uploadId;
+    return { storedFilename, uploadId };
   }, Effect.catchDefect(uploadFailure))
 );
 

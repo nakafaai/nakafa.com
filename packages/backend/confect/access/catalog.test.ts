@@ -81,6 +81,7 @@ describe("access/catalog", () => {
       "integration",
       "class",
       "visit",
+      "document",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
@@ -97,6 +98,15 @@ describe("access/catalog", () => {
       "period.view",
       "person.view",
     ]);
+  });
+
+  it("opens the document actions to the school's Admin and Teacher, and to no student or integration client", () => {
+    for (const action of ["document.view", "document.edit"]) {
+      expect(opensTo(action, "admin")).toBe(true);
+      expect(opensTo(action, "teacher")).toBe(true);
+      expect(opensTo(action, "student")).toBe(false);
+      expect(opensTo(action, "integration")).toBe(false);
+    }
   });
 
   it("derives every change of every kind and extension", () => {
@@ -236,6 +246,7 @@ describe("access/catalog", () => {
       "integration.manage",
       "integration.view",
       "visit.approve",
+      "document.edit",
     ]);
   });
 

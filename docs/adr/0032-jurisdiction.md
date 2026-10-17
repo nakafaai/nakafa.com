@@ -3,8 +3,8 @@
 ## Status
 
 Accepted on 13 October 2026 with owner decisions K2, K4, K17, and K20. The owner
-approved decisions K1 to K20 on that day. Planned, except the four locale
-settings, which are live.
+approved decisions K1 to K20 on that day. The Implementation Status table at the
+end says which parts are live, and every other part is planned.
 The profile module, `confect/jurisdiction`, does not exist yet. The organisation
 holds its country and its billing currency, and each school holds its time zone
 and its content language (`packages/backend/confect/tenancy/schema.ts`). Until
@@ -110,7 +110,7 @@ lists.
 
 ### Design-system rules that depend on the locale
 
-These are targets. They are not live.
+The first rule is live. The other two are targets.
 
 - The text direction comes from the interface language, through one helper and
   the `DirectionProvider` of Base UI.
@@ -145,4 +145,5 @@ These are targets. They are not live.
 | `confect/jurisdiction` | Planned, program wave A |
 | Signed Aksara profile for Indonesia | Planned, program wave A |
 | The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NEXT_LOCALE` cookie |
-| Text direction through one helper | Target |
+| Text direction through one helper | Live. `textDirection` in `packages/internationalization/src/direction.ts` gives the direction. The root layout, `apps/www/app/[locale]/layout.tsx`, sets `dir` on `<html>` and passes it to `DesignSystemProvider`, which renders the `DirectionProvider` of Base UI |
+| School time through one formatter | Built. `formatSchoolTime` in `packages/internationalization/src/school/time.ts`. No screen uses it yet |

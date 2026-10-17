@@ -4,7 +4,8 @@
 
 Accepted. Amended on 13 October 2026: the assessment player and the school
 working set are two more instances of the store rule (Instances Of The Store
-Rule).
+Rule). Amended on 17 October 2026: the pending actions of the chat stay out of
+transitions (Pending Actions Are Not Transitions).
 
 ## Decision
 
@@ -57,6 +58,24 @@ it.
   `withHydrationBoundary` from `@/lib/content/renderer/client/boundary`, whose
   visible `Activity` lets the lesson hydrate, and answer presses, before the
   renderer's code arrives.
+
+## Pending Actions Are Not Transitions
+
+A send, a stop, a retry, a new-chat admission, and the attachment tray that
+waits for one keep their pending state as plain state, not as a React
+transition. Two facts of the installed packages make a transition wrong for
+them. React entangles every transition that starts while an async action is
+pending with that action (`entangleAsyncAction` in react-dom 19.3.0), and
+Next.js dispatches navigation inside `startTransition`
+(`dist/client/components/app-router-instance.js` in next 16.4.0). A transition
+that held a send would therefore hold the learner's next navigation until the
+server answered. The chat store (`apps/www/components/ai/chat/store.client.ts`)
+holds the pending flags of a send, a stop, or a retry. The admission
+(`apps/www/components/ai/chat/admission.tsx`) holds its prompt, and the tray
+(`apps/www/components/ai/input.tsx`) holds the files that wait for it. The
+navigation tests in `apps/www/e2e/chat/leave.browser.ts` check that a learner
+can leave while an admission is pending. Rename, sharing, and delete need no pending state: they
+update the loaded lists optimistically and roll back on failure.
 
 ## Instances Of The Store Rule
 
