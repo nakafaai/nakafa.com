@@ -110,7 +110,7 @@ lists.
 
 ### Design-system rules that depend on the locale
 
-These are targets. They are not live.
+The first rule is live. The other two are targets.
 
 - The text direction comes from the interface language, through one helper and
   the `DirectionProvider` of Base UI.
@@ -145,4 +145,4 @@ These are targets. They are not live.
 | `confect/jurisdiction` | Planned, program wave A |
 | Signed Aksara profile for Indonesia | Planned, program wave A |
 | The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NEXT_LOCALE` cookie |
-| Text direction through one helper | Target |
+| Text direction through one helper | Live. `textDirection` in `packages/internationalization/src/direction.ts` sets `dir` on `<html>` and the `DirectionProvider` of Base UI, which `DesignSystemProvider` renders |
