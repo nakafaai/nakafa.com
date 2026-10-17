@@ -266,6 +266,12 @@ function MemoryEditorSheet({
       <SheetContent
         className="w-full max-w-none gap-0 border-l-0"
         finalFocus={() => {
+          // The sheet also goes when the window widens past the panel's width.
+          // The editor is still open then, and it moves into the panel with its
+          // caret, so the focus stays in it.
+          if (open) {
+            return false;
+          }
           if (opener === null) {
             return document.getElementById(MEMORY_ADD_ID);
           }
