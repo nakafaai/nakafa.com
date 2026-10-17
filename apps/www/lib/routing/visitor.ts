@@ -7,7 +7,10 @@ import { readRequestHost } from "@/lib/routing/school/host";
  * protocol, path and query of the request URL, with the host and port that the
  * Host header names. A self-hosted server builds the request URL from its own
  * address (ADR 0026), so the request URL can name another host and another port
- * than the visitor's, behind a reverse proxy, a port mapping or a tunnel. A Host
+ * than the visitor's, behind a reverse proxy, a port mapping or a tunnel. Its
+ * protocol is already the visitor's: Next.js writes `https` when the connection is
+ * TLS or `x-forwarded-proto` names `https` (`resolve-routes.js` in
+ * `next/dist/server/lib/router-utils`, line 116), and on Vercel always. A Host
  * header without a port names the default port of the protocol, which is the port
  * that the browser used. A request without a usable Host header keeps the host and
  * port of its URL.

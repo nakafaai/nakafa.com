@@ -35,6 +35,16 @@ describe("visitor URL", () => {
     expect(url.href).toBe("https://harapan.nakafa.com/classes/");
   });
 
+  it("keeps the https protocol of a request behind a TLS proxy, with the visitor's host and its default port", () => {
+    const url = readVisitorUrl(
+      new NextRequest("https://localhost:3000/classes/", {
+        headers: { host: "harapan.nakafa.com" },
+      })
+    );
+
+    expect(url.href).toBe("https://harapan.nakafa.com/classes/");
+  });
+
   it("keeps the host of the request URL when the request has no Host header", () => {
     const url = readVisitorUrl(
       new NextRequest("http://localhost:3000/en/search")
