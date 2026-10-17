@@ -50,7 +50,7 @@ const share = Ref.getFunctionReference(
   refs.public.chats.mutations.updateChatVisibility
 );
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
-const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
+const halted = Ref.getFunctionReference(refs.internal.nina.phase.halted);
 const cleanup = Ref.getFunctionReference(
   refs.internal.auth.cleanup.cleanupDeletedUser
 );

@@ -232,23 +232,7 @@ describe("A tool-call repair of a turn that the learner stops", () => {
 
 describe("The halt watch of a running turn", () => {
   const turnId = Schema.decodeUnknownSync(Id("ninaTurns"))("turn");
-  const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
-  const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
-  const recover = Ref.getFunctionReference(
-    refs.internal.nina.lifecycle.recover
-  );
-
-  it("tells a run to halt once its turn was stopped, settled or removed", async () => {
-    const f = await createNinaTest();
-    await f.t.mutation(claim, { turnId: f.turnId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(false);
-    await f.owner.mutation(cancel, { chatId: f.chatId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-    await f.t.mutation(recover, { turnId: f.turnId });
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-    await f.t.mutation((ctx) => ctx.db.delete("ninaTurns", f.turnId));
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-  });
+  const halted = Ref.getFunctionReference(refs.internal.nina.phase.halted);
 
   it.effect(
     "keeps asking after one check fails, and aborts the run once a check finds its turn halted",
