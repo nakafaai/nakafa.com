@@ -150,6 +150,17 @@ export function getParabolicLoopSample(
   };
 }
 
+/**
+ * The pose of a projectile at rest for reduced motion: the top of its arc, where
+ * its vertical speed is zero and its height is the peak height of the launch.
+ */
+export function getRestingProjectileSample(motion: ParabolicMotionState) {
+  return {
+    point: getProjectilePoint(motion, motion.peakTime),
+    time: motion.peakTime,
+  };
+}
+
 export function formatAngleMath(value: number) {
   return `\\theta=${formatTrimmedNumber(value)}^\\circ`;
 }

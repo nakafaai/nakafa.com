@@ -1,10 +1,12 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
 import {
   getParabolicLoopSample,
   getProjectilePoint,
   getProjectileVelocityAt,
+  getRestingProjectileSample,
   PARABOLIC_SCENE,
   type ParabolicLaunchId,
   type ParabolicMotionState,
@@ -187,9 +189,16 @@ function AnimatedBall({ motion }: { motion: ParabolicMotionState }) {
   const ballRef = useRef<Group>(null);
   const startRef = useRef<number | null>(null);
   const scenarioRef = useRef<ParabolicLaunchId | null>(null);
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
   useFrame(({ clock }) => {
     if (!ballRef.current) {
+      return;
+    }
+
+    // With reduced motion the ball rests at the top of its arc and never flies.
+    if (calm) {
+      placeBall(ballRef.current, motion, getRestingProjectileSample(motion));
       return;
     }
 
@@ -201,24 +210,11 @@ function AnimatedBall({ motion }: { motion: ParabolicMotionState }) {
       startRef.current = clock.elapsedTime;
     }
 
-    const sample = getParabolicLoopSample(
+    placeBall(
+      ballRef.current,
       motion,
-      clock.elapsedTime - startRef.current
+      getParabolicLoopSample(motion, clock.elapsedTime - startRef.current)
     );
-    const velocity = getProjectileVelocityAt(motion, sample.time);
-    const heading = Math.atan2(
-      velocity.verticalVelocity,
-      velocity.horizontalVelocity
-    );
-    const spin =
-      (sample.point.xMeters * PARABOLIC_SCENE.worldScale) /
-      PARABOLIC_SCENE.ballRadius;
-
-    ballRef.current.position.set(
-      ...toSceneTuple(sample.point.x, sample.point.y, 0)
-    );
-    ballRef.current.rotation.set(0, 0, heading);
-    ballRef.current.children[0]?.rotation.set(0, 0, -spin);
   });
 
   return (
@@ -241,6 +237,30 @@ function AnimatedBall({ motion }: { motion: ParabolicMotionState }) {
       </group>
     </CameraBounds>
   );
+}
+
+/**
+ * Places the ball, its heading and its spin for one sample of its flight. The
+ * heading follows the vertical speed at that moment, and the spin follows the
+ * distance flown, so the ball turns over the ground it crosses.
+ */
+function placeBall(
+  ball: Group,
+  motion: ParabolicMotionState,
+  sample: Pick<ReturnType<typeof getParabolicLoopSample>, "point" | "time">
+) {
+  const velocity = getProjectileVelocityAt(motion, sample.time);
+  const heading = Math.atan2(
+    velocity.verticalVelocity,
+    velocity.horizontalVelocity
+  );
+  const spin =
+    (sample.point.xMeters * PARABOLIC_SCENE.worldScale) /
+    PARABOLIC_SCENE.ballRadius;
+
+  ball.position.set(...toSceneTuple(sample.point.x, sample.point.y, 0));
+  ball.rotation.set(0, 0, heading);
+  ball.children[0]?.rotation.set(0, 0, -spin);
 }
 
 function ProjectileBall({ color }: { color: string }) {
