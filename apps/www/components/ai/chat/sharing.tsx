@@ -25,7 +25,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
-import { useAnswerRetry } from "@/components/ai/chat/retry";
+import { useAnswerRetry } from "@/components/ai/chat/retry.client";
 import { reportClientException } from "@/lib/analytics/client";
 import { isNewLinkFailure } from "@/lib/share/failure";
 
