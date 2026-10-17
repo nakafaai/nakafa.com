@@ -758,7 +758,7 @@ nobody tries them again without a new reason.
   numeral, for a number, so `Dr. Budi sakit` opened as a list item `Budi sakit`
   and the next save wrote `1. Budi sakit` (ueberdosis/tiptap issues 8376 and
   8395; the fix merged for 8376 stops mixed-case titles only and is not in
-  3.31.4, the latest release). The editor lexes a numbered list with `marked`,
+  any release up to 3.32.0). The editor lexes a numbered list with `marked`,
   as it does a bullet list, and the reader does too. Both lex the underline and
   the highlight with the one rule of `marks.ts`: a mark is a pair of delimiters
   around words, so `C++ and C++20` and `a == b == c` are text. A pair with no
