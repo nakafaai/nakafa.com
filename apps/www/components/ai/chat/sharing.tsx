@@ -18,13 +18,21 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { cn } from "cn";
-import { Array as Arr, Effect } from "effect";
+import { useConvex } from "convex/react";
+import { Array as Arr, Effect, Exit, Scope } from "effect";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import {
+  type RefObject,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
+import { awaitServerAnswer } from "@/lib/convex/answer";
 import { isNewLinkFailure } from "@/lib/share/failure";
 
 /**
@@ -45,12 +53,52 @@ export function ChatSharing({
 }) {
   const t = useTranslations("Ai");
   const actionErrorMessage = useTranslations("Common")("action-error");
+  const convex = useConvex();
   const updateChatVisibility = useUpdateChatVisibilityMutation();
-  // A retry gives the two readers of the link a new key. Each one subscribes to
-  // the token again, which asks the server anew, while the dialog stays mounted.
+  // A retry gives the readers of the link a new key, and the dialog stays
+  // mounted. Each reader subscribes to the token again once it mounts, which
+  // asks the server anew.
   const [attempt, setAttempt] = useState(0);
+  const [isPending, startTransition] = useTransition();
+  // The subscription that holds a fresh answer for a retry, with the attempt the
+  // retry started from. It ends once the attempt has moved on.
+  const answerHold = useRef<{ attempt: number; scope: Scope.Closeable } | null>(
+    null
+  );
   const isPrivate = chat.visibility === "private";
-  const retry = () => setAttempt((count) => count + 1);
+  const remount = () => setAttempt((count) => count + 1);
+
+  // Once the attempt has moved on, the readers of the new attempt have subscribed,
+  // because the effects of children run before the effects of their parent.
+  useEffect(() => {
+    const hold = answerHold.current;
+    if (hold !== null && hold.attempt !== attempt) {
+      releaseAnswerHold(answerHold);
+    }
+  }, [attempt]);
+  // A dialog that closes before the answer comes releases the answer it holds.
+  useEffect(() => () => releaseAnswerHold(answerHold), []);
+
+  /**
+   * Retries a link that failed in a way the query does not declare. Its readers
+   * have unmounted, so nothing subscribes to the token. The retry subscribes
+   * first and waits for the server's answer, then remounts the readers, which
+   * read that answer and subscribe. The button shows the pending state meanwhile.
+   */
+  const retryFromServer = () => {
+    startTransition(async () => {
+      const hold = Scope.makeUnsafe();
+      answerHold.current = { attempt, scope: hold };
+      await Effect.runPromise(
+        awaitServerAnswer(convex, chats.queries.getShareToken, {
+          chatId: chat._id,
+        }).pipe(Scope.provide(hold))
+      );
+      // A nested transition keeps the remount in the same transition, so the
+      // pending state lasts until the readers are back.
+      startTransition(remount);
+    });
+  };
 
   /** Persist the selected chat visibility, unless the chat already has it. */
   const handleUpdateVisibility = (visibility: ChatVisibility) => {
@@ -97,7 +145,9 @@ export function ChatSharing({
         // The description's boundary reports an undeclared failure of the read
         // that both of them make, so this boundary recovers it without a report.
         <ErrorBoundary
-          fallbackRender={() => <ChatShareRetry onRetry={retry} />}
+          fallbackRender={() => (
+            <ChatShareRetry isPending={isPending} onRetry={retryFromServer} />
+          )}
           key={attempt}
           report={false}
         >
@@ -105,7 +155,7 @@ export function ChatSharing({
             chatId={chat._id}
             isPrivate={isPrivate}
             onCreate={() => handleUpdateVisibility("public")}
-            onRetry={retry}
+            onRetry={remount}
           />
         </ErrorBoundary>
       }
@@ -152,6 +202,16 @@ export function ChatSharing({
   );
 }
 
+/** Closes the subscription that a retry holds, if a retry holds one. */
+function releaseAnswerHold(hold: RefObject<{ scope: Scope.Closeable } | null>) {
+  const current = hold.current;
+  if (current === null) {
+    return;
+  }
+  hold.current = null;
+  Effect.runFork(Scope.close(current.scope, Exit.void));
+}
+
 /**
  * Reads the share token of a chat that is public. A private chat has no token
  * to read, so its query is skipped.
@@ -186,10 +246,10 @@ function ChatShareDescription({
 
 /**
  * The action of the share dialog: create the link, copy it, or load it again.
- * A declared failure shows inline and never reaches the error boundary. Convex
- * keeps a failed answer until the server answers again after its last subscriber
- * leaves, and a render that throws that answer never subscribes again, so a retry
- * that threw it would find the same error. The action reports a failure that
+ * A declared failure shows inline and never reaches the error boundary: its
+ * readers stay subscribed, so a retry remounts them and the server answers anew.
+ * An undeclared failure unmounts the readers instead, and its retry asks the
+ * server first (see `retryFromServer`). The action reports a failure that
  * appears while it is mounted. A retry mounts it afresh, and the failure that the
  * cache still holds then is not new, so it is not reported again.
  */
@@ -256,12 +316,25 @@ function ChatShareAction({
   );
 }
 
-/** Asks the server for the link again, in place of the link action. */
-function ChatShareRetry({ onRetry }: { onRetry: () => void }) {
+/**
+ * Asks the server for the link again, in place of the link action. The button is
+ * disabled while a retry waits for the server's answer.
+ */
+function ChatShareRetry({
+  isPending = false,
+  onRetry,
+}: {
+  isPending?: boolean;
+  onRetry: () => void;
+}) {
   const t = useTranslations("Ai");
 
   return (
-    <Button onClick={onRetry}>
+    <Button
+      aria-busy={isPending || undefined}
+      disabled={isPending}
+      onClick={onRetry}
+    >
       <HugeIcons icon={Refresh03Icon} />
       {t("retry")}
     </Button>

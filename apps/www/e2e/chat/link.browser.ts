@@ -47,12 +47,15 @@ const unopenable = Schema.encodeSync(ChatShareReadError)(
 
 /**
  * The owner's share dialog says the link could not load while the query fails
- * with `failure`, and loads it on Retry once the server answers again.
+ * with `failure`, and loads it on Retry once the server answers again. While the
+ * answers are held, the dialog keeps its Retry and shows no link. A failure the
+ * query does not declare unmounts the dialog's readers, so Retry is disabled
+ * until the answer comes (`pending`), and it asks the server first.
  */
 const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
   page: Page,
   origin: string,
-  failure: unknown
+  scenario: { failure: unknown; pending: boolean }
 ) {
   const owner = yield* ownedChat(page, origin, {
     prompt: PROMPT,
@@ -65,7 +68,7 @@ const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
     await dialog.evaluate((node) => Reflect.set(node, "shareDialogKept", true));
 
     // The server fails to answer the query for the token of the link.
-    owner.changes.failQuery(SHARE_TOKEN_QUERY, failure);
+    owner.changes.failQuery(SHARE_TOKEN_QUERY, scenario.failure);
     await dialog.getByRole("button", { name: "Create link" }).click();
 
     // The dialog says so and offers to try again, and the chat stays.
@@ -76,9 +79,19 @@ const retriesTheLink = Effect.fn("NakafaE2E.retriesTheLink")(function* (
     await expect(promptOf(page, PROMPT)).toBeVisible();
     await expect(notAvailable(page)).toHaveCount(0);
 
-    // The server recovers, the retry loads the link, and the owner copies it.
+    // The server recovers, and its answers are held while Retry asks for the link.
     owner.changes.recoverQuery();
-    await dialog.getByRole("button", { name: en.Ai.retry }).click();
+    owner.changes.hold();
+    const retry = dialog.getByRole("button", { name: en.Ai.retry });
+    await retry.click();
+    if (scenario.pending) {
+      await expect(retry).toBeDisabled();
+    }
+    await expect(retry).toBeVisible();
+    await expect(copy).toHaveCount(0);
+
+    // The answer comes, the dialog loads the link, and the owner copies it.
+    owner.changes.release();
     await expect(copy).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
     // The failure and the retry changed what the dialog says, never the dialog.
     expect(
@@ -137,7 +150,7 @@ test.describe("A share link at 1440px", () => {
     page,
   }) => {
     await runOnPage(page, baseURL, (origin) =>
-      retriesTheLink(page, origin, unreadable)
+      retriesTheLink(page, origin, { failure: unreadable, pending: false })
     );
   });
 
@@ -146,7 +159,18 @@ test.describe("A share link at 1440px", () => {
     page,
   }) => {
     await runOnPage(page, baseURL, (origin) =>
-      retriesTheLink(page, origin, unopenable)
+      retriesTheLink(page, origin, { failure: unopenable, pending: false })
+    );
+  });
+
+  test("the share dialog says when the link fails in a way the query does not declare, and loads it again on Retry", async ({
+    baseURL,
+    page,
+  }) => {
+    // The server answers the query with a failure that carries no data, which
+    // the query does not declare.
+    await runOnPage(page, baseURL, (origin) =>
+      retriesTheLink(page, origin, { failure: undefined, pending: true })
     );
   });
 });
