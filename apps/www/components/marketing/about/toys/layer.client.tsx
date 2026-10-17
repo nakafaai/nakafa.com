@@ -1,12 +1,12 @@
 "use client";
 
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Scatter, Toy, Toys } from "@repo/design-system/components/ui/toy";
 import type { Place } from "@repo/design-system/lib/toy/scatter";
 import type { ThingName } from "@repo/mascot/thing/name";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { CastAnimal } from "@/components/marketing/about/cast";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { TOY_HERD } from "@/components/marketing/about/toys/herd";
 import { within } from "@/components/marketing/about/toys/place";
@@ -21,7 +21,7 @@ interface ToyPlacement {
 /** An animal of the cast, at its index in the slice the toys take. */
 function animal(index: number) {
   return (
-    <CastAnimal className="size-14" mascot={Arr.getUnsafe(TOY_HERD, index)} />
+    <PersonAvatar className="size-14" mascot={Arr.getUnsafe(TOY_HERD, index)} />
   );
 }
 

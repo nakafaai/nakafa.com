@@ -1,11 +1,11 @@
 import { DiscordIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { CastAnimal } from "@/components/marketing/about/cast";
 import {
   CROWD_HERD,
   CROWD_TYPING_EVERY,
@@ -53,7 +53,7 @@ export function Community() {
         >
           {Arr.map(CROWD_HERD, (mascot, index) => (
             <div className="relative" key={mascot.animal}>
-              <CastAnimal
+              <PersonAvatar
                 className="size-14 min-[760px]:size-16"
                 mascot={mascot}
               />

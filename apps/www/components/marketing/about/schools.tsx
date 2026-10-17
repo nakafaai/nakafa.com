@@ -1,10 +1,10 @@
 import { Mail01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { CastAnimal } from "@/components/marketing/about/cast";
 import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
 
 /**
@@ -49,7 +49,7 @@ export function Schools() {
           >
             {Arr.map(CLASS_HERD, (mascot) => (
               <li key={mascot.animal}>
-                <CastAnimal className="size-16" mascot={mascot} />
+                <PersonAvatar className="size-16" mascot={mascot} />
               </li>
             ))}
           </ul>
