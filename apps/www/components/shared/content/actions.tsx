@@ -23,11 +23,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
-import { toast } from "sonner";
 import {
   readOpenContentCopySource,
   writeOpenContentCopy,
@@ -106,11 +106,17 @@ export function OpenContent({
       Effect.matchEffect({
         onFailure: () =>
           Effect.sync(() =>
-            toast.error(t("copy-error"), { position: "bottom-center" })
+            toast.error(
+              { title: "copy-error.title" },
+              { position: "bottom-center" }
+            )
           ),
         onSuccess: () =>
           Effect.sync(() => {
-            toast.success(t("copy-success"), { position: "bottom-center" });
+            toast.success(
+              { title: "copy-success.title" },
+              { position: "bottom-center" }
+            );
           }),
       }),
       Effect.ensuring(

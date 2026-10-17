@@ -24,10 +24,10 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -156,7 +156,6 @@ function ChatList({
 
 /** Render owner actions for one profile chat row. */
 function UserChatsListActions({ chat }: { chat: ChatView }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
   const tAi = useTranslations("Ai");
   const deleteChat = useDeleteChatMutation();
@@ -184,7 +183,10 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(actionErrorMessage);
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
                 })
               )
             ),

@@ -2,9 +2,9 @@
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
   useEffect,
@@ -13,7 +13,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
 import { useAi } from "@/components/ai/context";
 import type { NinaPrompt } from "@/components/ai/message/prompt";
 import { restoreRefusedText } from "@/components/ai/store/draft";
@@ -65,7 +64,6 @@ export function useChatAdmission({
   const setText = useAi((state) => state.setText);
   // A new chat is on its way, from any surface, until its admission settles.
   const admitting = useAi((state) => state.chatDrafts.length > 0);
-  const t = useTranslations("Ai");
   const { send } = useNinaSubmission();
   // The prompt Nina is admitting, shown before its chat exists.
   const [prompt, setPrompt] = useState<
@@ -138,12 +136,15 @@ export function useChatAdmission({
           // are not moved. The admission has settled, so its prompt is no longer
           // on its way, even if the surface is shown again before it hides.
           setPrompt(null);
-          toast(t("admitted-elsewhere"), {
-            action: {
-              label: t("open-chat"),
-              onClick: () => onComplete(receipt.chatId),
-            },
-          });
+          toast.info(
+            { title: "admitted-elsewhere.title" },
+            {
+              action: {
+                label: "open-chat.title",
+                onClick: () => onComplete(receipt.chatId),
+              },
+            }
+          );
           return true;
         }
         setPrompt({
