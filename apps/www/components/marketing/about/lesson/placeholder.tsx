@@ -1,10 +1,16 @@
+import { BIOLOGY_DEFAULT_ITEM_INDEX } from "@repo/design-system/components/contents/biology/data";
 import {
   ATOM_SHELL_SAMPLE_IDS,
   ATOM_SHELL_SAMPLES,
   CALCIUM_ID,
 } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import { getAtomShellReadings } from "@repo/design-system/components/contents/chemistry/atom-shell/readings";
-import { formatTrigRatioMath } from "@repo/design-system/components/contents/mathematics/trig";
+import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
+import {
+  formatTrigRatioMath,
+  TRIG_NUMBER_OPTIONS,
+  UNIT_CIRCLE_DEFAULT_ANGLE,
+} from "@repo/design-system/components/contents/mathematics/trig";
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import {
   DEFAULT_PARABOLIC_LAUNCH_ID,
@@ -100,24 +106,32 @@ export function ProjectilePlaceholder({
   );
 }
 
-/** The angle the circle lesson opens on, which its card draws until the reader moves it. */
-const CIRCLE_ANGLE = 45;
-
 /**
  * The card of the circle lesson at its default angle, drawn before its lab loads.
- * The number field is a static box of the same height, and the scene an empty
+ * The number field is a static box of the same frame, and the scene an empty
  * frame, so the lab takes over the same box.
  */
 export function CirclePlaceholder({
   formatNumber,
   labels,
 }: {
-  formatNumber: (value: number) => string;
+  formatNumber: (value: number, options: Intl.NumberFormatOptions) => string;
   labels: { radian: string };
 }) {
-  const sin = formatTrigRatioMath(getSin(CIRCLE_ANGLE), formatNumber);
-  const cos = formatTrigRatioMath(getCos(CIRCLE_ANGLE), formatNumber);
-  const tan = formatTrigRatioMath(getTan(CIRCLE_ANGLE), formatNumber);
+  const formatApproximation = (value: number) =>
+    formatNumber(value, TRIG_NUMBER_OPTIONS);
+  const sin = formatTrigRatioMath(
+    getSin(UNIT_CIRCLE_DEFAULT_ANGLE),
+    formatApproximation
+  );
+  const cos = formatTrigRatioMath(
+    getCos(UNIT_CIRCLE_DEFAULT_ANGLE),
+    formatApproximation
+  );
+  const tan = formatTrigRatioMath(
+    getTan(UNIT_CIRCLE_DEFAULT_ANGLE),
+    formatApproximation
+  );
 
   return (
     <CoordinateProvider>
@@ -144,16 +158,19 @@ export function CirclePlaceholder({
             <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6">
               <div className="flex items-center gap-2">
                 <Badge style={{ color: COLORS.VIOLET }} variant="outline">
-                  <InlineMath math={`\\theta = ${CIRCLE_ANGLE}^\\circ`} />
+                  <InlineMath
+                    math={`\\theta = ${UNIT_CIRCLE_DEFAULT_ANGLE}^\\circ`}
+                  />
                 </Badge>
                 <Badge className="font-mono" variant="outline">
-                  {formatNumber(getRadians(CIRCLE_ANGLE))} {labels.radian}
+                  {formatNumber(
+                    getRadians(UNIT_CIRCLE_DEFAULT_ANGLE),
+                    TRIG_NUMBER_OPTIONS
+                  )}{" "}
+                  {labels.radian}
                 </Badge>
               </div>
-              <div
-                aria-hidden="true"
-                className="relative inline-flex h-9 w-full items-center overflow-hidden rounded-md border border-input text-sm shadow-xs"
-              />
+              <div aria-hidden="true" className={stepperVariants()} />
             </div>
           </div>
         </CoordinateControls>
@@ -237,15 +254,15 @@ export function AtomPlaceholder({
 }
 
 /**
- * The card of the cell lesson at its first item, drawn before its lab loads: the
- * same item toggles and frame, with the toggles as static items.
+ * The card of the cell lesson at its default item, drawn before its lab loads:
+ * the same item toggles and frame, with the toggles as static items.
  */
 export function CellPlaceholder({
   labels,
 }: {
   labels: {
     chooseMode: string;
-    tabs: readonly [string, string, string];
+    items: readonly { tab: string }[];
     viewLabel: string;
   };
 }) {
@@ -256,12 +273,12 @@ export function CellPlaceholder({
           aria-label={labels.chooseMode}
           gridColumns="auto"
           type="single"
-          value="0"
+          value={String(BIOLOGY_DEFAULT_ITEM_INDEX)}
           variant="outline"
         >
-          {Arr.map(labels.tabs, (tab, index) => (
-            <ToggleGroupItem key={tab} value={String(index)}>
-              {tab}
+          {Arr.map(labels.items, (item, index) => (
+            <ToggleGroupItem key={item.tab} value={String(index)}>
+              {item.tab}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

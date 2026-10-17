@@ -1,6 +1,5 @@
 import { formatTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
-import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr, Number as Num, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Schema } from "effect";
 
 const ParabolicLaunchIdSchema = Schema.Literals([
   "low-angle",
@@ -11,13 +10,12 @@ export type ParabolicLaunchId = typeof ParabolicLaunchIdSchema.Type;
 
 const ParabolicLaunchScenarioSchema = Schema.Struct({
   angleDegrees: Schema.Finite,
-  color: Schema.String,
   id: ParabolicLaunchIdSchema,
   initialSpeed: Schema.Finite,
 });
 type ParabolicLaunchScenario = typeof ParabolicLaunchScenarioSchema.Type;
 
-type VectorTuple = [number, number, number];
+export type VectorTuple = [number, number, number];
 
 const PARABOLIC_CAMERA_POSITION: VectorTuple = [-4.7, 3.15, 5.35];
 const PARABOLIC_CAMERA_TARGET: VectorTuple = [0, 0.85, 0];
@@ -42,26 +40,30 @@ export const PARABOLIC_SCENE = {
   worldScale: 0.08,
 } as const;
 
-export const PARABOLIC_LAUNCHES: ParabolicLaunchScenario[] = [
-  {
-    id: "low-angle",
+/** The scenario of each launch. Every launch starts at the same speed, so only its angle differs. */
+const PARABOLIC_LAUNCH_SCENARIOS = {
+  "low-angle": {
     angleDegrees: 28,
-    color: getColor("TEAL"),
+    id: "low-angle",
     initialSpeed: 22,
   },
-  {
-    id: "balanced-angle",
+  "balanced-angle": {
     angleDegrees: 45,
-    color: getColor("ORANGE", 500),
+    id: "balanced-angle",
     initialSpeed: 22,
   },
-  {
-    id: "high-angle",
+  "high-angle": {
     angleDegrees: 64,
-    color: getColor("VIOLET"),
+    id: "high-angle",
     initialSpeed: 22,
   },
-];
+} satisfies Record<ParabolicLaunchId, ParabolicLaunchScenario>;
+
+/** The launches in the order the lab lists them. */
+export const PARABOLIC_LAUNCHES: ParabolicLaunchScenario[] = Arr.map(
+  ParabolicLaunchIdSchema.literals,
+  (id) => PARABOLIC_LAUNCH_SCENARIOS[id]
+);
 
 export type ParabolicMotionState = ReturnType<typeof getParabolicMotionState>;
 
@@ -70,10 +72,7 @@ export function isParabolicLaunchId(value: string): value is ParabolicLaunchId {
 }
 
 export function getParabolicMotionState(id: ParabolicLaunchId) {
-  const scenario = Option.getOrElse(
-    Arr.findFirst(PARABOLIC_LAUNCHES, (launch) => launch.id === id),
-    () => PARABOLIC_LAUNCHES[0]
-  );
+  const scenario: ParabolicLaunchScenario = PARABOLIC_LAUNCH_SCENARIOS[id];
   const angleRadians = (scenario.angleDegrees * Math.PI) / 180;
   const horizontalVelocity = scenario.initialSpeed * Math.cos(angleRadians);
   const verticalVelocity = scenario.initialSpeed * Math.sin(angleRadians);
@@ -159,6 +158,16 @@ export function getRestingProjectileSample(motion: ParabolicMotionState) {
     point: getProjectilePoint(motion, motion.peakTime),
     time: motion.peakTime,
   };
+}
+
+/** Keeps the projectile center on the visible contact plane when y = 0. */
+export function getProjectileSceneY(y: number) {
+  return PARABOLIC_SCENE.ballRadius + y;
+}
+
+/** The scene position of one point of the flight, with its height lifted onto the contact plane. */
+export function toSceneTuple(x: number, y: number, z: number): VectorTuple {
+  return [x, getProjectileSceneY(y), z];
 }
 
 export function formatAngleMath(value: number) {

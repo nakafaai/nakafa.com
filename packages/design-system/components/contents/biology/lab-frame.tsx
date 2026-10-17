@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BIOLOGY_DEFAULT_ITEM_INDEX,
   BIOLOGY_DEFAULT_VIEW,
   type BiologySceneColors,
   getBiologySceneColors,
@@ -54,6 +55,8 @@ export interface BiologyLabItemProps {
 export interface BiologyLabProps<
   Item extends BiologyLabItemProps = BiologyLabItemProps,
 > {
+  /** The item the lab opens on. It starts at the first item when none is given. */
+  defaultItemIndex?: number | undefined;
   description?: ReactNode;
   labels: {
     chooseMode: string;
@@ -67,6 +70,8 @@ export interface BiologyLabProps<
    * its whole card in place, with an empty frame where the scene goes.
    */
   live?: boolean;
+  /** Reports each item the reader picks, so a window can keep it while this lab is unmounted. */
+  onItemIndexChange?: (index: number) => void;
   title?: ReactNode;
 }
 
@@ -82,9 +87,11 @@ export interface BiologySceneProps<
  * Renders the shared card, controls, and camera frame for one biology 3D lab.
  */
 export function BiologyLabFrame<Item extends BiologyLabItemProps>({
+  defaultItemIndex = BIOLOGY_DEFAULT_ITEM_INDEX,
   description,
   labels,
   live = true,
+  onItemIndexChange,
   scene: Scene,
   title,
   view = BIOLOGY_DEFAULT_VIEW,
@@ -93,7 +100,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   view?: NarrowCameraPose;
 }) {
   const { resolvedTheme } = useTheme();
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(defaultItemIndex);
   const colors = getBiologySceneColors(resolvedTheme);
   const selectedItem = labels.items[selectedIndex];
   const hasMultipleItems = labels.items.length > 1;
@@ -111,7 +118,9 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
       return;
     }
 
-    setSelectedIndex(Number(value));
+    const index = Number(value);
+    setSelectedIndex(index);
+    onItemIndexChange?.(index);
   }
 
   return (

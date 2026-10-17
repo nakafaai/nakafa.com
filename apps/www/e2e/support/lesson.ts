@@ -7,6 +7,9 @@ import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
  */
 export const LESSON_WAIT_MS = 8000;
 
+/** The view of the home page's first lesson, named in Indonesian as the page is read. */
+export const PROJECTILE_VIEW = "Visual lintasan bola lontar";
+
 /** The home page's lesson section, which holds the lesson window. */
 export function lessonSection(page: Page) {
   return page.locator(`#${LESSON_SECTION_ID}`);

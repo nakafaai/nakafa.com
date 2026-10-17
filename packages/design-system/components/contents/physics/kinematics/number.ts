@@ -1,5 +1,9 @@
+import { Schema } from "effect";
+
 /** The symbol a formatted number uses for its decimal point. */
-export type DecimalSeparator = "comma" | "dot";
+export const DecimalSeparatorSchema = Schema.Literals(["comma", "dot"]);
+
+export type DecimalSeparator = typeof DecimalSeparatorSchema.Type;
 
 const TRAILING_ZERO_PATTERN = /\.0$/;
 

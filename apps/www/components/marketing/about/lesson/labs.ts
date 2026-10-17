@@ -1,10 +1,12 @@
+import { DecimalSeparatorSchema } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { Schema } from "effect";
 import { type ComponentType, type LazyExoticComponent, lazy } from "react";
 import type { Lesson } from "@/components/marketing/about/lesson/id";
 
-/** What the lesson window passes to the lab of a lesson. */
+/** The props of every lesson lab, which the lesson window passes. */
 const LessonLabPropsSchema = Schema.Struct({
-  decimalSeparator: Schema.Literals(["comma", "dot"]),
+  /** The decimal separator of the page's locale, which the physics lab writes its numbers with. */
+  decimalSeparator: DecimalSeparatorSchema,
 });
 
 /** The props of every lesson lab. */

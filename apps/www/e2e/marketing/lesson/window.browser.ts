@@ -85,6 +85,67 @@ test("home lesson window turns only when the reader picks a lesson", async ({
   );
 });
 
+/** The tabs of the projectile and circle lessons, in the window's order. */
+const PROJECTILE_TAB_INDEX = 0;
+const CIRCLE_TAB_INDEX = 1;
+
+/** The toggle of the high-angle launch, the third of the projectile card's launches. */
+const HIGH_ANGLE_TOGGLE_INDEX = 2;
+
+test("home lesson window keeps the launch the reader picked when the reader returns to it", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      {
+        baseURL: baseURL ?? "",
+        reducedMotion: "no-preference",
+        serviceWorkers: "block",
+        viewport: viewportSize(desktopViewport),
+      },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              yield* openRoute(page, "/id", "denied");
+              const lesson = lessonSection(page);
+              const tabs = lesson.getByRole("tab");
+              const launch = lessonPanel(page)
+                .locator('[data-slot="toggle-group-item"]')
+                .nth(HIGH_ANGLE_TOGGLE_INDEX);
+              yield* Effect.promise(() => lesson.scrollIntoViewIfNeeded());
+              yield* Effect.promise(() =>
+                expect(
+                  lessonPanel(page).locator("canvas").first()
+                ).toBeAttached({ timeout: readinessTimeoutMilliseconds })
+              );
+              yield* Effect.promise(() => launch.click());
+              yield* Effect.promise(() =>
+                expect(launch).toHaveAttribute("aria-pressed", "true")
+              );
+
+              // The circle's lab replaces the projectile's, and the projectile's lab mounts again.
+              yield* Effect.promise(() => tabs.nth(CIRCLE_TAB_INDEX).click());
+              yield* Effect.promise(() =>
+                tabs.nth(PROJECTILE_TAB_INDEX).click()
+              );
+              yield* Effect.promise(() =>
+                expect(launch).toHaveAttribute("aria-pressed", "true", {
+                  timeout: readinessTimeoutMilliseconds,
+                })
+              );
+            })
+          );
+        })
+    )
+  );
+});
+
 test("home lesson window keeps a focused control on the page while the window is out of view", async ({
   baseURL,
   browser,

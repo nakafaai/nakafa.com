@@ -1,5 +1,15 @@
 import { Array as Arr, Option } from "effect";
 
+/** The angle the unit circle opens on, which its lab and its static card both draw. */
+export const UNIT_CIRCLE_DEFAULT_ANGLE = 45;
+
+/** How the unit circle writes its numbers: two places and no grouping. */
+export const TRIG_NUMBER_OPTIONS = {
+  maximumFractionDigits: 2,
+  minimumFractionDigits: 2,
+  useGrouping: false,
+} satisfies Intl.NumberFormatOptions;
+
 /** The common values of the unit circle, written as the fraction or root a reader expects. */
 const COMMON_RATIOS = [
   { value: 0.5, display: "\\frac{1}{2}" },
@@ -13,7 +23,8 @@ const COMMON_RATIOS = [
 /**
  * The math that follows the symbol of one trigonometric ratio: an exact value
  * when the angle has one, or an approximation to two places otherwise. The
- * caller formats the approximation, because its digits follow the locale.
+ * caller formats the approximation, because its digits follow the locale. A
+ * comma decimal is written as "{,}", so the math keeps a decimal's spacing.
  */
 export function formatTrigRatioMath(
   value: number,
@@ -33,5 +44,5 @@ export function formatTrigRatioMath(
   if (Option.isSome(exact)) {
     return `= ${value < 0 ? "-" : ""}${exact.value.display}`;
   }
-  return `\\approx ${formatApproximation(value)}`;
+  return `\\approx ${formatApproximation(value).replaceAll(",", "{,}")}`;
 }

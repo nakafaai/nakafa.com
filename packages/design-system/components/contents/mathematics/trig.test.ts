@@ -22,6 +22,10 @@ describe("trigonometric ratio math", () => {
     expect(formatTrigRatioMath(0.3, formatApproximation)).toBe("\\approx 0.30");
   });
 
+  it("keeps a comma decimal inside the math, so it keeps a decimal point's spacing", () => {
+    expect(formatTrigRatioMath(0.3, () => "0,30")).toBe("\\approx 0{,}30");
+  });
+
   it("keeps the exact value that the caller gives", () => {
     expect(formatTrigRatioMath(0.3, formatApproximation, "\\frac{3}{10}")).toBe(
       "= \\frac{3}{10}"

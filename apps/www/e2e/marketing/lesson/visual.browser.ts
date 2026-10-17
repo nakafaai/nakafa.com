@@ -1,28 +1,18 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect, MutableList } from "effect";
+import { Effect } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
-  LESSON_WAIT_MS,
   lessonPanel,
   lessonSection,
   lessonTabs,
   lessonVisual,
+  PROJECTILE_VIEW,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { holdChunkHolding, openRoute } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import {
-  desktopViewport,
-  touchViewport,
-  viewportSize,
-} from "@/e2e/support/viewport";
-
-/** How often the lesson panel's height is read once its visual is mounted. */
-const HEIGHT_SAMPLE_MS = 200;
-
-/** Enough samples to cover the wait with room to spare. */
-const HEIGHT_SAMPLE_COUNT = Math.ceil(LESSON_WAIT_MS / HEIGHT_SAMPLE_MS);
+import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
 /** How long the circle's scene is held back, so its placeholder stays on the screen. */
 const LOADING_HOLD_MS = 8000;
@@ -35,20 +25,6 @@ const CIRCLE_SCENE_MARKER = "coordinate-system";
 
 /** The tabs of the window, in order: projectile, circle, atom and cell. */
 const CIRCLE_TAB_INDEX = 1;
-
-/** The first lesson's tab, and the view its visual names, in Indonesian. */
-const PROJECTILE_VIEW = "Visual lintasan bola lontar";
-
-/** The widths the window's height is checked at: a phone and a desktop. */
-const WINDOW_VIEWPORTS = [touchViewport, desktopViewport];
-
-/**
- * The height of the window: its tabs and the grid of its panels. Every panel
- * shares one grid cell, so the height is the one of the tallest panel.
- */
-function lessonWindow(page: Page) {
-  return lessonSection(page).locator('[data-slot="tabs"]');
-}
 
 /**
  * Counts the layout shifts that moved something inside the lesson section and
@@ -169,109 +145,6 @@ test("home lesson window keeps its visual mounted once the window has left the s
   );
 });
 
-test("home lesson window keeps its height once its visual is mounted", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  await Effect.runPromise(
-    withBrowserContext(
-      browser,
-      {
-        baseURL: baseURL ?? "",
-        reducedMotion: "no-preference",
-        serviceWorkers: "block",
-        viewport: viewportSize(desktopViewport),
-      },
-      (context) =>
-        Effect.gen(function* () {
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* withObservedPageErrors(
-            page,
-            Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
-              const panel = lessonPanel(page);
-              yield* Effect.promise(() =>
-                lessonSection(page).scrollIntoViewIfNeeded()
-              );
-              yield* Effect.promise(() =>
-                expect(
-                  lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
-                ).toBeAttached({
-                  timeout: readinessTimeoutMilliseconds,
-                })
-              );
-
-              const heights = MutableList.make<number>();
-              for (let count = 0; count < HEIGHT_SAMPLE_COUNT; count += 1) {
-                const box = yield* Effect.promise(() => panel.boundingBox());
-                if (box !== null) {
-                  MutableList.append(heights, Math.round(box.height));
-                }
-                yield* Effect.promise(() =>
-                  page.waitForTimeout(HEIGHT_SAMPLE_MS)
-                );
-              }
-              expect(Arr.dedupe(MutableList.toArray(heights))).toHaveLength(1);
-            })
-          );
-        })
-    )
-  );
-});
-
-for (const viewport of WINDOW_VIEWPORTS) {
-  test(`home lesson window keeps its height before and after the reveal at ${viewport.width}px`, async ({
-    baseURL,
-    browser,
-  }) => {
-    expect(baseURL).toBeTruthy();
-    await Effect.runPromise(
-      withBrowserContext(
-        browser,
-        {
-          baseURL: baseURL ?? "",
-          reducedMotion: "no-preference",
-          serviceWorkers: "block",
-          viewport: viewportSize(viewport),
-        },
-        (context) =>
-          Effect.gen(function* () {
-            const page = yield* Effect.promise(() => context.newPage());
-            yield* withObservedPageErrors(
-              page,
-              Effect.gen(function* () {
-                yield* openRoute(page, "/id", "denied");
-                const root = lessonWindow(page);
-
-                // Before the reveal the open panel holds its frame, which must already be the window's height.
-                const before = yield* Effect.promise(() => root.boundingBox());
-                expect(before).not.toBeNull();
-
-                yield* Effect.promise(() =>
-                  lessonSection(page).scrollIntoViewIfNeeded()
-                );
-                yield* Effect.promise(() =>
-                  expect(
-                    lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
-                  ).toBeAttached({
-                    timeout: readinessTimeoutMilliseconds,
-                  })
-                );
-                const revealed = yield* Effect.promise(() =>
-                  root.boundingBox()
-                );
-                expect(Math.round(revealed?.height ?? 0)).toBe(
-                  Math.round(before?.height ?? -1)
-                );
-              })
-            );
-          })
-      )
-    );
-  });
-}
-
 test("home lesson window draws no layout shift in its section while it is revealed", async ({
   baseURL,
   browser,
@@ -314,56 +187,6 @@ test("home lesson window draws no layout shift in its section while it is reveal
                 countSectionShifts(page)
               );
               expect(shiftsAfter).toBe(shiftsBefore);
-            })
-          );
-        })
-    )
-  );
-});
-
-/**
- * With reduced motion the lab's scene is drawn on demand, so after its first frame
- * the canvas holds the same pixels: a second capture a moment later matches the
- * first. A scene that keeps a frame loop redraws its ball, so this test fails
- * when the loop is left running. The captures are screenshots, because a WebGL
- * canvas reads back blank after its frame unless it keeps its buffer.
- */
-test("home lesson lab holds its scene still with reduced motion", async ({
-  baseURL,
-  browser,
-}) => {
-  expect(baseURL).toBeTruthy();
-  await Effect.runPromise(
-    withBrowserContext(
-      browser,
-      {
-        baseURL: baseURL ?? "",
-        reducedMotion: "reduce",
-        serviceWorkers: "block",
-        viewport: viewportSize(desktopViewport),
-      },
-      (context) =>
-        Effect.gen(function* () {
-          const page = yield* Effect.promise(() => context.newPage());
-          yield* withObservedPageErrors(
-            page,
-            Effect.gen(function* () {
-              yield* openRoute(page, "/id", "denied");
-              yield* Effect.promise(() =>
-                lessonSection(page).scrollIntoViewIfNeeded()
-              );
-              const canvas = lessonVisual(page, PROJECTILE_VIEW).locator(
-                "canvas"
-              );
-              yield* Effect.promise(() =>
-                expect(canvas).toBeAttached({
-                  timeout: readinessTimeoutMilliseconds,
-                })
-              );
-              const first = yield* Effect.promise(() => canvas.screenshot());
-              yield* Effect.promise(() => page.waitForTimeout(800));
-              const second = yield* Effect.promise(() => canvas.screenshot());
-              expect(second.equals(first)).toBe(true);
             })
           );
         })

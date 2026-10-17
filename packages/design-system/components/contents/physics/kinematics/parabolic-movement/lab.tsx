@@ -41,6 +41,8 @@ const ParabolicMovementStage = dynamic(
 
 interface ParabolicMovementLabProps {
   decimalSeparator?: DecimalSeparator;
+  /** The launch the lab opens on. It starts at the default launch when none is given. */
+  defaultLaunchId?: ParabolicLaunchId | undefined;
   description?: ReactNode;
   labels: {
     chooseLaunch: string;
@@ -52,23 +54,27 @@ interface ParabolicMovementLabProps {
     };
     viewLabel: string;
   };
+  live?: boolean;
   /**
    * Whether the three-dimensional scene is mounted. A lab that is not live keeps
    * its whole card in place, with an empty frame where the scene goes.
    */
-  live?: boolean;
+  /** Reports each launch the reader picks, so a window can keep it while this lab is unmounted. */
+  onLaunchIdChange?: (launchId: ParabolicLaunchId) => void;
   title?: ReactNode;
 }
 
 export function ParabolicMovementLab({
   decimalSeparator,
+  defaultLaunchId,
+  onLaunchIdChange,
   title,
   description,
   labels,
   live = true,
 }: ParabolicMovementLabProps) {
   const [launchId, setLaunchId] = useState<ParabolicLaunchId>(
-    DEFAULT_PARABOLIC_LAUNCH_ID
+    defaultLaunchId ?? DEFAULT_PARABOLIC_LAUNCH_ID
   );
   const motion = useMemo(() => getParabolicMotionState(launchId), [launchId]);
   const facts = getParabolicFacts(motion, decimalSeparator, labels.factLabels);
@@ -79,6 +85,7 @@ export function ParabolicMovementLab({
     }
 
     setLaunchId(value);
+    onLaunchIdChange?.(value);
   }
 
   return (

@@ -52,18 +52,17 @@ const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
 
 /**
  * The homepage ceiling, derived. The 17 October trace of this page, with the
- * 18-friend crowd, counted at most 2,685 body elements at the touch viewport,
- * and 766 of them were the lesson section with its four labs mounted at once.
- * The window now mounts one panel, so the other 1,919 elements stay as they are,
- * and the lesson section holds about 230 elements: the chat and the tabs, about
- * 45, and one panel's card, about 185 with its math. That gives 2,149, and six
- * percent over it is 2,278.
+ * 18-friend crowd, counted 1,919 body elements outside the lesson section at the
+ * touch viewport. The lesson section's server markup holds 762 elements: its chat
+ * and heading, 21, and the window, 741. The window draws all four cards in one
+ * grid cell, so it keeps one height through every tab, and only the open lab
+ * mounts. That gives 2,681, and six percent over it is 2,842.
  *
- * PLACEHOLDER: the one-panel count is a static estimate, not a browser count.
- * The orchestrator's browser run measures the page with one panel mounted and
- * replaces this constant with that measure, rounded up with the same margin.
+ * PLACEHOLDER: the window's 741 comes from a static render of its markup, not from
+ * a browser. The orchestrator's browser run measures the page and replaces this
+ * constant with that measure, rounded up with the same margin.
  */
-const HOMEPAGE_MAX_DESCENDANTS = 2278;
+const HOMEPAGE_MAX_DESCENDANTS = 2842;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 
 const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (

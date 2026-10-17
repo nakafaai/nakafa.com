@@ -13,6 +13,11 @@ import {
   type Lesson as LessonId,
 } from "@/components/marketing/about/lesson/id";
 import {
+  getAtomLabels,
+  getCellLabels,
+  getProjectileLabels,
+} from "@/components/marketing/about/lesson/labels";
+import {
   AtomPlaceholder,
   CellPlaceholder,
   CirclePlaceholder,
@@ -57,57 +62,20 @@ export async function Lesson() {
     readLessons(locale),
   ]);
   const decimalSeparator = decimalSeparators[locale];
+  // Each card and its lab read their labels from the same builder, so the card and the lab agree.
   const placeholders: Record<LessonId, ReactNode> = {
-    atom: (
-      <AtomPlaceholder
-        labels={{
-          atomicNumber: t("lab.atom.atomic-number"),
-          chooseAtom: t("lab.atom.choose"),
-          configuration: t("lab.atom.configuration"),
-          electronTotal: t("lab.atom.electron-total"),
-          maximumCapacity: t("lab.atom.capacity"),
-          outerShell: t("lab.atom.outer-shell"),
-        }}
-      />
-    ),
-    cell: (
-      <CellPlaceholder
-        labels={{
-          chooseMode: t("lab.bacteria.choose"),
-          tabs: [
-            t("lab.bacteria.shape.tab"),
-            t("lab.bacteria.inside.tab"),
-            t("lab.bacteria.wall.tab"),
-          ],
-          viewLabel: t("lab.bacteria.view"),
-        }}
-      />
-    ),
+    atom: <AtomPlaceholder labels={getAtomLabels(t)} />,
+    cell: <CellPlaceholder labels={getCellLabels(t)} />,
     circle: (
       <CirclePlaceholder
-        formatNumber={(value) =>
-          format.number(value, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-            useGrouping: false,
-          })
-        }
+        formatNumber={(value, options) => format.number(value, options)}
         labels={{ radian: tCommon("radian") }}
       />
     ),
     projectile: (
       <ProjectilePlaceholder
         decimalSeparator={decimalSeparator}
-        labels={{
-          chooseLaunch: t("lab.projectile.choose"),
-          factLabels: {
-            flightTime: t("lab.projectile.flight-time"),
-            initialSpeed: t("lab.projectile.initial-speed"),
-            peakHeight: t("lab.projectile.peak-height"),
-            range: t("lab.projectile.range"),
-          },
-          viewLabel: t("lab.projectile.view"),
-        }}
+        labels={getProjectileLabels(t)}
       />
     ),
   };

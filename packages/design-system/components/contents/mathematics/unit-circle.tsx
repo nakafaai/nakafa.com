@@ -1,7 +1,12 @@
 "use client";
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
-import { formatTrigRatioMath } from "@repo/design-system/components/contents/mathematics/trig";
+import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
+import {
+  formatTrigRatioMath,
+  TRIG_NUMBER_OPTIONS,
+  UNIT_CIRCLE_DEFAULT_ANGLE,
+} from "@repo/design-system/components/contents/mathematics/trig";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   CoordinateControls,
@@ -41,7 +46,8 @@ const UnitCircleStage = dynamic(
 );
 
 interface CardProps {
-  angle?: number;
+  /** The angle the card shows until the reader picks another. */
+  angle?: number | undefined;
   /** The card's header. A lesson page names its unit circle with a title and a description. */
   header?: ReactNode;
   /**
@@ -49,6 +55,8 @@ interface CardProps {
    * its whole frame in place, with an empty frame where the scene goes.
    */
   live?: boolean;
+  /** Reports each angle the reader picks, so a window can keep it while this card is unmounted. */
+  onAngleChange?: (angle: number) => void;
   /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
   trigValues?:
     | {
@@ -62,7 +70,7 @@ interface CardProps {
 }
 
 interface Props {
-  angle?: number;
+  angle?: number | undefined;
   description: ReactNode;
   title: ReactNode;
   /** Exact trigonometric values as fractions (e.g., "5/13", "12/13", "5/12") */
@@ -75,9 +83,10 @@ interface Props {
  * page or the window that holds the card names the lesson.
  */
 export function UnitCircleCard({
-  angle = 45,
+  angle = UNIT_CIRCLE_DEFAULT_ANGLE,
   header,
   live = true,
+  onAngleChange,
   trigValues,
   viewLabel,
 }: CardProps) {
@@ -91,6 +100,7 @@ export function UnitCircleCard({
           <Content
             angle={angle}
             live={live}
+            onAngleChange={onAngleChange}
             trigValues={trigValues}
             viewLabel={viewLabel}
           />
@@ -104,7 +114,7 @@ export function UnitCircleCard({
 export function UnitCircle({
   title,
   description,
-  angle = 45,
+  angle = UNIT_CIRCLE_DEFAULT_ANGLE,
   trigValues,
 }: Props) {
   return (
@@ -119,11 +129,13 @@ export function UnitCircle({
 function Content({
   angle,
   live,
+  onAngleChange,
   trigValues,
   viewLabel,
 }: {
   angle: number;
   live: boolean;
+  onAngleChange: ((angle: number) => void) | undefined;
   trigValues?: CardProps["trigValues"];
   viewLabel: string | undefined;
 }) {
@@ -136,14 +148,7 @@ function Content({
   function formatRatio(value: number, exactValue?: string) {
     return formatTrigRatioMath(
       value,
-      (approximation) =>
-        format
-          .number(approximation, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-            useGrouping: false,
-          })
-          .replaceAll(",", "{,}"),
+      (approximation) => format.number(approximation, TRIG_NUMBER_OPTIONS),
       exactValue
     );
   }
@@ -191,11 +196,7 @@ function Content({
                 <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
               </Badge>
               <Badge className="font-mono" variant="outline">
-                {format.number(getRadians(angleValue), {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                  useGrouping: false,
-                })}{" "}
+                {format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}{" "}
                 {t("radian")}
               </Badge>
             </div>
@@ -206,12 +207,13 @@ function Content({
               onChange={(value) => {
                 if (Number.isFinite(value)) {
                   setAngleOverride(value);
+                  onAngleChange?.(value);
                 }
               }}
               value={angleValue}
             >
               <Label className="sr-only">{t("angle")}</Label>
-              <Group className="relative inline-flex h-9 w-full items-center overflow-hidden whitespace-nowrap rounded-md border border-input text-sm shadow-xs outline-none transition-[color,box-shadow] data-focus-within:border-ring data-disabled:opacity-50 data-focus-within:ring-3 data-focus-within:ring-ring/50 data-focus-within:has-aria-invalid:border-destructive data-focus-within:has-aria-invalid:ring-destructive/20 dark:data-focus-within:has-aria-invalid:ring-destructive/40">
+              <Group className={stepperVariants()}>
                 <Button
                   className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-e bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                   slot="decrement"

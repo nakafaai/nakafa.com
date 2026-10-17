@@ -27,6 +27,8 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 interface AtomShellLabProps {
+  /** The sample the lab opens on. It starts at calcium when none is given. */
+  defaultSampleId?: AtomShellSampleId | undefined;
   description?: ReactNode;
   labels: {
     atomicNumber: string;
@@ -49,18 +51,22 @@ interface AtomShellLabProps {
    * its whole card in place, with an empty frame where the model goes.
    */
   live?: boolean;
+  /** Reports each sample the reader picks, so a window can keep it while this lab is unmounted. */
+  onSampleIdChange?: (sampleId: AtomShellSampleId) => void;
   title?: ReactNode;
 }
 
 /** Renders a 3D Bohr shell reader for neutral atoms up to calcium. */
 export function AtomShellLab({
+  defaultSampleId = CALCIUM_ID,
   title,
   description,
   labels,
   live = true,
+  onSampleIdChange,
 }: AtomShellLabProps) {
   const [selectedSampleId, setSelectedSampleId] =
-    useState<AtomShellSampleId>(CALCIUM_ID);
+    useState<AtomShellSampleId>(defaultSampleId);
   const selectedSample = ATOM_SHELL_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
   const {
@@ -80,6 +86,7 @@ export function AtomShellLab({
     }
 
     setSelectedSampleId(value);
+    onSampleIdChange?.(value);
   }
 
   return (
