@@ -177,7 +177,7 @@ export const syncKeys = Effect.fn("nina.memory.keys.sync")(function* (
 
 /**
  * Deletes every key row of a memory and returns the keys it deleted, so that
- * `remove` can keep them for an Undo. Every path that deletes a memory calls it.
+ * `remove` can keep them for `restore`. Every path that deletes a memory calls it.
  */
 export const deleteKeys = Effect.fn("nina.memory.keys.delete")(function* (
   memoryId: MemoryId

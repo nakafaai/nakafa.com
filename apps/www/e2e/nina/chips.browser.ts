@@ -2,11 +2,19 @@ import { expect, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import {
   chipsIn,
+  chipsOfComposer,
+  composerOf,
   openComposer,
   pickFiles,
   pictureOf,
   runPage,
+  TRANSPARENT,
+  write,
 } from "@/e2e/support/attachment";
+import { onThePage, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { UNCONFIRMED } from "@/e2e/support/sheet";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { SAVE } from "@/e2e/support/upload";
 
 /** The themes a chip is read in. */
 const ThemeSchema = Schema.Literals(["light", "dark"]);
@@ -156,3 +164,42 @@ for (const scheme of ThemeSchema.literals) {
     });
   });
 }
+
+/** The wash that a failed picture lays over itself, as the browser computes it. */
+const readWash = (element: Element) =>
+  getComputedStyle(element, "::after").backgroundColor;
+
+test.describe("A picture whose upload failed in the composer", () => {
+  test.use({ viewport: { height: 900, width: 390 } });
+  test.describe.configure({ timeout: 180_000 });
+
+  test("shows the failure on the picture", async ({ baseURL, page }) => {
+    await runOnPage(page, baseURL, (origin) =>
+      Effect.gen(function* () {
+        const { changes } = yield* openChatPage(page, origin);
+        const composer = onThePage(page);
+        yield* pickFiles(composer, [
+          yield* pictureOf(page, "lesson.png", { height: 64, width: 64 }),
+        ]);
+        yield* write(composer, "Explain this picture");
+        const chip = chipsOfComposer(composer).first();
+        const picture = chip.locator('[data-slot="attachment-media"]');
+        changes.failNext(SAVE);
+
+        yield* Effect.promise(async () => {
+          // Before the send the picture has no wash, so a failure adds this one.
+          await expect.poll(() => picture.evaluate(readWash)).toBe(TRANSPARENT);
+          await composerOf(composer).press("Enter");
+          await expect(page.getByText(UNCONFIRMED).first()).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          await expect(chip).toHaveAttribute("data-state", "error");
+          await expect(chip).toHaveCSS("border-top-color", TRANSPARENT);
+          await expect
+            .poll(() => picture.evaluate(readWash))
+            .not.toBe(TRANSPARENT);
+        });
+      })
+    );
+  });
+});

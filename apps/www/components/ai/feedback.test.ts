@@ -4,9 +4,9 @@ import { captureException } from "@repo/analytics/posthog/browser";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Fiber, Option, Record as Rec } from "effect";
 import { TestClock } from "effect/testing";
-import { toast } from "sonner";
 import {
   NinaConnectionError,
   ninaFailureFeedback,
@@ -15,44 +15,70 @@ import {
   reportNinaFailure,
   requireNinaConnection,
 } from "@/components/ai/feedback";
-import { aiTranslator, NO_BREAK } from "@/test/ai";
+import { NO_BREAK, toastTranslator } from "@/test/ai";
 
 vi.mock("@repo/analytics/posthog/browser", () => ({
   captureException: vi.fn(),
 }));
-vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+vi.mock("@repo/design-system/lib/toast/notify", () => ({
+  toast: { error: vi.fn() },
+}));
 
 afterEach(() => vi.clearAllMocks());
 
-const copy = {
-  fallbackMessage: "Something went wrong.",
-  insufficientCreditsMessage: "You need more credits.",
-  rateLimitMessage: "Please wait before trying again.",
+const fallbackMessage: ToastCopy = {
+  description: "failure-connection.description",
+  title: "failure-connection.title",
+};
+const creditsMessage: ToastCopy = {
+  description: "failure-credits.description",
+  title: "failure-credits.title",
+};
+const rateLimitMessage: ToastCopy = {
+  description: "failure-rate-limit.description",
+  title: "failure-rate-limit.title",
 };
 
 describe("chat runtime feedback", () => {
-  for (const [code, message] of [
-    ["INSUFFICIENT_CREDITS", copy.insufficientCreditsMessage],
-    ["RATE_LIMITED", copy.rateLimitMessage],
-  ] as const) {
-    it.effect(`shows ${code} without recording an operational exception`, () =>
+  it.effect(
+    "shows insufficient credits without recording an operational exception",
+    () =>
       Effect.gen(function* () {
         yield* reportNinaFailure(
           new NinaCreditError({
-            code,
+            code: "INSUFFICIENT_CREDITS",
             message: "The request could not be admitted.",
           }),
-          message
+          creditsMessage
         );
 
-        expect(toast.error).toHaveBeenCalledExactlyOnceWith(message, {
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(creditsMessage, {
           id: expect.any(String),
           position: "top-center",
         });
         expect(captureException).not.toHaveBeenCalled();
       })
-    );
-  }
+  );
+
+  it.effect(
+    "shows a rate limit without recording an operational exception",
+    () =>
+      Effect.gen(function* () {
+        yield* reportNinaFailure(
+          new NinaCreditError({
+            code: "RATE_LIMITED",
+            message: "The request could not be admitted.",
+          }),
+          rateLimitMessage
+        );
+
+        expect(toast.error).toHaveBeenCalledExactlyOnceWith(rateLimitMessage, {
+          id: expect.any(String),
+          position: "top-center",
+        });
+        expect(captureException).not.toHaveBeenCalled();
+      })
+  );
 
   it.effect("shows a call refused offline without recording an exception", () =>
     Effect.gen(function* () {
@@ -61,13 +87,13 @@ describe("chat runtime feedback", () => {
           code: "NINA_OFFLINE",
           message: "Convex is offline, so the request was not started.",
         }),
-        copy.fallbackMessage
+        fallbackMessage
       );
 
-      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
-        copy.fallbackMessage,
-        { id: expect.any(String), position: "top-center" }
-      );
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(fallbackMessage, {
+        id: expect.any(String),
+        position: "top-center",
+      });
       expect(captureException).not.toHaveBeenCalled();
     })
   );
@@ -89,11 +115,11 @@ describe("chat runtime feedback", () => {
           message: "The request could not be admitted.",
         });
 
-        yield* reportNinaFailure(lost, copy.fallbackMessage);
-        yield* reportNinaFailure(lost, copy.fallbackMessage);
+        yield* reportNinaFailure(lost, fallbackMessage);
+        yield* reportNinaFailure(lost, fallbackMessage);
         // A lost connection and an offline call say the same sentence.
-        yield* reportNinaFailure(offline, copy.fallbackMessage);
-        yield* reportNinaFailure(credits, copy.insufficientCreditsMessage);
+        yield* reportNinaFailure(offline, fallbackMessage);
+        yield* reportNinaFailure(credits, creditsMessage);
 
         const [first, again, other, apart] = Arr.map(
           vi.mocked(toast.error).mock.calls,
@@ -114,18 +140,15 @@ describe("chat runtime feedback", () => {
         code: "NINA_CONNECTION_FAILED",
         message: "Private transport diagnostic",
       });
-      yield* reportNinaFailure(error, copy.fallbackMessage);
+      yield* reportNinaFailure(error, fallbackMessage);
 
       expect(captureException).toHaveBeenCalledExactlyOnceWith(error, {
         source: "nina-admission",
       });
-      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
-        copy.fallbackMessage,
-        {
-          id: expect.any(String),
-          position: "top-center",
-        }
-      );
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(fallbackMessage, {
+        id: expect.any(String),
+        position: "top-center",
+      });
     })
   );
 });
@@ -151,7 +174,7 @@ describe("the refusal of a prompt over the limit", () => {
     });
   });
 
-  it("does not refuse the press that stops a reply, whatever the composer holds", () => {
+  it("does not refuse a press while a reply streams, whatever the composer holds", () => {
     expect(promptRefusal(tooLong, true)).toEqual(Option.none());
   });
 });
@@ -162,17 +185,18 @@ describe("the sentences of the failure table", () => {
     (locale) =>
       Effect.gen(function* () {
         const onError = vi.fn();
-        const t = yield* aiTranslator(locale, onError);
+        const t = yield* toastTranslator(locale, onError);
 
         for (const { message } of Rec.values(ninaFailureFeedback)) {
           // A sentence that needs a number nobody passed fails to format.
-          t(`failures.${message}`, ninaFailureLimits);
+          t(`failure-${message}.title`, ninaFailureLimits);
+          t(`failure-${message}.description`, ninaFailureLimits);
         }
 
         expect(onError).not.toHaveBeenCalled();
-        expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
-          String(NINA_DOCUMENT_MEBIBYTES)
-        );
+        expect(
+          t("failure-attachment-size.description", ninaFailureLimits)
+        ).toContain(String(NINA_DOCUMENT_MEBIBYTES));
       })
   );
 
@@ -180,19 +204,19 @@ describe("the sentences of the failure table", () => {
     "keeps each number with its unit or its noun on one line, in %s",
     (locale) =>
       Effect.gen(function* () {
-        const t = yield* aiTranslator(locale);
+        const t = yield* toastTranslator(locale);
         const size = new Intl.NumberFormat(locale).format(
           NINA_DOCUMENT_MEBIBYTES
+        );
+        const sentence = t(
+          "failure-attachment-size.description",
+          ninaFailureLimits
         );
 
         // The learner reads "10 MiB" as one word, so a line never ends between
         // the number and its unit.
-        expect(t("failures.attachment-size", ninaFailureLimits)).toContain(
-          `${size}${NO_BREAK}`
-        );
-        expect(t("failures.attachment-size", ninaFailureLimits)).not.toContain(
-          `${size} `
-        );
+        expect(sentence).toContain(`${size}${NO_BREAK}`);
+        expect(sentence).not.toContain(`${size} `);
       })
   );
 });

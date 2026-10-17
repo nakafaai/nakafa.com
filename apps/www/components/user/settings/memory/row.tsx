@@ -38,11 +38,11 @@ import { useMemoryPage } from "@/components/user/settings/memory/provider";
  */
 export const MemoryRow = memo(
   function MemoryRow({
+    askDelete,
     memory,
-    remove,
   }: {
+    askDelete: (memory: Memory) => void;
     memory: Memory;
-    remove: (memory: Memory) => void;
   }) {
     const t = useTranslations("Memory");
     const openEdit = useMemoryPage((state) => state.openEdit);
@@ -105,7 +105,7 @@ export const MemoryRow = memo(
           </Button>
           <Button
             disabled={waiting}
-            onClick={() => remove(memory)}
+            onClick={() => askDelete(memory)}
             size="icon-sm"
             variant="ghost"
           >
@@ -117,5 +117,6 @@ export const MemoryRow = memo(
     );
   },
   (before, after) =>
-    before.remove === after.remove && Equal.equals(before.memory, after.memory)
+    before.askDelete === after.askDelete &&
+    Equal.equals(before.memory, after.memory)
 );

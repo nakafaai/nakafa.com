@@ -98,11 +98,18 @@ export const withQueryRetry = <E, R>(
     }))
   ).pipe(Layer.provide(base));
 
+/**
+ * Provides the Convex HTTP client for this deployment with one attempt per
+ * query. A caller that sets its own deadline and its own fallback, such as the
+ * school gate of the proxy, does not repeat a failed read.
+ */
+export function httpSingleAttemptLayer(options?: HttpClientOptions) {
+  return options === undefined
+    ? HttpClient.layer(clientEnv.NEXT_PUBLIC_CONVEX_URL)
+    : HttpClient.layer(clientEnv.NEXT_PUBLIC_CONVEX_URL, options);
+}
+
 /** Provides the Convex HTTP client for this deployment with query retries. */
 export function httpLayer(options?: HttpClientOptions) {
-  return withQueryRetry(
-    options === undefined
-      ? HttpClient.layer(clientEnv.NEXT_PUBLIC_CONVEX_URL)
-      : HttpClient.layer(clientEnv.NEXT_PUBLIC_CONVEX_URL, options)
-  );
+  return withQueryRetry(httpSingleAttemptLayer(options));
 }

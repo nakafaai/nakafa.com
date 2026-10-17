@@ -25,12 +25,11 @@ const LONGEST = Duration.seconds(3);
  * that fails tells the learner and is tried again with the next change. When
  * the editor is closed by then, it opens again with what they wrote. A save
  * that finds the memory gone closes the editor. A stored memory the learner
- * emptied is deleted when the editor closes, with an Undo.
+ * emptied keeps the words the server holds when the editor closes.
  *
  * `restored` is the words of a save that failed, when the editor opens again
  * with them, and `starting` is the words the editor opens with. `change` takes
- * what the editor holds now. `discard` stops the saving and deletes the memory,
- * with an Undo.
+ * what the editor holds now. `discard` stops the saving and deletes the memory.
  */
 export function useAutosave(
   memory: Memory | null,
@@ -38,9 +37,11 @@ export function useAutosave(
 ) {
   const { add, edit, remove } = useMemoryActions();
   const adopt = useMemoryPage((state) => state.adopt);
+  const hide = useMemoryPage((state) => state.hide);
   const leave = useMemoryPage((state) => state.leave);
   const reopen = useMemoryPage((state) => state.reopen);
   const session = useMemoryPage((state) => state.session);
+  const unhide = useMemoryPage((state) => state.unhide);
   const latest = useMemoryLatest();
   const [saving] = useState(() => createAutosave(memory, restored));
   const send = {
@@ -48,10 +49,12 @@ export function useAutosave(
     adopt: (stored: Memory) => adopt(session, stored),
     cleared: () => latest().cleared,
     edit,
+    hide,
     leave: () => leave(session),
     remove,
     // The editor holds the memory it opened, which follows what it saved.
     reopen: (draft: MemoryDraft) => reopen(session, draft, latest().target),
+    unhide,
   };
   const write = useCallbackRef(() => saving.write(send));
   const later = useDebouncedCallback(write, {
@@ -60,7 +63,7 @@ export function useAutosave(
   });
   const finish = useCallbackRef(() => {
     later.cancel();
-    saving.close(send, memory);
+    saving.close(send);
   });
 
   // The editor closes: what the server does not have yet goes out now.
