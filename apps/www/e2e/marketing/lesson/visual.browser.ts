@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
+import { LAB_VISIBLE_SHARE } from "@/components/marketing/about/lesson/reveal";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
   lessonPanel,
@@ -8,6 +9,7 @@ import {
   lessonVisual,
   lessonWindow,
   PROJECTILE_VIEW,
+  visibleShare,
 } from "@/e2e/support/lesson";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { holdChunkHolding, openRoute } from "@/e2e/support/route";
@@ -54,17 +56,42 @@ function countSectionShifts(page: Page) {
   }, LESSON_SECTION_ID);
 }
 
-/** The share of a box that lies inside the viewport, from 0 to 1. */
-function visibleShare(
-  box: Awaited<ReturnType<Locator["boundingBox"]>>,
-  viewportHeight: number
-) {
-  if (box === null || box.height <= 0) {
-    return 0;
-  }
-  const visible =
-    Math.min(box.y + box.height, viewportHeight) - Math.max(box.y, 0);
-  return Math.max(0, visible) / box.height;
+/** How far either side of the half the edge test sets the window's share. */
+const EDGE_STEP = 0.01;
+
+/** The share of the window that lies on the screen now. */
+function windowShare(root: Locator) {
+  return Effect.promise(async () =>
+    visibleShare(await root.boundingBox(), desktopViewport.height)
+  );
+}
+
+/** Checks that the window shows the share that its scroll aimed for, to within 0.005. */
+function expectWindowShare(root: Locator, share: number) {
+  return Effect.promise(async () => {
+    const measured = visibleShare(
+      await root.boundingBox(),
+      desktopViewport.height
+    );
+    expect(measured).toBeCloseTo(share, 2);
+  });
+}
+
+/**
+ * Scrolls the page at once, so that `share` of the window's height lies on the
+ * screen. The window's top moves to the point where that share begins, so the
+ * scroll sets the share and no test waits on a frame for it.
+ */
+function scrollWindowToShare(page: Page, root: Locator, share: number) {
+  return Effect.promise(async () => {
+    const box = await root.boundingBox();
+    expect(box).not.toBeNull();
+    const top = desktopViewport.height - share * (box?.height ?? 0);
+    await page.evaluate(
+      (distance) => window.scrollBy({ behavior: "instant", top: distance }),
+      (box?.y ?? 0) - top
+    );
+  });
 }
 
 test("home lesson window mounts its visual once half of the window is on the screen", async ({
@@ -90,23 +117,33 @@ test("home lesson window mounts its visual once half of the window is on the scr
               yield* openRoute(page, "/id", "denied");
               yield* Effect.promise(() => page.waitForLoadState("load"));
               const root = lessonWindow(page);
-              const box = yield* Effect.promise(() => root.boundingBox());
-              expect(box).not.toBeNull();
-              // Under half of the window is on the screen, so the server's card is still the visual.
-              expect(visibleShare(box, desktopViewport.height)).toBeLessThan(
-                0.5
-              );
-              yield* Effect.promise(() =>
-                expect(
-                  lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
-                ).toHaveCount(0)
+              const visual = lessonVisual(page, PROJECTILE_VIEW).locator(
+                "canvas"
               );
 
-              yield* Effect.promise(() => root.scrollIntoViewIfNeeded());
+              // Under half of the window is on the screen, so the server's card is still the visual.
+              expect(yield* windowShare(root)).toBeLessThan(LAB_VISIBLE_SHARE);
+              yield* Effect.promise(() => expect(visual).toHaveCount(0));
+
+              // Just short of half, the observer has not crossed the share, so the lab still waits.
+              yield* scrollWindowToShare(
+                page,
+                root,
+                LAB_VISIBLE_SHARE - EDGE_STEP
+              );
+              yield* expectWindowShare(root, LAB_VISIBLE_SHARE - EDGE_STEP);
+              yield* Effect.promise(() => page.waitForTimeout(500));
+              yield* Effect.promise(() => expect(visual).toHaveCount(0));
+
+              // Just past half, the observer crosses the share and the lab mounts.
+              yield* scrollWindowToShare(
+                page,
+                root,
+                LAB_VISIBLE_SHARE + EDGE_STEP
+              );
+              yield* expectWindowShare(root, LAB_VISIBLE_SHARE + EDGE_STEP);
               yield* Effect.promise(() =>
-                expect(
-                  lessonVisual(page, PROJECTILE_VIEW).locator("canvas")
-                ).toBeAttached({
+                expect(visual).toBeAttached({
                   timeout: readinessTimeoutMilliseconds,
                 })
               );

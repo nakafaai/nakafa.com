@@ -21,6 +21,7 @@ import {
   preloadLessonLab,
 } from "@/components/marketing/about/lesson/labs";
 import type { HomeLesson } from "@/components/marketing/about/lesson/published";
+import { LAB_VISIBLE_SHARE } from "@/components/marketing/about/lesson/reveal";
 import {
   createLessonSelectionStore,
   LessonSelectionContext,
@@ -36,9 +37,6 @@ interface LessonWindowProps {
   /** The static card of each lesson, drawn by the server so the lab takes over the same box. */
   readonly placeholders: Record<Lesson, ReactNode>;
 }
-
-/** The share of the window that must be on the screen before the open lab's code loads. */
-const LAB_VISIBLE_SHARE = 0.5;
 
 /** The DOM id of one lesson's tab, which names its panel for assistive technology. */
 function tabId(windowId: string, lesson: Lesson) {
@@ -68,8 +66,9 @@ interface LessonPanelProps {
  * tab change moves nothing below it. A panel that is not open is hidden by
  * visibility and made inert, so it leaves the accessibility tree and takes no
  * pointer or focus. The open panel's lab replaces its card in the same box once
- * the window is live. The card is inert until its lab mounts, so no control of
- * the card can hold focus when the lab replaces it. The cards of the panels are
+ * the window is live. The card's controls are inert until its lab mounts, so no
+ * control of the card can hold focus when the lab replaces it, while the card's
+ * text and its scene stay in the accessibility tree. The cards of the panels are
  * never skipped by content-visibility: a skipped card takes a fallback height
  * until it is first drawn, so the window would change height when the reader
  * reaches it.
@@ -86,7 +85,6 @@ function LessonPanel({
   placeholder,
 }: LessonPanelProps) {
   const Lab = LESSON_LABS[lesson];
-  const card = <div inert>{placeholder}</div>;
 
   return (
     <div
@@ -113,11 +111,11 @@ function LessonPanel({
         />
       </div>
       {live ? (
-        <Suspense fallback={card}>
+        <Suspense fallback={placeholder}>
           <Lab decimalSeparator={decimalSeparator} />
         </Suspense>
       ) : (
-        card
+        placeholder
       )}
     </div>
   );
@@ -170,7 +168,6 @@ export function LessonWindow({
         onPointerDown={reveal}
         onPointerEnter={reveal}
         rootMargin="0px"
-        threshold={LAB_VISIBLE_SHARE}
       >
         <Tabs onValueChange={handleChange} value={lesson}>
           <TabsList

@@ -71,9 +71,17 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
  * The footer of a coordinate scene's visual card: the grid and automatic
  * rotation beside the card's full screen action, above any readout the scene
  * adds. The coordinate store owns the grid and rotation, and the visual card
- * owns where the card is shown.
+ * owns where the card is shown. A static stand-in of the scene passes `inert`,
+ * so its three controls take no focus while the scene is not mounted, and the
+ * readouts stay in the accessibility tree.
  */
-export function CoordinateControls({ children }: { children?: ReactNode }) {
+export function CoordinateControls({
+  children,
+  inert = false,
+}: {
+  children?: ReactNode;
+  inert?: boolean;
+}) {
   const t = useTranslations("Common");
   const play = useCoordinateControls((controls) => controls.play);
   const showGrid = useCoordinateControls((controls) => controls.showGrid);
@@ -88,6 +96,7 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
       <div className="flex gap-2 px-(--card-spacing)">
         <Button
           aria-pressed={showGrid}
+          inert={inert}
           onClick={toggleGrid}
           size="icon"
           variant="secondary"
@@ -97,6 +106,7 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
         </Button>
         <Button
           aria-pressed={play}
+          inert={inert}
           onClick={togglePlay}
           size="icon"
           variant={play ? "secondary" : "default"}
@@ -104,7 +114,7 @@ export function CoordinateControls({ children }: { children?: ReactNode }) {
           <HugeIcons icon={play ? PauseIcon : PlayIcon} />
           <span className="sr-only">{t("automatic-rotation")}</span>
         </Button>
-        <VisualCardFullscreen />
+        <VisualCardFullscreen inert={inert} />
       </div>
       {children}
     </VisualCardFooter>

@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 
 /**
@@ -31,4 +31,17 @@ export function lessonWindow(page: Page) {
 /** The visual of a lesson, found by the name of its view. */
 export function lessonVisual(page: Page, name: string) {
   return lessonSection(page).getByRole("region", { name });
+}
+
+/** The share of a box that lies inside the viewport, from 0 to 1. A missing or empty box has none. */
+export function visibleShare(
+  box: Awaited<ReturnType<Locator["boundingBox"]>>,
+  viewportHeight: number
+) {
+  if (box === null || box.height <= 0) {
+    return 0;
+  }
+  const visible =
+    Math.min(box.y + box.height, viewportHeight) - Math.max(box.y, 0);
+  return Math.max(0, visible) / box.height;
 }

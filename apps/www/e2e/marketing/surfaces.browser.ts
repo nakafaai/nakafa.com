@@ -63,13 +63,15 @@ const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
  * The homepage ceiling, derived. The 17 October trace of this page, with the
  * 18-friend crowd, counted 1,919 body elements outside the lesson section at the
  * touch viewport, and 2,685 in all. The lesson section's server markup holds its
- * chat and heading, 21 elements, and the window, 745: the 741 of its tabs and its
- * four cards from a static render, plus the four inert wrappers that hold each
- * card until its lab mounts. The window draws all four cards in one grid cell,
- * so it keeps one height through every tab, and only the open lab mounts. That
- * gives 2,685 (1,919 + 21 + 745), and six percent over it is 2,847.
+ * chat and heading, 21 elements, and the window, 745: its tabs and its four cards
+ * from a static render, and four wrappers that held each card inert until its lab
+ * mounted. The cards have no wrapper now: their controls are inert in place, so
+ * the window is 741 and the page 2,681 (1,919 + 21 + 741). The window draws all
+ * four cards in one grid cell, so it keeps one height through every tab, and only
+ * the open lab mounts. Six percent over 2,681 is 2,842, and the ceiling stays at
+ * 2,847 until the measure replaces it.
  *
- * PLACEHOLDER: the window's 745 comes from a static render of its markup, not from
+ * PLACEHOLDER: the window's 741 comes from a static render of its markup, not from
  * a browser. Each run records the measured count as an annotation, and the
  * orchestrator replaces this constant with that measure, rounded up with the same
  * margin.

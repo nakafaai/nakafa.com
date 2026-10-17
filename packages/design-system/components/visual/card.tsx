@@ -205,9 +205,10 @@ function VisualCardFooter({
 /**
  * Shows the card across the whole screen, and returns it to the page. Its
  * pressed state and a polite status tell assistive technology where the
- * visual is.
+ * visual is. A static stand-in of the visual passes `inert`, so the button takes
+ * no focus until the visual is mounted.
  */
-function VisualCardFullscreen() {
+function VisualCardFullscreen({ inert = false }: { inert?: boolean }) {
   const t = useTranslations("Common");
   const { presented, toggle } = useVisual((state) => ({
     presented: state.presentation !== "inline",
@@ -219,6 +220,7 @@ function VisualCardFullscreen() {
       <Button
         aria-pressed={presented}
         className="ms-auto shrink-0"
+        inert={inert}
         onClick={(event) => toggle(event.currentTarget)}
         size="icon"
         variant="secondary"

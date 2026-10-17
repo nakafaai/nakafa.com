@@ -63,8 +63,13 @@ const SIZE_CHANGES_KEY = "nakafaHomeSizeChanges";
 /** The sections of the page and the panels of the lesson window, whose sizes a failure names. */
 const SIZED_ELEMENTS = "section[id], [role='tabpanel']";
 
-/** A resize within this many milliseconds of a shift is in the same frame, so it is the shift's cause to name. */
-const SHIFT_FRAME_MILLISECONDS = 50;
+/**
+ * How far apart a resize and a layout shift may be and still be named together
+ * in a failure. Timestamps cannot place a resize in its frame exactly, so this is
+ * about three frames at 60 Hz: a resize in the frame before a shift is named too,
+ * and the message lists candidate causes, not proven ones.
+ */
+const SHIFT_TOLERANCE_MILLISECONDS = 50;
 
 /**
  * Scrolls the whole page one screen at a time, so every part reaches the
@@ -156,7 +161,7 @@ for (const viewport of HOME_VIEWPORTS) {
                   );
                   // The number and the failure message read the same shifts: the
                   // ones that no press or key caused, with the elements they moved
-                  // and the elements that changed size in the same frame.
+                  // and the elements that changed size near them in time.
                   const counted = Arr.filter(
                     shifts,
                     (shift) => !shift.hadRecentInput
@@ -169,7 +174,7 @@ for (const viewport of HOME_VIEWPORTS) {
                       resizes,
                       (resize) =>
                         Math.abs(resize.time - entry.time) <=
-                        SHIFT_FRAME_MILLISECONDS
+                        SHIFT_TOLERANCE_MILLISECONDS
                     );
                     const sized = Arr.map(
                       resized,

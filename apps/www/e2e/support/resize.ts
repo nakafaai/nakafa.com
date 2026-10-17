@@ -2,12 +2,15 @@ import type { Page } from "@playwright/test";
 import { Effect, Schema } from "effect";
 
 /**
- * Records, from the first script on, every change in the size of the elements
- * that match `selector`, in the page global `key`, with the time of the change
- * and the element's name. A layout shift names what moved, and this names what
- * was resized, so a failure can say which element grew or shrank. Pass it to
- * `page.addInitScript` with the global's name and the selector.
- * `readRecordedSizeChanges` reads what it holds.
+ * Records every change in the size of the elements that match `selector` and
+ * are on the page when its DOM has loaded, in the page global `key`, with the
+ * time of the change and the element's name. The recorder first reports an
+ * element's size when it observes the element at DOMContentLoaded, and that size
+ * is the baseline, so a change counts only from then on. An element that the
+ * page adds after its DOM has loaded is not observed. A layout shift names what
+ * moved, and this names what was resized, so a failure can say which element grew
+ * or shrank. Pass it to `page.addInitScript` with the global's name and the
+ * selector. `readRecordedSizeChanges` reads what it holds.
  */
 export function recordSizeChanges({
   key,

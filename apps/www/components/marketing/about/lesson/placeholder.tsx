@@ -74,6 +74,7 @@ export function ProjectilePlaceholder({
         <ToggleGroup
           aria-label={labels.chooseLaunch}
           gridColumns="3"
+          inert
           type="single"
           value={DEFAULT_PARABOLIC_LAUNCH_ID}
           variant="outline"
@@ -100,7 +101,7 @@ export function ProjectilePlaceholder({
             />
           ))}
         </dl>
-        <VisualCardFullscreen />
+        <VisualCardFullscreen inert />
       </VisualCardFooter>
     </VisualCard>
   );
@@ -139,7 +140,7 @@ export function CirclePlaceholder({
         <VisualCardBody>
           <div aria-hidden="true" className={threeSceneFrameVariants()} />
         </VisualCardBody>
-        <CoordinateControls>
+        <CoordinateControls inert>
           <div className="flex w-full flex-col gap-4">
             <div className="flex flex-wrap items-center justify-center gap-2 px-6">
               <Badge variant="outline">
@@ -206,6 +207,7 @@ export function AtomPlaceholder({
         <ToggleGroup
           aria-label={labels.chooseAtom}
           gridColumns="6"
+          inert
           type="single"
           value={CALCIUM_ID}
           variant="outline"
@@ -247,7 +249,7 @@ export function AtomPlaceholder({
             }
           />
         </dl>
-        <VisualCardFullscreen />
+        <VisualCardFullscreen inert />
       </VisualCardFooter>
     </VisualCard>
   );
@@ -272,6 +274,7 @@ export function CellPlaceholder({
         <ToggleGroup
           aria-label={labels.chooseMode}
           gridColumns="auto"
+          inert
           type="single"
           value={String(BIOLOGY_DEFAULT_ITEM_INDEX)}
           variant="outline"
@@ -289,7 +292,7 @@ export function CellPlaceholder({
         />
       </VisualCardBody>
       <VisualCardFooter>
-        <VisualCardFullscreen />
+        <VisualCardFullscreen inert />
       </VisualCardFooter>
     </VisualCard>
   );
