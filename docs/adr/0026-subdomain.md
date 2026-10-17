@@ -77,6 +77,7 @@ Every address below is planned.
 | `nakafa.com/id/notifications` | One inbox. In a school, a panel on the right filters by school, and no second address exists. Push carries only an id and a general title. | Planned, changed |
 | `nakafa.com/id/user/settings/memory` | Personal Nina memory. It never appears inside a school. | Live |
 | `nakafa.com/id/user/settings` | Account settings | Live |
+| `nakafa.com/id/user/settings/learning` | Role and curriculum preferences | Live |
 | `nakafa.com/id` | Back to Nakafa learning | Live |
 | `api.nakafa.com/v1` | Public REST. No key, public data only. It never accepts a school path. | Live |
 | `mcp.nakafa.com/mcp` | Public MCP. No key, Nakafa content only. The name repeats in the host and the path, and it stays so that agents keep working. | Live |

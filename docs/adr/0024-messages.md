@@ -258,7 +258,10 @@ changes.
    attachments reader takes the file through it and gets the part with its name
    opened, so neither the model's file part, the admission receipt, nor the page
    sees the sealed form. A file part inside a message row is sealed and opened
-   with its row. The dry run reports how many attachments and bytes it would copy. The
+   with its row. Wave one keeps the name plain: `getFile` moves into the module
+   (`confect/nina/sealed/file.ts`), which returns the stored name. The sealed
+   name, its format, and its opening come with the writer in wave two (S2b), in
+   one pull request. The dry run reports how many attachments and bytes it would copy. The
    stored file is removed within two days of its chat's deletion, as
    the live policy already says (ADR 0001). The cleanup runs once a day, and it
    removes a file once no chat refers to it and 24 hours have passed since its
@@ -292,26 +295,37 @@ A sealed row keeps in the clear what the component, the index and the
 settlement need: `threadId`, `userId`, `order`, `stepOrder`, `status`, `tool`,
 `model`, `provider`, `finishReason`, `usage`, `warnings`, `fileIds`. The
 content moves into one sealed payload for the learner who owns the chat, bound
-to the field `{ table: "ninaMessages", field: "message" }`. The payload holds
-`message`, `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and
-`error`, encoded with Convex's value-to-JSON so that bytes survive. The prompt
+to the field `{ table: "ninaMessages", field: "message", row: [threadId, order,
+stepOrder] }`, so a payload opens only in the row it was sealed for. The payload
+holds `message`, `reasoning`, `reasoningDetails`, `sources`, `providerMetadata`
+and `error`, encoded with Convex's value-to-JSON so that bytes survive. The prompt
 that a cancelled or failed turn marks failed keeps its `error`, which Nakafa
 sets to `cancelled` or `failed` (`settlement.ts:75-82`). The row keeps a
 skeleton of `message` that is valid for the component:
 
 - the role is kept;
-- a text row has empty `content`, so `text` is empty and `text_search` indexes
-  nothing;
+- every part keeps its type. A text or reasoning part keeps an empty text, so
+  `text` is empty and `text_search` indexes nothing;
+- a file or image part keeps its media type and, when it has one, its provider
+  reference. Its address and its bytes stay in the payload, because an address of
+  a stored file opens the file for anyone who holds it. A custom part keeps its
+  kind, a source keeps its id and its source type, and a tool approval keeps its
+  ids, with `approved` on a response;
 - a tool-call part keeps `toolCallId` and `toolName` with an empty `input`, and
-  a tool-result part keeps both with a `null` `output`, so the `tool` flag, the
-  pairing of calls with results (`filterOutOrphanedToolMessages`) and
-  `excludeToolMessages` keep working;
-- the sealed bytes sit in `message.providerOptions.nakafa.sealed`.
+  a tool-result part keeps both with no `output`, because the Agent's validator
+  rejects `null`, so the `tool` flag, the pairing of calls with results
+  (`filterOutOrphanedToolMessages`) and `excludeToolMessages` keep working;
+- the sealed bytes sit in `message.providerOptions.nakafa.sealed` as bytes,
+  which the component's options validator (`v.any()`) holds, so a sealed row
+  stays about as long as the plain row.
 
 `reasoning`, `reasoningDetails`, `sources`, `providerMetadata` and `error` are
-not passed to `addMessages`, so the row has none. A row that has no sealed
-bytes is read as plain. It is a running turn's row, or a row of a settled turn
-that the seal has not reached yet, and the module passes it through, so a read
+not passed to `addMessages`, so the row has none. A field of that list that a row
+keeps in the clear beside its sealed bytes comes back as stored, such as the error
+that a cut-off turn writes onto a prompt row (`journal.ts`). A field that both the
+row and its sealed content hold fails the read, because neither value can be the
+right one. A row that has no sealed bytes is read as plain. It is a running
+turn's row, or a row of a settled turn that the seal has not reached yet, and the module passes it through, so a read
 does not fail before its turn is sealed. The seal writes `sealedAt` in the same
 transaction as the sealed rows, so a turn that carries it has no plain row unless
 a write came from outside the seal. Such a row fails the read, because the read
@@ -347,7 +361,7 @@ read for the whole function.
 | The summary job | 100 rows a page, text rows | 1 | rows read |
 | Capture, retry, replay | 1 row | 1 | 1 |
 | Attachments | 1 file row for each attachment | 1 | 1 name for each |
-| Suggestions | up to 50 rows | 1 | up to 50 |
+| Suggestions | up to 16 rows, the window of `SUGGESTION_MESSAGES` (`presentation.ts`) | 1 | up to 16 |
 | Title | 1 row: it runs for the first turn only (`presentation.ts:102`) | 1 | 1 |
 
 A sealed row has an empty `text`, so the readers that used it take the text of
@@ -475,3 +489,13 @@ module then keeps only the opening.
   can be turned back into text.
 - The model provider sees plain text for the length of a call. ADR 0019 covers
   retention.
+
+## Implementation Status
+
+| Part | Status |
+| --- | --- |
+| `packages/backend/confect/nina/sealed.ts`: seals a message's content into a skeleton row, and opens it only for its own thread, order and step. The field binds the row through `row` in `vault/text.ts`, so existing learner bindings do not change. | Built in program wave A, order of work step 1 (slice S1a). The readers open through it in S1b and S1c, and the writers seal in wave two. |
+| `packages/backend/confect/nina/sealed/`: the reads of stored rows and files. `thread.ts` reads a page of a thread, `message.ts` one message by id, `file.ts` a stored file, `model.ts` converts opened rows to model messages, `action.ts` reads from an action through the module's own internal queries (`sealed.spec.ts`, `sealed.impl.ts`), and `context.ts` gives the recent context of suggestions and the prompt of the title. `open.ts` opens the rows of one read for the owner it is given: a read of plain rows reads no key, and a read with a sealed row reads the owner's key once. | Built in S1b. Each read names the owner whose key opens it: the chat's owner, the turn's learner, or the learner who asks for a memory. |
+| Readers that open through the module. Each has a parity test, in which the same thread gives the same result plain and then sealed in place (`test/nina/seal.ts`): the page (`messages/page.ts`), the list (`messages.impl.ts`), the next turn's history (`uncovered.ts`), the summary's writer input and its summary (`summary.ts`), memory capture's words of a turn (`memory/said.ts`), the replay of a turn start (`turns.impl.ts`), the settlement check of the newest row (`journal.ts`), retry of a sealed prompt with its attachment (`prompt.ts`, `attachments.ts`), the brief's prompt (`brief.impl.ts`), and the suggestions' and the title's model input (`presentation.ts`, with the sealed window of `sealed/context.ts`). Attachment file names stay plain in this wave. Wave two (step 2) must open the row that `saveMessage` returns in the admission (`turns.impl.ts`, `toUIMessages([saved.message])`), once the learner's message is sealed at write: this wave writes that row plain, so no test can reach a sealed one here. The CLI journal gate (`packages/backend/scripts/nina/deployment.ts`) stays as it is: it reads only the status, the agent name, the finish reason, the usage and the role of each row (`scripts/nina/verdict.ts`), none of them sealed. | Built in S1b and S1c. |
+| Agent audit. Suggestions and title set `recentMessages: 0` and take their input from the module through `contextHandler`, as `generation.ts` already did. Every other Agent call (`math/agent.ts`, `math/repair.ts`, `memory/capture.ts`, `nakafa/agent.ts`, `portrait/build.ts`, `repair.ts`, the two calls of `research/agent.ts`, `summary.ts`, and the test helper `test/nina/capability.ts`) passes `userId` and no `threadId`, so its fetch of recent messages cannot run. Every `generateText`, `streamText`, `generateObject` and `streamObject` call of the backend goes through one of these Agents. | Built in S1b. |
+| `scripts/check/sealed.ts`, the source rule of ADR 0021 (Sealed message readers): no load of the Agent package that reaches one of its readers of stored rows and files (an import, a re-export, a namespace import, or a dynamic import), and no read of the component's messages that returns sealed rows as they are (a property, an element, a destructuring, or the messages taken as a value), in every authored module outside the sealed module. Type-only specifiers read nothing. Tests and the helpers under `packages/backend/test/` read the stored form on purpose and are not judged. | Built in S1b, with its tests and a planted violation of each form. |

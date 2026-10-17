@@ -19,6 +19,10 @@ import {
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
 import { foldWithin, nextSummaryTarget } from "@repo/backend/confect/nina/fold";
 import {
+  readThreadFromAction,
+  type ThreadPage,
+} from "@repo/backend/confect/nina/sealed/action";
+import {
   foldedTurns,
   transcriptOf,
 } from "@repo/backend/confect/nina/transcript";
@@ -103,32 +107,28 @@ const readOrders = Effect.fn("nina.summary.orders")(function* (
 });
 
 /**
- * Reads the thread messages around the turns a fold covers. Pages run newest
- * first from `anchor`, the prompt of the last turn the fold covers, and stop at
- * turns the summary already covers, so a refresh reads only its batch.
+ * Reads the thread messages around the turns a fold covers, opened for the
+ * learner who owns the chat. Pages run newest first from `anchor`, the prompt
+ * of the last turn the fold covers, and stop at turns the summary already
+ * covers, so a refresh reads only its batch.
  */
 const readWindow = Effect.fn("nina.summary.window")(function* (
-  threadId: string,
+  turn: Pick<NinaTurnsDoc, "threadId" | "userId">,
   from: number,
   anchor: string
 ) {
-  const ctx = yield* ActionCtx;
   let docs: MessageDoc[] = [];
   let cursor: string | null = null;
   let done = false;
   while (!done) {
-    const page = yield* Effect.tryPromise({
-      try: () =>
-        ctx.runQuery(components.nina.messages.listMessagesByThreadId, {
-          excludeToolMessages: true,
-          order: "desc",
-          paginationOpts: { cursor, numItems: MESSAGE_PAGE },
-          statuses: ["success"],
-          threadId,
-          upToAndIncludingMessageId: anchor,
-        }),
-      catch: () => new NinaSummaryError({ operation: "read" }),
-    });
+    const page: ThreadPage = yield* readThreadFromAction({
+      excludeToolMessages: true,
+      owner: turn.userId,
+      paginationOpts: { cursor, numItems: MESSAGE_PAGE },
+      statuses: ["success"],
+      threadId: turn.threadId,
+      upToAndIncludingMessageId: anchor,
+    }).pipe(Effect.mapError(() => new NinaSummaryError({ operation: "read" })));
     docs = Arr.appendAll(docs, page.page);
     done =
       page.isDone || Arr.some(page.page, (message) => message.order <= from);
@@ -145,7 +145,7 @@ const readWindow = Effect.fn("nina.summary.window")(function* (
  * starting at the prompt of the last turn the fold covers.
  */
 const readTranscript = Effect.fn("nina.summary.transcript")(function* (
-  turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId">,
+  turn: Pick<NinaTurnsDoc, "chatId" | "order" | "threadId" | "userId">,
   covered: number | null,
   target: number,
   uncovered: Effect.Success<ReturnType<typeof readUncovered>>
@@ -167,10 +167,7 @@ const readTranscript = Effect.fn("nina.summary.transcript")(function* (
     return yield* new NinaSummaryError({ operation: "read" });
   }
   const orders = yield* readOrders(turn, covered, target);
-  return foldedTurns(
-    yield* readWindow(turn.threadId, covered ?? -1, anchor),
-    orders
-  );
+  return foldedTurns(yield* readWindow(turn, covered ?? -1, anchor), orders);
 });
 
 /**

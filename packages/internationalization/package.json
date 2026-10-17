@@ -13,7 +13,7 @@
     "@repo/next-config": "workspace:*",
     "@repo/seo": "workspace:*",
     "effect": "catalog:",
-    "next": "16.4.0",
+    "next": "16.4.2",
     "next-intl": "catalog:"
   },
   "devDependencies": {

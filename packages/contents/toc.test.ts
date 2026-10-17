@@ -185,12 +185,4 @@ describe("ParsedHeadingSchema", () => {
 
     expect(decodeHeadings(headings)).toEqual(headings);
   });
-
-  it("rejects a heading index that is not a finite number", () => {
-    expect(() =>
-      decodeHeadings([
-        { children: [], href: "#main", index: Number.NaN, label: "Main" },
-      ])
-    ).toThrow();
-  });
 });

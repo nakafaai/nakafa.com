@@ -25,6 +25,7 @@ import { requireOpenCapacity } from "@repo/backend/confect/nina/capacity";
 import { reserveCredits } from "@repo/backend/confect/nina/credits/ledger";
 import { START_DEADLINE } from "@repo/backend/confect/nina/deadline";
 import { preparePrompt } from "@repo/backend/confect/nina/prompt";
+import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import { settleStopped } from "@repo/backend/confect/nina/settlement";
 import spec, { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { sha256Hex } from "@repo/utilities/digest";
@@ -82,16 +83,12 @@ const start = FunctionImpl.make(
         });
       }
       const ctx = yield* MutationCtx;
-      const persisted = yield* Effect.tryPromise({
-        try: () =>
-          ctx.runQuery(components.nina.messages.getMessagesByIds, {
-            messageIds: [existing.promptMessageId],
-          }),
-        catch: writeFailure,
-      });
-      const [message] = toUIMessages(
-        Arr.filter(persisted, (item) => item !== null)
-      );
+      const persisted = yield* readMessage(
+        ctx,
+        appUser._id,
+        existing.promptMessageId
+      ).pipe(Effect.mapError(writeFailure));
+      const [message] = toUIMessages(Arr.fromNullishOr(persisted));
       if (!message) {
         return yield* writeFailure();
       }
