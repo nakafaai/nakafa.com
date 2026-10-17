@@ -7,6 +7,7 @@ import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import {
   args,
+  cancel,
   contextFor,
   fixture,
   start,
@@ -102,5 +103,24 @@ describe("the request fingerprint of an admission", () => {
 
     expect(turn?.fingerprint).toBe(keyed);
     expect(turn?.fingerprint).not.toBe(unkeyed);
+  });
+
+  it("answers a repeated request whose settled turn has no fingerprint with a conflict, never a replay", async () => {
+    vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
+    const { t, owner } = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await owner.mutation(start, args)
+    );
+    // The one-off clears the unkeyed fingerprint of a settled turn (`fingerprints.impl.ts`).
+    await owner.mutation(cancel, { chatId: first.chatId });
+    await t.finishAllScheduledFunctions(() => undefined);
+    await t.mutation((ctx) =>
+      ctx.db.patch("ninaTurns", first.turnId, { fingerprint: undefined })
+    );
+
+    await expect(owner.mutation(start, args)).rejects.toMatchObject({
+      data: { code: "NINA_REQUEST_CONFLICT" },
+    });
   });
 });

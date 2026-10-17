@@ -358,11 +358,17 @@ changes.
    16 bytes and written in URL-safe Base64 (`nina/fingerprint.ts`, `vault/text.ts`).
    An unkeyed hash of the request would confirm a guessed short message against the
    database, which the seal has just hidden. A repeated request still matches itself,
-   because the learner's key stays the same. A fingerprint stored before this change
-   is an unkeyed SHA-256 in hexadecimal, so it never matches a new one, and a reader
-   of the database can still confirm a guessed request against it. A retry of an
-   id stored before the change is then refused as a conflict, which the decision
-   accepts, because a replay is bounded to the short window of its turn.
+   because the learner's key stays the same. Every fingerprint that `turns.start`
+   stores now is keyed. A fingerprint stored before this change is an unkeyed
+   SHA-256 in lower-case hexadecimal, 64 characters, which a reader of the database
+   could use to confirm a guessed request. The one-off `clear`
+   (`nina/fingerprints`, `confect/nina/fingerprints.impl.ts`) removes that value from
+   each settled turn, counts the active turns that still hold it, and writes no active
+   turn. It runs on production after the deploy, and again after the longest turn has
+   settled (`TURN_DEADLINE`). The change that deletes it follows the second run, which
+   must show no active turn holding the value. A retry of an id whose turn has no
+   fingerprint, or still holds the unkeyed one, is refused as a conflict, which the
+   decision accepts, because a replay is bounded to the short window of its turn.
 
 The stages, and the key that seals each one (owner decisions K2, K3, and K10):
 
