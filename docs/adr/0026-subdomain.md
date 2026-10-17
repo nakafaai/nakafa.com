@@ -59,11 +59,22 @@ finds the right data.
   layout still refuses a membership that has ended. A read that fails goes on to
   the school tree, and its full cause is logged, so an outage never answers with
   not found.
+- A path that next-intl cannot decode, such as `/%`, gets no rewrite and no
+  locale, so the request goes on unchanged for a refused visitor and an admitted
+  one. A 404 for a refused visitor alone would tell the two apart, so the refusal
+  does not apply to such a path.
 - A school page request costs two or three Convex query calls. The proxy makes one:
   `tenancy.profile.get`, which reads one school row by its slug, or
   `tenancy.viewer.get`, which reads a few indexed rows and at most `UNIT_LIMIT`
   units. The layout reads its profile and, for a signed-in viewer, its viewer
-  again, because it still renders the name and the role.
+  again, because it still renders the name and the role. A signed-in viewer also
+  reads the session token twice, once in the proxy and once in the layout, because
+  React's `cache` does not span the two. Each read, token or query, is retried
+  within the shared network budget, so one read answers or fails within 31.5
+  seconds (`packages/backend/client/network.ts`). The proxy goes on to the page
+  when its read fails, so a school that does not answer can hold a page request
+  for about 63 seconds before the error boundary, where the layout alone held it
+  for about 31.5 seconds.
 - School pages are private and not indexed (ADR 0011).
 - An address never holds personal data, so a student's name never enters a URL.
 - A school member or an account under 18 has no public profile (K15). Each school
