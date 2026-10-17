@@ -10,6 +10,7 @@ import {
   revealTimeoutMilliseconds,
 } from "@/e2e/support/timeout";
 import { targetViewports } from "@/e2e/support/viewport";
+import { isHydrated } from "@/e2e/support/window";
 
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
@@ -46,10 +47,6 @@ const clickCentered = Effect.fn("NakafaE2E.clickCentered")(function* (
   yield* Effect.promise(() => control.click({ scroll: "none" }));
 });
 
-/** Whether React has hydrated an element, which attaches its fiber to the node. */
-const hasReactFiber = (element: Element) =>
-  Object.keys(element).some((key) => key.startsWith("__reactFiber"));
-
 /**
  * Waits until React has taken over a control. The server markup shows the
  * control before that, and a press before then does nothing.
@@ -58,7 +55,7 @@ const waitForReactTakeover = Effect.fn("NakafaE2E.waitForReactTakeover")(
   function* (control: Locator) {
     yield* Effect.promise(() =>
       expect
-        .poll(() => control.evaluate(hasReactFiber), {
+        .poll(() => isHydrated(control), {
           timeout: readinessTimeoutMilliseconds,
         })
         .toBe(true)
