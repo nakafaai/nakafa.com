@@ -1,4 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Array as Arr, Effect, Order, Record as Rec } from "effect";
 import {
   CROWD_HERD,
@@ -53,17 +56,32 @@ const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
 /**
  * The homepage ceiling, derived. The 17 October trace of this page, with the
  * 18-friend crowd, counted 1,919 body elements outside the lesson section at the
- * touch viewport. The lesson section's server markup holds 762 elements: its chat
- * and heading, 21, and the window, 741. The window draws all four cards in one
- * grid cell, so it keeps one height through every tab, and only the open lab
- * mounts. That gives 2,681, and six percent over it is 2,842.
+ * touch viewport, and 2,685 in all. The lesson section's server markup holds its
+ * chat and heading, 21 elements, and the window, 745: the 741 of its tabs and its
+ * four cards from a static render, plus the four inert wrappers that hold each
+ * card until its lab mounts. The window draws all four cards in one grid cell,
+ * so it keeps one height through every tab, and only the open lab mounts. That
+ * gives 2,685 (1,919 + 21 + 745), and six percent over it is 2,847.
  *
- * PLACEHOLDER: the window's 741 comes from a static render of its markup, not from
- * a browser. The orchestrator's browser run measures the page and replaces this
- * constant with that measure, rounded up with the same margin.
+ * PLACEHOLDER: the window's 745 comes from a static render of its markup, not from
+ * a browser. Each run records the measured count as an annotation, and the
+ * orchestrator replaces this constant with that measure, rounded up with the same
+ * margin.
  */
-const HOMEPAGE_MAX_DESCENDANTS = 2842;
+const HOMEPAGE_MAX_DESCENDANTS = 2847;
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
+
+/**
+ * Records one measured count on the running test, so every run reports the number
+ * that a ceiling of this file is derived from, even when the check passes.
+ */
+function recordMeasure(name: string, value: number) {
+  const info = test.info();
+  info.annotations = Arr.append(info.annotations, {
+    description: String(value),
+    type: name,
+  });
+}
 
 const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
   page: Page,
@@ -93,6 +111,24 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/en");
     const measurements = yield* measureMarketingPage(page);
+    recordMeasure(
+      "community-chrome-descendants",
+      measurements.communityChromeDescendants
+    );
+    recordMeasure("community-descendants", measurements.communityDescendants);
+    recordMeasure("community-html-bytes", measurements.communityHtmlBytes);
+    recordMeasure("homepage-descendants", measurements.homepageDescendants);
+
+    // The crowd is one picture to assistive technology: one named image, and no list of friends.
+    const community = page.locator("#community");
+    yield* Effect.promise(() =>
+      expect(
+        community.getByRole("img", { name: en.Landing["community-crowd"] })
+      ).toHaveCount(1)
+    );
+    yield* Effect.promise(() =>
+      expect(community.getByRole("listitem")).toHaveCount(0)
+    );
 
     yield* Effect.sync(() => {
       expect(measurements.duplicateIds).toEqual([]);

@@ -13,7 +13,8 @@ import {
 
 /**
  * The community part: a line about learning together, the Discord link, and a
- * crowd of friends, some of them typing.
+ * crowd of friends, some of them typing. The crowd is one named picture to
+ * assistive technology, so its friends and their typing bubbles stay hidden.
  */
 export function Community() {
   const t = useTranslations("Landing");
@@ -45,24 +46,28 @@ export function Community() {
             }
           />
         </div>
-        <ul
+        <div
           aria-label={t("community-crowd")}
           className="grid grid-cols-6 justify-items-center gap-4 min-[760px]:grid-cols-9"
+          role="img"
         >
           {Arr.map(CROWD_HERD, (mascot, index) => (
-            <li className="relative" key={mascot.animal}>
+            <div className="relative" key={mascot.animal}>
               <CastAnimal
                 className="size-14 min-[760px]:size-16"
                 mascot={mascot}
               />
               {index % CROWD_TYPING_EVERY === 0 ? (
-                <span className="absolute -end-2 -top-3 rounded-full bg-card px-2 py-1 ring-1 ring-foreground/10">
+                <span
+                  aria-hidden="true"
+                  className="absolute -end-2 -top-3 rounded-full bg-card px-2 py-1 ring-1 ring-foreground/10"
+                >
                   <TypingLoader />
                 </span>
               ) : null}
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </section>
   );

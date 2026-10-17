@@ -21,6 +21,9 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Record as Rec } from "effect";
 
 const app = { de: appDe, en: appEn, id: appId };
+
+/** A text with at least one character that is not a space. */
+const NON_BLANK = /\S/;
 const standalone = { de, en, id };
 
 /** Every word of a standalone dictionary, named by its namespace and its key. */
@@ -40,6 +43,16 @@ describe("loadLocaleMessages", () => {
 
       expect(messages).toMatchObject(standalone[locale]);
       expect(messages.Common.home).toBeTypeOf("string");
+    }
+  );
+
+  // The crowd picture's accessible name is read from this key, so a language without it would name the picture nothing.
+  it.each(["de", "en", "id"] as const)(
+    "names the community crowd picture in %s",
+    async (locale) => {
+      const messages = await loadLocaleMessages(locale);
+
+      expect(messages.Landing["community-crowd"]).toMatch(NON_BLANK);
     }
   );
 });
