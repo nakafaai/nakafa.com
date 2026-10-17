@@ -176,12 +176,12 @@ export const ninaFailureLimits = {
 /**
  * The refusal of a press on the send button, or nothing. A prompt over the
  * limit stays in the composer, the learner is told it is too long for one
- * turn, and nothing is asked of the server. Every composer sends the text trimmed, so the trimmed length is
- * the one that counts. While a reply streams, the same press stops it and
- * sends no text, so the limit does not apply to it.
+ * turn, and nothing is asked of the server. Every composer sends the text
+ * trimmed, so the trimmed length is the one that counts. While a reply streams,
+ * a press sends no text, so the limit does not apply to it.
  */
-export function promptRefusal(text: string | undefined, stopping: boolean) {
-  if (stopping || isPromptWithinLimit(text?.trim() ?? "")) {
+export function promptRefusal(text: string | undefined, answering: boolean) {
+  if (answering || isPromptWithinLimit(text?.trim() ?? "")) {
     return Option.none();
   }
   return Option.some(

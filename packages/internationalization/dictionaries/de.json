@@ -693,7 +693,9 @@
     "failure-session": {
       "title": "Deine Sitzung ist abgelaufen.",
       "description": "Melde dich erneut an, um fortzufahren."
-    }
+    },
+    "admitted-elsewhere": { "title": "Nina antwortet in einem neuen Chat" },
+    "open-chat": { "title": "Chat öffnen" }
   },
   "Ai": {
     "attachment": "Anhang",
@@ -860,7 +862,7 @@
     "search-older": "Ältere Chats durchsuchen",
     "rename-chat": "Chat umbenennen",
     "delete-chat": "Chat löschen",
-    "delete-chat-description": "Bist du sicher? Dieser Chat kann nach dem Löschen nicht wiederhergestellt werden.",
+    "delete-chat-description": "Dieser Chat kann nach dem Löschen nicht wiederhergestellt werden.",
     "confirm": "Bestätigen",
     "share-chat": "Chat teilen",
     "share-chat-description": "Sei vorsichtig, wenn du diesen Link mit unbekannten Personen teilst.",
@@ -870,9 +872,11 @@
     "public-description": "Alle mit dem Link können den Chat sehen.",
     "create-link": "Link erstellen",
     "copy-link": "Link kopieren",
-    "share-link-error": "Der Link konnte nicht geladen werden",
+    "share-link-error": "Der Link konnte nicht geladen werden.",
     "private-chat-error": "Zugriff verweigert",
-    "private-chat-error-description": "Dieser Chat gehört dir nicht. Bitte die besitzende Person um Zugriff.",
+    "chat-unavailable": "Dieser Chat ist für dich nicht verfügbar.",
+    "chat-failed": "Etwas ist schiefgelaufen",
+    "chat-failed-description": "Nakafa konnte diesen Chat nicht laden.",
     "credits-label": "Credits",
     "token-usage": "Token-Nutzung",
     "input-tokens": "Eingabe",

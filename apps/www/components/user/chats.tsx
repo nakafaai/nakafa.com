@@ -22,11 +22,12 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { useChange } from "@/components/ai/chat/change.client";
+import { useState } from "react";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -156,66 +157,81 @@ function ChatList({
 /** Render owner actions for one profile chat row. */
 function UserChatsListActions({ chat }: { chat: ChatView }) {
   const t = useTranslations("Common");
+  const tAi = useTranslations("Ai");
   const deleteChat = useDeleteChatMutation();
-  const { change, isPending } = useChange();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  /** Delete this chat through the optimistic list mutation. */
+  /**
+   * Delete this chat through the optimistic list mutation, once the learner
+   * confirms in the dialog. The dialog closes first, as the row leaves the list.
+   */
   function handleDelete() {
-    change(() =>
-      Effect.runPromise(
-        Effect.asVoid(
-          Effect.tryPromise(() =>
-            deleteChat({
-              chatId: chat._id,
-            })
-          ).pipe(Effect.flatMap(Effect.fromResult))
-        ).pipe(
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/user/chats",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error({
-                      description: "action-error.description",
-                      title: "action-error.title",
-                    });
-                  })
-                )
-              ),
+    setConfirmDelete(false);
+    Effect.runFork(
+      Effect.asVoid(
+        Effect.tryPromise(() =>
+          deleteChat({
+            chatId: chat._id,
           })
-        )
+        ).pipe(Effect.flatMap(Effect.fromResult))
+      ).pipe(
+        Effect.matchEffect({
+          onSuccess: () => Effect.void,
+          onFailure: (error) =>
+            reportClientException(error, {
+              source: "components/user/chats",
+            }).pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
+                })
+              )
+            ),
+        })
       )
     );
   }
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            className="z-2 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
-            disabled={isPending}
-            size="icon-sm"
-            variant="ghost"
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              className="z-2 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+              <span className="sr-only">More actions</span>
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => setConfirmDelete(true)}
+            variant="destructive"
           >
-            <HugeIcons icon={MoreHorizontalIcon} />
-            <span className="sr-only">More actions</span>
+            <HugeIcons icon={Delete02Icon} />
+            {t("delete")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ResponsiveDialog
+        description={tAi("delete-chat-description")}
+        footer={
+          <Button onClick={handleDelete} variant="destructive">
+            <HugeIcons icon={Delete02Icon} />
+            {tAi("confirm")}
           </Button>
         }
+        open={confirmDelete}
+        setOpen={setConfirmDelete}
+        title={tAi("delete-chat")}
       />
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem
-          className="cursor-pointer"
-          disabled={isPending}
-          onClick={handleDelete}
-          variant="destructive"
-        >
-          <HugeIcons icon={Delete02Icon} />
-          {t("delete")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    </>
   );
 }

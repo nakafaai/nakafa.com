@@ -12,11 +12,14 @@ import { onChat } from "@/e2e/support/transcript/open";
 import { outcomes } from "@/e2e/support/transcript/outcome";
 import { pages, sameHost, webSearchFailed } from "@/e2e/support/transcript/web";
 
-/** Every capability, ended in every way a capability ends short of a plain answer. */
+/**
+ * Every capability, ended in every way a capability ends short of a plain
+ * answer. Math has no row at the limit: it never answers with that outcome.
+ */
 const ROWS = [
-  ...outcomes("deepResearch", webSearchFailed),
-  ...outcomes("nakafa", nakafaSearchFailed),
-  ...outcomes("math", checkFailed),
+  ...outcomes("deepResearch", webSearchFailed, { limit: true }),
+  ...outcomes("nakafa", nakafaSearchFailed, { limit: true }),
+  ...outcomes("math", checkFailed, { limit: false }),
   said("Nicht alles konnte geprüft werden."),
 ];
 
@@ -50,15 +53,16 @@ test.describe("Nina activity rows on a phone", () => {
     onChat(ROWS, { locale: "de" }, async (page) => {
       const rows = page.locator(ACTIVITY);
 
-      await expect(rows).toHaveCount(18);
+      await expect(rows).toHaveCount(17);
       await expect(
         rows
           .filter({ hasText: "Quellen im Web recherchieren" })
           .filter({ hasText: "Teilweise fertig" })
       ).toHaveCount(1);
+      // The limit row of each of the two capabilities that send links.
       await expect(
         rows.filter({ hasText: "Bitte höchstens 8 Links auf einmal senden" })
-      ).toHaveCount(3);
+      ).toHaveCount(2);
       for (const row of await rows.all()) {
         // The row wraps, so neither its label nor its note is cut.
         expect(await cutText(row)).toEqual([]);
@@ -71,7 +75,7 @@ test.describe("Nina activity rows on a phone", () => {
     onChat(ROWS, { locale: "id" }, async (page) => {
       const rows = page.locator(ACTIVITY);
 
-      await expect(rows).toHaveCount(18);
+      await expect(rows).toHaveCount(17);
       await expect(
         rows
           .filter({ hasText: "Menelusuri sumber di web" })
@@ -109,7 +113,7 @@ test.describe("Nina activity rows at 200 percent zoom", () => {
     onChat(ROWS, { locale: "de" }, async (page) => {
       const rows = page.locator(ACTIVITY);
 
-      await expect(rows).toHaveCount(18);
+      await expect(rows).toHaveCount(17);
       for (const row of await rows.all()) {
         expect(await cutText(row)).toEqual([]);
       }

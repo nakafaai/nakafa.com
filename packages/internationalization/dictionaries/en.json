@@ -693,7 +693,9 @@
     "failure-session": {
       "title": "Your session has expired.",
       "description": "Sign in again to continue."
-    }
+    },
+    "admitted-elsewhere": { "title": "Nina is answering in a new chat" },
+    "open-chat": { "title": "Open chat" }
   },
   "Ai": {
     "attachment": "Attachment",
@@ -860,7 +862,7 @@
     "search-older": "Search older chats",
     "rename-chat": "Rename chat",
     "delete-chat": "Delete chat",
-    "delete-chat-description": "Are you sure? This chat cannot be recovered once deleted.",
+    "delete-chat-description": "This chat cannot be recovered once it is deleted.",
     "confirm": "Confirm",
     "share-chat": "Share chat",
     "share-chat-description": "Be careful when sharing this link with strangers.",
@@ -870,9 +872,11 @@
     "public-description": "Anyone with the link can view the chat.",
     "create-link": "Create link",
     "copy-link": "Copy link",
-    "share-link-error": "We could not load the link",
+    "share-link-error": "We could not load the link.",
     "private-chat-error": "Access denied",
-    "private-chat-error-description": "This isn't your chat. Ask the owner for access.",
+    "chat-unavailable": "This chat is not available to you.",
+    "chat-failed": "Something went wrong",
+    "chat-failed-description": "Nakafa could not load this chat.",
     "credits-label": "Credits",
     "token-usage": "Token Usage",
     "input-tokens": "Input",

@@ -174,7 +174,7 @@ describe("the refusal of a prompt over the limit", () => {
     });
   });
 
-  it("does not refuse the press that stops a reply, whatever the composer holds", () => {
+  it("does not refuse a press while a reply streams, whatever the composer holds", () => {
     expect(promptRefusal(tooLong, true)).toEqual(Option.none());
   });
 });

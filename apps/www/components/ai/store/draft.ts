@@ -111,6 +111,34 @@ export const resolveAiDraftText = Effect.fn("ai.draft.resolve")(function* ({
   }
   return yield* readAiDraftText(ownerId);
 });
+/**
+ * The composer text once a refused prompt returns to it. The refused words come
+ * first and the text the learner typed meanwhile follows them, so a refusal
+ * loses neither. With nothing new typed, the refused words are the whole text.
+ * The composer is one for every account on this browser, so the words go back
+ * only to the account that sent them. Another account, or nobody once the
+ * learner has signed out, gets the text as it is.
+ */
+export function restoreRefusedText({
+  refused,
+  sentBy,
+  signedInAs,
+  typed,
+}: {
+  refused: string;
+  sentBy: string | null;
+  signedInAs: string | null;
+  typed: string;
+}) {
+  if (sentBy !== signedInAs) {
+    return typed;
+  }
+  const newer = typed.trim();
+  if (newer === "" || newer === refused.trim()) {
+    return refused;
+  }
+  return `${refused}\n\n${typed}`;
+}
 /** Clears the current tab's Nina draft without interrupting sign-out. */
 export const clearAiDraftText = saveAiDraftText("", null);
 
