@@ -4,10 +4,11 @@ import { trackChanges } from "@/e2e/support/changes";
 import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The Memory page of the English site. */
-export const MEMORY_PATH = "/en/user/settings/memory";
+export const MEMORY_PATH = `${appRoutes.settings}/memory`;
 const MEMORY_TITLE = /Memory/;
 /**
  * The Convex name of `nina.memory.list`, the query that reads a page of the

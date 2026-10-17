@@ -1,10 +1,5 @@
 import { Ref } from "@confect/core";
-import {
-  abortStream,
-  createThread,
-  listMessages,
-  saveMessage,
-} from "@convex-dev/agent";
+import { abortStream, createThread, saveMessage } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -12,6 +7,8 @@ import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/
 import { CreditStateError } from "@repo/backend/confect/credits/spec";
 import { resolveEffectiveCreditState } from "@repo/backend/confect/credits/state";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -36,8 +33,12 @@ vi.mock("@convex-dev/agent", async (load) => {
   return {
     ...actual,
     abortStream: vi.fn(actual.abortStream),
-    listMessages: vi.fn(actual.listMessages),
   };
+});
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
 });
 const NOW = Date.UTC(2026, 8, 27, 12);
 const start = Ref.getFunctionReference(refs.public.nina.turns.start);
@@ -60,7 +61,7 @@ beforeEach(() => {
   vi.mocked(resolveNinaContext).mockReturnValue(contextFor("home"));
 });
 afterEach(() => {
-  vi.mocked(listMessages).mockReset();
+  vi.mocked(readThread).mockReset();
   vi.mocked(abortStream).mockReset();
   vi.mocked(resolveEffectiveCreditState).mockReset();
   vi.clearAllMocks();
@@ -302,14 +303,26 @@ describe("native Nina deletion lifecycle", () => {
   });
 
   it.each([
-    { failure: "read", journal: vi.mocked(listMessages) },
-    { failure: "cut off", journal: vi.mocked(abortStream) },
+    {
+      failure: "read",
+      fail: () =>
+        vi
+          .mocked(readThread)
+          .mockReturnValue(Effect.fail(new SealedReadError())),
+    },
+    {
+      failure: "cut off",
+      fail: () =>
+        vi
+          .mocked(abortStream)
+          .mockRejectedValue(new Error("Private component failure")),
+    },
   ])(
     "deletes a chat whose open turn cannot be settled because its journal cannot be $failure, and ends the turn once",
-    async ({ journal }) => {
+    async ({ fail }) => {
       const { t, owner, receipt, read } = await fixture();
       await t.mutation(claim, { turnId: receipt.turnId });
-      journal.mockRejectedValue(new Error("Private component failure"));
+      fail();
 
       await owner.mutation(remove, { chatId: receipt.chatId });
 
@@ -340,9 +353,7 @@ describe("native Nina deletion lifecycle", () => {
   it("keeps the chat when the hold of its open turn cannot be paid back, so no credit is dropped to free it", async () => {
     const { t, owner, receipt, read } = await fixture();
     await t.mutation(claim, { turnId: receipt.turnId });
-    vi.mocked(listMessages).mockRejectedValue(
-      new Error("Private component failure")
-    );
+    vi.mocked(readThread).mockReturnValue(Effect.fail(new SealedReadError()));
     vi.mocked(resolveEffectiveCreditState).mockImplementation(() =>
       Effect.fail(
         new CreditStateError({

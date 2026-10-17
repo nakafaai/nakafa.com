@@ -1,5 +1,4 @@
 import { toModelMessage } from "@convex-dev/agent";
-import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -12,6 +11,7 @@ import {
 } from "@repo/backend/confect/nina/attachments";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
+import { readMessage } from "@repo/backend/confect/nina/sealed/message";
 import {
   type NinaInput,
   type NinaPageInput,
@@ -83,13 +83,11 @@ export const preparePrompt = Effect.fn("nina.prompt.prepare")(function* (
     return yield* retryUnavailable();
   }
   const ctx = yield* MutationCtx;
-  const [stored] = yield* Effect.tryPromise({
-    try: () =>
-      ctx.runQuery(components.nina.messages.getMessagesByIds, {
-        messageIds: [original.promptMessageId],
-      }),
-    catch: retryUnavailable,
-  });
+  const stored = yield* readMessage(
+    ctx,
+    user._id,
+    original.promptMessageId
+  ).pipe(Effect.mapError(retryUnavailable));
   if (
     !stored ||
     stored.threadId !== chat.threadId ||

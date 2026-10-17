@@ -10,6 +10,7 @@ export const appRoutes = {
   quranId: "/id/quran",
   quranSurah: "/en/quran/2",
   quranSurahId: "/id/quran/2",
+  settings: "/en/user/settings",
   tryout: "/en/try-out",
 } as const;
 

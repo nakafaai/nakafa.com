@@ -42,9 +42,13 @@ const MOST_PARTS = 40;
 /** How long a page may take to ask a signed-in learner about usage data. */
 const PROMPT_MILLISECONDS = 6000;
 
-/** A control that opens or closes a part of the evidence, and is closed now. */
+/**
+ * A control that opens or closes a part of the evidence, and is closed now. A
+ * trigger with nothing to open carries `data-disabled`, as Base UI marks it,
+ * whether the button is natively disabled or only marked so.
+ */
 const CLOSED =
-  '[data-slot="collapsible-trigger"]:not([data-panel-open]):not([aria-disabled="true"])';
+  '[data-slot="collapsible-trigger"]:not([data-panel-open]):not([data-disabled])';
 
 /** The cookies of a browser context. */
 type Cookies = Awaited<ReturnType<BrowserContext["cookies"]>>;

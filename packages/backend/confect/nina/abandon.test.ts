@@ -1,5 +1,5 @@
 import { Ref } from "@confect/core";
-import { abortStream, listMessages, saveMessages } from "@convex-dev/agent";
+import { abortStream, saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -10,11 +10,18 @@ import {
   SETTLE_GRACE,
   TURN_DEADLINE,
 } from "@repo/backend/confect/nina/deadline";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { createNinaTest } from "@repo/backend/test/nina";
 import { args, contextFor, start } from "@repo/backend/test/nina/admission";
 import { stubReport } from "@repo/backend/test/nina/report";
 import { Array as Arr, Duration, Effect } from "effect";
 
+vi.mock("@repo/backend/confect/nina/sealed/thread", async (load) => {
+  const actual =
+    await load<typeof import("@repo/backend/confect/nina/sealed/thread")>();
+  return { ...actual, readThread: vi.fn(actual.readThread) };
+});
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
@@ -31,7 +38,6 @@ vi.mock("@convex-dev/agent", async (load) => {
   return {
     ...actual,
     abortStream: vi.fn(actual.abortStream),
-    listMessages: vi.fn(actual.listMessages),
   };
 });
 
@@ -71,7 +77,7 @@ describe("A Nina turn that cannot be settled", () => {
   });
   afterEach(() => {
     report.mockRestore();
-    vi.mocked(listMessages).mockReset();
+    vi.mocked(readThread).mockReset();
     vi.mocked(abortStream).mockReset();
     vi.mocked(resolveEffectiveCreditState).mockReset();
     vi.clearAllMocks();
@@ -82,9 +88,7 @@ describe("A Nina turn that cannot be settled", () => {
   async function stranded() {
     const f = await fixture();
     await f.t.mutation(claim, { turnId: f.turnId });
-    vi.mocked(listMessages).mockRejectedValue(
-      new Error("Private component failure")
-    );
+    vi.mocked(readThread).mockReturnValue(Effect.fail(new SealedReadError()));
     const found = NOW + DEADLINE + 1;
     vi.setSystemTime(found);
     await f.t.mutation(sweep, {});
@@ -167,9 +171,7 @@ describe("A Nina turn that cannot be settled", () => {
     const f = await fixture();
     await f.t.mutation(claim, { turnId: f.turnId });
     await f.owner.mutation(cancel, { chatId: f.chatId });
-    vi.mocked(listMessages).mockRejectedValue(
-      new Error("Private component failure")
-    );
+    vi.mocked(readThread).mockReturnValue(Effect.fail(new SealedReadError()));
     vi.setSystemTime(NOW + DEADLINE + GRACE);
     await f.t.mutation(abandon, { turnId: f.turnId });
 
