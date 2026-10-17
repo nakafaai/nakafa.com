@@ -10,11 +10,15 @@ describe("users/bio", () => {
   it.each([
     ["Belajar fisika sambil minum teh.", "Belajar fisika sambil minum teh."],
     ["  Satu kalimat.  ", "Satu kalimat."],
+    ["Baris satu\nbaris dua", "Baris satu\nbaris dua"],
     [
       "Baris satu\nbaris dua\r\n\r\nbaris tiga",
-      "Baris satu baris dua baris tiga",
+      "Baris satu\nbaris dua\n\nbaris tiga",
     ],
-    ["tab\tdan   spasi", "tab dan spasi"],
+    ["  baris satu  \n   baris dua   ", "baris satu\nbaris dua"],
+    ["satu\n\n\n\n\ndua", "satu\n\ndua"],
+    ["\n\nsatu\n", "satu"],
+    ["tab\tdan   spasi", "tab\tdan   spasi"],
     ["", ""],
     [" \n\t ", ""],
     ["a".repeat(BIO_MAX_LENGTH), "a".repeat(BIO_MAX_LENGTH)],
@@ -22,7 +26,7 @@ describe("users/bio", () => {
     expect(readBio(input)).toEqual(Result.succeed(bio));
   });
 
-  it("refuses a bio of more than the limit once white space is gone", () => {
+  it("refuses a bio of more than the limit once the ends are trimmed", () => {
     expect(readBio("a".repeat(BIO_MAX_LENGTH + 1))).toEqual(
       Result.fail(new BioTooLong())
     );

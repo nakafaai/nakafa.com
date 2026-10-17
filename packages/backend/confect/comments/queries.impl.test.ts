@@ -110,4 +110,67 @@ describe("comments/queries", () => {
     expect(rowOf("Pertanyaan lama")?.user).toBeNull();
     expect(rowOf("Jawaban baru")?.replyToUser).toBeNull();
   });
+
+  it("shows an author's Google photo only while the author shows it", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const asker = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now,
+        suffix: "photo-asker",
+      });
+      await ctx.db.patch("users", user.userId, {
+        image: "https://example.com/photo-asker.png",
+      });
+      return user;
+    });
+    const answerer = await t.mutation(async (ctx) => {
+      const user = await seedAuthenticatedUser(ctx, {
+        now,
+        suffix: "photo-answerer",
+      });
+      await ctx.db.patch("users", user.userId, {
+        image: "https://example.com/photo-answerer.png",
+        picture: "photo",
+      });
+      return user;
+    });
+    const slug = "articles/photos";
+    const question = await t
+      .withIdentity({
+        subject: asker.authUserId,
+        sessionId: asker.sessionId,
+      })
+      .mutation(api.comments.mutations.addComment, {
+        slug,
+        text: "Pertanyaan foto",
+      });
+    await t
+      .withIdentity({
+        subject: answerer.authUserId,
+        sessionId: answerer.sessionId,
+      })
+      .mutation(api.comments.mutations.addComment, {
+        slug,
+        text: "Jawaban foto",
+        parentId: question,
+      });
+
+    const page = await t.query(api.comments.queries.getCommentsBySlug, {
+      slug,
+      paginationOpts: { cursor: null, numItems: 20 },
+    });
+    const rowOf = (text: string) =>
+      Option.getOrUndefined(
+        Arr.findFirst(page.page, (row) => row.text === text)
+      );
+
+    // The asker keeps the animal, so the asker's photo stays off the server
+    // both as the author and as the reply target.
+    expect(rowOf("Pertanyaan foto")?.user).not.toHaveProperty("image");
+    expect(rowOf("Jawaban foto")?.user).toMatchObject({
+      image: "https://example.com/photo-answerer.png",
+      picture: "photo",
+    });
+    expect(rowOf("Jawaban foto")?.replyToUser).not.toHaveProperty("image");
+  });
 });
