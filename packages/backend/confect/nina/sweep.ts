@@ -40,7 +40,9 @@ export const startsLate = Effect.fn("nina.sweep.late")(function* (
 /**
  * Schedules the seal of the settled turns that still hold plain rows, oldest first,
  * `SEAL_TURNS_PER_SWEEP` of them. A turn that the seal sealed leaves the index
- * range. A turn whose seal fails stays in it, and the next run tries it again.
+ * range. A turn whose seal fails stays in it, and the next run tries it again. So
+ * does a turn that the seal skips while its chat or learner is being deleted, until
+ * that deletion removes the turn (ADR 0024).
  */
 const scheduleSeals = Effect.fn("nina.sweep.seals")(function* () {
   const reader = yield* DatabaseReader;
