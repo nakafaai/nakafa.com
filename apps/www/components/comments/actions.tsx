@@ -131,14 +131,17 @@ export function useCommentActions<T>(
   return selector(value);
 }
 
-/** A vote or reply count that keeps its width and hides at zero. */
+/**
+ * A vote or reply count beside its icon, shown once it is above zero. An action
+ * takes its own width, as in Threads, so a zero leaves no empty slot.
+ */
 export function CommentCount({ value }: { value: number }) {
+  if (value === 0) {
+    return null;
+  }
   return (
     <NumberFormat
-      className={cn(
-        "min-w-[3ch] text-xs tabular-nums tracking-tight",
-        value === 0 && "invisible"
-      )}
+      className="text-xs tabular-nums"
       format={{ notation: "compact", maximumFractionDigits: 1 }}
       isolate={true}
       value={value}
@@ -177,7 +180,7 @@ function CommentVoteButton({ vote }: { vote: CommentVote }) {
           <Button
             aria-label={label}
             aria-pressed={selected}
-            className="group w-16"
+            className="group"
             disabled={isPending}
             onClick={() => onVote(vote)}
             size="sm"
