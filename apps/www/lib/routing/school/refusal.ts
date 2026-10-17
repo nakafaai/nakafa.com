@@ -1,11 +1,12 @@
 import { HttpClient } from "@confect/js";
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Effect, Option } from "effect";
+import { Data, Effect, Option } from "effect";
 import type { NextRequest } from "next/server";
 import { clientEnv } from "@/env.client";
 import { readSessionToken } from "@/lib/auth/token";
-import { httpLayer } from "@/lib/convex/http";
+import { httpSingleAttemptLayer } from "@/lib/convex/http";
 import { rewriteToNotFoundPage } from "@/lib/routing/answer";
 import {
   readSchoolLocale,
@@ -16,6 +17,13 @@ import {
 
 /** The header that Next sends on every Flight request. */
 const FLIGHT_HEADER = "rsc";
+
+/**
+ * The gate did not answer within NETWORK_ATTEMPT_DEADLINE, the bound that every
+ * attempt of a network read takes. The page goes on without the answer, as it
+ * does for every failed read.
+ */
+class SchoolReadDeadline extends Data.TaggedError("SchoolReadDeadline") {}
 
 /**
  * Whether the request is the document of a page that a visitor opens. Next sends
@@ -41,7 +49,7 @@ const readVisitorRefusal = Effect.fn("www.routing.school.visitorRefusal")(
       Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
       Effect.as(false),
       Effect.catchTag("TenantNotFound", () => Effect.succeed(true)),
-      Effect.provide(httpLayer())
+      Effect.provide(httpSingleAttemptLayer())
     );
   }
 );
@@ -64,7 +72,7 @@ const readMemberRefusal = Effect.fn("www.routing.school.memberRefusal")(
         NotMember: () => Effect.succeed(true),
         SessionRequired: () => Effect.succeed(false),
       }),
-      Effect.provide(httpLayer({ auth: token }))
+      Effect.provide(httpSingleAttemptLayer({ auth: token }))
     );
   }
 );
@@ -94,9 +102,11 @@ const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
  * request goes on to the school tree.
  *
  * Only a page request pays the read. A client navigation or a prefetch keeps the
- * school of its host, and the layout still refuses a membership that has ended. A
- * failed read goes on to the school tree, and the full cause is logged, so an
- * outage never answers a page with not found.
+ * school of its host, and the layout still refuses a membership that has ended.
+ * Each query makes one attempt, and the whole gate waits at most
+ * NETWORK_ATTEMPT_DEADLINE, so a school that does not answer holds the page for
+ * that long at most (ADR 0026). A failed or late read goes on to the school tree,
+ * and the full cause is logged, so an outage never answers a page with not found.
  */
 export const readSchoolRefusal = Effect.fn("www.routing.school.pageRefusal")(
   function* (request: NextRequest) {
@@ -105,6 +115,10 @@ export const readSchoolRefusal = Effect.fn("www.routing.school.pageRefusal")(
       return Option.none();
     }
     const refused = yield* readRefusal(school.value, request.headers).pipe(
+      Effect.timeoutOrElse({
+        duration: NETWORK_ATTEMPT_DEADLINE,
+        orElse: () => Effect.fail(new SchoolReadDeadline()),
+      }),
       Effect.catchCause((cause) =>
         Effect.logError(
           "A school address could not be read, so its page goes on to the school tree.",

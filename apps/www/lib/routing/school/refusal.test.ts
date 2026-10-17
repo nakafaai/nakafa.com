@@ -1,64 +1,44 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
-import {
-  AccountUnavailable,
-  SessionRequired,
-} from "@repo/backend/confect/auth/spec";
-import { NotMember } from "@repo/backend/confect/middleware/member.spec";
-import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
-import {
-  Array as Arr,
-  Cause,
-  Data,
-  Effect,
-  Layer,
-  Logger,
-  MutableList,
-  Option,
-} from "effect";
-import { NextRequest } from "next/server";
-import { clientEnv } from "@/env.client";
-import { SessionTokenUnavailable } from "@/lib/auth/token";
-import {
-  readSchoolRefusal,
-  routeSchoolPage,
-} from "@/lib/routing/school/refusal";
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
+import { Effect, Fiber, Option } from "effect";
+import { TestClock } from "effect/testing";
+import type { NextRequest } from "next/server";
+import { routeSchoolPage } from "@/lib/routing/school/refusal";
 import { proxy } from "@/proxy";
+import {
+  ACCESS_DENIED,
+  ACCOUNT_UNAVAILABLE,
+  answerAndCauses,
+  answered,
+  answerOf,
+  fetcher,
+  NOT_MEMBER,
+  PROFILE,
+  PROFILE_VALUE,
+  queriesOf,
+  refusedWith,
+  requestsTo,
+  resetFakeBackend,
+  SCHOOL_ROOT,
+  SESSION_COOKIE,
+  SESSION_REQUIRED,
+  serve,
+  signedIn,
+  silent,
+  TENANT_NOT_FOUND,
+  TOKEN,
+  TOKEN_PATH,
+  tokenRefused,
+  unreachable,
+  VIEWER,
+  VIEWER_VALUE,
+  visit,
+} from "@/test/school";
 
-const mocks = vi.hoisted(() => ({
-  layerOptions: vi.fn(),
-  query: vi.fn(),
-  token: vi.fn(),
-}));
 /** A school page reads no server value, so the server environment is a stand-in here. */
 vi.mock("@/env", () => ({ env: {} }));
-vi.mock("@/lib/auth/token", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/auth/token")>()),
-  readSessionToken: mocks.token,
-}));
-vi.mock("@confect/js", async (importOriginal) => {
-  const confect = await importOriginal<typeof import("@confect/js")>();
-  return {
-    ...confect,
-    HttpClient: {
-      ...confect.HttpClient,
-      layer: (...args: Parameters<typeof confect.HttpClient.layer>) => {
-        mocks.layerOptions(args[1]);
-        return Layer.effect(
-          confect.HttpClient.HttpClient,
-          Effect.gen(function* () {
-            const client = yield* confect.HttpClient.HttpClient;
-            return { ...client, query: mocks.query };
-          })
-        ).pipe(Layer.provide(confect.HttpClient.layer(...args)));
-      },
-    },
-  };
-});
-
 vi.mock("@repo/internationalization/src/routing", () => ({
   previewRouting: { defaultLocale: "en", locales: ["en", "id", "de"] },
   routing: {
@@ -109,60 +89,8 @@ vi.mock("next-intl/middleware", async () => {
   };
 });
 
-/** A read of the school that the network did not answer. */
-class SchoolOffline extends Data.TaggedError("SchoolOffline") {}
-
-const SCHOOL_ROOT = "https://harapan.nakafa.com/";
-const SESSION_COOKIE = "better-auth.session_token=session-value";
-const TOKEN = "session-token";
-
-/** A request to a school host, as a browser sends it: the Host header names the URL's host. */
-function visit(
-  address: string,
-  init?: { headers?: HeadersInit; method?: string }
-) {
-  const url = new URL(address);
-  const headers = new Headers(init?.headers);
-  headers.set("host", url.host);
-  return new NextRequest(url, { headers, method: init?.method ?? "GET" });
-}
-
-/** The answer of the refusal for one request, with the log messages it wrote. */
-function answerOf(
-  address: string,
-  init?: { headers?: HeadersInit; method?: string }
-) {
-  return readSchoolRefusal(visit(address, init)).pipe(
-    Effect.provide(Logger.layer([]))
-  );
-}
-
-/** The answer of the refusal for one request, with the causes that it logged. */
-function answerAndCauses(address: string, headers: HeadersInit) {
-  return Effect.gen(function* () {
-    const causes = MutableList.make<Cause.Cause<unknown>>();
-    const answer = yield* readSchoolRefusal(visit(address, { headers })).pipe(
-      Effect.provide(
-        Logger.layer([
-          Logger.make(({ cause }) => {
-            MutableList.append(causes, cause);
-          }),
-        ])
-      )
-    );
-    const logged = MutableList.toArray(causes);
-    return {
-      answer,
-      count: logged.length,
-      text: Arr.join(Arr.map(logged, Cause.pretty), "\n"),
-    };
-  });
-}
-
 beforeEach(() => {
-  mocks.layerOptions.mockReset();
-  mocks.query.mockReset();
-  mocks.token.mockReset();
+  resetFakeBackend();
 });
 
 describe("school page refusal", () => {
@@ -170,27 +98,27 @@ describe("school page refusal", () => {
     "refuses a school that does not exist to a visitor with no session",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.void);
-        mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
         expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("en"));
-        expect(mocks.token).toHaveBeenCalledWith(
-          clientEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
-          expect.any(Headers)
-        );
-        expect(mocks.query).toHaveBeenCalledOnce();
-        expect(mocks.query.mock.calls[0]?.[0]).toBe(tenancy.profile.get);
-        expect(mocks.query.mock.calls[0]?.[1]).toEqual({ slug: "harapan" });
+        expect(requestsTo(TOKEN_PATH)).toHaveLength(0);
+        expect(queriesOf()).toEqual([
+          { auth: null, path: PROFILE, slug: "harapan" },
+        ]);
       })
   );
 
   it.effect("admits a visitor with no session to a school that exists", () =>
     Effect.gen(function* () {
-      mocks.token.mockReturnValue(Effect.void);
-      mocks.query.mockReturnValue(Effect.succeed({ name: "Harapan" }));
+      serve({ profile: answered(PROFILE_VALUE) });
 
-      expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.none());
-      expect(mocks.query.mock.calls[0]?.[0]).toBe(tenancy.profile.get);
+      const { answer, count } = yield* answerAndCauses(SCHOOL_ROOT, {});
+
+      expect(answer).toEqual(Option.none());
+      expect(count).toBe(0);
+      expect(queriesOf()).toEqual([
+        { auth: null, path: PROFILE, slug: "harapan" },
+      ]);
     })
   );
 
@@ -198,24 +126,23 @@ describe("school page refusal", () => {
     "refuses a signed-in viewer who is not a member of the school",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.succeed(TOKEN));
-        mocks.query.mockReturnValue(Effect.fail(new NotMember()));
+        serve({
+          token: signedIn,
+          viewer: refusedWith(NOT_MEMBER),
+        });
 
         expect(
           yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
         ).toEqual(Option.some("en"));
-        expect(mocks.layerOptions).toHaveBeenCalledWith({ auth: TOKEN });
-        expect(mocks.query.mock.calls[0]?.[0]).toBe(tenancy.viewer.get);
-        expect(mocks.query.mock.calls[0]?.[1]).toEqual({ slug: "harapan" });
+        expect(queriesOf()).toEqual([
+          { auth: `Bearer ${TOKEN}`, path: VIEWER, slug: "harapan" },
+        ]);
       })
   );
 
   it.effect("refuses a signed-in viewer whom the school does not admit", () =>
     Effect.gen(function* () {
-      mocks.token.mockReturnValue(Effect.succeed(TOKEN));
-      mocks.query.mockReturnValue(
-        Effect.fail(new AccessDenied({ action: "tenant.view", reason: "role" }))
-      );
+      serve({ token: signedIn, viewer: refusedWith(ACCESS_DENIED) });
 
       expect(
         yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
@@ -225,12 +152,17 @@ describe("school page refusal", () => {
 
   it.effect("admits a signed-in member of the school", () =>
     Effect.gen(function* () {
-      mocks.token.mockReturnValue(Effect.succeed(TOKEN));
-      mocks.query.mockReturnValue(Effect.succeed({ grants: [] }));
+      serve({ token: signedIn, viewer: answered(VIEWER_VALUE) });
 
-      expect(
-        yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
-      ).toEqual(Option.none());
+      const { answer, count } = yield* answerAndCauses(SCHOOL_ROOT, {
+        cookie: SESSION_COOKIE,
+      });
+
+      expect(answer).toEqual(Option.none());
+      expect(count).toBe(0);
+      expect(queriesOf()).toEqual([
+        { auth: `Bearer ${TOKEN}`, path: VIEWER, slug: "harapan" },
+      ]);
     })
   );
 
@@ -238,27 +170,18 @@ describe("school page refusal", () => {
     "leaves a session or an account that the app cannot read to the layout",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.succeed(TOKEN));
-        mocks.query.mockReturnValue(
-          Effect.fail(
-            new AccountUnavailable({
-              code: "UNAUTHORIZED",
-              message: "User not found.",
-            })
-          )
-        );
+        serve({
+          token: signedIn,
+          viewer: refusedWith(ACCOUNT_UNAVAILABLE),
+        });
         expect(
           yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
         ).toEqual(Option.none());
 
-        mocks.query.mockReturnValue(
-          Effect.fail(
-            new SessionRequired({
-              code: "UNAUTHENTICATED",
-              message: "Unauthenticated",
-            })
-          )
-        );
+        serve({
+          token: signedIn,
+          viewer: refusedWith(SESSION_REQUIRED),
+        });
         expect(
           yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
         ).toEqual(Option.none());
@@ -267,8 +190,7 @@ describe("school page refusal", () => {
 
   it.effect("sends a client navigation and a prefetch on without a read", () =>
     Effect.gen(function* () {
-      mocks.token.mockReturnValue(Effect.void);
-      mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+      serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
       expect(
         yield* answerOf(SCHOOL_ROOT, {
@@ -278,21 +200,18 @@ describe("school page refusal", () => {
       expect(yield* answerOf(SCHOOL_ROOT, { headers: { rsc: "1" } })).toEqual(
         Option.none()
       );
-      expect(mocks.token).not.toHaveBeenCalled();
-      expect(mocks.query).not.toHaveBeenCalled();
+      expect(fetcher).not.toHaveBeenCalled();
     })
   );
 
   it.effect("sends a POST, such as a server action, on without a read", () =>
     Effect.gen(function* () {
-      mocks.token.mockReturnValue(Effect.void);
-      mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+      serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
       expect(yield* answerOf(SCHOOL_ROOT, { method: "POST" })).toEqual(
         Option.none()
       );
-      expect(mocks.token).not.toHaveBeenCalled();
-      expect(mocks.query).not.toHaveBeenCalled();
+      expect(fetcher).not.toHaveBeenCalled();
     })
   );
 
@@ -300,8 +219,7 @@ describe("school page refusal", () => {
     "reads nothing for the main host or for a bypass file of a school host",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.void);
-        mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
         expect(yield* answerOf("https://nakafa.com/en/classes")).toEqual(
           Option.none()
@@ -309,8 +227,7 @@ describe("school page refusal", () => {
         expect(
           yield* answerOf("https://harapan.nakafa.com/robots.txt")
         ).toEqual(Option.none());
-        expect(mocks.token).not.toHaveBeenCalled();
-        expect(mocks.query).not.toHaveBeenCalled();
+        expect(fetcher).not.toHaveBeenCalled();
       })
   );
 
@@ -318,8 +235,7 @@ describe("school page refusal", () => {
     "answers the locale that the school page negotiates: the cookie, then Accept-Language, then the default",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.void);
-        mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
         expect(
           yield* answerOf(SCHOOL_ROOT, {
@@ -339,15 +255,14 @@ describe("school page refusal", () => {
     "goes on to the school tree and logs the cause when the session cannot be read",
     () =>
       Effect.gen(function* () {
-        const failure = new SessionTokenUnavailable({ reason: "fetch" });
-        mocks.token.mockReturnValue(Effect.fail(failure));
+        serve({ token: tokenRefused });
 
         const { answer, count, text } = yield* answerAndCauses(SCHOOL_ROOT, {
           cookie: SESSION_COOKIE,
         });
 
         expect(answer).toEqual(Option.none());
-        expect(mocks.query).not.toHaveBeenCalled();
+        expect(queriesOf()).toHaveLength(0);
         expect(count).toBe(1);
         expect(text).toContain("SessionTokenUnavailable");
       })
@@ -357,14 +272,59 @@ describe("school page refusal", () => {
     "goes on to the school tree and logs the cause when the school cannot be read",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.void);
-        mocks.query.mockReturnValue(Effect.fail(new SchoolOffline()));
+        serve({ profile: unreachable });
 
         const { answer, count, text } = yield* answerAndCauses(SCHOOL_ROOT, {});
 
         expect(answer).toEqual(Option.none());
         expect(count).toBe(1);
-        expect(text).toContain("SchoolOffline");
+        expect(text).toContain("fetch failed");
+      })
+  );
+
+  it.effect(
+    "makes one attempt at a school read that the network refuses, and does not repeat it",
+    () =>
+      Effect.gen(function* () {
+        serve({ profile: unreachable });
+
+        expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.none());
+        expect(queriesOf()).toHaveLength(1);
+      })
+  );
+
+  it.effect(
+    "goes on to the school tree and logs the deadline when the school does not answer in time",
+    () =>
+      Effect.gen(function* () {
+        serve({ profile: silent });
+
+        const fiber = yield* Effect.forkChild(answerAndCauses(SCHOOL_ROOT, {}));
+        yield* TestClock.adjust(NETWORK_ATTEMPT_DEADLINE);
+        const { answer, count, text } = yield* Fiber.join(fiber);
+
+        expect(answer).toEqual(Option.none());
+        expect(count).toBe(1);
+        expect(text).toContain("SchoolReadDeadline");
+      })
+  );
+
+  it.effect(
+    "bounds the session read of a signed-in visitor by the same deadline",
+    () =>
+      Effect.gen(function* () {
+        serve({ token: silent });
+
+        const fiber = yield* Effect.forkChild(
+          answerAndCauses(SCHOOL_ROOT, { cookie: SESSION_COOKIE })
+        );
+        yield* TestClock.adjust(NETWORK_ATTEMPT_DEADLINE);
+        const { answer, count, text } = yield* Fiber.join(fiber);
+
+        expect(answer).toEqual(Option.none());
+        expect(queriesOf()).toHaveLength(0);
+        expect(count).toBe(1);
+        expect(text).toContain("SchoolReadDeadline");
       })
   );
 });
@@ -374,8 +334,7 @@ describe("the route of a school host", () => {
     "answers a refused school page with the not-found page in the locale of the page",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.void);
-        mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
         const response = yield* routeSchoolPage(
           visit(SCHOOL_ROOT, { headers: { "accept-language": "de-DE" } })
@@ -398,8 +357,7 @@ describe("the route of a school host", () => {
     "answers a refused school page through the proxy with the not-found page and 404, before the school tree",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.void);
-        mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
         const response = yield* Effect.promise(() => proxy(visit(SCHOOL_ROOT)));
 
@@ -415,13 +373,12 @@ describe("the route of a school host", () => {
     "answers a path that next-intl cannot decode the same for a refused school and an admitted one",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.void);
-        mocks.query.mockReturnValue(Effect.fail(new TenantNotFound()));
+        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
         const refused = yield* routeSchoolPage(
           visit("https://harapan.nakafa.com/%")
         );
 
-        mocks.query.mockReturnValue(Effect.succeed({ name: "Harapan" }));
+        serve({ profile: answered(PROFILE_VALUE) });
         const admitted = yield* routeSchoolPage(
           visit("https://harapan.nakafa.com/%")
         );
@@ -435,8 +392,7 @@ describe("the route of a school host", () => {
 
   it.effect("routes an admitted school page to its school tree", () =>
     Effect.gen(function* () {
-      mocks.token.mockReturnValue(Effect.void);
-      mocks.query.mockReturnValue(Effect.succeed({ name: "Harapan" }));
+      serve({ profile: answered(PROFILE_VALUE) });
 
       const response = yield* routeSchoolPage(visit(SCHOOL_ROOT));
 
@@ -450,8 +406,7 @@ describe("the route of a school host", () => {
     "rewrites an admitted school page through the proxy before the public routes read it",
     () =>
       Effect.gen(function* () {
-        mocks.token.mockReturnValue(Effect.void);
-        mocks.query.mockReturnValue(Effect.succeed({ name: "Harapan" }));
+        serve({ profile: answered(PROFILE_VALUE) });
 
         const response = yield* Effect.promise(() =>
           proxy(visit("https://harapan.nakafa.com/classes"))
@@ -469,7 +424,7 @@ describe("the route of a school host", () => {
       expect(
         yield* routeSchoolPage(visit("https://nakafa.com/en/classes"))
       ).toBeNull();
-      expect(mocks.token).not.toHaveBeenCalled();
+      expect(fetcher).not.toHaveBeenCalled();
     })
   );
 });

@@ -9,7 +9,8 @@ The eu data cell is planned, and it is created when the first school in the
 European Union signs (K5). The routes of the old School are deleted from the web
 app (#1051, K11) and get no redirect. Amended on 14 October 2026: ADR 0027
 decides what an email may hold (Data cells). Amended on 17 October 2026: the
-proxy decides the 404 of a school page before it streams (Hosts).
+proxy decides the 404 of a school page before it streams, and the shared sign-in
+trusts only school hosts (Hosts).
 
 ## Context
 
@@ -37,6 +38,20 @@ finds the right data.
   menu sets it again.
 - One sign-in covers `nakafa.com` and every school host of the `us` cell,
   through the cross-subdomain cookies that ADR 0011 describes.
+- The shared sign-in trusts an origin only when it is the site's own origin on a
+  local run, or a school host of the site. A school host's label must pass
+  `isSchoolLabel` (`confect/tenancy/slug.ts`), the rule that the school router
+  applies too, so a reserved label such as `cas`, `api` or `mcp` is not trusted,
+  and neither is a label of two levels, a label the slug rules refuse, or an
+  origin that a browser would not write. A script on a service host sends the
+  shared session cookie with a credentialed request, so trusting every subdomain
+  would let that script act on the session (ADR 0009). Better Auth asks for the
+  trusted origins with each request (`trustedOrigins` as a function in
+  `better-auth` 1.6.33, `dist/context/helpers.mjs` lines 76 to 82, and
+  `dist/api/middlewares/origin-check.mjs` line 108), so the answer holds the
+  request's own origin only when the rule trusts it (`confect/auth/host.ts`). A
+  callback URL on a school host is therefore trusted only for a request from that
+  host. No sign-in flow names another school host yet.
 - The proxy reads the host, the cookie, and Accept-Language. The map from host to
   school is configuration, so a request never reads the database to find its
   school. A request that reads nothing keeps the target of under 1 ms, measured at
@@ -69,12 +84,22 @@ finds the right data.
   units. The layout reads its profile and, for a signed-in viewer, its viewer
   again, because it still renders the name and the role. A signed-in viewer also
   reads the session token twice, once in the proxy and once in the layout, because
-  React's `cache` does not span the two. Each read, token or query, is retried
-  within the shared network budget, so one read answers or fails within 31.5
-  seconds (`packages/backend/client/network.ts`). The proxy goes on to the page
-  when its read fails, so a school that does not answer can hold a page request
-  for about 63 seconds before the error boundary, where the layout alone held it
-  for about 31.5 seconds.
+  React's `cache` does not span the two. Each read of the layout, token or query,
+  is retried within the shared network budget, so one read answers or fails
+  within 31.5 seconds (`packages/backend/client/network.ts`). The proxy's gate
+  makes one attempt per query, and the whole gate, its session read included,
+  waits at most one deadline: `NETWORK_ATTEMPT_DEADLINE`, 10 seconds, the bound
+  that every attempt of a network read already has (`packages/backend/client/network.ts`,
+  used by `lib/routing/school/refusal.ts`). A gate that misses the deadline or
+  fails goes on to the page, with its full cause logged. So a school that does not
+  answer holds a page request for at most 10 seconds in the proxy and then up to
+  31.5 seconds in the layout, before the error boundary. Before this change the
+  proxy alone could hold it for 31.5 seconds, so the worst case falls from about
+  63 seconds to about 42 seconds.
+  The deadline is not derived from a measured latency in this change: the
+  p50 and p99 of `tenancy.profile.get` and `tenancy.viewer.get` on a local
+  acceptance backend are not recorded here, and the bound stays the existing one
+  until they are.
 - School pages are private and not indexed (ADR 0011).
 - An address never holds personal data, so a student's name never enters a URL.
 - A school member or an account under 18 has no public profile (K15). Each school
