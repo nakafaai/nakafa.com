@@ -123,6 +123,7 @@ export declare const api: {
             image?: string;
             mascot: string;
             name: string;
+            picture?: "animal" | "photo";
             plan: "free" | "pro";
             planCreditGrantId?: Id<"creditTransactions">;
             role?: "teacher" | "student" | "parent" | "administrator";
@@ -140,7 +141,12 @@ export declare const api: {
         "query",
         "public",
         { userId: Id<"users"> },
-        { image?: string; mascot: string; name: string } | null
+        {
+          image?: string;
+          mascot: string;
+          name: string;
+          picture?: "animal" | "photo";
+        } | null
       >;
     };
   };
@@ -423,6 +429,7 @@ export declare const api: {
               image?: string | null;
               mascot: string;
               name: string;
+              picture?: "animal" | "photo";
             } | null;
             replyToUserId?: Id<"users">;
             slug: string;
@@ -433,6 +440,7 @@ export declare const api: {
               image?: string | null;
               mascot: string;
               name: string;
+              picture?: "animal" | "photo";
             } | null;
             userId: Id<"users">;
             viewerVote: -1 | 1 | null;
@@ -7028,6 +7036,12 @@ export declare const api: {
         { mascot: string },
         { mascot: string }
       >;
+      setPicture: FunctionReference<
+        "mutation",
+        "public",
+        { picture: "animal" | "photo" },
+        null
+      >;
       syncUserInfoForChat: FunctionReference<
         "mutation",
         "public",
@@ -11027,6 +11041,7 @@ export declare const internal: {
           image?: string;
           mascot: string;
           name: string;
+          picture?: "animal" | "photo";
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
@@ -11052,6 +11067,7 @@ export declare const internal: {
           image?: string;
           mascot: string;
           name: string;
+          picture?: "animal" | "photo";
           plan: "free" | "pro";
           planCreditGrantId?: Id<"creditTransactions">;
           role?: "teacher" | "student" | "parent" | "administrator";
