@@ -1,4 +1,6 @@
+import { Ref } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -10,6 +12,9 @@ import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 9, 12, 12, 0, 0);
+const getProfileByUsername = Ref.getFunctionReference(
+  refs.public.users.queries.getProfileByUsername
+);
 
 describe("users/queries", () => {
   it("loads users by id and auth id", async () => {
@@ -93,5 +98,77 @@ describe("users/queries", () => {
     expect(await check(other, "9lives")).toBe("letterFirst");
     expect(await check(other, "a b")).toBe("characters");
     expect(await check(other, "admin")).toBe("notAllowed");
+  });
+
+  it("shows the public profile of a username to anyone, and nothing for a name nobody holds", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const holder = await t.mutation(async (ctx) => {
+      const seeded = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "profile-holder",
+      });
+      await ctx.db.patch("users", seeded.userId, {
+        bio: "Belajar aljabar setiap hari.",
+        image: "https://photos.example.com/holder.jpg",
+        name: "Nabil Fatih",
+        picture: "photo",
+        username: "nabilfatih",
+      });
+      return seeded;
+    });
+    const stranger = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "profile-stranger" })
+    );
+    const profileOf = (caller: Pick<typeof t, "query">, username: string) =>
+      caller.query(getProfileByUsername, { username });
+
+    // Only the public fields leave the server: no email, auth id, plan, or settings.
+    const expected = {
+      _id: holder.userId,
+      bio: "Belajar aljabar setiap hari.",
+      image: "https://photos.example.com/holder.jpg",
+      mascot: MASCOT_CODE,
+      name: "Nabil Fatih",
+      username: "nabilfatih",
+    };
+    expect(await profileOf(t, "nabilfatih")).toStrictEqual(expected);
+    expect(
+      await profileOf(
+        t.withIdentity({
+          sessionId: stranger.sessionId,
+          subject: stranger.authUserId,
+        }),
+        "nabilfatih"
+      )
+    ).toStrictEqual(expected);
+    expect(await profileOf(t, "nobodyholdsthis")).toBeNull();
+  });
+
+  it("hides the photo of an account that shows its animal, and an empty bio", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const holder = await t.mutation(async (ctx) => {
+      const seeded = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "animal-holder",
+      });
+      await ctx.db.patch("users", seeded.userId, {
+        image: "https://photos.example.com/hidden.jpg",
+        name: "Siti Aminah",
+        picture: "animal",
+        username: "sitiaminah",
+      });
+      return seeded;
+    });
+
+    expect(
+      await t.query(getProfileByUsername, {
+        username: "sitiaminah",
+      })
+    ).toStrictEqual({
+      _id: holder.userId,
+      mascot: MASCOT_CODE,
+      name: "Siti Aminah",
+      username: "sitiaminah",
+    });
   });
 });

@@ -7,7 +7,13 @@ import { useTranslations } from "next-intl";
 import { SharedTabs } from "@/components/user/navigation";
 import { ProfileTab, profileHref } from "@/lib/profile/href";
 
-export function UserTabs({ username }: { username: string }) {
+export function UserTabs({
+  isOwner,
+  username,
+}: {
+  isOwner: boolean;
+  username: string;
+}) {
   const t = useTranslations("Common");
 
   const pathname = usePathname();
@@ -17,12 +23,18 @@ export function UserTabs({ username }: { username: string }) {
     chat: t("chat"),
     comments: t("comments"),
   };
+  // A profile never lists another learner's chats, so the Chat tab is the
+  // owner's alone.
+  const tabsShown = Arr.filter(
+    ProfileTab.literals,
+    (tab) => isOwner || tab !== "chat"
+  );
   const tabs = [
     {
       label: t("posts"),
       href: profileHref(username),
     },
-    ...Arr.map(ProfileTab.literals, (tab) => ({
+    ...Arr.map(tabsShown, (tab) => ({
       label: labels[tab],
       href: `${profileHref(username)}/${tab}`,
     })),
