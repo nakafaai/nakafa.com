@@ -15,7 +15,9 @@ import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -121,14 +123,14 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               const canSubmit = Boolean(isDirty) && Boolean(isValid);
               const isDisabled = !canSubmit || Boolean(isSubmitting);
               return (
-                <div className="flex w-full items-center justify-between gap-4">
-                  <p className="text-muted-foreground text-sm">
-                    {t("name-footer")}
-                  </p>
-                  <Button disabled={isDisabled} size="sm" type="submit">
-                    {t("save")}
-                  </Button>
-                </div>
+                <>
+                  <CardSectionHint>{t("name-footer")}</CardSectionHint>
+                  <CardSectionActions>
+                    <Button disabled={isDisabled} size="sm" type="submit">
+                      {t("save")}
+                    </Button>
+                  </CardSectionActions>
+                </>
               );
             }}
           </form.Subscribe>

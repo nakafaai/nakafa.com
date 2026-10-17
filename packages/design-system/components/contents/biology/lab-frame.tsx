@@ -20,6 +20,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -163,16 +164,18 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
         </VisualCardScene>
 
         <p className="text-muted-foreground text-sm">{selectedItem.caption}</p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact label={labels.focusLabel} value={selectedItem.focus} />
+            <VisualFact
+              label={labels.takeawayLabel}
+              value={selectedItem.takeaway}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact label={labels.focusLabel} value={selectedItem.focus} />
-          <VisualFact
-            label={labels.takeawayLabel}
-            value={selectedItem.takeaway}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

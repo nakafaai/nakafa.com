@@ -27,7 +27,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
+  CardSectionActions,
   CardSectionFooter,
+  CardSectionHint,
 } from "@/components/shared/card/section";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";
@@ -221,18 +223,18 @@ function UserSettingsCurriculumForm({
             ]}
           >
             {([isDirty, isValid, isSubmitting]) => (
-              <div className="flex w-full items-center justify-between gap-4">
-                <p className="text-muted-foreground text-sm">
-                  {t("curriculum-footer")}
-                </p>
-                <Button
-                  disabled={!(isDirty && isValid) || isSubmitting}
-                  size="sm"
-                  type="submit"
-                >
-                  {t("save")}
-                </Button>
-              </div>
+              <>
+                <CardSectionHint>{t("curriculum-footer")}</CardSectionHint>
+                <CardSectionActions>
+                  <Button
+                    disabled={!(isDirty && isValid) || isSubmitting}
+                    size="sm"
+                    type="submit"
+                  >
+                    {t("save")}
+                  </Button>
+                </CardSectionActions>
+              </>
             )}
           </form.Subscribe>
         </CardSectionFooter>

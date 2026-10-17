@@ -15,6 +15,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -106,27 +107,29 @@ export function PeriodicPropertiesLab({
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.guidance}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact
+              label={labels.factLabels.question}
+              value={selectedLabels.question}
+            />
+            <VisualFact
+              label={labels.factLabels.period}
+              value={selectedLabels.periodTrend}
+            />
+            <VisualFact
+              label={labels.factLabels.group}
+              value={selectedLabels.groupTrend}
+            />
+            <VisualFact
+              label={labels.factLabels.cause}
+              value={selectedLabels.cause}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact
-            label={labels.factLabels.question}
-            value={selectedLabels.question}
-          />
-          <VisualFact
-            label={labels.factLabels.period}
-            value={selectedLabels.periodTrend}
-          />
-          <VisualFact
-            label={labels.factLabels.group}
-            value={selectedLabels.groupTrend}
-          />
-          <VisualFact
-            label={labels.factLabels.cause}
-            value={selectedLabels.cause}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

@@ -23,6 +23,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -143,20 +144,25 @@ export function ChemicalReactionCharacteristicsLab({
         <p className="text-muted-foreground text-sm">
           {selectedLabels.helperCaption}
         </p>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFact
+              label={labels.observationLabel}
+              value={selectedLabels.observation}
+            />
+            <VisualFact
+              label={labels.meaningLabel}
+              value={selectedLabels.meaning}
+            />
+            <VisualFact
+              label={labels.limitLabel}
+              value={selectedLabels.limit}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFact
-            label={labels.observationLabel}
-            value={selectedLabels.observation}
-          />
-          <VisualFact
-            label={labels.meaningLabel}
-            value={selectedLabels.meaning}
-          />
-          <VisualFact label={labels.limitLabel} value={selectedLabels.limit} />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

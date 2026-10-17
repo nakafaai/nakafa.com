@@ -30,6 +30,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -169,21 +170,23 @@ export function VelocitySpeedLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            {Arr.map(facts, (fact) => (
+              <VisualFactIndicator
+                indicatorColor={
+                  "markerColor" in fact ? fact.markerColor : undefined
+                }
+                key={fact.id}
+                label={fact.label}
+                value={<InlineMath math={fact.math} />}
+              />
+            ))}
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          {Arr.map(facts, (fact) => (
-            <VisualFactIndicator
-              indicatorColor={
-                "markerColor" in fact ? fact.markerColor : undefined
-              }
-              key={fact.id}
-              label={fact.label}
-              value={<InlineMath math={fact.math} />}
-            />
-          ))}
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

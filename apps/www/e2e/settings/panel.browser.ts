@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { openMemoryPage } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -29,6 +29,21 @@ const WIDE = 1040;
 /** The line height of the small text of a card, and the lines the explanation may take on a narrow card. */
 const LINE_HEIGHT = 20;
 const LINES = 3;
+
+/** The box an element takes on the page, or null when it is missing. */
+type Box = Awaited<ReturnType<Locator["boundingBox"]>>;
+
+/** The edges of a box. A missing box has zero edges, so check it exists first. */
+function edgesOf(box: Box) {
+  const left = box?.x ?? 0;
+  const top = box?.y ?? 0;
+  return {
+    bottom: top + (box?.height ?? 0),
+    left,
+    right: left + (box?.width ?? 0),
+    top,
+  };
+}
 
 /** The row of the settings layout that holds the page and the panel. */
 const rowOf = (page: Page) =>
@@ -233,8 +248,8 @@ test.describe("Memory editor at the width where it changes layout", () => {
  * search is whole, the search keeps no slot for a clear button while it is
  * empty and gives one back with the first letter, and the button that adds a
  * memory is beside it inside the card. The explanation and the button of the
- * card that deletes every memory wrap, so that the button stays in the card and
- * the text keeps lines of a readable length.
+ * card that deletes every memory share one row, so that the button stays in the
+ * card beside the text, and the text keeps lines of a readable length.
  */
 const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
   page: Page,
@@ -280,23 +295,19 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
     expect(add).not.toBeNull();
     expect(field).not.toBeNull();
     expect(list).not.toBeNull();
-    expect((field?.x ?? 0) + (field?.width ?? 0)).toBeLessThanOrEqual(
-      add?.x ?? 0
-    );
-    expect((add?.x ?? 0) + (add?.width ?? 0)).toBeLessThanOrEqual(
-      (list?.x ?? 0) + (list?.width ?? 0)
-    );
-    // The button is inside its card, and below the text when the line is full.
+    expect(edgesOf(field).right).toBeLessThanOrEqual(edgesOf(add).left);
+    expect(edgesOf(add).right).toBeLessThanOrEqual(edgesOf(list).right);
+    // The button is inside its card, on the same row as the text and to its right.
     expect(card).not.toBeNull();
     expect(button).not.toBeNull();
     expect(explanation).not.toBeNull();
-    expect((button?.x ?? 0) + (button?.width ?? 0)).toBeLessThanOrEqual(
-      (card?.x ?? 0) + (card?.width ?? 0)
-    );
+    expect(edgesOf(button).right).toBeLessThanOrEqual(edgesOf(card).right);
     expect(explanation?.height ?? 0).toBeLessThanOrEqual(LINES * LINE_HEIGHT);
-    expect(button?.y ?? 0).toBeGreaterThanOrEqual(
-      (explanation?.y ?? 0) + (explanation?.height ?? 0)
+    expect(edgesOf(explanation).right).toBeLessThanOrEqual(
+      edgesOf(button).left
     );
+    expect(edgesOf(button).top).toBeLessThan(edgesOf(explanation).bottom);
+    expect(edgesOf(explanation).top).toBeLessThan(edgesOf(button).bottom);
   });
 
   // The first letter brings the clear button back.
