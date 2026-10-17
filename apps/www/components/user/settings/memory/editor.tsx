@@ -11,15 +11,18 @@ import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
 import { Function as Fn } from "effect";
 import { useTranslations } from "next-intl";
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
+import {
+  MEMORY_ADD_ID,
+  memoryRowId,
+} from "@/components/user/settings/memory/focus";
+import { useFocusAfterClose } from "@/components/user/settings/memory/focus.client";
+import {
+  createHost,
+  useEditorHost,
+} from "@/components/user/settings/memory/host.client";
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
@@ -102,112 +105,9 @@ function useMemoryEditor() {
   return useMemoryPage((state) => ({
     memory: state.target,
     open: state.open,
+    opener: state.opener,
     session: state.session,
   }));
-}
-
-/** The element the open editor lives in: one for the whole life of the page. */
-function createHost() {
-  if (typeof document === "undefined") {
-    return null;
-  }
-
-  const host = document.createElement("div");
-  host.className = "flex min-h-0 flex-1 flex-col";
-
-  return host;
-}
-
-/** Where the caret was in the editor that is about to move, to put it back. */
-interface Caret {
-  active: HTMLElement;
-  anchorNode: Node | null;
-  anchorOffset: number;
-  focusNode: Node | null;
-  focusOffset: number;
-}
-
-/** Notes the focus and the selection when they are inside `host`, or nothing. */
-function keepCaret(host: HTMLElement): Caret | null {
-  const { activeElement } = document;
-  if (!(activeElement instanceof HTMLElement && host.contains(activeElement))) {
-    return null;
-  }
-
-  const selection = document.getSelection();
-
-  return {
-    active: activeElement,
-    anchorNode: selection?.anchorNode ?? null,
-    anchorOffset: selection?.anchorOffset ?? 0,
-    focusNode: selection?.focusNode ?? null,
-    focusOffset: selection?.focusOffset ?? 0,
-  };
-}
-
-/** Puts back the selection and the focus that `keepCaret` noted. */
-function restoreCaret(caret: Caret) {
-  if (caret.anchorNode && caret.focusNode) {
-    document
-      .getSelection()
-      ?.setBaseAndExtent(
-        caret.anchorNode,
-        caret.anchorOffset,
-        caret.focusNode,
-        caret.focusOffset
-      );
-  }
-  caret.active.focus({ preventScroll: true });
-}
-
-/**
- * Gives the editor one element to live in, whichever layout shows it. The
- * element moves into the place of the layout that is on: the panel or the
- * sheet. React never unmounts the editor when the layout changes, so the words,
- * the title, the undo history and the saving stay, and the caret is put back
- * where it was when the editor had it.
- *
- * `place` is the ref of the element each layout offers. `slot` is that element,
- * or none while no layout holds the editor. A layout runs `remember` when it
- * goes, before any of its elements leaves the page, because the sheet's own
- * code takes its elements out first and the focus is gone by the time its ref
- * lets go.
- */
-function useEditorHost() {
-  const [host] = useState(createHost);
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-  const caret = useRef<Caret | null>(null);
-
-  const place = useCallback(
-    (element: HTMLElement | null) => {
-      if (host === null) {
-        return;
-      }
-
-      if (element === null) {
-        setSlot(null);
-        return;
-      }
-
-      const kept = caret.current;
-
-      caret.current = null;
-      setSlot(element);
-      element.append(host);
-      if (kept && host.contains(kept.active)) {
-        restoreCaret(kept);
-      }
-    },
-    [host]
-  );
-
-  const remember = useCallback(() => {
-    if (host !== null) {
-      caret.current = keepCaret(host);
-    }
-  }, [host]);
-
-  return { host, place, remember, slot };
 }
 
 /** The ref each layout puts on the element that holds the editor. */
@@ -224,14 +124,30 @@ type Remember = ReturnType<typeof useEditorHost>["remember"];
  * changes loses nothing the learner wrote.
  */
 export function MemoryEditor() {
+  // The server renders no editor, because it has no page to hold one in.
+  const [host] = useState(createHost);
+
+  return host ? <HostedMemoryEditor host={host} /> : null;
+}
+
+/**
+ * The editor once the page has an element to hold it: the document, and the
+ * layout that shows it.
+ */
+function HostedMemoryEditor({ host }: { host: HTMLElement }) {
   const wide = useMediaQuery(WIDE);
-  const { memory, open, session } = useMemoryEditor();
-  const { host, place, remember, slot } = useEditorHost();
+  const { memory, open, opener, session } = useMemoryEditor();
+  const { place, remember, slot } = useEditorHost(host);
+
+  useFocusAfterClose(open, opener, host);
 
   return (
     <>
-      {host && (open || slot)
-        ? createPortal(<MemoryDocument key={session} memory={memory} />, host)
+      {open || slot
+        ? createPortal(
+            <MemoryDocument key={session} memory={memory} open={open} />,
+            host
+          )
         : null}
       {wide ? (
         <MemoryEditorPanel
@@ -314,6 +230,9 @@ function MemoryEditorPanel({
   );
 }
 
+/** The sheet over the page on a narrow screen, which takes the focus when it opens. */
+const SHEET_ID = "user-settings-memory-sheet";
+
 /** The editor as a sheet over the page, for a screen too narrow for a panel. */
 function MemoryEditorSheet({
   memory,
@@ -328,9 +247,13 @@ function MemoryEditorSheet({
 }) {
   const t = useTranslations("Memory");
   const close = useMemoryPage((state) => state.close);
+  const { opener } = useMemoryEditor();
 
   useLayoutEffect(() => remember, [remember]);
 
+  // A dialog focuses its first field when it opens, which is the title, and the
+  // editor keeps out of a field that has the focus. So the sheet focuses its own
+  // element instead, and the editor takes the caret once it exists.
   return (
     <Sheet
       onOpenChange={(next) => {
@@ -342,6 +265,22 @@ function MemoryEditorSheet({
     >
       <SheetContent
         className="w-full max-w-none gap-0 border-l-0"
+        finalFocus={() => {
+          // The sheet also goes when the window widens past the panel's width.
+          // The editor is still open then, and it moves into the panel with its
+          // caret, so the focus stays in it.
+          if (open) {
+            return false;
+          }
+          if (opener === null) {
+            return document.getElementById(MEMORY_ADD_ID);
+          }
+          // A deleted memory has no row, and its delete question has placed the
+          // focus already, so the sheet leaves it where the question put it.
+          return document.getElementById(memoryRowId(opener)) ?? false;
+        }}
+        id={SHEET_ID}
+        initialFocus={() => document.getElementById(SHEET_ID)}
         ref={place}
         showCloseButton={false}
       >

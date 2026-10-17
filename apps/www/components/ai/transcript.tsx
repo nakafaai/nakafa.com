@@ -14,12 +14,13 @@ import { loadMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { Array as Arr, Effect, Fiber } from "effect";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 import { useChat } from "@/components/ai/chat/context";
 import { AiChatError } from "@/components/ai/chat/error";
 import { useChatFeed } from "@/components/ai/chat/feed.client";
 import { hasFailedReply, hasReply } from "@/components/ai/chat/messages";
 import { AiChatPending } from "@/components/ai/chat/pending";
+import { sameRow } from "@/components/ai/message/row";
 import { AiChatMessage } from "@/components/ai/message/view";
 
 /**
@@ -75,9 +76,11 @@ export function NinaTranscript() {
 
 /**
  * One message of the transcript. The first row loads older messages when it
- * comes near the reader, while more are there to load.
+ * comes near the reader, while more are there to load. A row renders again only
+ * when its message says something new, so a streamed batch leaves the settled
+ * rows as they are.
  */
-function TranscriptRow({
+const TranscriptRow = memo(function TranscriptRow({
   last,
   loadMore,
   message,
@@ -97,4 +100,4 @@ function TranscriptRow({
       </Message>
     </MessageScrollerItem>
   );
-}
+}, sameRow);

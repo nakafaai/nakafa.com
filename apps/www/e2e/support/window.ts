@@ -45,6 +45,16 @@ const hasReactFiber = (element: Element) =>
 export const isHydrated = (target: Locator) => target.evaluate(hasReactFiber);
 
 /**
+ * Whether React has taken over one element, which it does when it hydrates the
+ * element. Until then React cannot run the element's handlers, and a press on it
+ * can be lost.
+ */
+export const isTakenOver = (element: Locator) =>
+  element.evaluate((node) =>
+    Object.keys(node).some((key) => key.startsWith("__reactFiber"))
+  );
+
+/**
  * Loads the page with its scripts held back, so it shows only what the server
  * rendered, notes where the first and the last row of the server's page stand,
  * lets the scripts run, and checks that the rows stand in the same places once
