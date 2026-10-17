@@ -725,7 +725,7 @@
     "search-older": "Ältere Chats durchsuchen",
     "rename-chat": "Chat umbenennen",
     "delete-chat": "Chat löschen",
-    "delete-chat-description": "Bist du sicher? Dieser Chat kann nach dem Löschen nicht wiederhergestellt werden.",
+    "delete-chat-description": "Dieser Chat kann nach dem Löschen nicht wiederhergestellt werden.",
     "confirm": "Bestätigen",
     "share-chat": "Chat teilen",
     "share-chat-description": "Sei vorsichtig, wenn du diesen Link mit unbekannten Personen teilst.",
