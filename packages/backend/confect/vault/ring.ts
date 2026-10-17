@@ -16,7 +16,11 @@ const ROOT_KEY_BYTES = 32;
 
 const malformed = new VaultError({ reason: "configuration" });
 
-/** Reads one `id:key` entry: a root key name and 32 bytes in Base64. */
+/**
+ * Reads one `id:key` entry: a root key name and 32 bytes in Base64. A malformed entry,
+ * or a key that the platform cannot derive, is reason `configuration`: the fault is in
+ * the ring, not in any stored data.
+ */
 const readEntry = Effect.fn("vault.ring.readEntry")(function* (entry: string) {
   const [name, encoded, ...rest] = Str.split(entry, ":");
   const id = yield* Schema.decodeEffect(RootKeyId)(name).pipe(
@@ -26,7 +30,8 @@ const readEntry = Effect.fn("vault.ring.readEntry")(function* (entry: string) {
   if (rest.length > 0 || key?.length !== ROOT_KEY_BYTES) {
     return yield* malformed;
   }
-  return { id, keys: yield* deriveKeys(key) };
+  const keys = yield* deriveKeys(key).pipe(Effect.mapError(() => malformed));
+  return { id, keys };
 });
 
 /**

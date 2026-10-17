@@ -82,20 +82,34 @@ describe("vault learner keys", () => {
   );
 
   it.effect(
-    "fails with a key error when no root key in the environment unwraps the learner key",
+    "fails with a configuration error when the environment lacks the root key that a learner key names",
     () =>
       scenario(
         Effect.gen(function* () {
           const userId = yield* learner("moved");
           yield* ensureLearnerKeys(userId);
           const unknown = `gone:${Base64.encode(new Uint8Array(32).fill(9))}`;
+          for (const read of [readLearnerKeys, ensureLearnerKeys]) {
+            expect(
+              (yield* Effect.flip(read(userId).pipe(withRoots(unknown)))).reason
+            ).toBe("configuration");
+          }
+        })
+      )
+  );
+
+  it.effect(
+    "fails with a key error when the root key in the environment does not open the learner key",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const userId = yield* learner("renamed");
+          yield* ensureLearnerKeys(userId);
           const renamed = `test:${Base64.encode(new Uint8Array(32).fill(9))}`;
-          for (const roots of [unknown, renamed]) {
-            for (const read of [readLearnerKeys, ensureLearnerKeys]) {
-              expect(
-                (yield* Effect.flip(read(userId).pipe(withRoots(roots)))).reason
-              ).toBe("key");
-            }
+          for (const read of [readLearnerKeys, ensureLearnerKeys]) {
+            expect(
+              (yield* Effect.flip(read(userId).pipe(withRoots(renamed)))).reason
+            ).toBe("key");
           }
         })
       )

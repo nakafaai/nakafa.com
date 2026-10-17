@@ -5,7 +5,7 @@ import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { runNakafaAgent } from "@repo/backend/confect/nina/nakafa/agent";
-import { readLearnerKeys } from "@repo/backend/confect/vault/keys";
+import { RUN_LIFETIME_MS } from "@repo/backend/confect/nina/sealed/turn";
 import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import { createNinaTest, ninaStream } from "@repo/backend/test/nina";
 import { contextFor } from "@repo/backend/test/nina/admission";
@@ -16,11 +16,7 @@ import {
   plantedIn,
   plantedModel,
 } from "@repo/backend/test/nina/planted";
-import {
-  earlierTurnIn,
-  sealThreadIn,
-  withoutRowIds,
-} from "@repo/backend/test/nina/seal";
+import { earlierTurnIn, withoutRowIds } from "@repo/backend/test/nina/seal";
 import { readThreadIn } from "@repo/backend/test/nina/sealed";
 import { storedRowsIn } from "@repo/backend/test/nina/stored";
 import {
@@ -40,39 +36,11 @@ vi.mock("@repo/backend/confect/nina/nakafa/agent", () => ({
 vi.mock("@repo/backend/confect/nina/context", () => ({
   resolveNinaContext: vi.fn(),
 }));
-vi.mock("@convex-dev/agent", async (load) => {
-  const actual = await load<typeof import("@convex-dev/agent")>();
-  return { ...actual, saveMessages: vi.fn(actual.saveMessages) };
-});
-vi.mock("@repo/backend/confect/vault/keys", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("@repo/backend/confect/vault/keys")>();
-  return { ...actual, readLearnerKeys: vi.fn(actual.readLearnerKeys) };
-});
 
 const run = Ref.getFunctionReference(refs.internal.nina.response.run);
 const seal = Ref.getFunctionReference(refs.internal.nina.sealed.seal);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const readChat = Ref.getFunctionReference(refs.public.nina.messages.page);
-
-/**
- * Seals the settled turn of a fixture whose component stores the seal's rows as
- * `store` makes it, and checks that the seal is refused and writes nothing (ADR 0024).
- */
-async function refusedSeal(store: () => unknown) {
-  const f = await createNinaTest({ history: [{ steps: 1 }], now: NOW });
-  const turn = await earlierTurnIn(f.t);
-  const before = await storedRowsIn(f.t, f.threadId, []);
-  await store();
-
-  await expect(f.t.mutation(seal, { turnId: turn._id })).rejects.toThrow();
-
-  expect(await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))).toEqual(
-    turn
-  );
-  const after = await storedRowsIn(f.t, f.threadId, []);
-  expect(after.messages.page).toEqual(before.messages.page);
-}
 
 beforeEach(() => {
   // Only the clock is faked: the delta writer and the scheduler keep real timers.
@@ -255,38 +223,6 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.sealedAt()).toBe(sealedAt);
   });
 
-  it("holds a turn whose chat was deleted before its seal ran, and leaves its plain rows", async () => {
-    provider.languageModel.mockReturnValue(plantedModel());
-    vi.mocked(runNakafaAgent).mockImplementation(() =>
-      Effect.succeed({ text: PLANTED.output })
-    );
-    const f = await askedIn(PLANTED.prompt);
-    await f.t.action(run, { turnId: f.receipt.turnId });
-    await f.t.mutation((ctx) => ctx.db.delete("chats", f.receipt.chatId));
-    await f.t.finishAllScheduledFunctions(() => undefined);
-
-    expect(await f.turn()).toMatchObject({
-      sealHold: "chatDeleted",
-    });
-    expect(await f.sealedAt()).toBeUndefined();
-    const stored = await storedRowsIn(f.t, f.receipt.threadId, []);
-    expect(plantedIn(stored)).toEqual(
-      expect.arrayContaining([PLANTED.answer, PLANTED.output])
-    );
-  });
-
-  it("holds a turn whose learner's account was deleted, and leaves its plain rows", async () => {
-    const f = await askedIn(PLANTED.prompt);
-    await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
-    await f.t.mutation((ctx) =>
-      ctx.db.patch("users", f.userId, { deletedAt: NOW })
-    );
-    await f.t.finishAllScheduledFunctions(() => undefined);
-
-    expect(await f.turn()).toMatchObject({ sealHold: "accountDeleted" });
-    expect(await f.sealedAt()).toBeUndefined();
-  });
-
   it("seals a turn whose rows take more than one page to read", async () => {
     const f = await createNinaTest({ history: [{ steps: 5 }], now: NOW });
     const earlier = await earlierTurnIn(f.t);
@@ -321,31 +257,6 @@ describe("Sealing a settled Nina turn", () => {
     expect(await f.turn()).toBeNull();
   });
 
-  it("holds a turn whose prompt is gone", async () => {
-    const f = await askedIn(PLANTED.prompt);
-    await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
-    await f.t.mutation((ctx) =>
-      ctx.runMutation(components.nina.messages.deleteByIds, {
-        messageIds: [f.receipt.promptMessageId],
-      })
-    );
-
-    await f.t.mutation(seal, { turnId: f.receipt.turnId });
-
-    expect(await f.turn()).toMatchObject({ sealHold: "promptMissing" });
-    expect(await f.sealedAt()).toBeUndefined();
-  });
-
-  it("holds a turn whose learner's account is gone", async () => {
-    const f = await askedIn(PLANTED.prompt);
-    await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
-    await f.t.mutation((ctx) => ctx.db.delete("users", f.userId));
-    await f.t.finishAllScheduledFunctions(() => undefined);
-
-    expect(await f.turn()).toMatchObject({ sealHold: "accountDeleted" });
-    expect(await f.sealedAt()).toBeUndefined();
-  });
-
   it("leaves a turn alone that is still running", async () => {
     const f = await askedIn(PLANTED.prompt);
 
@@ -377,57 +288,143 @@ describe("Sealing a settled Nina turn", () => {
     ).toMatchObject({ sealedAt: expect.any(Number) });
   });
 
-  it("counts the bytes it reads and writes, and a sealed turn counts only its own document", async () => {
-    const f = await createNinaTest({ history: [{ steps: 2 }], now: NOW });
-    const earlier = await earlierTurnIn(f.t);
+  it("leaves a turn with a young pending row for a later run, and seals it once that row is gone", async () => {
+    const f = await createNinaTest({ history: [{ steps: 1 }], now: NOW });
+    const turn = await earlierTurnIn(f.t);
+    // A run that still writes its step holds a pending row at the turn's order.
+    await f.t.mutation(async (ctx) => {
+      await saveMessages(ctx, components.nina, {
+        messages: [
+          {
+            role: "assistant",
+            content: [{ type: "text", text: "Still writing." }],
+          },
+        ],
+        metadata: [{ status: "pending" }],
+        order: turn.order,
+        threadId: f.threadId,
+      });
+    });
+    const before = await storedRowsIn(f.t, f.threadId, []);
+    const pending = Arr.filter(
+      before.messages.page,
+      (row) => row.status === "pending"
+    );
+    expect(pending).toHaveLength(1);
 
-    const first = await f.t.mutation(seal, { turnId: earlier._id });
-    const again = await f.t.mutation(seal, { turnId: earlier._id });
+    const cost = await f.t.mutation(seal, { turnId: turn._id });
 
-    expect(first.bytes).toBeGreaterThan(again.bytes);
-    expect(again.bytes).toBeGreaterThan(0);
+    // The seal writes nothing: the turn keeps its record and its rows, and no hold is set.
+    expect(cost.bytes).toBeGreaterThan(0);
+    expect(await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))).toEqual(
+      turn
+    );
+    expect(await storedRowsIn(f.t, f.threadId, [])).toEqual(before);
+
+    // Once the pending row is gone, the next run seals the turn.
+    await f.t.mutation((ctx) =>
+      ctx.runMutation(components.nina.messages.deleteByIds, {
+        messageIds: Arr.map(pending, (row) => row._id),
+      })
+    );
+    await f.t.mutation(seal, { turnId: turn._id });
+    expect(
+      await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))
+    ).toMatchObject({ sealedAt: expect.any(Number) });
   });
 
-  it("writes nothing when the component stores fewer rows than the seal wrote", () =>
-    refusedSeal(() => {
-      vi.mocked(saveMessages).mockResolvedValueOnce({ messages: [] });
-    }));
-
-  it("writes nothing when the component stores the sealed rows at other steps", () =>
-    refusedSeal(async () => {
-      const actual =
-        await vi.importActual<typeof import("@convex-dev/agent")>(
-          "@convex-dev/agent"
-        );
-      // The same rows, stored five steps later than the seal named them.
-      vi.mocked(saveMessages).mockImplementationOnce(
-        async (ctx, component, args) => {
-          const stored = await actual.saveMessages(ctx, component, args);
-          return {
-            ...stored,
-            messages: Arr.map(stored.messages, (row) => ({
-              ...row,
-              stepOrder: row.stepOrder + 5,
-            })),
-          };
-        }
-      );
-    }));
-
-  it("seals a turn with no second read of the learner's key, since the prompt's place needs none", async () => {
+  it("seals a turn whose pending row is older than a run can live, and writes that row as failed", async () => {
     const f = await createNinaTest({ history: [{ steps: 1 }], now: NOW });
-    // Admission seals the prompt, so the fixture's rows are sealed in place the same way.
-    await sealThreadIn(f.t, f.threadId, f.identity.userId);
     const turn = await earlierTurnIn(f.t);
-    vi.mocked(readLearnerKeys).mockClear();
+    // The run that wrote this row died: its pending row stays, and no run follows it.
+    await f.t.mutation(async (ctx) => {
+      await saveMessages(ctx, components.nina, {
+        messages: [
+          {
+            role: "assistant",
+            content: [{ type: "text", text: "Still writing." }],
+          },
+        ],
+        metadata: [{ status: "pending" }],
+        order: turn.order,
+        threadId: f.threadId,
+      });
+    });
+    vi.setSystemTime(NOW + RUN_LIFETIME_MS + 1);
 
     await f.t.mutation(seal, { turnId: turn._id });
 
     expect(
       await f.t.query((ctx) => ctx.db.get("ninaTurns", turn._id))
-    ).toMatchObject({
-      sealedAt: expect.any(Number),
+    ).toMatchObject({ sealedAt: expect.any(Number) });
+    const stored = await storedRowsIn(f.t, f.threadId, []);
+    expect(Arr.map(stored.messages.page, (row) => row.status)).not.toContain(
+      "pending"
+    );
+    expect(
+      Arr.filter(
+        stored.messages.page,
+        (row) => row.order === turn.order && row.status === "failed"
+      )
+    ).toHaveLength(1);
+  });
+});
+
+describe("Sealing a settled Nina turn that the seal skips", () => {
+  it("holds a turn whose chat was deleted before its seal ran, and leaves its plain rows", async () => {
+    provider.languageModel.mockReturnValue(plantedModel());
+    vi.mocked(runNakafaAgent).mockImplementation(() =>
+      Effect.succeed({ text: PLANTED.output })
+    );
+    const f = await askedIn(PLANTED.prompt);
+    await f.t.action(run, { turnId: f.receipt.turnId });
+    await f.t.mutation((ctx) => ctx.db.delete("chats", f.receipt.chatId));
+    await f.t.finishAllScheduledFunctions(() => undefined);
+
+    expect(await f.turn()).toMatchObject({
+      sealHold: "chatDeleted",
     });
-    expect(readLearnerKeys).not.toHaveBeenCalled();
+    expect(await f.sealedAt()).toBeUndefined();
+    const stored = await storedRowsIn(f.t, f.receipt.threadId, []);
+    expect(plantedIn(stored)).toEqual(
+      expect.arrayContaining([PLANTED.answer, PLANTED.output])
+    );
+  });
+
+  it("holds a turn whose learner's account was deleted, and leaves its plain rows", async () => {
+    const f = await askedIn(PLANTED.prompt);
+    await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("users", f.userId, { deletedAt: NOW })
+    );
+    await f.t.finishAllScheduledFunctions(() => undefined);
+
+    expect(await f.turn()).toMatchObject({ sealHold: "accountDeleted" });
+    expect(await f.sealedAt()).toBeUndefined();
+  });
+
+  it("holds a turn whose prompt is gone", async () => {
+    const f = await askedIn(PLANTED.prompt);
+    await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
+    await f.t.mutation((ctx) =>
+      ctx.runMutation(components.nina.messages.deleteByIds, {
+        messageIds: [f.receipt.promptMessageId],
+      })
+    );
+
+    await f.t.mutation(seal, { turnId: f.receipt.turnId });
+
+    expect(await f.turn()).toMatchObject({ sealHold: "promptMissing" });
+    expect(await f.sealedAt()).toBeUndefined();
+  });
+
+  it("holds a turn whose learner's account is gone", async () => {
+    const f = await askedIn(PLANTED.prompt);
+    await f.owner.mutation(cancel, { chatId: f.receipt.chatId });
+    await f.t.mutation((ctx) => ctx.db.delete("users", f.userId));
+    await f.t.finishAllScheduledFunctions(() => undefined);
+
+    expect(await f.turn()).toMatchObject({ sealHold: "accountDeleted" });
+    expect(await f.sealedAt()).toBeUndefined();
   });
 });

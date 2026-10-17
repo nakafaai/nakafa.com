@@ -10,6 +10,15 @@ export class SealedReadError extends Schema.TaggedError<SealedReadError>()(
   {}
 ) {}
 
+/**
+ * The key ring cannot be read, so no turn can be sealed now. The fault is broad and
+ * blames no turn, so the drain stops its run at once (ADR 0024).
+ */
+export class SealUnavailable extends Schema.TaggedError<SealUnavailable>()(
+  "SealUnavailable",
+  {}
+) {}
+
 /** The message statuses the component's list filters by. */
 const ListedStatus = Schema.Literals(["failed", "pending", "success"]);
 
@@ -70,12 +79,14 @@ export default GroupSpec.make()
       error: () => Schema.Union([SealedReadError, VaultError]),
     })
   )
-  // Seals the rows of one settled turn (ADR 0024). Settlement and the drain schedule it.
+  // Seals the rows of one settled turn (ADR 0024). Settlement schedules it, and the drain calls it.
+  // It fails with `SealUnavailable` only when the key ring cannot be read.
   .addFunction(
     FunctionSpec.internalMutation({
       name: "seal",
       args: () => ({ turnId: Id("ninaTurns") }),
       returns: () => SealCost,
+      error: () => SealUnavailable,
     })
   )
   // Seals the settled turns that still hold plain rows, oldest first, within a byte

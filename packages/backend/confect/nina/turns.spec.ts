@@ -79,8 +79,10 @@ const NinaActiveTurn = Schema.Struct({
   requestId: NinaRequestId,
   /**
    * A keyed hash of the request, under the learner's key (`nina/fingerprint.ts`).
-   * A stored value confirms no guessed message, and a fingerprint written before
-   * the key was used never matches a new one (ADR 0024).
+   * A stored keyed value cannot confirm a guessed message, because the key is not
+   * in the database. A fingerprint written before the key was used is an unkeyed
+   * hash, so it can still confirm a guessed request, and it never matches a new one
+   * (ADR 0024).
    */
   fingerprint: Schema.String,
   page: NinaPageSchema,

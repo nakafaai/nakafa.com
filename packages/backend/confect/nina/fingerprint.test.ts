@@ -3,6 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import { requestFingerprint } from "@repo/backend/confect/nina/fingerprint";
+import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import {
   args,
@@ -10,10 +11,11 @@ import {
   fixture,
   start,
 } from "@repo/backend/test/nina/admission";
-import { fingerprintsIn } from "@repo/backend/test/nina/sealed";
+import {
+  fingerprintsIn,
+  unkeyedFingerprint,
+} from "@repo/backend/test/nina/sealed";
 import { learner, scenario } from "@repo/backend/test/owner";
-import { sha256Hex } from "@repo/utilities/digest";
-import { encodeJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -24,7 +26,7 @@ const input = {
   kind: "message",
   page: { locale: "en", slug: "home" },
   prompt: { text: "Jelaskan limit fungsi." },
-};
+} satisfies typeof NinaInput.Type;
 
 describe("request fingerprint", () => {
   it.effect(
@@ -65,15 +67,17 @@ describe("request fingerprint", () => {
   );
 
   it.effect(
-    "is not the unkeyed hash of the request, which a guessed message would confirm",
+    "is not the unkeyed fingerprint of the request, which a guessed message would confirm",
     () =>
       scenario(
         Effect.gen(function* () {
           const keys = yield* ensureLearnerKeys(yield* learner("owner"));
+          const keyed = yield* requestFingerprint(keys, null, input);
+          const unkeyed = yield* unkeyedFingerprint(null, input);
 
-          expect(yield* requestFingerprint(keys, null, input)).not.toBe(
-            yield* sha256Hex(encodeJsonText([null, input]))
-          );
+          // The same length, so only the key tells the two apart.
+          expect(unkeyed).toHaveLength(keyed.length);
+          expect(keyed).not.toBe(unkeyed);
         })
       )
   );

@@ -1,4 +1,5 @@
 import { RegisteredFunction } from "@confect/server";
+import { saveMessages } from "@convex-dev/agent";
 import schema from "@repo/backend/confect/_generated/schema";
 import { drainSeals } from "@repo/backend/confect/nina/sealed/drain";
 import type { createNinaTest } from "@repo/backend/test/nina";
@@ -6,8 +7,29 @@ import { Array as Arr, Effect, Logger, MutableRef, Order } from "effect";
 
 type Deployment = Awaited<ReturnType<typeof createNinaTest>>;
 
+/** A budget that covers every turn of the drain tests, however many there are. */
+export const UNLIMITED = Number.MAX_SAFE_INTEGER;
+
 /** The log entries that the drains of a test wrote, as the logger of `drainIn` read them. */
 export const logged = MutableRef.make<readonly unknown[]>([]);
+
+/**
+ * Makes every write of a seal at one of `orders` fail, and passes every other write
+ * through. The calls the fixture made before are forgotten, so a test counts the
+ * writes of its seals only. The test file mocks the Agent's `saveMessages`.
+ */
+export async function failSealsAt(orders: readonly number[]) {
+  const actual =
+    await vi.importActual<typeof import("@convex-dev/agent")>(
+      "@convex-dev/agent"
+    );
+  vi.mocked(saveMessages).mockClear();
+  vi.mocked(saveMessages).mockImplementation((ctx, component, args) =>
+    Arr.contains(orders, args.order)
+      ? Promise.reject(new Error("The seal is broken for this test"))
+      : actual.saveMessages(ctx, component, args)
+  );
+}
 
 /** Each settled turn of the chat, oldest first, with what the drain left of it. */
 export async function settled(t: Deployment["t"]) {

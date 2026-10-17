@@ -1,24 +1,30 @@
 import { Ref } from "@confect/core";
+import { RegisteredConvexFunction } from "@confect/server";
 import { saveMessages } from "@convex-dev/agent";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import schema from "@repo/backend/confect/_generated/schema";
 import {
-  SEAL_FAILURES_PER_RUN,
   SEAL_RESERVE_BYTES,
   SEAL_TRIES,
 } from "@repo/backend/confect/nina/sealed/drain";
 import { SEAL_BYTES_PER_SWEEP } from "@repo/backend/confect/nina/sweep";
+import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { createNinaTest } from "@repo/backend/test/nina";
 import {
   drainIn,
+  failSealsAt,
   logged,
   settled,
   turnAt,
+  UNLIMITED,
 } from "@repo/backend/test/nina/drain";
 import { earlierTurnIn } from "@repo/backend/test/nina/seal";
 import { storedRowsIn } from "@repo/backend/test/nina/stored";
-import { Array as Arr, MutableRef } from "effect";
+import { TEST_ROOT_KEYS } from "@repo/backend/test/vault";
+import { Array as Arr, Effect, MutableRef } from "effect";
+import { Base64 } from "effect/encoding";
 
 vi.mock("@convex-dev/agent", async (load) => {
   const actual = await load<typeof import("@convex-dev/agent")>();
@@ -26,43 +32,26 @@ vi.mock("@convex-dev/agent", async (load) => {
 });
 
 const NOW = Date.UTC(2026, 8, 27, 12);
-/** A budget that covers every turn of these tests, however many there are. */
-const UNLIMITED = Number.MAX_SAFE_INTEGER;
 const seal = Ref.getFunctionReference(refs.internal.nina.sealed.seal);
 const recordFailure = Ref.getFunctionReference(
   refs.internal.nina.sealed.recordFailure
 );
 
-/**
- * Makes every write of a seal at one of `orders` fail, and passes every other write
- * through. The calls the fixture made before are forgotten, so a test counts the
- * writes of its seals only.
- */
-async function failSealsAt(orders: readonly number[]) {
-  const actual =
-    await vi.importActual<typeof import("@convex-dev/agent")>(
-      "@convex-dev/agent"
-    );
-  vi.mocked(saveMessages).mockClear();
-  vi.mocked(saveMessages).mockImplementation((ctx, component, args) =>
-    Arr.contains(orders, args.order)
-      ? Promise.reject(new Error("The seal is broken for this test"))
-      : actual.saveMessages(ctx, component, args)
-  );
-}
+/** The messages that `saveMessages` takes, typed by the Agent. */
+type Messages = Parameters<typeof saveMessages>[2]["messages"];
 
 /** Adds `count` tool steps, each with an output of `size` characters, at an order. */
-function toolSteps(count: number, size: number, order: number) {
+function toolSteps(count: number, size: number, order: number): Messages {
   return Arr.flatMap(
     Arr.makeBy(count, (step) => step),
-    (step) => {
+    (step): Messages => {
       const toolCallId = `drain-${order}-${step}`;
       return [
         {
-          role: "assistant" as const,
+          role: "assistant",
           content: [
             {
-              type: "tool-call" as const,
+              type: "tool-call",
               toolCallId,
               toolName: "nakafa",
               input: { query: `step ${step}` },
@@ -70,13 +59,13 @@ function toolSteps(count: number, size: number, order: number) {
           ],
         },
         {
-          role: "tool" as const,
+          role: "tool",
           content: [
             {
-              type: "tool-result" as const,
+              type: "tool-result",
               toolCallId,
               toolName: "nakafa",
-              output: { type: "text" as const, value: "x".repeat(size) },
+              output: { type: "text", value: "x".repeat(size) },
             },
           ],
         },
@@ -92,6 +81,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.mocked(saveMessages).mockReset();
+  vi.unstubAllEnvs();
   vi.useRealTimers();
 });
 
@@ -124,6 +114,22 @@ describe("Nina drain seals settled turns within a byte budget", () => {
     ).toEqual([0]);
   });
 
+  it("counts a failed seal as one reserve, so the run stops before a seal its budget cannot fit", async () => {
+    const f = await createNinaTest({ history: 3, now: NOW });
+    await failSealsAt([0]);
+
+    // The failed seal costs one reserve, so a second reserve does not fit the budget.
+    await drainIn(f, 2 * SEAL_RESERVE_BYTES - 1);
+
+    expect(
+      Arr.map(await settled(f.t), (turn) => [turn.sealAttempts, turn.sealed])
+    ).toEqual([
+      [1, false],
+      [undefined, false],
+      [undefined, false],
+    ]);
+  });
+
   it("seals every settled turn that holds plain rows when the budget covers them", async () => {
     const f = await createNinaTest({ history: 3, now: NOW });
 
@@ -148,6 +154,43 @@ describe("Nina drain seals settled turns within a byte budget", () => {
     ]);
   });
 
+  it("reads the candidates a page at a time, and seals the turns of every page", async () => {
+    const f = await createNinaTest({ history: 11, now: NOW });
+
+    await drainIn(f, UNLIMITED);
+
+    expect(Arr.map(await settled(f.t), (turn) => turn.sealed)).toEqual(
+      Arr.makeBy(11, () => true)
+    );
+  });
+
+  it("does nothing when no settled turn holds plain rows", async () => {
+    const f = await createNinaTest({ now: NOW });
+
+    await drainIn(f, UNLIMITED);
+
+    expect(await settled(f.t)).toEqual([]);
+    expect(MutableRef.get(logged)).toEqual([]);
+  });
+
+  it("seals a turn of the longest shape within the reserve of one seal", async () => {
+    const f = await createNinaTest({ history: [{ steps: 0 }], now: NOW });
+    const turn = await earlierTurnIn(f.t);
+    await f.t.mutation(async (ctx) => {
+      await saveMessages(ctx, components.nina, {
+        messages: toolSteps(20, 24_000, turn.order),
+        order: turn.order,
+        threadId: f.threadId,
+      });
+    });
+
+    const cost = await f.t.mutation(seal, { turnId: turn._id });
+
+    expect(cost.bytes).toBeLessThanOrEqual(SEAL_RESERVE_BYTES);
+  });
+});
+
+describe("Nina drain keeps a broken turn from holding the turns behind it", () => {
   it("counts a failed seal on its turn and logs it, and seals the turns behind it", async () => {
     const f = await createNinaTest({ history: 3, now: NOW });
     const before = await storedRowsIn(f.t, f.threadId, []);
@@ -209,19 +252,45 @@ describe("Nina drain seals settled turns within a byte budget", () => {
     expect(MutableRef.get(logged)).toHaveLength(SEAL_TRIES);
   });
 
-  it("stops a run after SEAL_FAILURES_PER_RUN failed seals, and leaves the turns behind them to a later run", async () => {
-    const turns = SEAL_FAILURES_PER_RUN + 2;
+  it("holds a turn that always fails after SEAL_TRIES runs, and seals the turn behind it in the next run", async () => {
+    const f = await createNinaTest({ history: 2, now: NOW });
+    await failSealsAt([0]);
+    // The budget fits one failed seal and no second one, as the production budget does.
+    const budget = 2 * SEAL_RESERVE_BYTES - 1;
+
+    for (let run = 0; run < SEAL_TRIES; run += 1) {
+      await drainIn(f, budget);
+    }
+
+    expect(
+      Arr.map(await settled(f.t), (turn) => [turn.hold, turn.sealed])
+    ).toEqual([
+      ["failedAttempts", false],
+      [undefined, false],
+    ]);
+
+    await drainIn(f, budget);
+
+    const turns = await settled(f.t);
+    expect(turns[0]).toMatchObject({
+      hold: "failedAttempts",
+      sealAttempts: SEAL_TRIES,
+      sealed: false,
+    });
+    expect(turns[1]).toMatchObject({ sealed: true });
+  });
+
+  it("does not stop a run at any number of failed seals, and seals the turns behind them", async () => {
+    const turns = 6;
+    const broken = Arr.makeBy(turns - 1, (order) => order);
     const f = await createNinaTest({ history: turns, now: NOW });
-    await failSealsAt(Arr.makeBy(turns, (order) => order));
+    await failSealsAt(broken);
 
     await drainIn(f, UNLIMITED);
 
     expect(
-      Arr.map(await settled(f.t), (turn) => turn.sealAttempts ?? 0)
-    ).toEqual([
-      ...Arr.makeBy(SEAL_FAILURES_PER_RUN, () => 1),
-      ...Arr.makeBy(turns - SEAL_FAILURES_PER_RUN, () => 0),
-    ]);
+      Arr.map(await settled(f.t), (turn) => [turn.sealAttempts, turn.sealed])
+    ).toEqual([...Arr.map(broken, () => [1, false]), [undefined, true]]);
   });
 
   it("holds the turns whose chat is gone, so the drain passes them by", async () => {
@@ -238,26 +307,7 @@ describe("Nina drain seals settled turns within a byte budget", () => {
     ]);
   });
 
-  it("does nothing when no settled turn holds plain rows", async () => {
-    const f = await createNinaTest({ now: NOW });
-
-    await drainIn(f, UNLIMITED);
-
-    expect(await settled(f.t)).toEqual([]);
-    expect(MutableRef.get(logged)).toEqual([]);
-  });
-
-  it("reads the candidates a page at a time, and seals the turns of every page", async () => {
-    const f = await createNinaTest({ history: 11, now: NOW });
-
-    await drainIn(f, UNLIMITED);
-
-    expect(Arr.map(await settled(f.t), (turn) => turn.sealed)).toEqual(
-      Arr.makeBy(11, () => true)
-    );
-  });
-
-  it("logs the cause of each failed seal by its error tag, its error name, or its value", async () => {
+  it("logs the cause of each failed seal as its error tag or name, and as unknown for a value that is not an error", async () => {
     const f = await createNinaTest({ history: 3, now: NOW });
     const actual =
       await vi.importActual<typeof import("@convex-dev/agent")>(
@@ -323,19 +373,100 @@ describe("Nina drain seals settled turns within a byte budget", () => {
     expect(await count(f.turnId)).toBeNull();
   });
 
-  it("seals a turn of the longest shape within the reserve of one seal", async () => {
-    const f = await createNinaTest({ history: [{ steps: 0 }], now: NOW });
-    const turn = await earlierTurnIn(f.t);
-    await f.t.mutation(async (ctx) => {
-      await saveMessages(ctx, components.nina, {
-        messages: toolSteps(20, 24_000, turn.order),
-        order: turn.order,
-        threadId: f.threadId,
-      });
-    });
+  it("counts a turn whose learner's key the ring cannot open as that turn's failure, and never stops the run", async () => {
+    const f = await createNinaTest({ history: 3, now: NOW });
+    // The learner's key is made under the current root before the ring changes. The ring
+    // then holds that root with other bytes, so the key does not open and no root is missing.
+    await f.t.mutation((ctx) =>
+      Effect.runPromise(
+        ensureLearnerKeys(f.identity.userId).pipe(
+          Effect.asVoid,
+          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+        )
+      )
+    );
+    vi.stubEnv(
+      "VAULT_ROOT_KEYS",
+      `test:${Base64.encode(new Uint8Array(32).fill(9))}`
+    );
 
-    const cost = await f.t.mutation(seal, { turnId: turn._id });
+    await drainIn(f, UNLIMITED);
 
-    expect(cost.bytes).toBeLessThanOrEqual(SEAL_RESERVE_BYTES);
+    const turns = await settled(f.t);
+    expect(Arr.map(turns, (turn) => [turn.sealAttempts, turn.sealed])).toEqual([
+      [1, false],
+      [1, false],
+      [1, false],
+    ]);
+    expect(MutableRef.get(logged)).toEqual(
+      Arr.map(turns, (turn) => [
+        "Nina could not seal a settled turn",
+        expect.objectContaining({ cause: "VaultError", turnId: turn._id }),
+      ])
+    );
+  });
+
+  it("stops the run at once when the ring lacks the root key that a learner key names, with one log and no failure on any turn", async () => {
+    const f = await createNinaTest({ history: 3, now: NOW });
+    // The learner's key is made under the current root, and the ring then holds only the
+    // retired root, so the root that the learner's key names is missing from the environment.
+    await f.t.mutation((ctx) =>
+      Effect.runPromise(
+        ensureLearnerKeys(f.identity.userId).pipe(
+          Effect.asVoid,
+          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+        )
+      )
+    );
+    // The fixture writes its own rows with the Agent, so the spy counts the drain's writes only.
+    vi.mocked(saveMessages).mockClear();
+    vi.stubEnv("VAULT_ROOT_KEYS", TEST_ROOT_KEYS.retired);
+
+    await drainIn(f, UNLIMITED);
+
+    // The seal fails before it writes anything, and the run never reaches the next turn.
+    expect(vi.mocked(saveMessages)).not.toHaveBeenCalled();
+    expect(
+      Arr.map(await settled(f.t), (turn) => [turn.sealAttempts, turn.sealed])
+    ).toEqual([
+      [undefined, false],
+      [undefined, false],
+      [undefined, false],
+    ]);
+    expect(MutableRef.get(logged)).toEqual([
+      [
+        "Nina stopped sealing settled turns: the key ring cannot be read",
+        expect.objectContaining({ cause: "SealUnavailable" }),
+      ],
+    ]);
+  });
+
+  it("stops the run at once when the key ring cannot be read, with one log and no failure on any turn", async () => {
+    const f = await createNinaTest({ history: 3, now: NOW });
+    // The fixture writes its own rows with the Agent, so the spy counts the drain's writes only.
+    vi.mocked(saveMessages).mockClear();
+    vi.stubEnv("VAULT_ROOT_KEYS", "");
+
+    await drainIn(f, UNLIMITED);
+
+    // The seal fails before it writes anything, and the run never reaches the next turn.
+    expect(vi.mocked(saveMessages)).not.toHaveBeenCalled();
+    expect(
+      Arr.map(await settled(f.t), (turn) => [
+        turn.sealAttempts,
+        turn.hold,
+        turn.sealed,
+      ])
+    ).toEqual([
+      [undefined, undefined, false],
+      [undefined, undefined, false],
+      [undefined, undefined, false],
+    ]);
+    expect(MutableRef.get(logged)).toEqual([
+      [
+        "Nina stopped sealing settled turns: the key ring cannot be read",
+        expect.objectContaining({ cause: "SealUnavailable" }),
+      ],
+    ]);
   });
 });

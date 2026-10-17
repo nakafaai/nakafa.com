@@ -1,3 +1,4 @@
+import type { NinaInput } from "@repo/backend/confect/nina/turns.spec";
 import type { LearnerKeys } from "@repo/backend/confect/vault/keys";
 import type { VaultField } from "@repo/backend/confect/vault/schema";
 import { blindText } from "@repo/backend/confect/vault/text";
@@ -20,7 +21,7 @@ const FINGERPRINT_FIELD = {
 export const requestFingerprint = Effect.fn("nina.fingerprint")(function* (
   keys: LearnerKeys,
   chatId: string | null,
-  input: unknown
+  input: typeof NinaInput.Type
 ) {
   const text = yield* Schema.encodeEffect(JsonTextSchema)([chatId, input]);
   return yield* blindText(keys, FINGERPRINT_FIELD, text);
