@@ -11,9 +11,8 @@ import {
 const SECURE_NAME = "__Secure-better-auth.session_token";
 const PLAIN_NAME = "better-auth.session_token";
 
-/** The origins that the shared sign-in trusts for one request from `origin` to `site`. */
-function trustedFor(site: string, origin: string | undefined) {
-  const headers = origin === undefined ? {} : { origin };
+/** The origins that the shared sign-in trusts for one POST to `site` with these headers. */
+function trustedFor(site: string, headers: Record<string, string> = {}) {
   return readSchoolTrustedOrigins(new URL(site))(
     new Request("https://nakafa.com/api/auth/sign-out", {
       headers,
@@ -25,7 +24,7 @@ function trustedFor(site: string, origin: string | undefined) {
 describe("school trusted origins", () => {
   it("trusts the origin of a school host of a production site", () => {
     expect(
-      trustedFor("https://nakafa.com", "https://harapan.nakafa.com")
+      trustedFor("https://nakafa.com", { origin: "https://harapan.nakafa.com" })
     ).toEqual(["https://harapan.nakafa.com"]);
   });
 
@@ -33,7 +32,9 @@ describe("school trusted origins", () => {
     "refuses the reserved host %s, which the school router refuses too",
     (label) => {
       expect(
-        trustedFor("https://nakafa.com", `https://${label}.nakafa.com`)
+        trustedFor("https://nakafa.com", {
+          origin: `https://${label}.nakafa.com`,
+        })
       ).toEqual([]);
     }
   );
@@ -46,7 +47,9 @@ describe("school trusted origins", () => {
     "-nf.nakafa.com",
     "xn--nf.nakafa.com",
   ])("refuses a host that is not a school label: %s", (host) => {
-    expect(trustedFor("https://nakafa.com", `https://${host}`)).toEqual([]);
+    expect(
+      trustedFor("https://nakafa.com", { origin: `https://${host}` })
+    ).toEqual([]);
   });
 
   it.each([
@@ -54,7 +57,7 @@ describe("school trusted origins", () => {
     "https://harapan.nakafa.com/",
     "https://harapan.nakafa.com:443",
   ])("refuses an origin that a browser would not write: %s", (origin) => {
-    expect(trustedFor("https://nakafa.com", origin)).toEqual([]);
+    expect(trustedFor("https://nakafa.com", { origin })).toEqual([]);
   });
 
   it.each([
@@ -63,39 +66,97 @@ describe("school trusted origins", () => {
     "https://evilnakafa.com",
     "https://harapan.nakafa.com.evil.com",
   ])("refuses an origin that is not a school of the site: %s", (origin) => {
-    expect(trustedFor("https://nakafa.com", origin)).toEqual([]);
+    expect(trustedFor("https://nakafa.com", { origin })).toEqual([]);
   });
 
   it("trusts a school host on the site's own port alone when the site is not local", () => {
     expect(
-      trustedFor("https://nakafa.com:8443", "https://harapan.nakafa.com:8443")
+      trustedFor("https://nakafa.com:8443", {
+        origin: "https://harapan.nakafa.com:8443",
+      })
     ).toEqual(["https://harapan.nakafa.com:8443"]);
     expect(
-      trustedFor("https://nakafa.com:8443", "https://harapan.nakafa.com")
+      trustedFor("https://nakafa.com:8443", {
+        origin: "https://harapan.nakafa.com",
+      })
     ).toEqual([]);
   });
 
   it("keeps a local site's own host and its school hosts on any port", () => {
     expect(
-      trustedFor("http://localhost:3000", "http://localhost:3400")
+      trustedFor("http://localhost:3000", { origin: "http://localhost:3400" })
     ).toEqual(["http://localhost:3400"]);
     expect(
-      trustedFor("http://localhost:3000", "http://harapan.localhost:3400")
+      trustedFor("http://localhost:3000", {
+        origin: "http://harapan.localhost:3400",
+      })
     ).toEqual(["http://harapan.localhost:3400"]);
   });
 
   it("refuses a local school host under another protocol", () => {
     expect(
-      trustedFor("http://localhost:3000", "https://harapan.localhost:3400")
+      trustedFor("http://localhost:3000", {
+        origin: "https://harapan.localhost:3400",
+      })
     ).toEqual([]);
   });
 
-  it("trusts nothing for a request without an origin, an origin that is not a URL, or no request", () => {
-    expect(trustedFor("https://nakafa.com", undefined)).toEqual([]);
-    expect(trustedFor("https://nakafa.com", "null")).toEqual([]);
+  it("trusts nothing for a request with no Origin or Referer, an origin that is not a URL, or no request", () => {
+    expect(trustedFor("https://nakafa.com")).toEqual([]);
+    expect(trustedFor("https://nakafa.com", { origin: "null" })).toEqual([]);
     expect(readSchoolTrustedOrigins(new URL("https://nakafa.com"))()).toEqual(
       []
     );
+  });
+});
+
+describe("school trusted origins from the Referer", () => {
+  it("trusts the origin of the Referer of a request with no Origin, as Better Auth checks it", () => {
+    expect(
+      trustedFor("https://nakafa.com", {
+        referer: "https://harapan.nakafa.com/classes",
+      })
+    ).toEqual(["https://harapan.nakafa.com"]);
+  });
+
+  it("reads the Referer when the Origin header is empty, as Better Auth does", () => {
+    expect(
+      trustedFor("https://nakafa.com", {
+        origin: "",
+        referer: "https://harapan.nakafa.com/classes",
+      })
+    ).toEqual(["https://harapan.nakafa.com"]);
+  });
+
+  it("prefers the Origin header to the Referer", () => {
+    expect(
+      trustedFor("https://nakafa.com", {
+        origin: "https://harapan.nakafa.com",
+        referer: "https://cas.nakafa.com/",
+      })
+    ).toEqual(["https://harapan.nakafa.com"]);
+  });
+
+  it("refuses the Referer of a reserved service host", () => {
+    expect(
+      trustedFor("https://nakafa.com", { referer: "https://cas.nakafa.com/" })
+    ).toEqual([]);
+  });
+
+  it("refuses a Referer that is not a URL", () => {
+    expect(
+      trustedFor("https://nakafa.com", {
+        referer: "harapan.nakafa.com/classes",
+      })
+    ).toEqual([]);
+  });
+
+  it("keeps a local site's school hosts on any port for the Referer", () => {
+    expect(
+      trustedFor("http://localhost:3000", {
+        referer: "http://harapan.localhost:3400/classes",
+      })
+    ).toEqual(["http://harapan.localhost:3400"]);
   });
 });
 

@@ -49,9 +49,18 @@ finds the right data.
   trusted origins with each request (`trustedOrigins` as a function in
   `better-auth` 1.6.33, `dist/context/helpers.mjs` lines 76 to 82, and
   `dist/api/middlewares/origin-check.mjs` line 108), so the answer holds the
-  request's own origin only when the rule trusts it (`confect/auth/host.ts`). A
-  callback URL on a school host is therefore trusted only for a request from that
-  host. No sign-in flow names another school host yet.
+  origin that Better Auth checks for the request only when the rule trusts it
+  (`confect/auth/host.ts`). That origin is the Origin header or, when the header
+  is empty, the origin of the Referer header (`origin-check.mjs` line 98). A
+  browser sends an Origin with every POST: the Fetch standard appends one to
+  every request whose method is neither GET nor HEAD (section 3.2, step 4), and
+  MDN lists same-origin POST requests among those that carry it. A `null` Origin
+  is refused before the Referer is read, because the header is not empty. The
+  Referer therefore answers only a client that is not a browser, and such a
+  client already holds the session cookie that the check protects. A school host
+  and the base host both pass the check for a request with no Origin. A callback
+  URL on a school host is trusted only for a request from that host. No sign-in
+  flow names another school host yet.
 - The proxy reads the host, the cookie, and Accept-Language. The map from host to
   school is configuration, so a request never reads the database to find its
   school. A request that reads nothing keeps the target of under 1 ms, measured at

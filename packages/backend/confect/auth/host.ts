@@ -57,18 +57,45 @@ function isSchoolOrigin(origin: string, siteUrl: URL) {
 }
 
 /**
+ * The origin that Better Auth checks for a request: its Origin header, or, when
+ * that header is empty, the origin of its Referer header (`validateOrigin` in
+ * `better-auth/dist/api/middlewares/origin-check.mjs`, line 98). A browser sends
+ * an Origin with every POST, so the Referer answers only a client that is not a
+ * browser (ADR 0026).
+ */
+function readCheckedOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  if (origin) {
+    return Option.some(origin);
+  }
+  return Option.flatMap(
+    Option.fromNullishOr(request.headers.get("referer")),
+    readRefererOrigin
+  );
+}
+
+/** The origin of a Referer that parses as a URL, and none for any other text. */
+function readRefererOrigin(referer: string) {
+  if (!URL.canParse(referer)) {
+    return Option.none();
+  }
+  return Option.some(new URL(referer).origin);
+}
+
+/**
  * The origins that the shared sign-in trusts for one request, for Better Auth's
  * `trustedOrigins` (ADR 0009, ADR 0026). Better Auth calls it with the request,
- * and once with no request at start, so the answer holds the request's own
- * origin only when the sign-in trusts that origin (`isSchoolOrigin`), and nothing
- * otherwise. A script on a service host such as `cas.nakafa.com` therefore fails
- * the origin check of a request that carries the shared session cookie.
+ * and once with no request at start, so the answer holds the origin that Better
+ * Auth checks for the request only when the sign-in trusts that origin
+ * (`isSchoolOrigin`), and nothing otherwise. A script on a service host such as
+ * `cas.nakafa.com` therefore fails the origin check of a request that carries the
+ * shared session cookie.
  */
 export function readSchoolTrustedOrigins(siteUrl: URL) {
   return (request?: Request): string[] =>
     Option.toArray(
       Option.filter(
-        Option.fromNullishOr(request?.headers.get("origin")),
+        Option.flatMap(Option.fromNullishOr(request), readCheckedOrigin),
         (origin) => isSchoolOrigin(origin, siteUrl)
       )
     );

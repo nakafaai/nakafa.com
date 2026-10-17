@@ -255,19 +255,27 @@ describe("auth/runtime", () => {
                 if (typeof trustedOrigins !== "function") {
                   return { rule: "static" };
                 }
-                const answerFor = (origin: string) =>
+                const answerFor = (headers: Record<string, string>) =>
                   Effect.promise(async () =>
                     trustedOrigins(
                       new Request("https://nakafa.com/api/auth/sign-out", {
-                        headers: { origin },
+                        headers,
                         method: "POST",
                       })
                     )
                   );
                 return {
                   rule: "request",
-                  cas: yield* answerFor("https://cas.nakafa.com"),
-                  harapan: yield* answerFor("https://harapan.nakafa.com"),
+                  cas: yield* answerFor({ origin: "https://cas.nakafa.com" }),
+                  harapan: yield* answerFor({
+                    origin: "https://harapan.nakafa.com",
+                  }),
+                  refererCas: yield* answerFor({
+                    referer: "https://cas.nakafa.com/",
+                  }),
+                  refererHarapan: yield* answerFor({
+                    referer: "https://harapan.nakafa.com/classes",
+                  }),
                 };
               }).pipe(
                 Effect.provide(
@@ -281,6 +289,8 @@ describe("auth/runtime", () => {
           rule: "request",
           cas: [],
           harapan: ["https://harapan.nakafa.com"],
+          refererCas: [],
+          refererHarapan: ["https://harapan.nakafa.com"],
         });
       }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
   );
