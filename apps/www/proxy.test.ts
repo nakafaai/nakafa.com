@@ -52,6 +52,7 @@ function expectHardNotFound(response: Response, locale: string) {
   expect(response.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
     locale
   );
+  expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
   expectNoLocaleProxy();
 }
 /**
@@ -198,15 +199,6 @@ describe("proxy", () => {
       "http://localhost:3000/en/search"
     );
   });
-  it("rewrites a school host into the school tree before the public routes read it", async () => {
-    const response = await proxy(
-      new NextRequest("https://harapan.nakafa.com/classes")
-    );
-
-    expect(mockLocaleRouting.activeMiddleware).toHaveBeenCalledOnce();
-    expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expect(runtimeMocks.readRedirect).not.toHaveBeenCalled();
-  });
   it.each(redirectCases)("permanently redirects %s", async (...args) => {
     const [source, target, init] = args;
     const sourceUrl = new URL(source, "http://localhost:3000");
@@ -222,17 +214,23 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe(targetUrl.toString());
     expectMigrationAsked(sourceUrl.pathname);
   });
-  it("answers a temporary redirect with the status of its rule", async () => {
-    const destination = "/en/try-out/indonesia/snbt/2027/set-1";
-    runtimeMocks.readRedirect.mockReturnValueOnce(
-      Effect.succeed({ destination, status: 307 })
-    );
-    const response = await requestProxy("/en/try-out/indonesia/snbt/set-1");
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(
-      `http://localhost:3000${destination}`
-    );
-  });
+  it.each([
+    ["127.0.0.1:3000", "http://127.0.0.1:3000"],
+    ["127.0.0.1", "http://127.0.0.1"],
+  ])(
+    "answers a temporary redirect on the visitor's host and port (Host %s)",
+    async (host, origin) => {
+      const destination = "/en/try-out/indonesia/snbt/2027/set-1";
+      runtimeMocks.readRedirect.mockReturnValueOnce(
+        Effect.succeed({ destination, status: 307 })
+      );
+      const response = await requestProxy("/en/try-out/indonesia/snbt/set-1", {
+        headers: { host },
+      });
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(`${origin}${destination}`);
+    }
+  );
   it("tells the migration resolver when a URL carries a try-out attempt", async () => {
     const pathname = "/id/try-out/indonesia/snbt/2027/set-1/bahasa-inggris";
     await requestProxy(`${pathname}?attemptId=attempt-1`);

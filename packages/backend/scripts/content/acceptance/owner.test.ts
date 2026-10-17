@@ -1,6 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { createAcceptanceOwner } from "@repo/backend/scripts/content/acceptance/owner";
 import { ownerAddress } from "@repo/backend/scripts/content/acceptance/school";
 import {
@@ -39,9 +40,6 @@ const CreatedAccount = Schema.fromJsonString(
 );
 const Claim = Schema.fromJsonString(
   Schema.Struct({ cursor: Schema.NullOr(Schema.String), userId: Schema.String })
-);
-const Cookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
 );
 
 /** The text one Convex command prints, as the local backend answers it. */
@@ -120,7 +118,7 @@ describe("acceptance owner", () => {
         ).toEqual({ cursor: null, userId: "app-user-1" });
         const cookie = yield* fs
           .readFileString(`${root}/owner.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(Cookie)));
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         expect(cookie.name).toBe("better-auth.session_token");
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );

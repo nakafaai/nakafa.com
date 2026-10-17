@@ -5,11 +5,12 @@ import type {
   ExamsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import {
-  type DatabaseReader,
+  DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { createDocument } from "@repo/backend/confect/editor/create";
-import { snapshotOf, stepsAfter } from "@repo/backend/confect/editor/store";
+import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
+import { snapshotOf, stepsThrough } from "@repo/backend/confect/editor/store";
 import { QuestionHistoryLong } from "@repo/backend/confect/exams/errors";
 import { placeQuestion } from "@repo/backend/confect/exams/questions/place";
 import { Array as Arr, Effect } from "effect";
@@ -18,23 +19,38 @@ import { Array as Arr, Effect } from "effect";
 type ExamCopy = Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">;
 
 /**
- * The steps of a document after one version, read in one bounded read through the
- * store. The copy takes the whole history in that read: a history the read does not
- * finish is refused and writes nothing, so the copy never loops over the step log.
+ * The version of a prompt, the number of steps it has accepted. It is read from the
+ * prompt's small document row, so the copy knows how many steps follow its snapshot.
+ */
+const headOf = Effect.fn("exams.question.head")(function* (
+  documentId: GenericId.GenericId<"editorDocuments">
+) {
+  const document = yield* (yield* DatabaseReader)
+    .table("editorDocuments")
+    .get(documentId)
+    .pipe(Effect.orDie);
+  return document.head;
+});
+
+/**
+ * The steps of a document after one version, up to its head, through the store. A
+ * history longer than one page of steps (`STEP_PAGE_STEPS`, the bound of `since`) is
+ * refused before any step is read, so the copy reads no more than one page and writes
+ * nothing.
  */
 const historyAfter = Effect.fn("exams.question.history")(function* (
   documentId: GenericId.GenericId<"editorDocuments">,
-  version: number
+  version: number,
+  head: number
 ): Effect.fn.Return<
   readonly EditorStepsDoc[],
   QuestionHistoryLong,
   DatabaseReader
 > {
-  const read = yield* stepsAfter(documentId, version);
-  if (!read.done) {
+  if (head - version > STEP_PAGE_STEPS) {
     return yield* new QuestionHistoryLong();
   }
-  return read.steps;
+  return yield* stepsThrough(documentId, version, head);
 });
 
 /**
@@ -83,7 +99,8 @@ export const copyQuestion = Effect.fn("exams.question.copy")(function* (
   original: ExamQuestionsDoc
 ) {
   const snapshot = yield* snapshotOf(original.prompt);
-  const steps = yield* historyAfter(original.prompt, snapshot.version);
+  const head = yield* headOf(original.prompt);
+  const steps = yield* historyAfter(original.prompt, snapshot.version, head);
   const prompt = yield* createDocument({
     scope: exam.scope,
     tenantId: exam.tenantId,

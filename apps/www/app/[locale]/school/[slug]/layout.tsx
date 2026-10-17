@@ -10,6 +10,17 @@ import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
+/**
+ * The proxy decides the status of a school page before it streams: a missing
+ * school, a viewer who is not a member, and one the school does not admit answer
+ * 404 there (`lib/routing/school/refusal.ts`, ADR 0026). This layout answers the
+ * same viewers with not found as well, for a request the proxy did not check, such
+ * as a client navigation. Its not-found call runs after the static shell of the
+ * route, which is sent with status 200 first, so that answer shows the not-found
+ * page with a 200 status.
+ */
+export const instant = false;
+
 /** A viewer the school does not list gets no school, and the page answers not found. */
 const notInSchool = () => Effect.succeedNone;
 

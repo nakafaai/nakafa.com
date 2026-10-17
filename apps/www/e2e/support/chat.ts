@@ -4,17 +4,33 @@ import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { trackChanges } from "@/e2e/support/changes";
-import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
+import {
+  type DeclineLocale,
+  declineUsageData,
+  seedAnalyticsConsent,
+} from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
+/** The new chat page of a language of the site. */
+export const chatPathOf = (locale: DeclineLocale) => `/${locale}/chat`;
 /** The new chat page of the English site. */
-export const CHAT_PATH = "/en/chat";
+export const CHAT_PATH = chatPathOf("en");
 /** A lesson, where Nina's sheet opens beside the page. */
 export const LESSON_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";
 /** How many chats one page of a list loads. */
 export const PAGE = CHAT_LIST_PAGE_SIZE;
+/**
+ * The part of a chat page that holds the conversation, beside the sidebar. The
+ * new chat page and the page of the chat it opens share it, and the page the
+ * learner left stays in it, hidden, until React renders that page again.
+ * `promptWith` counts only the bubbles a reader can see, so the left page
+ * never counts.
+ */
+export const onThePage = (page: Page) => page.locator("main main");
+/** The address of a chat that a page moves to once its first prompt is admitted. */
+export const OPENED_CHAT = /\/en\/chat\/[a-z0-9]+$/;
 /**
  * The Convex names of the functions the chat pages call. The refs module
  * cannot be imported here, because it pulls in packages that Node does not
@@ -24,11 +40,13 @@ const LIST_QUERY = "chats/queries:getOwnChats";
 export const START = "nina/turns:start";
 export const RENAME = "chats/mutations:updateChatTitle";
 export const DELETE = "chats/mutations:deleteChat";
+/** The mutation the composer of a profile's posts calls to write a post. */
+const POST_CREATE = "posts/mutations:create";
 /** The mutation the share dialog calls to turn sharing on, and the query it reads the token with. */
 const SHARE = "chats/mutations:updateChatVisibility";
 export const SHARE_TOKEN_QUERY = "chats/queries:getShareToken";
 /** What the pages say when a change fails. */
-export const FAILED = "We could not complete this action. Please try again.";
+export const FAILED = "We could not complete this action.";
 
 /** A call to the backend that did not succeed. */
 class ConvexCallError extends Schema.TaggedError<ConvexCallError>()(
@@ -133,6 +151,10 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
     deleteChat: Effect.fn("NakafaE2E.deleteChat")(function* (chatId: string) {
       yield* call("mutation", DELETE, { chatId });
     }),
+    /** Writes a post of the learner, as the composer of their profile does, so a test can fill a list quickly. */
+    writePost: Effect.fn("NakafaE2E.writePost")(function* (text: string) {
+      yield* call("mutation", POST_CREATE, { text });
+    }),
     /**
      * Adds `count` chats to the list, after the chats it has. They share the
      * thread of a chat that was started, so each can be opened and deleted,
@@ -213,20 +235,22 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
 /**
  * Signs a synthetic learner in and opens the new chat page, where it waits
  * until the page is signed in. It returns the tracker of the changes the page
- * sends from then on, and the learner as the backend sees them.
+ * sends from then on, and the learner as the backend sees them. The page is
+ * the English one unless `locale` names another language of the site.
  */
 export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   page: Page,
-  baseURL: string
+  baseURL: string,
+  locale: DeclineLocale = "en"
 ) {
   const changes = yield* trackChanges(page, [LIST_QUERY]);
   yield* seedAnalyticsConsent(page, "denied");
   yield* signInLearner(page.context(), baseURL);
-  yield* Effect.promise(() => page.goto(CHAT_PATH));
+  yield* Effect.promise(() => page.goto(chatPathOf(locale)));
 
   // The server took the learner's choice, so the page was signed in and its
   // connection to the backend is open.
-  yield* declineUsageData(page, changes);
+  yield* declineUsageData(page, changes, locale);
   const learner = yield* learnerOf(page, baseURL, changes.origin);
   return { changes, learner };
 });

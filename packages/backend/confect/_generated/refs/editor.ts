@@ -1,11 +1,10 @@
 import { GroupSpec, Refs, Spec } from "@confect/core";
 import editor_documents from "../../editor/documents.spec";
-import editor_snapshots from "../../editor/snapshots.spec";
 import editor_steps from "../../editor/steps.spec";
 
 const spec: Spec.Spec<{
-  readonly editor: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "editor", never, GroupSpec.NamedAt<typeof editor_documents, "documents"> | GroupSpec.NamedAt<typeof editor_snapshots, "snapshots"> | GroupSpec.NamedAt<typeof editor_steps, "steps">>, "editor">;
-}> = Spec.make().addAt("editor", GroupSpec.makeAt("editor").addGroupAt("documents", editor_documents).addGroupAt("snapshots", editor_snapshots).addGroupAt("steps", editor_steps));
+  readonly editor: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "editor", never, GroupSpec.NamedAt<typeof editor_documents, "documents"> | GroupSpec.NamedAt<typeof editor_steps, "steps">>, "editor">;
+}> = Spec.fromGroups({ ["editor"]: GroupSpec.addGroupsAt(GroupSpec.make(), { ["documents"]: editor_documents, ["steps"]: editor_steps }) }) as typeof spec;
 
 const refs: Refs.FromSpec<typeof spec> = Refs.make(spec);
 

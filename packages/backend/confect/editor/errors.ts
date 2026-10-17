@@ -2,25 +2,6 @@ import { refusal } from "@repo/backend/confect/tenancy/errors";
 import { Schema } from "effect";
 
 /**
- * Why the server refuses a snapshot: its version is no newer than the stored
- * snapshot (`stale`), it is past the head (`ahead`), or the snapshot rule does not
- * allow a snapshot yet (`notDue`).
- */
-const SnapshotReason = Schema.Literals(["ahead", "notDue", "stale"]);
-
-/** A snapshot the server refuses for the rule it breaks. It writes nothing. */
-export class SnapshotRefused extends Schema.TaggedError<SnapshotRefused>()(
-  "SnapshotRefused",
-  {
-    reason: SnapshotReason,
-    ...refusal(
-      "SNAPSHOT_REFUSED",
-      "The editor cannot save this version of the document now."
-    ),
-  }
-) {}
-
-/**
  * A batch whose client id belongs to another person's editor session. The server
  * writes nothing, so a co-editor cannot send steps under another editor's id.
  */
@@ -29,6 +10,19 @@ export class ClientTaken extends Schema.TaggedError<ClientTaken>()(
   refusal(
     "CLIENT_TAKEN",
     "This editor session belongs to another person. Open the document again."
+  )
+) {}
+
+/**
+ * The steps that the snapshot lacks are more than one read holds, so the document cannot
+ * be checked with this batch yet. A fold of those steps is already due, so the client sends
+ * the batch again when the fold has run (ADR 0028). The server writes nothing.
+ */
+export class FoldPending extends Schema.TaggedError<FoldPending>()(
+  "FoldPending",
+  refusal(
+    "FOLD_PENDING",
+    "The steps of this document are being folded. Send the batch again shortly."
   )
 ) {}
 

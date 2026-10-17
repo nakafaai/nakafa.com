@@ -50,6 +50,11 @@ export function NinaAskProvider({ children }: { children: ReactNode }) {
           Effect.sync(() =>
             latest.current.resolveAsk(id, receipt?.chatId ?? null)
           )
+        ),
+        // A defect ends the send without an answer. The ask is released with no
+        // chat, or it would hold Nina's one ask slot and the new-chat composer.
+        Effect.onError(() =>
+          Effect.sync(() => latest.current.resolveAsk(id, null))
         )
       )
     );

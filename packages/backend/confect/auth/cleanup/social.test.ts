@@ -3,6 +3,7 @@ import { afterEach, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { createDeletedUserTombstone } from "@repo/backend/confect/auth/deletion/tombstone";
 import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
+import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -208,7 +209,7 @@ it("deletes the learner's portrait with their memories, also one that a capture 
   expect(await owners()).toEqual([other.userId]);
 });
 
-it("deletes the records that keep a deleted memory for its Undo with the learner's memories, and keeps another learner's", async () => {
+it("deletes the records that keep a deleted memory for the restore window with the learner's memories, and keeps another learner's", async () => {
   vi.useFakeTimers();
   const now = Date.UTC(2026, 9, 10, 12);
   vi.setSystemTime(now);
@@ -306,5 +307,83 @@ it("deletes both directions of comment votes before their owning comment while k
     sharedVote: null,
   });
   await expect(cleanup()).resolves.toBe(false);
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+});
+
+it("removes the learner's likes on other posts with their counts, deletes the learner's posts with the likes others left, and keeps the rest", async () => {
+  const { t, owner, retained } = await createDeletedOwner("posts");
+  const seeded = await t.mutation(async (ctx) => {
+    const ownPost = await ctx.db.insert("posts", {
+      authorId: owner,
+      likeCount: 1,
+      text: "Removed post",
+    });
+    const sharedPost = await ctx.db.insert("posts", {
+      authorId: retained,
+      likeCount: 2,
+      text: "Retained post",
+    });
+    // A like on a post that is already gone must not stop the cleanup.
+    const gonePost = await ctx.db.insert("posts", {
+      authorId: retained,
+      likeCount: 0,
+      text: "Gone post",
+    });
+    await ctx.db.delete(gonePost);
+    await ctx.db.insert("postLikes", { postId: ownPost, userId: retained });
+    await ctx.db.insert("postLikes", { postId: sharedPost, userId: owner });
+    await ctx.db.insert("postLikes", { postId: sharedPost, userId: retained });
+    await ctx.db.insert("postLikes", { postId: gonePost, userId: owner });
+    return { gonePost, ownPost, sharedPost };
+  });
+  const cleanup = () =>
+    t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner });
+  while (await cleanup()) {
+    // Each pass deletes one batch of what is left.
+  }
+  expect(
+    await t.query(async (ctx) => ({
+      likes: await ctx.db.query("postLikes").collect(),
+      ownPost: await ctx.db.get(seeded.ownPost),
+      sharedPost: await ctx.db.get(seeded.sharedPost),
+    }))
+  ).toEqual({
+    likes: [
+      expect.objectContaining({ postId: seeded.sharedPost, userId: retained }),
+    ],
+    ownPost: null,
+    sharedPost: expect.objectContaining({ likeCount: 1 }),
+  });
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+});
+
+it("deletes the likes a learner's post collected a batch at a time, and deletes the post after the last of them", async () => {
+  const { t, owner, retained } = await createDeletedOwner("post-batches");
+  const others = POST_LIKE_CLEANUP_BATCH_SIZE + 1;
+  const postId = await t.mutation(async (ctx) => {
+    const id = await ctx.db.insert("posts", {
+      authorId: owner,
+      likeCount: others,
+      text: "Liked a lot",
+    });
+    for (let index = 0; index < others; index += 1) {
+      await ctx.db.insert("postLikes", { postId: id, userId: retained });
+    }
+    return id;
+  });
+  const cleanup = () =>
+    t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner });
+  const likes = () =>
+    t
+      .query((ctx) => ctx.db.query("postLikes").collect())
+      .then((rows) => rows.length);
+  await expect(cleanup()).resolves.toBe(true);
+  expect(await likes()).toBe(1);
+  expect(await t.query((ctx) => ctx.db.get("posts", postId))).not.toBeNull();
+  while (await cleanup()) {
+    // Each pass deletes one batch of what is left.
+  }
+  expect(await likes()).toBe(0);
+  expect(await t.query((ctx) => ctx.db.get("posts", postId))).toBeNull();
   await t.finishAllScheduledFunctions(vi.runAllTimers);
 });

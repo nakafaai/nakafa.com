@@ -6,6 +6,7 @@ import { documentAccess } from "@repo/backend/confect/editor/authority";
 import { createDocument } from "@repo/backend/confect/editor/create";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import spec from "@repo/backend/confect/editor/documents.spec";
+import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
 import {
   clientRecordOf,
   snapshotOf,
@@ -42,10 +43,10 @@ const create = FunctionImpl.make(
 );
 
 /**
- * Reads a document for its editor: its head, its snapshot, the steps after the
- * snapshot, one read's worth, and the editor session's own record. The editor reads
- * on with `steps:since` from the last version it received, so a long document takes
- * more than one read. The record answers only the session's own author.
+ * Reads a document for its editor: its snapshot, the steps after the snapshot, one
+ * read's worth, and the editor session's own record. The editor reads on with
+ * `steps:since` from the last version it received, so a long document takes more
+ * than one read. The record answers only the session's own author.
  */
 const open = FunctionImpl.make(
   databaseSchema,
@@ -55,13 +56,16 @@ const open = FunctionImpl.make(
     const document = yield* Document;
     const { appUser } = yield* requireAuth().pipe(Effect.orDie);
     const snapshot = yield* snapshotOf(document._id);
-    const { steps } = yield* stepsAfter(document._id, snapshot.version);
+    const steps = yield* stepsAfter(
+      document._id,
+      snapshot.version,
+      STEP_PAGE_STEPS
+    );
     const record = yield* clientRecordOf(document._id, clientId);
     return {
       client: clientView(
         Option.filter(record, (own) => own.author === appUser._id)
       ),
-      head: document.head,
       snapshot: { content: snapshot.content, version: snapshot.version },
       steps: Arr.map(steps, stepView),
     };

@@ -18,6 +18,7 @@ import {
   DrawerPopup,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import {
   type MouseEvent,
@@ -28,7 +29,6 @@ import {
   useState,
   useTransition,
 } from "react";
-import { toast } from "sonner";
 import { QuranInterpretationContext } from "@/components/shared/quran/interpretation/context";
 import { reportClientException } from "@/lib/analytics/client";
 import { httpLayer } from "@/lib/convex/http";
@@ -36,10 +36,10 @@ import { httpLayer } from "@/lib/convex/http";
 interface Props {
   appLocale: Ref.Args<typeof contentRelease.quran.tafsir>["appLocale"];
   children: ReactNode;
-  errorMessage: string;
+  errorMessage: ToastCopy;
   label: string;
   recoverSnapshot: () => Promise<void>;
-  refreshingMessage: string;
+  refreshingMessage: ToastCopy;
   snapshotId: string;
   surahNumber: number;
 }
@@ -100,10 +100,7 @@ export function QuranInterpretationControls({
       error: QuranInterpretationRequestError | QuranPublicationError
     ) =>
       Effect.sync(() => {
-        toast.error(errorMessage, {
-          id: toastId,
-          position: "bottom-center",
-        });
+        toast.error(errorMessage, { id: toastId, position: "bottom-center" });
       }).pipe(
         Effect.andThen(
           reportClientException(error, {

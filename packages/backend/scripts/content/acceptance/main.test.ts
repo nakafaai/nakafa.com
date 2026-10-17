@@ -10,7 +10,9 @@ import type { acceptanceRuntimeError } from "@repo/backend/scripts/content/accep
 import type { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/import";
 import type { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import type { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import type { createAcceptanceOwner } from "@repo/backend/scripts/content/acceptance/owner";
 import type { updateAcceptanceProfile } from "@repo/backend/scripts/content/acceptance/profile";
+import type { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem, Schema } from "effect";
 
@@ -20,6 +22,8 @@ type EntryError =
   | Effect.Error<ReturnType<typeof runAcceptance>>
   | Effect.Error<ReturnType<typeof cleanLocalRuntime>>
   | Effect.Error<ReturnType<typeof createAcceptanceLearner>>
+  | Effect.Error<ReturnType<typeof createAcceptanceSchool>>
+  | Effect.Error<ReturnType<typeof createAcceptanceOwner>>
   | Effect.Error<ReturnType<typeof importAcceptanceRows>>
   | Effect.Error<ReturnType<typeof updateAcceptanceProfile>>
   | ReturnType<typeof acceptanceRuntimeError>
@@ -301,6 +305,9 @@ finally:
               mocks.run.mock.calls.length +
               mocks.clean.mock.calls.length +
               mocks.learner.mock.calls.length +
+              mocks.school.mock.calls.length +
+              mocks.owner.mock.calls.length +
+              mocks.profile.mock.calls.length +
               mocks.rows.mock.calls.length
           ).toBe(1);
         })

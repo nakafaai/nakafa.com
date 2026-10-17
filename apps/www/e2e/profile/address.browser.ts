@@ -5,6 +5,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 import { Effect } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { withReader } from "@/e2e/support/reader";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The name of the synthetic learner, which the account button and the profile show. */
@@ -23,8 +24,9 @@ test("a learner opens their own profile at the username address, which keeps the
     Effect.gen(function* () {
       const { learner } = yield* openChatPage(page, origin);
       const profile = new RegExp(`/en/@${learner.username}$`);
+      const comments = new RegExp(`/en/@${learner.username}/comments$`);
       const chat = new RegExp(`/en/@${learner.username}/chat$`);
-      yield* Effect.promise(() => page.goto("/en/user/settings"));
+      yield* Effect.promise(() => page.goto(appRoutes.settings));
 
       yield* Effect.promise(async () => {
         await page
@@ -55,9 +57,13 @@ test("a learner opens their own profile at the username address, which keeps the
           timeout: readinessTimeoutMilliseconds,
         });
         await page.getByRole("tab", { name: app.Common.comments }).click();
-        await expect(page).toHaveURL(profile, {
+        await expect(page).toHaveURL(comments, {
           timeout: readinessTimeoutMilliseconds,
         });
+        // The page is the Comments tab, not a not-found page.
+        await expect(
+          page.getByRole("tab", { name: app.Common.comments })
+        ).toHaveAttribute("aria-selected", "true");
       });
     })
   );

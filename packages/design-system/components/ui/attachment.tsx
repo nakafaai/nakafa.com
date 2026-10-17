@@ -54,8 +54,12 @@ const mediaVariants = cva(
     variants: {
       variant: {
         icon: "",
+        // A picture with a transparent background keeps its dark ink readable in
+        // the dark theme: its backdrop is the light foreground token there. A
+        // failed picture has no tile or text of its own, so a destructive wash
+        // covers it.
         image:
-          "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
+          "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 group-data-[state=error]/attachment:after:absolute group-data-[state=error]/attachment:after:inset-0 group-data-[state=error]/attachment:after:bg-destructive/40 dark:bg-foreground *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
       },
     },
   }

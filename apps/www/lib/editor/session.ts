@@ -1,7 +1,11 @@
 import type { VersionStale } from "@repo/backend/confect/editor/batch";
 import type {
+  DocumentInvalid,
+  DocumentTooLarge,
+} from "@repo/backend/confect/editor/document";
+import type {
   ClientTaken,
-  SnapshotRefused,
+  FoldPending,
 } from "@repo/backend/confect/editor/errors";
 import type {
   OpenedDocument,
@@ -9,14 +13,7 @@ import type {
 } from "@repo/backend/confect/editor/view";
 import type { Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
-import {
-  Clock,
-  DateTime,
-  Effect,
-  type Ref,
-  Schema,
-  type Semaphore,
-} from "effect";
+import { type Effect, type Ref, Schema, type Semaphore } from "effect";
 
 /** A call to the server that failed for a reason the loop does not decide: the network, a denied access, or a refused read. */
 export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
@@ -24,9 +21,10 @@ export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
 }) {}
 
 /**
- * A step that does not apply to a document: ProseMirror refused it, or it threw while
- * it applied the step, such as a position outside the document. The reason is the
- * text ProseMirror gave. The loop skips or drops the step, and logs the reason.
+ * A step that does not apply to a document: ProseMirror refused it, it threw while
+ * it applied the step, such as a position outside the document, or the document it
+ * makes nests past the bound of the contract. The reason is the text ProseMirror gave,
+ * or the bound it passes. The loop skips or drops the step, and logs the reason.
  */
 export class StepRejected extends Schema.TaggedError<StepRejected>()(
   "StepRejected",
@@ -36,10 +34,12 @@ export class StepRejected extends Schema.TaggedError<StepRejected>()(
 ) {}
 
 /**
- * Steps of this editor that the document no longer takes, because another editor
- * changed the same text while this one was away. The loop reports the count once,
- * from the first round that completes after the document opened again, so the
- * editor can tell its user once.
+ * Steps of this editor that the document no longer takes: another editor changed the
+ * same text while this one was away, the server skipped one of its steps because it
+ * nests the document past the bound, or one step no call can carry, because it is
+ * larger than a call may send or the contract refuses it. The loop reports the count
+ * once, from the first round that completes after the change, so the editor can tell
+ * its user once.
  */
 export class SyncDropped extends Schema.TaggedClass<SyncDropped>()(
   "SyncDropped",
@@ -53,13 +53,6 @@ export interface SyncTransport {
   readonly open: (
     clientId: string
   ) => Effect.Effect<typeof OpenedDocument.Type, SyncFailed>;
-  readonly save: (snapshot: {
-    readonly content: string;
-    readonly version: number;
-  }) => Effect.Effect<
-    { readonly version: number },
-    SyncFailed | SnapshotRefused
-  >;
   readonly since: (
     clientId: string,
     version: number
@@ -67,8 +60,13 @@ export interface SyncTransport {
   readonly submit: (
     batch: string
   ) => Effect.Effect<
-    { readonly head: number },
-    SyncFailed | VersionStale | ClientTaken
+    null,
+    | SyncFailed
+    | VersionStale
+    | ClientTaken
+    | DocumentInvalid
+    | DocumentTooLarge
+    | FoldPending
   >;
 }
 
@@ -118,17 +116,12 @@ const PendingBatch = Schema.Struct({
 /**
  * What the loop remembers between rounds. `batch` is the batch in flight, refused,
  * or failed. `dropped` counts the steps this editor lost while it opened again, which
- * no round has reported yet. `lastChangeAt` is the last time an edit of this document
- * was seen, from this editor or another, and the snapshot rule reads it as the idle time.
+ * no round has reported yet.
  */
 export const Memory = Schema.Struct({
   batch: Schema.Option(PendingBatch),
   clientId: Schema.String,
   dropped: Schema.Natural,
-  head: Schema.Natural,
-  lastChangeAt: Schema.DateTimeUtc,
-  snapshotAt: Schema.Option(Schema.DateTimeUtc),
-  snapshotVersion: Schema.Natural,
 });
 
 /**
@@ -147,6 +140,3 @@ export interface SyncSession {
   readonly server: Ref.Ref<Node>;
   readonly transport: SyncTransport;
 }
-
-/** The current time as a `DateTime`, read from the clock so a test can move it. */
-export const nowTime = Effect.map(Clock.currentTimeMillis, DateTime.makeUnsafe);

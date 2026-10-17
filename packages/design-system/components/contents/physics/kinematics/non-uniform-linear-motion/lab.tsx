@@ -32,6 +32,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -141,48 +142,50 @@ export function NonUniformLinearMotionLab({
             </Suspense>
           </ThreeCanvas>
         </VisualCardScene>
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+            <VisualFactIndicator
+              label={labels.factLabels.initialVelocity}
+              value={
+                <InlineMath
+                  math={`v_0=${formatVelocityMath(
+                    motion.scenario.initialVelocity
+                  )}`}
+                />
+              }
+            />
+            <VisualFactIndicator
+              indicatorColor={motion.scenario.color}
+              label={labels.factLabels.acceleration}
+              value={
+                <InlineMath
+                  math={`a=${formatAccelerationMath(
+                    motion.scenario.acceleration
+                  )}`}
+                />
+              }
+            />
+            <VisualFactIndicator
+              label={labels.factLabels.finalVelocity}
+              value={
+                <InlineMath
+                  math={`v_t=${formatVelocityMath(motion.finalVelocity)}`}
+                />
+              }
+            />
+            <VisualFactIndicator
+              label={labels.factLabels.displacement}
+              value={
+                <InlineMath
+                  math={`\\Delta x=${formatTrimmedMeterMath(motion.displacement)}`}
+                />
+              }
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <VisualFactIndicator
-            label={labels.factLabels.initialVelocity}
-            value={
-              <InlineMath
-                math={`v_0=${formatVelocityMath(
-                  motion.scenario.initialVelocity
-                )}`}
-              />
-            }
-          />
-          <VisualFactIndicator
-            indicatorColor={motion.scenario.color}
-            label={labels.factLabels.acceleration}
-            value={
-              <InlineMath
-                math={`a=${formatAccelerationMath(
-                  motion.scenario.acceleration
-                )}`}
-              />
-            }
-          />
-          <VisualFactIndicator
-            label={labels.factLabels.finalVelocity}
-            value={
-              <InlineMath
-                math={`v_t=${formatVelocityMath(motion.finalVelocity)}`}
-              />
-            }
-          />
-          <VisualFactIndicator
-            label={labels.factLabels.displacement}
-            value={
-              <InlineMath
-                math={`\\Delta x=${formatTrimmedMeterMath(motion.displacement)}`}
-              />
-            }
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

@@ -1,9 +1,10 @@
 import {
-  NewTenantSlug,
+  isSchoolLabel,
   type TenantSlug,
 } from "@repo/backend/confect/tenancy/slug";
 import { SCHOOL_CELL_DOMAINS } from "@repo/next-config/domains";
-import { Array as Arr, Option, Record as Rec, Schema } from "effect";
+import { readHostname } from "@repo/utilities/http/host";
+import { Array as Arr, Option, Record as Rec } from "effect";
 
 /**
  * The domain of a local development server. Browsers resolve every
@@ -14,9 +15,6 @@ const LOCAL_DOMAIN = "localhost";
 
 /** The cell domains of production, then the local domain for development. */
 const SCHOOL_DOMAINS = [...Rec.values(SCHOOL_CELL_DOMAINS), LOCAL_DOMAIN];
-
-/** Whether a label is a valid school address that Nakafa does not reserve. */
-const isSchoolSlug = Schema.is(NewTenantSlug);
 
 /** The single label in front of a domain, or none when the host is not one label under it. */
 function readLabel(hostname: string, domain: string): Option.Option<string> {
@@ -33,7 +31,7 @@ function readSchoolLabel(
   hostname: string,
   domain: string
 ): Option.Option<TenantSlug> {
-  return readLabel(hostname, domain).pipe(Option.filter(isSchoolSlug));
+  return readLabel(hostname, domain).pipe(Option.filter(isSchoolLabel));
 }
 
 /**
@@ -58,4 +56,27 @@ export function isRefusedSchoolHost(hostname: string) {
       hostname.endsWith(`.${domain}`)
     ) && Option.isNone(readSchoolSlug(hostname))
   );
+}
+
+/**
+ * The host that the visitor asked for, with its port when the `host` header names
+ * one, such as `harapan.localhost:3000`. The value must name a host (see
+ * `readHostname`), so a missing header, or a value that is not a host, names none.
+ */
+export function readRequestHost(headers: Headers) {
+  return Option.fromNullOr(headers.get("host")).pipe(
+    Option.filter((host) => Option.isSome(readHostname(host)))
+  );
+}
+
+/**
+ * The hostname that the visitor asked for, read from the `host` header and not
+ * from the request URL. A local run, or any server that builds its request URL
+ * from its own address, names that address for every host, so only the header
+ * tells the school hosts apart. On Vercel, Next.js builds the URL from this same
+ * header (`trustHostHeader`), so production reads the same host here. The port
+ * is dropped, and a missing header or a value that is not a host names no host.
+ */
+export function readRequestHostname(headers: Headers) {
+  return Option.flatMap(readRequestHost(headers), readHostname);
 }

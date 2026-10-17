@@ -8,7 +8,6 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   isPrunable,
-  PRUNE_PAGE_CLIENTS,
   PRUNE_PAGE_STEPS,
 } from "@repo/backend/confect/editor/prune";
 import spec from "@repo/backend/confect/editor/prune.spec";
@@ -61,8 +60,25 @@ const sweep = FunctionImpl.make(
       (step) => writer.table("editorSteps").delete(step._id),
       { discard: true }
     );
+    const scheduler = yield* Scheduler;
+    // A step that no snapshot covers yet stays in the log. Its document is folded now, so
+    // a later sweep can prune the step once a snapshot holds it (ADR 0028).
+    const unfolded = Arr.filter(page.page, (step) =>
+      Option.exists(
+        HashMap.get(versions, step.documentId),
+        (snapshotVersion) => step.version > snapshotVersion
+      )
+    );
+    yield* Effect.forEach(
+      Arr.dedupe(Arr.map(unfolded, (step) => step.documentId)),
+      (documentId) =>
+        scheduler.runAfter(Duration.zero, refs.internal.editor.fold.fold, {
+          documentId,
+        }),
+      { discard: true }
+    );
     if (!page.isDone) {
-      yield* (yield* Scheduler).runAfter(
+      yield* scheduler.runAfter(
         Duration.zero,
         refs.internal.editor.prune.sweep,
         { cursor: page.continueCursor }
@@ -76,63 +92,8 @@ const sweep = FunctionImpl.make(
   })
 );
 
-/**
- * Deletes, in one page, the editor-session records that a snapshot covers and that
- * were last submitted at least the keep delay ago, and starts the next page while
- * the table has more. A record whose snapshot does not cover its version stays, so
- * a session that may still hold an in-flight batch can learn whether it landed.
- */
-const sweepClients = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "sweepClients",
-  Effect.fn("editor.prune.sweepClients")(function* ({ cursor }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const now = yield* Clock.currentTimeMillis;
-    const page = yield* reader
-      .table("editorClients")
-      .index("by_creation_time")
-      .paginate({ cursor, numItems: PRUNE_PAGE_CLIENTS })
-      .pipe(Effect.orDie);
-    const versions = yield* snapshotVersionsOf(
-      Arr.dedupe(Arr.map(page.page, (client) => client.documentId))
-    );
-    const prunable = Arr.filter(page.page, (client) =>
-      Option.exists(
-        HashMap.get(versions, client.documentId),
-        (snapshotVersion) =>
-          isPrunable({
-            at: client.seenAt,
-            now,
-            snapshotVersion,
-            version: client.version,
-          })
-      )
-    );
-    yield* Effect.forEach(
-      prunable,
-      (client) => writer.table("editorClients").delete(client._id),
-      { discard: true }
-    );
-    if (!page.isDone) {
-      yield* (yield* Scheduler).runAfter(
-        Duration.zero,
-        refs.internal.editor.prune.sweepClients,
-        { cursor: page.continueCursor }
-      );
-    }
-    return {
-      deleted: prunable.length,
-      done: page.isDone,
-      scanned: page.page.length,
-    };
-  })
-);
-
-/** Implements the prune group of `prune.spec.ts`: the internal sweeps of the step log and the session records. */
+/** Implements the prune group of `prune.spec.ts`: the internal sweep of the step log. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(sweep),
-  Layer.provide(sweepClients),
   GroupImpl.finalize
 );

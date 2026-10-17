@@ -311,6 +311,9 @@ has exactly one owner.
   That reader moves to the assessment document in the same release.
 - No Aksara release may contain short-answer or rubric content until the renderer
   and grading are installed. This is a release gate in wave B.
+- The contract step for the version of a try-out answer landed in #1102. The
+  save takes its version as a required argument, and the gate's unversioned
+  branch and its `assessment.gate.unversioned` log line are gone.
 
 ## Consequences
 

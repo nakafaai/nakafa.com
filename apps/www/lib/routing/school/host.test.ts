@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import { isRefusedSchoolHost, readSchoolSlug } from "@/lib/routing/school/host";
+import {
+  isRefusedSchoolHost,
+  readRequestHostname,
+  readSchoolSlug,
+} from "@/lib/routing/school/host";
 
 describe("school host labels", () => {
   it.each([
@@ -42,4 +46,28 @@ describe("school host labels", () => {
   ])("does not refuse %s", (hostname, refused) => {
     expect(isRefusedSchoolHost(hostname)).toBe(refused);
   });
+});
+
+describe("request hostnames", () => {
+  it.each([
+    ["harapan.nakafa.com", "harapan.nakafa.com"],
+    ["nakafa.com", "nakafa.com"],
+    ["harapan.localhost:3000", "harapan.localhost"],
+    ["127.0.0.1:3000", "127.0.0.1"],
+  ])("reads the hostname of the Host header %s", (host, hostname) => {
+    expect(readRequestHostname(new Headers({ host }))).toEqual(
+      Option.some(hostname)
+    );
+  });
+
+  it("names no host without a Host header", () => {
+    expect(readRequestHostname(new Headers())).toEqual(Option.none());
+  });
+
+  it.each(["", "not a host", "harapan.nakafa.com/classes"])(
+    "names no host for the Host header %s",
+    (host) => {
+      expect(readRequestHostname(new Headers({ host }))).toEqual(Option.none());
+    }
+  );
 });

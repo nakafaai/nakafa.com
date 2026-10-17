@@ -39,11 +39,6 @@ export const ObjectRef = Schema.Union(Arr.map(kinds, (kind) => kind.ref)).pipe(
   Schema.toTaggedUnion("kind")
 );
 
-/** Every audited change of every kind. */
-export const Change = Schema.Union(
-  Arr.flatten(Arr.map(entries, (entry) => entry.changes))
-);
-
 /**
  * Every action of every kind, named as `source.verb`. An entry that declares no
  * action, such as an extension that only adds changes, adds no literal here:

@@ -1,14 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
-import { encode, type Mascot, MascotCode } from "@repo/mascot/code";
+import { encode, type Mascot } from "@repo/mascot/code";
 import { contrast } from "@repo/mascot/ground";
-import { cast, forSeed, gallery, reroll } from "@repo/mascot/seed";
-import { Array as Arr, Schema } from "effect";
-
-/** The mascot of a code that is known to be good. */
-function mascotOf(code: string) {
-  return Schema.decodeSync(MascotCode)(code);
-}
+import { cast, forSeed, gallery } from "@repo/mascot/seed";
+import { Array as Arr } from "effect";
 
 /** Whether the animal of a mascot stands out from its ground. */
 function standsOut({ animal, ground, palette }: typeof Mascot.Type) {
@@ -94,51 +89,6 @@ describe("mascot/seed", () => {
       expect(
         Arr.filter(cast("home", 65), (mascot) => !standsOut(mascot))
       ).toEqual([]);
-    });
-  });
-
-  describe("reroll", () => {
-    it("never gives the current animal back, whoever asks", () => {
-      const clashes = Arr.filter(Arr.take(SEEDS, 300), (seed) => {
-        const current = forSeed(seed);
-        return Arr.some(
-          reroll(seed, current, 5),
-          ({ animal }) => animal === current.animal
-        );
-      });
-      expect(clashes).toEqual([]);
-    });
-
-    it("gives as many as are asked for, each one different", () => {
-      const current = forSeed("nakafa");
-      const others = reroll("nakafa", current, 8);
-      expect(others).toHaveLength(8);
-      expect(Arr.dedupe(Arr.map(others, encode))).toHaveLength(8);
-    });
-
-    it("gives the same rerolls again, and others for another current mascot", () => {
-      const current = forSeed("nakafa");
-      expect(reroll("nakafa", current, 3)).toEqual(
-        reroll("nakafa", current, 3)
-      );
-      expect(reroll("nakafa", current, 3)).not.toEqual(
-        reroll("nakafa", mascotOf("elephant.2.8c5a8f.peek-left.open"), 3)
-      );
-    });
-
-    it("gives nothing when none is asked for", () => {
-      expect(reroll("nakafa", forSeed("nakafa"), 0)).toEqual([]);
-    });
-
-    it("gives up at its limit of tries, with what it found, when it is asked for more than there are", () => {
-      const found = reroll("nakafa", forSeed("nakafa"), 1000);
-      expect(found.length).toBeGreaterThan(100);
-      expect(found.length).toBeLessThan(200);
-    });
-
-    it("stands every animal out from its ground", () => {
-      const rerolled = reroll("nakafa", forSeed("nakafa"), 65);
-      expect(Arr.filter(rerolled, (mascot) => !standsOut(mascot))).toEqual([]);
     });
   });
 

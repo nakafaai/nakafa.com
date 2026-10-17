@@ -1,16 +1,12 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { BrowserContext } from "@playwright/test";
+import {
+  SchoolFixture,
+  SessionCookie,
+} from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-
-/** A school that the local acceptance runtime opened for one browser test. */
-const SchoolFixture = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, slug: Schema.String })
-);
-/** The session cookie of an account that the local acceptance runtime signed in. */
-const SessionCookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
-);
+import { addSessionCookie } from "@/e2e/support/context";
 
 /**
  * Opens a new school in the running local acceptance runtime and reads its
@@ -45,7 +41,7 @@ export const createSchool = Effect.fn("NakafaE2E.createSchool")(
  * is a member. The command runs once: a second run would try to open the same
  * Owner account again.
  */
-export const createOwnerCookie = Effect.fn("NakafaE2E.createOwnerCookie")(
+const createOwnerCookie = Effect.fn("NakafaE2E.createOwnerCookie")(
   function* (slug: string) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({
@@ -68,17 +64,7 @@ export const signInOwner = Effect.fn("NakafaE2E.signInOwner")(function* (
   address: string
 ) {
   const cookie = yield* createOwnerCookie(slug);
-  yield* Effect.promise(() =>
-    context.addCookies([
-      {
-        httpOnly: true,
-        name: cookie.name,
-        sameSite: "Lax",
-        url: address,
-        value: cookie.value,
-      },
-    ])
-  );
+  yield* addSessionCookie(context, cookie, address);
 });
 
 /** The address of a path on a host under the same server as the test's base address. */

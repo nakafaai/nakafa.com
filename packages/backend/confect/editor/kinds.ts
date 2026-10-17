@@ -1,9 +1,20 @@
 import { Kind } from "@repo/backend/confect/access/kind";
-import type { RuleRole } from "@repo/backend/confect/access/schema";
+import type { Rule, RuleRole } from "@repo/backend/confect/access/schema";
 import { tenant, unit } from "@repo/backend/confect/tenancy/kinds";
 
 /** The school roles that view and edit the documents of their school, within each document's scope. */
 const documentEditors: (typeof RuleRole.Type)[] = ["admin", "teacher"];
+
+/**
+ * The rule of `document.edit`: the school roles may edit a document within its scope.
+ * Every kind that declares the action takes this one rule, so the roles are written once.
+ */
+const documentEdit: Rule = {
+  access: "write",
+  grantedBy: "roles",
+  relations: [],
+  roles: documentEditors,
+};
 
 /**
  * One collaborative document: a question, a material, or an announcement that
@@ -14,12 +25,7 @@ const documentEditors: (typeof RuleRole.Type)[] = ["admin", "teacher"];
  */
 export const documentKind = Kind.make("document", "editorDocuments", {
   actions: {
-    "document.edit": {
-      access: "write",
-      grantedBy: "roles",
-      relations: [],
-      roles: documentEditors,
-    },
+    "document.edit": documentEdit,
     "document.view": {
       access: "read",
       grantedBy: "roles",
@@ -38,27 +44,13 @@ export const documentKind = Kind.make("document", "editorDocuments", {
  * and the unit each take the `document.edit` action of their own.
  */
 const tenantDocuments = Kind.extend(tenant, {
-  actions: {
-    "document.edit": {
-      access: "write",
-      grantedBy: "roles",
-      relations: [],
-      roles: documentEditors,
-    },
-  },
+  actions: { "document.edit": documentEdit },
   changes: [],
   published: [],
 });
 
 const unitDocuments = Kind.extend(unit, {
-  actions: {
-    "document.edit": {
-      access: "write",
-      grantedBy: "roles",
-      relations: [],
-      roles: documentEditors,
-    },
-  },
+  actions: { "document.edit": documentEdit },
   changes: [],
   published: [],
 });

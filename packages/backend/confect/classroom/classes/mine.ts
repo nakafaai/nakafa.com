@@ -6,7 +6,10 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { CLASS_LIMIT, classView } from "@repo/backend/confect/classroom/class";
 import spec from "@repo/backend/confect/classroom/classes.spec";
-import { teachingIn } from "@repo/backend/confect/classroom/teacher";
+import {
+  teachesUnit,
+  teachingIn,
+} from "@repo/backend/confect/classroom/teacher";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { placementOf } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Effect, HashMap, Option, Order, Tuple } from "effect";
@@ -27,14 +30,16 @@ const activeIn = Effect.fnUntraced(function* (
 /**
  * The active classes the caller teaches and attends in one period, by name. A
  * period is read only when it belongs to the caller's school, and the reads are
- * bounded: one placement, and the teaching rows of that period.
+ * bounded: one placement, and the teaching rows of that period. A taught class
+ * counts only while a teacher grant over its unit stands, the rule that
+ * `subjectTeacher` decides by.
  */
 export const mine = FunctionImpl.make(
   databaseSchema,
   spec,
   "mine",
   Effect.fn("classroom.classes.mine")(function* ({ periodId }) {
-    const { person, tenant } = yield* Member;
+    const { grants, person, tenant } = yield* Member;
     const reader = yield* DatabaseReader;
     const period = yield* reader
       .table("tenantPeriods")
@@ -58,11 +63,12 @@ export const mine = FunctionImpl.make(
       (row) => reader.table("classes").get(row.classId).pipe(Effect.orDie),
       { concurrency: "unbounded" }
     );
+    const teachingNow = Arr.filter(
+      taught,
+      (row) => row.status === "active" && teachesUnit(grants, row.unitId)
+    );
     const byId = HashMap.fromIterable(
-      Arr.map(
-        [...placed, ...Arr.filter(taught, (row) => row.status === "active")],
-        (row) => Tuple.make(row._id, row)
-      )
+      Arr.map([...placed, ...teachingNow], (row) => Tuple.make(row._id, row))
     );
     return Arr.map(
       Arr.sortWith(

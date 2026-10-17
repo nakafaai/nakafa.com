@@ -129,13 +129,23 @@ name, and the two readers pick different values:
 - The presence check of the app (`getSessionCookie` in `cookies/index.mjs`,
   which parses with `cookie-utils.mjs`) reads the last value.
 
-Every response from the main site that sets or clears the shared cookie also
-expires the older host-only cookie (`packages/backend/confect/auth/host.ts`), so
-the pair does not form there. A response from a school host cannot expire the
-main site's host-only cookie, because the expiry has no `Domain` attribute. The
-pair would form if a school host wrote the shared cookie while an older
-host-only cookie existed. No flow of this change does that, since the Google
-callback runs on the main site. The school sign-in lane must keep that rule.
+A response that sets or clears the shared cookie also expires the older host-only
+cookie of the host that answered, when the shared cookie reaches that host
+(`packages/backend/confect/auth/host.ts`). The shared cookie reaches the site's
+own host and, when its domain has a dot, every subdomain of that domain. A
+response from a host that the shared cookie does not reach leaves that host's
+cookie alone. The expiry has no `Domain` attribute, so it reaches only the host
+that answered. The expiry comes before the shared cookie in the response, because
+a browser that stores both as one cookie, as Chromium does for `localhost`, must
+keep the shared one.
+
+The pair would form if a school host wrote the shared cookie while an older
+host-only cookie existed. The browser would send the older cookie first, and the
+identity route reads the first value, so the main site would serve the older
+session. No flow of this change does that, since the Google callback runs on the
+main site. A school sign-in endpoint must not write the shared cookie while an
+older host-only cookie can exist: it must end on the main site, where a response
+that sets the shared cookie expires that older cookie.
 
 A session that exists only as the older cookie keeps working on the main site
 until its next refresh or sign-in, and it shows as signed out on a school host

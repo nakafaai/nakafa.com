@@ -23,10 +23,11 @@ const CONTRACT_MANIFEST_PATHS = [
 ] as const;
 const CONTRACT_OWNERS = Arr.join(CONTRACT_MANIFEST_PATHS, ", ");
 const WEB_MANIFEST = "apps/www/package.json";
-/** Every manifest the fixture builds: the contract owners, and the design system that holds collab. */
+/** Every manifest the fixture builds: the contract owners, the design system that holds collab, and the editor package. */
 const FIXTURE_MANIFEST_PATHS = [
   ...CONTRACT_MANIFEST_PATHS,
   "packages/design-system/package.json",
+  "packages/editor/package.json",
 ];
 
 type PolicyInput = Parameters<typeof validateDependencyPolicy>[0];
@@ -64,7 +65,7 @@ function validInput(): PolicyInput {
         index === 0
           ? {
               doctor:
-                "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17",
+                "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18",
             }
           : undefined,
     },
@@ -266,7 +267,7 @@ describe("dependency policy validation", () => {
           scripts: { doctor: "pnpm dlx react-doctor@0.9.5" },
         })),
       problem:
-        "apps/www/package.json script doctor is pnpm dlx react-doctor@0.9.5; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17.",
+        "apps/www/package.json script doctor is pnpm dlx react-doctor@0.9.5; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18.",
     },
     {
       name: "a missing reviewed script",
@@ -276,7 +277,7 @@ describe("dependency policy validation", () => {
           scripts: undefined,
         })),
       problem:
-        "apps/www/package.json script doctor is missing; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.17.",
+        "apps/www/package.json script doctor is missing; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18.",
     },
     {
       name: "missing update ignores",

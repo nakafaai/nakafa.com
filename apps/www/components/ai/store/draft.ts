@@ -111,5 +111,53 @@ export const resolveAiDraftText = Effect.fn("ai.draft.resolve")(function* ({
   }
   return yield* readAiDraftText(ownerId);
 });
+/**
+ * The composer text once a refused prompt returns to it. The refused words come
+ * first and the text the learner typed meanwhile follows them, so a refusal
+ * loses neither. With nothing new typed, the refused words are the whole text.
+ * The composer is one for every account on this browser, so the words go back
+ * only to the account that sent them. Another account, or nobody once the
+ * learner has signed out, gets the text as it is.
+ */
+export function restoreRefusedText({
+  refused,
+  sentBy,
+  signedInAs,
+  typed,
+}: {
+  refused: string;
+  sentBy: string | null;
+  signedInAs: string | null;
+  typed: string;
+}) {
+  if (sentBy !== signedInAs) {
+    return typed;
+  }
+  const newer = typed.trim();
+  if (newer === "" || newer === refused.trim()) {
+    return refused;
+  }
+  return `${refused}\n\n${typed}`;
+}
 /** Clears the current tab's Nina draft without interrupting sign-out. */
 export const clearAiDraftText = saveAiDraftText("", null);
+
+/**
+ * What a change of the signed-in learner does to what Nina holds. The first
+ * answer of a page changes nothing. After that, a new learner ends the session
+ * of the previous one in the store. The draft, its text and its files, goes
+ * too, except when the previous learner was a visitor: a visitor who signs in
+ * keeps the draft, because the account takes over what the visitor wrote and
+ * attached.
+ */
+export function resolveAiOwnerChange(
+  previousOwnerId: string | null | undefined,
+  ownerId: string | null
+) {
+  const ownerChanged =
+    previousOwnerId !== undefined && previousOwnerId !== ownerId;
+  return {
+    mustResetDraft: ownerChanged && previousOwnerId !== null,
+    ownerChanged,
+  };
+}

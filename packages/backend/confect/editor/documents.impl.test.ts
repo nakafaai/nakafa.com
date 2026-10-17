@@ -1,29 +1,26 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  CONVEX_DOCUMENT_LIMIT,
-  MAX_DOCUMENT_BYTES,
-  utf8Bytes,
-} from "@repo/backend/confect/editor/size";
+import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import {
   batchText,
   denied,
   documentRowOf,
   documentRows,
-  IDLE,
   jsonValue,
   nf,
   otherSchoolTeacher,
   paragraphText,
   snapshotRows,
 } from "@repo/backend/test/editor";
+import { nestBlockquotes } from "@repo/backend/test/editor/nodes";
 import {
   slugOf,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
+import { utf8Bytes } from "@repo/utilities/text";
 import { Array as Arr, Effect } from "effect";
 
 const { create, open } = refs.public.editor.documents;
@@ -31,7 +28,7 @@ const other = slugOf("other");
 
 describe("editor/documents open from a snapshot", () => {
   const { submit } = refs.public.editor.steps;
-  const { save } = refs.public.editor.snapshots;
+  const fold = refs.internal.editor.fold.fold;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -39,7 +36,7 @@ describe("editor/documents open from a snapshot", () => {
   });
 
   it.effect(
-    "opens the snapshot with only the steps after it, the head of the log, and the session's record",
+    "opens the snapshot with only the steps after it, and the session's record",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -54,13 +51,7 @@ describe("editor/documents open from a snapshot", () => {
           documentId: made.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(save, {
-          content: paragraphText("Soal"),
-          documentId: made.id,
-          slug: nf,
-          version: 2,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: made.id });
         yield* teacher.mutation(submit, {
           batch: yield* batchText(2, "rina", 1),
           documentId: made.id,
@@ -71,7 +62,6 @@ describe("editor/documents open from a snapshot", () => {
           documentId: made.id,
           slug: nf,
         });
-        expect(opened.head).toBe(3);
         expect(opened.snapshot.version).toBe(2);
         expect(Arr.map(opened.steps, (step) => step.version)).toEqual([3]);
         expect(opened.client).toEqual({ batch: "rina-2-1-1", version: 3 });
@@ -110,12 +100,6 @@ describe("editor/documents open from a snapshot", () => {
   );
 });
 
-/** `count` blockquotes nested around `inner`, each one a level of the document. */
-const nestBlockquotes = (count: number, inner: unknown): unknown =>
-  count === 0
-    ? inner
-    : { content: [nestBlockquotes(count - 1, inner)], type: "blockquote" };
-
 /**
  * A document `levels` levels deep: the `doc`, the blockquotes around it, and a
  * paragraph at the bottom. The paragraph is the deepest node.
@@ -142,7 +126,7 @@ describe("editor/documents create", () => {
           .as("teacher")
           .query(open, { clientId: "rina", documentId: made.id, slug: nf });
         expect(jsonValue(opened.snapshot.content)).toEqual(jsonValue(content));
-        expect(opened).toMatchObject({ head: 0, snapshot: { version: 0 } });
+        expect(opened).toMatchObject({ snapshot: { version: 0 } });
       })
   );
 
@@ -188,8 +172,21 @@ describe("editor/documents create", () => {
       })
   );
 
+  it.effect("stores the largest document whose row stays under one MiB", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const overhead = utf8Bytes(paragraphText(""));
+      yield* fixture.as("admin").mutation(create, {
+        content: paragraphText("a".repeat(MAX_DOCUMENT_BYTES - overhead)),
+        scope: { kind: "tenant" },
+        slug: nf,
+      });
+      expect(yield* fixture.run(documentRows)).toHaveLength(1);
+    })
+  );
+
   it.effect(
-    "refuses a document whose complete row reaches one MiB, though its text fits, and writes nothing",
+    "refuses a document one byte past the largest text its row holds, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -197,14 +194,16 @@ describe("editor/documents create", () => {
         const failure = yield* fixture
           .as("admin")
           .mutation(create, {
-            content: paragraphText("a".repeat(MAX_DOCUMENT_BYTES - overhead)),
+            content: paragraphText(
+              "a".repeat(MAX_DOCUMENT_BYTES - overhead + 1)
+            ),
             scope: { kind: "tenant" },
             slug: nf,
           })
           .pipe(Effect.flip);
         expect(failure).toMatchObject({
           _tag: "DocumentTooLarge",
-          limit: CONVEX_DOCUMENT_LIMIT,
+          limit: MAX_DOCUMENT_BYTES,
         });
         expect(yield* fixture.run(documentRows)).toEqual([]);
         expect(yield* fixture.run(snapshotRows)).toEqual([]);

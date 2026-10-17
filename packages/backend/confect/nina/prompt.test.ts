@@ -12,6 +12,14 @@ import {
   NOW,
   start,
 } from "@repo/backend/test/nina/admission";
+import { plainThreadIn, sealThreadIn } from "@repo/backend/test/nina/seal";
+import { readMessageIn } from "@repo/backend/test/nina/sealed";
+import {
+  admission,
+  attachment,
+  save,
+  uploadFixture,
+} from "@repo/backend/test/nina/uploads";
 import { Array as Arr } from "effect";
 
 vi.mock("@repo/backend/confect/nina/context", () => ({
@@ -66,6 +74,108 @@ describe("a retried Nina prompt", () => {
       })
     );
     expect(retried.prompt.text).toBe("An owned text-only prompt.");
+  });
+
+  it("retries a sealed prompt with the text it was asked with", async () => {
+    const f = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, args)
+    );
+    await f.owner.mutation(cancel, { chatId: first.chatId });
+    await f.t.mutation(async (ctx) => {
+      const saved = await saveMessage(ctx, components.nina, {
+        threadId: first.threadId,
+        userId: f.identity.userId,
+        prompt: "An owned text-only prompt.",
+      });
+      await ctx.db.patch("ninaTurns", first.turnId, {
+        promptMessageId: saved.messageId,
+      });
+    });
+    await sealThreadIn(f.t, first.threadId, f.identity.userId);
+    const retried = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, {
+        ...args,
+        chatId: first.chatId,
+        requestId: "retry-sealed",
+        input: { kind: "retry", order: first.order },
+      })
+    );
+    expect(retried.prompt.text).toBe("An owned text-only prompt.");
+  });
+
+  it("retries a prompt the writers sealed with the text it was asked with", async () => {
+    const f = await fixture();
+    const first = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, args)
+    );
+    await f.owner.mutation(cancel, { chatId: first.chatId });
+    const retried = Ref.decodeReturnsSync(
+      refs.public.nina.turns.start,
+      await f.owner.mutation(start, {
+        ...args,
+        chatId: first.chatId,
+        requestId: "retry-written",
+        input: { kind: "retry", order: first.order },
+      })
+    );
+    expect(retried.prompt.text).toBe(args.input.prompt.text);
+  });
+
+  it("retries a prompt with its attachment the same from the writer's sealed row, a plain row and the seal in place", async () => {
+    /** The retry of a prompt with an image, after its chat is written as `copy` says. */
+    const retried = async (copy: "written" | "plain" | "sealed") => {
+      const { t, owner, identity } = await uploadFixture();
+      const uploadId = Ref.decodeReturnsSync(
+        refs.public.nina.uploads.save,
+        await owner.action(save, attachment)
+      );
+      const first = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await owner.mutation(start, {
+          ...admission,
+          input: {
+            ...admission.input,
+            prompt: { ...admission.input.prompt, uploadIds: [uploadId] },
+          },
+        })
+      );
+      await owner.mutation(cancel, { chatId: first.chatId });
+      if (copy === "plain") {
+        await plainThreadIn(t, first.threadId, identity.userId);
+      }
+      if (copy === "sealed") {
+        await sealThreadIn(t, first.threadId, identity.userId);
+      }
+      const second = Ref.decodeReturnsSync(
+        refs.public.nina.turns.start,
+        await owner.mutation(start, {
+          requestId: "retry",
+          chatId: first.chatId,
+          input: { kind: "retry", order: first.order },
+        })
+      );
+      const retriedRow = await readMessageIn(
+        t,
+        identity.userId,
+        second.promptMessageId
+      );
+      return {
+        fileIds: retriedRow?.fileIds,
+        order: second.order,
+        prompt: second.prompt,
+      };
+    };
+    const written = await retried("written");
+    expect(await retried("plain")).toEqual(written);
+    const resealed = await retried("sealed");
+    expect(resealed).toEqual(written);
+    expect(resealed.prompt.files).toEqual([
+      expect.objectContaining({ type: "file", mediaType: "image/png" }),
+    ]);
   });
 
   it("stores the turn that first asked the question on a retry, even a retry of a retry, and none for a new message", async () => {

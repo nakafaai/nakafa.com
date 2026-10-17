@@ -10,7 +10,7 @@ import {
 /**
  * The entry surface of a school for a visitor who is signed out. It reuses the
  * entry shell of the main site, and the Google button returns the visitor to
- * the school root they came from. The school sign-in lane replaces it.
+ * the school root they came from.
  */
 export function TenantEntry({ title }: { title: string }) {
   return (

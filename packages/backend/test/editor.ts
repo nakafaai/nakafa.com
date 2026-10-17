@@ -4,11 +4,11 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { AccessDenied } from "@repo/backend/confect/access/errors";
 import { type Batch, encodeBatch } from "@repo/backend/confect/editor/batch";
 import { STEP_KEEP_DELAY } from "@repo/backend/confect/editor/prune";
-import { SNAPSHOT_IDLE_DELAY } from "@repo/backend/confect/editor/snapshot";
-import type { Step } from "@repo/backend/confect/editor/step";
-import { paragraphOf } from "@repo/backend/test/editor/nodes";
+import { encodeStep, type Step } from "@repo/backend/confect/editor/step";
+import { nestBlockquotes, paragraphOf } from "@repo/backend/test/editor/nodes";
 import {
   grantRole,
   slugOf,
@@ -25,16 +25,11 @@ export const nf = slugOf("nf");
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
 /** The access refusal of one reason, as a client decodes it. */
-export const denied = (reason: "resource" | "role" | "condition") => ({
+export const denied = (reason: AccessDenied["reason"]) => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
   reason,
 });
-
-/** Past the snapshot rule's idle delay by one second, so a snapshot is due at once. */
-export const IDLE = Duration.toMillis(
-  Duration.sum(SNAPSHOT_IDLE_DELAY, Duration.seconds(1))
-);
 
 /** Past the step keep delay by one minute, so every step a snapshot covers is old enough to prune. */
 export const LONG_AGO = Duration.toMillis(
@@ -44,7 +39,6 @@ export const LONG_AGO = Duration.toMillis(
 /** Reads a JSON text back into its value, so a test compares documents as values. */
 export const jsonValue = Schema.decodeUnknownSync(JsonTextSchema);
 
-/** A document of one paragraph of one text, as the contract reads it. */
 /** Creates a document in the SMP unit, as its teacher, and returns its ID. */
 export const newDocument = Effect.fn("test.editor.newDocument")(function* (
   fixture: Fixture
@@ -59,18 +53,32 @@ export const newDocument = Effect.fn("test.editor.newDocument")(function* (
   return made.id;
 });
 
+/** A document of one paragraph of one text, as the contract reads it, as JSON text. */
 export const paragraphText = (text: string) =>
   encodeJsonText(paragraphOf(text));
 
 /**
- * A replace step that inserts one text node at the start of a document. The step
- * is well formed; the server stores it and does not apply it.
+ * A replace step that inserts one text node at position 1, which is the start of the
+ * first paragraph of a document of paragraphs. The step is well formed, and the fold
+ * applies it, so the text lands in that paragraph.
  */
 export const insertStep = (text: string): Step => ({
   from: 1,
   slice: { content: [{ text, type: "text" }] },
   stepType: "replace",
   to: 1,
+});
+
+/**
+ * A replace step that inserts `count` blockquotes around a paragraph at the start of a
+ * document of one paragraph. Its first step of 14 blockquotes takes the document to the depth
+ * bound, and a step of 15 takes it one level past the bound.
+ */
+export const blockquotesAtStart = (count: number): Step => ({
+  from: 0,
+  slice: { content: [nestBlockquotes(count, { type: "paragraph" })] },
+  stepType: "replace",
+  to: 0,
 });
 
 /**
@@ -92,6 +100,58 @@ export const batchText = Effect.fn("test.editor.batchText")(function* (
     steps: Arr.makeBy(count, () => insertStep(text)),
   };
   return yield* encodeBatch(batch).pipe(Effect.orDie);
+});
+
+/**
+ * Plants a stored step after the document's head, and moves the head to count it. A
+ * stored step that a submit would refuse can only reach the log this way, so a test uses
+ * it to prove the fold refuses such a step too (ADR 0028). The step is written by the
+ * teacher's account and the client `crafted`.
+ */
+export const plantStep = Effect.fn("test.editor.plantStep")(function* (
+  fixture: Effect.Success<typeof tenancyFixture>,
+  documentId: GenericId.GenericId<"editorDocuments">,
+  step: Step
+) {
+  yield* fixture.run(
+    Effect.gen(function* () {
+      const writer = yield* DatabaseWriter;
+      const document = yield* documentRowOf(documentId);
+      const version = document.head + 1;
+      const text = yield* encodeStep(step).pipe(Effect.orDie);
+      yield* writer
+        .table("editorSteps")
+        .insert({
+          author: fixture.users.teacher.userId,
+          clientId: "crafted",
+          documentId,
+          step: text,
+          version,
+        })
+        .pipe(Effect.orDie);
+      yield* writer
+        .table("editorDocuments")
+        .patch(documentId, { head: version })
+        .pipe(Effect.orDie);
+    })
+  );
+});
+
+/**
+ * Plants `count` stored steps after a document's head, one plant per step. A submit refuses a
+ * batch of more than `MAX_BATCH_STEPS` steps, and a backlog that one fold read does not hold, so
+ * a test that needs a long log plants it.
+ */
+export const plantSteps = Effect.fn("test.editor.plantSteps")(function* (
+  fixture: Effect.Success<typeof tenancyFixture>,
+  documentId: GenericId.GenericId<"editorDocuments">,
+  count: number
+) {
+  yield* Effect.forEach(
+    Arr.makeBy(count, () => insertStep("x")),
+    (step) => plantStep(fixture, documentId, step),
+    { discard: true }
+  );
 });
 
 /** The document row, read inside the fixture. */

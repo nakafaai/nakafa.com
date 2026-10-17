@@ -2,7 +2,6 @@
 
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {
-  ArrowDown02Icon,
   Delete02Icon,
   Globe02Icon,
   MoreHorizontalIcon,
@@ -11,6 +10,7 @@ import {
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { ChatView } from "@repo/backend/confect/chats/view";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -22,15 +22,35 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { Array as Arr, Effect } from "effect";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import {
+  Array as Arr,
+  DateTime,
+  Effect,
+  Option,
+  pipe,
+  String as Str,
+} from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { toast } from "sonner";
-import { useChange } from "@/components/ai/chat/change.client";
+import { useState } from "react";
+import type { StoreApi } from "zustand";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
+import { formatShortAge } from "@/components/user/age";
+import type { AgeClock } from "@/components/user/clock";
+import { useAgeClock, useAgeNow } from "@/components/user/clock.client";
+import {
+  FeedAge,
+  FeedAvatar,
+  FeedBody,
+  FeedEmpty,
+  FeedEnd,
+  FeedHeader,
+  FeedName,
+  FeedRow,
+} from "@/components/user/feed";
 import { reportClientException } from "@/lib/analytics/client";
-import { formatAge } from "@/lib/i18n/date";
 import { useViewer } from "@/lib/identity/client";
 
 /**
@@ -46,9 +66,7 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
     return <OwnChatsList />;
   }
   if (isPending) {
-    return (
-      <ChatList canDelete={false} isLoading loadMore={undefined} results={[]} />
-    );
+    return null;
   }
   return <ChatsByLink />;
 }
@@ -56,15 +74,16 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
 /** What another learner's profile says in place of a list: a chat opens by its link. */
 function ChatsByLink() {
   const t = useTranslations("Common");
-  return (
-    <p className="text-center text-muted-foreground text-sm">
-      {t("chats-by-link")}
-    </p>
-  );
+  return <FeedEmpty>{t("chats-by-link")}</FeedEmpty>;
 }
 
-/** Subscribe to all study chats owned by the current viewer. */
+/**
+ * The owner's study chats, in the anatomy every row of the profile shares.
+ * Nothing shows while the first page loads, and the next page loads as the end
+ * of the list comes into view.
+ */
 function OwnChatsList() {
+  const t = useTranslations("Common");
   const pagination = usePaginatedQuery(
     chats.queries.getOwnChats,
     {
@@ -75,145 +94,164 @@ function OwnChatsList() {
     }
   );
   const { loadMore, results } = useChatList(pagination);
+  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
+  if (PaginatedQueryResult.isLoadingFirstPage(pagination)) {
+    return null;
+  }
+  if (results.length === 0) {
+    return <FeedEmpty>{t("no-chats")}</FeedEmpty>;
+  }
   return (
-    <ChatList
-      canDelete={true}
-      isLoading={PaginatedQueryResult.isLoadingFirstPage(pagination)}
-      loadMore={loadMore}
-      results={results}
-    />
+    <div className="flex flex-col">
+      {Arr.map(results, (chat) => (
+        <ChatRow chat={chat} clock={clock} key={chat._id} />
+      ))}
+      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
+    </div>
   );
 }
 
-/** Render a resolved chat page with optional owner controls. */
-function ChatList({
-  canDelete,
-  loadMore,
-  results,
-  isLoading,
+/**
+ * One chat, as a post of the owner: the owner's picture, then the name, the age,
+ * whether the chat is private or shared, and its More menu on one line, then
+ * the whole title, which holds at most 80 characters. The title is the row's
+ * link, and the whole row opens the chat.
+ */
+function ChatRow({
+  chat,
+  clock,
 }: {
-  canDelete: boolean;
-  loadMore: (() => void) | undefined;
-  results: readonly ChatView[];
-  isLoading: boolean;
+  chat: ChatView;
+  clock: StoreApi<AgeClock>;
 }) {
-  const t = useTranslations("Common");
+  const tAi = useTranslations("Ai");
   const locale = useLocale();
-  if (isLoading) {
-    return <Skeleton className="h-12 w-full rounded-xl border shadow-sm" />;
-  }
-  if (results.length === 0) {
-    return (
-      <p className="text-center text-muted-foreground text-sm">
-        {t("no-chats")}
-      </p>
-    );
+  const account = useViewer((state) => state.account);
+  const now = useAgeNow(clock);
+  const isPrivate = chat.visibility === "private";
+  // A chat Nina has not named yet reads as a new chat, so its link has a name.
+  const title = pipe(
+    Option.fromUndefinedOr(chat.title),
+    Option.filter(Str.isNonEmpty),
+    Option.getOrElse(() => tAi("new-chat"))
+  );
+  if (!account) {
+    return null;
   }
   return (
-    <>
-      <div className="flex flex-col divide-y overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
-        {Arr.map(results, (chat) => {
-          const isPrivate = chat.visibility === "private";
-          return (
-            <div
-              className="group relative flex flex-col justify-between gap-2 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground sm:flex-row sm:items-center"
-              key={chat._id}
-            >
-              <NavigationLink
-                className="absolute inset-0 z-1"
-                href={`/chat/${chat._id}`}
-              />
-              <div className="flex flex-1 items-center gap-2">
-                <HugeIcons
-                  className="size-4 shrink-0"
-                  icon={isPrivate ? SquareLock01Icon : Globe02Icon}
-                />
-                <span className="truncate text-sm">{chat.title}</span>
-                <HugeIcons
-                  className="size-4 shrink-0 -rotate-90 opacity-0 transition-opacity ease-out group-hover:opacity-100"
-                  icon={ArrowDown02Icon}
-                />
-              </div>
-
-              <div className="flex shrink-0 items-center justify-between gap-2">
-                <time className="truncate text-muted-foreground text-sm tracking-tight group-hover:text-accent-foreground">
-                  {formatAge(chat.updatedAt, locale)}
-                </time>
-                {canDelete ? <UserChatsListActions chat={chat} /> : null}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
-    </>
+    <FeedRow>
+      <FeedAvatar
+        mascot={account.appUser.mascot}
+        photo={photoOf(account.appUser)}
+      />
+      <FeedBody>
+        <FeedHeader>
+          <FeedName>{account.authUser.name}</FeedName>
+          <FeedAge at={chat.updatedAt}>
+            {formatShortAge(chat.updatedAt, now, locale)}
+          </FeedAge>
+          <HugeIcons
+            aria-label={tAi(isPrivate ? "private" : "public")}
+            className="size-4 text-muted-foreground"
+            icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+            role="img"
+          />
+          <FeedEnd>
+            <UserChatsListActions chat={chat} />
+          </FeedEnd>
+        </FeedHeader>
+        <NavigationLink
+          className="wrap-anywhere rounded-sm outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          dir="auto"
+          href={`/chat/${chat._id}`}
+        >
+          {title}
+        </NavigationLink>
+      </FeedBody>
+    </FeedRow>
   );
 }
 
 /** Render owner actions for one profile chat row. */
 function UserChatsListActions({ chat }: { chat: ChatView }) {
-  const actionErrorMessage = useTranslations("Common")("action-error");
   const t = useTranslations("Common");
+  const tAi = useTranslations("Ai");
   const deleteChat = useDeleteChatMutation();
-  const { change, isPending } = useChange();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  /** Delete this chat through the optimistic list mutation. */
+  /**
+   * Delete this chat through the optimistic list mutation, once the learner
+   * confirms in the dialog. The dialog closes first, as the row leaves the list.
+   */
   function handleDelete() {
-    change(() =>
-      Effect.runPromise(
-        Effect.asVoid(
-          Effect.tryPromise(() =>
-            deleteChat({
-              chatId: chat._id,
-            })
-          ).pipe(Effect.flatMap(Effect.fromResult))
-        ).pipe(
-          Effect.matchEffect({
-            onSuccess: () => Effect.void,
-            onFailure: (error) =>
-              reportClientException(error, {
-                source: "components/user/chats",
-              }).pipe(
-                Effect.andThen(
-                  Effect.sync(() => {
-                    toast.error(actionErrorMessage);
-                  })
-                )
-              ),
+    setConfirmDelete(false);
+    Effect.runFork(
+      Effect.asVoid(
+        Effect.tryPromise(() =>
+          deleteChat({
+            chatId: chat._id,
           })
-        )
+        ).pipe(Effect.flatMap(Effect.fromResult))
+      ).pipe(
+        Effect.matchEffect({
+          onSuccess: () => Effect.void,
+          onFailure: (error) =>
+            reportClientException(error, {
+              source: "components/user/chats",
+            }).pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  toast.error({
+                    description: "action-error.description",
+                    title: "action-error.title",
+                  });
+                })
+              )
+            ),
+        })
       )
     );
   }
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            className="z-2 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
-            disabled={isPending}
-            size="icon-sm"
-            variant="ghost"
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={t("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => setConfirmDelete(true)}
+            variant="destructive"
           >
-            <HugeIcons icon={MoreHorizontalIcon} />
-            <span className="sr-only">More actions</span>
+            <HugeIcons icon={Delete02Icon} />
+            {t("delete")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ResponsiveDialog
+        description={tAi("delete-chat-description")}
+        footer={
+          <Button onClick={handleDelete} variant="destructive">
+            <HugeIcons icon={Delete02Icon} />
+            {tAi("confirm")}
           </Button>
         }
+        open={confirmDelete}
+        setOpen={setConfirmDelete}
+        title={tAi("delete-chat")}
       />
-      <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem
-          className="cursor-pointer"
-          disabled={isPending}
-          onClick={handleDelete}
-          variant="destructive"
-        >
-          <HugeIcons icon={Delete02Icon} />
-          {t("delete")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    </>
   );
 }

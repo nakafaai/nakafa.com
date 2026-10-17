@@ -7,10 +7,16 @@ import {
   decodeBatch,
   encodeBatch,
   MAX_ID_LENGTH,
+  MAX_STEP_BYTES,
 } from "@repo/backend/confect/editor/batch";
-import { MAX_BATCH_BYTES, utf8Bytes } from "@repo/backend/confect/editor/size";
-import type { Step } from "@repo/backend/confect/editor/step";
+import {
+  MAX_BATCH_BYTES,
+  MAX_BATCH_STEPS,
+} from "@repo/backend/confect/editor/size";
+import { encodeStep, type Step } from "@repo/backend/confect/editor/step";
 import { nested } from "@repo/backend/test/editor/nodes";
+import { encodeJsonText } from "@repo/utilities/json";
+import { utf8Bytes } from "@repo/utilities/text";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Schema } from "effect";
 
@@ -83,27 +89,29 @@ describe("editor/batch version rule", () => {
 
   it.effect("refuses a call over the step bound on the version it names", () =>
     Effect.gen(function* () {
-      // One step more than the 200-step bound of ADR 0028, on the version the document is at, so only the bound refuses it.
+      // One step more than the bound of ADR 0028, on the version the document is at, so only the bound refuses it.
       const step = '{"mark":{"type":"bold"},"pos":0,"stepType":"addNodeMark"}';
       const steps = Arr.join(
-        Arr.makeBy(201, () => step),
+        Arr.makeBy(MAX_BATCH_STEPS + 1, () => step),
         ","
       );
       const text = `{"baseVersion":40,"batch":"rina-40","clientId":"rina","steps":[${steps}]}`;
       const failure = yield* decodeBatch(text).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
-      expect(failure.message).toContain("at most 200 steps");
+      expect(failure.message).toContain(`at most ${MAX_BATCH_STEPS} steps`);
     })
   );
 });
 
 describe("editor/batch limits", () => {
   it.effect(
-    "reads a batch of one step, and a batch of 200 steps, the bound of ADR 0028",
+    "reads a batch of one step, and a batch of the most steps one call sends, the bound of ADR 0028",
     () =>
       Effect.gen(function* () {
         yield* Schema.decodeEffect(BatchSchema)(batchOf("rina", 0, 1));
-        yield* Schema.decodeEffect(BatchSchema)(batchOf("rina", 0, 200));
+        yield* Schema.decodeEffect(BatchSchema)(
+          batchOf("rina", 0, MAX_BATCH_STEPS)
+        );
       })
   );
 
@@ -120,9 +128,9 @@ describe("editor/batch limits", () => {
         expect(none._tag).toBe("SchemaError");
 
         const more = yield* Schema.decodeEffect(BatchSchema)(
-          batchOf("rina", 0, 201)
+          batchOf("rina", 0, MAX_BATCH_STEPS + 1)
         ).pipe(Effect.flip);
-        expect(more.message).toContain("at most 200 steps");
+        expect(more.message).toContain(`at most ${MAX_BATCH_STEPS} steps`);
       })
   );
 
@@ -216,6 +224,33 @@ describe("editor/batch limits", () => {
   );
 
   it.effect(
+    "carries a step of exactly MAX_STEP_BYTES in a call with the longest ids and version, and refuses one byte more",
+    () =>
+      Effect.gen(function* () {
+        const longest = "x".repeat(MAX_ID_LENGTH);
+        const callWith = (value: string) =>
+          encodeBatch({
+            baseVersion: Number.MAX_SAFE_INTEGER,
+            batch: longest,
+            clientId: longest,
+            steps: [{ attr: "title", stepType: "docAttr", value }],
+          });
+        const base = utf8Bytes(
+          yield* encodeStep({ attr: "title", stepType: "docAttr", value: "" })
+        );
+        const room = MAX_STEP_BYTES - base;
+        const text = yield* callWith("x".repeat(room));
+        expect(utf8Bytes(text)).toBe(MAX_BATCH_BYTES);
+        const refused = yield* callWith("x".repeat(room + 1)).pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "BatchTooLarge",
+          bytes: MAX_BATCH_BYTES + 1,
+          limit: MAX_BATCH_BYTES,
+        });
+      })
+  );
+
+  it.effect(
     "refuses a batch whose slice is nested 100,000 levels on write as a schema issue",
     () =>
       Effect.gen(function* () {
@@ -289,5 +324,57 @@ describe("editor/batch call body", () => {
       ).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
     })
+  );
+});
+
+describe("editor/batch node and mark types", () => {
+  it.effect(
+    "reads a batch whose step adds a mark the editor reads, and refuses one that adds a mark it does not",
+    () =>
+      Effect.gen(function* () {
+        const markBatch = (type: string) =>
+          encodeJsonText({
+            baseVersion: 0,
+            batch: `rina-mark-${type}`,
+            clientId: "rina",
+            steps: [{ from: 1, mark: { type }, stepType: "addMark", to: 2 }],
+          });
+        const read = yield* decodeBatch(markBatch("bold"));
+        expect(read.steps).toEqual([
+          { from: 1, mark: { type: "bold" }, stepType: "addMark", to: 2 },
+        ]);
+        const refused = yield* decodeBatch(markBatch("strike")).pipe(
+          Effect.flip
+        );
+        expect(refused._tag).toBe("SchemaError");
+      })
+  );
+
+  it.effect(
+    "reads a batch whose step holds a paragraph, and refuses one that holds a table the editor does not read",
+    () =>
+      Effect.gen(function* () {
+        const nodeBatch = (type: string) =>
+          encodeJsonText({
+            baseVersion: 0,
+            batch: `rina-node-${type}`,
+            clientId: "rina",
+            steps: [
+              {
+                from: 0,
+                slice: {
+                  content: [{ content: [{ text: "x", type: "text" }], type }],
+                },
+                stepType: "replace",
+                to: 0,
+              },
+            ],
+          });
+        yield* decodeBatch(nodeBatch("paragraph"));
+        const refused = yield* decodeBatch(nodeBatch("table")).pipe(
+          Effect.flip
+        );
+        expect(refused._tag).toBe("SchemaError");
+      })
   );
 });

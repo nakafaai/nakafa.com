@@ -1,12 +1,11 @@
 // @vitest-environment node
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { changeSchoolLanguage } from "@/components/tenant/language.client";
 
 const doubles = vi.hoisted(() => ({
   isStaleAction: vi.fn(),
-  reload: vi.fn(),
   report: vi.fn(),
   save: vi.fn(),
 }));
@@ -24,52 +23,53 @@ vi.mock("next/navigation", () => ({
 describe("changeSchoolLanguage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal("window", { location: { reload: doubles.reload } });
     doubles.report.mockReturnValue(Effect.void);
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  it.effect(
+    "saves the chosen language and renders the page again in place",
+    () =>
+      Effect.gen(function* () {
+        doubles.save.mockResolvedValue(undefined);
 
-  it.effect("saves the chosen language and then reloads the page", () =>
-    Effect.gen(function* () {
-      doubles.save.mockResolvedValue(undefined);
+        const render = yield* changeSchoolLanguage("id");
 
-      yield* changeSchoolLanguage("id");
-
-      expect(doubles.save).toHaveBeenCalledExactlyOnceWith("id");
-      expect(doubles.reload).toHaveBeenCalledOnce();
-      expect(doubles.report).not.toHaveBeenCalled();
-    })
+        expect(render).toBe("refresh");
+        expect(doubles.save).toHaveBeenCalledExactlyOnceWith("id");
+        expect(doubles.report).not.toHaveBeenCalled();
+      })
   );
 
-  it.effect("reports a failed save and still reloads the page", () =>
-    Effect.gen(function* () {
-      const failure = new Error("network");
-      doubles.save.mockRejectedValue(failure);
-      doubles.isStaleAction.mockReturnValue(false);
+  it.effect(
+    "reports a failed save and answers failed, so the page keeps its language",
+    () =>
+      Effect.gen(function* () {
+        const failure = new Error("network");
+        doubles.save.mockRejectedValue(failure);
+        doubles.isStaleAction.mockReturnValue(false);
 
-      yield* changeSchoolLanguage("de");
+        const render = yield* changeSchoolLanguage("de");
 
-      expect(doubles.report).toHaveBeenCalledExactlyOnceWith(failure, {
-        source: "school-language",
-      });
-      expect(doubles.reload).toHaveBeenCalledOnce();
-    })
+        expect(render).toBe("failed");
+        expect(doubles.report).toHaveBeenCalledExactlyOnceWith(failure, {
+          source: "school-language",
+        });
+      })
   );
 
-  it.effect("reloads a tab that runs an old build without reporting it", () =>
-    Effect.gen(function* () {
-      const stale = new Error("Failed to find Server Action");
-      doubles.save.mockRejectedValue(stale);
-      doubles.isStaleAction.mockReturnValue(true);
+  it.effect(
+    "asks for a reload for a tab that runs an old build, without reporting it",
+    () =>
+      Effect.gen(function* () {
+        const stale = new Error("Failed to find Server Action");
+        doubles.save.mockRejectedValue(stale);
+        doubles.isStaleAction.mockReturnValue(true);
 
-      yield* changeSchoolLanguage("de");
+        const render = yield* changeSchoolLanguage("de");
 
-      expect(doubles.isStaleAction).toHaveBeenCalledExactlyOnceWith(stale);
-      expect(doubles.report).not.toHaveBeenCalled();
-      expect(doubles.reload).toHaveBeenCalledOnce();
-    })
+        expect(render).toBe("reload");
+        expect(doubles.isStaleAction).toHaveBeenCalledExactlyOnceWith(stale);
+        expect(doubles.report).not.toHaveBeenCalled();
+      })
   );
 });

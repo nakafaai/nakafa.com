@@ -146,6 +146,7 @@ export const StepSchema = Schema.Union([
   AttrStepSchema,
   DocAttrStepSchema,
 ]);
+/** One step, as `StepSchema` decodes it. */
 export type Step = typeof StepSchema.Type;
 
 /** The JSON text of a step: the one string field a step is stored in (ADR 0028). */

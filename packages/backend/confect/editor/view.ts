@@ -33,6 +33,7 @@ const ClientRecordSchema = Schema.Struct({
   version: VersionSchema,
 });
 
+/** A session's record as a reader sees it: its batch and version, or null when the caller has none. */
 export const ClientRecordView = Schema.NullOr(ClientRecordSchema);
 
 /** The wire view of a session's record, or null when the caller has none. */
@@ -45,14 +46,12 @@ export const clientView = (
   });
 
 /**
- * A document as its editor opens it: its head, its snapshot as JSON text at one
- * version, the steps after that snapshot, and the session's own record. A long
- * document takes more than one read of its steps, so the editor reads on from the
- * last version it received.
+ * A document as its editor opens it: its snapshot as JSON text at one version, the
+ * steps after that snapshot, and the session's own record. A long document takes more
+ * than one read of its steps, so the editor reads on from the last version it received.
  */
 export const OpenedDocument = Schema.Struct({
   client: ClientRecordView,
-  head: VersionSchema,
   snapshot: Schema.Struct({
     content: Schema.String,
     version: VersionSchema,
@@ -61,20 +60,17 @@ export const OpenedDocument = Schema.Struct({
 });
 
 /**
- * The reply to a read of the steps after a version. `steps` carries the head and
- * the steps the log still keeps after the version. `behind` carries the head when
- * the log has pruned a step the client needs, so the client opens from the snapshot.
- * Both carry the session's own record, so a client that was behind learns whether
- * its in-flight batch landed.
+ * The reply to a read of the steps after a version. `steps` carries the steps the log
+ * still keeps after the version. `behind` says the log has pruned a step the client
+ * needs, so the client opens again from the snapshot. Both carry the session's own
+ * record, so a client that was behind learns whether its in-flight batch landed.
  */
 export const SinceReply = Schema.Union([
   Schema.TaggedStruct("steps", {
     client: ClientRecordView,
-    head: VersionSchema,
     steps: Schema.Array(StepView),
   }),
   Schema.TaggedStruct("behind", {
     client: ClientRecordView,
-    head: VersionSchema,
   }),
 ]);

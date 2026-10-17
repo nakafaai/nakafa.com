@@ -5,9 +5,9 @@ import {
   withObservedEvents,
   withObservedPageErrors,
 } from "@/e2e/support/observe";
+import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const SETTINGS = "/en/user/settings";
 const SESSION_ANSWER = "**/api/auth/get-session**";
 /** What Better Auth answers when its session lookup throws, as the trace of a failed run showed. */
 const SESSION_REFUSED =
@@ -57,7 +57,7 @@ test("a change made the moment a page loads is sent signed in", async ({
         yield* signInLearner(page.context(), origin);
 
         // The first load settles the session, which the browser keeps.
-        yield* Effect.promise(() => page.goto(SETTINGS));
+        yield* Effect.promise(() => page.goto(appRoutes.settings));
         yield* Effect.promise(() =>
           page.waitForFunction(
             () => window.localStorage.getItem("nakafa-session") !== null,
@@ -168,7 +168,7 @@ test("a session read the server refuses once is read again", async ({
         // The browser stores the id of a session once the page has settled on
         // it, and stores nothing after a failed read, so the key can only show
         // up after the page has asked again.
-        yield* Effect.promise(() => page.goto(SETTINGS));
+        yield* Effect.promise(() => page.goto(appRoutes.settings));
         yield* Effect.promise(() =>
           page.waitForFunction(
             () => window.localStorage.getItem("nakafa-session") !== null,

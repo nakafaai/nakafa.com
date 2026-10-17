@@ -4,6 +4,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import { VisualCardGroup } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import { Array as Arr } from "effect";
@@ -31,14 +32,14 @@ export function TriangleReadout({
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-center gap-2 px-6">
+      <VisualCardGroup>
         {Arr.map(TRIANGLE_SIDES, (side) => (
           <Badge key={side.key} style={{ color: side.color }} variant="outline">
             <InlineMath math={side.symbol} />: {labels[side.key]}
           </Badge>
         ))}
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-2 px-6">
+      </VisualCardGroup>
+      <VisualCardGroup>
         <Badge variant="outline">
           <InlineMath
             math={`\\sin(${angle}^\\circ) \\approx ${formatRatio(getSin(angle))}`}
@@ -60,11 +61,11 @@ export function TriangleReadout({
             </>
           )}
         </Badge>
-      </div>
+      </VisualCardGroup>
 
       <Separator />
 
-      <div className="mx-auto flex w-full max-w-md items-center gap-2 px-6">
+      <div className="mx-auto flex w-full max-w-md items-center gap-2">
         <Badge style={{ color: COLORS.VIOLET }} variant="outline">
           <InlineMath math={`${angle}^\\circ`} />
         </Badge>{" "}

@@ -11,20 +11,60 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@repo/design-system/components/ui/sidebar-menu";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr, Effect, Result } from "effect";
+import { Array as Arr, Effect } from "effect";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { startTransition } from "react";
+import { signOutSchoolAccount } from "@/components/tenant/account.client";
 import { changeSchoolLanguage } from "@/components/tenant/language.client";
-import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 
-/** Signs out, then returns to the school address, which shows the sign-in surface. */
-const signOut = Effect.gen(function* () {
-  const result = yield* Effect.result(signOutAccountBrowserIdentity());
-  if (Result.isSuccess(result)) {
-    window.location.assign("/");
-  }
-});
+/**
+ * Signs out, then returns to the school address, which shows the sign-in
+ * surface. A failed sign-out shows its message and keeps the page.
+ */
+function signOut() {
+  Effect.runFork(
+    Effect.gen(function* () {
+      const destination = yield* signOutSchoolAccount();
+      if (destination === "home") {
+        window.location.assign("/");
+      }
+    })
+  );
+}
+
+/**
+ * Saves the language that the account menu chose, then shows it. The page
+ * stays in its language until the server answers, so the change is not shown
+ * before it is saved. A failed save keeps the page as it is and shows one
+ * message, and the viewer chooses the language again from the same menu.
+ */
+function changeLanguage(
+  language: string,
+  router: ReturnType<typeof useRouter>
+) {
+  startTransition(async () => {
+    const render = await Effect.runPromise(changeSchoolLanguage(language));
+    if (render === "failed") {
+      toast.error(
+        {
+          description: "school-language-error.description",
+          title: "school-language-error.title",
+        },
+        { position: "bottom-center" }
+      );
+      return;
+    }
+    if (render === "reload") {
+      window.location.reload();
+      return;
+    }
+    router.refresh();
+  });
+}
 
 /**
  * The account menu of a school. Its links open the pages of the Nakafa account
@@ -33,6 +73,7 @@ const signOut = Effect.gen(function* () {
 export function TenantAccountMenu() {
   const t = useTranslations();
   const locale = useLocale();
+  const router = useRouter();
 
   return (
     <DropdownMenu>
@@ -52,9 +93,7 @@ export function TenantAccountMenu() {
                 {Arr.map(languages, (language) => (
                   <DropdownMenuItem
                     key={language.value}
-                    onClick={() =>
-                      Effect.runFork(changeSchoolLanguage(language.value))
-                    }
+                    onClick={() => changeLanguage(language.value, router)}
                   >
                     {language.label}
                   </DropdownMenuItem>
@@ -87,7 +126,7 @@ export function TenantAccountMenu() {
               </a>
             }
           />
-          <DropdownMenuItem onClick={() => Effect.runFork(signOut)}>
+          <DropdownMenuItem onClick={signOut}>
             {t("Auth.logout")}
           </DropdownMenuItem>
         </DropdownMenuGroup>

@@ -8,3 +8,9 @@ export class ChatAccessError extends Schema.TaggedError<ChatAccessError>()(
     message: Schema.String,
   }
 ) {}
+
+/** The share of a chat could not be read or opened, so its link cannot be shown. */
+export class ChatShareReadError extends Schema.TaggedError<ChatShareReadError>()(
+  "ChatShareReadError",
+  {}
+) {}

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { encodeBatch } from "@repo/backend/confect/editor/batch";
+import {
+  MAX_BATCH_BYTES,
+  MAX_BATCH_STEPS,
+} from "@repo/backend/confect/editor/size";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Ref } from "effect";
-import { TestClock } from "effect/testing";
+import { Array as Arr, Effect, Option, Ref } from "effect";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import {
   SyncFailed,
@@ -11,22 +14,19 @@ import {
 } from "@/lib/editor/session";
 import { startSync, tick } from "@/lib/editor/sync";
 import {
-  IDLE,
   makePort,
   makeServer,
   nestedQuote,
   openEditor,
   settle,
   silentEditor,
+  THREE_LETTERS,
   textOf,
   typeText,
 } from "@/test/sync";
 
 /** The text of two letters typed by two editors, in either order. */
 const TWO_LETTERS = /^[ab]{2}$/;
-
-/** The text of three letters typed by three editors, in any order. */
-const THREE_LETTERS = /^[abc]{3}$/;
 
 describe("editor/sync convergence", () => {
   it.effect("converges two editors on one document and loses no step", () =>
@@ -136,13 +136,19 @@ describe("editor/sync refusals and waiting", () => {
         const server = yield* makeServer();
         const editor = yield* openEditor(server.transport);
         yield* Effect.forEach(
-          Arr.makeBy(201, (index) => index),
+          Arr.makeBy(MAX_BATCH_STEPS + 1, (index) => index),
           () => typeText(editor.state, "x")
         );
         yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({ head: 200, submits: 1 });
+        expect(yield* server.counts).toMatchObject({
+          head: MAX_BATCH_STEPS,
+          submits: 1,
+        });
         yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({ head: 201, submits: 2 });
+        expect(yield* server.counts).toMatchObject({
+          head: MAX_BATCH_STEPS + 1,
+          submits: 2,
+        });
       })
   );
 
@@ -161,101 +167,31 @@ describe("editor/sync refusals and waiting", () => {
         expect(yield* server.counts).toMatchObject({ head: 2, submits: 2 });
       })
   );
-
-  it.effect(
-    "fails a step that one call cannot send, and keeps the step unconfirmed",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "x".repeat(200_000));
-        const failure = yield* tick(editor.session).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "SyncFailed" });
-        expect(sendableSteps(yield* Ref.get(editor.state))).not.toBeNull();
-        expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
-      })
-  );
 });
 
-describe("editor/sync snapshots", () => {
+describe("editor/sync steps no call can carry", () => {
   it.effect(
-    "saves a snapshot only when nothing is unconfirmed and the snapshot rule allows one",
+    "drops a queued step that is larger than one call may send, counts it, and sends the next batch",
     () =>
       Effect.gen(function* () {
         const server = yield* makeServer();
         const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "a");
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({ saves: 0 });
-        yield* TestClock.adjust(IDLE);
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({
-          head: 1,
-          saves: 1,
-          snapshotVersion: 1,
+        // A run of letters of one call's bound: its step is over the bound once it is encoded.
+        yield* typeText(editor.state, "x".repeat(MAX_BATCH_BYTES));
+        const dropped = yield* tick(editor.session);
+        expect(Option.getOrNull(dropped)).toMatchObject({
+          _tag: "SyncDropped",
+          count: 1,
         });
-        // Nothing has changed since the snapshot, so the rule allows no second one.
+        expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
+        yield* typeText(editor.state, "b");
         yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({ saves: 1 });
-      })
-  );
-
-  it.effect(
-    "does not save a snapshot while its batch still waits for the server's steps, though the idle time has passed",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "a");
+        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        // The next round takes the server's steps, which confirm the batch.
         yield* tick(editor.session);
-        yield* TestClock.adjust(IDLE);
-        // The steps the server accepted have not come back yet, so the editor holds
-        // "a" as unconfirmed while the idle time has passed.
-        yield* tick(silentEditor(server, editor.session));
-        expect(yield* server.counts).toMatchObject({ head: 1, saves: 0 });
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({
-          head: 1,
-          saves: 1,
-          snapshotVersion: 1,
-        });
-      })
-  );
-
-  it.effect(
-    "counts an edit by another editor as a change, so the idle time of this editor starts over",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const writer = yield* openEditor(server.transport);
-        const reader = yield* openEditor(server.transport);
-        yield* typeText(writer.state, "a");
-        yield* tick(writer.session);
-        yield* TestClock.adjust(IDLE);
-        yield* tick(reader.session);
-        expect(yield* server.counts).toMatchObject({ head: 1, saves: 0 });
-        yield* TestClock.adjust(IDLE);
-        yield* tick(reader.session);
-        expect(yield* server.counts).toMatchObject({ head: 1, saves: 1 });
-      })
-  );
-
-  it.effect(
-    "does not ask again on every tick after the server refuses a snapshot",
-    () =>
-      Effect.gen(function* () {
-        const server = yield* makeServer();
-        const editor = yield* openEditor(server.transport);
-        yield* typeText(editor.state, "a");
-        yield* tick(editor.session);
-        yield* TestClock.adjust(IDLE);
-        yield* server.refuseSaves(true);
-        yield* tick(editor.session);
-        yield* tick(editor.session);
-        expect(yield* server.counts).toMatchObject({
-          saveAttempts: 1,
-          saves: 0,
-        });
+        const state = yield* Ref.get(editor.state);
+        expect(textOf(state.doc)).toBe("b");
+        expect(sendableSteps(state)).toBeNull();
       })
   );
 });
@@ -272,7 +208,7 @@ describe("editor/sync failures", () => {
   );
 
   it.effect(
-    "refuses a stored step the editor's schema cannot read, and keeps the document",
+    "skips a stored step the editor's schema cannot read, as the server does, and keeps the document",
     () =>
       Effect.gen(function* () {
         const server = yield* makeServer();
@@ -291,9 +227,10 @@ describe("editor/sync failures", () => {
           ],
         }).pipe(Effect.orDie);
         yield* server.transport.submit(text).pipe(Effect.orDie);
-        const failure = yield* tick(editor.session).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "SyncFailed" });
-        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("");
+        yield* tick(editor.session).pipe(Effect.orDie);
+        const state = yield* Ref.get(editor.state);
+        expect(textOf(state.doc)).toBe("");
+        expect(getVersion(state)).toBe(1);
       })
   );
 

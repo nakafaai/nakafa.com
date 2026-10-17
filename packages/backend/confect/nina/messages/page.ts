@@ -1,7 +1,6 @@
 import { FunctionImpl } from "@confect/server";
-import { listUIMessages } from "@convex-dev/agent";
+import { toUIMessages } from "@convex-dev/agent";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
-import { components } from "@repo/backend/confect/_generated/components";
 import schema from "@repo/backend/confect/_generated/schema";
 import { QueryCtx } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
@@ -13,6 +12,7 @@ import {
   readerMessage,
   readerStreams,
 } from "@repo/backend/confect/nina/reader";
+import { readThread } from "@repo/backend/confect/nina/sealed/thread";
 import { readStreams } from "@repo/backend/confect/nina/streams";
 import { Array as Arr, Effect, Number as Num, Struct } from "effect";
 
@@ -46,18 +46,22 @@ export const page = FunctionImpl.make(
           : readerStreams(args.streamArgs),
       };
     }
-    // The component SDK owns message projection and the resumable delta
-    // protocol. A page holds at most `NINA_MESSAGES_PAGE_SIZE` messages,
-    // however many the caller asks for.
+    // The sealed module reads and opens the rows, and the component SDK owns
+    // their projection and the resumable delta protocol. A page holds at most
+    // `NINA_MESSAGES_PAGE_SIZE` messages, however many the caller asks for.
     const paginationOpts = Struct.assign(args.paginationOpts, {
       numItems: Num.min(args.paginationOpts.numItems, NINA_MESSAGES_PAGE_SIZE),
     });
-    const messages = yield* Effect.tryPromise({
-      try: () =>
-        listUIMessages(ctx, components.nina, { ...args, paginationOpts }),
-      catch: () =>
-        new NinaReadError({ message: "Unable to read Nina messages." }),
-    });
+    const result = yield* readThread(ctx, {
+      owner: chat.userId,
+      paginationOpts,
+      threadId: args.threadId,
+    }).pipe(
+      Effect.mapError(
+        () => new NinaReadError({ message: "Unable to read Nina messages." })
+      )
+    );
+    const messages = { ...result, page: toUIMessages(result.page) };
     // The page reads the messages and no row of a turn: where a turn stands and
     // what it cost is told by `conversation.get` and `conversation.turns`. So
     // a write that touches a turn alone, such as the usage a run records after

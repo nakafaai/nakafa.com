@@ -47,8 +47,8 @@ and that every published type is a change of its kind.
 
 `confect/access/catalog.ts` lists every lane's kinds and extensions once and
 derives the rest: `ObjectRef` (a tagged union over every kind, matched by
-kind), the journal's `Change`, `TenantAction`, and the tolerant
-`TenantCapabilities`. `Kind.actions(entries, kind)` and
+kind), `TenantAction`, and the tolerant `TenantCapabilities`. The journal's
+entry union takes each kind's changes from `Kind.changes` (ADR 0016). `Kind.actions(entries, kind)` and
 `Kind.changes(entries, kind)` join one kind's actions and changes from its
 declaration and every extension, so types follow from the Schemas instead of
 hand-written type aliases.

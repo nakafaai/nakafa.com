@@ -19,7 +19,7 @@ const restore = Ref.getFunctionReference(memory.restore);
 const expire = Ref.getFunctionReference(refs.internal.nina.memory.expire);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
-/** The Undo is read from its one owner, the contract the page reads too. */
+/** The restore window is read from its one owner, the memory spec. */
 const UNDO = Duration.toMillis(MEMORY_UNDO);
 const LESSON = "lesson:material:lesson:mathematics:material-section:limits";
 /** What the page is told when there is nothing to put back for the learner. */
@@ -92,7 +92,7 @@ describe("Nina memory restore", () => {
     expect(await f.owner.mutation(remove, { id })).toBeNull();
     expect(await f.rowOf(id)).toBeNull();
     expect(await keysOf(f, id)).toEqual([]);
-    // The record holds the fields as stored, the keys, and the end of the Undo.
+    // The record holds the fields as stored, its keys, and the window's end.
     expect(await f.restores()).toEqual([
       expect.objectContaining({
         expiresAt: NOW + UNDO,
@@ -220,7 +220,7 @@ describe("Nina memory restore", () => {
     expect(await f.restores()).toEqual([]);
   });
 
-  it("puts a memory back until the Undo ends and not at its end, and the record that outlived it waits for the job", async () => {
+  it("puts a memory back until the restore window ends and not at its end, and the record that outlived it waits for the job", async () => {
     const f = await createMemoryTest();
     const inside = await f.seed({ text: "Inside" });
     const outside = await f.seed({ text: "Outside" });
@@ -262,7 +262,7 @@ describe("Nina memory restore", () => {
     expect(await f.texts()).toEqual(["Once"]);
   });
 
-  it("schedules the deletion of the record for the end of the Undo, and the deletion is harmless when the record was used", async () => {
+  it("schedules the deletion of the record for the end of the restore window, and the deletion is harmless when the record was used", async () => {
     const f = await createMemoryTest();
     const used = await f.seed({ text: "Used" });
     const unused = await f.seed({ text: "Unused" });
@@ -321,8 +321,8 @@ describe("Nina memory restore", () => {
     ]);
 
     // No memory is left to tell this Delete all how far to reach, so the
-    // newest record does, and the Undo is refused as it is when the clock has
-    // moved on.
+    // newest record does, and the restore is refused, as it would be once the
+    // window has ended.
     await f.owner.mutation(clear, {});
     await expect(f.owner.mutation(restore, { id })).rejects.toMatchObject(
       missing

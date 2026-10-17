@@ -10,17 +10,17 @@ import {
 import {
   CONVEX_DOCUMENT_LIMIT,
   MAX_DOCUMENT_BYTES,
-  utf8Bytes,
 } from "@repo/backend/confect/editor/size";
 import { refusal } from "@repo/backend/confect/tenancy/errors";
+import { utf8Bytes } from "@repo/utilities/text";
 import { getDocumentSize, type Value } from "convex/values";
 import { Effect, Schema, SchemaTransformation } from "effect";
 
 /**
  * The `doc` node at the root. It holds at least one node. The editor's document
  * node requires blocks there (`block+`, as `@tiptap/extension-document` writes
- * it), and the contract checks the node types at the snapshot (ADR 0028). This
- * schema does not name the node types.
+ * it). Each node is read with the node and mark types the editor reads, and the
+ * contract checks the blocks at the snapshot (ADR 0028).
  */
 const DocumentRootSchema = Schema.Struct({
   attrs: Schema.optionalKey(AttributesSchema),
@@ -47,17 +47,14 @@ export const DocumentSchema = UncheckedDocumentSchema.pipe(
     SchemaTransformation.passthroughSupertype()
   )
 );
+/** One document, as `DocumentSchema` decodes it. */
 export type Document = typeof DocumentSchema.Type;
 
-/** The JSON text of a document: the one string field a document is stored in (ADR 0028). */
-const DocumentTextSchema = Schema.fromJsonString(DocumentSchema);
-
 /**
- * A document's JSON text as the contract reads it: the assessment document of ADR
- * 0031. Its Schema checks the node types, the typed attributes, and the depth
- * before any node is read.
+ * The JSON text of a document: the one string field a document is stored in (ADR 0028).
+ * Reading the text checks its shape, the node and mark types the editor reads, and the depth.
  */
-const AssessmentTextSchema = Schema.fromJsonString(AssessmentDocumentSchema);
+export const DocumentTextSchema = Schema.fromJsonString(DocumentSchema);
 
 /**
  * A text that the contract refuses as a document, or that is not JSON. It names
@@ -77,17 +74,28 @@ export class DocumentTooLarge extends Schema.TaggedError<DocumentTooLarge>()(
   }
 ) {}
 
+/** The JSON text of a contract document: the one string field a snapshot is stored in (ADR 0028). */
+const StoredTextSchema = Schema.fromJsonString(AssessmentDocumentSchema);
+
 /**
- * Writes a document as its JSON text. The depth of the typed input is checked
- * before the encoder walks it, so a deep document fails as a schema issue and
- * never as a stack overflow. A text over `MAX_DOCUMENT_BYTES` is refused here,
- * before any write, with the bytes it would take and the limit.
+ * Writes a document as the JSON text a snapshot stores. The editor's own Schema checks
+ * the typed input first, its depth before any node is read and its attributes, so a deep
+ * document fails as a schema issue and never as a stack overflow. The contract's Schema
+ * then decodes the document, and its output is what is written: an attribute the contract
+ * does not name, such as a link's `target` and `rel`, is not stored, so the stored text is
+ * the contract's normalized form (ADR 0028). A text over `MAX_DOCUMENT_BYTES` is refused
+ * here, before any write, with the bytes it would take and the limit.
  */
 export const encodeDocument = Effect.fn("editor.document.encode")(function* (
   document: Document
 ) {
-  yield* Schema.decodeEffect(UncheckedDocumentSchema)(document);
-  const text = yield* Schema.encodeEffect(DocumentTextSchema)(document);
+  const checked = yield* Schema.decodeEffect(DocumentSchema)(document);
+  const normalized = yield* Schema.decodeEffect(AssessmentDocumentSchema)(
+    checked
+  );
+  const text = yield* Schema.encodeEffect(StoredTextSchema)(normalized).pipe(
+    Effect.catchTag("SchemaError", Effect.die)
+  );
   const bytes = utf8Bytes(text);
   if (bytes > MAX_DOCUMENT_BYTES) {
     return yield* new DocumentTooLarge({ bytes, limit: MAX_DOCUMENT_BYTES });
@@ -96,21 +104,20 @@ export const encodeDocument = Effect.fn("editor.document.encode")(function* (
 });
 
 /**
- * The text a document is stored as, from the text a client sent. The contract's
- * Schema reads the client's text first, so every stored document is one the
- * contract accepts (ADR 0028, ADR 0031). A text the contract refuses fails with
- * `DocumentInvalid`, and a stored text over the bound with `DocumentTooLarge`. A
- * typed document that the contract has just accepted cannot fail to encode, so
- * an encoding failure is a defect.
+ * The text a snapshot stores, from the text a client sent. The text must read as a
+ * document of the editor, with the node and mark types the editor reads, and the
+ * contract's Schema must decode it, so every stored document is one the contract
+ * accepts (ADR 0028, ADR 0031). A text that fails either check fails with
+ * `DocumentInvalid`, and a stored text over the bound with `DocumentTooLarge`.
  */
 export const storedDocument = Effect.fn("editor.document.stored")(function* (
   text: string
 ) {
-  const document = yield* Schema.decodeEffect(AssessmentTextSchema)(text).pipe(
+  const document = yield* Schema.decodeEffect(DocumentTextSchema)(text).pipe(
     Effect.mapError(() => new DocumentInvalid())
   );
   return yield* encodeDocument(document).pipe(
-    Effect.catchTag("SchemaError", Effect.die)
+    Effect.catchTag("SchemaError", () => Effect.fail(new DocumentInvalid()))
   );
 });
 
@@ -130,15 +137,4 @@ export const ensureRowSize = Effect.fn("editor.document.row")(function* (
       limit: CONVEX_DOCUMENT_LIMIT,
     });
   }
-});
-
-/**
- * Reads a stored document's JSON text back into a document. It checks the
- * ProseMirror shape and the depth. The contract's rules are checked at the
- * snapshot (ADR 0028), not here.
- */
-export const decodeDocument = Effect.fn("editor.document.decode")(function* (
-  text: string
-) {
-  return yield* Schema.decodeEffect(DocumentTextSchema)(text);
 });

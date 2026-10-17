@@ -21,6 +21,7 @@ import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use } from "react";
 import type { Invocation } from "@/components/ai/message/invocation";
+import { readLimitCopy } from "@/components/ai/message/limit";
 import { isProblem } from "@/components/ai/message/state";
 
 const ActivityContext = createContext<Invocation | null>(null);
@@ -47,7 +48,12 @@ export function Activity({
 }) {
   return (
     <ActivityContext value={invocation}>
-      <Collapsible className="not-prose min-w-0" defaultOpen={false}>
+      {/* A row with nothing to open is disabled at the root, so every part carries `data-disabled`. */}
+      <Collapsible
+        className="not-prose min-w-0"
+        defaultOpen={false}
+        disabled={invocation.artifacts.length === 0}
+      >
         <ActivityTrigger />
         <CollapsibleContent className="motion-reduce:transition-none">
           {/* The line runs under the middle of the row's icon, and the evidence starts where the row's words start (8 + 1 + 15 = 24 px), so it reads as their children. */}
@@ -77,12 +83,16 @@ function ActivityTrigger() {
     deepResearch: Globe02Icon,
     unknown: BrainIcon,
   }[capability];
+  const limitCopy = readLimitCopy(capability);
   const label = {
     denied: t("activity.denied"),
     done: t(`activity.${capability}`),
     empty: t(`activity.${capability}`),
     failed: t(`tool-failures.${capability}`),
-    limit: t("activity.source-limit", { count: researchMaxSources }),
+    limit:
+      limitCopy === null
+        ? t(`activity.${capability}`)
+        : t(limitCopy, { count: researchMaxSources }),
     partial: t(`activity.${capability}`),
     running: t(`activity.${capability}`),
     stopped: t(`activity.${capability}`),
@@ -107,7 +117,6 @@ function ActivityTrigger() {
           ? "text-destructive"
           : "text-muted-foreground hover:text-foreground"
       )}
-      disabled={artifactCount === 0}
     >
       <Spinner
         aria-hidden="true"

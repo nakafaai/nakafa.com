@@ -4,14 +4,13 @@ import { Duration } from "effect";
  * How long a step that a snapshot covers stays in the log, after its creation. A
  * client that was offline for less than this loads the steps it missed; a client
  * offline for longer opens again from the snapshot (ADR 0028 Bounds). Ten minutes
- * is the value the build sets, and the ADR records it. The editor sessions use the
- * same delay before the sweep deletes their records.
+ * is the value the build sets, and the ADR records it.
  */
 export const STEP_KEEP_DELAY = Duration.minutes(10);
 
 /**
- * How often each sweep starts. It runs at the pace of the keep delay, so a covered
- * row waits at most one interval after the delay before it is deleted.
+ * How often the sweep of the step log starts. It runs at the pace of the keep delay,
+ * so a covered step waits at most one interval after the delay before it is deleted.
  */
 export const PRUNE_INTERVAL = Duration.minutes(10);
 
@@ -25,17 +24,16 @@ export const PRUNE_INTERVAL = Duration.minutes(10);
 export const PRUNE_PAGE_STEPS = 64;
 
 /**
- * How many editor-session records one page of the record sweep reads. A record is
- * a small row, so the page is bounded by its count and not by its bytes.
+ * How many editor-session records one page of a document's deletion reads and
+ * deletes. A record is a small row, so the page is bounded by its count and not by
+ * its bytes.
  */
 export const PRUNE_PAGE_CLIENTS = 64;
 
 /**
- * Whether a sweep deletes a row that a snapshot covers: its version is at most the
- * snapshot's, and it was written at least `STEP_KEEP_DELAY` before `now`. A step is
- * covered by the snapshot of its document, and a session record by the same
- * snapshot, with its last submit as the write time. Both times are epoch
- * milliseconds.
+ * Whether the sweep deletes a step that a snapshot covers: its version is at most the
+ * snapshot's, and it was created at least `STEP_KEEP_DELAY` before `now`. Both times
+ * are epoch milliseconds.
  */
 export function isPrunable(input: {
   at: number;

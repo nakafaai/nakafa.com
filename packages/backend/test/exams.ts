@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import type { tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /** Every exam row, for a test that expects none or one. */
 export const examRows = Effect.flatMap(DatabaseReader, (reader) =>
@@ -24,9 +24,6 @@ export const LANGUAGE = Schema.decodeSync(DeliveryLanguageSchema)("id");
 
 /** The fixture the exam tests seed. */
 type ExamFixture = Effect.Success<typeof tenancyFixture>;
-
-/** Past the snapshot rule's idle delay, so a snapshot is due at once. */
-export const IDLE = Duration.toMillis(Duration.seconds(31));
 
 const { create, open } = refs.public.exams.exams;
 

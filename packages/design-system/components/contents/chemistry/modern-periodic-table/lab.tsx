@@ -22,6 +22,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardControls,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
@@ -120,18 +121,20 @@ export function ModernPeriodicTableLab({
         </p>
 
         <Legend colors={colors} labels={labels} />
+        <VisualCardControls>
+          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <VisualFact label={labels.focusLabel} value={selectedLabels.name} />
+            <VisualFact label={labels.group} value="1–18" />
+            <VisualFact label={labels.period} value="1–7" />
+            <VisualFact
+              label={labels.atomicNumber}
+              value={<InlineMath math="Z" />}
+            />
+          </dl>
+        </VisualCardControls>
       </VisualCardBody>
 
       <VisualCardFooter>
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <VisualFact label={labels.focusLabel} value={selectedLabels.name} />
-          <VisualFact label={labels.group} value="1–18" />
-          <VisualFact label={labels.period} value="1–7" />
-          <VisualFact
-            label={labels.atomicNumber}
-            value={<InlineMath math="Z" />}
-          />
-        </dl>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>

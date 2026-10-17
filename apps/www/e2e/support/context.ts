@@ -3,6 +3,7 @@ import type {
   BrowserContext,
   BrowserContextOptions,
 } from "@playwright/test";
+import type { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect } from "effect";
 
 /**
@@ -24,6 +25,31 @@ const REAL_USER_AGENT_BRANDS = [
   { brand: "Google Chrome", version: "153" },
   { brand: "Not-A.Brand", version: "8" },
 ];
+
+/**
+ * Adds a session cookie that the local acceptance runtime signed in, for the
+ * address of one host. The attributes are those of the session cookie that
+ * Better Auth sets: HttpOnly, and SameSite Lax.
+ */
+export const addSessionCookie = Effect.fn("NakafaE2E.addSessionCookie")(
+  function* (
+    context: BrowserContext,
+    cookie: typeof SessionCookie.Type,
+    url: string
+  ) {
+    yield* Effect.promise(() =>
+      context.addCookies([
+        {
+          httpOnly: true,
+          name: cookie.name,
+          sameSite: "Lax",
+          url,
+          value: cookie.value,
+        },
+      ])
+    );
+  }
+);
 
 /** Owns one isolated Playwright context for the complete use program. */
 export const withBrowserContext = Effect.fn("NakafaE2E.withBrowserContext")(

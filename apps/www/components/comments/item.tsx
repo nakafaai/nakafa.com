@@ -6,15 +6,11 @@ import {
   ArrowTurnForwardIcon,
 } from "@hugeicons/core-free-icons";
 import type comments from "@repo/backend/confect/_generated/refs/comments";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
-import { Animal } from "@repo/design-system/components/ui/animal";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@repo/design-system/components/ui/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   Tooltip,
   TooltipContent,
@@ -96,7 +92,6 @@ export function CommentContent({
   const locale = useLocale();
   const user = useViewer((s) => s.account);
   const userName = comment.user?.name ?? t("anonymous");
-  const userImage = comment.user?.image ?? "";
   const isReplyToMe = user && comment.replyToUser?._id === user.appUser._id;
   return (
     <div
@@ -106,12 +101,11 @@ export function CommentContent({
           "rounded-l-none border-primary border-l bg-[color-mix(in_oklch,var(--accent)_3%,var(--background))]"
       )}
     >
-      <Avatar className="size-10">
-        <AvatarImage alt={userName} src={userImage} />
-        <AvatarFallback>
-          <Animal mascot={comment.user?.mascot} />
-        </AvatarFallback>
-      </Avatar>
+      <PersonAvatar
+        className="size-10"
+        mascot={comment.user?.mascot}
+        photo={photoOf(comment.user ?? {})}
+      />
       <div className="grid min-w-0 flex-1 gap-2">
         <div className="grid gap-1">
           <div className="flex min-w-0 items-center gap-2">
@@ -156,7 +150,6 @@ function CommentReplyToggle({
         render={
           <Button
             aria-label={t("reply")}
-            className="w-16"
             disabled={isPending}
             onClick={onReplyToggle}
             size="sm"

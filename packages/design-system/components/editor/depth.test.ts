@@ -1,10 +1,8 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from "@effect/vitest";
-import {
-  depthGuard,
-  nodeDepth,
-} from "@repo/design-system/components/editor/depth";
+import { depthGuard } from "@repo/design-system/components/editor/depth";
+import { nodeDepth } from "@repo/utilities/depth";
 import { Editor } from "@tiptap/core";
 import { EditorState } from "@tiptap/pm/state";
 import { StarterKit } from "@tiptap/starter-kit";
@@ -12,7 +10,10 @@ import { StarterKit } from "@tiptap/starter-kit";
 /** The bound of the test document, small enough that a blockquote breaks it. */
 const MAX_DEPTH = 3;
 
-/** A headless editor that refuses edits past `MAX_DEPTH`, and a state of `text` in a paragraph of its schema. */
+/**
+ * A headless editor that refuses edits past `MAX_DEPTH`, with the nodes of its schema and a
+ * builder of states of its documents.
+ */
 function openEditor() {
   const editor = new Editor({
     element: null,
@@ -21,18 +22,8 @@ function openEditor() {
   const { blockquote, paragraph } = editor.schema.nodes;
   const stateOf = (doc: ReturnType<typeof editor.schema.node>) =>
     EditorState.create({ doc, plugins: editor.extensionManager.plugins });
-  return { blockquote, editor, paragraph, schema: editor.schema, stateOf };
+  return { blockquote, paragraph, schema: editor.schema, stateOf };
 }
-
-describe("nodeDepth", () => {
-  it("counts a node and every level below it, text included", () => {
-    const { blockquote, paragraph, schema } = openEditor();
-    const doc = schema.node("doc", null, [
-      blockquote.create(null, paragraph.create(null, schema.text("a"))),
-    ]);
-    expect(nodeDepth(doc)).toBe(4);
-  });
-});
 
 describe("depthGuard", () => {
   it("refuses an edit that nests the document past the bound, and keeps the document", () => {

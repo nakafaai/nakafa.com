@@ -1,7 +1,11 @@
 import { createLearnerAccount } from "@repo/backend/scripts/content/acceptance/account";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import {
+  acceptanceRuntimeError,
+  retryFunctionTimeout,
+} from "@repo/backend/scripts/content/acceptance/error";
+import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import { makeSignature } from "better-auth/crypto";
 import { Duration, Effect, FileSystem, Schema } from "effect";
@@ -10,10 +14,6 @@ import { Duration, Effect, FileSystem, Schema } from "effect";
 const SESSION_COOKIE = "better-auth.session_token";
 /** Outlives any browser suite run; the whole runtime is discarded after. */
 export const SESSION_LIFETIME = Duration.hours(24);
-/** The cookie file a browser test reads back before it signs in. */
-const SessionCookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
-);
 
 /**
  * Writes the session cookie of one session token, mode 600, for a browser test
@@ -54,10 +54,14 @@ export const createAcceptanceLearner = Effect.fn(
       "Run pnpm acceptance:prepare and start acceptance before creating a learner."
     );
   }
-  const { token } = yield* createLearnerAccount(
-    (operation, args, sensitiveValues) =>
-      runLocalConvex(runtime, operation, args, sensitiveValues),
-    SESSION_LIFETIME
+  // A loaded machine pushes the local backend past its function time limit, and
+  // the learner's setup is not what a browser test checks, so it tries again.
+  const { token } = yield* retryFunctionTimeout(
+    createLearnerAccount(
+      (operation, args, sensitiveValues) =>
+        runLocalConvex(runtime, operation, args, sensitiveValues),
+      SESSION_LIFETIME
+    )
   );
   yield* writeSessionCookie(output, token);
 });

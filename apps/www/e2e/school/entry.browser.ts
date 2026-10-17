@@ -33,6 +33,9 @@ test("a learner who is not a member of an existing school gets not found", async
 
   const response = await page.goto(schoolHome);
 
+  // The page the 404 shows is checked at its own address in host.browser.ts:
+  // a local production build answers the proxy's rewrite with the framework's
+  // built-in page.
   expect(response?.status()).toBe(404);
   await context.close();
 });

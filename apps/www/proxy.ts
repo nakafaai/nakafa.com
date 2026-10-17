@@ -28,27 +28,32 @@ import {
 } from "@/lib/llms/routes";
 import { isOgRouteAliasPathname, readOgRouteAliasLocale } from "@/lib/og/route";
 import {
+  NEXT_INTL_LOCALE_HEADER,
+  plainTextAnswer,
+  rewriteToNotFoundPage,
+} from "@/lib/routing/answer";
+import {
   isLocaleBypassPath,
   isUnsupportedSystemPath,
 } from "@/lib/routing/bypass";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
-import { routeSchoolRequest } from "@/lib/routing/school/request";
+import { routeSchoolPage } from "@/lib/routing/school/refusal";
+import { redirectTrailingSlash } from "@/lib/routing/slash";
+import { readVisitorUrl } from "@/lib/routing/visitor";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
-const TRAILING_SLASH_PATTERN = /\/+$/;
-const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
-const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
  *
  * The proxy keeps platform concerns here: PostHog bypasses, canonical slash
- * redirects, school host rewrites (ADR 0026), public discovery bypasses, locale
- * middleware, and response rewrites. The llms route seam handles Markdown negotiation, while the route
- * handler owns content lookup and final response status.
+ * redirects, school page refusals and school host rewrites (ADR 0026), public
+ * discovery bypasses, locale middleware, and response rewrites. The llms route
+ * seam handles Markdown negotiation, while the route handler owns content lookup
+ * and final response status.
  *
  * References:
  * https://nextjs.org/docs/app/api-reference/file-conventions/proxy
@@ -66,7 +71,7 @@ export async function proxy(request: NextRequest) {
     return slashRedirect;
   }
 
-  const schoolResponse = routeSchoolRequest(request);
+  const schoolResponse = await Effect.runPromise(routeSchoolPage(request));
   if (schoolResponse) {
     return schoolResponse;
   }
@@ -110,7 +115,11 @@ export async function proxy(request: NextRequest) {
       previewConfigured &&
       (await Effect.runPromise(matchesPreviewPathname(pathname)));
     if (!previewOwnsPathname) {
-      return rewriteToContentNotFound(request, candidateLocale);
+      return rewriteToNotFoundPage(
+        request,
+        candidateLocale,
+        LLMS_REPRESENTATION_VARY_FIELDS
+      );
     }
   }
 
@@ -120,7 +129,11 @@ export async function proxy(request: NextRequest) {
     ogAliasLocale !== null &&
     !hasLocale(routing.locales, ogAliasLocale)
   ) {
-    return rewriteToContentNotFound(request, routing.defaultLocale);
+    return rewriteToNotFoundPage(
+      request,
+      routing.defaultLocale,
+      LLMS_REPRESENTATION_VARY_FIELDS
+    );
   }
 
   if (isOgRouteAliasPathname(pathname)) {
@@ -141,7 +154,7 @@ export async function proxy(request: NextRequest) {
     })
   );
   if (urlMigrationRedirect) {
-    const redirectUrl = new URL(request.url);
+    const redirectUrl = readVisitorUrl(request);
     redirectUrl.pathname = `${urlMigrationRedirect.destination}${migrationSuffix}`;
 
     const response = NextResponse.redirect(
@@ -156,7 +169,11 @@ export async function proxy(request: NextRequest) {
     readProfileRefusal(pathname, request.headers)
   );
   if (profileRefusal !== null) {
-    return rewriteToContentNotFound(request, profileRefusal);
+    return rewriteToNotFoundPage(
+      request,
+      profileRefusal,
+      LLMS_REPRESENTATION_VARY_FIELDS
+    );
   }
 
   const routeDecision = await Effect.runPromise(
@@ -172,7 +189,11 @@ export async function proxy(request: NextRequest) {
   );
 
   if (routeDecision.kind === "not-found") {
-    return rewriteToContentNotFound(request, routeDecision.locale);
+    return rewriteToNotFoundPage(
+      request,
+      routeDecision.locale,
+      LLMS_REPRESENTATION_VARY_FIELDS
+    );
   }
 
   if (routeDecision.kind === "rewrite-markdown") {
@@ -214,7 +235,10 @@ function routeLocalizedRequest(
   return response;
 }
 
-/** Rewrites a localized route to the source-backed markdown handler. */
+/**
+ * Rewrites a localized route to the source-backed markdown handler. The rewrite
+ * names the request URL (see `readVisitorUrl`).
+ */
 function rewriteToLlmsMdx(
   request: NextRequest,
   localizedRoute: LocalizedLlmsRoute
@@ -225,30 +249,6 @@ function rewriteToLlmsMdx(
   const response = NextResponse.rewrite(rewriteUrl);
   mergeRepresentationVary(response);
   return response;
-}
-
-/** Redirects a path with a trailing slash to its one canonical spelling, as a 308. */
-function redirectTrailingSlash(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  if (pathname.length <= 1 || !pathname.endsWith("/")) {
-    return null;
-  }
-
-  const redirectUrl = new URL(request.url);
-  redirectUrl.pathname = pathname.replace(TRAILING_SLASH_PATTERN, "");
-
-  return NextResponse.redirect(redirectUrl, 308);
-}
-
-/** Answers a retired or unknown resource in plain text that search engines must not index. */
-function plainTextAnswer(status: 404 | 410, body: string) {
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Robots-Tag": "noindex",
-    },
-    status,
-  });
 }
 
 /** Returns a hard 406 when neither public page representation is acceptable. */
@@ -271,28 +271,6 @@ function mergeRepresentationVary(response: Response) {
       LLMS_REPRESENTATION_VARY_FIELDS
     )
   );
-}
-
-/** Rewrites missing content to the styled app not-found route with 404 status. */
-function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale);
-  const rewriteUrl = new URL(
-    `/${CONTENT_NOT_FOUND_SEGMENT}/${locale}`,
-    request.url
-  );
-
-  const response = NextResponse.rewrite(rewriteUrl, {
-    headers: {
-      "X-Robots-Tag": "noindex",
-    },
-    request: {
-      headers: requestHeaders,
-    },
-    status: 404,
-  });
-  mergeRepresentationVary(response);
-  return response;
 }
 
 /**

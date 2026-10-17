@@ -6,7 +6,7 @@ import { Effect } from "effect";
 describe("contentRelease/tryout/row", () => {
   it.effect("accepts the current signed placement contract", () =>
     Effect.gen(function* () {
-      const row = makeTryoutPlacementRow("id");
+      const row = yield* makeTryoutPlacementRow("id");
 
       expect(yield* decodeStoredSnapshotRow(row)).toEqual(row);
     })
@@ -14,7 +14,7 @@ describe("contentRelease/tryout/row", () => {
 
   it.effect("rejects predecessor choice rows", () =>
     Effect.gen(function* () {
-      const current = makeTryoutPlacementRow("id");
+      const current = yield* makeTryoutPlacementRow("id");
       if (current.record.row.response.kind !== "single-choice") {
         return yield* Effect.fail("Expected a single-choice fixture.");
       }

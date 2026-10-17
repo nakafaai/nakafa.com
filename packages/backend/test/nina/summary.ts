@@ -15,6 +15,12 @@ import {
 import { GatewayTest } from "@repo/backend/test/gateway";
 import { measured, type Sample, totalOf } from "@repo/backend/test/measure";
 import { type EarlierTurn, filler } from "@repo/backend/test/nina";
+import {
+  copyOf,
+  type Replacement,
+  sealThreadIn,
+  writtenThreadIn,
+} from "@repo/backend/test/nina/seal";
 import { providerStep } from "@repo/backend/test/nina/specialist";
 import { sealedSummary } from "@repo/backend/test/seal";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -84,14 +90,18 @@ function toolSteps(order: number, steps: number) {
  * the summary as a turn settles, and read the model input of a turn. A
  * cancelled turn keeps the answer text it wrote before it stopped, and its
  * prompt is failed, as settlement leaves it. `shape` sets a turn's size with
- * `tokens`, which a fold counts, and gives it `steps` tool steps.
+ * `tokens`, which a fold counts, and gives it `steps` tool steps. With `copy`
+ * other than plain, every learner's prompt is written by the writers before the
+ * test runs, and with `sealed` every row is then sealed in place. Each prompt
+ * names its copy, so the fold reads the written or the sealed form.
  */
 export async function createSummaryTest(
   turns: number,
-  shape: (order: number) => typeof EarlierTurn.Type = () => ({})
+  shape: (order: number) => typeof EarlierTurn.Type = () => ({}),
+  options: { readonly copy?: "plain" | "written" | "sealed" } = {}
 ) {
   const t = createConvexTestWithBetterAuth();
-  const setup = await t.mutation(async (ctx) => {
+  const plain = await t.mutation(async (ctx) => {
     const { userId } = await seedAuthenticatedUser(ctx, { now: NOW });
     const threadId = await createThread(ctx, components.nina, { userId });
     const chatId = await ctx.db.insert("chats", {
@@ -152,6 +162,21 @@ export async function createSummaryTest(
     }
     return { chatId, prompts, threadId, userId };
   });
+  const copy = options.copy ?? "plain";
+  const written: readonly Replacement[] =
+    copy === "plain"
+      ? []
+      : await writtenThreadIn(t, plain.threadId, plain.userId);
+  const replacements: readonly Replacement[] =
+    copy === "sealed"
+      ? await sealThreadIn(t, plain.threadId, plain.userId)
+      : [];
+  const setup = {
+    ...plain,
+    prompts: Arr.map(plain.prompts, (id) =>
+      copyOf(replacements, copyOf(written, id))
+    ),
+  };
   const settled = (order: number) => ({
     ...setup,
     order,

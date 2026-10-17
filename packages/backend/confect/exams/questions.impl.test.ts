@@ -7,6 +7,7 @@ import {
   denied,
   documentRows,
   nf,
+  plantSteps,
   snapshotRows,
   stepRows,
 } from "@repo/backend/test/editor";
@@ -471,11 +472,7 @@ describe("exams/questions remove", () => {
           slug: nf,
         });
         const stepCount = PRUNE_PAGE_STEPS + 1;
-        yield* teacher.mutation(submit, {
-          batch: yield* batchText(0, "rina", stepCount),
-          documentId: first.prompt,
-          slug: nf,
-        });
+        yield* plantSteps(fixture, first.prompt, stepCount);
         yield* teacher.mutation(remove, {
           examId: exam.id,
           questionId: first.id,

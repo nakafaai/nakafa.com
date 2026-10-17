@@ -1,12 +1,20 @@
+import { RegisteredFunction } from "@confect/server";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { ContentSnapshotSetSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import confectSchema from "@repo/backend/confect/_generated/schema";
 import { INITIAL_MODEL_SLOT } from "@repo/backend/confect/contentRelease/models/slot";
 import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  ActionCtx,
+  MutationCtx,
+} from "@repo/backend/convex/_generated/server";
+import type schema from "@repo/backend/convex/schema";
+import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -17,7 +25,8 @@ import {
   testStoredReachability,
 } from "@repo/backend/test/content/release";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Schema } from "effect";
+import type { TestConvex } from "convex-test";
+import { Effect, Schema } from "effect";
 
 const StagedReleaseOptionsSchema = Schema.Struct({
   activeAppLocales: Schema.optionalKey(Schema.Array(ActiveAppLocaleCodeSchema)),
@@ -52,6 +61,47 @@ const StagedReleaseOptionsSchema = Schema.Struct({
 type StagedReleaseOptions = typeof StagedReleaseOptionsSchema.Type;
 
 /** Inserts one pending candidate slot with caller-owned frozen envelope bytes. */
+class ObservedStageActionFailure extends Schema.TaggedError<ObservedStageActionFailure>()(
+  "ObservedStageActionFailure",
+  {
+    cause: Schema.Unknown,
+  }
+) {}
+
+/** Runs one staging program through the real Convex action boundary. */
+export const runStage = Effect.fn("test.contentRelease.runStage")(function* <
+  A,
+  E,
+>(
+  target: TestConvex<typeof schema>,
+  makeProgram: (
+    ctx: ActionCtx
+  ) => Effect.Effect<
+    A,
+    E,
+    | ContentVerificationKeyResolver
+    | RegisteredFunction.ActionServices<typeof confectSchema>
+  >,
+  resolver = TEST_KEY_RESOLVER
+) {
+  const runtimeServices = yield* Effect.context<never>();
+  return yield* Effect.tryPromise({
+    catch: (cause) =>
+      new ObservedStageActionFailure({
+        cause,
+      }),
+    try: () =>
+      target.action((ctx) =>
+        Effect.runPromiseWith(runtimeServices)(
+          makeProgram(ctx).pipe(
+            Effect.provideService(ContentVerificationKeyResolver, resolver),
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
+        )
+      ),
+  });
+});
+
 export async function insertSignedCandidate(
   ctx: MutationCtx,
   releaseId: ReleaseId,

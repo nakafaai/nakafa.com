@@ -1,20 +1,22 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
 import {
   batchText,
+  documentRowOf,
   nf,
-  paragraphText,
+  plantSteps,
   stepRows,
 } from "@repo/backend/test/editor";
-import { IDLE, teacherExam } from "@repo/backend/test/exams";
+import { teacherExam } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { open } = refs.public.exams.exams;
 const { copy } = refs.public.exams.questions;
 const { open: openDocument } = refs.public.editor.documents;
-const { save } = refs.public.editor.snapshots;
 const { submit } = refs.public.editor.steps;
+const fold = refs.internal.editor.fold.fold;
 
 describe("exams/questions/copy", () => {
   beforeEach(() => {
@@ -35,13 +37,7 @@ describe("exams/questions/copy", () => {
           documentId: original.prompt,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(save, {
-          content: paragraphText("Soal"),
-          documentId: original.prompt,
-          slug: nf,
-          version: 2,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: original.prompt });
         yield* teacher.mutation(submit, {
           batch: yield* batchText(2, "rina", 1, "y"),
           documentId: original.prompt,
@@ -77,7 +73,8 @@ describe("exams/questions/copy", () => {
         expect(Arr.map(duplicate.steps, (step) => step.step)).toEqual(
           Arr.map(source.steps, (step) => step.step)
         );
-        expect(duplicate.head).toBe(1);
+        const copiedRow = yield* fixture.run(documentRowOf(copied.prompt));
+        expect(copiedRow.head).toBe(1);
       })
   );
 
@@ -99,7 +96,9 @@ describe("exams/questions/copy", () => {
           documentId: copied.prompt,
           slug: nf,
         });
-        expect(duplicate).toMatchObject({ head: 0, steps: [] });
+        expect(duplicate.steps).toEqual([]);
+        const copiedRow = yield* fixture.run(documentRowOf(copied.prompt));
+        expect(copiedRow.head).toBe(0);
       })
   );
 
@@ -131,23 +130,39 @@ describe("exams/questions/copy", () => {
   );
 
   it.effect(
-    "refuses to copy a history that one read of the step log does not finish, and writes nothing",
+    "copies a history of exactly one page of steps, renumbered from version 1 to the page's size",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Satu halaman");
+        const [original] = exam.questions;
+        yield* plantSteps(fixture, original.prompt, STEP_PAGE_STEPS);
+        const copied = yield* teacher.mutation(copy, {
+          examId: exam.id,
+          questionId: original.id,
+          slug: nf,
+        });
+        const steps = yield* fixture.run(stepRows);
+        const copiedSteps = Arr.filter(
+          steps,
+          (step) => step.documentId === copied.prompt
+        );
+        expect(Arr.map(copiedSteps, (step) => step.version)).toEqual(
+          Arr.makeBy(STEP_PAGE_STEPS, (index) => index + 1)
+        );
+      })
+  );
+
+  it.effect(
+    "refuses to copy a history longer than one page of steps, before it reads a step, and writes nothing",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const exam = yield* teacherExam(fixture, "Riwayat panjang");
         const [original] = exam.questions;
-        yield* teacher.mutation(submit, {
-          batch: yield* batchText(0, "rina", 200),
-          documentId: original.prompt,
-          slug: nf,
-        });
-        yield* teacher.mutation(submit, {
-          batch: yield* batchText(200, "rina", 1),
-          documentId: original.prompt,
-          slug: nf,
-        });
+        yield* plantSteps(fixture, original.prompt, STEP_PAGE_STEPS + 1);
         const refused = yield* teacher
           .mutation(copy, {
             examId: exam.id,
@@ -164,7 +179,7 @@ describe("exams/questions/copy", () => {
           slug: nf,
         });
         expect(questions.questions).toHaveLength(1);
-        expect(yield* fixture.run(stepRows)).toHaveLength(201);
+        expect(yield* fixture.run(stepRows)).toHaveLength(STEP_PAGE_STEPS + 1);
       })
   );
 });

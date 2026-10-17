@@ -192,7 +192,7 @@ export function memoryTools(f: NinaTest) {
   const keys = () =>
     f.t.query((ctx) => ctx.db.query("ninaMemoryKeys").collect());
 
-  /** Every stored restore record: a deleted memory kept for its Undo. */
+  /** Every stored restore record, a deleted memory kept for its window. */
   const restores = () =>
     f.t.query((ctx) => ctx.db.query("ninaMemoryRestores").collect());
 

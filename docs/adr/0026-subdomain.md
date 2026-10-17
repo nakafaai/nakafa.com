@@ -8,7 +8,9 @@ and the root of the URL tree are live, and the rest of the URL tree is planned.
 The eu data cell is planned, and it is created when the first school in the
 European Union signs (K5). The routes of the old School are deleted from the web
 app (#1051, K11) and get no redirect. Amended on 14 October 2026: ADR 0027
-decides what an email may hold (Data cells).
+decides what an email may hold (Data cells). Amended on 17 October 2026: the
+proxy decides the 404 of a school page before it streams, and the shared sign-in
+trusts only school hosts (Hosts).
 
 ## Context
 
@@ -31,13 +33,93 @@ finds the right data.
   organisations under a registrable domain of its own (see Data cells). One host
   serves every unit of the organisation.
 - A school host has no locale prefix. The language comes from the `NEXT_LOCALE`
-  cookie. Sign-in sets the cookie, and changing the language in the account menu
-  sets it again.
+  cookie, then from Accept-Language, then from the default locale, as next-intl
+  resolves it. Sign-in sets the cookie, and changing the language in the account
+  menu sets it again.
 - One sign-in covers `nakafa.com` and every school host of the `us` cell,
   through the cross-subdomain cookies that ADR 0011 describes.
-- The proxy reads only the host and the cookie. The map from host to school is
-  configuration, so a request never reads the database to find its school. Its
-  target is under 1 ms, measured at the edge.
+- The shared sign-in trusts an origin only when it is the site's own origin on a
+  local run, or a school host of the site. A school host's label must pass
+  `isSchoolLabel` (`confect/tenancy/slug.ts`), the rule that the school router
+  applies too, so a reserved label such as `cas`, `api` or `mcp` is not trusted,
+  and neither is a label of two levels, a label the slug rules refuse, or an
+  origin that a browser would not write. A script on a service host sends the
+  shared session cookie with a credentialed request, so trusting every subdomain
+  would let that script act on the session (ADR 0009). Better Auth asks for the
+  trusted origins with each request (`trustedOrigins` as a function in
+  `better-auth` 1.6.33, `dist/context/helpers.mjs` lines 76 to 82, and
+  `dist/api/middlewares/origin-check.mjs` line 108), so the answer holds the
+  origin that Better Auth checks for the request only when the rule trusts it
+  (`confect/auth/host.ts`). That origin is the Origin header or, when the header
+  is empty, the origin of the Referer header (`origin-check.mjs` line 98). A
+  browser sends an Origin with every POST: the Fetch standard appends one to
+  every request whose method is neither GET nor HEAD (section 3.2, step 4), and
+  MDN lists same-origin POST requests among those that carry it. A `null` Origin
+  is refused before the Referer is read, because the header is not empty. The
+  Referer therefore answers only a client that is not a browser, and such a
+  client already holds the session cookie that the check protects. A school host
+  and the base host both pass the check for a request with no Origin. A callback
+  URL on a school host is trusted only for a request from that host. No sign-in
+  flow names another school host yet.
+- The proxy reads the host, the cookie, and Accept-Language. The map from host to
+  school is configuration, so a request never reads the database to find its
+  school. A request that reads nothing has a target of under 1 ms, which no run has
+  measured yet. A page request on a school host makes the one Convex query of the
+  next bullets, and only to decide the page's status.
+- The proxy's redirects name the host and port that the visitor asked for, read
+  from the Host header (`lib/routing/visitor.ts`): the port of the header, or the
+  default port of the protocol when the header names none. Only the protocol comes
+  from the request URL. Its rewrites name the request URL, the origin of the
+  server, because Next proxies a rewrite to any other origin: a
+  school page is never rewritten to the visitor's host, and the school rewrite
+  reads the request URL and not `nextUrl`, which maps a loopback address to
+  `localhost`. A self-hosted run builds the request URL from the server's own
+  address, so the redirects of next-intl, such as `/` to `/en` on the main site,
+  still name that address. Vercel builds the request URL from the Host header, so
+  that limit applies to a local or self-hosted run only.
+- A school page's status is decided by the proxy before the page streams, in
+  `lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
+  the proxy (`lib/routing/public/profile.ts`). A visitor with no session is refused
+  when the school does not exist: `tenancy.profile.get` answers `TenantNotFound`. A
+  signed-in viewer is refused when `tenancy.viewer.get` answers `NotMember`, which
+  it gives for a school that does not exist and for a school the viewer does not
+  belong to alike, or `AccessDenied`. The refused page answers with the app's
+  not-found page and a 404 status, through a rewrite to the not-found route, in
+  the locale that the school page negotiates. The school layout cannot answer 404
+  itself: Next sends the static shell of the route with status 200 first, and a
+  `notFound()` call after that keeps the 200 (the installed docs, `loading.md`,
+  "Status codes").
+- A page request is a GET or HEAD document that is not a Flight request. A client
+  navigation and a prefetch both carry `rsc: 1`, so they pay no read, and the
+  layout still refuses a membership that has ended. A read that fails goes on to
+  the school tree, and its full cause is logged, so an outage never answers with
+  not found.
+- A path that next-intl cannot decode, such as `/%`, gets no rewrite and no
+  locale, so the request goes on unchanged for a refused visitor and an admitted
+  one. A 404 for a refused visitor alone would tell the two apart, so the refusal
+  does not apply to such a path.
+- A school page request costs two or three Convex query calls. The proxy makes one:
+  `tenancy.profile.get`, which reads one school row by its slug, or
+  `tenancy.viewer.get`, which reads a few indexed rows and at most `UNIT_LIMIT`
+  units. The layout reads its profile and, for a signed-in viewer, its viewer
+  again, because it still renders the name and the role. A signed-in viewer also
+  reads the session token twice, once in the proxy and once in the layout, because
+  React's `cache` does not span the two. Each read of the layout, token or query,
+  is retried within the shared network budget, so one read answers or fails
+  within 31.5 seconds (`packages/backend/client/network.ts`). The proxy's gate
+  makes one attempt per query, and the whole gate, its session read included,
+  waits at most one deadline: `NETWORK_ATTEMPT_DEADLINE`, 10 seconds, the bound
+  that every attempt of a network read already has (`packages/backend/client/network.ts`,
+  used by `lib/routing/school/refusal.ts`). A gate that misses the deadline or
+  fails goes on to the page, with its full cause logged. So a school that does not
+  answer holds a page request for at most 10 seconds in the proxy and then up to
+  31.5 seconds in the layout, before the error boundary. Before this change the
+  proxy alone could hold it for 31.5 seconds, so the worst case falls from about
+  63 seconds to about 42 seconds.
+  The deadline is not derived from a measured latency in this change: the
+  p50 and p99 of `tenancy.profile.get` and `tenancy.viewer.get` on a local
+  acceptance backend are not recorded here, and the bound stays the existing one
+  until they are.
 - School pages are private and not indexed (ADR 0011).
 - An address never holds personal data, so a student's name never enters a URL.
 - A school member or an account under 18 has no public profile (K15). Each school
@@ -78,6 +160,7 @@ Every address below is planned, except the root of a school host, which is live.
 | `nakafa.com/id/notifications` | One inbox. In a school, a panel on the right filters by school, and no second address exists. Push carries only an id and a general title. | Planned, changed |
 | `nakafa.com/id/user/settings/memory` | Personal Nina memory. It never appears inside a school. | Live |
 | `nakafa.com/id/user/settings` | Account settings | Live |
+| `nakafa.com/id/user/settings/learning` | Role and curriculum preferences | Live |
 | `nakafa.com/id` | Back to Nakafa learning | Live |
 | `api.nakafa.com/v1` | Public REST. No key, public data only. It never accepts a school path. | Live |
 | `mcp.nakafa.com/mcp` | Public MCP. No key, Nakafa content only. The name repeats in the host and the path, and it stays so that agents keep working. | Live |
@@ -183,6 +266,9 @@ A move runs in this order:
 - A school that moves cells needs an export, an import, a dated cutover, and a
   deletion of the source rows. Nothing moves on its own, and its members claim
   their Persons again with accounts of the target cell.
+- A school page that the proxy cannot read is answered as it was before the proxy
+  decided it: a missing school shows the not-found page with a 200 status, because
+  the layout cannot change the status once the shell is sent.
 - The eu cell adds a second place where data lives, a second `www` project, and a
   second budget. Its cost starts with the first European school that signs.
 - Data location is limited by the providers. Resend stores account data in the
@@ -196,8 +282,8 @@ A move runs in this order:
 - Personal data in an address, such as a student's name. An address is shared and
   logged, so it never carries personal data.
 - Creating the eu cell now. K5 defers it until the first European school signs.
-- Reading the database in the proxy to find a school. The proxy reads only the
-  host and the cookie.
+- Reading the database in the proxy to find a school. The host names the school,
+  so the proxy reads the database only to decide the status of a page (Hosts).
 - A session cookie of its own name for each cell under `.nakafa.com`. The
   browser sends every `.nakafa.com` cookie to every host under it, so the names
   keep the sessions apart but still send one cell's session to the other cell's
@@ -221,7 +307,9 @@ A move runs in this order:
 | The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 (K11). Its backend stays until the observation of ADR 0011 passes |
 | Host rewrite for school subdomains | Live |
 | Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
+| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Proven on `localhost` alone. Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so sign-in sharing across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |
 | School URL tree, root (`/`, Beranda) | Live |
+| The proxy decides the 404 of a school page (Hosts) | Live |
 | School URL tree, every other address | Planned |
 | `us` data cell | Live |
 | `eu` data cell, with its own `www` project and Convex deployment | Planned, created by K5 |

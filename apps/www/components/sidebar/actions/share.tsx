@@ -7,10 +7,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { getAppUrl } from "@repo/next-config/app";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 
 export function ShareButton() {
   const t = useTranslations("Common");
@@ -23,10 +23,12 @@ export function ShareButton() {
   function handleShare() {
     const url = `${getAppUrl()}${pathname}`;
     clipboard.copy(url);
-    toast.success(t("share-copied"), {
-      description: url,
-      position: "bottom-center",
-    });
+    // The link is on the clipboard, so the toast says only that it was copied:
+    // a URL is not a dictionary message, and a long one takes more than two lines.
+    toast.success(
+      { title: "link-copied.title" },
+      { position: "bottom-center" }
+    );
   }
 
   return (

@@ -2,6 +2,8 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
+import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import { makeSignature } from "better-auth/crypto";
 import {
@@ -49,9 +51,6 @@ const CommandInput = Schema.fromJsonString(
   })
 );
 const LEARNER_EMAIL = /^learner-[0-9a-f]{16}@acceptance\.invalid$/u;
-const Cookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
-);
 
 /** Answers each Convex command the way the local backend does. */
 function answerCommands(createdUser = '{"_creationTime":1,"_id":"user-1"}') {
@@ -129,7 +128,7 @@ describe("synthetic acceptance learner", () => {
 
         const cookie = yield* fs
           .readFileString(`${root}/first.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(Cookie)));
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         // Node's Buffer encodes the HMAC bytes, so no Effect code vouches for itself.
         const signature = Buffer.from(
           yield* Effect.promise(() =>
@@ -206,6 +205,52 @@ describe("synthetic acceptance learner", () => {
 
       expect(error._tag).toBe("SchemaError");
       expect(specs).toHaveLength(1);
+      expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.live(
+    "creates the learner again after the local backend timed out, and only then",
+    () =>
+      Effect.gen(function* () {
+        const { fs, root } = yield* fixture;
+        const specs = answerCommands();
+        mocks.command.mockImplementationOnce((spec: CommandSpec) =>
+          Effect.andThen(
+            Effect.sync(() => MutableList.append(specs, spec)),
+            acceptanceRuntimeError(
+              'Learner account failed: ✖ Failed to run function "adapter:create": Error: [Request ID: 1] Server Error Function execution timed out (maximum duration: 1s)'
+            )
+          )
+        );
+
+        yield* createAcceptanceLearner(root, `${root}/cookie.json`);
+
+        expect(MutableList.toArray(specs)).toHaveLength(4);
+        expect(yield* fs.exists(`${root}/cookie.json`)).toBe(true);
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect("does not create the learner again after any other failure", () =>
+    Effect.gen(function* () {
+      const { fs, root } = yield* fixture;
+      const specs = MutableList.make<CommandSpec>();
+      mocks.command.mockImplementation((spec: CommandSpec) =>
+        Effect.andThen(
+          Effect.sync(() => MutableList.append(specs, spec)),
+          acceptanceRuntimeError(
+            'Learner account failed: ✖ Failed to run function "adapter:create": Uncaught ConvexError: invalid'
+          )
+        )
+      );
+
+      const error = yield* createAcceptanceLearner(
+        root,
+        `${root}/cookie.json`
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("AcceptanceRuntimeError");
+      expect(MutableList.toArray(specs)).toHaveLength(1);
       expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );

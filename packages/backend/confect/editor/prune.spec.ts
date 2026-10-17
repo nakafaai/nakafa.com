@@ -9,23 +9,15 @@ const SweepResult = Schema.Struct({
 });
 
 /**
- * The sweeps of the editor's rows. They are internal: the crons start them, and each
- * one starts itself again with the cursor of the next page until its table is read.
- * `sweep` deletes the steps a snapshot covers, and `sweepClients` deletes the
- * editor-session records a snapshot covers.
+ * The sweep of the step log. It is internal: the cron starts it, and it starts itself
+ * again with the cursor of the next page until the log is read. It deletes the steps a
+ * snapshot covers. A session record has no sweep: it stays until its document is
+ * deleted, because a client that was away may still need it (ADR 0028).
  */
-export default GroupSpec.make()
-  .addFunction(
-    FunctionSpec.internalMutation({
-      name: "sweep",
-      args: () => ({ cursor: Schema.NullOr(Schema.String) }),
-      returns: () => SweepResult,
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalMutation({
-      name: "sweepClients",
-      args: () => ({ cursor: Schema.NullOr(Schema.String) }),
-      returns: () => SweepResult,
-    })
-  );
+export default GroupSpec.make().addFunction(
+  FunctionSpec.internalMutation({
+    name: "sweep",
+    args: () => ({ cursor: Schema.NullOr(Schema.String) }),
+    returns: () => SweepResult,
+  })
+);

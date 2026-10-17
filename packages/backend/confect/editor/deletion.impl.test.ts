@@ -4,7 +4,6 @@ import {
   batchText,
   clientRows,
   documentRows,
-  IDLE,
   nf,
   paragraphText,
   snapshotRows,
@@ -15,7 +14,7 @@ import { Array as Arr, Effect } from "effect";
 
 const documents = refs.public.editor.documents;
 const steps = refs.public.editor.steps;
-const snapshots = refs.public.editor.snapshots;
+const fold = refs.internal.editor.fold.fold;
 const deletion = refs.internal.editor.deletion;
 
 beforeEach(() => {
@@ -55,13 +54,7 @@ describe("editor/deletion document", () => {
           documentId: kept.id,
           slug: nf,
         });
-        vi.setSystemTime(TENANCY_NOW + IDLE);
-        yield* teacher.mutation(snapshots.save, {
-          content: paragraphText("Soal"),
-          documentId: removed.id,
-          slug: nf,
-          version: 3,
-        });
+        yield* fixture.internal.mutation(fold, { documentId: removed.id });
         expect(yield* fixture.run(clientRows)).toHaveLength(3);
         const done = yield* fixture.internal.mutation(deletion.document, {
           documentId: removed.id,
@@ -93,11 +86,15 @@ describe("editor/deletion document", () => {
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
         });
-        yield* teacher.mutation(steps.submit, {
-          batch: yield* batchText(0, "rina", 70),
-          documentId: made.id,
-          slug: nf,
-        });
+        // Seventy steps in calls of the batch limit, with each fold run before the next call.
+        for (const version of [0, 32, 64]) {
+          yield* teacher.mutation(steps.submit, {
+            batch: yield* batchText(version, "rina", version === 64 ? 6 : 32),
+            documentId: made.id,
+            slug: nf,
+          });
+          yield* fixture.finishScheduled();
+        }
         const firstPage = yield* fixture.internal.mutation(deletion.document, {
           documentId: made.id,
         });
@@ -121,13 +118,15 @@ describe("editor/deletion document", () => {
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
         });
-        // One session per step, so the head reaches 65 and every session holds a record.
+        // One session per step, so the head reaches 65 and every session holds a record. Each
+        // fold runs before the next call, so the backlog stays within one read.
         for (const index of Arr.makeBy(65, (step) => step)) {
           yield* teacher.mutation(steps.submit, {
             batch: yield* batchText(index, `rina-${index}`, 1),
             documentId: made.id,
             slug: nf,
           });
+          yield* fixture.finishScheduled();
         }
         const firstPage = yield* fixture.internal.mutation(deletion.document, {
           documentId: made.id,

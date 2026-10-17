@@ -27,7 +27,7 @@ export function Youtube({ videoId }: Props) {
       <div className="aspect-video">
         <YoutubePlayer videoId={videoId} />
       </div>
-      <CardFooter className="flex-wrap gap-2 border-t pb-6">
+      <CardFooter className="justify-end border-t pb-6">
         <Button
           nativeButton={false}
           render={

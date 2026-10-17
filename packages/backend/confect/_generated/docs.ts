@@ -69,6 +69,8 @@ export type NinaUploadsDoc = Document.Document<typeof schemaDefinition, "ninaUpl
 export type NotificationsDoc = Document.Document<typeof schemaDefinition, "notifications">;
 export type OnboardingProfilesDoc = Document.Document<typeof schemaDefinition, "onboardingProfiles">;
 export type OperatorsDoc = Document.Document<typeof schemaDefinition, "operators">;
+export type PostLikesDoc = Document.Document<typeof schemaDefinition, "postLikes">;
+export type PostsDoc = Document.Document<typeof schemaDefinition, "posts">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
@@ -173,6 +175,8 @@ export interface Docs {
   notifications: NotificationsDoc;
   onboardingProfiles: OnboardingProfilesDoc;
   operators: OperatorsDoc;
+  postLikes: PostLikesDoc;
+  posts: PostsDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;
   quranRows: QuranRowsDoc;
