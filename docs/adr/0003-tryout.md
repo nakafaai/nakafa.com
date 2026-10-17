@@ -97,10 +97,10 @@ write did before the gate. Each answer carries a version that grows with every
 write of its question, a clear included: deleting an answer deletes its
 version, so the question's placement keeps the version of the clear. The gate
 refuses an answer that is not newer than the latest write of its question
-(`TRYOUT_RESPONSE_STALE`). A page opened before versions sends none, and the
-gate writes its answer as the next version until that temporary compatibility
-goes (owner, exit, and cleanup are in `confect/tryouts/response/spec.ts`). A
-question of another learner reports `TRYOUT_PLACEMENT_NOT_FOUND`, like a
+(`TRYOUT_RESPONSE_STALE`). Since the contract step of ADR 0031 section 10
+(#1102), every answer carries its version, and the server refuses one without
+it, so a page opened before versions must reload. A question of another
+learner reports `TRYOUT_PLACEMENT_NOT_FOUND`, like a
 question that does not exist. The try-out store lives in
 `confect/tryouts/gate.ts` and goes with the rest of the try-out runtime at the
 engine cutover.
