@@ -162,7 +162,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "0.53.2",
+    approved: "0.53.3",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },
@@ -339,8 +339,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.53.2",
-    "Compiler patching moves with TypeScript and Effect. 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), 0.51 adds declaration locations to it, 0.52 adds schemaClassMissingBrand (default severity suggestion; base.json keeps it off until every Schema error class carries a brand, see docs/adr/0021-rules.md), effectSleepZeroToYieldNow and flatMapToTap (default severity suggestion; base.json sets error), and the opt-in preferEffectArray, preferEffectRecord, and preferSchemaTaggedError (default off). 0.53 adds errorPayloadShadowsName (default severity suggestion; base.json sets error) and the opt-in preferBarrelImport and preferNamespaceImport (default off). Every rule is decided in packages/typescript-config/base.json.",
+    "0.53.4",
+    "Compiler patching moves with TypeScript and Effect. 0.49 migrates the compiler integrations to the current TypeScript path APIs, 0.50 adds the apiStabilityLeak diagnostic off by default (the maintainers preset only), 0.51 adds declaration locations to it, 0.52 adds schemaClassMissingBrand (default severity suggestion; base.json keeps it off until every Schema error class carries a brand, see docs/adr/0021-rules.md), effectSleepZeroToYieldNow and flatMapToTap (default severity suggestion; base.json sets error), and the opt-in preferEffectArray, preferEffectRecord, and preferSchemaTaggedError (default off). 0.53 adds errorPayloadShadowsName (default severity suggestion; base.json sets error) and the opt-in preferBarrelImport and preferNamespaceImport (default off). 0.53.3 makes effect-tsgo diagnostics report related locations. 0.53.4 only moves the TypeScript next tag, which Nakafa does not use, and Aksara's one-day release age admits it on 18 October 2026, so both repositories stay on 0.53.3 until then. Every rule is decided in packages/typescript-config/base.json.",
   ],
   ["vitest@latest", "5.0.5", "The Effect 4 test adapter requires Vitest 5."],
   [
