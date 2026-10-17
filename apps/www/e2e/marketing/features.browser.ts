@@ -46,6 +46,26 @@ const clickCentered = Effect.fn("NakafaE2E.clickCentered")(function* (
   yield* Effect.promise(() => control.click({ scroll: "none" }));
 });
 
+/** Whether React has hydrated an element, which attaches its fiber to the node. */
+const hasReactFiber = (element: Element) =>
+  Object.keys(element).some((key) => key.startsWith("__reactFiber"));
+
+/**
+ * Waits until React has taken over a control. The server markup shows the
+ * control before that, and a press before then does nothing.
+ */
+const waitForReactTakeover = Effect.fn("NakafaE2E.waitForReactTakeover")(
+  function* (control: Locator) {
+    yield* Effect.promise(() =>
+      expect
+        .poll(() => control.evaluate(hasReactFiber), {
+          timeout: readinessTimeoutMilliseconds,
+        })
+        .toBe(true)
+    );
+  }
+);
+
 const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
   page: Page
 ) {
@@ -74,12 +94,15 @@ const expectNinaPageFlow = Effect.fn("NakafaE2E.expectNinaPageFlow")(function* (
   const reasoning = conversation.getByText(NINA_REASONING_TEXT, {
     exact: false,
   });
+  yield* waitForReactTakeover(reasoningTrigger);
   yield* clickCentered(reasoningTrigger);
   yield* Effect.promise(() => expect(reasoning).toBeVisible());
   yield* clickCentered(reasoningTrigger);
   // The collapse moves every row below it, so wait before the next target.
   yield* Effect.promise(() => expect(reasoning).toBeHidden());
+  yield* waitForReactTakeover(activityTrigger);
   yield* clickCentered(activityTrigger);
+  yield* waitForReactTakeover(mathTrigger);
   yield* clickCentered(mathTrigger);
   yield* Effect.promise(() =>
     expect(mathTrigger).toHaveAttribute("aria-expanded", "true")
