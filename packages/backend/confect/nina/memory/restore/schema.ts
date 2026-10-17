@@ -9,8 +9,8 @@ import { Schema } from "effect";
  * (kind, end day, author, confirmation time, topics, words and title), so
  * nothing is computed again. `memoryId` is the id the memory had, which names
  * the record. `keys` are the key rows the memory had in the memory index, so
- * the index comes back as it was. `expiresAt` is when the Undo ends: the
- * record is useless after it, and a scheduled job deletes it.
+ * the index comes back as it was. `expiresAt` is when the restore window ends:
+ * the record is useless after it, and a scheduled job deletes it.
  */
 export const NinaMemoryRestore = Schema.Struct({
   ...NinaMemory.fields,
