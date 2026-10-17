@@ -8,11 +8,11 @@ import { photoOf } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState } from "react";
-import { toast } from "sonner";
 import { insertDraftPost } from "@/components/user/posts/mutation.client";
 import { usePostDraft } from "@/components/user/posts/provider";
 import { remainingToShow } from "@/components/user/posts/remaining";
@@ -34,7 +34,6 @@ export function PostComposer({
   disabled: boolean;
 }) {
   const t = useTranslations("Posts");
-  const tCommon = useTranslations("Common");
   const text = usePostDraft((draft) => draft.text);
   const saving = usePostDraft((draft) => draft.saving);
   const setText = usePostDraft((draft) => draft.setText);
@@ -83,7 +82,10 @@ export function PostComposer({
               Effect.andThen(
                 Effect.sync(() => {
                   refuseSaving(posted);
-                  toast.error(tCommon("action-error"));
+                  toast.error({
+                    title: "action-error.title",
+                    description: "action-error.description",
+                  });
                 })
               )
             ),

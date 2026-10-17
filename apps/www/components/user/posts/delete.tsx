@@ -6,9 +6,9 @@ import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { removeFromLists } from "@/components/user/posts/mutation.client";
 import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
@@ -46,7 +46,10 @@ export function PostDeletion({
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(tCommon("action-error"));
+                  toast.error({
+                    title: "action-error.title",
+                    description: "action-error.description",
+                  });
                 })
               )
             ),

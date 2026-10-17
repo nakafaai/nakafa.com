@@ -139,7 +139,7 @@ for (const viewport of VIEWPORTS) {
             await expect(composerOf(page)).toHaveAttribute("readonly", "");
             changes.release();
             await expect(
-              page.getByText(app.Common["action-error"]).first()
+              page.getByText(app.Toast["action-error"].title).first()
             ).toBeVisible();
             await expect(postOf(page, REFUSED)).toHaveCount(0);
             await expect(composerOf(page)).toHaveValue(REFUSED);

@@ -17,12 +17,12 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { DateTime, Effect } from "effect";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import {
   likeInLists,
   unlikeInLists,
@@ -42,9 +42,10 @@ const PostDeletion = dynamic(
 );
 
 /**
- * One post of the list: the author's picture with a line down to the next post,
- * the author's name and the age of the post, the text, and the actions of the
- * post. Only the author sees the More menu.
+ * One post of the list: the author's picture, the author's name and the age of
+ * the post, the text, and the actions of the post. Only the author sees the
+ * More menu. Separate posts have no line between their pictures, because a
+ * post has no replies to join.
  */
 export function PostRow({
   author,
@@ -65,14 +66,11 @@ export function PostRow({
       className={cn("flex gap-3 py-4", !isLast && "border-b")}
       data-slot="post-row"
     >
-      <div className="flex shrink-0 flex-col items-center gap-2">
-        <PersonAvatar
-          className="size-10"
-          mascot={author.appUser.mascot}
-          photo={photoOf(author.appUser)}
-        />
-        {!isLast && <span aria-hidden className="w-px grow bg-border" />}
-      </div>
+      <PersonAvatar
+        className="size-10 shrink-0"
+        mascot={author.appUser.mascot}
+        photo={photoOf(author.appUser)}
+      />
       <div className="grid min-w-0 flex-1 gap-1">
         <div className="flex min-w-0 items-baseline gap-2 text-sm">
           <span className="truncate font-medium">{author.authUser.name}</span>
@@ -102,6 +100,7 @@ export function PostRow({
 
 /**
  * The like toggle of a post, with its count once the count is above zero. The
+ * count keeps its width at zero, so the first like does not move the row. The
  * change is made at once and the server answers after it.
  */
 function PostLikeButton({ post }: { post: ListPost }) {
@@ -127,7 +126,10 @@ function PostLikeButton({ post }: { post: ListPost }) {
             }).pipe(
               Effect.andThen(
                 Effect.sync(() => {
-                  toast.error(t("action-error"));
+                  toast.error({
+                    title: "action-error.title",
+                    description: "action-error.description",
+                  });
                 })
               )
             ),
@@ -149,9 +151,9 @@ function PostLikeButton({ post }: { post: ListPost }) {
         className={cn(post.liked && "text-destructive [&_path]:fill-current")}
         icon={FavouriteIcon}
       />
-      {post.likeCount > 0 && (
-        <span className="text-xs tabular-nums">{post.likeCount}</span>
-      )}
+      <span className="min-w-[3ch] text-xs tabular-nums">
+        {post.likeCount > 0 && post.likeCount}
+      </span>
     </Button>
   );
 }
