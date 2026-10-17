@@ -275,11 +275,20 @@ describe("Nina generation through the real Agent component", () => {
         ],
       },
     ]);
-    const answer = Option.getOrUndefined(
-      Arr.findFirst(
-        state.messages.page,
-        (message) => message.role === "assistant"
+    // The learner reads the transcript through its page, which opens the sealed rows.
+    const learner = Ref.decodeReturnsSync(
+      refs.public.nina.messages.page,
+      await f.owner.query(
+        Ref.getFunctionReference(refs.public.nina.messages.page),
+        {
+          chatId: f.chatId,
+          paginationOpts: { cursor: null, numItems: 20 },
+          threadId: f.threadId,
+        }
       )
+    );
+    const answer = Option.getOrUndefined(
+      Arr.findFirst(learner.page, (message) => message.role === "assistant")
     );
     expect(answer?.parts).toEqual(
       expect.arrayContaining([

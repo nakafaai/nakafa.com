@@ -29,6 +29,12 @@ export function getPlanCreditConfig(plan: UserPlan) {
 }
 
 /**
+ * Credits one Nina response holds and charges. The web reads it to show how
+ * many answers a plan gives, so it lives beside the plan grants.
+ */
+export const NINA_RESPONSE_CREDITS = 5;
+
+/**
  * Default plan for new users.
  */
 export const DEFAULT_USER_PLAN: UserPlan = "free";

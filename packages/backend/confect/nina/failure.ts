@@ -1,7 +1,5 @@
-import {
-  classify,
-  GatewayFailure,
-} from "@repo/backend/confect/gateway/failure";
+import { classify } from "@repo/backend/confect/gateway/classify";
+import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { NinaFailureReason } from "@repo/backend/confect/nina/contract/turn";
 import { Cause, Option, Schema } from "effect";
 

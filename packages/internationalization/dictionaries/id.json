@@ -305,13 +305,13 @@
     "action-loading": "Memuat",
     "cancel-cta": "Batal",
     "start-dialog-title": "Mulai try out ini?",
-    "start-dialog-description": "Try out aktif hingga 3 hari. Setelah mulai, kamu bebas pilih bagian yang ingin dikerjakan lebih dulu.",
+    "start-dialog-description": "Try out aktif hingga 3 hari, dan setelah mulai kamu bebas memilih bagian yang ingin dikerjakan lebih dulu.",
     "free-dialog-title": "Mulai try out gratis",
-    "free-dialog-description": "Kamu bebas mengerjakan dan mengulang semua try out. Setiap percobaan aktif hingga 3 hari dan tetap mendapat skor. Pembahasan tersedia dengan Nakafa Pro.",
-    "free-entry-dialog-description": "Kamu bebas mengerjakan dan mengulang semua try out, lengkap dengan skor. Waktu set langsung berjalan setelah kamu mulai. Pembahasan tersedia dengan Nakafa Pro.",
+    "free-dialog-description": "Kamu bebas mengerjakan dan mengulang semua try out, setiap percobaan aktif hingga 3 hari dan tetap mendapat skor, tetapi pembahasan tersedia dengan Nakafa Pro.",
+    "free-entry-dialog-description": "Kamu bebas mengerjakan dan mengulang semua try out, lengkap dengan skor, dan waktu set langsung berjalan setelah kamu mulai, tetapi pembahasan tersedia dengan Nakafa Pro.",
     "restart-dialog-title": "Mulai try out ini dari awal?",
-    "restart-dialog-description": "Kamu akan mulai dari awal. Hasil sebelumnya tetap tersimpan.",
-    "restart-entry-dialog-description": "Kamu akan mulai dari awal, dan waktu set langsung berjalan. Hasil sebelumnya tetap tersimpan.",
+    "restart-dialog-description": "Kamu akan mulai dari awal, dan hasil sebelumnya tetap tersimpan.",
+    "restart-entry-dialog-description": "Kamu akan mulai dari awal, waktu set langsung berjalan, dan hasil sebelumnya tetap tersimpan.",
     "start-entry-dialog-description": "Waktu set langsung berjalan setelah kamu mulai.",
     "paywall-title": "Lihat pembahasan {count} soal ini",
     "paywall-description": "Pahami langkah dan alasan di balik setiap jawaban, lalu tanya Nina kalau masih bingung.",
@@ -552,7 +552,7 @@
     "memory": "Memori",
     "new": "Memori baru",
     "empty": "Belum ada memori",
-    "empty-description": "Ceritakan dirimu ke Nina saat mengobrol, atau tambahkan memori di sini",
+    "empty-description": "Ceritakan dirimu ke Nina saat mengobrol, atau tambahkan memori di sini.",
     "no-result": "Memori tidak ditemukan",
     "edit": "Ubah memori",
     "delete": "Hapus memori",
@@ -572,8 +572,12 @@
       "title": "Tindakan ini belum berhasil.",
       "description": "Silakan coba lagi."
     },
-    "copy-error": { "title": "Gagal nyalin nih" },
-    "copy-success": { "title": "Udah disalin!" },
+    "copy-error": {
+      "title": "Gagal nyalin nih"
+    },
+    "copy-success": {
+      "title": "Udah disalin!"
+    },
     "curriculum-preference-error": {
       "title": "Preferensi kurikulum gagal disimpan.",
       "description": "Coba lagi ya."
@@ -582,12 +586,16 @@
       "title": "Onboarding belum selesai.",
       "description": "Coba lagi."
     },
-    "onboarding-invalid-selection": { "title": "Jawab semua pertanyaan." },
+    "onboarding-invalid-selection": {
+      "title": "Jawab semua pertanyaan."
+    },
     "onboarding-save-error": {
       "title": "Jawaban belum tersimpan.",
       "description": "Coba lagi."
     },
-    "link-copied": { "title": "Link berhasil disalin!" },
+    "link-copied": {
+      "title": "Link berhasil disalin!"
+    },
     "provider-error": {
       "title": "Tidak bisa lanjut dengan Google.",
       "description": "Coba lagi ya."
@@ -612,16 +620,8 @@
       "title": "Bagian belum bisa diselesaikan.",
       "description": "Coba lagi ya."
     },
-    "tryout-complete-part-success": {
-      "title": "Bagian selesai.",
-      "description": "Kamu bisa pilih bagian lain atau kembali ke set."
-    },
     "tryout-preference-error": {
       "title": "Preferensi try out belum tersimpan."
-    },
-    "tryout-start-entry-success": {
-      "title": "Try out dimulai.",
-      "description": "Waktu sudah berjalan."
     },
     "tryout-start-error": {
       "title": "Try out belum bisa dimulai.",
@@ -631,21 +631,19 @@
       "title": "Bagian belum bisa dimulai.",
       "description": "Coba lagi ya."
     },
-    "tryout-start-part-success": {
-      "title": "Bagian dimulai.",
-      "description": "Waktu sudah berjalan."
-    },
-    "tryout-start-success": {
-      "title": "Try out dimulai.",
-      "description": "Kamu bisa pilih bagian yang mau dikerjakan dulu."
-    },
     "tryout-submit-answer-error": {
       "title": "Jawabanmu belum bisa disimpan.",
       "description": "Coba lagi ya."
     },
-    "memory-limit": { "title": "Tunggu sebentar, lalu simpan lagi." },
-    "memory-missing": { "title": "Memori ini sudah tidak ada." },
-    "memory-too-long": { "title": "Teks terlalu panjang untuk memori." },
+    "memory-limit": {
+      "title": "Tunggu sebentar, lalu simpan lagi."
+    },
+    "memory-missing": {
+      "title": "Memori ini sudah tidak ada."
+    },
+    "memory-too-long": {
+      "title": "Teks terlalu panjang untuk memori."
+    },
     "interpretation-error": {
       "title": "Tafsir ayat ini belum dapat dimuat.",
       "description": "Coba lagi."
@@ -726,8 +724,12 @@
       "title": "Sesimu sudah berakhir.",
       "description": "Masuk lagi untuk melanjutkan."
     },
-    "admitted-elsewhere": { "title": "Nina sedang menjawab di chat baru" },
-    "open-chat": { "title": "Buka chat" },
+    "admitted-elsewhere": {
+      "title": "Nina sedang menjawab di chat baru"
+    },
+    "open-chat": {
+      "title": "Buka chat"
+    },
     "school-language-error": {
       "title": "Kamu belum bisa mengubah bahasa.",
       "description": "Silakan coba lagi."
@@ -960,107 +962,198 @@
     "nakafa-taxonomy": "Menelusuri koleksi materi"
   },
   "Pricing": {
-    "headline": "<mark>Kita juga pernah jadi pelajar.</mark> Ngerti rasanya milih antara belajar atau makan. Akses dasar gratis. Selamanya.",
     "free-title": "Gratis",
-    "free-description": "Mulai belajar sesuai kecepatanmu",
-    "free-feature-1": "Akses ke ratusan materi pembelajaran",
-    "free-feature-2": "Latihan dan pembahasan di dalam materi belajar",
-    "free-feature-3": "25 kredit AI setiap hari untuk Nina, tutor AI kamu",
+    "free-description": "Buat belajar sehari-hari.",
+    "free-worth-card": "Tanpa kartu.",
+    "free-worth-trial": "Tanpa masa percobaan.",
+    "free-feature-1": "Ratusan materi belajar",
+    "free-feature-2": "Latihan dan pembahasan di dalam materi",
+    "free-feature-3": "Kredit harian untuk tanya Nina",
     "free-feature-4": "Semua try out tanpa batas, lengkap dengan skor",
-    "free-feature-5": "Akses komunitas di Discord",
-    "free-cta": "Mulai Belajar",
+    "free-feature-5": "Komunitas di Discord",
+    "free-cta": "Mulai belajar",
     "pro-title": "Pro",
-    "pro-description": "Untuk ritme belajar yang lebih intensif.",
+    "pro-description": "Buat kamu yang lagi ngejar sesuatu.",
     "pro-period": "/bulan",
-    "pro-feature-1": "Semua fitur Gratis, plus:",
-    "pro-feature-2": "3.000 kredit AI setiap bulan untuk Nina",
-    "pro-feature-3": "Pembahasan lengkap untuk semua try out, termasuk percobaan sebelumnya",
+    "pro-feature-1": "Semua yang ada di Gratis",
+    "pro-feature-2": "{credits, number} kredit setiap bulan untuk tanya Nina",
+    "pro-feature-3": "Pembahasan lengkap semua try out, termasuk percobaan sebelumnya",
     "pro-feature-5": "Bantuan prioritas saat kamu butuh arahan",
-    "pro-cta": "Dapatkan Pro"
+    "pro-cta": "Ambil Pro"
   },
   "PricingPage": {
     "metadata-title": "Harga Nakafa: Gratis dan Pro",
     "metadata-description": "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan Tryout online.",
     "breadcrumb": "Harga",
-    "headline": "Mulai dengan Gratis. <mark>Beralih ke Pro saat kamu siap.</mark>",
-    "description": "Bandingkan kedua paket, lalu pilih yang sesuai dengan cara belajarmu.",
-    "faq-badge": "Tanya jawab",
-    "faq-headline": "Ada yang ingin kamu <mark>pastikan?</mark>",
-    "faq-contact": "Tanya langsung",
-    "q1": "Apa yang bisa dipelajari di Nakafa?",
-    "a1": "Nakafa menyediakan materi dari tingkat SD hingga universitas, termasuk Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, AI, dan Data Science. Pilihan yang tersedia mengikuti kurikulum dan materi yang sudah diterbitkan.",
-    "q2": "Bagaimana cara belajar di Nakafa?",
-    "a2": "Mulai dari materi, lanjutkan dengan latihan soal atau Tryout, lalu tanya Nina saat ada konsep yang belum kamu pahami.",
-    "q3": "Apakah ada latihan soal dengan pembahasan?",
-    "a3": "Ada. Latihan soal dilengkapi pembahasan agar kamu bisa memahami prosesnya, bukan hanya melihat jawaban akhir.",
-    "q4": "Apa yang bisa dilakukan Nina?",
-    "a4": "Nina dapat menjelaskan konsep, menjawab pertanyaan tentang materi, dan membantu saat kamu buntu. Semua pengguna memakai Nina yang sama, dan satu jawaban memakai 5 kredit.",
-    "q5": "Apakah Nakafa punya Tryout online?",
-    "a5": "Ya. Semua try out bisa dikerjakan dan diulang secara gratis tanpa batas. Kamu tetap mendapat skor, termasuk skor IRT pada set yang mendukungnya. Nakafa Pro membuka pembahasan lengkap, termasuk untuk percobaan sebelumnya.",
-    "q6": "Apakah saya bisa belajar tanpa membuat akun?",
-    "a6": "Bisa. Materi publik dapat dibaca tanpa akun. Masuk diperlukan untuk menyimpan progres, memakai kredit AI, mengerjakan Tryout, dan mengaktifkan Pro.",
-    "q7": "Bisakah sekolah menggunakan Nakafa?",
-    "a7": "Bisa. Guru dan siswa memakai materi, latihan soal, dan Tryout yang sama seperti pengguna lain. Jika sekolah membutuhkan lebih dari itu, hubungi kami.",
-    "q8": "Bisakah sumber materi Nakafa diperiksa?",
-    "a8": "Bisa. Materi dapat menyertakan rujukan, dan sumber Markdown tersedia saat kamu ingin memeriksa isi atau mengusulkan perbaikan.",
-    "q9": "Apa itu kredit AI Nakafa?",
-    "a9": "Kredit AI digunakan saat Nina menjawab pertanyaanmu. Semua pengguna memakai Nina yang sama, dan satu jawaban memakai 5 kredit.",
+    "checkout-line": "Harga saat ini dan pembayaran: {url}",
+    "comparison-title": "{price} itu segini",
+    "drink-title": "Kira-kira {count} {item}",
+    "drink-note": "Bedanya, yang ini kepakai sebulan penuh.",
+    "drink-idr": "gelas es kopi susu",
+    "drink-eur": "kopi untuk dibawa pulang",
+    "drink-usd": "gelas latte",
+    "per-day-title": "{price} sehari",
+    "per-day-note-idr": "Seharga sekali parkir motor, kurang lebih.",
+    "per-day-note-other": "Harga sebulan dibagi 30 hari, kurang lebih.",
+    "answers-title": "{answers, number} jawaban Nina",
+    "answers-note": "Sekitar {perDay} jawaban sehari.",
+    "q6": "Bisa belajar tanpa membuat akun?",
+    "a6": "Bisa. Materi publik dapat dibaca tanpa akun. Masuk diperlukan untuk menyimpan progres, bertanya ke Nina, dan mengerjakan try out.",
+    "q9": "Apa itu kredit AI?",
+    "a9": "Kredit AI dipakai saat Nina menjawab pertanyaanmu. Satu jawaban memakai {cost} kredit.",
     "q10": "Kapan kredit AI diperbarui?",
     "a10": "Kredit Gratis diperbarui setiap hari. Kredit Pro diperbarui pada awal setiap bulan.",
     "q11": "Apakah sisa kredit dibawa ke periode berikutnya?",
-    "a11": "Tidak. Saat kredit diperbarui, periode baru dimulai dan sisa kredit sebelumnya tidak ikut terbawa.",
+    "a11": "Tidak. Sisa kredit hangus saat periode baru dimulai.",
     "q12": "Apa yang terjadi jika kredit AI habis?",
     "a12": "Nina dapat digunakan lagi setelah pembaruan kredit berikutnya atau setelah kamu beralih ke Pro. Materi dan latihan soal tetap bisa digunakan.",
     "q13": "Apakah jawaban Nina yang gagal tetap memakai kredit?",
     "a13": "Tidak. Jika Nina tidak dapat menyelesaikan jawaban, kredit tidak dipotong.",
     "q14": "Apakah Pro merupakan langganan bulanan?",
-    "a14": "Ya. Masuk ke akun sebelum membayar agar Pro terhubung ke akun Nakafa milikmu. Pro ditagihkan setiap bulan dan tetap aktif sampai kamu membatalkannya.",
+    "a14": "Ya. Masuk ke akun sebelum membayar agar Pro terhubung ke akun Nakafa milikmu. Pro tetap aktif sampai kamu membatalkannya.",
     "q15": "Bagaimana cara mengelola atau membatalkan Pro?",
     "a15": "Masuk ke akunmu, pilih tombol Pro, lalu kelola atau batalkan langganan melalui portal pelanggan.",
     "q16": "Apa yang terjadi setelah Pro berakhir?",
     "a16": "Akunmu kembali ke paket Gratis dan menerima jatah kredit Gratis harian.",
     "q17": "Apakah materi belajar dasar akan tetap gratis?",
-    "a17": "Ya. Materi belajar dasar Nakafa tetap gratis untuk semua orang.",
-    "q18": "Kurikulum apa yang tersedia di Nakafa?",
-    "a18": "Nakafa memuat Kurikulum Merdeka, Cambridge International, Singapore MOE, dan jalur yang diselaraskan dengan standar Amerika Serikat. Materi yang bisa dipilih mengikuti bagian kurikulum yang sudah diterbitkan.",
-    "q19": "Apakah Nakafa bisa digunakan untuk persiapan ujian?",
-    "a19": "Bisa. Gunakan materi untuk mengulang konsep, latihan soal untuk menguji pemahaman, dan Tryout untuk berlatih dalam format ujian. Set yang tersedia dapat berbeda sesuai ujian yang sedang diterbitkan.",
+    "a17": "Ya. Selamanya, untuk semua orang.",
     "q20": "Apakah Nakafa bisa digunakan di ponsel?",
     "a20": "Bisa. Nakafa dapat dibuka melalui browser di ponsel, tablet, atau komputer tanpa memasang aplikasi."
   },
   "Faq": {
-    "badge": "Bantuan",
-    "headline": "Masih ada <mark>pertanyaan?</mark>",
-    "description": "Tidak menemukan yang kamu cari? Hubungi kami langsung.",
-    "cta-contact": "Hubungi founder",
-    "q1": "Apakah Nakafa benar-benar gratis?",
-    "a1": "Ya. Materi belajar dan semua try out bisa kamu akses gratis. Kamu bebas mengulang try out dan tetap mendapat skor. Nakafa Pro membuka pembahasan try out serta memberi 3.000 kredit AI setiap bulan.",
-    "q2": "AI apa yang bisa saya gunakan?",
-    "a2": "Semua pengguna memakai Nina yang sama. Kredit menentukan berapa banyak jawaban yang bisa kamu dapatkan, dan satu jawaban memakai 5 kredit.",
     "q4": "Mata pelajaran dan kelas apa yang tercakup?",
     "a4": "Kami mencakup SD hingga universitas. Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, dan lainnya. Dari konsep dasar SD hingga kursus universitas tingkat lanjut.",
-    "q5": "Apakah data saya pribadi?",
-    "a5": "Ya. Kami tidak menjual data kamu. Percakapan AI diproses dengan aman. Kamu bisa menghapus riwayat chat kapan saja. Kami mengutamakan privasi.",
-    "q6": "Bisakah sekolah menggunakan Nakafa?",
-    "a6": "Bisa. Guru dan siswa bisa mengakses semua materi belajar dan try out secara gratis. Jika sekolahmu butuh lebih dari itu, hubungi founder.",
     "q7": "Bagaimana Nakafa memastikan akurasi konten?",
     "a7": "Semua konten dibuat oleh kontributor yang berkualifikasi dan ditinjau oleh komunitas. Pendekatan source-available kami membuat siapa pun bisa meninjau materi dan mengusulkan perbaikan. Latihan soal punya pembahasan supaya kamu belajar dari kesalahan, bukan hanya skor."
   },
+  "Landing": {
+    "hero-title": "Belajar sampai <mark>paham.</mark>",
+    "hero-tag": "Baca materinya, coba soalnya, tanya Nina kalau mentok.",
+    "hero-start": "Mulai belajar",
+    "hero-tryout": "Coba try out",
+    "lesson-title": "Materi yang enak dibaca",
+    "lesson-lead": "Pendek, runtut, langsung ke contoh.",
+    "lesson-ask": "Gerak parabola itu gimana sih?",
+    "lesson-answer": "Baca ini dulu.",
+    "lesson-tabs": "Pelajaran",
+    "lab": {
+      "circle": {
+        "view": "Visual lingkaran satuan"
+      },
+      "projectile": {
+        "choose": "Pilih sudut lontar",
+        "view": "Visual lintasan bola lontar",
+        "initial-speed": "Kelajuan awal",
+        "flight-time": "Waktu di udara",
+        "range": "Jangkauan",
+        "peak-height": "Tinggi puncak"
+      },
+      "atom": {
+        "choose": "Pilih atom netral",
+        "atomic-number": "Nomor atom",
+        "configuration": "Konfigurasi",
+        "electron-total": "Jumlah elektron",
+        "capacity": "Kapasitas",
+        "outer-shell": "Kulit terluar"
+      },
+      "bacteria": {
+        "choose": "Pilih tampilan bakteri",
+        "view": "Model struktur bakteri",
+        "shape": {
+          "tab": "Bentuk"
+        },
+        "inside": {
+          "tab": "Isi sel"
+        },
+        "wall": {
+          "tab": "Dinding"
+        }
+      }
+    },
+    "tryout-title": "Skor try out langsung keluar",
+    "tryout-lead": "Mau ulang? Tinggal ulang.",
+    "tryout-ask": "Aku udah paham belum, ya?",
+    "tryout-answer": "Coba jawab yang ini.",
+    "tryout-right": "Benar, itu jawabannya.",
+    "tryout-wrong": "Belum. Coba lihat sekali lagi.",
+    "nina-title": "Nina tahu bagian mana yang kamu maksud",
+    "nina-lead": "Tanya dari soal atau materi yang sedang kamu buka.",
+    "nina-ask": "Nomor ini masih bingung.",
+    "nina-answer": "Sini, kita bedah bareng.",
+    "nina-chat-ask": "Kenapa jawabanku 13 salah?",
+    "nina-chat-answer": "### 13 muncul kalau m dianggap 3\n\nHitungannya jadi $5(2) + 9/3 = 13$. Masalahnya, $m = 3$ tidak cocok dengan soal.\n\n#### Cek dengan yang diketahui\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nDengan $m = 1$ hasilnya pas: $2(2) + 4/1 = 8$. Jadi $m$ harus 1, dan jawabannya 19.",
+    "scene-label": "Adegan tiga dimensi gerak parabola bola meriam",
+    "scene-title": "Yang sulit dibayangkan, bisa kamu lihat",
+    "scene-lead": "Adegan dari pelajaran Gerak Parabola.",
+    "scene-ask": "Kalau sudutnya diganti, gimana?",
+    "scene-answer": "Perhatikan bolanya.",
+    "memory-title": "Nina makin kenal kamu",
+    "memory-lead": "Ingatannya bisa kamu baca, ubah, jeda, atau hapus.",
+    "memory-said-1": "Aku kelas 12 IPA.",
+    "memory-said-2": "Jelasin pakai contoh dulu, ya.",
+    "memory-said-3": "Aku lagi ngejar SNBT 2027.",
+    "memory-said-4": "Limit trigonometri masih sering salah.",
+    "memory-said-5": "Aku biasanya belajar malam.",
+    "memory-when-day": "Hari pertama",
+    "memory-when-week": "Minggu ketiga",
+    "memory-when-month": "Bulan kedua",
+    "privacy-title": "Privasi sejak awal",
+    "privacy-lead": "Ingatan Nina dan judul obrolanmu disimpan terkunci, dengan kunci khusus untukmu.",
+    "privacy-words": "Ingatan Nina",
+    "curricula-title": "Kurikulummu boleh berbeda. Alur belajarmu tetap sama.",
+    "curricula-list": "Kurikulum yang tersedia",
+    "letter-hello": "Hai, aku Nabil.",
+    "letter-student": "Aku juga pernah jadi pelajar. Ngerti rasanya harus milih antara belajar atau makan.",
+    "letter-fair": "Menurutku itu nggak adil. Paham atau nggaknya kamu nggak seharusnya ditentukan isi dompet.",
+    "letter-free": "Makanya <mark>akses dasar Nakafa gratis. Selamanya.</mark>",
+    "letter-open": "Nakafa masih jauh dari selesai. Kalau ada yang kurang, bilang aja. Aku baca.",
+    "letter-slow": "Pelan-pelan nggak apa-apa. Yang penting paham.",
+    "letter-founder": "Founder Nakafa",
+    "letter-signature": "Tanda tangan Nabil",
+    "medals-title": "Teman belajarmu datang dari sini",
+    "medals-hook": "Kampusmu?",
+    "medals-label": "Sekolah dan kampus",
+    "prices-title": "Gratis itu beneran gratis",
+    "school-title": "Nakafa juga buat satu sekolah",
+    "school-lead": "Butuh LMS, integrasi konten, atau alur kelas khusus? Kita cari yang cocok.",
+    "school-cta": "Ceritakan sekolahmu",
+    "school-class": "Satu kelas hewan",
+    "faq-title": "Yang sering ditanyakan",
+    "faq-subjects-question": "Mata pelajaran dan kelas apa yang tercakup?",
+    "faq-subjects-answer": "Kami mencakup SD hingga universitas: Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, dan lainnya.",
+    "faq-account-question": "Bisa belajar tanpa membuat akun?",
+    "faq-account-answer": "Bisa. Materi publik dapat dibaca tanpa akun. Masuk diperlukan untuk menyimpan progres, bertanya ke Nina, dan mengerjakan try out.",
+    "faq-phone-question": "Bisa dipakai di ponsel?",
+    "faq-phone-answer": "Bisa. Nakafa berjalan di peramban ponsel, tablet, dan komputer, tanpa memasang apa pun.",
+    "faq-credits-question": "Apa itu kredit AI?",
+    "faq-credits-answer": "Kredit AI dipakai saat Nina menjawab pertanyaanmu. Satu jawaban memakai {cost} kredit.",
+    "faq-empty-question": "Apa yang terjadi kalau kreditku habis?",
+    "faq-empty-answer": "Nina bisa dipakai lagi setelah kredit diperbarui. Materi, latihan, dan try out tetap bisa dipakai.",
+    "faq-accuracy-question": "Bagaimana Nakafa memastikan akurasi konten?",
+    "faq-accuracy-answer": "Semua konten dibuat oleh kontributor yang berkualifikasi. Pendekatan source-available kami membuat siapa pun bisa meninjau materi dan mengusulkan perbaikan.",
+    "faq-languages-question": "Nakafa tersedia dalam bahasa apa?",
+    "faq-languages-answer": "Bahasa Indonesia, Inggris, dan Jerman.",
+    "faq-nina-question": "Apakah jawaban Nina selalu benar?",
+    "faq-nina-answer": "Tidak selalu. Nina bisa keliru, jadi cek lagi dengan materi atau soalnya.",
+    "faq-memory-question": "Di mana aku mengatur apa yang Nina ingat?",
+    "faq-memory-answer": "Di Pengaturan, buka Memori. Di sana kamu bisa membaca, mengubah, menjeda, atau menghapus ingatan Nina.",
+    "faq-data-question": "Apakah datamu tetap milikmu?",
+    "faq-data-answer": "Nakafa tidak menjual data pribadimu, dan kamu bisa menghapus obrolan atau ingatan Nina mana pun.",
+    "community-title": "Belajar nggak harus sendirian",
+    "community-lead": "Tanya, jawab, saling bantu di Discord.",
+    "community-cta": "Gabung Discord",
+    "community-crowd": "Hewan-hewan teman belajar, sebagian sedang mengetik",
+    "closing-ask": "Hari ini mau paham {topic}?",
+    "closing-topic-0": "apa",
+    "closing-topic-1": "gerak parabola",
+    "closing-topic-2": "fungsi kuadrat",
+    "closing-topic-3": "konsep mol",
+    "closing-topic-4": "sel"
+  },
   "Features": {
-    "story": "Belajar tidak berhenti setelah kamu selesai membaca. Coba pemahamanmu lewat Tryout, lihat yang masih bikin ragu, lalu <mark>tanya Nina tanpa mulai dari awal.</mark>",
-    "subjects-title": "Mulai dari <mark>pelajaran yang kamu butuhkan</mark>",
-    "subjects-navigation": "Pelajaran yang tersedia",
-    "tryout-title": "Setelah belajar, coba lihat <mark>apa yang benar-benar kamu pahami</mark>",
-    "nina-title": "Kalau masih ragu, <mark>Nina sudah tahu bagian mana yang kamu maksud</mark>",
-    "nina-prompt": "Pada operasi △(a,b) = ka + b/m, diketahui △(2,4) = 8 dan △(3,5) = 11. Bagaimana cara mencari △(5,9)?",
-    "nina-reasoning": "Bandingkan dua persamaan yang diketahui. Selisihnya menunjukkan nilai bulat positif $$k$$ dan $$m$$ sebelum perhitungan terakhir.",
-    "nina-answer": "Kurangi persamaan pertama dari persamaan kedua:\n\n$$k+\\frac{1}{m}=3$$\n\nKarena $$k$$ dan $$m$$ bilangan bulat positif, $$\\frac{1}{m}$$ hanya bisa bulat saat $$m=1$$. Jadi $$k=2$$.\n\nMasukkan keduanya ke operasi terakhir:\n\n$$\\triangle(5,9)=5(2)+\\frac{9}{1}=19$$\n\nJadi $$\\triangle(5,9)=19$$.",
-    "projectile-title": "Gerak yang sulit dibayangkan jadi lebih mudah saat <mark>bisa kamu lihat sendiri</mark>",
-    "projectile-controls": "Pilih lintasan bola meriam",
     "projectile-sixty-degree": "Enam Puluh Derajat",
     "projectile-long-drive": "Jarak Jauh",
     "projectile-high-arc": "Lengkung Tinggi",
-    "projectile-view-label": "Visual analisis gerak parabola bola meriam",
     "projectile-horizontal-component": "Komponen mendatar",
     "projectile-vertical-component": "Komponen vertikal",
     "projectile-peak-time": "Waktu puncak",
@@ -1068,34 +1161,10 @@
     "projectile-range": "Jangkauan",
     "projectile-instantaneous-velocity": "Kecepatan pada dua detik"
   },
-  "CurriculaSection": {
-    "headline": "Kurikulummu boleh berbeda. <mark>Alur belajarmu tetap menyatu.</mark>",
-    "description": "Mulai dari jalur sekolahmu. Materi, Tryout, dan Nina mengikuti kurikulum yang kamu gunakan.",
-    "cta": "Lihat semua kurikulum",
-    "navigation": "Kurikulum yang tersedia"
-  },
-  "SchoolsSection": {
-    "badge": "Untuk Sekolah",
-    "headline": "Setiap sekolah punya kebutuhan <mark>berbeda</mark>. Kami <mark>mengerti</mark>.",
-    "description": "Materi belajar dan Tryout gratis untuk guru dan siswa. Ceritakan apa lagi yang dibutuhkan sekolahmu.",
-    "cta": "Diskusikan kebutuhanmu"
-  },
   "About": {
-    "title": "Belajar sampai <mark>paham.</mark>",
-    "description": "Pilih pelajaran, uji pemahaman lewat Tryout, lalu tanya Nina saat kamu buntu.",
-    "explore-subjects": "Jelajahi pelajaran",
-    "try-tryout": "Coba Tryout",
-    "contribute": "Kontribusi",
-    "join-community": "Bergabung komunitas",
-    "community-title": "Ketemu orang yang ngerti apa yang kamu pelajari",
-    "community-description": "Di balik tiap materi ada orang yang pernah bingung juga. Gabung Discord buat tanya jawab, bagi-bagi sumber belajar, atau bantu yang lain.",
-    "curriculum-description": "Pilih tingkatmu, pelajari materi apa saja, atau cari solusi masalahmu. Nggak perlu scroll lama-lama.",
     "company": "Perusahaan",
     "community": "Komunitas",
-    "about-us": "Tentang Kami",
-    "trusted-badge": "Belajar bersama",
-    "trusted-headline": "<mark>Siswa dan mahasiswa</mark> dari sekolah dan universitas ini belajar dengan <mark>Nakafa.</mark>",
-    "trusted-description": "Mereka mulai dari materi terbuka, lalu lanjut sesuai ritme masing-masing."
+    "about-us": "Tentang Kami"
   },
   "Legal": {
     "terms-and-policies": "Syarat dan Kebijakan",
@@ -1110,11 +1179,11 @@
     "allow": "Izinkan",
     "decline": "Tolak",
     "manage": "Data penggunaan",
-    "status-granted": "Berbagi detail penggunaan aktif",
-    "status-denied": "Berbagi detail penggunaan nonaktif",
-    "status-browser-signal": "Pengaturan privasi browsermu menonaktifkan berbagi detail",
-    "status-pending": "Memuat pilihanmu",
-    "status-prompt": "Belum ada pilihan",
+    "status-granted": "Berbagi detail penggunaan sedang aktif.",
+    "status-denied": "Berbagi detail penggunaan sedang nonaktif.",
+    "status-browser-signal": "Pengaturan privasi browsermu menonaktifkan berbagi detail.",
+    "status-pending": "Pilihanmu sedang dimuat.",
+    "status-prompt": "Belum ada pilihan.",
     "policy": "<privacy-policy>Kebijakan Privasi</privacy-policy>",
     "load-error": "Kami tidak dapat memuat pilihanmu. Pembagian data tetap nonaktif selama kami mencoba lagi.",
     "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tidak dapat diterapkan. Statusnya tetap seperti semula.",

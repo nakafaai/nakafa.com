@@ -1,18 +1,15 @@
 "use client";
 
-import { useThree } from "@react-three/fiber";
 import {
+  BIOLOGY_DEFAULT_ITEM_INDEX,
   BIOLOGY_DEFAULT_VIEW,
   type BiologySceneColors,
   getBiologySceneColors,
   isBiologyItemIndex,
 } from "@repo/design-system/components/contents/biology/data";
-import { CameraControls } from "@repo/design-system/components/three/camera-controls";
-import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
-import {
-  isNarrowThreeScene,
-  threeSceneFrameVariants,
-} from "@repo/design-system/components/three/scene-frame";
+import { biologyReadings } from "@repo/design-system/components/contents/biology/readings";
+import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -29,11 +26,19 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
+import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 
-const NARROW_CANVAS_ASPECT_RATIO = 1.3;
+/** The stage loads once the lab asks for it, and its frame holds the place meanwhile. */
+const BiologyStage = dynamic(
+  () =>
+    import("@repo/design-system/components/contents/biology/stage").then(
+      ({ BiologyStage }) => BiologyStage
+    ),
+  { loading: SceneSpinner }
+);
 
 export interface BiologyLabCalloutProps {
   id: string;
@@ -42,24 +47,33 @@ export interface BiologyLabCalloutProps {
 
 export interface BiologyLabItemProps {
   callouts?: readonly BiologyLabCalloutProps[];
-  caption: ReactNode;
-  focus: ReactNode;
+  caption?: ReactNode;
+  focus?: ReactNode;
   tab: string;
-  takeaway: ReactNode;
+  takeaway?: ReactNode;
 }
 
 export interface BiologyLabProps<
   Item extends BiologyLabItemProps = BiologyLabItemProps,
 > {
-  description: ReactNode;
+  /** The item the lab opens on. It starts at the first item when none is given. */
+  defaultItemIndex?: number | undefined;
+  description?: ReactNode;
   labels: {
     chooseMode: string;
-    focusLabel: string;
+    focusLabel?: string;
     items: readonly [Item, ...Item[]];
-    takeawayLabel: string;
+    takeawayLabel?: string;
     viewLabel: string;
   };
-  title: ReactNode;
+  /**
+   * Whether the three-dimensional scene is mounted. A lab that is not live keeps
+   * its whole card in place, with an empty frame where the scene goes.
+   */
+  live?: boolean;
+  /** Reports each item the reader picks, so a window can keep it while this lab is unmounted. */
+  onItemIndexChange?: (index: number) => void;
+  title?: ReactNode;
 }
 
 export interface BiologySceneProps<
@@ -74,8 +88,11 @@ export interface BiologySceneProps<
  * Renders the shared card, controls, and camera frame for one biology 3D lab.
  */
 export function BiologyLabFrame<Item extends BiologyLabItemProps>({
+  defaultItemIndex = BIOLOGY_DEFAULT_ITEM_INDEX,
   description,
   labels,
+  live = true,
+  onItemIndexChange,
   scene: Scene,
   title,
   view = BIOLOGY_DEFAULT_VIEW,
@@ -84,10 +101,11 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   view?: NarrowCameraPose;
 }) {
   const { resolvedTheme } = useTheme();
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(defaultItemIndex);
   const colors = getBiologySceneColors(resolvedTheme);
   const selectedItem = labels.items[selectedIndex];
   const hasMultipleItems = labels.items.length > 1;
+  const readings = biologyReadings(selectedItem, labels);
 
   /**
    * Keeps one tab active when ToggleGroup emits an empty value.
@@ -101,7 +119,9 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
       return;
     }
 
-    setSelectedIndex(Number(value));
+    const index = Number(value);
+    setSelectedIndex(index);
+    onItemIndexChange?.(index);
   }
 
   return (
@@ -131,72 +151,44 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
           className={threeSceneFrameVariants()}
           render={<section />}
         >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ResponsiveBiologyCamera key={selectedIndex} view={view} />
-              <ambientLight intensity={0.58} />
-              <hemisphereLight
-                color={colors.skyLight}
-                groundColor={colors.soil}
-                intensity={0.68}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.45}
-                position={[4.5, 6, 4.5]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <pointLight
-                color={colors.skyLight}
-                intensity={0.34}
-                position={[-3, 2, 3]}
-              />
+          {live ? (
+            <BiologyStage
+              colors={colors}
+              selectedIndex={selectedIndex}
+              view={view}
+            >
               <Scene
                 colors={colors}
                 item={selectedItem}
                 selectedIndex={selectedIndex}
               />
-            </Suspense>
-          </ThreeCanvas>
+            </BiologyStage>
+          ) : null}
         </VisualCardScene>
 
-        <p className="text-muted-foreground text-sm">{selectedItem.caption}</p>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <VisualFact label={labels.focusLabel} value={selectedItem.focus} />
-            <VisualFact
-              label={labels.takeawayLabel}
-              value={selectedItem.takeaway}
-            />
-          </dl>
-        </VisualCardControls>
+        {selectedItem.caption === undefined ? null : (
+          <p className="text-muted-foreground text-sm">
+            {selectedItem.caption}
+          </p>
+        )}
+        {readings.length === 0 ? null : (
+          <VisualCardControls>
+            <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+              {Arr.map(readings, (reading) => (
+                <VisualFact
+                  key={reading.key}
+                  label={reading.label}
+                  value={reading.value}
+                />
+              ))}
+            </dl>
+          </VisualCardControls>
+        )}
       </VisualCardBody>
 
       <VisualCardFooter>
         <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Keeps the active biology scene framed on narrow and wide canvases.
- */
-function ResponsiveBiologyCamera({ view }: { view: NarrowCameraPose }) {
-  const size = useThree((state) => state.size);
-  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
-    ? view.narrowCameraPosition
-    : view.cameraPosition;
-
-  return (
-    <CameraControls
-      autoRotate={false}
-      cameraPosition={cameraPosition}
-      cameraTarget={view.cameraTarget}
-      fov={45}
-    />
   );
 }

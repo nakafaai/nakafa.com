@@ -1,7 +1,5 @@
-import {
-  classify,
-  GatewayFailure,
-} from "@repo/backend/confect/gateway/failure";
+import { classify } from "@repo/backend/confect/gateway/classify";
+import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { NinaUpkeepCall } from "@repo/backend/confect/nina/contract/usage";
 import { NoObjectGeneratedError } from "ai";
 import { Effect, Option, pipe, Schema } from "effect";

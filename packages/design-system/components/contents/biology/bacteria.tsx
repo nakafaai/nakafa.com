@@ -1,7 +1,9 @@
 "use client";
 
-import type { BacteriaLabItemProps } from "@repo/design-system/components/contents/biology/bacteria-scene";
-import { BacteriaStructureScene } from "@repo/design-system/components/contents/biology/bacteria-scene";
+import {
+  type BacteriaLabItemProps,
+  BacteriaStructureScene,
+} from "@repo/design-system/components/contents/biology/bacteria-scene";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
@@ -15,7 +17,9 @@ const BACTERIA_VIEW = {
 } satisfies NarrowCameraPose;
 
 /**
- * Renders bacterial shape, structure, and cell-wall comparison views.
+ * Renders bacterial shape, structure, and cell-wall comparison views. The scene
+ * comes with the lab's module rather than in a lazy chunk of its own, so the
+ * stage draws the scene in its first frame, as the other labs' stages do.
  */
 export function BacteriaStructureLab(
   props: BiologyLabProps<BacteriaLabItemProps>

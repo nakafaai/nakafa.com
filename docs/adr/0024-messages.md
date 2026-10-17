@@ -4,9 +4,9 @@
 
 Accepted after the sealing spike of 12 October 2026. It decides the design and
 the order of work. The title, the summary, the memory, the learner's message at
-send, and the file name of a new upload are sealed and live. The other stages in
-Decision are planned for program wave A, the first delivery wave of the School
-program, and are not live yet.
+send, the file name of a new upload, and the rows and deltas of a settled turn
+are sealed and live. The other stages in Decision are planned for program wave
+A, the first delivery wave of the School program, and are not live yet.
 
 ## Context
 
@@ -147,6 +147,74 @@ The measurements cover the cost of the cipher only. The cost of reading and
 writing documents is counted in documents, because the test database says
 nothing about it.
 
+### The Seal And The Sweep Bound (order of work step 3)
+
+The seal counts the bytes it reads and writes (`sealed/bytes.ts`, and the total
+that `sealTurn` returns). Each document it reads counts once at its stored size:
+the turn, its chat and its learner, its prompt, the page of rows it reads, and the
+streams it lists. Each row it deletes counts twice, because the component reads it
+to delete it and writes it away. Each row it adds counts once, and so does the turn
+it replaces. Text counts by its UTF-8 length, binary by its byte length, a key by
+its UTF-8 length, and a number or a boolean at a fixed 8 bytes. Not counted: the
+learner's key row, the stream deltas, which the seal deletes in later pages
+(`deleteStreamAsync`), and the component's index entries.
+
+Measured with that counter in the repository's Convex test runtime, on two
+fixtures that write the same kind of tool output:
+
+| Turn | Counted bytes of one seal |
+| --- | --- |
+| Short: a question, one tool step with a 200-character output, and an answer (4 rows, no stream) | 6,134 |
+| Long: a question, 20 tool steps with 24,000-character outputs, and an answer (41 rows, no stream) | 1,976,386 |
+
+A real turn adds one stream document a step, a few hundred bytes. The 24,000-character
+outputs of the long shape are an assumption of the measurement, not a measured
+maximum of what a tool stores. An earlier spike probe, which wrapped the database
+calls of one seal, counted 9,388 bytes for the short shape and 2,016,855 for the
+long one. The counter in the code replaces it.
+
+The budget. A sweep runs every five minutes (`SWEEP_INTERVAL`, `deadline.ts`), so
+288 times a day. One gigabyte a day divided by 288 is 3,472,222 bytes, the budget
+of a run (`SEAL_BYTES_PER_SWEEP`, derived in `sweep.ts`). The sweep schedules one
+drain of the settled turns that still hold plain rows, oldest first, and the
+drain seals each in its own transaction (`sealed/drain.ts`). A run starts a seal
+only while the bytes it has counted, plus a reserve of 2,000,000 bytes, still fit
+the budget. The reserve is the long shape's 1,976,386 bytes, rounded up. The first
+seal of a run always starts, so a turn never waits behind the budget. A run then
+ends within the budget, as long as no seal costs more than the reserve.
+
+Projected from the measurements, for a backlog of one shape:
+
+- Short turns: the seals start while the counted bytes are at most 1,472,222, the
+  budget less the reserve, so a run seals 241 of them (240 at 6,134 bytes each,
+  plus the first). That is 69,408 a day, and 10,000 old short turns clear in 42
+  runs, about three and a half hours.
+- Long turns: the first seal of a run starts, and a second would start at
+  1,976,386 bytes, where the reserve no longer fits. So a run seals one long turn.
+  That is 288 a day, and 10,000 old long turns take 35 days.
+
+Failures and holds bound the cost of one broken turn. A failed seal rolls back whole,
+so what it read is unknown, and it counts one `SEAL_RESERVE_BYTES` against the run's
+budget, the same reserve a later seal must fit. The drain counts the failure on the
+turn (`sealAttempts` and `sealFailedAt`, bounded fields) and logs an error with the
+turn and the cause, the name of the error, never its message. After `SEAL_TRIES` (3)
+failures the turn is held (`sealHold` `failedAttempts`), and the drain never takes it
+again. A failed seal costs a whole reserve, so under the production budget it ends
+its run, and the turns behind it wait: a turn that always fails delays the turns
+behind it by at most `SEAL_TRIES` runs, about 15 minutes, and the next run seals
+them. The one fault that stops a run at once is an unreadable key ring. The seal then
+fails with `SealUnavailable`, which the vault's reason `configuration` raises. That
+reason covers `VAULT_ROOT_KEYS` missing or malformed (`vault/ring.ts`), a root key
+the platform cannot derive (`vault/ring.ts`), and a stored key that names a root key
+the ring does not hold (`vault/keys.ts`). That fault blames no turn, so the drain
+logs one error with the cause and counts no failure on any turn. A turn that the seal
+skips on purpose is held at once, with `chatDeleted`, `accountDeleted` or
+`promptMissing`. A held turn keeps its plain rows, which stay readable. A turn whose
+run still holds a pending row younger than `RUN_LIFETIME_MS`, 30 minutes, is not
+sealed yet: the seal writes nothing and sets neither `sealedAt` nor a hold, the drain
+counts no failure, and a later run takes the turn again. A pending row older than that
+belongs to a run that has ended, so the seal writes it as `failed`.
+
 ## Designs
 
 **1. Seal the settled turn by replacing its rows.** The learner's message is
@@ -241,10 +309,11 @@ changes.
    alone. A settled turn records `sealedAt` when its rows are sealed, and the
    sweep that already settles stuck turns also seals any settled turn without
    it, so a missed seal is found and not forgotten. The sweep finds those turns
-   through an index on the turn's phase and `sealedAt`, which order-of-work step 3
-   adds. The seal skips a turn that already carries `sealedAt`, so a retry is
-   safe, and a seal that fails leaves the turn plain and readable until the next
-   sweep run.
+   through the index `by_phase_and_sealedAt_and_sealHold`, which order-of-work step 3
+   adds, and seals them oldest first within the byte budget of a run (The Seal And
+   The Sweep Bound). The seal skips a turn that already carries `sealedAt`, so a
+   retry is safe, and a seal that fails leaves the turn plain and readable until the
+   next run that takes it.
 3. **One module owns the form, and every reader opens through it.** A reader
    gets rows from the module and never from the component.
 4. **Chat attachments.** The file name of a chat attachment, the `files.filename`
@@ -281,6 +350,24 @@ changes.
    last reference changed. This plan does not seal the bytes of an upload. A new
    upload seals its name at upload, before the component stores the file (order
    of work, step 2).
+5. **The request fingerprint is keyed.** `turns.start` recognizes a repeated
+   request by the fingerprint that the turn stores with its request id. The
+   fingerprint is the blind hash of the learner's key over the request, `[chatId,
+   input]` as JSON: the HMAC-SHA-256 of `vault/cipher.ts` under the learner's blind
+   key, bound to the field `{ table: "ninaTurns", field: "fingerprint" }`, cut to
+   16 bytes and written in URL-safe Base64 (`nina/fingerprint.ts`, `vault/text.ts`).
+   An unkeyed hash of the request would confirm a guessed short message against the
+   database, which the seal has just hidden. A repeated request still matches itself,
+   because the learner's key stays the same. Every fingerprint that `turns.start`
+   stores now is keyed. A fingerprint stored before this change is an unkeyed
+   SHA-256 in lower-case hexadecimal, 64 characters, which a reader of the database
+   could use to confirm a guessed request. A one-off internal mutation removed that
+   value from every settled turn on production on 17 October 2026, and wrote no active
+   turn: the run after the deploy cleared 65 of 1,126 turns and found no active turn
+   holding it, and the run after the longest turn had settled (`TURN_DEADLINE`) found
+   none left. The one-off was deleted afterwards. A retry of an id whose turn has no
+   fingerprint, or still holds the unkeyed one, is refused as a conflict, which the
+   decision accepts, because a replay is bounded to the short window of its turn.
 
 The stages, and the key that seals each one (owner decisions K2, K3, and K10):
 
@@ -289,9 +376,9 @@ The stages, and the key that seals each one (owner decisions K2, K3, and K10):
 | Title, summary, and memory | The learner's key | Live |
 | The learner's message, at send | The learner's key | Live (order of work, step 2) |
 | The rows of a running turn | Not sealed while the turn runs | Plain, by design |
-| The private reply and tool rows, once the turn settles, in one transaction | The learner's key | Planned, wave A |
-| A failed or cancelled prompt, at turn end by the sweep | The learner's key | Planned, wave A |
-| Stream deltas | Not sealed; deleted after the turn | Planned, wave A |
+| The private reply and tool rows, once the turn settles, in one transaction | The learner's key | Live (order of work, step 3) |
+| The reply and tool rows of a failed or cancelled turn, at settlement, the sweep as backstop | The learner's key | Live (step 3). Its prompt is sealed at admission (step 2). |
+| Stream deltas | Not sealed; deleted at settlement by the seal | Live (order of work, step 3) |
 | Old messages, by migration | The learner's key | Planned, wave A |
 | Chat attachment file names, new uploads | The learner's key | Live (order of work, step 2) |
 | Chat attachment file names, uploads before step 2 | The learner's key | Planned, step 4 (migration) |
@@ -507,6 +594,26 @@ module then keeps only the opening.
   can be turned back into text.
 - The model provider sees plain text for the length of a call. ADR 0019 covers
   retention.
+- A seal that fails is counted on its turn. Under the production budget it ends its
+  run, so a broken turn delays the turns behind it by at most `SEAL_TRIES` runs. It
+  is tried again in later runs until `SEAL_TRIES` failures hold it, and then it stays
+  plain for good. Until a person fixes the fault, every such turn keeps its plain
+  rows, which the reader still opens. A failure of the settlement's own zero-delay `seal` is not counted:
+  the sweep's next try is the one that counts. Convex logs each failed scheduled
+  `seal` with its turn id, and the drain logs each failed try with its turn and its
+  cause. Such a failure is a defect to fix, not a state to accept.
+  A turn that the seal skips while its chat or its learner is being deleted is held
+  at once, with `chatDeleted` or `accountDeleted`, and the deletion removes its
+  turns. That deletion starts at once: the chat trigger schedules its cleanup at zero delay
+  (`triggers/chats/chats.ts`), the cleanup deletes the turns
+  (`triggers/chats/cleanup.impl.ts`), and the account deletion launches its
+  cleanup at zero delay (`auth/deletion/finalize.ts`). The pause lasts as long as
+  that deletion takes.
+- A run that writes a row into a turn after the seal leaves that row plain. A
+  cancelled or failed settlement cuts off the turn's streams (`journal.ts`), and
+  the seal aborts any stream still open at the turn's order before it reads the
+  streams, which stops the known writers. Step 5 makes a plain row of a sealed
+  turn fail the read. Until step 5, nothing detects such a row.
 
 ## Implementation Status
 
@@ -518,3 +625,4 @@ module then keeps only the opening.
 | Agent audit. Suggestions and title set `recentMessages: 0` and take their input from the module through `contextHandler`, as `generation.ts` already did. Every other Agent call (`math/agent.ts`, `math/repair.ts`, `memory/capture.ts`, `nakafa/agent.ts`, `portrait/build.ts`, `repair.ts`, the two calls of `research/agent.ts`, `summary.ts`, and the test helper `test/nina/capability.ts`) passes `userId` and no `threadId`, so its fetch of recent messages cannot run. Every `generateText`, `streamText`, `generateObject` and `streamObject` call of the backend goes through one of these Agents. | Built in S1b. |
 | `scripts/check/sealed.ts`, the source rule of ADR 0021 (Sealed message readers): no load of the Agent package that reaches one of its readers of stored rows and files (an import, a re-export, a namespace import, or a dynamic import), and no read of the component's messages that returns sealed rows as they are (a property, an element, a destructuring, or the messages taken as a value), in every authored module outside the sealed module. Type-only specifiers read nothing. Tests and the helpers under `packages/backend/test/` read the stored form on purpose and are not judged. | Built in S1b, with its tests and a planted violation of each form. |
 | The writers of step 2. `sealed/save.ts` (`savePrompt`) seals a learner's message at its place: it reads the newest row of the thread across every status and tool flag, and takes the next order with step 0, as the Agent does for a user message. It serializes the message, seals it with the learner's key bound to that row, saves it through the Agent's `saveMessage` with the explicit order, and opens the stored row. `turns.start` is its only caller: the admission, and the retry, which sends the stored prompt again. A replayed request reads its row and writes nothing, and `memory/capture.ts` writes no learner message (it reads one through `memory/said.ts`). `sealed/file.ts` (`sealFileName`) seals a new upload's name, and `nina/uploads.impl.ts` seals it inside `reserve`, before `storeFile` stores the file, and records `nameSealed` on the upload, so the component never sees the plain name. `sealed/file.ts` (`readFile`) opens a name only for an upload that sealed it, and the retry's size check reads the storage entry alone. Built in step 2. | Built in step 2. Gates: `turns.impl.test.ts` (no table of the component holds the planted prompt after admission), `uploads.impl.test.ts` (no table holds a planted name, `files` included), `sealed/save.test.ts`, `sealed/file.test.ts`, and `attachments.test.ts` (a retry opens no name, and a send opens a name only for a sealed upload, with one key read). |
+| The settled turn's seal, order of work step 3. `sealed/turn.ts` (`sealTurn`) seals the assistant and tool rows of a settled turn at the steps they take, with the same order, and deletes its streams' deltas with `deleteStreamAsync`, in one transaction that records `sealedAt`. `sealed.spec.ts` and `sealed.impl.ts` expose it as the internal mutation `seal`, which `settlement.ts` schedules at zero delay for every outcome. `sealTurn` returns the bytes it counted (`sealed/bytes.ts`). `sealed/drain.ts` seals the unsealed settled turns oldest first within the byte budget of a run, which `sweep.ts` derives from the cadence (`SEAL_BYTES_PER_SWEEP`): the drain is an action and each seal is its own transaction. It finds the turns through the index `by_phase_and_sealedAt_and_sealHold` (`tables/ninaTurns.ts`), which the drain reads a page at a time. It records a failed seal on its turn, holds a turn after `SEAL_TRIES` failures or at a skip on purpose, passes a turn with a young pending row by without counting a failure, seals an older pending row as failed, and stops a run at once at `SealUnavailable`, the unreadable key ring. Otherwise a run also ends when the next seal's reserve does not fit the budget, which under the production budget happens after any failed seal (The Seal And The Sweep Bound). `turns.spec.ts` adds the optional `sealedAt`, `sealAttempts`, `sealFailedAt` and `sealHold` of a settled turn. The keyed request fingerprint (Decision 5) is `nina/fingerprint.ts`, which `turns.impl.ts` stores with the turn, and `savePrompt` takes the learner's keys from the admission, so one key read serves the admission. A stream that still streams at the turn's order is aborted first, as settlement aborts it. Gates: `sealed/turn.test.ts` (including the turns the seal skips on purpose, and the gate: planted strings in the learner's message, the reasoning, the answer, a tool input, a tool output, a source and the name of an upload, and no planted string in any component table, files included, after settlement and the deletion of the deltas, with the learner's page and the module's thread reader unchanged; a failed and a cancelled turn; a retried seal; a deleted turn, chat, account and prompt; a seal that reads the learner's key once, a pinned count of its bytes, and a young pending row, which waits for a later run, and an old one, which is sealed as failed), `sealed/rows.test.ts` (a turn of more than one page of rows, a turn with no rows above its prompt, and a component that stores fewer rows, or the sealed rows at other steps, where nothing is written), `sealed/drain.test.ts` (the first seal always runs, the reserve stops a run before its budget is spent, a budget that covers every turn seals them all, the sweep's own budget seals three short turns, a failed seal is counted, logged with its cause and rolled back, the turns behind it still seal, a turn is held after `SEAL_TRIES` failures, a run goes on past any number of failures, a failed seal costs one reserve, an unreadable key ring stops a run with one log, a held or chat-deleted turn is passed by, a sealed, held, running or gone turn is not counted, the drain reads candidates a page at a time, and the reserve covers the long shape), `sealed/bytes.test.ts` (the counted sizes of text, binary and nested values), `fingerprint.test.ts` (the fingerprint is keyed to the learner, is not an unkeyed hash of the request, and is the value the admission stores), `sweep.test.ts` (the sweep schedules one drain with the run's budget, and seals old turns that still hold plain rows, leaving a sealed one alone), and `generation.test.ts`, whose transcript read goes through the learner's page. Built in step 3 and verified against `@convex-dev/agent` 0.7.8, the installed version; the spike read 0.7.7. |

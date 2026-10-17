@@ -38,7 +38,7 @@ const GRID_PIXELS = 4;
 /** The height of the screen that must show the whole sign-in page. */
 const SHORT_SCREEN = 640;
 /**
- * The pool's driver reveals the settled pile through `element.dataset.shown`,
+ * The pool's driver reveals the pile through `element.dataset.shown`,
  * and no other script writes that property. A minifier keeps property names,
  * while the React Compiler may move a JSX attribute's text into a variable.
  */

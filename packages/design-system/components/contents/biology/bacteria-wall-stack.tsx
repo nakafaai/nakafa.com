@@ -12,7 +12,7 @@ export function BacterialWallStack({
   x,
 }: {
   colors: readonly string[];
-  label: ReactNode;
+  label?: ReactNode;
   textColor: string;
   x: number;
 }) {
@@ -39,13 +39,15 @@ export function BacterialWallStack({
           </mesh>
         );
       })}
-      <ThreeLabel
-        color={textColor}
-        fontSize="compact"
-        position={[0, 0.44, 0.72]}
-      >
-        {label}
-      </ThreeLabel>
+      {label === undefined ? null : (
+        <ThreeLabel
+          color={textColor}
+          fontSize="compact"
+          position={[0, 0.44, 0.72]}
+        >
+          {label}
+        </ThreeLabel>
+      )}
     </group>
   );
 }

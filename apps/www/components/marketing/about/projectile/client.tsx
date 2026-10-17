@@ -1,18 +1,18 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import type {
   ProjectileMotionState,
   ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@repo/design-system/components/ui/toggle-group";
-import { Array as Arr, Effect, Option } from "effect";
-import { useReducedMotion } from "motion/react";
+  VisualCard,
+  VisualCardFullscreen,
+  VisualCardScene,
+} from "@repo/design-system/components/visual/card";
+import { Array as Arr, Effect } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -21,6 +21,9 @@ import type { ProjectileSceneProps } from "@/components/marketing/about/projecti
 import { reportClientException } from "@/lib/analytics/client";
 
 const PROJECTILE_PRELOAD_MARGIN = 400;
+
+/** How long one trajectory flies before the next one takes its turn. */
+const TRAJECTORY_INTERVAL_MS = 6000;
 
 const reloadProjectilePage = Effect.fn("www.home.reloadProjectilePage")(() =>
   Effect.sync(() => window.location.reload())
@@ -47,13 +50,13 @@ function UnavailableProjectileScene(_props: ProjectileSceneProps) {
   );
 }
 
-/** Keeps the scene's pending state local to its semantic frame. */
+/** Keeps the scene's pending state local to its frame. */
 function ProjectileSceneLoading() {
-  const t = useTranslations("Features");
+  const t = useTranslations("Landing");
 
   return (
     <div
-      aria-label={t("projectile-view-label")}
+      aria-label={t("scene-label")}
       className="flex size-full items-center justify-center"
       role="status"
     >
@@ -79,7 +82,7 @@ const ProjectileScene = dynamic(
           onFailure: (error) =>
             reportClientException(error, {
               operation: "load-projectile-scene",
-              source: "home-features",
+              source: "home-scene",
             }).pipe(Effect.as(UnavailableProjectileScene)),
           onSuccess: Effect.succeed,
         })
@@ -88,20 +91,24 @@ const ProjectileScene = dynamic(
   { loading: ProjectileSceneLoading }
 );
 
-interface ProjectileClientProps {
-  readonly controlsLabel: string;
-  readonly initialScenario: ProjectileClientProps["scenarios"][number];
-  readonly scenarios: readonly {
-    readonly facts: readonly {
-      readonly id: string;
-      readonly label: ReactNode;
-      readonly value: ReactNode;
-    }[];
-    readonly id: ProjectileScenarioId;
+/** One trajectory of the scene, with the numbers that describe it. */
+interface ProjectileScenario {
+  readonly facts: readonly {
+    readonly id: string;
     readonly label: ReactNode;
-    readonly motion: ProjectileMotionState;
+    readonly value: ReactNode;
   }[];
-  readonly title: ReactNode;
+  readonly id: ProjectileScenarioId;
+  readonly label: ReactNode;
+  readonly motion: ProjectileMotionState;
+}
+
+interface ProjectileClientProps {
+  readonly lead: string;
+  /** Every trajectory, the default one first, so the scene opens on it. */
+  readonly scenarios: Arr.NonEmptyReadonlyArray<ProjectileScenario>;
+  readonly talk: ReactNode;
+  readonly title: string;
   readonly viewLabel: string;
 }
 
@@ -121,7 +128,7 @@ function isSceneNearViewport(element: HTMLElement) {
 
 /** Tracks scene activity from observer and current viewport geometry. */
 function useProjectileSceneVisibility() {
-  const sceneFrameRef = useRef<HTMLElement>(null);
+  const sceneFrameRef = useRef<HTMLDivElement>(null);
   const [sceneVisible, setSceneVisible] = useState(false);
 
   useEffect(() => {
@@ -158,82 +165,76 @@ function useProjectileSceneVisibility() {
   return { sceneFrameRef, sceneVisible };
 }
 
-/** Keeps all projectile interactions while hydrating only their control state. */
+/**
+ * The lesson scene from edge to edge. Its title and the chat sit in the sky, and
+ * its numbers in the water. The trajectories fly in turn while the scene is on
+ * screen, and the scene holds still with reduced motion.
+ */
 export function ProjectileClient({
-  controlsLabel,
-  initialScenario,
+  lead,
   scenarios,
+  talk,
   title,
   viewLabel,
 }: ProjectileClientProps) {
   const { sceneFrameRef, sceneVisible } = useProjectileSceneVisibility();
-  const shouldReduceMotion = useReducedMotion() ?? false;
-  const [scenarioId, setScenarioId] = useState(initialScenario.id);
-  const activeScenario = Option.getOrElse(
-    Arr.findFirst(scenarios, ({ id }) => id === scenarioId),
-    () => initialScenario
-  );
+  const shouldReduceMotion = useReducedMotion();
+  const playing = sceneVisible && !shouldReduceMotion;
+  const [index, setIndex] = useState(0);
+  const active = scenarios[index % scenarios.length];
 
-  /** Selects a verified projectile scenario for the interactive lesson scene. */
-  function handleScenarioChange(value: string) {
-    const scenario = Arr.findFirst(scenarios, ({ id }) => id === value);
-    if (Option.isNone(scenario)) {
+  useEffect(() => {
+    if (!playing) {
       return;
     }
-
-    setScenarioId(scenario.value.id);
-  }
+    const timer = window.setInterval(() => {
+      setIndex((current) => (current + 1) % scenarios.length);
+    }, TRAJECTORY_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [playing, scenarios.length]);
 
   return (
-    <div className="relative flex min-h-168 flex-col overflow-hidden bg-background lg:col-span-7 lg:min-h-176">
-      <div className="flex min-h-0 flex-1 flex-col gap-8 p-8 lg:p-10">
-        <h3 className="max-w-2xl text-balance text-3xl tracking-tight sm:text-4xl">
-          {title}
-        </h3>
+    <VisualCard
+      aria-label={viewLabel}
+      className="relative isolate h-svh max-h-230 min-h-120 overflow-hidden rounded-none border-0 bg-background py-0 shadow-none ring-0"
+      id="scene"
+      role="region"
+    >
+      <VisualCardScene className="absolute inset-0">
+        <div className="size-full" ref={sceneFrameRef}>
+          {sceneVisible && (
+            <ProjectileScene
+              motion={active.motion}
+              shouldReduceMotion={shouldReduceMotion}
+            />
+          )}
+        </div>
+      </VisualCardScene>
 
-        <div className="mt-auto flex flex-col gap-4">
-          <ToggleGroup
-            aria-label={controlsLabel}
-            gridColumns="3"
-            onValueChange={handleScenarioChange}
-            type="single"
-            value={scenarioId}
-            variant="outline"
-          >
-            {Arr.map(scenarios, (scenario) => (
-              <ToggleGroupItem key={scenario.id} value={scenario.id}>
-                {scenario.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-
-          <section
-            aria-label={viewLabel}
-            className={threeSceneFrameVariants()}
-            ref={sceneFrameRef}
-          >
-            {sceneVisible && (
-              <ProjectileScene
-                motion={activeScenario.motion}
-                shouldReduceMotion={shouldReduceMotion}
-              />
-            )}
-          </section>
+      <div className="pointer-events-none absolute inset-x-0 top-0 grid gap-6 p-6 lg:p-10">
+        <div className="pointer-events-auto justify-self-start">{talk}</div>
+        <div className="grid max-w-2xl gap-2">
+          <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
+            {title}
+          </h2>
+          <p className="text-pretty text-base">{lead}</p>
         </div>
       </div>
 
-      <div className="border-t p-8 lg:p-10">
-        <dl className="grid w-full grid-cols-1 gap-x-6 gap-y-5 text-sm sm:grid-cols-2 xl:grid-cols-3">
-          {Arr.map(activeScenario.facts, (fact) => (
-            <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
-              <dt className="text-muted-foreground">{fact.label}</dt>
-              <dd className="wrap-break-word text-foreground tabular-nums">
-                {fact.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+      <div className="absolute end-6 top-6 lg:end-10 lg:top-10">
+        <VisualCardFullscreen />
       </div>
-    </div>
+
+      <dl className="pointer-events-none absolute inset-x-0 bottom-0 grid grid-cols-2 gap-x-6 gap-y-3 p-6 text-sm sm:grid-cols-3 lg:p-10 xl:grid-cols-6">
+        {Arr.map(active.facts, (fact) => (
+          <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
+            <dt className="text-muted-foreground">{fact.label}</dt>
+            <dd className="wrap-break-word text-foreground tabular-nums">
+              {fact.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </VisualCard>
   );
 }

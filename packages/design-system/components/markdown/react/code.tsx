@@ -23,9 +23,7 @@ export const reactCodeComponents: ReactMarkdownComponents = {
 
     if (isInlineMath) {
       return (
-        <InlineMath data-nakafa="math-inline" overflow="scroll">
-          {String(children)}
-        </InlineMath>
+        <InlineMath data-nakafa="math-inline">{String(children)}</InlineMath>
       );
     }
 

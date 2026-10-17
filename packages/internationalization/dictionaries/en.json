@@ -305,13 +305,13 @@
     "action-loading": "Loading",
     "cancel-cta": "Cancel",
     "start-dialog-title": "Start this tryout?",
-    "start-dialog-description": "Your tryout stays active for up to 3 days. Once you start, you can choose which section to do first.",
+    "start-dialog-description": "Your tryout stays active for up to 3 days, and once you start, you can choose which section to do first.",
     "free-dialog-title": "Start a free tryout",
-    "free-dialog-description": "Take and retake any tryout for free. Each attempt stays active for up to 3 days and includes your score. Detailed solutions require Nakafa Pro.",
-    "free-entry-dialog-description": "Take and retake any tryout for free, with scores included. The timer starts as soon as you begin. Detailed solutions require Nakafa Pro.",
+    "free-dialog-description": "Take and retake any tryout for free, with each attempt active for up to 3 days and your score included, but detailed solutions require Nakafa Pro.",
+    "free-entry-dialog-description": "Take and retake any tryout for free, with scores included, and the timer starts as soon as you begin, but detailed solutions require Nakafa Pro.",
     "restart-dialog-title": "Start this tryout from the beginning?",
-    "restart-dialog-description": "You will start over. Your previous result stays saved.",
-    "restart-entry-dialog-description": "You will start over, and this set's timer starts immediately. Your previous result stays saved.",
+    "restart-dialog-description": "You will start over, and your previous result stays saved.",
+    "restart-entry-dialog-description": "You will start over, this set's timer starts immediately, and your previous result stays saved.",
     "start-entry-dialog-description": "This set's timer starts as soon as you begin.",
     "paywall-title": "{count, plural, one {See the solution to this question} other {See the solutions to all # questions}}",
     "paywall-description": "Learn the steps and reasoning behind every answer, and ask Nina whenever something is unclear.",
@@ -552,7 +552,7 @@
     "memory": "Memory",
     "new": "New memory",
     "empty": "No memories yet",
-    "empty-description": "Tell Nina about yourself in a chat, or add a memory here",
+    "empty-description": "Tell Nina about yourself in a chat, or add a memory here.",
     "no-result": "No memory found",
     "edit": "Edit memory",
     "delete": "Delete memory",
@@ -572,8 +572,12 @@
       "title": "We could not complete this action.",
       "description": "Please try again."
     },
-    "copy-error": { "title": "Couldn't copy" },
-    "copy-success": { "title": "Copied!" },
+    "copy-error": {
+      "title": "Couldn't copy"
+    },
+    "copy-success": {
+      "title": "Copied!"
+    },
     "curriculum-preference-error": {
       "title": "Curriculum preference not saved.",
       "description": "Please try again."
@@ -582,12 +586,16 @@
       "title": "Onboarding did not finish.",
       "description": "Try again."
     },
-    "onboarding-invalid-selection": { "title": "Answer every question." },
+    "onboarding-invalid-selection": {
+      "title": "Answer every question."
+    },
     "onboarding-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
     },
-    "link-copied": { "title": "Link copied!" },
+    "link-copied": {
+      "title": "Link copied!"
+    },
     "provider-error": {
       "title": "We couldn't continue with Google.",
       "description": "Please try again."
@@ -612,16 +620,8 @@
       "title": "Could not finish this section yet.",
       "description": "Please try again."
     },
-    "tryout-complete-part-success": {
-      "title": "Section finished.",
-      "description": "You can choose another section or go back to the set."
-    },
     "tryout-preference-error": {
       "title": "Tryout preference not saved yet."
-    },
-    "tryout-start-entry-success": {
-      "title": "Tryout started.",
-      "description": "The timer is now running."
     },
     "tryout-start-error": {
       "title": "We could not start the tryout yet.",
@@ -631,21 +631,19 @@
       "title": "We could not start this section yet.",
       "description": "Please try again."
     },
-    "tryout-start-part-success": {
-      "title": "Section started.",
-      "description": "The timer is now running."
-    },
-    "tryout-start-success": {
-      "title": "Tryout started.",
-      "description": "You can choose which section to work on first."
-    },
     "tryout-submit-answer-error": {
       "title": "We couldn't save your answer.",
       "description": "Please try again."
     },
-    "memory-limit": { "title": "Wait a moment before saving again." },
-    "memory-missing": { "title": "This memory no longer exists." },
-    "memory-too-long": { "title": "That text is too long for a memory." },
+    "memory-limit": {
+      "title": "Wait a moment before saving again."
+    },
+    "memory-missing": {
+      "title": "This memory no longer exists."
+    },
+    "memory-too-long": {
+      "title": "That text is too long for a memory."
+    },
     "interpretation-error": {
       "title": "Could not load this interpretation.",
       "description": "Try again."
@@ -726,8 +724,12 @@
       "title": "Your session has expired.",
       "description": "Sign in again to continue."
     },
-    "admitted-elsewhere": { "title": "Nina is answering in a new chat" },
-    "open-chat": { "title": "Open chat" },
+    "admitted-elsewhere": {
+      "title": "Nina is answering in a new chat"
+    },
+    "open-chat": {
+      "title": "Open chat"
+    },
     "school-language-error": {
       "title": "We could not change the language.",
       "description": "Please try again."
@@ -960,107 +962,198 @@
     "nakafa-taxonomy": "Browsing the content collection"
   },
   "Pricing": {
-    "headline": "<mark>We were students too.</mark> We know what it is like to choose between learning and eating. Core access is free. Always.",
     "free-title": "Free",
-    "free-description": "Start learning at your own pace",
-    "free-feature-1": "Access to hundreds of learning materials",
-    "free-feature-2": "Exercises and worked solutions within lessons",
-    "free-feature-3": "25 AI credits each day for Nina, your AI tutor",
-    "free-feature-4": "Unlimited tryouts with scores",
-    "free-feature-5": "Community access on Discord",
-    "free-cta": "Start Learning",
+    "free-description": "For everyday learning.",
+    "free-worth-card": "No card.",
+    "free-worth-trial": "No trial period.",
+    "free-feature-1": "Hundreds of lessons",
+    "free-feature-2": "Practice questions and worked answers in every lesson",
+    "free-feature-3": "Daily credits to ask Nina",
+    "free-feature-4": "Every practice test, unlimited, with your score",
+    "free-feature-5": "Community on Discord",
+    "free-cta": "Start learning",
     "pro-title": "Pro",
-    "pro-description": "For a more intensive study routine.",
+    "pro-description": "For when you are working toward something.",
     "pro-period": "/month",
-    "pro-feature-1": "Everything in Free, plus:",
-    "pro-feature-2": "3,000 AI credits each month for Nina",
-    "pro-feature-3": "Detailed solutions for every tryout, including earlier attempts",
-    "pro-feature-5": "Priority support when you need guidance",
+    "pro-feature-1": "Everything in Free",
+    "pro-feature-2": "{credits, number} credits every month to ask Nina",
+    "pro-feature-3": "Full worked solutions for every practice test, including earlier attempts",
+    "pro-feature-5": "Priority help when you need guidance",
     "pro-cta": "Get Pro"
   },
   "PricingPage": {
     "metadata-title": "Nakafa Pricing: Free and Pro",
     "metadata-description": "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
     "breadcrumb": "Pricing",
-    "headline": "Start with Free. <mark>Move to Pro when you are ready.</mark>",
-    "description": "Compare both plans, then choose the one that fits how you learn.",
-    "faq-badge": "Questions",
-    "faq-headline": "Anything you want to <mark>check first?</mark>",
-    "faq-contact": "Ask us directly",
-    "q1": "What can I learn on Nakafa?",
-    "a1": "Nakafa offers material from primary school through university, including Mathematics, Physics, Chemistry, Biology, Computer Science, AI, and Data Science. Availability follows the curricula and material already published.",
-    "q2": "How do I learn with Nakafa?",
-    "a2": "Start with a lesson, continue with practice questions or a Tryout, then ask Nina about anything you still do not understand.",
-    "q3": "Are there practice questions with explanations?",
-    "a3": "Yes. Practice questions include explanations so you can understand the process, not just see the final answer.",
-    "q4": "What can Nina do?",
-    "a4": "Nina can explain concepts, answer questions about a lesson, and help when you get stuck. Everyone uses the same Nina, and one answer uses 5 credits.",
-    "q5": "Does Nakafa have online Tryouts?",
-    "a5": "Yes. Take and retake any tryout for free, without limits. Scores are included, with IRT scores on supported sets. Nakafa Pro opens the detailed solutions, including for earlier attempts.",
-    "q6": "Can I learn without creating an account?",
-    "a6": "Yes. Public learning materials can be read without an account. Sign-in is required to save progress, use AI credits, take a Tryout, and activate Pro.",
-    "q7": "Can schools use Nakafa?",
-    "a7": "Yes. Teachers and students use the same lessons, practice questions, and Tryouts as everyone else. If your school needs something more, write to us.",
-    "q8": "Can I check the sources behind Nakafa material?",
-    "a8": "Yes. Lessons can include references, and the Markdown source is available when you want to inspect the content or suggest an improvement.",
-    "q9": "What are Nakafa AI credits?",
-    "a9": "AI credits are used when Nina answers you. Everyone uses the same Nina, and one answer uses 5 credits.",
-    "q10": "When do AI credits reset?",
-    "a10": "Free credits reset each day. Pro credits reset at the start of each month.",
-    "q11": "Do unused credits carry over?",
-    "a11": "No. Each reset starts a new credit period, so unused credits do not carry over.",
-    "q12": "What happens when I run out of AI credits?",
-    "a12": "Nina becomes available again after your next reset or when you move to Pro. Learning materials and practice questions remain available.",
-    "q13": "Does a failed Nina answer use credits?",
-    "a13": "No. If Nina cannot complete an answer, no credits are deducted.",
+    "checkout-line": "Current price and checkout: {url}",
+    "comparison-title": "What {price} comes to",
+    "drink-title": "About {count} {item}",
+    "drink-note": "The difference is that this one lasts a whole month.",
+    "drink-idr": "{count, plural, one {iced milk coffee} other {iced milk coffees}}",
+    "drink-eur": "{count, plural, one {takeaway coffee} other {takeaway coffees}}",
+    "drink-usd": "{count, plural, one {latte} other {lattes}}",
+    "per-day-title": "{price} a day",
+    "per-day-note-idr": "Roughly the price of one motorbike parking.",
+    "per-day-note-other": "Roughly the monthly price divided by 30.",
+    "answers-title": "{answers, number} answers from Nina",
+    "answers-note": "Around {perDay} answers a day.",
+    "q6": "Can I learn without an account?",
+    "a6": "Yes. Public lessons can be read without an account. You need to sign in to save your progress, ask Nina and take practice tests.",
+    "q9": "What is a credit?",
+    "a9": "Nina uses credits when she answers your question. One answer uses {cost} credits.",
+    "q10": "When do credits renew?",
+    "a10": "Free credits renew every day. Pro credits renew at the start of every month.",
+    "q11": "Do unused credits carry over to the next period?",
+    "a11": "No. Unused credits expire when a new period starts.",
+    "q12": "What happens when I run out of credits?",
+    "a12": "Nina can be used again after the next credit renewal, or once you move to Pro. Lessons and practice questions stay available.",
+    "q13": "Do failed Nina answers still use credits?",
+    "a13": "No. If Nina cannot finish an answer, no credits are taken.",
     "q14": "Is Pro a monthly subscription?",
-    "a14": "Yes. Sign in before payment so Pro can be linked to your Nakafa account. Pro is billed monthly and continues until you cancel it.",
+    "a14": "Yes. Sign in before you pay so that Pro connects to your Nakafa account. Pro stays active until you cancel it.",
     "q15": "How do I manage or cancel Pro?",
-    "a15": "Sign in, select the Pro button, then manage or cancel your subscription through the customer portal.",
-    "q16": "What happens when Pro ends?",
-    "a16": "Your account returns to Free and receives the daily Free credit allowance.",
-    "q17": "Will basic learning materials stay free?",
-    "a17": "Yes. Nakafa's basic learning materials remain free for everyone.",
-    "q18": "Which curricula are available on Nakafa?",
-    "a18": "Nakafa includes the Merdeka Curriculum, Cambridge International, Singapore MOE, and a pathway aligned with United States standards. The material you can choose follows the curriculum sections already published.",
-    "q19": "Can I use Nakafa to prepare for an exam?",
-    "a19": "Yes. Review concepts with learning materials, check your understanding with practice questions, and rehearse the exam format with Tryouts. Available sets vary with the exams currently published.",
+    "a15": "Sign in to your account, choose the Pro button, then manage or cancel the subscription in the customer portal.",
+    "q16": "What happens after Pro ends?",
+    "a16": "Your account goes back to the Free plan and receives the daily Free credits.",
+    "q17": "Will the basic lessons stay free?",
+    "a17": "Yes. Forever, for everyone.",
     "q20": "Can I use Nakafa on my phone?",
     "a20": "Yes. Nakafa works in a browser on phones, tablets, and computers without installing an app."
   },
   "Faq": {
-    "badge": "Support",
-    "headline": "Still have <mark>questions?</mark>",
-    "description": "Cannot find what you need? Reach out to us directly.",
-    "cta-contact": "Contact founder",
-    "q1": "Is Nakafa really free?",
-    "a1": "Yes. Lessons and all tryouts are free. You can repeat any tryout and receive your score. Nakafa Pro adds detailed tryout solutions and 3,000 AI credits each month.",
-    "q2": "What AI can I use?",
-    "a2": "Everyone uses the same Nina. Credits decide how many answers you can get, and one answer uses 5 credits.",
     "q4": "What subjects and grades do you cover?",
     "a4": "We cover K-12 through university. Mathematics, Physics, Chemistry, Biology, Computer Science, and more. From elementary basics to advanced university courses.",
-    "q5": "Is my data private?",
-    "a5": "Yes. We do not sell your data. AI conversations are processed securely. You can delete your chat history anytime. We are privacy-first by design.",
-    "q6": "Can schools use Nakafa?",
-    "a6": "Yes. Teachers and students can use all lessons and tryouts for free. If your school needs something more, contact the founder.",
     "q7": "How does Nakafa ensure content accuracy?",
     "a7": "All content is created by qualified contributors and reviewed by the community. Our source-available approach means anyone can inspect materials and propose improvements. Practice exercises include explanations so you learn from mistakes, not just scores."
   },
+  "Landing": {
+    "hero-title": "Learn until <mark>it clicks.</mark>",
+    "hero-tag": "Read the lesson, try the questions, ask Nina when you get stuck.",
+    "hero-start": "Start learning",
+    "hero-tryout": "Try a practice test",
+    "lesson-title": "Lessons that are easy to read",
+    "lesson-lead": "Short, in order, straight to an example.",
+    "lesson-ask": "How does projectile motion work?",
+    "lesson-answer": "Read this first.",
+    "lesson-tabs": "Lessons",
+    "lab": {
+      "circle": {
+        "view": "Unit circle visual"
+      },
+      "projectile": {
+        "choose": "Choose launch angle",
+        "view": "Projectile ball path visual",
+        "initial-speed": "Initial speed",
+        "flight-time": "Time in the air",
+        "range": "Range",
+        "peak-height": "Peak height"
+      },
+      "atom": {
+        "choose": "Choose a neutral atom",
+        "atomic-number": "Atomic number",
+        "configuration": "Configuration",
+        "electron-total": "Electron count",
+        "capacity": "Capacity",
+        "outer-shell": "Outer shell"
+      },
+      "bacteria": {
+        "choose": "Choose a bacterial view",
+        "view": "Bacterial structure model",
+        "shape": {
+          "tab": "Shape"
+        },
+        "inside": {
+          "tab": "Inside"
+        },
+        "wall": {
+          "tab": "Wall"
+        }
+      }
+    },
+    "tryout-title": "Practice tests that score you right away",
+    "tryout-lead": "You can repeat them any time.",
+    "tryout-ask": "Do I get it yet?",
+    "tryout-answer": "Try one question first.",
+    "tryout-right": "Right, that is the answer.",
+    "tryout-wrong": "Not yet. Take one more look.",
+    "nina-title": "Nina knows which part you mean",
+    "nina-lead": "Ask from the question or lesson you have open.",
+    "nina-ask": "This one still confuses me.",
+    "nina-answer": "Come, let us take it apart together.",
+    "nina-chat-ask": "Why is 13 wrong?",
+    "nina-chat-answer": "### 13 comes from taking m as 3\n\nThat gives $5(2) + 9/3 = 13$. The trouble is that $m = 3$ does not fit the question.\n\n#### Check it against what you know\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nWith $m = 1$ it fits: $2(2) + 4/1 = 8$. So $m$ must be 1, and the answer is 19.",
+    "scene-label": "Three-dimensional scene of a projectile motion, a cannonball",
+    "scene-title": "What is hard to picture, you can see",
+    "scene-lead": "A scene from the Projectile Motion lesson.",
+    "scene-ask": "What if the angle changes?",
+    "scene-answer": "Watch the ball.",
+    "memory-title": "Nina gets to know you",
+    "memory-lead": "You can read, change, pause or delete what she remembers at any time.",
+    "memory-said-1": "I am in grade 12, science.",
+    "memory-said-2": "Explain it with an example first, please.",
+    "memory-said-3": "I am aiming for SNBT 2027.",
+    "memory-said-4": "I still get trigonometric limits wrong.",
+    "memory-said-5": "I usually study at night.",
+    "memory-when-day": "Day one",
+    "memory-when-week": "Week three",
+    "memory-when-month": "Month two",
+    "privacy-title": "Private from the start",
+    "privacy-lead": "What Nina remembers and the titles of your chats are stored locked, with a key of your own.",
+    "privacy-words": "What Nina remembers",
+    "curricula-title": "Your curriculum may differ. The way you learn stays the same.",
+    "curricula-list": "Curricula available",
+    "letter-hello": "Hi, I am Nabil.",
+    "letter-student": "I was a student too. I know what it is like to choose between studying and eating.",
+    "letter-fair": "I think that is not fair. Whether you understand something should not depend on what is in your wallet.",
+    "letter-free": "So <mark>the basic access to Nakafa is free. Forever.</mark>",
+    "letter-open": "Nakafa is still far from finished. If something is missing, tell me. I read it.",
+    "letter-slow": "Take your time. What matters is that you understand.",
+    "letter-founder": "Founder of Nakafa",
+    "letter-signature": "Nabil's signature",
+    "medals-title": "Your study mates come from here",
+    "medals-hook": "Your school?",
+    "medals-label": "Schools and campuses",
+    "prices-title": "Free really means free",
+    "school-title": "Nakafa is for a whole school too",
+    "school-lead": "Need an LMS, content integration or a custom class flow? We will find what fits.",
+    "school-cta": "Tell us about your school",
+    "school-class": "One class of animals",
+    "faq-title": "Frequently asked",
+    "faq-subjects-question": "Which subjects and grades are covered?",
+    "faq-subjects-answer": "From primary school to university: Mathematics, Physics, Chemistry, Biology, Computer Science and more.",
+    "faq-account-question": "Can I learn without an account?",
+    "faq-account-answer": "Yes. Public lessons can be read without an account. Sign in to save your progress, ask Nina and take try-outs.",
+    "faq-phone-question": "Does it work on a phone?",
+    "faq-phone-answer": "Yes. Nakafa runs in the browser on a phone, a tablet and a computer, with nothing to install.",
+    "faq-credits-question": "What are AI credits?",
+    "faq-credits-answer": "AI credits are used when Nina answers your question. One answer uses {cost} credits.",
+    "faq-empty-question": "What happens when my credits run out?",
+    "faq-empty-answer": "Nina is available again once your credits renew. Lessons, exercises and try-outs keep working.",
+    "faq-accuracy-question": "How does Nakafa keep its content accurate?",
+    "faq-accuracy-answer": "All content is written by qualified contributors. Because it is source-available, anyone can review a lesson and suggest a fix.",
+    "faq-languages-question": "Which languages is Nakafa in?",
+    "faq-languages-answer": "English, Indonesian and German.",
+    "faq-nina-question": "Is Nina always right?",
+    "faq-nina-answer": "Not always. Nina can be wrong, so check again with the lesson or the question.",
+    "faq-memory-question": "Where do I manage what Nina remembers?",
+    "faq-memory-answer": "In Settings, open Memory. There you can read, change, pause or delete what Nina remembers.",
+    "faq-data-question": "Is your data still yours?",
+    "faq-data-answer": "Nakafa does not sell your personal data, and you can delete any chat or any memory Nina keeps.",
+    "community-title": "Learning together is better",
+    "community-lead": "Ask, answer and help each other.",
+    "community-cta": "Join Discord",
+    "community-crowd": "Animal friends, some of them typing",
+    "closing-ask": "Want to understand {topic} today?",
+    "closing-topic-0": "something",
+    "closing-topic-1": "projectile motion",
+    "closing-topic-2": "quadratic functions",
+    "closing-topic-3": "the mole",
+    "closing-topic-4": "the cell"
+  },
   "Features": {
-    "story": "Learning doesn’t stop when you finish reading. Put it to the test with Tryout, see what still feels unclear, then <mark>ask Nina without starting over.</mark>",
-    "subjects-title": "Start with <mark>the subject you need</mark>",
-    "subjects-navigation": "Available subjects",
-    "tryout-title": "After learning, see <mark>what you really understood</mark>",
-    "nina-title": "If you are still unsure, <mark>Nina already knows which part you mean</mark>",
-    "nina-prompt": "For the operation △(a,b) = ka + b/m, we know △(2,4) = 8 and △(3,5) = 11. How do I find △(5,9)?",
-    "nina-reasoning": "Compare the two known equations. Their difference reveals the positive integer values of $$k$$ and $$m$$ before the final calculation.",
-    "nina-answer": "Subtract the first equation from the second:\n\n$$k+\\frac{1}{m}=3$$\n\nBecause $$k$$ and $$m$$ are positive integers, $$\\frac{1}{m}$$ can only be an integer when $$m=1$$. That makes $$k=2$$.\n\nPut both values into the final operation:\n\n$$\\triangle(5,9)=5(2)+\\frac{9}{1}=19$$\n\nSo $$\\triangle(5,9)=19$$.",
-    "projectile-title": "Motion becomes easier to understand when <mark>you can see it for yourself</mark>",
-    "projectile-controls": "Choose a cannonball path",
     "projectile-sixty-degree": "Sixty Degrees",
     "projectile-long-drive": "Long Drive",
     "projectile-high-arc": "High Arc",
-    "projectile-view-label": "Cannonball projectile analysis visual",
     "projectile-horizontal-component": "Horizontal component",
     "projectile-vertical-component": "Vertical component",
     "projectile-peak-time": "Peak time",
@@ -1068,34 +1161,10 @@
     "projectile-range": "Range",
     "projectile-instantaneous-velocity": "Velocity at two seconds"
   },
-  "CurriculaSection": {
-    "headline": "Your curriculum may differ. <mark>Your learning still stays connected.</mark>",
-    "description": "Start from your school pathway. Lessons, Tryout, and Nina follow the curriculum you use.",
-    "cta": "Explore all curricula",
-    "navigation": "Available curricula"
-  },
-  "SchoolsSection": {
-    "badge": "For Schools",
-    "headline": "Every school has <mark>different</mark> needs. We <mark>get it</mark>.",
-    "description": "Lessons and Tryouts are free for teachers and students. Tell us what else your school needs.",
-    "cta": "Discuss your needs"
-  },
   "About": {
-    "title": "Learn until it <mark>clicks.</mark>",
-    "description": "Pick a subject, test what you know with Tryout, and ask Nina when you get stuck.",
-    "explore-subjects": "Explore subjects",
-    "try-tryout": "Try a Tryout",
-    "contribute": "Contribute",
-    "join-community": "Join community",
-    "community-title": "Find people who get what you are learning",
-    "community-description": "Every lesson is made by someone who was confused too. Join our Discord to ask questions, share resources, or help others out.",
-    "curriculum-description": "Pick your grade, choose a subject, or search for the topic you are studying. No endless scrolling.",
     "company": "Company",
     "community": "Community",
-    "about-us": "About Us",
-    "trusted-badge": "Learning together",
-    "trusted-headline": "<mark>Students</mark> from these schools and universities learn with <mark>Nakafa.</mark>",
-    "trusted-description": "They start with open lessons, then keep going at their own pace."
+    "about-us": "About Us"
   },
   "Legal": {
     "terms-and-policies": "Terms and Policies",
@@ -1110,11 +1179,11 @@
     "allow": "Allow",
     "decline": "Decline",
     "manage": "Usage data",
-    "status-granted": "Detailed usage sharing is on",
-    "status-denied": "Detailed usage sharing is off",
-    "status-browser-signal": "Your browser privacy settings keep detailed sharing off",
-    "status-pending": "Loading your choice",
-    "status-prompt": "No choice yet",
+    "status-granted": "Detailed usage sharing is on.",
+    "status-denied": "Detailed usage sharing is off.",
+    "status-browser-signal": "Your browser privacy settings keep detailed sharing off.",
+    "status-pending": "We are loading your choice.",
+    "status-prompt": "You have not chosen yet.",
     "policy": "<privacy-policy>Privacy Policy</privacy-policy>",
     "load-error": "We could not load your choice. Usage sharing stays off while we retry.",
     "runtime-error": "Your choice was saved, but usage sharing could not be applied. It stays as it was.",

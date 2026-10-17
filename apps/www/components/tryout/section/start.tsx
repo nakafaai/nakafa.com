@@ -44,20 +44,7 @@ export function StartSectionButton({
                 attemptId,
                 sectionKey,
               })
-            ).pipe(
-              Effect.flatMap(Effect.fromResult),
-              Effect.tap(() =>
-                Effect.sync(() => {
-                  toast.success(
-                    {
-                      description: "tryout-start-part-success.description",
-                      title: "tryout-start-part-success.title",
-                    },
-                    { position: "bottom-center" }
-                  );
-                })
-              )
-            )
+            ).pipe(Effect.flatMap(Effect.fromResult))
           ),
           Effect.catch(() =>
             Effect.sync(() => {

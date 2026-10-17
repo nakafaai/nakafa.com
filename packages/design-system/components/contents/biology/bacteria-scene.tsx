@@ -12,18 +12,18 @@ import type { ReactNode } from "react";
 export interface BacteriaLabItemProps extends BiologyLabItemProps {
   scene:
     | {
-        bacillusLabel: ReactNode;
-        coccusLabel: ReactNode;
+        bacillusLabel?: ReactNode;
+        coccusLabel?: ReactNode;
         kind: "shape";
-        spiralLabel: ReactNode;
+        spiralLabel?: ReactNode;
       }
     | {
         kind: "structure";
-        nucleoidDnaLabel: ReactNode;
+        nucleoidDnaLabel?: ReactNode;
       }
     | {
-        gramNegativeLabel: ReactNode;
-        gramPositiveLabel: ReactNode;
+        gramNegativeLabel?: ReactNode;
+        gramPositiveLabel?: ReactNode;
         kind: "wall";
       };
 }

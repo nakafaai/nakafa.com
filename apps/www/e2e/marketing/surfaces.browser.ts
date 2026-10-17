@@ -1,73 +1,96 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Array as Arr, Effect, Order, Record as Rec } from "effect";
-import { activateUntilVisible, press } from "@/e2e/support/input";
 import {
+  CROWD_HERD,
+  CROWD_TYPING_EVERY,
+} from "@/components/marketing/about/toys/herd";
+import { activateUntilVisible } from "@/e2e/support/input";
+import {
+  loadMarketingPage,
   measureMarketingPage,
   readFirstContributor,
-  swipeContributorDrawer,
 } from "@/e2e/support/marketing";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import {
-  expectStablePricingAppShell,
-  expectStablePricingTransition,
-  observeStablePricingReload,
-} from "@/e2e/support/pricing";
 import { openRoute } from "@/e2e/support/route";
-import { DRAWER_TITLE, MARKETING_PAGE } from "@/e2e/support/selector";
+import { DRAWER_TITLE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { targetViewports } from "@/e2e/support/viewport";
+import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**
- * Each contributor sits in the design system's Avatar with its AvatarFallback,
- * the same anatomy as every other avatar, and the gallery takes its animals from
- * one cast. Raw Community markup therefore grew from the single svg per
- * contributor that the earlier ceilings measured. Measured in the browser on a
- * production build on 14 October 2026, at all five target viewports (the same
- * at each), the section counts 74 non-SVG descendants, 340 descendants, and
- * 39,335 bytes, and the 16 animals are all different. These ceilings leave about
- * six percent regression room over that measure: 79, 361, and 41,700 bytes.
- *
- * The homepage ceiling stays at 2063. The same build measured 1,813 homepage
- * descendants at each viewport.
+ * Each friend of the crowd is one animal in a round avatar: two spans around an
+ * svg of 15 to 25 elements, and every fourth friend also has a typing bubble of
+ * six elements. The ceilings follow the friends that the section renders, read
+ * from the crowd's own constants, so a new friend adds its share and a heavier
+ * drawing still breaks the budget. The figures are measured on a production
+ * build of commit 0923c41e34 on 17 October 2026, by the reader this test uses,
+ * at every target viewport: 18 friends, 5 of them typing, 436 descendants, 109
+ * of them outside the drawings, and 44,814 bytes once serialized. Each ceiling
+ * is about six percent over its measure: a fixed part plus the friends and the
+ * bubbles.
  */
-const COMMUNITY_MAX_CHROME_DESCENDANTS = 79;
-const COMMUNITY_MAX_DESCENDANTS = 361;
-const COMMUNITY_MAX_HTML_BYTES = 41_700;
-const HOMEPAGE_MAX_DESCENDANTS = 2063;
-const PRICING_PATH_PATTERN = /\/id\/pricing$/;
+const COMMUNITY_MARGIN = 1.06;
+const COMMUNITY_FRIENDS = CROWD_HERD.length;
+const COMMUNITY_TYPING_FRIENDS = Math.ceil(
+  COMMUNITY_FRIENDS / CROWD_TYPING_EVERY
+);
+const COMMUNITY_MAX_CHROME_DESCENDANTS = Math.ceil(
+  COMMUNITY_MARGIN * (7 + 4 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
+);
+const COMMUNITY_MAX_DESCENDANTS = Math.ceil(
+  COMMUNITY_MARGIN *
+    (10 + 22 * COMMUNITY_FRIENDS + 6 * COMMUNITY_TYPING_FRIENDS)
+);
+const COMMUNITY_MAX_HTML_BYTES = Math.ceil(
+  COMMUNITY_MARGIN *
+    (2743 + 2152 * COMMUNITY_FRIENDS + 667 * COMMUNITY_TYPING_FRIENDS)
+);
 
-type MarketingViewport = (typeof targetViewports)[number];
+/**
+ * The homepage ceiling: the body held 3,079 elements at every target viewport
+ * on the production build of commit 4eed1d1a95 on 17 October 2026, because the
+ * lesson window draws all four cards in one grid cell and mounts only the open
+ * lab. Six percent over 3,079 is 3,264.
+ */
+const HOMEPAGE_MAX_DESCENDANTS = 3264;
 
-const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
-  page: Page,
-  href: string
-) {
-  yield* openRoute(page, href, "denied");
-  yield* waitForCommittedAppRouter(
-    page,
-    href,
-    href,
-    readinessTimeoutMilliseconds
-  );
-  /**
-   * Next.js may commit App Router history before React reveals a streamed route.
-   * Keep the existing readiness budget attached to the visible route boundary.
-   * @see https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
-   */
-  yield* Effect.promise(() =>
-    expect(page.locator(MARKETING_PAGE).filter({ visible: true })).toHaveCount(
-      1,
-      { timeout: readinessTimeoutMilliseconds }
-    )
-  );
-});
+/**
+ * Records one measured count on the running test, so every run reports the number
+ * that a ceiling of this file is derived from, even when the check passes.
+ */
+function recordMeasure(name: string, value: number) {
+  const info = test.info();
+  info.annotations = Arr.append(info.annotations, {
+    description: String(value),
+    type: name,
+  });
+}
 
 const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
-  function* (page: Page, viewport: MarketingViewport) {
+  function* (page: Page) {
     yield* loadMarketingPage(page, "/en");
     const measurements = yield* measureMarketingPage(page);
+    recordMeasure(
+      "community-chrome-descendants",
+      measurements.communityChromeDescendants
+    );
+    recordMeasure("community-descendants", measurements.communityDescendants);
+    recordMeasure("community-html-bytes", measurements.communityHtmlBytes);
+    recordMeasure("homepage-descendants", measurements.homepageDescendants);
+
+    // The crowd is one picture to assistive technology: one named image, and no list of friends.
+    const community = page.locator("#community");
+    yield* Effect.promise(() =>
+      expect(
+        community.getByRole("img", { name: en.Landing["community-crowd"] })
+      ).toHaveCount(1)
+    );
+    yield* Effect.promise(() =>
+      expect(community.getByRole("listitem")).toHaveCount(0)
+    );
 
     yield* Effect.sync(() => {
       expect(measurements.duplicateIds).toEqual([]);
@@ -87,65 +110,9 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
     });
     yield* Effect.promise(() =>
       expect(page.locator('#faq [data-slot="accordion-trigger"]')).toHaveCount(
-        6
+        10
       )
     );
-
-    const gallery = page.locator("#community [data-contributor-gallery]");
-    const triggers = gallery.locator("[data-contributor-username]");
-    yield* Effect.promise(() => expect(gallery).toHaveCount(1));
-    yield* Effect.promise(() =>
-      expect(triggers).toHaveCount(contributors.length)
-    );
-    yield* Effect.promise(() =>
-      expect(page.locator("[data-contributor-drawer]")).toHaveCount(0)
-    );
-
-    const { hasTouch } = viewport;
-    const firstContributor = yield* readFirstContributor(contributors);
-    const firstTrigger = triggers.first();
-    yield* Effect.promise(() => press(firstTrigger, hasTouch));
-    const drawer = page.locator("[data-contributor-drawer]");
-    yield* Effect.promise(() => expect(drawer).toHaveCount(1));
-    yield* Effect.promise(() => expect(drawer).toBeVisible());
-    yield* Effect.promise(() =>
-      expect(drawer).toHaveAccessibleName(firstContributor.name)
-    );
-    yield* Effect.promise(() =>
-      expect(drawer).toHaveAttribute(
-        "data-contributor-username",
-        firstContributor.username
-      )
-    );
-
-    for (let press = 0; press < 6; press += 1) {
-      yield* Effect.promise(() => page.keyboard.press("Tab"));
-      yield* Effect.promise(() =>
-        expect
-          .poll(() =>
-            drawer.evaluate((element) =>
-              element.contains(document.activeElement)
-            )
-          )
-          .toBe(true)
-      );
-    }
-
-    if (hasTouch) {
-      yield* swipeContributorDrawer(drawer, page);
-    } else {
-      yield* Effect.promise(() => page.keyboard.press("Escape"));
-    }
-    yield* Effect.promise(() => expect(drawer).toHaveCount(0));
-    yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
-
-    yield* Effect.promise(() => press(firstTrigger, hasTouch));
-    const outsideSurface = page.locator('[data-slot="drawer-viewport"]');
-    yield* Effect.promise(() =>
-      press(outsideSurface, hasTouch, { position: { x: 2, y: 2 } })
-    );
-    yield* Effect.promise(() => expect(drawer).toHaveCount(0));
-    yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
   }
 );
 
@@ -256,129 +223,6 @@ const verifyContributorPage = Effect.fn("NakafaE2E.verifyContributorPage")(
   }
 );
 
-const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
-  page: Page
-) {
-  yield* loadMarketingPage(page, "/en/pricing");
-  yield* Effect.promise(() =>
-    expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Start with Free. Move to Pro when you are ready."
-    )
-  );
-  yield* Effect.promise(() =>
-    expect(page.getByRole("heading", { level: 2, name: "Free" })).toBeVisible()
-  );
-  yield* Effect.promise(() =>
-    expect(page.getByRole("heading", { level: 2, name: "Pro" })).toBeVisible()
-  );
-  yield* Effect.promise(() =>
-    expect(
-      page.getByRole("region", {
-        name: "Start with Free. Move to Pro when you are ready.",
-      })
-    ).toContainText("3,000 AI credits")
-  );
-  yield* Effect.promise(() =>
-    expect(page.getByRole("button", { name: "Get Pro" })).toBeEnabled()
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("[data-pricing-plan]")).toHaveCount(2)
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("[data-pricing-price-slot]")).toHaveCount(2)
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("[data-pricing-price-fallback]")).toHaveCount(0)
-  );
-
-  const pricingQuestions = page.locator('#faq [data-slot="accordion-trigger"]');
-  yield* Effect.promise(() => expect(pricingQuestions).toHaveCount(20));
-
-  const productQuestion = pricingQuestions.filter({
-    hasText: "What can I learn on Nakafa?",
-  });
-  const productItem = page
-    .locator('#faq [data-slot="accordion-item"]')
-    .filter({ hasText: "What can I learn on Nakafa?" });
-  const productPanel = productItem.locator('[data-slot="accordion-content"]');
-  yield* Effect.promise(() => productQuestion.click());
-  yield* Effect.promise(() =>
-    expect(productQuestion).toHaveAttribute("aria-expanded", "true")
-  );
-  yield* Effect.promise(() =>
-    expect(productPanel).toHaveAttribute("data-open", "")
-  );
-  yield* Effect.promise(() =>
-    expect(productPanel).toHaveCSS("animation-name", "accordion-down")
-  );
-  yield* Effect.promise(() =>
-    expect(productPanel).toHaveCSS("animation-duration", "0.18s")
-  );
-  yield* Effect.promise(() =>
-    expect(productQuestion.locator("svg")).toHaveCSS("rotate", "180deg")
-  );
-  yield* Effect.promise(() =>
-    expect(productQuestion.locator("svg")).toHaveCSS(
-      "transition-duration",
-      "0.18s"
-    )
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("#faq")).toContainText(
-      "primary school through university"
-    )
-  );
-
-  const subscriptionQuestion = pricingQuestions.filter({
-    hasText: "How do I manage or cancel Pro?",
-  });
-  yield* Effect.promise(() => subscriptionQuestion.click());
-  yield* Effect.promise(() =>
-    expect(page.locator("#faq")).toContainText(
-      "manage or cancel your subscription"
-    )
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator('header nav [href="/en/pricing"]')).toHaveText(
-      "Pricing"
-    )
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator('header nav [href="/en/pricing"]')).toHaveAttribute(
-      "aria-current",
-      "page"
-    )
-  );
-});
-
-const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
-  function* (page: Page) {
-    yield* expectStablePricingAppShell(page);
-    yield* loadMarketingPage(page, "/id");
-
-    const pricingLink = page.locator('header nav [href="/id/pricing"]');
-    yield* Effect.promise(() => expect(pricingLink).toHaveText("Harga"));
-    yield* Effect.promise(() => pricingLink.click());
-    yield* Effect.promise(() =>
-      expect(page).toHaveURL(PRICING_PATH_PATTERN, {
-        timeout: readinessTimeoutMilliseconds,
-      })
-    );
-    yield* Effect.promise(() =>
-      expect(page.locator("[data-pricing-plan]:visible")).toHaveCount(2)
-    );
-    yield* Effect.promise(() =>
-      expect(page.locator("[data-pricing-price-fallback]")).toHaveCount(0)
-    );
-
-    const observation = yield* observeStablePricingReload(
-      page,
-      readinessTimeoutMilliseconds
-    );
-    yield* Effect.sync(() => expectStablePricingTransition(observation));
-  }
-);
-
 for (const viewport of targetViewports) {
   test.describe(`marketing surfaces at ${viewport.name}`, () => {
     test.use({
@@ -390,14 +234,19 @@ for (const viewport of targetViewports) {
       page,
     }) => {
       await Effect.runPromise(
-        withObservedPageErrors(page, verifyMarketingSurface(page, viewport))
+        withObservedPageErrors(page, verifyMarketingSurface(page))
       );
     });
   });
 }
 
 test.describe("detached contributor payloads", () => {
-  test.use({ viewport: { height: 900, width: 1440 } });
+  test.use({
+    viewport: {
+      height: desktopViewport.height,
+      width: desktopViewport.width,
+    },
+  });
 
   test("renders every contributor through one drawer root", async ({
     page,
@@ -412,26 +261,6 @@ test.describe("detached contributor payloads", () => {
   }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyContributorPage(page))
-    );
-  });
-});
-
-test.describe("dedicated pricing page", () => {
-  test.use({ viewport: { height: 900, width: 1440 } });
-
-  test("renders plans and pricing questions through the marketing shell", async ({
-    page,
-  }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyPricingPage(page))
-    );
-  });
-
-  test("navigates from the header with a stable pricing shell", async ({
-    page,
-  }) => {
-    await Effect.runPromise(
-      withObservedPageErrors(page, verifyPricingNavigation(page))
     );
   });
 });

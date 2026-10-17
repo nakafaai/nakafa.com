@@ -1,6 +1,11 @@
-import { expect, type Page } from "@playwright/test";
+import {
+  type APIResponse,
+  expect,
+  type Page,
+  type Route,
+} from "@playwright/test";
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -45,6 +50,63 @@ export const waitForCachedRoute = Effect.fn("NakafaE2E.waitForCachedRoute")(
  */
 export const NEXT_CHUNK_PATH =
   /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
+
+/**
+ * Routes every chunk the page asks for. A chunk whose code holds `marker` goes
+ * to `onMatch` with its response, and every other chunk is fulfilled as the
+ * server sent it. The chunk's text is read from the response, so the route
+ * matches the module itself and not its name, which changes with each build.
+ */
+function routeChunkHolding(
+  page: Page,
+  marker: string,
+  onMatch: (route: Route, response: APIResponse) => Effect.Effect<void>
+) {
+  return Effect.promise(() =>
+    page.route(NEXT_CHUNK_PATH, (route) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const response = yield* Effect.promise(() => route.fetch());
+          const body = yield* Effect.promise(() => response.text());
+          if (body.includes(marker)) {
+            return yield* onMatch(route, response);
+          }
+          return yield* Effect.promise(() => route.fulfill({ response }));
+        })
+      )
+    )
+  );
+}
+
+/**
+ * Aborts the chunk whose code holds `marker`, while the page hydrates. The
+ * result lists the URLs it aborted, in order, so a test can prove the failure
+ * happened.
+ */
+export function abortChunkHolding(page: Page, marker: string) {
+  const aborted = MutableList.make<string>();
+  return Effect.as(
+    routeChunkHolding(page, marker, (route) => {
+      MutableList.append(aborted, route.request().url());
+      return Effect.promise(() => route.abort("failed"));
+    }),
+    aborted
+  );
+}
+
+/** Holds the chunk whose code holds `marker` for `milliseconds` before it loads. */
+export function holdChunkHolding(
+  page: Page,
+  marker: string,
+  milliseconds: number
+) {
+  return routeChunkHolding(page, marker, (route, response) =>
+    Effect.andThen(
+      Effect.sleep(milliseconds),
+      Effect.promise(() => route.fulfill({ response }))
+    )
+  );
+}
 
 /**
  * Seeds one consent decision before the first navigation, then opens `href`
