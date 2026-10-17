@@ -56,6 +56,25 @@ describe("school requests", () => {
     expect(rewritten.nextUrl.pathname).toBe("/school/harapan");
   });
 
+  it("hands the NEXT_LOCALE cookie and Accept-Language of the visitor to the locale routing", () => {
+    routeSchoolRequest(
+      visit("https://harapan.nakafa.com/", {
+        headers: { cookie: "NEXT_LOCALE=de", "accept-language": "id-ID" },
+      })
+    );
+
+    const [[rewritten]] = mockSchool.middleware.mock.calls;
+    expect(rewritten.headers.get("cookie")).toBe("NEXT_LOCALE=de");
+    expect(rewritten.headers.get("accept-language")).toBe("id-ID");
+  });
+
+  it("varies the school response by the cookie and by Accept-Language", () => {
+    const response = routeSchoolRequest(visit("https://harapan.nakafa.com/"));
+
+    expect(response?.headers.get("vary")).toContain("Accept-Language");
+    expect(response?.headers.get("vary")).toContain("Cookie");
+  });
+
   it("rewrites a local school host the same way as a production one", () => {
     routeSchoolRequest(visit("http://harapan.localhost:3000/"));
 
