@@ -11,7 +11,7 @@ import {
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
-const { resolve } = refs.public.classroom.classes;
+const { archive, get, resolve } = refs.public.classroom.classes;
 const periods = refs.public.tenancy.periods;
 const placements = refs.public.tenancy.placements;
 
@@ -92,6 +92,78 @@ describe("classroom/classes resolve", () => {
       expect(beforeArchive).toEqual(made);
       expect(afterArchive).toMatchObject(denied("resource"));
     })
+  );
+
+  it.effect(
+    "resolves the active class of an address that an archived class of another period also holds",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const smp = yield* period(fixture, fixture.units.smp);
+        const sma = yield* period(fixture, fixture.units.sma);
+        yield* fixture
+          .as("admin")
+          .mutation(periods.open, { periodId: smp.id, slug: nf });
+        yield* fixture
+          .as("admin")
+          .mutation(periods.open, { periodId: sma.id, slug: nf });
+        const smpCohort = yield* cohort(fixture, smp.id, "X-1");
+        const smaCohort = yield* cohort(fixture, sma.id, "X-1");
+        const archived = yield* classOf(fixture, smpCohort.id, "Fisika");
+        yield* fixture
+          .as("admin")
+          .mutation(archive, { classId: archived.id, slug: nf });
+        const active = yield* classOf(fixture, smaCohort.id, "Fisika");
+        const found = yield* fixture
+          .as("admin")
+          .query(resolve, { classSlug: "fisika-x-1", slug: nf });
+        expect(found).toEqual(active);
+      })
+  );
+
+  it.effect(
+    "refuses an address that only an archived class holds as missing, and reads that class by its ID",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        yield* fixture
+          .as("admin")
+          .mutation(periods.open, { periodId: term.id, slug: nf });
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        const made = yield* classOf(fixture, x1.id, "Fisika");
+        yield* fixture
+          .as("admin")
+          .mutation(archive, { classId: made.id, slug: nf });
+        const refused = yield* fixture
+          .as("admin")
+          .query(resolve, { classSlug: "fisika-x-1", slug: nf })
+          .pipe(Effect.flip);
+        const readable = yield* fixture
+          .as("admin")
+          .query(get, { classId: made.id, slug: nf });
+        expect(refused).toMatchObject(denied("resource"));
+        expect(readable).toMatchObject({ id: made.id, status: "archived" });
+      })
+  );
+
+  it.effect(
+    "refuses an address in capitals as missing, because no class holds that spelling",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        yield* fixture
+          .as("admin")
+          .mutation(periods.open, { periodId: term.id, slug: nf });
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        yield* classOf(fixture, x1.id, "Fisika");
+        const refused = yield* fixture
+          .as("admin")
+          .query(resolve, { classSlug: "Fisika-X-1", slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("resource"));
+      })
   );
 
   it.effect(

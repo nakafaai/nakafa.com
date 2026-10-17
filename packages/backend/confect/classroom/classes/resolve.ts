@@ -44,30 +44,33 @@ const activePeriodsOf = Effect.fnUntraced(function* (
 });
 
 /**
- * The class of one period that holds the address, if any. `create` walks past
- * every address that a class of the period holds, archived classes included, so
- * one period holds at most one class at each address and one read finds it.
+ * The active class of one period that holds the address, if any. `create` walks
+ * past every address that a class of the period holds, archived classes included,
+ * so one period holds at most one class at each address and one read finds it.
+ * An archived class holds no address for resolution, so it is left out here.
  */
 const holderIn = Effect.fnUntraced(function* (
   periodId: GenericId.GenericId<"tenantPeriods">,
   classSlug: string
 ) {
-  return yield* (yield* DatabaseReader)
+  const found = yield* (yield* DatabaseReader)
     .table("classes")
     .index("by_periodId_and_slug", (query) =>
       query.eq("periodId", periodId).eq("slug", classSlug)
     )
     .first()
     .pipe(Effect.orDie);
+  return Option.filter(found, (row) => row.status === "active");
 });
 
 /**
- * One class by its address in the caller's school, read from the active periods of
- * its active units only, so a class in an archived period never resolves. An
- * address that no such class holds is refused the way a missing object is, and one
- * that two or more hold is refused as ambiguous. The ambiguity refusal comes before
- * the access decision and names no class. The one class found is decided on as
- * `class.view`.
+ * One active class by its address in the caller's school. It reads the active
+ * periods of the active units only, so a class in an archived period never
+ * resolves. An archived class holds no address, so it never resolves either, and
+ * it stays readable by its ID. An address that no active class holds is refused
+ * the way a missing object is, and one that two or more active classes hold is
+ * refused as ambiguous. The ambiguity refusal comes before the access decision and
+ * names no class. The one class found is decided on as `class.view`.
  */
 export const resolve = FunctionImpl.make(
   databaseSchema,
