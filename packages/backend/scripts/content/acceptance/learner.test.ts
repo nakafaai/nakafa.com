@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
+import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import { makeSignature } from "better-auth/crypto";
 import {
@@ -50,9 +51,6 @@ const CommandInput = Schema.fromJsonString(
   })
 );
 const LEARNER_EMAIL = /^learner-[0-9a-f]{16}@acceptance\.invalid$/u;
-const Cookie = Schema.fromJsonString(
-  Schema.Struct({ name: Schema.String, value: Schema.String })
-);
 
 /** Answers each Convex command the way the local backend does. */
 function answerCommands(createdUser = '{"_creationTime":1,"_id":"user-1"}') {
@@ -130,7 +128,7 @@ describe("synthetic acceptance learner", () => {
 
         const cookie = yield* fs
           .readFileString(`${root}/first.json`)
-          .pipe(Effect.flatMap(Schema.decodeEffect(Cookie)));
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
         // Node's Buffer encodes the HMAC bytes, so no Effect code vouches for itself.
         const signature = Buffer.from(
           yield* Effect.promise(() =>

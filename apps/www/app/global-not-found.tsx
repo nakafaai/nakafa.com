@@ -10,6 +10,8 @@ import {
   routing,
 } from "@repo/internationalization/src/routing";
 import { hasPreviewProvider } from "@repo/next-config/preview";
+import { SITE_ORIGIN } from "@repo/seo/origin";
+import { Option } from "effect";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { hasLocale } from "next-intl";
@@ -17,6 +19,8 @@ import { Suspense } from "react";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 import { Stage } from "@/components/state/stage";
+import { NEXT_INTL_LOCALE_HEADER } from "@/lib/routing/answer";
+import { readRequestHostname, readSchoolSlug } from "@/lib/routing/school/host";
 import { appViewport } from "@/lib/theme/viewport";
 
 /** Global 404 viewport contract shared with localized app documents. */
@@ -26,7 +30,6 @@ export const viewport = appViewport;
 export const instant = true;
 
 const dictionaries = { de, en, id };
-const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 
 /** Generates metadata from the same locale dictionary as the 404 document. */
 export async function generateMetadata(): Promise<Metadata> {
@@ -62,24 +65,52 @@ async function getNotFoundLocale() {
 /** Renders the global not-found boundary with the default locale fallback. */
 export default function GlobalNotFound() {
   return (
-    <Suspense fallback={<NotFoundDocument locale={routing.defaultLocale} />}>
+    <Suspense
+      fallback={
+        <NotFoundDocument isSchoolHost={false} locale={routing.defaultLocale} />
+      }
+    >
       <LocalizedNotFoundDocument />
     </Suspense>
   );
 }
 
-/** Renders the localized not-found document after request headers are available. */
+/**
+ * Renders the localized not-found document after request headers are available,
+ * with the links of a school host when the request came to one.
+ */
 async function LocalizedNotFoundDocument() {
-  return <NotFoundDocument locale={await getNotFoundLocale()} />;
+  const [locale, isSchoolHost] = await Promise.all([
+    getNotFoundLocale(),
+    readIsSchoolHost(),
+  ]);
+  return <NotFoundDocument isSchoolHost={isSchoolHost} locale={locale} />;
+}
+
+/** Whether the request came to a school host, which has a home and no search page. */
+async function readIsSchoolHost() {
+  const requestHeaders = await headers();
+  return Option.isSome(
+    readRequestHostname(requestHeaders).pipe(Option.flatMap(readSchoolSlug))
+  );
 }
 
 /**
  * Renders the complete global 404 document from one locale dictionary. It is
  * its own document and has no app around it, so it reads only the small
  * dictionary of the standalone pages, with plain links, and no provider that
- * needs the app.
+ * needs the app. On a school host the home link is Nakafa's home, because the
+ * proxy sends an unknown school and a viewer who is not a member here, and the
+ * root of that school would answer not found again. The search link is left out,
+ * because a school has no search page.
  */
-function NotFoundDocument({ locale }: { locale: keyof typeof dictionaries }) {
+function NotFoundDocument({
+  isSchoolHost,
+  locale,
+}: {
+  isSchoolHost: boolean;
+  locale: keyof typeof dictionaries;
+}) {
   const messages = dictionaries[locale];
 
   return (
@@ -97,15 +128,21 @@ function NotFoundDocument({ locale }: { locale: keyof typeof dictionaries }) {
               title={messages.NotFound.title}
             >
               <ActionLink
-                href={`/${locale}`}
+                href={
+                  isSchoolHost
+                    ? new URL(`/${locale}`, SITE_ORIGIN).href
+                    : `/${locale}`
+                }
                 label={messages.State["home-button"]}
                 variant="default"
               />
-              <ActionLink
-                href={`/${locale}/search`}
-                label={messages.NotFound["search-button"]}
-                variant="ghost"
-              />
+              {isSchoolHost ? null : (
+                <ActionLink
+                  href={`/${locale}/search`}
+                  label={messages.NotFound["search-button"]}
+                  variant="ghost"
+                />
+              )}
             </Missing>
           </Stage>
         </DesignSystemProvider>
