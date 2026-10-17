@@ -10,7 +10,10 @@ import { StarterKit } from "@tiptap/starter-kit";
 /** The bound of the test document, small enough that a blockquote breaks it. */
 const MAX_DEPTH = 3;
 
-/** A headless editor that refuses edits past `MAX_DEPTH`, and a state of `text` in a paragraph of its schema. */
+/**
+ * A headless editor that refuses edits past `MAX_DEPTH`, with the nodes of its schema and a
+ * builder of states of its documents.
+ */
 function openEditor() {
   const editor = new Editor({
     element: null,
@@ -19,7 +22,7 @@ function openEditor() {
   const { blockquote, paragraph } = editor.schema.nodes;
   const stateOf = (doc: ReturnType<typeof editor.schema.node>) =>
     EditorState.create({ doc, plugins: editor.extensionManager.plugins });
-  return { blockquote, editor, paragraph, schema: editor.schema, stateOf };
+  return { blockquote, paragraph, schema: editor.schema, stateOf };
 }
 
 describe("depthGuard", () => {

@@ -11,20 +11,6 @@ import type { Schema } from "@tiptap/pm/model";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Array as Arr } from "effect";
 
-/**
- * A mark that a document may hold. Each name is the mark's name in ProseMirror and in
- * the Aksara contract of an assessment document (ADR 0031), so the caller passes the
- * contract's own names and nothing is renamed on the way.
- */
-type DocumentMark =
-  | "bold"
-  | "code"
-  | "italic"
-  | "link"
-  | "subscript"
-  | "superscript"
-  | "underline";
-
 /** A heading level, which Tiptap numbers from 1 to 6. */
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -60,20 +46,21 @@ const DocumentOrderedList = OrderedList.extend({
   },
 });
 
+/** The extension of one mark, given its priority and the rule of the link addresses. */
+type MarkExtension = (
+  priority: number,
+  isLinkAllowed: DocumentRules["isLinkAllowed"]
+) => AnyExtension;
+
 /**
  * The extension of each mark, given its priority and the rule of the link addresses.
  * Tiptap sorts extensions by priority, and ProseMirror ranks the marks of a text node
  * in that order, so a mark's priority sets its place. The link extension sets priority
  * 1000 and the other marks keep the default, so the link would rank first. Each mark
  * therefore takes the priority of its place in the list, and the list sets the order.
+ * The name of each mark is written here once, and `DocumentMark` is read from these keys.
  */
-const MARKS: Record<
-  DocumentMark,
-  (
-    priority: number,
-    isLinkAllowed: DocumentRules["isLinkAllowed"]
-  ) => AnyExtension
-> = {
+const MARKS = {
   bold: (priority) => Bold.extend({ priority }),
   code: (priority) => Code.extend({ priority }),
   italic: (priority) => Italic.extend({ priority }),
@@ -97,7 +84,14 @@ const MARKS: Record<
   subscript: (priority) => Subscript.extend({ priority }),
   superscript: (priority) => Superscript.extend({ priority }),
   underline: (priority) => Underline.extend({ priority }),
-};
+} satisfies Record<string, MarkExtension>;
+
+/**
+ * A mark that a document may hold. Each name is the mark's name in ProseMirror and in
+ * the Aksara contract of an assessment document (ADR 0031), so the caller passes the
+ * contract's own names and nothing is renamed on the way.
+ */
+type DocumentMark = keyof typeof MARKS;
 
 /**
  * The extensions of an editor that holds a document of the given rules. StarterKit

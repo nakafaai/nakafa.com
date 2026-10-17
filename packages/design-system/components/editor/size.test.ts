@@ -16,8 +16,9 @@ import { StarterKit } from "@tiptap/starter-kit";
 const MAX_BYTES = 200;
 
 /**
- * A headless editor that holds the guard it is given, and a state of its document.
- * The states carry the editor's plugins, so a transaction applied to them is filtered.
+ * A headless editor that holds the guard it is given, with its schema and a builder of
+ * states of its documents. The states carry the editor's plugins, so a transaction applied
+ * to them is filtered.
  */
 function openEditor(guard: ReturnType<typeof stepSizeGuard>) {
   const editor = new Editor({
@@ -26,7 +27,7 @@ function openEditor(guard: ReturnType<typeof stepSizeGuard>) {
   });
   const stateOf = (doc: ReturnType<typeof editor.schema.node>) =>
     EditorState.create({ doc, plugins: editor.extensionManager.plugins });
-  return { editor, schema: editor.schema, stateOf };
+  return { schema: editor.schema, stateOf };
 }
 
 describe("stepSizeGuard", () => {
