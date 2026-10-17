@@ -5,7 +5,7 @@ import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { commentVoteValidator } from "@repo/backend/confect/comments/schema";
 import { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 const publicCommentUserValidator = Schema.Struct({
   _id: userDataValidator.fields._id,
@@ -14,17 +14,28 @@ const publicCommentUserValidator = Schema.Struct({
   name: userDataValidator.fields.name,
   picture: userDataValidator.fields.picture,
 });
-const commentWithViewerVoteValidator = Schema.Struct({
-  ...commentsTable.Doc.fields,
+
+/**
+ * One comment as a list shows it: its stored fields, its count of likes (zero before
+ * the count was kept), whether the viewer liked it, and the viewer's vote, which is a
+ * like for the open web builds.
+ */
+const commentRowValidator = Schema.Struct({
+  ...Struct.omit(commentsTable.Doc.fields, ["likeCount"]),
+  likeCount: Schema.Finite,
+  liked: Schema.Boolean,
   viewerVote: Schema.NullOr(commentVoteValidator),
 });
 const commentWithUserValidator = Schema.Struct({
-  ...commentWithViewerVoteValidator.fields,
+  ...commentRowValidator.fields,
   user: Schema.NullOr(publicCommentUserValidator),
   replyToUser: Schema.NullOr(publicCommentUserValidator),
 });
 
-/** Load the current viewer's vote for each bounded comment page row. */
+/**
+ * Reads the comments of a slug and of a profile, and the replies of a thread. A page
+ * of each list holds bounded rows, and each row says whether the viewer liked it.
+ */
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
@@ -38,11 +49,21 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
+      name: "getCommentReplies",
+      args: () => ({
+        threadId: IdSchema("comments"),
+      }),
+      item: () => commentWithUserValidator,
+      error: () => AuthFailure,
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicPaginatedQuery({
       name: "getCommentsByUserId",
       args: () => ({
         userId: IdSchema("users"),
       }),
-      item: () => commentWithViewerVoteValidator,
+      item: () => commentRowValidator,
       error: () => AuthFailure,
     }).middleware(Session)
   );

@@ -3,6 +3,8 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
+import { removeCommentLike } from "@repo/backend/confect/comments/likes";
+import { findComment } from "@repo/backend/confect/comments/rows";
 import { dropRestores } from "@repo/backend/confect/nina/memory/restore/store";
 import { deleteBatch } from "@repo/backend/confect/nina/memory/store";
 import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
@@ -12,13 +14,18 @@ import {
   removePostLikeBatch,
 } from "@repo/backend/confect/posts/likes";
 import { findPost } from "@repo/backend/confect/posts/rows";
+import { COMMENT_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/triggers/comments/cleanup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
 const COMMENT_VOTE_BATCH_SIZE = 50;
 const COMMENT_REFERENCE_BATCH_SIZE = 25;
 
-/** Deletes one bounded batch of a user's comments and votes. */
+/**
+ * Deletes one bounded batch of a user's comments and votes. The replies of a deleted
+ * comment stay as top-level comments, without their reference to it, as they did
+ * before the threads. Their own replies go with the thread of the deleted comment.
+ */
 const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
   function* (userId: Id<"users">) {
     const database = yield* DatabaseReader;
@@ -78,12 +85,14 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
       .take(COMMENT_REFERENCE_BATCH_SIZE)
       .pipe(Effect.orDie);
     for (const reply of replies) {
+      // A reply becomes top-level, so it leaves the thread of the comment being deleted.
       yield* writer
         .table("comments")
         .patch(reply._id, {
           parentId: undefined,
           replyToText: undefined,
           replyToUserId: undefined,
+          threadId: undefined,
         })
         .pipe(Effect.orDie);
     }
@@ -92,6 +101,28 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
     }
     yield* writer.table("comments").delete(comment._id);
     return true;
+  },
+  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+);
+
+/**
+ * Removes one bounded batch of the learner's own likes on comments, and takes each
+ * one off the count of the comment it was on, so the counts of other learners'
+ * comments stay exact.
+ */
+const cleanupCommentLikes = Effect.fn("auth.cleanup.cleanupCommentLikes")(
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const likes = yield* database
+      .table("commentLikes")
+      .index("by_userId", (query) => query.eq("userId", userId))
+      .take(COMMENT_LIKE_CLEANUP_BATCH_SIZE)
+      .pipe(Effect.orDie);
+    for (const like of likes) {
+      const comment = yield* findComment(like.commentId);
+      yield* removeCommentLike(like, comment);
+    }
+    return likes.length > 0;
   },
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
@@ -202,6 +233,9 @@ export const cleanupUserSocialData = Effect.fn(
   "auth.cleanup.cleanupUserSocialData"
 )(function* (userId: Id<"users">) {
   if (yield* cleanupComments(userId)) {
+    return true;
+  }
+  if (yield* cleanupCommentLikes(userId)) {
     return true;
   }
   if (yield* cleanupPostLikes(userId)) {
