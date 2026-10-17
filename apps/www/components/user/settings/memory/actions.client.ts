@@ -181,6 +181,8 @@ export function useMemoryActions() {
 
     const { session } = latest();
     settle(() => removeById({ id: memory.id }), {
+      // The server deleted the memory, so the words kept for it are let go.
+      done: () => release(memory.id),
       failed: () => {
         const held = Option.getOrElse(
           Rec.get(latest().withheld, memory.id),
