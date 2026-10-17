@@ -62,6 +62,8 @@ import ninaUploads from "./tables/ninaUploads";
 import notifications from "./tables/notifications";
 import onboardingProfiles from "./tables/onboardingProfiles";
 import operators from "./tables/operators";
+import postLikes from "./tables/postLikes";
+import posts from "./tables/posts";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
 import quranRows from "./tables/quranRows";
@@ -160,6 +162,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly notifications: typeof notifications;
   readonly onboardingProfiles: typeof onboardingProfiles;
   readonly operators: typeof operators;
+  readonly postLikes: typeof postLikes;
+  readonly posts: typeof posts;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
   readonly quranRows: typeof quranRows;
@@ -257,6 +261,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   notifications,
   onboardingProfiles,
   operators,
+  postLikes,
+  posts,
   programBuckets,
   programCatalog,
   quranRows,

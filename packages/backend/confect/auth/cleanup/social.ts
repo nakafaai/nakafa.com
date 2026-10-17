@@ -6,8 +6,10 @@ import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
 import { dropRestores } from "@repo/backend/confect/nina/memory/restore/store";
 import { deleteBatch } from "@repo/backend/confect/nina/memory/store";
 import { dropPortrait } from "@repo/backend/confect/nina/portrait/store";
+import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
+import { findPost } from "@repo/backend/confect/posts/rows";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, flow, Option } from "effect";
+import { Effect, flow, Option, Struct } from "effect";
 
 const COMMENT_VOTE_BATCH_SIZE = 50;
 const COMMENT_REFERENCE_BATCH_SIZE = 25;
@@ -90,6 +92,72 @@ const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
   Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
 );
 
+/**
+ * Removes one bounded batch of the learner's own likes on posts, and takes each
+ * one off the count of the post it was on, so the counts of other learners'
+ * posts stay exact.
+ */
+const cleanupPostLikes = Effect.fn("auth.cleanup.cleanupPostLikes")(
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const likes = yield* database
+      .table("postLikes")
+      .index("by_userId", (query) => query.eq("userId", userId))
+      .take(POST_LIKE_CLEANUP_BATCH_SIZE)
+      .pipe(Effect.orDie);
+    for (const like of likes) {
+      const post = yield* findPost(like.postId);
+      if (post !== null) {
+        yield* writer
+          .table("posts")
+          .replace(post._id, {
+            ...Struct.omit(post, ["_id", "_creationTime"]),
+            likeCount: Math.max(post.likeCount - 1, 0),
+          })
+          .pipe(Effect.orDie);
+      }
+      yield* writer.table("postLikes").delete(like._id);
+    }
+    return likes.length > 0;
+  },
+  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+);
+
+/**
+ * Removes one bounded batch of the learner's posts. A post goes only after the
+ * likes of it that other learners left, so each pass takes one batch of them,
+ * and the post itself goes on the pass that finds none left.
+ */
+const cleanupPosts = Effect.fn("auth.cleanup.cleanupPosts")(
+  function* (userId: Id<"users">) {
+    const database = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const post = yield* database
+      .table("posts")
+      .index("by_authorId", (query) => query.eq("authorId", userId))
+      .first()
+      .pipe(Effect.map(Option.getOrNull), Effect.orDie);
+    if (!post) {
+      return false;
+    }
+    const likes = yield* database
+      .table("postLikes")
+      .index("by_postId_and_userId", (query) => query.eq("postId", post._id))
+      .take(POST_LIKE_CLEANUP_BATCH_SIZE)
+      .pipe(Effect.orDie);
+    for (const like of likes) {
+      yield* writer.table("postLikes").delete(like._id);
+    }
+    if (likes.length > 0) {
+      return true;
+    }
+    yield* writer.table("posts").delete(post._id);
+    return true;
+  },
+  Effect.catchDefect(flow(toUserCleanupError, Effect.fail))
+);
+
 /** Deletes one chat; its trigger owns the Agent journal cascade. */
 const cleanupChats = Effect.fn("auth.cleanup.cleanupChats")(
   function* (userId: Id<"users">) {
@@ -148,6 +216,12 @@ export const cleanupUserSocialData = Effect.fn(
   "auth.cleanup.cleanupUserSocialData"
 )(function* (userId: Id<"users">) {
   if (yield* cleanupComments(userId)) {
+    return true;
+  }
+  if (yield* cleanupPostLikes(userId)) {
+    return true;
+  }
+  if (yield* cleanupPosts(userId)) {
     return true;
   }
   if (yield* cleanupNinaUploads(userId)) {
