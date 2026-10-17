@@ -1,8 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
+import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
+import { AuthFailure, AuthReadError } from "@repo/backend/confect/auth/spec";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { live, saved } from "@/e2e/support/changes";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -10,10 +12,23 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const OLDER = "Kemarin belajar aljabar.";
 const POST = "Hari ini belajar trigonometri.";
 const REFUSED = "Tulisan yang ditolak server.";
+const KEPT = "Post dari server.";
 const VIEWPORTS = [
   { name: "a phone", size: { width: 390, height: 844 } },
   { name: "a desktop", size: { width: 1440, height: 900 } },
 ];
+/** The Convex name of the query that reads a profile's posts. */
+const POSTS_LIST_QUERY = "posts/queries:list";
+/**
+ * What the server throws when it cannot read the account behind a query, as the
+ * page decodes it. The failure of the list is this typed failure.
+ */
+const unreadable = Schema.encodeSync(AuthFailure)(
+  new AuthReadError({
+    code: "AUTH_READ_FAILED",
+    message: "Unable to read authentication state.",
+  })
+);
 
 /** The composer of the owner's own Posts tab. */
 const composerOf = (page: Page) =>
@@ -129,6 +144,94 @@ for (const viewport of VIEWPORTS) {
             await expect(postOf(page, REFUSED)).toHaveCount(0);
             await expect(composerOf(page)).toHaveValue(REFUSED);
             await expect(composerOf(page)).not.toHaveAttribute("readonly", "");
+          });
+        })
+      );
+    });
+
+    test("a first page that fails shows the server's page under the failure, and the list loads again on Retry", async ({
+      baseURL,
+      page,
+    }) => {
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          const { changes, learner } = yield* openChatPage(page, origin);
+          yield* learner.writePost(KEPT);
+          // The live list answers its first page with the failure from now on,
+          // so the server's page is all the profile holds until the list recovers.
+          changes.failQuery(POSTS_LIST_QUERY, unreadable);
+          yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
+
+          yield* Effect.promise(async () => {
+            await expect(postOf(page, KEPT)).toBeVisible({
+              timeout: readinessTimeoutMilliseconds,
+            });
+            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
+              timeout: readinessTimeoutMilliseconds,
+            });
+            await expect(page.getByText(app.Posts.empty)).toHaveCount(0);
+            await expect(composerOf(page)).toBeDisabled();
+
+            // Retry asks the server for the list anew, and the list holds the post.
+            changes.recoverQuery();
+            await page.getByRole("button", { name: app.Common.retry }).click();
+            await expect(composerOf(page)).toBeEnabled({
+              timeout: readinessTimeoutMilliseconds,
+            });
+            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
+              0
+            );
+            await expect(postOf(page, KEPT)).toBeVisible();
+          });
+        })
+      );
+    });
+
+    test("a later page that fails keeps the posts already shown under the failure, and loads on Retry", async ({
+      baseURL,
+      page,
+    }) => {
+      await runOnPage(page, baseURL, (origin) =>
+        Effect.gen(function* () {
+          const { changes, learner } = yield* openChatPage(page, origin);
+          // One post more than a page, so the list has a second page to load.
+          yield* Effect.forEach(
+            Arr.makeBy(POST_PAGE_SIZE + 1, (index) => `Post ${index + 1}`),
+            (text) => learner.writePost(text),
+            { discard: true }
+          );
+          yield* Effect.promise(() => page.goto(`/en/@${learner.username}`));
+
+          yield* Effect.promise(async () => {
+            await expect(composerOf(page)).toBeEnabled({
+              timeout: readinessTimeoutMilliseconds,
+            });
+            await live(changes);
+            await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
+
+            // The second page fails: the rows stay, the failure shows, and there
+            // is no load-more action until the list asks again.
+            changes.failQuery(POSTS_LIST_QUERY, unreadable);
+            await page
+              .getByRole("button", { name: app.Posts["load-more"] })
+              .click();
+            await expect(page.getByText(app.Common["load-error"])).toBeVisible({
+              timeout: readinessTimeoutMilliseconds,
+            });
+            await expect(rowsOf(page)).toHaveCount(POST_PAGE_SIZE);
+            await expect(
+              page.getByRole("button", { name: app.Posts["load-more"] })
+            ).toHaveCount(0);
+
+            // Retry asks for the list again, which holds its first page and offers more.
+            changes.recoverQuery();
+            await page.getByRole("button", { name: app.Common.retry }).click();
+            await expect(
+              page.getByRole("button", { name: app.Posts["load-more"] })
+            ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+            await expect(page.getByText(app.Common["load-error"])).toHaveCount(
+              0
+            );
           });
         })
       );

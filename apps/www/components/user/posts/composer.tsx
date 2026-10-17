@@ -17,6 +17,7 @@ import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { insertDraftPost } from "@/components/user/posts/mutation.client";
+import { usePostDraft } from "@/components/user/posts/provider";
 import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
@@ -27,7 +28,8 @@ const SHOW_REMAINING_FROM = 50;
 /**
  * Writes a new post at the top of the owner's posts. The post shows at once,
  * and the text is locked while the server saves it, so a refused post gives its
- * text back to the composer with a message.
+ * text back to the composer with a message. The words live in the draft store,
+ * so they survive a Retry of the list.
  */
 export function PostComposer({
   appUser,
@@ -38,7 +40,8 @@ export function PostComposer({
 }) {
   const t = useTranslations("Posts");
   const tCommon = useTranslations("Common");
-  const [text, setText] = useState("");
+  const text = usePostDraft((draft) => draft.text);
+  const setText = usePostDraft((draft) => draft.setText);
   const [focused, setFocused] = useState(false);
   const [isPosting, startPostTransition] = useTransition();
   const startPost = useMutation(posts.mutations.create);

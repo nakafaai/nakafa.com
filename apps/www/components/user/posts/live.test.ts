@@ -2,51 +2,96 @@ import { PaginatedQueryResult } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
-import { holdsFirstPage } from "@/components/user/posts/live";
+import { postsView } from "@/components/user/posts/live";
 import type { ListPost } from "@/components/user/posts/state";
 
-const post: ListPost = {
-  _creationTime: 1,
-  _id: Schema.decodeUnknownSync(Id("posts"))("first"),
-  likeCount: 0,
-  liked: false,
-  text: "first",
-};
+/** A post row with the given id, as the server sends it. */
+function row(id: string): ListPost {
+  return {
+    _creationTime: 1,
+    _id: Schema.decodeUnknownSync(Id("posts"))(id),
+    likeCount: 0,
+    liked: false,
+    text: id,
+  };
+}
 
-describe("posts live list", () => {
-  it("holds no first page while the list loads it", () => {
+const post = row("live");
+const serverPost = row("server");
+
+describe("posts list view", () => {
+  it("shows the server's first page while the live list loads its first page, and holds nothing yet", () => {
     expect(
-      holdsFirstPage(PaginatedQueryResult.loadingFirstPage({ skipped: false }))
-    ).toBe(false);
+      postsView(PaginatedQueryResult.loadingFirstPage({ skipped: false }), [
+        serverPost,
+      ])
+    ).toEqual({
+      empty: false,
+      failed: false,
+      ready: false,
+      rows: [serverPost],
+    });
   });
 
-  it("holds the first page once the list answers, and while more pages load", () => {
+  it("shows nothing while the live list loads its first page and no server page was read", () => {
     expect(
-      holdsFirstPage(
+      postsView(PaginatedQueryResult.loadingFirstPage({ skipped: false }), null)
+    ).toEqual({ empty: false, failed: false, ready: false, rows: [] });
+  });
+
+  it("shows the live first page, and holds the list once it answers", () => {
+    expect(
+      postsView(
         PaginatedQueryResult.canLoadMore({
           loadMore: () => undefined,
           results: [post],
-        })
+        }),
+        [serverPost]
       )
-    ).toBe(true);
-    expect(
-      holdsFirstPage(PaginatedQueryResult.exhausted({ results: [] }))
-    ).toBe(true);
-    expect(
-      holdsFirstPage(PaginatedQueryResult.loadingMore({ results: [post] }))
-    ).toBe(true);
+    ).toEqual({ empty: false, failed: false, ready: true, rows: [post] });
   });
 
-  it("holds no first page when the first page failed, and keeps the first page when a later one failed", () => {
+  it("says the list is empty once the live list answers with no posts", () => {
     expect(
-      holdsFirstPage(
-        PaginatedQueryResult.failure({ error: "failed", results: [] })
-      )
-    ).toBe(false);
+      postsView(PaginatedQueryResult.exhausted({ results: [] }), [])
+    ).toEqual({ empty: true, failed: false, ready: true, rows: [] });
+  });
+
+  it("keeps the rows of a list that loads its next page", () => {
     expect(
-      holdsFirstPage(
-        PaginatedQueryResult.failure({ error: "failed", results: [post] })
+      postsView(PaginatedQueryResult.loadingMore({ results: [post] }), null)
+    ).toEqual({ empty: false, failed: false, ready: true, rows: [post] });
+  });
+
+  it("shows a failed first page above the server's page, and never the empty sentence", () => {
+    expect(
+      postsView(
+        PaginatedQueryResult.failure({ error: "failed", results: [] }),
+        [serverPost]
       )
-    ).toBe(true);
+    ).toEqual({
+      empty: false,
+      failed: true,
+      ready: false,
+      rows: [serverPost],
+    });
+  });
+
+  it("shows a failed first page with no server page as the failure alone", () => {
+    expect(
+      postsView(
+        PaginatedQueryResult.failure({ error: "failed", results: [] }),
+        null
+      )
+    ).toEqual({ empty: false, failed: true, ready: false, rows: [] });
+  });
+
+  it("keeps the rows of a failed later page, shows the failure, and holds the list", () => {
+    expect(
+      postsView(
+        PaginatedQueryResult.failure({ error: "failed", results: [post] }),
+        [serverPost]
+      )
+    ).toEqual({ empty: false, failed: true, ready: true, rows: [post] });
   });
 });

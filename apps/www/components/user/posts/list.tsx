@@ -2,6 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Array as Arr, DateTime } from "effect";
@@ -9,9 +10,9 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { DataFailure } from "@/components/shared/failure";
 import { PostComposer } from "@/components/user/posts/composer";
-import { holdsFirstPage } from "@/components/user/posts/live";
+import { postsView } from "@/components/user/posts/live";
+import { PostDraftProvider } from "@/components/user/posts/provider";
 import { PostRow } from "@/components/user/posts/row";
-import { POST_PAGE_SIZE } from "@/components/user/posts/state";
 import { AGE_TICK_MILLISECONDS } from "@/components/user/posts/time";
 import { type CurrentUser, useViewer } from "@/lib/identity/client";
 
@@ -33,40 +34,74 @@ export function UserPosts({
   first: Ref.Returns<typeof posts.queries.list> | null;
   now: number;
 }) {
-  const t = useTranslations("Posts");
   const identity = useViewer((state) => state);
   const now = usePostsNow(serverNow);
   // Until the browser knows the viewer, the account the server read stands for
   // the viewer, because the profile opens only for its owner.
   const viewer = identity.isPending ? account : identity.account;
-  const author = viewer ?? account;
-  const isAuthor = viewer?.appUser._id === account.appUser._id;
+  const author =
+    viewer && viewer.appUser._id === account.appUser._id ? viewer : null;
+  // A Retry changes the key, which remounts the live list so that it asks the
+  // server again. The draft lives in the provider above the list, so it stays.
+  const [attempt, setAttempt] = useState(0);
+
+  return (
+    <PostDraftProvider>
+      <PostsFeed
+        account={account}
+        author={author}
+        first={first}
+        key={attempt}
+        now={now}
+        onRetry={() => setAttempt((count) => count + 1)}
+      />
+    </PostDraftProvider>
+  );
+}
+
+/**
+ * The live list of one profile, with the owner's composer above it and the
+ * failure above the rows. A failure keeps the rows the list holds, and its Retry
+ * remounts this part to ask the server anew.
+ */
+function PostsFeed({
+  account,
+  author,
+  first,
+  now,
+  onRetry,
+}: {
+  account: CurrentUser;
+  /** The signed-in account when it is the profile's owner, which may write posts. */
+  author: CurrentUser | null;
+  first: Ref.Returns<typeof posts.queries.list> | null;
+  now: number;
+  onRetry: () => void;
+}) {
+  const t = useTranslations("Posts");
   const live = usePaginatedQuery(
     posts.queries.list,
     { authorId: account.appUser._id },
     { initialNumItems: POST_PAGE_SIZE }
   );
-  const ready = holdsFirstPage(live);
-  const loading = PaginatedQueryResult.isLoadingFirstPage(live);
-  const rows = loading ? (first?.page ?? []) : live.results;
-  // A list that loads without a server page shows nothing yet, because the
-  // empty sentence would claim that the learner has no posts.
-  const showsEmpty = rows.length === 0 && (!loading || first !== null);
+  const view = postsView(live, first?.page ?? null);
 
   return (
     <div className="flex flex-col">
-      {isAuthor && <PostComposer appUser={author.appUser} disabled={!ready} />}
-      <div className="flex flex-col" inert={!ready}>
-        {PaginatedQueryResult.isFailure(live) && rows.length === 0 && (
-          <DataFailure />
-        )}
-        {rows.length > 0 && (
+      {author && (
+        <PostComposer appUser={author.appUser} disabled={!view.ready} />
+      )}
+      {view.failed && <DataFailure onRetry={onRetry} />}
+      <div className="flex flex-col" inert={!view.ready}>
+        {view.rows.length > 0 && (
           <div className="flex flex-col">
-            {Arr.map(rows, (post, index) => (
+            {Arr.map(view.rows, (post, index) => (
+              // The rows show the profile's own account, never the signed-in
+              // viewer, so a row does not depend on who is looking at it.
               <PostRow
-                author={author}
-                isAuthor={isAuthor}
-                isLast={index === rows.length - 1}
+                author={account}
+                isAuthor={author !== null}
+                isLast={index === view.rows.length - 1}
                 key={post._id}
                 now={now}
                 post={post}
@@ -74,7 +109,7 @@ export function UserPosts({
             ))}
           </div>
         )}
-        {showsEmpty && (
+        {view.empty && (
           <p className="text-center text-muted-foreground text-sm">
             {t("empty")}
           </p>

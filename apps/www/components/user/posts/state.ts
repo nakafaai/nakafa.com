@@ -2,9 +2,6 @@ import type { Ref } from "@confect/core";
 import type posts from "@repo/backend/confect/_generated/refs/posts";
 import { Array as Arr } from "effect";
 
-/** How many posts a page of the profile holds, the first one and each one after it. */
-export const POST_PAGE_SIZE = 20;
-
 /** One post as the list of an author's posts shows it. */
 export type ListPost = Ref.Returns<typeof posts.queries.list>["page"][number];
 

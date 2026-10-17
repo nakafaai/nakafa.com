@@ -1,11 +1,11 @@
 import { HttpClient } from "@confect/js";
+import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Clock, Effect, String as Str } from "effect";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserPosts } from "@/components/user/posts/list";
-import { POST_PAGE_SIZE } from "@/components/user/posts/state";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";

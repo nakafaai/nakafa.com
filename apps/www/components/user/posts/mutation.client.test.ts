@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import { describe, expect, it } from "@effect/vitest";
+import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import { Id } from "@repo/backend/confect/_generated/id";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Array as Arr, Equal, MutableRef, Option, Schema } from "effect";
@@ -14,7 +15,6 @@ import {
 import {
   type ListPost,
   likePost,
-  POST_PAGE_SIZE,
   updatePost,
 } from "@/components/user/posts/state";
 
