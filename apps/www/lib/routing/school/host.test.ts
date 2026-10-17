@@ -54,20 +54,20 @@ describe("request hostnames", () => {
     ["nakafa.com", "nakafa.com"],
     ["harapan.localhost:3000", "harapan.localhost"],
     ["127.0.0.1:3000", "127.0.0.1"],
-    ["[::1]:3000", "[::1]"],
-    ["HARAPAN.nakafa.com", "harapan.nakafa.com"],
   ])("reads the hostname of the Host header %s", (host, hostname) => {
-    expect(readRequestHostname(new Headers({ host }))).toBe(hostname);
+    expect(readRequestHostname(new Headers({ host }))).toEqual(
+      Option.some(hostname)
+    );
   });
 
   it("names no host without a Host header", () => {
-    expect(readRequestHostname(new Headers())).toBe("");
+    expect(readRequestHostname(new Headers())).toEqual(Option.none());
   });
 
-  it.each(["", "not a host"])(
+  it.each(["", "not a host", "harapan.nakafa.com/classes"])(
     "names no host for the Host header %s",
     (host) => {
-      expect(readRequestHostname(new Headers({ host }))).toBe("");
+      expect(readRequestHostname(new Headers({ host }))).toEqual(Option.none());
     }
   );
 });

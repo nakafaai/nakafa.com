@@ -89,6 +89,31 @@ describe("school requests", () => {
     expect(mockSchool.middleware).not.toHaveBeenCalled();
   });
 
+  it("sends a refused host to the production origin when the request URL names localhost", () => {
+    const response = routeSchoolRequest(
+      new NextRequest("http://localhost:3400/classes/fisika?tab=grades", {
+        headers: { host: "www.nakafa.com:3400" },
+      })
+    );
+
+    expect(response?.status).toBe(307);
+    expect(response?.headers.get("location")).toBe(
+      "https://nakafa.com/classes/fisika?tab=grades"
+    );
+    expect(mockSchool.middleware).not.toHaveBeenCalled();
+  });
+
+  it("keeps the refused redirect on the main site when the path starts with two slashes", () => {
+    const response = routeSchoolRequest(
+      visit("https://www.nakafa.com//example.org/classes")
+    );
+
+    expect(response?.status).toBe(307);
+    expect(response?.headers.get("location")).toBe(
+      "https://nakafa.com//example.org/classes"
+    );
+  });
+
   it.each([
     "https://nakafa.com/school/harapan",
     "https://nakafa.com/id/school/harapan",

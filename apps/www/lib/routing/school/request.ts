@@ -1,6 +1,6 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { schoolRouting } from "@repo/internationalization/src/routing";
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { Option } from "effect";
 import { NextRequest, NextResponse } from "next/server";
@@ -44,11 +44,15 @@ function rewriteToSchool(request: NextRequest, slug: TenantSlug) {
 
 /**
  * Sends a host under the production domain that names no school to the main
- * site, with the same path and query, as a 307.
+ * site, with the same path and query, as a 307. The target starts from the
+ * production origin and not from the request URL, because a local server builds
+ * the request URL from its own address. Only the path and query are set, so a
+ * path that starts with two slashes still stays on the main site.
  */
 function redirectToMainSite(request: NextRequest) {
-  const redirectUrl = new URL(request.url);
-  redirectUrl.hostname = MAIN_DOMAIN;
+  const redirectUrl = new URL(SITE_ORIGIN);
+  redirectUrl.pathname = request.nextUrl.pathname;
+  redirectUrl.search = request.nextUrl.search;
 
   return NextResponse.redirect(redirectUrl, 307);
 }
@@ -65,11 +69,11 @@ function redirectToMainSite(request: NextRequest) {
 export function routeSchoolRequest(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = readRequestHostname(request.headers);
-  const schoolSlug = readSchoolSlug(hostname);
+  const schoolSlug = Option.flatMap(hostname, readSchoolSlug);
   if (Option.isSome(schoolSlug) && !isLocaleBypassPath(pathname)) {
     return rewriteToSchool(request, schoolSlug.value);
   }
-  if (isRefusedSchoolHost(hostname)) {
+  if (Option.exists(hostname, isRefusedSchoolHost)) {
     return redirectToMainSite(request);
   }
   if (isSchoolTreePath(pathname)) {

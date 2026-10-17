@@ -3,6 +3,7 @@ import {
   type TenantSlug,
 } from "@repo/backend/confect/tenancy/slug";
 import { SCHOOL_CELL_DOMAINS } from "@repo/next-config/domains";
+import { readHostname } from "@repo/utilities/http/host";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 
 /**
@@ -66,12 +67,8 @@ export function isRefusedSchoolHost(hostname: string) {
  * from its own address, names that address for every host, so only the header
  * tells the school hosts apart. On Vercel, Next.js builds the URL from this same
  * header (`trustHostHeader`), so production reads the same host here. The port
- * is dropped, and a header that is not a valid host names no host at all.
+ * is dropped, and a missing header or a value that is not a host names no host.
  */
 export function readRequestHostname(headers: Headers) {
-  const host = headers.get("host");
-  if (host === null || !URL.canParse(`http://${host}`)) {
-    return "";
-  }
-  return new URL(`http://${host}`).hostname;
+  return Option.flatMap(Option.fromNullOr(headers.get("host")), readHostname);
 }
