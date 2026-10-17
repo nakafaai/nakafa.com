@@ -622,10 +622,6 @@
       "title": "Abschnitt nicht gestartet.",
       "description": "Versuche es erneut."
     },
-    "tryout-start-part-success": {
-      "title": "Abschnitt gestartet.",
-      "description": "Der Timer läuft jetzt."
-    },
     "tryout-start-success": {
       "title": "Probetest gestartet.",
       "description": "Du kannst wählen, welchen Abschnitt du zuerst bearbeitest."

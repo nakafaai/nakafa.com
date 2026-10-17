@@ -622,10 +622,6 @@
       "title": "We could not start this section yet.",
       "description": "Please try again."
     },
-    "tryout-start-part-success": {
-      "title": "Section started.",
-      "description": "The timer is now running."
-    },
     "tryout-start-success": {
       "title": "Tryout started.",
       "description": "You can choose which section to work on first."
