@@ -1,9 +1,15 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect, MutableList, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  MutableList,
+  Number as Num,
+  Schema,
+} from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
-  readCumulativeLayoutShift,
+  readRecordedLayoutShifts,
   recordLayoutShifts,
 } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -41,7 +47,10 @@ const HOME_VIEWPORTS = [touchViewport, tabletPortraitViewport, desktopViewport];
 /** The two colour schemes the home page must hold in. */
 const COLOR_SCHEMES = Schema.Literals(["light", "dark"]).literals;
 
-/** The page global that records each layout shift with the elements that moved, so a failure names them. */
+/**
+ * The page global that holds the layout shifts the page makes, with the elements
+ * that moved, so a failure names them. A fixed toaster's shifts are left out.
+ */
 const LAYOUT_SHIFTS_KEY = "nakafaHomeLayoutShifts";
 
 /**
@@ -118,14 +127,25 @@ for (const viewport of HOME_VIEWPORTS) {
                     page.waitForLoadState("networkidle")
                   );
                   yield* scrollThroughPage(page);
-                  const shift = yield* readCumulativeLayoutShift(page);
-                  const shifts = yield* Effect.promise(() =>
-                    page.evaluate(
-                      (key) => JSON.stringify(Reflect.get(window, key) ?? []),
-                      LAYOUT_SHIFTS_KEY
-                    )
+                  const shifts = yield* readRecordedLayoutShifts(
+                    page,
+                    LAYOUT_SHIFTS_KEY
                   );
-                  expect(shift, shifts).toBe(0);
+                  // The number and the failure message read the same shifts: the
+                  // ones that no press or key caused, with the elements they moved.
+                  const counted = Arr.filter(
+                    shifts,
+                    (shift) => !shift.hadRecentInput
+                  );
+                  const shift = Num.sumAll(
+                    Arr.map(counted, ({ value }) => value)
+                  );
+                  const moved = Arr.map(
+                    counted,
+                    (entry) =>
+                      `${entry.value} at ${Math.round(entry.time)} ms: ${Arr.join(entry.sources, "; ")}`
+                  );
+                  expect(shift, Arr.join(moved, "\n")).toBe(0);
                   expect(MutableList.toArray(issues)).toEqual([]);
                 })
               );
