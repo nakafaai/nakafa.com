@@ -212,6 +212,9 @@ function MemoryEditorPanel({
   );
 }
 
+/** The sheet over the page on a narrow screen, which takes the focus when it opens. */
+const SHEET_ID = "user-settings-memory-sheet";
+
 /** The editor as a sheet over the page, for a screen too narrow for a panel. */
 function MemoryEditorSheet({
   memory,
@@ -229,6 +232,9 @@ function MemoryEditorSheet({
 
   useLayoutEffect(() => remember, [remember]);
 
+  // A dialog focuses its first field when it opens, which is the title, and the
+  // editor keeps out of a field that has the focus. So the sheet focuses its own
+  // element instead, and the editor takes the caret once it exists.
   return (
     <Sheet
       onOpenChange={(next) => {
@@ -240,6 +246,8 @@ function MemoryEditorSheet({
     >
       <SheetContent
         className="w-full max-w-none gap-0 border-l-0"
+        id={SHEET_ID}
+        initialFocus={() => document.getElementById(SHEET_ID)}
         ref={place}
         showCloseButton={false}
       >

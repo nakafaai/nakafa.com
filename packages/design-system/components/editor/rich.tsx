@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallbackRef } from "@mantine/hooks";
+import { placeCaret } from "@repo/design-system/components/editor/caret";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
 import {
   editorDocument,
@@ -16,9 +17,9 @@ import { useMemo, useState } from "react";
 
 interface RichEditorProps {
   /**
-   * Whether the caret goes to the end of the text when the editor mounts. A
-   * mount that is closing takes no focus, so the focus stays where the closing
-   * left it.
+   * Whether the caret goes to the end of the text once the editor exists. A
+   * closing editor takes no focus, so the focus stays where the closing left it,
+   * and an editor takes no caret from a field the learner is typing in.
    */
   autoFocus: boolean;
   /**
@@ -96,11 +97,17 @@ export function RichEditor({
   );
   const editor = useEditor({
     ...options,
-    autofocus: autoFocus ? "end" : false,
     content,
     contentType: "markdown",
     editorProps,
     immediatelyRender: false,
+    // The editor's own autofocus takes the focus at its mount whatever the
+    // learner has chosen, so the caret is placed here, once the editor exists.
+    onCreate: ({ editor: created }) => {
+      if (autoFocus) {
+        placeCaret(created, document.activeElement);
+      }
+    },
     onUpdate: ({ editor: current }) => change(current.getMarkdown()),
   });
   const context = useMemo(() => ({ editor }), [editor]);
