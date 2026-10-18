@@ -174,9 +174,9 @@ function UnitChoice({
 }
 
 /**
- * Renders the periods of one unit in a data table that filters by name, dates, and status,
- * and loads more rows as its end comes into view, or the table's empty state while the unit
- * has no period. The table waits for its first page, so no empty state shows before the
+ * Renders the periods of one unit in a data table that finds a name, filters by status,
+ * sorts by dates, and loads more rows as its end comes into view, or the table's empty
+ * state while the unit has no period. The table waits for its first page, so no empty state shows before the
  * rows arrive.
  */
 function SchoolPeriodTable({
@@ -227,7 +227,7 @@ function SchoolPeriodTable({
     periodColumns.accessor((period) => period.status, {
       cell: (info) => t(`period-${info.getValue()}`),
       enableSorting: false,
-      filterFn: "arrIncludesSome",
+      filterFn: "oneOf",
       header: t("period-status"),
       id: "status",
     }),

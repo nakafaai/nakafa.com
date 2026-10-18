@@ -113,8 +113,8 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
 }
 
 /**
- * The login names in a data table that filters by login name, person, and expiry, or the
- * table's empty state when no card is issued.
+ * The login names in a data table that finds a login name and sorts by when each card was
+ * issued, or the table's empty state when no card is issued.
  */
 function SchoolLoginTable({
   logins,

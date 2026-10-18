@@ -46,7 +46,6 @@ import {
   createFacetedUniqueValues,
   createFilteredRowModel,
   createSortedRowModel,
-  filterFn_arrIncludesSome,
   filterFn_includesString,
   type Header,
   type RowData,
@@ -61,6 +60,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { FacetValues, oneOfFilter } from "@/components/shared/table/filter";
 import { TableFrame } from "@/components/shared/table/frame";
 import { EmptyNina } from "@/components/state/empty";
 
@@ -75,8 +75,8 @@ export const dataTableFeatures = tableFeatures({
   facetedUniqueValues: createFacetedUniqueValues(),
   filteredRowModel: createFilteredRowModel(),
   filterFns: {
-    arrIncludesSome: filterFn_arrIncludesSome,
     includesString: filterFn_includesString,
+    oneOf: oneOfFilter,
   },
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
@@ -90,9 +90,6 @@ export const dataTableFeatures = tableFeatures({
 
 /** The arrow of a column sorted each way. */
 const sortIcons = { asc: ArrowUp01Icon, desc: ArrowDown01Icon };
-
-/** The value a facet's menu holds: the values of the column it keeps. */
-const FacetValues = Schema.Array(Schema.String);
 
 /**
  * A data table as shadcn builds it: a toolbar that filters the rows, then the table in

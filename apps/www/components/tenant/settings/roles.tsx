@@ -166,12 +166,12 @@ function SchoolGrantTable({
     grantColumns.accessor((grant) => grant.role.key, {
       cell: (info) => <RoleBadge role={info.getValue()} />,
       enableSorting: false,
-      filterFn: "arrIncludesSome",
+      filterFn: "oneOf",
       header: t("grant-role"),
       id: "role",
     }),
     grantColumns.accessor(scopeName, {
-      filterFn: "arrIncludesSome",
+      filterFn: "oneOf",
       header: t("grant-scope"),
       id: "scope",
       sortFn: "text",
@@ -197,10 +197,15 @@ function SchoolGrantTable({
         },
         {
           column: "scope",
-          options: Arr.map(Arr.dedupe(Arr.map(grants, scopeName)), (name) => ({
-            label: name,
-            value: name,
-          })),
+          options: Arr.map(
+            Arr.dedupe(
+              Arr.filter(Arr.map(grants, scopeName), (name) => name !== "")
+            ),
+            (name) => ({
+              label: name,
+              value: name,
+            })
+          ),
           title: t("grant-scope"),
         },
       ]}

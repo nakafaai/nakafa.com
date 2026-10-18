@@ -86,7 +86,7 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
       sortFn: "basic",
     }),
     entryColumns.accessor(actorLabel, {
-      filterFn: "arrIncludesSome",
+      filterFn: "oneOf",
       header: t("audit-who"),
       id: "who",
       sortFn: "text",

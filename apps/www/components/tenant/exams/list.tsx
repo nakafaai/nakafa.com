@@ -156,7 +156,7 @@ function ExamTable({
       cell: (info) => (
         <span className="text-muted-foreground">{info.getValue()}</span>
       ),
-      filterFn: "arrIncludesSome",
+      filterFn: "oneOf",
       header: t("language"),
       id: "language",
       sortFn: "text",

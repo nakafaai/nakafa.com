@@ -142,7 +142,7 @@ function SchoolClientTable({
       sortFn: "text",
     }),
     clientColumns.accessor(scopeName, {
-      filterFn: "arrIncludesSome",
+      filterFn: "oneOf",
       header: t("client-scope"),
       id: "scope",
       sortFn: "text",
@@ -150,7 +150,7 @@ function SchoolClientTable({
     clientColumns.accessor((client) => client.status, {
       cell: (info) => t(`client-${info.getValue()}`),
       enableSorting: false,
-      filterFn: "arrIncludesSome",
+      filterFn: "oneOf",
       header: t("client-status"),
       id: "status",
     }),
@@ -176,7 +176,12 @@ function SchoolClientTable({
           {
             column: "scope",
             options: Arr.map(
-              Arr.dedupe(Arr.map(pagination.results, scopeName)),
+              Arr.dedupe(
+                Arr.filter(
+                  Arr.map(pagination.results, scopeName),
+                  (name) => name !== ""
+                )
+              ),
               (name) => ({ label: name, value: name })
             ),
             title: t("client-scope"),
