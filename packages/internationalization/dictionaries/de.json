@@ -85,6 +85,7 @@
     "student-room-line": "Raum {room}.",
     "sitting": "Prüfungstermin",
     "student-enter": "Sitzung betreten",
+    "student-enter-footer": "Die Aufsicht gibt dir den Token.",
     "student-token-placeholder": "Token von der Aufsicht eingeben",
     "student-token-refused": "Das Token passt nicht. Prüfe es und versuche es erneut.",
     "student-too-many-tries": "Zu viele Versuche. Warte eine Minute und versuche es erneut.",

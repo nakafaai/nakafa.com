@@ -35,7 +35,6 @@ import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { SchoolHeader } from "@/components/tenant/header";
@@ -160,12 +159,10 @@ export function StudentSitting({
                 />
               </Field>
             </CardContent>
-            <CardSectionFooter>
-              {message === null ? null : (
-                <CardSectionHint role="alert" tone="destructive">
-                  {t(message)}
-                </CardSectionHint>
-              )}
+            <CardSectionFooter
+              hint={message === null ? t("student-enter-footer") : t(message)}
+              tone={message === null ? null : "destructive"}
+            >
               <CardSectionActions>
                 <Button type="submit">{t("student-enter")}</Button>
               </CardSectionActions>

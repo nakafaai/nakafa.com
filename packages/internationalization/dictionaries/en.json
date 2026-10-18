@@ -85,6 +85,7 @@
     "student-room-line": "Room {room}.",
     "sitting": "Sitting",
     "student-enter": "Enter sitting",
+    "student-enter-footer": "Your proctor gives you the token.",
     "student-token-placeholder": "Enter the token from your proctor",
     "student-token-refused": "The token does not match. Check it and try again.",
     "student-too-many-tries": "Too many tries. Wait a minute and try again.",

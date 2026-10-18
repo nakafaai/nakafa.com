@@ -85,6 +85,7 @@
     "student-room-line": "Ruang {room}.",
     "sitting": "Sesi ujian",
     "student-enter": "Masuk ke sesi",
+    "student-enter-footer": "Pengawas memberikan tokennya.",
     "student-token-placeholder": "Masukkan token dari pengawas",
     "student-token-refused": "Token tidak cocok. Periksa lagi lalu coba kembali.",
     "student-too-many-tries": "Terlalu banyak percobaan. Tunggu satu menit lalu coba lagi.",
