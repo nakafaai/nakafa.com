@@ -9,7 +9,6 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 /** The thumbnail of the first question, whose name starts with its number. */
 const FIRST_QUESTION = /^Question 1\b/;
 const SECOND_QUESTION = /^Question 2\b/;
-const THIRD_QUESTION = /^Question 3\b/;
 /** A prompt with more steps than a fold waits for, so typing it moves the snapshot. */
 const LONG_PROMPT =
   "Sebuah mobil melaju 60 km/jam selama 2 jam. Berapa jarak yang ditempuh?";
@@ -150,25 +149,48 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(firstThumbnail.locator('input[data-slot="input"]')).toHaveCount(
     OPTIONS.length
   );
+  await context.close();
+});
 
-  // A prompt long enough for a fold, then another question: the left question's thumbnail
-  // reads the server while the fold moves its snapshot, and the page keeps drawing.
-  const secondPrompt = reopened.getByRole("textbox", { name: "Question text" });
+test("a question typed long enough for a fold keeps its thumbnail once the teacher moves on", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  await page.getByRole("button", { name: "Create exam" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Fisika");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+
+  // The first question gets more steps than a fold waits for, then the teacher adds and
+  // writes a second: the first question's thumbnail now reads the server while the fold
+  // moves its snapshot, and the page keeps drawing.
+  const strip = page.getByRole("navigation", { name: "Questions" });
+  const firstPrompt = page.getByRole("textbox", { name: "Question text" });
+  await expect(firstPrompt).toBeEditable({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await firstPrompt.click();
+  await page.keyboard.type(LONG_PROMPT);
+  await page.getByRole("button", { name: "Add question" }).click();
+  await expect(page.getByRole("heading", { name: "Question 2" })).toBeVisible();
+  const secondPrompt = page.getByRole("textbox", { name: "Question text" });
   await expect(secondPrompt).toBeEditable({
     timeout: readinessTimeoutMilliseconds,
   });
   await secondPrompt.click();
-  await reopened.keyboard.type(LONG_PROMPT);
-  await reopenedStrip.getByRole("button", { name: THIRD_QUESTION }).click();
-  const thirdPrompt = reopened.getByRole("textbox", { name: "Question text" });
-  await expect(thirdPrompt).toBeEditable({
-    timeout: readinessTimeoutMilliseconds,
-  });
-  await thirdPrompt.click();
-  await reopened.keyboard.type("Berapa hasil 3 + 4?");
+  await page.keyboard.type("Berapa hasil 3 + 4?");
   await expect(
-    reopenedStrip.getByRole("button", { name: SECOND_QUESTION })
+    strip.getByRole("button", { name: FIRST_QUESTION })
   ).toContainText(LONG_PROMPT, { timeout: readinessTimeoutMilliseconds });
-  await expect(thirdPrompt).toContainText("Berapa hasil 3 + 4?");
+  await expect(secondPrompt).toContainText("Berapa hasil 3 + 4?");
   await context.close();
 });
