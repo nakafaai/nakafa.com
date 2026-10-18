@@ -4,7 +4,8 @@ import { EditorState, Plugin, PluginKey } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { Array as Arr, Effect } from "effect";
 import { collab, getVersion } from "prosemirror-collab";
-import { versionOf, viewPort } from "@/lib/editor/port";
+import { statePort, versionOf, viewPort } from "@/lib/editor/port";
+import { EditorClosed } from "@/lib/editor/session";
 
 const schema = new Schema({
   nodes: {
@@ -141,5 +142,68 @@ describe("viewPort", () => {
 
       expect(versionOf(view)).toBe(5);
     })
+  );
+
+  it.effect(
+    "fails a change with EditorClosed once the view is destroyed, never as applied or stale",
+    () =>
+      Effect.gen(function* () {
+        const view = makeView();
+        const port = viewPort(view);
+        const built = view.state;
+        view.destroy();
+
+        const dispatched = yield* port
+          .dispatch(built, built.tr.insertText("late", 1))
+          .pipe(Effect.flip);
+        const replaced = yield* port.replace(built, built).pipe(Effect.flip);
+
+        expect(dispatched).toBeInstanceOf(EditorClosed);
+        expect(replaced).toBeInstanceOf(EditorClosed);
+      })
+  );
+});
+
+describe("statePort", () => {
+  const initialState = () =>
+    EditorState.create({
+      doc: emptyDoc(),
+      plugins: [collab({ clientID: "start", version: 0 })],
+      schema,
+    });
+
+  it.effect(
+    "applies a change to the state it holds, and refuses a change built on another state",
+    () =>
+      Effect.gen(function* () {
+        const port = yield* statePort(initialState());
+        const built = yield* port.state;
+
+        expect(
+          yield* port.dispatch(built, built.tr.insertText("first", 1))
+        ).toBe(true);
+        expect((yield* port.state).doc.textContent).toBe("first");
+
+        expect(
+          yield* port.dispatch(built, built.tr.insertText("second", 1))
+        ).toBe(false);
+        expect((yield* port.state).doc.textContent).toBe("first");
+      })
+  );
+
+  it.effect(
+    "replaces its state only while it holds the one the replacement was built from",
+    () =>
+      Effect.gen(function* () {
+        const port = yield* statePort(initialState());
+        const built = yield* port.state;
+        const next = port.fresh({ clientId: "a", doc: emptyDoc(), version: 2 });
+
+        expect(yield* port.replace(built, next)).toBe(true);
+        expect(yield* port.state).toBe(next);
+
+        expect(yield* port.replace(built, built)).toBe(false);
+        expect(yield* port.state).toBe(next);
+      })
   );
 });
