@@ -11,6 +11,7 @@ export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "arti
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
 export type ChatSharesDoc = Document.Document<typeof schemaDefinition, "chatShares">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
+export type ClassGradesDoc = Document.Document<typeof schemaDefinition, "classGrades">;
 export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "classTeachers">;
 export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
 export type ClassroomChannelsDoc = Document.Document<typeof schemaDefinition, "classroomChannels">;
@@ -49,6 +50,7 @@ export type ExamQuestionsDoc = Document.Document<typeof schemaDefinition, "examQ
 export type ExamSignalsDoc = Document.Document<typeof schemaDefinition, "examSignals">;
 export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSittings">;
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
+export type GradingSchemesDoc = Document.Document<typeof schemaDefinition, "gradingSchemes">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
@@ -123,6 +125,7 @@ export interface Docs {
   articleCategories: ArticleCategoriesDoc;
   chatShares: ChatSharesDoc;
   chats: ChatsDoc;
+  classGrades: ClassGradesDoc;
   classTeachers: ClassTeachersDoc;
   classes: ClassesDoc;
   classroomChannels: ClassroomChannelsDoc;
@@ -161,6 +164,7 @@ export interface Docs {
   examSignals: ExamSignalsDoc;
   examSittings: ExamSittingsDoc;
   exams: ExamsDoc;
+  gradingSchemes: GradingSchemesDoc;
   integrationClients: IntegrationClientsDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;

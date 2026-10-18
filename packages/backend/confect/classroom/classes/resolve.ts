@@ -6,7 +6,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import {
   classAuthority,
-  classPlace,
+  placeClass,
 } from "@repo/backend/confect/classroom/authority";
 import {
   CLASS_ADDRESS_LIMIT,
@@ -43,7 +43,7 @@ const holdersOf = Effect.fnUntraced(function* (
  * no address yet, so it is left out, as `None`.
  */
 const standingOf = Effect.fnUntraced(function* (row: ClassesDoc) {
-  const { locked } = yield* classPlace(row);
+  const { locked } = yield* placeClass(row);
   if (locked) {
     return Option.some({ live: false, row });
   }

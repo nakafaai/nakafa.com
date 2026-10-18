@@ -1,8 +1,10 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "cn";
-import type { ReactNode } from "react";
 
-const markdownFrameVariants = cva(
+/**
+ * The shared response frame around any rendered block collection. The caller
+ * applies these classes to the element that holds its blocks.
+ */
+export const markdownFrameVariants = cva(
   "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
   {
     variants: {
@@ -39,21 +41,3 @@ const markdownFrameVariants = cva(
 );
 
 export type MarkdownFrameVariant = VariantProps<typeof markdownFrameVariants>;
-
-type MarkdownFrameProps = {
-  readonly children: ReactNode;
-  readonly className?: string | undefined;
-} & MarkdownFrameVariant;
-
-/** Preserves the shared response frame around any rendered block collection. */
-export function MarkdownFrame({
-  children,
-  className,
-  variant,
-}: MarkdownFrameProps) {
-  return (
-    <div className={cn(markdownFrameVariants({ variant }), className)}>
-      {children}
-    </div>
-  );
-}

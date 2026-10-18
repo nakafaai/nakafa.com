@@ -85,6 +85,7 @@
     "student-room-line": "Room {room}.",
     "sitting": "Sitting",
     "student-enter": "Enter sitting",
+    "student-enter-footer": "Your proctor gives you the token.",
     "student-token-placeholder": "Enter the token from your proctor",
     "student-token-refused": "The token does not match. Check it and try again.",
     "student-too-many-tries": "Too many tries. Wait a minute and try again.",
@@ -143,6 +144,7 @@
     "manage-group": "Management",
     "manage-settings": "Settings",
     "address-copy": "Copy address",
+    "address-footer": "Copy it to share with your school.",
     "logo-title": "School logo",
     "logo-description": "It shows in the sidebar, on the sign-in page, and on report cards.",
     "address-title": "School address",
@@ -240,6 +242,12 @@
         "archived": "Classroom archived",
         "teacherAssigned": "Teacher assigned to classroom",
         "teacherRemoved": "Teacher removed from classroom"
+      },
+      "grade": {
+        "released": "Grade released"
+      },
+      "scheme": {
+        "stored": "Grading scheme version added"
       },
       "cohort": {
         "created": "Class added",
@@ -355,7 +363,7 @@
     "secret-copy": "Copy",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Eight digits",
-    "unit-npsn-footer": "The national school number has eight digits and belongs to one unit.",
+    "unit-npsn-footer": "Eight digits, one number per unit.",
     "unit-npsn-save": "Save",
     "logins-footer": "A login card holds a login name and a one-time code.",
     "login-name": "Login name",
@@ -750,6 +758,7 @@
     "paywall-title": "{count, plural, one {See the solution to this question} other {See the solutions to all # questions}}",
     "paywall-description": "Learn the steps and reasoning behind every answer, and ask Nina whenever something is unclear.",
     "paywall-compare": "Compare plans",
+    "paywall-footer": "Cancel any time.",
     "ask-nina-prompt": "Help me understand question {number}.",
     "score-label-irt": "IRT score",
     "score-label-standard": "Score",
@@ -1604,6 +1613,7 @@
   "AnalyticsConsent": {
     "title": "Usage data",
     "prompt-description": "Sharing details is optional.",
+    "prompt-footer": "You can change it later.",
     "description": "Allow Nakafa to see which features you use and what needs fixing without recording your screen. Nakafa always counts visits, without cookies or accounts, to operate the site. Choose Allow only if you are 18 or older, or 13 to 17 with a parent or legal guardian's approval.",
     "allow": "Allow",
     "decline": "Decline",

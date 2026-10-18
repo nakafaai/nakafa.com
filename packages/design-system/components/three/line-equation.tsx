@@ -32,7 +32,13 @@ import {
   MutableList,
   Option,
 } from "effect";
-import { type ComponentProps, type ReactNode, useMemo } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactNode,
+  use,
+  useMemo,
+} from "react";
 import {
   CatmullRomCurve3,
   Color,
@@ -163,6 +169,52 @@ export interface Props {
 export type LineLabel = NonNullable<Props["labels"]>[number];
 
 const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
+
+/** The line of one equation: its color, its endpoints, its width and its points. */
+interface EquationLineValues {
+  color: string | Color;
+  endpoints: LineEndpoints | undefined;
+  lineWidth: number;
+  points: Vector3[];
+}
+
+const EquationLineContext = createContext<EquationLineValues | null>(null);
+
+/** Selects the line of the surrounding equation. */
+function useEquationLine() {
+  const line = use(EquationLineContext);
+  if (line === null) {
+    // A missing equation is a programmer composition error at this React seam.
+    throw new Error("The equation line requires LineEquation.");
+  }
+  return line;
+}
+
+/** The line through the equation's points, with open endpoints drawn as rings. */
+function EquationLine() {
+  const { color, endpoints, lineWidth, points } = useEquationLine();
+
+  if (points.length <= 1) {
+    return null;
+  }
+
+  if (endpoints?.start === "open" || endpoints?.end === "open") {
+    return (
+      <EndpointLine
+        color={color}
+        endpoints={endpoints}
+        frustumCulled
+        lineWidth={lineWidth}
+        points={points}
+        radius={SPHERE_GEOMETRY_RADIUS}
+      />
+    );
+  }
+
+  return (
+    <Line color={color} frustumCulled lineWidth={lineWidth} points={points} />
+  );
+}
 
 /**
  * Renders a 3D line or curve with optional point markers, labels, and arrowheads.
@@ -355,85 +407,75 @@ export function LineEquation({
     [labels, vectorPoints]
   );
 
+  const line = useMemo(
+    () => ({ color, endpoints, lineWidth, points: linePoints }),
+    [color, endpoints, lineWidth, linePoints]
+  );
+
   return (
-    <group frustumCulled>
-      {/* Draw a line connecting the provided points */}
-      {linePoints.length > 1 &&
-        (endpoints?.start === "open" || endpoints?.end === "open" ? (
-          <EndpointLine
-            color={color}
-            endpoints={endpoints}
-            frustumCulled
-            lineWidth={lineWidth}
-            points={linePoints}
-            radius={SPHERE_GEOMETRY_RADIUS}
-          />
-        ) : (
-          <Line
-            color={color}
-            frustumCulled
-            lineWidth={lineWidth}
-            points={linePoints}
-          />
-        ))}
+    <EquationLineContext value={line}>
+      <group frustumCulled>
+        {/* Draw a line connecting the provided points */}
+        <EquationLine />
 
-      {/* Render the cone(s) if configured */}
-      {!!coneData &&
-        !!coneGeometry &&
-        !!coneMaterial &&
-        Arr.map(coneData, (data) => (
-          <mesh
-            frustumCulled
-            geometry={coneGeometry}
-            key={`cone-${data.position.x}-${data.position.y}-${data.position.z}`}
-            material={coneMaterial}
-            position={data.position}
-            quaternion={data.quaternion}
-          />
-        ))}
+        {/* Render the cone(s) if configured */}
+        {!!coneData &&
+          !!coneGeometry &&
+          !!coneMaterial &&
+          Arr.map(coneData, (data) => (
+            <mesh
+              frustumCulled
+              geometry={coneGeometry}
+              key={`cone-${data.position.x}-${data.position.y}-${data.position.z}`}
+              material={coneMaterial}
+              position={data.position}
+              quaternion={data.quaternion}
+            />
+          ))}
 
-      {/* Optionally render a small sphere at each point */}
-      <Instances
-        count={markerPoints.length}
-        frustumCulled
-        geometry={pointGeom}
-        material={pointMat}
-        visible={markerPoints.length > 0}
-      >
-        {Arr.map(markerPoints, (v, index) => (
-          <Instance
-            // biome-ignore lint/suspicious/noArrayIndexKey: Coordinates may appear multiple times, need index for uniqueness
-            key={`point-${index}-${v.x}-${v.y}-${v.z}`}
-            position={[v.x, v.y, v.z]}
-          />
-        ))}
-      </Instances>
-
-      {Arr.map(
-        Arr.filter(endpointMarkers, (marker) => marker.state === "open"),
-        (marker) => (
-          <EndpointRing
-            key={`open-${marker.index}`}
-            material={pointMat}
-            position={marker.point}
-            radius={SPHERE_GEOMETRY_RADIUS}
-          />
-        )
-      )}
-
-      {/* Render custom labels at specified indices */}
-      {Arr.map(labelData, (data) => (
-        <ThreeLabel
-          anchorX={data.anchorX}
-          color={color}
-          fontSize={data.fontSize}
-          key={data.key}
-          minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
-          position={data.position}
+        {/* Optionally render a small sphere at each point */}
+        <Instances
+          count={markerPoints.length}
+          frustumCulled
+          geometry={pointGeom}
+          material={pointMat}
+          visible={markerPoints.length > 0}
         >
-          {data.text}
-        </ThreeLabel>
-      ))}
-    </group>
+          {Arr.map(markerPoints, (v, index) => (
+            <Instance
+              // biome-ignore lint/suspicious/noArrayIndexKey: Coordinates may appear multiple times, need index for uniqueness
+              key={`point-${index}-${v.x}-${v.y}-${v.z}`}
+              position={[v.x, v.y, v.z]}
+            />
+          ))}
+        </Instances>
+
+        {Arr.map(
+          Arr.filter(endpointMarkers, (marker) => marker.state === "open"),
+          (marker) => (
+            <EndpointRing
+              key={`open-${marker.index}`}
+              material={pointMat}
+              position={marker.point}
+              radius={SPHERE_GEOMETRY_RADIUS}
+            />
+          )
+        )}
+
+        {/* Render custom labels at specified indices */}
+        {Arr.map(labelData, (data) => (
+          <ThreeLabel
+            anchorX={data.anchorX}
+            color={color}
+            fontSize={data.fontSize}
+            key={data.key}
+            minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
+            position={data.position}
+          >
+            {data.text}
+          </ThreeLabel>
+        ))}
+      </group>
+    </EquationLineContext>
   );
 }
