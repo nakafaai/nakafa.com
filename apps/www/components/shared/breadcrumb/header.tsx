@@ -47,14 +47,13 @@ interface BreadcrumbHeaderProps {
 type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
 
 /**
- * Renders at most Home and the two nearest path items. The action shares the
- * path's row, and an action that takes the full width, such as a selector on a
- * phone, wraps under the path.
+ * Renders at most Home and the two nearest path items, with the action on the same
+ * row at every width: the header is one row, so an action stays compact on a phone.
  */
 export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
   const { action, homeHref, homeLabel, items, menuLabel, title } = value;
   return (
-    <BreadcrumbHeaderFrame contentClassName="flex-wrap sm:flex-nowrap sm:py-0">
+    <BreadcrumbHeaderFrame contentClassName="flex-nowrap">
       <h1 className="sr-only">{title}</h1>
       <BreadcrumbHeaderPath
         homeHref={homeHref}
@@ -136,6 +135,37 @@ export function BreadcrumbHeaderPath({
           />
         ))}
         {children}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
+
+/**
+ * A path folded whole into its ellipsis menu, as Google Drive shows it on a phone: Home
+ * and every item go into the menu, and the page names itself beside it. A header whose
+ * own title is the current page, such as a surah's, shows this on a phone so the title
+ * shares the row.
+ */
+export function BreadcrumbHeaderFold({
+  className,
+  homeHref,
+  homeLabel,
+  items,
+  menuLabel,
+}: Pick<
+  BreadcrumbHeaderValue,
+  "homeHref" | "homeLabel" | "items" | "menuLabel"
+> & {
+  className: string;
+}) {
+  return (
+    <Breadcrumb className={cn("shrink-0", className)}>
+      <BreadcrumbList className="flex-nowrap">
+        <BreadcrumbMenu
+          className=""
+          items={[{ href: homeHref, label: homeLabel }, ...items]}
+          menuLabel={menuLabel}
+        />
       </BreadcrumbList>
     </Breadcrumb>
   );
