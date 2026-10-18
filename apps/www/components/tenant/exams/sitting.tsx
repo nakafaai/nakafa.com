@@ -5,7 +5,12 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ScheduleInvalid } from "@repo/backend/confect/exams/sittings/errors";
 import { RoomName } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -26,7 +31,7 @@ import {
 } from "effect";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
 import { useExam } from "@/components/tenant/exams/provider";
@@ -63,6 +68,7 @@ export function ScheduleSitting({
   readonly units: readonly ViewerUnit[];
 }) {
   const t = useTranslations("Exams");
+  const id = useId();
   const common = useTranslations("Common");
   const router = useRouter();
   const { exam, slug } = useExam();
@@ -159,6 +165,16 @@ export function ScheduleSitting({
       description={t("schedule-description")}
       footer={
         <>
+          {keysMissing || refusal === "keys" ? (
+            <p className="me-auto text-muted-foreground text-sm">
+              {t("schedule-keys")}
+            </p>
+          ) : null}
+          {refusal === "past" ? (
+            <p className="me-auto text-muted-foreground text-sm">
+              {t("schedule-past")}
+            </p>
+          ) : null}
           <Button onClick={() => setOpen(false)} variant="outline">
             {common("cancel")}
           </Button>
@@ -171,21 +187,15 @@ export function ScheduleSitting({
       setOpen={setOpen}
       title={t("schedule-title")}
     >
-      <div className="flex flex-col gap-4">
-        {keysMissing || refusal === "keys" ? (
-          <p className="text-muted-foreground text-sm">{t("schedule-keys")}</p>
-        ) : null}
-        {refusal === "past" ? (
-          <p className="text-muted-foreground text-sm">{t("schedule-past")}</p>
-        ) : null}
+      <FieldGroup>
         <Field>
-          <FieldLabel>{t("unit")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>
           <Select
             items={unitItems}
             onValueChange={(key) => setPicked(key)}
             value={Option.getOrNull(Option.map(choice, (unit) => unit.id))}
           >
-            <SelectTrigger aria-label={t("unit")}>
+            <SelectTrigger className="w-full" id={`${id}-unit`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -198,56 +208,56 @@ export function ScheduleSitting({
           </Select>
         </Field>
         <Field>
-          <FieldLabel>{t("room")}</FieldLabel>
+          <FieldLabel htmlFor={`${id}-room`}>{t("room")}</FieldLabel>
           <Input
-            aria-label={t("room")}
+            id={`${id}-room`}
             onChange={(event) => setRoom(event.target.value)}
             placeholder={t("room-placeholder")}
             value={room}
           />
         </Field>
-        <Field>
-          <FieldLabel>{t("starts")}</FieldLabel>
-          <Input
-            aria-label={t("starts")}
-            onChange={(event) => onStartsChange(event.target.value)}
-            type="datetime-local"
-            value={starts}
-          />
-          {Option.isSome(choice) ? (
-            <p className="text-muted-foreground text-sm">
-              {choice.value.timeZone}
-            </p>
-          ) : null}
-        </Field>
-        <Field>
-          <FieldLabel>{t("length")}</FieldLabel>
-          <Select
-            items={lengthItems}
-            onValueChange={(value) => {
-              const next = Arr.findFirst(
-                LENGTHS,
-                (length) => `${length}` === value
-              );
-              if (Option.isSome(next)) {
-                setMinutes(next.value);
-              }
-            }}
-            value={`${minutes}`}
-          >
-            <SelectTrigger aria-label={t("length")}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Arr.map(lengthItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-      </div>
+        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
+          <Field>
+            <FieldLabel htmlFor={`${id}-starts`}>{t("starts")}</FieldLabel>
+            <Input
+              id={`${id}-starts`}
+              onChange={(event) => onStartsChange(event.target.value)}
+              type="datetime-local"
+              value={starts}
+            />
+            {Option.isSome(choice) ? (
+              <FieldDescription>{choice.value.timeZone}</FieldDescription>
+            ) : null}
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
+            <Select
+              items={lengthItems}
+              onValueChange={(value) => {
+                const next = Arr.findFirst(
+                  LENGTHS,
+                  (length) => `${length}` === value
+                );
+                if (Option.isSome(next)) {
+                  setMinutes(next.value);
+                }
+              }}
+              value={`${minutes}`}
+            >
+              <SelectTrigger className="w-full" id={`${id}-length`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Arr.map(lengthItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </div>
+      </FieldGroup>
     </ResponsiveDialog>
   );
 }
