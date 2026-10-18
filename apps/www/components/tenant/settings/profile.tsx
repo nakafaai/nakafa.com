@@ -35,11 +35,11 @@ const SOURCE = "components/tenant/settings/profile";
 /** The copy of a logo the page refuses before it uploads anything. */
 const LOGO_SIZE_REFUSED: ToastCopy = {
   description: "school-logo-size.description",
-  title: "school-logo-refused.title",
+  title: "school-logo-size.title",
 };
 const LOGO_TYPE_REFUSED: ToastCopy = {
   description: "school-logo-type.description",
-  title: "school-logo-refused.title",
+  title: "school-logo-type.title",
 };
 const ADDRESS_COPIED: ToastCopy = {
   title: "school-address-copied.title",
