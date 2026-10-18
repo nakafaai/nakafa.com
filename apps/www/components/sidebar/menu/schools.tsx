@@ -45,29 +45,20 @@ function SidebarSchoolMenuItem({
 const SCHOOL_PAGE = 20;
 
 /**
- * The memberships of the account, read as the account button mounts, so the
- * account menu has its schools ready when it opens.
+ * The account's schools in its menu, one link each under a heading. The menu loads
+ * this part, and with it the school contracts, when it opens, so no page carries
+ * them in its first JavaScript. Nothing shows while the first page loads, and a
+ * failed read shows one disabled line, so the menu is never silently empty. The
+ * next page loads as the end of the list comes into view, and nothing shows for an
+ * account with no school.
  */
-export function useAccountSchools() {
-  return usePaginatedQuery(
+export function SidebarSchoolMenuItems() {
+  const t = useTranslations("Common");
+  const memberships = usePaginatedQuery(
     tenancy.memberships.list,
     {},
     { initialNumItems: SCHOOL_PAGE }
   );
-}
-
-/**
- * The account's schools in its menu, one link each under a heading. Nothing shows
- * while the first page loads, and a failed read shows one disabled line, so the
- * menu is never silently empty. The next page loads as the end of the list comes
- * into view, and nothing shows for an account with no school.
- */
-export function SidebarSchoolMenuItems({
-  memberships,
-}: {
-  memberships: ReturnType<typeof useAccountSchools>;
-}) {
-  const t = useTranslations("Common");
 
   if (PaginatedQueryResult.isLoadingFirstPage(memberships)) {
     return null;
