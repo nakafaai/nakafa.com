@@ -16,20 +16,29 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
 import { AccountMenu } from "@/components/sidebar/menu/account";
-import {
-  SidebarSchoolMenuItems,
-  useAccountSchools,
-} from "@/components/sidebar/menu/schools";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/identity/client";
 import { profileHref } from "@/lib/profile/href";
+
+/**
+ * The account's schools, loaded when the menu opens: the list brings the school
+ * contracts with it, which no page needs at first paint.
+ */
+const SidebarSchoolMenuItems = dynamic(
+  () =>
+    import("@/components/sidebar/menu/schools").then(
+      (module) => module.SidebarSchoolMenuItems
+    ),
+  { loading: () => null, ssr: false }
+);
 
 /** Renders the app account menu, with the account and legal pages, once authentication is confirmed. */
 export function NavUserAccount({ user }: { user: CurrentUser }) {
@@ -44,8 +53,6 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
     free: t("plan-free"),
     pro: t("plan-pro"),
   };
-
-  const memberships = useAccountSchools();
 
   /** Signs the user out and leaves the shared authenticated app subtree on success. */
   async function handleSignOut() {
@@ -70,7 +77,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       name={user.authUser.name}
       onSignOut={handleSignOut}
     >
-      <SidebarSchoolMenuItems memberships={memberships} />
+      <SidebarSchoolMenuItems />
       <DropdownMenuGroup>
         {username === undefined ? null : (
           <DropdownMenuItem
