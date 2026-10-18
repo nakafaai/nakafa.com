@@ -39,16 +39,20 @@ function attempt(
 function dashboard(...attempts: DashboardAttempt[]): DashboardValue {
   return {
     attempts: { continueCursor: "", isDone: true, page: attempts },
+    can: ["sitting.proctor", "sitting.view"],
     sitting: {
       closesAt: 10_000,
       cohortId: null,
       examId: examId("exam-a"),
+      examTitle: "Mathematics midterm",
       id: sittingId("sitting-a"),
       opensAt: 1000,
       room: "Lab 2",
       state: "open",
+      timeZone: "Asia/Jakarta",
       unitId: unitId("unit-a"),
     },
+    token: null,
   };
 }
 

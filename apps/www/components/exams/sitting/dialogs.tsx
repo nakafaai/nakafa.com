@@ -26,10 +26,7 @@ import {
   useUnlockAttempt,
 } from "@/components/exams/sitting/actions.client";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
-import {
-  useSittingData,
-  useSittingStore,
-} from "@/components/exams/sitting/context";
+import { useSittingData } from "@/components/exams/sitting/context";
 import { parseMinutes } from "@/components/exams/sitting/minutes";
 
 /** One reason a proctor gives for an action, as the server names it. */
@@ -119,7 +116,7 @@ function ReasonSelect({
   );
 }
 
-/** Asks before a sitting's token changes. The new token is kept for this session only. */
+/** Asks before a sitting's token changes. The dashboard shows the new token once the server answers. */
 export function ChangeTokenDialog({
   onOpenChange,
   open,
@@ -129,7 +126,6 @@ export function ChangeTokenDialog({
 }) {
   const t = useTranslations("Exams");
   const { sittingId, slug } = useSittingData();
-  const setToken = useSittingStore((state) => state.setToken);
   const changeToken = useChangeToken();
 
   return (
@@ -141,10 +137,7 @@ export function ChangeTokenDialog({
           onCancel={() => onOpenChange(false)}
           onConfirm={() => {
             onOpenChange(false);
-            runSittingCall(
-              () => changeToken({ sittingId, slug }),
-              (result) => setToken(result.token)
-            );
+            runSittingCall(() => changeToken({ sittingId, slug }));
           }}
         />
       }

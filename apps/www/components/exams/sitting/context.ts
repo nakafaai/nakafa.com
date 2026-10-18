@@ -1,17 +1,16 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DashboardView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { createContext, use } from "react";
 import { type StoreApi, useStore } from "zustand";
 import type { SittingStore } from "@/components/exams/sitting/store";
 
 /**
- * What the dashboard holds for one sitting: the page that the query answers, the school's
- * address, and whether the viewer may take the proctor's actions.
+ * What the dashboard holds for one sitting: the page that the query answers, and the school's
+ * address. The actions the viewer may take come with the page, in `value.can`.
  */
 const SittingData = Schema.Struct({
-  canProctor: Schema.Boolean,
   sittingId: Id("examSittings"),
   slug: TenantSlug,
   value: DashboardView,
@@ -33,6 +32,12 @@ export function useSittingData() {
     throw new Error("useSittingData must be used within the sitting dashboard");
   }
   return data;
+}
+
+/** Whether the viewer may take the proctor's actions, which the dashboard lists for each caller (ADR 0013). */
+export function useMayProctor() {
+  const { value } = useSittingData();
+  return Arr.contains(value.can, "sitting.proctor");
 }
 
 /** Reads one part of the dashboard's own state. It throws outside the dashboard. */

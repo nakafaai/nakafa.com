@@ -85,6 +85,7 @@ function SeatButton({ attempt }: { readonly attempt: DashboardAttempt }) {
         frame: seatFrame(attempt),
         selected,
       })}
+      data-frame={seatFrame(attempt)}
       onClick={() => choose(attempt.id)}
       type="button"
     >

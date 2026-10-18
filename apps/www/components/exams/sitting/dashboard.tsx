@@ -17,7 +17,6 @@ import { SittingPanel } from "@/components/exams/sitting/panel";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingToolbar } from "@/components/exams/sitting/toolbar";
-import { useTenant } from "@/components/tenant/context";
 
 /**
  * The proctor's dashboard of one sitting: the room and the token, the filter row, the seats of
@@ -35,7 +34,6 @@ export function SittingDashboard({
   readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const tenant = useTenant();
   const [store] = useState(createSittingStore);
   const state = useQuery(
     exams.sittings.dashboard,
@@ -43,7 +41,11 @@ export function SittingDashboard({
   );
 
   if (QueryResult.isFailure(state)) {
-    return <p className="text-muted-foreground text-sm">{t("unavailable")}</p>;
+    return (
+      <p className="text-muted-foreground text-sm">
+        {t("sitting-unavailable")}
+      </p>
+    );
   }
   if (!QueryResult.isSuccess(state)) {
     return null;
@@ -57,7 +59,6 @@ export function SittingDashboard({
   }
 
   const data: SittingData = {
-    canProctor: tenant.role !== "principal" && tenant.role !== "deputy",
     sittingId,
     slug,
     value: state.value,

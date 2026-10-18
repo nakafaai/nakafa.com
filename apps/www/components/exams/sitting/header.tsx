@@ -4,8 +4,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
+  useMayProctor,
   useSittingData,
-  useSittingStore,
 } from "@/components/exams/sitting/context";
 import {
   ChangeTokenDialog,
@@ -13,28 +13,33 @@ import {
 } from "@/components/exams/sitting/dialogs";
 
 /**
- * The one-row header of the dashboard: the room on the left, the token of the sitting in
- * the middle with the action that changes it, and the action that closes the sitting on the
- * right. A viewer who may only view the dashboard sees the room alone.
+ * The one-row header of the dashboard: the exam and the room on the left, the token in the middle
+ * with the action that changes it, and the action that closes the sitting on the right. The page
+ * carries the token only for a proctor, and the actions show only when the page lists them.
  */
 export function SittingHeader() {
   const t = useTranslations("Exams");
-  const { canProctor, value } = useSittingData();
-  const token = useSittingStore((state) => state.token);
+  const { value } = useSittingData();
+  const mayProctor = useMayProctor();
   const [dialog, setDialog] = useState<"close" | "token" | null>(null);
 
   return (
     <header className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b pb-3">
-      <p className="min-w-0 truncate font-medium text-sm">
-        {value.sitting.room}
-      </p>
+      <div className="min-w-0">
+        <p className="truncate font-medium text-sm">
+          {value.sitting.examTitle}
+        </p>
+        <p className="truncate text-muted-foreground text-sm">
+          {value.sitting.room}
+        </p>
+      </div>
       <div className="flex items-center justify-center gap-2">
-        {canProctor && token !== null ? (
+        {value.token === null ? null : (
           <span className="font-mono text-sm tabular-nums tracking-wider">
-            {token}
+            {value.token}
           </span>
-        ) : null}
-        {canProctor ? (
+        )}
+        {mayProctor ? (
           <Button
             onClick={() => setDialog("token")}
             size="sm"
@@ -46,7 +51,7 @@ export function SittingHeader() {
         ) : null}
       </div>
       <div className="flex justify-end">
-        {canProctor ? (
+        {mayProctor ? (
           <Button
             onClick={() => setDialog("close")}
             size="sm"

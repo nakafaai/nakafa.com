@@ -6,12 +6,11 @@ import { createSittingStore } from "@/components/exams/sitting/store";
 const attemptId = Schema.decodeUnknownSync(Id("examAttempts"));
 
 describe("createSittingStore", () => {
-  it("starts with every seat, no selection, and no token", () => {
+  it("starts with every seat and no selection", () => {
     const state = createSittingStore().getState();
 
     expect(state.filter).toBe("all");
     expect(state.selected).toBeNull();
-    expect(state.token).toBeNull();
   });
 
   it("keeps the selected seat until another is chosen or the selection is cleared", () => {
@@ -32,14 +31,6 @@ describe("createSittingStore", () => {
 
     expect(store.getState().filter).toBe("needsAttention");
     expect(store.getState().selected).toBe(attemptId("attempt-a"));
-  });
-
-  it("keeps the token that a change returned", () => {
-    const store = createSittingStore();
-
-    store.getState().setToken("K7Q4XM");
-
-    expect(store.getState().token).toBe("K7Q4XM");
   });
 
   it("gives every dashboard instance its own state", () => {

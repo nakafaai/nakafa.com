@@ -1,9 +1,12 @@
 "use client";
 
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
+import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import {
   Sheet,
@@ -17,6 +20,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import {
+  useMayProctor,
   useSittingData,
   useSittingStore,
 } from "@/components/exams/sitting/context";
@@ -29,6 +33,9 @@ import {
 
 /** The dialog of a panel action that is open, or none. */
 type PanelDialog = "add-minutes" | "allow-device" | "lock" | "unlock";
+
+/** How many signals one page of the panel's list holds, the first one and each one after it. */
+const SIGNAL_PAGE_SIZE = 20;
 
 /** The copy key of each state of an attempt, as the panel names it. */
 const stateLabels: Record<
@@ -123,7 +130,8 @@ export function SittingPanel() {
 /**
  * The content of the panel for one student. The actions follow the table of ADR 0013: a lock
  * for an attempt in progress, an unlock for a locked one, and added minutes for either. A
- * second device is allowed in every state. A viewer who may only view takes no action.
+ * second device is allowed in every state. The actions show only when the page lists them for
+ * the viewer, so a viewer who may only view sees the signals and no action.
  */
 function StudentPanel({
   attempt,
@@ -134,11 +142,10 @@ function StudentPanel({
 }) {
   const t = useTranslations("Exams");
   const tCommon = useTranslations("Common");
-  const { canProctor } = useSittingData();
+  const mayProctor = useMayProctor();
   const [dialog, setDialog] = useState<PanelDialog | null>(null);
   const takesMinutes =
     attempt.state === "inProgress" || attempt.state === "locked";
-  const latest = attempt.latestSignal;
 
   return (
     <div className="grid gap-4">
@@ -160,13 +167,11 @@ function StudentPanel({
           <HugeIcons icon={Cancel01Icon} />
         </Button>
       </div>
-      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
-        <dt className="text-muted-foreground">{t("signals")}</dt>
-        <dd>
-          {latest === null ? t("signals-empty") : t(signalLabels[latest.kind])}
-        </dd>
-      </dl>
-      {canProctor ? (
+      <div className="grid gap-2">
+        <p className="text-muted-foreground text-sm">{t("signals")}</p>
+        <SignalList attemptId={attempt.id} key={attempt.id} />
+      </div>
+      {mayProctor ? (
         <div className="flex flex-wrap gap-2">
           {attempt.state === "inProgress" ? (
             <Button
@@ -232,6 +237,51 @@ function StudentPanel({
         onOpenChange={(next) => setDialog(next ? "allow-device" : null)}
         open={dialog === "allow-device"}
       />
+    </div>
+  );
+}
+
+/**
+ * The signals of one attempt, newest first. A page loads as the list reaches its end, through an
+ * intersection sentinel rather than a button, so the list grows as the proctor scrolls.
+ */
+function SignalList({
+  attemptId,
+}: {
+  readonly attemptId: DashboardAttempt["id"];
+}) {
+  const t = useTranslations("Exams");
+  const { slug, value } = useSittingData();
+  const signals = usePaginatedQuery(
+    exams.sittings.signals,
+    { attemptId, sittingId: value.sitting.id, slug },
+    { initialNumItems: SIGNAL_PAGE_SIZE }
+  );
+
+  if (PaginatedQueryResult.isFailure(signals)) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        {t("sitting-unavailable")}
+      </p>
+    );
+  }
+  if (PaginatedQueryResult.isLoadingFirstPage(signals)) {
+    return null;
+  }
+
+  return (
+    <div className="grid gap-2 text-sm">
+      {signals.results.length === 0 ? (
+        <p className="text-muted-foreground">{t("signals-empty")}</p>
+      ) : null}
+      {Arr.map(signals.results, (signal) => (
+        <p key={`${signal.at}-${signal.kind}`}>
+          {t(signalLabels[signal.kind])}
+        </p>
+      ))}
+      {PaginatedQueryResult.isCanLoadMore(signals) ? (
+        <Intersection onIntersect={() => signals.loadMore(SIGNAL_PAGE_SIZE)} />
+      ) : null}
     </div>
   );
 }

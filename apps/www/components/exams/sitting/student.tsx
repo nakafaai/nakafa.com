@@ -3,6 +3,7 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -22,7 +23,7 @@ import {
 } from "@/components/exams/sitting/admit.client";
 import { readSittingDevice } from "@/components/exams/sitting/device";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
-import { useSittingSignals } from "@/components/exams/sitting/signals.client";
+import { StudentPlayer } from "@/components/exams/sitting/player";
 
 /** An admission that lets the student into the sitting, with the attempt it opened. */
 type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
@@ -30,8 +31,8 @@ type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
 /**
  * The student's screen of one sitting. Before the student is admitted it shows the room and
  * the token field. A device that the browser keeps enters without the token, because it
- * already owns the attempt. The exam's questions, the finish, and the times wait for a later
- * version, so an admitted student sees the room and the state of the attempt.
+ * already owns the attempt. An admitted student sees the paper in the shared player while the
+ * attempt is open, and one sentence for a lock, a closing, or a finished attempt.
  */
 export function StudentSitting({
   sittingId,
@@ -98,7 +99,7 @@ export function StudentSitting({
   }
   if (admitted !== null) {
     return (
-      <AdmittedSitting admitted={admitted} room={sitting.room} slug={slug} />
+      <AdmittedSitting admitted={admitted} sitting={sitting} slug={slug} />
     );
   }
 
@@ -139,34 +140,33 @@ export function StudentSitting({
 }
 
 /**
- * The admitted student's view: the room, and the locked sentence when the proctor has locked
- * the sitting. The signals run while the page is open, and only for an attempt that can still
- * take them.
+ * The admitted student's view, read from the attempt the server holds. The player shows while
+ * the attempt is open, and its state decides the rest of the screen.
  */
 function AdmittedSitting({
   admitted,
-  room,
+  sitting,
   slug,
 }: {
   readonly admitted: Admitted;
-  readonly room: string;
+  readonly sitting: typeof SittingView.Type;
   readonly slug: TenantSlug;
 }) {
-  const t = useTranslations("Exams");
-
-  useSittingSignals({
-    attemptId: admitted.attemptId,
-    deviceId: admitted.deviceId,
-    enabled: admitted.state === "inProgress" || admitted.state === "locked",
+  const attempt = useQuery(exams.sittings.attempt, {
+    sittingId: sitting.id,
     slug,
   });
 
+  if (!QueryResult.isSuccess(attempt) || attempt.value === null) {
+    return null;
+  }
+
   return (
-    <section className="grid gap-4">
-      <header className="border-b pb-3">
-        <p className="truncate font-medium text-sm">{room}</p>
-      </header>
-      {admitted.state === "locked" ? <p>{t("student-locked")}</p> : null}
-    </section>
+    <StudentPlayer
+      attempt={attempt.value}
+      deviceId={admitted.deviceId}
+      sitting={sitting}
+      slug={slug}
+    />
   );
 }
