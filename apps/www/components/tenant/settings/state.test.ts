@@ -3,13 +3,13 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Schema } from "effect";
 import {
-  addGrant,
   type Client,
-  type Grant,
   insertPeriod,
+  isDraft,
   mapUnit,
   type Period,
   revokeClient,
+  setPeriodName,
   setPeriodStatus,
   type Unit,
   withoutItem,
@@ -56,16 +56,6 @@ function unit(id: string, overrides: Partial<Unit> = {}): Unit {
     status: "active",
     timeZone: "Asia/Jakarta",
     ...overrides,
-  };
-}
-
-/** One grant of a person as the grants of that person show it. */
-function grant(id: string): Grant {
-  return {
-    id: Schema.decodeUnknownSync(Id("tenantGrants"))(id),
-    role: { key: "teacher", kind: "builtin" },
-    scope: { kind: "tenant" },
-    term: { kind: "standing" },
   };
 }
 
@@ -121,9 +111,18 @@ describe("components/tenant/settings/state", () => {
     ).toEqual(["20100001", null]);
   });
 
-  it("puts a new grant at the end of the grants", () => {
+  it("sets the name of only the period with the given id", () => {
+    const page = [period("first"), period("second")];
     expect(
-      Arr.map(addGrant([grant("first")], grant("second")), (item) => item.id)
-    ).toEqual([grant("first").id, grant("second").id]);
+      Arr.map(
+        setPeriodName(page, periodId("second"), "Genap 2027"),
+        (item) => item.name
+      )
+    ).toEqual(["first", "Genap 2027"]);
+  });
+
+  it("marks only the IDs that the page made before the server answered", () => {
+    expect(isDraft("draft-3f2a")).toBe(true);
+    expect(isDraft("kg2m8q3xz0h8w1d6e9r4t7y2u5i0o3p")).toBe(false);
   });
 });

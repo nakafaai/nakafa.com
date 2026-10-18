@@ -27,9 +27,16 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
-import { CardSection } from "@/components/shared/card/section";
+import {
+  CardSection,
+  CardSectionActions,
+  CardSectionFooter,
+  CardSectionHint,
+} from "@/components/shared/card/section";
+import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
@@ -57,6 +64,7 @@ export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
   const sendLocale = Option.getOrUndefined(
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(locale)
   );
+  const [isInviting, setIsInviting] = useState(false);
 
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
@@ -93,6 +101,19 @@ export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("invites-footer")}</CardSectionHint>
+        <CardSectionActions>
+          <Button onClick={() => setIsInviting(true)} size="sm" type="button">
+            {t("invite-action")}
+          </Button>
+        </CardSectionActions>
+      </CardSectionFooter>
+      <SchoolInviteDialog
+        open={isInviting}
+        setOpen={setIsInviting}
+        slug={slug}
+      />
     </CardSection>
   );
 }
@@ -124,6 +145,7 @@ function SchoolInviteRow({
       <TableCell className="text-right">
         <Button
           disabled={sendLocale === undefined}
+          inert={isDraft(invite.id)}
           onClick={() => {
             if (sendLocale !== undefined) {
               startTransition(() =>
@@ -146,6 +168,7 @@ function SchoolInviteRow({
           {t("invite-resend")}
         </Button>
         <Button
+          inert={isDraft(invite.id)}
           onClick={() => setIsRevoking(true)}
           size="sm"
           type="button"

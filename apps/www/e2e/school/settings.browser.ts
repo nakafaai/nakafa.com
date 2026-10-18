@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { signInLearner } from "@/e2e/support/learner";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import {
+  createSchool,
+  hostAddress,
+  signInOwner,
+  signInTeacher,
+} from "@/e2e/support/school";
 
 test("an admin opens the profile and the periods of a school", async ({
   browser,
@@ -24,7 +28,7 @@ test("an admin opens the profile and the periods of a school", async ({
   await context.close();
 });
 
-test("a visitor who may not manage the school sees no settings", async ({
+test("a teacher of the school, who may not manage it, sees no settings", async ({
   browser,
   baseURL,
 }) => {
@@ -32,7 +36,7 @@ test("a visitor who may not manage the school sees no settings", async ({
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
   const context = await browser.newContext();
-  await Effect.runPromise(signInLearner(context, String(baseURL)));
+  await Effect.runPromise(signInTeacher(context, school.slug, address("/")));
   const page = await context.newPage();
 
   await page.goto(address("/settings/profile"));

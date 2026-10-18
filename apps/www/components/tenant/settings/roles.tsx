@@ -1,8 +1,15 @@
 "use client";
 
-import type { Ref } from "@confect/core";
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import {
+  type PaginatedQueryItem,
+  PaginatedQueryResult,
+  QueryResult,
+  useMutation,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import access from "@repo/backend/confect/_generated/refs/access";
+import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -12,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -25,8 +33,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option, Schema } from "effect";
@@ -45,15 +51,22 @@ import {
 import type { PersonId } from "@/components/tenant/settings/people";
 import { SchoolPersonCard } from "@/components/tenant/settings/person";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { scopeNameOf } from "@/components/tenant/settings/scope";
+import { isDraft } from "@/components/tenant/settings/state";
+import { SchoolTableHeader } from "@/components/tenant/settings/table";
 
 const SOURCE = "components/tenant/settings/roles";
 
-/** The ID of one grant of a person. */
-type GrantId = Ref.Returns<typeof access.grants.list>[number]["id"];
+/** How many grants one page of the list loads, and each page after it. */
+const PAGE_SIZE = 25;
+
+/** One active grant of the school as the grants list shows it. */
+type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
 
 /**
- * Renders the roles of the school: the person whose access is shown, that person's
- * grants, and the form that gives a role to them. A role covers the whole school.
+ * Renders the roles of the school: what each role may do, every role the school
+ * holds with its person, and the form that gives a role of the whole school to a
+ * chosen person.
  */
 export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
@@ -62,6 +75,7 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
   return (
     <>
       <SchoolRolesOverview />
+      <SchoolGrantsCard slug={slug} />
       <SchoolPersonCard
         description={t("roles-description")}
         onChoose={setPersonId}
@@ -70,7 +84,7 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
         title={t("roles")}
       />
       {personId === undefined ? null : (
-        <SchoolGrantsCard personId={personId} slug={slug} />
+        <SchoolAssignCard personId={personId} slug={slug} />
       )}
     </>
   );
@@ -107,20 +121,62 @@ function SchoolRolesOverview() {
   );
 }
 
-/** Renders one grant row, with its revoke action behind a confirmation. */
+/**
+ * Renders the active roles of the school, a page at a time: the Person who holds
+ * each role, the role, and what it covers. The list loads more rows as its end
+ * comes into view.
+ */
+function SchoolGrantsCard({ slug }: { slug: TenantSlug }) {
+  const t = useTranslations("SchoolSettings");
+  const pagination = usePaginatedQuery(
+    access.grants.list,
+    { slug },
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  if (PaginatedQueryResult.isFailure(pagination)) {
+    throw pagination.error;
+  }
+
+  return (
+    <CardSection>
+      <CardHeader>
+        <CardTitle>{t("roles-grants")}</CardTitle>
+        <CardDescription>{t("roles-grants-description")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <SchoolTableHeader
+            columns={[t("grant-person"), t("grant-role"), t("grant-scope"), ""]}
+          />
+          <TableBody>
+            {Arr.map(pagination.results, (grant) => (
+              <SchoolGrantRow grant={grant} key={grant.id} slug={slug} />
+            ))}
+          </TableBody>
+        </Table>
+        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+        ) : null}
+      </CardContent>
+    </CardSection>
+  );
+}
+
+/**
+ * Renders one grant row: its person, its role, what it covers, and its revoke action
+ * behind a confirmation. A grant the page is still giving waits, so its revoke is inert.
+ */
 function SchoolGrantRow({
   grant,
   slug,
 }: {
-  grant: {
-    readonly id: GrantId;
-    readonly role: { readonly key: BuiltinRole };
-    readonly scope: { readonly kind: "tenant" | "unit" };
-  };
+  grant: GrantItem;
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
+  const viewer = useQuery(tenancy.viewer.get, { slug });
   const revoke = useMutation(access.grants.revoke).withOptimisticUpdate(
     revokeGrantChange
   );
@@ -128,14 +184,20 @@ function SchoolGrantRow({
 
   return (
     <TableRow>
+      <TableCell>{grant.person.name}</TableCell>
       <TableCell>{tSchool(`role.${grant.role.key}`)}</TableCell>
       <TableCell>
-        {grant.scope.kind === "tenant"
-          ? t("grant-scope-school")
-          : t("grant-scope-unit")}
+        {QueryResult.isSuccess(viewer)
+          ? scopeNameOf(
+              grant.scope,
+              viewer.value.tenant.name,
+              viewer.value.units
+            )
+          : ""}
       </TableCell>
       <TableCell className="text-right">
         <Button
+          inert={isDraft(grant.id)}
           onClick={() => setIsRevoking(true)}
           size="sm"
           type="button"
@@ -168,8 +230,8 @@ function SchoolGrantRow({
   );
 }
 
-/** Renders the grants of one person, with the form that gives a role to that person. */
-function SchoolGrantsCard({
+/** Renders the form that gives a role of the whole school to the chosen person. */
+function SchoolAssignCard({
   personId,
   slug,
 }: {
@@ -178,15 +240,10 @@ function SchoolGrantsCard({
 }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
-  const grants = useQuery(access.grants.list, { personId, slug });
   const assign = useMutation(access.grants.assign).withOptimisticUpdate(
     assignGrantChange
   );
   const [role, setRole] = useState<BuiltinRole | undefined>(undefined);
-
-  if (!QueryResult.isSuccess(grants)) {
-    return null;
-  }
 
   const roleItems = Arr.map(BuiltinRole.literals, (value) => ({
     label: tSchool(`role.${value}`),
@@ -196,25 +253,8 @@ function SchoolGrantsCard({
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{t("roles-grants")}</CardTitle>
-        <CardDescription>{t("roles-grants-description")}</CardDescription>
+        <CardTitle>{t("roles-assign")}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("grant-role")}</TableHead>
-              <TableHead>{t("grant-scope")}</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Arr.map(grants.value, (grant) => (
-              <SchoolGrantRow grant={grant} key={grant.id} slug={slug} />
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
       <CardSectionFooter>
         <CardSectionHint>{t("roles-assign-footer")}</CardSectionHint>
         <CardSectionActions>

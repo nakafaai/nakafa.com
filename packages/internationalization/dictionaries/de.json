@@ -153,7 +153,8 @@
       "period": {
         "created": "Zeitraum angelegt",
         "opened": "Zeitraum geöffnet",
-        "archived": "Zeitraum archiviert"
+        "archived": "Zeitraum archiviert",
+        "rename": "Zeitraum umbenannt"
       },
       "person": {
         "claimed": "Konto übernommen",
@@ -240,10 +241,38 @@
     "login-name": "Anmeldename",
     "login-person": "Person",
     "login-issued": "Ausgestellt",
+    "invite-action": "Einladen",
+    "invites-footer": "Eine Person ohne Konto einladen.",
+    "invite-dialog-title": "Person einladen",
+    "invite-dialog-description": "Die Person erhält die Einladung an diese E-Mail-Adresse und meldet sich mit ihr an.",
+    "invite-person": "Person",
+    "invite-person-placeholder": "Person ohne Konto wählen",
+    "invite-none-left": "Alle aktiven Personen dieser Schule haben bereits ein Konto.",
+    "invite-locale": "Sprache der E-Mail",
+    "invite-submit": "Einladen",
+    "grant-person": "Person",
+    "client-add": "Client erstellen",
+    "client-add-footer": "Das Geheimnis wird einmal angezeigt, wenn der Client erstellt wird.",
+    "client-add-description": "Ein Client verbindet ein anderes System mit dieser Schule.",
+    "client-create": "Erstellen",
+    "client-scope": "Gilt für",
+    "client-name-placeholder": "Name des Systems",
+    "client-actions-footer": "Ein Client behält mindestens eine Aktion.",
+    "client-action": {
+      "cohort": {
+        "view": "Klassen ansehen"
+      },
+      "period": {
+        "view": "Zeiträume ansehen"
+      },
+      "person": {
+        "view": "Personen ansehen"
+      }
+    },
     "person-placeholder": "Person wählen",
     "roles-description": "Wählen Sie eine Person, um die Rollen zu sehen und zu ändern.",
-    "roles-grants": "Rollen",
-    "roles-grants-description": "Die Rollen dieser Person in der Schule.",
+    "roles-grants": "Vergebene Rollen",
+    "roles-grants-description": "Jede Rolle, die eine Person dieser Schule hat, und wofür sie gilt.",
     "grant-role": "Rolle",
     "grant-scope": "Gilt für",
     "grant-scope-school": "Gesamte Schule",

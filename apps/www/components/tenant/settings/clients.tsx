@@ -3,10 +3,13 @@
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
+  QueryResult,
   useMutation,
   usePaginatedQuery,
+  useQuery,
 } from "@confect/react";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
+import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -26,9 +29,16 @@ import {
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { CardSection } from "@/components/shared/card/section";
+import {
+  CardSection,
+  CardSectionActions,
+  CardSectionFooter,
+  CardSectionHint,
+} from "@/components/shared/card/section";
+import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
 
@@ -41,14 +51,16 @@ const PAGE_SIZE = 25;
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
 
 /**
- * Renders the integration clients of the school. A client is rotated, which issues a
- * new secret that is shown once, or revoked. Creating a client is not built yet.
+ * Renders the integration clients of the school, each with the part of the school it
+ * covers. A client is created, rotated (which issues a new secret that is shown once),
+ * or revoked.
  */
 export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
     undefined
   );
+  const [isCreating, setIsCreating] = useState(false);
   const pagination = usePaginatedQuery(
     integrations.clients.list,
     { slug },
@@ -70,7 +82,7 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
           <SchoolTableHeader
             columns={[
               t("client-name"),
-              t("client-actions"),
+              t("client-scope"),
               t("client-status"),
               "",
             ]}
@@ -90,6 +102,20 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("client-add-footer")}</CardSectionHint>
+        <CardSectionActions>
+          <Button onClick={() => setIsCreating(true)} size="sm" type="button">
+            {t("client-add")}
+          </Button>
+        </CardSectionActions>
+      </CardSectionFooter>
+      <SchoolClientCreateDialog
+        onIssued={setIssuedSecret}
+        open={isCreating}
+        setOpen={setIsCreating}
+        slug={slug}
+      />
       <SchoolSecretDialog
         description={t("client-secret-description")}
         onClose={() => setIssuedSecret(undefined)}
@@ -114,6 +140,7 @@ function SchoolClientRow({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const viewer = useQuery(tenancy.viewer.get, { slug });
   const rotate = useMutation(integrations.clients.rotate);
   const revoke = useMutation(integrations.clients.revoke).withOptimisticUpdate(
     revokeClientChange
@@ -125,7 +152,15 @@ function SchoolClientRow({
   return (
     <TableRow>
       <TableCell>{client.name}</TableCell>
-      <TableCell>{client.actions.length}</TableCell>
+      <TableCell>
+        {QueryResult.isSuccess(viewer)
+          ? scopeNameOf(
+              client.scope,
+              viewer.value.tenant.name,
+              viewer.value.units
+            )
+          : ""}
+      </TableCell>
       <TableCell>{t(`client-${client.status}`)}</TableCell>
       <TableCell className="text-right">
         {isActive ? (

@@ -7,19 +7,29 @@ import access from "@repo/backend/confect/_generated/refs/access";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { applyPolicy } from "@repo/backend/confect/tenancy/policy";
-import { Npsn } from "@repo/backend/confect/tenancy/schema";
+import { INVITE_TERM, Npsn } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { randomUuid } from "@repo/utilities/uuid";
-import { DateTime, Effect, Option, Schema, Struct } from "effect";
 import {
-  addGrant,
+  Array as Arr,
+  DateTime,
+  Duration,
+  Effect,
+  Option,
+  Schema,
+  Struct,
+} from "effect";
+import {
   type Client,
+  DRAFT_PREFIX,
   type Grant,
   type Invite,
   insertPeriod,
   mapUnit,
   type Period,
+  type Person,
   revokeClient,
+  setPeriodName,
   setPeriodStatus,
   type Unit,
   withoutItem,
@@ -149,22 +159,44 @@ function changeClientLists(
   }
 }
 
-/** Changes every loaded list of grants that the match accepts. */
-function changeGrantLists(
+/** Changes the page of every loaded list of the grants of one school. */
+function changeGrantPages(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
-  matches: (args: Ref.Args<typeof access.grants.list>) => boolean,
-  change: (grants: readonly Grant[]) => Grant[]
+  slug: TenantSlug,
+  change: (page: readonly Grant[]) => Grant[]
 ) {
   for (const query of localStore.getAllQueries(access.grants.list)) {
-    if (Option.isSome(query.value) && matches(query.args)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
       localStore.setQuery(
         access.grants.list,
         query.args,
-        Option.some(change(query.value.value))
+        Option.some({
+          ...query.value.value,
+          page: change(query.value.value.page),
+        })
       );
     }
   }
 }
+
+/** The loaded Person with this ID, read from any loaded list of people, or none when no list holds it. */
+function nameOfPerson(
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  personId: Person["id"]
+) {
+  return Arr.findFirst(
+    Arr.flatMap(localStore.getAllQueries(tenancy.people.list), (query) =>
+      Option.match(query.value, {
+        onNone: (): Person[] => [],
+        onSome: (result) => [...result.page],
+      })
+    ),
+    (person) => person.id === personId
+  );
+}
+
+/** A placeholder ID for a row the server has not answered yet, marked so its actions wait. */
+const draftText = () => `${DRAFT_PREFIX}${Effect.runSync(randomUuid)}`;
 
 /** Shows the policy the school chose at once. */
 export const setPolicyChange: OptimisticUpdate<
@@ -293,32 +325,58 @@ export const revokeClientChange: OptimisticUpdate<
   );
 };
 
-/** Lists a new grant of a person at once, at the end of its grants. */
+/** Lists a new grant at once, at the top of the school's grants, when its Person is loaded. */
 export const assignGrantChange: OptimisticUpdate<
   typeof access.grants.assign
-> = (localStore, { personId, role, scope }) => {
+> = (localStore, { personId, role, scope, slug }) => {
+  const person = nameOfPerson(localStore, personId);
+  if (Option.isNone(person)) {
+    return;
+  }
   const draft: Grant = {
-    id: Schema.decodeUnknownSync(Id("tenantGrants"))(
-      Effect.runSync(randomUuid)
-    ),
+    id: Schema.decodeUnknownSync(Id("tenantGrants"))(draftText()),
+    person: { id: person.value.id, name: person.value.name },
     role: { key: role, kind: "builtin" },
     scope,
-    term: { kind: "standing" },
   };
-  changeGrantLists(
-    localStore,
-    (args) => args.personId === personId,
-    (grants) => addGrant(grants, draft)
-  );
+  changeGrantPages(localStore, slug, (page) => Arr.prepend(page, draft));
 };
 
-/** Takes a grant off every open list of grants at once. */
+/** Takes a grant off every loaded list of the school's grants at once. */
 export const revokeGrantChange: OptimisticUpdate<
   typeof access.grants.revoke
-> = (localStore, { grantId }) => {
-  changeGrantLists(
+> = (localStore, { grantId, slug }) => {
+  changeGrantPages(localStore, slug, (page) => withoutItem(page, grantId));
+};
+
+/** Lists a new invite at once, at the top of the pending invites, when its Person is loaded. */
+export const inviteChange: OptimisticUpdate<typeof tenancy.invites.invite> = (
+  localStore,
+  { email, personId, slug }
+) => {
+  const person = nameOfPerson(localStore, personId);
+  if (Option.isNone(person)) {
+    return;
+  }
+  const draft: Invite = {
+    email,
+    expiresAt:
+      DateTime.toEpochMillis(DateTime.nowUnsafe()) +
+      Duration.toMillis(INVITE_TERM),
+    id: Schema.decodeUnknownSync(Id("tenantInvites"))(draftText()),
+    name: person.value.name,
+    personId,
+  };
+  changeInviteLists(localStore, slug, (page) => Arr.prepend(page, draft));
+};
+
+/** Shows a period under its new name at once, in every loaded list of periods. */
+export const renamePeriodChange: OptimisticUpdate<
+  typeof tenancy.periods.rename
+> = (localStore, { name, periodId }) => {
+  changePeriodLists(
     localStore,
     () => true,
-    (grants) => withoutItem(grants, grantId)
+    (page) => setPeriodName(page, periodId, name)
   );
 };

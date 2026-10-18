@@ -153,7 +153,8 @@
       "period": {
         "created": "Period added",
         "opened": "Period opened",
-        "archived": "Period archived"
+        "archived": "Period archived",
+        "rename": "Period renamed"
       },
       "person": {
         "claimed": "Account joined",
@@ -240,10 +241,38 @@
     "login-name": "Login name",
     "login-person": "Person",
     "login-issued": "Issued",
+    "invite-action": "Invite",
+    "invites-footer": "Invite a person who has no account yet.",
+    "invite-dialog-title": "Invite a person",
+    "invite-dialog-description": "The person gets an invitation at this email address, and signs in with it.",
+    "invite-person": "Person",
+    "invite-person-placeholder": "Choose a person without an account",
+    "invite-none-left": "Every active person of this school already has an account.",
+    "invite-locale": "Language of the email",
+    "invite-submit": "Invite",
+    "grant-person": "Person",
+    "client-add": "Create client",
+    "client-add-footer": "The secret is shown once, when the client is created.",
+    "client-add-description": "A client connects another system to this school.",
+    "client-create": "Create",
+    "client-scope": "Covers",
+    "client-name-placeholder": "Name of the system",
+    "client-actions-footer": "A client keeps at least one action.",
+    "client-action": {
+      "cohort": {
+        "view": "View classes"
+      },
+      "period": {
+        "view": "View periods"
+      },
+      "person": {
+        "view": "View people"
+      }
+    },
     "person-placeholder": "Choose a person",
     "roles-description": "Choose a person to see and change the roles they hold.",
-    "roles-grants": "Roles",
-    "roles-grants-description": "The roles this person holds in the school.",
+    "roles-grants": "Roles held",
+    "roles-grants-description": "Every role that a person of this school holds, and what it covers.",
     "grant-role": "Role",
     "grant-scope": "Covers",
     "grant-scope-school": "The whole school",

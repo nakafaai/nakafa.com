@@ -153,7 +153,8 @@
       "period": {
         "created": "Periode ditambahkan",
         "opened": "Periode dibuka",
-        "archived": "Periode diarsipkan"
+        "archived": "Periode diarsipkan",
+        "rename": "Periode diganti nama"
       },
       "person": {
         "claimed": "Akun bergabung",
@@ -240,10 +241,38 @@
     "login-name": "Nama login",
     "login-person": "Orang",
     "login-issued": "Diterbitkan",
+    "invite-action": "Undang",
+    "invites-footer": "Undang orang yang belum punya akun.",
+    "invite-dialog-title": "Undang orang",
+    "invite-dialog-description": "Orang itu menerima undangan ke alamat email ini, dan masuk dengan alamat tersebut.",
+    "invite-person": "Orang",
+    "invite-person-placeholder": "Pilih orang yang belum punya akun",
+    "invite-none-left": "Semua orang aktif di sekolah ini sudah punya akun.",
+    "invite-locale": "Bahasa email",
+    "invite-submit": "Undang",
+    "grant-person": "Orang",
+    "client-add": "Buat klien",
+    "client-add-footer": "Rahasia ditampilkan sekali, saat klien dibuat.",
+    "client-add-description": "Klien menghubungkan sistem lain ke sekolah ini.",
+    "client-create": "Buat",
+    "client-scope": "Berlaku untuk",
+    "client-name-placeholder": "Nama sistem",
+    "client-actions-footer": "Klien selalu memiliki paling sedikit satu aksi.",
+    "client-action": {
+      "cohort": {
+        "view": "Lihat kelas"
+      },
+      "period": {
+        "view": "Lihat periode"
+      },
+      "person": {
+        "view": "Lihat orang"
+      }
+    },
     "person-placeholder": "Pilih orang",
     "roles-description": "Pilih orang untuk melihat dan mengubah peran yang dimilikinya.",
-    "roles-grants": "Peran",
-    "roles-grants-description": "Peran yang dimiliki orang ini di sekolah.",
+    "roles-grants": "Peran yang dimiliki",
+    "roles-grants-description": "Setiap peran yang dimiliki orang di sekolah ini, dan wilayah yang dicakupnya.",
     "grant-role": "Peran",
     "grant-scope": "Berlaku untuk",
     "grant-scope-school": "Seluruh sekolah",

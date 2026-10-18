@@ -15,11 +15,25 @@ export type Client = Ref.Returns<
   typeof integrations.clients.list
 >["page"][number];
 
-/** One grant of a person, as the grants of that person show it. */
-export type Grant = Ref.Returns<typeof access.grants.list>[number];
+/** One active grant of the school, with the Person who holds it, its role and its scope. */
+export type Grant = Ref.Returns<typeof access.grants.list>["page"][number];
+
+/** One Person of the school as the people list shows them. */
+export type Person = Ref.Returns<typeof tenancy.people.list>["page"][number];
 
 /** One unit of the school with its national school number. */
 export type Unit = Ref.Returns<typeof tenancy.units.list>[number];
+
+/**
+ * The start of the ID of a row that the page shows before the server answers. The
+ * server never issues an ID with it, so a row with it is still on its way.
+ */
+export const DRAFT_PREFIX = "draft-";
+
+/** Whether a row is one the page shows before the server answers, so its actions wait. */
+export function isDraft(id: string) {
+  return id.startsWith(DRAFT_PREFIX);
+}
 
 /** The periods of one page in the order the list shows them: the newest start first. */
 const byNewestStart = Order.flip(
@@ -34,6 +48,17 @@ export function setPeriodStatus(
 ) {
   return Arr.map(page, (period) =>
     period.id === periodId ? { ...period, status } : period
+  );
+}
+
+/** Sets the name of one period on a page, and keeps every other period as it is. */
+export function setPeriodName(
+  page: readonly Period[],
+  periodId: Period["id"],
+  name: Period["name"]
+) {
+  return Arr.map(page, (period) =>
+    period.id === periodId ? { ...period, name } : period
   );
 }
 
@@ -69,9 +94,4 @@ export function mapUnit<Item extends { readonly id: unknown }>(
   change: (unit: Item) => Item
 ) {
   return Arr.map(units, (unit) => (unit.id === unitId ? change(unit) : unit));
-}
-
-/** Puts a grant at the end of the grants of one person, where a new grant goes. */
-export function addGrant(grants: readonly Grant[], grant: Grant) {
-  return Arr.append(grants, grant);
 }

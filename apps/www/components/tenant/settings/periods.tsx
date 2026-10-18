@@ -11,6 +11,7 @@ import {
 } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { PeriodName } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -35,6 +36,7 @@ import {
   TableCell,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { isComposingKey } from "@repo/utilities/composition";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
@@ -48,6 +50,7 @@ import {
   archivePeriodChange,
   createPeriodChange,
   openPeriodChange,
+  renamePeriodChange,
 } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
@@ -202,6 +205,53 @@ function SchoolPeriodList({
   );
 }
 
+/**
+ * Renders the name of one period as an input in its row. The name saves when the
+ * input loses focus or the Enter key is pressed, and the new name shows at once.
+ * A name left empty, or one that the schema refuses, goes back to the stored name.
+ */
+function SchoolPeriodName({
+  period,
+  slug,
+}: {
+  period: PeriodItem;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const rename = useMutation(tenancy.periods.rename).withOptimisticUpdate(
+    renamePeriodChange
+  );
+  const [name, setName] = useState(period.name);
+
+  const save = () => {
+    const next = name.trim();
+    if (next === period.name || !Schema.is(PeriodName)(next)) {
+      setName(period.name);
+      return;
+    }
+    startTransition(() =>
+      saveSchool(
+        () => rename({ name: next, periodId: period.id, slug }),
+        SOURCE
+      )
+    );
+  };
+
+  return (
+    <Input
+      aria-label={t("period-name")}
+      onBlur={save}
+      onChange={(event) => setName(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
+          event.currentTarget.blur();
+        }
+      }}
+      value={name}
+    />
+  );
+}
+
 /** Renders one period row, with the one action that its status allows. */
 function SchoolPeriodRow({
   period,
@@ -220,7 +270,9 @@ function SchoolPeriodRow({
 
   return (
     <TableRow>
-      <TableCell>{period.name}</TableCell>
+      <TableCell>
+        <SchoolPeriodName key={period.name} period={period} slug={slug} />
+      </TableCell>
       <TableCell>{`${period.start} - ${period.end}`}</TableCell>
       <TableCell>{t(`period-${period.status}`)}</TableCell>
       <TableCell className="text-right">
