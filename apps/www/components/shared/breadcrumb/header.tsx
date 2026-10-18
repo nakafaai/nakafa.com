@@ -68,7 +68,10 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
   );
 }
 
-/** Bounded path navigation with linked parents and one collapsed middle group. */
+/**
+ * Bounded path navigation with linked parents and one collapsed middle group. Home is a
+ * link, except on the home page itself, whose path is home alone.
+ */
 export function BreadcrumbHeaderPath({
   children,
   homeHref,
@@ -89,11 +92,15 @@ export function BreadcrumbHeaderPath({
     <Breadcrumb className="min-w-0">
       <BreadcrumbList className="flex-nowrap">
         <BreadcrumbItem className="shrink-0">
-          <BreadcrumbLink
-            render={
-              <BreadcrumbAnchor href={homeHref}>{homeLabel}</BreadcrumbAnchor>
-            }
-          />
+          {items.length === 0 ? (
+            <BreadcrumbPage>{homeLabel}</BreadcrumbPage>
+          ) : (
+            <BreadcrumbLink
+              render={
+                <BreadcrumbAnchor href={homeHref}>{homeLabel}</BreadcrumbAnchor>
+              }
+            />
+          )}
         </BreadcrumbItem>
         {hiddenItems.length > 0 && (
           <BreadcrumbMenu items={hiddenItems} menuLabel={menuLabel} />
