@@ -10,6 +10,7 @@ import {
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -46,7 +47,6 @@ import {
   FeedHeader,
   FeedName,
   FeedRow,
-  FeedText,
 } from "@/components/user/feed";
 import { LikeButton, useWhenSignedIn } from "@/components/user/like";
 import { reportClientException } from "@/lib/analytics/client";
@@ -118,7 +118,7 @@ export function CommentRow({
             )}
           </FeedHeader>
           {replyTo}
-          <FeedText>{comment.text}</FeedText>
+          <DeferredLearnerText>{comment.text}</DeferredLearnerText>
           <FeedActions inert={saving}>
             <CommentLikeButton comment={comment} />
             {replyAction}

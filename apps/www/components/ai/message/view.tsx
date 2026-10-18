@@ -1,6 +1,7 @@
 "use client";
 
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import {
   MessageContent,
   MessageFooter,
@@ -32,8 +33,9 @@ export function AiChatMessage({ last, message }: Props) {
         <NinaPrompt
           actions={<AiChatMessageActions />}
           files={Arr.filter(message.parts, (part) => part.type === "file")}
-          text={message.text}
-        />
+        >
+          <DeferredLearnerText>{message.text}</DeferredLearnerText>
+        </NinaPrompt>
       </MessageProvider>
     );
   }
