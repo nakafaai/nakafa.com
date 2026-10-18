@@ -5,7 +5,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
-import { UnitName } from "@repo/backend/confect/tenancy/schema";
+import { IntegrationName } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
@@ -65,7 +65,7 @@ export function SchoolClientCreateDialog({
     { label: t("grant-scope-school"), value: "school" },
     ...Arr.map(units, (unit) => ({ label: unit.name, value: unit.id })),
   ];
-  const clientName = Schema.decodeOption(UnitName)(name.trim());
+  const clientName = Schema.decodeOption(IntegrationName)(name.trim());
 
   const submit = () => {
     const held = [...actions];
