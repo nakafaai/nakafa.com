@@ -429,6 +429,8 @@
     "add-channel-title": "Themenkanal hinzufügen",
     "add-channel-description": "Alle in der Klasse lesen einen Themenkanal, und sein Name steht in der Liste.",
     "channel-name": "Kanalname",
+    "channel-name-taken": "Ein anderer Kanal dieser Klasse hat diesen Namen bereits.",
+    "channel-limit-reached": "Diese Klasse hat die maximale Anzahl an Kanälen erreicht.",
     "add-submit": "Hinzufügen"
   },
   "Metadata": {

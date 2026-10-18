@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { MiddlewareImpl } from "@confect/server";
+import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Authority } from "@repo/backend/confect/access/policy";
@@ -47,9 +48,24 @@ const readUnit = Effect.fnUntraced(function* (
 });
 
 /**
- * A class is locked once it, its cohort, its period, or its unit is archived,
- * and its unit's grants cover it. `classMember` holds for a student placed in its
- * cohort in its period who still holds a student grant over its unit, and
+ * Where a class sits, and whether it is locked: a class is locked once it, its
+ * cohort, its period, or its unit is archived. The class's unit grants cover it.
+ */
+export const classPlace = (row: ClassesDoc) =>
+  Effect.all({
+    cohort: readCohort(row.cohortId),
+    period: readPeriod(row.periodId),
+    unit: readUnit(row.unitId),
+  }).pipe(
+    Effect.map(({ cohort, period, unit }) => ({
+      locked: row.status === "archived" || cohortLocked(cohort, period, unit),
+      units: [row.unitId],
+    }))
+  );
+
+/**
+ * The access of a class. `classMember` holds for a student placed in its cohort
+ * in its period who still holds a student grant over its unit, and
  * `subjectTeacher` for a Person assigned to teach it who still holds a teacher
  * grant over its unit. A revoked grant ends either relation at once.
  */
@@ -57,18 +73,7 @@ export const classAuthority = Authority.make(
   classKind,
   Authority.load(classKind),
   {
-    place: (row) =>
-      Effect.all({
-        cohort: readCohort(row.cohortId),
-        period: readPeriod(row.periodId),
-        unit: readUnit(row.unitId),
-      }).pipe(
-        Effect.map(({ cohort, period, unit }) => ({
-          locked:
-            row.status === "archived" || cohortLocked(cohort, period, unit),
-          units: [row.unitId],
-        }))
-      ),
+    place: classPlace,
     relations: {
       // The placement counts only while a student grant over the class's unit
       // stands, so revoking that grant ends the class at once.

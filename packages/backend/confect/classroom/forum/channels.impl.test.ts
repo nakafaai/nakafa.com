@@ -176,7 +176,7 @@ describe("classroom/forum channels", () => {
   );
 
   it.effect(
-    "refuses a topic in an archived class and keeps its channels readable",
+    "refuses a topic in an archived class, and lists its channels to the address that resolves it",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -190,10 +190,14 @@ describe("classroom/forum channels", () => {
           .as("admin")
           .mutation(add, { classId: made.id, name: "Tugas", slug: nf })
           .pipe(Effect.flip);
+        const resolved = yield* fixture
+          .as("admin")
+          .query(classes.resolve, { classSlug: made.slug, slug: nf });
         const listed = yield* fixture
           .as("admin")
-          .query(list, { ...firstPage, classId: made.id, slug: nf });
+          .query(list, { ...firstPage, classId: resolved.id, slug: nf });
         expect(refused).toMatchObject(denied("condition"));
+        expect(resolved).toMatchObject({ id: made.id, status: "archived" });
         expect(listed.page).toEqual([general]);
       })
   );
@@ -223,6 +227,31 @@ describe("classroom/forum channels", () => {
           denied("role"),
           denied("role"),
         ]);
+      })
+  );
+
+  it.effect(
+    "ends a student's read of the channels at once when the student grant over the class unit is revoked",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "VII-1");
+        const made = yield* classOf(fixture, x1.id, "Fisika");
+        const { grantId, personId } = fixture.people.student;
+        yield* fixture.as("admin").mutation(placements.place, {
+          cohortId: x1.id,
+          personId,
+          slug: nf,
+        });
+        yield* fixture
+          .as("owner")
+          .mutation(grants.revoke, { grantId, slug: nf });
+        const refused = yield* fixture
+          .as("student")
+          .query(list, { ...firstPage, classId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("role"));
       })
   );
 

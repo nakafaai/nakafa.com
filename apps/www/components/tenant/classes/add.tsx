@@ -8,13 +8,14 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Data, Effect, Schema, String as Str } from "effect";
+import { Data, Effect, Option, Schema, String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import type { StoreApi } from "zustand";
@@ -27,10 +28,11 @@ class ChannelCallFailed extends Data.TaggedError("ChannelCallFailed")<{
 }> {}
 
 /**
- * Adds a topic channel to the class. The name joins the list as a saving row at once. When the
- * server answers, the row gives way to the saved channel; when it refuses the name or the call
- * does not complete, the row goes and the action-error toast shows. The dialog closes on submit,
- * so the list is the place the channel appears.
+ * Adds a topic channel to the class. The name joins the list as a saving row at once, and the
+ * dialog closes on submit, so the list is the place the channel appears. When the server saves
+ * the channel, the typed name clears. When the server refuses the name, or the class holds the
+ * most channels it can, the dialog reopens with the reason and the typed name, so the teacher
+ * corrects it in place. Any other call that does not complete shows the action-error toast.
  */
 export function AddChannel({
   classId,
@@ -46,9 +48,21 @@ export function AddChannel({
   const add = useMutation(classroom.forum.channels.add);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [refusal, setRefusal] = useState<Option.Option<string>>(Option.none());
   const id = useId();
+  const errorId = `${id}-error`;
   const name = Str.trim(title);
   const ready = Schema.is(ChannelName)(name);
+
+  /** Reopens the dialog with the reason the server refused the channel. */
+  const reopenWith = (message: string) => {
+    setRefusal(Option.some(message));
+    setOpen(true);
+  };
+  const refuseName = () =>
+    Effect.sync(() => reopenWith(t("channel-name-taken")));
+  const refuseLimit = () =>
+    Effect.sync(() => reopenWith(t("channel-limit-reached")));
 
   /** Shows the channel as saving, sends it, and removes the row once the server settles the call. */
   const submit = () => {
@@ -56,7 +70,7 @@ export function AddChannel({
       return;
     }
     setOpen(false);
-    setTitle("");
+    setRefusal(Option.none());
     drafts.getState().start(name);
     Effect.runPromise(
       Effect.tryPromise({
@@ -64,6 +78,15 @@ export function AddChannel({
         try: () => add({ classId, name, slug }),
       }).pipe(
         Effect.flatMap(Effect.fromResult),
+        Effect.andThen(
+          Effect.sync(() =>
+            setTitle((current) => (Str.trim(current) === name ? "" : current))
+          )
+        ),
+        Effect.catchTags({
+          ChannelLimit: refuseLimit,
+          ChannelNameTaken: refuseName,
+        }),
         Effect.matchEffect({
           onFailure: (error) =>
             reportClientException(error, {
@@ -105,13 +128,21 @@ export function AddChannel({
         title={t("add-channel-title")}
       >
         <FieldGroup>
-          <Field>
+          <Field data-invalid={Option.isSome(refusal)}>
             <FieldLabel htmlFor={`${id}-name`}>{t("channel-name")}</FieldLabel>
             <Input
+              aria-describedby={Option.isSome(refusal) ? errorId : undefined}
+              aria-invalid={Option.isSome(refusal)}
               id={`${id}-name`}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                setRefusal(Option.none());
+              }}
               value={title}
             />
+            {Option.isSome(refusal) ? (
+              <FieldError id={errorId}>{refusal.value}</FieldError>
+            ) : null}
           </Field>
         </FieldGroup>
       </ResponsiveDialog>

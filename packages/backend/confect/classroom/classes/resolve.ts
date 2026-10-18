@@ -1,76 +1,91 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl } from "@confect/server";
+import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { classAuthority } from "@repo/backend/confect/classroom/authority";
-import { classView } from "@repo/backend/confect/classroom/class";
+import {
+  classAuthority,
+  classPlace,
+} from "@repo/backend/confect/classroom/authority";
+import {
+  CLASS_ADDRESS_LIMIT,
+  classView,
+} from "@repo/backend/confect/classroom/class";
 import spec from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Effect, Option } from "effect";
 
 /**
- * The active period of each active unit of the school. A unit holds at most one
- * active period, because opening a period refuses while another period of its unit
- * is active, so one read per unit finds every active period. The units are read up
- * to UNIT_LIMIT, the most units a school may hold.
+ * The classes of one school that hold one address, archived ones included, read
+ * through the school's address index. A period holds one class at each address,
+ * so the school holds one class per period that has used it. The read takes one
+ * more than CLASS_ADDRESS_LIMIT, so a larger set is seen and refused, not truncated.
  */
-const activePeriodsOf = Effect.fnUntraced(function* (
-  tenantId: GenericId.GenericId<"tenants">
-) {
-  const reader = yield* DatabaseReader;
-  const units = yield* reader
-    .table("tenantUnits")
-    .index("by_tenantId_and_status", (query) =>
-      query.eq("tenantId", tenantId).eq("status", "active")
-    )
-    .take(UNIT_LIMIT)
-    .pipe(Effect.orDie);
-  const periods = yield* Effect.forEach(
-    units,
-    (unit) =>
-      reader
-        .table("tenantPeriods")
-        .index("by_unitId_and_status", (query) =>
-          query.eq("unitId", unit._id).eq("status", "active")
-        )
-        .first()
-        .pipe(Effect.orDie),
-    { concurrency: "unbounded" }
-  );
-  return Arr.getSomes(periods);
-});
-
-/**
- * The active class of one period that holds the address, if any. `create` walks
- * past every address that a class of the period holds, archived classes included,
- * so one period holds at most one class at each address and one read finds it.
- * An archived class holds no address for resolution, so it is left out here.
- */
-const holderIn = Effect.fnUntraced(function* (
-  periodId: GenericId.GenericId<"tenantPeriods">,
+const holdersOf = Effect.fnUntraced(function* (
+  tenantId: GenericId.GenericId<"tenants">,
   classSlug: string
 ) {
-  const found = yield* (yield* DatabaseReader)
+  return yield* (yield* DatabaseReader)
     .table("classes")
-    .index("by_periodId_and_slug", (query) =>
-      query.eq("periodId", periodId).eq("slug", classSlug)
+    .index("by_tenantId_and_slug", (query) =>
+      query.eq("tenantId", tenantId).eq("slug", classSlug)
     )
-    .first()
+    .take(CLASS_ADDRESS_LIMIT + 1)
     .pipe(Effect.orDie);
-  return Option.filter(found, (row) => row.status === "active");
 });
 
 /**
- * One active class by its address in the caller's school. It reads the active
- * periods of the active units only, so a class in an archived period never
- * resolves. An archived class holds no address, so it never resolves either, and
- * it stays readable by its ID. An address that no active class holds is refused
- * the way a missing object is, and one that two or more active classes hold is
- * refused as ambiguous. The ambiguity refusal comes before the access decision and
- * names no class. The one class found is decided on as `class.view`.
+ * How one holder of an address stands. A class that an archive locks, whatever its
+ * period, is archived and stays readable. A class that no archive locks is live
+ * when its period is active, and a class of a period that is still planned holds
+ * no address yet, so it is left out, as `None`.
+ */
+const standingOf = Effect.fnUntraced(function* (row: ClassesDoc) {
+  const { locked } = yield* classPlace(row);
+  if (locked) {
+    return Option.some({ live: false, row });
+  }
+  const period = yield* (yield* DatabaseReader)
+    .table("tenantPeriods")
+    .get(row.periodId)
+    .pipe(Effect.orDie);
+  if (period.status === "planned") {
+    return Option.none();
+  }
+  return Option.some({ live: true, row });
+});
+
+/**
+ * The class that an address names among its holders. A live class is named first,
+ * and two live classes are ambiguous. With no live class, the archived classes name
+ * the address, and two of them are ambiguous too. A set past the limit names no class.
+ */
+const namedBy = Effect.fnUntraced(function* (holders: readonly ClassesDoc[]) {
+  if (holders.length > CLASS_ADDRESS_LIMIT) {
+    return yield* new ClassAmbiguous();
+  }
+  const standing = Arr.getSomes(
+    yield* Effect.forEach(holders, standingOf, { concurrency: "unbounded" })
+  );
+  const live = Arr.filter(standing, (holder) => holder.live);
+  const named = live.length > 0 ? live : standing;
+  if (named.length > 1) {
+    return yield* new ClassAmbiguous();
+  }
+  return Arr.head(named).pipe(Option.map((holder) => holder.row));
+});
+
+/**
+ * One class by its address in the caller's school. A live class, in an active
+ * period that no archive locks, is the class an address names. An archived class,
+ * or a class of an archived period, cohort, or unit, stays readable and takes no
+ * write, so it names its address when no live class holds it, and the class's read
+ * rule decides the read. A class of a period not yet open holds no address until
+ * the period opens. An address that names two or more classes is refused as
+ * ambiguous before the access decision, and names no class. An address that no
+ * class holds is refused the way a missing object is.
  */
 export const resolve = FunctionImpl.make(
   databaseSchema,
@@ -78,18 +93,7 @@ export const resolve = FunctionImpl.make(
   "resolve",
   Effect.fn("classroom.classes.resolve")(function* ({ classSlug }) {
     const { tenant } = yield* Member;
-    const periods = yield* activePeriodsOf(tenant._id);
-    const holders = Arr.getSomes(
-      yield* Effect.forEach(
-        periods,
-        (period) => holderIn(period._id, classSlug),
-        { concurrency: "unbounded" }
-      )
-    );
-    if (holders.length > 1) {
-      return yield* new ClassAmbiguous();
-    }
-    const found = Arr.head(holders);
+    const found = yield* namedBy(yield* holdersOf(tenant._id, classSlug));
     if (Option.isNone(found)) {
       return yield* new AccessDenied({
         action: "class.view",
