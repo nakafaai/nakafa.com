@@ -18,6 +18,7 @@ import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useOptimistic, useRef, useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { QuestionnaireSteps } from "@/components/shared/questionnaire";
 import {
   StartCountryQuestion,
@@ -54,11 +55,14 @@ const decodeAnswer = Schema.decodeUnknownOption(StartAnswer);
 /**
  * The questionnaire that opens a school for the signed-in account (K42): five
  * questions in the entry frame, each answer saved as it is chosen, resumed at
- * the first question left open. It waits for the saved draft, so it never shows
- * an answer that the draft would change.
+ * the first question left open. It waits for the session and the saved draft, so
+ * it never shows an answer that the draft would change.
  */
 export function SchoolStart({ legal }: { legal: Legal }) {
-  const draft = useQuery(tenancy.start.draft, {});
+  // The server saw the session, but the client's Convex session settles a moment
+  // later; the draft is read once it has, so the first read is never anonymous.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const draft = useQuery(tenancy.start.draft, isSettled ? {} : "skip");
   if (QueryResult.isFailure(draft)) {
     throw draft.error;
   }
