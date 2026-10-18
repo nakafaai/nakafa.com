@@ -9,6 +9,10 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 /** The thumbnail of the first question, whose name starts with its number. */
 const FIRST_QUESTION = /^Question 1\b/;
 const SECOND_QUESTION = /^Question 2\b/;
+const THIRD_QUESTION = /^Question 3\b/;
+/** A prompt with more steps than a fold waits for, so typing it moves the snapshot. */
+const LONG_PROMPT =
+  "Sebuah mobil melaju 60 km/jam selama 2 jam. Berapa jarak yang ditempuh?";
 
 /** The four options of the question, each with its letter and its text. The second one is correct. */
 const OPTIONS = [
@@ -146,5 +150,25 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(firstThumbnail.locator('input[data-slot="input"]')).toHaveCount(
     OPTIONS.length
   );
+
+  // A prompt long enough for a fold, then another question: the left question's thumbnail
+  // reads the server while the fold moves its snapshot, and the page keeps drawing.
+  const secondPrompt = reopened.getByRole("textbox", { name: "Question text" });
+  await expect(secondPrompt).toBeEditable({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await secondPrompt.click();
+  await reopened.keyboard.type(LONG_PROMPT);
+  await reopenedStrip.getByRole("button", { name: THIRD_QUESTION }).click();
+  const thirdPrompt = reopened.getByRole("textbox", { name: "Question text" });
+  await expect(thirdPrompt).toBeEditable({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await thirdPrompt.click();
+  await reopened.keyboard.type("Berapa hasil 3 + 4?");
+  await expect(
+    reopenedStrip.getByRole("button", { name: SECOND_QUESTION })
+  ).toContainText(LONG_PROMPT, { timeout: readinessTimeoutMilliseconds });
+  await expect(thirdPrompt).toContainText("Berapa hasil 3 + 4?");
   await context.close();
 });
