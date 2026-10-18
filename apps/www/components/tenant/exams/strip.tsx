@@ -74,7 +74,7 @@ export function ExamStrip() {
   const pending = useExamSelection((state) => state.pending);
   const chosen = useExamSelection((state) => state.selected);
   const select = useExamSelection((state) => state.select);
-  const restore = useExamSelection((state) => state.restore);
+  const replace = useExamSelection((state) => state.replace);
   const startPending = useExamSelection((state) => state.startPending);
   const endPending = useExamSelection((state) => state.endPending);
   const add = useMutation(exams.questions.add);
@@ -95,9 +95,11 @@ export function ExamStrip() {
             })
           ).pipe(
             Effect.ensuring(Effect.sync(() => endPending(draft.id))),
-            Effect.tap((saved) => Effect.sync(() => select(saved.id))),
+            Effect.tap((saved) =>
+              Effect.sync(() => replace(draft.id, saved.id))
+            ),
             Effect.tapError(() =>
-              Effect.sync(() => restore(draft.id, previous))
+              Effect.sync(() => replace(draft.id, previous))
             )
           );
         })
@@ -151,7 +153,7 @@ function Thumbnail({
   const { exam, slug } = useExam();
   const chosen = useExamSelection((state) => state.selected);
   const select = useExamSelection((state) => state.select);
-  const restore = useExamSelection((state) => state.restore);
+  const replace = useExamSelection((state) => state.replace);
   const startPending = useExamSelection((state) => state.startPending);
   const endPending = useExamSelection((state) => state.endPending);
   const [asking, setAsking] = useState(false);
@@ -179,9 +181,11 @@ function Thumbnail({
             })
           ).pipe(
             Effect.ensuring(Effect.sync(() => endPending(draft.id))),
-            Effect.tap((saved) => Effect.sync(() => select(saved.id))),
+            Effect.tap((saved) =>
+              Effect.sync(() => replace(draft.id, saved.id))
+            ),
             Effect.tapError(() =>
-              Effect.sync(() => restore(draft.id, previous))
+              Effect.sync(() => replace(draft.id, previous))
             )
           );
         })

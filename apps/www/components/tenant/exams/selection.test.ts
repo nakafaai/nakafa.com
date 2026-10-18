@@ -96,7 +96,7 @@ describe("createExamSelection", () => {
 
     selection.getState().select(second.id);
     selection.getState().select(placeholder);
-    selection.getState().restore(placeholder, second.id);
+    selection.getState().replace(placeholder, second.id);
 
     expect(selection.getState().selected).toBe(second.id);
   });
@@ -108,8 +108,22 @@ describe("createExamSelection", () => {
     selection.getState().select(second.id);
     selection.getState().select(placeholder);
     selection.getState().select(first.id);
-    selection.getState().restore(placeholder, second.id);
+    selection.getState().replace(placeholder, second.id);
 
+    expect(selection.getState().selected).toBe(first.id);
+  });
+
+  it("selects the saved question in place of its placeholder, unless the teacher chose another meanwhile", () => {
+    const selection = createExamSelection();
+    const placeholder = questionId("placeholder");
+
+    selection.getState().select(placeholder);
+    selection.getState().replace(placeholder, second.id);
+    expect(selection.getState().selected).toBe(second.id);
+
+    selection.getState().select(placeholder);
+    selection.getState().select(first.id);
+    selection.getState().replace(placeholder, second.id);
     expect(selection.getState().selected).toBe(first.id);
   });
 });
