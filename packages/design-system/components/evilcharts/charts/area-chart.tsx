@@ -1,7 +1,10 @@
 "use client";
 
 import type { AreaAnimationType } from "@repo/design-system/components/evilcharts/charts/area/paint";
-import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
+import {
+  type ChartBrushOptions,
+  ChartContainer,
+} from "@repo/design-system/components/evilcharts/ui/chart";
 import {
   axisValueToPercentFormatter,
   type ChartConfig,
@@ -17,12 +20,14 @@ import {
   ChartLegendContent,
   type ChartLegendVariant,
 } from "@repo/design-system/components/evilcharts/ui/legend";
+import { LegendItemContext } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { LoadingArea } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
+  ChartTooltipContext,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
@@ -196,6 +201,17 @@ export function EvilAreaChart<
 
   const isExpanded = stackType === "expanded";
   const isStacked = stackType === "stacked" || isExpanded;
+  const brushOptions = useMemo<ChartBrushOptions>(
+    () => ({
+      curveType,
+      formatLabel: brushFormatLabel,
+      height: brushHeight,
+      stacked: isStacked,
+      variant: "area",
+      xDataKey,
+    }),
+    [brushFormatLabel, brushHeight, curveType, isStacked, xDataKey]
+  );
   const displayData = showBrush && !isLoading ? visibleData : data;
 
   // Updates selection state and notifies the parent
@@ -217,6 +233,7 @@ export function EvilAreaChart<
   return (
     <AreaChartContext value={contextValue}>
       <ChartContainer
+        brush={brushOptions}
         className={className}
         config={config}
         footer={
@@ -225,14 +242,8 @@ export function EvilAreaChart<
             <EvilBrush
               chartConfig={config}
               className="mt-1"
-              curveType={curveType}
               data={data}
-              formatLabel={brushFormatLabel}
-              height={brushHeight}
               skipStyle
-              stacked={isStacked}
-              variant="area"
-              xDataKey={xDataKey}
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);
@@ -365,25 +376,25 @@ export function Tooltip({
 }: TooltipProps) {
   const isLoading = useAreaChart((chart) => chart.isLoading);
   const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
+  const tooltipOptions = useMemo(
+    () => ({ roundness, selected: selectedDataKey, variant }),
+    [roundness, selectedDataKey, variant]
+  );
 
   if (isLoading) {
     return null;
   }
 
   return (
-    <ChartTooltip
-      content={
-        <ChartTooltipContent
-          roundness={roundness}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      cursor={
-        cursor ? { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH } : false
-      }
-      {...(defaultIndex === undefined ? {} : { defaultIndex })}
-    />
+    <ChartTooltipContext value={tooltipOptions}>
+      <ChartTooltip
+        content={<ChartTooltipContent />}
+        cursor={
+          cursor ? { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH } : false
+        }
+        {...(defaultIndex === undefined ? {} : { defaultIndex })}
+      />
+    </ChartTooltipContext>
   );
 }
 
@@ -406,19 +417,23 @@ export function Legend({
 }: LegendProps) {
   const selectedDataKey = useAreaChart((chart) => chart.selectedDataKey);
   const selectDataKey = useAreaChart((chart) => chart.selectDataKey);
+  const legendOptions = useMemo(
+    () => ({
+      isClickable,
+      onSelectChange: selectDataKey,
+      selected: selectedDataKey,
+      variant,
+    }),
+    [isClickable, selectDataKey, selectedDataKey, variant]
+  );
 
   return (
-    <ChartLegend
-      align={align}
-      content={
-        <ChartLegendContent
-          isClickable={isClickable}
-          onSelectChange={selectDataKey}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      verticalAlign={verticalAlign}
-    />
+    <LegendItemContext value={legendOptions}>
+      <ChartLegend
+        align={align}
+        content={<ChartLegendContent />}
+        verticalAlign={verticalAlign}
+      />
+    </LegendItemContext>
   );
 }

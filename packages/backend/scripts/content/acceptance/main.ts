@@ -13,6 +13,7 @@ import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { updateAcceptanceProfile } from "@repo/backend/scripts/content/acceptance/profile";
 import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
 import { createAcceptanceSitting } from "@repo/backend/scripts/content/acceptance/sitting";
+import { createAcceptanceTeacher } from "@repo/backend/scripts/content/acceptance/teacher";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
@@ -41,6 +42,9 @@ const main = Effect.gen(function* () {
   if (mode === "owner" && first !== undefined && second !== undefined) {
     return yield* createAcceptanceOwner(root, first, second);
   }
+  if (mode === "teacher" && first !== undefined && second !== undefined) {
+    return yield* createAcceptanceTeacher(root, first, second);
+  }
   if (
     mode === "sitting" &&
     first !== undefined &&
@@ -56,7 +60,7 @@ const main = Effect.gen(function* () {
     return yield* updateAcceptanceProfile(root, first, second);
   }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
   );
 });
 

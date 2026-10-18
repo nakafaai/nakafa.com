@@ -13,7 +13,8 @@ import { Array as Arr, Effect } from "effect";
 const nf = slugOf("nf");
 const other = slugOf("other");
 const viewer = refs.public.tenancy.viewer.get;
-const { archive, setLocale, unarchive } = refs.public.tenancy.units;
+const { archive, list, setLocale, setNpsn, unarchive } =
+  refs.public.tenancy.units;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
@@ -330,6 +331,155 @@ describe("tenancy/units access", () => {
         _tag: "SessionRequired",
         code: "UNAUTHENTICATED",
       });
+    })
+  );
+});
+
+describe("tenancy/units list", () => {
+  it.effect(
+    "lists every unit of the school with its NPSN to the Admin, and no NPSN where none is set",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.as("owner").mutation(setNpsn, {
+          npsn: "20100002",
+          slug: nf,
+          unitId: fixture.units.smp,
+        });
+        const units = yield* fixture.as("admin").query(list, { slug: nf });
+        expect(Arr.map(units, (unit) => [unit.id, unit.npsn])).toEqual(
+          expect.arrayContaining([
+            [fixture.units.smp, "20100002"],
+            [fixture.units.sma, null],
+          ])
+        );
+        expect(units).toContainEqual(
+          expect.objectContaining({
+            id: fixture.units.smp,
+            level: "smp",
+            name: "SMP Nakafa",
+            status: "active",
+          })
+        );
+      })
+  );
+
+  it.effect("refuses a teacher, who does not hold tenant.manage", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const denial = yield* fixture
+        .as("teacher")
+        .query(list, { slug: nf })
+        .pipe(Effect.flip);
+      expect(denial).toMatchObject(denied("role"));
+    })
+  );
+});
+
+describe("tenancy/units setNpsn", () => {
+  it.effect(
+    "sets the NPSN of a unit, answers it, and records it in the journal",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const answer = yield* fixture.as("owner").mutation(setNpsn, {
+          npsn: "20100002",
+          slug: nf,
+          unitId: fixture.units.smp,
+        });
+        const entries = yield* fixture.run(journal);
+        expect(answer).toBe("20100002");
+        expect(entries).toMatchObject([
+          {
+            actor: { id: fixture.people.owner.personId, kind: "person" },
+            change: { npsn: "20100002", type: "unit.npsn.set" },
+            owner: { kind: "tenant", tenantId: fixture.tenants.nf },
+            subject: { id: fixture.units.smp, kind: "unit" },
+          },
+        ]);
+      })
+  );
+
+  it.effect("refuses a value that is not eight digits", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const refusals = yield* Effect.forEach(
+        ["2010000", "201000021", "2010000a", " 20100002"],
+        (npsn) =>
+          fixture
+            .as("owner")
+            .mutation(setNpsn, {
+              npsn,
+              slug: nf,
+              unitId: fixture.units.smp,
+            })
+            .pipe(Effect.flip)
+      );
+      expect(refusals).toEqual(
+        Arr.replicate(
+          expect.objectContaining({
+            _tag: "NpsnInvalid",
+            code: "NPSN_INVALID",
+          }),
+          4
+        )
+      );
+      expect(yield* fixture.run(journal)).toEqual([]);
+    })
+  );
+
+  it.effect("refuses an NPSN that another unit of the school holds", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* fixture.as("owner").mutation(setNpsn, {
+        npsn: "20100002",
+        slug: nf,
+        unitId: fixture.units.smp,
+      });
+      const taken = yield* fixture
+        .as("owner")
+        .mutation(setNpsn, {
+          npsn: "20100002",
+          slug: nf,
+          unitId: fixture.units.sma,
+        })
+        .pipe(Effect.flip);
+      expect(taken).toMatchObject({ _tag: "NpsnTaken", code: "NPSN_TAKEN" });
+      expect(yield* fixture.run(journal)).toHaveLength(1);
+    })
+  );
+
+  it.effect("writes and records nothing for the NPSN already stored", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* fixture.as("owner").mutation(setNpsn, {
+        npsn: "20100002",
+        slug: nf,
+        unitId: fixture.units.smp,
+      });
+      const again = yield* fixture.as("owner").mutation(setNpsn, {
+        npsn: "20100002",
+        slug: nf,
+        unitId: fixture.units.smp,
+      });
+      expect(again).toBe("20100002");
+      expect(yield* fixture.run(journal)).toHaveLength(1);
+    })
+  );
+
+  it.effect("refuses a teacher, who does not hold tenant.manage", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const denial = yield* fixture
+        .as("teacher")
+        .mutation(setNpsn, {
+          npsn: "20100002",
+          slug: nf,
+          unitId: fixture.units.smp,
+        })
+        .pipe(Effect.flip);
+      expect(denial).toMatchObject(denied("role"));
+      expect(yield* fixture.run(journal)).toEqual([]);
     })
   );
 });

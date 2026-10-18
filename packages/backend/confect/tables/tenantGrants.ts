@@ -20,6 +20,7 @@ export default Table.make(() =>
   })
 )
   .index("by_personId_and_status", ["personId", "status"])
+  .index("by_tenantId_and_status", ["tenantId", "status"])
   .index("by_tenantId_and_role_key_and_status", [
     "tenantId",
     "role.key",

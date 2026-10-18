@@ -27,8 +27,9 @@ const PersonView = Schema.Struct({
 
 /**
  * The people of one school. Its Admin creates, renames, and removes them. The
- * roles that read the school's people list them one status at a time; a
- * cohort's members are listed by `cohorts:members`.
+ * roles that read the school's people list them one status at a time, and may
+ * narrow the list to the people who hold no account; a cohort's members are
+ * listed by `cohorts:members`.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -37,6 +38,7 @@ export default GroupSpec.make()
     FunctionSpec.publicPaginatedQuery({
       name: "list",
       args: () => ({
+        account: Schema.optional(Schema.Literal("unclaimed")),
         slug: TenantSlug,
         status: PersonStatus,
       }),
