@@ -1,4 +1,8 @@
 {
+  "DataTable": {
+    "no-results": "No results.",
+    "reset": "Reset"
+  },
   "School": {
     "account-settings": "Account settings",
     "back-to-learning": "Back to Nakafa",
@@ -303,6 +307,7 @@
     "roles-guide": "Role guide",
     "roles-assign-dialog": "Give a role",
     "roles-assign-description": "The person holds the role across the whole school.",
+    "roles-search": "Find a person",
     "roles-empty": "No one holds a role yet.",
     "card-issue": "Issue card",
     "card-issue-title": "Login card",

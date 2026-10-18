@@ -1,4 +1,8 @@
 {
+  "DataTable": {
+    "no-results": "Tidak ada hasil.",
+    "reset": "Atur ulang"
+  },
   "School": {
     "account-settings": "Pengaturan akun",
     "back-to-learning": "Kembali ke Nakafa",
@@ -303,6 +307,7 @@
     "roles-guide": "Panduan peran",
     "roles-assign-dialog": "Beri peran",
     "roles-assign-description": "Orang itu memegang peran di seluruh sekolah.",
+    "roles-search": "Cari orang",
     "roles-empty": "Belum ada yang memegang peran.",
     "card-issue": "Terbitkan kartu",
     "card-issue-title": "Kartu masuk",

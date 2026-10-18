@@ -46,6 +46,7 @@
     "@shadcn/react": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@tanstack/react-form": "^1.33.5",
+    "@tanstack/react-table": "^9.3.1",
     "@tiptap/pm": "3.32.0",
     "@vercel/functions": "^3.10.1",
     "ai": "catalog:",
