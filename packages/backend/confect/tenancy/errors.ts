@@ -34,7 +34,8 @@ export class TenantNotFound extends Schema.TaggedError<TenantNotFound>()(
  * An organisation that Nakafa refuses to open: `SLUG_TAKEN` another tenant has
  * the address, `SLUG_RESERVED` the address belongs to Nakafa itself,
  * `UNIT_REQUIRED` no school was named, `UNIT_LIMIT` more schools than one
- * organisation holds.
+ * organisation holds. `SCHOOL_NOT_FOUND` names an address that no school uses, so
+ * an invite into it has no school to join.
  */
 export class ProvisionRejected extends Schema.TaggedError<ProvisionRejected>()(
   "ProvisionRejected",
@@ -44,6 +45,7 @@ export class ProvisionRejected extends Schema.TaggedError<ProvisionRejected>()(
       "SLUG_RESERVED",
       "UNIT_REQUIRED",
       "UNIT_LIMIT",
+      "SCHOOL_NOT_FOUND",
     ]),
     message: Schema.String,
   }
@@ -276,4 +278,16 @@ export class PromotionCohortOccupied extends Schema.TaggedError<PromotionCohortO
     "PROMOTION_COHORT_OCCUPIED",
     "A cohort this promotion created still holds people, a homeroom teacher, or a class."
   )
+) {}
+
+/** A national school number that is not eight digits. */
+export class NpsnInvalid extends Schema.TaggedError<NpsnInvalid>()(
+  "NpsnInvalid",
+  refusal("NPSN_INVALID", "A national school number has eight digits.")
+) {}
+
+/** A national school number that another unit of this school already holds. */
+export class NpsnTaken extends Schema.TaggedError<NpsnTaken>()(
+  "NpsnTaken",
+  refusal("NPSN_TAKEN", "Another unit of this school has this number.")
 ) {}

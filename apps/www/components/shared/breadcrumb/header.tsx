@@ -44,11 +44,15 @@ interface BreadcrumbHeaderProps {
 
 type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
 
-/** Renders at most Home and the two nearest path items. */
+/**
+ * Renders at most Home and the two nearest path items. The action shares the
+ * path's row, and an action that takes the full width, such as a selector on a
+ * phone, wraps under the path.
+ */
 export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
   const { action, homeLabel, items, menuLabel, title } = value;
   return (
-    <BreadcrumbHeaderFrame contentClassName="flex-col items-stretch justify-center sm:flex-row sm:items-center sm:justify-between sm:py-0">
+    <BreadcrumbHeaderFrame contentClassName="flex-wrap sm:flex-nowrap sm:py-0">
       <h1 className="sr-only">{title}</h1>
       <BreadcrumbHeaderPath
         homeLabel={homeLabel}

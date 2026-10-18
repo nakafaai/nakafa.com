@@ -5,10 +5,27 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
+import { NpsnInvalid, NpsnTaken } from "@repo/backend/confect/tenancy/errors";
 import { NewTimeZone, TimeZone } from "@repo/backend/confect/tenancy/locale";
-import { UnitStatus } from "@repo/backend/confect/tenancy/schema";
+import {
+  Npsn,
+  UnitLevel,
+  UnitName,
+  UnitStatus,
+} from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
+
+/** One unit of the school as its Admin reads it, with its national school number. */
+const UnitView = Schema.Struct({
+  contentLanguage: AppLocaleCodeSchema,
+  id: Id("tenantUnits"),
+  level: UnitLevel,
+  name: UnitName,
+  npsn: Schema.NullOr(Npsn),
+  status: UnitStatus,
+  timeZone: TimeZone,
+});
 
 /**
  * What an Owner or an Admin changes for one school of the organisation. Each
@@ -19,6 +36,26 @@ import { Schema } from "effect";
 export default GroupSpec.make()
   .middleware(Session)
   .middleware(RequireMember)
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "list",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => Schema.Array(UnitView),
+      error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "tenant.manage" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "setNpsn",
+      args: () => ({
+        npsn: Schema.String,
+        slug: TenantSlug,
+        unitId: Id("tenantUnits"),
+      }),
+      returns: () => Npsn,
+      error: () => Schema.Union([AccessDenied, NpsnInvalid, NpsnTaken]),
+    }).middleware(TenantAccess, { action: "tenant.manage" })
+  )
   .addFunction(
     FunctionSpec.publicMutation({
       name: "setLocale",

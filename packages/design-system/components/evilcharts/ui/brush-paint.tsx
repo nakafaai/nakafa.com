@@ -6,6 +6,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts/ui/evil-brush";
 import { Array as Arr, MutableHashSet, Record as Rec } from "effect";
+import type { ReactNode } from "react";
 
 interface BrushDefinitionsProps {
   chartConfig: ChartConfig;
@@ -48,15 +49,15 @@ function BrushStops({
   );
 }
 
-/** Renders the gradient and optional area mask for one preview series. */
+/** Renders the gradient, given its color stops as children, and the optional area mask for one preview series. */
 function BrushGradient({
   chartId,
-  colorsCount,
+  children,
   dataKey,
   variant,
 }: {
   chartId: string;
-  colorsCount: number;
+  children: ReactNode;
   dataKey: string;
   variant: EvilBrushVariant;
 }) {
@@ -69,7 +70,7 @@ function BrushGradient({
         y1="0"
         y2="1"
       >
-        <BrushStops colorsCount={colorsCount} dataKey={dataKey} />
+        {children}
       </linearGradient>
 
       {variant === "area" ? (
@@ -131,11 +132,15 @@ export function BrushDefinitions({
         return [
           <BrushGradient
             chartId={chartId}
-            colorsCount={getColorsCount(config)}
             dataKey={dataKey}
             key={dataKey}
             variant={variant}
-          />,
+          >
+            <BrushStops
+              colorsCount={getColorsCount(config)}
+              dataKey={dataKey}
+            />
+          </BrushGradient>,
         ];
       })}
     </>

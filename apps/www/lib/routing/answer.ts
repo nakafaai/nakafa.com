@@ -3,20 +3,6 @@ import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { Option } from "effect";
 import { type NextRequest, NextResponse } from "next/server";
 
-/**
- * Answers in plain text that search engines must not index, such as a retired
- * or unknown resource.
- */
-export function plainTextAnswer(status: 404 | 410, body: string) {
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Robots-Tag": "noindex",
-    },
-    status,
-  });
-}
-
 /** The request header that carries the locale of a not-found page to the page that renders it. */
 export const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
 
@@ -24,10 +10,12 @@ export const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
 const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
 
 /**
- * Rewrites a request to the app's not-found page, with a 404 status, the locale
- * of the page, and a noindex header. The Vary fields name the request headers
- * that the answer depends on, and they merge with the ones the response has. The
- * rewrite names the request URL (see `readVisitorUrl`).
+ * Rewrites a request to the app's not-found page, with status 404, the locale of
+ * the page, and a noindex header. A retired page answers 404 too: Google treats
+ * every 4xx but 429 the same way, and a status set on a rewrite does not survive
+ * the page it renders. The Vary fields name the request headers that the answer
+ * depends on, and they merge with the ones the response has. The rewrite names
+ * the request URL (see `readVisitorUrl`).
  */
 export function rewriteToNotFoundPage(
   request: NextRequest,

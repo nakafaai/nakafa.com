@@ -12,6 +12,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect } from "effect";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition } from "react";
@@ -62,8 +63,10 @@ function changeLanguage(
  * with a username, as the Nakafa account menu lists it.
  */
 export function TenantAccountItems({
+  canManage,
   username,
 }: {
+  canManage: boolean;
   username: string | undefined;
 }) {
   const t = useTranslations();
@@ -73,6 +76,15 @@ export function TenantAccountItems({
   return (
     <>
       <DropdownMenuGroup>
+        {canManage ? (
+          <DropdownMenuItem
+            render={
+              <Link href="/settings/profile">
+                {t("SchoolSettings.manage-settings")}
+              </Link>
+            }
+          />
+        ) : null}
         {username === undefined ? null : (
           <DropdownMenuItem
             render={

@@ -6,9 +6,9 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile";
+import { admitAccountRoute } from "@/lib/account/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { admitUserSettingsRoute } from "@/lib/settings/server";
 
 export async function generateMetadata({
   params,
@@ -38,7 +38,7 @@ async function AuthenticatedSettings({
 }: {
   params: PageProps<"/[locale]/user/settings">["params"];
 }) {
-  const { token } = await admitUserSettingsRoute((await params).locale);
+  const { token } = await admitAccountRoute((await params).locale);
   const account = await Effect.runPromise(
     HttpClient.HttpClient.pipe(
       Effect.flatMap((client) => client.query(auth.queries.getCurrentUser, {})),

@@ -35,20 +35,20 @@ export const createSchool = Effect.fn("NakafaE2E.createSchool")(
 );
 
 /**
- * Signs in the first Owner of a school that `createSchool` opened, and returns
- * its session cookie. The Owner's account holds the school's Owner address, so
- * the school's invite is claimed before the cookie is returned, and the Owner
- * is a member. The command runs once: a second run would try to open the same
- * Owner account again.
+ * Signs in a member of a school that `createSchool` opened, through the acceptance
+ * command of its kind (`owner` or `teacher`), and returns its session cookie. The
+ * command holds the member's address and claims the school's invite before the
+ * cookie is returned, so the member is a member when the cookie is used. Each
+ * command runs once per school: a second run would open the same account again.
  */
-const createOwnerCookie = Effect.fn("NakafaE2E.createOwnerCookie")(
-  function* (slug: string) {
+const createMemberCookie = Effect.fn("NakafaE2E.createMemberCookie")(
+  function* (kind: "owner" | "teacher", slug: string) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-owner-",
+      prefix: `nakafa-${kind}-`,
     });
     const output = `${directory}/cookie.json`;
-    yield* runAcceptanceCommand("owner", slug, output);
+    yield* runAcceptanceCommand(kind, slug, output);
     return yield* fs
       .readFileString(output)
       .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
@@ -63,9 +63,57 @@ export const signInOwner = Effect.fn("NakafaE2E.signInOwner")(function* (
   slug: string,
   address: string
 ) {
-  const cookie = yield* createOwnerCookie(slug);
+  const cookie = yield* createMemberCookie("owner", slug);
   yield* addSessionCookie(context, cookie, address);
 });
+
+/**
+ * Signs the Teacher of a school into one browser context, for the school host at
+ * `address`. A Teacher is a member without the school's management rights, so the
+ * school settings answer not found for it.
+ */
+export const signInTeacher = Effect.fn("NakafaE2E.signInTeacher")(function* (
+  context: BrowserContext,
+  slug: string,
+  address: string
+) {
+  const cookie = yield* createMemberCookie("teacher", slug);
+  yield* addSessionCookie(context, cookie, address);
+});
+
+/**
+ * Invites a learner into a school that `createSchool` opened, and signs the learner into
+ * one browser context. The local acceptance runtime invites the address into the school,
+ * creates the learner's account with that address, claims the invitation for the account,
+ * and waits until the inbox holds the row. The command runs once, because a second run
+ * would invite the same address again.
+ */
+export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
+  function* (learner: {
+    readonly address: string;
+    readonly baseURL: string;
+    readonly context: BrowserContext;
+    readonly slug: string;
+  }) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "nakafa-invite-",
+    });
+    const output = `${directory}/cookie.json`;
+    yield* runAcceptanceCommand(
+      "invite",
+      learner.slug,
+      learner.address,
+      output
+    );
+    const cookie = yield* fs
+      .readFileString(output)
+      .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+    yield* addSessionCookie(learner.context, cookie, learner.baseURL);
+  },
+  Effect.scoped,
+  Effect.provide(nodeServicesLayer)
+);
 
 /** The address of a path on a host under the same server as the test's base address. */
 export function hostAddress(

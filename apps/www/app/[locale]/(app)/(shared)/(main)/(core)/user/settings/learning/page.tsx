@@ -8,9 +8,9 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsLearningPage } from "@/components/user/settings/learning";
+import { admitAccountRoute } from "@/lib/account/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { admitUserSettingsRoute } from "@/lib/settings/server";
 
 export async function generateMetadata({
   params,
@@ -45,7 +45,7 @@ async function AuthenticatedLearning({
 }: {
   params: PageProps<"/[locale]/user/settings/learning">["params"];
 }) {
-  const { locale, token } = await admitUserSettingsRoute((await params).locale);
+  const { locale, token } = await admitAccountRoute((await params).locale);
   const data = await Effect.runPromise(
     HttpClient.HttpClient.pipe(
       Effect.flatMap((client) =>

@@ -29,13 +29,16 @@ import {
 import { isOgRouteAliasPathname, readOgRouteAliasLocale } from "@/lib/og/route";
 import {
   NEXT_INTL_LOCALE_HEADER,
-  plainTextAnswer,
   rewriteToNotFoundPage,
 } from "@/lib/routing/answer";
 import {
   isLocaleBypassPath,
   isUnsupportedSystemPath,
 } from "@/lib/routing/bypass";
+import {
+  MISSING_LOCALE_VARY_FIELDS,
+  readMissingLocale,
+} from "@/lib/routing/missing";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
@@ -85,7 +88,10 @@ export async function proxy(request: NextRequest) {
     })
   );
   if (isRetired) {
-    return plainTextAnswer(410, "Gone\n");
+    return rewriteToNotFoundPage(request, readMissingLocale(request), [
+      ...LLMS_REPRESENTATION_VARY_FIELDS,
+      ...MISSING_LOCALE_VARY_FIELDS,
+    ]);
   }
 
   if (isLocaleBypassPath(pathname)) {
@@ -93,7 +99,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isUnsupportedSystemPath(pathname)) {
-    return plainTextAnswer(404, "Not Found\n");
+    return rewriteToNotFoundPage(request, readMissingLocale(request), [
+      ...LLMS_REPRESENTATION_VARY_FIELDS,
+      ...MISSING_LOCALE_VARY_FIELDS,
+    ]);
   }
 
   const previewConfigured = hasPreviewConfig();
@@ -294,10 +303,11 @@ function mergeRepresentationVary(response: Response) {
  *
  * What stays in, and what the proxy does with it:
  *
- * - Documents, Flight navigations and prefetches: it may redirect, rewrite,
- *   answer 410 for a removed route, or reject a locale.
+ * - Documents, Flight navigations and prefetches: it may redirect, rewrite, answer
+ *   the not-found page for a removed route, or reject a locale.
  * - Any other root file, such as `/missing.xml`, and any other path under
- *   `/.well-known`: a plain 404, before the path can reach a localized route.
+ *   `/.well-known`: a 404 with the not-found page, before the path can reach a
+ *   localized route.
  * - Any other spelling of a bypass path, such as one with a trailing slash,
  *   which it redirects.
  * - The localized image aliases, such as `/en/og/example/image.png`: it passes

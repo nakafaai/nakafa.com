@@ -140,6 +140,7 @@ describe("access/catalog", () => {
           "tenant.policy.set",
           "unit.created",
           "unit.locale.set",
+          "unit.npsn.set",
           "unit.archived",
           "unit.unarchived",
           "person.created",
@@ -160,6 +161,7 @@ describe("access/catalog", () => {
           "period.created",
           "period.opened",
           "period.archived",
+          "period.rename",
           "cohort.created",
           "cohort.renamed",
           "cohort.archived",
@@ -199,6 +201,7 @@ describe("access/catalog", () => {
           "sitting.addMinutes",
           "sitting.changeToken",
           "sitting.allowDevice",
+          "sitting.finish",
           "sitting.close",
         ],
         Order.String

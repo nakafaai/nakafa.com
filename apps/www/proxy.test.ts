@@ -7,6 +7,7 @@ import { config, proxy } from "@/proxy";
 import { activateTestRelease } from "@/test/active";
 import {
   bypassed,
+  expectNotFoundPage,
   localeHints,
   matched,
   passedOn,
@@ -17,6 +18,9 @@ import {
   snbtExam,
 } from "@/test/proxy";
 import { resetTestRuntimeCache } from "@/test/store";
+
+/** The Vary of a missing page whose locale the routing may negotiate. */
+const NEGOTIATED_VARY = "Accept, Accept-Encoding, RSC, Accept-Language, Cookie";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
 const MARKDOWN_SUFFIX_PATTERN = /\.mdx?$/;
@@ -45,14 +49,7 @@ function expectNoLocaleProxy() {
   expect(mockLocaleRouting.previewMiddleware).not.toHaveBeenCalled();
 }
 function expectHardNotFound(response: Response, locale: string) {
-  expect(response.status).toBe(404);
-  expect(response.headers.get("x-middleware-rewrite")).toBe(
-    `http://localhost:3000/_not-found/${locale}`
-  );
-  expect(response.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
-    locale
-  );
-  expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
+  expectNotFoundPage(response, locale);
   expectNoLocaleProxy();
 }
 /**
@@ -265,16 +262,21 @@ describe("proxy", () => {
     "/missing-machine-document.xml",
     "/.well-known/appspecific/com.chrome.devtools.json",
     "/.well-known/unknown",
-  ])("returns a clean 404 for unsupported system resource %s", async (path) => {
-    const response = await requestProxy(path);
-    expect(response.status).toBe(404);
-    expect(response.headers.get("content-type")).toBe(
-      "text/plain; charset=utf-8"
-    );
-    expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expectNoLocaleProxy();
-    expect(runtimeMocks.readActive).not.toHaveBeenCalled();
-  });
+  ])(
+    "answers an unsupported system resource %s in the locale that the routing negotiates",
+    async (path) => {
+      mockLocaleRouting.activeMiddleware.mockReturnValueOnce(
+        new Response(null, {
+          headers: {
+            "x-middleware-rewrite": `http://localhost:3000/de${path}`,
+          },
+        })
+      );
+      const response = await requestProxy(path);
+      expectNotFoundPage(response, "de", NEGOTIATED_VARY);
+      expect(runtimeMocks.readActive).not.toHaveBeenCalled();
+    }
+  );
   it.each([
     ["/en/search", undefined],
     ["/de/search", { headers: { accept: "text/x-component", rsc: "1" } }],
@@ -342,36 +344,31 @@ describe("proxy", () => {
     expect(matchesProxy("/api/chat/finance/chat-1")).toBe(false);
   });
   it.each([
-    "/sitemap-domain.xml",
-    "/en/events",
-    "/en/finance/chat/chat-1",
-    "/en/event/try-out/ABC123",
-    "/api/chat/finance",
+    ["/sitemap-domain.xml", "en"],
+    ["/en/events", "en"],
+    ["/en/finance/chat/chat-1", "en"],
+    ["/en/event/try-out/ABC123", "en"],
+    ["/api/chat/finance", "en"],
+    ["/id/events", "id"],
   ])(
-    "answers the removed route %s with a plain gone response",
-    async (path) => {
+    "answers the removed route %s with the not-found page in %s",
+    async (path, locale) => {
       const response = await requestProxy(path);
-      expect(response.status).toBe(410);
-      expect(response.headers.get("content-type")).toBe(
-        "text/plain; charset=utf-8"
-      );
-      expect(response.headers.get("x-robots-tag")).toBe("noindex");
-      expect(await response.text()).toBe("Gone\n");
-      expectNoLocaleProxy();
+      expectNotFoundPage(response, locale, NEGOTIATED_VARY);
       expect(runtimeMocks.readActive).not.toHaveBeenCalled();
     }
   );
-  it("answers a retired SNBT product URL gone once its retired year has no live track", async () => {
+  it("answers a retired SNBT product URL with the not-found page once its retired year has no live track", async () => {
     runtimeMocks.readTryout.mockReturnValueOnce(Effect.succeed(snbtExam));
     const response = await requestProxy("/en/try-out/snbt/2026-set-1");
-    expect(response.status).toBe(410);
+    expectNotFoundPage(response, "en", NEGOTIATED_VARY);
     expectNoLocaleProxy();
   });
   it.each(["/en/try-out/snbt/2028-set-1", "/de/try-out/snbt/2099-set-1"])(
     "sends the product URL %s of a year that is not retired to the try-out rules",
     async (path) => {
       const response = await requestProxy(path);
-      expect(response.status).not.toBe(410);
+      expect(response.headers.get("x-middleware-rewrite")).toBeNull();
       expectMigrationAsked(path);
     }
   );
