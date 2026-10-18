@@ -44,6 +44,9 @@ describe("rehypeLearnerText", () => {
     expect(render("**a**\n<b>c</b>")).toBe(
       "<p><strong>a</strong><br/>&lt;b&gt;c&lt;/b&gt;</p>"
     );
+    expect(render('a <span\ntitle="x">b</span>')).toBe(
+      "<p>a &lt;span<br/>title=&quot;x&quot;&gt;b&lt;/span&gt;</p>"
+    );
     expect(render("<li>Satu</li>\n<li>Dua</li>")).toBe(
       "&lt;li&gt;Satu&lt;/li&gt;<br/>&lt;li&gt;Dua&lt;/li&gt;"
     );

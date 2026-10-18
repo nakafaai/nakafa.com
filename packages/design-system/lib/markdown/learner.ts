@@ -125,7 +125,10 @@ function isInline(node: Node | undefined): boolean {
  */
 function learnerChildren(children: readonly Node[]): Node[] {
   return Arr.flatMap(children, (child, index): Node[] => {
-    if (child.type !== "element") {
+    if (
+      child.type === "text" ||
+      (child.type === "raw" && Str.includes("\n")(child.value))
+    ) {
       if (!Str.includes("\n")(child.value)) {
         return [child];
       }
@@ -134,7 +137,7 @@ function learnerChildren(children: readonly Node[]): Node[] {
         !(isInline(children[index - 1]) && isInline(children[index + 1]));
       return layout ? [child] : breakLines(child.value);
     }
-    if (Arr.contains(VERBATIM, child.tagName)) {
+    if (child.type !== "element" || Arr.contains(VERBATIM, child.tagName)) {
       return [child];
     }
     child.children = learnerChildren(child.children);
