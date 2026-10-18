@@ -15,11 +15,11 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -50,19 +50,19 @@ export function NonUniformLinearMotionGraphCard({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <GlbbScenarioToggle
           labels={labels}
           onScenarioChange={handleScenarioChange}
           scenarioId={scenarioId}
         />
-        <VisualCardScene>
-          <VelocityTimeGraph labels={labels} scenario={scenario} />
-        </VisualCardScene>
+      </VisualCardToolbar>
+      <VisualCardBody>
+        <VelocityTimeGraph labels={labels} scenario={scenario} />
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }

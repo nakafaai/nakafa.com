@@ -30,12 +30,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -110,7 +111,7 @@ export function UniformLinearMotionLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseSpeed}
           gridColumns="3"
@@ -125,58 +126,59 @@ export function UniformLinearMotionLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.72} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE")}
-                intensity={0.65}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[3.4, 5.4, 4.8]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={UNIFORM_LINEAR_MOTION_CAMERA.cameraPosition}
-                cameraTarget={UNIFORM_LINEAR_MOTION_CAMERA.cameraTarget}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={43}
-              />
-              <UniformLinearMotionScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            {Arr.map(facts, (fact) => (
-              <VisualFactIndicator
-                indicatorColor={fact.indicatorColor}
-                key={fact.id}
-                label={fact.label}
-                value={<InlineMath math={fact.math} />}
-              />
-            ))}
-          </dl>
-        </VisualCardControls>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.72} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("SLATE")}
+              intensity={0.65}
+            />
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[3.4, 5.4, 4.8]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
+            />
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={UNIFORM_LINEAR_MOTION_CAMERA.cameraPosition}
+              cameraTarget={UNIFORM_LINEAR_MOTION_CAMERA.cameraTarget}
+              enablePan
+              enableRotate
+              enableZoom
+              fov={43}
+            />
+            <UniformLinearMotionScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(facts, (fact) => (
+            <VisualFactIndicator
+              indicatorColor={fact.indicatorColor}
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

@@ -14,10 +14,8 @@ import {
 import {
   VisualCard,
   VisualCardBody,
-  VisualCardControls,
-  VisualCardFooter,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Effect, Fiber, Schedule, Schema } from "effect";
 import {
@@ -175,14 +173,25 @@ export function BacterialGrowth({
         title={labels.title}
       />
 
-      <VisualCardBody>
-        <VisualCardScene
-          aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
-          className="relative aspect-square w-full overflow-hidden rounded-lg border bg-card sm:aspect-video"
-          data-bacteria-count={frame.bacteriaCount}
-          data-visible-bacteria-count={frame.bacteriaIds.length}
-          role="img"
-        >
+      <VisualCardToolbar>
+        <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
+        <BacterialGenerations
+          generation={activeGeneration}
+          maxGenerations={maxGenerations}
+          onGenerationChange={selectGeneration}
+          timeInterval={timeInterval}
+          timeUnit={timeUnit}
+        />
+      </VisualCardToolbar>
+
+      <VisualCardBody
+        aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
+        className="p-(--card-spacing)"
+        data-bacteria-count={frame.bacteriaCount}
+        data-visible-bacteria-count={frame.bacteriaIds.length}
+        role="img"
+      >
+        <div className="relative aspect-square h-full w-full overflow-hidden rounded-lg border bg-card sm:aspect-video">
           <div
             className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
             style={{
@@ -224,26 +233,14 @@ export function BacterialGrowth({
               </LazyMotion>
             </MotionConfig>
           </div>
-        </VisualCardScene>
-        <VisualCardControls>
-          <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
-          <BacterialGenerations
-            generation={activeGeneration}
-            maxGenerations={maxGenerations}
-            onGenerationChange={selectGeneration}
-            timeInterval={timeInterval}
-            timeUnit={timeUnit}
-          />
-        </VisualCardControls>
+        </div>
       </VisualCardBody>
 
-      <VisualCardFooter>
-        <BacterialPlayback
-          isPlaying={isEffectivelyPlaying}
-          onReset={resetAnimation}
-          onTogglePlaying={togglePlayPause}
-        />
-      </VisualCardFooter>
+      <BacterialPlayback
+        isPlaying={isEffectivelyPlaying}
+        onReset={resetAnimation}
+        onTogglePlaying={togglePlayPause}
+      />
     </VisualCard>
   );
 }

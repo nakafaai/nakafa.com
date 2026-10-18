@@ -17,11 +17,12 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardBody,
-  VisualCardControls,
+  VisualCardActions,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Result } from "effect";
@@ -91,7 +92,7 @@ export function ElectronConfigurationLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-5">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseAtom}
           gridColumns="4"
@@ -114,43 +115,41 @@ export function ElectronConfigurationLab({
             );
           })}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <ShellModelCanvas
-          aria-label={`${selectedLabels.name}, ${labels.electronTotal} ${selectedSample.atomicNumber}`}
-          outerShellKey={outerShell.key}
-          sample={selectedSample}
-          shells={shellConfiguration}
-        />
+      <ShellModelCanvas
+        aria-label={`${selectedLabels.name}, ${labels.electronTotal} ${selectedSample.atomicNumber}`}
+        outerShellKey={outerShell.key}
+        sample={selectedSample}
+        shells={shellConfiguration}
+      />
 
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.note}
         </p>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-4">
-            <VisualFact
-              label={labels.atomicNumber}
-              value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
-            />
-            <VisualFact
-              label={labels.electronTotal}
-              value={
-                <InlineMath math={`e^- = ${selectedSample.atomicNumber}`} />
-              }
-            />
-            <VisualFact
-              label={labels.configuration}
-              value={<InlineMath math={`${configurationMath}`} />}
-            />
-            <VisualFact
-              label={labels.outerShell}
-              value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
-            />
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.atomicNumber}
+            value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
+          />
+          <VisualFact
+            label={labels.electronTotal}
+            value={<InlineMath math={`e^- = ${selectedSample.atomicNumber}`} />}
+          />
+          <VisualFact
+            label={labels.configuration}
+            value={<InlineMath math={`${configurationMath}`} />}
+          />
+          <VisualFact
+            label={labels.outerShell}
+            value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

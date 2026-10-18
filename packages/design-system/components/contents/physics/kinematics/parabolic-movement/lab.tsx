@@ -19,12 +19,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
@@ -93,7 +94,7 @@ export function ParabolicMovementLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseLaunch}
           gridColumns="3"
@@ -108,29 +109,30 @@ export function ParabolicMovementLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          {live ? <ParabolicMovementStage motion={motion} /> : null}
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            {Arr.map(facts, (fact) => (
-              <VisualFactTabular
-                key={fact.id}
-                label={fact.label}
-                value={<InlineMath math={fact.math} />}
-              />
-            ))}
-          </dl>
-        </VisualCardControls>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        {live ? <ParabolicMovementStage motion={motion} /> : null}
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(facts, (fact) => (
+            <VisualFactTabular
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

@@ -16,11 +16,12 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardBody,
-  VisualCardControls,
+  VisualCardActions,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { cn } from "cn";
 import { Array as Arr, Result } from "effect";
@@ -80,7 +81,7 @@ export function ValenceElectronLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseAtom}
           gridColumns="4"
@@ -103,42 +104,42 @@ export function ValenceElectronLab({
             );
           })}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <ShellModelCanvas
-          aria-label={`${selectedLabels.name}, ${labels.valenceElectron} ${facts.valenceElectronCount}`}
-          outerShellKey={facts.outerShell.key}
-          sample={selectedSample}
-          shells={facts.shellConfiguration}
-        />
+      <ShellModelCanvas
+        aria-label={`${selectedLabels.name}, ${labels.valenceElectron} ${facts.valenceElectronCount}`}
+        outerShellKey={facts.outerShell.key}
+        sample={selectedSample}
+        shells={facts.shellConfiguration}
+      />
 
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.note}
         </p>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <ValenceFact
-              label={labels.valenceElectron}
-              value={<InlineMath math={`${facts.valenceElectronCount}`} />}
-            />
-            <ValenceFact
-              label={labels.outerShell}
-              value={<InlineMath math={`\\mathrm{${facts.outerShell.key}}`} />}
-            />
-            <ValenceFact
-              label={labels.configuration}
-              value={<InlineMath math={facts.configurationMath} />}
-            />
-            <ValenceFact
-              className="sm:col-span-3"
-              label={labels.behavior}
-              value={selectedLabels.tendency}
-            />
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
+        <VisualCardFacts>
+          <ValenceFact
+            label={labels.valenceElectron}
+            value={<InlineMath math={`${facts.valenceElectronCount}`} />}
+          />
+          <ValenceFact
+            label={labels.outerShell}
+            value={<InlineMath math={`\\mathrm{${facts.outerShell.key}}`} />}
+          />
+          <ValenceFact
+            label={labels.configuration}
+            value={<InlineMath math={facts.configurationMath} />}
+          />
+          <ValenceFact
+            className="col-span-full"
+            label={labels.behavior}
+            value={selectedLabels.tendency}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

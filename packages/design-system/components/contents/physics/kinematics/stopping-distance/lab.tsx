@@ -31,12 +31,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -91,7 +92,7 @@ export function StoppingDistanceLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseSpeed}
           gridColumns="3"
@@ -106,78 +107,77 @@ export function StoppingDistanceLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.7} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE")}
-                intensity={0.62}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[3.5, 5.8, 4.5]}
-                shadow-bias={-0.0006}
-                shadow-camera-bottom={
-                  -STOPPING_DISTANCE_SCENE.shadowCameraRadius
-                }
-                shadow-camera-left={-STOPPING_DISTANCE_SCENE.shadowCameraRadius}
-                shadow-camera-right={STOPPING_DISTANCE_SCENE.shadowCameraRadius}
-                shadow-camera-top={STOPPING_DISTANCE_SCENE.shadowCameraRadius}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <StoppingDistanceCamera />
-              <StoppingDistanceScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
-            <VisualFactIndicator
-              label={labels.speed}
-              value={<InlineMath math={formatRoundedSpeedMath(motion.speed)} />}
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.7} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("SLATE")}
+              intensity={0.62}
             />
-            <VisualFactIndicator
-              indicatorColor={REACTION_DISTANCE_COLOR}
-              label={labels.reactionDistance}
-              value={
-                <InlineMath
-                  math={formatRoundedMeterMath(motion.reactionDistance)}
-                />
-              }
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[3.5, 5.8, 4.5]}
+              shadow-bias={-0.0006}
+              shadow-camera-bottom={-STOPPING_DISTANCE_SCENE.shadowCameraRadius}
+              shadow-camera-left={-STOPPING_DISTANCE_SCENE.shadowCameraRadius}
+              shadow-camera-right={STOPPING_DISTANCE_SCENE.shadowCameraRadius}
+              shadow-camera-top={STOPPING_DISTANCE_SCENE.shadowCameraRadius}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
             />
-            <VisualFactIndicator
-              indicatorColor={BRAKING_DISTANCE_COLOR}
-              label={labels.brakingDistance}
-              value={
-                <InlineMath
-                  math={formatRoundedMeterMath(motion.brakingDistance)}
-                />
-              }
-            />
-            <VisualFactIndicator
-              label={labels.stoppingDistance}
-              value={
-                <InlineMath
-                  math={formatRoundedMeterMath(motion.stoppingDistance)}
-                />
-              }
-            />
-          </dl>
-        </VisualCardControls>
+            <StoppingDistanceCamera />
+            <StoppingDistanceScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFactIndicator
+            label={labels.speed}
+            value={<InlineMath math={formatRoundedSpeedMath(motion.speed)} />}
+          />
+          <VisualFactIndicator
+            indicatorColor={REACTION_DISTANCE_COLOR}
+            label={labels.reactionDistance}
+            value={
+              <InlineMath
+                math={formatRoundedMeterMath(motion.reactionDistance)}
+              />
+            }
+          />
+          <VisualFactIndicator
+            indicatorColor={BRAKING_DISTANCE_COLOR}
+            label={labels.brakingDistance}
+            value={
+              <InlineMath
+                math={formatRoundedMeterMath(motion.brakingDistance)}
+              />
+            }
+          />
+          <VisualFactIndicator
+            label={labels.stoppingDistance}
+            value={
+              <InlineMath
+                math={formatRoundedMeterMath(motion.stoppingDistance)}
+              />
+            }
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
