@@ -3,6 +3,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
+import { Authenticated } from "@/components/auth/gate";
 import { AppProviders } from "@/components/providers/app";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
@@ -16,6 +17,11 @@ const notInSchool = () => Effect.succeedNone;
  * member without `tenant.manage` all get not found. The settings pages are client
  * components, so this layout mounts the client providers of the app layout, and
  * the rest of the school shell stays read on the server.
+ *
+ * The pages draw once Convex has confirmed the session. The server read the
+ * session from the cookie, but a browser that has not signed in on this school's
+ * host before learns of it one request after the page loads, and every query of
+ * these pages needs it: one sent before would be refused as signed out.
  */
 export default async function SchoolSettingsLayout({
   children,
@@ -46,5 +52,9 @@ export default async function SchoolSettingsLayout({
     notFound();
   }
 
-  return <AppProviders pageNavigation={null}>{children}</AppProviders>;
+  return (
+    <AppProviders pageNavigation={null}>
+      <Authenticated>{children}</Authenticated>
+    </AppProviders>
+  );
 }

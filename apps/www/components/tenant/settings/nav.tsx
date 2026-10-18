@@ -45,7 +45,9 @@ const groupIcons: Record<
  * Renders the school settings as the sidebar body for settings routes, replacing the
  * school's own navigation without replacing the shell: one Settings group whose
  * groups fold open into their sections, as shadcn's sidebar draws a menu with
- * submenus. The group that holds the current section starts open. A school host
+ * submenus. The group that holds the current section opens, also when the current
+ * section moves into it, as after the settings root sends the viewer to its first
+ * section, or a link opens a section of another group. A school host
  * has no locale in its paths, so the links are plain Next.js links, as in the
  * school's own navigation.
  */
@@ -75,10 +77,13 @@ function SchoolSettingsNavGroup({
     (section) => section.href === pathname
   );
 
+  // A new key starts the group again from its default when the current section
+  // moves in or out of it, and leaves a group the viewer folded alone otherwise.
   return (
     <Collapsible
       className="group/collapsible"
       defaultOpen={holdsCurrent}
+      key={String(holdsCurrent)}
       render={<SidebarMenuItem />}
     >
       <CollapsibleTrigger render={<SidebarMenuButton tooltip={label} />}>
