@@ -77,4 +77,4 @@ function VisualCardSceneActions({
   );
 }
 
-export { VisualCardPlay, VisualCardReset, VisualCardSceneActions };
+export { VisualCardSceneActions };

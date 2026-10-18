@@ -133,8 +133,7 @@ export function CameraControls(props: CameraControlsProps) {
   const invalidate = useThree((state) => state.invalidate);
   const viewportWidth = useThree((state) => state.size.width);
   const viewportHeight = useThree((state) => state.size.height);
-  // The card's play action turns the camera around the scene, and its reset
-  // action brings back the first view that framing saved.
+  // The card's play action turns the camera; its reset brings the first view back.
   const autoRotate = useVisualScene((state) => state.playing, false);
   const view = useVisualScene((state) => state.view, 0);
   const shownView = useRef(view);
@@ -394,8 +393,7 @@ export function CameraControls(props: CameraControlsProps) {
       return;
     }
     shownView.current = view;
-    // A fitted scene fits again from its authored view; any other scene
-    // returns to the pose its framing saved.
+    // A fitted scene fits again; any other returns to the pose framing saved.
     if (framingMode === "content") {
       lastFit.current = null;
       framing?.invalidate();

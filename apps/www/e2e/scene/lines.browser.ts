@@ -17,7 +17,7 @@ import {
 } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { isKnownSceneDiagnostic, revealLineScene } from "@/e2e/support/scene";
-import { SCENE_ACTIONS, lineSceneCards } from "@/e2e/support/selector";
+import { lineSceneCards, SCENE_ACTIONS } from "@/e2e/support/selector";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;

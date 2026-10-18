@@ -46,3 +46,6 @@ export function formatTrigRatioMath(
   }
   return `\\approx ${formatApproximation(value).replaceAll(",", "{,}")}`;
 }
+
+/** The numeral of each quadrant, as mathematics writes it in every language. */
+export const QUADRANT_NUMERALS = ["I", "II", "III", "IV"];

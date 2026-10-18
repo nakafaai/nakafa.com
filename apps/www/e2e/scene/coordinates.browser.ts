@@ -14,8 +14,8 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   CARD,
-  SCENE_ACTIONS,
   LINE_SCENE,
+  SCENE_ACTIONS,
   VISUAL_CARD_FOOTER,
 } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";

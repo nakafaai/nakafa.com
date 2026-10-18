@@ -17,7 +17,7 @@ import {
 } from "@/e2e/support/canvas";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { SCENE_ACTIONS, LINE_SCENE } from "@/e2e/support/selector";
+import { LINE_SCENE, SCENE_ACTIONS } from "@/e2e/support/selector";
 import {
   BACTERIA_SCENE,
   expectLabStill,
@@ -339,12 +339,10 @@ const pauseScenesBehind = Effect.fn("NakafaE2E.pauseVisualScenesBehind")(
       }, SCENE_PAIR_MARGIN);
       await expect(second.card).toBeInViewport({ ratio: 1 });
     });
-    const rotation = second.card
-      .locator(SCENE_ACTIONS)
-      .getByRole("button", {
-        exact: true,
-        name: en.Common.play,
-      });
+    const rotation = second.card.locator(SCENE_ACTIONS).getByRole("button", {
+      exact: true,
+      name: en.Common.play,
+    });
     yield* Effect.promise(async () => {
       await rotation.click();
       await expect(rotation).toHaveAttribute("aria-pressed", "true");

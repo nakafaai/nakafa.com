@@ -4,6 +4,7 @@ import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
 import {
   formatTrigRatioMath,
+  QUADRANT_NUMERALS,
   TRIG_NUMBER_OPTIONS,
   UNIT_CIRCLE_DEFAULT_ANGLE,
 } from "@repo/design-system/components/contents/mathematics/trig";
@@ -45,9 +46,6 @@ import {
 } from "react-aria-components";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
-/** The numeral of each quadrant, as mathematics writes it in every language. */
-const QUADRANT_NUMERALS = ["I", "II", "III", "IV"];
-
 const UnitCircleStage = dynamic(
   () =>
     import("@repo/design-system/components/three/unit-circle").then(
