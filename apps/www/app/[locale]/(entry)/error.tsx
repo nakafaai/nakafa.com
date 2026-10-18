@@ -4,7 +4,7 @@ import { captureException } from "@repo/analytics/posthog/browser";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
-import { Theme } from "@/components/marketing/shared/footer/action";
+import { ThemePicker } from "@/components/shared/theme/picker";
 import { Broken } from "@/components/state/broken";
 
 /** Keeps entry failures on a localized, recoverable Nakafa surface. */
@@ -28,7 +28,7 @@ export default function EntryError({
     <>
       <EntryShellHeader>
         <div className="ms-auto">
-          <Theme variant="ghost" />
+          <ThemePicker variant="ghost" />
         </div>
       </EntryShellHeader>
       <EntryShellBody>

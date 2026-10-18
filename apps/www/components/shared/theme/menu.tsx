@@ -3,7 +3,7 @@
 import { DropdownMenuContent } from "@repo/design-system/components/ui/dropdown-menu";
 import { ThemeMenuItems } from "@/components/shared/theme/items";
 
-/** Renders the theme list of the footer selector. */
+/** Renders the theme list of the theme picker. */
 export function ThemeMenuContent() {
   return (
     <DropdownMenuContent
