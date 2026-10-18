@@ -1515,10 +1515,6 @@
     "nina-answer": "Sini, kita bedah bareng.",
     "nina-chat-ask": "Kenapa jawabanku 13 salah?",
     "nina-chat-answer": "### 13 muncul kalau m dianggap 3\n\nHitungannya jadi $5(2) + 9/3 = 13$. Masalahnya, $m = 3$ tidak cocok dengan soal.\n\n#### Cek dengan yang diketahui\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nDengan $m = 1$ hasilnya pas: $2(2) + 4/1 = 8$. Jadi $m$ harus 1, dan jawabannya 19.",
-    "scene-label": "Adegan tiga dimensi gerak parabola bola meriam",
-    "scene-title": "Yang sulit dibayangkan, bisa kamu lihat",
-    "scene-lead": "Adegan dari pelajaran Gerak Parabola.",
-    "scene-choose": "Pilih lintasan",
     "memory-title": "Nina makin kenal kamu",
     "memory-lead": "Ingatannya bisa kamu baca, ubah, jeda, atau hapus.",
     "memory-said-1": "Aku kelas 12 IPA.",
@@ -1581,17 +1577,6 @@
     "closing-topic-2": "fungsi kuadrat",
     "closing-topic-3": "konsep mol",
     "closing-topic-4": "sel"
-  },
-  "Features": {
-    "projectile-sixty-degree": "Enam Puluh Derajat",
-    "projectile-long-drive": "Jarak Jauh",
-    "projectile-high-arc": "Lengkung Tinggi",
-    "projectile-horizontal-component": "Komponen mendatar",
-    "projectile-vertical-component": "Komponen vertikal",
-    "projectile-peak-time": "Waktu puncak",
-    "projectile-flight-time": "Waktu terbang",
-    "projectile-range": "Jangkauan",
-    "projectile-instantaneous-velocity": "Kecepatan pada dua detik"
   },
   "About": {
     "company": "Perusahaan",

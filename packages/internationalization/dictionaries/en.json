@@ -1515,10 +1515,6 @@
     "nina-answer": "Come, let us take it apart together.",
     "nina-chat-ask": "Why is 13 wrong?",
     "nina-chat-answer": "### 13 comes from taking m as 3\n\nThat gives $5(2) + 9/3 = 13$. The trouble is that $m = 3$ does not fit the question.\n\n#### Check it against what you know\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nWith $m = 1$ it fits: $2(2) + 4/1 = 8$. So $m$ must be 1, and the answer is 19.",
-    "scene-label": "Three-dimensional scene of a projectile motion, a cannonball",
-    "scene-title": "What is hard to picture, you can see",
-    "scene-lead": "A scene from the Projectile Motion lesson.",
-    "scene-choose": "Choose a trajectory",
     "memory-title": "Nina gets to know you",
     "memory-lead": "You can read, change, pause or delete what she remembers at any time.",
     "memory-said-1": "I am in grade 12, science.",
@@ -1581,17 +1577,6 @@
     "closing-topic-2": "quadratic functions",
     "closing-topic-3": "the mole",
     "closing-topic-4": "the cell"
-  },
-  "Features": {
-    "projectile-sixty-degree": "Sixty Degrees",
-    "projectile-long-drive": "Long Drive",
-    "projectile-high-arc": "High Arc",
-    "projectile-horizontal-component": "Horizontal component",
-    "projectile-vertical-component": "Vertical component",
-    "projectile-peak-time": "Peak time",
-    "projectile-flight-time": "Flight time",
-    "projectile-range": "Range",
-    "projectile-instantaneous-velocity": "Velocity at two seconds"
   },
   "About": {
     "company": "Company",

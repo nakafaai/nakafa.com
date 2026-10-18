@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { Array as Arr, Effect } from "effect";
+import { Effect } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
+import { expectNoOverflow } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { scrollThroughPage } from "@/e2e/support/scroll";
@@ -43,44 +44,18 @@ for (const viewport of NARROW_VIEWPORTS) {
                   yield* openRoute(page, `/${locale}`, "denied");
                   // Every part mounts on the way down, the lesson labs and the toys included.
                   yield* scrollThroughPage(page);
-                  const overflow = yield* Effect.promise(() =>
+                  yield* expectNoOverflow(page, locale);
+                  const header = yield* Effect.promise(() =>
                     page.evaluate(() => {
-                      const header = document.querySelector("header");
-                      // The outermost elements that reach past the right edge, named for the failure.
-                      const wide = Array.from(
-                        document.body.querySelectorAll<HTMLElement>("*")
-                      )
-                        .filter(
-                          (element) =>
-                            element.getBoundingClientRect().right >
-                              window.innerWidth + 0.5 &&
-                            !(
-                              element.parentElement &&
-                              element.parentElement.getBoundingClientRect()
-                                .right >
-                                window.innerWidth + 0.5
-                            )
-                        )
-                        .slice(0, 5)
-                        .map(
-                          (element) =>
-                            `${element.tagName.toLowerCase()}.${element.className}`
-                        );
-                      return {
-                        header: header
-                          ? header.scrollWidth - header.clientWidth
-                          : 0,
-                        page:
-                          document.documentElement.scrollWidth -
-                          window.innerWidth,
-                        wide,
-                      };
+                      const element = document.querySelector("header");
+                      return element
+                        ? element.scrollWidth - element.clientWidth
+                        : 0;
                     })
                   );
-                  expect(
-                    { header: overflow.header, page: overflow.page },
-                    `${locale}: ${Arr.join(overflow.wide, "; ")}`
-                  ).toEqual({ header: 0, page: 0 });
+                  yield* Effect.sync(() =>
+                    expect(header, `${locale} header`).toBe(0)
+                  );
                 })
               )
             );
