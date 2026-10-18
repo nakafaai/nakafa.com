@@ -8,6 +8,7 @@ import {
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Select,
   SelectContent,
@@ -19,15 +20,16 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 
-/** How many active people the picker lists, the most one page of the people list holds. */
+/** How many people one page of the picker loads, and each page after it. */
 const PICKER_SIZE = 100;
 
 /** The ID of one Person of the school. */
 export type PersonId = PaginatedQueryItem<typeof tenancy.people.list>["id"];
 
 /**
- * Renders the picker of an active person of the school. A person is chosen by ID, so
- * a choice the list does not hold never reaches a function.
+ * Renders the picker of an active person of the school. The list loads more people
+ * as its end comes into view. A person is chosen by ID, so a choice the list does
+ * not hold never reaches a function.
  */
 export function SchoolPersonPicker({
   onChoose,
@@ -76,6 +78,9 @@ export function SchoolPersonPicker({
             </SelectItem>
           ))}
         </SelectGroup>
+        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+          <Intersection onIntersect={() => pagination.loadMore(PICKER_SIZE)} />
+        ) : null}
       </SelectContent>
     </Select>
   );

@@ -18,6 +18,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -36,7 +37,7 @@ import { saveSchool } from "@/components/tenant/settings/save.client";
 
 const SOURCE = "components/tenant/settings/invite";
 
-/** How many people the invite list reads at once: the most one page of the people list holds. */
+/** How many unclaimed people one page of the invite list loads, and each page after it. */
 const PERSON_PAGE_SIZE = 100;
 
 /** The languages an invite may be written in: the active ones of the app. */
@@ -64,7 +65,7 @@ export function SchoolInviteDialog({
   const t = useTranslations("SchoolSettings");
   const people = usePaginatedQuery(
     tenancy.people.list,
-    { slug, status: "active" },
+    { account: "unclaimed", slug, status: "active" },
     { initialNumItems: PERSON_PAGE_SIZE }
   );
   const viewer = useQuery(tenancy.viewer.get, { slug });
@@ -82,14 +83,12 @@ export function SchoolInviteDialog({
     throw people.error;
   }
 
-  const unclaimed = Arr.filter(
-    people.results,
-    (person) => person.account === "unclaimed"
-  );
-  const personItems = Arr.map(unclaimed, (person) => ({
+  const personItems = Arr.map(people.results, (person) => ({
     label: person.name,
     value: person.id,
   }));
+  const noneLeft =
+    PaginatedQueryResult.isExhausted(people) && people.results.length === 0;
   const defaultLocale = QueryResult.isSuccess(viewer)
     ? Option.flatMap(
         Arr.findFirst(viewer.value.units, (unit) => unit.status === "active"),
@@ -148,7 +147,7 @@ export function SchoolInviteDialog({
       setOpen={setOpen}
       title={t("invite-dialog-title")}
     >
-      {unclaimed.length === 0 ? <p>{t("invite-none-left")}</p> : null}
+      {noneLeft ? <p>{t("invite-none-left")}</p> : null}
       <Field>
         <FieldLabel>{t("invite-person")}</FieldLabel>
         <Select
@@ -171,6 +170,11 @@ export function SchoolInviteDialog({
                 </SelectItem>
               ))}
             </SelectGroup>
+            {PaginatedQueryResult.isCanLoadMore(people) ? (
+              <Intersection
+                onIntersect={() => people.loadMore(PERSON_PAGE_SIZE)}
+              />
+            ) : null}
           </SelectContent>
         </Select>
       </Field>

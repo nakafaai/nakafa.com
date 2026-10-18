@@ -9,28 +9,23 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { applyPolicy } from "@repo/backend/confect/tenancy/policy";
 import { INVITE_TERM, Npsn } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { randomUuid } from "@repo/utilities/uuid";
 import {
   Array as Arr,
   DateTime,
   Duration,
-  Effect,
   Option,
   Schema,
   Struct,
 } from "effect";
 import {
   type Client,
-  DRAFT_PREFIX,
+  draftText,
   type Grant,
   type Invite,
-  insertPeriod,
+  isFirstPage,
   mapUnit,
-  type Period,
   type Person,
   revokeClient,
-  setPeriodName,
-  setPeriodStatus,
   type Unit,
   withoutItem,
 } from "@/components/tenant/settings/state";
@@ -99,34 +94,19 @@ function changeUnit(
   patchUnitList(localStore, slug, (units) => mapUnit(units, unitId, change));
 }
 
-/** Changes the page of every loaded list of periods that the match accepts. */
-function changePeriodLists(
-  localStore: OptimisticLocalStore.OptimisticLocalStore,
-  matches: (args: Ref.Args<typeof tenancy.periods.list>) => boolean,
-  change: (page: readonly Period[]) => Period[]
-) {
-  for (const query of localStore.getAllQueries(tenancy.periods.list)) {
-    if (Option.isSome(query.value) && matches(query.args)) {
-      localStore.setQuery(
-        tenancy.periods.list,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: change(query.value.value.page),
-        })
-      );
-    }
-  }
-}
-
-/** Changes the page of every loaded list of invites of one school. */
+/** Changes the page of every loaded list of invites of one school that the matches accept. */
 function changeInviteLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   slug: TenantSlug,
+  matches: (args: Ref.Args<typeof tenancy.invites.list>) => boolean,
   change: (page: readonly Invite[]) => Invite[]
 ) {
   for (const query of localStore.getAllQueries(tenancy.invites.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
+    if (
+      Option.isSome(query.value) &&
+      query.args.slug === slug &&
+      matches(query.args)
+    ) {
       localStore.setQuery(
         tenancy.invites.list,
         query.args,
@@ -159,14 +139,19 @@ function changeClientLists(
   }
 }
 
-/** Changes the page of every loaded list of the grants of one school. */
+/** Changes the page of every loaded list of the grants of one school that the matches accept. */
 function changeGrantPages(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   slug: TenantSlug,
+  matches: (args: Ref.Args<typeof access.grants.list>) => boolean,
   change: (page: readonly Grant[]) => Grant[]
 ) {
   for (const query of localStore.getAllQueries(access.grants.list)) {
-    if (Option.isSome(query.value) && query.args.slug === slug) {
+    if (
+      Option.isSome(query.value) &&
+      query.args.slug === slug &&
+      matches(query.args)
+    ) {
       localStore.setQuery(
         access.grants.list,
         query.args,
@@ -194,9 +179,6 @@ function nameOfPerson(
     (person) => person.id === personId
   );
 }
-
-/** A placeholder ID for a row the server has not answered yet, marked so its actions wait. */
-const draftText = () => `${DRAFT_PREFIX}${Effect.runSync(randomUuid)}`;
 
 /** Shows the policy the school chose at once. */
 export const setPolicyChange: OptimisticUpdate<
@@ -265,54 +247,16 @@ export const setNpsnChange: OptimisticUpdate<typeof tenancy.units.setNpsn> = (
   }
 };
 
-/** Lists a new period at once, in the order of its unit's list, as planned. */
-export const createPeriodChange: OptimisticUpdate<
-  typeof tenancy.periods.create
-> = (localStore, { end, name, start, unitId }) => {
-  const draft: Period = {
-    end,
-    id: Schema.decodeUnknownSync(Id("tenantPeriods"))(
-      Effect.runSync(randomUuid)
-    ),
-    name,
-    start,
-    status: "planned",
-  };
-  changePeriodLists(
-    localStore,
-    (args) => args.unitId === unitId,
-    (page) => insertPeriod(page, draft)
-  );
-};
-
-/** Shows a period as open at once. */
-export const openPeriodChange: OptimisticUpdate<typeof tenancy.periods.open> = (
-  localStore,
-  { periodId }
-) => {
-  changePeriodLists(
-    localStore,
-    () => true,
-    (page) => setPeriodStatus(page, periodId, "active")
-  );
-};
-
-/** Shows a period as archived at once. */
-export const archivePeriodChange: OptimisticUpdate<
-  typeof tenancy.periods.archive
-> = (localStore, { periodId }) => {
-  changePeriodLists(
-    localStore,
-    () => true,
-    (page) => setPeriodStatus(page, periodId, "archived")
-  );
-};
-
 /** Takes an invite off the pending list at once. */
 export const revokeInviteChange: OptimisticUpdate<
   typeof tenancy.invites.revoke
 > = (localStore, { inviteId, slug }) => {
-  changeInviteLists(localStore, slug, (page) => withoutItem(page, inviteId));
+  changeInviteLists(
+    localStore,
+    slug,
+    () => true,
+    (page) => withoutItem(page, inviteId)
+  );
 };
 
 /** Shows a client as revoked at once. */
@@ -339,14 +283,21 @@ export const assignGrantChange: OptimisticUpdate<
     role: { key: role, kind: "builtin" },
     scope,
   };
-  changeGrantPages(localStore, slug, (page) => Arr.prepend(page, draft));
+  changeGrantPages(localStore, slug, isFirstPage, (page) =>
+    Arr.prepend(page, draft)
+  );
 };
 
 /** Takes a grant off every loaded list of the school's grants at once. */
 export const revokeGrantChange: OptimisticUpdate<
   typeof access.grants.revoke
 > = (localStore, { grantId, slug }) => {
-  changeGrantPages(localStore, slug, (page) => withoutItem(page, grantId));
+  changeGrantPages(
+    localStore,
+    slug,
+    () => true,
+    (page) => withoutItem(page, grantId)
+  );
 };
 
 /** Lists a new invite at once, at the top of the pending invites, when its Person is loaded. */
@@ -367,16 +318,7 @@ export const inviteChange: OptimisticUpdate<typeof tenancy.invites.invite> = (
     name: person.value.name,
     personId,
   };
-  changeInviteLists(localStore, slug, (page) => Arr.prepend(page, draft));
-};
-
-/** Shows a period under its new name at once, in every loaded list of periods. */
-export const renamePeriodChange: OptimisticUpdate<
-  typeof tenancy.periods.rename
-> = (localStore, { name, periodId }) => {
-  changePeriodLists(
-    localStore,
-    () => true,
-    (page) => setPeriodName(page, periodId, name)
+  changeInviteLists(localStore, slug, isFirstPage, (page) =>
+    Arr.prepend(page, draft)
   );
 };

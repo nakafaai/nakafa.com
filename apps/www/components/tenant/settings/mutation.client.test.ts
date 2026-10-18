@@ -5,14 +5,10 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Email, Npsn } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Option, Schema } from "effect";
 import {
-  archivePeriodChange,
   archiveUnitChange,
   assignGrantChange,
-  createPeriodChange,
   inviteChange,
-  openPeriodChange,
   removeLogoChange,
-  renamePeriodChange,
   revokeClientChange,
   revokeGrantChange,
   revokeInviteChange,
@@ -21,11 +17,7 @@ import {
   setUnitLocaleChange,
   unarchiveUnitChange,
 } from "@/components/tenant/settings/mutation.client";
-import {
-  type Invite,
-  isDraft,
-  type Unit,
-} from "@/components/tenant/settings/state";
+import { type Invite, isDraft } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
 import {
   client,
@@ -36,7 +28,6 @@ import {
   otherSlug,
   pageOf,
   paging,
-  period,
   person,
   slug,
   sma,
@@ -44,21 +35,6 @@ import {
   unit,
   viewer,
 } from "@/test/settings";
-
-/** The page of periods of one unit a store holds, or none while it is not loaded. */
-function periodsOf(
-  local: ReturnType<typeof createLocalStore>,
-  unitId: Unit["id"]
-) {
-  return Option.match(
-    local.store.getQuery(tenancy.periods.list, {
-      paginationOpts: paging,
-      slug,
-      unitId,
-    }),
-    { onNone: () => [], onSome: (result) => result.page }
-  );
-}
 
 describe("components/tenant/settings/mutation.client", () => {
   describe("the viewer and the units of the school", () => {
@@ -168,66 +144,6 @@ describe("components/tenant/settings/mutation.client", () => {
         unitId: smp,
       });
       expect(local.written()).toEqual([]);
-    });
-  });
-
-  describe("the periods of a unit", () => {
-    it("lists a new period in the periods of its own unit, as planned, newest start first", () => {
-      const local = createLocalStore();
-      local.seed(
-        tenancy.periods.list,
-        { paginationOpts: paging, slug, unitId: smp },
-        pageOf([period("june", "2027-06-01", "planned")])
-      );
-      local.seed(
-        tenancy.periods.list,
-        { paginationOpts: later, slug, unitId: smp },
-        undefined
-      );
-      local.seed(
-        tenancy.periods.list,
-        { paginationOpts: paging, slug, unitId: sma },
-        pageOf([period("other", "2027-06-01", "planned")])
-      );
-      createPeriodChange(local.store, {
-        end: "2027-08-31",
-        name: "April",
-        slug,
-        start: "2027-04-01",
-        unitId: smp,
-      });
-      expect(
-        Arr.map(periodsOf(local, smp), (item) => [item.name, item.status])
-      ).toEqual([
-        ["june", "planned"],
-        ["April", "planned"],
-      ]);
-      expect(Arr.map(periodsOf(local, sma), (item) => item.name)).toEqual([
-        "other",
-      ]);
-    });
-
-    it("shows a period as open, and as archived, in every loaded list of it", () => {
-      const local = createLocalStore();
-      const june = period("june", "2027-06-01", "planned");
-      local.seed(
-        tenancy.periods.list,
-        { paginationOpts: paging, slug, unitId: smp },
-        pageOf([june])
-      );
-      local.seed(
-        tenancy.periods.list,
-        { paginationOpts: paging, slug, unitId: sma },
-        pageOf([june])
-      );
-      openPeriodChange(local.store, { periodId: june.id, slug });
-      expect(Arr.map(periodsOf(local, sma), (item) => item.status)).toEqual([
-        "active",
-      ]);
-      archivePeriodChange(local.store, { periodId: june.id, slug });
-      expect(Arr.map(periodsOf(local, smp), (item) => item.status)).toEqual([
-        "archived",
-      ]);
     });
   });
 
@@ -347,6 +263,47 @@ describe("components/tenant/settings/mutation.client", () => {
       ]);
     });
 
+    it("lists a new grant on the first loaded page of the grants only", () => {
+      const local = createLocalStore();
+      local.seed(
+        tenancy.people.list,
+        { paginationOpts: paging, slug, status: "active" },
+        pageOf([person("person-two", "Dua")])
+      );
+      local.seed(
+        access.grants.list,
+        { paginationOpts: paging, slug },
+        pageOf([grant("existing")])
+      );
+      local.seed(
+        access.grants.list,
+        { paginationOpts: later, slug },
+        pageOf([grant("older", "staff")])
+      );
+      assignGrantChange(local.store, {
+        personId: grantedPersonId,
+        role: "counselor",
+        scope: { kind: "tenant" },
+        slug,
+      });
+      const grantsOf = (pagination: typeof paging | typeof later) =>
+        Option.getOrThrow(
+          local.store.getQuery(access.grants.list, {
+            paginationOpts: pagination,
+            slug,
+          })
+        ).page;
+      expect(
+        Arr.map(grantsOf(paging), (item) => [item.person.name, item.role.key])
+      ).toEqual([
+        ["Dua", "counselor"],
+        ["Admin", "teacher"],
+      ]);
+      expect(Arr.map(grantsOf(later), (item) => item.role.key)).toEqual([
+        "staff",
+      ]);
+    });
+
     it("writes no grant while its Person is not loaded", () => {
       const local = createLocalStore();
       local.seed(
@@ -431,6 +388,43 @@ describe("components/tenant/settings/mutation.client", () => {
       ]);
     });
 
+    it("lists a new invite on the first loaded page of the invites only", () => {
+      const local = createLocalStore();
+      local.seed(
+        tenancy.people.list,
+        { paginationOpts: paging, slug, status: "active" },
+        pageOf([person("person-two", "Dua")])
+      );
+      local.seed(
+        tenancy.invites.list,
+        { paginationOpts: paging, slug },
+        pageOf([invite("lama")])
+      );
+      local.seed(
+        tenancy.invites.list,
+        { paginationOpts: later, slug },
+        pageOf([invite("tua")])
+      );
+      inviteChange(local.store, {
+        email: Schema.decodeSync(Email)("dua@example.com"),
+        locale: "id",
+        personId: grantedPersonId,
+        slug,
+      });
+      const invitesOf = (pagination: typeof paging | typeof later) =>
+        Arr.map(
+          Option.getOrThrow(
+            local.store.getQuery(tenancy.invites.list, {
+              paginationOpts: pagination,
+              slug,
+            })
+          ).page,
+          (item) => item.name
+        );
+      expect(invitesOf(paging)).toEqual(["Dua", "lama"]);
+      expect(invitesOf(later)).toEqual(["tua"]);
+    });
+
     it("writes no invite while its Person is not loaded", () => {
       const local = createLocalStore();
       local.seed(
@@ -445,26 +439,6 @@ describe("components/tenant/settings/mutation.client", () => {
         slug,
       });
       expect(local.written()).toEqual([]);
-    });
-  });
-
-  describe("the name of a period", () => {
-    it("shows a period under its new name at once, in every loaded list of it", () => {
-      const local = createLocalStore();
-      const june = period("june", "2027-06-01", "planned");
-      local.seed(
-        tenancy.periods.list,
-        { paginationOpts: paging, slug, unitId: smp },
-        pageOf([june])
-      );
-      renamePeriodChange(local.store, {
-        name: "Genap 2027",
-        periodId: june.id,
-        slug,
-      });
-      expect(Arr.map(periodsOf(local, smp), (item) => item.name)).toEqual([
-        "Genap 2027",
-      ]);
     });
   });
 });

@@ -3,6 +3,7 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { Npsn } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -77,14 +78,23 @@ export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
 
 /**
  * Renders the national school number of one unit: its eight digits and the action
- * that saves them. The number shows at once, and a refused number is undone.
+ * that saves them. The draft follows the stored number, so a refused number goes
+ * back, and an archived unit shows its number without a way to change it.
  */
 function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
   const t = useTranslations("SchoolSettings");
   const setNpsn = useMutation(tenancy.units.setNpsn).withOptimisticUpdate(
     setNpsnChange
   );
-  const [npsn, setValue] = useState(unit.npsn ?? "");
+  const stored = unit.npsn ?? "";
+  const [npsn, setValue] = useState(stored);
+  const [seen, setSeen] = useState(stored);
+  if (stored !== seen) {
+    setSeen(stored);
+    setValue(stored);
+  }
+  const isArchived = unit.status === "archived";
+  const canSave = !isArchived && Schema.is(Npsn)(npsn.trim());
 
   return (
     <CardSection>
@@ -94,6 +104,7 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
       <CardContent>
         <Input
           aria-label={t("unit-npsn")}
+          disabled={isArchived}
           inputMode="numeric"
           maxLength={8}
           onChange={(event) => setValue(event.target.value)}
@@ -105,7 +116,7 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
         <CardSectionHint>{t("unit-npsn-footer")}</CardSectionHint>
         <CardSectionActions>
           <Button
-            disabled={npsn.trim() === ""}
+            disabled={!canSave}
             onClick={() =>
               startTransition(() =>
                 saveSchool(

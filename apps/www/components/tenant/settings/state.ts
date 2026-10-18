@@ -2,7 +2,8 @@ import type { Ref } from "@confect/core";
 import type access from "@repo/backend/confect/_generated/refs/access";
 import type integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { Array as Arr, Order } from "effect";
+import { randomUuid } from "@repo/utilities/uuid";
+import { Array as Arr, Effect, Order } from "effect";
 
 /** One period as the periods list shows it. */
 export type Period = Ref.Returns<typeof tenancy.periods.list>["page"][number];
@@ -28,12 +29,23 @@ export type Unit = Ref.Returns<typeof tenancy.units.list>[number];
  * The start of the ID of a row that the page shows before the server answers. The
  * server never issues an ID with it, so a row with it is still on its way.
  */
-export const DRAFT_PREFIX = "draft-";
+const DRAFT_PREFIX = "draft-";
 
 /** Whether a row is one the page shows before the server answers, so its actions wait. */
 export function isDraft(id: string) {
   return id.startsWith(DRAFT_PREFIX);
 }
+
+/** A placeholder ID for a row the server has not answered yet, marked so its actions wait. */
+export const draftText = () => `${DRAFT_PREFIX}${Effect.runSync(randomUuid)}`;
+
+/**
+ * Whether a loaded page is the first page of its list. An insert lands on the first
+ * page only, so the later pages keep the rows the server answered them with.
+ */
+export const isFirstPage = (
+  args: Pick<Ref.Args<typeof tenancy.periods.list>, "paginationOpts">
+) => args.paginationOpts.cursor === null;
 
 /** The periods of one page in the order the list shows them: the newest start first. */
 const byNewestStart = Order.flip(

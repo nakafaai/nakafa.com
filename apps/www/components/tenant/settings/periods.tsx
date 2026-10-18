@@ -51,8 +51,9 @@ import {
   createPeriodChange,
   openPeriodChange,
   renamePeriodChange,
-} from "@/components/tenant/settings/mutation.client";
+} from "@/components/tenant/settings/periods.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
 
 const SOURCE = "components/tenant/settings/periods";
@@ -240,6 +241,8 @@ function SchoolPeriodName({
   return (
     <Input
       aria-label={t("period-name")}
+      disabled={period.status === "archived"}
+      inert={isDraft(period.id)}
       onBlur={save}
       onChange={(event) => setName(event.target.value)}
       onKeyDown={(event) => {
@@ -278,6 +281,7 @@ function SchoolPeriodRow({
       <TableCell className="text-right">
         {period.status === "planned" ? (
           <Button
+            inert={isDraft(period.id)}
             onClick={() =>
               startTransition(() =>
                 saveSchool(() => open({ periodId: period.id, slug }), SOURCE)
