@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
@@ -81,10 +82,13 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all af
   await page.reload();
   await page.waitForLoadState("networkidle");
 
-  // Everything the teacher wrote is there after the reload.
-  await expect(
-    page.getByRole("textbox", { name: "Question text" })
-  ).toContainText("Berapa hasil 2 + 3?");
+  // Everything the teacher wrote is there after the reload. The prompt turns
+  // editable once its document has opened, with its steps applied.
+  const reopened = page.getByRole("textbox", { name: "Question text" });
+  await expect(reopened).toBeEditable({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(reopened).toContainText("Berapa hasil 2 + 3?");
   for (const option of OPTIONS) {
     await expect(
       page.getByRole("textbox", { name: `Option ${option.letter}` })
