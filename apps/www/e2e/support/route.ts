@@ -5,7 +5,7 @@ import {
   type Route,
 } from "@playwright/test";
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
-import { Deferred, Effect } from "effect";
+import { Deferred, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -75,6 +75,22 @@ function routeChunkHolding(
         })
       )
     )
+  );
+}
+
+/**
+ * Aborts the chunk whose code holds `marker`, while the page hydrates. The
+ * result lists the URLs it aborted, in order, so a test can prove the failure
+ * happened.
+ */
+export function abortChunkHolding(page: Page, marker: string) {
+  const aborted = MutableList.make<string>();
+  return Effect.as(
+    routeChunkHolding(page, marker, (route) => {
+      MutableList.append(aborted, route.request().url());
+      return Effect.promise(() => route.abort("failed"));
+    }),
+    aborted
   );
 }
 

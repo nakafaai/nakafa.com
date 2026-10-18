@@ -1,7 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect } from "effect";
+import { Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
+import { expectNoOverflow } from "@/e2e/support/layout";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes, openRoute } from "@/e2e/support/route";
 import { scrollThroughPage } from "@/e2e/support/scroll";
@@ -26,7 +27,18 @@ const routes = [
 ];
 
 /** The widths the window narrows through, one after another, from the desktop to a compact phone. */
-const narrowingWidths = [1180, 1024, 820, 768, 600, 430, 390, 360, 320];
+const narrowingWidths = [
+  desktopViewport.width,
+  1180,
+  1024,
+  820,
+  768,
+  600,
+  430,
+  390,
+  360,
+  320,
+];
 
 /** Lets two animation frames pass, so a layout change that the browser reports in a frame has landed. */
 const twoFrames = (page: Page) =>
@@ -38,35 +50,15 @@ const twoFrames = (page: Page) =>
   );
 
 /**
- * Reads whether the document is wider than the window, and names the outermost
- * elements that reach past the window's right edge. It then scrolls sideways
- * as far as the page allows, so a page that is wider than the window shows a
- * scroll position other than 0.
+ * Scrolls the window sideways as far as the page allows, and reads where it
+ * stopped. A page that is wider than the window scrolls, so it stops at a
+ * position other than 0. This runs after the width check, because scrolling
+ * moves every element that the check measures.
  */
-const readSideways = (page: Page) =>
+const scrollSideways = (page: Page) =>
   page.evaluate(() => {
-    const edge = window.innerWidth + 0.5;
-    const wide = Array.from(document.body.querySelectorAll<HTMLElement>("*"))
-      .filter(
-        (element) =>
-          element.getBoundingClientRect().right > edge &&
-          !(
-            element.parentElement &&
-            element.parentElement.getBoundingClientRect().right > edge
-          )
-      )
-      .slice(0, 5)
-      .map(
-        (element) =>
-          `${element.tagName.toLowerCase()}.${element.getAttribute("class") ?? ""}`
-      );
     window.scrollTo(100_000, window.scrollY);
-    return {
-      clientWidth: document.documentElement.clientWidth,
-      scrollWidth: document.documentElement.scrollWidth,
-      scrollX: window.scrollX,
-      wide,
-    };
+    return window.scrollX;
   });
 
 /**
@@ -82,14 +74,10 @@ const narrowTo = Effect.fn("NakafaE2E.narrowToWidth")(function* (
     page.setViewportSize({ height: desktopViewport.height, width })
   );
   yield* Effect.promise(() => twoFrames(page));
-  const sideways = yield* Effect.promise(() => readSideways(page));
-  const message = `${route} at ${width}px: ${Arr.join(sideways.wide, "; ")}`;
-  yield* Effect.sync(() => {
-    expect(sideways.scrollWidth, message).toBeLessThanOrEqual(
-      sideways.clientWidth
-    );
-    expect(sideways.scrollX, message).toBe(0);
-  });
+  const label = `${route} at ${width}px`;
+  yield* expectNoOverflow(page, label);
+  const scrollX = yield* Effect.promise(() => scrollSideways(page));
+  yield* Effect.sync(() => expect(scrollX, label).toBe(0));
 });
 
 for (const route of routes) {
