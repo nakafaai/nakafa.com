@@ -1,7 +1,10 @@
 "use client";
 
 import type { AreaAnimationType } from "@repo/design-system/components/evilcharts/charts/area/paint";
-import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
+import {
+  type ChartBrushOptions,
+  ChartContainer,
+} from "@repo/design-system/components/evilcharts/ui/chart";
 import {
   axisValueToPercentFormatter,
   type ChartConfig,
@@ -195,13 +198,20 @@ export function EvilAreaChart<
     [loadingPoints]
   );
   const { visibleData, brushProps } = useEvilBrush({ data });
-  const brushOptions = useMemo(
-    () => ({ formatLabel: brushFormatLabel, height: brushHeight, xDataKey }),
-    [brushFormatLabel, brushHeight, xDataKey]
-  );
 
   const isExpanded = stackType === "expanded";
   const isStacked = stackType === "stacked" || isExpanded;
+  const brushOptions = useMemo<ChartBrushOptions>(
+    () => ({
+      curveType,
+      formatLabel: brushFormatLabel,
+      height: brushHeight,
+      stacked: isStacked,
+      variant: "area",
+      xDataKey,
+    }),
+    [brushFormatLabel, brushHeight, curveType, isStacked, xDataKey]
+  );
   const displayData = showBrush && !isLoading ? visibleData : data;
 
   // Updates selection state and notifies the parent
@@ -232,11 +242,8 @@ export function EvilAreaChart<
             <EvilBrush
               chartConfig={config}
               className="mt-1"
-              curveType={curveType}
               data={data}
               skipStyle
-              stacked={isStacked}
-              variant="area"
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);

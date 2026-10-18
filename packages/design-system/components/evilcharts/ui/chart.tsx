@@ -1,11 +1,13 @@
 "use client";
 
+import type { EvilBrushCurveType } from "@repo/design-system/components/evilcharts/ui/brush-preview";
 import {
   type AtLeastOneThemeColor,
   type ChartConfig,
   validateChartConfigColors,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
+import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts/ui/evil-brush";
 import type { ChartSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "cn";
 import { Result } from "effect";
@@ -21,10 +23,15 @@ import {
 } from "react";
 import { ResponsiveContainer } from "recharts";
 
-/** Presentation options of the zoom brush, set once by the chart root. */
+/** Options of the zoom brush, set once by the chart root and read by the brush parts. */
 export interface ChartBrushOptions {
+  barRadius?: number | undefined; // corner radius of the bars in the miniature chart
+  connectNulls?: boolean | undefined; // whether the miniature line or area connects null points
+  curveType?: EvilBrushCurveType | undefined; // curve of the miniature line or area
   formatLabel?: ((value: unknown, index: number) => string) | undefined; // formats the handle labels
   height?: number | undefined; // pixel height of the brush
+  stacked?: boolean | undefined; // whether the miniature series stack on each other
+  variant?: EvilBrushVariant | undefined; // visual variant of the miniature chart
   xDataKey?: string | undefined; // x-axis key whose values label the handles
 }
 

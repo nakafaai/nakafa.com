@@ -1,6 +1,9 @@
 "use client";
 
-import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
+import {
+  type ChartBrushOptions,
+  ChartContainer,
+} from "@repo/design-system/components/evilcharts/ui/chart";
 import {
   type ChartConfig,
   getLoadingData,
@@ -222,9 +225,15 @@ export function EvilComposedChart<
     [loadingBars]
   );
   const { visibleData, brushProps } = useEvilBrush({ data });
-  const brushOptions = useMemo(
-    () => ({ formatLabel: brushFormatLabel, height: brushHeight, xDataKey }),
-    [brushFormatLabel, brushHeight, xDataKey]
+  const brushOptions = useMemo<ChartBrushOptions>(
+    () => ({
+      curveType,
+      formatLabel: brushFormatLabel,
+      height: brushHeight,
+      variant: "area",
+      xDataKey,
+    }),
+    [brushFormatLabel, brushHeight, curveType, xDataKey]
   );
 
   const displayData = showBrush && !isLoading ? visibleData : data;
@@ -263,10 +272,8 @@ export function EvilComposedChart<
             <EvilBrush
               chartConfig={config}
               className="mt-1"
-              curveType={curveType}
               data={data}
               skipStyle
-              variant="area"
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);

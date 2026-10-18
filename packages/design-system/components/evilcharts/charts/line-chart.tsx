@@ -1,7 +1,10 @@
 "use client";
 
 import type { LineAnimationType } from "@repo/design-system/components/evilcharts/charts/line/paint";
-import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
+import {
+  type ChartBrushOptions,
+  ChartContainer,
+} from "@repo/design-system/components/evilcharts/ui/chart";
 import {
   type ChartConfig,
   getLoadingData,
@@ -190,9 +193,15 @@ export function EvilLineChart<
     [loadingPoints]
   );
   const { visibleData, brushProps } = useEvilBrush({ data });
-  const brushOptions = useMemo(
-    () => ({ formatLabel: brushFormatLabel, height: brushHeight, xDataKey }),
-    [brushFormatLabel, brushHeight, xDataKey]
+  const brushOptions = useMemo<ChartBrushOptions>(
+    () => ({
+      curveType,
+      formatLabel: brushFormatLabel,
+      height: brushHeight,
+      variant: "line",
+      xDataKey,
+    }),
+    [brushFormatLabel, brushHeight, curveType, xDataKey]
   );
 
   const displayData = showBrush && !isLoading ? visibleData : data;
@@ -225,10 +234,8 @@ export function EvilLineChart<
             <EvilBrush
               chartConfig={config}
               className="mt-1"
-              curveType={curveType}
               data={data}
               skipStyle
-              variant="line"
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);

@@ -4,7 +4,10 @@ import {
   type BackgroundVariant,
   ChartBackground,
 } from "@repo/design-system/components/evilcharts/ui/background";
-import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
+import {
+  type ChartBrushOptions,
+  ChartContainer,
+} from "@repo/design-system/components/evilcharts/ui/chart";
 import {
   type ChartConfig,
   getLoadingData,
@@ -233,12 +236,19 @@ export function EvilBarChart<
     [loadingBars]
   );
   const { visibleData, brushProps } = useEvilBrush({ data });
-  const brushOptions = useMemo(
-    () => ({ formatLabel: brushFormatLabel, height: brushHeight, xDataKey }),
-    [brushFormatLabel, brushHeight, xDataKey]
-  );
 
   const isStacked = stackType === "stacked" || stackType === "percent";
+  const brushOptions = useMemo<ChartBrushOptions>(
+    () => ({
+      barRadius,
+      formatLabel: brushFormatLabel,
+      height: brushHeight,
+      stacked: isStacked,
+      variant: "bar",
+      xDataKey,
+    }),
+    [barRadius, brushFormatLabel, brushHeight, isStacked, xDataKey]
+  );
   const isHorizontal = layout === "horizontal";
   const displayData = showBrush && !isLoading ? visibleData : data;
 
@@ -276,13 +286,10 @@ export function EvilBarChart<
           showBrush &&
           !isLoading && (
             <EvilBrush
-              barRadius={barRadius}
               chartConfig={config}
               className="mt-1"
               data={data}
               skipStyle
-              stacked={isStacked}
-              variant="bar"
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);
