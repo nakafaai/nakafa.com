@@ -40,9 +40,10 @@ interface TooltipLabelProps {
   payload: TooltipPayload;
 }
 
-/** Options that the tooltip content shares with each of its items. */
+/** Options that the tooltip content shares with its label and each of its items. */
 interface TooltipItemOptions<Formatter> {
   formatter: Formatter;
+  labelProps: TooltipLabelProps;
   selected: string | null;
 }
 
@@ -68,7 +69,6 @@ interface TooltipItemProps {
   index: number;
   indicator: TooltipIndicator;
   item: TooltipPayloadItem;
-  labelProps: TooltipLabelProps;
   nameKey: string | undefined;
   nestLabel: boolean;
 }
@@ -114,7 +114,6 @@ function TooltipItem({
   index,
   indicator,
   item,
-  labelProps,
   nameKey,
   nestLabel,
 }: TooltipItemProps) {
@@ -164,7 +163,7 @@ function TooltipItem({
             )}
           >
             <div className="grid gap-1.5">
-              {nestLabel ? <TooltipLabel {...labelProps} /> : null}
+              {nestLabel ? <TooltipLabel /> : null}
               <span className="text-muted-foreground">
                 {itemConfig?.label ?? item.name}
               </span>
@@ -201,15 +200,17 @@ function TooltipValue({
 }
 
 /** Renders the formatted tooltip label when it is visible. */
-function TooltipLabel({
-  config,
-  hideLabel,
-  label,
-  labelClassName,
-  labelFormatter,
-  labelKey,
-  payload,
-}: TooltipLabelProps) {
+function TooltipLabel() {
+  const {
+    config,
+    hideLabel,
+    label,
+    labelClassName,
+    labelFormatter,
+    labelKey,
+    payload,
+  } = useTooltipItem((options) => options.labelProps);
+
   if (hideLabel) {
     return null;
   }

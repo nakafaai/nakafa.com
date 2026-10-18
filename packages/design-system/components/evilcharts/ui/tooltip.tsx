@@ -118,8 +118,8 @@ function ChartTooltipContent({
 
   return (
     <div className={cn(tooltipVariants({ roundness, variant }), className)}>
-      {nestLabel ? null : <TooltipLabel {...labelProps} />}
-      <TooltipItemContext value={{ formatter, selected }}>
+      <TooltipItemContext value={{ formatter, labelProps, selected }}>
+        {nestLabel ? null : <TooltipLabel />}
         <div className="grid gap-1.5">
           {Arr.map(payload, (item, index) => {
             if (item.type === "none") {
@@ -133,7 +133,6 @@ function ChartTooltipContent({
                 indicator={indicator}
                 item={item}
                 key={getTooltipItemKey(item, nameKey)}
-                labelProps={labelProps}
                 nameKey={nameKey}
                 nestLabel={nestLabel}
               />
