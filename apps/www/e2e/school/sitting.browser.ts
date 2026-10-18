@@ -28,11 +28,12 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
       slug: school.slug,
     })
   );
-  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  // The seed records its exam as made by the school's Owner, who must have signed in first.
   const proctorContext = await browser.newContext();
   await Effect.runPromise(
     signInOwner(proctorContext, school.slug, address("/"))
   );
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
 
   const student = await studentContext.newPage();
   await student.goto(address(`/sittings/${sitting.sittingId}`));
