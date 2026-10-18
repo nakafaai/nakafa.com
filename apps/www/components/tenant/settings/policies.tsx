@@ -28,13 +28,17 @@ import {
 } from "@/components/shared/card/section";
 import { setPolicyChange } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { SchoolTrailAction } from "@/components/tenant/settings/trail";
 
 const SOURCE = "components/tenant/settings/policies";
 
 /** The policies of the school as the settings page reads them. */
 type SchoolPolicies = typeof TenantPolicies.Type;
 
-/** Renders the policies of the school: the Nina and thread switches, and the allowed email domains. */
+/**
+ * Renders the policies of the school: the students' card with the Nina and thread
+ * switches, and the allowed email domains.
+ */
 export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
   const viewer = useQuery(tenancy.viewer.get, { slug });
 
@@ -44,19 +48,9 @@ export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
 
   return (
     <>
-      <SchoolSwitchPolicy
-        buildPolicy={(value) => ({ key: "nina", value })}
-        checked={viewer.value.tenant.policies.nina}
-        description="policy-nina-description"
+      <SchoolStudentsPolicy
+        policies={viewer.value.tenant.policies}
         slug={slug}
-        title="policy-nina"
-      />
-      <SchoolSwitchPolicy
-        buildPolicy={(value) => ({ key: "studentThreads", value })}
-        checked={viewer.value.tenant.policies.studentThreads}
-        description="policy-threads-description"
-        slug={slug}
-        title="policy-threads"
       />
       <SchoolDomainsPolicy
         policies={viewer.value.tenant.policies}
@@ -66,7 +60,55 @@ export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
   );
 }
 
-/** Renders one policy that is on or off, and saves each change at once. */
+/**
+ * Renders the policies of the students as one card: the Nina and thread switches,
+ * each saved at once, with the audit trail in its footer.
+ */
+function SchoolStudentsPolicy({
+  policies,
+  slug,
+}: {
+  policies: SchoolPolicies;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+
+  return (
+    <CardSection>
+      <CardHeader>
+        <CardTitle>{t("policy-students")}</CardTitle>
+        <CardDescription>{t("policy-students-description")}</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <SchoolSwitchPolicy
+          buildPolicy={(value) => ({ key: "nina", value })}
+          checked={policies.nina}
+          description="policy-nina-description"
+          slug={slug}
+          title="policy-nina"
+        />
+        <SchoolSwitchPolicy
+          buildPolicy={(value) => ({ key: "studentThreads", value })}
+          checked={policies.studentThreads}
+          description="policy-threads-description"
+          slug={slug}
+          title="policy-threads"
+        />
+      </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("policy-students-footer")}</CardSectionHint>
+        <CardSectionActions>
+          <SchoolTrailAction />
+        </CardSectionActions>
+      </CardSectionFooter>
+    </CardSection>
+  );
+}
+
+/**
+ * Renders one policy that is on or off as a row of the students' card, with its
+ * description under its label, and saves each change at once.
+ */
 function SchoolSwitchPolicy({
   buildPolicy,
   checked,
@@ -87,29 +129,24 @@ function SchoolSwitchPolicy({
   const id = useId();
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t(title)}</CardTitle>
-        <CardDescription>{t(description)}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between gap-4">
-          <Label htmlFor={id}>{t(title)}</Label>
-          <Switch
-            checked={checked}
-            id={id}
-            onCheckedChange={(value) => {
-              startTransition(() =>
-                saveSchool(
-                  () => setPolicy({ policy: buildPolicy(value), slug }),
-                  SOURCE
-                )
-              );
-            }}
-          />
-        </div>
-      </CardContent>
-    </CardSection>
+    <div className="flex items-center justify-between gap-4">
+      <div className="grid min-w-0 gap-1">
+        <Label htmlFor={id}>{t(title)}</Label>
+        <p className="text-muted-foreground text-sm">{t(description)}</p>
+      </div>
+      <Switch
+        checked={checked}
+        id={id}
+        onCheckedChange={(value) => {
+          startTransition(() =>
+            saveSchool(
+              () => setPolicy({ policy: buildPolicy(value), slug }),
+              SOURCE
+            )
+          );
+        }}
+      />
+    </div>
   );
 }
 

@@ -114,6 +114,9 @@ function SchoolLoginsCard({ slug }: { slug: TenantSlug }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("logins-footer")}</CardSectionHint>
+      </CardSectionFooter>
     </CardSection>
   );
 }
