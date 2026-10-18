@@ -275,6 +275,7 @@
     "client-create": "Buat",
     "client-scope": "Berlaku untuk",
     "client-name-placeholder": "Nama sistem",
+    "client-actions": "Aksi",
     "client-actions-footer": "Klien selalu memiliki paling sedikit satu aksi.",
     "client-action": {
       "cohort": {

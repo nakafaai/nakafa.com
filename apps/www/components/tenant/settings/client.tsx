@@ -162,7 +162,7 @@ export function SchoolClientCreateDialog({
           </Select>
         </Field>
         <FieldSet>
-          <FieldLegend variant="label">{t("client-scope")}</FieldLegend>
+          <FieldLegend variant="label">{t("client-actions")}</FieldLegend>
           {Arr.map(IntegrationAction.literals, (action) => {
             const checked = Arr.contains(actions, action);
             return (

@@ -275,6 +275,7 @@
     "client-create": "Erstellen",
     "client-scope": "Gilt für",
     "client-name-placeholder": "Name des Systems",
+    "client-actions": "Aktionen",
     "client-actions-footer": "Ein Client behält mindestens eine Aktion.",
     "client-action": {
       "cohort": {

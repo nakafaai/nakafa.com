@@ -275,6 +275,7 @@
     "client-create": "Create",
     "client-scope": "Covers",
     "client-name-placeholder": "Name of the system",
+    "client-actions": "Actions",
     "client-actions-footer": "A client keeps at least one action.",
     "client-action": {
       "cohort": {
