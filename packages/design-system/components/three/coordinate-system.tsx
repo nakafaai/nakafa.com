@@ -19,7 +19,15 @@ import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
 import { useTheme } from "next-themes";
-import { type CSSProperties, type ReactNode, Suspense, useMemo } from "react";
+import {
+  type ComponentProps,
+  type CSSProperties,
+  createContext,
+  type ReactNode,
+  Suspense,
+  use,
+  useMemo,
+} from "react";
 
 const CAMERA_POSITION_X = 12;
 const CAMERA_POSITION_Y = 8;
@@ -62,6 +70,77 @@ interface Props {
   showZAxis?: boolean;
   /** Size of the coordinate system */
   size?: number;
+}
+
+/**
+ * The configuration of one coordinate scene, which its camera and axes read.
+ * Each part takes the props of the component that draws it, so the scene keeps
+ * the types those components declare.
+ */
+type CoordinateScene = Pick<
+  ComponentProps<typeof CameraControls>,
+  "cameraTarget" | "framing" | "maxDistance" | "minDistance" | "projection"
+> &
+  Required<Pick<ComponentProps<typeof CameraControls>, "cameraPosition">> &
+  Required<
+    Pick<
+      ComponentProps<typeof Axes>,
+      "frame" | "showLabels" | "showZAxis" | "size"
+    >
+  > &
+  Pick<ComponentProps<typeof Axes>, "origin"> &
+  Required<Pick<Props, "showAxes">>;
+
+const CoordinateSceneContext = createContext<CoordinateScene | null>(null);
+
+/** Selects the configuration of the surrounding coordinate scene. */
+function useCoordinateScene() {
+  const scene = use(CoordinateSceneContext);
+  if (scene === null) {
+    // A missing scene is a programmer composition error at this React seam.
+    throw new Error("Coordinate scene parts require CoordinateSystem.");
+  }
+  return scene;
+}
+
+/** The scene's camera, with the controls that orbit and frame it. */
+function CoordinateCamera() {
+  const {
+    cameraPosition,
+    cameraTarget,
+    framing,
+    maxDistance,
+    minDistance,
+    projection,
+  } = useCoordinateScene();
+
+  return (
+    <CameraControls
+      cameraPosition={cameraPosition}
+      cameraTarget={cameraTarget}
+      framing={framing}
+      maxDistance={maxDistance}
+      minDistance={minDistance}
+      projection={projection}
+    />
+  );
+}
+
+/** The scene's axes, with its Z axis when the scene shows it. */
+function CoordinateAxes() {
+  const { frame, origin, showAxes, showLabels, showZAxis, size } =
+    useCoordinateScene();
+
+  return (
+    <Axes
+      frame={frame}
+      origin={origin}
+      showLabels={showAxes && showLabels}
+      showZAxis={showZAxis}
+      size={size}
+      visible={showAxes}
+    />
+  );
 }
 
 /**
@@ -117,79 +196,99 @@ export function CoordinateSystem({
     () => frame ?? createSymmetricFrame(gridSize ?? 100),
     [frame, gridSize]
   );
+  const scene = useMemo(
+    () => ({
+      cameraPosition,
+      cameraTarget,
+      framing: cameraFraming,
+      frame: axisFrame,
+      maxDistance: cameraMaxDistance,
+      minDistance: cameraMinDistance,
+      origin,
+      projection: cameraProjection,
+      showAxes,
+      showLabels,
+      showZAxis,
+      size,
+    }),
+    [
+      axisFrame,
+      cameraFraming,
+      cameraMaxDistance,
+      cameraMinDistance,
+      cameraPosition,
+      cameraProjection,
+      cameraTarget,
+      origin,
+      showAxes,
+      showLabels,
+      showZAxis,
+      size,
+    ]
+  );
 
   return (
-    <VisualCardBody
-      aria-label={ariaLabel}
-      className={cn(threeSceneFrameVariants(), "cursor-grab", className)}
-      data-scene="coordinate-system"
-      render={ariaLabel === undefined ? undefined : <section />}
-    >
-      <ThreeCanvas style={{ background: backgroundColor }}>
-        <Suspense>
-          {/* Camera Controls */}
-          <CameraControls
-            cameraPosition={cameraPosition}
-            cameraTarget={cameraTarget}
-            framing={cameraFraming}
-            maxDistance={cameraMaxDistance}
-            minDistance={cameraMinDistance}
-            projection={cameraProjection}
-          />
+    <CoordinateSceneContext value={scene}>
+      <VisualCardBody
+        aria-label={ariaLabel}
+        className={cn(threeSceneFrameVariants(), "cursor-grab", className)}
+        data-scene="coordinate-system"
+        render={ariaLabel === undefined ? undefined : <section />}
+      >
+        <ThreeCanvas style={{ background: backgroundColor }}>
+          <Suspense>
+            {/* Camera Controls */}
+            <CoordinateCamera />
 
-          {/* Lighting */}
-          <ambientLight intensity={0.5} />
-          <pointLight intensity={1} position={[10, 10, 10]} />
+            {/* Lighting */}
+            <ambientLight intensity={0.5} />
+            <pointLight intensity={1} position={[10, 10, 10]} />
 
-          {/* Coordinate System */}
-          {/* Fit the true origin without measuring decorative axis lengths. */}
-          <CameraBounds
-            bounds={
-              !frame && showAxes
-                ? {
-                    x: { min: origin?.x ?? 0, max: origin?.x ?? 0 },
-                    y: { min: origin?.y ?? 0, max: origin?.y ?? 0 },
-                    z: { min: origin?.z ?? 0, max: origin?.z ?? 0 },
-                  }
-                : undefined
-            }
-            exclude={!(frame || showAxes)}
-          >
-            <Axes
-              frame={axisFrame}
-              origin={origin}
-              showLabels={showAxes && showLabels}
-              showZAxis={showZAxis}
-              size={size}
-              visible={showAxes}
-            />
+            {/* Coordinate System */}
+            {/* Fit the true origin without measuring decorative axis lengths. */}
+            <CameraBounds
+              bounds={
+                !frame && showAxes
+                  ? {
+                      x: { min: origin?.x ?? 0, max: origin?.x ?? 0 },
+                      y: { min: origin?.y ?? 0, max: origin?.y ?? 0 },
+                      z: { min: origin?.z ?? 0, max: origin?.z ?? 0 },
+                    }
+                  : undefined
+              }
+              exclude={!(frame || showAxes)}
+            >
+              <CoordinateAxes />
 
-            {/* Origin */}
-            <Origin
-              color={COLORS.SLATE}
-              {...(origin ? { position: [origin.x, origin.y, origin.z] } : {})}
-              size={0.06}
-              visible={showOrigin}
-            />
-          </CameraBounds>
-
-          {/* Grid */}
-          {showGrid ? (
-            <CameraBounds exclude>
-              <CoordinateGrid
-                cellColor={gridColors.secondary}
-                frame={gridFrame}
-                infinite={!frame && gridSize === undefined}
-                origin={origin}
-                sectionColor={gridColors.main}
+              {/* Origin */}
+              <Origin
+                color={COLORS.SLATE}
+                {...(origin
+                  ? { position: [origin.x, origin.y, origin.z] }
+                  : {})}
+                size={0.06}
+                visible={showOrigin}
               />
             </CameraBounds>
-          ) : null}
 
-          {/* User Content */}
-          {children}
-        </Suspense>
-      </ThreeCanvas>
-    </VisualCardBody>
+            {/* Grid */}
+            {showGrid ? (
+              <CameraBounds exclude>
+                <CoordinateGrid
+                  cellColor={gridColors.secondary}
+                  frame={gridFrame}
+                  infinite={!frame && gridSize === undefined}
+                  origin={origin}
+                  sectionColor={gridColors.main}
+                />
+              </CameraBounds>
+            ) : null}
+
+            {/* User Content */}
+            {children}
+          </Suspense>
+        </ThreeCanvas>
+      </VisualCardBody>
+    </CoordinateSceneContext>
   );
 }

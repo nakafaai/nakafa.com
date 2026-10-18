@@ -10,7 +10,16 @@ import {
 } from "@repo/design-system/components/three/data/constants";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
 import { MutableHashMap } from "effect";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactNode,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import {
   Color,
   type Group,
@@ -45,6 +54,45 @@ interface ThreeLabelProps {
 }
 
 const LABEL_BASE_FONT_SIZE = 16;
+
+/** What the overlay content of one label draws, which it reads from its label. */
+interface LabelValues {
+  distanceFactor: number;
+  measure: ComponentProps<typeof SceneHtml>["ref"];
+  occlude: boolean | undefined;
+  style: ComponentProps<typeof SceneHtml>["style"];
+}
+
+const LabelContext = createContext<LabelValues | null>(null);
+
+/** Selects the overlay values of the surrounding label. */
+function useThreeLabel() {
+  const label = use(LabelContext);
+  if (label === null) {
+    // A missing label is a programmer composition error at this React seam.
+    throw new Error("The label content requires ThreeLabel.");
+  }
+  return label;
+}
+
+/**
+ * The overlay content of one label. The label provides what it draws, so the
+ * content takes no props.
+ */
+function LabelHtml({ children }: { children: ReactNode }) {
+  const { distanceFactor, measure, occlude, style } = useThreeLabel();
+
+  return (
+    <SceneHtml
+      distanceFactor={distanceFactor}
+      occlude={occlude}
+      ref={measure}
+      style={style}
+    >
+      {children}
+    </SceneHtml>
+  );
+}
 
 function anchorOffset(anchor: LabelAnchorX | LabelAnchorY) {
   if (anchor === "left" || anchor === "top") {
@@ -217,45 +265,59 @@ export function ThreeLabel({
     ]
   );
 
+  const style = useMemo<ComponentProps<typeof SceneHtml>["style"]>(
+    () => ({
+      WebkitTextStroke:
+        outlineColor && outlineWidthEm > 0
+          ? `${outlineWidthEm}em ${outlineColor}`
+          : undefined,
+      color: labelColor,
+      fontFamily: "var(--font-sans)",
+      fontSize: LABEL_BASE_FONT_SIZE,
+      lineHeight: 1,
+      paintOrder: "stroke fill",
+      pointerEvents: "none",
+      transform: `translate(${anchorOffset(anchorX) * 100}%, ${anchorOffset(anchorY) * 100}%) rotate(${rotation}rad) translate(${gapDirection(anchorX) * gapPixels}px, ${gapDirection(anchorY) * gapPixels}px)`,
+      transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
+      userSelect: "none",
+      whiteSpace: "nowrap",
+    }),
+    [
+      anchorX,
+      anchorY,
+      gapPixels,
+      labelColor,
+      outlineColor,
+      outlineWidthEm,
+      rotation,
+    ]
+  );
+  const labelValues = useMemo(
+    () => ({ distanceFactor, measure: measureLabel, occlude, style }),
+    [distanceFactor, measureLabel, occlude, style]
+  );
+
   if (!visible) {
     return null;
   }
 
   return (
     <group {...(position === undefined ? {} : { position })} ref={group}>
-      <SceneHtml
-        distanceFactor={distanceFactor}
-        occlude={occlude}
-        ref={measureLabel}
-        style={{
-          WebkitTextStroke:
-            outlineColor && outlineWidthEm > 0
-              ? `${outlineWidthEm}em ${outlineColor}`
-              : undefined,
-          color: labelColor,
-          fontFamily: "var(--font-sans)",
-          fontSize: LABEL_BASE_FONT_SIZE,
-          lineHeight: 1,
-          paintOrder: "stroke fill",
-          pointerEvents: "none",
-          transform: `translate(${anchorOffset(anchorX) * 100}%, ${anchorOffset(anchorY) * 100}%) rotate(${rotation}rad) translate(${gapDirection(anchorX) * gapPixels}px, ${gapDirection(anchorY) * gapPixels}px)`,
-          transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
-          userSelect: "none",
-          whiteSpace: "nowrap",
-        }}
-      >
-        <span
-          aria-hidden="true"
-          ref={content}
-          style={{
-            display: "inline-block",
-            transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
-            verticalAlign: "top",
-          }}
-        >
-          {children}
-        </span>
-      </SceneHtml>
+      <LabelContext value={labelValues}>
+        <LabelHtml>
+          <span
+            aria-hidden="true"
+            ref={content}
+            style={{
+              display: "inline-block",
+              transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
+              verticalAlign: "top",
+            }}
+          >
+            {children}
+          </span>
+        </LabelHtml>
+      </LabelContext>
     </group>
   );
 }

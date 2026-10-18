@@ -9,7 +9,7 @@ import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/data/
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { Predicate } from "effect";
-import { type ReactNode, useMemo } from "react";
+import { createContext, type ReactNode, use, useMemo } from "react";
 import { type Color, Quaternion, Vector3 } from "three";
 
 const ARROW_SEGMENT_OFFSET = 0.2;
@@ -39,6 +39,43 @@ function getLabelPositionProgress(labelPosition: LabelPosition) {
   }
 
   return 1;
+}
+
+/** How the label of one arrow is placed and drawn. */
+interface ArrowLabelValues {
+  anchorX: LabelAnchorX;
+  color: string | Color;
+  fontSize: ThreeFontSize | number;
+  position: Vector3;
+}
+
+const ArrowLabelContext = createContext<ArrowLabelValues | null>(null);
+
+/** Selects the label of the surrounding arrow. */
+function useArrowLabel() {
+  const label = use(ArrowLabelContext);
+  if (label === null) {
+    // A missing arrow is a programmer composition error at this React seam.
+    throw new Error("An arrow label requires ArrowHelper.");
+  }
+  return label;
+}
+
+/** The label of one arrow, placed at its label point in the arrow's color. */
+function ArrowLabel({ children }: { children: ReactNode }) {
+  const { anchorX, color, fontSize, position } = useArrowLabel();
+
+  return (
+    <ThreeLabel
+      anchorX={anchorX}
+      color={color}
+      fontSize={fontSize}
+      minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
+      position={position}
+    >
+      {children}
+    </ThreeLabel>
+  );
 }
 
 interface Props {
@@ -171,42 +208,44 @@ export function ArrowHelper({
     return { position, quaternion };
   }, [vectors, headSize]);
 
+  const labelValues = useMemo(
+    () => ({
+      anchorX: labelAnchorX,
+      color,
+      fontSize: labelSize,
+      position: labelPos,
+    }),
+    [color, labelAnchorX, labelPos, labelSize]
+  );
+
   return (
-    <group frustumCulled {...props}>
-      {/* Shaft of the arrow */}
-      <Line
-        color={color}
-        frustumCulled
-        lineWidth={lineWidth}
-        points={shaftPoints}
-      />
-
-      {/* Cone arrowhead with optimized segments */}
-      {!!coneTransform && (
-        <mesh
-          frustumCulled
-          position={coneTransform.position}
-          quaternion={coneTransform.quaternion}
-        >
-          <coneGeometry
-            args={[headSize / 4, headSize, GRAPH_ARROW_SEGMENTS, 1]}
-          />
-          <meshBasicMaterial color={color} />
-        </mesh>
-      )}
-
-      {/* Label text */}
-      {Predicate.isNotNullish(label) && (
-        <ThreeLabel
-          anchorX={labelAnchorX}
+    <ArrowLabelContext value={labelValues}>
+      <group frustumCulled {...props}>
+        {/* Shaft of the arrow */}
+        <Line
           color={color}
-          fontSize={labelSize}
-          minimumFontSize={THREE_DIAGRAM_MINIMUM_FONT_SIZE}
-          position={labelPos}
-        >
-          {label}
-        </ThreeLabel>
-      )}
-    </group>
+          frustumCulled
+          lineWidth={lineWidth}
+          points={shaftPoints}
+        />
+
+        {/* Cone arrowhead with optimized segments */}
+        {!!coneTransform && (
+          <mesh
+            frustumCulled
+            position={coneTransform.position}
+            quaternion={coneTransform.quaternion}
+          >
+            <coneGeometry
+              args={[headSize / 4, headSize, GRAPH_ARROW_SEGMENTS, 1]}
+            />
+            <meshBasicMaterial color={color} />
+          </mesh>
+        )}
+
+        {/* Label text */}
+        {Predicate.isNotNullish(label) && <ArrowLabel>{label}</ArrowLabel>}
+      </group>
+    </ArrowLabelContext>
   );
 }
