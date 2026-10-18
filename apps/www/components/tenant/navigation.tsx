@@ -13,15 +13,16 @@ import { isSchoolSettingsPath } from "@/lib/settings/school";
 
 /**
  * Renders the navigation of the school sidebar. The settings sections replace it
- * on a settings route, and otherwise the school's own groups show. The management
- * group, with the settings entry, shows only to a viewer who may manage the school.
+ * on a settings route for a viewer who may manage the school, and otherwise the
+ * school's own groups show. The management group, with the settings entry, shows
+ * only to that viewer.
  */
 export function TenantNavigation({ canManage }: { canManage: boolean }) {
   const pathname = usePathname();
   const t = useTranslations("School");
   const tSettings = useTranslations("SchoolSettings");
 
-  if (isSchoolSettingsPath(pathname)) {
+  if (canManage && isSchoolSettingsPath(pathname)) {
     return <SchoolSettingsNav />;
   }
 

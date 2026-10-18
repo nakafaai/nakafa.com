@@ -12,13 +12,13 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { TenantSidebarGroup } from "@/components/tenant/group";
@@ -45,7 +45,9 @@ const sectionIcons: Record<
 
 /**
  * Renders the school settings sections as the sidebar body for settings routes,
- * replacing the school's own navigation without replacing the shell.
+ * replacing the school's own navigation without replacing the shell. A school
+ * host has no locale in its paths, so the links are plain Next.js links, as in
+ * the school's own navigation.
  */
 export function SchoolSettingsNav() {
   return (
@@ -75,7 +77,7 @@ function SchoolSettingsNavGroup({
           <SidebarMenuItem key={section.href}>
             <SidebarMenuButton
               isActive={pathname === section.href}
-              render={<NavigationLink href={section.href} title={label} />}
+              render={<Link href={section.href} title={label} />}
               tooltip={label}
             >
               <HugeIcons icon={sectionIcons[section.labelKey]} />
