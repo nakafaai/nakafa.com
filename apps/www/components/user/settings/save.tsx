@@ -15,7 +15,7 @@ export function SettingsSave({ disabled }: { disabled: boolean }) {
 
   return (
     <CardSectionActions>
-      <Button disabled={disabled} size="sm" type="submit" variant="secondary">
+      <Button disabled={disabled} size="sm" type="submit">
         {t("save")}
       </Button>
     </CardSectionActions>

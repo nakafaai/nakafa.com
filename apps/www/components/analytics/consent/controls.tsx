@@ -132,12 +132,7 @@ function ConsentActions({
       >
         {t("decline")}
       </Button>
-      <Button
-        disabled={!canGrant}
-        onClick={() => decide(true)}
-        type="button"
-        variant="secondary"
-      >
+      <Button disabled={!canGrant} onClick={() => decide(true)} type="button">
         {t("allow")}
       </Button>
     </>
