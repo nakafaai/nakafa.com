@@ -1,5 +1,13 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -14,61 +22,67 @@ export function Graph({
   title,
   description,
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
+  const config = resolveLineScene({
+    cameraPosition: [0, 0, 15],
+    data: [
+      // Outer Triangle ABC
+      {
+        points: [A, B, C, A],
+        color: getColor("INDIGO"),
+        showPoints: true,
+        smooth: false,
+        labels: [
+          {
+            text: <InlineMath math="a^\circ" />,
+            at: 0,
+            offset: [0, -1.5, 0],
+          },
+          {
+            text: <InlineMath math="x^\circ" />,
+            at: 1,
+            offset: [0.8, 1.2, 0],
+          },
+          {
+            text: <InlineMath math="y^\circ" />,
+            at: 1,
+            offset: [1, 0.3, 0],
+          },
+          {
+            text: <InlineMath math="y^\circ" />,
+            at: 2,
+            offset: [-0.8, 1.2, 0],
+          },
+          {
+            text: <InlineMath math="x^\circ" />,
+            at: 2,
+            offset: [-1, 0.3, 0],
+          },
+        ],
+      },
+      // Inner Triangle Lines BD and CD
+      {
+        points: [B, D, C],
+        color: getColor("TEAL"),
+        showPoints: true,
+        smooth: false,
+        labels: [
+          {
+            text: <InlineMath math="100^\circ" />,
+            at: 1,
+            offset: [0, -0.8, 0],
+          },
+        ],
+      },
+    ],
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[0, 0, 15]}
-      data={[
-        // Outer Triangle ABC
-        {
-          points: [A, B, C, A],
-          color: getColor("INDIGO"),
-          showPoints: true,
-          smooth: false,
-          labels: [
-            {
-              text: <InlineMath math="a^\circ" />,
-              at: 0,
-              offset: [0, -1.5, 0],
-            },
-            {
-              text: <InlineMath math="x^\circ" />,
-              at: 1,
-              offset: [0.8, 1.2, 0],
-            },
-            {
-              text: <InlineMath math="y^\circ" />,
-              at: 1,
-              offset: [1, 0.3, 0],
-            },
-            {
-              text: <InlineMath math="y^\circ" />,
-              at: 2,
-              offset: [-0.8, 1.2, 0],
-            },
-            {
-              text: <InlineMath math="x^\circ" />,
-              at: 2,
-              offset: [-1, 0.3, 0],
-            },
-          ],
-        },
-        // Inner Triangle Lines BD and CD
-        {
-          points: [B, D, C],
-          color: getColor("TEAL"),
-          showPoints: true,
-          smooth: false,
-          labels: [
-            {
-              text: <InlineMath math="100^\circ" />,
-              at: 1,
-              offset: [0, -0.8, 0],
-            },
-          ],
-        },
-      ]}
-      description={description}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }

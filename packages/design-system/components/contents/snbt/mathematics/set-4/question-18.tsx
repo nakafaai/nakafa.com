@@ -1,9 +1,17 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import {
   getArcPoints,
   getMidpoint,
 } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -119,14 +127,20 @@ function scaleDistance(value: number) {
 
 /** Renders the coordinate graph for SNBT set 4 question 18. */
 export function Graph({ title, description }: GraphProps) {
+  const config = resolveLineScene({
+    cameraPosition: [3.9, 2.6, 12],
+    cameraTarget: [3.9, 2.6, 0],
+    data: graphData,
+    showZAxis: false,
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[3.9, 2.6, 12]}
-      cameraTarget={[3.9, 2.6, 0]}
-      data={graphData}
-      description={description}
-      showZAxis={false}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }

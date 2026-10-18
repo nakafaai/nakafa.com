@@ -1,5 +1,13 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
@@ -20,70 +28,76 @@ export function Graph({
   title,
   description,
 }: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
+  const config = resolveLineScene({
+    cameraPosition: [2.5, 3, 12],
+    cameraTarget: [2.5, 3, 0],
+    data: [
+      {
+        points: linearPoints,
+        color: getColor("INDIGO"),
+        labels: [
+          {
+            text: <InlineMath math="y = f(x)" />,
+            at: 1,
+            offset: [-1.4, -2, 0],
+          },
+          {
+            text: <InlineMath math="5" />,
+            at: Option.getOrElse(
+              Arr.findFirstIndex(linearPoints, (p) => p.x === 0),
+              () => -1
+            ),
+            offset: [-0.5, 0, 0],
+          },
+          {
+            text: <InlineMath math="5" />,
+            at: Option.getOrElse(
+              Arr.findFirstIndex(linearPoints, (p) => p.x === 5),
+              () => -1
+            ),
+            offset: [0.5, 0.5, 0],
+          },
+        ],
+        showPoints: false,
+        smooth: false,
+        cone: { position: "both", size: 0.5 },
+      },
+      {
+        points: exponentialPoints,
+        color: getColor("TEAL"),
+        labels: [
+          {
+            text: <InlineMath math="y = g(x)" />,
+            at: Option.getOrElse(
+              Arr.findFirstIndex(exponentialPoints, (p) => p.x === 2),
+              () => -1
+            ),
+            offset: [2, 1, 0],
+          },
+          {
+            text: <InlineMath math="(2, 3)" />,
+            at: Option.getOrElse(
+              Arr.findFirstIndex(exponentialPoints, (p) => p.x === 2),
+              () => -1
+            ),
+            offset: [2, 0, 0],
+          },
+        ],
+        showPoints: false,
+        smooth: false,
+        cone: { position: "both", size: 0.5 },
+      },
+    ],
+    showZAxis: false,
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[2.5, 3, 12]}
-      cameraTarget={[2.5, 3, 0]}
-      data={[
-        {
-          points: linearPoints,
-          color: getColor("INDIGO"),
-          labels: [
-            {
-              text: <InlineMath math="y = f(x)" />,
-              at: 1,
-              offset: [-1.4, -2, 0],
-            },
-            {
-              text: <InlineMath math="5" />,
-              at: Option.getOrElse(
-                Arr.findFirstIndex(linearPoints, (p) => p.x === 0),
-                () => -1
-              ),
-              offset: [-0.5, 0, 0],
-            },
-            {
-              text: <InlineMath math="5" />,
-              at: Option.getOrElse(
-                Arr.findFirstIndex(linearPoints, (p) => p.x === 5),
-                () => -1
-              ),
-              offset: [0.5, 0.5, 0],
-            },
-          ],
-          showPoints: false,
-          smooth: false,
-          cone: { position: "both", size: 0.5 },
-        },
-        {
-          points: exponentialPoints,
-          color: getColor("TEAL"),
-          labels: [
-            {
-              text: <InlineMath math="y = g(x)" />,
-              at: Option.getOrElse(
-                Arr.findFirstIndex(exponentialPoints, (p) => p.x === 2),
-                () => -1
-              ),
-              offset: [2, 1, 0],
-            },
-            {
-              text: <InlineMath math="(2, 3)" />,
-              at: Option.getOrElse(
-                Arr.findFirstIndex(exponentialPoints, (p) => p.x === 2),
-                () => -1
-              ),
-              offset: [2, 0, 0],
-            },
-          ],
-          showPoints: false,
-          smooth: false,
-          cone: { position: "both", size: 0.5 },
-        },
-      ]}
-      description={description}
-      showZAxis={false}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }

@@ -1,5 +1,12 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -68,142 +75,148 @@ export function Graph({ title, description, labels }: GraphProps) {
   const dimensionY = -labelOffsetY * 0.4;
   const dimensionY_X = -labelOffsetY * 0.8;
 
+  const config = resolveLineScene({
+    cameraPosition: [3.8, 2.7, 12],
+    cameraTarget: [3.8, 2.7, 0],
+    data: [
+      {
+        points: [origin, buildingTop],
+        color: getColor("INDIGO"),
+        showPoints: false,
+        labels: [
+          {
+            text: <InlineMath math="16\,\text{m}" />,
+            at: 1,
+            offset: [-labelOffsetX, -labelOffsetY, 0],
+          },
+          {
+            text: labels.building,
+            at: 1,
+            offset: [1.4, 0, 0],
+          },
+        ],
+      },
+      {
+        points: [buildingTop, helicopter],
+        color: getColor("ORANGE"),
+        showPoints: false,
+        labels: [
+          {
+            text: labels.helicopter,
+            at: 1,
+            offset: [2.4, labelOffsetY * 0.4, 0],
+          },
+          {
+            text: <InlineMath math="?" />,
+            at: 0,
+            offset: [-labelOffsetX, labelOffsetY * 0.7, 0],
+          },
+        ],
+        cone: { position: "end" },
+      },
+      {
+        points: [groundStart, groundEnd],
+        color: getColor("TEAL"),
+        showPoints: false,
+      },
+      {
+        points: [
+          { x: 0, y: dimensionY, z: 0 },
+          { x: totalGround / 2, y: dimensionY, z: 0 },
+          { x: totalGround, y: dimensionY, z: 0 },
+        ],
+        color: getColor("ROSE"),
+        showPoints: false,
+        cone: { position: "both" },
+        labels: [
+          {
+            text: <InlineMath math="32\,\text{m}" />,
+            at: 1,
+            offset: [0, -labelOffsetY * 0.4, 0],
+          },
+        ],
+      },
+      {
+        points: [observationPoint, buildingTop],
+        color: getColor("VIOLET"),
+        showPoints: false,
+      },
+      {
+        points: [observationPoint, helicopter],
+        color: getColor("EMERALD"),
+        showPoints: false,
+      },
+      {
+        points: [
+          observerPosition,
+          { x: observerPosition.x, y: observerHeight, z: 0 },
+        ],
+        color: getColor("CYAN"),
+        showPoints: false,
+        labels: [
+          {
+            text: labels.observer,
+            at: 1,
+            offset: [0, labelOffsetY * 0.3, 0],
+          },
+        ],
+      },
+      {
+        points: [
+          { x: observationPoint.x, y: dimensionY_X, z: 0 },
+          {
+            x: observationPoint.x + shadowLength / 2,
+            y: dimensionY_X,
+            z: 0,
+          },
+          { x: observerPosition.x, y: dimensionY_X, z: 0 },
+        ],
+        color: getColor("CYAN"),
+        showPoints: false,
+        cone: { position: "both" },
+        labels: [
+          {
+            text: <InlineMath math="x" />,
+            at: 1,
+            offset: [0, -labelOffsetY * 0.4, 0],
+          },
+        ],
+      },
+      {
+        points: arc30Points,
+        color: getColor("VIOLET"),
+        showPoints: false,
+        labels: [
+          {
+            text: <InlineMath math="30^\circ" />,
+            at: arc30LabelIndex,
+            offset: [-labelOffsetX * 0.6, labelOffsetY * 0.05, 0],
+          },
+        ],
+      },
+      {
+        points: arc45Points,
+        color: getColor("EMERALD"),
+        showPoints: false,
+        labels: [
+          {
+            text: <InlineMath math="45^\circ" />,
+            at: arc45LabelIndex,
+            offset: [-labelOffsetX * 0.8, labelOffsetY * 0.5, 0],
+          },
+        ],
+      },
+    ],
+    showZAxis: false,
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[3.8, 2.7, 12]}
-      cameraTarget={[3.8, 2.7, 0]}
-      data={[
-        {
-          points: [origin, buildingTop],
-          color: getColor("INDIGO"),
-          showPoints: false,
-          labels: [
-            {
-              text: <InlineMath math="16\,\text{m}" />,
-              at: 1,
-              offset: [-labelOffsetX, -labelOffsetY, 0],
-            },
-            {
-              text: labels.building,
-              at: 1,
-              offset: [1.4, 0, 0],
-            },
-          ],
-        },
-        {
-          points: [buildingTop, helicopter],
-          color: getColor("ORANGE"),
-          showPoints: false,
-          labels: [
-            {
-              text: labels.helicopter,
-              at: 1,
-              offset: [2.4, labelOffsetY * 0.4, 0],
-            },
-            {
-              text: <InlineMath math="?" />,
-              at: 0,
-              offset: [-labelOffsetX, labelOffsetY * 0.7, 0],
-            },
-          ],
-          cone: { position: "end" },
-        },
-        {
-          points: [groundStart, groundEnd],
-          color: getColor("TEAL"),
-          showPoints: false,
-        },
-        {
-          points: [
-            { x: 0, y: dimensionY, z: 0 },
-            { x: totalGround / 2, y: dimensionY, z: 0 },
-            { x: totalGround, y: dimensionY, z: 0 },
-          ],
-          color: getColor("ROSE"),
-          showPoints: false,
-          cone: { position: "both" },
-          labels: [
-            {
-              text: <InlineMath math="32\,\text{m}" />,
-              at: 1,
-              offset: [0, -labelOffsetY * 0.4, 0],
-            },
-          ],
-        },
-        {
-          points: [observationPoint, buildingTop],
-          color: getColor("VIOLET"),
-          showPoints: false,
-        },
-        {
-          points: [observationPoint, helicopter],
-          color: getColor("EMERALD"),
-          showPoints: false,
-        },
-        {
-          points: [
-            observerPosition,
-            { x: observerPosition.x, y: observerHeight, z: 0 },
-          ],
-          color: getColor("CYAN"),
-          showPoints: false,
-          labels: [
-            {
-              text: labels.observer,
-              at: 1,
-              offset: [0, labelOffsetY * 0.3, 0],
-            },
-          ],
-        },
-        {
-          points: [
-            { x: observationPoint.x, y: dimensionY_X, z: 0 },
-            {
-              x: observationPoint.x + shadowLength / 2,
-              y: dimensionY_X,
-              z: 0,
-            },
-            { x: observerPosition.x, y: dimensionY_X, z: 0 },
-          ],
-          color: getColor("CYAN"),
-          showPoints: false,
-          cone: { position: "both" },
-          labels: [
-            {
-              text: <InlineMath math="x" />,
-              at: 1,
-              offset: [0, -labelOffsetY * 0.4, 0],
-            },
-          ],
-        },
-        {
-          points: arc30Points,
-          color: getColor("VIOLET"),
-          showPoints: false,
-          labels: [
-            {
-              text: <InlineMath math="30^\circ" />,
-              at: arc30LabelIndex,
-              offset: [-labelOffsetX * 0.6, labelOffsetY * 0.05, 0],
-            },
-          ],
-        },
-        {
-          points: arc45Points,
-          color: getColor("EMERALD"),
-          showPoints: false,
-          labels: [
-            {
-              text: <InlineMath math="45^\circ" />,
-              at: arc45LabelIndex,
-              offset: [-labelOffsetX * 0.8, labelOffsetY * 0.5, 0],
-            },
-          ],
-        },
-      ]}
-      description={description}
-      showZAxis={false}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }

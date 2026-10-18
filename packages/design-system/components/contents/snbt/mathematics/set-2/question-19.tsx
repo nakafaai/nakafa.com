@@ -1,5 +1,12 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -46,110 +53,116 @@ function generateArc(
 
 /** Renders the coordinate graph for SNBT set 2 question 19. */
 export function Graph({ title, description }: GraphProps) {
+  const config = resolveLineScene({
+    cameraPosition: [3.3, 2.1, 12],
+    cameraTarget: [3.3, 2.1, 0],
+    data: [
+      // Ground Line (A -> D -> B)
+      {
+        points: [
+          { x: pointAOnGround, y: 0, z: 0 },
+          { x: fortyFiveDegreeDistance, y: 0, z: 0 }, // D
+          { x: thirtyDegreeDistance, y: 0, z: 0 }, // B
+        ],
+        color: getColor("INDIGO"),
+        labels: [
+          {
+            text: <InlineMath math="A\;(\mathrm{ATC})" />,
+            at: 0,
+            offset: [-0.5, -0.5, 0],
+          },
+          { text: <InlineMath math="D" />, at: 1, offset: [0, -0.5, 0] },
+          { text: <InlineMath math="B" />, at: 2, offset: [0, -0.5, 0] },
+        ],
+      },
+      // Plane Path (E -> C)
+      {
+        points: [
+          { x: fortyFiveDegreeDistance, y: height, z: 0 }, // E
+          { x: thirtyDegreeDistance, y: height, z: 0 }, // C
+        ],
+        color: getColor("EMERALD"),
+        labels: [
+          { text: <InlineMath math="E" />, at: 0, offset: [0, 0.5, 0] },
+          { text: <InlineMath math="C" />, at: 1, offset: [0, 0.5, 0] },
+        ],
+      },
+      // Line of Sight 1 (A -> C) - 30 degrees
+      {
+        points: [
+          { x: pointAOnGround, y: 0, z: 0 },
+          { x: thirtyDegreeDistance, y: height, z: 0 },
+        ],
+        color: getColor("ORANGE"),
+      },
+      // Line of Sight 2 (A -> E) - 45 degrees
+      {
+        points: [
+          { x: pointAOnGround, y: 0, z: 0 },
+          { x: fortyFiveDegreeDistance, y: height, z: 0 },
+        ],
+        color: getColor("TEAL"),
+      },
+      // Vertical Line (B -> C)
+      {
+        points: [
+          { x: thirtyDegreeDistance, y: 0, z: 0 },
+          { x: thirtyDegreeDistance, y: height, z: 0 },
+        ],
+        color: getColor("INDIGO"),
+        labels: [
+          {
+            text: <InlineMath math="3000\,\mathrm{m}" />,
+            at: 1,
+            offset: [-1.6, -height / 2, 0],
+          },
+        ],
+      },
+      // Vertical Line (D -> E)
+      {
+        points: [
+          { x: fortyFiveDegreeDistance, y: 0, z: 0 },
+          { x: fortyFiveDegreeDistance, y: height, z: 0 },
+        ],
+        color: getColor("INDIGO"),
+      },
+      // Arc 30 degrees
+      {
+        points: generateArc(1500 * scale, 0, 30),
+        color: getColor("VIOLET"),
+        labels: [
+          {
+            text: <InlineMath math="30^\circ" />,
+            at: 10,
+            offset: [0.5, 0, 0],
+          },
+        ],
+        showPoints: false,
+      },
+      // Arc 15 degrees (from 30 to 45)
+      {
+        points: generateArc(2000 * scale, 30, 45),
+        color: getColor("VIOLET"),
+        labels: [
+          {
+            text: <InlineMath math="15^\circ" />,
+            at: 10,
+            offset: [0.5, 0.3, 0],
+          },
+        ],
+        showPoints: false,
+      },
+    ],
+    showZAxis: false,
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[3.3, 2.1, 12]}
-      cameraTarget={[3.3, 2.1, 0]}
-      data={[
-        // Ground Line (A -> D -> B)
-        {
-          points: [
-            { x: pointAOnGround, y: 0, z: 0 },
-            { x: fortyFiveDegreeDistance, y: 0, z: 0 }, // D
-            { x: thirtyDegreeDistance, y: 0, z: 0 }, // B
-          ],
-          color: getColor("INDIGO"),
-          labels: [
-            {
-              text: <InlineMath math="A\;(\mathrm{ATC})" />,
-              at: 0,
-              offset: [-0.5, -0.5, 0],
-            },
-            { text: <InlineMath math="D" />, at: 1, offset: [0, -0.5, 0] },
-            { text: <InlineMath math="B" />, at: 2, offset: [0, -0.5, 0] },
-          ],
-        },
-        // Plane Path (E -> C)
-        {
-          points: [
-            { x: fortyFiveDegreeDistance, y: height, z: 0 }, // E
-            { x: thirtyDegreeDistance, y: height, z: 0 }, // C
-          ],
-          color: getColor("EMERALD"),
-          labels: [
-            { text: <InlineMath math="E" />, at: 0, offset: [0, 0.5, 0] },
-            { text: <InlineMath math="C" />, at: 1, offset: [0, 0.5, 0] },
-          ],
-        },
-        // Line of Sight 1 (A -> C) - 30 degrees
-        {
-          points: [
-            { x: pointAOnGround, y: 0, z: 0 },
-            { x: thirtyDegreeDistance, y: height, z: 0 },
-          ],
-          color: getColor("ORANGE"),
-        },
-        // Line of Sight 2 (A -> E) - 45 degrees
-        {
-          points: [
-            { x: pointAOnGround, y: 0, z: 0 },
-            { x: fortyFiveDegreeDistance, y: height, z: 0 },
-          ],
-          color: getColor("TEAL"),
-        },
-        // Vertical Line (B -> C)
-        {
-          points: [
-            { x: thirtyDegreeDistance, y: 0, z: 0 },
-            { x: thirtyDegreeDistance, y: height, z: 0 },
-          ],
-          color: getColor("INDIGO"),
-          labels: [
-            {
-              text: <InlineMath math="3000\,\mathrm{m}" />,
-              at: 1,
-              offset: [-1.6, -height / 2, 0],
-            },
-          ],
-        },
-        // Vertical Line (D -> E)
-        {
-          points: [
-            { x: fortyFiveDegreeDistance, y: 0, z: 0 },
-            { x: fortyFiveDegreeDistance, y: height, z: 0 },
-          ],
-          color: getColor("INDIGO"),
-        },
-        // Arc 30 degrees
-        {
-          points: generateArc(1500 * scale, 0, 30),
-          color: getColor("VIOLET"),
-          labels: [
-            {
-              text: <InlineMath math="30^\circ" />,
-              at: 10,
-              offset: [0.5, 0, 0],
-            },
-          ],
-          showPoints: false,
-        },
-        // Arc 15 degrees (from 30 to 45)
-        {
-          points: generateArc(2000 * scale, 30, 45),
-          color: getColor("VIOLET"),
-          labels: [
-            {
-              text: <InlineMath math="15^\circ" />,
-              at: 10,
-              offset: [0.5, 0.3, 0],
-            },
-          ],
-          showPoints: false,
-        },
-      ]}
-      description={description}
-      showZAxis={false}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }

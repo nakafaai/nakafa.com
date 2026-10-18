@@ -1,6 +1,13 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -28,165 +35,171 @@ interface GraphProps {
 
 /** Renders the coordinate graph for SNBT set 2 question 6. */
 export function Graph({ description, title }: GraphProps) {
+  const config = resolveLineScene({
+    cameraPosition: [8, -6, 9],
+    cameraTarget: [2, 2, 2],
+    data: [
+      // Bottom Face
+      {
+        ...hiddenPoints,
+        points: [cubePointD, getMidpoint(cubePointD, cubePointA), cubePointA],
+        color: getColor("INDIGO"),
+        labels: [
+          { text: <InlineMath math="D" />, at: 0, offset: [-0.3, -0.3, 0] },
+          { text: <InlineMath math="A" />, at: 2, offset: [0.3, -0.3, 0] },
+        ],
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointA, getMidpoint(cubePointA, cubePointB), cubePointB],
+        color: getColor("INDIGO"),
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointB, getMidpoint(cubePointB, cubePointC), cubePointC],
+        color: getColor("INDIGO"),
+        labels: [
+          { text: <InlineMath math="B" />, at: 0, offset: [0.3, 0.3, 0] },
+          { text: <InlineMath math="C" />, at: 2, offset: [-0.3, 0.3, 0] },
+        ],
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointC, getMidpoint(cubePointC, cubePointD), cubePointD],
+        color: getColor("INDIGO"),
+      },
+
+      // Top Face
+      {
+        ...hiddenPoints,
+        points: [cubePointH, getMidpoint(cubePointH, cubePointE), cubePointE],
+        color: getColor("INDIGO"),
+        labels: [
+          { text: <InlineMath math="H" />, at: 0, offset: [-0.3, -0.3, 0.3] },
+          { text: <InlineMath math="E" />, at: 2, offset: [0.9, -0.3, 0.3] },
+        ],
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointE, getMidpoint(cubePointE, cubePointF), cubePointF],
+        color: getColor("INDIGO"),
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointF, getMidpoint(cubePointF, cubePointQ), cubePointQ],
+        color: getColor("INDIGO"),
+        labels: [
+          { text: <InlineMath math="F" />, at: 0, offset: [0.3, 0.3, 0.3] },
+          { text: <InlineMath math="2" />, at: 1, offset: [0, 0.3, 0.3] },
+        ],
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointQ, getMidpoint(cubePointQ, cubePointG), cubePointG],
+        color: getColor("INDIGO"),
+        labels: [
+          { text: <InlineMath math="2" />, at: 1, offset: [0, 0.3, 0.3] },
+          { text: <InlineMath math="G" />, at: 2, offset: [-0.3, 0.3, 0.3] },
+        ],
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointG, getMidpoint(cubePointG, cubePointH), cubePointH],
+        color: getColor("INDIGO"),
+      },
+
+      // Vertical Edges
+      {
+        ...hiddenPoints,
+        points: [cubePointD, getMidpoint(cubePointD, cubePointH), cubePointH],
+        color: getColor("INDIGO"),
+        labels: [
+          { text: <InlineMath math="4" />, at: 1, offset: [-0.3, -0.3, 0] },
+        ],
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointA, getMidpoint(cubePointA, cubePointE), cubePointE],
+        color: getColor("INDIGO"),
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointB, getMidpoint(cubePointB, cubePointF), cubePointF],
+        color: getColor("INDIGO"),
+        labels: [
+          { text: <InlineMath math="4" />, at: 1, offset: [0.9, 0.1, -0.3] },
+        ],
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointC, getMidpoint(cubePointC, cubePointG), cubePointG],
+        color: getColor("INDIGO"),
+      },
+
+      // Diagonal BD
+      {
+        ...hiddenPoints,
+        points: [cubePointB, cubePointD],
+        color: getColor("ORANGE"),
+      },
+
+      // Triangle DBQ Lines
+      {
+        ...hiddenPoints,
+        points: [cubePointD, getMidpoint(cubePointD, cubePointQ), cubePointQ],
+        color: getColor("TEAL"),
+        labels: [
+          { text: <InlineMath math="6" />, at: 1, offset: [-0.3, 0.3, 0] },
+          { text: <InlineMath math="Q" />, at: 2, offset: [0, 0.3, 0.3] },
+        ],
+      },
+      {
+        ...hiddenPoints,
+        points: [cubePointB, getMidpoint(cubePointB, cubePointQ), cubePointQ],
+        color: getColor("TEAL"),
+        labels: [
+          {
+            text: <InlineMath math="2\sqrt{5}" />,
+            at: 1,
+            offset: [0.3, 0, 0],
+          },
+        ],
+      },
+
+      // Line HQ (from image)
+      {
+        ...hiddenPoints,
+        points: [cubePointH, getMidpoint(cubePointH, cubePointQ), cubePointQ],
+        color: getColor("VIOLET"),
+        labels: [
+          {
+            text: <InlineMath math="2\sqrt{5}" />,
+            at: 1,
+            offset: [0, 0, 0.3],
+          },
+        ],
+      },
+
+      // Height Line QO
+      {
+        ...hiddenPoints,
+        points: [cubePointQ, getMidpoint(cubePointQ, cubePointO), cubePointO],
+        color: getColor("ROSE"),
+        labels: [
+          { text: <InlineMath math="y" />, at: 1, offset: [-0.4, -0.1, 0.1] },
+          { text: <InlineMath math="O" />, at: 2, offset: [0.2, 0.2, 0] },
+        ],
+      },
+    ],
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[8, -6, 9]}
-      cameraTarget={[2, 2, 2]}
-      data={[
-        // Bottom Face
-        {
-          ...hiddenPoints,
-          points: [cubePointD, getMidpoint(cubePointD, cubePointA), cubePointA],
-          color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="D" />, at: 0, offset: [-0.3, -0.3, 0] },
-            { text: <InlineMath math="A" />, at: 2, offset: [0.3, -0.3, 0] },
-          ],
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointA, getMidpoint(cubePointA, cubePointB), cubePointB],
-          color: getColor("INDIGO"),
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointB, getMidpoint(cubePointB, cubePointC), cubePointC],
-          color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="B" />, at: 0, offset: [0.3, 0.3, 0] },
-            { text: <InlineMath math="C" />, at: 2, offset: [-0.3, 0.3, 0] },
-          ],
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointC, getMidpoint(cubePointC, cubePointD), cubePointD],
-          color: getColor("INDIGO"),
-        },
-
-        // Top Face
-        {
-          ...hiddenPoints,
-          points: [cubePointH, getMidpoint(cubePointH, cubePointE), cubePointE],
-          color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="H" />, at: 0, offset: [-0.3, -0.3, 0.3] },
-            { text: <InlineMath math="E" />, at: 2, offset: [0.9, -0.3, 0.3] },
-          ],
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointE, getMidpoint(cubePointE, cubePointF), cubePointF],
-          color: getColor("INDIGO"),
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointF, getMidpoint(cubePointF, cubePointQ), cubePointQ],
-          color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="F" />, at: 0, offset: [0.3, 0.3, 0.3] },
-            { text: <InlineMath math="2" />, at: 1, offset: [0, 0.3, 0.3] },
-          ],
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointQ, getMidpoint(cubePointQ, cubePointG), cubePointG],
-          color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="2" />, at: 1, offset: [0, 0.3, 0.3] },
-            { text: <InlineMath math="G" />, at: 2, offset: [-0.3, 0.3, 0.3] },
-          ],
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointG, getMidpoint(cubePointG, cubePointH), cubePointH],
-          color: getColor("INDIGO"),
-        },
-
-        // Vertical Edges
-        {
-          ...hiddenPoints,
-          points: [cubePointD, getMidpoint(cubePointD, cubePointH), cubePointH],
-          color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [-0.3, -0.3, 0] },
-          ],
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointA, getMidpoint(cubePointA, cubePointE), cubePointE],
-          color: getColor("INDIGO"),
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointB, getMidpoint(cubePointB, cubePointF), cubePointF],
-          color: getColor("INDIGO"),
-          labels: [
-            { text: <InlineMath math="4" />, at: 1, offset: [0.9, 0.1, -0.3] },
-          ],
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointC, getMidpoint(cubePointC, cubePointG), cubePointG],
-          color: getColor("INDIGO"),
-        },
-
-        // Diagonal BD
-        {
-          ...hiddenPoints,
-          points: [cubePointB, cubePointD],
-          color: getColor("ORANGE"),
-        },
-
-        // Triangle DBQ Lines
-        {
-          ...hiddenPoints,
-          points: [cubePointD, getMidpoint(cubePointD, cubePointQ), cubePointQ],
-          color: getColor("TEAL"),
-          labels: [
-            { text: <InlineMath math="6" />, at: 1, offset: [-0.3, 0.3, 0] },
-            { text: <InlineMath math="Q" />, at: 2, offset: [0, 0.3, 0.3] },
-          ],
-        },
-        {
-          ...hiddenPoints,
-          points: [cubePointB, getMidpoint(cubePointB, cubePointQ), cubePointQ],
-          color: getColor("TEAL"),
-          labels: [
-            {
-              text: <InlineMath math="2\sqrt{5}" />,
-              at: 1,
-              offset: [0.3, 0, 0],
-            },
-          ],
-        },
-
-        // Line HQ (from image)
-        {
-          ...hiddenPoints,
-          points: [cubePointH, getMidpoint(cubePointH, cubePointQ), cubePointQ],
-          color: getColor("VIOLET"),
-          labels: [
-            {
-              text: <InlineMath math="2\sqrt{5}" />,
-              at: 1,
-              offset: [0, 0, 0.3],
-            },
-          ],
-        },
-
-        // Height Line QO
-        {
-          ...hiddenPoints,
-          points: [cubePointQ, getMidpoint(cubePointQ, cubePointO), cubePointO],
-          color: getColor("ROSE"),
-          labels: [
-            { text: <InlineMath math="y" />, at: 1, offset: [-0.4, -0.1, 0.1] },
-            { text: <InlineMath math="O" />, at: 2, offset: [0.2, 0.2, 0] },
-          ],
-        },
-      ]}
-      description={description}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }

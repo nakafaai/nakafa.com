@@ -1,5 +1,12 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -71,156 +78,162 @@ export function Graph({ title, description }: GraphProps) {
     z: (H.z + F.z) / 2,
   };
 
+  const config = resolveLineScene({
+    cameraPosition: [-7, 5, 9],
+    data: [
+      // Cube Edges
+      ...Arr.map(cubeEdges, (edge) => ({
+        points: edge,
+        color: COLOR_CUBE,
+        showPoints: false,
+        lineWidth: 2,
+      })),
+
+      // Triangle HDF
+      ...Arr.map(triangleEdges, (edge) => ({
+        points: edge,
+        color: COLOR_TRIANGLE,
+        showPoints: false,
+        lineWidth: 3,
+      })),
+
+      // Diagonal DF (Hypotenuse)
+      {
+        points: [D, midDF, F],
+        color: COLOR_DIAGONAL,
+        showPoints: false,
+        lineWidth: 3,
+        labels: [
+          {
+            text: <InlineMath math="DF" />,
+            at: 1, // Midpoint index
+            offset: [0.4, 0.8, 0],
+          },
+        ],
+      },
+
+      // Diagonal HF (Opposite)
+      {
+        points: [H, midHF, F],
+        color: COLOR_DIAGONAL,
+        showPoints: false,
+        lineWidth: 3,
+        labels: [
+          {
+            text: <InlineMath math="HF" />,
+            at: 1, // Midpoint index
+            offset: [-0.8, 0.5, 0],
+          },
+        ],
+      },
+
+      // Labels for Vertices
+      {
+        points: [D],
+        color: COLOR_LABEL,
+        showPoints: true,
+        labels: [
+          {
+            text: <InlineMath math="D" />,
+            at: 0,
+            offset: [-0.5, -0.5, -0.5],
+          },
+        ],
+      },
+      {
+        points: [H],
+        color: COLOR_LABEL,
+        showPoints: true,
+        labels: [
+          {
+            text: <InlineMath math="H" />,
+            at: 0,
+            offset: [-0.5, 0.5, -0.5],
+          },
+        ],
+      },
+      {
+        points: [F],
+        color: COLOR_LABEL,
+        showPoints: true,
+        labels: [
+          {
+            text: <InlineMath math="F" />,
+            at: 0,
+            offset: [0.5, 0.5, 0.5],
+          },
+        ],
+      },
+      {
+        points: [A],
+        color: COLOR_CUBE,
+        showPoints: true,
+        labels: [
+          {
+            text: <InlineMath math="A" />,
+            at: 0,
+            offset: [-0.5, -0.5, 0.5],
+          },
+        ],
+      },
+      {
+        points: [B],
+        color: COLOR_CUBE,
+        showPoints: true,
+        labels: [
+          {
+            text: <InlineMath math="B" />,
+            at: 0,
+            offset: [0.5, -0.5, 0.5],
+          },
+        ],
+      },
+      {
+        points: [C],
+        color: COLOR_CUBE,
+        showPoints: true,
+        labels: [
+          {
+            text: <InlineMath math="C" />,
+            at: 0,
+            offset: [0.5, -0.5, -0.5],
+          },
+        ],
+      },
+      {
+        points: [E],
+        color: COLOR_CUBE,
+        showPoints: true,
+        labels: [
+          {
+            text: <InlineMath math="E" />,
+            at: 0,
+            offset: [-0.5, 0.5, 0.5],
+          },
+        ],
+      },
+      {
+        points: [G],
+        color: COLOR_CUBE,
+        showPoints: true,
+        labels: [
+          {
+            text: <InlineMath math="G" />,
+            at: 0,
+            offset: [0.5, 0.5, -0.5],
+          },
+        ],
+      },
+    ],
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[-7, 5, 9]}
-      data={[
-        // Cube Edges
-        ...Arr.map(cubeEdges, (edge) => ({
-          points: edge,
-          color: COLOR_CUBE,
-          showPoints: false,
-          lineWidth: 2,
-        })),
-
-        // Triangle HDF
-        ...Arr.map(triangleEdges, (edge) => ({
-          points: edge,
-          color: COLOR_TRIANGLE,
-          showPoints: false,
-          lineWidth: 3,
-        })),
-
-        // Diagonal DF (Hypotenuse)
-        {
-          points: [D, midDF, F],
-          color: COLOR_DIAGONAL,
-          showPoints: false,
-          lineWidth: 3,
-          labels: [
-            {
-              text: <InlineMath math="DF" />,
-              at: 1, // Midpoint index
-              offset: [0.4, 0.8, 0],
-            },
-          ],
-        },
-
-        // Diagonal HF (Opposite)
-        {
-          points: [H, midHF, F],
-          color: COLOR_DIAGONAL,
-          showPoints: false,
-          lineWidth: 3,
-          labels: [
-            {
-              text: <InlineMath math="HF" />,
-              at: 1, // Midpoint index
-              offset: [-0.8, 0.5, 0],
-            },
-          ],
-        },
-
-        // Labels for Vertices
-        {
-          points: [D],
-          color: COLOR_LABEL,
-          showPoints: true,
-          labels: [
-            {
-              text: <InlineMath math="D" />,
-              at: 0,
-              offset: [-0.5, -0.5, -0.5],
-            },
-          ],
-        },
-        {
-          points: [H],
-          color: COLOR_LABEL,
-          showPoints: true,
-          labels: [
-            {
-              text: <InlineMath math="H" />,
-              at: 0,
-              offset: [-0.5, 0.5, -0.5],
-            },
-          ],
-        },
-        {
-          points: [F],
-          color: COLOR_LABEL,
-          showPoints: true,
-          labels: [
-            {
-              text: <InlineMath math="F" />,
-              at: 0,
-              offset: [0.5, 0.5, 0.5],
-            },
-          ],
-        },
-        {
-          points: [A],
-          color: COLOR_CUBE,
-          showPoints: true,
-          labels: [
-            {
-              text: <InlineMath math="A" />,
-              at: 0,
-              offset: [-0.5, -0.5, 0.5],
-            },
-          ],
-        },
-        {
-          points: [B],
-          color: COLOR_CUBE,
-          showPoints: true,
-          labels: [
-            {
-              text: <InlineMath math="B" />,
-              at: 0,
-              offset: [0.5, -0.5, 0.5],
-            },
-          ],
-        },
-        {
-          points: [C],
-          color: COLOR_CUBE,
-          showPoints: true,
-          labels: [
-            {
-              text: <InlineMath math="C" />,
-              at: 0,
-              offset: [0.5, -0.5, -0.5],
-            },
-          ],
-        },
-        {
-          points: [E],
-          color: COLOR_CUBE,
-          showPoints: true,
-          labels: [
-            {
-              text: <InlineMath math="E" />,
-              at: 0,
-              offset: [-0.5, 0.5, 0.5],
-            },
-          ],
-        },
-        {
-          points: [G],
-          color: COLOR_CUBE,
-          showPoints: true,
-          labels: [
-            {
-              text: <InlineMath math="G" />,
-              at: 0,
-              offset: [0.5, 0.5, -0.5],
-            },
-          ],
-        },
-      ]}
-      description={description}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }

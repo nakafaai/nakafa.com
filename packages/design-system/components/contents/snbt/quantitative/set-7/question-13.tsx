@@ -1,5 +1,13 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -83,12 +91,18 @@ const graphData = [
 
 /** Renders the quantitative graph for SNBT set 7 question 13. */
 export function Graph({ title, description }: Props) {
+  const config = resolveLineScene({
+    cameraPosition: [0, 0, 10],
+    data: graphData,
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[0, 0, 10]}
-      data={graphData}
-      description={description}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }

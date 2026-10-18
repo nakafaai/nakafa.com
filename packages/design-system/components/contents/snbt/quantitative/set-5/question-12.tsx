@@ -1,5 +1,13 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
@@ -33,39 +41,45 @@ export function QuestionGraph({
   // x = 8 (y=0, vertex at y=1 is x=9, so y=0 is x=8)
   const index8 = Math.round((0 - startY) / step);
 
+  const config = resolveLineScene({
+    cameraPosition: [3, 1, 18],
+    cameraTarget: [3, 1, 0],
+    data: [
+      {
+        points,
+        color: getColor("INDIGO"),
+        showPoints: false,
+        smooth: false,
+        cone: { position: "both", size: 0.5 },
+        labels: [
+          {
+            text: <InlineMath math="4" />,
+            at: index4,
+            offset: [-0.5, -0.5, 0],
+          },
+          {
+            text: <InlineMath math="-2" />,
+            at: indexNeg2,
+            offset: [-0.6, 0.5, 0],
+          },
+          {
+            text: <InlineMath math="8" />,
+            at: index8,
+            offset: [0.3, -0.5, 0],
+          },
+        ],
+      },
+    ],
+    showZAxis: false,
+  });
+
   return (
-    <LineEquation
-      cameraPosition={[3, 1, 18]}
-      cameraTarget={[3, 1, 0]}
-      data={[
-        {
-          points,
-          color: getColor("INDIGO"),
-          showPoints: false,
-          smooth: false,
-          cone: { position: "both", size: 0.5 },
-          labels: [
-            {
-              text: <InlineMath math="4" />,
-              at: index4,
-              offset: [-0.5, -0.5, 0],
-            },
-            {
-              text: <InlineMath math="-2" />,
-              at: indexNeg2,
-              offset: [-0.6, 0.5, 0],
-            },
-            {
-              text: <InlineMath math="8" />,
-              at: index8,
-              offset: [0.3, -0.5, 0],
-            },
-          ],
-        },
-      ]}
-      description={description}
-      showZAxis={false}
-      title={title}
-    />
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <DeferredLineScene />
+        <CoordinateControls />
+      </VisualCard>
+    </LineEquationProvider>
   );
 }
