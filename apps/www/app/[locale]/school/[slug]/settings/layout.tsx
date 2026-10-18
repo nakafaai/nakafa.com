@@ -50,7 +50,9 @@ export default async function SchoolSettingsLayout({
   return (
     <AppProviders pageNavigation={null}>
       <SchoolSettingsHeader />
-      <div className="flex flex-col gap-6 px-4 py-6">{children}</div>
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-6">
+        {children}
+      </div>
     </AppProviders>
   );
 }

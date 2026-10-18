@@ -14,7 +14,7 @@ export function TenantHome() {
   const t = useTranslations("School");
 
   return (
-    <p className="px-4 py-6 text-sm">
+    <p className="mx-auto w-full max-w-3xl px-6 py-6 text-sm">
       {tenant.role === null
         ? t("signed-in")
         : t("signed-in-as", { role: t(`role.${tenant.role}`) })}

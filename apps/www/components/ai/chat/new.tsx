@@ -46,7 +46,7 @@ export function ChatNew({
       <div
         className={cn(
           "relative mx-auto grid w-full shrink-0",
-          prompt ? "max-w-3xl px-4 pb-4" : "max-w-xl px-6"
+          prompt ? "max-w-3xl px-4 pb-4" : "max-w-3xl px-6"
         )}
         key="composer"
       >
