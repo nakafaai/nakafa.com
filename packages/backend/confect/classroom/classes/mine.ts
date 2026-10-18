@@ -6,6 +6,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { CLASS_LIMIT, classView } from "@repo/backend/confect/classroom/class";
 import spec from "@repo/backend/confect/classroom/classes.spec";
+import { attendsUnit } from "@repo/backend/confect/classroom/student";
 import {
   teachesUnit,
   teachingIn,
@@ -30,9 +31,10 @@ const activeIn = Effect.fnUntraced(function* (
 /**
  * The active classes the caller teaches and attends in one period, by name. A
  * period is read only when it belongs to the caller's school, and the reads are
- * bounded: one placement, and the teaching rows of that period. A taught class
- * counts only while a teacher grant over its unit stands, the rule that
- * `subjectTeacher` decides by.
+ * bounded: one placement, and the teaching rows of that period. An attended class
+ * counts only while a student grant over its unit stands, the rule that
+ * `classMember` decides by, and a taught class only while a teacher grant over its
+ * unit stands, the rule that `subjectTeacher` decides by.
  */
 export const mine = FunctionImpl.make(
   databaseSchema,
@@ -63,12 +65,15 @@ export const mine = FunctionImpl.make(
       (row) => reader.table("classes").get(row.classId).pipe(Effect.orDie),
       { concurrency: "unbounded" }
     );
+    const attended = Arr.filter(placed, (row) =>
+      attendsUnit(grants, row.unitId)
+    );
     const teachingNow = Arr.filter(
       taught,
       (row) => row.status === "active" && teachesUnit(grants, row.unitId)
     );
     const byId = HashMap.fromIterable(
-      Arr.map([...placed, ...teachingNow], (row) => Tuple.make(row._id, row))
+      Arr.map([...attended, ...teachingNow], (row) => Tuple.make(row._id, row))
     );
     return Arr.map(
       Arr.sortWith(

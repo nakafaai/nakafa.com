@@ -13,7 +13,8 @@ import {
 import { journal, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { archive, get, list, rename } = refs.public.classroom.classes;
+const { archive, get, list, mine, rename, resolve } =
+  refs.public.classroom.classes;
 const cohorts = refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const placements = refs.public.tenancy.placements;
@@ -361,6 +362,49 @@ describe("classroom/classes members", () => {
           .pipe(Effect.flip);
         expect(read.id).toBe(own.id);
         expect(refused).toMatchObject(denied("role"));
+      })
+  );
+
+  it.effect(
+    "ends a student's class at once when the grant over its unit is revoked, in get, mine and resolve",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        yield* fixture
+          .as("admin")
+          .mutation(periods.open, { periodId: term.id, slug: nf });
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        const { grantId, personId } = fixture.people.student;
+        yield* fixture.as("admin").mutation(placements.place, {
+          cohortId: x1.id,
+          personId,
+          slug: nf,
+        });
+        const made = yield* classOf(fixture, x1.id, "Fisika");
+        const before = yield* fixture
+          .as("student")
+          .query(mine, { periodId: term.id, slug: nf });
+        yield* fixture
+          .as("owner")
+          .mutation(grants.revoke, { grantId, slug: nf });
+        const read = yield* fixture
+          .as("student")
+          .query(get, { classId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        const listed = yield* fixture
+          .as("student")
+          .query(mine, { periodId: term.id, slug: nf });
+        const resolved = yield* fixture
+          .as("student")
+          .query(resolve, { classSlug: made.slug, slug: nf })
+          .pipe(Effect.flip);
+        expect(Arr.map(before, (row) => row.id)).toEqual([made.id]);
+        expect([read, resolved]).toMatchObject([
+          denied("role"),
+          denied("role"),
+        ]);
+        expect(listed).toEqual([]);
       })
   );
 

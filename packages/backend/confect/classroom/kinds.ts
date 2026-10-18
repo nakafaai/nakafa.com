@@ -11,8 +11,8 @@ const classReaders: (typeof RuleRole.Type)[] = ["admin", "principal", "deputy"];
  * One class: one subject taught to one cohort in one period. The Admin creates,
  * renames, archives, and assigns its subject teachers. The leaders of the school
  * read it, a subject teacher reads it through `subjectTeacher`, and a student
- * placed in its cohort reads it through `classMember`. An archived cohort,
- * period, or unit locks the class.
+ * placed in its cohort, who holds a student grant over its unit, reads it through
+ * `classMember`. An archived cohort, period, or unit locks the class.
  */
 export const classKind = Kind.make("class", "classes", {
   actions: {
