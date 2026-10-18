@@ -530,8 +530,6 @@
     "founder-line": "Der Gründer hilft großen Schulen beim Start.",
     "founder-link": "Mit dem Gründer sprechen",
     "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms> und die <privacy>Datenschutzerklärung</privacy>.",
-    "back": "Zurück",
-    "continue": "Weiter",
     "finish": "Schule eröffnen",
     "required-error": "Wähle eine Antwort."
   },
@@ -666,6 +664,7 @@
     "emoji-picker-placeholder": "Emoji auswählen...",
     "no-emoji-found": "Kein Emoji gefunden.",
     "back": "Zurück",
+    "continue": "Weiter",
     "lines": "Linien",
     "scale": "Skala",
     "solution-set": "Lösungsmenge",
@@ -738,8 +737,6 @@
           "description": "Prüfungen üben."
         }
       },
-      "back": "Zurück",
-      "continue": "Weiter",
       "finish": "Fertig",
       "required-error": "Wähle eine Antwort."
     },
@@ -1303,7 +1300,7 @@
       "description": "Versuch es morgen noch einmal."
     },
     "school-save-error": {
-      "title": "Deine Antwort wurde nicht gespeichert.",
+      "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
     }
   },

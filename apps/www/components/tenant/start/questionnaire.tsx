@@ -1,11 +1,7 @@
 "use client";
 
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import {
-  ArrowLeft02Icon,
-  ArrowRight02Icon,
-  School01Icon,
-} from "@hugeicons/core-free-icons";
+import { School01Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   SchoolSize,
@@ -13,20 +9,16 @@ import {
   StartCountry,
   StartRole,
 } from "@repo/backend/confect/tenancy/start";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Questionnaire,
-  QuestionnaireActions,
-  QuestionnaireNext,
-  QuestionnairePrevious,
   QuestionnaireProgress,
-  QuestionnaireSubmit,
 } from "@repo/design-system/components/ui/questionnaire";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useOptimistic, useRef, useState, useTransition } from "react";
+import { QuestionnaireSteps } from "@/components/shared/questionnaire";
 import {
   StartCountryQuestion,
   StartLevelsQuestion,
@@ -83,6 +75,9 @@ type Opening = Record<"name" | "slug", string>;
 const NAME_INPUT = '[data-slot="questionnaire-item"]:not([hidden]) input';
 const FINISH_BUTTON = 'button[type="submit"]';
 
+/** No control to focus: the form has not returned from a refused opening. */
+const NO_REFOCUS: Option.Option<string> = Option.none();
+
 /**
  * The form of the questionnaire. Finishing shows the school at once and opens
  * its own address once the server answers; a refused address returns to the
@@ -100,10 +95,10 @@ function SchoolStartForm({
   const open = useMutation(tenancy.start.open);
   const [typed] = useState(() => createTypedName(draft));
   const [item, setItem] = useState<StartItem>(() => resumeItem(draft));
-  const [opened, setOpened] = useState<Option.Option<Opening>>(Option.none());
+  const [opened, setOpened] = useState<Option.Option<Opening>>(Option.none);
   const [shown, showOpening] = useOptimistic(opened);
   const [isOpening, startOpening] = useTransition();
-  const refocus = useRef<Option.Option<string>>(Option.none());
+  const refocus = useRef(NO_REFOCUS);
 
   /**
    * The form mounts again when a refused opening returns to it, so the focus
@@ -268,20 +263,9 @@ function SchoolStartForm({
         <StartLevelsQuestion />
         <StartRoleQuestion />
         <StartSizeQuestion />
-        <QuestionnaireActions>
-          <QuestionnairePrevious inert={isOpening} variant="ghost">
-            <HugeIcons data-icon="inline-start" icon={ArrowLeft02Icon} />
-            {t("back")}
-          </QuestionnairePrevious>
-          <QuestionnaireNext inert={isOpening}>
-            {t("continue")}
-            <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
-          </QuestionnaireNext>
-          <QuestionnaireSubmit inert={isOpening}>
-            <HugeIcons data-icon="inline-start" icon={School01Icon} />
-            {t("finish")}
-          </QuestionnaireSubmit>
-        </QuestionnaireActions>
+        <QuestionnaireSteps finishIcon={School01Icon} inert={isOpening}>
+          {t("finish")}
+        </QuestionnaireSteps>
       </Questionnaire>
     </StartContext>
   );

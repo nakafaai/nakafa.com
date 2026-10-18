@@ -530,8 +530,6 @@
     "founder-line": "The founder can help a large school set up.",
     "founder-link": "Talk to the founder",
     "consent": "Opening a school accepts the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
-    "back": "Back",
-    "continue": "Continue",
     "finish": "Open school",
     "required-error": "Choose an answer."
   },
@@ -666,6 +664,7 @@
     "emoji-picker-placeholder": "Select an emoji...",
     "no-emoji-found": "No emoji found.",
     "back": "Back",
+    "continue": "Continue",
     "lines": "Lines",
     "scale": "Scale",
     "solution-set": "Solution set",
@@ -738,8 +737,6 @@
           "description": "Practise for exams."
         }
       },
-      "back": "Back",
-      "continue": "Continue",
       "finish": "Finish",
       "required-error": "Choose one answer."
     },
@@ -1295,7 +1292,7 @@
       "description": "Try again."
     },
     "school-limit": {
-      "title": "You already run 3 schools you opened.",
+      "title": "You run 3 schools already.",
       "description": "Talk to the founder for more."
     },
     "school-rate": {
