@@ -4,6 +4,8 @@ import {
   drawToken,
   drawTokenFrom,
   normalizeToken,
+  openToken,
+  sealToken,
   tokenHash,
 } from "@repo/backend/confect/exams/sittings/token";
 import { deriveKeys } from "@repo/backend/confect/vault/cipher";
@@ -66,6 +68,32 @@ describe("exams/sittings token", () => {
         expect(
           yield* tokenHash(yield* keysFrom(2), "sitting-a", "K7Q4XM")
         ).not.toBe(hash);
+      })
+  );
+
+  it.effect(
+    "opens a sealed token only for the sitting it was sealed for, under the same school key",
+    () =>
+      Effect.gen(function* () {
+        const keys = yield* keysFrom(1);
+        const sealed = yield* sealToken(keys, "sitting-a", "K7Q4XM");
+        expect(yield* openToken(keys, "sitting-a", sealed)).toBe("K7Q4XM");
+        const elsewhere = yield* openToken(keys, "sitting-b", sealed).pipe(
+          Effect.flip
+        );
+        expect(elsewhere).toMatchObject({
+          _tag: "VaultError",
+          reason: "cipher",
+        });
+        const otherSchool = yield* openToken(
+          yield* keysFrom(2),
+          "sitting-a",
+          sealed
+        ).pipe(Effect.flip);
+        expect(otherSchool).toMatchObject({
+          _tag: "VaultError",
+          reason: "cipher",
+        });
       })
   );
 });

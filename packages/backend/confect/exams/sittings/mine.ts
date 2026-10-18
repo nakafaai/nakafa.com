@@ -1,7 +1,7 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { covers } from "@repo/backend/confect/access/decision";
 import type { SittingState } from "@repo/backend/confect/exams/sittings/schema";
-import { sittingView } from "@repo/backend/confect/exams/sittings/view";
+import { sittingViews } from "@repo/backend/confect/exams/sittings/view";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
 import { Array as Arr, Effect } from "effect";
@@ -67,5 +67,5 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
     )
   );
   const rows = Arr.flatten(Arr.flatten([...unitRows, ...cohortRows]));
-  return Arr.map(rows, sittingView);
+  return yield* sittingViews(rows);
 });

@@ -4,10 +4,15 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { schoolMascot } from "@repo/backend/confect/tenancy/mascot";
 import { MASCOT } from "@repo/backend/test/mascot";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Order } from "effect";
+import { Array as Arr, Effect, Order, Struct } from "effect";
 
 const nf = slugOf("nf");
 const viewer = refs.public.tenancy.viewer.get;
+
+/** The units of a view where the caller may take the exam edit action. */
+const examEditable = <Unit extends { readonly can: readonly string[] }>(
+  units: readonly Unit[]
+) => Arr.filter(units, (unit) => Arr.contains(unit.can, "exam.edit"));
 
 describe("tenancy/viewer", () => {
   it.effect(
@@ -32,7 +37,7 @@ describe("tenancy/viewer", () => {
           kind: "member",
           name: "Owner",
         });
-        expect(view.units).toEqual([
+        expect(Arr.map(view.units, Struct.omit(["can"]))).toEqual([
           {
             contentLanguage: "id",
             id: fixture.units.sma,
@@ -92,6 +97,29 @@ describe("tenancy/viewer", () => {
         const view = yield* fixture.as("teacher").query(viewer, { slug: nf });
         expect(view.can).toEqual(["tenant.view"]);
       })
+  );
+
+  it.effect(
+    "lets the Owner edit exams in each active unit, and in no archived unit",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const view = yield* fixture.as("owner").query(viewer, { slug: nf });
+        expect(Arr.map(examEditable(view.units), (unit) => unit.id)).toEqual([
+          fixture.units.sma,
+          fixture.units.smp,
+        ]);
+      })
+  );
+
+  it.effect("lets a unit teacher edit exams in their own unit only", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const view = yield* fixture.as("teacher").query(viewer, { slug: nf });
+      expect(Arr.map(examEditable(view.units), (unit) => unit.id)).toEqual([
+        fixture.units.smp,
+      ]);
+    })
   );
 
   it.effect("drops every write capability while the tenant is suspended", () =>

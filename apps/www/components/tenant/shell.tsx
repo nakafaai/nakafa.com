@@ -54,12 +54,10 @@ function signOutOfSchool() {
  */
 function TenantAccount({
   account,
-  canManage,
   name,
   role,
 }: {
   account: typeof ViewerAccount.Type;
-  canManage: boolean;
   name: string;
   role: TenantValue["role"];
 }) {
@@ -78,10 +76,7 @@ function TenantAccount({
           name={name}
           onSignOut={signOutOfSchool}
         >
-          <TenantAccountItems
-            canManage={canManage}
-            username={account.username}
-          />
+          <TenantAccountItems username={account.username} />
         </AccountMenu>
       </SidebarMenu>
     </SidebarFooter>
@@ -97,6 +92,7 @@ function TenantAccount({
 export function TenantShell({
   account,
   canManage,
+  canOpenExams,
   children,
   personName,
   profile,
@@ -104,13 +100,16 @@ export function TenantShell({
 }: {
   account: typeof ViewerAccount.Type;
   canManage: boolean;
+  canOpenExams: boolean;
   children: ReactNode;
   personName: string;
   profile: typeof TenantProfile.Type;
   role: TenantValue["role"];
 }) {
   return (
-    <TenantContext value={{ name: profile.name, role }}>
+    <TenantContext
+      value={{ canManage, canOpenExams, name: profile.name, role }}
+    >
       <SidebarProvider>
         <Sidebar side="left">
           <SidebarHeader className="border-b">
@@ -126,14 +125,9 @@ export function TenantShell({
             </SidebarMenu>
           </SidebarHeader>
           <SidebarContent>
-            <TenantNavigation canManage={canManage} />
+            <TenantNavigation />
           </SidebarContent>
-          <TenantAccount
-            account={account}
-            canManage={canManage}
-            name={personName}
-            role={role}
-          />
+          <TenantAccount account={account} name={personName} role={role} />
         </Sidebar>
         <SidebarInset>
           <header className="flex h-12 items-center gap-2 px-4">

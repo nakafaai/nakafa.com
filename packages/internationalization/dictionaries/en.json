@@ -188,6 +188,7 @@
         "addMinutes": "Minutes added to an exam attempt",
         "changeToken": "Exam sitting token changed",
         "allowDevice": "Second device allowed for an exam attempt",
+        "finish": "Exam attempt finished",
         "close": "Exam sitting closed"
       },
       "tenant": {
@@ -844,6 +845,33 @@
     "more": "More",
     "style": "Text style",
     "text": "Normal text"
+  },
+  "Exams": {
+    "title": "Exams",
+    "empty": "There are no exams yet.",
+    "untitled": "Untitled exam",
+    "title-label": "Exam title",
+    "unavailable": "This exam is not available.",
+    "questions": "Questions",
+    "question": "Question {number}",
+    "option": "Option {letter}",
+    "correct": "Correct answer",
+    "correct-option": "Mark option {letter} as correct",
+    "no-key": "This question has no answer key yet.",
+    "move-up": "Move up",
+    "move-down": "Move down",
+    "remove": "Remove question",
+    "remove-title": "Remove this question?",
+    "remove-description": "The question and its answers leave this exam.",
+    "create": "Create exam",
+    "create-description": "The exam starts with one question.",
+    "unit": "Unit",
+    "whole-school": "Whole school",
+    "language": "Language",
+    "add-question": "Add question",
+    "copy": "Copy question",
+    "prompt-label": "Question text",
+    "prompt-placeholder": "Write the question here."
   },
   "Memory": {
     "remember": "Let Nina save and use memories",
