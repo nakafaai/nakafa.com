@@ -3,7 +3,11 @@ import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Ref } from "effect";
 import { getVersion, receiveTransaction } from "prosemirror-collab";
 import { reopen } from "@/lib/editor/replay";
-import { SyncFailed, type SyncSession } from "@/lib/editor/session";
+import {
+  type EditorClosed,
+  SyncFailed,
+  type SyncSession,
+} from "@/lib/editor/session";
 import { settleSteps } from "@/lib/editor/settle";
 
 /** Whether the steps follow the version one by one, starting with the version after it. */
@@ -22,7 +26,7 @@ const dispatchReceived = Effect.fn("editor.sync.dispatch")(function* (
   session: SyncSession,
   received: readonly Step[],
   clientIDs: readonly string[]
-): Effect.fn.Return<void, never> {
+): Effect.fn.Return<void, EditorClosed> {
   const from = yield* session.port.state;
   const applied = yield* session.port.dispatch(
     from,

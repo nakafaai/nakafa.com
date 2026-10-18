@@ -5,12 +5,14 @@ import type { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { createContext, use } from "react";
 
 /**
- * The school the shell shows, and the viewer's first role in it, or none when
- * the viewer holds no grant. A type only: the browser bundle never evaluates
- * the schemas it is derived from.
+ * The school the shell shows, the viewer's first role in it, or none when the
+ * viewer holds no grant, and what the viewer may open: the school's settings
+ * and its exams. A type only: the browser bundle never evaluates the schemas it
+ * is derived from.
  */
 export type TenantValue = Pick<typeof TenantProfile.Type, "name"> &
-  Record<"role", BuiltinRole | null>;
+  Record<"role", BuiltinRole | null> &
+  Record<"canManage" | "canOpenExams", boolean>;
 
 /**
  * The school of the shell. Its value is fixed for one render of the school
