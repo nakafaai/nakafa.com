@@ -1,82 +1,38 @@
-import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
-import { cn } from "cn";
-import { memo } from "react";
+import { Schema } from "effect";
+import { createContext, use } from "react";
 
-type GeometricDotType = Extract<
-  ChartDotVariant,
-  | "square"
-  | "square-border"
-  | "diamond"
-  | "diamond-border"
-  | "triangle"
-  | "triangle-border"
->;
-
-interface GeometricDotProps {
-  className?: string | undefined;
-  cx: number;
-  cy: number;
-  fillOpacity: number;
-  gradientUrl: string;
-  maskId?: string | undefined;
-  type: GeometricDotType;
-}
-
-/** Renders a solid or active outlined square, diamond, or triangle chart dot. */
-export const GeometricDot = memo(function GeometricDot({
-  className,
-  cx,
-  cy,
-  fillOpacity,
-  gradientUrl,
-  maskId,
-  type,
-}: GeometricDotProps) {
-  const isBorder = type.endsWith("-border");
-  const shape = type.replace("-border", "");
-  const outerRadius = isBorder ? 4.5 : 3.5;
-
-  return (
-    <g
-      className={cn(className, isBorder && "text-background")}
-      mask={maskId ? `url(#${maskId})` : undefined}
-    >
-      <GeometricShape
-        cx={cx}
-        cy={cy}
-        fill={gradientUrl}
-        fillOpacity={fillOpacity}
-        radius={outerRadius}
-        shape={shape}
-      />
-      {isBorder && (
-        <GeometricShape
-          cx={cx}
-          cy={cy}
-          fill="currentColor"
-          radius={2.5}
-          shape={shape}
-        />
-      )}
-    </g>
-  );
+/** The center and the paint of one shape of a geometric dot. */
+const GeometricShapeSchema = Schema.Struct({
+  cx: Schema.Finite, // horizontal center of the shape
+  cy: Schema.Finite, // vertical center of the shape
+  fill: Schema.String, // fill of the shape: a gradient reference or a color
+  fillOpacity: Schema.UndefinedOr(Schema.Finite), // opacity of the fill, absent for the border
 });
 
-function GeometricShape({
-  cx,
-  cy,
-  fill,
-  fillOpacity,
-  radius,
-  shape,
-}: {
-  cx: number;
-  cy: number;
-  fill: string;
-  fillOpacity?: number;
-  radius: number;
-  shape: string;
-}) {
+/** Provided by the geometric dot for each of its shapes, read by the shape that draws it. */
+const GeometricDotContext = createContext<
+  typeof GeometricShapeSchema.Type | null
+>(null);
+
+// Selects the center and paint of one shape, throwing a helpful error when used outside a geometric dot
+function useGeometricDot<T>(
+  selector: (shape: typeof GeometricShapeSchema.Type) => T
+) {
+  const value = use(GeometricDotContext);
+
+  if (!value) {
+    throw new Error("GeometricShape must be used within a geometric dot");
+  }
+
+  return selector(value);
+}
+
+/** Renders a solid or active outlined square, diamond, or triangle of a chart dot. */
+function GeometricShape({ radius, shape }: { radius: number; shape: string }) {
+  const { cx, cy, fill, fillOpacity } = useGeometricDot(
+    (geometric) => geometric
+  );
+
   if (shape === "square") {
     return (
       <rect
@@ -108,3 +64,5 @@ function GeometricShape({
     />
   );
 }
+
+export { GeometricDotContext, GeometricShape };
