@@ -7,7 +7,7 @@ import { Option, Schema } from "effect";
  * by pixels. A toy is only placed between `minWidth` and `maxWidth` wide, so a
  * phone and a desktop each get the room they have.
  */
-const AnchorSchema = Schema.Struct({
+export const AnchorSchema = Schema.Struct({
   dx: Schema.optionalKey(Schema.Finite),
   dy: Schema.optionalKey(Schema.Finite),
   maxWidth: Schema.optionalKey(Schema.Finite),

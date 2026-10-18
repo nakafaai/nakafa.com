@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { lazy, Suspense } from "react";
 
 /** The emphasis of the Pro action: the page's one primary on the pricing page, secondary elsewhere. */
-type PricingButtonVariant = "default" | "secondary";
+export type PricingButtonVariant = "default" | "secondary";
 
 function LoadingButton({ variant }: { variant: PricingButtonVariant }) {
   const t = useTranslations("Pricing");

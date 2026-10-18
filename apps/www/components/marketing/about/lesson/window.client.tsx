@@ -160,7 +160,7 @@ function LessonButton({
       onFocus={() => preloadLessonLab(lesson)}
       onPointerEnter={() => preloadLessonLab(lesson)}
       title={name}
-      variant={open ? "default" : "outline"}
+      variant={open ? "secondary" : "outline"}
     >
       <HugeIcons icon={icon} />
       <span className="sr-only sm:not-sr-only">{name}</span>

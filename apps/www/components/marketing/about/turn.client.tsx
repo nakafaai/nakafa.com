@@ -33,19 +33,17 @@ interface TurnState {
   readonly answer: () => void;
   readonly ask: () => void;
   readonly phase: Phase;
-  readonly text: string;
   readonly type: () => void;
   readonly typed: number;
   readonly wait: () => void;
 }
 
 /** Creates the state of one turn. It lives as long as its row. */
-function createTurnStore(text: string) {
+function createTurnStore() {
   return createStore<TurnState>()((set) => ({
     answer: () => set({ phase: "answered" }),
     ask: () => set({ phase: "asking", typed: 0 }),
     phase: "answered",
-    text,
     type: () => set((state) => ({ typed: state.typed + 1 })),
     typed: 0,
     wait: () => set({ phase: "waiting" }),
@@ -78,7 +76,7 @@ export function TurnPlayer({
   ask: string;
   children: ReactNode;
 }) {
-  const [store] = useState(() => createTurnStore(ask));
+  const [store] = useState(() => createTurnStore());
   const { entry, ref } = useIntersection({ threshold: 0.6 });
   const shouldReduceMotion = useReducedMotion();
   const phase = useStore(store, (state) => state.phase);
@@ -133,10 +131,10 @@ export function TurnPlayer({
 /**
  * The learner's question, typed into the chat's own bubble. The whole question
  * holds the bubble at its final size from the start, so typing moves nothing.
+ * `text` is the question that the turn's player types in.
  */
-export function TurnAsk() {
+export function TurnAsk({ text }: { text: string }) {
   const phase = useTurn((state) => state.phase);
-  const text = useTurn((state) => state.text);
   const typed = useTurn((state) => state.typed);
   const hidden = phase !== "answered";
 

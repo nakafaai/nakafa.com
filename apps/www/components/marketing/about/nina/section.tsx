@@ -34,6 +34,7 @@ import {
  */
 export function NinaSection() {
   const t = useTranslations("Landing");
+  const ask = t("nina-chat-ask");
 
   return (
     <FeatureRow id="nina">
@@ -45,10 +46,10 @@ export function NinaSection() {
         <FeatureLead>{t("nina-lead")}</FeatureLead>
       </FeatureText>
       <FeatureCard>
-        <TurnPlayer ask={t("nina-chat-ask")}>
+        <TurnPlayer ask={ask}>
           <Message align="end">
             <NinaPrompt>
-              <TurnAsk />
+              <TurnAsk text={ask} />
             </NinaPrompt>
           </Message>
           <Message>
