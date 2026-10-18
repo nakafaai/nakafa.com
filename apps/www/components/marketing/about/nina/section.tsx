@@ -11,6 +11,7 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { useTranslations } from "next-intl";
 import { NinaPrompt } from "@/components/ai/message/prompt";
 import { NinaComposer } from "@/components/marketing/about/nina/client";
+import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import {
   TurnAnswer,
   TurnAsk,
@@ -37,7 +38,9 @@ export function NinaSection() {
   return (
     <FeatureRow id="nina">
       <FeatureText>
-        <Nina act="typing" label="" size={88} whole />
+        <span className="inline-block" id={NINA_SLOT.nina}>
+          <Nina act="typing" label="" size={88} whole />
+        </span>
         <FeatureTitle>{t("nina-title")}</FeatureTitle>
         <FeatureLead>{t("nina-lead")}</FeatureLead>
       </FeatureText>
