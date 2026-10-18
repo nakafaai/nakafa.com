@@ -1,13 +1,9 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import {
   getArcPoints,
   getMidpoint,
 } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -108,18 +104,14 @@ function scaleDistance(value: number) {
 
 /** Renders the coordinate graph for SNBT set 3 question 19. */
 export function Graph({ title, description }: GraphProps) {
-  const config = resolveLineScene({
-    cameraPosition: [3.9, 2.6, 12],
-    cameraTarget: [3.9, 2.6, 0],
-    data: graphData,
-    showZAxis: false,
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[3.9, 2.6, 12]}
+      cameraTarget={[3.9, 2.6, 0]}
+      data={graphData}
+      description={description}
+      showZAxis={false}
+      title={title}
+    />
   );
 }

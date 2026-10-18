@@ -1,9 +1,5 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Order } from "effect";
 import type { ComponentProps } from "react";
@@ -35,83 +31,79 @@ export function Graph({
     z: 0,
   }));
 
-  const config = resolveLineScene({
-    cameraPosition: [-0.5, 2, 14],
-    cameraTarget: [-0.5, 2, 0],
-    data: [
-      // Linear Line: y = 2x + 6
-      {
-        points: linearPoints,
-        color: getColor("INDIGO"),
-        showPoints: false,
-        smooth: false,
-        cone: { position: "both", size: 0.5 },
-        labels: [
-          {
-            text: <InlineMath math="y = 2x + 6" />,
-            at: 1,
-            offset: [3, 0.4, 0],
-          },
-        ],
-      },
-      // Exponential Curve: y = (1/2)^x - 3
-      {
-        points: exponentialPoints,
-        color: getColor("ORANGE"),
-        showPoints: false,
-        smooth: false,
-        cone: { position: "both", size: 0.5 },
-        labels: [
-          {
-            text: <InlineMath math="y = \left(\frac{1}{2}\right)^x - 3" />,
-            at: Option.getOrElse(
-              Arr.findFirstIndex(
-                exponentialInputs,
-                (input) => input === curveLabelX
-              ),
-              () => -1
-            ),
-            offset: [0, -0.6, 0],
-          },
-        ],
-      },
-      // Point A (0, -2) - y-intercept of curve
-      {
-        points: [{ x: 0, y: -2, z: 0 }],
-        color: getColor("ORANGE"),
-        showPoints: true,
-        labels: [{ text: <InlineMath math="A" />, offset: [0.5, 0, 0] }],
-      },
-      // Point B (0, 6) - y-intercept of line
-      {
-        points: [{ x: 0, y: 6, z: 0 }],
-        color: getColor("INDIGO"),
-        showPoints: true,
-        labels: [{ text: <InlineMath math="B" />, offset: [-0.75, -0.1, 0] }],
-      },
-      // Point C (-3, 0) - x-intercept of line
-      {
-        points: [{ x: -3, y: 0, z: 0 }],
-        color: getColor("INDIGO"),
-        showPoints: true,
-        labels: [{ text: <InlineMath math="C" />, offset: [-0.65, 0.4, 0] }],
-      },
-      // Point D is the shared point of the line and the exponential curve.
-      {
-        points: [{ x: intersectionX, y: 2 * intersectionX + 6, z: 0 }],
-        color: getColor("TEAL"),
-        showPoints: true,
-        labels: [{ text: <InlineMath math="D" />, offset: [0.4, 0.4, 0] }],
-      },
-    ],
-    showZAxis: false,
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[-0.5, 2, 14]}
+      cameraTarget={[-0.5, 2, 0]}
+      data={[
+        // Linear Line: y = 2x + 6
+        {
+          points: linearPoints,
+          color: getColor("INDIGO"),
+          showPoints: false,
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
+          labels: [
+            {
+              text: <InlineMath math="y = 2x + 6" />,
+              at: 1,
+              offset: [3, 0.4, 0],
+            },
+          ],
+        },
+        // Exponential Curve: y = (1/2)^x - 3
+        {
+          points: exponentialPoints,
+          color: getColor("ORANGE"),
+          showPoints: false,
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
+          labels: [
+            {
+              text: <InlineMath math="y = \left(\frac{1}{2}\right)^x - 3" />,
+              at: Option.getOrElse(
+                Arr.findFirstIndex(
+                  exponentialInputs,
+                  (input) => input === curveLabelX
+                ),
+                () => -1
+              ),
+              offset: [0, -0.6, 0],
+            },
+          ],
+        },
+        // Point A (0, -2) - y-intercept of curve
+        {
+          points: [{ x: 0, y: -2, z: 0 }],
+          color: getColor("ORANGE"),
+          showPoints: true,
+          labels: [{ text: <InlineMath math="A" />, offset: [0.5, 0, 0] }],
+        },
+        // Point B (0, 6) - y-intercept of line
+        {
+          points: [{ x: 0, y: 6, z: 0 }],
+          color: getColor("INDIGO"),
+          showPoints: true,
+          labels: [{ text: <InlineMath math="B" />, offset: [-0.75, -0.1, 0] }],
+        },
+        // Point C (-3, 0) - x-intercept of line
+        {
+          points: [{ x: -3, y: 0, z: 0 }],
+          color: getColor("INDIGO"),
+          showPoints: true,
+          labels: [{ text: <InlineMath math="C" />, offset: [-0.65, 0.4, 0] }],
+        },
+        // Point D is the shared point of the line and the exponential curve.
+        {
+          points: [{ x: intersectionX, y: 2 * intersectionX + 6, z: 0 }],
+          color: getColor("TEAL"),
+          showPoints: true,
+          labels: [{ text: <InlineMath math="D" />, offset: [0.4, 0.4, 0] }],
+        },
+      ]}
+      description={description}
+      showZAxis={false}
+      title={title}
+    />
   );
 }

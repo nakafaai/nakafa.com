@@ -192,7 +192,7 @@ function getElementCategory(symbol: string) {
 /**
  * Parses a compact main-table entry in group:symbol:atomicNumber format.
  */
-export function parseMainEntry(source: string) {
+function parseMainEntry(source: string) {
   const [groupText, symbol, atomicNumberText] = source.split(":");
   const group = Number(groupText);
 
@@ -235,7 +235,7 @@ export function parseMainEntry(source: string) {
 /**
  * Parses a detached f-block entry in atomicNumber:symbol format.
  */
-export function parseSeriesEntry(source: string) {
+function parseSeriesEntry(source: string) {
   const [atomicNumberText, symbol] = source.split(":");
   const atomicNumber = Number(atomicNumberText);
 

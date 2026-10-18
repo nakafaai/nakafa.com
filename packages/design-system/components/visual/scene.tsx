@@ -16,9 +16,9 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 /**
- * Starts the scene moving by itself, or stops it. A still scene shows the play
- * button filled, so the way to bring it to life is the first thing the eye
- * finds. It is a toggle: its name stays "Play" and `aria-pressed` says whether
+ * Starts the scene moving by itself, or stops it. It has the look of every other
+ * scene action, since a page keeps one primary button: its icon shows play or
+ * pause. It is a toggle: its name stays "Play" and `aria-pressed` says whether
  * the scene plays. A static stand-in of the scene passes `inert`.
  */
 function VisualCardPlay({ inert = false }: { inert?: boolean }) {
@@ -34,7 +34,7 @@ function VisualCardPlay({ inert = false }: { inert?: boolean }) {
       inert={inert}
       onClick={togglePlaying}
       size="icon"
-      variant={playing ? "secondary" : "default"}
+      variant="secondary"
     >
       <HugeIcons icon={playing ? PauseIcon : PlayIcon} />
       <span className="sr-only">{t("play")}</span>

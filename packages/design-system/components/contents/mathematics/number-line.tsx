@@ -1,5 +1,3 @@
-"use client";
-
 import {
   formatInterval,
   type Interval,
@@ -22,7 +20,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { createContext, type ReactNode, use } from "react";
+import type { ReactNode } from "react";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
   variants: {
@@ -77,34 +75,11 @@ interface NumberLineProps {
   title: ReactNode;
 }
 
-/** The range and segments of one number line, shared with its body. */
+/** The range and segments of one number line, which its body and its facts both draw from. */
 interface NumberLineConfig {
   max?: number | undefined;
   min?: number | undefined;
   segments: readonly NumberLineSegment[];
-}
-
-const NumberLineContext = createContext<NumberLineConfig | null>(null);
-
-/** Provides one number line's range and segments to its body. */
-export function NumberLineProvider({
-  children,
-  config,
-}: {
-  children: ReactNode;
-  config: NumberLineConfig;
-}) {
-  return <NumberLineContext value={config}>{children}</NumberLineContext>;
-}
-
-/** Reads the range and segments of the surrounding number line. */
-function useNumberLine() {
-  const config = use(NumberLineContext);
-  if (!config) {
-    // A missing provider is a programmer composition error at this React seam.
-    throw new Error("useNumberLine must be used within NumberLineProvider");
-  }
-  return config;
 }
 
 /**
@@ -163,8 +138,7 @@ function drawnScale({ max, min, segments }: NumberLineConfig): Interval {
 }
 
 /** Draws one number line's scale, its segments, their labels, and its full screen action. */
-function NumberLineBody() {
-  const config = useNumberLine();
+function NumberLineBody({ config }: { config: NumberLineConfig }) {
   const { segments } = config;
   const scale = drawnScale(config);
   const paddedMin = scale.min;
@@ -314,11 +288,10 @@ function NumberLineBody() {
 }
 
 /** The scale and the solution set of a number line, as the readouts of its footer. */
-function NumberLineFacts() {
+function NumberLineFacts({ config }: { config: NumberLineConfig }) {
   const t = useTranslations("Common");
   const format = useFormatter();
   const locale = useLocale();
-  const config = useNumberLine();
   const formatNumber = (value: number) =>
     format.number(value, MATH_NUMBER_OPTIONS);
   const separator = intervalSeparator(locale);
@@ -345,20 +318,10 @@ function NumberLineFacts() {
   );
 }
 
-/** The frame of one number-line card: its header, its scale, and its readouts in the footer. */
-export function NumberLineCard({ children }: { children: ReactNode }) {
-  return (
-    <VisualCard>
-      {children}
-      <NumberLineBody />
-      <VisualCardFooter>
-        <NumberLineFacts />
-      </VisualCardFooter>
-    </VisualCard>
-  );
-}
-
-/** Draws one number line card: its header and its scale. */
+/**
+ * Draws one number line card: its header, its scale, and the readouts of its footer. It
+ * holds no client state, so a server card draws it and its math stays on the server.
+ */
 export function NumberLine({
   min,
   max,
@@ -369,10 +332,12 @@ export function NumberLine({
   const config = { max, min, segments };
 
   return (
-    <NumberLineProvider config={config}>
-      <NumberLineCard>
-        <VisualCardHeader description={description} title={title} />
-      </NumberLineCard>
-    </NumberLineProvider>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <NumberLineBody config={config} />
+      <VisualCardFooter>
+        <NumberLineFacts config={config} />
+      </VisualCardFooter>
+    </VisualCard>
   );
 }

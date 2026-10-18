@@ -1,8 +1,5 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -90,191 +87,187 @@ export function Graph({ title, description, label }: GraphProps) {
   const COLOR_LABEL = getColor("VIOLET");
   const COLOR_AUX = getColor("AMBER");
 
-  const config = resolveLineScene({
-    cameraPosition: [0, -0.2, 16],
-    cameraTarget: [0, -0.2, 0],
-    data: [
-      // Horizontal line of sight (for angle of depression)
-      {
-        points: [A, MidHorizontal, HorizontalEnd],
-        color: COLOR_SIGHT,
-        showPoints: false,
-        lineWidth: 2,
-        smooth: false,
-        labels: [
-          {
-            text: label.horizontal,
-            at: 1,
-            offset: [0, 0.5, 0],
-          },
-        ],
-      },
-      // Hypotenuse (Line of sight to target)
-      {
-        points: [A, C],
-        color: COLOR_SIGHT,
-        showPoints: false,
-        lineWidth: 2,
-        smooth: false,
-      },
-      // Vertical Height Label (60 m)
-      {
-        points: [A, MidAB, B],
-        color: COLOR_LABEL,
-        showPoints: false,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="60\,\text{m}" />,
-            at: 1, // midpoint
-            offset: [-1, 0, 0],
-          },
-        ],
-      },
-      // Horizontal Distance Label (180 m)
-      {
-        points: [B, MidBC, C],
-        color: COLOR_LABEL,
-        showPoints: false,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="180\,\text{m}" />,
-            at: 1,
-            offset: [0, -1, 0],
-          },
-        ],
-      },
-      // Angle alpha Arcs
-      {
-        points: arcA_points,
-        color: COLOR_AUX,
-        showPoints: false,
-        smooth: false,
-        lineWidth: 2,
-      },
-      {
-        points: arcC_points,
-        color: COLOR_AUX,
-        showPoints: false,
-        smooth: false,
-        lineWidth: 2,
-      },
-      // Angle alpha Labels (Anchors)
-      {
-        points: [
-          {
-            x: A.x + 2.0 * Math.cos(-angleAlpha / 2),
-            y: A.y + 2.0 * Math.sin(-angleAlpha / 2),
-            z: 0,
-          },
-        ],
-        color: COLOR_AUX,
-        showPoints: false,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="\alpha" />,
-            at: 0,
-            offset: [0, 0, 0],
-          },
-        ],
-      },
-      {
-        points: [
-          {
-            x: C.x - 2.0 * Math.cos(angleAlpha / 2),
-            y: C.y + 2.0 * Math.sin(angleAlpha / 2),
-            z: 0,
-          },
-        ],
-        color: COLOR_AUX,
-        showPoints: false,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="\alpha" />,
-            at: 0,
-            offset: [0, 0, 0],
-          },
-        ],
-      },
-      // Person Height Lines (173 cm)
-      {
-        points: [B, B_Mid, B_Ground],
-        color: COLOR_LABEL,
-        showPoints: false,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="173\,\text{cm}" />,
-            at: 1,
-            offset: [-0.8, 0, 0],
-          },
-        ],
-      },
-      {
-        points: [C, C_Mid, C_Ground],
-        color: COLOR_LABEL,
-        showPoints: false,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="173\,\text{cm}" />,
-            at: 1,
-            offset: [0.8, 0, 0],
-          },
-        ],
-      },
-      // Points
-      {
-        points: [A],
-        color: COLOR_TRIANGLE,
-        showPoints: true,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="A" />,
-            at: 0,
-            offset: [-0.5, 0.5, 0],
-          },
-        ],
-      },
-      {
-        points: [B],
-        color: COLOR_TRIANGLE,
-        showPoints: true,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="B" />,
-            at: 0,
-            offset: [0, -1.15, 0],
-          },
-        ],
-      },
-      {
-        points: [C],
-        color: COLOR_TRIANGLE,
-        showPoints: true,
-        smooth: false,
-        labels: [
-          {
-            text: <InlineMath math="C" />,
-            at: 0,
-            offset: [0, -1.15, 0],
-          },
-        ],
-      },
-    ],
-    showZAxis: false,
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[0, -0.2, 16]}
+      cameraTarget={[0, -0.2, 0]}
+      data={[
+        // Horizontal line of sight (for angle of depression)
+        {
+          points: [A, MidHorizontal, HorizontalEnd],
+          color: COLOR_SIGHT,
+          showPoints: false,
+          lineWidth: 2,
+          smooth: false,
+          labels: [
+            {
+              text: label.horizontal,
+              at: 1,
+              offset: [0, 0.5, 0],
+            },
+          ],
+        },
+        // Hypotenuse (Line of sight to target)
+        {
+          points: [A, C],
+          color: COLOR_SIGHT,
+          showPoints: false,
+          lineWidth: 2,
+          smooth: false,
+        },
+        // Vertical Height Label (60 m)
+        {
+          points: [A, MidAB, B],
+          color: COLOR_LABEL,
+          showPoints: false,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="60\,\text{m}" />,
+              at: 1, // midpoint
+              offset: [-1, 0, 0],
+            },
+          ],
+        },
+        // Horizontal Distance Label (180 m)
+        {
+          points: [B, MidBC, C],
+          color: COLOR_LABEL,
+          showPoints: false,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="180\,\text{m}" />,
+              at: 1,
+              offset: [0, -1, 0],
+            },
+          ],
+        },
+        // Angle alpha Arcs
+        {
+          points: arcA_points,
+          color: COLOR_AUX,
+          showPoints: false,
+          smooth: false,
+          lineWidth: 2,
+        },
+        {
+          points: arcC_points,
+          color: COLOR_AUX,
+          showPoints: false,
+          smooth: false,
+          lineWidth: 2,
+        },
+        // Angle alpha Labels (Anchors)
+        {
+          points: [
+            {
+              x: A.x + 2.0 * Math.cos(-angleAlpha / 2),
+              y: A.y + 2.0 * Math.sin(-angleAlpha / 2),
+              z: 0,
+            },
+          ],
+          color: COLOR_AUX,
+          showPoints: false,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="\alpha" />,
+              at: 0,
+              offset: [0, 0, 0],
+            },
+          ],
+        },
+        {
+          points: [
+            {
+              x: C.x - 2.0 * Math.cos(angleAlpha / 2),
+              y: C.y + 2.0 * Math.sin(angleAlpha / 2),
+              z: 0,
+            },
+          ],
+          color: COLOR_AUX,
+          showPoints: false,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="\alpha" />,
+              at: 0,
+              offset: [0, 0, 0],
+            },
+          ],
+        },
+        // Person Height Lines (173 cm)
+        {
+          points: [B, B_Mid, B_Ground],
+          color: COLOR_LABEL,
+          showPoints: false,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="173\,\text{cm}" />,
+              at: 1,
+              offset: [-0.8, 0, 0],
+            },
+          ],
+        },
+        {
+          points: [C, C_Mid, C_Ground],
+          color: COLOR_LABEL,
+          showPoints: false,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="173\,\text{cm}" />,
+              at: 1,
+              offset: [0.8, 0, 0],
+            },
+          ],
+        },
+        // Points
+        {
+          points: [A],
+          color: COLOR_TRIANGLE,
+          showPoints: true,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="A" />,
+              at: 0,
+              offset: [-0.5, 0.5, 0],
+            },
+          ],
+        },
+        {
+          points: [B],
+          color: COLOR_TRIANGLE,
+          showPoints: true,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="B" />,
+              at: 0,
+              offset: [0, -1.15, 0],
+            },
+          ],
+        },
+        {
+          points: [C],
+          color: COLOR_TRIANGLE,
+          showPoints: true,
+          smooth: false,
+          labels: [
+            {
+              text: <InlineMath math="C" />,
+              at: 0,
+              offset: [0, -1.15, 0],
+            },
+          ],
+        },
+      ]}
+      description={description}
+      showZAxis={false}
+      title={title}
+    />
   );
 }

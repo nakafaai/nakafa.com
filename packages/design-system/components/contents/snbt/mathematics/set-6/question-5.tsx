@@ -1,8 +1,5 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -84,114 +81,110 @@ export function Graph({ title, description }: GraphProps) {
     { x: OFFSET + R2, y: 0, z: 0 },
   ];
 
-  const config = resolveLineScene({
-    cameraPosition: [0.4, 13.5, 17],
-    cameraTarget: [0.4, 0.5, 0],
-    data: [
-      // --- Cone 1 ---
-      {
-        points: cone1Base,
-        color: COLOR_CONE_1,
-        smooth: false,
-        showPoints: false,
-        lineWidth: 2,
-      },
-      ...Arr.map(cone1Slants, (points) => ({
-        points,
-        color: COLOR_CONE_1,
-        showPoints: false,
-        lineWidth: 1,
-      })),
-      // Height (h1) and P1
-      {
-        points: cone1HeightLine,
-        color: COLOR_HELPER,
-        showPoints: true, // Shows P1 and Apex
-        lineWidth: 2,
-        labels: [
-          {
-            text: <InlineMath math="h_1" />,
-            at: 0,
-            offset: [-1.25, H1 / 2, 0],
-          },
-          {
-            text: <InlineMath math="P_1" />,
-            at: 0,
-            offset: [0, -1.8, 0],
-          },
-        ],
-      },
-      // Radius (R1)
-      {
-        points: cone1RadiusLine,
-        color: COLOR_HELPER,
-        showPoints: false,
-        lineWidth: 2,
-        labels: [
-          {
-            text: <InlineMath math="R_1" />,
-            at: 0,
-            offset: [R1 / 2 + 0.4, -1.15, 0],
-          },
-        ],
-      },
-
-      // --- Cone 2 ---
-      {
-        points: cone2Base,
-        color: COLOR_CONE_2,
-        smooth: false,
-        showPoints: false,
-        lineWidth: 2,
-      },
-      ...Arr.map(cone2Slants, (points) => ({
-        points,
-        color: COLOR_CONE_2,
-        showPoints: false,
-        lineWidth: 1,
-      })),
-      // Height (h2) and P2
-      {
-        points: cone2HeightLine,
-        color: COLOR_HELPER,
-        showPoints: true,
-        lineWidth: 2,
-        labels: [
-          {
-            text: <InlineMath math="h_2" />,
-            at: 0,
-            offset: [-1.25, H2 / 2, 0],
-          },
-          {
-            text: <InlineMath math="P_2" />,
-            at: 0,
-            offset: [0, -1.8, 0],
-          },
-        ],
-      },
-      // Radius (R2)
-      {
-        points: cone2RadiusLine,
-        color: COLOR_HELPER,
-        showPoints: false,
-        lineWidth: 2,
-        labels: [
-          {
-            text: <InlineMath math="R_2" />,
-            at: 0,
-            offset: [R2 / 2 + 0.4, -1.15, 0],
-          },
-        ],
-      },
-    ],
-    // Camera looking at center (0,0,0) from slightly above and front
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[0.4, 13.5, 17]}
+      cameraTarget={[0.4, 0.5, 0]}
+      data={[
+        // --- Cone 1 ---
+        {
+          points: cone1Base,
+          color: COLOR_CONE_1,
+          smooth: false,
+          showPoints: false,
+          lineWidth: 2,
+        },
+        ...Arr.map(cone1Slants, (points) => ({
+          points,
+          color: COLOR_CONE_1,
+          showPoints: false,
+          lineWidth: 1,
+        })),
+        // Height (h1) and P1
+        {
+          points: cone1HeightLine,
+          color: COLOR_HELPER,
+          showPoints: true, // Shows P1 and Apex
+          lineWidth: 2,
+          labels: [
+            {
+              text: <InlineMath math="h_1" />,
+              at: 0,
+              offset: [-1.25, H1 / 2, 0],
+            },
+            {
+              text: <InlineMath math="P_1" />,
+              at: 0,
+              offset: [0, -1.8, 0],
+            },
+          ],
+        },
+        // Radius (R1)
+        {
+          points: cone1RadiusLine,
+          color: COLOR_HELPER,
+          showPoints: false,
+          lineWidth: 2,
+          labels: [
+            {
+              text: <InlineMath math="R_1" />,
+              at: 0,
+              offset: [R1 / 2 + 0.4, -1.15, 0],
+            },
+          ],
+        },
+
+        // --- Cone 2 ---
+        {
+          points: cone2Base,
+          color: COLOR_CONE_2,
+          smooth: false,
+          showPoints: false,
+          lineWidth: 2,
+        },
+        ...Arr.map(cone2Slants, (points) => ({
+          points,
+          color: COLOR_CONE_2,
+          showPoints: false,
+          lineWidth: 1,
+        })),
+        // Height (h2) and P2
+        {
+          points: cone2HeightLine,
+          color: COLOR_HELPER,
+          showPoints: true,
+          lineWidth: 2,
+          labels: [
+            {
+              text: <InlineMath math="h_2" />,
+              at: 0,
+              offset: [-1.25, H2 / 2, 0],
+            },
+            {
+              text: <InlineMath math="P_2" />,
+              at: 0,
+              offset: [0, -1.8, 0],
+            },
+          ],
+        },
+        // Radius (R2)
+        {
+          points: cone2RadiusLine,
+          color: COLOR_HELPER,
+          showPoints: false,
+          lineWidth: 2,
+          labels: [
+            {
+              text: <InlineMath math="R_2" />,
+              at: 0,
+              offset: [R2 / 2 + 0.4, -1.15, 0],
+            },
+          ],
+        },
+      ]}
+      // Camera looking at center (0,0,0) from slightly above and front
+      description={description}
+      title={title}
+    />
   );
 }

@@ -1,12 +1,9 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import {
   getArcPoints,
   getMidpoint,
 } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -46,60 +43,56 @@ const arcLabelIndex = Math.floor(arcPoints.length / 2);
 
 /** Renders the coordinate graph for SNBT set 4 question 19. */
 export function Graph({ title, description }: GraphProps) {
-  const config = resolveLineScene({
-    cameraPosition: [1, 2.3, 8.4],
-    cameraTarget: [1, 2.3, 0],
-    data: [
-      {
-        points: [pointA, midpointAB, pointB],
-        color: getColor("INDIGO"),
-        showPoints: false,
-        labels: [
-          { text: <InlineMath math="A" />, at: 0, offset: [0.25, -0.35, 0] },
-          { text: <InlineMath math="B" />, at: 2, offset: [0.25, 0.25, 0] },
-        ],
-      },
-      {
-        points: [pointA, midpointAC, pointC],
-        color: getColor("EMERALD"),
-        showPoints: false,
-        labels: [
-          { text: <InlineMath math="C" />, at: 2, offset: [-0.2, -0.35, 0] },
-        ],
-      },
-      {
-        points: [pointB, midpointBC, pointC],
-        color: getColor("CYAN"),
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="BC = 500\,\text{m}" />,
-            at: 1,
-            offset: [-1.15, 0.55, 0],
-          },
-        ],
-      },
-      {
-        points: arcPoints,
-        color: getColor("ORANGE"),
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="60^\circ" />,
-            at: arcLabelIndex,
-            offset: [0.4, 0.2, 0],
-          },
-        ],
-      },
-    ],
-    showZAxis: false,
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[1, 2.3, 8.4]}
+      cameraTarget={[1, 2.3, 0]}
+      data={[
+        {
+          points: [pointA, midpointAB, pointB],
+          color: getColor("INDIGO"),
+          showPoints: false,
+          labels: [
+            { text: <InlineMath math="A" />, at: 0, offset: [0.25, -0.35, 0] },
+            { text: <InlineMath math="B" />, at: 2, offset: [0.25, 0.25, 0] },
+          ],
+        },
+        {
+          points: [pointA, midpointAC, pointC],
+          color: getColor("EMERALD"),
+          showPoints: false,
+          labels: [
+            { text: <InlineMath math="C" />, at: 2, offset: [-0.2, -0.35, 0] },
+          ],
+        },
+        {
+          points: [pointB, midpointBC, pointC],
+          color: getColor("CYAN"),
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="BC = 500\,\text{m}" />,
+              at: 1,
+              offset: [-1.15, 0.55, 0],
+            },
+          ],
+        },
+        {
+          points: arcPoints,
+          color: getColor("ORANGE"),
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="60^\circ" />,
+              at: arcLabelIndex,
+              offset: [0.4, 0.2, 0],
+            },
+          ],
+        },
+      ]}
+      description={description}
+      showZAxis={false}
+      title={title}
+    />
   );
 }

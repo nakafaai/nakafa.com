@@ -1,9 +1,6 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -44,168 +41,164 @@ export function Graph({ title, description }: GraphProps) {
   const G = { x: xMax, y: yMax, z: zMin }; // Back-Right-Top
   const H = { x: xMin, y: yMax, z: zMin }; // Back-Left-Top
 
-  const config = resolveLineScene({
-    cameraPosition: [-3.4, 4.5, 6],
-    data: [
-      // Bottom Face Edges
-      {
-        ...common,
-        points: [A, getMidpoint(A, B), B],
-        labels: [
-          {
-            text: <InlineMath math="A" />,
-            at: 0,
-            offset: [-0.2, -0.2, 0.2],
-          },
-          {
-            text: <InlineMath math="B" />,
-            at: 2,
-            offset: [0.2, -0.2, 0.2],
-          },
-          {
-            text: <InlineMath math="p = 2l" />,
-            at: 1,
-            offset: [0, -0.4, 0],
-          },
-        ],
-      },
-      {
-        ...common,
-        points: [B, getMidpoint(B, C), C],
-        labels: [
-          {
-            text: <InlineMath math="C" />,
-            at: 2,
-            offset: [0.2, -0.2, -0.2],
-          },
-        ],
-      },
-      {
-        ...common,
-        points: [C, D],
-        labels: [
-          {
-            text: <InlineMath math="D" />,
-            at: 1,
-            offset: [-0.2, -0.2, -0.2],
-          },
-        ],
-      },
-      {
-        ...common,
-        points: [D, getMidpoint(D, A), A],
-        labels: [
-          {
-            text: <InlineMath math="l" />,
-            at: 1,
-            offset: [-0.55, 0, 0.2],
-          },
-        ],
-      },
-
-      // Top Face Edges
-      {
-        ...common,
-        points: [E, F],
-        labels: [
-          {
-            text: <InlineMath math="E" />,
-            at: 0,
-            offset: [-0.2, 0.2, 0.2],
-          },
-          {
-            text: <InlineMath math="F" />,
-            at: 1,
-            offset: [0.2, 0.2, 0.2],
-          },
-        ],
-      },
-      {
-        ...common,
-        points: [F, G],
-        labels: [
-          {
-            text: <InlineMath math="G" />,
-            at: 1,
-            offset: [0.2, 0.2, -0.2],
-          },
-        ],
-      },
-      {
-        ...common,
-        points: [G, H],
-        labels: [
-          {
-            text: <InlineMath math="H" />,
-            at: 1,
-            offset: [-0.2, 0.2, -0.2],
-          },
-        ],
-      },
-      {
-        ...common,
-        points: [H, E],
-      },
-
-      // Vertical Edges
-      { ...common, points: [A, E] },
-      { ...common, points: [D, H] },
-      {
-        ...common,
-        points: [B, getMidpoint(B, F), F],
-        labels: [
-          {
-            text: <InlineMath math="t" />,
-            at: 1,
-            offset: [0.2, 0, 0],
-          },
-        ],
-      },
-      {
-        ...common,
-        points: [C, getMidpoint(C, G), G],
-      },
-
-      // Plane ADGF (Diagonal Plane) - Highlighted
-      {
-        points: [A, F],
-        color: highlightColor,
-        showPoints: false,
-      },
-      {
-        points: [F, G],
-        color: highlightColor,
-        showPoints: false,
-      },
-      {
-        points: [G, D],
-        color: highlightColor,
-        showPoints: false,
-      },
-      {
-        points: [D, A],
-        color: highlightColor,
-        showPoints: false,
-      },
-      // Fill diagonals for visual effect of the plane
-      {
-        points: [A, G],
-        color: highlightColor,
-        showPoints: false,
-      },
-      {
-        points: [D, F],
-        color: highlightColor,
-        showPoints: false,
-      },
-    ],
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[-3.4, 4.5, 6]}
+      data={[
+        // Bottom Face Edges
+        {
+          ...common,
+          points: [A, getMidpoint(A, B), B],
+          labels: [
+            {
+              text: <InlineMath math="A" />,
+              at: 0,
+              offset: [-0.2, -0.2, 0.2],
+            },
+            {
+              text: <InlineMath math="B" />,
+              at: 2,
+              offset: [0.2, -0.2, 0.2],
+            },
+            {
+              text: <InlineMath math="p = 2l" />,
+              at: 1,
+              offset: [0, -0.4, 0],
+            },
+          ],
+        },
+        {
+          ...common,
+          points: [B, getMidpoint(B, C), C],
+          labels: [
+            {
+              text: <InlineMath math="C" />,
+              at: 2,
+              offset: [0.2, -0.2, -0.2],
+            },
+          ],
+        },
+        {
+          ...common,
+          points: [C, D],
+          labels: [
+            {
+              text: <InlineMath math="D" />,
+              at: 1,
+              offset: [-0.2, -0.2, -0.2],
+            },
+          ],
+        },
+        {
+          ...common,
+          points: [D, getMidpoint(D, A), A],
+          labels: [
+            {
+              text: <InlineMath math="l" />,
+              at: 1,
+              offset: [-0.55, 0, 0.2],
+            },
+          ],
+        },
+
+        // Top Face Edges
+        {
+          ...common,
+          points: [E, F],
+          labels: [
+            {
+              text: <InlineMath math="E" />,
+              at: 0,
+              offset: [-0.2, 0.2, 0.2],
+            },
+            {
+              text: <InlineMath math="F" />,
+              at: 1,
+              offset: [0.2, 0.2, 0.2],
+            },
+          ],
+        },
+        {
+          ...common,
+          points: [F, G],
+          labels: [
+            {
+              text: <InlineMath math="G" />,
+              at: 1,
+              offset: [0.2, 0.2, -0.2],
+            },
+          ],
+        },
+        {
+          ...common,
+          points: [G, H],
+          labels: [
+            {
+              text: <InlineMath math="H" />,
+              at: 1,
+              offset: [-0.2, 0.2, -0.2],
+            },
+          ],
+        },
+        {
+          ...common,
+          points: [H, E],
+        },
+
+        // Vertical Edges
+        { ...common, points: [A, E] },
+        { ...common, points: [D, H] },
+        {
+          ...common,
+          points: [B, getMidpoint(B, F), F],
+          labels: [
+            {
+              text: <InlineMath math="t" />,
+              at: 1,
+              offset: [0.2, 0, 0],
+            },
+          ],
+        },
+        {
+          ...common,
+          points: [C, getMidpoint(C, G), G],
+        },
+
+        // Plane ADGF (Diagonal Plane) - Highlighted
+        {
+          points: [A, F],
+          color: highlightColor,
+          showPoints: false,
+        },
+        {
+          points: [F, G],
+          color: highlightColor,
+          showPoints: false,
+        },
+        {
+          points: [G, D],
+          color: highlightColor,
+          showPoints: false,
+        },
+        {
+          points: [D, A],
+          color: highlightColor,
+          showPoints: false,
+        },
+        // Fill diagonals for visual effect of the plane
+        {
+          points: [A, G],
+          color: highlightColor,
+          showPoints: false,
+        },
+        {
+          points: [D, F],
+          color: highlightColor,
+          showPoints: false,
+        },
+      ]}
+      description={description}
+      title={title}
+    />
   );
 }

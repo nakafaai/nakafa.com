@@ -1,8 +1,4 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -66,16 +62,12 @@ export function Graph({ title, description }: GraphProps) {
     },
   ];
 
-  const config = resolveLineScene({
-    cameraPosition: [0, 0, 20],
-    data,
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[0, 0, 20]}
+      data={data}
+      description={description}
+      title={title}
+    />
   );
 }

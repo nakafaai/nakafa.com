@@ -1,8 +1,5 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -56,156 +53,152 @@ const diagonals = [
 
 /** Renders the coordinate graph for SNBT set 7 question 4. */
 export function Graph({ title, description }: GraphProps) {
-  const config = resolveLineScene({
-    cameraPosition: [-8, 5, 10],
-    data: [
-      // Cube Edges
-      ...Arr.map(cubeEdges, (edge) => ({
-        points: edge,
-        color: COLOR_CUBE,
-        showPoints: false,
-        lineWidth: 2,
-      })),
-
-      // Diagonals
-      ...Arr.map(diagonals, (edge) => ({
-        points: edge,
-        color: COLOR_DIAGONAL,
-        showPoints: false,
-        lineWidth: 2,
-      })),
-
-      // Distance Line (Center to Floor)
-      {
-        points: [CENTER, MID_DISTANCE, FLOOR_CENTER],
-        color: COLOR_DISTANCE,
-        showPoints: false,
-        lineWidth: 3,
-        labels: [
-          {
-            text: <InlineMath math="\frac{5}{2}\,\text{m}" />,
-            at: 1,
-            offset: [-1.2, 0, -0.5],
-          },
-        ],
-      },
-      // Distance Line Endpoints
-      {
-        points: [CENTER],
-        color: COLOR_DISTANCE,
-        showPoints: true,
-      },
-      {
-        points: [FLOOR_CENTER],
-        color: COLOR_DISTANCE,
-        showPoints: true,
-      },
-
-      // Labels for Vertices
-      {
-        points: [A],
-        color: COLOR_CUBE,
-        showPoints: true,
-        labels: [
-          {
-            text: <InlineMath math="A" />,
-            at: 0,
-            offset: [-0.5, -0.5, 0.5],
-          },
-        ],
-      },
-      {
-        points: [B],
-        color: COLOR_CUBE,
-        showPoints: true,
-        labels: [
-          {
-            text: <InlineMath math="B" />,
-            at: 0,
-            offset: [0.5, -0.5, 0.5],
-          },
-        ],
-      },
-      {
-        points: [C],
-        color: COLOR_CUBE,
-        showPoints: true,
-        labels: [
-          {
-            text: <InlineMath math="C" />,
-            at: 0,
-            offset: [0.5, -0.5, -0.5],
-          },
-        ],
-      },
-      {
-        points: [D],
-        color: COLOR_CUBE,
-        showPoints: true,
-        labels: [
-          {
-            text: <InlineMath math="D" />,
-            at: 0,
-            offset: [-0.5, -0.5, -0.5],
-          },
-        ],
-      },
-      {
-        points: [E],
-        color: COLOR_CUBE,
-        showPoints: true,
-        labels: [
-          {
-            text: <InlineMath math="E" />,
-            at: 0,
-            offset: [-0.5, 0.5, 0.5],
-          },
-        ],
-      },
-      {
-        points: [F],
-        color: COLOR_CUBE,
-        showPoints: true,
-        labels: [
-          {
-            text: <InlineMath math="F" />,
-            at: 0,
-            offset: [0.5, 0.5, 0.5],
-          },
-        ],
-      },
-      {
-        points: [G],
-        color: COLOR_CUBE,
-        showPoints: true,
-        labels: [
-          {
-            text: <InlineMath math="G" />,
-            at: 0,
-            offset: [0.5, 0.5, -0.5],
-          },
-        ],
-      },
-      {
-        points: [H],
-        color: COLOR_CUBE,
-        showPoints: true,
-        labels: [
-          {
-            text: <InlineMath math="H" />,
-            at: 0,
-            offset: [-0.5, 0.5, -0.5],
-          },
-        ],
-      },
-    ],
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[-8, 5, 10]}
+      data={[
+        // Cube Edges
+        ...Arr.map(cubeEdges, (edge) => ({
+          points: edge,
+          color: COLOR_CUBE,
+          showPoints: false,
+          lineWidth: 2,
+        })),
+
+        // Diagonals
+        ...Arr.map(diagonals, (edge) => ({
+          points: edge,
+          color: COLOR_DIAGONAL,
+          showPoints: false,
+          lineWidth: 2,
+        })),
+
+        // Distance Line (Center to Floor)
+        {
+          points: [CENTER, MID_DISTANCE, FLOOR_CENTER],
+          color: COLOR_DISTANCE,
+          showPoints: false,
+          lineWidth: 3,
+          labels: [
+            {
+              text: <InlineMath math="\frac{5}{2}\,\text{m}" />,
+              at: 1,
+              offset: [-1.2, 0, -0.5],
+            },
+          ],
+        },
+        // Distance Line Endpoints
+        {
+          points: [CENTER],
+          color: COLOR_DISTANCE,
+          showPoints: true,
+        },
+        {
+          points: [FLOOR_CENTER],
+          color: COLOR_DISTANCE,
+          showPoints: true,
+        },
+
+        // Labels for Vertices
+        {
+          points: [A],
+          color: COLOR_CUBE,
+          showPoints: true,
+          labels: [
+            {
+              text: <InlineMath math="A" />,
+              at: 0,
+              offset: [-0.5, -0.5, 0.5],
+            },
+          ],
+        },
+        {
+          points: [B],
+          color: COLOR_CUBE,
+          showPoints: true,
+          labels: [
+            {
+              text: <InlineMath math="B" />,
+              at: 0,
+              offset: [0.5, -0.5, 0.5],
+            },
+          ],
+        },
+        {
+          points: [C],
+          color: COLOR_CUBE,
+          showPoints: true,
+          labels: [
+            {
+              text: <InlineMath math="C" />,
+              at: 0,
+              offset: [0.5, -0.5, -0.5],
+            },
+          ],
+        },
+        {
+          points: [D],
+          color: COLOR_CUBE,
+          showPoints: true,
+          labels: [
+            {
+              text: <InlineMath math="D" />,
+              at: 0,
+              offset: [-0.5, -0.5, -0.5],
+            },
+          ],
+        },
+        {
+          points: [E],
+          color: COLOR_CUBE,
+          showPoints: true,
+          labels: [
+            {
+              text: <InlineMath math="E" />,
+              at: 0,
+              offset: [-0.5, 0.5, 0.5],
+            },
+          ],
+        },
+        {
+          points: [F],
+          color: COLOR_CUBE,
+          showPoints: true,
+          labels: [
+            {
+              text: <InlineMath math="F" />,
+              at: 0,
+              offset: [0.5, 0.5, 0.5],
+            },
+          ],
+        },
+        {
+          points: [G],
+          color: COLOR_CUBE,
+          showPoints: true,
+          labels: [
+            {
+              text: <InlineMath math="G" />,
+              at: 0,
+              offset: [0.5, 0.5, -0.5],
+            },
+          ],
+        },
+        {
+          points: [H],
+          color: COLOR_CUBE,
+          showPoints: true,
+          labels: [
+            {
+              text: <InlineMath math="H" />,
+              at: 0,
+              offset: [-0.5, 0.5, -0.5],
+            },
+          ],
+        },
+      ]}
+      description={description}
+      title={title}
+    />
   );
 }

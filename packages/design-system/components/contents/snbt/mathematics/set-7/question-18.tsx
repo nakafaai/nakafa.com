@@ -1,8 +1,5 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -110,116 +107,112 @@ export function Graph({ title, description, labels }: GraphProps) {
   const COLOR_FISH = getColor("TEAL");
   const COLOR_LABEL = getColor("VIOLET");
 
-  const config = resolveLineScene({
-    cameraPosition: [1.2, 0.6, 15],
-    cameraTarget: [1.2, 0.6, 0],
-    data: [
-      // Water Surface
-      {
-        points: [SURFACE_START, SURFACE_MID, SURFACE_LABEL_POS, SURFACE_END],
-        color: COLOR_WATER,
-        showPoints: false,
-        labels: [
-          {
-            text: labels.surface,
-            at: 2, // At SURFACE_LABEL_POS
-            offset: [0, -0.6, 0], // Below x-axis
-          },
-        ],
-      },
-      // Angle Arc
-      {
-        points: ARC_POINTS,
-        color: COLOR_LABEL,
-        showPoints: false,
-        // Removed duplicate label logic, relying on separate point below
-      },
-      // Angle Label
-      {
-        points: [LABEL_POS],
-        color: COLOR_LABEL,
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="30^\circ" />,
-            at: 0,
-            offset: [0, 0, 0],
-          },
-        ],
-      },
-      // Line of Sight (Fish to Eagle)
-      {
-        points: [F, SIGHT_MID, E],
-        color: COLOR_SIGHT,
-        showPoints: false,
-        labels: [
-          {
-            text: labels.sightDistance,
-            at: 1, // Midpoint
-            offset: [0, 1, 0],
-          },
-          // Removed 30 deg label from here
-        ],
-      },
-      // Fish Depth Line
-      {
-        points: [F, FISH_DEPTH_MID, F_PROJ],
-        color: COLOR_DEPTH,
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="3\,\text{m}" />,
-            at: 1, // Midpoint
-            offset: [-0.8, 0, 0], // Adjusted offset
-          },
-        ],
-      },
-      // Eagle Height Line
-      {
-        points: [E, EAGLE_HEIGHT_MID, E_PROJ],
-        color: COLOR_DEPTH,
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="h = ?" />,
-            at: 1, // Midpoint
-            offset: [1, 0, 0], // Adjusted offset
-          },
-        ],
-      },
-      // Points of interest
-      {
-        points: [F],
-        color: COLOR_FISH,
-        showPoints: true,
-        labels: [
-          {
-            text: labels.fish,
-            at: 0,
-            offset: [0, -0.8, 0], // Adjusted offset
-          },
-        ],
-      },
-      {
-        points: [E],
-        color: COLOR_EAGLE,
-        showPoints: true,
-        labels: [
-          {
-            text: labels.eagle,
-            at: 0,
-            offset: [0, 0.8, 0], // Adjusted offset
-          },
-        ],
-      },
-    ],
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[1.2, 0.6, 15]}
+      cameraTarget={[1.2, 0.6, 0]}
+      data={[
+        // Water Surface
+        {
+          points: [SURFACE_START, SURFACE_MID, SURFACE_LABEL_POS, SURFACE_END],
+          color: COLOR_WATER,
+          showPoints: false,
+          labels: [
+            {
+              text: labels.surface,
+              at: 2, // At SURFACE_LABEL_POS
+              offset: [0, -0.6, 0], // Below x-axis
+            },
+          ],
+        },
+        // Angle Arc
+        {
+          points: ARC_POINTS,
+          color: COLOR_LABEL,
+          showPoints: false,
+          // Removed duplicate label logic, relying on separate point below
+        },
+        // Angle Label
+        {
+          points: [LABEL_POS],
+          color: COLOR_LABEL,
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="30^\circ" />,
+              at: 0,
+              offset: [0, 0, 0],
+            },
+          ],
+        },
+        // Line of Sight (Fish to Eagle)
+        {
+          points: [F, SIGHT_MID, E],
+          color: COLOR_SIGHT,
+          showPoints: false,
+          labels: [
+            {
+              text: labels.sightDistance,
+              at: 1, // Midpoint
+              offset: [0, 1, 0],
+            },
+            // Removed 30 deg label from here
+          ],
+        },
+        // Fish Depth Line
+        {
+          points: [F, FISH_DEPTH_MID, F_PROJ],
+          color: COLOR_DEPTH,
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="3\,\text{m}" />,
+              at: 1, // Midpoint
+              offset: [-0.8, 0, 0], // Adjusted offset
+            },
+          ],
+        },
+        // Eagle Height Line
+        {
+          points: [E, EAGLE_HEIGHT_MID, E_PROJ],
+          color: COLOR_DEPTH,
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="h = ?" />,
+              at: 1, // Midpoint
+              offset: [1, 0, 0], // Adjusted offset
+            },
+          ],
+        },
+        // Points of interest
+        {
+          points: [F],
+          color: COLOR_FISH,
+          showPoints: true,
+          labels: [
+            {
+              text: labels.fish,
+              at: 0,
+              offset: [0, -0.8, 0], // Adjusted offset
+            },
+          ],
+        },
+        {
+          points: [E],
+          color: COLOR_EAGLE,
+          showPoints: true,
+          labels: [
+            {
+              text: labels.eagle,
+              at: 0,
+              offset: [0, 0.8, 0], // Adjusted offset
+            },
+          ],
+        },
+      ]}
+      description={description}
+      title={title}
+    />
   );
 }

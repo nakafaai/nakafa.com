@@ -1,4 +1,5 @@
 import { VisualPlaceSchema } from "@repo/design-system/components/visual/backdrop";
+import { playActions, STILL } from "@repo/design-system/components/visual/play";
 import {
   closeSession,
   focusSession,
@@ -38,19 +39,6 @@ const INLINE: typeof VisualViewSchema.Type = {
   place: undefined,
   presentation: "inline",
 };
-
-/**
- * What the card's scene reads: whether it plays, and how many times the
- * learner asked for its first view back. A scene starts still, at its first
- * view.
- */
-const VisualSceneSchema = Schema.Struct({
-  playing: Schema.Boolean,
-  view: Schema.Int,
-});
-
-/** A scene that stands still at its first view. */
-const STILL: typeof VisualSceneSchema.Type = { playing: false, view: 0 };
 
 /** The browser refused to show or leave a visual card with the Fullscreen API. */
 class VisualFullscreenError extends Schema.TaggedError<VisualFullscreenError>()(
@@ -221,10 +209,7 @@ export function createVisualStore() {
       }
 
       return {
-        /** Takes the scene back to its first view. */
-        resetView: () => set((current) => ({ view: current.view + 1 })),
-        /** Starts the scene moving by itself, or stops it. */
-        togglePlaying: () => set((current) => ({ playing: !current.playing })),
+        ...playActions(set),
         /** Registers the card element; the card passes it as its ref. */
         bind: (element: HTMLElement | null) => {
           card = element;

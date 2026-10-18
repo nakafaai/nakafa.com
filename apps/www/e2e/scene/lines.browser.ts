@@ -95,7 +95,7 @@ const pauseSceneAway = Effect.fn("NakafaE2E.pauseSceneAway")(function* (
     .locator(SCENE_ACTIONS)
     .getByRole("button", { name: "Play" });
 
-  // Automatic rotation draws every frame, like an animated lab.
+  // Playing turns the camera on every frame, like an animated lab.
   yield* Effect.promise(() => rotation.click());
   yield* Effect.promise(() =>
     expect(rotation).toHaveAttribute("aria-pressed", "true")

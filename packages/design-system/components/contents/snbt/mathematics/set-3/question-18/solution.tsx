@@ -1,8 +1,5 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -79,166 +76,162 @@ export function GraphSolution({
   const dimensionY = -labelOffsetY * 0.6;
   const observerHeight = 2 / scale;
 
-  const config = resolveLineScene({
-    cameraPosition: [3.2, 2.8, 16],
-    cameraTarget: [3.2, 2.8, 0],
-    data: [
-      // Vertical Line AC (A -> D -> C)
-      {
-        points: [pointA, midAD, D],
-        color: getColor("INDIGO"),
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="A" />,
-            at: 0,
-            offset: [-labelOffsetX * 0.3, labelOffsetY * 0.2, 0],
-          },
-          {
-            text: <InlineMath math="16\,\text{m}" />,
-            at: 1,
-            offset: [-labelOffsetX, 0, 0],
-          },
-          {
-            text: labels.building,
-            at: 1,
-            offset: [-labelOffsetX * 1.8, -labelOffsetY * 0.55, 0],
-          },
-          {
-            text: <InlineMath math="D" />,
-            at: 2,
-            offset: [-labelOffsetX * 0.3, 0, 0],
-          },
-        ],
-      },
-      {
-        points: [D, C],
-        color: getColor("ORANGE"),
-        showPoints: false,
-        labels: [
-          {
-            text: labels.helicopter,
-            at: 1,
-            offset: [labelOffsetX * 0.3, labelOffsetY * 0.4, 0],
-          },
-          {
-            text: <InlineMath math="C" />,
-            at: 1,
-            offset: [-labelOffsetX * 0.3, 0, 0],
-          },
-        ],
-      },
-      // Horizontal Line AE (A -> B -> E)
-      {
-        points: [pointA, midAB, B],
-        color: getColor("TEAL"),
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="(32 - x)\,\text{m}" />,
-            at: 1,
-            offset: [0, -labelOffsetY * 0.3, 0],
-          },
-          {
-            text: <InlineMath math="B" />,
-            at: 2,
-            offset: [0, labelOffsetY * 0.2, 0],
-          },
-        ],
-      },
-      {
-        points: [B, midBE, E],
-        color: getColor("CYAN"),
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="x" />,
-            at: 1,
-            offset: [0, -labelOffsetY * 0.3, 0],
-          },
-          {
-            text: <InlineMath math="E" />,
-            at: 2,
-            offset: [labelOffsetX, labelOffsetY * 0.2, 0],
-          },
-        ],
-      },
-      // Observer
-      {
-        points: [E, { x: E.x, y: observerHeight, z: 0 }],
-        color: getColor("CYAN"),
-        showPoints: false,
-        labels: [
-          {
-            text: labels.observer,
-            at: 1,
-            offset: [0, labelOffsetY * 0.3, 0],
-          },
-        ],
-      },
-      // Hypotenuse DB
-      {
-        points: [D, B],
-        color: getColor("VIOLET"),
-        showPoints: false,
-      },
-      // Hypotenuse CB
-      {
-        points: [C, B],
-        color: getColor("EMERALD"),
-        showPoints: false,
-      },
-      // Bottom Dimension 32m
-      {
-        points: [
-          { x: 0, y: dimensionY, z: 0 },
-          { x: totalGround / 2, y: dimensionY, z: 0 },
-          { x: totalGround, y: dimensionY, z: 0 },
-        ],
-        color: getColor("ROSE"),
-        showPoints: false,
-        cone: { position: "both" },
-        labels: [
-          {
-            text: <InlineMath math="32\,\text{m}" />,
-            at: 1,
-            offset: [0, -labelOffsetY * 0.4, 0],
-          },
-        ],
-      },
-      // Angles
-      {
-        points: arc30Points,
-        color: getColor("VIOLET"),
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="30^\circ" />,
-            at: arc30LabelIndex,
-            offset: [-labelOffsetX * 0.6, labelOffsetY * 0.05, 0],
-          },
-        ],
-      },
-      {
-        points: arc45Points,
-        color: getColor("EMERALD"),
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="45^\circ" />,
-            at: arc45LabelIndex,
-            offset: [-labelOffsetX * 0.8, labelOffsetY * 0.5, 0],
-          },
-        ],
-      },
-    ],
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[3.2, 2.8, 16]}
+      cameraTarget={[3.2, 2.8, 0]}
+      data={[
+        // Vertical Line AC (A -> D -> C)
+        {
+          points: [pointA, midAD, D],
+          color: getColor("INDIGO"),
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="A" />,
+              at: 0,
+              offset: [-labelOffsetX * 0.3, labelOffsetY * 0.2, 0],
+            },
+            {
+              text: <InlineMath math="16\,\text{m}" />,
+              at: 1,
+              offset: [-labelOffsetX, 0, 0],
+            },
+            {
+              text: labels.building,
+              at: 1,
+              offset: [-labelOffsetX * 1.8, -labelOffsetY * 0.55, 0],
+            },
+            {
+              text: <InlineMath math="D" />,
+              at: 2,
+              offset: [-labelOffsetX * 0.3, 0, 0],
+            },
+          ],
+        },
+        {
+          points: [D, C],
+          color: getColor("ORANGE"),
+          showPoints: false,
+          labels: [
+            {
+              text: labels.helicopter,
+              at: 1,
+              offset: [labelOffsetX * 0.3, labelOffsetY * 0.4, 0],
+            },
+            {
+              text: <InlineMath math="C" />,
+              at: 1,
+              offset: [-labelOffsetX * 0.3, 0, 0],
+            },
+          ],
+        },
+        // Horizontal Line AE (A -> B -> E)
+        {
+          points: [pointA, midAB, B],
+          color: getColor("TEAL"),
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="(32 - x)\,\text{m}" />,
+              at: 1,
+              offset: [0, -labelOffsetY * 0.3, 0],
+            },
+            {
+              text: <InlineMath math="B" />,
+              at: 2,
+              offset: [0, labelOffsetY * 0.2, 0],
+            },
+          ],
+        },
+        {
+          points: [B, midBE, E],
+          color: getColor("CYAN"),
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="x" />,
+              at: 1,
+              offset: [0, -labelOffsetY * 0.3, 0],
+            },
+            {
+              text: <InlineMath math="E" />,
+              at: 2,
+              offset: [labelOffsetX, labelOffsetY * 0.2, 0],
+            },
+          ],
+        },
+        // Observer
+        {
+          points: [E, { x: E.x, y: observerHeight, z: 0 }],
+          color: getColor("CYAN"),
+          showPoints: false,
+          labels: [
+            {
+              text: labels.observer,
+              at: 1,
+              offset: [0, labelOffsetY * 0.3, 0],
+            },
+          ],
+        },
+        // Hypotenuse DB
+        {
+          points: [D, B],
+          color: getColor("VIOLET"),
+          showPoints: false,
+        },
+        // Hypotenuse CB
+        {
+          points: [C, B],
+          color: getColor("EMERALD"),
+          showPoints: false,
+        },
+        // Bottom Dimension 32m
+        {
+          points: [
+            { x: 0, y: dimensionY, z: 0 },
+            { x: totalGround / 2, y: dimensionY, z: 0 },
+            { x: totalGround, y: dimensionY, z: 0 },
+          ],
+          color: getColor("ROSE"),
+          showPoints: false,
+          cone: { position: "both" },
+          labels: [
+            {
+              text: <InlineMath math="32\,\text{m}" />,
+              at: 1,
+              offset: [0, -labelOffsetY * 0.4, 0],
+            },
+          ],
+        },
+        // Angles
+        {
+          points: arc30Points,
+          color: getColor("VIOLET"),
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="30^\circ" />,
+              at: arc30LabelIndex,
+              offset: [-labelOffsetX * 0.6, labelOffsetY * 0.05, 0],
+            },
+          ],
+        },
+        {
+          points: arc45Points,
+          color: getColor("EMERALD"),
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="45^\circ" />,
+              at: arc45LabelIndex,
+              offset: [-labelOffsetX * 0.8, labelOffsetY * 0.5, 0],
+            },
+          ],
+        },
+      ]}
+      description={description}
+      title={title}
+    />
   );
 }

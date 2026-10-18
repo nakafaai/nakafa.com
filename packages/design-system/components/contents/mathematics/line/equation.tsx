@@ -1,5 +1,6 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
 import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import { LineFacts } from "@repo/design-system/components/contents/mathematics/line/facts";
 import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import type {
   AuthoredLine,
@@ -7,7 +8,12 @@ import type {
   CircleArcLabelFields,
   ResolvedLineLabel,
 } from "@repo/design-system/components/contents/mathematics/line/spec";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
+import {
+  VisualCard,
+  VisualCardFooter,
+  VisualCardHeader,
+} from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 
 /**
@@ -27,7 +33,11 @@ interface Props {
   title: ReactNode;
 }
 
-/** Renders one interactive line-equation card. */
+/**
+ * Renders one interactive line-equation card: its header, the scene with its actions, and
+ * the readouts of the scene in the footer. The footer is drawn on the server, so its math
+ * never reaches the browser; the scene parts read the scene from `LineEquationProvider`.
+ */
 export function LineEquation({
   title,
   description,
@@ -45,9 +55,14 @@ export function LineEquation({
 
   return (
     <LineEquationProvider config={config}>
-      <LineSceneCard>
+      <VisualCard>
         <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
+        <DeferredLineScene />
+        <CoordinateControls />
+        <VisualCardFooter>
+          <LineFacts lines={config.lines} />
+        </VisualCardFooter>
+      </VisualCard>
     </LineEquationProvider>
   );
 }

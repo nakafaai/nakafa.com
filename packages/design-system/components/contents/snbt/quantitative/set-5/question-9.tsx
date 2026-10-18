@@ -1,9 +1,5 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import type { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
@@ -48,67 +44,63 @@ export function QuestionGraph({
   // C: x = 2 on line curve
   const indexC = 1;
 
-  const config = resolveLineScene({
-    cameraPosition: [1, 1, 10.5],
-    cameraTarget: [1, 1, 0],
-    data: [
-      {
-        points: expPoints,
-        color: getColor("INDIGO"),
-        showPoints: false,
-        smooth: false,
-        cone: { position: "end", size: 0.5 },
-        labels: [
-          {
-            text: <InlineMath math="A" />,
-            at: indexA,
-            offset: [0.4, -0.4, 0],
-          },
-          {
-            text: <InlineMath math="B" />,
-            at: indexB,
-            offset: [0.3, -0.4, 0],
-          },
-          {
-            text: <InlineMath math="D" />,
-            at: indexD,
-            offset: [-0.6, 0.5, 0],
-          },
-          {
-            text: <InlineMath math="y = 2^x - 2" />,
-            at: Math.round((2.5 - startExp) / step),
-            offset: [-1.1, 1, 0],
-          },
-        ],
-      },
-      {
-        points: linePoints,
-        color: getColor("TEAL"),
-        showPoints: false,
-        smooth: false,
-        cone: { position: "both", size: 0.5 },
-        labels: [
-          {
-            text: <InlineMath math="C" />,
-            at: indexC,
-            offset: [0.6, 0.3, 0],
-          },
-          {
-            text: <InlineMath math="y = -2x + 4" />,
-            at: 2,
-            offset: [-1.2, -0.55, 0],
-          },
-        ],
-      },
-    ],
-    showZAxis: false,
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[1, 1, 10.5]}
+      cameraTarget={[1, 1, 0]}
+      data={[
+        {
+          points: expPoints,
+          color: getColor("INDIGO"),
+          showPoints: false,
+          smooth: false,
+          cone: { position: "end", size: 0.5 },
+          labels: [
+            {
+              text: <InlineMath math="A" />,
+              at: indexA,
+              offset: [0.4, -0.4, 0],
+            },
+            {
+              text: <InlineMath math="B" />,
+              at: indexB,
+              offset: [0.3, -0.4, 0],
+            },
+            {
+              text: <InlineMath math="D" />,
+              at: indexD,
+              offset: [-0.6, 0.5, 0],
+            },
+            {
+              text: <InlineMath math="y = 2^x - 2" />,
+              at: Math.round((2.5 - startExp) / step),
+              offset: [-1.1, 1, 0],
+            },
+          ],
+        },
+        {
+          points: linePoints,
+          color: getColor("TEAL"),
+          showPoints: false,
+          smooth: false,
+          cone: { position: "both", size: 0.5 },
+          labels: [
+            {
+              text: <InlineMath math="C" />,
+              at: indexC,
+              offset: [0.6, 0.3, 0],
+            },
+            {
+              text: <InlineMath math="y = -2x + 4" />,
+              at: 2,
+              offset: [-1.2, -0.55, 0],
+            },
+          ],
+        },
+      ]}
+      description={description}
+      showZAxis={false}
+      title={title}
+    />
   );
 }

@@ -1,8 +1,5 @@
-import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
-import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -103,123 +100,119 @@ export function Graph({ title, description, labels }: GraphProps) {
     z: 0,
   };
 
-  const config = resolveLineScene({
-    cameraPosition: [0, 0, 16.5],
-    data: [
-      // Ground Line (A to B)
-      {
-        points: [pA, pB],
-        color: COLOR_GROUND,
-        showPoints: true, // Show A and B
-        labels: [
-          {
-            text: labels.atc,
-            at: 0, // At A
-            offset: [0, -0.6, 0], // Below A
-          },
-        ],
-      },
-      // Height Line (B to C)
-      {
-        points: [pB, pC],
-        color: COLOR_HEIGHT,
-        showPoints: true, // Show C
-      },
-      // Height Line with Midpoint for Label
-      {
-        points: [pB, MID_HEIGHT, pC],
-        color: COLOR_HEIGHT,
-        showPoints: false,
-        labels: [
-          {
-            text: labels.height,
-            at: 1, // Midpoint
-            offset: [-1.4, 0.5, 0], // Inside the initial vertical projection
-          },
-          {
-            text: labels.initialPos,
-            at: 2, // At C
-            offset: [-0.8, 1.1, 0], // Above the initial position, inside the view
-          },
-        ],
-      },
-      // Line of Sight 1 (A to C - 30 deg)
-      {
-        points: [pA, pC],
-        color: COLOR_SIGHT,
-        showPoints: false,
-      },
-      // Line of Sight 2 (A to E - 45 deg)
-      {
-        points: [pA, pE],
-        color: COLOR_SIGHT,
-        showPoints: true, // Show E
-        labels: [
-          {
-            text: labels.finalPos,
-            at: 1, // At E
-            offset: [-2, 0.8, 0], // Above and left of the final position
-          },
-        ],
-      },
-      // Plane Path (E to C or C to E)
-      {
-        points: [pC, pE],
-        color: COLOR_PATH,
-        showPoints: false,
-      },
-      // Projection line for E (D to E)
-      {
-        points: [pD, pE],
-        color: COLOR_HEIGHT,
-        showPoints: true, // Show D
-      },
-      // Arc 1 (30 deg)
-      {
-        points: ARC_POINTS_1,
-        color: COLOR_LABEL,
-        showPoints: false,
-      },
-      // Label 30 deg (Manual point)
-      {
-        points: [LABEL_POS_1],
-        color: COLOR_LABEL,
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="30^\circ" />,
-            at: 0,
-            offset: [0, 0, 0],
-          },
-        ],
-      },
-      // Arc 2 (45 deg)
-      {
-        points: ARC_POINTS_2,
-        color: COLOR_LABEL,
-        showPoints: false,
-      },
-      // Label 45 deg (Manual point)
-      {
-        points: [LABEL_POS_2],
-        color: COLOR_LABEL,
-        showPoints: false,
-        labels: [
-          {
-            text: <InlineMath math="45^\circ" />,
-            at: 0,
-            offset: [0, 0, 0],
-          },
-        ],
-      },
-    ],
-  });
-
   return (
-    <LineEquationProvider config={config}>
-      <LineSceneCard>
-        <VisualCardHeader description={description} title={title} />
-      </LineSceneCard>
-    </LineEquationProvider>
+    <LineEquation
+      cameraPosition={[0, 0, 16.5]}
+      data={[
+        // Ground Line (A to B)
+        {
+          points: [pA, pB],
+          color: COLOR_GROUND,
+          showPoints: true, // Show A and B
+          labels: [
+            {
+              text: labels.atc,
+              at: 0, // At A
+              offset: [0, -0.6, 0], // Below A
+            },
+          ],
+        },
+        // Height Line (B to C)
+        {
+          points: [pB, pC],
+          color: COLOR_HEIGHT,
+          showPoints: true, // Show C
+        },
+        // Height Line with Midpoint for Label
+        {
+          points: [pB, MID_HEIGHT, pC],
+          color: COLOR_HEIGHT,
+          showPoints: false,
+          labels: [
+            {
+              text: labels.height,
+              at: 1, // Midpoint
+              offset: [-1.4, 0.5, 0], // Inside the initial vertical projection
+            },
+            {
+              text: labels.initialPos,
+              at: 2, // At C
+              offset: [-0.8, 1.1, 0], // Above the initial position, inside the view
+            },
+          ],
+        },
+        // Line of Sight 1 (A to C - 30 deg)
+        {
+          points: [pA, pC],
+          color: COLOR_SIGHT,
+          showPoints: false,
+        },
+        // Line of Sight 2 (A to E - 45 deg)
+        {
+          points: [pA, pE],
+          color: COLOR_SIGHT,
+          showPoints: true, // Show E
+          labels: [
+            {
+              text: labels.finalPos,
+              at: 1, // At E
+              offset: [-2, 0.8, 0], // Above and left of the final position
+            },
+          ],
+        },
+        // Plane Path (E to C or C to E)
+        {
+          points: [pC, pE],
+          color: COLOR_PATH,
+          showPoints: false,
+        },
+        // Projection line for E (D to E)
+        {
+          points: [pD, pE],
+          color: COLOR_HEIGHT,
+          showPoints: true, // Show D
+        },
+        // Arc 1 (30 deg)
+        {
+          points: ARC_POINTS_1,
+          color: COLOR_LABEL,
+          showPoints: false,
+        },
+        // Label 30 deg (Manual point)
+        {
+          points: [LABEL_POS_1],
+          color: COLOR_LABEL,
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="30^\circ" />,
+              at: 0,
+              offset: [0, 0, 0],
+            },
+          ],
+        },
+        // Arc 2 (45 deg)
+        {
+          points: ARC_POINTS_2,
+          color: COLOR_LABEL,
+          showPoints: false,
+        },
+        // Label 45 deg (Manual point)
+        {
+          points: [LABEL_POS_2],
+          color: COLOR_LABEL,
+          showPoints: false,
+          labels: [
+            {
+              text: <InlineMath math="45^\circ" />,
+              at: 0,
+              offset: [0, 0, 0],
+            },
+          ],
+        },
+      ]}
+      description={description}
+      title={title}
+    />
   );
 }
