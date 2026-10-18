@@ -8,7 +8,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { ApiIcon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -114,8 +114,8 @@ function SchoolClientTable({
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return (
       <TableEmpty
+        act="typing"
         description={t("client-add-description")}
-        icon={<HugeIcons icon={ApiIcon} />}
         title={t("clients-empty")}
       />
     );

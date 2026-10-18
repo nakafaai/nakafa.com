@@ -5,10 +5,8 @@ import {
   PaginatedQueryResult,
   usePaginatedQuery,
 } from "@confect/react";
-import { CheckListIcon } from "@hugeicons/core-free-icons";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -61,8 +59,8 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return (
       <TableEmpty
+        act="reading"
         description={t("audit-description")}
-        icon={<HugeIcons icon={CheckListIcon} />}
         title={t("audit-empty")}
       />
     );
