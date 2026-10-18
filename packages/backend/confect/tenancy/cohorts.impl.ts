@@ -14,6 +14,7 @@ import {
   cohortAccess,
   cohortAuthority,
   periodAccess,
+  unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import {
   COHORT_LIMIT,
@@ -50,6 +51,30 @@ const list = FunctionImpl.make(
       .take(COHORT_LIMIT)
       .pipe(Effect.orDie);
     return Arr.map(cohorts, view);
+  })
+);
+
+/**
+ * The active period of one unit, which the unit's new cohorts join, or null while the unit
+ * has none open. A unit holds at most one active period, so the lookup is one indexed read.
+ */
+const activePeriod = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "activePeriod",
+  Effect.fn("tenancy.cohorts.activePeriod")(function* ({ unitId }) {
+    yield* unitAuthority.authorize("period.view", unitId);
+    const period = yield* (yield* DatabaseReader)
+      .table("tenantPeriods")
+      .index("by_unitId_and_status", (query) =>
+        query.eq("unitId", unitId).eq("status", "active")
+      )
+      .first()
+      .pipe(Effect.orDie);
+    return Option.match(period, {
+      onNone: () => null,
+      onSome: (found) => found._id,
+    });
   })
 );
 
@@ -155,6 +180,7 @@ const archive = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
+  Layer.provide(activePeriod),
   Layer.provide(members),
   Layer.provide(create),
   Layer.provide(rename),

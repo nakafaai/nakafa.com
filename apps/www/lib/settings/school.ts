@@ -6,6 +6,7 @@ const SchoolSettingsSectionSchema = Schema.Struct({
   labelKey: Schema.Literals([
     "profile",
     "periods",
+    "cohorts",
     "units",
     "roles",
     "invites",
@@ -41,6 +42,7 @@ export const schoolSettingsGroups: typeof SchoolSettingsGroupsSchema.Type = [
     sections: [
       { href: `${schoolSettingsRootHref}/profile`, labelKey: "profile" },
       { href: `${schoolSettingsRootHref}/periods`, labelKey: "periods" },
+      { href: `${schoolSettingsRootHref}/cohorts`, labelKey: "cohorts" },
       { href: `${schoolSettingsRootHref}/units`, labelKey: "units" },
     ],
   },

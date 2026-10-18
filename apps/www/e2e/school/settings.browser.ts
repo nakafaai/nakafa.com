@@ -56,6 +56,56 @@ test("an admin opens the profile and the periods of a school", async ({
   await context.close();
 });
 
+test("an admin opens a period, then creates and renames a cohort of it", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  // A cohort belongs to the active period, so the admin opens a period first.
+  await page.goto(address("/settings/periods"));
+  await page
+    .locator("header")
+    .getByRole("button", { name: "Add period" })
+    .click();
+  const periodDialog = page.getByRole("dialog");
+  await periodDialog.getByLabel("Name").fill("Semester 1");
+  await periodDialog.getByLabel("First day").fill("2027-07-01");
+  await periodDialog.getByLabel("Last day").fill("2027-12-20");
+  await periodDialog.getByRole("button", { name: "Add period" }).click();
+  const periodRow = page.getByRole("row", { name: "Semester 1" });
+  await periodRow.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Open" }).click();
+  await expect(periodRow.getByText("Active")).toBeVisible();
+
+  await page.goto(address("/settings/cohorts"));
+  await expect(page).toHaveURL(address("/settings/cohorts"));
+  await page
+    .locator("header")
+    .getByRole("button", { name: "Add cohort" })
+    .click();
+  const cohortDialog = page.getByRole("dialog");
+  await cohortDialog.getByLabel("Name").fill("7A");
+  await cohortDialog.getByRole("combobox", { name: "Grade" }).click();
+  await page.getByRole("option", { exact: true, name: "7" }).click();
+  await cohortDialog.getByRole("button", { name: "Add cohort" }).click();
+  const cohortRow = page.getByRole("row", { name: "7A" });
+  await expect(cohortRow).toBeVisible();
+
+  await cohortRow.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Rename" }).click();
+  const renameDialog = page.getByRole("dialog");
+  await renameDialog.getByLabel("Name").fill("7 Biru");
+  await renameDialog.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("row", { name: "7 Biru" })).toBeVisible();
+  await context.close();
+});
+
 test("a teacher of the school, who may not manage it, sees no settings", async ({
   browser,
   baseURL,

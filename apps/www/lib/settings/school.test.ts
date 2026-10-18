@@ -19,6 +19,7 @@ describe("school settings routes", () => {
     ).toEqual([
       ["/settings/profile", "profile", "school"],
       ["/settings/periods", "periods", "school"],
+      ["/settings/cohorts", "cohorts", "school"],
       ["/settings/units", "units", "school"],
       ["/settings/roles", "roles", "people"],
       ["/settings/invites", "invites", "people"],
@@ -36,7 +37,7 @@ describe("school settings routes", () => {
         Arr.map(group.sections, (section) => section.labelKey),
       ])
     ).toEqual([
-      ["school", ["profile", "periods", "units"]],
+      ["school", ["profile", "periods", "cohorts", "units"]],
       ["people", ["roles", "invites", "students"]],
       ["integrations", ["clients"]],
       ["security", ["policies", "audit"]],
@@ -47,6 +48,7 @@ describe("school settings routes", () => {
     expect(
       Arr.map(schoolSettingsSections, (section) => section.group.href)
     ).toEqual([
+      "/settings/profile",
       "/settings/profile",
       "/settings/profile",
       "/settings/profile",

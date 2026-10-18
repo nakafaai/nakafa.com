@@ -7,6 +7,7 @@ import { forSeed } from "@repo/mascot/seed";
 import { Schema } from "effect";
 import type {
   Client,
+  Cohort,
   Grant,
   Invite,
   Period,
@@ -39,6 +40,21 @@ export function period(
     id: Schema.decodeUnknownSync(Id("tenantPeriods"))(id),
     name: id,
     start,
+    status,
+  };
+}
+
+/** One cohort, a rombel, as the cohorts list of a period shows it. */
+export function cohort(
+  id: string,
+  name: string,
+  grade: number,
+  status: Cohort["status"] = "active"
+): Cohort {
+  return {
+    grade,
+    id: Schema.decodeUnknownSync(Id("tenantCohorts"))(id),
+    name,
     status,
   };
 }

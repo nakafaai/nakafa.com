@@ -51,6 +51,14 @@ export default GroupSpec.make()
     }).middleware(PeriodAccess, { action: "period.view", arg: "periodId" })
   )
   .addFunction(
+    FunctionSpec.publicQuery({
+      name: "activePeriod",
+      args: () => ({ slug: TenantSlug, unitId: Id("tenantUnits") }),
+      returns: () => Schema.NullOr(Id("tenantPeriods")),
+      error: () => AccessDenied,
+    })
+  )
+  .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "members",
       args: () => ({ cohortId: Id("tenantCohorts"), slug: TenantSlug }),

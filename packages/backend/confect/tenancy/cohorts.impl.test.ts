@@ -7,7 +7,8 @@ import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { create, list, members, rename, archive } = refs.public.tenancy.cohorts;
+const { activePeriod, create, list, members, rename, archive } =
+  refs.public.tenancy.cohorts;
 const periods = refs.public.tenancy.periods;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
@@ -154,6 +155,39 @@ describe("tenancy/cohorts create and list", () => {
           denied("condition"),
         ]);
       })
+  );
+});
+
+describe("tenancy/cohorts active period", () => {
+  it.effect(
+    "answers the active period of a unit, and none once it is archived",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* sma(fixture);
+        const query = { slug: nf, unitId: fixture.units.sma };
+        const principal = fixture.as("principal");
+        expect(yield* principal.query(activePeriod, query)).toBeNull();
+        yield* fixture
+          .as("admin")
+          .mutation(periods.open, { periodId: period.id, slug: nf });
+        expect(yield* principal.query(activePeriod, query)).toBe(period.id);
+        yield* fixture
+          .as("admin")
+          .mutation(periods.archive, { periodId: period.id, slug: nf });
+        expect(yield* principal.query(activePeriod, query)).toBeNull();
+      })
+  );
+
+  it.effect("refuses a teacher, who does not read the unit's periods", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const refused = yield* fixture
+        .as("teacher")
+        .query(activePeriod, { slug: nf, unitId: fixture.units.smp })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject(denied("role"));
+    })
   );
 });
 
