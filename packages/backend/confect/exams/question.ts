@@ -64,6 +64,16 @@ const AnswersText = Schema.fromJsonString(
   Schema.NonEmptyArray(InteractionSchema)
 );
 
+/**
+ * A stored question's interactions, decoded with the contract's interaction schema. A stored
+ * text that the contract refuses is a defect, because only interactions it accepts are written.
+ */
+export const questionAnswers = Effect.fn("exams.question.answers")(function* (
+  text: string
+) {
+  return yield* Schema.decodeEffect(AnswersText)(text).pipe(Effect.orDie);
+});
+
 /** The answer key of a question as JSON text, decoded with the contract's key schema. */
 const KeyText = Schema.fromJsonString(
   Schema.NonEmptyArray(InteractionKeySchema)
@@ -114,9 +124,7 @@ const decodeKey = Effect.fn("exams.question.key")(function* (
 export const questionView = Effect.fn("exams.question.view")(function* (
   row: ExamQuestionsDoc
 ) {
-  const answers = yield* Schema.decodeEffect(AnswersText)(row.answers).pipe(
-    Effect.orDie
-  );
+  const answers = yield* questionAnswers(row.answers);
   return {
     answers,
     id: row._id,

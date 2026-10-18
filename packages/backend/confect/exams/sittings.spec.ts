@@ -1,11 +1,17 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/PaginationOptions";
+import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { SittingAccess } from "@repo/backend/confect/exams/sittings/access";
 import {
   DashboardView,
   EnterOutcome,
+  HeldAttempt,
+  PaperView,
+  PromptView,
+  SignalsPage,
   SittingView,
   TokenResult,
 } from "@repo/backend/confect/exams/sittings/contract";
@@ -13,6 +19,8 @@ import {
   AttemptClosed,
   DeviceRetired,
   NotInSitting,
+  QuestionNotInExam,
+  ResponseDoesNotFit,
   RetiredDevicesFull,
   SecondDevice,
   SittingClosed,
@@ -185,5 +193,109 @@ export default GroupSpec.make()
     }).middleware(SittingAccess, {
       action: "sitting.proctor",
       arg: "sittingId",
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "attempt",
+      args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
+      returns: () => Schema.NullOr(HeldAttempt),
+      error: () => Schema.Never,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "signals",
+      args: () => ({
+        attemptId: Id("examAttempts"),
+        paginationOpts: PaginationOptionsSchema,
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => SignalsPage,
+      error: () => AccessDenied,
+    }).middleware(SittingAccess, { action: "sitting.view", arg: "sittingId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "paper",
+      args: () => ({
+        deviceId: DeviceId,
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => PaperView,
+      error: () =>
+        Schema.Union([
+          NotInSitting,
+          SittingLocked,
+          AttemptClosed,
+          SecondDevice,
+          DeviceRetired,
+        ]),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "prompt",
+      args: () => ({
+        deviceId: DeviceId,
+        questionId: Id("examQuestions"),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => PromptView,
+      error: () =>
+        Schema.Union([
+          NotInSitting,
+          SittingLocked,
+          AttemptClosed,
+          SecondDevice,
+          DeviceRetired,
+          QuestionNotInExam,
+          FoldPending,
+        ]),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "answer",
+      args: () => ({
+        deviceId: DeviceId,
+        questionId: Id("examQuestions"),
+        response: Schema.Array(LocalIdSchema),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () =>
+        Schema.Union([
+          NotInSitting,
+          SittingLocked,
+          AttemptClosed,
+          SecondDevice,
+          DeviceRetired,
+          QuestionNotInExam,
+          ResponseDoesNotFit,
+        ]),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "finish",
+      args: () => ({
+        deviceId: DeviceId,
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () =>
+        Schema.Union([
+          NotInSitting,
+          SittingLocked,
+          AttemptClosed,
+          SecondDevice,
+          DeviceRetired,
+        ]),
     })
   );

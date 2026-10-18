@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { SeedRefused } from "@repo/backend/confect/acceptance/seed";
 import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
 import { Email, PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -24,6 +25,6 @@ export default GroupSpec.make().addFunction(
         invite: Id("tenantInvites"),
         person: Id("tenantPeople"),
       }),
-    error: () => TenantNotFound,
+    error: () => Schema.Union([SeedRefused, TenantNotFound]),
   })
 );

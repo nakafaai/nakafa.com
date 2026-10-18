@@ -41,6 +41,7 @@ import editorClients from "./tables/editorClients";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
+import examAnswers from "./tables/examAnswers";
 import examAttempts from "./tables/examAttempts";
 import examQuestions from "./tables/examQuestions";
 import examSignals from "./tables/examSignals";
@@ -151,6 +152,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly editorDocuments: typeof editorDocuments;
   readonly editorSnapshots: typeof editorSnapshots;
   readonly editorSteps: typeof editorSteps;
+  readonly examAnswers: typeof examAnswers;
   readonly examAttempts: typeof examAttempts;
   readonly examQuestions: typeof examQuestions;
   readonly examSignals: typeof examSignals;
@@ -260,6 +262,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   editorDocuments,
   editorSnapshots,
   editorSteps,
+  examAnswers,
   examAttempts,
   examQuestions,
   examSignals,
