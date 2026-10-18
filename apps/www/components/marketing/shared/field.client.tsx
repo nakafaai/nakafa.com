@@ -15,7 +15,11 @@ export function PageField() {
   const visibility = useDocumentVisibility();
 
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 -z-10"
+      data-slot="page-field"
+    >
       <ErrorBoundary fallback={null}>
         <DeferredParticles
           className="absolute inset-0"

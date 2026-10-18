@@ -228,7 +228,9 @@ test("home page keeps the hero when the particle field fails to load", async ({
                 ).toBeVisible()
               );
               yield* Effect.promise(() =>
-                expect(page.locator("#hero canvas")).toHaveCount(0)
+                expect(
+                  page.locator('[data-slot="page-field"] canvas')
+                ).toHaveCount(0)
               );
             })
           );
