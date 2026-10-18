@@ -1,4 +1,4 @@
-import { paragraphVariants } from "@repo/design-system/components/markdown/paragraph";
+import { paragraphVariants } from "@repo/design-system/lib/paragraph";
 import { Extension } from "@tiptap/core";
 import type { Node } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
