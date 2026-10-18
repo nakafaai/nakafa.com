@@ -75,7 +75,6 @@ describe("analytics consent session", () => {
     ) =>
       resolveAnalyticsConsentSessionPolicy({
         durableConsent,
-        hasLoadError: false,
         overrides,
         promptIdentity,
         status,
@@ -113,7 +112,7 @@ describe("analytics consent session", () => {
     );
   });
 
-  it("shows a prompt only until that visitor has a pending choice", () => {
+  it("keeps the prompt while the choice loads and hides it once a save owns it", () => {
     const promptIdentity = createAnalyticsConsentPromptIdentity({
       isAuthenticated: false,
       user: null,
@@ -124,7 +123,6 @@ describe("analytics consent session", () => {
 
     const unresolved = resolveAnalyticsConsentSessionPolicy({
       durableConsent: null,
-      hasLoadError: true,
       overrides: emptyAnalyticsConsentSessionOverrides,
       promptIdentity,
       status: "pending",
@@ -132,7 +130,6 @@ describe("analytics consent session", () => {
     const pendingOwner = Symbol("pending save");
     const pending = resolveAnalyticsConsentSessionPolicy({
       durableConsent: null,
-      hasLoadError: true,
       overrides: setAnalyticsConsentSessionOverride({
         override: { owner: pendingOwner, persistence: "pending" },
         overrides: emptyAnalyticsConsentSessionOverrides,
@@ -151,7 +148,6 @@ describe("analytics consent session", () => {
     expect(
       resolveAnalyticsConsentSessionPolicy({
         durableConsent: null,
-        hasLoadError: false,
         overrides: emptyAnalyticsConsentSessionOverrides,
         promptIdentity,
         status: "prompt",
@@ -160,10 +156,17 @@ describe("analytics consent session", () => {
     expect(
       resolveAnalyticsConsentSessionPolicy({
         durableConsent: null,
-        hasLoadError: true,
         overrides: emptyAnalyticsConsentSessionOverrides,
         promptIdentity: null,
         status: "pending",
+      }).isPromptOpen
+    ).toBe(true);
+    expect(
+      resolveAnalyticsConsentSessionPolicy({
+        durableConsent: null,
+        overrides: emptyAnalyticsConsentSessionOverrides,
+        promptIdentity,
+        status: "granted",
       }).isPromptOpen
     ).toBe(false);
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Message } from "@repo/design-system/components/ui/message";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { useRouter } from "@repo/internationalization/src/navigation";
@@ -19,7 +20,9 @@ export function NinaComposer() {
       {prompt ? (
         <>
           <Message align="end">
-            <NinaPrompt files={prompt.files} text={prompt.text} />
+            <NinaPrompt files={prompt.files}>
+              <DeferredLearnerText>{prompt.text}</DeferredLearnerText>
+            </NinaPrompt>
           </Message>
           {/* The prompt is on its way: show the turn as started, as the page's new chat does. */}
           <Message>

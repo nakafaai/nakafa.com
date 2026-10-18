@@ -1,4 +1,5 @@
 import {
+  ANALYTICS_CONSENT_DENIED,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
@@ -18,7 +19,7 @@ type SignOutRequest = () => Promise<SignOutResult>;
 
 const denyAnonymousAnalytics = Clock.currentTimeMillis.pipe(
   Effect.map((decidedAt) =>
-    createAnonymousAnalyticsConsent("denied", decidedAt)
+    createAnonymousAnalyticsConsent(ANALYTICS_CONSENT_DENIED, decidedAt)
   ),
   Effect.flatMap(saveAnonymousAnalyticsConsent)
 );

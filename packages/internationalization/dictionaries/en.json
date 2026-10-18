@@ -232,10 +232,11 @@
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
-    "comment": "Comment",
     "no-comments": "No comments yet.",
     "delete-title": "Delete comment?",
-    "delete-description": "The comment is deleted for good."
+    "delete-description": "The comment and its replies are deleted for good.",
+    "delete-reply-description": "The reply and the replies to it are deleted for good.",
+    "replying-to": "Replying to {name}"
   },
   "Subject": {
     "elementary-school": "Elementary School",
@@ -1092,8 +1093,7 @@
     "scene-label": "Three-dimensional scene of a projectile motion, a cannonball",
     "scene-title": "What is hard to picture, you can see",
     "scene-lead": "A scene from the Projectile Motion lesson.",
-    "scene-ask": "What if the angle changes?",
-    "scene-answer": "Watch the ball.",
+    "scene-choose": "Choose a trajectory",
     "memory-title": "Nina gets to know you",
     "memory-lead": "You can read, change, pause or delete what she remembers at any time.",
     "memory-said-1": "I am in grade 12, science.",

@@ -32,12 +32,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { useTheme } from "next-themes";
@@ -111,7 +112,7 @@ export function MeasurementToolsLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseTool}
           gridColumns="3"
@@ -131,36 +132,7 @@ export function MeasurementToolsLab({
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <VisualCardScene className={threeSceneFrameVariants()}>
-          <ThreeCanvas frameloop="demand">
-            <Suspense>
-              <ResponsiveMeasurementCamera viewConfig={viewConfig} />
-              <ambientLight intensity={0.75} />
-              <hemisphereLight
-                color={sceneColors.skyLight}
-                groundColor={sceneColors.groundLight}
-                intensity={0.65}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[5, 8, 6]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <MeasurementScene
-                colors={sceneColors}
-                measurement={selectedMeasurement}
-                reading={<InlineMath math={selectedReadingMath} />}
-                selectedToolId={selectedToolId}
-              />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-
-        <div className="flex flex-col gap-3 pt-2">
+        <div className="flex w-full flex-col gap-3">
           <div className="flex items-center justify-between gap-4 text-sm">
             <div className="min-w-0">
               <div>{selectedLabels.control}</div>
@@ -178,26 +150,56 @@ export function MeasurementToolsLab({
             value={selectedMeasurement}
           />
         </div>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <VisualFact
-              label={labels.instrument}
-              value={selectedLabels.instrument}
+      </VisualCardToolbar>
+
+      <VisualCardBody className={threeSceneFrameVariants()}>
+        <ThreeCanvas frameloop="demand">
+          <Suspense>
+            <ResponsiveMeasurementCamera viewConfig={viewConfig} />
+            <ambientLight intensity={0.75} />
+            <hemisphereLight
+              color={sceneColors.skyLight}
+              groundColor={sceneColors.groundLight}
+              intensity={0.65}
             />
-            <VisualFact
-              label={labels.measuredObject}
-              value={selectedLabels.object}
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[5, 8, 6]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
             />
-            <VisualFact
-              label={labels.reading}
-              value={<InlineMath math={selectedReadingMath} />}
+            <MeasurementScene
+              colors={sceneColors}
+              measurement={selectedMeasurement}
+              reading={<InlineMath math={selectedReadingMath} />}
+              selectedToolId={selectedToolId}
             />
-          </dl>
-        </VisualCardControls>
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.instrument}
+            value={selectedLabels.instrument}
+          />
+          <VisualFact
+            label={labels.measuredObject}
+            value={selectedLabels.object}
+          />
+          <VisualFact
+            label={labels.reading}
+            value={<InlineMath math={selectedReadingMath} />}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

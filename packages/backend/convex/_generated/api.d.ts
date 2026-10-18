@@ -406,6 +406,18 @@ export declare const api: {
         { commentId: Id<"comments"> },
         null
       >;
+      likeComment: FunctionReference<
+        "mutation",
+        "public",
+        { commentId: Id<"comments"> },
+        null
+      >;
+      unlikeComment: FunctionReference<
+        "mutation",
+        "public",
+        { commentId: Id<"comments"> },
+        null
+      >;
       voteOnComment: FunctionReference<
         "mutation",
         "public",
@@ -414,6 +426,58 @@ export declare const api: {
       >;
     };
     queries: {
+      getCommentReplies: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          threadId: Id<"comments">;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"comments">;
+            downvoteCount: number;
+            likeCount: number;
+            liked: boolean;
+            parentId?: Id<"comments">;
+            replyCount: number;
+            replyToText?: string;
+            replyToUser: {
+              _id: Id<"users">;
+              image?: string | null;
+              mascot: string;
+              name: string;
+              picture?: "animal" | "photo";
+            } | null;
+            replyToUserId?: Id<"users">;
+            slug: string;
+            text: string;
+            threadId?: Id<"comments">;
+            upvoteCount: number;
+            user: {
+              _id: Id<"users">;
+              image?: string | null;
+              mascot: string;
+              name: string;
+              picture?: "animal" | "photo";
+            } | null;
+            userId: Id<"users">;
+            viewerVote: -1 | 1 | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
       getCommentsBySlug: FunctionReference<
         "query",
         "public",
@@ -435,6 +499,8 @@ export declare const api: {
             _creationTime: number;
             _id: Id<"comments">;
             downvoteCount: number;
+            likeCount: number;
+            liked: boolean;
             parentId?: Id<"comments">;
             replyCount: number;
             replyToText?: string;
@@ -448,6 +514,7 @@ export declare const api: {
             replyToUserId?: Id<"users">;
             slug: string;
             text: string;
+            threadId?: Id<"comments">;
             upvoteCount: number;
             user: {
               _id: Id<"users">;
@@ -484,12 +551,15 @@ export declare const api: {
             _creationTime: number;
             _id: Id<"comments">;
             downvoteCount: number;
+            likeCount: number;
+            liked: boolean;
             parentId?: Id<"comments">;
             replyCount: number;
             replyToText?: string;
             replyToUserId?: Id<"users">;
             slug: string;
             text: string;
+            threadId?: Id<"comments">;
             upvoteCount: number;
             userId: Id<"users">;
             viewerVote: -1 | 1 | null;
@@ -8646,6 +8716,24 @@ export declare const internal: {
         "internal",
         { model: string; newDoc: any; oldDoc: any },
         any
+      >;
+    };
+  };
+  comments: {
+    migration: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor?: string; recount?: boolean },
+        {
+          done: boolean;
+          likesAdded: number;
+          linked: number;
+          orphaned: number;
+          recounted: number;
+          scanned: number;
+          votesRemoved: number;
+        }
       >;
     };
   };

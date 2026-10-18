@@ -12,7 +12,7 @@ import {
 import { CoordinateGrid } from "@repo/design-system/components/three/grid";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { VisualCardScene } from "@repo/design-system/components/visual/card";
+import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { COLORS, getColor } from "@repo/design-system/lib/color";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
@@ -66,7 +66,7 @@ interface Props {
 
 /**
  * Renders an interactive coordinate scene with grid and playback controls. Its
- * frame is a visual card scene, so it fills the card in full screen. The
+ * frame is the visual card body, so it fills the card in full screen. The
  * canvas fills the frame by percentage, never by its own size, so it follows
  * the frame both up and down: back from full screen, or a phone turned to a
  * narrower width.
@@ -120,10 +120,10 @@ export function CoordinateSystem({
   );
 
   return (
-    <VisualCardScene
+    <VisualCardBody
       aria-label={ariaLabel}
       className={cn(threeSceneFrameVariants(), "cursor-grab", className)}
-      data-slot="coordinate-system"
+      data-scene="coordinate-system"
       render={ariaLabel === undefined ? undefined : <section />}
     >
       <ThreeCanvas style={{ background: backgroundColor }}>
@@ -192,6 +192,6 @@ export function CoordinateSystem({
           {children}
         </Suspense>
       </ThreeCanvas>
-    </VisualCardScene>
+    </VisualCardBody>
   );
 }

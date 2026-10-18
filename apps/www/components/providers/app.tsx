@@ -1,5 +1,6 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
+import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import { AnalyticsConsentControls } from "@/components/analytics/consent/controls";
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
@@ -40,6 +41,7 @@ export function AppProviders({
               }
             >
               {children}
+              <AnalyticsConsentBootstrap />
               <AnalyticsConsentControls />
             </AnalyticsConsentProvider>
           ) : (

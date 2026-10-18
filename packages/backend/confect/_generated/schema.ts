@@ -12,6 +12,7 @@ import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
+import commentLikes from "./tables/commentLikes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
@@ -118,6 +119,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly chats: typeof chats;
   readonly classTeachers: typeof classTeachers;
   readonly classes: typeof classes;
+  readonly commentLikes: typeof commentLikes;
   readonly commentVotes: typeof commentVotes;
   readonly comments: typeof comments;
   readonly contentAnalyticsPartitions: typeof contentAnalyticsPartitions;
@@ -223,6 +225,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   chats,
   classTeachers,
   classes,
+  commentLikes,
   commentVotes,
   comments,
   contentAnalyticsPartitions,

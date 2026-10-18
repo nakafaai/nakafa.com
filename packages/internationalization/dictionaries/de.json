@@ -232,10 +232,11 @@
   },
   "Comments": {
     "add-comment-placeholder": "Kommentar hinzufügen...",
-    "comment": "Kommentieren",
     "no-comments": "Noch keine Kommentare.",
     "delete-title": "Kommentar löschen?",
-    "delete-description": "Der Kommentar wird endgültig gelöscht."
+    "delete-description": "Der Kommentar und seine Antworten werden endgültig gelöscht.",
+    "delete-reply-description": "Die Antwort und die Antworten darauf werden endgültig gelöscht.",
+    "replying-to": "Antwort an {name}"
   },
   "Subject": {
     "elementary-school": "Grundschule",
@@ -1092,8 +1093,7 @@
     "scene-label": "Dreidimensionale Szene zum schiefen Wurf, eine Kanonenkugel",
     "scene-title": "Was schwer vorstellbar ist, kannst du sehen",
     "scene-lead": "Eine Szene aus der Lektion zum schiefen Wurf.",
-    "scene-ask": "Und wenn sich der Winkel ändert?",
-    "scene-answer": "Achte auf die Kugel.",
+    "scene-choose": "Flugbahn wählen",
     "memory-title": "Nina lernt dich kennen",
     "memory-lead": "Was sie sich merkt, kannst du jederzeit lesen, ändern, pausieren oder löschen.",
     "memory-said-1": "Ich bin in der 12. Klasse, Naturwissenschaften.",

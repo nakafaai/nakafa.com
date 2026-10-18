@@ -357,6 +357,65 @@ it("removes the learner's likes on other posts with their counts, deletes the le
   await t.finishAllScheduledFunctions(vi.runAllTimers);
 });
 
+it("removes the learner's likes on comments with their counts, and keeps the rest", async () => {
+  const { t, owner, retained } = await createDeletedOwner("comment-likes");
+  const seeded = await t.mutation(async (ctx) => {
+    const sharedComment = await ctx.db.insert("comments", {
+      likeCount: 2,
+      replyCount: 0,
+      slug: "material/algebra",
+      text: "Shared comment",
+      upvoteCount: 0,
+      downvoteCount: 0,
+      userId: retained,
+    });
+    // A like on a comment that is already gone must not stop the cleanup.
+    const goneComment = await ctx.db.insert("comments", {
+      likeCount: 0,
+      replyCount: 0,
+      slug: "material/algebra",
+      text: "Gone comment",
+      upvoteCount: 0,
+      downvoteCount: 0,
+      userId: retained,
+    });
+    await ctx.db.delete(goneComment);
+    await ctx.db.insert("commentLikes", {
+      commentId: sharedComment,
+      userId: owner,
+    });
+    await ctx.db.insert("commentLikes", {
+      commentId: goneComment,
+      userId: owner,
+    });
+    await ctx.db.insert("commentLikes", {
+      commentId: sharedComment,
+      userId: retained,
+    });
+    return { sharedComment };
+  });
+  const cleanup = () =>
+    t.mutation(internal.auth.cleanup.cleanupDeletedUser, { userId: owner });
+  while (await cleanup()) {
+    // Each pass deletes one batch of what is left.
+  }
+  expect(
+    await t.query(async (ctx) => ({
+      likes: await ctx.db.query("commentLikes").collect(),
+      comment: await ctx.db.get(seeded.sharedComment),
+    }))
+  ).toEqual({
+    likes: [
+      expect.objectContaining({
+        commentId: seeded.sharedComment,
+        userId: retained,
+      }),
+    ],
+    comment: expect.objectContaining({ likeCount: 1 }),
+  });
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+});
+
 it("deletes the likes a learner's post collected a batch at a time, and deletes the post after the last of them", async () => {
   const { t, owner, retained } = await createDeletedOwner("post-batches");
   const others = POST_LIKE_CLEANUP_BATCH_SIZE + 1;

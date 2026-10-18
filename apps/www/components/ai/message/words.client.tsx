@@ -6,12 +6,18 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 /**
- * A learner's own words, shown as they wrote them: no Markdown, no formulas,
- * no HTML. Line breaks and spaces stay, a long word breaks where it must, and
- * the text takes the direction of its own content.
+ * A learner's own words, as `NinaPrompt` draws them. Each paragraph takes the
+ * direction of its own text, so the wrapper names none: a wrapper with
+ * `dir="auto"` skips paragraphs that carry their own and reads left to right.
  *
  * A message taller than twelve lines shows its first twelve, and the learner
  * opens the rest. Twelve lines are 292.5 pixels at the chat text size, which
@@ -20,7 +26,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
  * whole text stays in the page whether it is folded or not, so find and copy
  * reach all of it.
  */
-export function NinaWords({ children }: { children: string }) {
+export function NinaWords({ children }: { children: ReactNode }) {
   const t = useTranslations("Ai");
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
@@ -49,7 +55,7 @@ export function NinaWords({ children }: { children: string }) {
   }, [open]);
 
   return (
-    <div className="flex flex-col items-start gap-2" dir="auto">
+    <div className="flex flex-col items-start gap-2">
       <div
         className={cn(
           "w-full overflow-hidden",
@@ -59,9 +65,7 @@ export function NinaWords({ children }: { children: string }) {
         id={id}
         ref={box}
       >
-        <div className="whitespace-pre-wrap" ref={text}>
-          {children}
-        </div>
+        <div ref={text}>{children}</div>
       </div>
       {tall ? (
         <Button

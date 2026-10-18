@@ -18,11 +18,10 @@ import {
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import {
   fitRegressionLine,
@@ -103,102 +102,100 @@ export function ScatterDiagram({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody>
-        <VisualCardScene>
-          <EvilComposedChart config={chartConfig} data={chartData}>
-            <Grid vertical={false} />
-            <XAxis
-              dataKey="x"
-              {...(xAxisDomain === "min-max"
-                ? { domain: ["dataMin", "dataMax"] }
-                : {})}
-              label={{
-                value: xAxisLabel || "X",
-                position: "bottom",
-                offset: 10,
-                style: { textAnchor: "middle" },
-              }}
-              tickFormatter={(value) => value.toString()}
-              tickMargin={8}
-              type="number"
-            />
-            <YAxis
-              dataKey="y"
-              label={{
-                value: yAxisLabel || "Y",
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-              tickMargin={8}
-              type="number"
-            />
-            <Tooltip hideContent />
-            {Arr.map(datasets, (dataset, index) => {
-              const cue = getPointSeriesCue(index);
+      <VisualCardBody className="p-(--card-spacing)">
+        <EvilComposedChart config={chartConfig} data={chartData}>
+          <Grid vertical={false} />
+          <XAxis
+            dataKey="x"
+            {...(xAxisDomain === "min-max"
+              ? { domain: ["dataMin", "dataMax"] }
+              : {})}
+            label={{
+              value: xAxisLabel || "X",
+              position: "bottom",
+              offset: 10,
+              style: { textAnchor: "middle" },
+            }}
+            tickFormatter={(value) => value.toString()}
+            tickMargin={8}
+            type="number"
+          />
+          <YAxis
+            dataKey="y"
+            label={{
+              value: yAxisLabel || "Y",
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+            tickMargin={8}
+            type="number"
+          />
+          <Tooltip hideContent />
+          {Arr.map(datasets, (dataset, index) => {
+            const cue = getPointSeriesCue(index);
 
-              return (
-                <Scatter
-                  data={dataset.points}
-                  dataKey={dataset.name}
-                  key={dataset.name}
-                >
-                  <Dot variant={cue.dot} />
-                  <ActiveDot variant={cue.activeDot} />
-                </Scatter>
-              );
-            })}
-            {Option.isSome(regressionLine) && (
-              <Line
-                dataKey={REGRESSION_DATA_KEY}
-                lineProps={{
-                  activeDot: false,
-                  data: Arr.map(
-                    [regressionLine.value.xMin, regressionLine.value.xMax],
-                    (x) => ({
-                      x,
-                      [REGRESSION_DATA_KEY]: predictY(regressionLine.value, x),
-                    })
-                  ),
-                  dot: false,
-                  legendType: "none",
-                  ...(regressionLineStyle?.strokeDasharray === undefined
-                    ? {}
-                    : {
-                        strokeDasharray: regressionLineStyle?.strokeDasharray,
-                      }),
-                  strokeWidth: 2,
-                  tooltipType: "none",
-                }}
-              />
+            return (
+              <Scatter
+                data={dataset.points}
+                dataKey={dataset.name}
+                key={dataset.name}
+              >
+                <Dot variant={cue.dot} />
+                <ActiveDot variant={cue.activeDot} />
+              </Scatter>
+            );
+          })}
+          {Option.isSome(regressionLine) && (
+            <Line
+              dataKey={REGRESSION_DATA_KEY}
+              lineProps={{
+                activeDot: false,
+                data: Arr.map(
+                  [regressionLine.value.xMin, regressionLine.value.xMax],
+                  (x) => ({
+                    x,
+                    [REGRESSION_DATA_KEY]: predictY(regressionLine.value, x),
+                  })
+                ),
+                dot: false,
+                legendType: "none",
+                ...(regressionLineStyle?.strokeDasharray === undefined
+                  ? {}
+                  : {
+                      strokeDasharray: regressionLineStyle?.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+                tooltipType: "none",
+              }}
+            />
+          )}
+          {!!showResiduals &&
+            Option.isSome(regressionLine) &&
+            Arr.flatMap(datasets, (dataset) =>
+              Arr.map(dataset.points, (point) => {
+                const yPredicted = predictY(regressionLine.value, point.x);
+
+                return (
+                  <ReferenceLine
+                    ifOverflow="visible"
+                    key={`${dataset.name}-residual-${point.x}-${point.y}-${yPredicted}`}
+                    segment={[
+                      { x: point.x, y: point.y },
+                      { x: point.x, y: yPredicted },
+                    ]}
+                    stroke={dataset.color}
+                    strokeDasharray="2 2"
+                  />
+                );
+              })
             )}
-            {!!showResiduals &&
-              Option.isSome(regressionLine) &&
-              Arr.flatMap(datasets, (dataset) =>
-                Arr.map(dataset.points, (point) => {
-                  const yPredicted = predictY(regressionLine.value, point.x);
-
-                  return (
-                    <ReferenceLine
-                      ifOverflow="visible"
-                      key={`${dataset.name}-residual-${point.x}-${point.y}-${yPredicted}`}
-                      segment={[
-                        { x: point.x, y: point.y },
-                        { x: point.x, y: yPredicted },
-                      ]}
-                      stroke={dataset.color}
-                      strokeDasharray="2 2"
-                    />
-                  );
-                })
-              )}
-            <Legend variant="circle" />
-          </EvilComposedChart>
-        </VisualCardScene>
+          <Legend variant="circle" />
+        </EvilComposedChart>
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }

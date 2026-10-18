@@ -10,7 +10,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   VisualCardActions,
-  VisualCardFooter,
   VisualCardFullscreen,
 } from "@repo/design-system/components/visual/card";
 import { useTranslations } from "next-intl";
@@ -37,7 +36,7 @@ function createControlsStore() {
   );
 }
 
-/** One card's controls store, shared by its scene and its footer. */
+/** One card's controls store, shared by its scene and its actions. */
 type ControlsStore = ReturnType<typeof createControlsStore>;
 
 /** One card's controls and the actions that change them. */
@@ -46,7 +45,7 @@ type Controls = ExtractState<ControlsStore>;
 const ControlsContext = createContext<ControlsStore | null>(null);
 
 /**
- * Shares one card's controls between its scene and its footer through a
+ * Shares one card's controls between its scene and its actions through a
  * store, so each part re-renders only for the control it reads.
  */
 export function CoordinateProvider({ children }: { children: ReactNode }) {
@@ -69,12 +68,12 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
 }
 
 /**
- * The footer of a coordinate scene's visual card: the grid and automatic
- * rotation beside the card's full screen action, on the right. A scene's own
- * controls sit in its card body, so the footer renders after the body. The
- * coordinate store owns the grid and rotation, and the visual card owns where
- * the card is shown. A static stand-in of the scene passes `inert`, so its
- * three controls take no focus while the scene is not mounted.
+ * The actions of a coordinate scene's visual card: the grid and automatic
+ * rotation, with the card's full screen action at the right end. The scene's
+ * own controls sit in the card's toolbar, so the actions render after the body.
+ * The coordinate store owns the grid and rotation, and the visual card owns
+ * where the card is shown. A static stand-in of the scene passes `inert`, so
+ * its three controls take no focus while the scene is not mounted.
  */
 export function CoordinateControls({ inert = false }: { inert?: boolean }) {
   const t = useTranslations("Common");
@@ -84,30 +83,28 @@ export function CoordinateControls({ inert = false }: { inert?: boolean }) {
   const togglePlay = useCoordinateControls((controls) => controls.togglePlay);
 
   return (
-    <VisualCardFooter data-coordinate-controls="">
-      <VisualCardActions>
-        <Button
-          aria-pressed={showGrid}
-          inert={inert}
-          onClick={toggleGrid}
-          size="icon"
-          variant="secondary"
-        >
-          <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
-          <span className="sr-only">{t("grid")}</span>
-        </Button>
-        <Button
-          aria-pressed={play}
-          inert={inert}
-          onClick={togglePlay}
-          size="icon"
-          variant={play ? "secondary" : "default"}
-        >
-          <HugeIcons icon={play ? PauseIcon : PlayIcon} />
-          <span className="sr-only">{t("automatic-rotation")}</span>
-        </Button>
-        <VisualCardFullscreen inert={inert} />
-      </VisualCardActions>
-    </VisualCardFooter>
+    <VisualCardActions data-coordinate-controls="">
+      <Button
+        aria-pressed={showGrid}
+        inert={inert}
+        onClick={toggleGrid}
+        size="icon"
+        variant="secondary"
+      >
+        <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
+        <span className="sr-only">{t("grid")}</span>
+      </Button>
+      <Button
+        aria-pressed={play}
+        inert={inert}
+        onClick={togglePlay}
+        size="icon"
+        variant={play ? "secondary" : "default"}
+      >
+        <HugeIcons icon={play ? PauseIcon : PlayIcon} />
+        <span className="sr-only">{t("automatic-rotation")}</span>
+      </Button>
+      <VisualCardFullscreen inert={inert} />
+    </VisualCardActions>
   );
 }

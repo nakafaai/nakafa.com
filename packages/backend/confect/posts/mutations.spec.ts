@@ -2,14 +2,14 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { PostTextRefusal } from "@repo/backend/confect/posts/schema";
+import { LearnerTextRefusal } from "@repo/backend/confect/writing/text";
 import { Schema } from "effect";
 
 /** Expected denial while writing a post or a like on it. */
 export class PostWriteError extends Schema.TaggedError<PostWriteError>()(
   "PostWriteError",
   {
-    code: Schema.Literals([...PostTextRefusal.literals, "POST_NOT_FOUND"]),
+    code: Schema.Literals([...LearnerTextRefusal.literals, "POST_NOT_FOUND"]),
     message: Schema.String,
   }
 ) {}

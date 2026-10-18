@@ -15,11 +15,10 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo } from "react";
@@ -59,45 +58,43 @@ export function GrowthChart({ description, title, yAxisLabel }: Props) {
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody>
-        <VisualCardScene>
-          <EvilComposedChart
-            className="aspect-video"
-            config={chartConfig}
-            data={chartData}
-          >
-            <Grid vertical={false} />
-            <XAxis dataKey="year" tickMargin={10} />
-            <YAxis domain={[4, 6]} tickCount={6} tickMargin={10} />
-            <ChartTooltip
-              content={({ content, ...props }) => (
-                <ChartTooltipContent
-                  {...props}
-                  payload={
-                    props.payload &&
-                    Arr.filter(
-                      props.payload,
-                      (item) => item.dataKey !== "barValue"
-                    )
-                  }
-                />
-              )}
-            />
-            <Bar barProps={{ barSize: 40 }} dataKey="barValue" radius={4} />
-            <Line
-              dataKey="growth"
-              lineProps={{
-                activeDot: { r: 6 },
-                dot: { r: 4 },
-                strokeWidth: 2,
-              }}
-            />
-          </EvilComposedChart>
-        </VisualCardScene>
+      <VisualCardBody className="p-(--card-spacing)">
+        <EvilComposedChart
+          className="aspect-video"
+          config={chartConfig}
+          data={chartData}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="year" tickMargin={10} />
+          <YAxis domain={[4, 6]} tickCount={6} tickMargin={10} />
+          <ChartTooltip
+            content={({ content, ...props }) => (
+              <ChartTooltipContent
+                {...props}
+                payload={
+                  props.payload &&
+                  Arr.filter(
+                    props.payload,
+                    (item) => item.dataKey !== "barValue"
+                  )
+                }
+              />
+            )}
+          />
+          <Bar barProps={{ barSize: 40 }} dataKey="barValue" radius={4} />
+          <Line
+            dataKey="growth"
+            lineProps={{
+              activeDot: { r: 6 },
+              dot: { r: 4 },
+              strokeWidth: 2,
+            }}
+          />
+        </EvilComposedChart>
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }

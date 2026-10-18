@@ -29,12 +29,11 @@ const SIXTY_LETTERS = "Maria".repeat(12);
 const ONE_LETTER = "A";
 const OTHER_SCRIPT = "Наталья Петровна Иванова";
 /**
- * The avatar of one comment's author, which sits in the identity block that is
- * the first child of the comment's row. The reply composer is in the same row
- * too, closed and still in the document, and it draws an avatar of its own, so
- * a selector for any avatar in the row matches two.
+ * The avatar of one comment's author, which sits in the row that is the only
+ * child of the comment's container. The thread and its composer sit beside the
+ * row, not in it, so the row holds one avatar.
  */
-const AUTHOR_AVATAR = ':scope > div > [data-slot="avatar"]';
+const AUTHOR_AVATAR = ':scope > [data-slot="feed-row"] > [data-slot="avatar"]';
 
 /** The name the sidebar footer shows for the account. */
 function sidebarName(page: Page, name: string) {
@@ -172,7 +171,7 @@ test("a comment by a learner without a photo shows the animal of the learner", a
           .filter({ has: page.getByRole("textbox", { name: placeholder }) });
         await composer.getByRole("textbox", { name: placeholder }).fill(text);
         await composer
-          .getByRole("button", { name: app.Comments.comment, exact: true })
+          .getByRole("button", { name: app.Posts.post, exact: true })
           .click();
 
         const comment = page

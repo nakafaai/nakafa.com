@@ -1,115 +1,62 @@
 "use client";
 
-import {
-  PaginatedQueryResult,
-  useMutation,
-  usePaginatedQuery,
-} from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { toast } from "@repo/design-system/lib/toast/notify";
-import { randomUuid } from "@repo/utilities/uuid";
-import { Array as Arr, DateTime, Effect, Schema, Struct } from "effect";
-import { useOptimistic } from "react";
-import { CommentsAdd } from "@/components/comments/add";
-import {
-  CommentContent,
-  type CommentDisplay,
-  CommentItem,
-  type CommentWithUser,
-} from "@/components/comments/item";
+import { Array as Arr } from "effect";
+import { CommentComposer } from "@/components/comments/composer";
+import { usePostComment } from "@/components/comments/posting";
+import { CommentsProvider } from "@/components/comments/provider";
+import { CommentRow, ReplyButton } from "@/components/comments/row";
+import { CommentThread } from "@/components/comments/thread";
 import { DataFailure } from "@/components/shared/failure";
-import { reportClientException } from "@/lib/analytics/client";
-import { useViewer } from "@/lib/identity/client";
 
-class CommentCreateError extends Schema.TaggedError<CommentCreateError>()(
-  "CommentCreateError",
-  { cause: Schema.Unknown }
-) {}
-type Draft = CommentDisplay & Pick<CommentWithUser, "slug">;
-const noDrafts: Draft[] = [];
+/** How many top-level comments a page holds, the first one and each one after it. */
+const PAGE_SIZE = 25;
 
-/** Owns the comment feed and pending submissions without inventing database IDs. */
+/**
+ * The comments of one slug: the composer of a new comment, then each top-level
+ * comment with its thread. Every change shows at once, and a page is read as the
+ * list reaches its end.
+ */
 export function CommentsList({ slug }: { slug: string }) {
-  const user = useViewer((state) => state.account);
+  return (
+    <CommentsProvider>
+      <SlugComments slug={slug} />
+    </CommentsProvider>
+  );
+}
+
+/** The composer and the comments of the slug, inside the provider their changes write to. */
+function SlugComments({ slug }: { slug: string }) {
   const pagination = usePaginatedQuery(
     comments.queries.getCommentsBySlug,
     { slug },
-    { initialNumItems: 25 }
+    { initialNumItems: PAGE_SIZE }
   );
-  const addComment = useMutation(comments.mutations.addComment);
-  const [drafts, showDraft] = useOptimistic(
-    noDrafts,
-    (previous, draft: Draft) => [draft, ...previous]
-  );
-
-  async function submit(text: string, parent?: CommentWithUser) {
-    if (!user) {
-      return false;
-    }
-    showDraft({
-      _id: Effect.runSync(randomUuid),
-      _creationTime: DateTime.toEpochMillis(DateTime.nowUnsafe()),
-      text,
-      slug,
-      user: {
-        _id: user.appUser._id,
-        ...Struct.pick(user.appUser, ["mascot", "picture"]),
-        name: user.authUser.name,
-        image: user.authUser.image ?? null,
-      },
-      replyToUser: parent?.user ?? null,
-      ...(parent ? { parentId: parent._id, replyToText: parent.text } : {}),
-    });
-    return await Effect.runPromise(
-      Effect.tryPromise({
-        try: () =>
-          addComment({
-            slug,
-            text,
-            ...(parent ? { parentId: parent._id } : {}),
-          }),
-        catch: (cause) => new CommentCreateError({ cause }),
-      }).pipe(
-        Effect.flatMap((result) =>
-          Effect.fromResult(result).pipe(
-            Effect.mapError((cause) => new CommentCreateError({ cause }))
-          )
-        ),
-        Effect.as(true),
-        Effect.catchTag("CommentCreateError", (error) =>
-          reportClientException(error, { source: "comment-create" }).pipe(
-            Effect.andThen(
-              Effect.sync(() =>
-                toast.error({
-                  description: "action-error.description",
-                  title: "action-error.title",
-                })
-              )
-            ),
-            Effect.as(false)
-          )
-        )
-      )
-    );
-  }
+  const postComment = usePostComment();
 
   return (
     <>
-      <CommentsAdd onSubmit={submit} />
+      <CommentComposer
+        onPost={(text) => postComment({ parent: null, slug, text })}
+      />
       {PaginatedQueryResult.isFailure(pagination) ? <DataFailure /> : null}
       <div className="flex flex-col gap-4">
-        {Arr.map(
-          Arr.filter(drafts, (comment) => comment.slug === slug),
-          (comment) => (
-            <CommentContent comment={comment} key={comment._id} />
-          )
-        )}
         {Arr.map(pagination.results, (comment) => (
-          <CommentItem comment={comment} key={comment._id} submit={submit} />
+          <div key={comment._id}>
+            <CommentRow
+              author={comment.user}
+              comment={comment}
+              replyAction={
+                <ReplyButton comment={comment} count={comment.replyCount} />
+              }
+            />
+            <CommentThread comment={comment} />
+          </div>
         ))}
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(25)} />
+          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </div>
     </>
