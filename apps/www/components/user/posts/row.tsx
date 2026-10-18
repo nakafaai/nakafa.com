@@ -3,6 +3,7 @@
 import { useMutation } from "@confect/react";
 import { Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import posts from "@repo/backend/confect/_generated/refs/posts";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -26,7 +27,6 @@ import {
   FeedHeader,
   FeedName,
   FeedRow,
-  FeedText,
 } from "@/components/user/feed";
 import { LikeButton } from "@/components/user/like";
 import {
@@ -78,7 +78,7 @@ export function PostRow({ post }: { post: ListPost }) {
             </FeedEnd>
           )}
         </FeedHeader>
-        <FeedText>{post.text}</FeedText>
+        <DeferredLearnerText>{post.text}</DeferredLearnerText>
         <FeedActions inert={pending}>
           <PostLikeButton post={post} />
         </FeedActions>
