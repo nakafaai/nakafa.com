@@ -7,7 +7,7 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import posts from "@repo/backend/confect/_generated/refs/posts";
-import { LearnerText } from "@repo/design-system/components/markdown/learner";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -86,7 +86,7 @@ export function PostRow({ post }: { post: ListPost }) {
             </FeedEnd>
           )}
         </FeedHeader>
-        <LearnerText>{post.text}</LearnerText>
+        <DeferredLearnerText>{post.text}</DeferredLearnerText>
         <FeedActions inert={pending}>
           <PostLikeButton post={post} />
         </FeedActions>

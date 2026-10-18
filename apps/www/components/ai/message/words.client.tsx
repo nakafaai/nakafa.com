@@ -2,19 +2,21 @@
 
 import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { useTranslations } from "next-intl";
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 /**
- * A learner's own words, drawn as Markdown by LearnerText: bold text, lists and
- * formulas draw as they do in Nina's answers, and the line breaks the learner
- * wrote stay. Links open in a new tab, and an image draws as a link to its
- * address. A long word breaks where it must, and each paragraph takes the
- * direction of its own text; the wrapper names none, because a wrapper with
+ * A learner's own words, as `NinaPrompt` draws them. Each paragraph takes the
+ * direction of its own text, so the wrapper names none: a wrapper with
  * `dir="auto"` skips paragraphs that carry their own and reads left to right.
  *
  * A message taller than twelve lines shows its first twelve, and the learner
@@ -24,7 +26,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
  * whole text stays in the page whether it is folded or not, so find and copy
  * reach all of it.
  */
-export function NinaWords({ children }: { children: string }) {
+export function NinaWords({ children }: { children: ReactNode }) {
   const t = useTranslations("Ai");
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
@@ -63,9 +65,7 @@ export function NinaWords({ children }: { children: string }) {
         id={id}
         ref={box}
       >
-        <div ref={text}>
-          <LearnerText>{children}</LearnerText>
-        </div>
+        <div ref={text}>{children}</div>
       </div>
       {tall ? (
         <Button

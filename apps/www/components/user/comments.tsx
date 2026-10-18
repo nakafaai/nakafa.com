@@ -16,7 +16,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { LearnerText } from "@repo/design-system/components/markdown/learner";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -157,7 +157,7 @@ function CommentRow({
               <CommentMoreMenu />
             </FeedEnd>
           </FeedHeader>
-          <LearnerText>{comment.text}</LearnerText>
+          <DeferredLearnerText>{comment.text}</DeferredLearnerText>
           <FeedActions>
             <CommentVotes />
             <NavigationLink
