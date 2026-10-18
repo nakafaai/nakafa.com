@@ -3,7 +3,7 @@
 import { useMutation } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import posts from "@repo/backend/confect/_generated/refs/posts";
-import { readPostText } from "@repo/backend/confect/posts/schema";
+import { readLearnerText } from "@repo/backend/confect/writing/text";
 import { Button } from "@repo/design-system/components/ui/button";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -42,7 +42,7 @@ export function PostComposer({
   const finishSaving = usePostDraft((draft) => draft.finishSaving);
   const refuseSaving = usePostDraft((draft) => draft.refuseSaving);
   const startPost = useMutation(posts.mutations.create);
-  const body = readPostText(text);
+  const body = readLearnerText(text);
   const remaining = remainingToShow(text);
 
   /** Sends the trimmed text, and shows the post in the list while the server saves it. */

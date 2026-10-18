@@ -227,10 +227,11 @@
   },
   "Comments": {
     "add-comment-placeholder": "Add a comment...",
-    "comment": "Comment",
     "no-comments": "No comments yet.",
     "delete-title": "Delete comment?",
-    "delete-description": "The comment is deleted for good."
+    "delete-description": "The comment and its replies are deleted for good.",
+    "delete-reply-description": "The reply and the replies to it are deleted for good.",
+    "replying-to": "Replying to {name}"
   },
   "Subject": {
     "elementary-school": "Elementary School",

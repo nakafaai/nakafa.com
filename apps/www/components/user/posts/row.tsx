@@ -1,11 +1,7 @@
 "use client";
 
 import { useMutation } from "@confect/react";
-import {
-  Delete02Icon,
-  FavouriteIcon,
-  MoreHorizontalIcon,
-} from "@hugeicons/core-free-icons";
+import { Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -15,15 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useRouter } from "@repo/internationalization/src/navigation";
-import { cn } from "cn";
 import { Effect, HashSet } from "effect";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
-import { useConvexAuth } from "@/components/providers/convex";
 import { formatShortAge } from "@/components/user/age";
 import {
   FeedActions,
@@ -36,6 +28,7 @@ import {
   FeedRow,
   FeedText,
 } from "@/components/user/feed";
+import { LikeButton } from "@/components/user/like";
 import {
   likeInLists,
   unlikeInLists,
@@ -47,7 +40,6 @@ import {
 } from "@/components/user/posts/provider";
 import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 
 /** The delete dialog loads when the learner opens the More menu of a post, before they can choose Delete. */
 const PostDeletion = dynamic(
@@ -95,20 +87,8 @@ export function PostRow({ post }: { post: ListPost }) {
   );
 }
 
-/**
- * The like toggle of a post, at its own width: the heart, and the count once it
- * is above zero. The change is made at once and the server answers after it. A
- * visitor who has not signed in goes to the sign-in page, which returns to this
- * profile. The ghost variant recolors the icon on hover, so a liked heart keeps
- * its color with a rule of its own.
- */
+/** The like toggle of a post, which changes the post at once and tells the learner when the server refuses. */
 function PostLikeButton({ post }: { post: ListPost }) {
-  const t = useTranslations("Common");
-  const router = useRouter();
-  const authNavigation = useCurrentAuthNavigation();
-  const signedOut = useConvexAuth(
-    (auth) => !(auth.isAuthenticated || auth.isLoading)
-  );
   const like = useMutation(posts.mutations.like).withOptimisticUpdate(
     likeInLists
   );
@@ -118,10 +98,6 @@ function PostLikeButton({ post }: { post: ListPost }) {
 
   /** Likes or unlikes the post, and tells the learner when the server refuses. */
   function toggle() {
-    if (signedOut) {
-      router.push(authNavigation.readHref());
-      return;
-    }
     const change = post.liked ? unlike : like;
     Effect.runPromise(
       Effect.tryPromise(() => change({ postId: post._id })).pipe(
@@ -147,27 +123,11 @@ function PostLikeButton({ post }: { post: ListPost }) {
   }
 
   return (
-    <Button
-      aria-label={t("like")}
-      aria-pressed={post.liked}
-      className={cn(post.liked && "hover:[&_svg]:text-destructive")}
-      onClick={toggle}
-      size="sm"
-      variant="ghost"
-    >
-      <HugeIcons
-        className={cn(post.liked && "text-destructive [&_path]:fill-current")}
-        icon={FavouriteIcon}
-      />
-      {post.likeCount > 0 && (
-        <NumberFormat
-          className="text-xs tabular-nums"
-          format={{ notation: "compact", maximumFractionDigits: 1 }}
-          isolate={true}
-          value={post.likeCount}
-        />
-      )}
-    </Button>
+    <LikeButton
+      likeCount={post.likeCount}
+      liked={post.liked}
+      onToggle={toggle}
+    />
   );
 }
 

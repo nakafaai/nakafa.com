@@ -20,10 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
+import { useRef } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
@@ -108,7 +110,15 @@ export function UserSettingsCurriculum({
     />
   );
 }
-/** Owns the curriculum preference form state after Convex data is ready. */
+/**
+ * Owns the curriculum preference form state after Convex data is ready. A save
+ * does not wait: the new choice is the form's saved one at once and the
+ * optimistic update shows it everywhere, so Save has nothing left to save. A
+ * refused save, the server's or a choice that left the list, brings the stored
+ * choice back as the saved one and keeps the newest choice, so Save offers it
+ * again beside the error toast. A refusal that a later save overtook leaves the
+ * form to that save.
+ */
 function UserSettingsCurriculumForm({
   initialProgramKey,
   programs,
@@ -119,6 +129,7 @@ function UserSettingsCurriculumForm({
   const locale = useLocale();
   const t = useTranslations("Auth");
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(programs);
+  const latestSave = useRef(0);
   const selectItems = Arr.map(programs, (program) => ({
     label: (
       <>
@@ -135,33 +146,51 @@ function UserSettingsCurriculumForm({
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value, formApi }) => {
       if (!isActiveLocale(locale)) {
         return;
       }
-      const handleMutationError = (error: CurriculumPreferenceMutationError) =>
+      const stored =
+        formApi.options.defaultValues?.preferredCurriculumProgramKey;
+      const save = latestSave.current + 1;
+      latestSave.current = save;
+      // The new choice is the saved one at once, so Save has nothing to save.
+      formApi.reset(value);
+      const restore = Effect.sync(() => {
+        toast.error({
+          description: "action-error.description",
+          title: "action-error.title",
+        });
+        if (save !== latestSave.current) {
+          return;
+        }
+        // The stored choice comes back as the saved one, and the newest
+        // choice stays, so Save offers it again.
+        const chosen = formApi.getFieldMeta("preferredCurriculumProgramKey")
+          ?.isTouched
+          ? formApi.getFieldValue("preferredCurriculumProgramKey")
+          : value.preferredCurriculumProgramKey;
+        formApi.reset({ preferredCurriculumProgramKey: stored ?? "" });
+        formApi.setFieldValue("preferredCurriculumProgramKey", chosen);
+      });
+      const refuseInvalid = () => restore;
+      const reportFailure = (error: CurriculumPreferenceMutationError) =>
         reportClientException(error, {
           source: "user-settings-curriculum",
-        }).pipe(Effect.as(false));
-      const handleValidationError = () => Effect.succeed(false);
-      const didSave = await Effect.runPromise(
+        }).pipe(Effect.andThen(restore));
+      Effect.runPromise(
         submitCurriculumPreference({
           locale,
           programs,
           setPreferredCurriculum,
           value,
         }).pipe(
-          Effect.as(true),
           Effect.catchTags({
-            CurriculumPreferenceMutationError: handleMutationError,
-            CurriculumPreferenceValidationError: handleValidationError,
+            CurriculumPreferenceMutationError: reportFailure,
+            CurriculumPreferenceValidationError: refuseInvalid,
           })
         )
       );
-      if (!didSave) {
-        return;
-      }
-      form.reset(value);
     },
   });
   return (
@@ -216,18 +245,14 @@ function UserSettingsCurriculumForm({
         </CardContent>
         <CardSectionFooter>
           <form.Subscribe
-            selector={(state) => [
-              state.isDirty,
-              state.isValid,
-              state.isSubmitting,
-            ]}
+            selector={(state) => [state.isDirty, state.isValid] as const}
           >
-            {([isDirty, isValid, isSubmitting]) => (
+            {([isDirty, isValid]) => (
               <>
                 <CardSectionHint>{t("curriculum-footer")}</CardSectionHint>
                 <CardSectionActions>
                   <Button
-                    disabled={!(isDirty && isValid) || isSubmitting}
+                    disabled={!(isDirty && isValid)}
                     size="sm"
                     type="submit"
                   >
