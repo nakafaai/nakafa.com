@@ -1,6 +1,7 @@
 "use client";
 
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import { SidebarScope } from "@repo/design-system/components/ui/sidebar-scope";
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
 import {
   createContext,
@@ -15,6 +16,11 @@ import {
 
 /** Changes the count of visible pages that hold the nearest shell locked. */
 const ShellLocksContext = createContext<Dispatch<
+  SetStateAction<number>
+> | null>(null);
+
+/** Changes the count of visible page headers that title the nearest shell. */
+const ShellTitlesContext = createContext<Dispatch<
   SetStateAction<number>
 > | null>(null);
 
@@ -50,33 +56,39 @@ export function LockableShell({
 }) {
   const [locks, setLocks] = useState(0);
   const locked = locks > 0;
+  const [titles, setTitles] = useState(0);
 
   return (
     <ShellLocksContext value={setLocks}>
-      <SidebarProvider
-        className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] data-locked:[--app-header-top:0rem]"
-        data-locked={locked ? "" : undefined}
-        locked={locked}
-      >
-        {/* Pages lay out in normal flow directly inside main: a flex column
+      <ShellTitlesContext value={setTitles}>
+        <SidebarProvider
+          className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] has-[[data-shell-title]]:[--app-header-top:0rem] data-locked:[--app-header-top:0rem] data-titled:[--app-header-top:0rem]"
+          data-locked={locked ? "" : undefined}
+          data-titled={titles > 0 ? "" : undefined}
+          locked={locked}
+        >
+          {/* Pages lay out in normal flow directly inside main: a flex column
             would shrink every centered page column to its content, and a
             wrapper of their own would move when a lock change drops the
             header. */}
-        <SidebarInset className="block transition-[--app-sidebar-offset] duration-surface [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] lg:pl-(--app-shell-inset) group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem]">
-          {locked ? null : (
-            <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden">
-              {header}
-            </div>
-          )}
-          {children}
-        </SidebarInset>
-        {/* Hidden rather than collapsed, so locking and unlocking swap the
+          <SidebarInset className="block transition-[--app-sidebar-offset] duration-surface [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] lg:pl-(--app-shell-inset) group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem]">
+            <SidebarScope>
+              {locked ? null : (
+                <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden">
+                  {header}
+                </div>
+              )}
+              {children}
+            </SidebarScope>
+          </SidebarInset>
+          {/* Hidden rather than collapsed, so locking and unlocking swap the
             sidebar at once and the learner's open or closed choice returns
             unchanged when the lock ends. */}
-        <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden">
-          {sidebar}
-        </div>
-      </SidebarProvider>
+          <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden">
+            {sidebar}
+          </div>
+        </SidebarProvider>
+      </ShellTitlesContext>
     </ShellLocksContext>
   );
 }
@@ -121,4 +133,32 @@ export function ShellLock() {
   }, [setLocks]);
 
   return hydrating ? <span data-shell-lock="" hidden /> : null;
+}
+
+/**
+ * Titles the shell while this element is mounted and visible: a page that draws its own
+ * header row takes the place of the shell's bar on a phone. The title applies in a layout
+ * effect, so it lands before the browser paints the page, and it goes when the page
+ * unmounts or Next.js hides it on navigation; a header that stays in the document, hidden,
+ * titles nothing. The server markup and the hydrating page carry the title as a marker
+ * instead, so the page paints titled before any script runs. Outside a shell it does
+ * nothing.
+ */
+export function ShellTitle() {
+  const setTitles = use(ShellTitlesContext);
+  const hydrating = useSyncExternalStore(
+    subscribeNever,
+    () => false,
+    () => true
+  );
+
+  useLayoutEffect(() => {
+    if (setTitles === null) {
+      return;
+    }
+    setTitles((count) => count + 1);
+    return () => setTitles((count) => count - 1);
+  }, [setTitles]);
+
+  return hydrating ? <span data-shell-title="" hidden /> : null;
 }
