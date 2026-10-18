@@ -7,6 +7,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import comments from "@repo/backend/confect/_generated/refs/comments";
+import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import consents from "@repo/backend/confect/_generated/refs/consents";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import contents from "@repo/backend/confect/_generated/refs/contents";
@@ -98,6 +99,7 @@ const domainModules = {
   chats,
   classroom,
   comments,
+  connectors,
   consents,
   contentRelease,
   contents,

@@ -2,6 +2,7 @@ import { Kind } from "@repo/backend/confect/access/kind";
 import { access } from "@repo/backend/confect/access/kinds";
 import type { Rule, RuleRole } from "@repo/backend/confect/access/schema";
 import { classroom } from "@repo/backend/confect/classroom/kinds";
+import { connectors } from "@repo/backend/confect/connectors/kinds";
 import { editor } from "@repo/backend/confect/editor/kinds";
 import { exam } from "@repo/backend/confect/exams/kinds";
 import { sitting } from "@repo/backend/confect/exams/sittings/kinds";
@@ -15,6 +16,7 @@ export const kinds = [
   ...tenancy.kinds,
   ...access.kinds,
   ...integrations.kinds,
+  ...connectors.kinds,
   ...classroom.kinds,
   ...operators.kinds,
   ...editor.kinds,
@@ -27,6 +29,7 @@ const extensions = [
   ...tenancy.extensions,
   ...access.extensions,
   ...integrations.extensions,
+  ...connectors.extensions,
   ...classroom.extensions,
   ...operators.extensions,
   ...editor.extensions,

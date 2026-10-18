@@ -246,6 +246,11 @@
         "renamed": "Klasse umbenannt",
         "archived": "Klasse archiviert"
       },
+      "connection": {
+        "connected": "Verbindung hinzugefügt",
+        "disconnected": "Verbindung getrennt",
+        "reconnect": "Verbindung muss erneut hergestellt werden"
+      },
       "grant": {
         "created": "Rolle vergeben",
         "ended": "Rolle beendet"

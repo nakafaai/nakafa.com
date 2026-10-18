@@ -246,6 +246,11 @@
         "renamed": "Kelas diganti nama",
         "archived": "Kelas diarsipkan"
       },
+      "connection": {
+        "connected": "Koneksi ditambahkan",
+        "disconnected": "Koneksi diputus",
+        "reconnect": "Koneksi perlu dihubungkan ulang"
+      },
       "grant": {
         "created": "Peran diberikan",
         "ended": "Peran berakhir"

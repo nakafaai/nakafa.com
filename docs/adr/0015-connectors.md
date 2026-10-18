@@ -6,10 +6,11 @@ Accepted on 13 October 2026 with owner decisions K2, K3, and K13. The owner
 approved decisions K1 to K20 on that day. Planned for program wave B, after the
 Google verification (risk R3 of the plan) for the scopes that need it.
 
-No connector exists in the code today: `git grep` on main at `f8a5610808` finds
-no connector module, table, or route, and no connector scope. The rule that
-matches Classroom members stands only after its gate passes (see Gates).
-Implementation Status lists each part.
+No connector adapter exists in the code. Since the connections slice (CN1), the
+code holds the connection tables, the sealed token table, and the `connection`
+kind in `confect/connectors`, but no connector route, page, or Google scope. The
+rule that matches Classroom members stands only after its gate passes (see
+Gates). Implementation Status lists each part.
 
 ## Context
 
@@ -21,14 +22,14 @@ at any time, and a strict split between a learner's own data and a school's
 data, the split that K3 makes for memory.
 
 Today Google is a sign-in provider only.
-`packages/backend/confect/auth/runtime.ts` asks Google for offline access with a
-forced consent prompt (`accessType: "offline"`,
-`prompt: "select_account consent"`), asks for no scope beyond Better Auth's
-defaults (`email`, `profile`, and `openid`), and Better Auth stores the tokens it
-gets on the account row. ADR 0009 plans to stop storing them and says that a
-connector token never sits there. Better Auth's Google provider also adds
-`include_granted_scopes=true` to every sign-in request (`@better-auth/core`
-1.6.33, `dist/social-providers/google.mjs`).
+`packages/backend/confect/auth/tokens.ts` sends Google the prompt
+`select_account` and no `access_type`, so Google issues no refresh token. It
+also turns off ID token sign-in. Better Auth's account hooks keep every provider
+token out of the `account` table (#1052 and #1069). Sign-in asks for no scope
+beyond Better Auth's defaults (`email`, `profile`, and `openid`). Better Auth's
+Google provider still adds `include_granted_scopes=true` to every sign-in request
+(`@better-auth/core` 1.6.33, `dist/social-providers/google.mjs`), so connectors
+keep a Google Cloud project of their own (see Decision).
 
 These rules of Google shape the design. Each was read on its own page on 13
 October 2026, and References lists the pages.
@@ -443,10 +444,11 @@ Two kinds of connection decides.
 
 | Part | Status |
 | --- | --- |
-| Google sign-in with offline access and a forced consent prompt (`packages/backend/confect/auth/runtime.ts`) | Live. ADR 0009 plans to stop storing its tokens. |
+| Google sign-in with `select_account` and no `access_type` (`packages/backend/confect/auth/tokens.ts`), storing no provider tokens (#1052, #1069) | Live |
 | Learner key in `confect/vault` (`vaultKeys`) | Live |
 | School key (`tenantKeys`, ADR 0030) | Built, program wave B |
-| `confect/connectors`, `connectorLinks`, `connectorSecrets` | Planned, program wave B |
+| `confect/connectors`: the `connectorConnections` and `connectorSecrets` tables, the `connection` kind, and its journal changes | Built in CN1. A token is sealed under the owner's key, and a disconnect destroys it. No adapter yet. |
+| `connectorLinks`, one row for each Google class that links it to a Nakafa class | Planned, with the Classroom slices |
 | The Drive, Forms, Classroom, Calendar, and Gmail adapters | Planned, program wave B. Each reaches production as Google verification says. |
 | The connector pages: connect, disconnect, reconnect, sync by hand, and the Admin's switch for each role (ADR 0026 has the school address) | Planned, program wave B |
 | A Google Cloud project for connectors, and its verification request | Planned, program wave A step |

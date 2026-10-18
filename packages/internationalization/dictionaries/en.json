@@ -246,6 +246,11 @@
         "renamed": "Class renamed",
         "archived": "Class archived"
       },
+      "connection": {
+        "connected": "Connection added",
+        "disconnected": "Connection disconnected",
+        "reconnect": "Connection needs reconnecting"
+      },
       "grant": {
         "created": "Role given",
         "ended": "Role ended"

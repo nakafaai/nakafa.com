@@ -16,6 +16,8 @@ import classes from "./tables/classes";
 import commentLikes from "./tables/commentLikes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
+import connectorConnections from "./tables/connectorConnections";
+import connectorSecrets from "./tables/connectorSecrets";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
@@ -127,6 +129,8 @@ export default $defineSchema({
   commentLikes: $Table.tableDefinition(commentLikes),
   commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
+  connectorConnections: $Table.tableDefinition(connectorConnections),
+  connectorSecrets: $Table.tableDefinition(connectorSecrets),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),
   contentArtifactFacts: $Table.tableDefinition(contentArtifactFacts),
   contentArtifacts: $Table.tableDefinition(contentArtifacts),

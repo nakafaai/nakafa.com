@@ -16,6 +16,8 @@ export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
 export type CommentLikesDoc = Document.Document<typeof schemaDefinition, "commentLikes">;
 export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
+export type ConnectorConnectionsDoc = Document.Document<typeof schemaDefinition, "connectorConnections">;
+export type ConnectorSecretsDoc = Document.Document<typeof schemaDefinition, "connectorSecrets">;
 export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefinition, "contentAnalyticsPartitions">;
 export type ContentArtifactFactsDoc = Document.Document<typeof schemaDefinition, "contentArtifactFacts">;
 export type ContentArtifactsDoc = Document.Document<typeof schemaDefinition, "contentArtifacts">;
@@ -127,6 +129,8 @@ export interface Docs {
   commentLikes: CommentLikesDoc;
   commentVotes: CommentVotesDoc;
   comments: CommentsDoc;
+  connectorConnections: ConnectorConnectionsDoc;
+  connectorSecrets: ConnectorSecretsDoc;
   contentAnalyticsPartitions: ContentAnalyticsPartitionsDoc;
   contentArtifactFacts: ContentArtifactFactsDoc;
   contentArtifacts: ContentArtifactsDoc;
