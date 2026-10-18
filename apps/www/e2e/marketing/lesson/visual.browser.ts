@@ -77,6 +77,9 @@ function expectWindowShare(root: Locator, share: number) {
   });
 }
 
+/** Where the window stops on its way to half, well short of the share that mounts its lab. */
+const APPROACH_SHARE = LAB_VISIBLE_SHARE - 0.15;
+
 /** The most scrolls that setting the window's share takes. */
 const SHARE_SCROLLS = 6;
 
@@ -144,6 +147,11 @@ test("home lesson window mounts its visual once half of the window is on the scr
               yield* Effect.promise(() => expect(visual).toHaveCount(0));
 
               // Just short of half, the observer has not crossed the share, so the lab still waits.
+              // The window comes from below the screen, where it still rises by most of its
+              // offset: a scroll aimed from there would carry it past half once the rise
+              // settles. It first stops well short of half, where little rise is left, and
+              // then aims for the edge.
+              yield* scrollWindowToShare(page, root, APPROACH_SHARE);
               yield* scrollWindowToShare(
                 page,
                 root,
