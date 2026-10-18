@@ -68,8 +68,9 @@ const expectFullscreenEndsActions = Effect.fn(
   const actions = card.locator('[data-slot="visual-card-actions"]');
   const end = yield* Effect.promise(() =>
     actions.evaluate((element) => {
-      const buttons = element.querySelectorAll("button");
-      const last = buttons[buttons.length - 1]?.getBoundingClientRect();
+      const last = Array.from(element.querySelectorAll("button"))
+        .at(-1)
+        ?.getBoundingClientRect();
       const padding = Number.parseFloat(getComputedStyle(element).paddingRight);
       return {
         lastRight: last?.right ?? 0,
