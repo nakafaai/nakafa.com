@@ -2,12 +2,20 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { schoolMascot } from "@repo/backend/confect/tenancy/mascot";
+import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
+import { SCHOOL_LIMIT } from "@repo/backend/confect/tenancy/schema";
+import { storageUrl, storeFile } from "@repo/backend/test/logo";
 import { MASCOT } from "@repo/backend/test/mascot";
-import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  slugOf,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Order } from "effect";
 
 const nf = slugOf("nf");
 const viewer = refs.public.tenancy.viewer.get;
+const schools = refs.public.tenancy.viewer.schools;
 
 describe("tenancy/viewer", () => {
   it.effect(
@@ -216,5 +224,144 @@ describe("tenancy/viewer", () => {
         });
         expect(hidden.account).toEqual({ mascot: MASCOT, name: "User owner" });
       })
+  );
+});
+
+describe("tenancy/viewer schools", () => {
+  it.effect(
+    "lists the schools the caller is an active member of, each with its name, its address, and its mark",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const list = yield* fixture.as("owner").query(schools, {});
+        expect(list).toEqual([
+          {
+            mark: { mascot: schoolMascot(fixture.tenants.nf) },
+            name: "Yayasan Nakafa",
+            slug: "nf",
+          },
+        ]);
+      })
+  );
+
+  it.effect("lists the newest membership first", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* fixture.run(
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer.table("tenantPeople").insert({
+            account: {
+              claimedAt: TENANCY_NOW,
+              method: "invite",
+              state: "claimed",
+              userId: fixture.users.owner.userId,
+            },
+            kind: "member",
+            name: "Owner",
+            status: "active",
+            tenantId: fixture.tenants.other,
+          })
+        )
+      );
+      const list = yield* fixture.as("owner").query(schools, {});
+      expect(Arr.map(list, (school) => school.slug)).toEqual(["other", "nf"]);
+    })
+  );
+
+  it.effect(
+    "lists only the caller's own active member Persons, never another account's, a suspended one, or an operator one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const otherOwner = yield* fixture.as("otherOwner").query(schools, {});
+        const suspended = yield* fixture.as("suspended").query(schools, {});
+        const visitor = yield* fixture.as("visitor").query(schools, {});
+        const stranger = yield* fixture.as("stranger").query(schools, {});
+        expect(Arr.map(otherOwner, (school) => school.slug)).toEqual(["other"]);
+        expect([suspended, visitor, stranger]).toEqual([[], [], []]);
+      })
+  );
+
+  it.effect(
+    "caps the list at the school limit, and keeps the newest memberships",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.run(
+          Effect.forEach(
+            Arr.makeBy(SCHOOL_LIMIT, (index) => index),
+            (index) =>
+              Effect.gen(function* () {
+                const writer = yield* DatabaseWriter;
+                const tenantId = yield* writer.table("tenants").insert({
+                  country: "ID",
+                  currency: "IDR",
+                  kind: "school",
+                  name: `Sekolah ${index}`,
+                  policies: NEW_TENANT_POLICIES,
+                  slug: slugOf(`sekolah-${index}`),
+                  status: "active",
+                });
+                yield* writer.table("tenantPeople").insert({
+                  account: {
+                    claimedAt: TENANCY_NOW,
+                    method: "invite",
+                    state: "claimed",
+                    userId: fixture.users.owner.userId,
+                  },
+                  kind: "member",
+                  name: "Owner",
+                  status: "active",
+                  tenantId,
+                });
+              }),
+            { discard: true }
+          )
+        );
+        const list = yield* fixture.as("owner").query(schools, {});
+        expect(list).toHaveLength(SCHOOL_LIMIT);
+        expect(Arr.map(list, (school) => school.slug)).not.toContain("nf");
+      })
+  );
+
+  it.effect(
+    "gives the mark of a school with a logo the address of the logo",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const file = yield* storeFile(
+          fixture.convex,
+          new Blob([new Uint8Array(8)], { type: "image/png" })
+        );
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenants").patch(fixture.tenants.nf, { logo: file })
+          )
+        );
+        const list = yield* fixture.as("owner").query(schools, {});
+        expect(list).toEqual([
+          {
+            mark: {
+              logo: yield* storageUrl(fixture.convex, file),
+              mascot: schoolMascot(fixture.tenants.nf),
+            },
+            name: "Yayasan Nakafa",
+            slug: "nf",
+          },
+        ]);
+      })
+  );
+
+  it.effect("requires a session", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const denial = yield* fixture.anonymous
+        .query(schools, {})
+        .pipe(Effect.flip);
+      expect(denial).toMatchObject({
+        _tag: "SessionRequired",
+        code: "UNAUTHENTICATED",
+      });
+    })
   );
 });
