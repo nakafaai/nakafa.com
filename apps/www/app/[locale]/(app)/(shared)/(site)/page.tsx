@@ -167,7 +167,7 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         }))}
         url={url}
       />
-      <div className="relative grid">
+      <div className="relative grid grid-cols-1">
         <Hero />
         <Lesson />
         <Tryout value={featuredTryout} />
