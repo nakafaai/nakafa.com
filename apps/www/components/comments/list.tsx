@@ -20,6 +20,15 @@ const PAGE_SIZE = 25;
  * list reaches its end.
  */
 export function CommentsList({ slug }: { slug: string }) {
+  return (
+    <CommentsProvider>
+      <SlugComments slug={slug} />
+    </CommentsProvider>
+  );
+}
+
+/** The composer and the comments of the slug, inside the provider their changes write to. */
+function SlugComments({ slug }: { slug: string }) {
   const pagination = usePaginatedQuery(
     comments.queries.getCommentsBySlug,
     { slug },
@@ -28,7 +37,7 @@ export function CommentsList({ slug }: { slug: string }) {
   const postComment = usePostComment();
 
   return (
-    <CommentsProvider>
+    <>
       <CommentComposer
         onPost={(text) => postComment({ parent: null, slug, text })}
       />
@@ -50,6 +59,6 @@ export function CommentsList({ slug }: { slug: string }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </div>
-    </CommentsProvider>
+    </>
   );
 }
