@@ -11,7 +11,7 @@ import {
   HeldAttempt,
   PaperView,
   PromptView,
-  SignalsPage,
+  SignalView,
   SittingView,
   TokenResult,
 } from "@repo/backend/confect/exams/sittings/contract";
@@ -204,15 +204,14 @@ export default GroupSpec.make()
     })
   )
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "signals",
       args: () => ({
         attemptId: Id("examAttempts"),
-        paginationOpts: PaginationOptionsSchema,
         sittingId: Id("examSittings"),
         slug: TenantSlug,
       }),
-      returns: () => SignalsPage,
+      item: () => SignalView,
       error: () => AccessDenied,
     }).middleware(SittingAccess, { action: "sitting.view", arg: "sittingId" })
   )
