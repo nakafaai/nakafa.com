@@ -14,7 +14,7 @@ export class PostWriteError extends Schema.TaggedError<PostWriteError>()(
   }
 ) {}
 
-/** Writes a learner's own posts, and the likes on the posts they may read. */
+/** Writes a learner's own posts, and likes any post. */
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicMutation({

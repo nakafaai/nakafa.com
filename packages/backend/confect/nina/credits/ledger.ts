@@ -7,6 +7,7 @@ import {
   MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
+import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
 import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
@@ -16,9 +17,6 @@ import {
   type NinaCreditHold,
 } from "@repo/backend/confect/nina/credits/schema";
 import { Clock, Effect, Struct } from "effect";
-
-/** Credits one Nina response holds and charges. */
-const responseCredits = 5;
 
 // Admission quota is independent of refundable credits. Five starts may burst;
 // ten per minute permits interactive retries without unbounded hold cycling.
@@ -45,7 +43,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
           })
       )
     );
-    if (state.credits < responseCredits) {
+    if (state.credits < NINA_RESPONSE_CREDITS) {
       return yield* new NinaCreditError({
         code: "INSUFFICIENT_CREDITS",
         message: "Not enough credits to start this response.",
@@ -80,7 +78,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
         })
         .pipe(Effect.orDie);
     }
-    const balance = state.credits - responseCredits;
+    const balance = state.credits - NINA_RESPONSE_CREDITS;
     yield* database
       .table("users")
       .patch(user._id, {
@@ -92,7 +90,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
       .table("creditTransactions")
       .insert({
         userId: user._id,
-        amount: -responseCredits,
+        amount: -NINA_RESPONSE_CREDITS,
         type: "usage",
         balanceAfter: balance,
         metadata: {
@@ -102,7 +100,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
       .pipe(Effect.orDie);
     return {
       userId: user._id,
-      credits: responseCredits,
+      credits: NINA_RESPONSE_CREDITS,
       creditsResetAt: state.creditsResetAt,
       transactionId,
       ...Struct.pick(user, ["planCreditGrantId"]),

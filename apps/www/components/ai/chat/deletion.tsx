@@ -10,10 +10,9 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
+import { deleteOnPress } from "@/components/ai/chat/deletion.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { useChatStore } from "@/components/ai/chat/store.client";
-import { reportClientException } from "@/lib/analytics/client";
-import { requireConvexOnline } from "@/lib/convex/online";
 import { useViewer } from "@/lib/identity/client";
 import { ownChatsHref } from "@/lib/profile/href";
 
@@ -40,45 +39,33 @@ export function ChatDeletion({
   const leave = useChatStore((state) => state.leave);
   const stay = useChatStore((state) => state.stay);
   const convex = useConvex();
-  /**
-   * Leave the current route and delete the owned chat. The press stops the page
-   * reading the chat at once, and a second press while the chat is leaving does
-   * nothing, so the chat is never deleted twice.
-   */
+  /** Leave the current route and delete the owned chat. */
   const handleDelete = () => {
+    // A press while the chat is already leaving would send the delete twice.
     if (!user || leaving) {
       return;
     }
     const { username } = user.appUser;
-    onOpenChange(false);
-    leave();
+    // The page the learner pressed Delete on. If they open another page while the
+    // delete waits for the socket, the redirect after the delete leaves that page alone.
+    const { pathname } = window.location;
     Effect.runFork(
-      requireConvexOnline(convex).pipe(
-        Effect.andThen(
-          Effect.tryPromise(() => deleteChat({ chatId: chat._id })).pipe(
-            Effect.flatMap(Effect.fromResult),
-            Effect.tapError((error) =>
-              reportClientException(error, {
-                source: "components/ai/chat/deletion",
-              })
-            )
-          )
-        ),
-        Effect.tap(() =>
-          Effect.sync(() => router.replace(ownChatsHref(username)))
-        ),
-        Effect.matchEffect({
-          onSuccess: () => Effect.void,
-          onFailure: () =>
-            Effect.sync(() => {
-              stay();
-              toast.error({
-                description: "action-error.description",
-                title: "action-error.title",
-              });
-            }),
-        })
-      )
+      deleteOnPress({
+        chatId: chat._id,
+        close: () => onOpenChange(false),
+        convex,
+        deleteChat,
+        deleted: () => router.replace(ownChatsHref(username)),
+        leave,
+        refused: () => {
+          stay();
+          toast.error({
+            description: "action-error.description",
+            title: "action-error.title",
+          });
+        },
+        stillOnChat: () => window.location.pathname === pathname,
+      })
     );
   };
   return (

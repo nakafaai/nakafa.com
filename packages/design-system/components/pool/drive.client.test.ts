@@ -107,6 +107,16 @@ function finishSettle() {
   return frames;
 }
 
+/** Runs frames until the frame loop sleeps, so a pile that falls in has come to rest. */
+function runUntilAsleep() {
+  let frames = 0;
+  while (looping() && frames < MAX_FRAMES) {
+    runFrame();
+    frames += 1;
+  }
+  return frames;
+}
+
 /** A box of this size, whose measured width and height the test can change. */
 function boxOf(width: number, height: number) {
   const element = document.createElement("div");
@@ -184,20 +194,18 @@ describe("the drive of one pool", () => {
     vi.restoreAllMocks();
   });
 
-  it("shows a fresh pool only once its pile has settled", () => {
+  it("shows a fresh pool at once, with its pile above the box, and lets the pile fall in", () => {
     const element = boxOf(NARROW.width, NARROW.height);
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
-    // The first measure of the box starts the settle of its pile.
+    // The first measure of the box shows it at once: no settle runs before the show.
     observed();
-    let frames = 0;
-    while (element.dataset.shown !== "true" && frames < MAX_FRAMES) {
-      expect(element.dataset.shown, `frame ${frames}`).toBeUndefined();
-      runFrame();
-      frames += 1;
-    }
     expect(element.dataset.shown).toBe("true");
-    expect(frames).toBeGreaterThan(1);
+    // Every ball starts above the box, so the box shows only the fall.
+    expect(
+      Arr.every(membersIn(element), (member) => centerOf(member).y < 0)
+    ).toBe(true);
+    expect(looping()).toBe(true);
     drive.destroy();
   });
 
@@ -206,9 +214,9 @@ describe("the drive of one pool", () => {
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     expect(element.dataset.shown).toBe("true");
-    // Nothing has woken the loop since the pile settled, so no frame is due.
+    // The pile has fallen to rest, so the loop sleeps and no frame is due.
     expect(looping()).toBe(false);
     drive.setVisible(false);
     drive.setVisible(true);
@@ -228,7 +236,7 @@ describe("the drive of one pool", () => {
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     setSize(element, WIDE.width, WIDE.height);
     observed();
     vi.advanceTimersByTime(RESIZE_QUIET);
@@ -249,7 +257,7 @@ describe("the drive of one pool", () => {
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     const place = centerOf(firstMember(element));
     // Pressing empty space takes no grip, so nothing is captured.
     pointerAt(element, "pointerdown", 1, 1);
@@ -274,7 +282,7 @@ describe("the drive of one pool", () => {
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     const still = element.innerHTML;
     vi.advanceTimersByTime(FIRST_HOP);
     expect(looping()).toBe(true);
@@ -288,7 +296,7 @@ describe("the drive of one pool", () => {
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     drive.setVisible(false);
     // Effect draws its random numbers from Math.random, so a fixed draw makes a hop certain.
     vi.spyOn(Math, "random").mockReturnValue(FIXED_DRAW);
@@ -309,7 +317,7 @@ describe("the drive of one pool", () => {
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     setSize(element, WIDE.width, WIDE.height);
     observed();
     vi.advanceTimersByTime(RESIZE_QUIET - 100);
@@ -356,7 +364,7 @@ describe("the drive of one pool", () => {
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     const place = centerOf(firstMember(element));
     pointerAt(element, "pointermove", place.x + 30, place.y);
     expect(looping()).toBe(true);
@@ -369,7 +377,7 @@ describe("the drive of one pool", () => {
     const drive = createDrive(element, false, drawPlain(element));
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     setSize(element, WIDE.width, WIDE.height);
     observed();
     vi.advanceTimersByTime(RESIZE_QUIET);
@@ -388,7 +396,7 @@ describe("the drive of one pool", () => {
     );
     drive.setVisible(true);
     observed();
-    finishSettle();
+    runUntilAsleep();
     setSize(element, WIDE.width, WIDE.height);
     observed();
     vi.advanceTimersByTime(RESIZE_QUIET);

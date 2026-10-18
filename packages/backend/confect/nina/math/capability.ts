@@ -1,4 +1,4 @@
-import { classify } from "@repo/backend/confect/gateway/failure";
+import { classify } from "@repo/backend/confect/gateway/classify";
 import {
   defineCapability,
   failed,

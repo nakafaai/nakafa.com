@@ -1,17 +1,14 @@
 import { saveMessage, serializeMessage } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { MutationCtx } from "@repo/backend/confect/_generated/services";
 import {
   identityOf,
   openMessage,
   sealMessage,
 } from "@repo/backend/confect/nina/sealed";
-import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
+import type { LearnerKeys } from "@repo/backend/confect/vault/keys";
 import type { ModelMessage } from "ai";
 import { Effect, Schema, Struct } from "effect";
-
-type LearnerId = Docs["users"]["_id"];
 
 /** The component could not store a learner's message. Nothing of the message is kept. */
 class SealedWriteError extends Schema.TaggedError<SealedWriteError>()(
@@ -44,18 +41,19 @@ const nextOrder = Effect.fn("nina.sealed.save.order")(function* (
  * Saves a learner's message sealed for the learner who owns its thread, as the first
  * step of a new order, and returns the stored message opened (ADR 0024). The content
  * is sealed before the component stores it, so no plain copy of the message rests in
- * the component. The file ids stay in the clear, as the row keeps them.
+ * the component. The file ids stay in the clear, as the row keeps them. The caller
+ * passes the learner's keys, so one read serves the whole admission.
  */
 export const savePrompt = Effect.fn("nina.sealed.save.prompt")(function* (
   ctx: MutationCtx,
-  owner: LearnerId,
+  keys: LearnerKeys,
   prompt: {
     readonly fileIds: readonly string[];
     readonly message: ModelMessage;
     readonly threadId: string;
   }
 ) {
-  const keys = yield* ensureLearnerKeys(owner).pipe(Effect.orDie);
+  const owner = keys.userId;
   const { message } = yield* Effect.tryPromise({
     try: () => serializeMessage(ctx, components.nina, prompt.message),
     catch: () => new SealedWriteError(),

@@ -1,5 +1,6 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { BLUE_MARBLE_EARTH_TEXTURE_ASSET } from "@repo/design-system/components/contents/biology/assets";
@@ -120,8 +121,13 @@ function GreenhouseScene({
 }) {
   const earthRef = useRef<Group>(null);
   const heatRef = useRef<Group>(null);
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
   useFrame((_, delta) => {
+    if (calm) {
+      return;
+    }
+
     if (earthRef.current) {
       earthRef.current.rotation.y += delta * 0.12;
     }

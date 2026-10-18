@@ -10,19 +10,23 @@ import {
   MemoryEnds,
   MemoryOrigin,
 } from "@/components/user/settings/memory/facts";
+import { memoryRowId } from "@/components/user/settings/memory/focus";
 import {
   isPending,
   type Memory,
   memoryName,
 } from "@/components/user/settings/memory/list";
+import { warmMemoryEditor } from "@/components/user/settings/memory/module";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 
 /**
  * The content of one memory in the list: its title, or its words when it has
  * none, and its facts, each on one line. A press opens it in the editor, where
- * the whole text is. The actions show while the pointer or the focus is on the
- * row, and always on a touch screen. The row fills the item the window gives
- * it, which has a fixed height, so every row is as tall as the window expects.
+ * the whole text is. A focus, a pointer over it or a press on its name or on its
+ * edit button starts loading the editor's code. The actions show while the
+ * pointer or the focus is on the row, and always on a touch screen. The row
+ * fills the item the window gives it, which has a fixed height, so every row is
+ * as tall as the window expects.
  *
  * The list can hold thousands of memories, so a row renders again only when
  * its own memory or whether it is the one in the editor changes: it subscribes
@@ -75,7 +79,11 @@ export const MemoryRow = memo(
         <button
           className="flex h-full min-w-0 flex-1 cursor-pointer flex-col justify-center gap-1 ps-(--card-spacing) text-start outline-none disabled:cursor-default"
           disabled={waiting}
+          id={memoryRowId(memory.id)}
           onClick={() => openEdit(memory)}
+          onFocus={warmMemoryEditor}
+          onPointerDown={warmMemoryEditor}
+          onPointerEnter={warmMemoryEditor}
           type="button"
         >
           {/* The name follows the direction of its own words, and a name too
@@ -97,6 +105,9 @@ export const MemoryRow = memo(
           <Button
             disabled={waiting}
             onClick={() => openEdit(memory)}
+            onFocus={warmMemoryEditor}
+            onPointerDown={warmMemoryEditor}
+            onPointerEnter={warmMemoryEditor}
             size="icon-sm"
             variant="ghost"
           >

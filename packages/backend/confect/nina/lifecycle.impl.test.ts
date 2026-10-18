@@ -25,7 +25,6 @@ vi.mock("@repo/backend/confect/nina/settlement", async (load) => {
 const NOW = Date.UTC(2026, 8, 27, 12);
 const claim = Ref.getFunctionReference(refs.internal.nina.lifecycle.claim);
 const recover = Ref.getFunctionReference(refs.internal.nina.lifecycle.recover);
-const halted = Ref.getFunctionReference(refs.internal.nina.lifecycle.halted);
 const cancel = Ref.getFunctionReference(refs.public.nina.lifecycle.cancel);
 const record = Ref.getFunctionReference(refs.internal.nina.usage.record);
 
@@ -307,8 +306,6 @@ describe("native Nina settlement", () => {
         })
       )
     ).toEqual([expect.objectContaining({ streamId, status: "aborted" })]);
-    expect(await f.t.query(halted, { turnId: f.turnId })).toBe(true);
-
     // The run exits once its stream has stopped, and only then does it settle.
     await f.t.mutation(recover, { turnId: f.turnId, failure: "interrupted" });
     const settled = await f.inspect();

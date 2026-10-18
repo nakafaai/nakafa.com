@@ -80,7 +80,7 @@ function joinSegments(segments: readonly string[]) {
  * path from the file's folder.
  * A package specifier names no repository module.
  */
-function resolveSpecifier(file: string, specifier: string) {
+export function resolveSpecifier(file: string, specifier: string) {
   if (specifier.startsWith("@/")) {
     return Result.succeed(
       joinSegments([...Arr.take(file.split("/"), 2), specifier.slice(2)])

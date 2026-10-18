@@ -1,7 +1,11 @@
 "use client";
 
 import { Sad02Icon } from "@hugeicons/core-free-icons";
-import { useIntersection, useMergedRef } from "@mantine/hooks";
+import {
+  useIntersection,
+  useMergedRef,
+  useReducedMotion,
+} from "@mantine/hooks";
 import { AdaptiveDpr } from "@react-three/drei";
 import {
   Canvas,
@@ -136,6 +140,10 @@ function subscribeToInert(onChange: () => void) {
  * full screen, stops the same way. Scene labels draw in a DOM overlay over the
  * same frame, so they need no React root of their own.
  *
+ * With reduced motion every canvas renders on demand, whatever loop it asks
+ * for: a scene is drawn once, and again only when the reader moves the camera.
+ * A scene that animates by its own clock keeps its still pose in that case.
+ *
  * @param children - React Three.js children to render
  * @param frameloop - Frame update strategy ("always" | "demand")
  * @param props - Additional CanvasProps passed to @react-three/fiber Canvas
@@ -158,8 +166,10 @@ function ThreeCanvasComponent({
   });
   const [frame, setFrame] = useState<HTMLDivElement | null>(null);
   const frameRef = useMergedRef(ref, setFrame);
+  const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
   // A canvas renders until the observer first places it.
   const nearViewport = entry?.isIntersecting ?? true;
+  const loop = calm ? "demand" : frameloop;
   const behindInert = useSyncExternalStore(
     subscribeToInert,
     () => Boolean(frame?.closest("[inert]")),
@@ -211,7 +221,7 @@ function ThreeCanvasComponent({
                 />
               </div>
             }
-            frameloop={nearViewport && !behindInert ? frameloop : "never"}
+            frameloop={nearViewport && !behindInert ? loop : "never"}
             gl={{
               antialias: true,
               powerPreference,

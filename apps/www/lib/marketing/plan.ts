@@ -1,7 +1,4 @@
-/**
- * Plan feature message keys rendered inside each pricing plan, in display
- * order. The first pro key leads the card; the remaining keys sit below a rule.
- */
+/** Free plan feature message keys, in display order. */
 export const freePlanFeatures = [
   "free-feature-1",
   "free-feature-2",
@@ -10,7 +7,7 @@ export const freePlanFeatures = [
   "free-feature-5",
 ] as const;
 
-/** Pro feature message keys; the first key is the leading card row. */
+/** Pro feature message keys, in display order. */
 export const proPlanFeatures = [
   "pro-feature-1",
   "pro-feature-2",

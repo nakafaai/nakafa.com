@@ -133,31 +133,6 @@ describe("The Nina response run when generation fails", () => {
         const state = yield* Effect.promise(f.inspect);
         expect(state.turn?.state).toMatchObject({ status: "failed", reason });
         expect(state.user?.credits).toBe(10);
-        // `list` is read for the turn metadata that tabs opened before `page`
-        // still use. `page` returns no metadata, so this check goes with `list`.
-        const page = yield* Effect.promise(() =>
-          f.owner.query(
-            Ref.getFunctionReference(refs.public.nina.messages.list),
-            {
-              chatId: f.chatId,
-              threadId: f.threadId,
-              paginationOpts: { cursor: null, numItems: 20 },
-            }
-          )
-        ).pipe(
-          Effect.flatMap((value) =>
-            Ref.decodeReturns(refs.public.nina.messages.list, value)
-          )
-        );
-        expect(
-          Arr.some(
-            page.page,
-            (message) =>
-              message.metadata?.state.status === "failed" &&
-              message.metadata.state.reason === reason
-          )
-        ).toBe(true);
-        expect(encodeJsonText(page)).not.toMatch(PRIVATE_DIAGNOSTIC);
         // The turns that ended tell the same failure, and no private diagnostic.
         const turns = yield* Effect.promise(() =>
           f.owner.query(
@@ -276,6 +251,10 @@ describe("The Nina response run and the memory tool", () => {
       await f.owner.mutation(pause, { paused: true });
     }
     await f.t.action(run, { turnId: f.turnId });
+    // Settlement schedules the turn's follow-up work (title, suggestions, memory and
+    // seal) at zero delay. The test runs it here, so none of it is still pending when
+    // the next test advances the clock and finds it.
+    await f.t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
     expect(model.doStreamCalls).toHaveLength(1);
     return Arr.map(model.doStreamCalls[0]?.tools ?? [], (tool) => tool.name);
   }

@@ -44,6 +44,9 @@ export const BIOLOGY_DEFAULT_VIEW = {
   cameraTarget: [0, 0.1, 0],
 } satisfies Record<string, BiologyScenePoint>;
 
+/** The item a biology lab opens on, which its static card draws until the reader picks another. */
+export const BIOLOGY_DEFAULT_ITEM_INDEX = 0;
+
 export const BIOLOGY_RING_POINT_COUNT = 12;
 export const BIOLOGY_SMALL_RING_POINT_COUNT = 8;
 

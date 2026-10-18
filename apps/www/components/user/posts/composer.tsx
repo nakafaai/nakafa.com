@@ -4,7 +4,6 @@ import { useMutation } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { readPostText } from "@repo/backend/confect/posts/schema";
-import { photoOf } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -18,7 +17,7 @@ import { usePostDraft } from "@/components/user/posts/provider";
 import { remainingToShow } from "@/components/user/posts/remaining";
 import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
-import type { CurrentUser } from "@/lib/identity/client";
+import type { PublicProfile } from "@/lib/profile/public";
 
 /**
  * Writes a new post at the top of the owner's posts, in the first row of the
@@ -29,11 +28,11 @@ import type { CurrentUser } from "@/lib/identity/client";
  * list.
  */
 export function PostComposer({
-  appUser,
   disabled,
+  profile,
 }: {
-  appUser: CurrentUser["appUser"];
   disabled: boolean;
+  profile: PublicProfile;
 }) {
   const t = useTranslations("Posts");
   const text = usePostDraft((draft) => draft.text);
@@ -98,7 +97,7 @@ export function PostComposer({
 
   return (
     <FeedForm onSubmit={handleSubmit}>
-      <FeedAvatar mascot={appUser.mascot} photo={photoOf(appUser)} />
+      <FeedAvatar mascot={profile.mascot} photo={profile.image} />
       <InputGroupTextarea
         aria-label={t("placeholder")}
         className="min-h-10 min-w-0 flex-1 px-0 py-2"

@@ -1,94 +1,39 @@
-import { ArrowUpRight01Icon, Globe02Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { CurriculaArt } from "@/components/marketing/about/curricula/art";
-import { CountryFlagIcon } from "@/components/shared/flag";
+import { CurriculumList } from "@/components/marketing/about/curricula/list.client";
+import { MarketingSection } from "@/components/marketing/shared/section";
 import {
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,
 } from "@/lib/curriculum/model";
-import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
-/** Renders a country flag when available and a global curriculum mark otherwise. */
-function CurriculumCountryMark({
-  countryCode,
-}: {
-  countryCode?: string | undefined;
-}) {
-  return (
-    <CountryFlagIcon
-      className="h-auto w-6 rounded-xs ring-1 ring-foreground/10"
-      countryCode={countryCode}
-      fallback={<HugeIcons className="size-5 shrink-0" icon={Globe02Icon} />}
-    />
-  );
-}
-
-/** Lets learners enter Nakafa through the curriculum they already use. */
+/**
+ * The curricula part: a heading, then Nina pointing at the curricula of the
+ * catalog, which the list lights up one at a time. The names come from the
+ * catalog, so the page never names a class. On a phone, where the list stands
+ * under the heading on its own, Nina is left out.
+ */
 export async function Curricula({ locale }: { locale: Locale }) {
   const [t, catalog] = await Promise.all([
-    getTranslations({ locale, namespace: "CurriculaSection" }),
+    getTranslations({ locale, namespace: "Landing" }),
     readRuntimeCurriculumCatalog(locale),
   ]);
   const curricula = readRuntimeCurriculumOptions(catalog, locale);
 
   return (
-    <section className="relative isolate z-0 bg-background" id="curricula">
-      <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="px-6 py-24 sm:py-28 lg:px-10 lg:py-32">
-          <h2 className="max-w-4xl text-balance text-3xl tracking-tight sm:text-4xl">
-            {t.rich("headline", {
-              mark: (chunks) => <mark>{chunks}</mark>,
-            })}
-          </h2>
-          <p className="mt-6 max-w-2xl text-pretty text-foreground/70 text-lg">
-            {t("description")}
-          </p>
-          <Button
-            className="mt-8"
-            nativeButton={false}
-            render={
-              <NavigationLink href={getCurriculumIndexHref(locale)}>
-                {t("cta")}
-                <HugeIcons icon={ArrowUpRight01Icon} />
-              </NavigationLink>
-            }
-          />
-        </div>
-
-        <nav
-          aria-label={t("navigation")}
-          className="grid grid-cols-2 border-t lg:grid-cols-4"
-        >
-          {Arr.map(curricula, (curriculum, index) => (
-            <NavigationLink
-              className={cn(
-                "group relative flex min-h-40 flex-col items-start justify-between bg-background p-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-44 sm:p-6 lg:min-h-48 lg:p-8",
-                index % 2 === 1 && "border-l",
-                index >= 2 && "border-t",
-                index % 4 === 0 ? "lg:border-l-0" : "lg:border-l",
-                index >= 4 ? "lg:border-t" : "lg:border-t-0"
-              )}
-              href={curriculum.href}
-              key={curriculum.programKey}
-            >
-              <CurriculumCountryMark countryCode={curriculum.countryCode} />
-              <span className="max-w-52 text-balance text-lg tracking-tight sm:text-xl">
-                {curriculum.title}
-              </span>
-            </NavigationLink>
-          ))}
-        </nav>
-
-        <div className="relative min-h-80 overflow-hidden border-t sm:min-h-96 lg:min-h-112">
-          <CurriculaArt />
+    <MarketingSection id="curricula">
+      <div className="mx-auto grid w-full max-w-5xl justify-items-center gap-12">
+        <h2 className="max-w-2xl text-balance text-center text-3xl tracking-tight sm:text-4xl">
+          {t("curricula-title")}
+        </h2>
+        <div className="grid items-center gap-16 md:grid-cols-[auto_minmax(0,1fr)]">
+          <div className="hidden md:block">
+            <Nina act="pointing" label="" size={200} whole />
+          </div>
+          <CurriculumList curricula={curricula} label={t("curricula-list")} />
         </div>
       </div>
-    </section>
+    </MarketingSection>
   );
 }

@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
+import users from "@repo/backend/confect/_generated/refs/users";
 import { Effect, Layer } from "effect";
 import { clientEnv } from "@/env.client";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
@@ -209,39 +210,82 @@ describe("profile address refusals", () => {
     mocks.token.mockReset();
   });
 
-  it.effect.each(["/en/@nabilfatih", "/de/@NabilFatih/chat"])(
-    "lets the account that holds the username open %s",
+  it.effect.each(["/en/@nabilfatih", "/de/@NabilFatih/comments"])(
+    "lets anyone open %s while its username is held",
     (pathname) =>
       Effect.gen(function* () {
-        signedIn();
         mocks.query.mockReturnValue(
-          accountOf({ _id: ID, username: "nabilfatih" })
+          Effect.succeed({ _id: ID, username: "nabilfatih" })
         );
 
         expect(yield* readProfileRefusal(pathname, headers)).toBeNull();
-        expect(mocks.layerOptions).toHaveBeenCalledWith({ auth: TOKEN });
+        expect(mocks.query).toHaveBeenCalledWith(
+          users.queries.getProfileByUsername,
+          { username: "nabilfatih" }
+        );
+        expect(mocks.token).not.toHaveBeenCalled();
       })
   );
 
-  it.effect("refuses a visitor in the language of the address", () =>
+  it.effect("lets the owner open the Chat tab of their profile", () =>
     Effect.gen(function* () {
-      mocks.token.mockReturnValue(Effect.void);
+      signedIn();
+      mocks.query
+        .mockReturnValueOnce(
+          Effect.succeed({ _id: ID, username: "nabilfatih" })
+        )
+        .mockReturnValueOnce(accountOf({ _id: ID, username: "nabilfatih" }));
 
-      expect(yield* readProfileRefusal("/id/@nabilfatih", headers)).toBe("id");
-      expect(mocks.query).not.toHaveBeenCalled();
+      expect(
+        yield* readProfileRefusal("/de/@NabilFatih/chat", headers)
+      ).toBeNull();
+      expect(mocks.query.mock.calls[1]?.[0]).toBe(auth.queries.getCurrentUser);
+      expect(mocks.layerOptions).toHaveBeenCalledWith({ auth: TOKEN });
     })
   );
 
-  it.effect("refuses another account and a session that names none", () =>
-    Effect.gen(function* () {
-      signedIn();
-      mocks.query.mockReturnValue(
-        accountOf({ _id: OTHER_ID, username: "someoneelse" })
-      );
-      expect(yield* readProfileRefusal("/en/@nabilfatih", headers)).toBe("en");
-      mocks.query.mockReturnValue(Effect.succeed(null));
-      expect(yield* readProfileRefusal("/en/@nabilfatih", headers)).toBe("en");
-    })
+  it.effect(
+    "refuses the Chat tab of a held profile to a visitor and to another account",
+    () =>
+      Effect.gen(function* () {
+        mocks.token.mockReturnValue(Effect.void);
+        mocks.query.mockReturnValue(
+          Effect.succeed({ _id: ID, username: "nabilfatih" })
+        );
+        expect(yield* readProfileRefusal("/id/@nabilfatih/chat", headers)).toBe(
+          "id"
+        );
+        expect(mocks.query).toHaveBeenCalledOnce();
+
+        mocks.query.mockReset();
+        signedIn();
+        mocks.query
+          .mockReturnValueOnce(
+            Effect.succeed({ _id: ID, username: "nabilfatih" })
+          )
+          .mockReturnValueOnce(
+            accountOf({ _id: OTHER_ID, username: "someoneelse" })
+          );
+        expect(yield* readProfileRefusal("/en/@nabilfatih/chat", headers)).toBe(
+          "en"
+        );
+      })
+  );
+
+  it.effect(
+    "refuses an address whose username nobody holds, in the language of the address",
+    () =>
+      Effect.gen(function* () {
+        mocks.query.mockReturnValue(Effect.succeed(null));
+
+        expect(yield* readProfileRefusal("/id/@nabilfatih", headers)).toBe(
+          "id"
+        );
+        expect(yield* readProfileRefusal("/en/@NabilFatih/chat", headers)).toBe(
+          "en"
+        );
+        expect(mocks.token).not.toHaveBeenCalled();
+      })
   );
 
   it.effect.each([
@@ -253,7 +297,7 @@ describe("profile address refusals", () => {
   ])("leaves %s, which is no profile address, to the other rules", (pathname) =>
     Effect.gen(function* () {
       expect(yield* readProfileRefusal(pathname, headers)).toBeNull();
-      expect(mocks.token).not.toHaveBeenCalled();
+      expect(mocks.query).not.toHaveBeenCalled();
     })
   );
 });

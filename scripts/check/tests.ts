@@ -35,6 +35,7 @@ import { inspectGatewaySource } from "#scripts/check/gateway";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectReactSource, inspectStateSource } from "#scripts/check/react";
 import { inspectRefsSource } from "#scripts/check/refs";
+import { inspectSdkReach } from "#scripts/check/sdk";
 import { inspectSealedSource } from "#scripts/check/sealed";
 import { inspectCohortPins, inspectSharedFiles } from "#scripts/check/shared";
 import { inspectModuleSize } from "#scripts/check/size";
@@ -188,6 +189,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         declarationDirectories(configs)
       )
     );
+    const sdkViolations = yield* inspectSdkReach(root, workspaces);
     const reports = Arr.filter(
       [
         fileReport(
@@ -204,6 +206,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         ),
         lineReport(runnerViolations),
         lineReport(sourceViolations),
+        lineReport(sdkViolations),
         lineReport(
           inspectCompilerConfigs(
             sharedPackage,

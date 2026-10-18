@@ -10,4 +10,5 @@ export default {
 ["getUserById"]: RegisteredConvexFunction.register({ ...definitions["getUserById"], handler: forward(definitions["getUserById"].handler) }),
 ["getUserByAuthId"]: RegisteredConvexFunction.register({ ...definitions["getUserByAuthId"], handler: forward(definitions["getUserByAuthId"].handler) }),
 ["checkUsername"]: RegisteredConvexFunction.register({ ...definitions["checkUsername"], handler: forward(definitions["checkUsername"].handler) }),
+["getProfileByUsername"]: RegisteredConvexFunction.register({ ...definitions["getProfileByUsername"], handler: forward(definitions["getProfileByUsername"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../users/queries.spec")["default"]>;
