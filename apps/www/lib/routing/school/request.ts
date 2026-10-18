@@ -6,8 +6,9 @@ import { Array as Arr, Option } from "effect";
 import { NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
-import { plainTextAnswer } from "@/lib/routing/answer";
+import { rewriteToNotFoundPage } from "@/lib/routing/answer";
 import { isLocaleBypassPath } from "@/lib/routing/bypass";
+import { readMissingLocale } from "@/lib/routing/missing";
 import {
   isRefusedSchoolHost,
   readRequestHostname,
@@ -118,7 +119,8 @@ export function readServedSchool(request: NextRequest) {
  * Answers a request that belongs to the school hosts before the public routes
  * see it, or returns nothing so that the public routes answer it. A school host
  * gets its school tree, a label that names no school under the production
- * domain goes to the main site, and the school tree answers 404 everywhere else.
+ * domain goes to the main site, and the school tree answers the not-found page
+ * (404) everywhere else.
  * The host is the one in the `host` header (see `readRequestHostname`). The root
  * files of the matcher never reach this function, so they are the same on every
  * host.
@@ -134,7 +136,12 @@ export function routeSchoolRequest(request: NextRequest) {
     return redirectToMainSite(request);
   }
   if (isSchoolTreePath(pathname)) {
-    return plainTextAnswer(404, "Not Found\n");
+    return rewriteToNotFoundPage(
+      request,
+      readMissingLocale(request),
+      SCHOOL_VISITOR_VARY_FIELDS,
+      404
+    );
   }
   return null;
 }

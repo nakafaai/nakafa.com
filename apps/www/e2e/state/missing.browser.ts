@@ -273,6 +273,53 @@ test.describe("the state of a missing page in German at the narrowest width", ()
   });
 });
 
+/**
+ * Opens an address as a visitor types it, with no locale added, so the proxy
+ * answers it and negotiates the language of the page that it rewrites to.
+ */
+const openAddress = Effect.fn("NakafaE2E.openAddress")(function* (
+  page: Page,
+  address: string
+) {
+  yield* seedAnalyticsConsent(page, "denied");
+  yield* holdWebFont(page);
+  return yield* Effect.promise(() =>
+    page.goto(address, { waitUntil: "domcontentloaded" })
+  );
+});
+
+/**
+ * The addresses that the proxy answers before any page renders: a school tree
+ * address on the main host and an unsupported system resource answer 404, and a
+ * removed route answers 410. Each answers the app's not-found page with that
+ * status. On a local production build a rewrite may draw the framework's own page
+ * instead, as `STANDALONE_ADDRESS` explains, so these checks depend on the
+ * rewrite that Vercel serves.
+ */
+const PROXY_ANSWERS = [
+  { address: "/school", status: 404 },
+  { address: "/school/anything", status: 404 },
+  { address: "/en/events", status: 410 },
+  { address: "/missing-machine-document.xml", status: 404 },
+] as const;
+
+for (const { address, status } of PROXY_ANSWERS) {
+  test(`${address} answers ${status} with the not-found page`, async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.gen(function* () {
+          const response = yield* openAddress(page, address);
+          yield* Effect.sync(() => expect(response?.status()).toBe(status));
+          yield* expectMissingState(page, "en");
+        })
+      )
+    );
+  });
+}
+
 test.describe("the things beside Nina on the state of a missing page", () => {
   test.use({
     hasTouch: touchViewport.hasTouch,

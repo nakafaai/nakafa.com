@@ -1,7 +1,25 @@
+import { expect } from "@effect/vitest";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import { Array as Arr, Effect } from "effect";
 import type { NextRequest } from "next/server";
 import { LOCALE_BYPASS_PATHS } from "@/lib/routing/bypass";
+/** The app's not-found page in one locale, answered with its status and Vary fields. */
+export function expectNotFoundPage(
+  response: Response,
+  locale: string,
+  status: 404 | 410
+) {
+  expect(response.status).toBe(status);
+  expect(response.headers.get("x-middleware-rewrite")).toBe(
+    `http://localhost:3000/_not-found/${locale}`
+  );
+  expect(response.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
+    locale
+  );
+  expect(response.headers.get("x-robots-tag")).toBe("noindex");
+  expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
+}
+
 /** Public redirect examples cover renderer URLs, locale spelling and suffixes. */
 export const redirectCases: [
   string,
