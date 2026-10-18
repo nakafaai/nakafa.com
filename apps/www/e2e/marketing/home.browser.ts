@@ -34,7 +34,6 @@ const HOME_PARTS = [
   LESSON_SECTION_ID,
   "tryout",
   "nina",
-  "scene",
   "memory",
   "privacy",
   "curricula",
