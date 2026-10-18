@@ -144,8 +144,7 @@ export const routeSchoolPage = Effect.fn("www.routing.school.page")(function* (
     return rewriteToNotFoundPage(
       request,
       refusal.value,
-      SCHOOL_VISITOR_VARY_FIELDS,
-      404
+      SCHOOL_VISITOR_VARY_FIELDS
     );
   }
   return routeSchoolRequest(request);

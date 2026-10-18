@@ -7,10 +7,9 @@ import { LOCALE_BYPASS_PATHS } from "@/lib/routing/bypass";
 export function expectNotFoundPage(
   response: Response,
   locale: string,
-  status: 404 | 410,
   vary = "Accept, Accept-Encoding, RSC"
 ) {
-  expect(response.status).toBe(status);
+  expect(response.status).toBe(404);
   expect(response.headers.get("x-middleware-rewrite")).toBe(
     `http://localhost:3000/_not-found/${locale}`
   );

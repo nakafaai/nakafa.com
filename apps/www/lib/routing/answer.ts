@@ -10,17 +10,17 @@ export const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
 const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
 
 /**
- * Rewrites a request to the app's not-found page, with the status of the answer
- * (404 for a missing page, 410 for a retired one), the locale of the page, and a
- * noindex header. The Vary fields name the request headers that the answer
+ * Rewrites a request to the app's not-found page, with status 404, the locale of
+ * the page, and a noindex header. A retired page answers 404 too: Google treats
+ * every 4xx but 429 the same way, and a status set on a rewrite does not survive
+ * the page it renders. The Vary fields name the request headers that the answer
  * depends on, and they merge with the ones the response has. The rewrite names
  * the request URL (see `readVisitorUrl`).
  */
 export function rewriteToNotFoundPage(
   request: NextRequest,
   locale: AppLocaleCode,
-  vary: readonly string[],
-  status: 404 | 410
+  vary: readonly string[]
 ) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale);
@@ -34,7 +34,7 @@ export function rewriteToNotFoundPage(
       request: {
         headers: requestHeaders,
       },
-      status,
+      status: 404,
     }
   );
   response.headers.set(

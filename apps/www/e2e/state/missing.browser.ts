@@ -289,28 +289,28 @@ const openAddress = Effect.fn("NakafaE2E.openAddress")(function* (
 });
 
 /**
- * The addresses that the proxy answers before any page renders: a school tree
- * address on the main host and an unsupported system resource answer 404, and a
- * removed route answers 410. The proxy rewrites each to the app's not-found page,
+ * The addresses that the proxy answers with 404 before any page renders: a school
+ * tree address on the main host, a removed route, and an unsupported system
+ * resource. The proxy rewrites each to the app's not-found page,
  * which `proxy.test.ts` checks; a local production build draws the framework's
  * page for a rewrite, as `STANDALONE_ADDRESS` explains, so here only the status
  * is checked, and the tests above check the page that the rewrite reaches.
  */
 const PROXY_ANSWERS = [
-  { address: "/school", status: 404 },
-  { address: "/school/anything", status: 404 },
-  { address: "/en/events", status: 410 },
-  { address: "/missing-machine-document.xml", status: 404 },
-] as const;
+  "/school",
+  "/school/anything",
+  "/en/events",
+  "/missing-machine-document.xml",
+];
 
-for (const { address, status } of PROXY_ANSWERS) {
-  test(`${address} answers ${status}`, async ({ page }) => {
+for (const address of PROXY_ANSWERS) {
+  test(`${address} answers 404`, async ({ page }) => {
     await Effect.runPromise(
       withObservedPageErrors(
         page,
         Effect.gen(function* () {
           const response = yield* openAddress(page, address);
-          yield* Effect.sync(() => expect(response?.status()).toBe(status));
+          yield* Effect.sync(() => expect(response?.status()).toBe(404));
         })
       )
     );

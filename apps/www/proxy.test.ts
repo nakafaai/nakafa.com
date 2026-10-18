@@ -49,7 +49,7 @@ function expectNoLocaleProxy() {
   expect(mockLocaleRouting.previewMiddleware).not.toHaveBeenCalled();
 }
 function expectHardNotFound(response: Response, locale: string) {
-  expectNotFoundPage(response, locale, 404);
+  expectNotFoundPage(response, locale);
   expectNoLocaleProxy();
 }
 /**
@@ -273,7 +273,7 @@ describe("proxy", () => {
         })
       );
       const response = await requestProxy(path);
-      expectNotFoundPage(response, "de", 404, NEGOTIATED_VARY);
+      expectNotFoundPage(response, "de", NEGOTIATED_VARY);
       expect(runtimeMocks.readActive).not.toHaveBeenCalled();
     }
   );
@@ -351,24 +351,24 @@ describe("proxy", () => {
     ["/api/chat/finance", "en"],
     ["/id/events", "id"],
   ])(
-    "answers the removed route %s with the not-found page in %s and 410",
+    "answers the removed route %s with the not-found page in %s",
     async (path, locale) => {
       const response = await requestProxy(path);
-      expectNotFoundPage(response, locale, 410, NEGOTIATED_VARY);
+      expectNotFoundPage(response, locale, NEGOTIATED_VARY);
       expect(runtimeMocks.readActive).not.toHaveBeenCalled();
     }
   );
   it("answers a retired SNBT product URL with the not-found page once its retired year has no live track", async () => {
     runtimeMocks.readTryout.mockReturnValueOnce(Effect.succeed(snbtExam));
     const response = await requestProxy("/en/try-out/snbt/2026-set-1");
-    expectNotFoundPage(response, "en", 410, NEGOTIATED_VARY);
+    expectNotFoundPage(response, "en", NEGOTIATED_VARY);
     expectNoLocaleProxy();
   });
   it.each(["/en/try-out/snbt/2028-set-1", "/de/try-out/snbt/2099-set-1"])(
     "sends the product URL %s of a year that is not retired to the try-out rules",
     async (path) => {
       const response = await requestProxy(path);
-      expect(response.status).not.toBe(410);
+      expect(response.headers.get("x-middleware-rewrite")).toBeNull();
       expectMigrationAsked(path);
     }
   );

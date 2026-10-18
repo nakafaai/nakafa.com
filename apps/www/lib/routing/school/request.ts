@@ -139,8 +139,7 @@ export function routeSchoolRequest(request: NextRequest) {
     return rewriteToNotFoundPage(
       request,
       readMissingLocale(request),
-      SCHOOL_VISITOR_VARY_FIELDS,
-      404
+      SCHOOL_VISITOR_VARY_FIELDS
     );
   }
   return null;

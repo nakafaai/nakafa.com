@@ -88,12 +88,10 @@ export async function proxy(request: NextRequest) {
     })
   );
   if (isRetired) {
-    return rewriteToNotFoundPage(
-      request,
-      readMissingLocale(request),
-      [...LLMS_REPRESENTATION_VARY_FIELDS, ...MISSING_LOCALE_VARY_FIELDS],
-      410
-    );
+    return rewriteToNotFoundPage(request, readMissingLocale(request), [
+      ...LLMS_REPRESENTATION_VARY_FIELDS,
+      ...MISSING_LOCALE_VARY_FIELDS,
+    ]);
   }
 
   if (isLocaleBypassPath(pathname)) {
@@ -101,12 +99,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isUnsupportedSystemPath(pathname)) {
-    return rewriteToNotFoundPage(
-      request,
-      readMissingLocale(request),
-      [...LLMS_REPRESENTATION_VARY_FIELDS, ...MISSING_LOCALE_VARY_FIELDS],
-      404
-    );
+    return rewriteToNotFoundPage(request, readMissingLocale(request), [
+      ...LLMS_REPRESENTATION_VARY_FIELDS,
+      ...MISSING_LOCALE_VARY_FIELDS,
+    ]);
   }
 
   const previewConfigured = hasPreviewConfig();
@@ -131,8 +127,7 @@ export async function proxy(request: NextRequest) {
       return rewriteToNotFoundPage(
         request,
         candidateLocale,
-        LLMS_REPRESENTATION_VARY_FIELDS,
-        404
+        LLMS_REPRESENTATION_VARY_FIELDS
       );
     }
   }
@@ -146,8 +141,7 @@ export async function proxy(request: NextRequest) {
     return rewriteToNotFoundPage(
       request,
       routing.defaultLocale,
-      LLMS_REPRESENTATION_VARY_FIELDS,
-      404
+      LLMS_REPRESENTATION_VARY_FIELDS
     );
   }
 
@@ -187,8 +181,7 @@ export async function proxy(request: NextRequest) {
     return rewriteToNotFoundPage(
       request,
       profileRefusal,
-      LLMS_REPRESENTATION_VARY_FIELDS,
-      404
+      LLMS_REPRESENTATION_VARY_FIELDS
     );
   }
 
@@ -208,8 +201,7 @@ export async function proxy(request: NextRequest) {
     return rewriteToNotFoundPage(
       request,
       routeDecision.locale,
-      LLMS_REPRESENTATION_VARY_FIELDS,
-      404
+      LLMS_REPRESENTATION_VARY_FIELDS
     );
   }
 
@@ -311,8 +303,8 @@ function mergeRepresentationVary(response: Response) {
  *
  * What stays in, and what the proxy does with it:
  *
- * - Documents, Flight navigations and prefetches: it may redirect, rewrite,
- *   answer 410 for a removed route, or reject a locale.
+ * - Documents, Flight navigations and prefetches: it may redirect, rewrite, answer
+ *   the not-found page for a removed route, or reject a locale.
  * - Any other root file, such as `/missing.xml`, and any other path under
  *   `/.well-known`: a 404 with the not-found page, before the path can reach a
  *   localized route.
