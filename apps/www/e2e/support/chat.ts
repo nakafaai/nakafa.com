@@ -5,15 +5,15 @@ import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import { trackChanges } from "@/e2e/support/changes";
 import {
-  type DeclineLocale,
   declineUsageData,
+  type PromptLocale,
   seedAnalyticsConsent,
 } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
 /** The new chat page of a language of the site. */
-export const chatPathOf = (locale: DeclineLocale) => `/${locale}/chat`;
+export const chatPathOf = (locale: PromptLocale) => `/${locale}/chat`;
 /** The new chat page of the English site. */
 export const CHAT_PATH = chatPathOf("en");
 /** A lesson, where Nina's sheet opens beside the page. */
@@ -241,7 +241,7 @@ const learnerOf = Effect.fn("NakafaE2E.learnerOf")(function* (
 export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   page: Page,
   baseURL: string,
-  locale: DeclineLocale = "en"
+  locale: PromptLocale = "en"
 ) {
   const changes = yield* trackChanges(page, [LIST_QUERY]);
   yield* seedAnalyticsConsent(page, "denied");

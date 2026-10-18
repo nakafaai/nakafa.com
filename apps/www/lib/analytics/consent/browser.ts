@@ -2,6 +2,8 @@
 
 import {
   ANALYTICS_BROWSER_SIGNAL_MECHANISM,
+  ANALYTICS_CONSENT_DENIED,
+  ANALYTICS_CONSENT_GRANTED,
   ANALYTICS_CONSENT_MECHANISM,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   createAnonymousAnalyticsBrowserSignalDenial,
@@ -21,7 +23,8 @@ import {
 } from "@/lib/analytics/consent/storage";
 import type { AnalyticsConsentStoreState } from "@/lib/analytics/consent/store";
 
-function readNavigatorPrivacySignal() {
+/** Reads the browser's DNT and GPC values the way the inline bootstrap script reads them. */
+export function readNavigatorPrivacySignal() {
   let globalPrivacyControl: unknown;
   if ("globalPrivacyControl" in navigator) {
     globalPrivacyControl = navigator.globalPrivacyControl;
@@ -78,7 +81,9 @@ export function createAnonymousConsentSave({
             hasBrowserPrivacySignal
               ? createAnonymousAnalyticsBrowserSignalDenial(decidedAt)
               : createAnonymousAnalyticsConsent(
-                  granted ? "granted" : "denied",
+                  granted
+                    ? ANALYTICS_CONSENT_GRANTED
+                    : ANALYTICS_CONSENT_DENIED,
                   decidedAt
                 )
           )
@@ -238,7 +243,10 @@ export function useAnonymousDenialPersistence({
             Effect.map((decidedAt) =>
               mechanism === ANALYTICS_BROWSER_SIGNAL_MECHANISM
                 ? createAnonymousAnalyticsBrowserSignalDenial(decidedAt)
-                : createAnonymousAnalyticsConsent("denied", decidedAt)
+                : createAnonymousAnalyticsConsent(
+                    ANALYTICS_CONSENT_DENIED,
+                    decidedAt
+                  )
             ),
             Effect.tap(saveAnonymousAnalyticsConsent),
             Effect.matchEffect({

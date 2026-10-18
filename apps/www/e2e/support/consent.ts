@@ -1,5 +1,10 @@
-import { expect, type Page } from "@playwright/test";
 import {
+  type BrowserContextOptions,
+  expect,
+  type Page,
+} from "@playwright/test";
+import {
+  ANALYTICS_CONSENT_ROOT_ATTRIBUTE,
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   type AnalyticsConsentDecision,
   createAnonymousAnalyticsConsent,
@@ -14,13 +19,14 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 import id from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
-import { Effect, pipe, Schema, String as Str } from "effect";
+import { Effect, MutableList, pipe, Schema, String as Str } from "effect";
 import {
   ANSWER_MILLISECONDS,
   type Changes,
   saved,
 } from "@/e2e/support/changes";
 import { activate, activateUntilVisible } from "@/e2e/support/input";
+import { NEXT_CHUNK_PATH } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
@@ -79,19 +85,41 @@ const describePage = Effect.fn("NakafaE2E.describeUsageDataPage")(function* (
   return `Page ${page.url()}, signed in ${changes.signedIn}, learner read ${changes.hasAnswered(CURRENT_USER)}, choice read ${changes.hasAnswered(CURRENT_CHOICE)}, text "${pipe(text, Str.replaceAll(/\s+/gu, " "), Str.trim, Str.slice(0, 300))}".`;
 });
 
-/** What the usage-data prompt calls its Decline button, in each language of the site. */
-const DECLINE_LABELS = {
-  de: de.AnalyticsConsent.decline,
-  en: en.AnalyticsConsent.decline,
-  id: id.AnalyticsConsent.decline,
+/** What the usage-data prompt calls its buttons, in each language of the site. */
+const PROMPT_LABELS = {
+  de: de.AnalyticsConsent,
+  en: en.AnalyticsConsent,
+  id: id.AnalyticsConsent,
 };
 
-/** A language of the site whose usage-data prompt a test can decline. */
-export type DeclineLocale = keyof typeof DECLINE_LABELS;
+/** A language of the site whose usage-data prompt a test can answer. */
+export type PromptLocale = keyof typeof PROMPT_LABELS;
 
-/** The Decline button of the usage-data prompt, in the language of the page. */
-const declineButton = (page: Page, locale: DeclineLocale) =>
-  page.getByRole("button", { exact: true, name: DECLINE_LABELS[locale] });
+/** A button of the usage-data prompt, by its choice, in the language of the page. */
+const promptButton = (
+  page: Page,
+  choice: "allow" | "decline",
+  locale: PromptLocale
+) =>
+  page.getByRole("button", {
+    exact: true,
+    name: PROMPT_LABELS[locale][choice],
+  });
+
+/** Presses one button of the usage-data prompt and waits until the prompt is gone. */
+const pressPromptButton = Effect.fn("NakafaE2E.pressPromptButton")(function* (
+  page: Page,
+  choice: "allow" | "decline",
+  hasTouch: boolean,
+  locale: PromptLocale
+) {
+  const button = promptButton(page, choice, locale);
+
+  yield* activate(button, hasTouch);
+  yield* Effect.promise(() =>
+    expect(button).toBeHidden({ timeout: readinessTimeoutMilliseconds })
+  );
+});
 
 /**
  * Presses Decline on the usage-data prompt of a signed-in learner and waits
@@ -105,18 +133,13 @@ const declineButton = (page: Page, locale: DeclineLocale) =>
 export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
   page: Page,
   hasTouch: boolean,
-  locale: DeclineLocale = "en"
+  locale: PromptLocale = "en"
 ) {
-  const decline = declineButton(page, locale);
-
-  yield* activate(decline, hasTouch);
-  yield* Effect.promise(() =>
-    expect(decline).toBeHidden({ timeout: readinessTimeoutMilliseconds })
-  );
+  yield* pressPromptButton(page, "decline", hasTouch, locale);
 });
 
 /**
- * Declines the usage data of a signed-in learner and waits until the server has
+ * Presses one button of the usage-data prompt and waits until the server has
  * stored the choice, for a test that loads another page next. The prompt hides
  * before the server has the choice. The Convex client asks the browser to
  * confirm a leave while a change is unanswered, and Playwright accepts that
@@ -128,31 +151,53 @@ export const pressDecline = Effect.fn("NakafaE2E.pressDecline")(function* (
  * fails with what the page showed. The page is the English one unless `locale`
  * names another language of the site.
  */
-export const declineUsageData = Effect.fn("NakafaE2E.declineUsageData")(
-  function* (page: Page, changes: Changes, locale: DeclineLocale = "en") {
-    yield* Effect.tryPromise(() =>
-      expect(declineButton(page, locale)).toBeVisible({
-        timeout: readinessTimeoutMilliseconds,
-      })
-    ).pipe(
-      Effect.catchTag("UnknownError", () =>
-        describePage(page, changes).pipe(
-          Effect.flatMap((shown) => new UsageDataPromptMissing({ shown }))
-        )
+const answerUsageData = Effect.fn("NakafaE2E.answerUsageData")(function* (
+  page: Page,
+  changes: Changes,
+  choice: "allow" | "decline",
+  locale: PromptLocale
+) {
+  yield* Effect.tryPromise(() =>
+    expect(promptButton(page, choice, locale)).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  ).pipe(
+    Effect.catchTag("UnknownError", () =>
+      describePage(page, changes).pipe(
+        Effect.flatMap((shown) => new UsageDataPromptMissing({ shown }))
       )
-    );
-    const before = changes.sent;
-    yield* pressDecline(page, false, locale);
-    yield* Effect.promise(async () => {
-      await expect
-        .poll(() => changes.took(SAVE_CHOICE), {
-          timeout: ANSWER_MILLISECONDS,
-        })
-        .toBe(true);
-      await saved(changes, before);
-    });
+    )
+  );
+  const before = changes.sent;
+  yield* pressPromptButton(page, choice, false, locale);
+  yield* Effect.promise(async () => {
+    await expect
+      .poll(() => changes.took(SAVE_CHOICE), {
+        timeout: ANSWER_MILLISECONDS,
+      })
+      .toBe(true);
+    await saved(changes, before);
+  });
+});
+
+/** Declines the usage data of a signed-in learner until the server has the choice. */
+export const declineUsageData = Effect.fn("NakafaE2E.declineUsageData")(
+  function* (page: Page, changes: Changes, locale: PromptLocale = "en") {
+    yield* answerUsageData(page, changes, "decline", locale);
   }
 );
+
+/**
+ * Allows the usage data of a signed-in learner until the server has the choice. An
+ * Allow stores only the account's choice, so the browser keeps no anonymous record
+ * that a later visitor of the browser would read.
+ */
+export const allowUsageData = Effect.fn("NakafaE2E.allowUsageData")(function* (
+  page: Page,
+  changes: Changes
+) {
+  yield* answerUsageData(page, changes, "allow", "en");
+});
 
 /** The footer control that opens the usage-data preferences. */
 export function usageDataTrigger(page: Page) {
@@ -185,3 +230,60 @@ export const openConsentPreferences = Effect.fn(
 
   return { popup, trigger };
 });
+
+/** The first words of the usage-data prompt's description in English. */
+export const PROMPT_DESCRIPTION = "Allow Nakafa to see which features you use";
+
+/** A phone, where the prompt covers the lower part of the lesson. */
+export const compactContext: BrowserContextOptions = {
+  hasTouch: true,
+  serviceWorkers: "block",
+  viewport: { height: 844, width: 390 },
+};
+
+/** React reports a hydration mismatch as a console error that names it. */
+const HYDRATION_ERROR = /hydrat|#41[89]|#42[35]/iu;
+
+/**
+ * Stops every app chunk from loading, so the page stays as the server sent it
+ * and only the inline bootstrap script and the stylesheet can act.
+ */
+export async function stopAppCode(page: Page) {
+  await page.route(NEXT_CHUNK_PATH, (route) => route.abort());
+}
+
+/** Collects the hydration errors that the page reports while it runs. */
+export function observeHydrationErrors(page: Page) {
+  const errors = MutableList.make<string>();
+  page.on("console", (message) => {
+    if (message.type() === "error" && HYDRATION_ERROR.test(message.text())) {
+      MutableList.append(errors, message.text());
+    }
+  });
+  return errors;
+}
+
+/** Stores a raw record under the key the consent store reads, before the page loads. */
+export function seedRawStorage(page: Page, key: string, value: string) {
+  return page.addInitScript(
+    ({ key, value }) => localStorage.setItem(key, value),
+    { key, value }
+  );
+}
+
+/**
+ * Asserts that the server sent the prompt. A check that the prompt is hidden
+ * proves nothing when the prompt is absent, and the copy alone does not prove
+ * it either, because the page also carries the copy in its serialized messages.
+ */
+export function expectPromptRendered(page: Page) {
+  return expect(page.getByText(PROMPT_DESCRIPTION)).toBeAttached();
+}
+
+/** Whether the document root carries the mark that the bootstrap writes before paint. */
+export function isRootMarked(page: Page) {
+  return page.evaluate(
+    (name) => document.documentElement.hasAttribute(name),
+    ANALYTICS_CONSENT_ROOT_ATTRIBUTE
+  );
+}
