@@ -31,7 +31,9 @@ test("a phone shows one header row: the page's own, with the app sidebar's trigg
         );
         // The app's own bar, with its trigger and search, steps aside for the page header.
         yield* Effect.promise(() =>
-          expect(page.locator(VISIBLE_SIDEBAR_TRIGGER)).toHaveCount(1)
+          expect(page.locator(VISIBLE_SIDEBAR_TRIGGER)).toHaveCount(1, {
+            timeout: readinessTimeoutMilliseconds,
+          })
         );
         yield* Effect.promise(() =>
           expect(
@@ -82,7 +84,9 @@ test("a phone shows the app's bar again on a page without a header of its own, a
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
         );
         yield* Effect.promise(() =>
-          expect(page.locator(VISIBLE_SIDEBAR_TRIGGER)).toHaveCount(1)
+          expect(page.locator(VISIBLE_SIDEBAR_TRIGGER)).toHaveCount(1, {
+            timeout: readinessTimeoutMilliseconds,
+          })
         );
       })
     )
