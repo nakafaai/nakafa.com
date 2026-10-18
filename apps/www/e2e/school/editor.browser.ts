@@ -42,6 +42,20 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
     "false"
   );
 
+  // The page has one header: the sidebar's trigger, the path, and Create exam share its row.
+  const header = page
+    .locator("header")
+    .filter({ has: page.getByRole("button", { name: "Create exam" }) });
+  await expect(
+    header.getByRole("button", { name: "Toggle Sidebar" })
+  ).toBeVisible();
+  await expect(
+    header.getByRole("navigation", { name: "breadcrumb" })
+  ).toContainText("Exams");
+  await expect(
+    page.getByRole("button", { name: "Toggle Sidebar" })
+  ).toHaveCount(1);
+
   // The dialog preselects the school's unit, whose language it shows.
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");

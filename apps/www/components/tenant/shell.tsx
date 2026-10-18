@@ -18,7 +18,6 @@ import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provi
 import {
   Sidebar,
   SidebarInset,
-  SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
@@ -88,9 +87,10 @@ function TenantAccount({
 /**
  * The frame of a school's pages: the sidebar with the school's mark and name at its
  * top, the sidebar groups of the viewer, and the viewer's account at its foot, beside
- * the pages. The exam editor draws its own frame, so on its route the pages render
- * alone. The pathname is read here, not in the shell, so the shell's context value
- * does not change on navigation.
+ * the pages. Each page draws its one header, with the sidebar's trigger in it
+ * (`SchoolHeader`), so the frame draws none. The exam editor draws its own frame,
+ * so on its route the pages render alone. The pathname is read here, not in the
+ * shell, so the shell's context value does not change on navigation.
  */
 function TenantFrame({
   account,
@@ -131,12 +131,7 @@ function TenantFrame({
         </SidebarContent>
         <TenantAccount account={account} name={personName} role={role} />
       </Sidebar>
-      <SidebarInset>
-        <header className="flex h-12 items-center gap-2 px-4">
-          <SidebarTrigger />
-        </header>
-        {children}
-      </SidebarInset>
+      <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
 }
