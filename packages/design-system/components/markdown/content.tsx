@@ -1,6 +1,6 @@
 import {
-  MarkdownFrame,
   type MarkdownFrameVariant,
+  markdownFrameVariants,
 } from "@repo/design-system/components/markdown/frame";
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react/mdx";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
@@ -8,6 +8,7 @@ import { rehypeDirection } from "@repo/design-system/lib/markdown/direction";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
 import { preprocessLaTeX } from "@repo/math/latex";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import ReactMarkdown from "react-markdown";
@@ -23,6 +24,7 @@ const REMARK_PLUGINS = [
 
 type HardenOptions = Parameters<typeof harden>[0];
 
+/** The link and image policy that a markdown block renders under. */
 interface MarkdownSecurityProps {
   allowedImagePrefixes?: HardenOptions["allowedImagePrefixes"];
   allowedLinkPrefixes?: HardenOptions["allowedLinkPrefixes"];
@@ -42,21 +44,25 @@ export type MarkdownContentProps = {
  * may show raw HTML as the text it was written as instead of dropping it.
  */
 export function MarkdownBlock({
-  allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
-  allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
   children,
   components = reactMdxComponents,
-  defaultOrigin = SITE_ORIGIN,
   rehypePlugins = [],
+  security = {},
   skipHtml = true,
-}: MarkdownSecurityProps & {
+}: {
   readonly children: string;
   readonly components?: ComponentProps<typeof ReactMarkdown>["components"];
   readonly rehypePlugins?: ComponentProps<
     typeof ReactMarkdown
   >["rehypePlugins"];
+  readonly security?: MarkdownSecurityProps;
   readonly skipHtml?: boolean;
 }) {
+  const {
+    allowedImagePrefixes = DEFAULT_ALLOWED_PREFIXES,
+    allowedLinkPrefixes = DEFAULT_ALLOWED_PREFIXES,
+    defaultOrigin = SITE_ORIGIN,
+  } = security;
   const parsedContent = preprocessLaTeX(children.trim());
 
   if (!parsedContent.trim()) {
@@ -90,19 +96,17 @@ export function MarkdownContent({
   variant,
 }: MarkdownContentProps) {
   const blocks = readMarkdownBlocks(id, normalizeText(children));
+  // Server components cannot read React context, so the document passes its
+  // link and image policy to each block as one value.
+  const security = { allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin };
 
   return (
-    <MarkdownFrame className={className} variant={variant}>
+    <div className={cn(markdownFrameVariants({ variant }), className)}>
       {Arr.map(blocks, (block) => (
-        <MarkdownBlock
-          allowedImagePrefixes={allowedImagePrefixes}
-          allowedLinkPrefixes={allowedLinkPrefixes}
-          defaultOrigin={defaultOrigin}
-          key={block.key}
-        >
+        <MarkdownBlock key={block.key} security={security}>
           {block.content}
         </MarkdownBlock>
       ))}
-    </MarkdownFrame>
+    </div>
   );
 }

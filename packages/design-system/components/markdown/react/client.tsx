@@ -4,6 +4,10 @@ import { CodeBlockText } from "@repo/design-system/components/code-block/text";
 import { DiagramFrame } from "@repo/design-system/components/markdown/diagram";
 import { CodeFence } from "@repo/design-system/components/markdown/react/fence";
 import {
+  FenceSourceContext,
+  useFenceSource,
+} from "@repo/design-system/components/markdown/react/source";
+import {
   codeFenceBodyVariants,
   codeFencePreVariants,
 } from "@repo/design-system/components/markdown/react/variants";
@@ -25,30 +29,48 @@ const LazyMermaidMdx = dynamic(() =>
   )
 );
 
+interface MarkdownCodeBlockProps {
+  readonly className?: string | undefined;
+  readonly code: string;
+  readonly language: string;
+}
+
+/**
+ * The block's frame and its code as plain text. It holds the place of the
+ * highlighted block while the highlighter loads.
+ */
+function CodeBlockPlaceholder() {
+  const { className, code, language } = useFenceSource();
+
+  return (
+    <CodeFence language={language}>
+      <CodeBlockText
+        className={cn(codeFenceBodyVariants(), className)}
+        preClassName={codeFencePreVariants()}
+      >
+        {code}
+      </CodeBlockText>
+    </CodeFence>
+  );
+}
+
 /**
  * Defers syntax highlighting until a rendered response contains code. The
  * block's frame and its code as plain text hold its place while the
  * highlighter loads, so the answer never falls back to the page's loading
  * state and nothing around the block moves.
  */
-export function MarkdownCodeBlock(
-  props: ComponentProps<typeof LazyMarkdownCodeBlock>
-) {
+export function MarkdownCodeBlock({
+  className,
+  code,
+  language,
+}: MarkdownCodeBlockProps) {
   return (
-    <Suspense
-      fallback={
-        <CodeFence language={props.language}>
-          <CodeBlockText
-            className={cn(codeFenceBodyVariants(), props.className)}
-            preClassName={codeFencePreVariants()}
-          >
-            {props.code}
-          </CodeBlockText>
-        </CodeFence>
-      }
-    >
-      <LazyMarkdownCodeBlock {...props} />
-    </Suspense>
+    <FenceSourceContext value={{ className, code, language }}>
+      <Suspense fallback={<CodeBlockPlaceholder />}>
+        <LazyMarkdownCodeBlock />
+      </Suspense>
+    </FenceSourceContext>
   );
 }
 
