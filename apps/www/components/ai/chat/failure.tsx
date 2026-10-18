@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert02Icon, SquareLock01Icon } from "@hugeicons/core-free-icons";
+import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Empty,
@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { readChatFailureKind } from "@/components/ai/chat/access";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
+import { EmptyNina } from "@/components/state/empty";
 
 /**
  * The card a chat shows in place of its content when it cannot be read. A
@@ -38,9 +39,7 @@ export function ChatFailure({
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <HugeIcons icon={SquareLock01Icon} />
-          </EmptyMedia>
+          <EmptyNina act="guarding" />
           <EmptyTitle>{t("private-chat-error")}</EmptyTitle>
           <EmptyDescription>{t("chat-unavailable")}</EmptyDescription>
         </EmptyHeader>

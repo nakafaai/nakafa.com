@@ -6,7 +6,7 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
-import { MailAdd01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -112,8 +112,8 @@ function SchoolInviteTable({
   if (Arr.isReadonlyArrayEmpty(invites)) {
     return (
       <TableEmpty
+        act="waving"
         description={t("invites-footer")}
-        icon={<HugeIcons icon={MailAdd01Icon} />}
         title={t("invites-empty")}
       />
     );
