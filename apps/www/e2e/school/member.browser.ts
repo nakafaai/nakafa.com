@@ -22,6 +22,27 @@ test("a member sees the school in the sidebar and the viewer's role in Beranda",
   await context.close();
 });
 
+test("Beranda offers the owner one next step, which opens the exams", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const schoolHome = hostAddress(baseURL, host, "/");
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, schoolHome));
+  const page = await context.newPage();
+  await page.goto(schoolHome);
+
+  await expect(page.getByText("Write an exam", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Students see an exam only once it is scheduled.")
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Open exams" }).click();
+  await expect(page).toHaveURL(hostAddress(baseURL, host, "/exams"));
+  await context.close();
+});
+
 test("the account menu saves the language of the school host and renders the school in it", async ({
   browser,
   baseURL,
