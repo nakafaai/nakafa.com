@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallbackRef } from "@mantine/hooks";
+import { editableState } from "@repo/design-system/components/editor/editable";
 import type { AnyExtension, Editor } from "@tiptap/core";
 import { Placeholder } from "@tiptap/extensions";
 import type { Transaction } from "@tiptap/pm/state";
@@ -24,9 +25,9 @@ interface DocumentEditorProps {
 /**
  * Edits a document of the given extensions. It keeps no text of its own: the document is
  * the editor's state, and a caller that syncs the document (ADR 0028) reads and changes that
- * state through the editor it receives. The editor starts read-only, so a caller turns
- * editing on once the document is open. Load it with `next/dynamic` and `ssr: false`, as
- * the editor brings the editing library with it.
+ * state through the editor it receives. The editor starts read-only, and says so to
+ * assistive technology, so a caller turns editing on once the document is open. Load it
+ * with `next/dynamic` and `ssr: false`, as the editor brings the editing library with it.
  */
 export function DocumentEditor({
   className,
@@ -43,7 +44,11 @@ export function DocumentEditor({
     editorProps: {
       attributes: { "aria-label": label, "aria-multiline": "true" },
     },
-    extensions: [...extensions, Placeholder.configure({ placeholder })],
+    extensions: [
+      ...extensions,
+      Placeholder.configure({ placeholder }),
+      editableState,
+    ],
     immediatelyRender: false,
     onCreate: ({ editor: current }) => ready(current),
     onUpdate: ({ transaction }) => change(transaction),

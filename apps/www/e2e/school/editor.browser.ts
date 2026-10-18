@@ -41,6 +41,17 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all af
     "PTS Matematika"
   );
 
+  // The sidebar marks the exams entry as the current page, never home.
+  const sidebar = page.locator('[data-sidebar="sidebar"]:visible');
+  await expect(sidebar.getByRole("link", { name: "Exams" })).toHaveAttribute(
+    "data-active",
+    "true"
+  );
+  await expect(sidebar.getByRole("link", { name: "Home" })).toHaveAttribute(
+    "data-active",
+    "false"
+  );
+
   // A new exam starts with one question, and each added question is selected at once.
   await page.getByRole("button", { name: "Add question" }).click();
   await expect(page.getByRole("heading", { name: "Question 2" })).toBeVisible();

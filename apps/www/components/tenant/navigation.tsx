@@ -5,6 +5,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
+import { String as Str } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useTenant } from "@/components/tenant/context";
@@ -34,13 +35,21 @@ export function TenantNavigation() {
     <>
       <TenantSidebarGroup label={t("for-you")}>
         <SidebarMenuItem>
-          <SidebarMenuButton isActive render={<Link href="/" />}>
+          <SidebarMenuButton
+            isActive={pathname === "/"}
+            render={<Link href="/" />}
+          >
             {t("home")}
           </SidebarMenuButton>
         </SidebarMenuItem>
         {canOpenExams ? (
           <SidebarMenuItem>
-            <SidebarMenuButton render={<Link href="/exams" />}>
+            <SidebarMenuButton
+              isActive={
+                pathname === "/exams" || Str.startsWith("/exams/")(pathname)
+              }
+              render={<Link href="/exams" />}
+            >
               {tExams("title")}
             </SidebarMenuButton>
           </SidebarMenuItem>
