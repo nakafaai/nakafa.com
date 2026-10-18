@@ -3,6 +3,7 @@ import { getChartPayloadStringValue } from "@repo/design-system/components/evilc
 import {
   type TooltipIndicator,
   TooltipItem,
+  TooltipItemContext,
   TooltipLabel,
   type TooltipLabelProps,
 } from "@repo/design-system/components/evilcharts/ui/tooltip-item";
@@ -10,6 +11,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
+import { createContext, use } from "react";
 import { type DefaultTooltipContentProps, Tooltip } from "recharts";
 import type {
   NameType,
@@ -42,6 +44,22 @@ export type TooltipVariant = NonNullable<
   VariantProps<typeof tooltipVariants>["variant"]
 >;
 
+/** Options that the tooltip part of a chart shares with its content. */
+interface ChartTooltipOptions<Roundness, Variant> {
+  roundness: Roundness;
+  selected: string | null;
+  variant: Variant;
+}
+
+/** Provided by the tooltip part of each chart. Content without a part keeps the default surface. */
+const ChartTooltipContext = createContext<
+  ChartTooltipOptions<TooltipRoundness | undefined, TooltipVariant | undefined>
+>({
+  roundness: undefined,
+  selected: null,
+  variant: undefined,
+});
+
 type TooltipPayloadItem = NonNullable<
   DefaultTooltipContentProps<ValueType, NameType>["payload"]
 >[number];
@@ -59,31 +77,28 @@ function ChartTooltipContent({
   className,
   indicator = "dot",
   hideLabel = false,
-  hideIndicator = false,
   label,
   labelFormatter,
   labelClassName,
   formatter,
   nameKey,
   labelKey,
-  selected,
-  roundness = "lg",
-  variant = "default",
 }: React.ComponentProps<typeof Tooltip> &
   React.ComponentProps<"div"> & {
     hideLabel?: boolean;
-    hideIndicator?: boolean;
     indicator?: TooltipIndicator;
     nameKey?: string;
     labelKey?: string;
-    selected?: string | null;
-    roundness?: TooltipRoundness | undefined;
-    variant?: TooltipVariant | undefined;
   } & Omit<
     DefaultTooltipContentProps<ValueType, NameType>,
     "accessibilityLayer"
   >) {
   const config = useChart((chart) => chart.config);
+  const {
+    roundness = "lg",
+    selected,
+    variant = "default",
+  } = use(ChartTooltipContext);
 
   if (!(active && payload?.length)) {
     // Empty tooltip - to prevent position getting 0.0 so it doesnt animate tooltip every time from 0.0 origin
@@ -103,30 +118,28 @@ function ChartTooltipContent({
 
   return (
     <div className={cn(tooltipVariants({ roundness, variant }), className)}>
-      {nestLabel ? null : <TooltipLabel {...labelProps} />}
-      <div className="grid gap-1.5">
-        {Arr.map(payload, (item, index) => {
-          if (item.type === "none") {
-            return null;
-          }
+      <TooltipItemContext value={{ formatter, labelProps, selected }}>
+        {nestLabel ? null : <TooltipLabel />}
+        <div className="grid gap-1.5">
+          {Arr.map(payload, (item, index) => {
+            if (item.type === "none") {
+              return null;
+            }
 
-          return (
-            <TooltipItem
-              config={config}
-              formatter={formatter}
-              hideIndicator={hideIndicator}
-              index={index}
-              indicator={indicator}
-              item={item}
-              key={getTooltipItemKey(item, nameKey)}
-              labelProps={labelProps}
-              nameKey={nameKey}
-              nestLabel={nestLabel}
-              selected={selected}
-            />
-          );
-        })}
-      </div>
+            return (
+              <TooltipItem
+                config={config}
+                index={index}
+                indicator={indicator}
+                item={item}
+                key={getTooltipItemKey(item, nameKey)}
+                nameKey={nameKey}
+                nestLabel={nestLabel}
+              />
+            );
+          })}
+        </div>
+      </TooltipItemContext>
     </div>
   );
 }
@@ -138,4 +151,4 @@ function ChartTooltip({
   return <Tooltip animationDuration={animationDuration} {...props} />;
 }
 
-export { ChartTooltip, ChartTooltipContent };
+export { ChartTooltip, ChartTooltipContent, ChartTooltipContext };

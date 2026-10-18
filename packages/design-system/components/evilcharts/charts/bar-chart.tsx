@@ -4,7 +4,10 @@ import {
   type BackgroundVariant,
   ChartBackground,
 } from "@repo/design-system/components/evilcharts/ui/background";
-import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
+import {
+  type ChartBrushOptions,
+  ChartContainer,
+} from "@repo/design-system/components/evilcharts/ui/chart";
 import {
   type ChartConfig,
   getLoadingData,
@@ -19,6 +22,7 @@ import {
   ChartLegendContent,
   type ChartLegendVariant,
 } from "@repo/design-system/components/evilcharts/ui/legend";
+import { LegendItemContext } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { LoadingBar } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
@@ -26,6 +30,7 @@ import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts
 import {
   ChartTooltip,
   ChartTooltipContent,
+  ChartTooltipContext,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
@@ -233,6 +238,17 @@ export function EvilBarChart<
   const { visibleData, brushProps } = useEvilBrush({ data });
 
   const isStacked = stackType === "stacked" || stackType === "percent";
+  const brushOptions = useMemo<ChartBrushOptions>(
+    () => ({
+      barRadius,
+      formatLabel: brushFormatLabel,
+      height: brushHeight,
+      stacked: isStacked,
+      variant: "bar",
+      xDataKey,
+    }),
+    [barRadius, brushFormatLabel, brushHeight, isStacked, xDataKey]
+  );
   const isHorizontal = layout === "horizontal";
   const displayData = showBrush && !isLoading ? visibleData : data;
 
@@ -263,22 +279,17 @@ export function EvilBarChart<
   return (
     <BarChartContext value={contextValue}>
       <ChartContainer
+        brush={brushOptions}
         className={className}
         config={config}
         footer={
           showBrush &&
           !isLoading && (
             <EvilBrush
-              barRadius={barRadius}
               chartConfig={config}
               className="mt-1"
               data={data}
-              formatLabel={brushFormatLabel}
-              height={brushHeight}
               skipStyle
-              stacked={isStacked}
-              variant="bar"
-              xDataKey={xDataKey}
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);
@@ -423,23 +434,23 @@ interface TooltipProps {
 export function Tooltip({ variant, roundness, defaultIndex }: TooltipProps) {
   const isLoading = useBarChart((chart) => chart.isLoading);
   const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
+  const tooltipOptions = useMemo(
+    () => ({ roundness, selected: selectedDataKey, variant }),
+    [roundness, selectedDataKey, variant]
+  );
 
   if (isLoading) {
     return null;
   }
 
   return (
-    <ChartTooltip
-      content={
-        <ChartTooltipContent
-          roundness={roundness}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      cursor={false}
-      {...(defaultIndex === undefined ? {} : { defaultIndex })}
-    />
+    <ChartTooltipContext value={tooltipOptions}>
+      <ChartTooltip
+        content={<ChartTooltipContent />}
+        cursor={false}
+        {...(defaultIndex === undefined ? {} : { defaultIndex })}
+      />
+    </ChartTooltipContext>
   );
 }
 
@@ -462,19 +473,23 @@ export function Legend({
 }: LegendProps) {
   const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
   const selectDataKey = useBarChart((chart) => chart.selectDataKey);
+  const legendOptions = useMemo(
+    () => ({
+      isClickable,
+      onSelectChange: selectDataKey,
+      selected: selectedDataKey,
+      variant,
+    }),
+    [isClickable, selectDataKey, selectedDataKey, variant]
+  );
 
   return (
-    <ChartLegend
-      align={align}
-      content={
-        <ChartLegendContent
-          isClickable={isClickable}
-          onSelectChange={selectDataKey}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      verticalAlign={verticalAlign}
-    />
+    <LegendItemContext value={legendOptions}>
+      <ChartLegend
+        align={align}
+        content={<ChartLegendContent />}
+        verticalAlign={verticalAlign}
+      />
+    </LegendItemContext>
   );
 }
