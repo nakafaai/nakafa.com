@@ -98,7 +98,7 @@ test("home toys and loaders move while they are on screen and hold still out of 
   );
 });
 
-test("home holds still with reduced motion: the padlock keeps its size and the ball does not turn", async ({
+test("home holds still with reduced motion: the ball does not turn", async ({
   baseURL,
   browser,
 }) => {
@@ -119,26 +119,9 @@ test("home holds still with reduced motion: the padlock keeps its size and the b
             page,
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
-              const padlock = page.locator("#privacy svg[class*='scale-110']");
               const ball = page
                 .locator("#closing [class*='animate-thing-hop']")
                 .first();
-
-              yield* Effect.promise(() =>
-                page.locator("#privacy").scrollIntoViewIfNeeded()
-              );
-              yield* Effect.promise(() =>
-                expect(padlock.first()).toBeAttached()
-              );
-              yield* Effect.promise(() =>
-                expect
-                  .poll(() =>
-                    padlock
-                      .first()
-                      .evaluate((element) => getComputedStyle(element).scale)
-                  )
-                  .toBe("none")
-              );
 
               yield* Effect.promise(() =>
                 page.locator("#closing").scrollIntoViewIfNeeded()

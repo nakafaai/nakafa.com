@@ -2,7 +2,6 @@
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { Thing } from "@repo/design-system/components/ui/thing";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Schema } from "effect";
 import { useEffect, useState } from "react";
@@ -26,12 +25,16 @@ const NEXT: Record<Step, typeof TimingSchema.Type> = {
   words: { after: 1600, next: "falling" },
 };
 
-/** How the line of words looks at each step: whole, falling, or hidden behind the lock. */
+/**
+ * How the line of words looks at each step: whole, dots falling into the lock
+ * Nina holds, or gone into it. The dots fall the height of her head, so they
+ * end at her lock.
+ */
 const wordsVariants = cva("min-h-8 text-lg", {
   variants: {
     step: {
       falling:
-        "translate-y-10 opacity-0 transition-[translate,opacity] duration-1000 ease-in",
+        "translate-y-36 scale-75 opacity-0 transition-[translate,scale,opacity] duration-1000 ease-(--ease-in-out)",
       locked: "opacity-0",
       words: "",
     },
@@ -40,9 +43,9 @@ const wordsVariants = cva("min-h-8 text-lg", {
 
 /**
  * The dark room of the privacy part. Nina holds a padlock, and a line of words
- * above her turns into dots that fall into the lock, which then closes. It turns
- * once while the room is on screen, and rests on the closed lock with reduced
- * motion.
+ * above her turns into dots that fall into it, and she is proud once they are
+ * locked away. It turns while the room is on screen, and rests on the locked
+ * step with reduced motion.
  */
 export function PrivacyRoom({ words }: { readonly words: string }) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
@@ -76,15 +79,12 @@ export function PrivacyRoom({ words }: { readonly words: string }) {
       >
         {current === "words" ? words : dots}
       </p>
-      <Nina act="guarding" label="" size={240} whole />
-      <Thing
-        className={
-          current === "locked"
-            ? "transition-transform duration-300 motion-safe:scale-110"
-            : "transition-transform duration-300"
-        }
-        name="padlock"
-        size={72}
+      <Nina
+        act="guarding"
+        label=""
+        mood={current === "locked" ? "proud" : "focused"}
+        size={240}
+        whole
       />
     </div>
   );

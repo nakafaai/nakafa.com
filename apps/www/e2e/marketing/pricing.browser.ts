@@ -157,9 +157,7 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
       ).toBeVisible()
     );
     yield* Effect.promise(() =>
-      expect(page.locator("#comparison")).toContainText(
-        "Kira-kira 2 gelas latte"
-      )
+      expect(page.locator("#comparison")).toContainText("Kira-kira 2 latte")
     );
 
     const observation = yield* observeStablePricingReload(
@@ -233,7 +231,7 @@ const verifyRupiahPricingComparisons = Effect.fn(
   );
   yield* Effect.promise(() =>
     expect(page.locator("#comparison")).toContainText(
-      "Kira-kira 3 gelas es kopi susu"
+      "Kira-kira 3 es kopi susu"
     )
   );
   yield* Effect.promise(() =>
