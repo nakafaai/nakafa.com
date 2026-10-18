@@ -2,11 +2,29 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
 
+/** The most characters a room's name may hold, counted as Unicode code points. */
+const ROOM_NAME_MAX_LENGTH = 80;
+
+/** The most devices an attempt retires, so `retiredDeviceIds` stays small (round 2). */
+export const RETIRED_DEVICE_LIMIT = 10;
+
+/** The most characters of a reason code. A reason is a code, never free text (ADR 0016). */
+const REASON_CODE_MAX_LENGTH = 40;
+
+/** A room's name: one line with no space at either end, at most 80 characters. */
+export const RoomName = Schema.String.check(
+  Schema.isTrimmed(),
+  isSingleLine,
+  Schema.isMinLength(1),
+  Schema.isMaxCodePoints(ROOM_NAME_MAX_LENGTH)
+);
+
 /**
- * The group a sitting runs for: one unit of the school, or one cohort of a unit's
- * period (ADR 0013). A sitting holds exactly one of the two.
+ * The group a sitting runs for: one unit of the school, or one cohort of a unit
+ * (ADR 0013). A cohort names its unit through the cohort row, so the caller gives
+ * only the cohort.
  */
-const SittingGroup = Schema.Union([
+export const SittingGroup = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("unit"), unitId: Id("tenantUnits") }),
   Schema.Struct({
     cohortId: Id("tenantCohorts"),
@@ -14,40 +32,60 @@ const SittingGroup = Schema.Union([
   }),
 ]);
 
-/** The room a sitting is held in: one line with no space at either end. */
-const RoomName = Schema.String.check(
-  Schema.isTrimmed(),
-  isSingleLine,
-  Schema.isMinLength(1)
+/**
+ * A reason that a proctor gives for a lock, an unlock, or added minutes. It is a code
+ * of lowercase words joined by single hyphens, because the journal holds codes and never
+ * free text (ADR 0016). The list of codes is not decided yet.
+ */
+export const ReasonCode = Schema.String.check(
+  Schema.isMaxLength(REASON_CODE_MAX_LENGTH),
+  Schema.isPattern(/^[a-z]+(?:-[a-z]+)*$/u)
+);
+
+/** Minutes that a proctor adds to one attempt: a whole number of at least one. */
+export const Minutes = Schema.Int.check(Schema.isGreaterThan(0));
+
+/** A device, as the web names it: the UUID that the browser keeps for one sitting. */
+export const DeviceId = Schema.String.check(
+  Schema.isPattern(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu
+  )
 );
 
 /**
- * The state of a sitting. The server opens it and closes it at its scheduled times,
- * and a proctor can close it earlier (ADR 0013).
+ * The state of a sitting. The server opens it at its scheduled time and closes it at
+ * its scheduled time or when a proctor closes it (ADR 0013).
  */
-const SittingState = Schema.Literals(["scheduled", "open", "closed"]);
+export const SittingState = Schema.Literals(["scheduled", "open", "closed"]);
+
+/** The ID of one scheduled job, which the scheduler returns and cancels. */
+const JobId = Id("_scheduled_functions");
 
 /**
- * One proctored sitting: one run of an exam for one group in one room, with one
- * token. The token is kept only as a keyed hash of the school key (ADR 0013, ADR 0030).
+ * One proctored sitting: one run of an exam for one unit or one cohort, in one room,
+ * with one token. The row names its unit in every case, so a unit grant covers it. A
+ * unit sitting holds `null` as its cohort, so the group's indexes need no join. The token
+ * is kept only as a keyed hash of the school key (ADR 0013, ADR 0030).
  */
 export const examSittingValidator = Schema.Struct({
   closesAt: Schema.Finite,
+  cohortId: Schema.NullOr(Id("tenantCohorts")),
   examId: Id("exams"),
-  group: SittingGroup,
+  jobs: Schema.Array(JobId),
   opensAt: Schema.Finite,
   room: RoomName,
   state: SittingState,
   tenantId: Id("tenants"),
   tokenHash: Schema.String,
   tokenIssuedAt: Schema.Finite,
+  unitId: Id("tenantUnits"),
 });
 
 /**
  * The state of one student's attempt in a sitting (ADR 0013). `ready` comes before
  * the student starts, and `submitted` closes the attempt for good.
  */
-const AttemptState = Schema.Literals([
+export const AttemptState = Schema.Literals([
   "ready",
   "inProgress",
   "locked",
@@ -56,15 +94,21 @@ const AttemptState = Schema.Literals([
 ]);
 
 /**
- * One student's attempt in a sitting. Its device is the client-generated UUID that the
- * web keeps for the sitting, and it is set when the student first enters (ADR 0013).
+ * One student's attempt in a sitting. It starts with the sitting's close as its
+ * deadline, and it is bound to the device that first enters it. `deviceId` is `null`
+ * while a proctor has allowed another device and none has entered yet. `retiredDeviceIds`
+ * lists the devices that a proctor has retired, which may no longer write (ADR 0013).
  */
 export const examAttemptValidator = Schema.Struct({
+  closeJob: Schema.optionalKey(JobId),
   deadline: Schema.Finite,
-  deviceId: Schema.optionalKey(Schema.String),
+  deviceId: Schema.NullOr(DeviceId),
   person: Id("tenantPeople"),
+  retiredDeviceIds: Schema.Array(DeviceId).check(
+    Schema.isMaxLength(RETIRED_DEVICE_LIMIT)
+  ),
   sitting: Id("examSittings"),
-  startedAt: Schema.optionalKey(Schema.Finite),
+  startedAt: Schema.Finite,
   state: AttemptState,
   submittedAt: Schema.optionalKey(Schema.Finite),
   tenantId: Id("tenants"),
@@ -74,7 +118,7 @@ export const examAttemptValidator = Schema.Struct({
  * The integrity signals that an attempt records (ADR 0013). A signal flags something
  * for a proctor to read, and it never locks an attempt by itself.
  */
-const SignalKind = Schema.Literals([
+export const SignalKind = Schema.Literals([
   "exit",
   "blur",
   "fullscreenExit",

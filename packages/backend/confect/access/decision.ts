@@ -25,7 +25,7 @@ const Subject = Schema.Struct({
 const Decision = Schema.Literals(["allow", "role", "condition", "resource"]);
 
 /** Whether a scope covers a subject placed in these units. A tenant scope covers every subject. */
-const covers = (
+export const covers = (
   scope: GrantScope,
   units: (typeof Placement.Type)["units"]
 ): boolean =>

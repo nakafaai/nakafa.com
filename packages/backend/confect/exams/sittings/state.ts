@@ -1,3 +1,4 @@
+import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Effect, Predicate, Schema } from "effect";
 
 /** The actions a proctor takes on an attempt, as ADR 0013's table names them. */
@@ -39,7 +40,7 @@ export class ProctorActionRefused extends Schema.TaggedError<ProctorActionRefuse
   {
     action: ProctorAction,
     reason: RefusalReason,
-    state: ProctoredState,
+    state: AttemptState,
   }
 ) {}
 
@@ -85,17 +86,20 @@ const table: Record<
 };
 
 /**
- * Decides one proctor action on an attempt in a proctored state, by ADR 0013's table.
- * A refused action fails with `ProctorActionRefused` and the reason the table gives.
+ * Decides one proctor action on an attempt, by ADR 0013's table. A refused action fails
+ * with `ProctorActionRefused` and the reason the table gives. The table does not decide
+ * `ready` or `submitted`, so an action on either is refused for its state.
  */
 export const decideProctorAction = Effect.fn(
   "exams.sittings.decideProctorAction"
 )(function* (
   action: typeof ProctorAction.Type,
-  state: typeof ProctoredState.Type,
+  state: typeof AttemptState.Type,
   beforeDeadline: boolean
 ) {
-  const cell = table[action][state](beforeDeadline);
+  const cell = Schema.is(ProctoredState)(state)
+    ? table[action][state](beforeDeadline)
+    : "state";
   if (Predicate.isString(cell)) {
     return yield* new ProctorActionRefused({ action, reason: cell, state });
   }

@@ -42,6 +42,12 @@ export const drawToken = Effect.fn("exams.sittings.drawToken")(function* () {
   return yield* drawTokenFrom(seed);
 }, Effect.provide(WebCryptoLayer));
 
+/**
+ * A token as the server compares it: without a space at either end, and in upper case,
+ * so a student who types it in lower case still enters (round 2, decision 11).
+ */
+export const normalizeToken = (text: string) => text.trim().toUpperCase();
+
 /** The school keys that `readTenantKeys` returns. */
 type SchoolKeys = Effect.Success<ReturnType<typeof readTenantKeys>>;
 
