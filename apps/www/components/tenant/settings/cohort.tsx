@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { CohortName } from "@repo/backend/confect/tenancy/cohort";
@@ -23,12 +23,22 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { startTransition, useId, useState } from "react";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { SchoolHeader } from "@/components/tenant/header";
 import {
   archiveCohortChange,
   renameCohortChange,
 } from "@/components/tenant/settings/cohorts.client";
+import { SchoolHomeroomCard } from "@/components/tenant/settings/homeroom";
+import { SchoolCohortMembers } from "@/components/tenant/settings/members";
+import { SchoolPlacementAdd } from "@/components/tenant/settings/placement";
 import { saveSchool } from "@/components/tenant/settings/save.client";
-import { type Cohort, isDraft } from "@/components/tenant/settings/state";
+import {
+  type Cohort,
+  type CohortDetail,
+  isDraft,
+} from "@/components/tenant/settings/state";
+import { getSchoolSettingsSection } from "@/lib/settings/school";
 
 const SOURCE = "components/tenant/settings/cohort";
 
@@ -136,5 +146,56 @@ export function SchoolCohortMenu({
         </FieldGroup>
       </ResponsiveDialog>
     </div>
+  );
+}
+
+/**
+ * One cohort's page: its path and name in the school's one header, with the page's action
+ * that places a student at its end, then the homeroom teacher and the students of the cohort.
+ * An archived cohort keeps what it holds to read, and offers no action that changes it.
+ */
+export function SchoolCohortSettings({
+  cohortId,
+  slug,
+}: {
+  cohortId: CohortDetail["id"];
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const cohort = useQuery(tenancy.cohorts.get, { cohortId, slug });
+  if (QueryResult.isFailure(cohort)) {
+    throw cohort.error;
+  }
+  if (!QueryResult.isSuccess(cohort)) {
+    return null;
+  }
+  const detail = cohort.value;
+  const isArchived = detail.status === "archived";
+  const section = getSchoolSettingsSection("/settings/cohorts");
+
+  return (
+    <>
+      <SchoolHeader
+        items={[
+          { href: section.group.href, label: t(section.group.key) },
+          { href: section.href, label: t(section.labelKey) },
+          { label: detail.name },
+        ]}
+        title={detail.name}
+      >
+        {isArchived ? null : (
+          <SchoolPlacementAdd cohortId={cohortId} slug={slug} />
+        )}
+      </SchoolHeader>
+      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+        <SchoolHomeroomCard cohort={detail} slug={slug} />
+        <SchoolCohortMembers
+          cohortId={cohortId}
+          isArchived={isArchived}
+          periodId={detail.periodId}
+          slug={slug}
+        />
+      </LayoutContent>
+    </>
   );
 }

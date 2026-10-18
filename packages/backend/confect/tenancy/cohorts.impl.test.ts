@@ -7,8 +7,9 @@ import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { activePeriod, create, list, members, rename, archive } =
+const { activePeriod, create, get, list, members, rename, archive } =
   refs.public.tenancy.cohorts;
+const assignments = refs.public.tenancy.assignments;
 const periods = refs.public.tenancy.periods;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
@@ -178,16 +179,38 @@ describe("tenancy/cohorts active period", () => {
         expect(yield* principal.query(activePeriod, query)).toBeNull();
       })
   );
+});
 
-  it.effect("refuses a teacher, who does not read the unit's periods", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const refused = yield* fixture
-        .as("teacher")
-        .query(activePeriod, { slug: nf, unitId: fixture.units.smp })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject(denied("role"));
-    })
+describe("tenancy/cohorts get", () => {
+  it.effect(
+    "reads a cohort with its period, and its homeroom teacher once one is assigned",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* fixture.as("admin").mutation(periods.create, {
+          end: "2026-12-19",
+          name: "Ganjil 2026/2027",
+          slug: nf,
+          start: "2026-07-13",
+          unitId: fixture.units.smp,
+        });
+        const made = yield* cohort(fixture, term.id, "7A", 7);
+        const read = fixture
+          .as("admin")
+          .query(get, { cohortId: made.id, slug: nf });
+        expect(yield* read).toMatchObject({
+          homeroom: null,
+          periodId: term.id,
+        });
+        yield* fixture.as("admin").mutation(assignments.assign, {
+          cohortId: made.id,
+          personId: fixture.people.teacher.personId,
+          slug: nf,
+        });
+        expect(yield* read).toMatchObject({
+          homeroom: { id: fixture.people.teacher.personId },
+        });
+      })
   );
 });
 

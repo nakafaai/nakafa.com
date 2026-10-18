@@ -1,11 +1,26 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   createSchool,
   hostAddress,
+  inviteLearner,
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
+
+/** Adds one cohort of grade 7 to the active period, from the cohorts page. */
+async function addCohort(page: Page, name: string) {
+  await page
+    .locator("header")
+    .getByRole("button", { name: "Add cohort" })
+    .click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Name").fill(name);
+  await dialog.getByRole("combobox", { name: "Grade" }).click();
+  await page.getByRole("option", { exact: true, name: "7" }).click();
+  await dialog.getByRole("button", { name: "Add cohort" }).click();
+  await expect(page.getByRole("link", { name })).toBeVisible();
+}
 
 test("an admin opens the profile and the periods of a school", async ({
   browser,
@@ -103,6 +118,77 @@ test("an admin opens a period, then creates and renames a cohort of it", async (
   await renameDialog.getByLabel("Name").fill("7 Biru");
   await renameDialog.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("row", { name: "7 Biru" })).toBeVisible();
+  await context.close();
+});
+
+test("an admin places a student in a cohort, then moves the student to another", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learnerContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: `student-${school.slug}@acceptance.example.test`,
+      baseURL: address("/"),
+      context: learnerContext,
+      slug: school.slug,
+    })
+  );
+  await learnerContext.close();
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/settings/periods"));
+  await page
+    .locator("header")
+    .getByRole("button", { name: "Add period" })
+    .click();
+  const periodDialog = page.getByRole("dialog");
+  await periodDialog.getByLabel("Name").fill("Semester 1");
+  await periodDialog.getByLabel("First day").fill("2027-07-01");
+  await periodDialog.getByLabel("Last day").fill("2027-12-20");
+  await periodDialog.getByRole("button", { name: "Add period" }).click();
+  await page
+    .getByRole("row", { name: "Semester 1" })
+    .getByRole("button", { name: "More actions" })
+    .click();
+  await page.getByRole("menuitem", { name: "Open" }).click();
+
+  await page.goto(address("/settings/cohorts"));
+  await addCohort(page, "7A");
+  await addCohort(page, "7B");
+
+  // The admin places the learner in 7A, then moves them to 7B, which shows at once.
+  await page.getByRole("link", { name: "7A" }).click();
+  await page
+    .locator("header")
+    .getByRole("button", { name: "Add student" })
+    .click();
+  const placeDialog = page.getByRole("dialog");
+  await placeDialog.getByRole("combobox", { name: "Student" }).click();
+  await page.getByRole("option", { name: "Acceptance Learner" }).click();
+  await placeDialog.getByRole("button", { name: "Add student" }).click();
+  await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
+    1
+  );
+
+  await page.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Move" }).click();
+  const moveDialog = page.getByRole("dialog");
+  await moveDialog.getByRole("combobox", { name: "Move to" }).click();
+  await page.getByRole("option", { exact: true, name: "7B" }).click();
+  await moveDialog.getByRole("button", { exact: true, name: "Move" }).click();
+  await expect(page.getByText("No student yet.")).toBeVisible();
+
+  await page.goto(address("/settings/cohorts"));
+  await page.getByRole("link", { name: "7B" }).click();
+  await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
+    1
+  );
   await context.close();
 });
 

@@ -11,6 +11,7 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { Cohort, Period } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
+  activeHomeroomOf,
   cohortAccess,
   cohortAuthority,
   periodAccess,
@@ -51,6 +52,38 @@ const list = FunctionImpl.make(
       .take(COHORT_LIMIT)
       .pipe(Effect.orDie);
     return Arr.map(cohorts, view);
+  })
+);
+
+/**
+ * The homeroom teacher of one cohort as its readers see them, or null while the cohort has
+ * none. A teacher who was removed holds no slot, so the readers find none for them.
+ */
+const homeroomTeacherOf = Effect.fnUntraced(function* (
+  cohortId: TenantCohortsDoc["_id"]
+) {
+  const assignment = yield* activeHomeroomOf(cohortId);
+  if (Option.isNone(assignment)) {
+    return null;
+  }
+  const teacher = yield* (yield* DatabaseReader)
+    .table("tenantPeople")
+    .get(assignment.value.personId)
+    .pipe(Effect.orDie);
+  return { id: teacher._id, name: teacher.name };
+});
+
+/** One cohort with its period, and the homeroom teacher it has now. */
+const detail = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "get",
+  Effect.fn("tenancy.cohorts.get")(function* () {
+    const cohort = yield* Cohort;
+    return Struct.assign(view(cohort), {
+      homeroom: yield* homeroomTeacherOf(cohort._id),
+      periodId: cohort.periodId,
+    });
   })
 );
 
@@ -180,6 +213,7 @@ const archive = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
+  Layer.provide(detail),
   Layer.provide(activePeriod),
   Layer.provide(members),
   Layer.provide(create),

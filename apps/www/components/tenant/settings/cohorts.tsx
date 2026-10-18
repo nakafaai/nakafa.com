@@ -28,6 +28,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { startTransition, useId, useState } from "react";
 import { DataTable } from "@/components/shared/table/data";
@@ -285,7 +286,14 @@ function SchoolCohortTable({
 
   const columns = cohortColumns.columns([
     cohortColumns.accessor((cohort) => cohort.name, {
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => (
+        <Link
+          className="font-medium"
+          href={`/settings/cohorts/${info.row.original.id}`}
+        >
+          {info.getValue()}
+        </Link>
+      ),
       filterFn: "includesString",
       header: t("cohort-name"),
       id: "name",

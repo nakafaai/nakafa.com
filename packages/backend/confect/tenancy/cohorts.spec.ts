@@ -34,6 +34,18 @@ const PlacedPersonView = Schema.Struct({
   name: PersonName,
 });
 
+/** One cohort with its period, and the homeroom teacher it has now, if it has one. */
+const CohortDetailView = Schema.Struct({
+  grade: CohortGrade,
+  homeroom: Schema.NullOr(
+    Schema.Struct({ id: Id("tenantPeople"), name: PersonName })
+  ),
+  id: Id("tenantCohorts"),
+  name: CohortName,
+  periodId: Id("tenantPeriods"),
+  status: CohortStatus,
+});
+
 /**
  * The cohorts of one period. The school's Admin creates, renames, and archives
  * them, and the roles that read the plan read them. A Person placed in a cohort
@@ -49,6 +61,14 @@ export default GroupSpec.make()
       returns: () => Schema.Array(CohortView),
       error: () => AccessDenied,
     }).middleware(PeriodAccess, { action: "period.view", arg: "periodId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "get",
+      args: () => ({ cohortId: Id("tenantCohorts"), slug: TenantSlug }),
+      returns: () => CohortDetailView,
+      error: () => AccessDenied,
+    }).middleware(CohortAccess, { action: "cohort.view", arg: "cohortId" })
   )
   .addFunction(
     FunctionSpec.publicQuery({

@@ -12,6 +12,14 @@ export type Period = Ref.Returns<typeof tenancy.periods.list>["page"][number];
 /** One cohort, a rombel, as the cohorts list of a period shows it. */
 export type Cohort = Ref.Returns<typeof tenancy.cohorts.list>[number];
 
+/** One cohort as its page reads it: its period, and the homeroom teacher it has now. */
+export type CohortDetail = Ref.Returns<typeof tenancy.cohorts.get>;
+
+/** One student placed in a cohort, as the cohort's members list shows them. */
+export type Member = Ref.Returns<
+  typeof tenancy.cohorts.members
+>["page"][number];
+
 /** One pending invite as the invites list shows it. */
 export type Invite = Ref.Returns<typeof tenancy.invites.list>["page"][number];
 
