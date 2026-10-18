@@ -1,9 +1,33 @@
 "use client";
 
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+import { createContext, use } from "react";
 import { ActionButton, ActionLink } from "@/components/state/action";
 import { DeferredFigure } from "@/components/state/figure.client";
 import { Screen } from "@/components/state/screen";
+
+/** The quiet way home of a broken page: its label and the page it leads to. */
+const BrokenHome = Schema.Struct({
+  home: Schema.String,
+  homeHref: Schema.String,
+});
+
+const BrokenHomeContext = createContext<typeof BrokenHome.Type | null>(null);
+
+/** Reads the quiet way home that the broken page shows. */
+function useBrokenHome() {
+  const home = use(BrokenHomeContext);
+  if (home === null) {
+    throw new Error("useBrokenHome must be used within Broken");
+  }
+  return home;
+}
+
+/** The quiet way home, which reads its label and its link from Broken. */
+function BrokenHomeLink() {
+  const { home, homeHref } = useBrokenHome();
+  return <ActionLink href={homeHref} label={home} variant="ghost" />;
+}
 
 interface BrokenProps {
   description: string;
@@ -42,20 +66,22 @@ export function Broken({
   title,
 }: BrokenProps) {
   return (
-    <Screen
-      actions={
-        <>
-          <ActionButton
-            label={retry}
-            onClick={() => Effect.runSync(reloadDocument())}
-            variant="default"
-          />
-          <ActionLink href={homeHref} label={home} variant="ghost" />
-        </>
-      }
-      description={description}
-      figure={<DeferredFigure scene="broken" />}
-      title={title}
-    />
+    <BrokenHomeContext value={{ home, homeHref }}>
+      <Screen
+        actions={
+          <>
+            <ActionButton
+              label={retry}
+              onClick={() => Effect.runSync(reloadDocument())}
+              variant="default"
+            />
+            <BrokenHomeLink />
+          </>
+        }
+        description={description}
+        figure={<DeferredFigure scene="broken" />}
+        title={<h1>{title}</h1>}
+      />
+    </BrokenHomeContext>
   );
 }
