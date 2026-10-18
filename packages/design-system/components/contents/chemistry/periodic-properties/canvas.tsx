@@ -38,7 +38,6 @@ export function PeriodicPropertiesCanvas({
         <Suspense>
           <PeriodicPropertiesRenderSync key={modeId} />
           <CameraControls
-            autoRotate={false}
             cameraPosition={CAMERA_POSITION}
             cameraTarget={CAMERA_TARGET}
             fov={44}

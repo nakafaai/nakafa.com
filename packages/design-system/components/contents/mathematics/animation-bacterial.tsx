@@ -5,18 +5,23 @@ import {
   BacterialGenerations,
   BacterialPlayback,
   BacterialSpeeds,
+  BacterialTimeProvider,
 } from "@repo/design-system/components/contents/mathematics/bacterial-controls";
 import {
   type BacterialFormulaType,
   BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
+import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Effect, Fiber, Schedule, Schema } from "effect";
 import {
   AnimatePresence,
@@ -27,6 +32,7 @@ import {
 } from "motion/react";
 // biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
 import * as m from "motion/react-m";
+import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 const SPEED_INTERVAL = 1000;
@@ -95,6 +101,8 @@ export function BacterialGrowth({
     bacterial: "Bacterial",
   },
 }: BacterialGrowthProps) {
+  const t = useTranslations("Common");
+  const format = useFormatter();
   const [generation, setGeneration] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -162,85 +170,100 @@ export function BacterialGrowth({
     setIsPlaying(false);
   }
 
+  const time = { timeInterval, timeUnit };
+
   return (
-    <VisualCard ref={ref}>
-      <VisualCardHeader
-        description={
-          // One text node: a count that grows a digit would otherwise move
-          // the label beside it, a layout shift no learner caused.
-          <span aria-live="polite">{`${frame.bacteriaCount} ${labels.bacterial}`}</span>
-        }
-        title={labels.title}
-      />
+    <BacterialTimeProvider time={time}>
+      <VisualCard ref={ref}>
+        <VisualCardHeader title={labels.title} />
 
-      <VisualCardToolbar>
-        <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
-        <BacterialGenerations
-          generation={activeGeneration}
-          maxGenerations={maxGenerations}
-          onGenerationChange={selectGeneration}
-          timeInterval={timeInterval}
-          timeUnit={timeUnit}
-        />
-      </VisualCardToolbar>
+        <VisualCardToolbar>
+          <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
+          <BacterialGenerations
+            generation={activeGeneration}
+            maxGenerations={maxGenerations}
+            onGenerationChange={selectGeneration}
+          />
+        </VisualCardToolbar>
 
-      <VisualCardBody
-        aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
-        className="p-(--card-spacing)"
-        data-bacteria-count={frame.bacteriaCount}
-        data-visible-bacteria-count={frame.bacteriaIds.length}
-        role="img"
-      >
-        <div className="relative aspect-square h-full w-full overflow-hidden rounded-lg border bg-card sm:aspect-video">
-          <div
-            className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
-            style={{
-              gridTemplateColumns: `repeat(${frame.gridColumns}, minmax(0, 1fr))`,
-            }}
-          >
-            <MotionConfig reducedMotion="user">
-              <LazyMotion features={domMax} strict>
-                <LayoutGroup>
-                  <AnimatePresence mode="popLayout">
-                    {Arr.map(frame.bacteriaIds, (id, index) => (
-                      <m.div
-                        animate={{
-                          opacity: 1,
-                          scale: 1,
-                          x: 0,
-                        }}
-                        className="relative flex items-center justify-center"
-                        exit={{ opacity: 0, scale: 0.35, x: -10 }}
-                        initial={{ opacity: 0, scale: 0.35, x: -10 }}
-                        key={id}
-                        layout
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                          delay: index * STAGGER_DELAY,
-                        }}
-                        whileHover={{ scale: SCALE_INCREASE }}
-                      >
-                        <div
-                          className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-chart-1 sm:max-h-8 sm:max-w-8"
-                          data-bacterium=""
-                        />
-                      </m.div>
-                    ))}
-                  </AnimatePresence>
-                </LayoutGroup>
-              </LazyMotion>
-            </MotionConfig>
+        <VisualCardBody
+          aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
+          className="p-(--card-spacing)"
+          data-bacteria-count={frame.bacteriaCount}
+          data-visible-bacteria-count={frame.bacteriaIds.length}
+          role="img"
+        >
+          <div className="relative aspect-square h-full w-full overflow-hidden sm:aspect-video">
+            <div
+              className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
+              style={{
+                gridTemplateColumns: `repeat(${frame.gridColumns}, minmax(0, 1fr))`,
+              }}
+            >
+              <MotionConfig reducedMotion="user">
+                <LazyMotion features={domMax} strict>
+                  <LayoutGroup>
+                    <AnimatePresence mode="popLayout">
+                      {Arr.map(frame.bacteriaIds, (id, index) => (
+                        <m.div
+                          animate={{
+                            opacity: 1,
+                            scale: 1,
+                            x: 0,
+                          }}
+                          className="relative flex items-center justify-center"
+                          exit={{ opacity: 0, scale: 0.35, x: -10 }}
+                          initial={{ opacity: 0, scale: 0.35, x: -10 }}
+                          key={id}
+                          layout
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                            delay: index * STAGGER_DELAY,
+                          }}
+                          whileHover={{ scale: SCALE_INCREASE }}
+                        >
+                          <div
+                            className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-chart-1 sm:max-h-8 sm:max-w-8"
+                            data-bacterium=""
+                          />
+                        </m.div>
+                      ))}
+                    </AnimatePresence>
+                  </LayoutGroup>
+                </LazyMotion>
+              </MotionConfig>
+            </div>
           </div>
-        </div>
-      </VisualCardBody>
+        </VisualCardBody>
 
-      <BacterialPlayback
-        isPlaying={isEffectivelyPlaying}
-        onReset={resetAnimation}
-        onTogglePlaying={togglePlayPause}
-      />
-    </VisualCard>
+        <BacterialPlayback
+          isPlaying={isEffectivelyPlaying}
+          onReset={resetAnimation}
+          onTogglePlaying={togglePlayPause}
+        />
+
+        <VisualCardFooter>
+          <VisualCardFacts>
+            <VisualFact
+              label={t("bacteria")}
+              value={
+                // aria-atomic makes a screen reader announce the count with its
+                // subject, which is visually hidden because the label already shows it.
+                <span aria-atomic="true" aria-live="polite">
+                  {format.number(frame.bacteriaCount, MATH_NUMBER_OPTIONS)}
+                  <span className="sr-only"> {t("bacteria")}</span>
+                </span>
+              }
+            />
+            <VisualFact
+              label={t("time")}
+              value={`${format.number(activeGeneration * timeInterval, MATH_NUMBER_OPTIONS)} ${timeUnit}`}
+            />
+          </VisualCardFacts>
+        </VisualCardFooter>
+      </VisualCard>
+    </BacterialTimeProvider>
   );
 }

@@ -22,16 +22,16 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -76,6 +76,7 @@ export function ChemicalReactionTypesLab({
   const [selectedTypeId, setSelectedTypeId] =
     useState<ChemicalReactionTypeId>(COMBUSTION_TYPE_ID);
   const selectedLabels = labels.types[selectedTypeId];
+  const t = useTranslations("Common");
   const sceneColors = getChemicalReactionTypeSceneColors(resolvedTheme);
 
   /**
@@ -151,15 +152,11 @@ export function ChemicalReactionTypesLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="text-muted-foreground text-sm">
-          {selectedLabels.helperCaption}
-        </p>
         <VisualCardFacts>
+          <VisualFact label={t("note")} value={selectedLabels.helperCaption} />
           <VisualFact
             label={labels.equationLabel}
             value={selectedLabels.equation}
@@ -190,7 +187,6 @@ function ReactionTypeCameraControls() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CHEMICAL_REACTION_TYPES_SCENE_VIEW.cameraTarget}
       fov={45}

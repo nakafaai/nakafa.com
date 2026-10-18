@@ -91,7 +91,6 @@ export function CoordinateSystem({
   className,
   "aria-label": ariaLabel,
 }: Props) {
-  const play = useCoordinateControls((controls) => controls.play);
   const showGrid = useCoordinateControls((controls) => controls.showGrid);
   const { resolvedTheme } = useTheme();
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
@@ -130,7 +129,6 @@ export function CoordinateSystem({
         <Suspense>
           {/* Camera Controls */}
           <CameraControls
-            autoRotate={play}
             cameraPosition={cameraPosition}
             cameraTarget={cameraTarget}
             framing={cameraFraming}

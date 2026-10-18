@@ -381,3 +381,22 @@ export function getModernPeriodicTableCategoryColor(
 ) {
   return colors[MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS[category]];
 }
+
+/** The categories an element tile can have: every element category, never a series marker. */
+type PeriodicElementTileCategoryId =
+  (typeof PERIODIC_ELEMENT_CATEGORY_IDS)[number];
+
+/**
+ * Counts the element tiles of one category in the main table and the f-block
+ * rows. Series markers are not element tiles, so they are never counted.
+ */
+export function getPeriodicElementCategoryCount(
+  categoryId: PeriodicElementTileCategoryId
+) {
+  const tiles = [
+    ...Arr.flatMap(MAIN_PERIODIC_TABLE_ROWS, (row) => row.entries),
+    ...Arr.flatMap(PERIODIC_SERIES_ROWS, (row) => row.entries),
+  ];
+
+  return Arr.filter(tiles, (tile) => tile.category === categoryId).length;
+}

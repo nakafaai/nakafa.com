@@ -23,16 +23,17 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -87,6 +88,7 @@ export function SubatomicParticlePropertiesLab({
   const [selectedModeId, setSelectedModeId] =
     useState<SubatomicParticlePropertiesModeId>(CHARGE_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
+  const t = useTranslations("Common");
   const sceneColors = getSubatomicParticlePropertiesColors(resolvedTheme);
   const viewConfig = SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG[selectedModeId];
   const toggleOrientation = useVerticalToggle ? "vertical" : "horizontal";
@@ -156,17 +158,17 @@ export function SubatomicParticlePropertiesLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <div className="max-w-3xl text-muted-foreground text-sm leading-relaxed">
-          {selectedLabels.summary}
-        </div>
         <VisualCardFacts>
+          <VisualFact label={t("note")} value={selectedLabels.summary} />
           {Arr.map(selectedLabels.facts, (fact) => (
-            <PropertyFact fact={fact} key={fact.label} />
+            <VisualFact
+              key={fact.label}
+              label={fact.label}
+              value={fact.value}
+            />
           ))}
         </VisualCardFacts>
       </VisualCardFooter>
@@ -189,23 +191,10 @@ function ResponsivePropertyCamera({
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={viewConfig.cameraTarget}
       fov={45}
       framing="content"
     />
-  );
-}
-
-/**
- * Renders one compact property fact.
- */
-function PropertyFact({ fact }: { fact: { label: string; value: ReactNode } }) {
-  return (
-    <div className="flex min-h-12 min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{fact.label}</dt>
-      <dd className="wrap-break-word text-foreground">{fact.value}</dd>
-    </div>
   );
 }

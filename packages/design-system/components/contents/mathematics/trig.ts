@@ -21,8 +21,8 @@ const COMMON_RATIOS = [
 ];
 
 /**
- * The math that follows the symbol of one trigonometric ratio: an exact value
- * when the angle has one, or an approximation to two places otherwise. The
+ * The value of one trigonometric ratio as math: its exact value when the angle
+ * has one, or an approximation to two places, after "\\approx", otherwise. The
  * caller formats the approximation, because its digits follow the locale. A
  * comma decimal is written as "{,}", so the math keeps a decimal's spacing.
  */
@@ -32,17 +32,20 @@ export function formatTrigRatioMath(
   exactValue?: string
 ) {
   if (exactValue !== undefined) {
-    return `= ${exactValue}`;
+    return exactValue;
   }
   if (Math.abs(value) < 1e-10) {
-    return "= 0";
+    return "0";
   }
   const exact = Arr.findFirst(
     COMMON_RATIOS,
     (candidate) => Math.abs(Math.abs(value) - candidate.value) < 1e-10
   );
   if (Option.isSome(exact)) {
-    return `= ${value < 0 ? "-" : ""}${exact.value.display}`;
+    return `${value < 0 ? "-" : ""}${exact.value.display}`;
   }
   return `\\approx ${formatApproximation(value).replaceAll(",", "{,}")}`;
 }
+
+/** The numeral of each quadrant, as mathematics writes it in every language. */
+export const QUADRANT_NUMERALS = ["I", "II", "III", "IV"];

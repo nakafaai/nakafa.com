@@ -15,15 +15,14 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
@@ -83,7 +82,6 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
         <ThreeCanvas frameloop="always">
           <Suspense>
             <CameraControls
-              autoRotate={false}
               cameraPosition={[3, 1.7, 4.05]}
               cameraTarget={[0.1, 0.08, 0]}
               fov={42}
@@ -100,9 +98,7 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>

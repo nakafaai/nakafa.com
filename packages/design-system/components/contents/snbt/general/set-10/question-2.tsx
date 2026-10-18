@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,
@@ -14,6 +16,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -35,10 +38,10 @@ const RECRUITMENT_CUES = {
 };
 
 interface Props {
-  acceptedLabel: ReactNode;
+  acceptedLabel: string;
   description: ReactNode;
   divisionLabel: string;
-  rejectedLabel: ReactNode;
+  rejectedLabel: string;
   title: ReactNode;
 }
 
@@ -76,36 +79,66 @@ export function RecruitmentChart({
     [acceptedLabel, rejectedLabel]
   );
 
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(data, (row) => row.formattedDivision),
+      series: [
+        {
+          key: "rejected",
+          label: chartConfig.rejected.label,
+          color: chartConfig.rejected.colors.light[0],
+          values: Arr.map(data, (row) => row.rejected),
+        },
+        {
+          key: "accepted",
+          label: chartConfig.accepted.label,
+          color: chartConfig.accepted.colors.light[0],
+          values: Arr.map(data, (row) => row.accepted),
+        },
+      ],
+    }),
+    [chartConfig, data]
+  );
+
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilBarChart className="aspect-video" config={chartConfig} data={data}>
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="formattedDivision"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis axisLine={false} tickLine={false} tickMargin={10} />
-          <Tooltip />
-          <Legend />
-          <Bar
-            dataKey="rejected"
-            radius={RECRUITMENT_CUES.rejected.radius}
-            variant={RECRUITMENT_CUES.rejected.variant}
-          />
-          <Bar
-            dataKey="accepted"
-            radius={RECRUITMENT_CUES.accepted.radius}
-            variant={RECRUITMENT_CUES.accepted.variant}
-          />
-        </EvilBarChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilBarChart
+            className="aspect-video"
+            config={chartConfig}
+            data={data}
+          >
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="formattedDivision"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+            <Tooltip />
+            <Legend />
+            <Bar
+              dataKey="rejected"
+              radius={RECRUITMENT_CUES.rejected.radius}
+              variant={RECRUITMENT_CUES.rejected.variant}
+            />
+            <Bar
+              dataKey="accepted"
+              radius={RECRUITMENT_CUES.accepted.radius}
+              variant={RECRUITMENT_CUES.accepted.variant}
+            />
+          </EvilBarChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

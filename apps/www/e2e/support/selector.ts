@@ -33,8 +33,8 @@ export const DRAWER_PANEL = '[data-slot="drawer-panel"]';
 export const SHEET_POPUP = '[data-slot="sheet-popup"][data-open]';
 /** A deferred 3D line scene inside a lesson card. */
 export const LINE_SCENE = '[data-scene="line"]';
-/** The footer of a 3D scene: its grid and its automatic rotation. */
-export const COORDINATE_CONTROLS = "[data-coordinate-controls]";
+/** The actions band of a 3D scene: its own actions, then play, reset and full screen. */
+export const SCENE_ACTIONS = "[data-scene-actions]";
 /** The sidebar trigger in a Quran surah's header, which opens its outline. */
 export const SURAH_SIDEBAR_TRIGGER =
   'header [data-slot="surah-header-actions"] button[data-sidebar="trigger"]';

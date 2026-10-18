@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import {
   getSchoolSettingsSection,
+  isExamEditorPath,
   isSchoolSettingsPath,
   schoolSettingsGroups,
   schoolSettingsSections,
@@ -80,5 +81,20 @@ describe("school settings routes", () => {
     expect(isSchoolSettingsPath("/settings/policies")).toBe(true);
     expect(isSchoolSettingsPath("/")).toBe(false);
     expect(isSchoolSettingsPath("/settings-archive")).toBe(false);
+  });
+});
+
+describe("exam editor routes", () => {
+  it("recognizes the editor route of an exam, with or without a trailing slash", () => {
+    expect(isExamEditorPath("/exams/exam-1/edit")).toBe(true);
+    expect(isExamEditorPath("/exams/exam-1/edit/")).toBe(true);
+  });
+
+  it("keeps the exams list, the page of one exam, and every other path out of the editor", () => {
+    expect(isExamEditorPath("/exams")).toBe(false);
+    expect(isExamEditorPath("/exams/exam-1")).toBe(false);
+    expect(isExamEditorPath("/exams/exam-1/editor")).toBe(false);
+    expect(isExamEditorPath("/settings/policies")).toBe(false);
+    expect(isExamEditorPath("/")).toBe(false);
   });
 });

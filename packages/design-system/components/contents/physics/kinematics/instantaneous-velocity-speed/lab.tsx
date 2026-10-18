@@ -31,15 +31,14 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -144,7 +143,6 @@ export function InstantaneousVelocitySpeedLab({
               shadow-normalBias={0.02}
             />
             <CameraControls
-              autoRotate={false}
               cameraPosition={INSTANTANEOUS_SPEED_CAMERA.cameraPosition}
               cameraTarget={INSTANTANEOUS_SPEED_CAMERA.cameraTarget}
               enablePan
@@ -157,9 +155,7 @@ export function InstantaneousVelocitySpeedLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>
