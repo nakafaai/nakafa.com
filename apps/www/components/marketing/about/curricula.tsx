@@ -2,6 +2,7 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { CurriculumList } from "@/components/marketing/about/curricula/list.client";
+import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import {
   readRuntimeCurriculumCatalog,
@@ -28,7 +29,7 @@ export async function Curricula({ locale }: { locale: Locale }) {
           {t("curricula-title")}
         </h2>
         <div className="grid items-center gap-16 md:grid-cols-[auto_minmax(0,1fr)]">
-          <div className="hidden md:block">
+          <div className="hidden md:block" id={NINA_SLOT.curricula}>
             <Nina act="pointing" label="" size={200} whole />
           </div>
           <CurriculumList curricula={curricula} label={t("curricula-list")} />

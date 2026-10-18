@@ -31,6 +31,25 @@ const BoxSchema = Schema.Struct({
 type Box = typeof BoxSchema.Type;
 
 /**
+ * Where layout put an element, before any transform: its offsets summed up the
+ * chain of offset parents, each parent's border included. A part that rises
+ * into view by a transform moves on the screen but not in layout, so a toy
+ * beside it lands where the part rests, and never jumps when the motion ends
+ * and the toys are laid again.
+ */
+function layoutOrigin(el: HTMLElement): Pick<Box, "left" | "top"> {
+  const parent = el.offsetParent;
+  if (!(parent instanceof HTMLElement)) {
+    return { left: el.offsetLeft, top: el.offsetTop };
+  }
+  const above = layoutOrigin(parent);
+  return {
+    left: above.left + parent.clientLeft + el.offsetLeft,
+    top: above.top + parent.clientTop + el.offsetTop,
+  };
+}
+
+/**
  * Answers where a toy belongs at this width of the page, from the live layout:
  * `box` measures any element in the page. When there is no free room for the
  * toy at this width it answers nothing, and the toy is left out.
@@ -63,8 +82,24 @@ export function createScatter(rest: (el: HTMLElement) => void) {
     // The first width is no change of page: nothing has moved yet.
     const fresh = width !== 0 && next !== width;
     width = next;
+    const origin = layoutOrigin(current);
     const base = current.getBoundingClientRect();
+    // An element of the page is measured by its layout, so no transform moves
+    // its toys; an SVG part has no offsets, so the screen measures it.
     const box = (el: Element): Box => {
+      if (el instanceof HTMLElement) {
+        const at = layoutOrigin(el);
+        const left = at.left - origin.left;
+        const top = at.top - origin.top;
+        return {
+          bottom: top + el.offsetHeight,
+          height: el.offsetHeight,
+          left,
+          right: left + el.offsetWidth,
+          top,
+          width: el.offsetWidth,
+        };
+      }
       const rect = el.getBoundingClientRect();
       return {
         bottom: rect.bottom - base.top,

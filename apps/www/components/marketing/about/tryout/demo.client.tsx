@@ -2,12 +2,12 @@
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { TalkReply } from "@/components/marketing/about/talk.client";
 import {
   TryoutResponseFields,
   type TryoutResponseFieldsProps,
@@ -159,20 +159,19 @@ const MOODS = {
 } as const satisfies Record<Outcome, typeof MoodSchema.Type>;
 
 /**
- * Nina's answer beside the question: an invitation while it waits, then what
- * the chosen answer is: right, with a laugh, or not yet, with a look.
+ * Nina beside the row's title, following the demo: she thinks while the
+ * question waits, cheers a right answer, and keeps thinking over a wrong one.
  */
-export function TryoutDemoReply({
-  words,
-}: {
-  /** What Nina says at each moment of the demo. */
-  words: Record<Outcome, string>;
-}) {
+export function TryoutDemoNina() {
   const outcome = useTryoutDemo((state) => state.outcome);
 
   return (
-    <TalkReply act="drumming" mood={MOODS[outcome]}>
-      {words[outcome]}
-    </TalkReply>
+    <Nina
+      act={outcome === "right" ? "cheering" : "thinking"}
+      label=""
+      mood={MOODS[outcome]}
+      size={88}
+      whole
+    />
   );
 }
