@@ -135,7 +135,9 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
 
-  // On a phone the header folds its path into one menu, with the Quran index.
+  // Once the drawer's backdrop fades, the header's folded path holds the index.
+  const backdrop = page.locator('[data-slot="drawer-backdrop"]');
+  yield* Effect.promise(() => expect(backdrop).toBeHidden());
   const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
   yield* Effect.promise(() => breadcrumb.getByRole("button").click());
   const menu = page.getByRole("menu");
