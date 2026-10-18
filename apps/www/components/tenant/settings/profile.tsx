@@ -145,7 +145,7 @@ function SchoolProfileCard({
           <CardDescription>{t("logo-description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
+          <SchoolMark logo={tenant.logo} mascot={tenant.mascot} size="lg" />
         </CardContent>
         <CardSectionFooter>
           <CardSectionHint>{t("logo-footer")}</CardSectionHint>

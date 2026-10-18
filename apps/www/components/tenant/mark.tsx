@@ -4,7 +4,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import Image from "next/image";
 
-/** The two sizes of a school's mark: beside its name in the sidebar, and above the sign-in title. */
+/** The two sizes of a school's mark: beside its name in the sidebar, and large on the sign-in page and in the logo settings. */
 const markVariants = cva("", {
   defaultVariants: { size: "sm" },
   variants: { size: { lg: "size-24", sm: "size-8" } },
