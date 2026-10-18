@@ -181,6 +181,15 @@
         "returned": "Promotion returned",
         "undone": "Promotion step undone"
       },
+      "sitting": {
+        "schedule": "Exam sitting scheduled",
+        "lock": "Exam attempt locked",
+        "unlock": "Exam attempt unlocked",
+        "addMinutes": "Minutes added to an exam attempt",
+        "changeToken": "Exam sitting token changed",
+        "allowDevice": "Second device allowed for an exam attempt",
+        "close": "Exam sitting closed"
+      },
       "tenant": {
         "provisioned": "School opened",
         "locale": {

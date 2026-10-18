@@ -181,6 +181,15 @@
         "returned": "Kenaikan kelas dikembalikan",
         "undone": "Langkah kenaikan kelas dibatalkan"
       },
+      "sitting": {
+        "schedule": "Sesi ujian dijadwalkan",
+        "lock": "Percobaan ujian dikunci",
+        "unlock": "Kunci percobaan ujian dibuka",
+        "addMinutes": "Waktu percobaan ujian ditambah",
+        "changeToken": "Token sesi ujian diganti",
+        "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
+        "close": "Sesi ujian ditutup"
+      },
       "tenant": {
         "provisioned": "Sekolah dibuka",
         "locale": {
