@@ -5,6 +5,11 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -24,7 +29,7 @@ import {
 } from "effect";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { StoreApi } from "zustand";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
@@ -66,6 +71,7 @@ export function CreateExam({
   const [title, setTitle] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
   const [schoolLanguage, setSchoolLanguage] = useState<Language | null>(null);
+  const id = useId();
   const names = useMemo(
     () => new Intl.DisplayNames([locale], { type: "language" }),
     [locale]
@@ -95,6 +101,8 @@ export function CreateExam({
     Option.isSome(choice) &&
     Option.isSome(language) &&
     Schema.is(ExamTitle)(name);
+  const isUnitLanguage =
+    Option.isSome(choice) && choice.value.language !== null;
 
   /** Creates the exam, shows it at once, and goes to its editor once the server saves it. */
   const submit = () => {
@@ -143,37 +151,37 @@ export function CreateExam({
         setOpen={setOpen}
         title={t("create")}
       >
-        <div className="flex flex-col gap-4">
-          <Input
-            aria-label={t("title-label")}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder={t("untitled")}
-            value={title}
-          />
-          <Select
-            items={unitItems}
-            onValueChange={(key) => setPicked(key)}
-            value={Option.getOrNull(Option.map(choice, choiceKey))}
-          >
-            <SelectTrigger aria-label={t("unit")}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Arr.map(unitItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {Option.isSome(choice) && choice.value.language !== null ? (
-            <div className="flex flex-col">
-              <span className="text-muted-foreground text-sm">
-                {t("language")}
-              </span>
-              <p>{names.of(choice.value.language)}</p>
-            </div>
-          ) : (
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor={`${id}-title`}>{t("title-label")}</FieldLabel>
+            <Input
+              id={`${id}-title`}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={t("untitled")}
+              value={title}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>
+            <Select
+              items={unitItems}
+              onValueChange={(key) => setPicked(key)}
+              value={Option.getOrNull(Option.map(choice, choiceKey))}
+            >
+              <SelectTrigger className="w-full" id={`${id}-unit`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Arr.map(unitItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-language`}>{t("language")}</FieldLabel>
             <Select
               items={languageItems}
               onValueChange={(code) =>
@@ -187,7 +195,11 @@ export function CreateExam({
                 Option.map(language, (code): string => code)
               )}
             >
-              <SelectTrigger aria-label={t("language")}>
+              <SelectTrigger
+                className="w-full"
+                disabled={isUnitLanguage}
+                id={`${id}-language`}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -198,8 +210,8 @@ export function CreateExam({
                 ))}
               </SelectContent>
             </Select>
-          )}
-        </div>
+          </Field>
+        </FieldGroup>
       </ResponsiveDialog>
     </>
   );

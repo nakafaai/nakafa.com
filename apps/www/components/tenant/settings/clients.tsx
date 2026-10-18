@@ -8,16 +8,19 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
+import { ApiIcon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -29,14 +32,10 @@ import {
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-  CardSectionHint,
-} from "@/components/shared/card/section";
+import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
@@ -52,8 +51,8 @@ type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
 
 /**
  * Renders the integration clients of the school, each with the part of the school it
- * covers. A client is created, rotated (which issues a new secret that is shown once),
- * or revoked.
+ * covers, in a data table with Create client in the header. A client is created, rotated
+ * (which issues a new secret that is shown once), or revoked.
  */
 export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
@@ -61,6 +60,45 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
     undefined
   );
   const [isCreating, setIsCreating] = useState(false);
+
+  return (
+    <SettingsPage
+      actions={
+        <Button onClick={() => setIsCreating(true)} type="button">
+          {t("client-add")}
+        </Button>
+      }
+    >
+      <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+      <SchoolClientCreateDialog
+        onIssued={setIssuedSecret}
+        open={isCreating}
+        setOpen={setIsCreating}
+        slug={slug}
+      />
+      <SchoolSecretDialog
+        description={t("client-secret-description")}
+        onClose={() => setIssuedSecret(undefined)}
+        secret={issuedSecret}
+        title={t("client-secret-title")}
+      />
+    </SettingsPage>
+  );
+}
+
+/**
+ * Renders the clients of the school in a data table that loads more rows as its end comes
+ * into view, or the table's empty state while the school has no client. The table waits
+ * for its first page, so no empty state shows before the rows arrive.
+ */
+function SchoolClientTable({
+  onIssued,
+  slug,
+}: {
+  onIssued: (secret: string) => void;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
   const pagination = usePaginatedQuery(
     integrations.clients.list,
     { slug },
@@ -70,14 +108,22 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
+  if (pagination._tag === "LoadingFirstPage") {
+    return null;
+  }
+  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    return (
+      <TableEmpty
+        description={t("client-add-description")}
+        icon={<HugeIcons icon={ApiIcon} />}
+        title={t("clients-empty")}
+      />
+    );
+  }
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("clients")}</CardTitle>
-        <CardDescription>{t("clients-description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <>
+      <TableFrame>
         <Table>
           <SchoolTableHeader
             columns={[
@@ -92,43 +138,25 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
               <SchoolClientRow
                 client={client}
                 key={client.id}
-                onIssued={setIssuedSecret}
+                onIssued={onIssued}
                 slug={slug}
               />
             ))}
           </TableBody>
         </Table>
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-        ) : null}
-      </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("client-add-footer")}</CardSectionHint>
-        <CardSectionActions>
-          <Button onClick={() => setIsCreating(true)} size="sm" type="button">
-            {t("client-add")}
-          </Button>
-        </CardSectionActions>
-      </CardSectionFooter>
-      <SchoolClientCreateDialog
-        onIssued={setIssuedSecret}
-        open={isCreating}
-        setOpen={setIsCreating}
-        slug={slug}
-      />
-      <SchoolSecretDialog
-        description={t("client-secret-description")}
-        onClose={() => setIssuedSecret(undefined)}
-        secret={issuedSecret}
-        title={t("client-secret-title")}
-      />
-    </CardSection>
+      </TableFrame>
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
+    </>
   );
 }
 
 /**
- * Renders one client row, with its rotate action and, while it is active, its revoke
- * action. The rotate button stays as it is while its request runs, and is inert then.
+ * Renders one client row: its name, the part of the school it covers, and its status.
+ * An active client's row menu rotates its secret, which the rotate request answers once,
+ * and revokes it behind a confirmation. A revoked client has no menu. The rotate item is
+ * disabled while its request runs.
  */
 function SchoolClientRow({
   client,
@@ -140,6 +168,7 @@ function SchoolClientRow({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const viewer = useQuery(tenancy.viewer.get, { slug });
   const rotate = useMutation(integrations.clients.rotate);
   const revoke = useMutation(integrations.clients.revoke).withOptimisticUpdate(
@@ -151,7 +180,7 @@ function SchoolClientRow({
 
   return (
     <TableRow>
-      <TableCell>{client.name}</TableCell>
+      <TableCell className="font-medium">{client.name}</TableCell>
       <TableCell>
         {QueryResult.isSuccess(viewer)
           ? scopeNameOf(
@@ -165,49 +194,69 @@ function SchoolClientRow({
       <TableCell className="text-right">
         {isActive ? (
           <>
-            <Button
-              inert={isPending}
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(
-                    () => rotate({ clientId: client.id, slug }),
-                    SOURCE,
-                    (issued) => onIssued(issued.secret)
-                  )
-                )
-              }
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              {t("client-rotate")}
-            </Button>
-            <Button
-              onClick={() => setIsRevoking(true)}
-              size="sm"
-              type="button"
-              variant="destructive"
-            >
-              {t("client-revoke")}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    aria-label={common("more-actions")}
+                    size="icon-sm"
+                    variant="ghost"
+                  >
+                    <HugeIcons icon={MoreHorizontalIcon} />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  disabled={isPending}
+                  onClick={() =>
+                    startTransition(() =>
+                      saveSchool(
+                        () => rotate({ clientId: client.id, slug }),
+                        SOURCE,
+                        (issued) => onIssued(issued.secret)
+                      )
+                    )
+                  }
+                >
+                  {t("client-rotate")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setIsRevoking(true)}
+                  variant="destructive"
+                >
+                  {t("client-revoke")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <ResponsiveDialog
               description={t("client-revoke-description")}
               footer={
-                <Button
-                  onClick={() => {
-                    setIsRevoking(false);
-                    startTransition(() =>
-                      saveSchool(
-                        () => revoke({ clientId: client.id, slug }),
-                        SOURCE
-                      )
-                    );
-                  }}
-                  type="button"
-                  variant="destructive"
-                >
-                  {t("client-revoke-confirm")}
-                </Button>
+                <>
+                  <Button
+                    onClick={() => setIsRevoking(false)}
+                    type="button"
+                    variant="outline"
+                  >
+                    {common("cancel")}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsRevoking(false);
+                      startTransition(() =>
+                        saveSchool(
+                          () => revoke({ clientId: client.id, slug }),
+                          SOURCE
+                        )
+                      );
+                    }}
+                    type="button"
+                    variant="destructive"
+                  >
+                    {t("client-revoke-confirm")}
+                  </Button>
+                </>
               }
               open={isRevoking}
               setOpen={setIsRevoking}

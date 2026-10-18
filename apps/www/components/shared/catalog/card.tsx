@@ -39,7 +39,6 @@ export function CatalogCard({
           className="w-full"
           nativeButton={false}
           render={action}
-          variant="secondary"
         >
           {actionLabel}
         </Button>

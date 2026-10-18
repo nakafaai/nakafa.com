@@ -6,16 +6,19 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
+import { MailAdd01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -27,14 +30,10 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-  CardSectionHint,
-} from "@/components/shared/card/section";
+import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
@@ -49,9 +48,10 @@ const PAGE_SIZE = 25;
 type InviteItem = PaginatedQueryItem<typeof tenancy.invites.list>;
 
 /**
- * Renders the pending invites of the school, each with its expiry, and the actions
- * to send an invite again or to revoke it. The list loads more rows as its end
- * comes into view.
+ * The pending invites of the school: Invite in the header, then every invite in a data
+ * table with its expiry and its row menu, which sends it again or revokes it. With no
+ * invite, the table says what it will hold. The list loads more rows as its end comes
+ * into view.
  */
 export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
@@ -71,54 +71,81 @@ export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
   }
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("invites")}</CardTitle>
-        <CardDescription>{t("invites-description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <SchoolTableHeader
-            columns={[
-              t("invite-name"),
-              t("invite-email"),
-              t("invite-expires"),
-              "",
-            ]}
-          />
-          <TableBody>
-            {Arr.map(pagination.results, (invite) => (
-              <SchoolInviteRow
-                invite={invite}
-                key={invite.id}
-                sendLocale={sendLocale}
-                slug={slug}
-              />
-            ))}
-          </TableBody>
-        </Table>
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-        ) : null}
-      </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("invites-footer")}</CardSectionHint>
-        <CardSectionActions>
-          <Button onClick={() => setIsInviting(true)} size="sm" type="button">
-            {t("invite-action")}
-          </Button>
-        </CardSectionActions>
-      </CardSectionFooter>
+    <SettingsPage
+      actions={
+        <Button onClick={() => setIsInviting(true)} type="button">
+          {t("invite-action")}
+        </Button>
+      }
+    >
+      {pagination._tag === "LoadingFirstPage" ? null : (
+        <SchoolInviteTable
+          invites={pagination.results}
+          sendLocale={sendLocale}
+          slug={slug}
+        />
+      )}
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
       <SchoolInviteDialog
         open={isInviting}
         setOpen={setIsInviting}
         slug={slug}
       />
-    </CardSection>
+    </SettingsPage>
   );
 }
 
-/** Renders one invite row: its person, its address, its expiry, and its actions. */
+/** The invites in a data table, or the table's empty state when there is none. */
+function SchoolInviteTable({
+  invites,
+  sendLocale,
+  slug,
+}: {
+  invites: readonly InviteItem[];
+  sendLocale: typeof ActiveAppLocaleCodeSchema.Type | undefined;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+
+  if (Arr.isReadonlyArrayEmpty(invites)) {
+    return (
+      <TableEmpty
+        description={t("invites-footer")}
+        icon={<HugeIcons icon={MailAdd01Icon} />}
+        title={t("invites-empty")}
+      />
+    );
+  }
+
+  return (
+    <TableFrame>
+      <Table>
+        <SchoolTableHeader
+          columns={[
+            t("invite-name"),
+            t("invite-email"),
+            t("invite-expires"),
+            "",
+          ]}
+        />
+        <TableBody>
+          {Arr.map(invites, (invite) => (
+            <SchoolInviteRow
+              invite={invite}
+              key={invite.id}
+              sendLocale={sendLocale}
+              slug={slug}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </TableFrame>
+  );
+}
+
+/** One invite row: its person, its address, its expiry, and its row menu. */
 function SchoolInviteRow({
   invite,
   sendLocale,
@@ -129,6 +156,7 @@ function SchoolInviteRow({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const resend = useMutation(tenancy.invites.resend);
   const revoke = useMutation(tenancy.invites.revoke).withOptimisticUpdate(
     revokeInviteChange
@@ -137,63 +165,82 @@ function SchoolInviteRow({
 
   return (
     <TableRow>
-      <TableCell>{invite.name}</TableCell>
+      <TableCell className="font-medium">{invite.name}</TableCell>
       <TableCell>{invite.email}</TableCell>
       <TableCell>
         <SchoolDateTime at={invite.expiresAt} slug={slug} />
       </TableCell>
       <TableCell className="text-right">
-        <Button
-          disabled={sendLocale === undefined}
-          inert={isDraft(invite.id)}
-          onClick={() => {
-            if (sendLocale !== undefined) {
-              startTransition(() =>
-                saveSchool(
-                  () =>
-                    resend({
-                      inviteId: invite.id,
-                      locale: sendLocale,
-                      slug,
-                    }),
-                  SOURCE
-                )
-              );
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label={common("more-actions")}
+                inert={isDraft(invite.id)}
+                size="icon-sm"
+                variant="ghost"
+              >
+                <HugeIcons icon={MoreHorizontalIcon} />
+              </Button>
             }
-          }}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          {t("invite-resend")}
-        </Button>
-        <Button
-          inert={isDraft(invite.id)}
-          onClick={() => setIsRevoking(true)}
-          size="sm"
-          type="button"
-          variant="destructive"
-        >
-          {t("invite-revoke")}
-        </Button>
+          />
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              disabled={sendLocale === undefined}
+              onClick={() => {
+                if (sendLocale !== undefined) {
+                  startTransition(() =>
+                    saveSchool(
+                      () =>
+                        resend({
+                          inviteId: invite.id,
+                          locale: sendLocale,
+                          slug,
+                        }),
+                      SOURCE
+                    )
+                  );
+                }
+              }}
+            >
+              {t("invite-resend")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setIsRevoking(true)}
+              variant="destructive"
+            >
+              {t("invite-revoke")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <ResponsiveDialog
           description={t("invite-revoke-description")}
           footer={
-            <Button
-              onClick={() => {
-                setIsRevoking(false);
-                startTransition(() =>
-                  saveSchool(
-                    () => revoke({ inviteId: invite.id, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("invite-revoke-confirm")}
-            </Button>
+            <>
+              <Button
+                onClick={() => setIsRevoking(false)}
+                type="button"
+                variant="outline"
+              >
+                {common("cancel")}
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsRevoking(false);
+                  startTransition(() =>
+                    saveSchool(
+                      () => revoke({ inviteId: invite.id, slug }),
+                      SOURCE
+                    )
+                  );
+                }}
+                type="button"
+                variant="destructive"
+              >
+                {t("invite-revoke-confirm")}
+              </Button>
+            </>
           }
           open={isRevoking}
           setOpen={setIsRevoking}

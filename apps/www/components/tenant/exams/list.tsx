@@ -6,20 +6,32 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
+import { File01Icon } from "@hugeicons/core-free-icons";
 import { useIntersection } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@repo/design-system/components/ui/table";
 import { Array as Arr } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
 import { CreateExam } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
+import { SchoolHeader } from "@/components/tenant/header";
 
 /** How many exams the list asks for each time its end comes into view. */
 const EXAM_PAGE_SIZE = 20;
@@ -27,8 +39,8 @@ const EXAM_PAGE_SIZE = 20;
 /**
  * The exams of the school, newest first, each with its title and its language. An exam that
  * the server has not saved yet is disabled until it answers. The next page loads when the end of
- * the list comes into view, so the list has no button. The create action shows when the viewer
- * can create an exam in at least one place.
+ * the list comes into view, so the list has no button. The create action sits in the school's
+ * one header, and shows when the viewer can create an exam in at least one place.
  */
 export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
@@ -66,13 +78,10 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   const languages = QueryResult.isSuccess(viewer)
     ? unitLanguages(viewer.value.units)
     : [];
-  const empty =
-    pagination._tag === "Exhausted" && pagination.results.length === 0;
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <header className="flex items-center justify-between gap-2">
-        <h1 className="font-semibold text-xl">{t("title")}</h1>
+    <>
+      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {choices.length > 0 ? (
           <CreateExam
             choices={choices}
@@ -81,31 +90,69 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
             slug={slug}
           />
         ) : null}
-      </header>
-      {empty ? (
-        <p className="text-muted-foreground text-sm">{t("empty")}</p>
-      ) : null}
-      {pagination._tag === "LoadingFirstPage" ? null : (
-        <ul className="flex flex-col gap-2">
-          {Arr.map(pagination.results, (exam) => (
-            <li key={exam.id}>
-              <ExamRow
-                exam={exam}
-                names={names}
-                saving={Arr.contains(saving, exam.id)}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-      <div aria-hidden ref={ref} />
-    </div>
+      </SchoolHeader>
+      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+        {pagination._tag === "LoadingFirstPage" ? null : (
+          <ExamTable exams={pagination.results} names={names} saving={saving} />
+        )}
+        <div aria-hidden ref={ref} />
+      </LayoutContent>
+    </>
   );
 }
 
 /**
- * One exam of the list: its title and its language. A saved exam links to its editor. An
- * exam that the server is still saving shows the same row without a link, so it is disabled.
+ * The exams in a data table, the title linking to its editor, or the table's empty
+ * state when there is none.
+ */
+function ExamTable({
+  exams: rows,
+  names,
+  saving,
+}: {
+  exams: readonly ExamSummary[];
+  names: Intl.DisplayNames;
+  saving: readonly ExamSummary["id"][];
+}) {
+  const t = useTranslations("Exams");
+
+  if (Arr.isReadonlyArrayEmpty(rows)) {
+    return (
+      <TableEmpty
+        description={t("create-description")}
+        icon={<HugeIcons icon={File01Icon} />}
+        title={t("empty")}
+      />
+    );
+  }
+
+  return (
+    <TableFrame>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("title-label")}</TableHead>
+            <TableHead>{t("language")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Arr.map(rows, (exam) => (
+            <ExamRow
+              exam={exam}
+              key={exam.id}
+              names={names}
+              saving={Arr.contains(saving, exam.id)}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </TableFrame>
+  );
+}
+
+/**
+ * One exam of the table: its title, which opens its editor, and its language. An exam
+ * that the server is still saving shows its title without a link, so it is inert.
  */
 function ExamRow({
   exam,
@@ -116,34 +163,23 @@ function ExamRow({
   names: Intl.DisplayNames;
   saving: boolean;
 }) {
-  const content = (
-    <>
-      <span className="min-w-0 truncate font-medium">{exam.title}</span>
-      <span className="shrink-0 text-muted-foreground text-sm">
-        {names.of(exam.language)}
-      </span>
-    </>
-  );
-
-  if (saving) {
-    return (
-      <Button
-        className="h-auto w-full justify-between py-2 text-start"
-        disabled
-        variant="outline"
-      >
-        {content}
-      </Button>
-    );
-  }
-
   return (
-    <Button
-      className="h-auto w-full justify-between py-2 text-start"
-      render={<Link href={`/exams/${exam.id}/edit`} />}
-      variant="outline"
-    >
-      {content}
-    </Button>
+    <TableRow>
+      <TableCell className="font-medium">
+        {saving ? (
+          <span className="text-muted-foreground">{exam.title}</span>
+        ) : (
+          <Link
+            className="underline-offset-4 hover:underline"
+            href={`/exams/${exam.id}/edit`}
+          >
+            {exam.title}
+          </Link>
+        )}
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {names.of(exam.language)}
+      </TableCell>
+    </TableRow>
   );
 }
