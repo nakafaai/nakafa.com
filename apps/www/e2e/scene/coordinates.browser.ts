@@ -14,7 +14,7 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   CARD,
-  COORDINATE_CONTROLS,
+  SCENE_ACTIONS,
   LINE_SCENE,
   VISUAL_CARD_FOOTER,
 } from "@/e2e/support/selector";
@@ -154,7 +154,7 @@ const expectStableCoordinateSystem = Effect.fn(
   });
   const scene = card.locator(LINE_SCENE);
   const canvas = scene.locator("canvas");
-  const footer = card.locator(COORDINATE_CONTROLS);
+  const footer = card.locator(SCENE_ACTIONS);
   const gridButton = footer.getByRole("button", { name: "Kisi" });
   const rotationButton = footer.getByRole("button", {
     name: "Rotasi otomatis",

@@ -26,14 +26,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
@@ -137,9 +136,7 @@ export function RelativeMovementLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>
@@ -184,7 +181,6 @@ export function RelativeMovementLab({
 function RelativeMovementCamera() {
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={RELATIVE_MOVEMENT_CAMERA.cameraPosition}
       cameraTarget={RELATIVE_MOVEMENT_CAMERA.cameraTarget}
       enablePan

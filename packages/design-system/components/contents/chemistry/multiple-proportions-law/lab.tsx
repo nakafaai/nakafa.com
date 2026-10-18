@@ -22,14 +22,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
@@ -138,9 +137,7 @@ export function MultipleProportionsLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <p className="text-muted-foreground text-sm">
@@ -166,7 +163,6 @@ function MultipleProportionsCameraControls() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={MULTIPLE_PROPORTIONS_SCENE_VIEW.cameraTarget}
       fov={42}

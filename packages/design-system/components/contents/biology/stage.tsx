@@ -67,7 +67,6 @@ function ResponsiveBiologyCamera({ view }: { view: NarrowCameraPose }) {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={view.cameraTarget}
       fov={45}

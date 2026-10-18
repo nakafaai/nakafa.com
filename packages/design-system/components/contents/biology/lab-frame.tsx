@@ -16,14 +16,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
@@ -169,9 +168,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
         ) : null}
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       {hasFooter && (
         <VisualCardFooter>

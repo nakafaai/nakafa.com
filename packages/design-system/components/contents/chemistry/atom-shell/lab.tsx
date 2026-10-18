@@ -16,13 +16,12 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -128,9 +127,7 @@ export function AtomShellLab({
         shells={shellConfiguration}
       />
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         {selectedLabels.note === undefined ? null : (

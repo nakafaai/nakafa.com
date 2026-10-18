@@ -23,14 +23,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
 import { type ReactNode, useMemo, useState } from "react";
@@ -142,9 +141,7 @@ export function AverageVelocitySpeedLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>

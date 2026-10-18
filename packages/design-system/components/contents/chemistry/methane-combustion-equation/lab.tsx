@@ -13,12 +13,11 @@ import {
 } from "@repo/design-system/components/three/scene-frame";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Option } from "effect";
@@ -168,9 +167,7 @@ export function MethaneCombustionEquationLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <p className="text-muted-foreground text-sm">{labels.equation}</p>
@@ -338,7 +335,6 @@ function CombustionCamera() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={VIEW.cameraTarget}
       fov={42}

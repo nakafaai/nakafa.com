@@ -16,13 +16,12 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { cn } from "cn";
 import { Array as Arr, Result } from "effect";
 import type { ReactNode } from "react";
@@ -113,9 +112,7 @@ export function ValenceElectronLab({
         shells={facts.shellConfiguration}
       />
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">

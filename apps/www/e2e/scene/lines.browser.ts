@@ -17,7 +17,7 @@ import {
 } from "@/e2e/support/observe";
 import { openRoute } from "@/e2e/support/route";
 import { isKnownSceneDiagnostic, revealLineScene } from "@/e2e/support/scene";
-import { COORDINATE_CONTROLS, lineSceneCards } from "@/e2e/support/selector";
+import { SCENE_ACTIONS, lineSceneCards } from "@/e2e/support/selector";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;
@@ -92,8 +92,8 @@ const pauseSceneAway = Effect.fn("NakafaE2E.pauseSceneAway")(function* (
   const card = cards.first();
   const canvas = yield* revealLineScene(card);
   const rotation = card
-    .locator(COORDINATE_CONTROLS)
-    .getByRole("button", { name: "Automatic rotation" });
+    .locator(SCENE_ACTIONS)
+    .getByRole("button", { name: "Play" });
 
   // Automatic rotation draws every frame, like an animated lab.
   yield* Effect.promise(() => rotation.click());

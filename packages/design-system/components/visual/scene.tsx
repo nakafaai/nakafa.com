@@ -1,0 +1,85 @@
+"use client";
+
+import {
+  CenterFocusIcon,
+  PauseIcon,
+  PlayIcon,
+} from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  useVisual,
+  VisualCardActions,
+  VisualCardFullscreen,
+} from "@repo/design-system/components/visual/card";
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
+
+/**
+ * Starts the scene moving by itself, or stops it. A still scene shows the play
+ * button filled, so the way to bring it to life is the first thing the eye
+ * finds. It is a toggle: its name stays "Play" and `aria-pressed` says whether
+ * the scene plays. A static stand-in of the scene passes `inert`.
+ */
+function VisualCardPlay({ inert = false }: { inert?: boolean }) {
+  const t = useTranslations("Common");
+  const { playing, togglePlaying } = useVisual((state) => ({
+    playing: state.playing,
+    togglePlaying: state.togglePlaying,
+  }));
+
+  return (
+    <Button
+      aria-pressed={playing}
+      inert={inert}
+      onClick={togglePlaying}
+      size="icon"
+      variant={playing ? "secondary" : "default"}
+    >
+      <HugeIcons icon={playing ? PauseIcon : PlayIcon} />
+      <span className="sr-only">{t("play")}</span>
+    </Button>
+  );
+}
+
+/** Takes the scene's camera back to its first view, after the learner moved it. */
+function VisualCardReset({ inert = false }: { inert?: boolean }) {
+  const t = useTranslations("Common");
+  const resetView = useVisual((state) => state.resetView);
+
+  return (
+    <Button
+      inert={inert}
+      onClick={resetView}
+      size="icon"
+      variant="secondary"
+    >
+      <HugeIcons icon={CenterFocusIcon} />
+      <span className="sr-only">{t("reset")}</span>
+    </Button>
+  );
+}
+
+/**
+ * The actions every 3D scene has, in one band under it: play, the first view
+ * back, and full screen at the end. A scene with actions of its own, such as
+ * the grid of a coordinate scene, passes them as children, and they come first.
+ */
+function VisualCardSceneActions({
+  children,
+  inert = false,
+}: {
+  children?: ReactNode;
+  inert?: boolean;
+}) {
+  return (
+    <VisualCardActions data-scene-actions="">
+      {children}
+      <VisualCardPlay inert={inert} />
+      <VisualCardReset inert={inert} />
+      <VisualCardFullscreen inert={inert} />
+    </VisualCardActions>
+  );
+}
+
+export { VisualCardPlay, VisualCardReset, VisualCardSceneActions };

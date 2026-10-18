@@ -9,14 +9,13 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -101,7 +100,6 @@ export function WindEnergyConversionLab({
         <ThreeCanvas frameloop="always">
           <Suspense>
             <CameraControls
-              autoRotate={false}
               cameraPosition={[2.65, 2, 4.7]}
               cameraTarget={[0.03, 0.94, 0.14]}
               fov={34}
@@ -126,9 +124,7 @@ export function WindEnergyConversionLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>

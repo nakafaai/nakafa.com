@@ -39,6 +39,19 @@ const INLINE: typeof VisualViewSchema.Type = {
   presentation: "inline",
 };
 
+/**
+ * What the card's scene reads: whether it plays, and how many times the
+ * learner asked for its first view back. A scene starts still, at its first
+ * view.
+ */
+const VisualSceneSchema = Schema.Struct({
+  playing: Schema.Boolean,
+  view: Schema.Int,
+});
+
+/** A scene that stands still at its first view. */
+const STILL: typeof VisualSceneSchema.Type = { playing: false, view: 0 };
+
 /** The browser refused to show or leave a visual card with the Fullscreen API. */
 class VisualFullscreenError extends Schema.TaggedError<VisualFullscreenError>()(
   "VisualFullscreenError",
@@ -89,11 +102,12 @@ const exitFullscreen = Effect.fn("designSystem.visual.exitFullscreen")(
  *
  * The actions are the handlers of the card's action, Escape, focus, and
  * `fullscreenchange`, so they run the session and Fullscreen API programs at
- * that browser event boundary.
+ * that browser event boundary. The store also holds the scene's play state
+ * and the count of view resets, which the scene's camera follows.
  */
 export function createVisualStore() {
   return createStore(
-    combine(INLINE, (set, get) => {
+    combine({ ...INLINE, ...STILL }, (set, get) => {
       let card: HTMLElement | null = null;
       let session: Session | undefined;
 
@@ -207,6 +221,11 @@ export function createVisualStore() {
       }
 
       return {
+        /** Takes the scene back to its first view. */
+        resetView: () => set((current) => ({ view: current.view + 1 })),
+        /** Starts the scene moving by itself, or stops it. */
+        togglePlaying: () =>
+          set((current) => ({ playing: !current.playing })),
         /** Registers the card element; the card passes it as its ref. */
         bind: (element: HTMLElement | null) => {
           card = element;
