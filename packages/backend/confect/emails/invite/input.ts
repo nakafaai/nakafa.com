@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { schoolAddress } from "@repo/backend/confect/emails/invite/school";
+import { schoolAddress } from "@repo/backend/confect/tenancy/address";
 import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";

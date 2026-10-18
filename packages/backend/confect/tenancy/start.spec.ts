@@ -51,7 +51,7 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "open",
       args: () => startArgs,
-      returns: () => Schema.Struct({ slug: TenantSlug }),
+      returns: () => Schema.Struct({ address: Schema.String, slug: TenantSlug }),
       error: () => Schema.Union([AccountFailure, FoundingRefused]),
     })
   );

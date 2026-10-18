@@ -74,10 +74,12 @@ const foundedRows = (slug: string) =>
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(TENANCY_NOW);
+  vi.stubEnv("SITE_URL", "https://nakafa.com");
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 describe("tenancy/start", () => {
@@ -99,7 +101,10 @@ describe("tenancy/start", () => {
           },
         });
         const opened = yield* founder.client.mutation(open, harapan("harapan"));
-        expect(opened).toEqual({ slug: "harapan" });
+        expect(opened).toEqual({
+          address: "https://harapan.nakafa.com/",
+          slug: "harapan",
+        });
 
         const rows = yield* fixture.run(foundedRows("harapan"));
         expect(

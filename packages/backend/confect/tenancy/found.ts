@@ -8,7 +8,11 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { assignRole } from "@repo/backend/confect/access/grant";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
-import { readAddress } from "@repo/backend/confect/tenancy/address";
+import { readSiteUrl } from "@repo/backend/confect/site/config";
+import {
+  readAddress,
+  schoolAddress,
+} from "@repo/backend/confect/tenancy/address";
 import {
   periodAuthority,
   personAuthority,
@@ -136,13 +140,19 @@ const checkOpening = Effect.fn("tenancy.found.check")(function* (
  * the Owner role and the role the founder chose, one unit for each level, and
  * each unit's active period for the school year now running in its country.
  * Every write is journaled under the founder's Person, as the operator's
- * opening journals under the system. The account's draft is removed.
+ * opening journals under the system. The account's draft is removed, and the
+ * answer names the school's own address, where the founder goes next.
  */
 export const foundSchool = Effect.fn("tenancy.found")(function* (
   user: UsersDoc,
   args: typeof StartRequest.Type
 ) {
   yield* checkOpening(user, args.slug);
+  // The address is read before any write: a site without a host is a
+  // deployment defect, and no school opens that its founder cannot reach.
+  const address = yield* schoolAddress(yield* readSiteUrl(), args.slug).pipe(
+    Effect.orDie
+  );
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const defaults = countryDefaults[args.country];
@@ -235,5 +245,5 @@ export const foundSchool = Effect.fn("tenancy.found")(function* (
       .delete(draft.value._id)
       .pipe(Effect.orDie);
   }
-  return { slug: args.slug };
+  return { address, slug: args.slug };
 });
