@@ -6,12 +6,10 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { File01Icon } from "@hugeicons/core-free-icons";
 import { useIntersection } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Table,
   TableBody,
@@ -119,8 +117,8 @@ function ExamTable({
   if (Arr.isReadonlyArrayEmpty(rows)) {
     return (
       <TableEmpty
+        act="writing"
         description={t("create-description")}
-        icon={<HugeIcons icon={File01Icon} />}
         title={t("empty")}
       />
     );
