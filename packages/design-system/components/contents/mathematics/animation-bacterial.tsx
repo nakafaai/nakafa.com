@@ -5,6 +5,7 @@ import {
   BacterialGenerations,
   BacterialPlayback,
   BacterialSpeeds,
+  BacterialTimeProvider,
 } from "@repo/design-system/components/contents/mathematics/bacterial-controls";
 import {
   type BacterialFormulaType,
@@ -162,85 +163,87 @@ export function BacterialGrowth({
     setIsPlaying(false);
   }
 
+  const time = { timeInterval, timeUnit };
+
   return (
-    <VisualCard ref={ref}>
-      <VisualCardHeader
-        description={
-          // One text node: a count that grows a digit would otherwise move
-          // the label beside it, a layout shift no learner caused.
-          <span aria-live="polite">{`${frame.bacteriaCount} ${labels.bacterial}`}</span>
-        }
-        title={labels.title}
-      />
-
-      <VisualCardToolbar>
-        <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
-        <BacterialGenerations
-          generation={activeGeneration}
-          maxGenerations={maxGenerations}
-          onGenerationChange={selectGeneration}
-          timeInterval={timeInterval}
-          timeUnit={timeUnit}
+    <BacterialTimeProvider time={time}>
+      <VisualCard ref={ref}>
+        <VisualCardHeader
+          description={
+            // One text node: a count that grows a digit would otherwise move
+            // the label beside it, a layout shift no learner caused.
+            <span aria-live="polite">{`${frame.bacteriaCount} ${labels.bacterial}`}</span>
+          }
+          title={labels.title}
         />
-      </VisualCardToolbar>
 
-      <VisualCardBody
-        aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
-        className="p-(--card-spacing)"
-        data-bacteria-count={frame.bacteriaCount}
-        data-visible-bacteria-count={frame.bacteriaIds.length}
-        role="img"
-      >
-        <div className="relative aspect-square h-full w-full overflow-hidden rounded-lg border bg-card sm:aspect-video">
-          <div
-            className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
-            style={{
-              gridTemplateColumns: `repeat(${frame.gridColumns}, minmax(0, 1fr))`,
-            }}
-          >
-            <MotionConfig reducedMotion="user">
-              <LazyMotion features={domMax} strict>
-                <LayoutGroup>
-                  <AnimatePresence mode="popLayout">
-                    {Arr.map(frame.bacteriaIds, (id, index) => (
-                      <m.div
-                        animate={{
-                          opacity: 1,
-                          scale: 1,
-                          x: 0,
-                        }}
-                        className="relative flex items-center justify-center"
-                        exit={{ opacity: 0, scale: 0.35, x: -10 }}
-                        initial={{ opacity: 0, scale: 0.35, x: -10 }}
-                        key={id}
-                        layout
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                          delay: index * STAGGER_DELAY,
-                        }}
-                        whileHover={{ scale: SCALE_INCREASE }}
-                      >
-                        <div
-                          className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-chart-1 sm:max-h-8 sm:max-w-8"
-                          data-bacterium=""
-                        />
-                      </m.div>
-                    ))}
-                  </AnimatePresence>
-                </LayoutGroup>
-              </LazyMotion>
-            </MotionConfig>
+        <VisualCardToolbar>
+          <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
+          <BacterialGenerations
+            generation={activeGeneration}
+            maxGenerations={maxGenerations}
+            onGenerationChange={selectGeneration}
+          />
+        </VisualCardToolbar>
+
+        <VisualCardBody
+          aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
+          className="p-(--card-spacing)"
+          data-bacteria-count={frame.bacteriaCount}
+          data-visible-bacteria-count={frame.bacteriaIds.length}
+          role="img"
+        >
+          <div className="relative aspect-square h-full w-full overflow-hidden rounded-lg border bg-card sm:aspect-video">
+            <div
+              className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
+              style={{
+                gridTemplateColumns: `repeat(${frame.gridColumns}, minmax(0, 1fr))`,
+              }}
+            >
+              <MotionConfig reducedMotion="user">
+                <LazyMotion features={domMax} strict>
+                  <LayoutGroup>
+                    <AnimatePresence mode="popLayout">
+                      {Arr.map(frame.bacteriaIds, (id, index) => (
+                        <m.div
+                          animate={{
+                            opacity: 1,
+                            scale: 1,
+                            x: 0,
+                          }}
+                          className="relative flex items-center justify-center"
+                          exit={{ opacity: 0, scale: 0.35, x: -10 }}
+                          initial={{ opacity: 0, scale: 0.35, x: -10 }}
+                          key={id}
+                          layout
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                            delay: index * STAGGER_DELAY,
+                          }}
+                          whileHover={{ scale: SCALE_INCREASE }}
+                        >
+                          <div
+                            className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-chart-1 sm:max-h-8 sm:max-w-8"
+                            data-bacterium=""
+                          />
+                        </m.div>
+                      ))}
+                    </AnimatePresence>
+                  </LayoutGroup>
+                </LazyMotion>
+              </MotionConfig>
+            </div>
           </div>
-        </div>
-      </VisualCardBody>
+        </VisualCardBody>
 
-      <BacterialPlayback
-        isPlaying={isEffectivelyPlaying}
-        onReset={resetAnimation}
-        onTogglePlaying={togglePlayPause}
-      />
-    </VisualCard>
+        <BacterialPlayback
+          isPlaying={isEffectivelyPlaying}
+          onReset={resetAnimation}
+          onTogglePlaying={togglePlayPause}
+        />
+      </VisualCard>
+    </BacterialTimeProvider>
   );
 }
