@@ -1,14 +1,18 @@
 "use client";
 
 import { useMutation } from "@confect/react";
+import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Radio,
   RadioGroup,
 } from "@repo/design-system/components/ui/radio-group";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Effect, Function as Fn, Option } from "effect";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceOf,
   labelText,
@@ -21,49 +25,100 @@ import {
   answerUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
-import { useActiveQuestion, useExam } from "@/components/tenant/exams/provider";
+import {
+  useActiveQuestion,
+  useExam,
+  useExamSelection,
+} from "@/components/tenant/exams/provider";
+import { makeQuietSaver } from "@/lib/save/quiet";
+
+/** The prompt loads when the canvas shows a saved question, never with the page. */
+const ExamPrompt = dynamic(
+  () =>
+    import("@/components/tenant/exams/prompt").then(
+      (module) => module.ExamPrompt
+    ),
+  { loading: () => null, ssr: false }
+);
+
+/** The quiet period after the last keystroke of an option, before its text is saved. */
+const OPTION_SAVE_QUIET = "500 millis";
 
 /**
- * The canvas of the selected question: its number, then its options, each a text field
- * with a radio that marks the correct answer. Every change saves the question's answers
- * or key at the revision the teacher saw, so an edit that another edit overtook is refused.
+ * The canvas of the selected question: its number, its prompt, then its options, each a
+ * text field with a radio that marks the correct answer. A question the server has not
+ * saved yet shows its options only, and they take no change until the server answers.
  */
 export function ExamCanvas() {
   const t = useTranslations("Exams");
+  const { slug, exam } = useExam();
   const active = useActiveQuestion();
+  const pending = useExamSelection((state) => state.pending);
 
   return Option.match(active, {
     onNone: () => null,
-    onSome: ({ index, question }) => (
-      <section className="flex min-w-0 flex-1 flex-col gap-4 p-4">
-        <h2 className="font-semibold text-lg">
-          {t("question", { number: index + 1 })}
-        </h2>
-        <QuestionOptions question={question} />
-      </section>
-    ),
+    onSome: ({ index, question }) => {
+      const saved = !Arr.contains(pending, question.id);
+      return (
+        <section className="flex min-w-0 flex-1 flex-col gap-4 p-4">
+          <h2 className="font-semibold text-lg">
+            {t("question", { number: index + 1 })}
+          </h2>
+          {saved ? (
+            <section className="my-6">
+              <ExamPrompt
+                key={question.prompt}
+                prompt={question.prompt}
+                slug={slug}
+              />
+            </section>
+          ) : null}
+          <QuestionOptions
+            examId={exam.id}
+            pending={!saved}
+            question={question}
+          />
+        </section>
+      );
+    },
   });
 }
 
-/** The options of one question, in the layout of the player, with the teacher's key beside each. */
-function QuestionOptions({ question }: { question: Question }) {
+/**
+ * The options of one question, in the layout of the player, with the teacher's key beside
+ * each. A key change saves at once, and each option text saves after its quiet period.
+ */
+function QuestionOptions({
+  examId,
+  pending,
+  question,
+}: {
+  examId: Id<"exams">;
+  pending: boolean;
+  question: Question;
+}) {
   const t = useTranslations("Exams");
-  const { exam, slug } = useExam();
+  const { slug } = useExam();
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate
   );
 
   /** Saves the answers and the key of this question as they are now, at the revision the teacher saw. */
-  function save(answers: Question["answers"], key: Question["key"]) {
-    answer({
-      answers,
-      examId: exam.id,
-      key,
-      questionId: question.id,
-      revision: question.revision,
-      slug,
-    });
-  }
+  const saveAnswers = (answers: Question["answers"], key: Question["key"]) => {
+    runExamAction(
+      sentAction(() =>
+        answer({
+          answers,
+          examId,
+          key,
+          questionId: question.id,
+          revision: question.revision,
+          slug,
+        })
+      ),
+      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+    );
+  };
 
   return Option.match(choiceOf(question.answers), {
     onNone: () => null,
@@ -71,8 +126,14 @@ function QuestionOptions({ question }: { question: Question }) {
       <RadioGroup
         aria-label={t("correct")}
         className="grid grid-cols-1 gap-2 md:grid-cols-2"
-        onValueChange={(optionId: string) =>
-          save(question.answers, markedKey(question.answers, optionId))
+        onValueChange={
+          pending
+            ? undefined
+            : (optionId: string) =>
+                saveAnswers(
+                  question.answers,
+                  markedKey(question.answers, optionId)
+                )
         }
         value={markedOption(question.key) ?? ""}
       >
@@ -80,13 +141,14 @@ function QuestionOptions({ question }: { question: Question }) {
           <OptionField
             index={index}
             key={option.id}
-            onText={(text) =>
-              save(
+            onSave={(text) =>
+              saveAnswers(
                 withOptionText(question.answers, option.id, text),
                 question.key
               )
             }
             optionId={option.id}
+            pending={pending}
             text={labelText(option.label)}
           />
         ))}
@@ -95,20 +157,33 @@ function QuestionOptions({ question }: { question: Question }) {
   });
 }
 
-/** One option: its letter, its text field, and the radio in a dashed outline that marks it correct. */
+/**
+ * One option: its letter, its text field, and the radio in a dashed outline that marks it
+ * correct. The field shows what the teacher typed at once. Its text is saved after the
+ * quiet period, or at once when the field loses focus, and the latest save is the one that
+ * runs.
+ */
 function OptionField({
   index,
-  onText,
+  onSave,
   optionId,
+  pending,
   text,
 }: {
   index: number;
-  onText: (text: string) => void;
+  onSave: (text: string) => void;
   optionId: string;
+  pending: boolean;
   text: string;
 }) {
   const t = useTranslations("Exams");
   const letter = optionLetter(index);
+  const [draft, setDraft] = useState<string | null>(null);
+  const [saver] = useState(() =>
+    Effect.runSync(
+      makeQuietSaver((save: () => void) => Effect.sync(save), OPTION_SAVE_QUIET)
+    )
+  );
 
   return (
     <div className="flex items-center gap-2">
@@ -120,8 +195,17 @@ function OptionField({
       </span>
       <Input
         aria-label={t("option", { letter })}
-        onChange={(event) => onText(event.target.value)}
-        value={text}
+        onBlur={() => {
+          Effect.runFork(saver.flush);
+          setDraft(null);
+        }}
+        onChange={(event) => {
+          const next = event.target.value;
+          setDraft(next);
+          Effect.runFork(saver.touch(() => onSave(next)));
+        }}
+        readOnly={pending}
+        value={draft ?? text}
       />
     </div>
   );

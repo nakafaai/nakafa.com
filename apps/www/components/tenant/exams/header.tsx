@@ -5,16 +5,18 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
 import { Input } from "@repo/design-system/components/ui/input";
 import { isComposingKey } from "@repo/utilities/composition";
-import { Result, Schema, String as Str } from "effect";
+import { Function as Fn, Schema, String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 
 /**
  * The exam's title, renamed in place. The title is saved when the field loses focus or
  * the teacher presses Enter, so the server only ever gets a whole, trimmed title. A
- * title that is empty, or that the server refuses, goes back to the saved one.
+ * title that is empty goes back to the saved one at once, and a title that the server
+ * refuses goes back to the saved one too.
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -33,11 +35,13 @@ export function ExamHeader() {
     }
 
     setDraft(title);
-    rename({ examId: exam.id, slug, title }).then((result) => {
-      if (Result.isFailure(result)) {
-        setDraft(exam.title);
+    runExamAction(
+      sentAction(() => rename({ examId: exam.id, slug, title })),
+      {
+        onFailure: () => setDraft(exam.title),
+        onSuccess: Fn.constVoid,
       }
-    });
+    );
   }
 
   return (
