@@ -188,6 +188,7 @@
         "addMinutes": "Waktu percobaan ujian ditambah",
         "changeToken": "Token sesi ujian diganti",
         "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
+        "finish": "Percobaan ujian diselesaikan",
         "close": "Sesi ujian ditutup"
       },
       "tenant": {
@@ -830,6 +831,33 @@
     "more": "Lainnya",
     "style": "Gaya teks",
     "text": "Teks biasa"
+  },
+  "Exams": {
+    "title": "Ujian",
+    "empty": "Belum ada ujian.",
+    "untitled": "Ujian tanpa judul",
+    "title-label": "Judul ujian",
+    "unavailable": "Ujian ini tidak tersedia.",
+    "questions": "Soal",
+    "question": "Soal {number}",
+    "option": "Pilihan {letter}",
+    "correct": "Jawaban benar",
+    "correct-option": "Tandai pilihan {letter} sebagai jawaban benar",
+    "no-key": "Soal ini belum punya kunci jawaban.",
+    "move-up": "Pindah ke atas",
+    "move-down": "Pindah ke bawah",
+    "remove": "Hapus soal",
+    "remove-title": "Hapus soal ini?",
+    "remove-description": "Soal dan jawabannya keluar dari ujian ini.",
+    "create": "Buat ujian",
+    "create-description": "Ujian dimulai dengan satu soal.",
+    "unit": "Unit",
+    "whole-school": "Seluruh sekolah",
+    "language": "Bahasa",
+    "add-question": "Tambah soal",
+    "copy": "Salin soal",
+    "prompt-label": "Teks soal",
+    "prompt-placeholder": "Tulis soal di sini."
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",

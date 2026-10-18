@@ -13,6 +13,7 @@ import { createAcceptanceOwner } from "@repo/backend/scripts/content/acceptance/
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { updateAcceptanceProfile } from "@repo/backend/scripts/content/acceptance/profile";
 import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
+import { createAcceptanceSitting } from "@repo/backend/scripts/content/acceptance/sitting";
 import { createAcceptanceTeacher } from "@repo/backend/scripts/content/acceptance/teacher";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Array as Arr, Effect, FileSystem, Layer } from "effect";
@@ -53,6 +54,14 @@ const main = Effect.gen(function* () {
   if (mode === "teacher" && first !== undefined && second !== undefined) {
     return yield* createAcceptanceTeacher(root, first, second);
   }
+  if (
+    mode === "sitting" &&
+    first !== undefined &&
+    second !== undefined &&
+    third !== undefined
+  ) {
+    return yield* createAcceptanceSitting(root, first, second, third);
+  }
   if (mode === "import" && first !== undefined && second !== undefined) {
     return yield* importAcceptanceRows(root, first, second);
   }
@@ -60,7 +69,7 @@ const main = Effect.gen(function* () {
     return yield* updateAcceptanceProfile(root, first, second);
   }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
   );
 });
 

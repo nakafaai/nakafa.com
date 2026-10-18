@@ -4,6 +4,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import { assignRole } from "@repo/backend/confect/access/grant";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
@@ -23,6 +24,7 @@ const teacher = FunctionImpl.make(
   spec,
   "teacher",
   Effect.fn("tenancy.seed.teacher")(function* ({ email, locale, name, slug }) {
+    yield* requireAcceptanceSeed();
     const reader = yield* DatabaseReader;
     const tenant = yield* reader
       .table("tenants")
