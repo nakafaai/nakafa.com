@@ -151,6 +151,23 @@ const expectFunctionCharts = Effect.fn("NakafaE2E.expectFunctionCharts")(
     yield* Effect.promise(() =>
       expect(page.locator("article table:has(caption)")).toHaveCount(2)
     );
+    // Each values table is its own band: its rows run the card's full width.
+    const widths = yield* Effect.promise(() =>
+      page
+        .locator('article [data-slot="visual-card-table"]')
+        .evaluateAll((bands) =>
+          bands.map((band) => ({
+            band: band.getBoundingClientRect().width,
+            row: band.querySelector("tr")?.getBoundingClientRect().width ?? 0,
+          }))
+        )
+    );
+    yield* Effect.sync(() => {
+      expect(widths).toHaveLength(2);
+      for (const { band, row } of widths) {
+        expect(row).toBeGreaterThanOrEqual(band - 1);
+      }
+    });
   }
 );
 
