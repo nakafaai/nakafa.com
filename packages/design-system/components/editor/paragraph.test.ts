@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
-import { paragraphVariants } from "@repo/design-system/components/markdown/paragraph";
+import { paragraphVariants } from "@repo/design-system/lib/paragraph";
 import { Editor } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Array as Arr } from "effect";
