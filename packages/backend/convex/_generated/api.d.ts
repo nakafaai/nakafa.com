@@ -586,6 +586,93 @@ export declare const api: {
       >;
     };
   };
+  connectors: {
+    connections: {
+      disconnectOwn: FunctionReference<
+        "mutation",
+        "public",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      disconnectSchool: FunctionReference<
+        "mutation",
+        "public",
+        { connectionId: Id<"connectorConnections">; slug: string },
+        null
+      >;
+      listOwn: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            connector:
+              | "drive"
+              | "forms"
+              | "classroom"
+              | "calendar"
+              | "gmail"
+              | "dapodik";
+            createdAt: number;
+            id: Id<"connectorConnections">;
+            lastSyncedAt: number | null;
+            nextSyncAt: number | null;
+            scopes: Array<string>;
+            status: "active" | "reconnect" | "disconnected";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      listSchool: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            connector:
+              | "drive"
+              | "forms"
+              | "classroom"
+              | "calendar"
+              | "gmail"
+              | "dapodik";
+            createdAt: number;
+            id: Id<"connectorConnections">;
+            lastSyncedAt: number | null;
+            nextSyncAt: number | null;
+            scopes: Array<string>;
+            status: "active" | "reconnect" | "disconnected";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+  };
   consents: {
     current: {
       get: FunctionReference<
@@ -4547,8 +4634,12 @@ export declare const api: {
             | "grant.view"
             | "integration.manage"
             | "integration.view"
+            | "connection.manage"
+            | "connection.view"
             | "class.manage"
             | "class.view"
+            | "grade.release"
+            | "grade.view"
             | "visit.end"
             | "document.edit"
             | "document.view"
@@ -4568,8 +4659,12 @@ export declare const api: {
             | "integration.manage"
             | "integration.view"
             | "integration.manage"
+            | "connection.view"
             | "class.create"
             | "class.list"
+            | "grade.enter"
+            | "grade.list"
+            | "scheme.manage"
             | "visit.approve"
             | "document.edit"
             | "document.edit"
@@ -4625,8 +4720,12 @@ export declare const api: {
               | "grant.view"
               | "integration.manage"
               | "integration.view"
+              | "connection.manage"
+              | "connection.view"
               | "class.manage"
               | "class.view"
+              | "grade.release"
+              | "grade.view"
               | "visit.end"
               | "document.edit"
               | "document.view"
@@ -4646,8 +4745,12 @@ export declare const api: {
               | "integration.manage"
               | "integration.view"
               | "integration.manage"
+              | "connection.view"
               | "class.create"
               | "class.list"
+              | "grade.enter"
+              | "grade.list"
+              | "scheme.manage"
               | "visit.approve"
               | "document.edit"
               | "document.edit"
@@ -4726,6 +4829,46 @@ export declare const api: {
                   assignment: "homeroom";
                   person: Id<"tenantPeople">;
                   type: "assignment.removed";
+                }
+              | {
+                  connection: Id<"connectorConnections">;
+                  connector:
+                    | "drive"
+                    | "forms"
+                    | "classroom"
+                    | "calendar"
+                    | "gmail"
+                    | "dapodik";
+                  type: "connection.connected";
+                }
+              | {
+                  connection: Id<"connectorConnections">;
+                  connector:
+                    | "drive"
+                    | "forms"
+                    | "classroom"
+                    | "calendar"
+                    | "gmail"
+                    | "dapodik";
+                  type: "connection.disconnected";
+                }
+              | {
+                  connection: Id<"connectorConnections">;
+                  connector:
+                    | "drive"
+                    | "forms"
+                    | "classroom"
+                    | "calendar"
+                    | "gmail"
+                    | "dapodik";
+                  type: "connection.reconnect";
+                }
+              | {
+                  classId: Id<"classes">;
+                  periodId: Id<"tenantPeriods">;
+                  personId: Id<"tenantPeople">;
+                  state: "released";
+                  type: "grade.released";
                 }
               | {
                   client: Id<"integrationClients">;
@@ -4878,6 +5021,7 @@ export declare const api: {
                   key: "emailDomains" | "nina" | "studentThreads";
                   type: "tenant.policy.set";
                 }
+              | { scheme: Id<"gradingSchemes">; type: "scheme.stored" }
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
               | { type: "unit.created" }
@@ -4912,7 +5056,9 @@ export declare const api: {
               | { id: Id<"tenantPromotions">; kind: "promotion" }
               | { id: Id<"tenantGrants">; kind: "grant" }
               | { id: Id<"integrationClients">; kind: "integration" }
+              | { id: Id<"connectorConnections">; kind: "connection" }
               | { id: Id<"classes">; kind: "class" }
+              | { id: Id<"classGrades">; kind: "grade" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
@@ -5400,7 +5546,9 @@ export declare const api: {
               | { id: Id<"tenantPromotions">; kind: "promotion" }
               | { id: Id<"tenantGrants">; kind: "grant" }
               | { id: Id<"integrationClients">; kind: "integration" }
+              | { id: Id<"connectorConnections">; kind: "connection" }
               | { id: Id<"classes">; kind: "class" }
+              | { id: Id<"classGrades">; kind: "grade" }
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
@@ -5437,7 +5585,9 @@ export declare const api: {
             | { id: Id<"tenantPromotions">; kind: "promotion" }
             | { id: Id<"tenantGrants">; kind: "grant" }
             | { id: Id<"integrationClients">; kind: "integration" }
+            | { id: Id<"connectorConnections">; kind: "connection" }
             | { id: Id<"classes">; kind: "class" }
+            | { id: Id<"classGrades">; kind: "grade" }
             | { id: Id<"tenantVisits">; kind: "visit" }
             | { id: Id<"editorDocuments">; kind: "document" }
             | { id: Id<"exams">; kind: "exam" }
@@ -5925,6 +6075,106 @@ export declare const api: {
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
+        }
+      >;
+    };
+  };
+  records: {
+    grades: {
+      enter: FunctionReference<
+        "mutation",
+        "public",
+        {
+          classId: Id<"classes">;
+          personId: Id<"tenantPeople">;
+          slug: string;
+          value: number;
+        },
+        {
+          band?: string;
+          classId: Id<"classes">;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          personId: Id<"tenantPeople">;
+          state: "draft" | "released";
+          value: number;
+        }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          classId: Id<"classes">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            band?: string;
+            classId: Id<"classes">;
+            id: Id<"classGrades">;
+            kktp: "reached" | "notReached";
+            personId: Id<"tenantPeople">;
+            state: "draft" | "released";
+            value: number;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      mine: FunctionReference<
+        "query",
+        "public",
+        { classId: Id<"classes">; slug: string },
+        Array<{
+          band?: string;
+          classId: Id<"classes">;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          personId: Id<"tenantPeople">;
+          state: "draft" | "released";
+          value: number;
+        }>
+      >;
+      release: FunctionReference<
+        "mutation",
+        "public",
+        { gradeId: Id<"classGrades">; slug: string },
+        {
+          band?: string;
+          classId: Id<"classes">;
+          id: Id<"classGrades">;
+          kktp: "reached" | "notReached";
+          personId: Id<"tenantPeople">;
+          state: "draft" | "released";
+          value: number;
+        }
+      >;
+    };
+    schemes: {
+      store: FunctionReference<
+        "mutation",
+        "public",
+        {
+          bands: Array<{ label: string; minimum: number }>;
+          effectiveFrom: number;
+          kktp: number;
+          slug: string;
+        },
+        {
+          bands: Array<{ label: string; minimum: number }>;
+          effectiveFrom: number;
+          id: Id<"gradingSchemes">;
+          kktp: number;
         }
       >;
     };

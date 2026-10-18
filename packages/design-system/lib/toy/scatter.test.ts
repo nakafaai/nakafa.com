@@ -66,7 +66,12 @@ function scatter() {
   const layer = document.createElement("div");
   document.body.replaceChildren(layer);
   Object.defineProperty(layer, "clientWidth", { get: () => page.width });
-  define(layer, { getBoundingClientRect: rect(10, 20, 800, 2000) });
+  define(layer, {
+    getBoundingClientRect: rect(10, 20, 800, 2000),
+    offsetLeft: 10,
+    offsetParent: null,
+    offsetTop: 20,
+  });
   const rest = vi.fn();
   const placed = createScatter(rest);
   const toy = (place: Place) => {
@@ -84,7 +89,13 @@ describe("placing toys", () => {
   it("puts a toy where its place function says, measured from the corner of the layer", () => {
     const { layer, placed, toy } = scatter();
     const target = document.createElement("div");
-    define(target, { getBoundingClientRect: rect(110, 220, 50, 60) });
+    define(target, {
+      offsetHeight: 60,
+      offsetLeft: 110,
+      offsetParent: null,
+      offsetTop: 220,
+      offsetWidth: 50,
+    });
     const el = toy((_, box) => {
       const found = box(target);
       expect(found).toEqual({
@@ -107,6 +118,50 @@ describe("placing toys", () => {
     expect(el.style.left).toBe("104px");
     expect(el.style.top).toBe("261px");
     expect(el.style.getPropertyValue("--toy")).toBe("40px");
+  });
+
+  it("measures a part by its layout, so a part that rises into view by a transform never moves its toys", () => {
+    const { layer, placed, toy } = scatter();
+    const card = document.createElement("div");
+    define(card, {
+      clientLeft: 1,
+      clientTop: 1,
+      offsetLeft: 40,
+      offsetParent: null,
+      offsetTop: 300,
+    });
+    const part = document.createElement("div");
+    define(part, {
+      // On the screen the part still sits 24 px lower, mid rise.
+      getBoundingClientRect: rect(51, 335, 30, 40),
+      offsetHeight: 40,
+      offsetLeft: 10,
+      offsetParent: card,
+      offsetTop: 10,
+      offsetWidth: 30,
+    });
+    const el = toy((_, box) => {
+      const found = box(part);
+      return Option.some({ x: found.left, y: found.top });
+    });
+    placed.attach(layer);
+    wait(FRAME);
+    expect(el.style.left).toBe("41px");
+    expect(el.style.top).toBe("291px");
+  });
+
+  it("measures an SVG part on the screen, since it has no layout offsets", () => {
+    const { layer, placed, toy } = scatter();
+    const part = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    define(part, { getBoundingClientRect: rect(60, 70, 30, 40) });
+    const el = toy((_, box) => {
+      const found = box(part);
+      return Option.some({ x: found.right, y: found.bottom });
+    });
+    placed.attach(layer);
+    wait(FRAME);
+    expect(el.style.left).toBe("80px");
+    expect(el.style.top).toBe("90px");
   });
 
   it("keeps a toy inside the layer, so a place near an edge never makes the page scroll sideways", () => {

@@ -31,14 +31,17 @@ const ribbonFill = cva("", {
 type RibbonTone = NonNullable<VariantProps<typeof ribbonFill>["tone"]>;
 
 /** The swing of a medal. A medal hangs still unless the reader allows motion. */
-const medalSwing = cva("transform-fill grid origin-top justify-items-center", {
-  variants: {
-    swinging: {
-      false: "",
-      true: "animate-thing-sway",
+const medalSwing = cva(
+  "transform-fill grid origin-top justify-items-center will-change-transform",
+  {
+    variants: {
+      swinging: {
+        false: "",
+        true: "animate-thing-sway",
+      },
     },
-  },
-});
+  }
+);
 
 /** The fill of each ribbon, in turn. */
 const RIBBON_TONES: readonly RibbonTone[] = [

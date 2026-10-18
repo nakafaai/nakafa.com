@@ -1,3 +1,4 @@
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import {
@@ -17,8 +18,14 @@ import {
   ProjectilePlaceholder,
 } from "@/components/marketing/about/lesson/placeholder";
 import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
-import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
-import { MarketingSection } from "@/components/marketing/shared/section";
+import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
+import {
+  FeatureLead,
+  FeatureProduct,
+  FeatureRow,
+  FeatureText,
+  FeatureTitle,
+} from "@/components/marketing/shared/feature";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { decimalSeparators } from "@/lib/marketing/decimal";
 
@@ -65,32 +72,22 @@ export async function Lesson() {
   };
 
   return (
-    <MarketingSection id={LESSON_SECTION_ID}>
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-        <div className="grid min-w-0 content-center gap-8">
-          <div className="grid gap-2">
-            <h2 className="text-balance text-2xl tracking-tight">
-              {t("lesson-title")}
-            </h2>
-            <p className="max-w-md text-pretty text-base text-muted-foreground">
-              {t("lesson-lead")}
-            </p>
-          </div>
-          <Talk ask={t("lesson-ask")}>
-            <TalkReply act="greeting" mood="hello">
-              {t("lesson-answer")}
-            </TalkReply>
-          </Talk>
-        </div>
-        <div className="min-w-0">
-          <LessonWindow
-            decimalSeparator={decimalSeparator}
-            label={t("lesson-tabs")}
-            placeholders={placeholders}
-            subjects={subjects}
-          />
-        </div>
-      </div>
-    </MarketingSection>
+    <FeatureRow id={LESSON_SECTION_ID}>
+      <FeatureText>
+        <span className="inline-block" id={NINA_SLOT.lesson}>
+          <Nina act="waving" label="" size={88} whole />
+        </span>
+        <FeatureTitle>{t("lesson-title")}</FeatureTitle>
+        <FeatureLead>{t("lesson-lead")}</FeatureLead>
+      </FeatureText>
+      <FeatureProduct>
+        <LessonWindow
+          decimalSeparator={decimalSeparator}
+          label={t("lesson-tabs")}
+          placeholders={placeholders}
+          subjects={subjects}
+        />
+      </FeatureProduct>
+    </FeatureRow>
   );
 }

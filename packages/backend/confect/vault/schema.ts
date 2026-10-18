@@ -35,6 +35,20 @@ export const TenantKey = Schema.Struct({
 });
 
 /**
+ * The connectors' one key, wrapped by the root key that `root` names. It blinds a
+ * Google account to the same value under every owner, so the connections of one
+ * account can be counted across schools and learners (ADR 0015). No owner derives
+ * it, and it is never shredded, because a shredded key would strand every blind it
+ * made.
+ */
+export const ConnectorKey = Schema.Struct({
+  createdAt: Schema.Finite,
+  key: Schema.Literal("primary"),
+  root: RootKeyId,
+  wrapped: Sealed,
+});
+
+/**
  * The stored field a sealed value belongs to. A value opens only for the owner
  * and the field it was sealed for. When the field belongs to one row, `row` holds
  * the values that name that row, in a fixed order (ADR 0024), so a value copied

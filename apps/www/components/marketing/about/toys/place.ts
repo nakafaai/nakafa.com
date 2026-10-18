@@ -7,7 +7,7 @@ import { Option, Schema } from "effect";
  * by pixels. A toy is only placed between `minWidth` and `maxWidth` wide, so a
  * phone and a desktop each get the room they have.
  */
-const AnchorSchema = Schema.Struct({
+export const AnchorSchema = Schema.Struct({
   dx: Schema.optionalKey(Schema.Finite),
   dy: Schema.optionalKey(Schema.Finite),
   maxWidth: Schema.optionalKey(Schema.Finite),
@@ -21,7 +21,8 @@ type Anchor = typeof AnchorSchema.Type;
 
 /**
  * The place of a toy beside the part with the element id `part`. The place reads
- * the live layout, so the toy follows its part when the page changes width.
+ * the live layout, so the toy follows its part when the page changes width, and
+ * it has none while the part is not drawn.
  */
 export function within(part: string, anchor: Anchor): Place {
   return (width, box) => {
@@ -36,6 +37,11 @@ export function within(part: string, anchor: Anchor): Place {
       return Option.none();
     }
     const rect = box(element);
+    // A part the page does not draw at this width, such as one hidden on a
+    // phone, has no box, and a toy beside it would land at the page's corner.
+    if (rect.width === 0 && rect.height === 0) {
+      return Option.none();
+    }
     return Option.some({
       x: rect.left + anchor.x * rect.width + (anchor.dx ?? 0),
       y: rect.top + anchor.y * rect.height + (anchor.dy ?? 0),

@@ -243,10 +243,21 @@
         "teacherAssigned": "Guru ditetapkan ke ruang kelas",
         "teacherRemoved": "Guru dilepas dari ruang kelas"
       },
+      "grade": {
+        "released": "Nilai dirilis"
+      },
+      "scheme": {
+        "stored": "Versi skema nilai ditambahkan"
+      },
       "cohort": {
         "created": "Kelas ditambahkan",
         "renamed": "Kelas diganti nama",
         "archived": "Kelas diarsipkan"
+      },
+      "connection": {
+        "connected": "Koneksi ditambahkan",
+        "disconnected": "Koneksi diputus",
+        "reconnect": "Koneksi perlu dihubungkan ulang"
       },
       "grant": {
         "created": "Peran diberikan",
@@ -1466,8 +1477,6 @@
     "hero-tryout": "Coba try out",
     "lesson-title": "Materi yang enak dibaca",
     "lesson-lead": "Pendek, runtut, langsung ke contoh.",
-    "lesson-ask": "Gerak parabola itu gimana sih?",
-    "lesson-answer": "Baca ini dulu.",
     "lesson-tabs": "Pelajaran",
     "lab": {
       "circle": {
@@ -1505,14 +1514,8 @@
     },
     "tryout-title": "Skor try out langsung keluar",
     "tryout-lead": "Mau ulang? Tinggal ulang.",
-    "tryout-ask": "Aku udah paham belum, ya?",
-    "tryout-answer": "Coba jawab yang ini.",
-    "tryout-right": "Benar, itu jawabannya.",
-    "tryout-wrong": "Belum. Coba lihat sekali lagi.",
     "nina-title": "Nina tahu bagian mana yang kamu maksud",
     "nina-lead": "Tanya dari soal atau materi yang sedang kamu buka.",
-    "nina-ask": "Nomor ini masih bingung.",
-    "nina-answer": "Sini, kita bedah bareng.",
     "nina-chat-ask": "Kenapa jawabanku 13 salah?",
     "nina-chat-answer": "### 13 muncul kalau m dianggap 3\n\nHitungannya jadi $5(2) + 9/3 = 13$. Masalahnya, $m = 3$ tidak cocok dengan soal.\n\n#### Cek dengan yang diketahui\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nDengan $m = 1$ hasilnya pas: $2(2) + 4/1 = 8$. Jadi $m$ harus 1, dan jawabannya 19.",
     "memory-title": "Nina makin kenal kamu",
@@ -1544,7 +1547,7 @@
     "prices-title": "Gratis itu beneran gratis",
     "school-title": "Nakafa juga buat satu sekolah",
     "school-lead": "Butuh LMS, integrasi konten, atau alur kelas khusus? Kita cari yang cocok.",
-    "school-cta": "Ceritakan sekolahmu",
+    "school-cta": "Hubungi kami",
     "school-class": "Satu kelas hewan",
     "faq-title": "Yang sering ditanyakan",
     "faq-subjects-question": "Mata pelajaran dan kelas apa yang tercakup?",
