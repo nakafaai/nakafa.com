@@ -16,10 +16,12 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
+import { LayoutContent } from "@/components/shared/content/layout";
 import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
 import { CreateExam } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
+import { SchoolHeader } from "@/components/tenant/header";
 
 /** How many exams the list asks for each time its end comes into view. */
 const EXAM_PAGE_SIZE = 20;
@@ -27,8 +29,8 @@ const EXAM_PAGE_SIZE = 20;
 /**
  * The exams of the school, newest first, each with its title and its language. An exam that
  * the server has not saved yet is disabled until it answers. The next page loads when the end of
- * the list comes into view, so the list has no button. The create action shows when the viewer
- * can create an exam in at least one place.
+ * the list comes into view, so the list has no button. The create action sits in the school's
+ * one header, and shows when the viewer can create an exam in at least one place.
  */
 export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
@@ -70,9 +72,8 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
     pagination._tag === "Exhausted" && pagination.results.length === 0;
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <header className="flex items-center justify-between gap-2">
-        <h1 className="font-semibold text-xl">{t("title")}</h1>
+    <>
+      <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
         {choices.length > 0 ? (
           <CreateExam
             choices={choices}
@@ -81,25 +82,27 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
             slug={slug}
           />
         ) : null}
-      </header>
-      {empty ? (
-        <p className="text-muted-foreground text-sm">{t("empty")}</p>
-      ) : null}
-      {pagination._tag === "LoadingFirstPage" ? null : (
-        <ul className="flex flex-col gap-2">
-          {Arr.map(pagination.results, (exam) => (
-            <li key={exam.id}>
-              <ExamRow
-                exam={exam}
-                names={names}
-                saving={Arr.contains(saving, exam.id)}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-      <div aria-hidden ref={ref} />
-    </div>
+      </SchoolHeader>
+      <LayoutContent className="flex w-full flex-col gap-2 py-6">
+        {empty ? (
+          <p className="text-muted-foreground text-sm">{t("empty")}</p>
+        ) : null}
+        {pagination._tag === "LoadingFirstPage" ? null : (
+          <ul className="flex flex-col gap-2">
+            {Arr.map(pagination.results, (exam) => (
+              <li key={exam.id}>
+                <ExamRow
+                  exam={exam}
+                  names={names}
+                  saving={Arr.contains(saving, exam.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+        <div aria-hidden ref={ref} />
+      </LayoutContent>
+    </>
   );
 }
 
