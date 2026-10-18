@@ -9,6 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import type { Mascot } from "@repo/mascot/code";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
@@ -40,38 +41,49 @@ function SidebarSchoolMenuItem({
   );
 }
 
-/** How many schools the account menu lists: the first page of the account's memberships. */
+/** How many schools the account menu loads at a time: the first page, then each page as the list reaches its end. */
 const SCHOOL_PAGE = 20;
 
 /**
- * The schools the account is an active member of, in the order the memberships
- * query answers them. The account button reads them as it mounts, so the menu
- * has them ready when it opens and nothing in it moves.
+ * The memberships of the account, read as the account button mounts, so the
+ * account menu has its schools ready when it opens.
  */
 export function useAccountSchools() {
-  const memberships = usePaginatedQuery(
+  return usePaginatedQuery(
     tenancy.memberships.list,
     {},
     { initialNumItems: SCHOOL_PAGE }
   );
-  return PaginatedQueryResult.isLoadingFirstPage(memberships) ||
-    PaginatedQueryResult.isFailure(memberships)
-    ? []
-    : Arr.map(memberships.results, (membership) => membership.tenant);
 }
 
 /**
- * The account's schools in its menu, one link each under a heading, and nothing
- * when the account holds no school.
+ * The account's schools in its menu, one link each under a heading. Nothing shows
+ * while the first page loads, and a failed read shows one disabled line, so the
+ * menu is never silently empty. The next page loads as the end of the list comes
+ * into view, and nothing shows for an account with no school.
  */
 export function SidebarSchoolMenuItems({
-  schools,
+  memberships,
 }: {
-  schools: ReturnType<typeof useAccountSchools>;
+  memberships: ReturnType<typeof useAccountSchools>;
 }) {
   const t = useTranslations("Common");
 
-  if (!Arr.isReadonlyArrayNonEmpty(schools)) {
+  if (PaginatedQueryResult.isLoadingFirstPage(memberships)) {
+    return null;
+  }
+  if (PaginatedQueryResult.isFailure(memberships)) {
+    return (
+      <>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{t("your-schools")}</DropdownMenuLabel>
+          <DropdownMenuItem disabled>{t("load-error")}</DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+      </>
+    );
+  }
+  if (!Arr.isReadonlyArrayNonEmpty(memberships.results)) {
     return null;
   }
 
@@ -79,15 +91,18 @@ export function SidebarSchoolMenuItems({
     <>
       <DropdownMenuGroup>
         <DropdownMenuLabel>{t("your-schools")}</DropdownMenuLabel>
-        {Arr.map(schools, (school) => (
+        {Arr.map(memberships.results, ({ tenant }) => (
           <SidebarSchoolMenuItem
-            key={school.slug}
-            logo={school.logo}
-            mascot={school.mascot}
-            name={school.name}
-            slug={school.slug}
+            key={tenant.slug}
+            logo={tenant.logo}
+            mascot={tenant.mascot}
+            name={tenant.name}
+            slug={tenant.slug}
           />
         ))}
+        {PaginatedQueryResult.isCanLoadMore(memberships) ? (
+          <Intersection onIntersect={() => memberships.loadMore(SCHOOL_PAGE)} />
+        ) : null}
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
     </>

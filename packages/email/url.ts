@@ -1,18 +1,5 @@
-import { HashSet, Schema, String as Str } from "effect";
-
-const loopbackHostnames = HashSet.make("127.0.0.1", "[::1]", "localhost");
-
-/**
- * Whether a host name is a loopback host: one of the loopback names, or a name
- * under `localhost`, such as a school's local host `harapan.localhost`, which
- * resolves to the loopback address (RFC 6761).
- */
-function isLoopback(hostname: string) {
-  return (
-    HashSet.has(loopbackHostnames, hostname) ||
-    Str.endsWith(".localhost")(hostname)
-  );
-}
+import { isLoopbackHostname } from "@repo/utilities/http/host";
+import { Schema } from "effect";
 
 function isEmailUrl(value: string) {
   if (!URL.canParse(value)) {
@@ -21,7 +8,7 @@ function isEmailUrl(value: string) {
   const url = new URL(value);
   return (
     url.protocol === "https:" ||
-    (url.protocol === "http:" && isLoopback(url.hostname))
+    (url.protocol === "http:" && isLoopbackHostname(url.hostname))
   );
 }
 

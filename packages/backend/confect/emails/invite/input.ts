@@ -41,7 +41,7 @@ export const readInviteInput = Effect.fn("emails.invite.readInput")(function* (
     locale,
     organisation: tenant.name,
     privacyPolicyUrl: links.privacyPolicyUrl,
-    signInUrl: schoolAddress(siteUrl, tenant.slug),
+    signInUrl: yield* schoolAddress(siteUrl, tenant.slug),
     termsOfServiceUrl: links.termsOfServiceUrl,
   };
 });

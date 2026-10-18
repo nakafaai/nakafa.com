@@ -45,7 +45,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
     pro: t("plan-pro"),
   };
 
-  const schools = useAccountSchools();
+  const memberships = useAccountSchools();
 
   /** Signs the user out and leaves the shared authenticated app subtree on success. */
   async function handleSignOut() {
@@ -70,7 +70,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       name={user.authUser.name}
       onSignOut={handleSignOut}
     >
-      <SidebarSchoolMenuItems schools={schools} />
+      <SidebarSchoolMenuItems memberships={memberships} />
       <DropdownMenuGroup>
         {username === undefined ? null : (
           <DropdownMenuItem
