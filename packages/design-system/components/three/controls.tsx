@@ -1,17 +1,9 @@
 "use client";
 
-import {
-  GridIcon,
-  GridOffIcon,
-  PauseIcon,
-  PlayIcon,
-} from "@hugeicons/core-free-icons";
+import { GridIcon, GridOffIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  VisualCardActions,
-  VisualCardFullscreen,
-} from "@repo/design-system/components/visual/card";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { useTranslations } from "next-intl";
 import {
   createContext,
@@ -23,15 +15,14 @@ import {
 import { createStore, type ExtractState, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
-/** A scene that stands still and shows its grid. */
-const initialControls = { play: false, showGrid: true };
+/** A scene that shows its grid. */
+const initialControls = { showGrid: true };
 
-/** Creates one card's controls: whether its scene plays and shows the grid. */
+/** Creates one card's controls: whether its scene shows the grid. */
 function createControlsStore() {
   return createStore(
     combine(initialControls, (set) => ({
       toggleGrid: () => set((current) => ({ showGrid: !current.showGrid })),
-      togglePlay: () => set((current) => ({ play: !current.play })),
     }))
   );
 }
@@ -68,22 +59,19 @@ export function useCoordinateControls<T>(selector: (controls: Controls) => T) {
 }
 
 /**
- * The actions of a coordinate scene's visual card: the grid and automatic
- * rotation, with the card's full screen action at the right end. The scene's
- * own controls sit in the card's toolbar, so the actions render after the body.
- * The coordinate store owns the grid and rotation, and the visual card owns
- * where the card is shown. A static stand-in of the scene passes `inert`, so
- * its three controls take no focus while the scene is not mounted.
+ * The actions of a coordinate scene's visual card: the grid, then the actions
+ * every scene has (play, the first view back, and full screen). The coordinate
+ * store owns the grid, and the visual card owns play, the view and where the
+ * card is shown. A static stand-in of the scene passes `inert`, so its controls
+ * take no focus while the scene is not mounted.
  */
 export function CoordinateControls({ inert = false }: { inert?: boolean }) {
   const t = useTranslations("Common");
-  const play = useCoordinateControls((controls) => controls.play);
   const showGrid = useCoordinateControls((controls) => controls.showGrid);
   const toggleGrid = useCoordinateControls((controls) => controls.toggleGrid);
-  const togglePlay = useCoordinateControls((controls) => controls.togglePlay);
 
   return (
-    <VisualCardActions data-coordinate-controls="">
+    <VisualCardSceneActions inert={inert}>
       <Button
         aria-pressed={showGrid}
         inert={inert}
@@ -94,17 +82,6 @@ export function CoordinateControls({ inert = false }: { inert?: boolean }) {
         <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
         <span className="sr-only">{t("grid")}</span>
       </Button>
-      <Button
-        aria-pressed={play}
-        inert={inert}
-        onClick={togglePlay}
-        size="icon"
-        variant={play ? "secondary" : "default"}
-      >
-        <HugeIcons icon={play ? PauseIcon : PlayIcon} />
-        <span className="sr-only">{t("automatic-rotation")}</span>
-      </Button>
-      <VisualCardFullscreen inert={inert} />
-    </VisualCardActions>
+    </VisualCardSceneActions>
   );
 }

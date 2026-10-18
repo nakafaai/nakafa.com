@@ -99,6 +99,7 @@ A free text is sealed. A number or a state that the server computes with is not
 | The Nina threads of a class | ADR 0024 |
 | The names of uploaded files | ADR 0028 |
 | Exam essays, and the names of answer photos | K10, built with the gate and with grading (ADR 0013, ADR 0031) |
+| The token of a sitting, which a proctor reads again (`examSittings.tokenSealed`), beside its keyed hash | ADR 0013, in version 1 of the sittings |
 | Insight narratives, not their numbers | K10, program wave C |
 | The tokens of a school connection, and its Drive copies and Calendar mirrors | ADR 0015 |
 | The secret of a webhook, which is sealed and not hashed because the server signs with it | ADR 0029 |
@@ -108,12 +109,12 @@ server computes with. The names and states that an index needs, such as class
 membership. The report card, whose PDF hash is in the journal. Integrity
 signals, which only teachers see. Notifications, which hold an id, a kind, and a
 time. The evidence of consent and the journal, which hold IDs and codes without
-free text (ADR 0016). Login card codes (ADR 0009) and exam tokens (ADR 0013) are
-kept as keyed hashes, and OAuth client secrets as hashes (ADR 0029): they are
-checked and never read. The keyed hash of a sitting's token, `examSittings.tokenHash`,
+free text (ADR 0016). Login card codes (ADR 0009) are kept as keyed hashes, and
+OAuth client secrets as hashes (ADR 0029): they are checked and never read. The keyed hash of a sitting's token, `examSittings.tokenHash`,
 is under the school key and is one of them. Version 1 of the sittings does not
 re-hash it in a school-key rotation, so a proctor changes the token after a
-rotation (ADR 0013).
+rotation (ADR 0013). The sealed copy of that token, `examSittings.tokenSealed`,
+is a sealed text and is listed above, so a rotation reseals it.
 
 ### Forum search and the blind index
 
@@ -190,9 +191,9 @@ is a migration, run the way ADR 0024 runs the migration of old messages.
    the newest and then the previous generation, so text that is not migrated yet
    still opens.
 2. A job walks every field sealed under the school key, in bounded batches. It
-   seals each value again under the newest generation and rebuilds every blind
-   index, except the token hash of a sitting, which version 1 leaves to a
-   proctor's change of the token (ADR 0013).
+   seals each value again under the newest generation, the sealed token of a
+   sitting included, and rebuilds every blind index, except the token hash of a
+   sitting, which version 1 leaves to a proctor's change of the token (ADR 0013).
 3. A pass that seals nothing again proves that the previous generation can go,
    and its row is deleted.
 4. The job is reviewed, runs dry first, and runs on dev and on production until
@@ -274,4 +275,5 @@ does another job.
 | `wordsOf` moved into `confect/vault`, and the forum index | Planned, with the forum (ADR 0025) |
 | Shredding a school key, with the deletion of its school | Planned, with the school deletion lane |
 | Replacing a school key by a new generation, on a suspected leak | Planned, as a migration (Rotation and replacement) |
+| `examSittings.tokenSealed`, sealed by `schedule` and `changeToken` and opened for a proctor by the dashboard | In code, with version 1 of the sittings. The school-key rotation that reseals it is planned with the rotation. |
 | `connectorSecrets` | Planned (ADR 0015) |

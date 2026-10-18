@@ -8,6 +8,8 @@ import {
 } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
+import { useCameraPlay } from "@repo/design-system/components/three/camera/play";
+import { useVisualScene } from "@repo/design-system/components/visual/card";
 import {
   type CameraProjection,
   resolveAuthoredView,
@@ -72,7 +74,6 @@ const DEFAULT_CAMERA_TARGET = [
  * @see https://drei.docs.pmnd.rs/controls/orbit-controls
  */
 interface CameraControlsProps {
-  autoRotate?: boolean;
   cameraPosition?: readonly [number, number, number];
   cameraTarget?: readonly [number, number, number] | undefined;
   enablePan?: boolean;
@@ -95,7 +96,6 @@ export function CameraControls(props: CameraControlsProps) {
   const {
     cameraPosition = DEFAULT_CAMERA_POSITION,
     cameraTarget = DEFAULT_CAMERA_TARGET,
-    autoRotate = true,
     enablePan = true,
     enableRotate = true,
     enableZoom = true,
@@ -134,6 +134,9 @@ export function CameraControls(props: CameraControlsProps) {
   const invalidate = useThree((state) => state.invalidate);
   const viewportWidth = useThree((state) => state.size.width);
   const viewportHeight = useThree((state) => state.size.height);
+  const autoRotate = useCameraPlay();
+  const view = useVisualScene((state) => state.view, 0);
+  const shownView = useRef(view);
   const [cameraPositionX, cameraPositionY, cameraPositionZ] = cameraPosition;
   const [cameraTargetX, cameraTargetY, cameraTargetZ] = cameraTarget;
   const projectionFov =
@@ -384,6 +387,21 @@ export function CameraControls(props: CameraControlsProps) {
     viewportHeight,
     viewportWidth,
   ]);
+
+  useEffect(() => {
+    if (shownView.current === view) {
+      return;
+    }
+    shownView.current = view;
+    // The card's reset fits a fitted scene again and returns any other to its saved pose.
+    if (framingMode === "content") {
+      lastFit.current = null;
+      framing?.invalidate();
+    } else {
+      controlsRef.current?.reset();
+    }
+    invalidate();
+  }, [framing, framingMode, invalidate, view]);
 
   const { start: startSettle, clear: clearSettle } = useTimeout(() => {
     settling.current = false;

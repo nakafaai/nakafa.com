@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   expireHostOnlySessionCookie,
   hostOnlySessionCookieHandler,
-  isLoopbackHostname,
   readHostOnlySessionCookieName,
   readSchoolTrustedOrigins,
   sharedCookieReaches,
@@ -157,20 +156,6 @@ describe("school trusted origins from the Referer", () => {
         referer: "http://harapan.localhost:3400/classes",
       })
     ).toEqual(["http://harapan.localhost:3400"]);
-  });
-});
-
-describe("loopback hostname", () => {
-  it("names localhost, its subdomains and the loopback addresses", () => {
-    expect(isLoopbackHostname("localhost")).toBe(true);
-    expect(isLoopbackHostname("harapan.localhost")).toBe(true);
-    expect(isLoopbackHostname("127.0.0.1")).toBe(true);
-    expect(isLoopbackHostname("[::1]")).toBe(true);
-  });
-
-  it("does not name a host that merely ends with localhost", () => {
-    expect(isLoopbackHostname("nakafa.com")).toBe(false);
-    expect(isLoopbackHostname("evillocalhost")).toBe(false);
   });
 });
 

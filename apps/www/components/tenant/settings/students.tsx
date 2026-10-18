@@ -65,6 +65,7 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
       <SchoolLoginsCard slug={slug} />
       <SchoolPersonCard
         description={t("students-description")}
+        footer={t("students-person-footer")}
         onChoose={setPersonId}
         personId={personId}
         slug={slug}
@@ -114,6 +115,9 @@ function SchoolLoginsCard({ slug }: { slug: TenantSlug }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("logins-footer")}</CardSectionHint>
+      </CardSectionFooter>
     </CardSection>
   );
 }
@@ -158,12 +162,13 @@ function SchoolCardForm({
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{t("card-issue")}</CardTitle>
+        <CardTitle>{t("card-issue-title")}</CardTitle>
         <CardDescription>{t("card-issue-description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Input
           aria-label={t("card-login-name")}
+          className="w-full max-w-xs"
           onChange={(event) => setLoginName(event.target.value)}
           placeholder={t("card-login-name-placeholder")}
           value={loginName}

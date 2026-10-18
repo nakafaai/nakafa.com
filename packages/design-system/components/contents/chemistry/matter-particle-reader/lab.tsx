@@ -22,16 +22,16 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -71,6 +71,7 @@ export function MatterParticleReaderLab({
   const [selectedModeId, setSelectedModeId] =
     useState<MatterParticleModeId>(ATOM_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
+  const t = useTranslations("Common");
   const sceneColors = getAtomSceneColors(resolvedTheme);
 
   function handleModeChange(value: string) {
@@ -141,15 +142,11 @@ export function MatterParticleReaderLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="text-muted-foreground text-sm">
-          {selectedLabels.helperCaption}
-        </p>
         <VisualCardFacts>
+          <VisualFact label={t("note")} value={selectedLabels.helperCaption} />
           <VisualFact
             label={labels.categoryLabel}
             value={selectedLabels.category}
@@ -172,7 +169,6 @@ function MatterParticleCameraControls() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={MATTER_PARTICLE_SCENE_VIEW.cameraTarget}
       fov={43}

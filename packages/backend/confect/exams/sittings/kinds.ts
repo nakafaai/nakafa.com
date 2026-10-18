@@ -63,6 +63,10 @@ export const sittingKind = Kind.make("sitting", "examSittings", {
       attempt: Id("examAttempts"),
       type: Schema.Literal("sitting.allowDevice"),
     }),
+    Schema.Struct({
+      attempt: Id("examAttempts"),
+      type: Schema.Literal("sitting.finish"),
+    }),
     Schema.Struct({ type: Schema.Literal("sitting.close") }),
   ],
   published: [],

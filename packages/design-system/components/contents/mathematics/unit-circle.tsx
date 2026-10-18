@@ -4,6 +4,7 @@ import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
 import {
   formatTrigRatioMath,
+  QUADRANT_NUMERALS,
   TRIG_NUMBER_OPTIONS,
   UNIT_CIRCLE_DEFAULT_ANGLE,
 } from "@repo/design-system/components/contents/mathematics/trig";
@@ -14,22 +15,27 @@ import {
 } from "@repo/design-system/components/three/controls";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardFacts,
   VisualCardFooter,
-  VisualCardGroup,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { COLORS } from "@repo/design-system/lib/color";
-import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
+import {
+  getCos,
+  getQuadrant,
+  getRadians,
+  getSin,
+  getTan,
+} from "@repo/math/angles";
+import { Option } from "effect";
 import dynamic from "next/dynamic";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import {
   Button,
   Group,
@@ -80,6 +86,56 @@ interface Props {
   trigValues?: CardProps["trigValues"];
 }
 
+/** The configuration of one unit-circle card, shared by its scene, its controls and its values. */
+interface UnitCircleConfig {
+  angle: number;
+  live: boolean;
+  onAngleChange: ((angle: number) => void) | undefined;
+  trigValues: CardProps["trigValues"];
+  viewLabel: string | undefined;
+}
+
+const UnitCircleContext = createContext<UnitCircleConfig | null>(null);
+
+/** Provides one unit-circle card's configuration and its coordinate controls. */
+function UnitCircleProvider({
+  children,
+  config,
+}: {
+  children: ReactNode;
+  config: UnitCircleConfig;
+}) {
+  return (
+    <CoordinateProvider>
+      <UnitCircleContext value={config}>{children}</UnitCircleContext>
+    </CoordinateProvider>
+  );
+}
+
+/** Reads the configuration of the surrounding unit-circle card. */
+function useUnitCircle() {
+  const config = use(UnitCircleContext);
+  if (!config) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error("useUnitCircle must be used within UnitCircleProvider");
+  }
+  return config;
+}
+
+/** The visual card that holds a unit circle's header, its controls, and its values. */
+function UnitCircleFrame({ children }: { children: ReactNode }) {
+  const locale = useLocale();
+
+  return (
+    <VisualCard>
+      {children}
+      <I18nProvider locale={locale}>
+        <Content />
+      </I18nProvider>
+    </VisualCard>
+  );
+}
+
 /**
  * The unit circle as a visual card without a header. The scene, its angle
  * controls and the trigonometric values of the angle are all in the card; the
@@ -93,23 +149,12 @@ export function UnitCircleCard({
   trigValues,
   viewLabel,
 }: CardProps) {
-  const locale = useLocale();
+  const config = { angle, live, onAngleChange, trigValues, viewLabel };
 
   return (
-    <CoordinateProvider>
-      <VisualCard>
-        {header}
-        <I18nProvider locale={locale}>
-          <Content
-            angle={angle}
-            live={live}
-            onAngleChange={onAngleChange}
-            trigValues={trigValues}
-            viewLabel={viewLabel}
-          />
-        </I18nProvider>
-      </VisualCard>
-    </CoordinateProvider>
+    <UnitCircleProvider config={config}>
+      <UnitCircleFrame>{header}</UnitCircleFrame>
+    </UnitCircleProvider>
   );
 }
 
@@ -120,30 +165,27 @@ export function UnitCircle({
   angle = UNIT_CIRCLE_DEFAULT_ANGLE,
   trigValues,
 }: Props) {
+  const config = {
+    angle,
+    live: true,
+    onAngleChange: undefined,
+    trigValues,
+    viewLabel: undefined,
+  };
+
   return (
-    <UnitCircleCard
-      angle={angle}
-      header={<VisualCardHeader description={description} title={title} />}
-      trigValues={trigValues}
-    />
+    <UnitCircleProvider config={config}>
+      <UnitCircleFrame>
+        <VisualCardHeader description={description} title={title} />
+      </UnitCircleFrame>
+    </UnitCircleProvider>
   );
 }
 
-function Content({
-  angle,
-  live,
-  onAngleChange,
-  trigValues,
-  viewLabel,
-}: {
-  angle: number;
-  live: boolean;
-  onAngleChange: ((angle: number) => void) | undefined;
-  trigValues?: CardProps["trigValues"];
-  viewLabel: string | undefined;
-}) {
+function Content() {
   const t = useTranslations("Common");
   const format = useFormatter();
+  const { angle, live, onAngleChange, trigValues, viewLabel } = useUnitCircle();
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
   const angleValue = angleOverride ?? angle;
   const exactValues = angleValue === angle ? trigValues : undefined;
@@ -212,41 +254,51 @@ function Content({
       </VisualCardBody>
       <CoordinateControls />
       <VisualCardFooter>
-        <VisualCardGroup>
-          <Badge variant="outline">
-            <InlineMath
-              math={`\\sin\\theta ${formatRatio(getSin(angleValue), exactValues?.sin)}`}
-            />
-          </Badge>
-          <Badge variant="outline">
-            <InlineMath
-              math={`\\cos\\theta ${formatRatio(getCos(angleValue), exactValues?.cos)}`}
-            />
-          </Badge>
-          <Badge variant="outline">
-            {Number.isFinite(getTan(angleValue)) ? (
+        <VisualCardFacts>
+          <VisualFact
+            label={<InlineMath math="\theta" />}
+            value={<InlineMath math={`${angleValue}^\\circ`} />}
+          />
+          <VisualFact
+            label={t("radian")}
+            value={format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}
+          />
+          <VisualFact
+            label={<InlineMath math="\sin\theta" />}
+            value={
               <InlineMath
-                math={`\\tan\\theta ${formatRatio(getTan(angleValue), exactValues?.tan)}`}
+                math={formatRatio(getSin(angleValue), exactValues?.sin)}
               />
-            ) : (
-              <>
-                <InlineMath math="\tan\theta" />: {t("undefined")}
-              </>
-            )}
-          </Badge>
-        </VisualCardGroup>
-
-        <Separator />
-
-        <div className="mx-auto flex w-full max-w-md items-center gap-2">
-          <Badge style={{ color: COLORS.VIOLET }} variant="outline">
-            <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
-          </Badge>
-          <Badge className="font-mono" variant="outline">
-            {format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}{" "}
-            {t("radian")}
-          </Badge>
-        </div>
+            }
+          />
+          <VisualFact
+            label={<InlineMath math="\cos\theta" />}
+            value={
+              <InlineMath
+                math={formatRatio(getCos(angleValue), exactValues?.cos)}
+              />
+            }
+          />
+          <VisualFact
+            label={<InlineMath math="\tan\theta" />}
+            value={
+              Number.isFinite(getTan(angleValue)) ? (
+                <InlineMath
+                  math={formatRatio(getTan(angleValue), exactValues?.tan)}
+                />
+              ) : (
+                t("undefined")
+              )
+            }
+          />
+          <VisualFact
+            label={t("quadrant")}
+            value={Option.match(getQuadrant(angleValue), {
+              onNone: () => t("on-axis"),
+              onSome: (quadrant) => QUADRANT_NUMERALS[quadrant - 1],
+            })}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </>
   );

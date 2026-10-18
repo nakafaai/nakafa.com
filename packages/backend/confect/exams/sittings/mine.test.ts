@@ -80,4 +80,21 @@ describe("exams/sittings mine", () => {
         expect(listed).toHaveLength(10);
       })
   );
+
+  it.effect(
+    "shows each sitting with its exam's title and its unit's time zone, in one list",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const listed = yield* fixture.as("student").query(mine, { slug: nf });
+        expect(listed).toEqual([
+          expect.objectContaining({
+            examTitle: "PTS",
+            id: made.id,
+            timeZone: "Asia/Jakarta",
+          }),
+        ]);
+      })
+  );
 });

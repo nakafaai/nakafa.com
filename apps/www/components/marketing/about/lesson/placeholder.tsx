@@ -8,6 +8,7 @@ import { getAtomShellReadings } from "@repo/design-system/components/contents/ch
 import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
 import {
   formatTrigRatioMath,
+  QUADRANT_NUMERALS,
   TRIG_NUMBER_OPTIONS,
   UNIT_CIRCLE_DEFAULT_ANGLE,
 } from "@repo/design-system/components/contents/mathematics/trig";
@@ -28,29 +29,30 @@ import {
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { Badge } from "@repo/design-system/components/ui/badge";
-import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
-  VisualCardGroup,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import {
   VisualFact,
   VisualFactTabular,
 } from "@repo/design-system/components/visual/fact";
-import { COLORS } from "@repo/design-system/lib/color";
-import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
-import { Array as Arr } from "effect";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import {
+  getCos,
+  getQuadrant,
+  getRadians,
+  getSin,
+  getTan,
+} from "@repo/math/angles";
+import { Array as Arr, Option } from "effect";
 
 /**
  * The card of the projectile lesson at its default launch, drawn before its lab
@@ -94,9 +96,7 @@ export function ProjectilePlaceholder({
         className={threeSceneFrameVariants()}
         render={<section />}
       />
-      <VisualCardActions>
-        <VisualCardFullscreen inert />
-      </VisualCardActions>
+      <VisualCardSceneActions inert />
       <VisualCardFooter>
         <VisualCardFacts>
           {Arr.map(facts, (fact) => (
@@ -122,7 +122,7 @@ export function CirclePlaceholder({
   labels,
 }: {
   formatNumber: (value: number, options: Intl.NumberFormatOptions) => string;
-  labels: { radian: string };
+  labels: { onAxis: string; quadrant: string; radian: string };
 }) {
   const formatApproximation = (value: number) =>
     formatNumber(value, TRIG_NUMBER_OPTIONS);
@@ -153,36 +153,40 @@ export function CirclePlaceholder({
         </VisualCardBody>
         <CoordinateControls inert />
         <VisualCardFooter>
-          <VisualCardGroup>
-            <Badge variant="outline">
-              <InlineMath math={`\\sin\\theta ${sin}`} />
-            </Badge>
-            <Badge variant="outline">
-              <InlineMath math={`\\cos\\theta ${cos}`} />
-            </Badge>
-            <Badge variant="outline">
-              <InlineMath math={`\\tan\\theta ${tan}`} />
-            </Badge>
-          </VisualCardGroup>
-
-          <Separator />
-
-          <div className="mx-auto flex w-full max-w-md flex-col">
-            <div className="flex items-center gap-2">
-              <Badge style={{ color: COLORS.VIOLET }} variant="outline">
-                <InlineMath
-                  math={`\\theta = ${UNIT_CIRCLE_DEFAULT_ANGLE}^\\circ`}
-                />
-              </Badge>
-              <Badge className="font-mono" variant="outline">
-                {formatNumber(
-                  getRadians(UNIT_CIRCLE_DEFAULT_ANGLE),
-                  TRIG_NUMBER_OPTIONS
-                )}{" "}
-                {labels.radian}
-              </Badge>
-            </div>
-          </div>
+          <VisualCardFacts>
+            <VisualFact
+              label={<InlineMath math="\theta" />}
+              value={
+                <InlineMath math={`${UNIT_CIRCLE_DEFAULT_ANGLE}^\\circ`} />
+              }
+            />
+            <VisualFact
+              label={labels.radian}
+              value={formatNumber(
+                getRadians(UNIT_CIRCLE_DEFAULT_ANGLE),
+                TRIG_NUMBER_OPTIONS
+              )}
+            />
+            <VisualFact
+              label={<InlineMath math="\sin\theta" />}
+              value={<InlineMath math={sin} />}
+            />
+            <VisualFact
+              label={<InlineMath math="\cos\theta" />}
+              value={<InlineMath math={cos} />}
+            />
+            <VisualFact
+              label={<InlineMath math="\tan\theta" />}
+              value={<InlineMath math={tan} />}
+            />
+            <VisualFact
+              label={labels.quadrant}
+              value={Option.match(getQuadrant(UNIT_CIRCLE_DEFAULT_ANGLE), {
+                onNone: () => labels.onAxis,
+                onSome: (quadrant) => QUADRANT_NUMERALS[quadrant - 1],
+              })}
+            />
+          </VisualCardFacts>
         </VisualCardFooter>
       </VisualCard>
     </CoordinateProvider>
@@ -235,9 +239,7 @@ export function AtomPlaceholder({
         className={threeSceneFrameVariants()}
         render={<section />}
       />
-      <VisualCardActions>
-        <VisualCardFullscreen inert />
-      </VisualCardActions>
+      <VisualCardSceneActions inert />
       <VisualCardFooter>
         <VisualCardFacts>
           <VisualFact
@@ -302,9 +304,7 @@ export function CellPlaceholder({
         className={threeSceneFrameVariants()}
         render={<section />}
       />
-      <VisualCardActions>
-        <VisualCardFullscreen inert />
-      </VisualCardActions>
+      <VisualCardSceneActions inert />
     </VisualCard>
   );
 }

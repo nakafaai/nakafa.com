@@ -23,6 +23,7 @@ export function TryoutPageHeader({
     <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
       <div className="col-span-2 min-w-0 md:col-span-1">
         <BreadcrumbHeaderPath
+          homeHref="/home"
           homeLabel={tCommon("home")}
           items={[
             { href: "/try-out", label: tCommon("try-out-short") },

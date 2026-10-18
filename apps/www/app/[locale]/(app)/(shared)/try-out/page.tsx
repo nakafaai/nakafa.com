@@ -94,6 +94,7 @@ async function TryoutHubRoute({
         <LayoutMaterialContent>
           <BreadcrumbHeader
             value={{
+              homeHref: "/home",
               homeLabel: tCommon("home"),
               items: [{ label: title }],
               menuLabel: tCommon("more"),

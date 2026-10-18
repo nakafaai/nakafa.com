@@ -24,7 +24,7 @@ test("a school without a logo shows its animal beside its name, and its account 
     "Account settings",
     "Theme",
     "Language",
-    "Back to Nakafa learning",
+    "Back to Nakafa",
     "Logout",
   ]) {
     await expect(page.getByRole("menuitem", { name: item })).toBeVisible();

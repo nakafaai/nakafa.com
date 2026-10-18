@@ -46,7 +46,8 @@ describe("exams/sittings signal", () => {
             state: "inProgress",
           },
         ]);
-        expect(mentions(page, made.token)).toBe(false);
+        expect(mentions(page.attempts, made.token)).toBe(false);
+        expect(mentions(page.sitting, made.token)).toBe(false);
       })
   );
 

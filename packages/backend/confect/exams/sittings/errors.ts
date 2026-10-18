@@ -53,6 +53,31 @@ export class DeviceRetired extends Schema.TaggedError<DeviceRetired>()(
   }
 ) {}
 
+/** A question that the sitting's exam does not hold, so the student cannot answer it. */
+export class QuestionNotInExam extends Schema.TaggedError<QuestionNotInExam>()(
+  "QuestionNotInExam",
+  {
+    ...refusal(
+      "QUESTION_NOT_IN_EXAM",
+      "This question is not part of this exam."
+    ),
+  }
+) {}
+
+/**
+ * A response that the question's choice does not take: an option that the choice does not
+ * hold, a repeated option, or a count of options outside the choice's minimum and maximum.
+ */
+export class ResponseDoesNotFit extends Schema.TaggedError<ResponseDoesNotFit>()(
+  "ResponseDoesNotFit",
+  {
+    ...refusal(
+      "RESPONSE_DOES_NOT_FIT",
+      "This response does not fit the question."
+    ),
+  }
+) {}
+
 /** An attempt that has retired as many devices as it may, so a proctor cannot allow another. */
 export class RetiredDevicesFull extends Schema.TaggedError<RetiredDevicesFull>()(
   "RetiredDevicesFull",
