@@ -16,6 +16,7 @@ import {
   RetiredDevicesFull,
   SecondDevice,
   SittingClosed,
+  SittingLocked,
   SittingNotOpen,
 } from "@repo/backend/confect/exams/sittings/errors";
 import {
@@ -53,6 +54,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingNotOpen,
           SittingClosed,
+          SittingLocked,
           AttemptClosed,
           SecondDevice,
           DeviceRetired,
@@ -72,6 +74,7 @@ export default GroupSpec.make()
       error: () =>
         Schema.Union([
           NotInSitting,
+          SittingLocked,
           AttemptClosed,
           SecondDevice,
           DeviceRetired,

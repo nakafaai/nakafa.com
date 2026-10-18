@@ -2,18 +2,32 @@ import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import type { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
 import { nf } from "@repo/backend/test/editor";
 import {
   admittedOf,
   attemptRow,
+  CLOSES_AT,
   deviceOf,
+  keyedExam,
+  OPENS_AT,
   openedSitting,
   type SittingFixture,
+  scheduleSitting,
+  seedAttempt,
 } from "@repo/backend/test/sittings";
-import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  grantRole,
+  slugOf,
+  TENANCY_NOW,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
 const { enter, lock, dashboard, close } = refs.public.exams.sittings;
+
+/** The reason of the proctor's locks in these tests: one of the six codes. */
+const RULE_BREAK: typeof ReasonCode.Type = "rule-break";
 
 /** The student's entry with the sitting's token, which must admit the student. */
 const enterStudent = (
@@ -37,7 +51,7 @@ const lockArgs = (
   sittingId: GenericId.GenericId<"examSittings">
 ) => ({
   attemptId,
-  reason: "signal-confirmed",
+  reason: RULE_BREAK,
   sittingId,
   slug: nf,
 });
@@ -129,6 +143,67 @@ describe("exams/sittings authority", () => {
           _tag: "AccessDenied",
           reason: "resource",
         });
+      })
+  );
+
+  it.effect(
+    "refuses a proctor action on an attempt of another sitting, as a missing object, and leaves that attempt as it was",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const sittingA = yield* openedSitting(fixture, "PTS");
+        const examId = yield* keyedExam(fixture, "PAS");
+        const sittingB = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        const attemptId = yield* seedAttempt(fixture, {
+          deadline: CLOSES_AT,
+          deviceId: deviceOf(1),
+          person: fixture.people.student.personId,
+          sittingId: sittingB.id,
+          state: "inProgress",
+        });
+        const refused = yield* fixture
+          .as("teacher")
+          .mutation(lock, lockArgs(attemptId, sittingA.id))
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "AccessDenied",
+          reason: "resource",
+        });
+        expect(yield* attemptRow(fixture, attemptId)).toMatchObject({
+          state: "inProgress",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses an entry from a member of another school who holds a student grant, as not in the sitting",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        yield* fixture.run(
+          grantRole(
+            fixture.tenants.other,
+            fixture.people.otherOwner.personId,
+            "student",
+            { kind: "tenant" }
+          )
+        );
+        const refused = yield* fixture
+          .as("otherOwner")
+          .mutation(enter, {
+            deviceId: deviceOf(1),
+            sittingId: made.id,
+            slug: slugOf("other"),
+            token: made.token,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "NotInSitting" });
       })
   );
 

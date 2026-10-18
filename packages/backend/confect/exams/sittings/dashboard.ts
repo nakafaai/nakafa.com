@@ -6,7 +6,10 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { sittingView } from "@repo/backend/confect/exams/sittings/view";
 import type { PaginationOptions } from "convex/server";
-import { Effect, Option } from "effect";
+import { Effect, Number as Num, Option, Struct } from "effect";
+
+/** The most attempts that one page of the dashboard holds. A larger request is clamped to it. */
+const DASHBOARD_PAGE_SIZE = 100;
 
 /** The animal of a claimed Person, from the account. An unclaimed Person has none. */
 const mascotOf = Effect.fn("exams.sittings.dashboard.mascot")(function* (
@@ -24,7 +27,7 @@ const mascotOf = Effect.fn("exams.sittings.dashboard.mascot")(function* (
 
 /**
  * One attempt as the dashboard shows it. The latest signal decides whether the student is
- * away: an exit or a disconnect with no return after it (round 2 and ADR 0013 decision 7).
+ * away: an exit or a disconnect with no return after it (ADR 0013).
  */
 const attemptRow = Effect.fn("exams.sittings.dashboard.attempt")(function* (
   attempt: ExamAttemptsDoc
@@ -62,9 +65,10 @@ const attemptRow = Effect.fn("exams.sittings.dashboard.attempt")(function* (
 });
 
 /**
- * The proctor's dashboard of a sitting: the sitting, and one page of its attempts in
- * the order the index holds them. A page follows the client's pagination options, and
- * no token or token hash is read (ADR 0013, round 2 decision 7).
+ * The proctor's dashboard of a sitting: the sitting, and one page of its attempts in the
+ * order the index holds them. A page asks for at most `DASHBOARD_PAGE_SIZE` attempts, and a
+ * larger request is clamped to that size, so every read is bounded. No token or token hash
+ * is read (ADR 0013).
  */
 export const dashboard = Effect.fn("exams.sittings.dashboard")(
   function* (args: { paginationOpts: PaginationOptions }) {
@@ -72,7 +76,14 @@ export const dashboard = Effect.fn("exams.sittings.dashboard")(
     const page = yield* (yield* DatabaseReader)
       .table("examAttempts")
       .index("by_sittingId", (query) => query.eq("sitting", sitting._id))
-      .paginate(args.paginationOpts)
+      .paginate(
+        Struct.assign(args.paginationOpts, {
+          numItems: Num.clamp(args.paginationOpts.numItems, {
+            maximum: DASHBOARD_PAGE_SIZE,
+            minimum: 1,
+          }),
+        })
+      )
       .pipe(Effect.orDie);
     const rows = yield* Effect.forEach(page.page, attemptRow, {
       concurrency: "unbounded",

@@ -33,8 +33,15 @@ import { readTenantKeys } from "@repo/backend/confect/vault/keys";
 import { Array as Arr, Clock, Effect, Option } from "effect";
 
 /**
+ * How long before the scheduling a sitting may have opened. An opening that is more than
+ * this far in the past is refused, so a schedule never opens a sitting whose time has passed.
+ */
+const OPEN_PAST_LIMIT_MS = 60_000;
+
+/**
  * The unit and the cohort that a sitting holds. A unit sitting holds no cohort. A cohort
- * sitting takes its unit from the cohort. The caller must be allowed to edit the unit.
+ * sitting takes its unit from the cohort. The caller must be allowed to edit the unit, and
+ * the cohort must be active.
  */
 const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
   group: typeof SittingGroup.Type,
@@ -56,6 +63,9 @@ const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
     kind: "unit",
     unitId: cohort.value.unitId,
   });
+  if (cohort.value.status !== "active") {
+    return yield* new ScheduleInvalid({ reason: "cohort" });
+  }
   return { cohortId: cohort.value._id, unitId: cohort.value.unitId };
 });
 
@@ -83,8 +93,9 @@ const keysFit = Effect.fn("exams.sittings.schedule.keys")(function* (
 
 /**
  * Creates a sitting of an exam for one group in one room, with a new token, and schedules
- * its opening and its closing (round 2, decision 10). The token is returned to the
- * proctor who schedules it, and only as a keyed hash is it kept.
+ * its opening and its closing (ADR 0013). The closing must come after the opening, and the
+ * opening may be at most a minute in the past. The token is returned to the proctor who
+ * schedules it, and only as a keyed hash is it kept.
  */
 export const scheduleSitting = Effect.fn("exams.sittings.schedule")(
   function* (args: {
@@ -95,13 +106,16 @@ export const scheduleSitting = Effect.fn("exams.sittings.schedule")(
     room: typeof RoomName.Type;
   }) {
     if (!(args.opensAt < args.closesAt)) {
-      return yield* new ScheduleInvalid();
+      return yield* new ScheduleInvalid({ reason: "closesAt" });
+    }
+    const now = yield* Clock.currentTimeMillis;
+    if (args.opensAt < now - OPEN_PAST_LIMIT_MS) {
+      return yield* new ScheduleInvalid({ reason: "opensAt" });
     }
     const member = yield* Member;
     const tenantId = member.tenant._id;
     const place = yield* placeOf(args.group, tenantId);
     yield* keysFit(args.exam.questions);
-    const now = yield* Clock.currentTimeMillis;
     const id = yield* (yield* DatabaseWriter)
       .table("examSittings")
       .insert({

@@ -5,11 +5,11 @@ import { Schema } from "effect";
 /** The most characters a room's name may hold, counted as Unicode code points. */
 const ROOM_NAME_MAX_LENGTH = 80;
 
-/** The most devices an attempt retires, so `retiredDeviceIds` stays small (round 2). */
+/** The most devices an attempt retires, so `retiredDeviceIds` stays small (ADR 0013). */
 export const RETIRED_DEVICE_LIMIT = 10;
 
-/** The most characters of a reason code. A reason is a code, never free text (ADR 0016). */
-const REASON_CODE_MAX_LENGTH = 40;
+/** The most minutes that one added-minutes action gives an attempt (ADR 0013). */
+const ADD_MINUTES_MAX = 120;
 
 /** A room's name: one line with no space at either end, at most 80 characters. */
 export const RoomName = Schema.String.check(
@@ -33,17 +33,22 @@ export const SittingGroup = Schema.Union([
 ]);
 
 /**
- * A reason that a proctor gives for a lock, an unlock, or added minutes. It is a code
- * of lowercase words joined by single hyphens, because the journal holds codes and never
- * free text (ADR 0016). The list of codes is not decided yet.
+ * The reason that a proctor gives for a lock, an unlock, or added minutes. It is one of
+ * these codes and never free text, because the journal holds codes (ADR 0016, ADR 0013).
  */
-export const ReasonCode = Schema.String.check(
-  Schema.isMaxLength(REASON_CODE_MAX_LENGTH),
-  Schema.isPattern(/^[a-z]+(?:-[a-z]+)*$/u)
-);
+export const ReasonCode = Schema.Literals([
+  "power-outage",
+  "device-problem",
+  "network-problem",
+  "health",
+  "rule-break",
+  "other",
+]);
 
-/** Minutes that a proctor adds to one attempt: a whole number of at least one. */
-export const Minutes = Schema.Int.check(Schema.isGreaterThan(0));
+/** Minutes that a proctor adds to one attempt: a whole number from one to 120 (ADR 0013). */
+export const Minutes = Schema.Int.check(
+  Schema.isBetween({ maximum: ADD_MINUTES_MAX, minimum: 1 })
+);
 
 /** A device, as the web names it: the UUID that the browser keeps for one sitting. */
 export const DeviceId = Schema.String.check(
@@ -82,11 +87,10 @@ export const examSittingValidator = Schema.Struct({
 });
 
 /**
- * The state of one student's attempt in a sitting (ADR 0013). `ready` comes before
- * the student starts, and `submitted` closes the attempt for good.
+ * The state of one student's attempt in a sitting (ADR 0013). Entering the sitting starts
+ * the attempt in progress, and `submitted` closes the attempt for good.
  */
 export const AttemptState = Schema.Literals([
-  "ready",
   "inProgress",
   "locked",
   "closing",

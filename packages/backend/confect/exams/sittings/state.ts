@@ -2,16 +2,11 @@ import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Effect, Predicate, Schema } from "effect";
 
 /** The actions a proctor takes on an attempt, as ADR 0013's table names them. */
-export const ProctorAction = Schema.Literals([
-  "lock",
-  "unlock",
-  "addMinutes",
-  "close",
-]);
+export const ProctorAction = Schema.Literals(["lock", "unlock", "addMinutes"]);
 
 /**
  * The attempt states that ADR 0013's proctor table covers. The table does not decide
- * `ready` or `submitted`, so they are not accepted here.
+ * `submitted`, so it is not accepted here.
  */
 export const ProctoredState = Schema.Literals([
   "inProgress",
@@ -65,11 +60,6 @@ const table: Record<
     locked: (beforeDeadline) =>
       beforeDeadline ? { deadline: "moved", state: "locked" } : "deadline",
   },
-  close: {
-    closing: () => ({ deadline: "kept", state: "closing" }),
-    inProgress: () => ({ deadline: "now", state: "closing" }),
-    locked: () => ({ deadline: "now", state: "locked" }),
-  },
   lock: {
     closing: () => "state",
     inProgress: () => ({ deadline: "kept", state: "locked" }),
@@ -88,7 +78,7 @@ const table: Record<
 /**
  * Decides one proctor action on an attempt, by ADR 0013's table. A refused action fails
  * with `ProctorActionRefused` and the reason the table gives. The table does not decide
- * `ready` or `submitted`, so an action on either is refused for its state.
+ * `submitted`, so an action on it is refused for its state.
  */
 export const decideProctorAction = Effect.fn(
   "exams.sittings.decideProctorAction"

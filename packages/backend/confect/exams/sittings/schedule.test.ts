@@ -77,7 +77,79 @@ describe("exams/sittings schedule", () => {
           group: { kind: "unit", unitId: fixture.units.smp },
           opensAt: OPENS_AT,
         }).pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "ScheduleInvalid" });
+        expect(failure).toMatchObject({
+          _tag: "ScheduleInvalid",
+          reason: "closesAt",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses an opening more than a minute in the past, and accepts one exactly a minute back",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "PTS");
+        const late = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: TENANCY_NOW - 60_001,
+        }).pipe(Effect.flip);
+        expect(late).toMatchObject({
+          _tag: "ScheduleInvalid",
+          reason: "opensAt",
+        });
+        const edge = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: TENANCY_NOW - 60_000,
+        });
+        expect(edge.token).toMatch(TOKEN);
+      })
+  );
+
+  it.effect(
+    "refuses a schedule for an archived cohort, as invalid for its cohort",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "PTS");
+        const cohortId = yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            const periodId = yield* writer.table("tenantPeriods").insert({
+              end: "2026-12-19",
+              name: "Ganjil",
+              start: "2026-07-13",
+              status: "active",
+              tenantId: fixture.tenants.nf,
+              unitId: fixture.units.smp,
+            });
+            return yield* writer.table("tenantCohorts").insert({
+              grade: 10,
+              name: "10A",
+              nameKey: "10a",
+              periodId,
+              status: "archived",
+              tenantId: fixture.tenants.nf,
+              unitId: fixture.units.smp,
+            });
+          })
+        );
+        const failure = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { cohortId, kind: "cohort" },
+          opensAt: OPENS_AT,
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "ScheduleInvalid",
+          reason: "cohort",
+        });
       })
   );
 

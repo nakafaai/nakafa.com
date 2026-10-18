@@ -4,17 +4,17 @@ import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { Effect } from "effect";
 
 /**
- * The tries that one sitting's token takes. A device may try five times a minute, and a
- * sitting takes at most sixty failed tries a minute, so no number of devices can guess
- * the token quickly (ADR 0013, round 2 decision 11). A token bucket refills its tries
- * evenly, so each limit is the number of tries a minute.
+ * The tries that the sittings take (ADR 0013). A device may try five times a minute. One
+ * person may fail five times a minute in one sitting, so no number of devices can guess a
+ * token quickly, and one student's failures never lock out the other students of the sitting.
+ * A token bucket refills its tries evenly, so each limit is the number of tries a minute.
  */
 const limits = new RateLimiter(components.agentRateLimiter, {
-  sittingFailedTries: {
-    capacity: 60,
+  sittingFailedTriesByPerson: {
+    capacity: 5,
     kind: "token bucket",
     period: MINUTE,
-    rate: 60,
+    rate: 5,
   },
   sittingTryByDevice: {
     capacity: 5,
@@ -35,26 +35,35 @@ export const deviceMayTry = Effect.fn("exams.sittings.rate.device")(function* (
   return quota.ok;
 });
 
-/**
- * Whether a sitting may take another failed try. It reads the limit without using a
- * try, so a sitting that has run out refuses even the right token.
- */
-export const sittingMayFail = Effect.fn("exams.sittings.rate.sitting")(
-  function* (sittingId: string) {
-    const ctx = yield* MutationCtx;
-    const quota = yield* Effect.tryPromise(() =>
-      limits.check(ctx, "sittingFailedTries", { key: sittingId })
-    ).pipe(Effect.orDie);
-    return quota.ok;
-  }
-);
+/** The key of one person's failed tries in one sitting. */
+const personKey = (sittingId: string, personId: string) =>
+  `${sittingId}:${personId}`;
 
-/** Counts one failed try of a sitting's token against the sitting's limit. */
+/**
+ * Whether one person may fail again in one sitting. It reads the limit without using a
+ * try, so a person who has run out is refused even with the right token.
+ */
+export const personMayFail = Effect.fn("exams.sittings.rate.person")(function* (
+  sittingId: string,
+  personId: string
+) {
+  const ctx = yield* MutationCtx;
+  const quota = yield* Effect.tryPromise(() =>
+    limits.check(ctx, "sittingFailedTriesByPerson", {
+      key: personKey(sittingId, personId),
+    })
+  ).pipe(Effect.orDie);
+  return quota.ok;
+});
+
+/** Counts one failed try of one person in one sitting against that person's limit. */
 export const countFailedTry = Effect.fn("exams.sittings.rate.failed")(
-  function* (sittingId: string) {
+  function* (sittingId: string, personId: string) {
     const ctx = yield* MutationCtx;
     yield* Effect.tryPromise(() =>
-      limits.limit(ctx, "sittingFailedTries", { key: sittingId })
+      limits.limit(ctx, "sittingFailedTriesByPerson", {
+        key: personKey(sittingId, personId),
+      })
     ).pipe(Effect.orDie);
   }
 );

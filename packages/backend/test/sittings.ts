@@ -54,6 +54,41 @@ export const admittedOf = Effect.fn("test.sittings.admittedOf")(function* (
   return reply;
 });
 
+/** The people who enter a sitting or read its dashboard in the tests. */
+type Actor = "student" | "teacher" | "deputy";
+
+/** One entry of a person into a sitting, with the device and token that the test gives. */
+export const entryOf = (
+  fixture: SittingFixture,
+  args: {
+    deviceId: string;
+    sittingId: GenericId.GenericId<"examSittings">;
+    token: string;
+  },
+  actor: Actor = "student"
+) =>
+  fixture
+    .as(actor)
+    .mutation(refs.public.exams.sittings.enter, { ...args, slug: nf });
+
+/** An entry that the test expects to admit, with the admitted reply narrowed. */
+export const enterOk = (
+  fixture: SittingFixture,
+  args: Parameters<typeof entryOf>[1],
+  actor: Actor = "student"
+) => entryOf(fixture, args, actor).pipe(Effect.flatMap(admittedOf));
+
+/** One page of a sitting's dashboard, read by the teacher. */
+export const dashboardOf = (
+  fixture: SittingFixture,
+  sittingId: GenericId.GenericId<"examSittings">
+) =>
+  fixture.as("teacher").query(refs.public.exams.sittings.dashboard, {
+    paginationOpts: { cursor: null, numItems: 10 },
+    sittingId,
+    slug: nf,
+  });
+
 /** A sitting in the tests opens one minute after the test starts, and closes an hour after it. */
 export const OPENS_AT = TENANCY_NOW + 60_000;
 export const CLOSES_AT = TENANCY_NOW + 3_600_000;

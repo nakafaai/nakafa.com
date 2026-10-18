@@ -2,7 +2,10 @@ import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { covers } from "@repo/backend/confect/access/decision";
 import type { Member } from "@repo/backend/confect/middleware/member.spec";
-import { placementOf } from "@repo/backend/confect/tenancy/authority";
+import {
+  placementOf,
+  scopePlace,
+} from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Effect, Option } from "effect";
 
 /**
@@ -30,4 +33,23 @@ export const mayEnter = Effect.fn("exams.sittings.mayEnter")(function* (
     placement,
     (found) => found.cohortId === sitting.cohortId
   );
+});
+
+/**
+ * Whether a sitting is locked for its entries and its signals (ADR 0013). Its school is
+ * suspended, which refuses every write, or its unit is archived, which locks every row
+ * placed in it.
+ */
+export const sittingLocked = Effect.fn("exams.sittings.locked")(function* (
+  sitting: Pick<ExamSittingsDoc, "tenantId" | "unitId">
+) {
+  const tenant = yield* (yield* DatabaseReader)
+    .table("tenants")
+    .get(sitting.tenantId)
+    .pipe(Effect.orDie);
+  if (tenant.status === "suspended") {
+    return true;
+  }
+  const place = yield* scopePlace({ kind: "unit", unitId: sitting.unitId });
+  return place.locked;
 });

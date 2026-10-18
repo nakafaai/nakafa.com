@@ -19,6 +19,12 @@ export class SittingClosed extends Schema.TaggedError<SittingClosed>()(
   { ...refusal("SITTING_CLOSED", "This sitting has closed.") }
 ) {}
 
+/** A sitting whose school is suspended, or whose unit is archived, so it admits and records nothing. */
+export class SittingLocked extends Schema.TaggedError<SittingLocked>()(
+  "SittingLocked",
+  { ...refusal("SITTING_LOCKED", "This sitting is locked.") }
+) {}
+
 /** An attempt that has passed its deadline, or that is closing or submitted. */
 export class AttemptClosed extends Schema.TaggedError<AttemptClosed>()(
   "AttemptClosed",
@@ -58,11 +64,19 @@ export class RetiredDevicesFull extends Schema.TaggedError<RetiredDevicesFull>()
   }
 ) {}
 
-/** A sitting whose closing time is not after its opening time. */
+/**
+ * A schedule the server refuses, and the rule it breaks: `closesAt` when the closing time is
+ * not after the opening time, `opensAt` when the opening is more than a minute in the past,
+ * and `cohort` when the cohort is not active.
+ */
 export class ScheduleInvalid extends Schema.TaggedError<ScheduleInvalid>()(
   "ScheduleInvalid",
   {
-    ...refusal("SCHEDULE_INVALID", "A sitting must open before it closes."),
+    ...refusal(
+      "SCHEDULE_INVALID",
+      "This sitting cannot be scheduled as given."
+    ),
+    reason: Schema.Literals(["closesAt", "cohort", "opensAt"]),
   }
 ) {}
 

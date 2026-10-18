@@ -1,6 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import type { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
 import { nf } from "@repo/backend/test/editor";
 import {
   admittedOf,
@@ -20,6 +21,9 @@ import { Array as Arr, Effect } from "effect";
 
 const { enter, signal, lock, unlock, addMinutes, allowDevice, changeToken } =
   refs.public.exams.sittings;
+
+/** The reason of a lock in these tests: one of the six codes. */
+const RULE_BREAK: typeof ReasonCode.Type = "rule-break";
 const timers = refs.internal.exams.sittings.timers;
 
 /** A minute, in milliseconds, as the proctor's added minutes count it. */
@@ -72,7 +76,7 @@ describe("exams/sittings proctor actions", () => {
         });
         yield* fixture.as("teacher").mutation(lock, {
           attemptId: entered.attempt,
-          reason: "signal-confirmed",
+          reason: "rule-break",
           sittingId: made.id,
           slug: nf,
         });
@@ -88,7 +92,7 @@ describe("exams/sittings proctor actions", () => {
         ).toMatchObject({ outcome: "admitted", state: "locked" });
         yield* fixture.as("teacher").mutation(unlock, {
           attemptId: entered.attempt,
-          reason: "screen-restored",
+          reason: "device-problem",
           sittingId: made.id,
           slug: nf,
         });
@@ -98,12 +102,12 @@ describe("exams/sittings proctor actions", () => {
         });
         expect(yield* changesOf(fixture)).toContainEqual({
           attempt: entered.attempt,
-          reason: "signal-confirmed",
+          reason: "rule-break",
           type: "sitting.lock",
         });
         expect(yield* changesOf(fixture)).toContainEqual({
           attempt: entered.attempt,
-          reason: "screen-restored",
+          reason: "device-problem",
           type: "sitting.unlock",
         });
       })
@@ -123,7 +127,7 @@ describe("exams/sittings proctor actions", () => {
         const teacher = fixture.as("teacher");
         const lockArgs = {
           attemptId: entered.attempt,
-          reason: "signal-confirmed",
+          reason: RULE_BREAK,
           sittingId: made.id,
           slug: nf,
         };
@@ -153,7 +157,7 @@ describe("exams/sittings proctor actions", () => {
         .as("teacher")
         .mutation(unlock, {
           attemptId: entered.attempt,
-          reason: "screen-restored",
+          reason: "device-problem",
           sittingId: made.id,
           slug: nf,
         })
@@ -182,14 +186,14 @@ describe("exams/sittings proctor actions", () => {
         yield* teacher.mutation(addMinutes, {
           attemptId: entered.attempt,
           minutes: 15,
-          reason: "power-cut",
+          reason: "power-outage",
           sittingId: made.id,
           slug: nf,
         });
         yield* teacher.mutation(addMinutes, {
           attemptId: entered.attempt,
           minutes: 5,
-          reason: "power-cut",
+          reason: "power-outage",
           sittingId: made.id,
           slug: nf,
         });
@@ -203,7 +207,7 @@ describe("exams/sittings proctor actions", () => {
         expect(yield* changesOf(fixture)).toContainEqual({
           attempt: entered.attempt,
           minutes: 5,
-          reason: "power-cut",
+          reason: "power-outage",
           type: "sitting.addMinutes",
         });
       })
@@ -226,7 +230,7 @@ describe("exams/sittings proctor actions", () => {
           .mutation(addMinutes, {
             attemptId: entered.attempt,
             minutes: 5,
-            reason: "power-cut",
+            reason: "power-outage",
             sittingId: made.id,
             slug: nf,
           })
@@ -234,6 +238,44 @@ describe("exams/sittings proctor actions", () => {
         expect(refused).toMatchObject({
           _tag: "ProctorActionRefused",
           reason: "deadline",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses added minutes above 120, and leaves the deadline and the close job as they were",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterAdmitted(fixture, {
+          device: 1,
+          sittingId: made.id,
+          token: made.token,
+        });
+        const teacher = fixture.as("teacher");
+        yield* teacher.mutation(addMinutes, {
+          attemptId: entered.attempt,
+          minutes: 1,
+          reason: "power-outage",
+          sittingId: made.id,
+          slug: nf,
+        });
+        const before = yield* attemptRow(fixture, entered.attempt);
+        expect(before.closeJob).toBeDefined();
+        const refused = yield* teacher
+          .mutation(addMinutes, {
+            attemptId: entered.attempt,
+            minutes: 121,
+            reason: "power-outage",
+            sittingId: made.id,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "SchemaError" });
+        expect(yield* attemptRow(fixture, entered.attempt)).toMatchObject({
+          closeJob: before.closeJob,
+          deadline: before.deadline,
         });
       })
   );
@@ -252,14 +294,14 @@ describe("exams/sittings proctor actions", () => {
         const teacher = fixture.as("teacher");
         yield* teacher.mutation(lock, {
           attemptId: entered.attempt,
-          reason: "signal-confirmed",
+          reason: "rule-break",
           sittingId: made.id,
           slug: nf,
         });
         vi.setSystemTime(CLOSES_AT + 1);
         yield* teacher.mutation(unlock, {
           attemptId: entered.attempt,
-          reason: "screen-restored",
+          reason: "device-problem",
           sittingId: made.id,
           slug: nf,
         });

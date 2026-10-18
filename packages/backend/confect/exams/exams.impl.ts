@@ -19,7 +19,14 @@ import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { authorizeScope } from "@repo/backend/confect/tenancy/authority";
-import { Array as Arr, Clock, Effect, Layer, Struct } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  Effect,
+  Layer,
+  Number as Num,
+  Struct,
+} from "effect";
 
 /**
  * Creates an exam in a scope the caller may edit, with its first question, so an
@@ -59,10 +66,14 @@ const create = FunctionImpl.make(
   })
 );
 
+/** The most exams that one page of the exam list holds. A larger request is clamped to it. */
+const EXAM_PAGE_LIMIT = 20;
+
 /**
  * One page of the exams of the school, newest first. The index reads the school's
  * exams in order, and each one is kept only if the caller may view it, so a scoped
- * Teacher sees the tenant's exams of their unit and no other unit's.
+ * Teacher sees the tenant's exams of their unit and no other unit's. A page asks for at
+ * most `EXAM_PAGE_LIMIT` exams, and a larger request is clamped to that size.
  */
 const list = FunctionImpl.make(
   databaseSchema,
@@ -73,7 +84,14 @@ const list = FunctionImpl.make(
     const page = yield* (yield* DatabaseReader)
       .table("exams")
       .index("by_tenantId", (query) => query.eq("tenantId", tenant._id), "desc")
-      .paginate(paginationOpts)
+      .paginate(
+        Struct.assign(paginationOpts, {
+          numItems: Num.clamp(paginationOpts.numItems, {
+            maximum: EXAM_PAGE_LIMIT,
+            minimum: 1,
+          }),
+        })
+      )
       .pipe(Effect.orDie);
     const viewable = yield* Effect.filter(page.page, (row) =>
       examAuthority

@@ -9,19 +9,23 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
 import { deviceBinding } from "@repo/backend/confect/exams/sittings/device";
-import { mayEnter } from "@repo/backend/confect/exams/sittings/eligibility";
+import {
+  mayEnter,
+  sittingLocked,
+} from "@repo/backend/confect/exams/sittings/eligibility";
 import {
   AttemptClosed,
   DeviceRetired,
   NotInSitting,
   SecondDevice,
   SittingClosed,
+  SittingLocked,
   SittingNotOpen,
 } from "@repo/backend/confect/exams/sittings/errors";
 import {
   countFailedTry,
   deviceMayTry,
-  sittingMayFail,
+  personMayFail,
 } from "@repo/backend/confect/exams/sittings/rate";
 import {
   normalizeToken,
@@ -108,7 +112,7 @@ const checkOpen = Effect.fn("exams.sittings.enter.open")(function* (
   }
 });
 
-/** Starts the Person's attempt with this device, which then owns it. */
+/** Starts the Person's attempt with this device, which then owns it. Entering starts the attempt. */
 const startAttempt = Effect.fn("exams.sittings.enter.start")(function* (
   sitting: ExamSittingsDoc,
   person: TenantPeopleDoc,
@@ -136,9 +140,10 @@ const startAttempt = Effect.fn("exams.sittings.enter.start")(function* (
 });
 
 /**
- * Admits a device to the Person's existing attempt. A device that owns it enters again.
- * An unbound attempt, after a proctor allowed another device, binds to this one. A
- * retired device and any other device are refused.
+ * Binds an attempt that no device holds to this device, once the token has matched. A
+ * retired device and any other device are refused. The device that owns the attempt was
+ * admitted before the token was checked, so it never reaches this function, and the
+ * attempt left here is unbound.
  */
 const bindAttempt = Effect.fn("exams.sittings.enter.bind")(function* (
   attempt: ExamAttemptsDoc,
@@ -151,20 +156,21 @@ const bindAttempt = Effect.fn("exams.sittings.enter.bind")(function* (
   if (binding === "other") {
     return yield* new SecondDevice();
   }
-  if (binding === "unbound") {
-    yield* (yield* DatabaseWriter)
-      .table("examAttempts")
-      .patch(attempt._id, { deviceId })
-      .pipe(Effect.orDie);
-  }
+  yield* (yield* DatabaseWriter)
+    .table("examAttempts")
+    .patch(attempt._id, { deviceId })
+    .pipe(Effect.orDie);
   return admitted(attempt);
 });
 
 /**
- * Admits a student to a sitting with its token, from one device (ADR 0013, round 2
- * decisions 1, 4, 11). The order is fixed: the student must be in the sitting, the
- * sitting or the attempt must be open, the device and the sitting must have a try left,
- * and the token must match. A token that does not match counts as a failed try.
+ * Admits a student to a sitting with its token, from one device (ADR 0013). The order is
+ * fixed: the student must be in the sitting, the school and the unit must not be locked,
+ * and the sitting or the attempt must be open. A device that already owns the attempt is
+ * admitted here, before any try is counted or any token is checked, so a student who is
+ * inside keeps working after the token changes. Every other entry needs a try left for its
+ * device and for the person, and then a token that matches. A token that does not match
+ * counts as a failed try of the person.
  */
 export const enter = Effect.fn("exams.sittings.enter")(function* (args: {
   deviceId: string;
@@ -176,13 +182,22 @@ export const enter = Effect.fn("exams.sittings.enter")(function* (args: {
   if (!(yield* mayEnter(sitting, member))) {
     return yield* new NotInSitting();
   }
+  if (yield* sittingLocked(sitting)) {
+    return yield* new SittingLocked();
+  }
   const attempt = yield* attemptOf(sitting._id, member.person._id);
   const now = yield* Clock.currentTimeMillis;
   yield* checkOpen(sitting, attempt, now);
+  if (
+    Option.isSome(attempt) &&
+    deviceBinding(attempt.value, args.deviceId) === "bound"
+  ) {
+    return admitted(attempt.value);
+  }
   if (!(yield* deviceMayTry(args.deviceId))) {
     return refused("TooManyTries");
   }
-  if (!(yield* sittingMayFail(sitting._id))) {
+  if (!(yield* personMayFail(sitting._id, member.person._id))) {
     return refused("TooManyTries");
   }
   const keys = yield* readTenantKeys(member.tenant._id).pipe(Effect.orDie);
@@ -192,7 +207,7 @@ export const enter = Effect.fn("exams.sittings.enter")(function* (args: {
     normalizeToken(args.token)
   ).pipe(Effect.orDie);
   if (!(yield* matchesSecret(hash, sitting.tokenHash).pipe(Effect.orDie))) {
-    yield* countFailedTry(sitting._id);
+    yield* countFailedTry(sitting._id, member.person._id);
     return refused("TokenRefused");
   }
   if (Option.isNone(attempt)) {
