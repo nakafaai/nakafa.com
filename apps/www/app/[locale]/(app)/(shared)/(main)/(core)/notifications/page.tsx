@@ -17,7 +17,7 @@ export async function generateMetadata({
   const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "Notifications" });
 
-  return { title: t("title") };
+  return { robots: { index: false, follow: false }, title: t("title") };
 }
 
 /** The inbox of the signed-in account, in the app shell. */
