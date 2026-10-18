@@ -31,10 +31,8 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
-import {
-  DataTable,
-  type dataTableFeatures,
-} from "@/components/shared/table/data";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import {

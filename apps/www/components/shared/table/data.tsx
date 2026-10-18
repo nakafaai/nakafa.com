@@ -40,53 +40,17 @@ import {
 import {
   type Column,
   type ColumnDef,
-  columnFacetingFeature,
-  columnFilteringFeature,
-  createFacetedRowModel,
-  createFacetedUniqueValues,
-  createFilteredRowModel,
-  createSortedRowModel,
-  filterFn_includesString,
   type Header,
   type RowData,
-  rowSortingFeature,
-  sortFn_alphanumeric,
-  sortFn_basic,
-  sortFn_datetime,
-  sortFn_text,
-  tableFeatures,
   useTable,
 } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { FacetValues, oneOfFilter } from "@/components/shared/table/filter";
+import { dataTableFeatures } from "@/components/shared/table/features";
+import { FacetValues } from "@/components/shared/table/filter";
 import { TableFrame } from "@/components/shared/table/frame";
 import { EmptyNina } from "@/components/state/empty";
-
-/**
- * What every Nakafa data table can do, as shadcn's data table registers it on TanStack
- * Table: filter each column, count the values a column holds, and sort.
- */
-export const dataTableFeatures = tableFeatures({
-  columnFacetingFeature,
-  columnFilteringFeature,
-  facetedRowModel: createFacetedRowModel(),
-  facetedUniqueValues: createFacetedUniqueValues(),
-  filteredRowModel: createFilteredRowModel(),
-  filterFns: {
-    includesString: filterFn_includesString,
-    oneOf: oneOfFilter,
-  },
-  rowSortingFeature,
-  sortedRowModel: createSortedRowModel(),
-  sortFns: {
-    alphanumeric: sortFn_alphanumeric,
-    basic: sortFn_basic,
-    datetime: sortFn_datetime,
-    text: sortFn_text,
-  },
-});
 
 /** The arrow of a column sorted each way. */
 const sortIcons = { asc: ArrowUp01Icon, desc: ArrowDown01Icon };

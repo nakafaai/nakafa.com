@@ -11,10 +11,8 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import {
-  DataTable,
-  type dataTableFeatures,
-} from "@/components/shared/table/data";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { SchoolDateTime } from "@/components/tenant/settings/time";

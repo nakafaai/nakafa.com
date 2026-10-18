@@ -28,10 +28,8 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import {
-  DataTable,
-  type dataTableFeatures,
-} from "@/components/shared/table/data";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation.client";

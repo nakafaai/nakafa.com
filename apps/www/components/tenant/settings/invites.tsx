@@ -25,10 +25,8 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
-import {
-  DataTable,
-  type dataTableFeatures,
-} from "@/components/shared/table/data";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";

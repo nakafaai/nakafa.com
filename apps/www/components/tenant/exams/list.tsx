@@ -17,10 +17,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
 import { LayoutContent } from "@/components/shared/content/layout";
-import {
-  DataTable,
-  type dataTableFeatures,
-} from "@/components/shared/table/data";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
 import { CreateExam } from "@/components/tenant/exams/dialog";
