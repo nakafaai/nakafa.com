@@ -19,6 +19,7 @@ import {
 } from "@repo/backend/confect/exams/sittings/schema";
 import { decideProctorAction } from "@repo/backend/confect/exams/sittings/state";
 import {
+  cancelPending,
   scheduleAttemptClose,
   scheduleSubmit,
 } from "@repo/backend/confect/exams/sittings/timers";
@@ -143,9 +144,8 @@ export const addMinutes = Effect.fn("exams.sittings.addMinutes")(
       attempt.state,
       now < attempt.deadline
     );
-    const scheduler = yield* Scheduler;
     if (attempt.closeJob !== undefined) {
-      yield* scheduler.cancel(attempt.closeJob);
+      yield* cancelPending(attempt.closeJob);
     }
     const deadline = attempt.deadline + args.minutes * MINUTE_MS;
     const closeJob = yield* scheduleAttemptClose(attempt._id, deadline);
@@ -224,14 +224,14 @@ export const changeToken = Effect.fn("exams.sittings.changeToken")(
 );
 
 /**
- * Close the sitting: its scheduled jobs are cancelled, and a run closes every open
- * attempt at once, one page at a time, with each deadline set to now (ADR 0013).
+ * Close the sitting: each of its jobs that is still pending is cancelled, and a run closes
+ * every open attempt at once, one page at a time, with each deadline set to now (ADR 0013).
  */
 export const close = Effect.fn("exams.sittings.close")(function* () {
   const sitting = yield* Sitting;
   const member = yield* Member;
   const scheduler = yield* Scheduler;
-  yield* Effect.forEach(sitting.jobs, (job) => scheduler.cancel(job));
+  yield* Effect.forEach(sitting.jobs, (job) => cancelPending(job));
   yield* (yield* DatabaseWriter)
     .table("examSittings")
     .patch(sitting._id, { state: "closed" })

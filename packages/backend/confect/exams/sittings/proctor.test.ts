@@ -8,6 +8,7 @@ import {
   attemptRow,
   CLOSES_AT,
   deviceOf,
+  jobStateOf,
   openedSitting,
   type SittingFixture,
   sittingRow,
@@ -190,6 +191,7 @@ describe("exams/sittings proctor actions", () => {
           sittingId: made.id,
           slug: nf,
         });
+        const firstJob = (yield* attemptRow(fixture, entered.attempt)).closeJob;
         yield* teacher.mutation(addMinutes, {
           attemptId: entered.attempt,
           minutes: 5,
@@ -197,6 +199,13 @@ describe("exams/sittings proctor actions", () => {
           sittingId: made.id,
           slug: nf,
         });
+        const secondJob = (yield* attemptRow(fixture, entered.attempt))
+          .closeJob;
+        if (firstJob === undefined || secondJob === undefined) {
+          return yield* Effect.die("each added minutes must schedule a close");
+        }
+        expect(yield* jobStateOf(fixture, firstJob)).toBe("canceled");
+        expect(yield* jobStateOf(fixture, secondJob)).toBe("pending");
         expect(yield* attemptRow(fixture, entered.attempt)).toMatchObject({
           deadline: CLOSES_AT + 20 * MINUTE,
           state: "inProgress",

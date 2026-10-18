@@ -14,8 +14,19 @@ import {
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
-import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Predicate, Record, Schema } from "effect";
+import {
+  scheduledJobs,
+  TENANCY_NOW,
+  type tenancyFixture,
+} from "@repo/backend/test/tenancy";
+import {
+  Array as Arr,
+  Effect,
+  Option,
+  Predicate,
+  Record,
+  Schema,
+} from "effect";
 
 /**
  * Whether any string inside a returned value contains the text. A read must never
@@ -187,6 +198,19 @@ export const openedSitting = Effect.fn("test.sittings.opened")(function* (
     sittingId: made.id,
   });
   return made;
+});
+
+/**
+ * The state of one scheduled job as the system table holds it: `pending`, `inProgress`,
+ * `success`, `failed`, or `canceled`. It is `null` when no row holds the job.
+ */
+export const jobStateOf = Effect.fn("test.sittings.jobStateOf")(function* (
+  fixture: SittingFixture,
+  jobId: GenericId.GenericId<"_scheduled_functions">
+) {
+  const jobs = yield* fixture.run(scheduledJobs);
+  const job = Arr.findFirst(jobs, (row) => row._id === jobId);
+  return Option.isSome(job) ? job.value.state.kind : null;
 });
 
 /** Reads one sitting row, to check its state, deadline, or jobs. */

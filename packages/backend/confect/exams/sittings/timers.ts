@@ -3,7 +3,10 @@ import type {
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Scheduler } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { DateTime, Effect } from "effect";
 
 /**
@@ -44,6 +47,26 @@ export const scheduleAttemptClose = Effect.fn("exams.sittings.timers.attempt")(
       refs.internal.exams.sittings.timers.closeAttempt,
       { attemptId }
     );
+  }
+);
+
+/**
+ * Cancels one scheduled job, and only while it is still pending. Convex fails to cancel a
+ * mutation that has committed, so a job that has run is left alone. A job whose row no
+ * longer exists is left alone too, because there is nothing to cancel.
+ */
+export const cancelPending = Effect.fn("exams.sittings.timers.cancel")(
+  function* (jobId: ExamSittingsDoc["jobs"][number]) {
+    const job = yield* (yield* DatabaseReader)
+      .table("_scheduled_functions")
+      .get(jobId)
+      .pipe(
+        Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)),
+        Effect.orDie
+      );
+    if (job?.state.kind === "pending") {
+      yield* (yield* Scheduler).cancel(jobId);
+    }
   }
 );
 
