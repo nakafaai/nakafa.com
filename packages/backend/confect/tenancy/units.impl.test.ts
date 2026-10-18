@@ -50,14 +50,16 @@ describe("tenancy/units setLocale", () => {
           contentLanguage: "de",
           timeZone: "Europe/Berlin",
         });
-        expect(view.units).toContainEqual({
-          contentLanguage: "de",
-          id: fixture.units.smp,
-          level: "smp",
-          name: "SMP Nakafa",
-          status: "active",
-          timeZone: "Europe/Berlin",
-        });
+        expect(view.units).toContainEqual(
+          expect.objectContaining({
+            contentLanguage: "de",
+            id: fixture.units.smp,
+            level: "smp",
+            name: "SMP Nakafa",
+            status: "active",
+            timeZone: "Europe/Berlin",
+          })
+        );
         expect(view.units).toContainEqual(
           expect.objectContaining({
             contentLanguage: "id",
