@@ -9,7 +9,7 @@ import { InputGroupTextarea } from "@repo/design-system/components/ui/input-grou
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { Effect, Option, Result } from "effect";
+import { Effect, Option, Result, String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import {
   type FocusEvent,
@@ -40,7 +40,8 @@ function focusOnMount(node: HTMLTextAreaElement | null) {
 /**
  * Writes a comment or a reply in the composer of the posts. The text clears on
  * Post and stays usable while the server saves, so nothing waits. A refused post
- * gives its text back to the field, and the list says why.
+ * gives its text back to the field, ahead of any next text written meanwhile and
+ * a blank line apart, and the list says why.
  */
 export function CommentComposer({ autoFocus = false, onClose, onPost }: Props) {
   const t = useTranslations("Comments");
@@ -63,7 +64,11 @@ export function CommentComposer({ autoFocus = false, onClose, onPost }: Props) {
         Effect.flatMap((saved) =>
           Effect.sync(() => {
             if (!saved) {
-              setText((previous) => previous || posted);
+              setText((previous) =>
+                Str.isEmpty(Str.trim(previous))
+                  ? posted
+                  : `${posted}\n\n${previous}`
+              );
             }
           })
         )
