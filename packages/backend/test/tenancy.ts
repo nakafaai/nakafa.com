@@ -28,10 +28,12 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { seedSchools } from "@repo/backend/test/school";
 import type { FunctionReference } from "convex/server";
 import type { TestConvex } from "convex-test";
 import {
+  Array as Arr,
   Cause,
   DateTime,
   Duration,
@@ -104,6 +106,44 @@ export const invitePerson = Effect.fn("test.tenancy.invitePerson")(function* (
   });
   return { inviteId, personId };
 });
+
+/**
+ * Adds claimed active members to one school, each with an account of its own, so
+ * the school holds more active Persons than one page of a list reads.
+ */
+export const claimedMembers = Effect.fn("test.tenancy.claimedMembers")(
+  function* (tenantId: GenericId.GenericId<"tenants">, count: number) {
+    const writer = yield* DatabaseWriter;
+    yield* Effect.forEach(
+      Arr.makeBy(count, (index) => index),
+      (index) =>
+        Effect.gen(function* () {
+          const userId = yield* writer.table("users").insert({
+            authId: `member-${index}`,
+            credits: 0,
+            creditsResetAt: 0,
+            email: `member-${index}@example.com`,
+            mascot: MASCOT,
+            name: `Member ${index}`,
+            plan: "free",
+          });
+          yield* writer.table("tenantPeople").insert({
+            account: {
+              claimedAt: TENANCY_NOW,
+              method: "invite",
+              state: "claimed",
+              userId,
+            },
+            kind: "member",
+            name: `Member ${index}`,
+            status: "active",
+            tenantId,
+          });
+        }),
+      { discard: true }
+    );
+  }
+);
 
 /** Gives one Person a standing grant of one role over a scope, as the school's roster and Admin do. */
 export const grantRole = Effect.fn("test.tenancy.grantRole")(function* (
