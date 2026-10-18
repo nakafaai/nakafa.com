@@ -2,6 +2,7 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import {
   createLearnerAccount,
+  openLearnerAccount,
   type RunConvex,
 } from "@repo/backend/scripts/content/acceptance/account";
 import {
@@ -57,7 +58,7 @@ type Call = Parameters<RunConvex<string, never>>;
  * A runner that answers the way the Better Auth adapter does and records each
  * call. The operations in `failing` fail with their own name.
  */
-function recordingRunner(failing: readonly string[] = []) {
+function recordingRunner(failing: readonly string[] = [], lookup = "null") {
   const calls = MutableList.make<Call>();
   const run: RunConvex<string, never> = (...call) => {
     MutableList.append(calls, call);
@@ -71,6 +72,9 @@ function recordingRunner(failing: readonly string[] = []) {
     if (operation === "Learner session") {
       return Effect.succeed('{"_creationTime":2,"_id":"session-1"}');
     }
+    if (operation === "Learner account lookup") {
+      return Effect.succeed(lookup);
+    }
     return Effect.succeed("null");
   };
   return { calls, run };
@@ -82,6 +86,63 @@ const readInput = ([, args]: Call) =>
 /** The operations of the calls a runner recorded, in order. */
 const operations = (calls: MutableList.MutableList<Call>) =>
   Arr.map(MutableList.toArray(calls), ([operation]) => operation);
+
+describe("opening a learner account", () => {
+  const ADDRESS = "learner-1a2b3c4d@acceptance.example.test";
+
+  it.effect(
+    "signs the account that holds the address in again, with a new session and no new account",
+    () =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(NOW);
+        const { calls, run } = recordingRunner([], '{"_id":"user-7"}');
+
+        const account = yield* openLearnerAccount(run, LIFETIME, ADDRESS);
+
+        expect(account).toMatchObject({
+          sessionId: "session-1",
+          userId: "user-7",
+        });
+        expect(operations(calls)).toEqual([
+          "Learner account lookup",
+          "Learner session",
+        ]);
+        const session = Option.getOrThrow(
+          Arr.findFirst(
+            MutableList.toArray(calls),
+            ([operation]) => operation === "Learner session"
+          )
+        );
+        expect((yield* readInput(session)).input?.data?.userId).toBe("user-7");
+      }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "creates the account with the address, its session, and its profile when no account holds it",
+    () =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(NOW);
+        const { calls, run } = recordingRunner();
+
+        const account = yield* openLearnerAccount(run, LIFETIME, ADDRESS);
+
+        expect(account.userId).toBe("user-1");
+        expect(operations(calls)).toEqual([
+          "Learner account lookup",
+          "Learner account",
+          "Learner session",
+          "Learner profile",
+        ]);
+        const created = Option.getOrThrow(
+          Arr.findFirst(
+            MutableList.toArray(calls),
+            ([operation]) => operation === "Learner account"
+          )
+        );
+        expect((yield* readInput(created)).input?.data?.email).toBe(ADDRESS);
+      }).pipe(Effect.provide(nodeServicesLayer))
+  );
+});
 
 describe("synthetic learner account", () => {
   it.effect(

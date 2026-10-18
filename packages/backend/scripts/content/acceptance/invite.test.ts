@@ -59,7 +59,15 @@ const InviteArgs = Schema.fromJsonString(
 );
 
 /** The text one Convex command prints, as the local backend answers it. */
-function answerOf(args: readonly string[], users: string, rows: string) {
+function answerOf(
+  args: readonly string[],
+  users: string,
+  rows: string,
+  account: string
+) {
+  if (Arr.contains(args, "adapter:findOne")) {
+    return account;
+  }
   if (Arr.contains(args, "data")) {
     return Arr.contains(args, "notifications") ? rows : users;
   }
@@ -76,7 +84,11 @@ function answerOf(args: readonly string[], users: string, rows: string) {
 }
 
 /** Answers every command and keeps the commands in the order they ran. The new account's Better Auth user is `user-1`. */
-function answerCommands(users: string, rows: string = INBOX_ROWS) {
+function answerCommands(
+  users: string,
+  rows: string = INBOX_ROWS,
+  account = "null"
+) {
   const specs = MutableList.make<CommandSpec>();
   mocks.command.mockImplementation((spec: CommandSpec) =>
     Effect.gen(function* () {
@@ -84,7 +96,7 @@ function answerCommands(users: string, rows: string = INBOX_ROWS) {
       const fs = yield* FileSystem.FileSystem;
       yield* fs.writeFileString(
         spec.stdoutPath,
-        answerOf(spec.args, users, rows)
+        answerOf(spec.args, users, rows, account)
       );
     })
   );
@@ -146,6 +158,53 @@ describe("acceptance invite", () => {
           lastArgument(accountCall)
         );
         expect(account.input.data.email).toBe(ADDRESS);
+        const claimCall = Option.getOrThrow(
+          Arr.findFirst(calls, (spec) =>
+            Arr.contains(spec.args, "tenancy/claims:run")
+          )
+        );
+        expect(
+          yield* Schema.decodeEffect(Claim)(lastArgument(claimCall))
+        ).toEqual({ cursor: null, userId: "app-user-1" });
+        const cookie = yield* fs
+          .readFileString(`${root}/invite.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+        expect(cookie.name).toBe("better-auth.session_token");
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "signs an account that already holds the address in again, creating none, and claims the invitation for it",
+    () =>
+      Effect.gen(function* () {
+        const { fs, root } = yield* fixture;
+        const specs = answerCommands(APP_USERS, INBOX_ROWS, '{"_id":"user-1"}');
+        const SessionCreate = Schema.fromJsonString(
+          Schema.Struct({
+            input: Schema.Struct({
+              data: Schema.Struct({ userId: Schema.String }),
+              model: Schema.Literal("session"),
+            }),
+          })
+        );
+
+        yield* createAcceptanceInvite(
+          root,
+          SLUG,
+          ADDRESS,
+          `${root}/invite.json`
+        );
+
+        const calls = MutableList.toArray(specs);
+        const creations = Arr.filter(calls, (spec) =>
+          Arr.contains(spec.args, "adapter:create")
+        );
+        expect(creations).toHaveLength(1);
+        expect(
+          yield* Schema.decodeEffect(SessionCreate)(
+            lastArgument(Option.getOrThrow(Arr.head(creations)))
+          )
+        ).toMatchObject({ input: { data: { userId: "user-1" } } });
         const claimCall = Option.getOrThrow(
           Arr.findFirst(calls, (spec) =>
             Arr.contains(spec.args, "tenancy/claims:run")

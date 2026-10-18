@@ -1,5 +1,5 @@
 import {
-  createLearnerAccount,
+  openLearnerAccount,
   type RunConvex,
 } from "@repo/backend/scripts/content/acceptance/account";
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
@@ -83,8 +83,8 @@ export const waitForInboxRow = Effect.fn("contentAcceptance.inboxRow")(
  * holds the invited address, so it claims the invitation the way `owner` claims
  * the school for its Owner. The command waits until the inbox holds the row, and
  * then writes the learner's session cookie to `output`, mode 600, for a browser
- * test to send. A learner the command invites has no attempts, and every run
- * invites a new learner, so the command runs once per address.
+ * test to send. An address that already holds an account signs that account in
+ * again, so a learner invited to a second school keeps one inbox.
  */
 export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
   function* (root: string, slug: string, address: string, output: string) {
@@ -110,7 +110,7 @@ export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
       ),
       Effect.flatMap(Schema.decodeEffect(InvitedPerson))
     );
-    const account = yield* createLearnerAccount(run, SESSION_LIFETIME, address);
+    const account = yield* openLearnerAccount(run, SESSION_LIFETIME, address);
     const users = yield* run("app users", [
       "data",
       "users",
