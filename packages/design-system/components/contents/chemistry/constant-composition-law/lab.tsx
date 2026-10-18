@@ -31,6 +31,7 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -71,6 +72,7 @@ export function ConstantCompositionLab({
   const [selectedModeId, setSelectedModeId] =
     useState<ConstantCompositionModeId>(EXACT_RATIO_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
+  const t = useTranslations("Common");
   const sceneColors = getConstantCompositionSceneColors(resolvedTheme);
 
   function handleModeChange(value: string) {
@@ -145,10 +147,8 @@ export function ConstantCompositionLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="text-muted-foreground text-sm">
-          {selectedLabels.helperCaption}
-        </p>
         <VisualCardFacts>
+          <VisualFact label={t("note")} value={selectedLabels.helperCaption} />
           <VisualFact label={labels.ratioLabel} value={selectedLabels.ratio} />
           <VisualFact
             label={labels.leftoverLabel}

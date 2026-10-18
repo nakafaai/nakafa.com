@@ -27,6 +27,7 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
 import { useState } from "react";
@@ -103,6 +104,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   const { resolvedTheme } = useTheme();
   const [selectedIndex, setSelectedIndex] = useState(defaultItemIndex);
   const colors = getBiologySceneColors(resolvedTheme);
+  const t = useTranslations("Common");
   const selectedItem = labels.items[selectedIndex];
   const hasMultipleItems = labels.items.length > 1;
   const readings = biologyReadings(selectedItem, labels);
@@ -172,22 +174,18 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
 
       {hasFooter && (
         <VisualCardFooter>
-          {selectedItem.caption === undefined ? null : (
-            <p className="text-muted-foreground text-sm">
-              {selectedItem.caption}
-            </p>
-          )}
-          {readings.length === 0 ? null : (
-            <VisualCardFacts>
-              {Arr.map(readings, (reading) => (
-                <VisualFact
-                  key={reading.key}
-                  label={reading.label}
-                  value={reading.value}
-                />
-              ))}
-            </VisualCardFacts>
-          )}
+          <VisualCardFacts>
+            {selectedItem.caption === undefined ? null : (
+              <VisualFact label={t("note")} value={selectedItem.caption} />
+            )}
+            {Arr.map(readings, (reading) => (
+              <VisualFact
+                key={reading.key}
+                label={reading.label}
+                value={reading.value}
+              />
+            ))}
+          </VisualCardFacts>
         </VisualCardFooter>
       )}
     </VisualCard>

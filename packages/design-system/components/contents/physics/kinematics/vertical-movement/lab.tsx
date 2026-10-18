@@ -24,6 +24,7 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
@@ -133,11 +134,11 @@ export function VerticalMovementLab({
 
       <VisualCardFooter>
         <VisualCardFacts>
-          <LabFact
+          <VisualFactTabular
             label={labels.initialCondition}
             value={<InlineMath math={formatInitialConditionMath(motion)} />}
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.maxHeight}
             value={
               <InlineMath
@@ -148,7 +149,7 @@ export function VerticalMovementLab({
               />
             }
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.time}
             value={
               <InlineMath
@@ -159,7 +160,7 @@ export function VerticalMovementLab({
               />
             }
           />
-          <LabFact
+          <VisualFactTabular
             label={labels.finalVelocity}
             value={
               <InlineMath math={formatRoundedSpeedMath(motion.finalVelocity)} />
@@ -274,15 +275,6 @@ function AnimatedBall({ motion }: { motion: MotionState }) {
         </mesh>
       </group>
     </CameraBounds>
-  );
-}
-
-function LabFact({ label, value }: { label: ReactNode; value: ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-foreground tabular-nums">{value}</dd>
-    </div>
   );
 }
 

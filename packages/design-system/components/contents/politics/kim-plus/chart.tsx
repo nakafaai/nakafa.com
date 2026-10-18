@@ -14,11 +14,14 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 const VALUE_AXIS_PADDING_RATIO = 0.12;
@@ -41,6 +44,7 @@ export function ElectabilityChart({
   footnote,
   labels,
 }: Props) {
+  const t = useTranslations("Common");
   const electabilityData = [
     {
       name: "Anies Baswedan",
@@ -112,7 +116,9 @@ export function ElectabilityChart({
         <VisualCardFullscreen />
       </VisualCardActions>
       <VisualCardFooter>
-        <p className="text-sm">{footnote}</p>
+        <VisualCardFacts>
+          <VisualFact label={t("source")} value={footnote} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

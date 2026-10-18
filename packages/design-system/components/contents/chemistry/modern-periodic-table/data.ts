@@ -192,7 +192,7 @@ function getElementCategory(symbol: string) {
 /**
  * Parses a compact main-table entry in group:symbol:atomicNumber format.
  */
-function parseMainEntry(source: string) {
+export function parseMainEntry(source: string) {
   const [groupText, symbol, atomicNumberText] = source.split(":");
   const group = Number(groupText);
 
@@ -235,7 +235,7 @@ function parseMainEntry(source: string) {
 /**
  * Parses a detached f-block entry in atomicNumber:symbol format.
  */
-function parseSeriesEntry(source: string) {
+export function parseSeriesEntry(source: string) {
   const [atomicNumberText, symbol] = source.split(":");
   const atomicNumber = Number(atomicNumberText);
 
@@ -380,4 +380,23 @@ export function getModernPeriodicTableCategoryColor(
   category: PeriodicElementCategoryId
 ) {
   return colors[MODERN_PERIODIC_TABLE_CATEGORY_COLOR_KEYS[category]];
+}
+
+/** The categories an element tile can have: every element category, never a series marker. */
+type PeriodicElementTileCategoryId =
+  (typeof PERIODIC_ELEMENT_CATEGORY_IDS)[number];
+
+/**
+ * Counts the element tiles of one category in the main table and the f-block
+ * rows. Series markers are not element tiles, so they are never counted.
+ */
+export function getPeriodicElementCategoryCount(
+  categoryId: PeriodicElementTileCategoryId
+) {
+  const tiles = [
+    ...Arr.flatMap(MAIN_PERIODIC_TABLE_ROWS, (row) => row.entries),
+    ...Arr.flatMap(PERIODIC_SERIES_ROWS, (row) => row.entries),
+  ];
+
+  return Arr.filter(tiles, (tile) => tile.category === categoryId).length;
 }

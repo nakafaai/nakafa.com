@@ -21,15 +21,18 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import {
   formatLongMonthYear,
   formatShortMonthYear,
 } from "@repo/design-system/lib/charts/month";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 interface ElectabilityChartProps {
@@ -145,6 +148,7 @@ export function ElectabilityChart({
   footnote,
   labels,
 }: ElectabilityChartProps) {
+  const t = useTranslations("Common");
   const chartConfig = {
     anies_muhaimin: {
       cue: ELECTABILITY_CUES.aniesMuhaimin,
@@ -248,7 +252,9 @@ export function ElectabilityChart({
         <VisualCardFullscreen />
       </VisualCardActions>
       <VisualCardFooter>
-        <p className="text-sm">{footnote}</p>
+        <VisualCardFacts>
+          <VisualFact label={t("source")} value={footnote} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

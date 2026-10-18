@@ -140,8 +140,6 @@ export function AtomSymbolLab({
               <InlineMath math={`X = \\mathrm{${selectedSample.symbol}}`} />
             }
           />
-        </VisualCardFacts>
-        <VisualCardFacts>
           <VisualFact
             label={labels.protonCount}
             value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
