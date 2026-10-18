@@ -13,8 +13,9 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
  * A learner's own words, drawn as Markdown by LearnerText: bold text, lists and
  * formulas draw as they do in Nina's answers, and the line breaks the learner
  * wrote stay. Links open in a new tab, and an image draws as a link to its
- * address. A long word breaks where it must, and the text takes the direction
- * of its own content.
+ * address. A long word breaks where it must, and each paragraph takes the
+ * direction of its own text; the wrapper names none, because a wrapper with
+ * `dir="auto"` skips paragraphs that carry their own and reads left to right.
  *
  * A message taller than twelve lines shows its first twelve, and the learner
  * opens the rest. Twelve lines are 292.5 pixels at the chat text size, which
@@ -52,7 +53,7 @@ export function NinaWords({ children }: { children: string }) {
   }, [open]);
 
   return (
-    <div className="flex flex-col items-start gap-2" dir="auto">
+    <div className="flex flex-col items-start gap-2">
       <div
         className={cn(
           "w-full overflow-hidden",
