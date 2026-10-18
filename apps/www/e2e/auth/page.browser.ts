@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { COVER } from "@repo/design-system/components/pool/cover";
 import { Array as Arr, Duration, Effect, MutableList, Schema } from "effect";
+import { expectSignInParts, NINA } from "@/e2e/support/auth";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -17,8 +18,6 @@ const SENTENCE = "So your progress stays saved.";
 const GOOGLE = "Continue with Google";
 const CONSENT =
   "By signing in, you agree to the Terms of Service and the Privacy Policy.";
-/** Nina is drawn this many pixels wide beside the title. */
-const NINA = 'svg[width="190"]';
 /** Two reads this far apart show whether the pool still moves, in milliseconds. */
 const READS_APART_MILLISECONDS = 500;
 /** A member may reach this far past the column's edge, in pixels, from rounding alone. */
@@ -194,6 +193,8 @@ const waitForRest = Effect.fn("NakafaE2E.waitForPoolRest")(function* (
 const openSignIn = Effect.fn("NakafaE2E.openSignIn")(function* (page: Page) {
   yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto(SIGN_IN));
+  yield* expectSignInParts(page);
+  yield* Effect.promise(() => expect(page.locator(NINA)).toBeVisible());
 });
 
 /**
