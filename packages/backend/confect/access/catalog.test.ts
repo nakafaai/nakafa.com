@@ -139,6 +139,7 @@ describe("access/catalog", () => {
           "tenant.policy.set",
           "unit.created",
           "unit.locale.set",
+          "unit.npsn.set",
           "unit.archived",
           "unit.unarchived",
           "person.created",
