@@ -2,7 +2,12 @@
 
 import { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -15,7 +20,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   runSittingCall,
   useAddMinutes,
@@ -82,6 +87,7 @@ function ReasonSelect({
   readonly value: Reason | null;
 }) {
   const t = useTranslations("Exams");
+  const id = useId();
   const items = Arr.map(ReasonCode.literals, (code) => ({
     label: t(`reason-${code}`),
     value: code,
@@ -89,7 +95,7 @@ function ReasonSelect({
 
   return (
     <Field>
-      <FieldLabel>{t("reason")}</FieldLabel>
+      <FieldLabel htmlFor={id}>{t("reason")}</FieldLabel>
       <Select
         items={items}
         onValueChange={(next) => {
@@ -99,7 +105,7 @@ function ReasonSelect({
         }}
         value={value}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full" id={id}>
           <SelectValue placeholder={t("reason")} />
         </SelectTrigger>
         <SelectContent>
@@ -287,6 +293,8 @@ export function AddMinutesDialog({
   const { sittingId, slug } = useSittingData();
   const addMinutes = useAddMinutes();
   const [minutesText, setMinutesText] = useState("");
+  const minutesId = useId();
+  const errorId = useId();
   const [reason, setReason] = useState<Reason | null>(null);
   const minutes = parseMinutes(minutesText);
   const invalid = minutesText !== "" && Option.isNone(minutes);
@@ -329,19 +337,23 @@ export function AddMinutesDialog({
       setOpen={changeOpen}
       title={t("confirm-add-minutes-title", { name })}
     >
-      <Field>
-        <FieldLabel>{t("minutes")}</FieldLabel>
-        <Input
-          aria-invalid={invalid}
-          inputMode="numeric"
-          onChange={(event) => setMinutesText(event.currentTarget.value)}
-          value={minutesText}
-        />
-        {invalid ? (
-          <p className="text-destructive text-sm">{t("minutes-invalid")}</p>
-        ) : null}
-      </Field>
-      <ReasonSelect onValueChange={setReason} value={reason} />
+      <FieldGroup>
+        <Field data-invalid={invalid}>
+          <FieldLabel htmlFor={minutesId}>{t("minutes")}</FieldLabel>
+          <Input
+            aria-describedby={invalid ? errorId : undefined}
+            aria-invalid={invalid}
+            id={minutesId}
+            inputMode="numeric"
+            onChange={(event) => setMinutesText(event.currentTarget.value)}
+            value={minutesText}
+          />
+          {invalid ? (
+            <FieldError id={errorId}>{t("minutes-invalid")}</FieldError>
+          ) : null}
+        </Field>
+        <ReasonSelect onValueChange={setReason} value={reason} />
+      </FieldGroup>
     </ResponsiveDialog>
   );
 }

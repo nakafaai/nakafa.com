@@ -92,9 +92,9 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await dialog
     .getByRole("button", { name: "Close sitting", exact: true })
     .click();
-  // The close moves the attempt to closing and submits it at once, so the student sees the
-  // closing line and then the submitted one; the submitted line is where it settles.
-  await expect(student.getByText("Your answers are in.")).toBeVisible({
+  // The close moves the attempt to closing, and the student's screen says so at once; the
+  // server submits it 75 seconds after its deadline, past what this test waits for.
+  await expect(student.getByText("This attempt has closed.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
 
