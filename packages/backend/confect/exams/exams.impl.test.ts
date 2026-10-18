@@ -142,6 +142,29 @@ describe("exams/exams", () => {
   );
 
   it.effect(
+    "pages the exam list at twenty exams at most, and says that more follow",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        for (let index = 0; index < 21; index += 1) {
+          yield* teacher.mutation(create, {
+            language: LANGUAGE,
+            scope: { kind: "unit", unitId: fixture.units.smp },
+            slug: nf,
+            title: `Ujian ${index + 1}`,
+          });
+        }
+        const page = yield* teacher.query(list, {
+          paginationOpts: { cursor: null, numItems: 50 },
+          slug: nf,
+        });
+        expect(page.page).toHaveLength(20);
+        expect(page.isDone).toBe(false);
+      })
+  );
+
+  it.effect(
     "opens an exam to an Admin of the school, and to a Teacher whose grant covers its unit",
     () =>
       Effect.gen(function* () {

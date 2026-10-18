@@ -2996,6 +2996,21 @@ export declare const api: {
         { examId: Id<"exams">; slug: string; title: string },
         { id: Id<"exams">; language: "en" | "id" | "de"; title: string }
       >;
+      schedule: FunctionReference<
+        "mutation",
+        "public",
+        {
+          closesAt: number;
+          examId: Id<"exams">;
+          group:
+            | { kind: "unit"; unitId: Id<"tenantUnits"> }
+            | { cohortId: Id<"tenantCohorts">; kind: "cohort" };
+          opensAt: number;
+          room: string;
+          slug: string;
+        },
+        { id: Id<"examSittings">; token: string }
+      >;
     };
     questions: {
       add: FunctionReference<
@@ -3978,6 +3993,185 @@ export declare const api: {
         { questions: Array<Id<"examQuestions">> }
       >;
     };
+    sittings: {
+      addMinutes: FunctionReference<
+        "mutation",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          minutes: number;
+          reason:
+            | "power-outage"
+            | "device-problem"
+            | "network-problem"
+            | "health"
+            | "rule-break"
+            | "other";
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
+      allowDevice: FunctionReference<
+        "mutation",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
+      changeToken: FunctionReference<
+        "mutation",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        { token: string }
+      >;
+      close: FunctionReference<
+        "mutation",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        null
+      >;
+      dashboard: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        {
+          attempts: {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              away: boolean;
+              deadline: number;
+              id: Id<"examAttempts">;
+              latestSignal: {
+                at: number;
+                kind:
+                  | "exit"
+                  | "blur"
+                  | "fullscreenExit"
+                  | "copy"
+                  | "paste"
+                  | "secondTab"
+                  | "disconnect"
+                  | "return";
+              } | null;
+              mascot: string | null;
+              name: string;
+              state: "inProgress" | "locked" | "closing" | "submitted";
+            }>;
+          };
+          sitting: {
+            closesAt: number;
+            cohortId: Id<"tenantCohorts"> | null;
+            examId: Id<"exams">;
+            id: Id<"examSittings">;
+            opensAt: number;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            unitId: Id<"tenantUnits">;
+          };
+        }
+      >;
+      enter: FunctionReference<
+        "mutation",
+        "public",
+        {
+          deviceId: string;
+          sittingId: Id<"examSittings">;
+          slug: string;
+          token: string;
+        },
+        | {
+            attempt: Id<"examAttempts">;
+            deadline: number;
+            outcome: "admitted";
+            state: "inProgress" | "locked" | "closing" | "submitted";
+          }
+        | { outcome: "refused"; reason: "TokenRefused" | "TooManyTries" }
+      >;
+      lock: FunctionReference<
+        "mutation",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          reason:
+            | "power-outage"
+            | "device-problem"
+            | "network-problem"
+            | "health"
+            | "rule-break"
+            | "other";
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
+      mine: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          closesAt: number;
+          cohortId: Id<"tenantCohorts"> | null;
+          examId: Id<"exams">;
+          id: Id<"examSittings">;
+          opensAt: number;
+          room: string;
+          state: "scheduled" | "open" | "closed";
+          unitId: Id<"tenantUnits">;
+        }>
+      >;
+      signal: FunctionReference<
+        "mutation",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          deviceId: string;
+          kind:
+            | "exit"
+            | "blur"
+            | "fullscreenExit"
+            | "copy"
+            | "paste"
+            | "secondTab"
+            | "disconnect"
+            | "return";
+          slug: string;
+        },
+        null
+      >;
+      unlock: FunctionReference<
+        "mutation",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          reason:
+            | "power-outage"
+            | "device-problem"
+            | "network-problem"
+            | "health"
+            | "rule-break"
+            | "other";
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
+    };
   };
   identity: {
     cards: {
@@ -4046,6 +4240,8 @@ export declare const api: {
             | "document.view"
             | "exam.edit"
             | "exam.view"
+            | "sitting.proctor"
+            | "sitting.view"
             | "invite.view"
             | "person.manage"
             | "person.view"
@@ -4120,6 +4316,8 @@ export declare const api: {
               | "document.view"
               | "exam.edit"
               | "exam.view"
+              | "sitting.proctor"
+              | "sitting.view"
               | "invite.view"
               | "person.manage"
               | "person.view"
@@ -4304,6 +4502,44 @@ export declare const api: {
                   step: "archive" | "cohorts" | "place" | "homeroom";
                   type: "promotion.undone";
                 }
+              | { type: "sitting.schedule" }
+              | {
+                  attempt: Id<"examAttempts">;
+                  reason:
+                    | "power-outage"
+                    | "device-problem"
+                    | "network-problem"
+                    | "health"
+                    | "rule-break"
+                    | "other";
+                  type: "sitting.lock";
+                }
+              | {
+                  attempt: Id<"examAttempts">;
+                  reason:
+                    | "power-outage"
+                    | "device-problem"
+                    | "network-problem"
+                    | "health"
+                    | "rule-break"
+                    | "other";
+                  type: "sitting.unlock";
+                }
+              | {
+                  attempt: Id<"examAttempts">;
+                  minutes: number;
+                  reason:
+                    | "power-outage"
+                    | "device-problem"
+                    | "network-problem"
+                    | "health"
+                    | "rule-break"
+                    | "other";
+                  type: "sitting.addMinutes";
+                }
+              | { type: "sitting.changeToken" }
+              | { attempt: Id<"examAttempts">; type: "sitting.allowDevice" }
+              | { type: "sitting.close" }
               | {
                   contract: {
                     contentLicense: string;
@@ -4359,6 +4595,7 @@ export declare const api: {
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
+              | { id: Id<"examSittings">; kind: "sitting" }
               | { kind: string };
             subjectName: string | null;
           }>;
@@ -4846,6 +5083,7 @@ export declare const api: {
               | { id: Id<"tenantVisits">; kind: "visit" }
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
+              | { id: Id<"examSittings">; kind: "sitting" }
               | { kind: string };
             tenant: {
               kind: "school" | "foundation";
@@ -4882,6 +5120,7 @@ export declare const api: {
             | { id: Id<"tenantVisits">; kind: "visit" }
             | { id: Id<"editorDocuments">; kind: "document" }
             | { id: Id<"exams">; kind: "exam" }
+            | { id: Id<"examSittings">; kind: "sitting" }
             | { kind: string };
           tenant: {
             kind: "school" | "foundation";
@@ -11201,6 +11440,36 @@ export declare const internal: {
                 | { error: string; kind: "failed" }
                 | { kind: "canceled" };
             }
+        >;
+      };
+    };
+  };
+  exams: {
+    sittings: {
+      timers: {
+        closeAttempt: FunctionReference<
+          "mutation",
+          "internal",
+          { attemptId: Id<"examAttempts"> },
+          null
+        >;
+        closeDue: FunctionReference<
+          "mutation",
+          "internal",
+          { atDeadline: "closesAt" | "now"; sittingId: Id<"examSittings"> },
+          null
+        >;
+        open: FunctionReference<
+          "mutation",
+          "internal",
+          { sittingId: Id<"examSittings"> },
+          null
+        >;
+        submit: FunctionReference<
+          "mutation",
+          "internal",
+          { attemptId: Id<"examAttempts"> },
+          null
         >;
       };
     };
