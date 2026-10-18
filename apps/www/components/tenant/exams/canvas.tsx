@@ -131,14 +131,9 @@ function QuestionOptions({
       <RadioGroup
         aria-label={t("correct")}
         className="grid grid-cols-1 gap-2 md:grid-cols-2"
-        onValueChange={
-          pending
-            ? undefined
-            : (optionId: string) =>
-                saveAnswers(
-                  question.answers,
-                  markedKey(question.answers, optionId)
-                )
+        disabled={pending}
+        onValueChange={(optionId: string) =>
+          saveAnswers(question.answers, markedKey(question.answers, optionId))
         }
         value={markedOption(question.key) ?? ""}
       >

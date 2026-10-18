@@ -3,7 +3,7 @@ import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { GrantScope } from "@repo/backend/confect/access/schema";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, type Option, Schema } from "effect";
 
 /** The viewer's view of the school, as the school layout reads it. */
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
@@ -45,24 +45,15 @@ const languageOf = (unit: ViewerUnit) =>
   Schema.decodeSync(DeliveryLanguageSchema)(unit.contentLanguage);
 
 /**
- * The places an exam can be created in: the whole school first when the viewer may edit
- * the school's exams, then each unit the viewer may create in. The whole school has no
- * language of its own.
+ * The places an exam can be created in: each unit the viewer may create in, in the order the
+ * viewer sees them, and the whole school first when the viewer may edit the school's exams.
+ * The whole school takes its language from the units, so it is offered only when one unit is
+ * creatable. The whole school has no language of its own.
  */
 export const scopeChoices = (
   units: readonly ViewerUnit[],
   canEditSchool: boolean
 ): readonly ScopeChoice[] => {
-  const school: readonly ScopeChoice[] = canEditSchool
-    ? [
-        {
-          language: null,
-          scope: { kind: "tenant" },
-          unitId: null,
-          unitName: null,
-        },
-      ]
-    : [];
   const unitChoices = Arr.map(
     creatableUnits(units),
     (unit): ScopeChoice => ({
@@ -72,21 +63,28 @@ export const scopeChoices = (
       unitName: unit.name,
     })
   );
+  const school: readonly ScopeChoice[] =
+    canEditSchool && Arr.isReadonlyArrayNonEmpty(unitChoices)
+      ? [
+          {
+            language: null,
+            scope: { kind: "tenant" },
+            unitId: null,
+            unitName: null,
+          },
+        ]
+      : [];
   return [...school, ...unitChoices];
 };
 
 /**
- * The choice that the dialog shows first: the first unit when there is one, so a teacher
- * creates in a unit by default, or the whole school when there is no unit. None when the
- * viewer can create nowhere, which hides the action.
+ * The choice that the dialog shows first: the first unit, so a teacher creates in a unit by
+ * default. None when the viewer can create nowhere, which hides the action.
  */
 export const defaultChoice = (
   choices: readonly ScopeChoice[]
 ): Option.Option<ScopeChoice> =>
-  Option.orElse(
-    Arr.findFirst(choices, (choice) => choice.unitId !== null),
-    () => Arr.head(choices)
-  );
+  Arr.findFirst(choices, (choice) => choice.unitId !== null);
 
 /** The distinct content languages of the units a new exam can be created in, which a whole-school exam picks from. */
 export const unitLanguages = (units: readonly ViewerUnit[]) =>
