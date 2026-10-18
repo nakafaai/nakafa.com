@@ -5,9 +5,10 @@
 ---
 
 Show every lesson lab, chart, animation, and 3D scene full screen. Each visual
-now renders through one `VisualCard`, whose bordered footer holds the visual's
-own controls, such as a 3D scene's grid and rotation, beside a full screen
-button. Desktop, Android, and iPad use the Fullscreen API on the card itself.
+now renders through one `VisualCard` of five bands: a header with its title and
+description, a toolbar with its controls, a body that holds the visual alone,
+the actions, such as a 3D scene's grid and rotation, ended by a full screen
+button, and a footer with its readouts and notes. Desktop, Android, and iPad use the Fullscreen API on the card itself.
 iPhone Safari has no element full screen, so there the same card covers the
 viewport in the browser's top layer, above every bar of the page. Where
 scrollbars take room, such as on Windows and Linux, the card still reaches

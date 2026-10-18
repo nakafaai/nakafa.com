@@ -8,11 +8,21 @@ import type {
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@repo/design-system/components/ui/toggle-group";
+import {
   VisualCard,
+  VisualCardActions,
+  VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardFullscreen,
-  VisualCardScene,
+  VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr, Effect } from "effect";
+import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import { Array as Arr, Effect, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -104,10 +114,10 @@ interface ProjectileScenario {
 }
 
 interface ProjectileClientProps {
+  readonly chooseLabel: string;
   readonly lead: string;
   /** Every trajectory, the default one first, so the scene opens on it. */
   readonly scenarios: Arr.NonEmptyReadonlyArray<ProjectileScenario>;
-  readonly talk: ReactNode;
   readonly title: string;
   readonly viewLabel: string;
 }
@@ -166,21 +176,24 @@ function useProjectileSceneVisibility() {
 }
 
 /**
- * The lesson scene from edge to edge. Its title and the chat sit in the sky, and
- * its numbers in the water. The trajectories fly in turn while the scene is on
- * screen, and the scene holds still with reduced motion.
+ * The lesson scene on the card every lesson visual uses: its title and lead,
+ * the trajectories to choose from, the scene alone, the full screen action,
+ * and the numbers of the trajectory under it. The trajectories fly in turn
+ * while the scene is on screen until the reader chooses one, and the scene
+ * holds still with reduced motion.
  */
 export function ProjectileClient({
+  chooseLabel,
   lead,
   scenarios,
-  talk,
   title,
   viewLabel,
 }: ProjectileClientProps) {
   const { sceneFrameRef, sceneVisible } = useProjectileSceneVisibility();
   const shouldReduceMotion = useReducedMotion();
-  const playing = sceneVisible && !shouldReduceMotion;
   const [index, setIndex] = useState(0);
+  const [chosen, setChosen] = useState(false);
+  const playing = sceneVisible && !shouldReduceMotion && !chosen;
   const active = scenarios[index % scenarios.length];
 
   useEffect(() => {
@@ -193,14 +206,44 @@ export function ProjectileClient({
     return () => window.clearInterval(timer);
   }, [playing, scenarios.length]);
 
+  /** Shows the trajectory the reader chose, and stops the turns. */
+  function choose(value: string) {
+    const next = Arr.findFirstIndex(
+      scenarios,
+      (scenario) => scenario.id === value
+    );
+    if (Option.isNone(next)) {
+      return;
+    }
+    setChosen(true);
+    setIndex(next.value);
+  }
+
   return (
-    <VisualCard
-      aria-label={viewLabel}
-      className="relative isolate h-svh max-h-230 min-h-120 overflow-hidden rounded-none border-0 bg-background py-0 shadow-none ring-0"
-      id="scene"
-      role="region"
-    >
-      <VisualCardScene className="absolute inset-0">
+    <VisualCard id="scene-card">
+      {/* The scene is a section of the home page, so its title is a heading. */}
+      <VisualCardHeader description={<p>{lead}</p>} title={<h2>{title}</h2>} />
+      <VisualCardToolbar>
+        <ToggleGroup
+          aria-label={chooseLabel}
+          gridColumns="3"
+          onValueChange={choose}
+          type="single"
+          value={active.id}
+          variant="outline"
+        >
+          {Arr.map(scenarios, (scenario) => (
+            <ToggleGroupItem key={scenario.id} value={scenario.id}>
+              {scenario.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </VisualCardToolbar>
+      <VisualCardBody
+        aria-label={viewLabel}
+        className="aspect-video min-h-72 overflow-hidden"
+        render={<section />}
+      >
         <div className="size-full" ref={sceneFrameRef}>
           {sceneVisible && (
             <ProjectileScene
@@ -209,32 +252,21 @@ export function ProjectileClient({
             />
           )}
         </div>
-      </VisualCardScene>
-
-      <div className="pointer-events-none absolute inset-x-0 top-0 grid gap-6 p-6 lg:p-10">
-        <div className="pointer-events-auto justify-self-start">{talk}</div>
-        <div className="grid max-w-2xl gap-2">
-          <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
-            {title}
-          </h2>
-          <p className="text-pretty text-base">{lead}</p>
-        </div>
-      </div>
-
-      <div className="absolute end-6 top-6 lg:end-10 lg:top-10">
+      </VisualCardBody>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </div>
-
-      <dl className="pointer-events-none absolute inset-x-0 bottom-0 grid grid-cols-2 gap-x-6 gap-y-3 p-6 text-sm sm:grid-cols-3 lg:p-10 xl:grid-cols-6">
-        {Arr.map(active.facts, (fact) => (
-          <div className="flex min-w-0 flex-col gap-1" key={fact.id}>
-            <dt className="text-muted-foreground">{fact.label}</dt>
-            <dd className="wrap-break-word text-foreground tabular-nums">
-              {fact.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      </VisualCardActions>
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(active.facts, (fact) => (
+            <VisualFactTabular
+              key={fact.id}
+              label={fact.label}
+              value={fact.value}
+            />
+          ))}
+        </VisualCardFacts>
+      </VisualCardFooter>
     </VisualCard>
   );
 }

@@ -18,12 +18,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
@@ -78,7 +79,7 @@ export function VerticalMovementLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.condition}
           gridColumns="2"
@@ -93,83 +94,82 @@ export function VerticalMovementLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.72} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE")}
-                intensity={0.62}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.25}
-                position={[4, 5.4, 3.4]}
-                shadow-bias={-0.0005}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-              />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={CAMERA_POSITION}
-                cameraTarget={CAMERA_TARGET}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={42}
-              />
-              <VerticalMotionScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <LabFact
-              label={labels.initialCondition}
-              value={<InlineMath math={formatInitialConditionMath(motion)} />}
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.72} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("SLATE")}
+              intensity={0.62}
             />
-            <LabFact
-              label={labels.maxHeight}
-              value={
-                <InlineMath
-                  math={formatTrimmedMeterMath(
-                    motion.maxHeight,
-                    decimalSeparator
-                  )}
-                />
-              }
+            <directionalLight
+              castShadow
+              intensity={1.25}
+              position={[4, 5.4, 3.4]}
+              shadow-bias={-0.0005}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
             />
-            <LabFact
-              label={labels.time}
-              value={
-                <InlineMath
-                  math={formatTrimmedSecondMath(
-                    motion.motionTime,
-                    decimalSeparator
-                  )}
-                />
-              }
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={CAMERA_POSITION}
+              cameraTarget={CAMERA_TARGET}
+              enablePan
+              enableRotate
+              enableZoom
+              fov={42}
             />
-            <LabFact
-              label={labels.finalVelocity}
-              value={
-                <InlineMath
-                  math={formatRoundedSpeedMath(motion.finalVelocity)}
-                />
-              }
-            />
-          </dl>
-        </VisualCardControls>
+            <VerticalMotionScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <LabFact
+            label={labels.initialCondition}
+            value={<InlineMath math={formatInitialConditionMath(motion)} />}
+          />
+          <LabFact
+            label={labels.maxHeight}
+            value={
+              <InlineMath
+                math={formatTrimmedMeterMath(
+                  motion.maxHeight,
+                  decimalSeparator
+                )}
+              />
+            }
+          />
+          <LabFact
+            label={labels.time}
+            value={
+              <InlineMath
+                math={formatTrimmedSecondMath(
+                  motion.motionTime,
+                  decimalSeparator
+                )}
+              />
+            }
+          />
+          <LabFact
+            label={labels.finalVelocity}
+            value={
+              <InlineMath math={formatRoundedSpeedMath(motion.finalVelocity)} />
+            }
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

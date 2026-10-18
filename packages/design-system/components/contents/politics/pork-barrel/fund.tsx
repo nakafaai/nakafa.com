@@ -12,11 +12,11 @@ import {
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 
@@ -70,35 +70,36 @@ export function FundChart({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
-        <VisualCardScene>
-          <EvilBarChart
-            chartProps={{ margin: FUND_CHART_MARGIN }}
-            config={chartConfig}
-            data={fundChartData}
-          >
-            <Grid vertical={false} />
-            <XAxis dataKey="year" tickMargin={10} />
-            <YAxis
-              label={{
-                value: yLabel,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-            />
-            <Tooltip />
-            <Bar
-              barProps={{ label: { position: "top", fontSize: 12 } }}
-              dataKey="fund"
-              radius={8}
-            />
-            <Legend />
-          </EvilBarChart>
-        </VisualCardScene>
+        <EvilBarChart
+          chartProps={{ margin: FUND_CHART_MARGIN }}
+          className="p-(--card-spacing)"
+          config={chartConfig}
+          data={fundChartData}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="year" tickMargin={10} />
+          <YAxis
+            label={{
+              value: yLabel,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+          />
+          <Tooltip />
+          <Bar
+            barProps={{ label: { position: "top", fontSize: 12 } }}
+            dataKey="fund"
+            radius={8}
+          />
+          <Legend />
+        </EvilBarChart>
       </VisualCardBody>
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
       <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-        <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
   );

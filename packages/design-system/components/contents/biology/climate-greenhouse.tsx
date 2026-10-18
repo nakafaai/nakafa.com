@@ -15,12 +15,13 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
@@ -57,33 +58,8 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="flex flex-col gap-4">
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={[3, 1.7, 4.05]}
-                cameraTarget={[0.1, 0.08, 0]}
-                fov={42}
-              />
-              <ambientLight intensity={0.58} />
-              <hemisphereLight
-                color={colors.skyLight}
-                groundColor={colors.soil}
-                intensity={0.72}
-              />
-              <directionalLight intensity={1.5} position={[-4, 3, 3]} />
-              <GreenhouseScene colors={colors} gasLevel={gasLevel} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-
-        <div className="flex flex-col gap-3 pt-2">
+      <VisualCardToolbar>
+        <div className="flex w-full flex-col gap-3">
           <div className="flex items-center justify-between gap-4 text-sm">
             <span>{labels.gasControl}</span>
             <span className="shrink-0 tabular-nums">{gasLevel}/5</span>
@@ -97,16 +73,42 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
             value={gasLevel}
           />
         </div>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <VisualFact label={labels.heatFlowLabel} value={labels.heatFlow} />
-            <VisualFact label={labels.meaningLabel} value={labels.meaning} />
-          </dl>
-        </VisualCardControls>
+      </VisualCardToolbar>
+
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={[3, 1.7, 4.05]}
+              cameraTarget={[0.1, 0.08, 0]}
+              fov={42}
+            />
+            <ambientLight intensity={0.58} />
+            <hemisphereLight
+              color={colors.skyLight}
+              groundColor={colors.soil}
+              intensity={0.72}
+            />
+            <directionalLight intensity={1.5} position={[-4, 3, 3]} />
+            <GreenhouseScene colors={colors} gasLevel={gasLevel} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact label={labels.heatFlowLabel} value={labels.heatFlow} />
+          <VisualFact label={labels.meaningLabel} value={labels.meaning} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

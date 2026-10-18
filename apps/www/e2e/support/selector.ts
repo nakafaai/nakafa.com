@@ -32,7 +32,7 @@ export const DRAWER_PANEL = '[data-slot="drawer-panel"]';
  */
 export const SHEET_POPUP = '[data-slot="sheet-popup"][data-open]';
 /** A deferred 3D line scene inside a lesson card. */
-export const LINE_SCENE = '[data-slot="line-scene"]';
+export const LINE_SCENE = '[data-scene="line"]';
 /** The footer of a 3D scene: its grid and its automatic rotation. */
 export const COORDINATE_CONTROLS = "[data-coordinate-controls]";
 /** The sidebar trigger in a Quran surah's header, which opens its outline. */
@@ -46,8 +46,10 @@ export const MARKETING_PAGE = 'main[data-marketing-page="true"]';
 export const NINA_SECTION = "#nina";
 /** A visual card, which wraps a lesson's lab, chart, or 3D scene. */
 export const VISUAL_CARD = '[data-slot="visual-card"]';
-/** The controls and readouts in a visual card's body, under its scene. */
-export const VISUAL_CARD_CONTROLS = '[data-slot="visual-card-controls"]';
+/** The toolbar of a visual card: the controls that change what the visual shows. */
+export const VISUAL_CARD_TOOLBAR = '[data-slot="visual-card-toolbar"]';
+/** The footer band of a visual card, which holds its readouts, legends and notes. */
+export const VISUAL_CARD_FOOTER = '[data-slot="visual-card-footer"]';
 /** The place of Nina on a full-page state, which holds her and the things beside her. */
 export const STATE_FIGURE = '[data-slot="empty-icon"]';
 /** A link to a subject lesson, such as the neighbors that lesson pagination shows. */

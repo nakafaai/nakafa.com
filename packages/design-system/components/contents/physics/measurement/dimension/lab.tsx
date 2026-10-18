@@ -28,12 +28,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { useTheme } from "next-themes";
@@ -86,7 +87,7 @@ export function DimensionLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseMode}
           gridColumns="3"
@@ -105,54 +106,55 @@ export function DimensionLab({
             {labels.modes.volume}
           </ToggleGroupItem>
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene className={threeSceneFrameVariants()}>
-          <ThreeCanvas frameloop="demand">
-            <Suspense>
-              <ResponsiveDimensionCamera />
-              <ambientLight intensity={0.75} />
-              <hemisphereLight
-                color={sceneColors.skyLight}
-                groundColor={sceneColors.groundLight}
-                intensity={0.65}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.3}
-                position={[4, 6, 5]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <DimensionScene
-                colors={sceneColors}
-                modeId={selectedModeId}
-                powerLabel={selectedMode.powerLabel}
-              />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <VisualFact
-              label={labels.formula}
-              value={<InlineMath math={selectedMode.formula} />}
+      <VisualCardBody className={threeSceneFrameVariants()}>
+        <ThreeCanvas frameloop="demand">
+          <Suspense>
+            <ResponsiveDimensionCamera />
+            <ambientLight intensity={0.75} />
+            <hemisphereLight
+              color={sceneColors.skyLight}
+              groundColor={sceneColors.groundLight}
+              intensity={0.65}
             />
-            <VisualFact
-              label={labels.unit}
-              value={<InlineMath math={selectedMode.unit} />}
+            <directionalLight
+              castShadow
+              intensity={1.3}
+              position={[4, 6, 5]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
             />
-            <VisualFact
-              label={labels.dimension}
-              value={<InlineMath math={selectedMode.dimension} />}
+            <DimensionScene
+              colors={sceneColors}
+              modeId={selectedModeId}
+              powerLabel={selectedMode.powerLabel}
             />
-          </dl>
-        </VisualCardControls>
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.formula}
+            value={<InlineMath math={selectedMode.formula} />}
+          />
+          <VisualFact
+            label={labels.unit}
+            value={<InlineMath math={selectedMode.unit} />}
+          />
+          <VisualFact
+            label={labels.dimension}
+            value={<InlineMath math={selectedMode.dimension} />}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
