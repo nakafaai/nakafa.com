@@ -217,6 +217,12 @@
       "school-curriculum": "Curriculum"
     }
   },
+  "Notifications": {
+    "title": "Notifications",
+    "mark-all-read": "Mark all as read",
+    "empty": "You have no notifications yet.",
+    "person-invited": "You have been invited to join this school."
+  },
   "Posts": {
     "placeholder": "What's new?",
     "post": "Post",
