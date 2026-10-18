@@ -586,6 +586,93 @@ export declare const api: {
       >;
     };
   };
+  connectors: {
+    connections: {
+      disconnectOwn: FunctionReference<
+        "mutation",
+        "public",
+        { connectionId: Id<"connectorConnections"> },
+        null
+      >;
+      disconnectSchool: FunctionReference<
+        "mutation",
+        "public",
+        { connectionId: Id<"connectorConnections">; slug: string },
+        null
+      >;
+      listOwn: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            connector:
+              | "drive"
+              | "forms"
+              | "classroom"
+              | "calendar"
+              | "gmail"
+              | "dapodik";
+            createdAt: number;
+            id: Id<"connectorConnections">;
+            lastSyncedAt: number | null;
+            nextSyncAt: number | null;
+            scopes: Array<string>;
+            status: "active" | "reconnect" | "disconnected";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+      listSchool: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            connector:
+              | "drive"
+              | "forms"
+              | "classroom"
+              | "calendar"
+              | "gmail"
+              | "dapodik";
+            createdAt: number;
+            id: Id<"connectorConnections">;
+            lastSyncedAt: number | null;
+            nextSyncAt: number | null;
+            scopes: Array<string>;
+            status: "active" | "reconnect" | "disconnected";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
+  };
   consents: {
     current: {
       get: FunctionReference<
@@ -4547,6 +4634,8 @@ export declare const api: {
             | "grant.view"
             | "integration.manage"
             | "integration.view"
+            | "connection.manage"
+            | "connection.view"
             | "class.manage"
             | "class.view"
             | "grade.release"
@@ -4570,6 +4659,7 @@ export declare const api: {
             | "integration.manage"
             | "integration.view"
             | "integration.manage"
+            | "connection.view"
             | "class.create"
             | "class.list"
             | "grade.enter"
@@ -4630,6 +4720,8 @@ export declare const api: {
               | "grant.view"
               | "integration.manage"
               | "integration.view"
+              | "connection.manage"
+              | "connection.view"
               | "class.manage"
               | "class.view"
               | "grade.release"
@@ -4653,6 +4745,7 @@ export declare const api: {
               | "integration.manage"
               | "integration.view"
               | "integration.manage"
+              | "connection.view"
               | "class.create"
               | "class.list"
               | "grade.enter"
@@ -4736,6 +4829,39 @@ export declare const api: {
                   assignment: "homeroom";
                   person: Id<"tenantPeople">;
                   type: "assignment.removed";
+                }
+              | {
+                  connection: Id<"connectorConnections">;
+                  connector:
+                    | "drive"
+                    | "forms"
+                    | "classroom"
+                    | "calendar"
+                    | "gmail"
+                    | "dapodik";
+                  type: "connection.connected";
+                }
+              | {
+                  connection: Id<"connectorConnections">;
+                  connector:
+                    | "drive"
+                    | "forms"
+                    | "classroom"
+                    | "calendar"
+                    | "gmail"
+                    | "dapodik";
+                  type: "connection.disconnected";
+                }
+              | {
+                  connection: Id<"connectorConnections">;
+                  connector:
+                    | "drive"
+                    | "forms"
+                    | "classroom"
+                    | "calendar"
+                    | "gmail"
+                    | "dapodik";
+                  type: "connection.reconnect";
                 }
               | {
                   classId: Id<"classes">;
@@ -4931,6 +5057,7 @@ export declare const api: {
               | { id: Id<"tenantPromotions">; kind: "promotion" }
               | { id: Id<"tenantGrants">; kind: "grant" }
               | { id: Id<"integrationClients">; kind: "integration" }
+              | { id: Id<"connectorConnections">; kind: "connection" }
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"classGrades">; kind: "grade" }
               | { id: Id<"tenantVisits">; kind: "visit" }
@@ -5420,6 +5547,7 @@ export declare const api: {
               | { id: Id<"tenantPromotions">; kind: "promotion" }
               | { id: Id<"tenantGrants">; kind: "grant" }
               | { id: Id<"integrationClients">; kind: "integration" }
+              | { id: Id<"connectorConnections">; kind: "connection" }
               | { id: Id<"classes">; kind: "class" }
               | { id: Id<"classGrades">; kind: "grade" }
               | { id: Id<"tenantVisits">; kind: "visit" }
@@ -5458,6 +5586,7 @@ export declare const api: {
             | { id: Id<"tenantPromotions">; kind: "promotion" }
             | { id: Id<"tenantGrants">; kind: "grant" }
             | { id: Id<"integrationClients">; kind: "integration" }
+            | { id: Id<"connectorConnections">; kind: "connection" }
             | { id: Id<"classes">; kind: "class" }
             | { id: Id<"classGrades">; kind: "grade" }
             | { id: Id<"tenantVisits">; kind: "visit" }

@@ -173,6 +173,7 @@ describe("access/policy authority", () => {
         expect(lists).toEqual([
           [
             "audit.view",
+            "connection.view",
             "document.edit",
             "exam.edit",
             "exam.view",
