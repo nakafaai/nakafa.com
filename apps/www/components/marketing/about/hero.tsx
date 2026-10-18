@@ -2,8 +2,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { useLocale, useTranslations } from "next-intl";
-import { HeroField } from "@/components/marketing/about/hero/field.client";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
+import { ParticleField } from "@/components/marketing/shared/field.client";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /**
@@ -22,7 +22,7 @@ export function Hero() {
       className="relative isolate flex min-h-[min(calc(100svh-4rem),57.5rem)] scroll-mt-28 items-center overflow-hidden"
       id="hero"
     >
-      <HeroField />
+      <ParticleField />
       <div className="relative mx-auto grid w-full max-w-3xl justify-items-center gap-6 px-6 pt-28 pb-16 text-center md:pt-24">
         <h1 className="text-balance text-[2.5rem] leading-[1.05] tracking-tight md:text-[3rem] lg:text-[4rem]">
           {t.rich("hero-title", {

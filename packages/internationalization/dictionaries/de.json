@@ -1385,14 +1385,8 @@
     "tryout-wrong": "Noch nicht. Schau noch einmal hin.",
     "nina-title": "Nina weiß, welche Stelle du meinst",
     "nina-lead": "Frag direkt aus der Aufgabe oder Lektion, die du offen hast.",
-    "nina-ask": "Die hier verstehe ich noch nicht.",
-    "nina-answer": "Komm, wir nehmen sie zusammen auseinander.",
     "nina-chat-ask": "Warum ist 13 falsch?",
     "nina-chat-answer": "### 13 kommt heraus, wenn m gleich 3 ist\n\nDann rechnest du $5(2) + 9/3 = 13$. Nur passt $m = 3$ nicht zur Aufgabe.\n\n#### Prüf es mit dem, was gegeben ist\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nMit $m = 1$ passt es: $2(2) + 4/1 = 8$. Also ist $m$ gleich 1, und die Antwort ist 19.",
-    "scene-label": "Dreidimensionale Szene zum schiefen Wurf, eine Kanonenkugel",
-    "scene-title": "Was schwer vorstellbar ist, kannst du sehen",
-    "scene-lead": "Eine Szene aus der Lektion zum schiefen Wurf.",
-    "scene-choose": "Flugbahn wählen",
     "memory-title": "Nina lernt dich kennen",
     "memory-lead": "Was sie sich merkt, kannst du jederzeit lesen, ändern, pausieren oder löschen.",
     "memory-said-1": "Ich bin in der 12. Klasse, Naturwissenschaften.",
@@ -1457,15 +1451,6 @@
     "closing-topic-4": "die Zelle"
   },
   "Features": {
-    "projectile-sixty-degree": "Sechzig Grad",
-    "projectile-long-drive": "Weite Flugbahn",
-    "projectile-high-arc": "Hoher Bogen",
-    "projectile-horizontal-component": "Horizontale Komponente",
-    "projectile-vertical-component": "Vertikale Komponente",
-    "projectile-peak-time": "Zeit bis zum höchsten Punkt",
-    "projectile-flight-time": "Flugzeit",
-    "projectile-range": "Reichweite",
-    "projectile-instantaneous-velocity": "Geschwindigkeit nach zwei Sekunden"
   },
   "About": {
     "company": "Unternehmen",

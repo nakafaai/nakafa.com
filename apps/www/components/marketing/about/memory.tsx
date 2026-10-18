@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { MemoryDesk } from "@/components/marketing/about/memory/desk.client";
+import { ParticleField } from "@/components/marketing/shared/field.client";
 import { MarketingSection } from "@/components/marketing/shared/section";
 
 /**
@@ -18,6 +19,7 @@ export function Memory() {
 
   return (
     <MarketingSection id="memory">
+      <ParticleField />
       <div className="mx-auto grid w-full max-w-3xl justify-items-center gap-10 text-center">
         <div className="grid justify-items-center gap-3">
           <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">

@@ -66,12 +66,18 @@ function heroAnimals(
   }));
 }
 
+/** Keeps a phone's spot of a thing inside the part, away from both edges. */
+function inset(x: number) {
+  return Math.min(0.88, Math.max(0.12, x));
+}
+
 /**
  * The small group of toys in the space where the part `part` begins, around
  * `x`, a fraction of the part's width: the animal at the herd's `index` in the
  * middle, and one or two things beside it. Each spot is in the part's top
- * padding, which no text or window reaches. Below 1024 px only the animal
- * stays, and a phone has none.
+ * padding, which no text or window reaches. From 1024 px the things sit close
+ * to the animal; on a phone and a tablet, where a fraction is fewer pixels,
+ * they sit further out, so every width keeps the whole group.
  */
 function gap(
   part: string,
@@ -80,38 +86,39 @@ function gap(
   things: readonly [ThingName] | readonly [ThingName, ThingName]
 ): ToyPlacement[] {
   const [before, after] = things;
+  /** One thing beside the animal: close on a wide page, further out below 1024 px. */
+  const beside = (name: ThingName, side: -1 | 1, dy: number) => [
+    {
+      key: `${part}-gap-${name}`,
+      picture: thing(name),
+      place: within(part, {
+        dx: -24,
+        dy,
+        minWidth: 1024,
+        x: x + side * 0.07,
+        y: 0,
+      }),
+    },
+    {
+      key: `${part}-gap-${name}-narrow`,
+      picture: thing(name),
+      place: within(part, {
+        dx: -24,
+        dy,
+        maxWidth: 1023,
+        x: inset(x + side * 0.24),
+        y: 0,
+      }),
+    },
+  ];
   return [
     {
       key: `${part}-gap-animal`,
       picture: animal(index),
-      place: within(part, { dx: -28, dy: 28, minWidth: 768, x, y: 0 }),
+      place: within(part, { dx: -28, dy: 28, x, y: 0 }),
     },
-    {
-      key: `${part}-gap-${before}`,
-      picture: thing(before),
-      place: within(part, {
-        dx: -24,
-        dy: 40,
-        minWidth: 1024,
-        x: x - 0.07,
-        y: 0,
-      }),
-    },
-    ...(after === undefined
-      ? []
-      : [
-          {
-            key: `${part}-gap-${after}`,
-            picture: thing(after),
-            place: within(part, {
-              dx: -24,
-              dy: 20,
-              minWidth: 1024,
-              x: x + 0.07,
-              y: 0,
-            }),
-          },
-        ]),
+    ...beside(before, -1, 40),
+    ...(after === undefined ? [] : beside(after, 1, 20)),
   ];
 }
 
@@ -192,12 +199,12 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   {
     key: "privacy-left",
     picture: animal(11),
-    place: within("privacy", { minWidth: 1024, x: 0.04, y: 0.2 }),
+    place: within("privacy", { dy: 12, x: 0.06, y: 0 }),
   },
   {
     key: "privacy-right",
     picture: animal(12),
-    place: within("privacy", { minWidth: 1024, x: 0.9, y: 0.8 }),
+    place: within("privacy", { dy: -68, x: 0.86, y: 1 }),
   },
   ...gap("curricula", 0.3, 13, ["globe", "backpack"]),
   ...gap("letter", 0.7, 14, ["letter", "plane"]),

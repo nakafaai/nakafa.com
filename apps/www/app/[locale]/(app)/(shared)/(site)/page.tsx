@@ -19,7 +19,6 @@ import { Memory } from "@/components/marketing/about/memory";
 import { NinaSection } from "@/components/marketing/about/nina/section";
 import { Pricing } from "@/components/marketing/about/pricing/landing";
 import { Privacy } from "@/components/marketing/about/privacy";
-import { ProjectileStage } from "@/components/marketing/about/projectile/stage";
 import { Schools } from "@/components/marketing/about/schools";
 import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { HomeToys } from "@/components/marketing/about/toys/intent.client";
@@ -172,7 +171,6 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         <Lesson />
         <Tryout value={featuredTryout} />
         <NinaSection />
-        <ProjectileStage />
         <Memory />
         <Privacy />
         <Curricula locale={locale} />

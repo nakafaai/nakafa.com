@@ -27,7 +27,11 @@ const expectSceneStill = Effect.fn("NakafaE2E.expectSceneStill")(function* (
   tabIndex: number
 ) {
   yield* Effect.promise(() =>
-    lessonSection(page).getByRole("tab").nth(tabIndex).click()
+    lessonSection(page)
+      .locator('[data-slot="button-group"]')
+      .getByRole("button")
+      .nth(tabIndex)
+      .click()
   );
   const canvas = lessonPanel(page).locator("canvas").first();
   yield* Effect.promise(() =>
