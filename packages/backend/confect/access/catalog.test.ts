@@ -83,6 +83,7 @@ describe("access/catalog", () => {
       "visit",
       "document",
       "exam",
+      "sitting",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
@@ -194,6 +195,13 @@ describe("access/catalog", () => {
           "tenant.reactivated",
           "person.reactivated",
           "person.suspended",
+          "sitting.schedule",
+          "sitting.lock",
+          "sitting.unlock",
+          "sitting.addMinutes",
+          "sitting.changeToken",
+          "sitting.allowDevice",
+          "sitting.close",
         ],
         Order.String
       )

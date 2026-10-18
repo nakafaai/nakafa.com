@@ -265,6 +265,15 @@ export const tenancyFixture = Effect.gen(function* () {
     /** Runs the scheduled functions whose time has come. */
     finishScheduled: () =>
       Effect.promise(() => t.finishAllScheduledFunctions(vi.runAllTimers)),
+    /**
+     * Advances the fake clock by `ms`, then waits for the scheduled functions that came due in
+     * that time. A job due later stays pending, so a test can run one job and keep another.
+     */
+    advanceScheduled: (ms: number) =>
+      Effect.promise(async () => {
+        vi.advanceTimersByTime(ms);
+        await t.finishInProgressScheduledFunctions();
+      }),
     as: (account: keyof typeof seeded.users) =>
       client(
         t.withIdentity({
