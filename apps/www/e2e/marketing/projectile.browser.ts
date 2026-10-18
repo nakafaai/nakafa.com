@@ -69,6 +69,15 @@ test("home page defers the projectile scene until the reader scrolls to it", asy
                   })
                 ).toHaveCount(1)
               );
+              // The scene is a section of the page, so its title is a heading.
+              yield* Effect.promise(() =>
+                expect(
+                  scene.getByRole("heading", {
+                    level: 2,
+                    name: id.Landing["scene-title"],
+                  })
+                ).toHaveCount(1)
+              );
               yield* Effect.promise(() =>
                 expect(scene.locator("canvas")).toHaveCount(0)
               );

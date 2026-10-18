@@ -22,7 +22,7 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -212,7 +212,7 @@ export function ProjectileClient({
       scenarios,
       (scenario) => scenario.id === value
     );
-    if (next._tag === "None") {
+    if (Option.isNone(next)) {
       return;
     }
     setChosen(true);
@@ -221,7 +221,8 @@ export function ProjectileClient({
 
   return (
     <VisualCard id="scene-card">
-      <VisualCardHeader description={lead} title={title} />
+      {/* The scene is a section of the home page, so its title is a heading. */}
+      <VisualCardHeader description={<p>{lead}</p>} title={<h2>{title}</h2>} />
       <VisualCardToolbar>
         <ToggleGroup
           aria-label={chooseLabel}
