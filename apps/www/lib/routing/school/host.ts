@@ -80,3 +80,12 @@ export function readRequestHost(headers: Headers) {
 export function readRequestHostname(headers: Headers) {
   return Option.flatMap(readRequestHost(headers), readHostname);
 }
+
+/**
+ * The address of a school's home on its school host, such as
+ * `https://harapan.nakafa.com`. Production has one cell today, so every school
+ * host sits under that cell's domain.
+ */
+export function schoolOrigin(slug: TenantSlug) {
+  return new URL(`https://${slug}.${SCHOOL_CELL_DOMAINS.us}`);
+}

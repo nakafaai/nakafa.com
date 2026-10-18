@@ -1,10 +1,20 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Option, Schema } from "effect";
 import {
   isRefusedSchoolHost,
   readRequestHostname,
   readSchoolSlug,
+  schoolOrigin,
 } from "@/lib/routing/school/host";
+
+describe("school origin", () => {
+  it("names the school's home on its school host under the production domain", () => {
+    const slug = Schema.decodeSync(TenantSlug)("harapan");
+
+    expect(schoolOrigin(slug).href).toBe("https://harapan.nakafa.com/");
+  });
+});
 
 describe("school host labels", () => {
   it.each([
