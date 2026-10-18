@@ -173,6 +173,7 @@ function UserSettingsCurriculumForm({
         formApi.reset({ preferredCurriculumProgramKey: stored ?? "" });
         formApi.setFieldValue("preferredCurriculumProgramKey", chosen);
       });
+      const refuseInvalid = () => restore;
       const reportFailure = (error: CurriculumPreferenceMutationError) =>
         reportClientException(error, {
           source: "user-settings-curriculum",
@@ -186,7 +187,7 @@ function UserSettingsCurriculumForm({
         }).pipe(
           Effect.catchTags({
             CurriculumPreferenceMutationError: reportFailure,
-            CurriculumPreferenceValidationError: () => restore,
+            CurriculumPreferenceValidationError: refuseInvalid,
           })
         )
       );
