@@ -7,6 +7,7 @@ import { exam } from "@repo/backend/confect/exams/kinds";
 import { sitting } from "@repo/backend/confect/exams/sittings/kinds";
 import { integrations } from "@repo/backend/confect/integrations/kinds";
 import { operators } from "@repo/backend/confect/operators/kinds";
+import { records } from "@repo/backend/confect/records/kinds";
 import { tenancy } from "@repo/backend/confect/tenancy/kinds";
 import { Array as Arr, Record, Schema, SchemaGetter, Struct } from "effect";
 
@@ -16,6 +17,7 @@ export const kinds = [
   ...access.kinds,
   ...integrations.kinds,
   ...classroom.kinds,
+  ...records.kinds,
   ...operators.kinds,
   ...editor.kinds,
   ...exam.kinds,
@@ -28,6 +30,7 @@ const extensions = [
   ...access.extensions,
   ...integrations.extensions,
   ...classroom.extensions,
+  ...records.extensions,
   ...operators.extensions,
   ...editor.extensions,
   ...exam.extensions,
