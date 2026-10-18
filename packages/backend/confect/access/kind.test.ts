@@ -63,6 +63,7 @@ describe("access/kind declarations", () => {
       "integration.manage",
       "document.edit",
       "exam.edit",
+      "exam.view",
     ]);
     expect(
       Arr.map(

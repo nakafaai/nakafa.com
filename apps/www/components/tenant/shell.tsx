@@ -20,6 +20,7 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
+import { usePathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -30,6 +31,7 @@ import { signOutSchoolAccount } from "@/components/tenant/account.client";
 import { TenantContext, type TenantValue } from "@/components/tenant/context";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
+import { isExamEditorPath } from "@/lib/settings/school";
 
 /**
  * Signs out of the school, then returns to the school address, which shows the
@@ -84,6 +86,62 @@ function TenantAccount({
 }
 
 /**
+ * The frame of a school's pages: the sidebar with the school's mark and name at its
+ * top, the sidebar groups of the viewer, and the viewer's account at its foot, beside
+ * the pages. The exam editor draws its own frame, so on its route the pages render
+ * alone. The pathname is read here, not in the shell, so the shell's context value
+ * does not change on navigation.
+ */
+function TenantFrame({
+  account,
+  children,
+  personName,
+  profile,
+  role,
+}: {
+  account: typeof ViewerAccount.Type;
+  children: ReactNode;
+  personName: string;
+  profile: typeof TenantProfile.Type;
+  role: TenantValue["role"];
+}) {
+  const pathname = usePathname();
+
+  if (isExamEditorPath(pathname)) {
+    return children;
+  }
+
+  return (
+    <SidebarProvider>
+      <Sidebar side="left">
+        <SidebarHeader className="border-b">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton render={<Link href="/" />} size="lg">
+                <SchoolMark logo={profile.logo} mascot={profile.mascot} />
+                <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">{profile.name}</span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          <TenantNavigation />
+        </SidebarContent>
+        <TenantAccount account={account} name={personName} role={role} />
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-12 items-center gap-2 px-4">
+          <SidebarTrigger />
+        </header>
+        {children}
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+/**
  * The shell of a school: its mark and name at the top of the sidebar, the
  * sidebar groups of the signed-in viewer, and the viewer's account at the foot.
  * The school layout admits only members, so every item here is open to any
@@ -110,32 +168,14 @@ export function TenantShell({
     <TenantContext
       value={{ canManage, canOpenExams, name: profile.name, role }}
     >
-      <SidebarProvider>
-        <Sidebar side="left">
-          <SidebarHeader className="border-b">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton render={<Link href="/" />} size="lg">
-                  <SchoolMark logo={profile.logo} mascot={profile.mascot} />
-                  <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{profile.name}</span>
-                  </div>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarHeader>
-          <SidebarContent>
-            <TenantNavigation />
-          </SidebarContent>
-          <TenantAccount account={account} name={personName} role={role} />
-        </Sidebar>
-        <SidebarInset>
-          <header className="flex h-12 items-center gap-2 px-4">
-            <SidebarTrigger />
-          </header>
-          {children}
-        </SidebarInset>
-      </SidebarProvider>
+      <TenantFrame
+        account={account}
+        personName={personName}
+        profile={profile}
+        role={role}
+      >
+        {children}
+      </TenantFrame>
     </TenantContext>
   );
 }

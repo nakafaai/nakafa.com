@@ -61,7 +61,7 @@ const placeholderDraft = (answers: Question["answers"], key: Question["key"]) =>
 /**
  * The questions of the exam in order, one thumbnail each: its number, and a dot when it has
  * no answer key. An add button at the end adds a question. Each thumbnail's menu copies,
- * moves, and removes its question. A question the server has not saved yet is inert until it
+ * moves, and removes its question. A question the server has not saved yet is disabled until it
  * answers, and the exam keeps at least one question, so the last one has no remove.
  */
 export function ExamStrip() {
@@ -109,8 +109,7 @@ export function ExamStrip() {
   return (
     <nav
       aria-label={t("questions")}
-      className="flex shrink-0 items-center gap-2 overflow-x-auto border-b p-3 md:w-44 md:flex-col md:overflow-y-auto md:border-e md:border-b-0"
-      data-slot="exam-strip"
+      className="flex shrink-0 items-center gap-2 overflow-x-auto border-b bg-sidebar p-2 md:w-60 md:flex-col md:overflow-y-auto md:border-r md:border-b-0"
     >
       {Arr.map(exam.questions, (question, index) => (
         <Thumbnail
@@ -215,7 +214,8 @@ function Thumbnail({
       <Button
         aria-current={selected ? "true" : undefined}
         className="h-auto flex-1 justify-start gap-2"
-        onClick={pending ? undefined : () => select(question.id)}
+        disabled={pending}
+        onClick={() => select(question.id)}
         variant={selected ? "secondary" : "ghost"}
       >
         <span className="tabular-nums">{index + 1}</span>

@@ -1,8 +1,12 @@
 "use client";
 
 import { useMutation } from "@confect/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
 import { useTranslations } from "next-intl";
@@ -13,10 +17,11 @@ import { useExam } from "@/components/tenant/exams/provider";
 import { titleToSave } from "@/components/tenant/exams/title";
 
 /**
- * The exam's title, renamed in place. The field shows the saved title until the teacher
- * types, so it follows a co-editor's rename. The title is saved when the field loses focus
- * or the teacher presses Enter, and only a trimmed, changed, valid title is sent. The
- * optimistic change restores the saved title when the server refuses the rename.
+ * The header of the editor: a link back to the exams, then the exam's title, renamed in
+ * place. The field shows the saved title until the teacher types, so it follows a
+ * co-editor's rename. The title is saved when the field loses focus or the teacher presses
+ * Enter, and only a trimmed, changed, valid title is sent. The optimistic change restores
+ * the saved title when the server refuses the rename.
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -42,10 +47,17 @@ export function ExamHeader() {
   }
 
   return (
-    <header className="flex items-center gap-2 border-b p-4">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
+      <NavigationLink
+        aria-label={t("title")}
+        className={buttonVariants({ size: "icon", variant: "ghost" })}
+        href="/exams"
+      >
+        <HugeIcons icon={ArrowLeft01Icon} />
+      </NavigationLink>
       <Input
         aria-label={t("title-label")}
-        className="font-semibold"
+        className="border-0 font-semibold text-lg shadow-none md:text-lg"
         onBlur={save}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {

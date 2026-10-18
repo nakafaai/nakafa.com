@@ -70,6 +70,14 @@ export function CreateExam({
     () => new Intl.DisplayNames([locale], { type: "language" }),
     [locale]
   );
+  const unitItems = Arr.map(choices, (current) => ({
+    label: current.unitName ?? t("whole-school"),
+    value: choiceKey(current),
+  }));
+  const languageItems = Arr.map(languages, (code) => ({
+    label: names.of(code),
+    value: code,
+  }));
 
   const choice = Option.orElse(
     Arr.findFirst(choices, (current) => choiceKey(current) === picked),
@@ -143,6 +151,7 @@ export function CreateExam({
             value={title}
           />
           <Select
+            items={unitItems}
             onValueChange={(key) => setPicked(key)}
             value={Option.getOrNull(Option.map(choice, choiceKey))}
           >
@@ -150,9 +159,9 @@ export function CreateExam({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Arr.map(choices, (current) => (
-                <SelectItem key={choiceKey(current)} value={choiceKey(current)}>
-                  {current.unitName ?? t("whole-school")}
+              {Arr.map(unitItems, (item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -166,6 +175,7 @@ export function CreateExam({
             </div>
           ) : (
             <Select
+              items={languageItems}
               onValueChange={(code) =>
                 setSchoolLanguage(
                   Arr.findFirst(languages, (item) => item === code).pipe(
@@ -181,9 +191,9 @@ export function CreateExam({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Arr.map(languages, (code) => (
-                  <SelectItem key={code} value={code}>
-                    {names.of(code)}
+                {Arr.map(languageItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
                   </SelectItem>
                 ))}
               </SelectContent>

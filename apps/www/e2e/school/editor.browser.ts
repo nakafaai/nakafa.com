@@ -30,6 +30,17 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   const page = await context.newPage();
   await page.goto(hostAddress(baseURL, host, "/exams"));
 
+  // The sidebar marks the exams entry as the current page, never home.
+  const sidebar = page.locator('[data-sidebar="sidebar"]:visible');
+  await expect(sidebar.getByRole("link", { name: "Exams" })).toHaveAttribute(
+    "data-active",
+    "true"
+  );
+  await expect(sidebar.getByRole("link", { name: "Home" })).toHaveAttribute(
+    "data-active",
+    "false"
+  );
+
   // The dialog preselects the school's unit, whose language it shows.
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
@@ -42,16 +53,9 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
     "PTS Matematika"
   );
 
-  // The sidebar marks the exams entry as the current page, never home.
-  const sidebar = page.locator('[data-sidebar="sidebar"]:visible');
-  await expect(sidebar.getByRole("link", { name: "Exams" })).toHaveAttribute(
-    "data-active",
-    "true"
-  );
-  await expect(sidebar.getByRole("link", { name: "Home" })).toHaveAttribute(
-    "data-active",
-    "false"
-  );
+  // The editor fills the page: no school sidebar, and a link back to the exams.
+  await expect(page.locator('[data-sidebar="sidebar"]:visible')).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Exams" })).toBeVisible();
 
   // A new exam starts with one question, and each added question is selected at once.
   await page.getByRole("button", { name: "Add question" }).click();
