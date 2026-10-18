@@ -1,12 +1,14 @@
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { redirect } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
-import { Theme } from "@/components/marketing/shared/footer/action";
 import { OnboardingQuestionnaire } from "@/components/programs/onboarding/questionnaire";
+import { ThemePicker } from "@/components/shared/theme/picker";
 import {
   getPostAuthDestination,
   getPostAuthSignInHref,
@@ -36,7 +38,7 @@ export default function Page(props: PageProps<"/[locale]/onboarding">) {
     <>
       <EntryShellHeader>
         <div className="ms-auto">
-          <Theme variant="ghost" />
+          <ThemePicker variant="ghost" />
         </div>
       </EntryShellHeader>
       <Suspense fallback={null}>
@@ -84,10 +86,12 @@ async function AuthenticatedOnboarding({
 
   return (
     <EntryShellBody>
+      <Nina act="writing" label="" size={120} whole />
       <OnboardingQuestionnaire
         initialProfile={status.profile}
         intent={intent}
       />
+      <AuthLegal />
     </EntryShellBody>
   );
 }
