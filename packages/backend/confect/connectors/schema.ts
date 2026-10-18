@@ -31,10 +31,10 @@ const ConnectionStatus = Schema.Literals([
 const ConnectorScope = Schema.NonEmptyString;
 
 /**
- * The blind key of the Google account behind a connection: the 22 URL-safe
- * characters that `blindText` makes under the owner's key. Connections of one
- * owner with the same key stand for one Google account, so the revoke rule
- * counts them (ADR 0015).
+ * The blind of the Google account behind a connection: the 22 URL-safe characters
+ * that `blindConnectorText` makes under the connector key. Connections of every
+ * owner with the same blind stand for one Google account, so the revoke rule counts
+ * them (ADR 0015).
  */
 const GoogleAccountKey = Schema.String.check(Schema.isPattern(/^[\w-]{22}$/u));
 
@@ -52,6 +52,19 @@ export const connectionValidator = Schema.Struct({
   owner: Space,
   scopes: Schema.Array(ConnectorScope).check(Schema.isUnique()),
   status: ConnectionStatus,
+});
+
+/**
+ * What a caller gives `connect` for one source. `googleSubject` is the subject of
+ * the Google account, the value that identifies the account: `connect` blinds it
+ * before it stores anything, so no row holds the subject. A source with no Google
+ * account, such as Dapodik, gives `null`.
+ */
+export const ConnectionInput = Schema.Struct({
+  connector: ConnectorKind,
+  googleSubject: Schema.NullOr(Schema.NonEmptyString),
+  refreshToken: Schema.NonEmptyString,
+  scopes: Schema.Array(ConnectorScope).check(Schema.isUnique()),
 });
 
 /** The owner that a school connection names: its school's tenant, and never an account. */

@@ -6,18 +6,15 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Authority } from "@repo/backend/confect/access/policy";
+import { blindGoogleAccount } from "@repo/backend/confect/connectors/account";
 import { connection } from "@repo/backend/confect/connectors/kinds";
-import type { connectionValidator } from "@repo/backend/confect/connectors/schema";
+import type { ConnectionInput } from "@repo/backend/confect/connectors/schema";
 import { sealRefreshToken } from "@repo/backend/confect/connectors/secret";
 import { type Actor, JournalEntry } from "@repo/backend/confect/journal/schema";
 import { Space } from "@repo/backend/confect/space";
 import { Effect, Option, Schema } from "effect";
 
 type ConnectionDoc = Docs["connectorConnections"];
-type ConnectionFields = Pick<
-  typeof connectionValidator.Type,
-  "connector" | "googleAccountKey" | "scopes"
->;
 
 /** One connection as its owner's list shows it. Its token and its Google account key stay on the server. */
 export const view = (row: ConnectionDoc) => ({
@@ -79,20 +76,26 @@ const record = Effect.fn("connectors.connection.record")(function* (
 
 /**
  * Stores a connection with its refresh token sealed under the owner's key, and
- * journals the connection. The token is written in the same transaction as the
- * connection, so no connection exists without its secret.
+ * journals the connection. The Google account's subject is blinded under the
+ * connector key before the row is written, so the row never holds the subject. The
+ * token is written in the same transaction as the connection, so no connection
+ * exists without its secret.
  */
 export const connect = Effect.fn("connectors.connection.connect")(function* (
   actor: typeof Actor.Type,
   owner: Space,
-  input: ConnectionFields & { readonly refreshToken: string }
+  input: typeof ConnectionInput.Type
 ) {
   const writer = yield* DatabaseWriter;
+  const googleAccountKey =
+    input.googleSubject === null
+      ? null
+      : yield* blindGoogleAccount(input.googleSubject);
   const connectionId = yield* writer
     .table("connectorConnections")
     .insert({
       connector: input.connector,
-      googleAccountKey: input.googleAccountKey,
+      googleAccountKey,
       lastSyncedAt: null,
       nextSyncAt: null,
       owner,
@@ -117,8 +120,11 @@ export const connect = Effect.fn("connectors.connection.connect")(function* (
   return connectionId;
 });
 
-/** Deletes the sealed token of a connection. A connection whose token is already gone has nothing to destroy. */
-const destroySecret = Effect.fn("connectors.connection.destroySecret")(
+/**
+ * Deletes the sealed token of a connection. A connection whose token is already gone
+ * has nothing to destroy. The account deletion drain uses it too (ADR 0015).
+ */
+export const destroySecret = Effect.fn("connectors.connection.destroySecret")(
   function* (connectionId: GenericId.GenericId<"connectorConnections">) {
     const secret = yield* (yield* DatabaseReader)
       .table("connectorSecrets")

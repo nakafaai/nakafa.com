@@ -358,9 +358,11 @@ granted to the project and invalidates the tokens of every client in it. A blind
 revoke would end the other connections of the same Google account, so Nakafa
 revokes only with the last one. Until then the grant stays in the user's Google
 account, and the connector page says where to remove it. The count spans the
-personal and the school connections of one Google account. The connector change
-decides how it finds them, and it must not show one owner's connection to
-another owner.
+personal and the school connections of one Google account. Connect blinds the
+account's subject under the connector key (ADR 0030), not under an owner's key,
+so every owner's connection to one account stores the same blind. The count
+reads the active connections that hold that blind and returns only a number, so
+it never shows one owner's connection to another owner.
 
 ### Nina and Google data
 
@@ -447,7 +449,7 @@ Two kinds of connection decides.
 | Google sign-in with `select_account` and no `access_type` (`packages/backend/confect/auth/tokens.ts`), storing no provider tokens (#1052, #1069) | Live |
 | Learner key in `confect/vault` (`vaultKeys`) | Live |
 | School key (`tenantKeys`, ADR 0030) | Built, program wave B |
-| `confect/connectors`: the `connectorConnections` and `connectorSecrets` tables, the `connection` kind, and its journal changes | Built in CN1. A token is sealed under the owner's key, and a disconnect destroys it. No adapter yet. |
+| `confect/connectors`: the `connectorConnections` and `connectorSecrets` tables, the `connection` kind, and its journal changes | Built in CN1. A token is sealed under the owner's key, and a disconnect destroys it. Connect blinds the Google account under the connector key (ADR 0030). A learner's deletion deletes the connections, their tokens, and their journal entries (`auth/cleanup/connections.ts`, `auth/cleanup/journal.ts`). Revoking each grant at Google waits for the adapter. No adapter yet. |
 | `connectorLinks`, one row for each Google class that links it to a Nakafa class | Planned, with the Classroom slices |
 | The Drive, Forms, Classroom, Calendar, and Gmail adapters | Planned, program wave B. Each reaches production as Google verification says. |
 | The connector pages: connect, disconnect, reconnect, sync by hand, and the Admin's switch for each role (ADR 0026 has the school address) | Planned, program wave B |

@@ -16,7 +16,7 @@ const TOKEN = "1//google-refresh-token-for-the-test";
 /** One Drive connection that holds the refresh token given. */
 const drive = (refreshToken: string) => ({
   connector: "drive" as const,
-  googleAccountKey: null,
+  googleSubject: null,
   refreshToken,
   scopes: ["drive.file"],
 });
