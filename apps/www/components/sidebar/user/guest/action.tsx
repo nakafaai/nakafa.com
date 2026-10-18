@@ -15,7 +15,7 @@ export function NavUserGuestButton() {
   return (
     <NavigationLink
       {...authNavigation.linkProps}
-      className={buttonVariants({ className: "w-full", variant: "secondary" })}
+      className={buttonVariants({ className: "w-full" })}
     >
       <HugeIcons icon={Login03Icon} />
       {t("login-cta-action")}

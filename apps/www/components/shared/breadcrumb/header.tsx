@@ -15,6 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
@@ -71,6 +72,7 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
 /** Bounded path navigation with linked parents and one collapsed middle group. */
 export function BreadcrumbHeaderPath({
   children,
+  className,
   homeHref,
   homeLabel,
   items,
@@ -81,12 +83,13 @@ export function BreadcrumbHeaderPath({
   "homeHref" | "homeLabel" | "items" | "menuLabel"
 > & {
   children?: ReactNode;
+  className?: string;
   visibleItemCount?: 1 | 2;
 }) {
   const hiddenItems = Arr.dropRight(items, visibleItemCount);
   const visibleItems = Arr.takeRight(items, visibleItemCount);
   return (
-    <Breadcrumb className="min-w-0">
+    <Breadcrumb className={cn("min-w-0", className)}>
       <BreadcrumbList className="flex-nowrap">
         <BreadcrumbItem className="shrink-0">
           <BreadcrumbLink

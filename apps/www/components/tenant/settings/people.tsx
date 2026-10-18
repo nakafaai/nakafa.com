@@ -32,10 +32,13 @@ export type PersonId = PaginatedQueryItem<typeof tenancy.people.list>["id"];
  * not hold never reaches a function.
  */
 export function SchoolPersonPicker({
+  id,
   onChoose,
   personId,
   slug,
 }: {
+  /** The ID of the trigger, which the label of the field names. */
+  id: string;
   onChoose: (personId: PersonId) => void;
   personId: PersonId | undefined;
   slug: TenantSlug;
@@ -67,7 +70,7 @@ export function SchoolPersonPicker({
       }}
       value={personId}
     >
-      <SelectTrigger className="w-full max-w-xs">
+      <SelectTrigger className="w-full" id={id}>
         <SelectValue placeholder={t("person-placeholder")} />
       </SelectTrigger>
       <SelectContent>

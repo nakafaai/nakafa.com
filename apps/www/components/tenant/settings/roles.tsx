@@ -8,17 +8,27 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
+import {
+  MoreHorizontalIcon,
+  UserShield01Icon,
+} from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -30,6 +40,13 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@repo/design-system/components/ui/sheet";
+import {
   Table,
   TableBody,
   TableCell,
@@ -37,24 +54,21 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useState } from "react";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-  CardSectionHint,
-} from "@/components/shared/card/section";
+import { startTransition, useId, useState } from "react";
+import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import {
   assignGrantChange,
   revokeGrantChange,
 } from "@/components/tenant/settings/mutation.client";
-import type { PersonId } from "@/components/tenant/settings/people";
-import { SchoolPersonCard } from "@/components/tenant/settings/person";
+import { SettingsPage } from "@/components/tenant/settings/page";
+import {
+  type PersonId,
+  SchoolPersonPicker,
+} from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
-import { SchoolTrailAction } from "@/components/tenant/settings/trail";
 
 const SOURCE = "components/tenant/settings/roles";
 
@@ -65,118 +79,93 @@ const PAGE_SIZE = 25;
 type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
 
 /**
- * Renders the roles of the school: what each role may do, every role the school
- * holds with its person, and the form that gives a role of the whole school to a
- * chosen person.
+ * The roles of the school: Role guide in the header opens what each role may do, and
+ * Give role opens the dialog that gives a role of the whole school to a person. The
+ * grants sit in a data table, and each grant's revoke action sits in its row menu.
  */
 export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
-  const t = useTranslations("SchoolSettings");
-  const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
-
-  return (
-    <>
-      <SchoolRolesOverview />
-      <SchoolGrantsCard slug={slug} />
-      <SchoolPersonCard
-        description={t("roles-description")}
-        footer={t("roles-person-footer")}
-        onChoose={setPersonId}
-        personId={personId}
-        slug={slug}
-        title={t("roles")}
-      />
-      {personId === undefined ? null : (
-        <SchoolAssignCard personId={personId} slug={slug} />
-      )}
-    </>
-  );
-}
-
-/** Renders every role of the school, each under its name, with what the role may do. */
-function SchoolRolesOverview() {
-  const t = useTranslations("SchoolSettings");
-  const tSchool = useTranslations("School");
-
-  return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("roles-overview")}</CardTitle>
-        <CardDescription>{t("roles-overview-description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableBody>
-            {Arr.map(BuiltinRole.literals, (role) => (
-              <TableRow key={role}>
-                <TableCell>
-                  <p className="font-medium">{tSchool(`role.${role}`)}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {t(`role-description.${role}`)}
-                  </p>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("roles-overview-footer")}</CardSectionHint>
-      </CardSectionFooter>
-    </CardSection>
-  );
-}
-
-/**
- * Renders the active roles of the school, a page at a time: the Person who holds
- * each role, the role, and what it covers. The list loads more rows as its end
- * comes into view.
- */
-function SchoolGrantsCard({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const pagination = usePaginatedQuery(
     access.grants.list,
     { slug },
     { initialNumItems: PAGE_SIZE }
   );
+  const [isGuiding, setIsGuiding] = useState(false);
+  const [isGiving, setIsGiving] = useState(false);
 
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("roles-grants")}</CardTitle>
-        <CardDescription>{t("roles-grants-description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <SchoolTableHeader
-            columns={[t("grant-person"), t("grant-role"), t("grant-scope"), ""]}
-          />
-          <TableBody>
-            {Arr.map(pagination.results, (grant) => (
-              <SchoolGrantRow grant={grant} key={grant.id} slug={slug} />
-            ))}
-          </TableBody>
-        </Table>
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-        ) : null}
-      </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("roles-grants-footer")}</CardSectionHint>
-        <CardSectionActions>
-          <SchoolTrailAction />
-        </CardSectionActions>
-      </CardSectionFooter>
-    </CardSection>
+    <SettingsPage
+      actions={
+        <>
+          <Button
+            onClick={() => setIsGuiding(true)}
+            type="button"
+            variant="outline"
+          >
+            {t("roles-guide")}
+          </Button>
+          <Button onClick={() => setIsGiving(true)} type="button">
+            {t("roles-assign")}
+          </Button>
+        </>
+      }
+    >
+      {pagination._tag === "LoadingFirstPage" ? null : (
+        <SchoolGrantTable grants={pagination.results} slug={slug} />
+      )}
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
+      <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
+      <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} slug={slug} />
+    </SettingsPage>
+  );
+}
+
+/** The grants in a data table, or the table's empty state when no one holds a role. */
+function SchoolGrantTable({
+  grants,
+  slug,
+}: {
+  grants: readonly GrantItem[];
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+
+  if (Arr.isReadonlyArrayEmpty(grants)) {
+    return (
+      <TableEmpty
+        description={t("roles-grants-description")}
+        icon={<HugeIcons icon={UserShield01Icon} />}
+        title={t("roles-empty")}
+      />
+    );
+  }
+
+  return (
+    <TableFrame>
+      <Table>
+        <SchoolTableHeader
+          columns={[t("grant-person"), t("grant-role"), t("grant-scope"), ""]}
+        />
+        <TableBody>
+          {Arr.map(grants, (grant) => (
+            <SchoolGrantRow grant={grant} key={grant.id} slug={slug} />
+          ))}
+        </TableBody>
+      </Table>
+    </TableFrame>
   );
 }
 
 /**
- * Renders one grant row: its person, its role, what it covers, and its revoke action
- * behind a confirmation. A grant the page is still giving waits, so its revoke is inert.
+ * One grant row: its person, its role, what it covers, and its row menu, which revokes
+ * the grant behind a confirmation. A draft grant, still on its way to the server, has an
+ * inert menu.
  */
 function SchoolGrantRow({
   grant,
@@ -187,6 +176,7 @@ function SchoolGrantRow({
 }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
+  const common = useTranslations("Common");
   const viewer = useQuery(tenancy.viewer.get, { slug });
   const revoke = useMutation(access.grants.revoke).withOptimisticUpdate(
     revokeGrantChange
@@ -195,7 +185,7 @@ function SchoolGrantRow({
 
   return (
     <TableRow>
-      <TableCell>{grant.person.name}</TableCell>
+      <TableCell className="font-medium">{grant.person.name}</TableCell>
       <TableCell>{tSchool(`role.${grant.role.key}`)}</TableCell>
       <TableCell>
         {QueryResult.isSuccess(viewer)
@@ -207,30 +197,55 @@ function SchoolGrantRow({
           : ""}
       </TableCell>
       <TableCell className="text-right">
-        <Button
-          inert={isDraft(grant.id)}
-          onClick={() => setIsRevoking(true)}
-          size="sm"
-          type="button"
-          variant="destructive"
-        >
-          {t("grant-revoke")}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label={common("more-actions")}
+                inert={isDraft(grant.id)}
+                size="icon-sm"
+                variant="ghost"
+              >
+                <HugeIcons icon={MoreHorizontalIcon} />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              onClick={() => setIsRevoking(true)}
+              variant="destructive"
+            >
+              {t("grant-revoke")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <ResponsiveDialog
           description={t("grant-revoke-description")}
           footer={
-            <Button
-              onClick={() => {
-                setIsRevoking(false);
-                startTransition(() =>
-                  saveSchool(() => revoke({ grantId: grant.id, slug }), SOURCE)
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("grant-revoke-confirm")}
-            </Button>
+            <>
+              <Button
+                onClick={() => setIsRevoking(false)}
+                type="button"
+                variant="outline"
+              >
+                {common("cancel")}
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsRevoking(false);
+                  startTransition(() =>
+                    saveSchool(
+                      () => revoke({ grantId: grant.id, slug }),
+                      SOURCE
+                    )
+                  );
+                }}
+                type="button"
+                variant="destructive"
+              >
+                {t("grant-revoke-confirm")}
+              </Button>
+            </>
           }
           open={isRevoking}
           setOpen={setIsRevoking}
@@ -241,19 +256,66 @@ function SchoolGrantRow({
   );
 }
 
-/** Renders the form that gives a role of the whole school to the chosen person. */
-function SchoolAssignCard({
-  personId,
+/**
+ * The sheet that says what each built-in role may do, with the name of each role
+ * above its description.
+ */
+function SchoolRoleGuide({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
+
+  return (
+    <Sheet onOpenChange={setOpen} open={open}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>{t("roles-overview")}</SheetTitle>
+          <SheetDescription>{t("roles-overview-description")}</SheetDescription>
+        </SheetHeader>
+        <div className="flex flex-col gap-4 p-4">
+          {Arr.map(BuiltinRole.literals, (role) => (
+            <div className="grid gap-1" key={role}>
+              <p className="font-medium text-sm">{tSchool(`role.${role}`)}</p>
+              <p className="text-muted-foreground text-sm">
+                {t(`role-description.${role}`)}
+              </p>
+            </div>
+          ))}
+          <p className="text-muted-foreground text-sm">
+            {t("roles-overview-footer")}
+          </p>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/**
+ * The dialog that gives a role of the whole school to a chosen person. The request
+ * goes out first, and the dialog closes at once, so the grant shows in the table.
+ */
+function SchoolGrantDialog({
+  open,
+  setOpen,
   slug,
 }: {
-  personId: PersonId;
+  open: boolean;
+  setOpen: (open: boolean) => void;
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
+  const common = useTranslations("Common");
+  const id = useId();
   const assign = useMutation(access.grants.assign).withOptimisticUpdate(
     assignGrantChange
   );
+  const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
   const [role, setRole] = useState<BuiltinRole | undefined>(undefined);
 
   const roleItems = Arr.map(BuiltinRole.literals, (value) => ({
@@ -262,13 +324,59 @@ function SchoolAssignCard({
   }));
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("roles-assign-title")}</CardTitle>
-      </CardHeader>
-      <CardSectionFooter>
-        <CardSectionHint>{t("roles-assign-footer")}</CardSectionHint>
-        <CardSectionActions>
+    <ResponsiveDialog
+      description={t("roles-assign-description")}
+      footer={
+        <>
+          <Button
+            onClick={() => setOpen(false)}
+            type="button"
+            variant="outline"
+          >
+            {common("cancel")}
+          </Button>
+          <Button
+            disabled={personId === undefined || role === undefined}
+            onClick={() => {
+              if (personId === undefined || role === undefined) {
+                return;
+              }
+              startTransition(() =>
+                saveSchool(
+                  () =>
+                    assign({
+                      personId,
+                      role,
+                      scope: { kind: "tenant" },
+                      slug,
+                    }),
+                  SOURCE
+                )
+              );
+              setOpen(false);
+            }}
+            type="button"
+          >
+            {t("roles-assign")}
+          </Button>
+        </>
+      }
+      open={open}
+      setOpen={setOpen}
+      title={t("roles-assign-dialog")}
+    >
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor={`${id}-person`}>{t("grant-person")}</FieldLabel>
+          <SchoolPersonPicker
+            id={`${id}-person`}
+            onChoose={setPersonId}
+            personId={personId}
+            slug={slug}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-role`}>{t("grant-role")}</FieldLabel>
           <Select
             items={roleItems}
             onValueChange={(value) => {
@@ -279,7 +387,7 @@ function SchoolAssignCard({
             }}
             value={role}
           >
-            <SelectTrigger className="w-full max-w-xs">
+            <SelectTrigger className="w-full" id={`${id}-role`}>
               <SelectValue placeholder={t("roles-role-placeholder")} />
             </SelectTrigger>
             <SelectContent>
@@ -292,31 +400,8 @@ function SchoolAssignCard({
               </SelectGroup>
             </SelectContent>
           </Select>
-          <Button
-            disabled={role === undefined}
-            onClick={() => {
-              if (role !== undefined) {
-                startTransition(() =>
-                  saveSchool(
-                    () =>
-                      assign({
-                        personId,
-                        role,
-                        scope: { kind: "tenant" },
-                        slug,
-                      }),
-                    SOURCE
-                  )
-                );
-              }
-            }}
-            size="sm"
-            type="button"
-          >
-            {t("roles-assign")}
-          </Button>
-        </CardSectionActions>
-      </CardSectionFooter>
-    </CardSection>
+        </Field>
+      </FieldGroup>
+    </ResponsiveDialog>
   );
 }

@@ -23,8 +23,9 @@ import {
  * among them. The last item of the path is the page itself; on the school's home the path
  * is home alone, as the current page. The page's title is a heading that only assistive
  * technology reads, because the path already shows it; a page whose body draws its own
- * heading, such as the not-found page, passes no title. The shell draws no header of its
- * own.
+ * heading, such as the not-found page, passes no title. On a phone the path keeps only
+ * the page itself, so the page's actions have their room; the sidebar's trigger beside it
+ * leads to every other page. The shell draws no header of its own.
  */
 export function SchoolHeader({
   children,
@@ -56,6 +57,7 @@ export function SchoolHeader({
           </Breadcrumb>
         ) : (
           <BreadcrumbHeaderPath
+            className="max-sm:[&_[data-slot=breadcrumb-item]:not(:last-child)]:hidden max-sm:[&_[data-slot=breadcrumb-separator]]:hidden"
             homeHref="/"
             homeLabel={tCommon("home")}
             items={Arr.map(items, (item, index) =>
