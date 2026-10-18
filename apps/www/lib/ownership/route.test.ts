@@ -101,6 +101,7 @@ describe("public route ownership", () => {
   it.each([
     ["de", "search"],
     ["de", "pricing"],
+    ["de", "notifications"],
     ["de", "auth"],
     ["de", "auth/error"],
     ["de", "onboarding"],
@@ -123,6 +124,7 @@ describe("public route ownership", () => {
   it.each([
     ["de", "search/fabricated"],
     ["de", "pricing/fabricated"],
+    ["de", "notifications/fabricated"],
     ["de", ""],
     ["de", "fabricated"],
     ["de", "auth/continue"],
