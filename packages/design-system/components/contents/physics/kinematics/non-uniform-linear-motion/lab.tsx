@@ -31,12 +31,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -87,7 +88,7 @@ export function NonUniformLinearMotionLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseScenario}
           gridColumns="3"
@@ -102,91 +103,92 @@ export function NonUniformLinearMotionLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.72} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE")}
-                intensity={0.65}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.25}
-                position={[4, 6, 4]}
-                shadow-bias={-0.0006}
-                shadow-camera-bottom={-shadowCameraRadius}
-                shadow-camera-left={-shadowCameraRadius}
-                shadow-camera-right={shadowCameraRadius}
-                shadow-camera-top={shadowCameraRadius}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={GLBB_SCENE.cameraPosition}
-                cameraTarget={GLBB_SCENE.cameraTarget}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={GLBB_SCENE.cameraFov}
-              />
-              <GlbbScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <VisualFactIndicator
-              label={labels.factLabels.initialVelocity}
-              value={
-                <InlineMath
-                  math={`v_0=${formatVelocityMath(
-                    motion.scenario.initialVelocity
-                  )}`}
-                />
-              }
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.72} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("SLATE")}
+              intensity={0.65}
             />
-            <VisualFactIndicator
-              indicatorColor={motion.scenario.color}
-              label={labels.factLabels.acceleration}
-              value={
-                <InlineMath
-                  math={`a=${formatAccelerationMath(
-                    motion.scenario.acceleration
-                  )}`}
-                />
-              }
+            <directionalLight
+              castShadow
+              intensity={1.25}
+              position={[4, 6, 4]}
+              shadow-bias={-0.0006}
+              shadow-camera-bottom={-shadowCameraRadius}
+              shadow-camera-left={-shadowCameraRadius}
+              shadow-camera-right={shadowCameraRadius}
+              shadow-camera-top={shadowCameraRadius}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
             />
-            <VisualFactIndicator
-              label={labels.factLabels.finalVelocity}
-              value={
-                <InlineMath
-                  math={`v_t=${formatVelocityMath(motion.finalVelocity)}`}
-                />
-              }
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={GLBB_SCENE.cameraPosition}
+              cameraTarget={GLBB_SCENE.cameraTarget}
+              enablePan
+              enableRotate
+              enableZoom
+              fov={GLBB_SCENE.cameraFov}
             />
-            <VisualFactIndicator
-              label={labels.factLabels.displacement}
-              value={
-                <InlineMath
-                  math={`\\Delta x=${formatTrimmedMeterMath(motion.displacement)}`}
-                />
-              }
-            />
-          </dl>
-        </VisualCardControls>
+            <GlbbScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFactIndicator
+            label={labels.factLabels.initialVelocity}
+            value={
+              <InlineMath
+                math={`v_0=${formatVelocityMath(
+                  motion.scenario.initialVelocity
+                )}`}
+              />
+            }
+          />
+          <VisualFactIndicator
+            indicatorColor={motion.scenario.color}
+            label={labels.factLabels.acceleration}
+            value={
+              <InlineMath
+                math={`a=${formatAccelerationMath(
+                  motion.scenario.acceleration
+                )}`}
+              />
+            }
+          />
+          <VisualFactIndicator
+            label={labels.factLabels.finalVelocity}
+            value={
+              <InlineMath
+                math={`v_t=${formatVelocityMath(motion.finalVelocity)}`}
+              />
+            }
+          />
+          <VisualFactIndicator
+            label={labels.factLabels.displacement}
+            value={
+              <InlineMath
+                math={`\\Delta x=${formatTrimmedMeterMath(motion.displacement)}`}
+              />
+            }
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

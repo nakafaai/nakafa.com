@@ -20,9 +20,10 @@ import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   VisualCard,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFooter,
   VisualCardGroup,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
@@ -157,93 +158,96 @@ function Content({
 
   return (
     <>
-      <VisualCardBody>
+      <VisualCardToolbar>
+        <div className="mx-auto w-full max-w-md">
+          <NumberField
+            decrementAriaLabel={t("decrease-angle")}
+            incrementAriaLabel={t("increase-angle")}
+            onChange={(value) => {
+              if (Number.isFinite(value)) {
+                setAngleOverride(value);
+                onAngleChange?.(value);
+              }
+            }}
+            value={angleValue}
+          >
+            <Label className="sr-only">{t("angle")}</Label>
+            <Group className={stepperVariants()}>
+              <Button
+                className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-e bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                slot="decrement"
+              >
+                <HugeIcons
+                  aria-hidden="true"
+                  className="size-4"
+                  icon={MinusSignIcon}
+                />
+              </Button>
+              <Input
+                aria-roledescription={t("number-field")}
+                className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums"
+              />
+              <Button
+                className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-s bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                slot="increment"
+              >
+                <HugeIcons
+                  aria-hidden="true"
+                  className="size-4"
+                  icon={PlusSignIcon}
+                />
+              </Button>
+            </Group>
+          </NumberField>
+        </div>
+      </VisualCardToolbar>
+
+      {/* The loading frame and the stage share this band, so nothing moves when the stage mounts. */}
+      <VisualCardBody className="group-data-fullscreen/visual:justify-center">
         {live ? (
           <UnitCircleStage angle={angleValue} viewLabel={viewLabel} />
         ) : (
           <div aria-hidden="true" className={threeSceneFrameVariants()} />
         )}
-        <VisualCardControls>
-          <VisualCardGroup>
-            <Badge variant="outline">
-              <InlineMath
-                math={`\\sin\\theta ${formatRatio(getSin(angleValue), exactValues?.sin)}`}
-              />
-            </Badge>
-            <Badge variant="outline">
-              <InlineMath
-                math={`\\cos\\theta ${formatRatio(getCos(angleValue), exactValues?.cos)}`}
-              />
-            </Badge>
-            <Badge variant="outline">
-              {Number.isFinite(getTan(angleValue)) ? (
-                <InlineMath
-                  math={`\\tan\\theta ${formatRatio(getTan(angleValue), exactValues?.tan)}`}
-                />
-              ) : (
-                <>
-                  <InlineMath math="\tan\theta" />: {t("undefined")}
-                </>
-              )}
-            </Badge>
-          </VisualCardGroup>
-
-          <Separator />
-
-          <div className="mx-auto flex w-full max-w-md flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <Badge style={{ color: COLORS.VIOLET }} variant="outline">
-                <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
-              </Badge>
-              <Badge className="font-mono" variant="outline">
-                {format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}{" "}
-                {t("radian")}
-              </Badge>
-            </div>
-
-            <NumberField
-              decrementAriaLabel={t("decrease-angle")}
-              incrementAriaLabel={t("increase-angle")}
-              onChange={(value) => {
-                if (Number.isFinite(value)) {
-                  setAngleOverride(value);
-                  onAngleChange?.(value);
-                }
-              }}
-              value={angleValue}
-            >
-              <Label className="sr-only">{t("angle")}</Label>
-              <Group className={stepperVariants()}>
-                <Button
-                  className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-e bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                  slot="decrement"
-                >
-                  <HugeIcons
-                    aria-hidden="true"
-                    className="size-4"
-                    icon={MinusSignIcon}
-                  />
-                </Button>
-                <Input
-                  aria-roledescription={t("number-field")}
-                  className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums"
-                />
-                <Button
-                  className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-s bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                  slot="increment"
-                >
-                  <HugeIcons
-                    aria-hidden="true"
-                    className="size-4"
-                    icon={PlusSignIcon}
-                  />
-                </Button>
-              </Group>
-            </NumberField>
-          </div>
-        </VisualCardControls>
       </VisualCardBody>
       <CoordinateControls />
+      <VisualCardFooter>
+        <VisualCardGroup>
+          <Badge variant="outline">
+            <InlineMath
+              math={`\\sin\\theta ${formatRatio(getSin(angleValue), exactValues?.sin)}`}
+            />
+          </Badge>
+          <Badge variant="outline">
+            <InlineMath
+              math={`\\cos\\theta ${formatRatio(getCos(angleValue), exactValues?.cos)}`}
+            />
+          </Badge>
+          <Badge variant="outline">
+            {Number.isFinite(getTan(angleValue)) ? (
+              <InlineMath
+                math={`\\tan\\theta ${formatRatio(getTan(angleValue), exactValues?.tan)}`}
+              />
+            ) : (
+              <>
+                <InlineMath math="\tan\theta" />: {t("undefined")}
+              </>
+            )}
+          </Badge>
+        </VisualCardGroup>
+
+        <Separator />
+
+        <div className="mx-auto flex w-full max-w-md items-center gap-2">
+          <Badge style={{ color: COLORS.VIOLET }} variant="outline">
+            <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
+          </Badge>
+          <Badge className="font-mono" variant="outline">
+            {format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}{" "}
+            {t("radian")}
+          </Badge>
+        </div>
+      </VisualCardFooter>
     </>
   );
 }

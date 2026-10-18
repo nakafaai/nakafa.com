@@ -16,11 +16,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
@@ -87,7 +89,7 @@ export function IonLab({ title, description, labels }: IonLabProps) {
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-5">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseIon}
           gridColumns="4"
@@ -111,44 +113,50 @@ export function IonLab({ title, description, labels }: IonLabProps) {
             );
           })}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <div className="grid gap-2 py-2 md:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] md:items-center">
-          <ParticleCard
-            charge={<InlineMath math="0" />}
-            electrons={<InlineMath math={`${neutralElectrons}`} />}
-            labels={labels}
-            notation={neutralNotation}
-            stage={labels.beforeChange}
-            title={labels.neutralAtom}
+      <VisualCardBody className="grid gap-2 p-(--card-spacing) md:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] md:items-center [[data-fullscreen]>&]:grid">
+        <ParticleCard
+          charge={<InlineMath math="0" />}
+          electrons={<InlineMath math={`${neutralElectrons}`} />}
+          labels={labels}
+          notation={neutralNotation}
+          stage={labels.beforeChange}
+          title={labels.neutralAtom}
+        />
+
+        <section
+          aria-label={labels.electronChange}
+          className="grid min-h-10 place-items-center text-3xl text-muted-foreground md:min-h-44"
+        >
+          <HugeIcons
+            aria-hidden="true"
+            className="size-7 md:hidden"
+            icon={ArrowDown02Icon}
           />
-
-          <section
-            aria-label={labels.electronChange}
-            className="grid min-h-10 place-items-center text-3xl text-muted-foreground md:min-h-44"
-          >
-            <HugeIcons
-              aria-hidden="true"
-              className="size-7 md:hidden"
-              icon={ArrowDown02Icon}
-            />
-            <HugeIcons
-              aria-hidden="true"
-              className="hidden size-7 md:block"
-              icon={ArrowRight02Icon}
-            />
-          </section>
-
-          <ParticleCard
-            charge={<InlineMath math={signedChargeMath} />}
-            electrons={<InlineMath math={`${ionElectrons}`} />}
-            labels={labels}
-            notation={ionNotation}
-            stage={labels.afterChange}
-            title={selectedLabels.type}
+          <HugeIcons
+            aria-hidden="true"
+            className="hidden size-7 md:block"
+            icon={ArrowRight02Icon}
           />
-        </div>
+        </section>
 
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+        <ParticleCard
+          charge={<InlineMath math={signedChargeMath} />}
+          electrons={<InlineMath math={`${ionElectrons}`} />}
+          labels={labels}
+          notation={ionNotation}
+          stage={labels.afterChange}
+          title={selectedLabels.type}
+        />
+      </VisualCardBody>
+
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
           <VisualFact
             label={labels.electronChange}
             value={selectedLabels.action}
@@ -157,35 +165,29 @@ export function IonLab({ title, description, labels }: IonLabProps) {
             label={labels.electrons}
             value={<InlineMath math={`e^-: ${electronFlowMath}`} />}
           />
-        </dl>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <VisualFact
-              label={labels.protons}
-              value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
-            />
-            <VisualFact
-              label={labels.neutrons}
-              value={
-                <InlineMath
-                  math={`${selectedSample.massNumber} - ${selectedSample.atomicNumber} = ${neutronCount}`}
-                />
-              }
-            />
-            <VisualFact
-              label={labels.charge}
-              value={
-                <InlineMath
-                  math={`q = p^+ - e^- = ${selectedSample.atomicNumber} - ${ionElectrons} = ${signedChargeMath}`}
-                />
-              }
-            />
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
+        </VisualCardFacts>
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.protons}
+            value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
+          />
+          <VisualFact
+            label={labels.neutrons}
+            value={
+              <InlineMath
+                math={`${selectedSample.massNumber} - ${selectedSample.atomicNumber} = ${neutronCount}`}
+              />
+            }
+          />
+          <VisualFact
+            label={labels.charge}
+            value={
+              <InlineMath
+                math={`q = p^+ - e^- = ${selectedSample.atomicNumber} - ${ionElectrons} = ${signedChargeMath}`}
+              />
+            }
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

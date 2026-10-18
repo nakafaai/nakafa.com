@@ -23,12 +23,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr } from "effect";
@@ -109,7 +110,7 @@ export function SubatomicParticlePropertiesLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseMode}
           className="w-full"
@@ -125,49 +126,49 @@ export function SubatomicParticlePropertiesLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene className={threeSceneFrameVariants()}>
-          <ThreeCanvas>
-            <Suspense>
-              <ResponsivePropertyCamera viewConfig={viewConfig} />
-              <ambientLight intensity={0.75} />
-              <hemisphereLight
-                color={sceneColors.skyLight}
-                groundColor={sceneColors.groundLight}
-                intensity={0.65}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[4, 6, 5]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <SubatomicParticlePropertiesScene
-                colors={sceneColors}
-                labels={labels.scene}
-                modeId={selectedModeId}
-              />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
+      <VisualCardBody className={threeSceneFrameVariants()}>
+        <ThreeCanvas>
+          <Suspense>
+            <ResponsivePropertyCamera viewConfig={viewConfig} />
+            <ambientLight intensity={0.75} />
+            <hemisphereLight
+              color={sceneColors.skyLight}
+              groundColor={sceneColors.groundLight}
+              intensity={0.65}
+            />
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[4, 6, 5]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
+            />
+            <SubatomicParticlePropertiesScene
+              colors={sceneColors}
+              labels={labels.scene}
+              modeId={selectedModeId}
+            />
+          </Suspense>
+        </ThreeCanvas>
+      </VisualCardBody>
 
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
         <div className="max-w-3xl text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.summary}
         </div>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            {Arr.map(selectedLabels.facts, (fact) => (
-              <PropertyFact fact={fact} key={fact.label} />
-            ))}
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
+        <VisualCardFacts>
+          {Arr.map(selectedLabels.facts, (fact) => (
+            <PropertyFact fact={fact} key={fact.label} />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
