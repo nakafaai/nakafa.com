@@ -171,7 +171,10 @@ export function BreadcrumbHeaderFold({
   );
 }
 
-/** Renders folded breadcrumb items inside an ellipsis menu. */
+/**
+ * Renders folded breadcrumb items inside an ellipsis menu. The menu keeps its size, so
+ * a long current title truncates instead of squeezing the button under the separator.
+ */
 function BreadcrumbMenu({
   className,
   items,
@@ -182,7 +185,7 @@ function BreadcrumbMenu({
   menuLabel: string;
 }) {
   return (
-    <BreadcrumbItem className={cn("min-w-0", className)}>
+    <BreadcrumbItem className={cn("shrink-0", className)}>
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
