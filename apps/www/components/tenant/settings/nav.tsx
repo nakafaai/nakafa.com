@@ -1,65 +1,67 @@
 "use client";
 
 import {
-  Analytics01Icon,
-  Clock04Icon,
+  ArrowRight01Icon,
   Link01Icon,
-  Mail01Icon,
   School01Icon,
-  Settings01Icon,
-  StudentIcon,
-  TeacherIcon,
-  UserIcon,
+  SecurityLockIcon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons";
+import {
+  Collapsible,
+  CollapsiblePanel,
+  CollapsibleTrigger,
+} from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import {
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from "@repo/design-system/components/ui/sidebar-submenu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { TenantSidebarGroup } from "@/components/tenant/group";
-import {
-  type SchoolSettingsLabelKey,
-  schoolSettingsGroups,
-} from "@/lib/settings/school";
+import { schoolSettingsGroups } from "@/lib/settings/school";
 
-/** The icon of each section. A section added without one does not compile. */
-const sectionIcons: Record<
-  SchoolSettingsLabelKey,
+/** The icon of each group. A group added without one does not compile. */
+const groupIcons: Record<
+  (typeof schoolSettingsGroups)[number]["key"],
   ComponentProps<typeof HugeIcons>["icon"]
 > = {
-  audit: Analytics01Icon,
-  clients: Link01Icon,
-  invites: Mail01Icon,
-  periods: Clock04Icon,
-  policies: Settings01Icon,
-  profile: UserIcon,
-  roles: TeacherIcon,
-  students: StudentIcon,
-  units: School01Icon,
+  integrations: Link01Icon,
+  people: UserGroupIcon,
+  school: School01Icon,
+  security: SecurityLockIcon,
 };
 
 /**
- * Renders the school settings sections as the sidebar body for settings routes,
- * replacing the school's own navigation without replacing the shell. A school
- * host has no locale in its paths, so the links are plain Next.js links, as in
- * the school's own navigation.
+ * Renders the school settings as the sidebar body for settings routes, replacing the
+ * school's own navigation without replacing the shell: one Settings group whose
+ * groups fold open into their sections, as shadcn's sidebar draws a menu with
+ * submenus. The group that holds the current section starts open. A school host
+ * has no locale in its paths, so the links are plain Next.js links, as in the
+ * school's own navigation.
  */
 export function SchoolSettingsNav() {
+  const t = useTranslations("SchoolSettings");
+
   return (
-    <>
+    <TenantSidebarGroup label={t("manage-settings")}>
       {Arr.map(schoolSettingsGroups, (group) => (
         <SchoolSettingsNavGroup group={group} key={group.key} />
       ))}
-    </>
+    </TenantSidebarGroup>
   );
 }
 
-/** Renders one labelled group of school settings sections. */
+/** One group of school settings: its name, which folds open into its sections. */
 function SchoolSettingsNavGroup({
   group,
 }: {
@@ -67,25 +69,40 @@ function SchoolSettingsNavGroup({
 }) {
   const pathname = usePathname();
   const t = useTranslations("SchoolSettings");
+  const label = t(group.key);
+  const holdsCurrent = Arr.some(
+    group.sections,
+    (section) => section.href === pathname
+  );
 
   return (
-    <TenantSidebarGroup label={t(group.key)}>
-      {Arr.map(group.sections, (section) => {
-        const label = t(section.labelKey);
-
-        return (
-          <SidebarMenuItem key={section.href}>
-            <SidebarMenuButton
-              isActive={pathname === section.href}
-              render={<Link href={section.href} title={label} />}
-              tooltip={label}
-            >
-              <HugeIcons icon={sectionIcons[section.labelKey]} />
-              <span className="truncate">{label}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        );
-      })}
-    </TenantSidebarGroup>
+    <Collapsible
+      className="group/collapsible"
+      defaultOpen={holdsCurrent}
+      render={<SidebarMenuItem />}
+    >
+      <CollapsibleTrigger render={<SidebarMenuButton tooltip={label} />}>
+        <HugeIcons icon={groupIcons[group.key]} />
+        <span className="truncate">{label}</span>
+        <HugeIcons
+          className="ms-auto transition-transform duration-200 group-data-open/collapsible:rotate-90"
+          icon={ArrowRight01Icon}
+        />
+      </CollapsibleTrigger>
+      <CollapsiblePanel>
+        <SidebarMenuSub>
+          {Arr.map(group.sections, (section) => (
+            <SidebarMenuSubItem key={section.href}>
+              <SidebarMenuSubButton
+                isActive={pathname === section.href}
+                render={<Link href={section.href} />}
+              >
+                <span className="truncate">{t(section.labelKey)}</span>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      </CollapsiblePanel>
+    </Collapsible>
   );
 }
