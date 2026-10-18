@@ -31,6 +31,7 @@ const ChartDot = memo(function ChartDot({
 }: ChartDotProps) {
   const dotId = useId().replace(/:/g, "");
   const gradientUrl = `url(#${getChartSeriesId(chartId, "colors", dataKey)})`;
+  const maskUrl = maskId ? `url(#${maskId})` : undefined;
 
   if (cx === undefined || cy === undefined) {
     return null;
@@ -45,7 +46,7 @@ const ChartDot = memo(function ChartDot({
         dotId={dotId}
         fillOpacity={fillOpacity}
         gradientUrl={gradientUrl}
-        maskId={maskId}
+        maskUrl={maskUrl}
       />
     )),
     Match.when("colored-border", () => (
@@ -56,7 +57,7 @@ const ChartDot = memo(function ChartDot({
         dotId={dotId}
         fillOpacity={fillOpacity}
         gradientUrl={gradientUrl}
-        maskId={maskId}
+        maskUrl={maskUrl}
       />
     )),
     Match.whenOr(
@@ -73,7 +74,7 @@ const ChartDot = memo(function ChartDot({
           cy={cy}
           fillOpacity={fillOpacity}
           gradientUrl={gradientUrl}
-          maskId={maskId}
+          maskUrl={maskUrl}
           type={geometricType}
         />
       )
@@ -86,7 +87,7 @@ const ChartDot = memo(function ChartDot({
         dotId={dotId}
         fillOpacity={fillOpacity}
         gradientUrl={gradientUrl}
-        maskId={maskId}
+        maskUrl={maskUrl}
       />
     ))
   );
@@ -99,7 +100,7 @@ interface DotVariantProps {
   dotId: string;
   fillOpacity: number;
   gradientUrl: string;
-  maskId?: string | undefined;
+  maskUrl?: string | undefined;
 }
 
 const DefaultDot = memo(
@@ -110,11 +111,11 @@ const DefaultDot = memo(
     fillOpacity,
     gradientUrl,
     className,
-    maskId,
+    maskUrl,
   }: DotVariantProps) => {
     const r = 3;
     return (
-      <g className={className} mask={maskId ? `url(#${maskId})` : undefined}>
+      <g className={className} mask={maskUrl}>
         <defs>
           <clipPath id={`dot-clip-${dotId}`}>
             <circle cx={cx} cy={cy} r={r} />
@@ -145,15 +146,12 @@ const PrimaryBorderDot = memo(
     fillOpacity,
     gradientUrl,
     className,
-    maskId,
+    maskUrl,
   }: DotVariantProps) => {
     const r = 6;
     const strokeWidth = 5;
     return (
-      <g
-        className={cn(className, "text-background")}
-        mask={maskId ? `url(#${maskId})` : undefined}
-      >
+      <g className={cn(className, "text-background")} mask={maskUrl}>
         <defs>
           <clipPath id={`dot-clip-${dotId}`}>
             <circle cx={cx} cy={cy} r={r} />
@@ -191,15 +189,12 @@ const ColoredBorderDot = memo(
     fillOpacity,
     gradientUrl,
     className,
-    maskId,
+    maskUrl,
   }: DotVariantProps) => {
     const r = 3;
     const strokeWidth = 1;
     return (
-      <g
-        className={cn(className, "text-background")}
-        mask={maskId ? `url(#${maskId})` : undefined}
-      >
+      <g className={cn(className, "text-background")} mask={maskUrl}>
         <defs>
           <clipPath id={`dot-clip-${dotId}`}>
             <circle cx={cx} cy={cy} r={r + strokeWidth / 2} />

@@ -1,6 +1,7 @@
 import type { ChartDotVariant } from "@repo/design-system/lib/charts/series-cue";
 import { cn } from "cn";
-import { memo } from "react";
+import { Schema } from "effect";
+import { createContext, memo, use, useMemo } from "react";
 
 type GeometricDotType = Extract<
   ChartDotVariant,
@@ -12,13 +13,36 @@ type GeometricDotType = Extract<
   | "triangle-border"
 >;
 
+/** Where the dot is drawn. Every shape of the dot reads its center from here. */
+const GeometricDotPositionSchema = Schema.Struct({
+  cx: Schema.Finite, // horizontal center of the dot
+  cy: Schema.Finite, // vertical center of the dot
+});
+
+const GeometricDotContext = createContext<
+  typeof GeometricDotPositionSchema.Type | null
+>(null);
+
+// Selects one part of the dot position, throwing a helpful error when used outside <GeometricDot />
+function useGeometricDot<T>(
+  selector: (dot: typeof GeometricDotPositionSchema.Type) => T
+) {
+  const value = use(GeometricDotContext);
+
+  if (!value) {
+    throw new Error("GeometricShape must be used within <GeometricDot />");
+  }
+
+  return selector(value);
+}
+
 interface GeometricDotProps {
   className?: string | undefined;
   cx: number;
   cy: number;
   fillOpacity: number;
   gradientUrl: string;
-  maskId?: string | undefined;
+  maskUrl?: string | undefined;
   type: GeometricDotType;
 }
 
@@ -29,54 +53,48 @@ export const GeometricDot = memo(function GeometricDot({
   cy,
   fillOpacity,
   gradientUrl,
-  maskId,
+  maskUrl,
   type,
 }: GeometricDotProps) {
+  const position = useMemo(() => ({ cx, cy }), [cx, cy]);
   const isBorder = type.endsWith("-border");
   const shape = type.replace("-border", "");
   const outerRadius = isBorder ? 4.5 : 3.5;
 
   return (
-    <g
-      className={cn(className, isBorder && "text-background")}
-      mask={maskId ? `url(#${maskId})` : undefined}
-    >
-      <GeometricShape
-        cx={cx}
-        cy={cy}
-        fill={gradientUrl}
-        fillOpacity={fillOpacity}
-        radius={outerRadius}
-        shape={shape}
-      />
-      {isBorder && (
+    <GeometricDotContext value={position}>
+      <g
+        className={cn(className, isBorder && "text-background")}
+        mask={maskUrl}
+      >
         <GeometricShape
-          cx={cx}
-          cy={cy}
-          fill="currentColor"
-          radius={2.5}
+          fill={gradientUrl}
+          fillOpacity={fillOpacity}
+          radius={outerRadius}
           shape={shape}
         />
-      )}
-    </g>
+        {isBorder && (
+          <GeometricShape fill="currentColor" radius={2.5} shape={shape} />
+        )}
+      </g>
+    </GeometricDotContext>
   );
 });
 
 function GeometricShape({
-  cx,
-  cy,
   fill,
   fillOpacity,
   radius,
   shape,
 }: {
-  cx: number;
-  cy: number;
   fill: string;
   fillOpacity?: number;
   radius: number;
   shape: string;
 }) {
+  const cx = useGeometricDot((dot) => dot.cx);
+  const cy = useGeometricDot((dot) => dot.cy);
+
   if (shape === "square") {
     return (
       <rect
