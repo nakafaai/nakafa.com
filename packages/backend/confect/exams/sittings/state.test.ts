@@ -154,6 +154,36 @@ describe("exams/sittings state: addMinutes", () => {
   );
 });
 
+describe("exams/sittings state: states the table does not decide", () => {
+  it.effect(
+    "refuses a proctor action on a submitted attempt by its state",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* Effect.flip(decideProctorAction("lock", "submitted", true))
+        ).toMatchObject({
+          _tag: "ProctorActionRefused",
+          action: "lock",
+          reason: "state",
+          state: "submitted",
+        });
+      })
+  );
+
+  it.effect("refuses a proctor action on a ready attempt by its state", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* Effect.flip(decideProctorAction("close", "ready", true))
+      ).toMatchObject({
+        _tag: "ProctorActionRefused",
+        action: "close",
+        reason: "state",
+        state: "ready",
+      });
+    })
+  );
+});
+
 describe("exams/sittings state: close", () => {
   it.effect(
     "sets the deadline of an attempt in progress to now, so it closes",

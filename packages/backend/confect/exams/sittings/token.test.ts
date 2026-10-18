@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import {
   drawToken,
   drawTokenFrom,
+  normalizeToken,
   tokenHash,
 } from "@repo/backend/confect/exams/sittings/token";
 import { deriveKeys } from "@repo/backend/confect/vault/cipher";
@@ -46,6 +47,11 @@ describe("exams/sittings token", () => {
       expect(yield* drawToken()).toMatch(TOKEN);
     })
   );
+
+  it("trims a token and upper-cases it before it is compared", () => {
+    expect(normalizeToken("  k7q4xm ")).toBe("K7Q4XM");
+    expect(normalizeToken("K7Q4XM")).toBe("K7Q4XM");
+  });
 
   it.effect(
     "hashes a token to 22 URL-safe characters that verify only for their sitting and key",
