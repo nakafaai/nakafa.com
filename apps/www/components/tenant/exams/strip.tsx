@@ -110,7 +110,6 @@ export function ExamStrip() {
     <nav
       aria-label={t("questions")}
       className="flex shrink-0 items-center gap-2 overflow-x-auto border-b bg-sidebar p-2 md:w-60 md:flex-col md:overflow-y-auto md:border-r md:border-b-0"
-      data-slot="exam-strip"
     >
       {Arr.map(exam.questions, (question, index) => (
         <Thumbnail
