@@ -21,6 +21,15 @@ const SelectionState = Schema.Struct({
 interface SelectionActions {
   /** Ends the pending state of a question, once the server answered or refused it. */
   readonly endPending: (id: QuestionId) => void;
+  /**
+   * Puts back the question that was chosen before a placeholder, when the server refused the
+   * placeholder. It acts only while the placeholder is still the chosen question, so a
+   * question the teacher chose meanwhile stays chosen.
+   */
+  readonly restore: (
+    placeholder: QuestionId,
+    previous: QuestionId | null
+  ) => void;
   /** Makes a question the one that the canvas shows. */
   readonly select: (id: QuestionId) => void;
   /** Marks a question as a placeholder that the server has not saved yet. */
@@ -67,6 +76,10 @@ export const createExamSelection = () =>
         pending: Arr.filter(state.pending, (current) => current !== id),
       })),
     pending: [],
+    restore: (placeholder, previous) =>
+      set((state) =>
+        state.selected === placeholder ? { selected: previous } : {}
+      ),
     select: (id) => set({ selected: id }),
     selected: null,
     startPending: (id) =>

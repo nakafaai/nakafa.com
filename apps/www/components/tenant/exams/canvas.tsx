@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@confect/react";
+import { useCallbackRef } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -75,6 +76,7 @@ export function ExamCanvas() {
           ) : null}
           <QuestionOptions
             examId={exam.id}
+            key={question.id}
             pending={!saved}
             question={question}
           />
@@ -179,9 +181,12 @@ function OptionField({
   const t = useTranslations("Exams");
   const letter = optionLetter(index);
   const [draft, setDraft] = useState<string | null>(null);
+  // The save calls the latest `onSave`, so a save made after a quiet period uses the answers,
+  // the key, and the revision of the render that is on screen when it runs.
+  const save = useCallbackRef(onSave);
   const [saver] = useState(() =>
     Effect.runSync(
-      makeQuietSaver((save: () => void) => Effect.sync(save), OPTION_SAVE_QUIET)
+      makeQuietSaver((run: () => void) => Effect.sync(run), OPTION_SAVE_QUIET)
     )
   );
 
@@ -202,7 +207,7 @@ function OptionField({
         onChange={(event) => {
           const next = event.target.value;
           setDraft(next);
-          Effect.runFork(saver.touch(() => onSave(next)));
+          Effect.runFork(saver.touch(() => save(next)));
         }}
         readOnly={pending}
         value={draft ?? text}

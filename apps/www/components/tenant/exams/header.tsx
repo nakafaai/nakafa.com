@@ -2,43 +2,40 @@
 
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { ExamTitle } from "@repo/backend/confect/exams/exam";
 import { Input } from "@repo/design-system/components/ui/input";
 import { isComposingKey } from "@repo/utilities/composition";
-import { Function as Fn, Schema, String as Str } from "effect";
+import { Function as Fn, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import { titleToSave } from "@/components/tenant/exams/title";
 
 /**
- * The exam's title, renamed in place. The title is saved when the field loses focus or
- * the teacher presses Enter, so the server only ever gets a whole, trimmed title. A
- * title that is empty goes back to the saved one at once, and a title that the server
- * refuses goes back to the saved one too.
+ * The exam's title, renamed in place. The field shows the saved title until the teacher
+ * types, so it follows a co-editor's rename. The title is saved when the field loses focus
+ * or the teacher presses Enter, and only a trimmed, changed, valid title is sent. The
+ * optimistic change restores the saved title when the server refuses the rename.
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
-  const [draft, setDraft] = useState(exam.title);
+  const [draft, setDraft] = useState<string | null>(null);
   const rename = useMutation(exams.exams.rename).withOptimisticUpdate(
     renameUpdate
   );
 
   function save() {
-    const title = Str.trim(draft);
-
-    if (title === exam.title || !Schema.is(ExamTitle)(title)) {
-      setDraft(exam.title);
+    const title = titleToSave(draft, exam.title);
+    setDraft(null);
+    if (Option.isNone(title)) {
       return;
     }
-
-    setDraft(title);
     runExamAction(
-      sentAction(() => rename({ examId: exam.id, slug, title })),
+      sentAction(() => rename({ examId: exam.id, slug, title: title.value })),
       {
-        onFailure: () => setDraft(exam.title),
+        onFailure: Fn.constVoid,
         onSuccess: Fn.constVoid,
       }
     );
@@ -58,7 +55,7 @@ export function ExamHeader() {
           }
         }}
         placeholder={t("untitled")}
-        value={draft}
+        value={draft ?? exam.title}
       />
     </header>
   );

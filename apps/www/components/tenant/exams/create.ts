@@ -30,9 +30,15 @@ export type ScopeChoice = typeof ScopeChoice.Type;
 export const choiceKey = (choice: ScopeChoice) =>
   choice.unitId === null ? "school" : choice.unitId;
 
-/** The units that take exams: the active ones, in the order the viewer sees them. */
-export const activeUnits = (units: readonly ViewerUnit[]) =>
-  Arr.filter(units, (unit) => unit.status === "active");
+/**
+ * The units a new exam can be created in: the active units where the server lets the
+ * viewer take the exam edit action, in the order the viewer sees them.
+ */
+export const creatableUnits = (units: readonly ViewerUnit[]) =>
+  Arr.filter(
+    units,
+    (unit) => unit.status === "active" && Arr.contains(unit.can, "exam.edit")
+  );
 
 /** A language of the school's units, as the delivery languages an exam takes. */
 const languageOf = (unit: ViewerUnit) =>
@@ -40,7 +46,8 @@ const languageOf = (unit: ViewerUnit) =>
 
 /**
  * The places an exam can be created in: the whole school first when the viewer may edit
- * the school's exams, then each active unit. The whole school has no language of its own.
+ * the school's exams, then each unit the viewer may create in. The whole school has no
+ * language of its own.
  */
 export const scopeChoices = (
   units: readonly ViewerUnit[],
@@ -57,7 +64,7 @@ export const scopeChoices = (
       ]
     : [];
   const unitChoices = Arr.map(
-    activeUnits(units),
+    creatableUnits(units),
     (unit): ScopeChoice => ({
       language: languageOf(unit),
       scope: { kind: "unit", unitId: unit.id },
@@ -81,6 +88,6 @@ export const defaultChoice = (
     () => Arr.head(choices)
   );
 
-/** The distinct content languages of the active units, which a whole-school exam picks from. */
+/** The distinct content languages of the units a new exam can be created in, which a whole-school exam picks from. */
 export const unitLanguages = (units: readonly ViewerUnit[]) =>
-  Arr.dedupe(Arr.map(activeUnits(units), languageOf));
+  Arr.dedupe(Arr.map(creatableUnits(units), languageOf));

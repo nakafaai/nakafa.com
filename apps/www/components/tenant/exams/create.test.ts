@@ -2,8 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, Option, Schema } from "effect";
 import {
-  activeUnits,
   choiceKey,
+  creatableUnits,
   defaultChoice,
   scopeChoices,
   unitLanguages,
@@ -12,12 +12,17 @@ import {
 
 const unitId = Schema.decodeUnknownSync(Id("tenantUnits"));
 
-/** One unit of the school, active unless the test says otherwise. */
+/**
+ * One unit of the school as the viewer sees it: active, and open to the exam edit action,
+ * unless the test says otherwise.
+ */
 const unit = (
   id: string,
   contentLanguage: "de" | "en" | "id",
-  status: "active" | "archived" = "active"
+  status: "active" | "archived" = "active",
+  can: ViewerUnit["can"] = ["exam.edit"]
 ): ViewerUnit => ({
+  can,
   contentLanguage,
   id: unitId(id),
   level: "sd",
@@ -29,16 +34,24 @@ const unit = (
 const kelas = unit("kelas", "id");
 const grade = unit("grade", "en");
 const closed = unit("closed", "de", "archived");
+const reader = unit("reader", "de", "active", ["unit.view"]);
 const units = [kelas, closed, grade];
 
-describe("activeUnits", () => {
-  it("keeps the active units in the order the viewer sees them", () => {
-    expect(activeUnits(units)).toEqual([kelas, grade]);
+describe("creatableUnits", () => {
+  it("keeps the active units the viewer may edit exams in, in the order the viewer sees them", () => {
+    expect(creatableUnits([kelas, closed, reader, grade])).toEqual([
+      kelas,
+      grade,
+    ]);
+  });
+
+  it("keeps no archived unit, even one the server lets the viewer edit", () => {
+    expect(creatableUnits([closed])).toEqual([]);
   });
 });
 
 describe("scopeChoices", () => {
-  it("offers the whole school first and then each active unit when the viewer may edit the school", () => {
+  it("offers the whole school first and then each unit when the viewer may edit the school", () => {
     expect(scopeChoices(units, true)).toEqual([
       {
         language: null,
@@ -61,9 +74,12 @@ describe("scopeChoices", () => {
     ]);
   });
 
-  it("offers only the active units to a viewer who may not edit the school", () => {
+  it("offers only the units the viewer may edit exams in to a viewer who may not edit the school", () => {
     expect(
-      Arr.map(scopeChoices(units, false), (choice) => choice.unitId)
+      Arr.map(
+        scopeChoices([kelas, reader, grade], false),
+        (choice) => choice.unitId
+      )
     ).toEqual([kelas.id, grade.id]);
   });
 });
@@ -75,14 +91,36 @@ describe("defaultChoice", () => {
     expect(defaultChoice(choices)).toEqual(Option.some(choices[1]));
   });
 
-  it("chooses the whole school when the school has no active unit", () => {
-    const choices = scopeChoices([closed], true);
+  it("chooses the first unit the viewer may edit exams in, not the first unit of the school", () => {
+    const choices = scopeChoices([reader, kelas], false);
+
+    expect(defaultChoice(choices)).toEqual(Option.some(choices[0]));
+    expect(Option.map(defaultChoice(choices), choiceKey)).toEqual(
+      Option.some(kelas.id)
+    );
+  });
+
+  it("chooses the whole school when the school has no unit the viewer may create in", () => {
+    const choices = scopeChoices([closed, reader], true);
 
     expect(defaultChoice(choices)).toEqual(Option.some(choices[0]));
   });
 
-  it("chooses nothing when the viewer can create nowhere", () => {
-    expect(defaultChoice(scopeChoices([closed], false))).toEqual(Option.none());
+  it("chooses nothing when the viewer can create nowhere, which hides the create action", () => {
+    expect(defaultChoice(scopeChoices([closed, reader], false))).toEqual(
+      Option.none()
+    );
+  });
+});
+
+describe("a unit teacher", () => {
+  it("creates in the one unit where they may edit exams, and that unit's language is the only one offered", () => {
+    const teacherUnits = [reader, kelas];
+
+    expect(Arr.map(scopeChoices(teacherUnits, false), choiceKey)).toEqual([
+      kelas.id,
+    ]);
+    expect(unitLanguages(teacherUnits)).toEqual(["id"]);
   });
 });
 
@@ -95,7 +133,7 @@ describe("choiceKey", () => {
 });
 
 describe("unitLanguages", () => {
-  it("lists each language of the active units once", () => {
+  it("lists each language of the units a new exam can be created in once", () => {
     expect(unitLanguages([kelas, grade, unit("kedua", "id")])).toEqual([
       "id",
       "en",

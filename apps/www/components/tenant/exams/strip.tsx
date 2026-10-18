@@ -72,7 +72,9 @@ export function ExamStrip() {
     Option.map(active, (current) => current.question.id)
   );
   const pending = useExamSelection((state) => state.pending);
+  const chosen = useExamSelection((state) => state.selected);
   const select = useExamSelection((state) => state.select);
+  const restore = useExamSelection((state) => state.restore);
   const startPending = useExamSelection((state) => state.startPending);
   const endPending = useExamSelection((state) => state.endPending);
   const add = useMutation(exams.questions.add);
@@ -82,6 +84,7 @@ export function ExamStrip() {
     act(
       placeholderDraft(newChoiceAnswers(), null).pipe(
         Effect.flatMap((draft) => {
+          const previous = chosen;
           startPending(draft.id);
           select(draft.id);
           return sentAction(() =>
@@ -92,7 +95,10 @@ export function ExamStrip() {
             })
           ).pipe(
             Effect.ensuring(Effect.sync(() => endPending(draft.id))),
-            Effect.tap((saved) => Effect.sync(() => select(saved.id)))
+            Effect.tap((saved) => Effect.sync(() => select(saved.id))),
+            Effect.tapError(() =>
+              Effect.sync(() => restore(draft.id, previous))
+            )
           );
         })
       )
@@ -143,7 +149,9 @@ function Thumbnail({
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const { exam, slug } = useExam();
+  const chosen = useExamSelection((state) => state.selected);
   const select = useExamSelection((state) => state.select);
+  const restore = useExamSelection((state) => state.restore);
   const startPending = useExamSelection((state) => state.startPending);
   const endPending = useExamSelection((state) => state.endPending);
   const [asking, setAsking] = useState(false);
@@ -160,6 +168,7 @@ function Thumbnail({
     act(
       placeholderDraft(question.answers, question.key).pipe(
         Effect.flatMap((draft) => {
+          const previous = chosen;
           startPending(draft.id);
           select(draft.id);
           return sentAction(() =>
@@ -170,7 +179,10 @@ function Thumbnail({
             })
           ).pipe(
             Effect.ensuring(Effect.sync(() => endPending(draft.id))),
-            Effect.tap((saved) => Effect.sync(() => select(saved.id)))
+            Effect.tap((saved) => Effect.sync(() => select(saved.id))),
+            Effect.tapError(() =>
+              Effect.sync(() => restore(draft.id, previous))
+            )
           );
         })
       )

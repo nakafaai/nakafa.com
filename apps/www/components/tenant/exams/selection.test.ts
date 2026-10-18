@@ -89,4 +89,27 @@ describe("createExamSelection", () => {
 
     expect(selection.getState().pending).toEqual([second.id]);
   });
+
+  it("puts back the question chosen before a placeholder the server refused", () => {
+    const selection = createExamSelection();
+    const placeholder = questionId("placeholder");
+
+    selection.getState().select(second.id);
+    selection.getState().select(placeholder);
+    selection.getState().restore(placeholder, second.id);
+
+    expect(selection.getState().selected).toBe(second.id);
+  });
+
+  it("leaves the question the teacher chose meanwhile when a placeholder is refused", () => {
+    const selection = createExamSelection();
+    const placeholder = questionId("placeholder");
+
+    selection.getState().select(second.id);
+    selection.getState().select(placeholder);
+    selection.getState().select(first.id);
+    selection.getState().restore(placeholder, second.id);
+
+    expect(selection.getState().selected).toBe(first.id);
+  });
 });
