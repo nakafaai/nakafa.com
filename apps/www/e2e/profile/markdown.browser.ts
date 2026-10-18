@@ -98,10 +98,13 @@ test("a learner's post draws its Markdown as Nina's answers do", async ({
           "https://example.com/foto.png"
         );
         await expect(photo).toHaveAttribute("target", "_blank");
-        await expect(post.locator("p").filter({ has: photo })).toHaveCount(1);
-        await expect(
-          post.locator("p").filter({ has: photo }).locator("img")
-        ).toHaveCount(0);
+        // A locator inside `has` is read from within the paragraph it filters,
+        // so it names the link alone, not the row around it.
+        const photoParagraph = post
+          .locator("p")
+          .filter({ has: page.getByRole("link", { name: "Foto kelas" }) });
+        await expect(photoParagraph).toHaveCount(1);
+        await expect(photoParagraph.locator("img")).toHaveCount(0);
       });
     })
   );
