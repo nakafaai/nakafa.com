@@ -57,7 +57,7 @@ const WINDOW_VIEWPORTS = [touchViewport, desktopViewport];
  */
 function lessonCards(page: Page) {
   return lessonSection(page).locator(
-    '[role="tabpanel"] [data-slot="visual-card"]'
+    '[data-slot="lesson-panel"] [data-slot="visual-card"]'
   );
 }
 
@@ -185,7 +185,9 @@ for (const viewport of WINDOW_VIEWPORTS) {
               Effect.gen(function* () {
                 yield* openHome(page);
                 const root = lessonWindow(page);
-                const tabs = lessonSection(page).getByRole("tab");
+                const tabs = lessonSection(page)
+                  .locator('[data-slot="button-group"]')
+                  .getByRole("button");
                 yield* Effect.promise(() => root.scrollIntoViewIfNeeded());
 
                 const heights = MutableList.make<number>();
@@ -246,7 +248,9 @@ for (const viewport of WINDOW_VIEWPORTS) {
               Effect.gen(function* () {
                 yield* openHome(page);
                 const cards = lessonCards(page);
-                const tabs = lessonSection(page).getByRole("tab");
+                const tabs = lessonSection(page)
+                  .locator('[data-slot="button-group"]')
+                  .getByRole("button");
 
                 // Before any lab mounts, every card is the one the server drew.
                 const served = yield* Effect.promise(() =>

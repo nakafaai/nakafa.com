@@ -10,11 +10,15 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
+import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import commentLikes from "./tables/commentLikes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
+import connectorConnections from "./tables/connectorConnections";
+import connectorKeys from "./tables/connectorKeys";
+import connectorSecrets from "./tables/connectorSecrets";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
@@ -47,6 +51,7 @@ import examQuestions from "./tables/examQuestions";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
+import gradingSchemes from "./tables/gradingSchemes";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -121,11 +126,15 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleCategories: typeof articleCategories;
   readonly chatShares: typeof chatShares;
   readonly chats: typeof chats;
+  readonly classGrades: typeof classGrades;
   readonly classTeachers: typeof classTeachers;
   readonly classes: typeof classes;
   readonly commentLikes: typeof commentLikes;
   readonly commentVotes: typeof commentVotes;
   readonly comments: typeof comments;
+  readonly connectorConnections: typeof connectorConnections;
+  readonly connectorKeys: typeof connectorKeys;
+  readonly connectorSecrets: typeof connectorSecrets;
   readonly contentAnalyticsPartitions: typeof contentAnalyticsPartitions;
   readonly contentArtifactFacts: typeof contentArtifactFacts;
   readonly contentArtifacts: typeof contentArtifacts;
@@ -158,6 +167,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly examSignals: typeof examSignals;
   readonly examSittings: typeof examSittings;
   readonly exams: typeof exams;
+  readonly gradingSchemes: typeof gradingSchemes;
   readonly integrationClients: typeof integrationClients;
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
@@ -231,11 +241,15 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleCategories,
   chatShares,
   chats,
+  classGrades,
   classTeachers,
   classes,
   commentLikes,
   commentVotes,
   comments,
+  connectorConnections,
+  connectorKeys,
+  connectorSecrets,
   contentAnalyticsPartitions,
   contentArtifactFacts,
   contentArtifacts,
@@ -268,6 +282,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   examSignals,
   examSittings,
   exams,
+  gradingSchemes,
   integrationClients,
   irtCalibrationRuns,
   irtScaleItems,

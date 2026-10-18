@@ -7,10 +7,7 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
-import {
-  IdentityCardIcon,
-  MoreHorizontalIcon,
-} from "@hugeicons/core-free-icons";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -129,8 +126,8 @@ function SchoolLoginTable({
   if (Arr.isReadonlyArrayEmpty(logins)) {
     return (
       <TableEmpty
+        act="pointing"
         description={t("logins-footer")}
-        icon={<HugeIcons icon={IdentityCardIcon} />}
         title={t("logins-empty")}
       />
     );

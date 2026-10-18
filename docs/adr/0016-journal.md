@@ -135,8 +135,9 @@ processing agreement, which is the agreement that states the period, so it ends
 the period for every entry, whatever its age. It exports the organisation's
 entries with proof, and then they are deleted with its other data.
 
-Personal entries leave with the account: the first personal writer adds the
-owner index on accounts and the account deletion drain.
+Personal entries leave with the account: `by_owner_userId` finds them, and the
+account deletion drain (`auth/cleanup/journal.ts`) deletes them in bounded
+batches.
 
 Account deletion leaves tenant entries alone. A tenant entry holds Person IDs, no
 account ID, and no name, and each ID points at a Person row, which holds personal
@@ -148,7 +149,7 @@ things that delete tenant entries.
 
 ## Implementation Contract
 
-- `journalEntries` (`by_owner_tenantId`); each authority's `record`;
+- `journalEntries` (`by_owner_tenantId`, `by_owner_userId`); each authority's `record`;
   `journal/audit:list`, the tenant audit log for `audit.view`, newest first,
   at most 100 entries a page, with each Person named on a page read once and
   all of them read concurrently.

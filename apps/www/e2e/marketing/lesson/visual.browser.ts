@@ -77,20 +77,41 @@ function expectWindowShare(root: Locator, share: number) {
   });
 }
 
+/** Where the window stops on its way to half, well short of the share that mounts its lab. */
+const APPROACH_SHARE = LAB_VISIBLE_SHARE - 0.15;
+
+/** The most scrolls that setting the window's share takes. */
+const SHARE_SCROLLS = 6;
+
+/** How close, in pixels, the window's top must come to where the share begins. */
+const SHARE_TOLERANCE_PX = 0.5;
+
 /**
- * Scrolls the page at once, so that `share` of the window's height lies on the
- * screen. The window's top moves to the point where that share begins, so the
- * scroll sets the share and no test waits on a frame for it.
+ * Scrolls the page at once until `share` of the window's height lies on the
+ * screen. The window rises into place as the page scrolls, so one scroll aimed
+ * from where it stood lands a little off: each scroll waits two frames for the
+ * rise to follow, then aims again from where the window now stands, and the
+ * share settles within a few scrolls.
  */
 function scrollWindowToShare(page: Page, root: Locator, share: number) {
   return Effect.promise(async () => {
-    const box = await root.boundingBox();
-    expect(box).not.toBeNull();
-    const top = desktopViewport.height - share * (box?.height ?? 0);
-    await page.evaluate(
-      (distance) => window.scrollBy({ behavior: "instant", top: distance }),
-      (box?.y ?? 0) - top
-    );
+    for (let scroll = 0; scroll < SHARE_SCROLLS; scroll += 1) {
+      const box = await root.boundingBox();
+      expect(box).not.toBeNull();
+      const top = desktopViewport.height - share * (box?.height ?? 0);
+      const distance = (box?.y ?? 0) - top;
+      if (Math.abs(distance) < SHARE_TOLERANCE_PX) {
+        return;
+      }
+      await page.evaluate(
+        (by) =>
+          new Promise<void>((resolve) => {
+            window.scrollBy({ behavior: "instant", top: by });
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          }),
+        distance
+      );
+    }
   });
 }
 
@@ -126,6 +147,11 @@ test("home lesson window mounts its visual once half of the window is on the scr
               yield* Effect.promise(() => expect(visual).toHaveCount(0));
 
               // Just short of half, the observer has not crossed the share, so the lab still waits.
+              // The window comes from below the screen, where it still rises by most of its
+              // offset: a scroll aimed from there would carry it past half once the rise
+              // settles. It first stops well short of half, where little rise is left, and
+              // then aims for the edge.
+              yield* scrollWindowToShare(page, root, APPROACH_SHARE);
               yield* scrollWindowToShare(
                 page,
                 root,
@@ -292,7 +318,8 @@ test("home lesson placeholder holds still with reduced motion while its scene lo
               );
               yield* Effect.promise(() =>
                 lessonSection(page)
-                  .getByRole("tab")
+                  .locator('[data-slot="button-group"]')
+                  .getByRole("button")
                   .nth(CIRCLE_TAB_INDEX)
                   .click()
               );

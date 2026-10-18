@@ -11,6 +11,12 @@ import { Array as Arr, Match, Schema } from "effect";
 /** The ink of every eye, mouth, and nose. */
 export const INK = "#15294f";
 
+/** The light that shines in an open eye. */
+const SHINE = "#ffffff";
+
+/** The soft pink of the cheeks under dark eyes. */
+const BLUSH = "#f48fb1";
+
 /** The pale white that several animals share. */
 export const PEARL = "#f6f4ef";
 
@@ -162,7 +168,7 @@ export function smile(y: number, wide: number, deep: number, ink: string) {
   );
 }
 
-/** One eye: an open eye that follows the pointer, a smiling arc, or a sleeping arc. */
+/** One eye: an open eye with its shine, which follows the pointer, a smiling arc, or a sleeping arc. */
 export function eye(
   kind: typeof Eyes.Type,
   x: number,
@@ -186,16 +192,46 @@ export function eye(
       )
     ),
     Match.orElse(() =>
-      drawEllipse({
-        cx: tenth(x),
-        cy: tenth(y),
-        fill: ink,
-        mark: Mark.literal,
-        rx: tenth(r),
-        ry: tenth(r * 1.22),
-      })
+      group(
+        [
+          drawEllipse({
+            cx: tenth(x),
+            cy: tenth(y),
+            fill: ink,
+            rx: tenth(r),
+            ry: tenth(r * 1.22),
+          }),
+          ...(ink === INK
+            ? [
+                drawEllipse({
+                  cx: tenth(x - r * 0.3),
+                  cy: tenth(y - r * 0.42),
+                  fill: SHINE,
+                  rx: tenth(r * 0.38),
+                  ry: tenth(r * 0.38),
+                }),
+              ]
+            : []),
+        ],
+        { mark: Mark.literal }
+      )
     )
   );
+}
+
+/**
+ * One cheek: a soft pink patch under an eye of size `r`, which every animal with
+ * dark eyes wears, so each face looks warm whatever its colours.
+ */
+function cheek(x: number, y: number, r: number) {
+  return drawEllipse({
+    cx: tenth(x),
+    cy: tenth(y),
+    fill: BLUSH,
+    opacity: 0.45,
+    rx: tenth(r * 1.15),
+    ry: tenth(r * 0.7),
+  });
 }
 
 /** What one side does when the eyes wink: the left eye smiles, the right stays open. */
@@ -214,9 +250,13 @@ export function eyes(
   r = 6.4,
   ink = kit.ink
 ) {
-  return both((side) =>
-    eye(kindAt(kit.eyes, side), 100 + side * dx + kit.look, y, r, ink)
-  );
+  return both((side) => {
+    const x = 100 + side * dx + kit.look;
+    const shown = eye(kindAt(kit.eyes, side), x, y, r, ink);
+    return ink === INK
+      ? [cheek(x + side * r * 1.1, y + r * 2.1, r), shown]
+      : shown;
+  });
 }
 
 /** Round ears on both sides, each with an inner ear when `inner` is given. */

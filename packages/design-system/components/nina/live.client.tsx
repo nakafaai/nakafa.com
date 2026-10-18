@@ -26,13 +26,34 @@ import {
 import { homeOf, modeOf, type Options } from "@repo/mascot/nina/options";
 import { Array as Arr, Effect, Random } from "effect";
 import { cancelFrame, type FrameData, frame } from "motion";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import {
+  createContext,
+  use,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { flushSync } from "react-dom";
 
 interface LiveProps {
   label: string;
   options: Options;
   size: number;
+}
+
+/** The Nina on screen, which her picture and her life read. */
+const LiveContext = createContext<LiveProps | null>(null);
+
+/** Selects the Nina on screen from the surrounding Live. */
+function useLive() {
+  const live = use(LiveContext);
+  if (live === null) {
+    // A missing Nina is a programmer composition error at this React seam.
+    throw new Error("Nina's parts require Live.");
+  }
+  return live;
 }
 
 /** A thing that she picks up arrives with a small pop, not from nowhere. */
@@ -92,7 +113,8 @@ function draw() {
  * With reduced motion she is a still picture of what she does, and a press
  * only changes her face for a moment.
  */
-function Calm({ label, options, size }: LiveProps) {
+function Calm() {
+  const { label, options, size } = useLive();
   const [glad, setGlad] = useState<typeof MoodSchema.Type>();
   const { clear, start: wait } = useTimeout(() => setGlad(undefined), 1100);
   const pressed = useEventListener("click", () => {
@@ -123,7 +145,8 @@ function Calm({ label, options, size }: LiveProps) {
  * made of, such as a new face or a thing in her arms, is she drawn with React
  * again, in the same frame, as a new figure.
  */
-function Alive({ label, options, size }: LiveProps) {
+function Alive() {
+  const { label, options, size } = useLive();
   const [figure, setFigure] = useState(() => ({
     ...scene(options),
     version: 0,
@@ -263,7 +286,11 @@ function Alive({ label, options, size }: LiveProps) {
 }
 
 /** Nina alive, or still when the person asks for less motion. */
-export function Live(props: LiveProps) {
+export function Live({ label, options, size }: LiveProps) {
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
-  return calm ? <Calm {...props} /> : <Alive {...props} />;
+  const live = useMemo(
+    () => ({ label, options, size }),
+    [label, options, size]
+  );
+  return <LiveContext value={live}>{calm ? <Calm /> : <Alive />}</LiveContext>;
 }

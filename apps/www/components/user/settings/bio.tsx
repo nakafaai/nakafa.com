@@ -16,7 +16,6 @@ import { useState } from "react";
 import {
   CardSection,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateBioMutation } from "@/components/user/mutation.client";
 import { SettingsSave } from "@/components/user/settings/save";
@@ -90,15 +89,11 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
             />
           </Field>
         </CardContent>
-        <CardSectionFooter>
-          {/* Only the too-long message is an alert, so only it is announced as it appears. */}
-          {fits ? (
-            <CardSectionHint>{t("bio-footer")}</CardSectionHint>
-          ) : (
-            <CardSectionHint role="alert" tone="destructive">
-              {t("bio-too-long")}
-            </CardSectionHint>
-          )}
+        {/* Only the too-long message is destructive, so only it is announced as it appears. */}
+        <CardSectionFooter
+          hint={fits ? t("bio-footer") : t("bio-too-long")}
+          tone={fits ? "muted" : "destructive"}
+        >
           <SettingsSave disabled={!canSave} />
         </CardSectionFooter>
       </CardSection>

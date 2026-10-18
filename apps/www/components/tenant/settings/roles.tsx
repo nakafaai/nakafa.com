@@ -8,10 +8,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import {
-  MoreHorizontalIcon,
-  UserShield01Icon,
-} from "@hugeicons/core-free-icons";
+import { BookOpen01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
@@ -101,12 +98,14 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
     <SettingsPage
       actions={
         <>
+          {/* On a phone the guide keeps its icon, so the page's name keeps its room. */}
           <Button
             onClick={() => setIsGuiding(true)}
             type="button"
             variant="outline"
           >
-            {t("roles-guide")}
+            <HugeIcons icon={BookOpen01Icon} />
+            <span className="max-sm:sr-only">{t("roles-guide")}</span>
           </Button>
           <Button onClick={() => setIsGiving(true)} type="button">
             {t("roles-assign")}
@@ -139,8 +138,8 @@ function SchoolGrantTable({
   if (Arr.isReadonlyArrayEmpty(grants)) {
     return (
       <TableEmpty
+        act="juggling"
         description={t("roles-grants-description")}
-        icon={<HugeIcons icon={UserShield01Icon} />}
         title={t("roles-empty")}
       />
     );
