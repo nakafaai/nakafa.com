@@ -22,7 +22,11 @@ import { isActiveLocale } from "@/lib/i18n/active";
 import { useViewer } from "@/lib/identity/client";
 
 /** Opens browser-originated checkout or the existing customer's portal. */
-export function BillingButton() {
+export function BillingButton({
+  variant,
+}: {
+  variant: "default" | "secondary";
+}) {
   const locale = useLocale();
   const t = useTranslations("Pricing");
   const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
@@ -94,6 +98,7 @@ export function BillingButton() {
       className="w-full"
       disabled={isPending || !billingReady || !isActiveLocale(locale)}
       onClick={handleBilling}
+      variant={variant}
     >
       <Spinner icon={Diamond02Icon} isLoading={isPending || !billingReady} />
       {t("pro-cta")}

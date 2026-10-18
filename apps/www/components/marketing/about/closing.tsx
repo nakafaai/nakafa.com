@@ -37,6 +37,7 @@ export function Closing() {
               </NavigationLink>
             }
             size="lg"
+            variant="secondary"
           />
           <Button
             nativeButton={false}
