@@ -62,7 +62,7 @@ export function ExamCanvas() {
     onSome: ({ index, question }) => {
       const saved = !Arr.contains(pending, question.id);
       return (
-        <section className="flex min-w-0 flex-1 flex-col bg-muted/40 p-4">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-muted/40 p-4">
           <Card className="mx-auto w-full max-w-3xl gap-4 p-8">
             <h2 className="font-semibold text-lg">
               {t("question", { number: index + 1 })}

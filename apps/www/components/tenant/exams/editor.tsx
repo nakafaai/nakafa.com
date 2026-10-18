@@ -12,7 +12,8 @@ import { ExamStrip } from "@/components/tenant/exams/strip";
 
 /**
  * The editor of one exam: its title in a header, the strip of questions beside the
- * canvas of the selected one, and, on a phone, the strip above the canvas. The exam
+ * canvas of the selected one, and, on a phone, the strip above the canvas. The editor
+ * fills the viewport, because the school sidebar steps aside on its route. The exam
  * is read once here, and the parts read it through the provider.
  */
 export function ExamEditor({
@@ -35,7 +36,7 @@ export function ExamEditor({
 
   return (
     <ExamProvider exam={result.value} slug={slug}>
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex h-svh flex-col">
         <ExamHeader />
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           <ExamStrip />
