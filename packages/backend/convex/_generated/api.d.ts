@@ -7069,6 +7069,7 @@ export declare const api: {
             status: "active" | "suspended";
           };
           units: Array<{
+            can: Array<string>;
             contentLanguage: "en" | "id" | "de";
             id: Id<"tenantUnits">;
             level:

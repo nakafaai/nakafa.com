@@ -5,6 +5,7 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { TenantEntry } from "@/components/tenant/entry";
+import { canOpenExams } from "@/components/tenant/exams/access";
 import { TenantShell } from "@/components/tenant/shell";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
@@ -86,6 +87,7 @@ export default async function SchoolLayout({
     <TenantShell
       account={viewer.value.account}
       canManage={canManage}
+      canOpenExams={canOpenExams(viewer.value.grants)}
       personName={viewer.value.person.name}
       profile={profile.value}
       role={role}

@@ -48,6 +48,16 @@ export class SyncDropped extends Schema.TaggedClass<SyncDropped>()(
   }
 ) {}
 
+/**
+ * The editor closed while the loop worked on it, so its view takes no more changes. A change
+ * to a closed editor is neither applied nor stale, so the port fails with this error, and the
+ * loop stops there.
+ */
+export class EditorClosed extends Schema.TaggedError<EditorClosed>()(
+  "EditorClosed",
+  {}
+) {}
+
 /** The server calls the loop makes. Each one wraps a Convex function, and maps the failures the loop does not decide to `SyncFailed`. */
 export interface SyncTransport {
   readonly open: (
@@ -78,22 +88,22 @@ export interface SyncTransport {
  * between is not lost; the loop reads again and builds the change anew.
  */
 export interface EditorPort {
-  /** Applies the transaction when the editor still holds `from`, which the transaction was built from. Says whether it applied. */
+  /** Applies the transaction when the editor still holds `from`, which the transaction was built from. Says whether it applied, and fails with `EditorClosed` once the editor is closed. */
   readonly dispatch: (
     from: EditorState,
     transaction: Transaction
-  ) => Effect.Effect<boolean>;
+  ) => Effect.Effect<boolean, EditorClosed>;
   /** A state of the editor for this document at this version under this client ID, with the editor's own plugins. */
   readonly fresh: (input: {
     readonly clientId: string;
     readonly doc: Node;
     readonly version: number;
   }) => EditorState;
-  /** Replaces the editor's state with `next` when the editor still holds `from`. Says whether it replaced it. */
+  /** Replaces the editor's state with `next` when the editor still holds `from`. Says whether it replaced it, and fails with `EditorClosed` once the editor is closed. */
   readonly replace: (
     from: EditorState,
     next: EditorState
-  ) => Effect.Effect<boolean>;
+  ) => Effect.Effect<boolean, EditorClosed>;
   readonly schema: ProseSchema;
   /** The state the editor holds now. A state is immutable, so a read keeps the state it returned. */
   readonly state: Effect.Effect<EditorState>;

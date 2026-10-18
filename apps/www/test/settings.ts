@@ -126,6 +126,7 @@ export function viewer(): Viewer {
     },
     units: [
       {
+        can: ["unit.view", "unit.manage", "period.view", "period.manage"],
         contentLanguage: "id",
         id: smp,
         level: "smp",
