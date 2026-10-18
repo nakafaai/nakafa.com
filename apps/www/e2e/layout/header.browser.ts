@@ -25,6 +25,8 @@ const publicRoutes = [
   appRoutes.quran,
   appRoutes.tryout,
   "/en/try-out/indonesia",
+  "/en/try-out/indonesia/snbt",
+  "/en/try-out/indonesia/snbt/2027",
   "/en/try-out/indonesia/snbt/2027/set-1",
   "/id/curricula/merdeka",
   LESSON_PATH,

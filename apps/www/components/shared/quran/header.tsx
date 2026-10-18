@@ -20,8 +20,9 @@ import { QuranSurahName } from "@/components/shared/quran/name";
 
 /**
  * Keeps surah navigation, name, and outline actions in one row at every width. On a
- * phone the path folds into its menu, as Google Drive folds it, so the surah's name
- * sits beside it; from md the path, the name and the actions stand apart.
+ * phone the path folds into its menu, as Google Drive folds it, and the surah's name
+ * sits beside it without its Arabic, which the page shows; from md the path, the name
+ * and the actions stand apart.
  */
 export function QuranSurahHeader({
   arabic,
@@ -65,7 +66,7 @@ export function QuranSurahHeader({
         </div>
       </div>
       <h1
-        className="col-start-2 row-start-1 flex min-w-0 items-baseline gap-2 font-medium text-base md:justify-center md:text-center"
+        className="col-start-2 row-start-1 flex min-w-0 items-baseline gap-2 font-medium text-base md:justify-center md:text-center max-sm:[&_[lang=ar]]:hidden"
         title={`${title}: ${meaning}`}
       >
         <span
