@@ -116,7 +116,10 @@ const LEARNER_PLUGINS = [rehypeLearnerText];
  * formula and a table included, sits one gap of `mt-3` below the one before
  * it, with none above the first or below the last. Each line break the learner
  * wrote stays, asterisks inside words stay, and text that reads as HTML shows
- * as written. The text takes the size and the color of the place it is in.
+ * as written. Each block reads in the direction of its own text (the pipeline's
+ * `rehypeDirection`), so the wrapper names none: a wrapper with `dir="auto"`
+ * would skip those blocks and read as left to right. The text takes the size
+ * and the color of the place it is in.
  */
 export function LearnerText({
   children,
@@ -126,10 +129,7 @@ export function LearnerText({
   readonly className?: string | undefined;
 }) {
   return (
-    <div
-      className={cn("wrap-anywhere *:mt-3 *:mb-0 *:first:mt-0", className)}
-      dir="auto"
-    >
+    <div className={cn("wrap-anywhere *:mt-3 *:mb-0 *:first:mt-0", className)}>
       <MarkdownBlock
         components={learnerComponents}
         rehypePlugins={LEARNER_PLUGINS}
