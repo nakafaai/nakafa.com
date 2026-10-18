@@ -35,7 +35,10 @@ import {
   isLocaleBypassPath,
   isUnsupportedSystemPath,
 } from "@/lib/routing/bypass";
-import { readMissingLocale } from "@/lib/routing/missing";
+import {
+  MISSING_LOCALE_VARY_FIELDS,
+  readMissingLocale,
+} from "@/lib/routing/missing";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
@@ -88,7 +91,7 @@ export async function proxy(request: NextRequest) {
     return rewriteToNotFoundPage(
       request,
       readMissingLocale(request),
-      LLMS_REPRESENTATION_VARY_FIELDS,
+      [...LLMS_REPRESENTATION_VARY_FIELDS, ...MISSING_LOCALE_VARY_FIELDS],
       410
     );
   }
@@ -101,7 +104,7 @@ export async function proxy(request: NextRequest) {
     return rewriteToNotFoundPage(
       request,
       readMissingLocale(request),
-      LLMS_REPRESENTATION_VARY_FIELDS,
+      [...LLMS_REPRESENTATION_VARY_FIELDS, ...MISSING_LOCALE_VARY_FIELDS],
       404
     );
   }

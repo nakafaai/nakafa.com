@@ -291,10 +291,10 @@ const openAddress = Effect.fn("NakafaE2E.openAddress")(function* (
 /**
  * The addresses that the proxy answers before any page renders: a school tree
  * address on the main host and an unsupported system resource answer 404, and a
- * removed route answers 410. Each answers the app's not-found page with that
- * status. On a local production build a rewrite may draw the framework's own page
- * instead, as `STANDALONE_ADDRESS` explains, so these checks depend on the
- * rewrite that Vercel serves.
+ * removed route answers 410. The proxy rewrites each to the app's not-found page,
+ * which `proxy.test.ts` checks; a local production build draws the framework's
+ * page for a rewrite, as `STANDALONE_ADDRESS` explains, so here only the status
+ * is checked, and the tests above check the page that the rewrite reaches.
  */
 const PROXY_ANSWERS = [
   { address: "/school", status: 404 },
@@ -304,16 +304,13 @@ const PROXY_ANSWERS = [
 ] as const;
 
 for (const { address, status } of PROXY_ANSWERS) {
-  test(`${address} answers ${status} with the not-found page`, async ({
-    page,
-  }) => {
+  test(`${address} answers ${status}`, async ({ page }) => {
     await Effect.runPromise(
       withObservedPageErrors(
         page,
         Effect.gen(function* () {
           const response = yield* openAddress(page, address);
           yield* Effect.sync(() => expect(response?.status()).toBe(status));
-          yield* expectMissingState(page, "en");
         })
       )
     );

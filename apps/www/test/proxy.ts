@@ -7,7 +7,8 @@ import { LOCALE_BYPASS_PATHS } from "@/lib/routing/bypass";
 export function expectNotFoundPage(
   response: Response,
   locale: string,
-  status: 404 | 410
+  status: 404 | 410,
+  vary = "Accept, Accept-Encoding, RSC"
 ) {
   expect(response.status).toBe(status);
   expect(response.headers.get("x-middleware-rewrite")).toBe(
@@ -17,7 +18,7 @@ export function expectNotFoundPage(
     locale
   );
   expect(response.headers.get("x-robots-tag")).toBe("noindex");
-  expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
+  expect(response.headers.get("vary")).toBe(vary);
 }
 
 /** Public redirect examples cover renderer URLs, locale spelling and suffixes. */

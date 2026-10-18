@@ -19,6 +19,9 @@ import {
 } from "@/test/proxy";
 import { resetTestRuntimeCache } from "@/test/store";
 
+/** The Vary of a missing page whose locale the routing may negotiate. */
+const NEGOTIATED_VARY = "Accept, Accept-Encoding, RSC, Accept-Language, Cookie";
+
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
 const MARKDOWN_SUFFIX_PATTERN = /\.mdx?$/;
 function requestProxy(pathname: string, init?: NextRequestInit) {
@@ -270,7 +273,7 @@ describe("proxy", () => {
         })
       );
       const response = await requestProxy(path);
-      expectNotFoundPage(response, "de", 404);
+      expectNotFoundPage(response, "de", 404, NEGOTIATED_VARY);
       expect(runtimeMocks.readActive).not.toHaveBeenCalled();
     }
   );
@@ -351,14 +354,14 @@ describe("proxy", () => {
     "answers the removed route %s with the not-found page in %s and 410",
     async (path, locale) => {
       const response = await requestProxy(path);
-      expectNotFoundPage(response, locale, 410);
+      expectNotFoundPage(response, locale, 410, NEGOTIATED_VARY);
       expect(runtimeMocks.readActive).not.toHaveBeenCalled();
     }
   );
   it("answers a retired SNBT product URL with the not-found page once its retired year has no live track", async () => {
     runtimeMocks.readTryout.mockReturnValueOnce(Effect.succeed(snbtExam));
     const response = await requestProxy("/en/try-out/snbt/2026-set-1");
-    expectNotFoundPage(response, "en", 410);
+    expectNotFoundPage(response, "en", 410, NEGOTIATED_VARY);
     expectNoLocaleProxy();
   });
   it.each(["/en/try-out/snbt/2028-set-1", "/de/try-out/snbt/2099-set-1"])(

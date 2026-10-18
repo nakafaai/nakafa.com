@@ -8,6 +8,12 @@ import type { NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 
 const handleLocalizedRequest = createMiddleware(routing);
+
+/**
+ * The request headers that the negotiated locale of a missing page reads, which
+ * its answer varies by, so a cache never gives one visitor another's language.
+ */
+export const MISSING_LOCALE_VARY_FIELDS = ["Accept-Language", "Cookie"];
 const decodeAppLocale = Schema.decodeUnknownOption(AppLocaleCodeSchema);
 
 /** Decodes one path segment as next-intl does, and yields none when the segment does not decode. */
