@@ -1,10 +1,16 @@
+import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
+import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { entries } from "@repo/backend/confect/access/catalog";
+import { Kind } from "@repo/backend/confect/access/kind";
+import { ExamTitle } from "@repo/backend/confect/exams/exam";
 import {
   AttemptState,
   RoomName,
   SignalKind,
   SittingState,
 } from "@repo/backend/confect/exams/sittings/schema";
+import { TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
@@ -32,18 +38,23 @@ export const EnterOutcome = Schema.Union([
   }),
 ]);
 
+/** The sitting actions that a caller may take, which the server computes for each sitting. */
+export const SittingAction = Kind.actions(entries, "sitting");
+
 /**
- * One sitting as a dashboard and a student's list show it. The view holds no token, no
- * token hash, and no scheduled job, so a read never returns them (ADR 0013).
+ * One sitting as a dashboard and a student's list show it: its own fields, the title of its
+ * exam, and the time zone of its unit, which the sitting's times are read in.
  */
 export const SittingView = Schema.Struct({
   closesAt: Schema.Finite,
   cohortId: Schema.NullOr(Id("tenantCohorts")),
   examId: Id("exams"),
+  examTitle: ExamTitle,
   id: Id("examSittings"),
   opensAt: Schema.Finite,
   room: RoomName,
   state: SittingState,
+  timeZone: TimeZone,
   unitId: Id("tenantUnits"),
 });
 
@@ -60,14 +71,20 @@ const DashboardAttempt = Schema.Struct({
   state: AttemptState,
 });
 
-/** One page of a sitting's attempts, with the sitting itself. */
+/**
+ * One page of a sitting's attempts, with the sitting itself. `can` lists the sitting actions
+ * that the caller may take, and `token` is the sitting's token, which only a proctor sees
+ * (`null` for a caller who may only view the sitting).
+ */
 export const DashboardView = Schema.Struct({
   attempts: Schema.Struct({
     continueCursor: Schema.String,
     isDone: Schema.Boolean,
     page: Schema.mutable(Schema.Array(DashboardAttempt)),
   }),
+  can: Schema.Array(SittingAction),
   sitting: SittingView,
+  token: Schema.NullOr(Schema.String),
 });
 
 /** What scheduling returns: the sitting, and its token, which only the proctor sees. */
@@ -78,3 +95,42 @@ export const ScheduleResult = Schema.Struct({
 
 /** The new token that a proctor gets when it is changed, which only the proctor sees. */
 export const TokenResult = Schema.Struct({ token: Schema.String });
+
+/** The student's own attempt in a sitting, as the student's screen follows it, or `null` before entry. */
+export const HeldAttempt = Schema.Struct({
+  deadline: Schema.Finite,
+  id: Id("examAttempts"),
+  startedAt: Schema.Finite,
+  state: AttemptState,
+});
+
+/** One integrity signal of an attempt, as a proctor reads it. */
+const SignalView = Schema.Struct({
+  at: Schema.Finite,
+  kind: SignalKind,
+});
+
+/** One page of an attempt's signals, newest first. */
+export const SignalsPage = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.mutable(Schema.Array(SignalView)),
+});
+
+/**
+ * One question of a student's paper: its number in the exam, its prompt as the editor stores
+ * it, its interactions without any answer key, and the response that the student saved, or
+ * `null` when none is saved yet.
+ */
+const PaperQuestion = Schema.Struct({
+  id: Id("examQuestions"),
+  interactions: Schema.NonEmptyArray(InteractionSchema),
+  number: Schema.Int.check(Schema.isGreaterThan(0)),
+  prompt: Schema.String,
+  response: Schema.NullOr(Schema.Array(LocalIdSchema)),
+});
+
+/** The questions of a student's paper, in the order of the exam. */
+export const PaperView = Schema.Struct({
+  questions: Schema.Array(PaperQuestion),
+});

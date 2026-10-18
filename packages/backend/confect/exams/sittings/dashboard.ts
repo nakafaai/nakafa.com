@@ -1,12 +1,24 @@
 import type {
   ExamAttemptsDoc,
+  ExamSittingsDoc,
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
+import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
+import { SittingAction } from "@repo/backend/confect/exams/sittings/contract";
+import { openToken } from "@repo/backend/confect/exams/sittings/token";
 import { sittingView } from "@repo/backend/confect/exams/sittings/view";
+import { readTenantKeys } from "@repo/backend/confect/vault/keys";
 import type { PaginationOptions } from "convex/server";
-import { Effect, Number as Num, Option, Struct } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Number as Num,
+  Option,
+  Schema,
+  Struct,
+} from "effect";
 
 /** The most attempts that one page of the dashboard holds. A larger request is clamped to it. */
 const DASHBOARD_PAGE_SIZE = 100;
@@ -65,14 +77,30 @@ const attemptRow = Effect.fn("exams.sittings.dashboard.attempt")(function* (
 });
 
 /**
- * The proctor's dashboard of a sitting: the sitting, and one page of its attempts in the
- * order the index holds them. A page asks for at most `DASHBOARD_PAGE_SIZE` attempts, and a
- * larger request is clamped to that size, so every read is bounded. No token or token hash
- * is read (ADR 0013).
+ * The token of a sitting for its proctor. A caller who may only view the sitting gets `null`,
+ * so the token is opened only for `sitting.proctor` (ADR 0013, ADR 0030).
+ */
+const tokenFor = Effect.fn("exams.sittings.dashboard.token")(function* (
+  sitting: ExamSittingsDoc,
+  actions: readonly string[]
+) {
+  if (!Arr.contains(actions, "sitting.proctor")) {
+    return null;
+  }
+  const keys = yield* readTenantKeys(sitting.tenantId);
+  return yield* openToken(keys, sitting._id, sitting.tokenSealed);
+}, Effect.orDie);
+
+/**
+ * The proctor's dashboard of a sitting: the sitting, the actions the caller may take on it,
+ * its token for a proctor, and one page of its attempts in the order the index holds them.
+ * A page asks for at most `DASHBOARD_PAGE_SIZE` attempts, and a larger request is clamped to
+ * that size, so every read is bounded (ADR 0013).
  */
 export const dashboard = Effect.fn("exams.sittings.dashboard")(
   function* (args: { paginationOpts: PaginationOptions }) {
     const sitting = yield* Sitting;
+    const actions = yield* sittingAuthority.allowed(sitting);
     const page = yield* (yield* DatabaseReader)
       .table("examAttempts")
       .index("by_sittingId", (query) => query.eq("sitting", sitting._id))
@@ -94,7 +122,9 @@ export const dashboard = Effect.fn("exams.sittings.dashboard")(
         isDone: page.isDone,
         page: rows,
       },
-      sitting: sittingView(sitting),
+      can: Arr.filter(actions, Schema.is(SittingAction)),
+      sitting: yield* sittingView(sitting),
+      token: yield* tokenFor(sitting, actions),
     };
   }
 );

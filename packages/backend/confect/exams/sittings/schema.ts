@@ -1,4 +1,6 @@
+import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { Sealed } from "@repo/backend/confect/vault/schema";
 import { isSingleLine } from "@repo/utilities/line";
 import { Schema } from "effect";
 
@@ -70,7 +72,8 @@ const JobId = Id("_scheduled_functions");
  * One proctored sitting: one run of an exam for one unit or one cohort, in one room,
  * with one token. The row names its unit in every case, so a unit grant covers it. A
  * unit sitting holds `null` as its cohort, so the group's indexes need no join. The token
- * is kept only as a keyed hash of the school key (ADR 0013, ADR 0030).
+ * is kept as a keyed hash that checks it, and sealed under the school key so a proctor
+ * can read it again (ADR 0013, ADR 0030).
  */
 export const examSittingValidator = Schema.Struct({
   closesAt: Schema.Finite,
@@ -83,7 +86,20 @@ export const examSittingValidator = Schema.Struct({
   tenantId: Id("tenants"),
   tokenHash: Schema.String,
   tokenIssuedAt: Schema.Finite,
+  tokenSealed: Sealed,
   unitId: Id("tenantUnits"),
+});
+
+/**
+ * One student's response to one question of an attempt: the option IDs that the student
+ * chose. An answer replaces the row of its question, so each question holds one row
+ * (ADR 0013).
+ */
+export const examAnswerValidator = Schema.Struct({
+  answeredAt: Schema.Finite,
+  attempt: Id("examAttempts"),
+  question: Id("examQuestions"),
+  response: Schema.Array(LocalIdSchema),
 });
 
 /**

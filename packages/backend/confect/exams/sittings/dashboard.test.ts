@@ -15,7 +15,7 @@ import {
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { dashboard } = refs.public.exams.sittings;
+const { changeToken, dashboard } = refs.public.exams.sittings;
 
 describe("exams/sittings dashboard", () => {
   beforeEach(() => {
@@ -129,6 +129,67 @@ describe("exams/sittings dashboard", () => {
           })
           .pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "AccessDenied", reason: "role" });
+      })
+  );
+
+  it.effect(
+    "gives a proctor the sitting's token and every action it may take",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const page = yield* dashboardOf(fixture, made.id);
+        expect(page.token).toBe(made.token);
+        expect(page.can).toHaveLength(2);
+        expect(page.can).toContain("sitting.proctor");
+        expect(page.can).toContain("sitting.view");
+      })
+  );
+
+  it.effect(
+    "gives a viewer the sitting without its token, and the view action only",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const page = yield* fixture.as("deputy").query(dashboard, {
+          paginationOpts: { cursor: null, numItems: 10 },
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(page.token).toBeNull();
+        expect(page.can).toEqual(["sitting.view"]);
+      })
+  );
+
+  it.effect(
+    "shows the sitting with its exam's title and its unit's time zone",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const page = yield* dashboardOf(fixture, made.id);
+        expect(page.sitting).toMatchObject({
+          examTitle: "PTS",
+          id: made.id,
+          timeZone: "Asia/Jakarta",
+        });
+      })
+  );
+
+  it.effect(
+    "shows the token that a proctor changed, and not the one it replaced",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const changed = yield* fixture.as("teacher").mutation(changeToken, {
+          sittingId: made.id,
+          slug: nf,
+        });
+        const page = yield* dashboardOf(fixture, made.id);
+        expect(page.token).toBe(changed.token);
+        expect(page.token).not.toBe(made.token);
       })
   );
 });
