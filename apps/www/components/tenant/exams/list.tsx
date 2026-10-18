@@ -26,7 +26,7 @@ const EXAM_PAGE_SIZE = 20;
 
 /**
  * The exams of the school, newest first, each with its title and its language. An exam that
- * the server has not saved yet is inert until it answers. The next page loads when the end of
+ * the server has not saved yet is disabled until it answers. The next page loads when the end of
  * the list comes into view, so the list has no button. The create action shows when the viewer
  * can create an exam in at least one place.
  */
@@ -70,7 +70,7 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
     pagination._tag === "Exhausted" && pagination.results.length === 0;
 
   return (
-    <main className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4">
       <header className="flex items-center justify-between gap-2">
         <h1 className="font-semibold text-xl">{t("title")}</h1>
         {choices.length > 0 ? (
@@ -99,13 +99,13 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
         </ul>
       )}
       <div aria-hidden ref={ref} />
-    </main>
+    </div>
   );
 }
 
 /**
  * One exam of the list: its title and its language. A saved exam links to its editor. An
- * exam that the server is still saving shows the same row without a link, so it is inert.
+ * exam that the server is still saving shows the same row without a link, so it is disabled.
  */
 function ExamRow({
   exam,
@@ -129,6 +129,7 @@ function ExamRow({
     return (
       <Button
         className="h-auto w-full justify-between py-2 text-start"
+        disabled
         variant="outline"
       >
         {content}

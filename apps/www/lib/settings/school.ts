@@ -98,6 +98,17 @@ export function isSchoolSettingsPath(pathname: string) {
   );
 }
 
+/** The editor route of one exam: `/exams/<id>/edit`, with or without a trailing slash. */
+const examEditorPathPattern = /^\/exams\/[^/]+\/edit\/?$/;
+
+/**
+ * Returns whether one school pathname is the editor of an exam. The editor draws its
+ * own frame in place of the school sidebar.
+ */
+export function isExamEditorPath(pathname: string) {
+  return examEditorPathPattern.test(pathname);
+}
+
 /**
  * Resolves the settings section that owns one school pathname. The settings
  * root and every path this table does not declare belong to the first section,

@@ -4572,7 +4572,9 @@ export declare const api: {
             | "document.edit"
             | "document.edit"
             | "exam.edit"
+            | "exam.view"
             | "exam.edit"
+            | "exam.view"
           >;
           name: string;
           scope:
@@ -4648,7 +4650,9 @@ export declare const api: {
               | "document.edit"
               | "document.edit"
               | "exam.edit"
+              | "exam.view"
               | "exam.edit"
+              | "exam.view"
             >;
             createdAt: number;
             id: Id<"integrationClients">;
