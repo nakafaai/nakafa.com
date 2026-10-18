@@ -83,6 +83,7 @@ describe("tenancy/viewer", () => {
           "owner.manage",
           "person.manage",
           "person.view",
+          "scheme.manage",
           "tenant.manage",
           "tenant.view",
           "visit.approve",

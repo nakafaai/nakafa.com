@@ -20,6 +20,12 @@ Chosen time belongs to email only, the guardian's exam reminder is the earlier o
 anchor, quiet hours hold a push back until they end except for an exam start,
 and quiet hours cover every student account while no age is stored.
 
+Amended on 18 October 2026: the sitting change is `sitting.schedule`, the name
+that the live scheduling writes (ADR 0016 keeps a stored change name), and
+`grade.released` belongs to Records (ADR 0033). The Dapodik import sets an
+under-age flag on the school roster and keeps no birth date, so quiet hours follow
+the flag once it is set (ADR 0034).
+
 ## Context
 
 A school produces notifications from many sources: a mention or a reply in a
@@ -167,7 +173,7 @@ A kind lists the change types it publishes (ADR 0016). These feed the consumer.
 | `assignment.deadlineChanged` | Class | Resets the deadline reminders |
 | `assignment.missed` | Class, by the system | A late task, for the guardian |
 | `grade.released` | Records | A released grade, for the student and the guardian |
-| `sitting.scheduled` | Exams | The exam reminders, for the student and the guardian |
+| `sitting.schedule` | Exams | The exam reminders, for the student and the guardian |
 
 ### Channels for each kind
 
@@ -251,8 +257,8 @@ sitting does not show.
 - Quiet hours run from 21:00 to 06:00 in the school's time zone. They are on for
   every student account. The Indonesian profile puts them on for an account
   under 18 (ADR 0032), and no birth date is stored, so they cover every student
-  until the country profile stores an age. A school can relax them only as its
-  data protection impact assessment (DPIA) allows.
+  until the school roster sets the under-age flag (ADR 0034). A school can relax
+  them only as its data protection impact assessment (DPIA) allows.
 - Quiet hours, reminders, and digests use the IANA time zone of the school the
   notification is about (ADR 0032). Instants are stored in UTC.
 - A reminder stores its anchor and its Timing, not its send instant. The anchor
