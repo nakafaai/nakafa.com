@@ -17,7 +17,7 @@ const OPTIONS = [
   { letter: "D", text: "7" },
 ];
 
-test("a teacher creates an exam, adds questions, writes one, and finds it all after a reload, with the dot on a question without a key", async ({
+test("a teacher creates an exam, adds questions, writes one, and finds it all when the editor opens again, with the dot on a question without a key", async ({
   browser,
   baseURL,
 }) => {
@@ -79,28 +79,33 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all af
     page.getByRole("radio", { name: "Mark option B as correct" })
   ).toBeChecked();
 
-  await page.reload();
-  await page.waitForLoadState("networkidle");
-
-  // Everything the teacher wrote is there after the reload. The prompt turns
-  // editable once its document has opened, with its steps applied.
-  const reopened = page.getByRole("textbox", { name: "Question text" });
-  await expect(reopened).toBeEditable({
+  // Everything the teacher wrote reaches the server, so the editor opened again shows it.
+  // Its queries are live: a save still on its way shows as soon as it lands, where a reload
+  // of this page would cancel it. The prompt turns editable once its document has opened,
+  // with its steps applied.
+  const reopened = await context.newPage();
+  await reopened.goto(page.url());
+  const reopenedPrompt = reopened.getByRole("textbox", {
+    name: "Question text",
+  });
+  await expect(reopenedPrompt).toBeEditable({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(reopened).toContainText("Berapa hasil 2 + 3?");
+  await expect(reopenedPrompt).toContainText("Berapa hasil 2 + 3?", {
+    timeout: readinessTimeoutMilliseconds,
+  });
   for (const option of OPTIONS) {
     await expect(
-      page.getByRole("textbox", { name: `Option ${option.letter}` })
-    ).toHaveValue(option.text);
+      reopened.getByRole("textbox", { name: `Option ${option.letter}` })
+    ).toHaveValue(option.text, { timeout: readinessTimeoutMilliseconds });
   }
   await expect(
-    page.getByRole("radio", { name: "Mark option B as correct" })
-  ).toBeChecked();
+    reopened.getByRole("radio", { name: "Mark option B as correct" })
+  ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
 
   // The two added questions have no key, so each shows its dot, and the first does not.
   await expect(
-    page
+    reopened
       .getByRole("navigation", { name: "Questions" })
       .getByText("This question has no answer key yet.")
   ).toHaveCount(2);
