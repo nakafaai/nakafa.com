@@ -33,7 +33,6 @@ export const small = {
         torso(kit.body),
         head(kit.body, 56, 48, 102),
         belly(kit.second),
-        both((side) => ellipse(100 + side * 34, 116, 10, 7, kit.second)),
         eyes(kit, 24, 98),
         nose(110, 4.6, 3.6, kit.ink),
         smile(117, 8, 7, kit.ink)
