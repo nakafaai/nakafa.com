@@ -1,16 +1,13 @@
 "use client";
 
-import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { readChatFailureKind } from "@/components/ai/chat/access";
 import { Unauthenticated } from "@/components/auth/gate";
@@ -55,9 +52,7 @@ export function ChatFailure({
   return (
     <Empty>
       <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <HugeIcons icon={Alert02Icon} />
-        </EmptyMedia>
+        <EmptyNina act="typing" />
         <EmptyTitle>{t("chat-failed")}</EmptyTitle>
         <EmptyDescription>{t("chat-failed-description")}</EmptyDescription>
       </EmptyHeader>
