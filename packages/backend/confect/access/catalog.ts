@@ -72,13 +72,23 @@ export const opensTo = (action: string, role: typeof RuleRole.Type): boolean =>
 /** Actions evaluated on the tenant itself, its own and every extension's. */
 export const TenantAction = Kind.actions(entries, "tenant");
 
+/** Actions evaluated on one school unit, its own and every extension's. */
+const UnitAction = Kind.actions(entries, "unit");
+
 /**
- * The caller's tenant capabilities on the wire. A client built before a lane
- * added an action drops the unknown literal instead of failing to decode.
+ * The action names of one kind on the wire. A client built before a lane added an
+ * action drops the unknown literal instead of failing to decode.
  */
-export const TenantCapabilities = Schema.Array(Schema.String).pipe(
-  Schema.decodeTo(Schema.Array(TenantAction), {
-    decode: SchemaGetter.transform(Arr.filter(Schema.is(TenantAction))),
-    encode: SchemaGetter.passthroughSubtype(),
-  })
-);
+const capabilitiesOf = <Action extends Schema.Codec<string>>(action: Action) =>
+  Schema.Array(Schema.String).pipe(
+    Schema.decodeTo(Schema.Array(action), {
+      decode: SchemaGetter.transform(Arr.filter(Schema.is(action))),
+      encode: SchemaGetter.passthroughSubtype(),
+    })
+  );
+
+/** The caller's tenant capabilities on the wire. */
+export const TenantCapabilities = capabilitiesOf(TenantAction);
+
+/** The caller's capabilities on one school unit on the wire. */
+export const UnitCapabilities = capabilitiesOf(UnitAction);

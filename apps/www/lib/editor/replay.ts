@@ -5,6 +5,7 @@ import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import {
+  type EditorClosed,
   type Memory,
   StepRejected,
   type SyncSession,
@@ -80,7 +81,7 @@ const reseat = Effect.fn("editor.sync.reseat")(function* (
     readonly received: readonly Step[];
     readonly version: number;
   }
-): Effect.fn.Return<typeof Replacement.Type, never> {
+): Effect.fn.Return<typeof Replacement.Type, EditorClosed> {
   const from = yield* session.port.state;
   const held = Arr.drop(sendableSteps(from)?.steps ?? [], snapshot.confirmed);
   const replayed = yield* replayOnto(

@@ -15,6 +15,7 @@ import {
   sharedPackageName,
 } from "#scripts/check/compiler";
 import { inspectDeploySource } from "#scripts/check/deploy";
+import { inspectDictionaries } from "#scripts/check/dictionary";
 import {
   effectFindings,
   effectTestViolations,
@@ -190,6 +191,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       )
     );
     const sdkViolations = yield* inspectSdkReach(root, workspaces);
+    const dictionaryViolations = yield* inspectDictionaries(root, workspaces);
     const reports = Arr.filter(
       [
         fileReport(
@@ -207,6 +209,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         lineReport(runnerViolations),
         lineReport(sourceViolations),
         lineReport(sdkViolations),
+        lineReport(dictionaryViolations),
         lineReport(
           inspectCompilerConfigs(
             sharedPackage,

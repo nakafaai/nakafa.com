@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition } from "react";
 import { SidebarThemeSubmenu } from "@/components/sidebar/menu/preference";
+import { useTenant } from "@/components/tenant/context";
 import { changeSchoolLanguage } from "@/components/tenant/language.client";
 import { profileHref } from "@/lib/profile/href";
 
@@ -63,12 +64,11 @@ function changeLanguage(
  * with a username, as the Nakafa account menu lists it.
  */
 export function TenantAccountItems({
-  canManage,
   username,
 }: {
-  canManage: boolean;
   username: string | undefined;
 }) {
+  const { canManage } = useTenant();
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();

@@ -1,0 +1,62 @@
+"use client";
+
+import { useMutation } from "@confect/react";
+import exams from "@repo/backend/confect/_generated/refs/exams";
+import { Input } from "@repo/design-system/components/ui/input";
+import { isComposingKey } from "@repo/utilities/composition";
+import { Function as Fn, Option } from "effect";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import { renameUpdate } from "@/components/tenant/exams/optimistic";
+import { useExam } from "@/components/tenant/exams/provider";
+import { titleToSave } from "@/components/tenant/exams/title";
+
+/**
+ * The exam's title, renamed in place. The field shows the saved title until the teacher
+ * types, so it follows a co-editor's rename. The title is saved when the field loses focus
+ * or the teacher presses Enter, and only a trimmed, changed, valid title is sent. The
+ * optimistic change restores the saved title when the server refuses the rename.
+ */
+export function ExamHeader() {
+  const t = useTranslations("Exams");
+  const { exam, slug } = useExam();
+  const [draft, setDraft] = useState<string | null>(null);
+  const rename = useMutation(exams.exams.rename).withOptimisticUpdate(
+    renameUpdate
+  );
+
+  function save() {
+    const title = titleToSave(draft, exam.title);
+    setDraft(null);
+    if (Option.isNone(title)) {
+      return;
+    }
+    runExamAction(
+      sentAction(() => rename({ examId: exam.id, slug, title: title.value })),
+      {
+        onFailure: Fn.constVoid,
+        onSuccess: Fn.constVoid,
+      }
+    );
+  }
+
+  return (
+    <header className="flex items-center gap-2 border-b p-4">
+      <Input
+        aria-label={t("title-label")}
+        className="font-semibold"
+        onBlur={save}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={(event) => {
+          // While the teacher composes a character, Enter belongs to the keyboard.
+          if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
+            event.currentTarget.blur();
+          }
+        }}
+        placeholder={t("untitled")}
+        value={draft ?? exam.title}
+      />
+    </header>
+  );
+}
