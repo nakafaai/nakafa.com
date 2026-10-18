@@ -13,15 +13,9 @@ import {
   codeFenceBodyVariants,
   codeFencePreVariants,
 } from "@repo/design-system/components/markdown/react/variants";
+import { DEFAULT_CODE_THEMES } from "@repo/design-system/lib/code-block/highlight";
 import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
-import type { ThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
-import type { BundledTheme } from "shiki";
-
-const CODE_THEMES = {
-  dark: "github-dark",
-  light: "github-light",
-} satisfies Record<ThemeAppearance, BundledTheme>;
 
 interface MarkdownCodeBlockProps {
   readonly className?: string | undefined;
@@ -60,7 +54,7 @@ export function MarkdownCodeBlock({
           data-nakafa="code-block"
           language={language}
           preClassName={codeFencePreVariants()}
-          themes={CODE_THEMES}
+          themes={DEFAULT_CODE_THEMES}
           transparentBackground
         >
           {code}

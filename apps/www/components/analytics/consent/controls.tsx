@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -9,8 +10,8 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import {
   CardSection,
@@ -23,8 +24,32 @@ import {
 } from "@/lib/analytics/consent/context";
 import { usePageNavigation } from "@/lib/content/page/context";
 
+/** Names the prompt section, so the hide rules below can match it. */
+const PROMPT_ATTRIBUTE = "data-analytics-consent-prompt";
+const promptAttributes = { [PROMPT_ATTRIBUTE]: "" };
+
+/**
+ * Hides the prompt while the document root carries the mark that the bootstrap
+ * writes before paint. The root attribute's name comes from the shared consent
+ * module, so this rule cannot drift from the script.
+ */
+const HIDE_PROMPT_WHILE_MARKED = `:root[${ANALYTICS_CONSENT_ROOT_ATTRIBUTE}] [${PROMPT_ATTRIBUTE}]{display:none}`;
+
+/**
+ * Hides the prompt where scripts are off. Nothing runs there to record a choice,
+ * so the buttons could never work.
+ */
+const HIDE_PROMPT_WITHOUT_SCRIPTS = `[${PROMPT_ATTRIBUTE}]{display:none}`;
+
 /**
  * Renders the non-blocking first decision and permanent preferences dialog.
+ *
+ * The server renders the prompt while the choice is pending, so the text is in
+ * the first HTML. The bootstrap script marks the root before paint for a signed-in
+ * visitor, and for a visitor whose choice this browser keeps; the consent provider
+ * marks a page the server did not render the same way. The store removes the mark
+ * once it knows the choice, so a signed-in visitor never sees the prompt before the
+ * account is known. Without scripts the prompt stays hidden.
  *
  * The consent state is derived once here and handed to the decision and
  * detail parts, which render in both the prompt and the dialog.
@@ -47,8 +72,13 @@ export function AnalyticsConsentControls() {
 
   return (
     <>
+      <style>{HIDE_PROMPT_WHILE_MARKED}</style>
+      <noscript>
+        <style>{HIDE_PROMPT_WITHOUT_SCRIPTS}</style>
+      </noscript>
       {consent.isPromptOpen ? (
         <section
+          {...promptAttributes}
           aria-label={t("title")}
           className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md"
         >
@@ -126,6 +156,10 @@ function ConsentDetails({
 /**
  * Links the privacy policy without prefetching it, as every signed Page link
  * must (see `PageNavigation`). This prompt opens on every first visit.
+ *
+ * The server renders this link in the root layout, outside every `Suspense`,
+ * so it is a plain localized `Link`: `NavigationLink` reads the pathname, which
+ * blocks the prerender of a dynamic route such as `/[locale]/chat/[id]`.
  */
 function PrivacyPolicyLink() {
   const t = useTranslations("AnalyticsConsent");
@@ -141,13 +175,13 @@ function PrivacyPolicyLink() {
     <p className="text-muted-foreground text-sm">
       {t.rich("policy", {
         "privacy-policy": (chunks) => (
-          <NavigationLink
+          <Link
             className="text-foreground underline underline-offset-4"
             href={href}
             prefetch={false}
           >
             {chunks}
-          </NavigationLink>
+          </Link>
         ),
       })}
     </p>

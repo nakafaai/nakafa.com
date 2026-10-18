@@ -117,7 +117,6 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
     (!isAuthenticated && hasStorageError);
   const sessionPolicy = resolveAnalyticsConsentSessionPolicy({
     durableConsent,
-    hasLoadError,
     overrides: sessionOverrides,
     promptIdentity,
     status: state.status,
@@ -183,6 +182,7 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
     currentAccountUserId: user?.appUser._id ?? null,
     currentBrowserPrivacySignal,
     durableStatus: state.status,
+    hasLoadError,
     interruptDepartedSave,
     isAuthenticated,
     isPreviewChild,

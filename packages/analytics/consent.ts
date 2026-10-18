@@ -34,7 +34,24 @@ export const ANALYTICS_CONSENT_NOTICE_VERSION = CONSENT_NOTICE_VERSIONS[0];
 export const ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY =
   "nakafa-analytics-consent";
 
-const AnalyticsConsentDecisionSchema = Schema.Literals(["granted", "denied"]);
+/**
+ * The attribute the page sets on the document root while the usage-data prompt must
+ * wait, before paint: the inline script on a page the server rendered, and the
+ * consent provider on a page it mounts. The consent provider removes it once the
+ * store knows the choice, or knows that it cannot load it.
+ */
+export const ANALYTICS_CONSENT_ROOT_ATTRIBUTE = "data-analytics-consent";
+
+/** The decision that grants analytics. */
+export const ANALYTICS_CONSENT_GRANTED = "granted";
+
+/** The decision that denies analytics. */
+export const ANALYTICS_CONSENT_DENIED = "denied";
+
+const AnalyticsConsentDecisionSchema = Schema.Literals([
+  ANALYTICS_CONSENT_GRANTED,
+  ANALYTICS_CONSENT_DENIED,
+]);
 
 export type AnalyticsConsentDecision =
   typeof AnalyticsConsentDecisionSchema.Type;
@@ -58,7 +75,7 @@ export const AnonymousAnalyticsConsentRecordSchema = Schema.Union([
   }),
   Schema.Struct({
     ...anonymousConsentFields,
-    decision: Schema.Literal("denied"),
+    decision: Schema.Literal(ANALYTICS_CONSENT_DENIED),
     mechanism: Schema.Literal(ANALYTICS_BROWSER_SIGNAL_MECHANISM),
   }),
 ]);
@@ -99,7 +116,7 @@ export function createAnonymousAnalyticsBrowserSignalDenial(
   return {
     category: "analytics",
     decidedAt,
-    decision: "denied",
+    decision: ANALYTICS_CONSENT_DENIED,
     mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
     noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
   };
@@ -197,7 +214,7 @@ export function resolveAnalyticsConsentState({
   return Option.match(anonymousConsent, {
     onNone: () => ({ scope: "anonymous", status: "prompt" }),
     onSome: (record) => {
-      if (record.decision === "denied") {
+      if (record.decision === ANALYTICS_CONSENT_DENIED) {
         return { scope: "anonymous", status: "denied" };
       }
 
