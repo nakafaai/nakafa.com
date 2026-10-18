@@ -1,5 +1,6 @@
 "use client";
 
+import { useTriangle } from "@repo/design-system/components/contents/mathematics/triangle/context";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -9,16 +10,10 @@ import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import { Array as Arr } from "effect";
 import { useFormatter, useTranslations } from "next-intl";
-import type { ReactNode } from "react";
 
 /** Connects the triangle's side symbols, authored names, and current angle. */
-export function TriangleReadout({
-  angle,
-  labels,
-}: {
-  angle: number;
-  labels: Record<(typeof TRIANGLE_SIDES)[number]["key"], ReactNode>;
-}) {
+export function TriangleReadout({ angle }: { angle: number }) {
+  const { labels } = useTriangle();
   const t = useTranslations("Common");
   const format = useFormatter();
   const formatRatio = (value: number) =>
