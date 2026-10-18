@@ -7,6 +7,7 @@ import {
   seedSitting,
   signInOwner,
 } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
@@ -91,7 +92,11 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await dialog
     .getByRole("button", { name: "Close sitting", exact: true })
     .click();
-  await expect(student.getByText("This attempt has closed.")).toBeVisible();
+  // The close moves the attempt to closing and submits it at once, so the student sees the
+  // closing line and then the submitted one; the submitted line is where it settles.
+  await expect(student.getByText("Your answers are in.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   await studentContext.close();
   await proctorContext.close();
