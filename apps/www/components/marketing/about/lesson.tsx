@@ -18,6 +18,7 @@ import {
   ProjectilePlaceholder,
 } from "@/components/marketing/about/lesson/placeholder";
 import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
+import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import {
   FeatureLead,
   FeatureProduct,
@@ -73,7 +74,9 @@ export async function Lesson() {
   return (
     <FeatureRow id={LESSON_SECTION_ID}>
       <FeatureText>
-        <Nina act="waving" label="" size={88} whole />
+        <span className="inline-block" id={NINA_SLOT.lesson}>
+          <Nina act="waving" label="" size={88} whole />
+        </span>
         <FeatureTitle>{t("lesson-title")}</FeatureTitle>
         <FeatureLead>{t("lesson-lead")}</FeatureLead>
       </FeatureText>

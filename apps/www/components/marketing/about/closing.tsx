@@ -5,6 +5,7 @@ import { Thing } from "@repo/design-system/components/ui/thing";
 import type { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { ClosingQuestion } from "@/components/marketing/about/closing/question.client";
+import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
@@ -49,7 +50,9 @@ export function Closing() {
           />
         </div>
         <div className="relative flex items-end justify-center">
-          <Nina act="juggling" label="" size={240} whole />
+          <span className="inline-block" id={NINA_SLOT.closing}>
+            <Nina act="juggling" label="" size={240} whole />
+          </span>
           <Thing className="absolute -end-4 bottom-4" name="balls" size={48} />
         </div>
       </div>

@@ -10,7 +10,9 @@ import type { ReactNode } from "react";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { TOY_HERD } from "@/components/marketing/about/toys/herd";
+import { NinaToy } from "@/components/marketing/about/toys/nina.client";
 import { within } from "@/components/marketing/about/toys/place";
+import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 
 /** One toy: its place beside a part of the page, and the picture it is drawn as. */
 export interface ToyPlacement {
@@ -234,8 +236,11 @@ const PLACEMENTS: readonly ToyPlacement[] = [
  * press through to the page, except on a toy.
  */
 export function ToyOverlay({
+  children,
   placements,
 }: {
+  /** Toys of the page that place themselves, such as a Nina that can be carried. */
+  children?: ReactNode;
   placements: readonly ToyPlacement[];
 }) {
   return (
@@ -246,12 +251,24 @@ export function ToyOverlay({
             {toy.picture}
           </Toy>
         ))}
+        {children}
       </Scatter>
     </Toys>
   );
 }
 
-/** The layer of toys over the whole home page. */
+/**
+ * The layer of toys over the whole home page: the animals and things, and every
+ * Nina of the page, each of whom can be carried anywhere on it.
+ */
 export function HomeToyLayer() {
-  return <ToyOverlay placements={PLACEMENTS} />;
+  return (
+    <ToyOverlay placements={PLACEMENTS}>
+      <NinaToy act="reading" size={240} slot={HERO_NINA_ID} />
+      <NinaToy act="waving" size={88} slot={NINA_SLOT.lesson} />
+      <NinaToy act="typing" size={88} slot={NINA_SLOT.nina} />
+      <NinaToy act="pointing" size={200} slot={NINA_SLOT.curricula} />
+      <NinaToy act="juggling" size={240} slot={NINA_SLOT.closing} />
+    </ToyOverlay>
+  );
 }
