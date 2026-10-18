@@ -22,16 +22,16 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -73,6 +73,7 @@ export function ChemicalReactionCharacteristicsLab({
   const { resolvedTheme } = useTheme();
   const [selectedCueId, setSelectedCueId] = useState<ReactionCueId>(GAS_CUE_ID);
   const selectedLabels = labels.cues[selectedCueId];
+  const t = useTranslations("Common");
   const sceneColors = getReactionSceneColors(resolvedTheme);
 
   /**
@@ -143,15 +144,11 @@ export function ChemicalReactionCharacteristicsLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="text-muted-foreground text-sm">
-          {selectedLabels.helperCaption}
-        </p>
         <VisualCardFacts>
+          <VisualFact label={t("note")} value={selectedLabels.helperCaption} />
           <VisualFact
             label={labels.observationLabel}
             value={selectedLabels.observation}
@@ -178,7 +175,6 @@ function ReactionCameraControls() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={REACTION_SCENE_VIEW.cameraTarget}
       fov={45}

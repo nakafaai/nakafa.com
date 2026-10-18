@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import {
   ActiveDot,
   Dot,
@@ -18,6 +20,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -44,8 +47,8 @@ interface Props {
   dayLabels: Record<ChartDay, string>;
   description: ReactNode;
   seriesLabels: {
-    laboratory: ReactNode;
-    library: ReactNode;
+    laboratory: string;
+    library: string;
   };
   title: ReactNode;
   yAxisLabel: string;
@@ -85,67 +88,93 @@ export function VisitorChart({
     [seriesLabels.laboratory, seriesLabels.library]
   );
 
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(data, (row) => row.day),
+      series: [
+        {
+          key: "library",
+          label: chartConfig.library.label,
+          color: chartConfig.library.colors.light[0],
+          values: Arr.map(data, (row) => row.library),
+        },
+        {
+          key: "laboratory",
+          label: chartConfig.laboratory.label,
+          color: chartConfig.laboratory.colors.light[0],
+          values: Arr.map(data, (row) => row.laboratory),
+        },
+      ],
+    }),
+    [chartConfig, data]
+  );
+
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilLineChart
-          className="aspect-video"
-          config={chartConfig}
-          data={data}
-        >
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="day"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis
-            axisLine={false}
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              offset: 10,
-              style: { textAnchor: "middle" },
-            }}
-            tickLine={false}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Legend />
-          <Line
-            dataKey="library"
-            lineProps={{
-              ...(VISITOR_CUES.library.strokeDasharray === undefined
-                ? {}
-                : { strokeDasharray: VISITOR_CUES.library.strokeDasharray }),
-              strokeWidth: 2,
-            }}
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilLineChart
+            className="aspect-video"
+            config={chartConfig}
+            data={data}
           >
-            <Dot variant={VISITOR_CUES.library.dot} />
-            <ActiveDot variant={VISITOR_CUES.library.activeDot} />
-          </Line>
-          <Line
-            dataKey="laboratory"
-            lineProps={{
-              ...(VISITOR_CUES.laboratory.strokeDasharray === undefined
-                ? {}
-                : {
-                    strokeDasharray: VISITOR_CUES.laboratory.strokeDasharray,
-                  }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={VISITOR_CUES.laboratory.dot} />
-            <ActiveDot variant={VISITOR_CUES.laboratory.activeDot} />
-          </Line>
-        </EvilLineChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="day"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              axisLine={false}
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+                offset: 10,
+                style: { textAnchor: "middle" },
+              }}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Legend />
+            <Line
+              dataKey="library"
+              lineProps={{
+                ...(VISITOR_CUES.library.strokeDasharray === undefined
+                  ? {}
+                  : { strokeDasharray: VISITOR_CUES.library.strokeDasharray }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={VISITOR_CUES.library.dot} />
+              <ActiveDot variant={VISITOR_CUES.library.activeDot} />
+            </Line>
+            <Line
+              dataKey="laboratory"
+              lineProps={{
+                ...(VISITOR_CUES.laboratory.strokeDasharray === undefined
+                  ? {}
+                  : {
+                      strokeDasharray: VISITOR_CUES.laboratory.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={VISITOR_CUES.laboratory.dot} />
+              <ActiveDot variant={VISITOR_CUES.laboratory.activeDot} />
+            </Line>
+          </EvilLineChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

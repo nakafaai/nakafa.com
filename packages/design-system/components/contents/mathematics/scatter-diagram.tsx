@@ -1,5 +1,12 @@
 "use client";
 
+import { totalOf } from "@repo/design-system/components/contents/mathematics/chart/summary";
+import {
+  formatInterval,
+  intervalOf,
+  intervalSeparator,
+} from "@repo/design-system/components/contents/mathematics/interval";
+import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
 import {
   ActiveDot,
   Dot,
@@ -16,23 +23,76 @@ import {
   YAxis,
 } from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import {
   fitRegressionLine,
   predictY,
 } from "@repo/design-system/lib/charts/regression";
 import { getPointSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { Array as Arr, Option, Record as Rec } from "effect";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 const REGRESSION_DATA_KEY = "regression";
 const DEFAULT_REGRESSION_COLOR = "var(--chart-5)";
+
+/**
+ * The readings of a scatter diagram in its footer: its number of points, the
+ * interval that its x and y values span, and the mean of its y values.
+ */
+function ScatterFacts({
+  points,
+}: {
+  points: Arr.NonEmptyReadonlyArray<{ x: number; y: number }>;
+}) {
+  const t = useTranslations("Common");
+  const format = useFormatter();
+  const locale = useLocale();
+  const separator = intervalSeparator(locale);
+  const formatNumber = (value: number) =>
+    format.number(value, MATH_NUMBER_OPTIONS);
+  const xs = Arr.map(points, (point) => point.x);
+  const ys = Arr.map(points, (point) => point.y);
+
+  return (
+    <VisualCardFacts>
+      <VisualFact
+        label={t("points")}
+        value={format.number(points.length, MATH_NUMBER_OPTIONS)}
+      />
+      <VisualFact
+        label={<InlineMath math="x" />}
+        value={
+          <InlineMath
+            math={formatInterval(intervalOf(xs), formatNumber, separator)}
+          />
+        }
+      />
+      <VisualFact
+        label={<InlineMath math="y" />}
+        value={
+          <InlineMath
+            math={formatInterval(intervalOf(ys), formatNumber, separator)}
+          />
+        }
+      />
+      <VisualFact
+        label={t("mean")}
+        value={formatNumber(totalOf(ys) / ys.length)}
+      />
+    </VisualCardFacts>
+  );
+}
 
 interface Props {
   calculateRegressionLine?: boolean;
@@ -95,8 +155,9 @@ export function ScatterDiagram({
     }))
   );
 
+  const points = Arr.flatMap(datasets, (dataset) => dataset.points);
   const regressionLine = calculateRegressionLine
-    ? fitRegressionLine(Arr.flatMap(datasets, (dataset) => dataset.points))
+    ? fitRegressionLine(points)
     : Option.none();
 
   return (
@@ -196,6 +257,11 @@ export function ScatterDiagram({
       <VisualCardActions>
         <VisualCardFullscreen />
       </VisualCardActions>
+      <VisualCardFooter>
+        {Arr.isReadonlyArrayNonEmpty(points) ? (
+          <ScatterFacts points={points} />
+        ) : null}
+      </VisualCardFooter>
     </VisualCard>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,
@@ -14,6 +16,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -35,9 +38,9 @@ interface Props {
   description: ReactNode;
   monthLabels: Record<ChartMonth, string>;
   seriesLabels: {
-    chili: ReactNode;
-    garlic: ReactNode;
-    shallot: ReactNode;
+    chili: string;
+    garlic: string;
+    shallot: string;
   };
   title: ReactNode;
   yAxisLabel: string;
@@ -82,47 +85,83 @@ export function SpiceSalesChart({
     [seriesLabels.chili, seriesLabels.garlic, seriesLabels.shallot]
   );
 
-  return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilBarChart className="aspect-video" config={chartConfig} data={data}>
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="month"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis
-            axisLine={false}
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-            }}
-            tickLine={false}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Legend />
-          {Arr.map(Rec.keys(chartConfig), (key, index) => {
-            const cue = getBarSeriesCue(index);
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(data, (row) => row.month),
+      series: [
+        {
+          key: "garlic",
+          label: chartConfig.garlic.label,
+          color: chartConfig.garlic.colors.light[0],
+          values: Arr.map(data, (row) => row.garlic),
+        },
+        {
+          key: "shallot",
+          label: chartConfig.shallot.label,
+          color: chartConfig.shallot.colors.light[0],
+          values: Arr.map(data, (row) => row.shallot),
+        },
+        {
+          key: "chili",
+          label: chartConfig.chili.label,
+          color: chartConfig.chili.colors.light[0],
+          values: Arr.map(data, (row) => row.chili),
+        },
+      ],
+    }),
+    [chartConfig, data]
+  );
 
-            return (
-              <Bar
-                dataKey={key}
-                key={key}
-                radius={cue.radius}
-                variant={cue.variant}
-              />
-            );
-          })}
-        </EvilBarChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+  return (
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilBarChart
+            className="aspect-video"
+            config={chartConfig}
+            data={data}
+          >
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="month"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              axisLine={false}
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+              }}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Legend />
+            {Arr.map(Rec.keys(chartConfig), (key, index) => {
+              const cue = getBarSeriesCue(index);
+
+              return (
+                <Bar
+                  dataKey={key}
+                  key={key}
+                  radius={cue.radius}
+                  variant={cue.variant}
+                />
+              );
+            })}
+          </EvilBarChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

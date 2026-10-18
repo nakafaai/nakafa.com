@@ -165,8 +165,6 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
             label={labels.abundance}
             value={selectedLabels.abundance}
           />
-        </VisualCardFacts>
-        <VisualCardFacts>
           <VisualFact
             label={labels.protons}
             value={<InlineMath math={`${selectedSample.atomicNumber}`} />}

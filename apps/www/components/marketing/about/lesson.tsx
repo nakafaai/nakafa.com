@@ -42,7 +42,11 @@ export async function Lesson() {
     circle: (
       <CirclePlaceholder
         formatNumber={(value, options) => format.number(value, options)}
-        labels={{ radian: tCommon("radian") }}
+        labels={{
+          onAxis: tCommon("on-axis"),
+          quadrant: tCommon("quadrant"),
+          radian: tCommon("radian"),
+        }}
       />
     ),
     projectile: (

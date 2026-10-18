@@ -106,7 +106,6 @@ function ResponsiveModernPeriodicTableCamera() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
       fov={42}

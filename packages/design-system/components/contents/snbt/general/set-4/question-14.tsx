@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,
@@ -14,6 +16,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -31,9 +34,9 @@ const chartData = [
 interface Props {
   description: ReactNode;
   seriesLabels: {
-    mieA: ReactNode;
-    mieB: ReactNode;
-    mieC: ReactNode;
+    mieA: string;
+    mieB: string;
+    mieC: string;
   };
   title: ReactNode;
   yAxisLabel: string;
@@ -68,52 +71,84 @@ export function PriceChart({
     [seriesLabels.mieA, seriesLabels.mieB, seriesLabels.mieC]
   );
 
-  return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilBarChart
-          className="aspect-video"
-          config={chartConfig}
-          data={chartData}
-        >
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="year"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis
-            axisLine={false}
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-            }}
-            tickFormatter={(value) => `${value / 1000}k`}
-            tickLine={false}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Legend />
-          {Arr.map(Rec.keys(chartConfig), (key, index) => {
-            const cue = getBarSeriesCue(index);
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(chartData, (row) => row.year),
+      series: [
+        {
+          key: "mieA",
+          label: chartConfig.mieA.label,
+          color: chartConfig.mieA.colors.light[0],
+          values: Arr.map(chartData, (row) => row.mieA),
+        },
+        {
+          key: "mieB",
+          label: chartConfig.mieB.label,
+          color: chartConfig.mieB.colors.light[0],
+          values: Arr.map(chartData, (row) => row.mieB),
+        },
+        {
+          key: "mieC",
+          label: chartConfig.mieC.label,
+          color: chartConfig.mieC.colors.light[0],
+          values: Arr.map(chartData, (row) => row.mieC),
+        },
+      ],
+    }),
+    [chartConfig]
+  );
 
-            return (
-              <Bar
-                dataKey={key}
-                key={key}
-                radius={cue.radius}
-                variant={cue.variant}
-              />
-            );
-          })}
-        </EvilBarChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+  return (
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilBarChart
+            className="aspect-video"
+            config={chartConfig}
+            data={chartData}
+          >
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="year"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              axisLine={false}
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+              }}
+              tickFormatter={(value) => `${value / 1000}k`}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Legend />
+            {Arr.map(Rec.keys(chartConfig), (key, index) => {
+              const cue = getBarSeriesCue(index);
+
+              return (
+                <Bar
+                  dataKey={key}
+                  key={key}
+                  radius={cue.radius}
+                  variant={cue.variant}
+                />
+              );
+            })}
+          </EvilBarChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

@@ -13,15 +13,17 @@ import {
 } from "@repo/design-system/components/three/scene-frame";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Option } from "effect";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
@@ -147,6 +149,7 @@ export function MethaneCombustionEquationLab({
 }: MethaneCombustionEquationLabProps) {
   const { resolvedTheme } = useTheme();
   const colors = getCombustionColors(resolvedTheme);
+  const t = useTranslations("Common");
 
   return (
     <VisualCard>
@@ -168,12 +171,12 @@ export function MethaneCombustionEquationLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="text-muted-foreground text-sm">{labels.equation}</p>
+        <VisualCardFacts>
+          <VisualFact label={t("equation")} value={labels.equation} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
@@ -338,7 +341,6 @@ function CombustionCamera() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={VIEW.cameraTarget}
       fov={42}

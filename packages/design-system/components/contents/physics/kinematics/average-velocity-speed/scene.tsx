@@ -66,7 +66,6 @@ export function AverageMotionStage({
         shadow-normalBias={0.02}
       />
       <CameraControls
-        autoRotate={false}
         cameraPosition={AVERAGE_VELOCITY_SPEED_CAMERA.cameraPosition}
         cameraTarget={AVERAGE_VELOCITY_SPEED_CAMERA.cameraTarget}
         enablePan

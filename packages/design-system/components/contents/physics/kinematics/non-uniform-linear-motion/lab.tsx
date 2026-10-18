@@ -31,15 +31,14 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
@@ -132,7 +131,6 @@ export function NonUniformLinearMotionLab({
               shadow-normalBias={0.02}
             />
             <CameraControls
-              autoRotate={false}
               cameraPosition={GLBB_SCENE.cameraPosition}
               cameraTarget={GLBB_SCENE.cameraTarget}
               enablePan
@@ -145,9 +143,7 @@ export function NonUniformLinearMotionLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>

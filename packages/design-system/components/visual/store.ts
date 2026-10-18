@@ -1,4 +1,5 @@
 import { VisualPlaceSchema } from "@repo/design-system/components/visual/backdrop";
+import { playActions, STILL } from "@repo/design-system/components/visual/play";
 import {
   closeSession,
   focusSession,
@@ -89,11 +90,12 @@ const exitFullscreen = Effect.fn("designSystem.visual.exitFullscreen")(
  *
  * The actions are the handlers of the card's action, Escape, focus, and
  * `fullscreenchange`, so they run the session and Fullscreen API programs at
- * that browser event boundary.
+ * that browser event boundary. The store also holds the scene's play state
+ * and the count of view resets, which the scene's camera follows.
  */
 export function createVisualStore() {
   return createStore(
-    combine(INLINE, (set, get) => {
+    combine({ ...INLINE, ...STILL }, (set, get) => {
       let card: HTMLElement | null = null;
       let session: Session | undefined;
 
@@ -207,6 +209,7 @@ export function createVisualStore() {
       }
 
       return {
+        ...playActions(set),
         /** Registers the card element; the card passes it as its ref. */
         bind: (element: HTMLElement | null) => {
           card = element;
