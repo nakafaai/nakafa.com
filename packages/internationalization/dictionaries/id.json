@@ -497,6 +497,12 @@
       "school-curriculum": "Kurikulum"
     }
   },
+  "Notifications": {
+    "title": "Notifikasi",
+    "mark-all-read": "Tandai semua sudah dibaca",
+    "empty": "Belum ada notifikasi.",
+    "person-invited": "Kamu diundang bergabung ke sekolah ini."
+  },
   "Posts": {
     "placeholder": "Apa yang baru?",
     "post": "Kirim",
@@ -850,8 +856,14 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
-    "school-logo-size": { "description": "Pilih logo yang paling besar 1 MB." },
-    "school-logo-type": { "description": "Pilih gambar PNG atau SVG." },
+    "school-logo-size": {
+      "title": "Logo tidak disimpan.",
+      "description": "Pilih logo yang paling besar 1 MB."
+    },
+    "school-logo-type": {
+      "title": "Logo tidak disimpan.",
+      "description": "Pilih gambar PNG atau SVG."
+    },
     "school-logo-refused": { "title": "Logo tidak disimpan." },
     "school-address-copied": { "title": "Alamat disalin." },
     "action-error": {
