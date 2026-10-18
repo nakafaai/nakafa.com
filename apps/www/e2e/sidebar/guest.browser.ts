@@ -3,6 +3,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
+import { expectSignInParts } from "@/e2e/support/auth";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -400,6 +401,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
             })
           ).toBeVisible()
         );
+        yield* expectSignInParts(page);
       })
     )
   );
