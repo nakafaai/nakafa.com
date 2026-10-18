@@ -13,7 +13,7 @@ export const LOGIN_NAME_PATTERN = /^[a-z0-9._-]+$/;
  * reserved names are refused when a name is read, not here, so a stored name
  * is always well formed.
  */
-const LoginName = Schema.String.check(
+export const LoginName = Schema.String.check(
   Schema.isMinLength(LOGIN_NAME_MIN_LENGTH),
   Schema.isMaxLength(LOGIN_NAME_MAX_LENGTH),
   Schema.isPattern(LOGIN_NAME_PATTERN)
