@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
@@ -40,21 +40,38 @@ function SidebarSchoolMenuItem({
   );
 }
 
-/**
- * The schools the account is an active member of, one link each under a heading.
- * This component mounts only while the account menu is open, so the list is read
- * then, and the group is left out when the account holds no school.
- */
-export function SidebarSchoolMenuItems() {
-  const t = useTranslations("Common");
-  const schools = useQuery(tenancy.viewer.schools, {});
+/** How many schools the account menu lists: the first page of the account's memberships. */
+const SCHOOL_PAGE = 20;
 
-  if (
-    !(
-      QueryResult.isSuccess(schools) &&
-      Arr.isReadonlyArrayNonEmpty(schools.value)
-    )
-  ) {
+/**
+ * The schools the account is an active member of, in the order the memberships
+ * query answers them. The account button reads them as it mounts, so the menu
+ * has them ready when it opens and nothing in it moves.
+ */
+export function useAccountSchools() {
+  const memberships = usePaginatedQuery(
+    tenancy.memberships.list,
+    {},
+    { initialNumItems: SCHOOL_PAGE }
+  );
+  return PaginatedQueryResult.isLoadingFirstPage(memberships) ||
+    PaginatedQueryResult.isFailure(memberships)
+    ? []
+    : Arr.map(memberships.results, (membership) => membership.tenant);
+}
+
+/**
+ * The account's schools in its menu, one link each under a heading, and nothing
+ * when the account holds no school.
+ */
+export function SidebarSchoolMenuItems({
+  schools,
+}: {
+  schools: ReturnType<typeof useAccountSchools>;
+}) {
+  const t = useTranslations("Common");
+
+  if (!Arr.isReadonlyArrayNonEmpty(schools)) {
     return null;
   }
 
@@ -62,11 +79,11 @@ export function SidebarSchoolMenuItems() {
     <>
       <DropdownMenuGroup>
         <DropdownMenuLabel>{t("your-schools")}</DropdownMenuLabel>
-        {Arr.map(schools.value, (school) => (
+        {Arr.map(schools, (school) => (
           <SidebarSchoolMenuItem
             key={school.slug}
-            logo={school.mark.logo}
-            mascot={school.mark.mascot}
+            logo={school.logo}
+            mascot={school.mascot}
             name={school.name}
             slug={school.slug}
           />
