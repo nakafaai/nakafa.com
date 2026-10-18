@@ -1,6 +1,7 @@
 import type { GenericId } from "@confect/core";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { schoolAddress } from "@repo/backend/confect/emails/invite/school";
 import { resolveLegalLinks } from "@repo/backend/confect/emails/legal";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
@@ -8,11 +9,11 @@ import { readPageCatalog } from "@repo/backend/content/publication/page";
 import { Effect } from "effect";
 
 /**
- * What an invitation says: the organisation that invited, where to sign in,
- * and the legal links of the email's language from the signed Pages. It names
- * no person. An invite that was revoked or has expired reads as nothing, so
- * nothing is sent. The send step checks the term again, because the workflow
- * runs after this read.
+ * What an invitation says: the organisation that invited, the address of its own
+ * host where the invited address signs in, and the legal links of the email's
+ * language from the signed Pages. It names no person. An invite that was revoked
+ * or has expired reads as nothing, so nothing is sent. The send step checks the
+ * term again, because the workflow runs after this read.
  */
 export const readInviteInput = Effect.fn("emails.invite.readInput")(function* (
   inviteId: GenericId.GenericId<"tenantInvites">,
@@ -40,7 +41,7 @@ export const readInviteInput = Effect.fn("emails.invite.readInput")(function* (
     locale,
     organisation: tenant.name,
     privacyPolicyUrl: links.privacyPolicyUrl,
-    signInUrl: new URL(`/${locale}/auth`, siteUrl).href,
+    signInUrl: schoolAddress(siteUrl, tenant.slug),
     termsOfServiceUrl: links.termsOfServiceUrl,
   };
 });
