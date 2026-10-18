@@ -62,6 +62,7 @@ export function NotificationsHeader() {
             {t("mark-all-read")}
           </Button>
         ) : undefined,
+        homeHref: "/home",
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],
         menuLabel: tCommon("more"),

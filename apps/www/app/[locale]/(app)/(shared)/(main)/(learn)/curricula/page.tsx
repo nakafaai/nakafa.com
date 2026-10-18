@@ -97,6 +97,7 @@ export default async function Page() {
         <LayoutMaterialContent>
           <BreadcrumbHeader
             value={{
+              homeHref: "/home",
               homeLabel: tCommon("home"),
               items: [{ label: title }],
               menuLabel: tCommon("more"),

@@ -12,7 +12,7 @@ const input = {
   locale: "id",
   organisation: "Yayasan Nakafa",
   privacyPolicyUrl: "https://nakafa.com/id/privacy",
-  signInUrl: "https://nakafa.com/id/auth",
+  signInUrl: "https://nf.nakafa.com/",
   termsOfServiceUrl: "https://nakafa.com/id/terms",
 };
 const message = { html: "<p>Masuk</p>", subject: "Diundang", text: "Masuk" };
