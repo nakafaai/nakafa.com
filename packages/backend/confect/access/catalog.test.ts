@@ -6,6 +6,7 @@ import {
   opensTo,
   TenantAction,
   TenantCapabilities,
+  UnitCapabilities,
 } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import type { Rule } from "@repo/backend/confect/access/schema";
@@ -272,6 +273,14 @@ describe("access/catalog", () => {
     expect(Schema.encodeSync(TenantCapabilities)(capabilities)).toEqual([
       "tenant.view",
     ]);
+  });
+
+  it("keeps only the unit actions a unit's capabilities name", () => {
+    const capabilities = Schema.decodeSync(UnitCapabilities)([
+      "exam.edit",
+      "tenant.view",
+    ]);
+    expect(capabilities).toEqual(["exam.edit"]);
   });
 
   it("keeps every kind within the stored union limit", () => {
