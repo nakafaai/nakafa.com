@@ -330,6 +330,16 @@ with its count, tests included, and a module that a tool generated is not
 judged. The limit is on physical lines, so a long comment counts: a module
 that needs that much explanation holds more than one capability.
 
+### Dictionary keys named twice
+
+A dictionary JSON file under `packages/internationalization/dictionaries`,
+standalone dictionaries included, names each key once in each object. A JSON
+reader keeps only the last copy of a repeated key, so a merge that adds the same
+object twice drops the first copy with no error. The check parses each file with
+the native compiler, wrapped in parentheses so that its lines keep their
+numbers, and reports each extra copy with its line and key path
+(`scripts/check/dictionary.ts`).
+
 ### Exports that nothing names
 
 An exported name is the interface of its module, so the check reports each one
