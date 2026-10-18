@@ -132,6 +132,7 @@
     "room-placeholder": "Labor 2",
     "starts": "Beginnt",
     "length": "Dauer",
+    "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
     "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit."
   },

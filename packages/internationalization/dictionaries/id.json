@@ -132,6 +132,7 @@
     "room-placeholder": "Lab 2",
     "starts": "Mulai",
     "length": "Durasi",
+    "length-minutes": "{count} menit",
     "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
     "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat."
   },

@@ -132,6 +132,7 @@
     "room-placeholder": "Lab 2",
     "starts": "Starts",
     "length": "Length",
+    "length-minutes": "{count, plural, one {# minute} other {# minutes}}",
     "schedule-keys": "Mark the correct answer of every question first.",
     "schedule-past": "The start has passed. Choose a later time."
   },
