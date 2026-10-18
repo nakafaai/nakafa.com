@@ -104,17 +104,10 @@ export const HeldAttempt = Schema.Struct({
   state: AttemptState,
 });
 
-/** One integrity signal of an attempt, as a proctor reads it. */
-const SignalView = Schema.Struct({
+/** One integrity signal of an attempt, as a proctor reads it, newest first in its pages. */
+export const SignalView = Schema.Struct({
   at: Schema.Finite,
   kind: SignalKind,
-});
-
-/** One page of an attempt's signals, newest first. */
-export const SignalsPage = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.mutable(Schema.Array(SignalView)),
 });
 
 /**

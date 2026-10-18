@@ -4436,6 +4436,8 @@ export declare const api: {
               | "disconnect"
               | "return";
           }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
         }
       >;
       unlock: FunctionReference<
