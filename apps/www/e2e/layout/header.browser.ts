@@ -41,6 +41,9 @@ const publicRoutes = [
   "/en/articles/politics/merah-putih-cabinet-analysis",
 ];
 
+/** The try-out page of a country, which a phone reaches from a set page's folded path. */
+const COUNTRY_PAGE = /\/en\/try-out\/indonesia$/;
+
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = ["/en/chat", "/en/user/settings", "/en/notifications"];
 
@@ -223,4 +226,23 @@ test("a school's pages keep their headers to one row at every width", async ({
         })
     )
   );
+});
+
+test("a phone opens a folded ancestor of the path with a tap", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 844, width: 390 });
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      openRoute(page, "/en/try-out/indonesia/snbt/2027/set-1", "denied")
+    )
+  );
+  const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
+  await breadcrumb.getByRole("button").click();
+  await page
+    .getByRole("menu")
+    .locator('a[href="/en/try-out/indonesia"]')
+    .click();
+  await expect(page).toHaveURL(COUNTRY_PAGE);
 });
