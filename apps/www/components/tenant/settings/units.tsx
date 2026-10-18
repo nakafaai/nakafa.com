@@ -12,7 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -39,6 +44,7 @@ import {
   setUnitLocaleChange,
   unarchiveUnitChange,
 } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import type { Unit } from "@/components/tenant/settings/state";
 
@@ -56,8 +62,17 @@ const languageItems = Arr.map(languages, (language) => ({
   value: language.value,
 }));
 
-/** Renders one card per unit of the school, with its time zone and content language, and its NPSN card. */
+/** The section in the settings page frame, whose header shows while its body loads. */
 export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolUnitsBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
+/** Renders one card per unit of the school, with its time zone and content language, and its NPSN card. */
+function SchoolUnitsBody({ slug }: { slug: TenantSlug }) {
   const units = useQuery(tenancy.units.list, { slug });
 
   if (!QueryResult.isSuccess(units)) {
@@ -102,19 +117,22 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
         <CardTitle>{t("unit-npsn")}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Input
-          aria-label={t("unit-npsn")}
-          className="w-full max-w-xs"
-          disabled={isArchived}
-          inputMode="numeric"
-          maxLength={8}
-          onChange={(event) => setValue(event.target.value)}
-          placeholder={t("unit-npsn-placeholder")}
-          value={npsn}
-        />
+        <FieldGroup>
+          <Field>
+            <Input
+              aria-label={t("unit-npsn")}
+              disabled={isArchived}
+              inputMode="numeric"
+              maxLength={8}
+              onChange={(event) => setValue(event.target.value)}
+              placeholder={t("unit-npsn-placeholder")}
+              value={npsn}
+            />
+            <FieldDescription>{t("unit-npsn-footer")}</FieldDescription>
+          </Field>
+        </FieldGroup>
       </CardContent>
       <CardSectionFooter>
-        <CardSectionHint>{t("unit-npsn-footer")}</CardSectionHint>
         <CardSectionActions>
           <Button
             disabled={!canSave}
@@ -128,7 +146,6 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
             }
             size="sm"
             type="button"
-            variant="secondary"
           >
             {t("unit-npsn-save")}
           </Button>
@@ -141,6 +158,7 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
 /** Renders one unit: its level, its time zone and content language, and its archive action. */
 function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const setLocale = useMutation(tenancy.units.setLocale).withOptimisticUpdate(
     setUnitLocaleChange
   );
@@ -192,81 +210,83 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
       <CardHeader>
         <CardTitle>{unit.name}</CardTitle>
         <CardDescription>
-          {isArchived ? t("unit-archived-description") : t("unit-description")}
+          {isArchived
+            ? t("unit-archived-description")
+            : t("unit-level-line", { level: levelLabel })}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        <Field>
-          <FieldLabel>{t("unit-level")}</FieldLabel>
-          <p className="text-sm">{levelLabel}</p>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`unit-time-zone-${unit.id}`}>
-            {t("unit-time-zone")}
-          </FieldLabel>
-          <Select
-            items={timeZoneItems}
-            onValueChange={(value) => {
-              if (value !== null && value !== unit.timeZone) {
-                choose({ timeZone: value });
-              }
-            }}
-            value={unit.timeZone}
-          >
-            <SelectTrigger
-              className="w-full max-w-xs"
-              disabled={isArchived}
-              id={`unit-time-zone-${unit.id}`}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(timeZoneItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`unit-language-${unit.id}`}>
-            {t("unit-content-language")}
-          </FieldLabel>
-          <Select
-            items={languageItems}
-            onValueChange={(value) => {
-              const language =
-                Schema.decodeUnknownOption(AppLocaleCodeSchema)(value);
-              if (
-                Option.isSome(language) &&
-                language.value !== unit.contentLanguage
-              ) {
-                choose({ contentLanguage: language.value });
-              }
-            }}
-            value={unit.contentLanguage}
-          >
-            <SelectTrigger
-              className="w-full max-w-xs"
-              disabled={isArchived}
-              id={`unit-language-${unit.id}`}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(languageItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
+      <CardContent>
+        <FieldGroup>
+          <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
+            <Field>
+              <FieldLabel htmlFor={`unit-time-zone-${unit.id}`}>
+                {t("unit-time-zone")}
+              </FieldLabel>
+              <Select
+                items={timeZoneItems}
+                onValueChange={(value) => {
+                  if (value !== null && value !== unit.timeZone) {
+                    choose({ timeZone: value });
+                  }
+                }}
+                value={unit.timeZone}
+              >
+                <SelectTrigger
+                  className="w-full"
+                  disabled={isArchived}
+                  id={`unit-time-zone-${unit.id}`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {Arr.map(timeZoneItems, (item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`unit-language-${unit.id}`}>
+                {t("unit-content-language")}
+              </FieldLabel>
+              <Select
+                items={languageItems}
+                onValueChange={(value) => {
+                  const language =
+                    Schema.decodeUnknownOption(AppLocaleCodeSchema)(value);
+                  if (
+                    Option.isSome(language) &&
+                    language.value !== unit.contentLanguage
+                  ) {
+                    choose({ contentLanguage: language.value });
+                  }
+                }}
+                value={unit.contentLanguage}
+              >
+                <SelectTrigger
+                  className="w-full"
+                  disabled={isArchived}
+                  id={`unit-language-${unit.id}`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {Arr.map(languageItems, (item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+        </FieldGroup>
       </CardContent>
       <CardSectionFooter>
         <CardSectionHint>
@@ -274,12 +294,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
         </CardSectionHint>
         <CardSectionActions>
           {isArchived ? (
-            <Button
-              onClick={restoreUnit}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={restoreUnit} size="sm" type="button">
               {t("unit-restore")}
             </Button>
           ) : (
@@ -297,9 +312,18 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
       <ResponsiveDialog
         description={t("unit-archive-description")}
         footer={
-          <Button onClick={archiveUnit} type="button" variant="destructive">
-            {t("unit-archive-confirm")}
-          </Button>
+          <>
+            <Button
+              onClick={() => setIsArchiving(false)}
+              type="button"
+              variant="outline"
+            >
+              {common("cancel")}
+            </Button>
+            <Button onClick={archiveUnit} type="button" variant="destructive">
+              {t("unit-archive-confirm")}
+            </Button>
+          </>
         }
         open={isArchiving}
         setOpen={setIsArchiving}

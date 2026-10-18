@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
+import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
@@ -26,6 +27,7 @@ import {
 import { logoRefusalOf } from "@/components/tenant/logo.client";
 import { SchoolMark } from "@/components/tenant/mark";
 import { removeLogoChange } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { storeSchoolLogo } from "@/components/tenant/settings/upload.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -45,12 +47,21 @@ const ADDRESS_COPIED: ToastCopy = {
   title: "school-address-copied.title",
 };
 
-/**
- * Renders the profile of the school: its mark, its name, and its address with a
- * copy action. The settings pages read the school on the client, so a logo that
- * changes shows at once.
- */
+/** The section in the settings page frame, whose header shows while its body loads. */
 export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolProfileBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
+/**
+ * Renders the profile of the school: its logo, and its address with a copy action.
+ * The settings pages read the school on the client, so a logo that changes shows
+ * at once.
+ */
+function SchoolProfileBody({ slug }: { slug: TenantSlug }) {
   const viewer = useQuery(tenancy.viewer.get, { slug });
 
   if (!QueryResult.isSuccess(viewer)) {
@@ -60,7 +71,7 @@ export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
   return <SchoolProfileCard slug={slug} tenant={viewer.value.tenant} />;
 }
 
-/** Renders the profile card, with the logo controls in its footer. */
+/** Renders the logo card and the address card, each with its action in the footer. */
 function SchoolProfileCard({
   slug,
   tenant,
@@ -69,10 +80,10 @@ function SchoolProfileCard({
   tenant: {
     readonly logo?: string | undefined;
     readonly mascot: Parameters<typeof SchoolMark>[0]["mascot"];
-    readonly name: string;
   };
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const fileInput = useRef<HTMLInputElement>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const requestUrl = useMutation(tenancy.logo.uploadUrl);
@@ -127,70 +138,87 @@ function SchoolProfileCard({
   };
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("profile")}</CardTitle>
-        <CardDescription>{t("profile-description")}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
-        <div className="grid min-w-0 flex-1 gap-1">
-          <p className="wrap-anywhere font-medium">{tenant.name}</p>
-          <p className="wrap-anywhere text-muted-foreground text-sm">
-            {address}
-          </p>
-        </div>
-        <Button onClick={copyAddress} size="sm" type="button" variant="outline">
-          {t("address-copy")}
-        </Button>
-      </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("logo-footer")}</CardSectionHint>
-        <CardSectionActions>
-          <input
-            accept="image/png,image/svg+xml"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (file) {
-                chooseLogo(file);
-              }
-            }}
-            ref={fileInput}
-            type="file"
-          />
-          <Button
-            onClick={() => fileInput.current?.click()}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {t("logo-upload")}
-          </Button>
-          {tenant.logo === undefined ? null : (
+    <>
+      <CardSection>
+        <CardHeader>
+          <CardTitle>{t("logo-title")}</CardTitle>
+          <CardDescription>{t("logo-description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SchoolMark logo={tenant.logo} mascot={tenant.mascot} size="lg" />
+        </CardContent>
+        <CardSectionFooter>
+          <CardSectionHint>{t("logo-footer")}</CardSectionHint>
+          <CardSectionActions>
+            <input
+              accept="image/png,image/svg+xml"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) {
+                  chooseLogo(file);
+                }
+              }}
+              ref={fileInput}
+              type="file"
+            />
+            {tenant.logo === undefined ? null : (
+              <Button
+                onClick={() => setIsRemoving(true)}
+                size="sm"
+                type="button"
+                variant="destructive"
+              >
+                {t("logo-remove")}
+              </Button>
+            )}
             <Button
-              onClick={() => setIsRemoving(true)}
+              onClick={() => fileInput.current?.click()}
               size="sm"
               type="button"
-              variant="destructive"
             >
-              {t("logo-remove")}
+              {t("logo-upload")}
             </Button>
-          )}
-        </CardSectionActions>
-      </CardSectionFooter>
-      <ResponsiveDialog
-        description={t("logo-remove-description")}
-        footer={
-          <Button onClick={takeLogoOff} type="button" variant="destructive">
-            {t("logo-remove-confirm")}
-          </Button>
-        }
-        open={isRemoving}
-        setOpen={setIsRemoving}
-        title={t("logo-remove-title")}
-      />
-    </CardSection>
+          </CardSectionActions>
+        </CardSectionFooter>
+        <ResponsiveDialog
+          description={t("logo-remove-description")}
+          footer={
+            <>
+              <Button
+                onClick={() => setIsRemoving(false)}
+                type="button"
+                variant="outline"
+              >
+                {common("cancel")}
+              </Button>
+              <Button onClick={takeLogoOff} type="button" variant="destructive">
+                {t("logo-remove-confirm")}
+              </Button>
+            </>
+          }
+          open={isRemoving}
+          setOpen={setIsRemoving}
+          title={t("logo-remove-title")}
+        />
+      </CardSection>
+      <CardSection>
+        <CardHeader>
+          <CardTitle>{t("address-title")}</CardTitle>
+          <CardDescription>{t("address-description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Input aria-label={t("address-title")} readOnly value={address} />
+        </CardContent>
+        <CardSectionFooter>
+          <CardSectionActions>
+            <Button onClick={copyAddress} size="sm" type="button">
+              {t("address-copy")}
+            </Button>
+          </CardSectionActions>
+        </CardSectionFooter>
+      </CardSection>
+    </>
   );
 }

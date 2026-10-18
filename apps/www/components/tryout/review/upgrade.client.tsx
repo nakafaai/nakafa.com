@@ -69,7 +69,6 @@ export function TryoutReviewCheckout() {
         }
         billing.openCheckout({ locale, source: "tryout-review-checkout" });
       }}
-      variant="secondary"
     >
       <Spinner
         data-icon="inline-start"
