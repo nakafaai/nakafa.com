@@ -9,66 +9,49 @@ import { ChartSeriesCueIndicator } from "@repo/design-system/components/evilchar
 import { cn } from "cn";
 import { Array as Arr, Match } from "effect";
 import type * as React from "react";
+import { createContext, use } from "react";
 import type * as RechartsPrimitive from "recharts";
 
 type LegendPayloadItem = NonNullable<
   RechartsPrimitive.DefaultLegendContentProps["payload"]
 >[number];
 
-interface LegendItemProps {
-  config: ChartConfig;
-  hideIcon: boolean;
+/** Options that the chart legend shares with each of its items. */
+interface LegendItemOptions {
   isClickable: boolean | undefined;
-  item: LegendPayloadItem;
-  itemKey: string;
   onSelectChange: ((selected: string | null) => void) | undefined;
   selected: string | null | undefined;
-  variant: ChartLegendVariant;
+  variant: ChartLegendVariant | undefined;
 }
 
-/** Renders the configured cue, icon, or default legend indicator. */
-function LegendItemIndicator({
-  colorsCount,
-  dataKey,
-  hideIcon,
-  itemConfig,
-  variant,
-}: {
-  colorsCount: number;
-  dataKey: string;
-  hideIcon: boolean;
-  itemConfig: ChartConfig[string] | undefined;
-  variant: ChartLegendVariant;
-}) {
-  if (itemConfig?.icon && !hideIcon) {
-    const Icon = itemConfig.icon;
-    return <Icon />;
+/** Provided by the legend part of each chart, read by every legend item. */
+const LegendItemContext = createContext<LegendItemOptions | null>(null);
+
+// Selects one option of the legend, throwing a helpful error when used outside a chart legend
+function useLegendItem<T>(selector: (options: LegendItemOptions) => T) {
+  const options = use(LegendItemContext);
+
+  if (!options) {
+    throw new Error("Legend items must be used within a chart legend");
   }
 
-  if (itemConfig?.cue && !hideIcon) {
-    return <ChartSeriesCueIndicator cue={itemConfig.cue} dataKey={dataKey} />;
-  }
+  return selector(options);
+}
 
-  return (
-    <LegendIndicator
-      colorsCount={colorsCount}
-      dataKey={dataKey}
-      variant={variant}
-    />
-  );
+const DEFAULT_LEGEND_VARIANT: ChartLegendVariant = "rounded-square";
+
+interface LegendItemProps {
+  config: ChartConfig;
+  item: LegendPayloadItem;
+  itemKey: string;
 }
 
 /** Renders one selectable or read-only legend payload item. */
-function LegendItem({
-  config,
-  hideIcon,
-  isClickable,
-  item,
-  itemKey,
-  onSelectChange,
-  selected,
-  variant,
-}: LegendItemProps) {
+function LegendItem({ config, item, itemKey }: LegendItemProps) {
+  const isClickable = useLegendItem((options) => options.isClickable);
+  const onSelectChange = useLegendItem((options) => options.onSelectChange);
+  const selected = useLegendItem((options) => options.selected);
+
   if (item.type === "none") {
     return null;
   }
@@ -96,12 +79,10 @@ function LegendItem({
         onClick={() => onSelectChange?.(selected === dataKey ? null : dataKey)}
         type="button"
       >
-        <LegendItemIndicator
+        <LegendIndicator
           colorsCount={colorsCount}
           dataKey={dataKey}
-          hideIcon={hideIcon}
           itemConfig={itemConfig}
-          variant={variant}
         />
         {itemConfig?.label}
       </button>
@@ -110,27 +91,39 @@ function LegendItem({
 
   return (
     <div className={itemClassName}>
-      <LegendItemIndicator
+      <LegendIndicator
         colorsCount={colorsCount}
         dataKey={dataKey}
-        hideIcon={hideIcon}
         itemConfig={itemConfig}
-        variant={variant}
       />
       {itemConfig?.label}
     </div>
   );
 }
 
+/** Renders the configured icon, cue, or default legend indicator of one series. */
 function LegendIndicator({
-  variant,
-  dataKey,
   colorsCount,
+  dataKey,
+  itemConfig,
 }: {
-  variant: ChartLegendVariant;
-  dataKey: string;
   colorsCount: number;
+  dataKey: string;
+  itemConfig: ChartConfig[string] | undefined;
 }) {
+  const variant = useLegendItem(
+    (options) => options.variant ?? DEFAULT_LEGEND_VARIANT
+  );
+
+  if (itemConfig?.icon) {
+    const Icon = itemConfig.icon;
+    return <Icon />;
+  }
+
+  if (itemConfig?.cue) {
+    return <ChartSeriesCueIndicator cue={itemConfig.cue} dataKey={dataKey} />;
+  }
+
   const fillStyle = getLegendFillStyle(dataKey, colorsCount);
   const outlineStyle = getLegendOutlineStyle(dataKey, colorsCount);
 
@@ -219,4 +212,4 @@ function getLegendOutlineStyle(
   };
 }
 
-export { LegendItem };
+export { LegendItem, LegendItemContext, type LegendItemOptions };

@@ -8,6 +8,7 @@ import { getChartPayloadStringValue } from "@repo/design-system/components/evilc
 import { cn } from "cn";
 import { Array as Arr, Predicate } from "effect";
 import type * as React from "react";
+import { createContext, use } from "react";
 import type * as RechartsPrimitive from "recharts";
 import type {
   NameType,
@@ -39,17 +40,37 @@ interface TooltipLabelProps {
   payload: TooltipPayload;
 }
 
+/** Options that the tooltip content shares with each of its items. */
+interface TooltipItemOptions<Formatter> {
+  formatter: Formatter;
+  selected: string | null;
+}
+
+/** Provided by the tooltip content, read by every tooltip item and its indicator. */
+const TooltipItemContext =
+  createContext<TooltipItemOptions<TooltipFormatter> | null>(null);
+
+// Selects one option of the tooltip content, throwing a helpful error when used outside it
+function useTooltipItem<T>(
+  selector: (options: TooltipItemOptions<TooltipFormatter>) => T
+) {
+  const options = use(TooltipItemContext);
+
+  if (!options) {
+    throw new Error("Tooltip items must be used within a chart tooltip");
+  }
+
+  return selector(options);
+}
+
 interface TooltipItemProps {
   config: ChartConfig;
-  formatter: TooltipFormatter;
-  hideIndicator: boolean;
   index: number;
   indicator: TooltipIndicator;
   item: TooltipPayloadItem;
   labelProps: TooltipLabelProps;
   nameKey: string | undefined;
   nestLabel: boolean;
-  selected: string | null | undefined;
 }
 
 /** Renders the configured icon or series indicator for one tooltip row. */
@@ -57,7 +78,6 @@ function TooltipItemIndicator({
   colorsCount,
   dataKey,
   fill,
-  hideIndicator,
   indicator,
   itemConfig,
   nestLabel,
@@ -65,7 +85,6 @@ function TooltipItemIndicator({
   colorsCount: number;
   dataKey: string;
   fill: string | undefined;
-  hideIndicator: boolean;
   indicator: TooltipIndicator;
   itemConfig: ChartConfig[string] | undefined;
   nestLabel: boolean;
@@ -73,10 +92,6 @@ function TooltipItemIndicator({
   if (itemConfig?.icon) {
     const Icon = itemConfig.icon;
     return <Icon />;
-  }
-
-  if (hideIndicator) {
-    return null;
   }
 
   return (
@@ -96,16 +111,16 @@ function TooltipItemIndicator({
 /** Renders one visible Recharts tooltip payload item. */
 function TooltipItem({
   config,
-  formatter,
-  hideIndicator,
   index,
   indicator,
   item,
   labelProps,
   nameKey,
   nestLabel,
-  selected,
 }: TooltipItemProps) {
+  const formatter = useTooltipItem((options) => options.formatter);
+  const selected = useTooltipItem((options) => options.selected);
+
   if (item.type === "none") {
     return null;
   }
@@ -138,7 +153,6 @@ function TooltipItem({
             colorsCount={colorsCount}
             dataKey={dataKey}
             fill={payloadFill}
-            hideIndicator={hideIndicator}
             indicator={indicator}
             itemConfig={itemConfig}
             nestLabel={nestLabel}
@@ -251,6 +265,8 @@ function getIndicatorColorStyle(
 export {
   type TooltipIndicator,
   TooltipItem,
+  TooltipItemContext,
+  type TooltipItemOptions,
   TooltipLabel,
   type TooltipLabelProps,
 };

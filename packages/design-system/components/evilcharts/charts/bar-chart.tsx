@@ -19,6 +19,7 @@ import {
   ChartLegendContent,
   type ChartLegendVariant,
 } from "@repo/design-system/components/evilcharts/ui/legend";
+import { LegendItemContext } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { LoadingBar } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
@@ -26,6 +27,7 @@ import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts
 import {
   ChartTooltip,
   ChartTooltipContent,
+  ChartTooltipContext,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
@@ -231,6 +233,10 @@ export function EvilBarChart<
     [loadingBars]
   );
   const { visibleData, brushProps } = useEvilBrush({ data });
+  const brushOptions = useMemo(
+    () => ({ formatLabel: brushFormatLabel, height: brushHeight, xDataKey }),
+    [brushFormatLabel, brushHeight, xDataKey]
+  );
 
   const isStacked = stackType === "stacked" || stackType === "percent";
   const isHorizontal = layout === "horizontal";
@@ -263,6 +269,7 @@ export function EvilBarChart<
   return (
     <BarChartContext value={contextValue}>
       <ChartContainer
+        brush={brushOptions}
         className={className}
         config={config}
         footer={
@@ -273,12 +280,9 @@ export function EvilBarChart<
               chartConfig={config}
               className="mt-1"
               data={data}
-              formatLabel={brushFormatLabel}
-              height={brushHeight}
               skipStyle
               stacked={isStacked}
               variant="bar"
-              xDataKey={xDataKey}
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);
@@ -423,23 +427,23 @@ interface TooltipProps {
 export function Tooltip({ variant, roundness, defaultIndex }: TooltipProps) {
   const isLoading = useBarChart((chart) => chart.isLoading);
   const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
+  const tooltipOptions = useMemo(
+    () => ({ roundness, selected: selectedDataKey, variant }),
+    [roundness, selectedDataKey, variant]
+  );
 
   if (isLoading) {
     return null;
   }
 
   return (
-    <ChartTooltip
-      content={
-        <ChartTooltipContent
-          roundness={roundness}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      cursor={false}
-      {...(defaultIndex === undefined ? {} : { defaultIndex })}
-    />
+    <ChartTooltipContext value={tooltipOptions}>
+      <ChartTooltip
+        content={<ChartTooltipContent />}
+        cursor={false}
+        {...(defaultIndex === undefined ? {} : { defaultIndex })}
+      />
+    </ChartTooltipContext>
   );
 }
 
@@ -462,19 +466,23 @@ export function Legend({
 }: LegendProps) {
   const selectedDataKey = useBarChart((chart) => chart.selectedDataKey);
   const selectDataKey = useBarChart((chart) => chart.selectDataKey);
+  const legendOptions = useMemo(
+    () => ({
+      isClickable,
+      onSelectChange: selectDataKey,
+      selected: selectedDataKey,
+      variant,
+    }),
+    [isClickable, selectDataKey, selectedDataKey, variant]
+  );
 
   return (
-    <ChartLegend
-      align={align}
-      content={
-        <ChartLegendContent
-          isClickable={isClickable}
-          onSelectChange={selectDataKey}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      verticalAlign={verticalAlign}
-    />
+    <LegendItemContext value={legendOptions}>
+      <ChartLegend
+        align={align}
+        content={<ChartLegendContent />}
+        verticalAlign={verticalAlign}
+      />
+    </LegendItemContext>
   );
 }

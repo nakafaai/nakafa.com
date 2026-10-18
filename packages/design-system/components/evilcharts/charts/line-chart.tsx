@@ -16,12 +16,14 @@ import {
   ChartLegendContent,
   type ChartLegendVariant,
 } from "@repo/design-system/components/evilcharts/ui/legend";
+import { LegendItemContext } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { LoadingLine } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
 import {
   ChartTooltip,
   ChartTooltipContent,
+  ChartTooltipContext,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
@@ -188,6 +190,10 @@ export function EvilLineChart<
     [loadingPoints]
   );
   const { visibleData, brushProps } = useEvilBrush({ data });
+  const brushOptions = useMemo(
+    () => ({ formatLabel: brushFormatLabel, height: brushHeight, xDataKey }),
+    [brushFormatLabel, brushHeight, xDataKey]
+  );
 
   const displayData = showBrush && !isLoading ? visibleData : data;
 
@@ -210,6 +216,7 @@ export function EvilLineChart<
   return (
     <LineChartContext value={contextValue}>
       <ChartContainer
+        brush={brushOptions}
         className={className}
         config={config}
         footer={
@@ -220,11 +227,8 @@ export function EvilLineChart<
               className="mt-1"
               curveType={curveType}
               data={data}
-              formatLabel={brushFormatLabel}
-              height={brushHeight}
               skipStyle
               variant="line"
-              xDataKey={xDataKey}
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);
@@ -358,25 +362,25 @@ export function Tooltip({
 }: TooltipProps) {
   const isLoading = useLineChart((chart) => chart.isLoading);
   const selectedDataKey = useLineChart((chart) => chart.selectedDataKey);
+  const tooltipOptions = useMemo(
+    () => ({ roundness, selected: selectedDataKey, variant }),
+    [roundness, selectedDataKey, variant]
+  );
 
   if (isLoading) {
     return null;
   }
 
   return (
-    <ChartTooltip
-      content={
-        <ChartTooltipContent
-          roundness={roundness}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      cursor={
-        cursor ? { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH } : false
-      }
-      {...(defaultIndex === undefined ? {} : { defaultIndex })}
-    />
+    <ChartTooltipContext value={tooltipOptions}>
+      <ChartTooltip
+        content={<ChartTooltipContent />}
+        cursor={
+          cursor ? { strokeDasharray: "3 3", strokeWidth: STROKE_WIDTH } : false
+        }
+        {...(defaultIndex === undefined ? {} : { defaultIndex })}
+      />
+    </ChartTooltipContext>
   );
 }
 
@@ -399,19 +403,23 @@ export function Legend({
 }: LegendProps) {
   const selectedDataKey = useLineChart((chart) => chart.selectedDataKey);
   const selectDataKey = useLineChart((chart) => chart.selectDataKey);
+  const legendOptions = useMemo(
+    () => ({
+      isClickable,
+      onSelectChange: selectDataKey,
+      selected: selectedDataKey,
+      variant,
+    }),
+    [isClickable, selectDataKey, selectedDataKey, variant]
+  );
 
   return (
-    <ChartLegend
-      align={align}
-      content={
-        <ChartLegendContent
-          isClickable={isClickable}
-          onSelectChange={selectDataKey}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      verticalAlign={verticalAlign}
-    />
+    <LegendItemContext value={legendOptions}>
+      <ChartLegend
+        align={align}
+        content={<ChartLegendContent />}
+        verticalAlign={verticalAlign}
+      />
+    </LegendItemContext>
   );
 }

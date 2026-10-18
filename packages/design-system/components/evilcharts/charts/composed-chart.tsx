@@ -15,6 +15,7 @@ import {
   ChartLegendContent,
   type ChartLegendVariant,
 } from "@repo/design-system/components/evilcharts/ui/legend";
+import { LegendItemContext } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { LoadingBar } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import type { OrderedRevealAnimation } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
@@ -22,6 +23,7 @@ import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts
 import {
   ChartTooltip,
   ChartTooltipContent,
+  ChartTooltipContext,
   type TooltipRoundness,
   type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
@@ -220,6 +222,10 @@ export function EvilComposedChart<
     [loadingBars]
   );
   const { visibleData, brushProps } = useEvilBrush({ data });
+  const brushOptions = useMemo(
+    () => ({ formatLabel: brushFormatLabel, height: brushHeight, xDataKey }),
+    [brushFormatLabel, brushHeight, xDataKey]
+  );
 
   const displayData = showBrush && !isLoading ? visibleData : data;
 
@@ -248,6 +254,7 @@ export function EvilComposedChart<
   return (
     <ComposedChartContext value={contextValue}>
       <ChartContainer
+        brush={brushOptions}
         className={className}
         config={config}
         footer={
@@ -258,11 +265,8 @@ export function EvilComposedChart<
               className="mt-1"
               curveType={curveType}
               data={data}
-              formatLabel={brushFormatLabel}
-              height={brushHeight}
               skipStyle
               variant="area"
-              xDataKey={xDataKey}
               {...brushProps}
               onChange={(range) => {
                 brushProps.onChange(range);
@@ -412,25 +416,24 @@ export function Tooltip({
 }: TooltipProps) {
   const isLoading = useComposedChart((chart) => chart.isLoading);
   const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
+  const tooltipOptions = useMemo(
+    () => ({ roundness, selected: selectedDataKey, variant }),
+    [roundness, selectedDataKey, variant]
+  );
 
   if (isLoading) {
     return null;
   }
 
   return (
-    <ChartTooltip
-      content={
-        <ChartTooltipContent
-          hideLabel={hideContent}
-          roundness={roundness}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      cursor={cursor}
-      {...(defaultIndex === undefined ? {} : { defaultIndex })}
-      {...(hideContent ? { wrapperStyle: { visibility: "hidden" } } : {})}
-    />
+    <ChartTooltipContext value={tooltipOptions}>
+      <ChartTooltip
+        content={<ChartTooltipContent hideLabel={hideContent} />}
+        cursor={cursor}
+        {...(defaultIndex === undefined ? {} : { defaultIndex })}
+        {...(hideContent ? { wrapperStyle: { visibility: "hidden" } } : {})}
+      />
+    </ChartTooltipContext>
   );
 }
 
@@ -453,19 +456,23 @@ export function Legend({
 }: LegendProps) {
   const selectedDataKey = useComposedChart((chart) => chart.selectedDataKey);
   const selectDataKey = useComposedChart((chart) => chart.selectDataKey);
+  const legendOptions = useMemo(
+    () => ({
+      isClickable,
+      onSelectChange: selectDataKey,
+      selected: selectedDataKey,
+      variant,
+    }),
+    [isClickable, selectDataKey, selectedDataKey, variant]
+  );
 
   return (
-    <ChartLegend
-      align={align}
-      content={
-        <ChartLegendContent
-          isClickable={isClickable}
-          onSelectChange={selectDataKey}
-          selected={selectedDataKey}
-          variant={variant}
-        />
-      }
-      verticalAlign={verticalAlign}
-    />
+    <LegendItemContext value={legendOptions}>
+      <ChartLegend
+        align={align}
+        content={<ChartLegendContent />}
+        verticalAlign={verticalAlign}
+      />
+    </LegendItemContext>
   );
 }

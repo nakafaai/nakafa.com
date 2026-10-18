@@ -21,7 +21,15 @@ import {
 } from "react";
 import { ResponsiveContainer } from "recharts";
 
+/** Presentation options of the zoom brush, set once by the chart root. */
+export interface ChartBrushOptions {
+  formatLabel?: ((value: unknown, index: number) => string) | undefined; // formats the handle labels
+  height?: number | undefined; // pixel height of the brush
+  xDataKey?: string | undefined; // x-axis key whose values label the handles
+}
+
 interface ChartContextProps {
+  brush: ChartBrushOptions;
   config: ChartConfig;
 }
 
@@ -52,6 +60,7 @@ export interface ChartContainerProps
       | "onResize"
       | "children"
     > {
+  brush: ChartBrushOptions;
   config: Record<
     string,
     {
@@ -70,6 +79,7 @@ export interface ChartContainerProps
 
 function ChartContainer({
   id,
+  brush,
   config,
   initialDimension = { width: 320, height: 200 },
   className,
@@ -79,7 +89,7 @@ function ChartContainer({
 }: Readonly<ChartContainerProps>) {
   const uniqueId = useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
-  const contextValue = useMemo(() => ({ config }), [config]);
+  const contextValue = useMemo(() => ({ brush, config }), [brush, config]);
   Result.getOrThrow(validateChartConfigColors(config));
 
   return (
