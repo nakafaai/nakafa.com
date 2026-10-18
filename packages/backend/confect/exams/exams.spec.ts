@@ -10,6 +10,15 @@ import {
   ExamTitle,
   ExamView,
 } from "@repo/backend/confect/exams/exam";
+import { ScheduleResult } from "@repo/backend/confect/exams/sittings/contract";
+import {
+  KeysMissing,
+  ScheduleInvalid,
+} from "@repo/backend/confect/exams/sittings/errors";
+import {
+  RoomName,
+  SittingGroup,
+} from "@repo/backend/confect/exams/sittings/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -61,5 +70,20 @@ export default GroupSpec.make()
       }),
       returns: () => ExamSummary,
       error: () => AccessDenied,
+    }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "schedule",
+      args: () => ({
+        closesAt: Schema.Finite,
+        examId: Id("exams"),
+        group: SittingGroup,
+        opensAt: Schema.Finite,
+        room: RoomName,
+        slug: TenantSlug,
+      }),
+      returns: () => ScheduleResult,
+      error: () => Schema.Union([AccessDenied, KeysMissing, ScheduleInvalid]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
   );

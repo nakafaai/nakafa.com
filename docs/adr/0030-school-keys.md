@@ -110,7 +110,10 @@ signals, which only teachers see. Notifications, which hold an id, a kind, and a
 time. The evidence of consent and the journal, which hold IDs and codes without
 free text (ADR 0016). Login card codes (ADR 0009) and exam tokens (ADR 0013) are
 kept as keyed hashes, and OAuth client secrets as hashes (ADR 0029): they are
-checked and never read.
+checked and never read. The keyed hash of a sitting's token, `examSittings.tokenHash`,
+is under the school key and is one of them. Version 1 of the sittings does not
+re-hash it in a school-key rotation, so a proctor changes the token after a
+rotation (ADR 0013).
 
 ### Forum search and the blind index
 
@@ -188,7 +191,8 @@ is a migration, run the way ADR 0024 runs the migration of old messages.
    still opens.
 2. A job walks every field sealed under the school key, in bounded batches. It
    seals each value again under the newest generation and rebuilds every blind
-   index.
+   index, except the token hash of a sitting, which version 1 leaves to a
+   proctor's change of the token (ADR 0013).
 3. A pass that seals nothing again proves that the previous generation can go,
    and its row is deleted.
 4. The job is reviewed, runs dry first, and runs on dev and on production until
