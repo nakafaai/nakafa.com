@@ -14,7 +14,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Exit, Schema } from "effect";
+import { Array as Arr, Effect, Exit, Option, Schema } from "effect";
 
 const seed = refs.internal.exams.seed.sitting;
 const { mine } = refs.public.exams.sittings;
@@ -90,6 +90,55 @@ describe("exams seed sitting", () => {
         expect(exam.questions).toHaveLength(2);
         const listed = yield* fixture.as("student").query(mine, { slug: nf });
         expect(Arr.map(listed, (row) => row.id)).toContain(made.sittingId);
+      })
+  );
+
+  it.effect(
+    "seats a crowd of numbered students with attempts in progress, more than one dashboard page holds",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const user = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("users")
+              .get(fixture.users.student.userId)
+              .pipe(Effect.orDie)
+          )
+        );
+        const made = yield* fixture.internal.mutation(seed, {
+          crowd: 101,
+          email: addressOf(user.email),
+          slug: nf,
+        });
+        const attempts = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("examAttempts")
+              .index("by_sittingId", (query) =>
+                query.eq("sitting", made.sittingId)
+              )
+              .collect()
+              .pipe(Effect.orDie)
+          )
+        );
+        expect(attempts).toHaveLength(101);
+        const last = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader
+              .table("tenantPeople")
+              .get(Option.getOrThrow(Arr.last(attempts)).person)
+              .pipe(Effect.orDie)
+          )
+        );
+        expect(last).toMatchObject({
+          account: { state: "unclaimed" },
+          name: "Seat 101",
+        });
+        expect(Arr.every(attempts, (row) => row.state === "inProgress")).toBe(
+          true
+        );
       })
   );
 

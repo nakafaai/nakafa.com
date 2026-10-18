@@ -4527,6 +4527,31 @@ export declare const api: {
           splitCursor?: string | null;
         }
       >;
+      student: FunctionReference<
+        "query",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        {
+          attempt: {
+            deadline: number;
+            id: Id<"examAttempts">;
+            startedAt: number;
+            state: "inProgress" | "locked" | "closing" | "submitted";
+          } | null;
+          sitting: {
+            closesAt: number;
+            cohortId: Id<"tenantCohorts"> | null;
+            examId: Id<"exams">;
+            examTitle: string;
+            id: Id<"examSittings">;
+            opensAt: number;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            timeZone: string;
+            unitId: Id<"tenantUnits">;
+          };
+        }
+      >;
       unlock: FunctionReference<
         "mutation",
         "public",
@@ -12063,7 +12088,7 @@ export declare const internal: {
       sitting: FunctionReference<
         "mutation",
         "internal",
-        { email: string; slug: string },
+        { crowd?: number; email: string; slug: string },
         { examId: Id<"exams">; sittingId: Id<"examSittings">; token: string }
       >;
     };
