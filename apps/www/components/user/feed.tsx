@@ -1,3 +1,4 @@
+import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { DateTime } from "effect";
@@ -97,6 +98,24 @@ export function FeedActions({
     <div className="-ms-2.5 -mb-2 flex items-center" inert={inert}>
       {children}
     </div>
+  );
+}
+
+/**
+ * The count beside an action of a row, in the compact form, shown once it is above
+ * zero. An action takes its own width, so a zero leaves no empty slot.
+ */
+export function FeedCount({ value }: { value: number }) {
+  if (value === 0) {
+    return null;
+  }
+  return (
+    <NumberFormat
+      className="text-xs tabular-nums"
+      format={{ notation: "compact", maximumFractionDigits: 1 }}
+      isolate={true}
+      value={value}
+    />
   );
 }
 

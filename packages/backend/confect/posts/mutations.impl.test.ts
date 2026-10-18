@@ -3,11 +3,11 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
-import { POST_TEXT_MAX_LENGTH } from "@repo/backend/confect/posts/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { LEARNER_TEXT_MAX_LENGTH } from "@repo/backend/confect/writing/text";
 
 const create = Ref.getFunctionReference(refs.public.posts.mutations.create);
 const remove = Ref.getFunctionReference(refs.public.posts.mutations.remove);
@@ -67,14 +67,14 @@ describe("posts write contracts", () => {
       data: { code: "POST_TEXT_EMPTY" },
     });
     await expect(
-      writePost(author, "a".repeat(POST_TEXT_MAX_LENGTH + 1))
+      writePost(author, "a".repeat(LEARNER_TEXT_MAX_LENGTH + 1))
     ).rejects.toMatchObject({
       data: {
         code: "POST_TEXT_TOO_LONG",
-        message: `The post must hold 1 to ${POST_TEXT_MAX_LENGTH} characters.`,
+        message: `The post must hold 1 to ${LEARNER_TEXT_MAX_LENGTH} characters.`,
       },
     });
-    const longest = "a".repeat(POST_TEXT_MAX_LENGTH);
+    const longest = "a".repeat(LEARNER_TEXT_MAX_LENGTH);
     expect(await writePost(author, longest)).toBeDefined();
   });
 

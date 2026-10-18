@@ -1,61 +1,25 @@
 "use client";
 
-import type { Ref } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import {
-  ArrowTurnBackwardIcon,
-  Delete02Icon,
-  MoreHorizontalIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowTurnBackwardIcon } from "@hugeicons/core-free-icons";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import comments from "@repo/backend/confect/_generated/refs/comments";
-import { photoOf } from "@repo/backend/confect/users/picture";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, DateTime } from "effect";
-import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
-import type { StoreApi } from "zustand";
-import {
-  CommentActionsProvider,
-  CommentCount,
-  CommentVotes,
-  useCommentActions,
-} from "@/components/comments/actions";
+import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
+import { CommentsProvider } from "@/components/comments/provider";
+import { CommentRow } from "@/components/comments/row";
 import { DataFailure } from "@/components/shared/failure";
-import { formatShortAge } from "@/components/user/age";
-import type { AgeClock } from "@/components/user/clock";
-import { useAgeClock, useAgeNow } from "@/components/user/clock.client";
-import {
-  FeedActions,
-  FeedAge,
-  FeedAvatar,
-  FeedBody,
-  FeedEmpty,
-  FeedEnd,
-  FeedHeader,
-  FeedName,
-  FeedNotice,
-  FeedRow,
-} from "@/components/user/feed";
-import { useViewer } from "@/lib/identity/client";
+import { FeedCount, FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { getCleanHref } from "@/lib/routing/href";
 
 /** How many comments a page of the profile holds, the first one and each one after it. */
@@ -64,6 +28,7 @@ const PAGE_SIZE = 25;
 /** Render the incrementally loaded comments for one user profile. */
 export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
+  const tCommon = useTranslations("Common");
   const userQuery = useQuery(auth.queries.getUserById, {
     userId,
   });
@@ -77,7 +42,6 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
     }
   );
   const { results } = pagination;
-  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
   if (QueryResult.isFailure(userQuery)) {
     throw userQuery.error;
   }
@@ -101,144 +65,34 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
     return <FeedEmpty>{t("no-comments")}</FeedEmpty>;
   }
   return (
-    <div className="flex flex-col">
-      {PaginatedQueryResult.isFailure(pagination) && (
-        <FeedNotice>
-          <DataFailure />
-        </FeedNotice>
-      )}
-      {Arr.map(results, (comment) => (
-        <CommentRow
-          clock={clock}
-          comment={comment}
-          key={comment._id}
-          user={userQuery.value}
-        />
-      ))}
-      {PaginatedQueryResult.isCanLoadMore(pagination) && (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      )}
-    </div>
-  );
-}
-type UserComment = Ref.Returns<
-  typeof comments.queries.getCommentsByUserId
->["page"][number];
-
-/**
- * One comment of the profile, in the anatomy every row of the profile shares:
- * the writer's picture, the name and the age with the More menu at the end of
- * that line, the comment, then its votes and the replies, which open the
- * comment on its page.
- */
-function CommentRow({
-  clock,
-  comment,
-  user,
-}: {
-  clock: StoreApi<AgeClock>;
-  comment: UserComment;
-  user: Ref.Returns<typeof auth.queries.getUserById>;
-}) {
-  const t = useTranslations("Common");
-  const locale = useLocale();
-  const now = useAgeNow(clock);
-  return (
-    <CommentActionsProvider comment={comment}>
-      <FeedRow>
-        <FeedAvatar mascot={user?.mascot} photo={photoOf(user ?? {})} />
-        <FeedBody>
-          <FeedHeader>
-            <FeedName>{user?.name ?? t("anonymous")}</FeedName>
-            <FeedAge at={comment._creationTime}>
-              {formatShortAge(comment._creationTime, now, locale)}
-            </FeedAge>
-            <FeedEnd>
-              <CommentMoreMenu />
-            </FeedEnd>
-          </FeedHeader>
-          <DeferredLearnerText>{comment.text}</DeferredLearnerText>
-          <FeedActions>
-            <CommentVotes />
-            <NavigationLink
-              aria-label={t("reply")}
-              className={buttonVariants({ size: "sm", variant: "ghost" })}
-              href={getCleanHref(comment.slug)}
-            >
-              <HugeIcons icon={ArrowTurnBackwardIcon} />
-              <CommentCount value={comment.replyCount} />
-            </NavigationLink>
-          </FeedActions>
-        </FeedBody>
-      </FeedRow>
-    </CommentActionsProvider>
-  );
-}
-
-/**
- * The More menu of a comment: Delete, for its writer, asks first in the one
- * confirm pattern of the app's deletions.
- */
-function CommentMoreMenu() {
-  const t = useTranslations("Common");
-  const tComments = useTranslations("Comments");
-  const viewerId = useViewer((state) => state.account?.appUser._id);
-  const authorId = useCommentActions(({ comment }) => comment.userId);
-  const isPending = useCommentActions((actions) => actions.isPending);
-  const remove = useCommentActions((actions) => actions.remove);
-  const [asking, setAsking] = useState(false);
-
-  if (authorId !== viewerId) {
-    return null;
-  }
-  return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={t("more")}
-              disabled={isPending}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => setAsking(true)}
-            variant="destructive"
-          >
-            <HugeIcons icon={Delete02Icon} />
-            {t("delete")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ResponsiveDialog
-        description={tComments("delete-description")}
-        footer={
-          <>
-            <Button onClick={() => setAsking(false)} variant="outline">
-              {t("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                setAsking(false);
-                remove();
-              }}
-              variant="destructive"
-            >
-              {t("delete")}
-            </Button>
-          </>
-        }
-        open={asking}
-        setOpen={setAsking}
-        title={tComments("delete-title")}
-      />
-    </>
+    <CommentsProvider>
+      <div className="flex flex-col">
+        {PaginatedQueryResult.isFailure(pagination) && (
+          <FeedNotice>
+            <DataFailure />
+          </FeedNotice>
+        )}
+        {Arr.map(results, (comment) => (
+          <CommentRow
+            author={userQuery.value}
+            comment={comment}
+            key={comment._id}
+            replyAction={
+              <NavigationLink
+                aria-label={tCommon("reply")}
+                className={buttonVariants({ size: "sm", variant: "ghost" })}
+                href={getCleanHref(comment.slug)}
+              >
+                <HugeIcons icon={ArrowTurnBackwardIcon} />
+                <FeedCount value={comment.replyCount} />
+              </NavigationLink>
+            }
+          />
+        ))}
+        {PaginatedQueryResult.isCanLoadMore(pagination) && (
+          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+        )}
+      </div>
+    </CommentsProvider>
   );
 }
