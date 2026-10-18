@@ -22,7 +22,6 @@ import {
   QuestionnaireSubmit,
   QuestionnaireTitle,
 } from "@repo/design-system/components/ui/questionnaire";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { redirect, useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
@@ -294,20 +293,18 @@ export function OnboardingQuestionnaire({
       </QuestionnaireItem>
 
       <QuestionnaireActions>
-        <QuestionnairePrevious disabled={isFinishing} variant="ghost">
+        {/* While the answers save, the actions hold still without a pending
+            look: the page moves on as soon as the server names it. */}
+        <QuestionnairePrevious inert={isFinishing} variant="ghost">
           <HugeIcons data-icon="inline-start" icon={ArrowLeft02Icon} />
           {t("onboarding.back")}
         </QuestionnairePrevious>
-        <QuestionnaireNext disabled={isFinishing}>
+        <QuestionnaireNext inert={isFinishing}>
           {t("onboarding.continue")}
           <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
         </QuestionnaireNext>
-        <QuestionnaireSubmit disabled={isFinishing}>
-          <Spinner
-            data-icon="inline-start"
-            icon={PartyIcon}
-            isLoading={isFinishing}
-          />
+        <QuestionnaireSubmit inert={isFinishing}>
+          <HugeIcons data-icon="inline-start" icon={PartyIcon} />
           {t("onboarding.finish")}
         </QuestionnaireSubmit>
       </QuestionnaireActions>
