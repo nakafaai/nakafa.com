@@ -4,10 +4,11 @@ import {
   MarkdownBlock,
   type MarkdownContentProps,
 } from "@repo/design-system/components/markdown/content";
-import { MarkdownFrame } from "@repo/design-system/components/markdown/frame";
+import { markdownFrameVariants } from "@repo/design-system/components/markdown/frame";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
 import { trimIncompleteTail } from "@repo/design-system/lib/markdown/stream";
+import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { memo, useMemo } from "react";
 
@@ -17,33 +18,6 @@ type ResponseProps = MarkdownContentProps & {
 };
 
 const MemoizedMarkdownBlock = memo(MarkdownBlock);
-
-/** Splits a response into stable markdown blocks for streaming updates. */
-function Blocks({
-  allowedImagePrefixes,
-  allowedLinkPrefixes,
-  children,
-  defaultOrigin,
-  id,
-}: MarkdownContentProps) {
-  const blocks = useMemo(
-    () => readMarkdownBlocks(id, children),
-    [children, id]
-  );
-
-  return Arr.map(blocks, (block) => (
-    <MemoizedMarkdownBlock
-      allowedImagePrefixes={allowedImagePrefixes}
-      allowedLinkPrefixes={allowedLinkPrefixes}
-      defaultOrigin={defaultOrigin}
-      key={block.key}
-    >
-      {block.content}
-    </MemoizedMarkdownBlock>
-  ));
-}
-
-const MemoizedBlocks = memo(Blocks);
 
 /**
  * Normalizes and renders one streamed markdown response: an answer at the chat
@@ -63,17 +37,24 @@ export function Response({
     const text = normalizeText(children);
     return isStreaming ? trimIncompleteTail(text) : text;
   }, [children, isStreaming]);
+  const blocks = useMemo(
+    () => readMarkdownBlocks(id, normalizedChildren),
+    [id, normalizedChildren]
+  );
+  // One value for every block keeps each memoized block from re-rendering when
+  // the response grows.
+  const security = useMemo(
+    () => ({ allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin }),
+    [allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin]
+  );
 
   return (
-    <MarkdownFrame className={className} variant={variant}>
-      <MemoizedBlocks
-        allowedImagePrefixes={allowedImagePrefixes}
-        allowedLinkPrefixes={allowedLinkPrefixes}
-        defaultOrigin={defaultOrigin}
-        id={id}
-      >
-        {normalizedChildren}
-      </MemoizedBlocks>
-    </MarkdownFrame>
+    <div className={cn(markdownFrameVariants({ variant }), className)}>
+      {Arr.map(blocks, (block) => (
+        <MemoizedMarkdownBlock key={block.key} security={security}>
+          {block.content}
+        </MemoizedMarkdownBlock>
+      ))}
+    </div>
   );
 }
