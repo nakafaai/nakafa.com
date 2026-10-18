@@ -27,7 +27,7 @@ describe("posts draft", () => {
     expect(HashSet.has(draft.getState().saving, second)).toBe(true);
   });
 
-  it("gives a refused post back to an empty composer, and keeps a next post the author started", () => {
+  it("gives a refused post back to the composer, ahead of a next post the author started", () => {
     const draft = createPostDraft();
     draft.getState().startSaving(first);
     draft.getState().refuseSaving(first, "Tulisan yang ditolak");
@@ -38,6 +38,14 @@ describe("posts draft", () => {
     draft.getState().startSaving(second);
     draft.getState().setText("Tulisan baru");
     draft.getState().refuseSaving(second, "Ditolak lagi");
-    expect(draft.getState().text).toBe("Tulisan baru");
+    expect(draft.getState().text).toBe("Ditolak lagi\n\nTulisan baru");
+  });
+
+  it("treats a composer that holds only spaces as empty", () => {
+    const draft = createPostDraft();
+    draft.getState().startSaving(first);
+    draft.getState().setText("  ");
+    draft.getState().refuseSaving(first, "Tulisan yang ditolak");
+    expect(draft.getState().text).toBe("Tulisan yang ditolak");
   });
 });

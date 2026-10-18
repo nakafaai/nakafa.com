@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/confect/_generated/id";
-import { HashSet } from "effect";
+import { HashSet, String as Str } from "effect";
 import { createStore } from "zustand";
 
 /**
@@ -13,8 +13,9 @@ export interface PostDraft {
   /** Forgets a post once the server took it. */
   readonly finishSaving: (postId: Id<"posts">) => void;
   /**
-   * Forgets a refused post and gives its words back to the composer, unless
-   * the author has started the next post there.
+   * Forgets a refused post and gives its words back to the composer. A next
+   * post the author started there stays after them, a blank line apart, so no
+   * words are lost.
    */
   readonly refuseSaving: (postId: Id<"posts">, text: string) => void;
   /**
@@ -42,7 +43,9 @@ export function createPostDraft() {
     refuseSaving: (postId, text) =>
       set((draft) => ({
         saving: HashSet.remove(draft.saving, postId),
-        text: draft.text === "" ? text : draft.text,
+        text: Str.isEmpty(Str.trim(draft.text))
+          ? text
+          : `${text}\n\n${draft.text}`,
       })),
     setText: (text) => set({ text }),
   }));

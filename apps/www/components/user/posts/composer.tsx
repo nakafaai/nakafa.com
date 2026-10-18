@@ -24,8 +24,9 @@ import type { PublicProfile } from "@/lib/profile/public";
  * list. Post stays at the end of the row and turns on once the text can be
  * posted. The post shows at once and the text clears, so the author can write
  * the next one while the server saves it. A refused post says so and gives its
- * text back to an empty composer. The words and the posts in flight live in the
- * draft store, so they survive a Retry of the list.
+ * text back to the composer, ahead of any next post started there. The words
+ * and the posts in flight live in the draft store, so they survive a Retry of
+ * the list.
  */
 export function PostComposer({
   disabled,

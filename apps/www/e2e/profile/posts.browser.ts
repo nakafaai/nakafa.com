@@ -12,6 +12,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const OLDER = "Kemarin belajar aljabar.";
 const POST = "Hari ini belajar trigonometri.";
 const REFUSED = "Tulisan yang ditolak server.";
+const NEXT = "Tulisan berikutnya.";
 const KEPT = "Post dari server.";
 const VIEWPORTS = [
   { name: "a phone", size: { width: 390, height: 844 } },
@@ -113,7 +114,7 @@ for (const viewport of VIEWPORTS) {
       );
     });
 
-    test("a post the server refuses leaves the list and gives its text back with a message", async ({
+    test("a post the server refuses leaves the list and gives its text back with a message, ahead of the next post", async ({
       baseURL,
       page,
     }) => {
@@ -138,13 +139,15 @@ for (const viewport of VIEWPORTS) {
             await expect(postOf(page, REFUSED)).toBeVisible();
             await expect(composerOf(page)).toHaveValue("");
             await expect(composerOf(page)).toBeEditable();
+            await composerOf(page).fill(NEXT);
             changes.release();
             await expect(
               page.getByText(app.Toast["action-error"].title).first()
             ).toBeVisible();
             await expect(postOf(page, REFUSED)).toHaveCount(0);
-            // A refused post comes back to the empty composer.
-            await expect(composerOf(page)).toHaveValue(REFUSED);
+            // A refused post comes back to the composer, and the next post the
+            // author started meanwhile stays after it.
+            await expect(composerOf(page)).toHaveValue(`${REFUSED}\n\n${NEXT}`);
           });
         })
       );
