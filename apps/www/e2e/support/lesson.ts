@@ -17,15 +17,22 @@ export function lessonSection(page: Page) {
 
 /** The open lesson's panel of the home page's lesson window. */
 export function lessonPanel(page: Page) {
-  return lessonSection(page).getByRole("tabpanel");
+  return lessonSection(page).locator('[data-slot="lesson-panel"]:not([inert])');
+}
+
+/** The lesson window's buttons, one per subject, in the window's order. */
+export function lessonButtons(page: Page) {
+  return lessonSection(page)
+    .locator('[data-slot="button-group"]')
+    .getByRole("button");
 }
 
 /**
- * The whole lesson window: its tabs and its panels. Its height is the one of its
- * tallest panel, and its lab mounts once at least half of it is on the screen.
+ * The whole lesson window: its buttons and its panels. Its height is the one of
+ * its tallest panel, and its lab mounts once at least half of it is on the screen.
  */
 export function lessonWindow(page: Page) {
-  return lessonSection(page).locator('[data-slot="tabs"]');
+  return lessonSection(page).locator('[data-slot="lesson-window"]');
 }
 
 /** The visual of a lesson, found by the name of its view. */

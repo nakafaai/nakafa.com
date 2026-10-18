@@ -5,12 +5,13 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { DeferredParticles } from "@/components/shared/particles";
 
 /**
- * The particle field behind the hero. It drifts while the hero is on screen,
- * and it holds still once the reader has scrolled past the hero. The field is
- * decoration: when its code fails to load, the hero stays without it, and the
- * failure never reaches the page's error page.
+ * The particle field behind a part of a marketing page. It drifts while the part
+ * is on screen, and it holds still once the reader has scrolled past it. The
+ * field is decoration: when its code fails to load, the part stays without it,
+ * and the failure never reaches the page's error page. The part is the field's
+ * positioned, isolated parent.
  */
-export function HeroField() {
+export function ParticleField() {
   const { entry, ref } = useIntersection({ threshold: 0 });
 
   return (

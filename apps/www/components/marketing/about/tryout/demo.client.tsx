@@ -2,12 +2,15 @@
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
+import { MarkdownFrame } from "@repo/design-system/components/markdown/frame";
+import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import type { MoodSchema } from "@repo/mascot/nina/face";
+import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { TalkReply } from "@/components/marketing/about/talk.client";
 import {
   TryoutResponseFields,
   type TryoutResponseFieldsProps,
@@ -159,8 +162,28 @@ const MOODS = {
 } as const satisfies Record<Outcome, typeof MoodSchema.Type>;
 
 /**
- * Nina's answer beside the question: an invitation while it waits, then what
- * the chosen answer is: right, with a laugh, or not yet, with a look.
+ * Nina beside the row's title, following the demo: she thinks while the
+ * question waits, cheers a right answer, and keeps thinking over a wrong one.
+ */
+export function TryoutDemoNina() {
+  const outcome = useTryoutDemo((state) => state.outcome);
+
+  return (
+    <Nina
+      act={outcome === "right" ? "cheering" : "thinking"}
+      label=""
+      mood={MOODS[outcome]}
+      size={88}
+      whole
+    />
+  );
+}
+
+/**
+ * Nina's answer beside the question, as her chat renders a sentence: an
+ * invitation while it waits, then what the chosen answer is. Every sentence
+ * holds the same place, so the answer keeps its height, and the new one fades
+ * in sharp as the old one blurs away.
  */
 export function TryoutDemoReply({
   words,
@@ -171,8 +194,30 @@ export function TryoutDemoReply({
   const outcome = useTryoutDemo((state) => state.outcome);
 
   return (
-    <TalkReply act="drumming" mood={MOODS[outcome]}>
-      {words[outcome]}
-    </TalkReply>
+    <MarkdownFrame variant="chat">
+      <div className="grid">
+        {Arr.map(OutcomeSchema.literals, (moment) => (
+          <Paragraph
+            aria-hidden={moment === outcome ? undefined : true}
+            className={replyVariants({ shown: moment === outcome })}
+            key={moment}
+          >
+            {words[moment]}
+          </Paragraph>
+        ))}
+      </div>
+    </MarkdownFrame>
   );
 }
+
+const replyVariants = cva(
+  "col-start-1 row-start-1 my-0 transition-[opacity,filter] duration-300 ease-out motion-reduce:transition-none",
+  {
+    variants: {
+      shown: {
+        false: "opacity-0 blur-xs",
+        true: "opacity-100 blur-none",
+      },
+    },
+  }
+);

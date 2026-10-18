@@ -292,7 +292,8 @@ test("home lesson placeholder holds still with reduced motion while its scene lo
               );
               yield* Effect.promise(() =>
                 lessonSection(page)
-                  .getByRole("tab")
+                  .locator('[data-slot="button-group"]')
+                  .getByRole("button")
                   .nth(CIRCLE_TAB_INDEX)
                   .click()
               );

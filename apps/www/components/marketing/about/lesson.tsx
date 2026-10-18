@@ -1,3 +1,5 @@
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import {
@@ -17,7 +19,7 @@ import {
   ProjectilePlaceholder,
 } from "@/components/marketing/about/lesson/placeholder";
 import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
-import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
+import { Turn } from "@/components/marketing/about/turn";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { decimalSeparators } from "@/lib/marketing/decimal";
@@ -69,6 +71,7 @@ export async function Lesson() {
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div className="grid min-w-0 content-center gap-8">
           <div className="grid gap-2">
+            <Nina act="waving" label="" size={88} whole />
             <h2 className="text-balance text-2xl tracking-tight">
               {t("lesson-title")}
             </h2>
@@ -76,11 +79,11 @@ export async function Lesson() {
               {t("lesson-lead")}
             </p>
           </div>
-          <Talk ask={t("lesson-ask")}>
-            <TalkReply act="greeting" mood="hello">
+          <Turn ask={t("lesson-ask")}>
+            <MarkdownContent id="home-lesson-answer" variant="chat">
               {t("lesson-answer")}
-            </TalkReply>
-          </Talk>
+            </MarkdownContent>
+          </Turn>
         </div>
         <div className="min-w-0">
           <LessonWindow

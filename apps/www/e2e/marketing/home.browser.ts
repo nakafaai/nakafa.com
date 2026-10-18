@@ -34,7 +34,6 @@ const HOME_PARTS = [
   LESSON_SECTION_ID,
   "tryout",
   "nina",
-  "scene",
   "memory",
   "privacy",
   "curricula",
@@ -63,7 +62,7 @@ const LAYOUT_SHIFTS_KEY = "nakafaHomeLayoutShifts";
 const SIZE_CHANGES_KEY = "nakafaHomeSizeChanges";
 
 /** The sections of the page and the panels of the lesson window, whose sizes a failure names. */
-const SIZED_ELEMENTS = "section[id], [role='tabpanel']";
+const SIZED_ELEMENTS = "section[id], [data-slot='lesson-panel']";
 
 /**
  * How far apart a resize and a layout shift may be and still be named together

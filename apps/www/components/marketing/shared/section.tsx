@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
  * band of color from edge to edge, with its content inset like any other.
  */
 const sectionVariants = cva(
-  "grid min-h-[calc(100svh-4rem)] scroll-mt-16 content-center px-6 py-20 lg:px-10 lg:py-32",
+  "relative isolate grid min-h-[calc(100svh-4rem)] scroll-mt-16 content-center px-6 py-20 lg:px-10 lg:py-32",
   {
     variants: {
       tone: {

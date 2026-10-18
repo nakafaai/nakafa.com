@@ -5,6 +5,7 @@ import { Thing } from "@repo/design-system/components/ui/thing";
 import type { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { ClosingQuestion } from "@/components/marketing/about/closing/question.client";
+import { ParticleField } from "@/components/marketing/shared/field.client";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
@@ -25,6 +26,7 @@ export function Closing() {
 
   return (
     <MarketingSection id="closing">
+      <ParticleField />
       <div className="mx-auto grid w-full max-w-4xl justify-items-center gap-10 text-center">
         <ClosingQuestion template={t.raw("closing-ask")} topics={topics} />
         <div className="flex flex-wrap items-center justify-center gap-3">
