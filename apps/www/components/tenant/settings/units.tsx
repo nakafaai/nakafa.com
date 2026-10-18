@@ -117,6 +117,7 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
       <CardContent>
         <Input
           aria-label={t("unit-npsn")}
+          className="max-w-xs"
           disabled={isArchived}
           inputMode="numeric"
           maxLength={8}

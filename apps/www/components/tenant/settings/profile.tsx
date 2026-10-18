@@ -207,7 +207,12 @@ function SchoolProfileCard({
           <CardDescription>{t("address-description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Input aria-label={t("address-title")} readOnly value={address} />
+          <Input
+            aria-label={t("address-title")}
+            className="max-w-sm"
+            readOnly
+            value={address}
+          />
         </CardContent>
         <CardSectionFooter hint={t("address-footer")}>
           <CardSectionActions>

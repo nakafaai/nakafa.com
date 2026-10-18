@@ -198,6 +198,7 @@ function SchoolDomainsPolicy({
       <CardContent>
         <Textarea
           aria-label={t("policy-domains")}
+          className="max-w-md"
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t("policy-domains-placeholder")}
           value={draft}
