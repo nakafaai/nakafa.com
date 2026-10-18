@@ -135,14 +135,14 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
 
-  // The header's folded path holds the index; the keyboard opens it here, and
-  // the layout header test taps a folded link with the pointer.
+  // The header's folded path holds the index. Back must bring the surah again
+  // with that menu closed, or its backdrop would take the next tap.
   const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
   yield* Effect.promise(() => breadcrumb.getByRole("button").click());
   const menu = page.getByRole("menu");
   const quranIndexLink = menu.locator(`a[href="${appRoutes.quranId}"]`);
   yield* Effect.promise(() => expect(quranIndexLink).toBeVisible());
-  yield* Effect.promise(() => quranIndexLink.press("Enter"));
+  yield* Effect.promise(() => quranIndexLink.click());
   yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));
   yield* Effect.promise(() => expect(trigger).toBeAttached());
   yield* Effect.promise(() => expect(trigger).toBeHidden());

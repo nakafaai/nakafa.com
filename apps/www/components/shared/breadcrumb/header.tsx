@@ -1,25 +1,17 @@
 import {
   Breadcrumb,
-  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
+import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
 
 const BreadcrumbHeaderItemSchema = Schema.Struct({
   href: Schema.optional(Schema.String),
@@ -168,64 +160,6 @@ export function BreadcrumbHeaderFold({
         />
       </BreadcrumbList>
     </Breadcrumb>
-  );
-}
-
-/**
- * Renders folded breadcrumb items inside an ellipsis menu. The menu keeps its size, so
- * a long current title truncates instead of squeezing the button under the separator.
- */
-function BreadcrumbMenu({
-  className,
-  items,
-  menuLabel,
-}: {
-  className: string;
-  items: readonly BreadcrumbHeaderItem[];
-  menuLabel: string;
-}) {
-  return (
-    <BreadcrumbItem className={cn("shrink-0", className)}>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <button
-              aria-label={menuLabel}
-              className="flex size-6 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              type="button"
-            >
-              <BreadcrumbEllipsis />
-            </button>
-          }
-        />
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
-            {Arr.map(items, (item) => (
-              <BreadcrumbMenuItem
-                item={item}
-                key={`${item.label}:${item.href ?? "current"}`}
-              />
-            ))}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </BreadcrumbItem>
-  );
-}
-
-/** Renders one linked or inert collapsed breadcrumb menu item. */
-function BreadcrumbMenuItem({ item }: { item: BreadcrumbHeaderItem }) {
-  const label = item.menuLabel ?? item.label;
-
-  if (!item.href) {
-    return <DropdownMenuItem render={<span>{label}</span>} />;
-  }
-
-  return (
-    <DropdownMenuItem
-      render={<BreadcrumbAnchor href={item.href}>{label}</BreadcrumbAnchor>}
-    />
   );
 }
 
