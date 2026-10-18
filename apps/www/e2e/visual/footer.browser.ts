@@ -16,6 +16,7 @@ const BAND_ORDER = [
   "visual-card-toolbar",
   "visual-card-body",
   "visual-card-actions",
+  "visual-card-table",
   "visual-card-footer",
 ];
 
