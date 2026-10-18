@@ -156,6 +156,18 @@ export class InvitePending extends Schema.TaggedError<InvitePending>()(
   refusal("INVITE_PENDING", "This person already has a pending invite.")
 ) {}
 
+/**
+ * An address that already holds a pending invite in this school. A second Person
+ * for it would leave two invites waiting on one address, so the school refuses it.
+ */
+export class AddressInvited extends Schema.TaggedError<AddressInvited>()(
+  "AddressInvited",
+  refusal(
+    "ADDRESS_INVITED",
+    "This address already has a pending invite in this school."
+  )
+) {}
+
 /** Sending again an invite that is no longer waiting for a claim. */
 export class InviteNotPending extends Schema.TaggedError<InviteNotPending>()(
   "InviteNotPending",

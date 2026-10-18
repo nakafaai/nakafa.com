@@ -1,5 +1,6 @@
 import type { Ref } from "@confect/core";
 import type access from "@repo/backend/confect/_generated/refs/access";
+import type identity from "@repo/backend/confect/_generated/refs/identity";
 import type integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { randomUuid } from "@repo/utilities/uuid";
@@ -21,6 +22,12 @@ export type Grant = Ref.Returns<typeof access.grants.list>["page"][number];
 
 /** One Person of the school as the people list shows them. */
 export type Person = Ref.Returns<typeof tenancy.people.list>["page"][number];
+
+/** One active member of the school, with its roles and how far it has joined. */
+export type Member = Ref.Returns<typeof tenancy.roster.members>["page"][number];
+
+/** One school login as the logins list shows it. */
+export type Login = Ref.Returns<typeof identity.logins.list>["page"][number];
 
 /** One unit of the school with its national school number. */
 export type Unit = Ref.Returns<typeof tenancy.units.list>[number];

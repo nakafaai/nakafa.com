@@ -9,10 +9,10 @@ import { assignRole } from "@repo/backend/confect/access/grant";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import {
-  personAuthority,
   tenantAuthority,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
 import {
   inviteToSchool,
@@ -115,23 +115,7 @@ export const openTenant = Effect.fn("tenancy.provision.tenant")(function* (
   const units = yield* Effect.forEach(args.units, (draft) =>
     createUnit(actor, tenantId, draft)
   );
-  const ownerId = yield* writer
-    .table("tenantPeople")
-    .insert({
-      account: { state: "unclaimed" },
-      kind: "member",
-      name: args.owner.name,
-      status: "active",
-      tenantId,
-    })
-    .pipe(Effect.orDie);
-  const owner = yield* reader
-    .table("tenantPeople")
-    .get(ownerId)
-    .pipe(Effect.orDie);
-  yield* personAuthority.record(actor, owner, {
-    type: "person.created",
-  });
+  const owner = yield* createPerson(actor, tenantId, args.owner.name);
   const invite = yield* writeInvite(
     actor,
     owner,
@@ -142,7 +126,7 @@ export const openTenant = Effect.fn("tenancy.provision.tenant")(function* (
   yield* assignRole(actor, owner, "owner", { kind: "tenant" }).pipe(
     Effect.orDie
   );
-  return { invite: invite._id, owner: ownerId, tenant: tenantId, units };
+  return { invite: invite._id, owner: owner._id, tenant: tenantId, units };
 });
 
 /** The acceptance command's invite, as the system, so the journal names no staff member. */

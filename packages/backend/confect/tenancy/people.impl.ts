@@ -16,6 +16,7 @@ import {
   personAccess,
   personAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { createPerson } from "@repo/backend/confect/tenancy/create";
 import spec from "@repo/backend/confect/tenancy/people.spec";
 import { removePerson } from "@repo/backend/confect/tenancy/remove";
 import { Array as Arr, Effect, Layer, Struct } from "effect";
@@ -73,25 +74,7 @@ const create = FunctionImpl.make(
   "create",
   Effect.fn("tenancy.people.create")(function* ({ name }) {
     const { person: actor, tenant } = yield* Member;
-    const reader = yield* DatabaseReader;
-    const personId = yield* (yield* DatabaseWriter)
-      .table("tenantPeople")
-      .insert({
-        account: { state: "unclaimed" },
-        kind: "member",
-        name,
-        status: "active",
-        tenantId: tenant._id,
-      })
-      .pipe(Effect.orDie);
-    const person = yield* reader
-      .table("tenantPeople")
-      .get(personId)
-      .pipe(Effect.orDie);
-    yield* personAuthority.record(personActor(actor), person, {
-      type: "person.created",
-    });
-    return view(person);
+    return view(yield* createPerson(personActor(actor), tenant._id, name));
   })
 );
 

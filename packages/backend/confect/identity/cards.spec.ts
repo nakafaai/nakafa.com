@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import {
   CardRoleRefused,
   LoginExists,
@@ -17,15 +18,37 @@ import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PersonAccess } from "@repo/backend/confect/tenancy/access";
 import { PersonClaimed } from "@repo/backend/confect/tenancy/errors";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /**
- * The login cards of one school's Persons. An Admin issues a student's first
- * card with a login name and reissues the card later. A student redeems a card
- * on the school's host, which is the one public function here.
+ * The login cards of one school's Persons. An Admin adds a student with a login
+ * name and the first card in one step, and reissues the card later. A student
+ * redeems a card on the school's host, which is the one public function here.
  */
 export default GroupSpec.make()
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "enroll",
+      args: () => ({
+        loginName: Schema.String,
+        name: PersonName,
+        slug: TenantSlug,
+      }),
+      returns: () => IssuedCard,
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          LoginExists,
+          LoginNameRefused,
+          LoginNameTaken,
+        ]),
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(TenantAccess, { action: "person.manage" })
+  )
   .addFunction(
     FunctionSpec.publicMutation({
       name: "issue",

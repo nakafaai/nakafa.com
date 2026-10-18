@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { tenantAccess } from "@repo/backend/confect/access/authority";
 import {
   type CardRefusal,
   cardOf,
@@ -27,6 +28,7 @@ import {
   personAccess,
   personAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { PersonClaimed } from "@repo/backend/confect/tenancy/errors";
 import { Effect, Layer, Match, Option, Result } from "effect";
 
@@ -78,6 +80,39 @@ const issue = FunctionImpl.make(
 );
 
 /**
+ * Adds a student in one transaction: an unclaimed Person, the school login name, and
+ * the first card. A login name the school cannot use refuses the step before anything
+ * is written, and a name taken at the claim refuses the whole transaction, so no Person
+ * is left without its card.
+ */
+const enroll = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "enroll",
+  Effect.fn("identity.cards.enroll")(function* ({ loginName, name }) {
+    const { person: issuer, tenant } = yield* Member;
+    const login = readLoginName(loginName);
+    if (Result.isFailure(login)) {
+      return yield* new LoginNameRefused({ reason: login.failure });
+    }
+    const by = personActor(issuer);
+    const person = yield* createPerson(by, tenant._id, name);
+    yield* personAuthority.check("card.issue", person);
+    yield* claimLoginName(person, login.success);
+    const card = yield* writeCard(person, issuer, Option.none());
+    yield* personAuthority.record(by, person, {
+      card: card.cardId,
+      type: "card.issued",
+    });
+    return {
+      code: card.code,
+      expiresAt: card.expiresAt,
+      loginName: login.success,
+    };
+  })
+);
+
+/**
  * Prints a new card for a Person who already has a login name, such as a
  * student who lost the card or a teacher who forgot the password. The old code
  * stops working, and the login name stays the same.
@@ -121,11 +156,13 @@ const redeem = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(enroll),
   Layer.provide(issue),
   Layer.provide(reissue),
   Layer.provide(redeem),
   Layer.provide(session),
   Layer.provide(member),
+  Layer.provide(tenantAccess),
   Layer.provide(personAccess),
   GroupImpl.finalize
 );
