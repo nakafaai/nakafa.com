@@ -31,8 +31,9 @@ type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
 /**
  * The student's screen of one sitting. Before the student is admitted it shows the room and
  * the token field. A device that the browser keeps enters without the token, because it
- * already owns the attempt. An admitted student sees the paper in the shared player while the
- * attempt is open, and one sentence for a lock, a closing, or a finished attempt.
+ * already owns the attempt, once the sitting is listed. An admitted student sees the paper in
+ * the shared player while the attempt is open, and one sentence for a lock, a closing, or a
+ * finished attempt, also after the proctor closes the sitting.
  */
 export function StudentSitting({
   sittingId,
@@ -45,22 +46,34 @@ export function StudentSitting({
   const mine = useQuery(exams.sittings.mine, { slug });
   const enter = useEnterSitting();
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
+  // The sitting as it was listed when the student entered: a closed sitting leaves the
+  // student's list of live sittings, and the student still reads the attempt's last state.
+  const [entered, setEntered] = useState<typeof SittingView.Type | null>(null);
   const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
   const [tokenText, setTokenText] = useState("");
   const resumed = useRef(false);
+  const listed = QueryResult.isSuccess(mine)
+    ? Option.getOrUndefined(
+        Arr.findFirst(mine.value, (row) => row.id === sittingId)
+      )
+    : undefined;
 
-  /** Shows the admission, or the sentence that explains why the entry was refused. */
-  const receive = useCallback((next: Admission) => {
-    if (next._tag === "admitted") {
-      setAdmitted(next);
-      setMessage(null);
-      return;
-    }
-    setMessage(next._tag === "refused" ? next.message : null);
-  }, []);
+  /** Shows the admission into this sitting, or the sentence that explains why the entry was refused. */
+  const receive = useCallback(
+    (next: Admission, sitting: typeof SittingView.Type) => {
+      if (next._tag === "admitted") {
+        setAdmitted(next);
+        setEntered(sitting);
+        setMessage(null);
+        return;
+      }
+      setMessage(next._tag === "refused" ? next.message : null);
+    },
+    []
+  );
 
   useEffect(() => {
-    if (resumed.current) {
+    if (resumed.current || listed === undefined) {
       return;
     }
     resumed.current = true;
@@ -69,14 +82,21 @@ export function StudentSitting({
         Effect.flatMap((stored) =>
           Option.isSome(stored)
             ? Effect.sync(() => {
-                enter({ sittingId, slug, token: "" }, receive);
+                enter({ sittingId, slug, token: "" }, (next) =>
+                  receive(next, listed)
+                );
               })
             : Effect.void
         )
       )
     );
-  }, [enter, receive, sittingId, slug]);
+  }, [enter, listed, receive, sittingId, slug]);
 
+  if (admitted !== null && entered !== null) {
+    return (
+      <AdmittedSitting admitted={admitted} sitting={entered} slug={slug} />
+    );
+  }
   if (QueryResult.isFailure(mine)) {
     return (
       <p className="text-muted-foreground text-sm">
@@ -87,26 +107,22 @@ export function StudentSitting({
   if (!QueryResult.isSuccess(mine)) {
     return null;
   }
-  const sitting = Option.getOrUndefined(
-    Arr.findFirst(mine.value, (row) => row.id === sittingId)
-  );
-  if (sitting === undefined) {
+  if (listed === undefined) {
     return (
       <p className="text-muted-foreground text-sm">
         {t("student-unavailable")}
       </p>
     );
   }
-  if (admitted !== null) {
-    return (
-      <AdmittedSitting admitted={admitted} sitting={sitting} slug={slug} />
-    );
-  }
+
+  const sitting = listed;
 
   /** Enters with the token that the student typed. */
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    enter({ sittingId, slug, token: tokenText.trim() }, receive);
+    enter({ sittingId, slug, token: tokenText.trim() }, (next) =>
+      receive(next, sitting)
+    );
   }
 
   return (
