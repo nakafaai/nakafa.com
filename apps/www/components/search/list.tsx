@@ -11,7 +11,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { Fragment, type ReactElement } from "react";
+import { createContext, Fragment, type ReactElement, use } from "react";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
 import type { ContentSearchResultItem } from "@/lib/search/query";
@@ -25,6 +25,18 @@ interface Props {
 }
 
 type SearchResultGroup = ReturnType<typeof getSearchResultGroups>[number];
+
+/** The query whose results the page shows, which each result's excerpt highlights. */
+const ResultsQueryContext = createContext<string | null>(null);
+
+/** Reads the query whose results the page shows. */
+function useResultsQuery() {
+  const query = use(ResultsQueryContext);
+  if (query === null) {
+    throw new Error("useResultsQuery must be used within SearchResults");
+  }
+  return query;
+}
 
 /** Renders full-page Convex search states and grouped results. */
 export function SearchResults({
@@ -77,25 +89,22 @@ export function SearchResults({
   const groups = getSearchResultGroups(results, sectionLabels);
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm">
-      {Arr.map(groups, (group, index) => (
-        <Fragment key={group.title}>
-          <ResultGroup group={group} query={query} />
-          {index !== groups.length - 1 && <Separator />}
-        </Fragment>
-      ))}
-    </div>
+    <ResultsQueryContext value={query}>
+      <div className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm">
+        {Arr.map(groups, (group, index) => (
+          <Fragment key={group.title}>
+            <ResultGroup group={group} />
+            {index !== groups.length - 1 && <Separator />}
+          </Fragment>
+        ))}
+      </div>
+    </ResultsQueryContext>
   );
 }
 
 /** Renders one grouped Convex search result section. */
-function ResultGroup({
-  group,
-  query,
-}: {
-  group: SearchResultGroup;
-  query: string;
-}) {
+function ResultGroup({ group }: { group: SearchResultGroup }) {
+  const query = useResultsQuery();
   return (
     <div className="space-y-2">
       <h2 className="px-4 font-medium text-muted-foreground text-sm">
