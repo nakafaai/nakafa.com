@@ -9,7 +9,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { Calendar03Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodName } from "@repo/backend/confect/tenancy/period";
@@ -197,8 +197,8 @@ function SchoolPeriodTable({
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
     return (
       <TableEmpty
+        act="thinking"
         description={t("periods-description")}
-        icon={<HugeIcons icon={Calendar03Icon} />}
         title={t("periods-empty")}
       />
     );
