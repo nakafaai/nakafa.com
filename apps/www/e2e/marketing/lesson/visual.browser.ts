@@ -77,20 +77,38 @@ function expectWindowShare(root: Locator, share: number) {
   });
 }
 
+/** The most scrolls that setting the window's share takes. */
+const SHARE_SCROLLS = 6;
+
+/** How close, in pixels, the window's top must come to where the share begins. */
+const SHARE_TOLERANCE_PX = 0.5;
+
 /**
- * Scrolls the page at once, so that `share` of the window's height lies on the
- * screen. The window's top moves to the point where that share begins, so the
- * scroll sets the share and no test waits on a frame for it.
+ * Scrolls the page at once until `share` of the window's height lies on the
+ * screen. The window rises into place as the page scrolls, so one scroll aimed
+ * from where it stood lands a little off: each scroll waits two frames for the
+ * rise to follow, then aims again from where the window now stands, and the
+ * share settles within a few scrolls.
  */
 function scrollWindowToShare(page: Page, root: Locator, share: number) {
   return Effect.promise(async () => {
-    const box = await root.boundingBox();
-    expect(box).not.toBeNull();
-    const top = desktopViewport.height - share * (box?.height ?? 0);
-    await page.evaluate(
-      (distance) => window.scrollBy({ behavior: "instant", top: distance }),
-      (box?.y ?? 0) - top
-    );
+    for (let scroll = 0; scroll < SHARE_SCROLLS; scroll++) {
+      const box = await root.boundingBox();
+      expect(box).not.toBeNull();
+      const top = desktopViewport.height - share * (box?.height ?? 0);
+      const distance = (box?.y ?? 0) - top;
+      if (Math.abs(distance) < SHARE_TOLERANCE_PX) {
+        return;
+      }
+      await page.evaluate(
+        (by) =>
+          new Promise<void>((resolve) => {
+            window.scrollBy({ behavior: "instant", top: by });
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          }),
+        distance
+      );
+    }
   });
 }
 
