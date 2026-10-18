@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { LayoutContent } from "@/components/shared/content/layout";
 import { useTenant } from "@/components/tenant/context";
 
 /**
@@ -14,10 +15,12 @@ export function TenantHome() {
   const t = useTranslations("School");
 
   return (
-    <p className="mx-auto w-full max-w-3xl px-6 py-6 text-sm">
-      {tenant.role === null
-        ? t("signed-in")
-        : t("signed-in-as", { role: t(`role.${tenant.role}`) })}
-    </p>
+    <LayoutContent className="w-full py-6 text-sm">
+      <p>
+        {tenant.role === null
+          ? t("signed-in")
+          : t("signed-in-as", { role: t(`role.${tenant.role}`) })}
+      </p>
+    </LayoutContent>
   );
 }
