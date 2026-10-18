@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -7,9 +7,17 @@ import { Array as Arr, Effect, Schema } from "effect";
 const seedTeacher = refs.internal.tenancy.seed.teacher;
 const teacherAddress = Schema.decodeSync(Email)("guru@acceptance.example.test");
 
-/** Fake timers keep the invitation workflow from starting before the test looks at the invite. */
+/**
+ * Fake timers keep the invitation workflow from starting before the test looks at the invite.
+ * The flag lets the seed run, as the acceptance runtime sets it.
+ */
 beforeEach(() => {
   vi.useFakeTimers();
+  vi.stubEnv("ACCEPTANCE_SEED", "true");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("tenancy/seed teacher", () => {
@@ -72,5 +80,28 @@ describe("tenancy/seed teacher", () => {
         .pipe(Effect.flip);
       expect(refusal).toMatchObject({ _tag: "TenantNotFound" });
     })
+  );
+
+  it.effect(
+    "refuses to seed outside the acceptance runtime, and writes no person",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const before = yield* fixture.run(journal);
+        vi.stubEnv("ACCEPTANCE_SEED", "false");
+        const refusal = yield* fixture.internal
+          .mutation(seedTeacher, {
+            email: teacherAddress,
+            locale: "id",
+            name: "Guru Acceptance",
+            slug: slugOf("nf"),
+          })
+          .pipe(Effect.flip);
+        expect(refusal).toMatchObject({
+          _tag: "SeedRefused",
+          code: "SEED_REFUSED",
+        });
+        expect(yield* fixture.run(journal)).toEqual(before);
+      })
   );
 });

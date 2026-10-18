@@ -1,15 +1,11 @@
-import type {
-  ExamAttemptsDoc,
-  ExamSittingsDoc,
-} from "@repo/backend/confect/_generated/docs";
+import type { ExamAttemptsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  DatabaseReader,
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
+import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import { RetiredDevicesFull } from "@repo/backend/confect/exams/sittings/errors";
 import {
@@ -25,35 +21,16 @@ import {
 } from "@repo/backend/confect/exams/sittings/timers";
 import {
   drawToken,
+  sealToken,
   tokenHash,
 } from "@repo/backend/confect/exams/sittings/token";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { readTenantKeys } from "@repo/backend/confect/vault/keys";
-import { Array as Arr, Clock, Duration, Effect, Option } from "effect";
+import { Array as Arr, Clock, Duration, Effect } from "effect";
 
 /** One minute in milliseconds, so added minutes move a deadline by whole minutes. */
 const MINUTE_MS = 60_000;
-
-/** The attempt that a proctor acts on. It must belong to the sitting that the action names. */
-const attemptIn = Effect.fn("exams.sittings.proctor.attempt")(function* (
-  sitting: ExamSittingsDoc,
-  attemptId: ExamAttemptsDoc["_id"],
-  action: string
-) {
-  const found = yield* (yield* DatabaseReader)
-    .table("examAttempts")
-    .get(attemptId)
-    .pipe(Effect.catchTag("DocumentDecodeError", Effect.die), Effect.option);
-  const row = Option.filter(
-    found,
-    (attempt) => attempt.sitting === sitting._id
-  );
-  if (Option.isNone(row)) {
-    return yield* new AccessDenied({ action, reason: "resource" });
-  }
-  return row.value;
-});
 
 /** Writes a new state to the attempt, when the state changes. */
 const setState = Effect.fn("exams.sittings.proctor.state")(function* (
@@ -211,10 +188,17 @@ export const changeToken = Effect.fn("exams.sittings.changeToken")(
     const token = yield* drawToken().pipe(Effect.orDie);
     const keys = yield* readTenantKeys(sitting.tenantId).pipe(Effect.orDie);
     const hash = yield* tokenHash(keys, sitting._id, token).pipe(Effect.orDie);
+    const sealed = yield* sealToken(keys, sitting._id, token).pipe(
+      Effect.orDie
+    );
     const now = yield* Clock.currentTimeMillis;
     yield* (yield* DatabaseWriter)
       .table("examSittings")
-      .patch(sitting._id, { tokenHash: hash, tokenIssuedAt: now })
+      .patch(sitting._id, {
+        tokenHash: hash,
+        tokenIssuedAt: now,
+        tokenSealed: sealed,
+      })
       .pipe(Effect.orDie);
     yield* sittingAuthority.record(personActor(member.person), sitting, {
       type: "sitting.changeToken",

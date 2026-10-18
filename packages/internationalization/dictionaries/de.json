@@ -188,6 +188,7 @@
         "addMinutes": "Minuten zu einem Prüfungsversuch hinzugefügt",
         "changeToken": "Token des Prüfungstermins geändert",
         "allowDevice": "Zweites Gerät für einen Prüfungsversuch erlaubt",
+        "finish": "Prüfungsversuch abgegeben",
         "close": "Prüfungstermin geschlossen"
       },
       "tenant": {
