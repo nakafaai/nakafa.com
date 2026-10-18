@@ -14,8 +14,13 @@ import { EditorPreview } from "@repo/design-system/components/editor/words";
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import { cn } from "cn";
-import type { ComponentProps } from "react";
-import { useMemo, useState } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  use,
+  useMemo,
+  useState,
+} from "react";
 
 interface RichEditorProps {
   /**
@@ -47,6 +52,27 @@ interface RichEditorProps {
   onRefuse: () => void;
   /** The hint shown while the text is empty. */
   placeholder: string;
+}
+
+/** The names of the toolbar's controls, which the editor provides to its toolbar. */
+const EditorLabelsContext = createContext<RichEditorProps["labels"] | null>(
+  null
+);
+
+/** Selects the names of the toolbar's controls from the surrounding editor. */
+function useEditorLabels() {
+  const labels = use(EditorLabelsContext);
+  if (labels === null) {
+    // A missing editor is a programmer composition error at this React seam.
+    throw new Error("The editor toolbar requires RichEditor.");
+  }
+  return labels;
+}
+
+/** The toolbar above the text, with the names of its controls. */
+function EditorToolbar() {
+  const labels = useEditorLabels();
+  return <RichEditorToolbar labels={labels} />;
 }
 
 /**
@@ -123,10 +149,12 @@ export function RichEditor({
 
   return (
     <EditorContext value={context}>
-      <div className={editorFrame()} data-slot="editor">
-        <RichEditorToolbar labels={labels} />
-        <EditorContent className={editorScroll()} editor={editor} />
-      </div>
+      <EditorLabelsContext value={labels}>
+        <div className={editorFrame()} data-slot="editor">
+          <EditorToolbar />
+          <EditorContent className={editorScroll()} editor={editor} />
+        </div>
+      </EditorLabelsContext>
     </EditorContext>
   );
 }

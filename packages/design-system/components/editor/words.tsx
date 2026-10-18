@@ -12,6 +12,7 @@ import { itemTokens } from "@repo/design-system/components/editor/plain";
 import { decodeReferences } from "@repo/design-system/components/editor/references";
 import { Array as Arr, Match, String as Str } from "effect";
 import type { Token, Tokens } from "marked-tiptap";
+import type { ReactNode } from "react";
 
 /**
  * The saved Markdown of a text, drawn as the rich editor draws it: the same bar,
@@ -96,7 +97,9 @@ function Block({ hint, token }: { hint?: string | undefined; token: Token }) {
       </p>
     )),
     Match.when({ type: "heading" }, ({ depth, tokens }) => (
-      <Heading depth={depth} hint={hint} tokens={tokens} />
+      <Heading depth={depth} hint={hint}>
+        <Textblock tokens={tokens} />
+      </Heading>
     )),
     Match.when({ type: "list" }, (list) => <List list={list} />),
     Match.when({ type: "blockquote" }, ({ tokens }) => (
@@ -122,28 +125,28 @@ function Block({ hint, token }: { hint?: string | undefined; token: Token }) {
 
 /** A heading. The editor has three levels, and a deeper heading is drawn as the first. */
 function Heading({
+  children,
   depth,
   hint,
-  tokens,
 }: {
+  children: ReactNode;
   depth: number;
   hint?: string | undefined;
-  tokens: Token[];
 }) {
   return Match.value(depth).pipe(
     Match.when(2, () => (
       <h2 dir="auto" {...hintOf(hint)}>
-        <Textblock tokens={tokens} />
+        {children}
       </h2>
     )),
     Match.when(3, () => (
       <h3 dir="auto" {...hintOf(hint)}>
-        <Textblock tokens={tokens} />
+        {children}
       </h3>
     )),
     Match.orElse(() => (
       <h1 dir="auto" {...hintOf(hint)}>
-        <Textblock tokens={tokens} />
+        {children}
       </h1>
     ))
   );
