@@ -1,7 +1,6 @@
 "use client";
 
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
   CardDescription,
@@ -23,13 +22,9 @@ import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-  CardSectionHint,
-} from "@/components/shared/card/section";
+import { CardSection } from "@/components/shared/card/section";
 import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
+import { SettingsFormFooter } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
 import { roles } from "@/lib/data/roles";
 import type { CurrentUser } from "@/lib/identity/client";
@@ -163,20 +158,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
             )}
           </form.Field>
         </CardContent>
-        <CardSectionFooter>
-          <form.Subscribe selector={(state) => state.isDirty}>
-            {(isDirty) => (
-              <>
-                <CardSectionHint>{t("role-footer")}</CardSectionHint>
-                <CardSectionActions>
-                  <Button disabled={!isDirty} size="sm" type="submit">
-                    {t("save")}
-                  </Button>
-                </CardSectionActions>
-              </>
-            )}
-          </form.Subscribe>
-        </CardSectionFooter>
+        <SettingsFormFooter form={form} hint={t("role-footer")} />
       </CardSection>
     </form>
   );

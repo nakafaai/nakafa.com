@@ -1,7 +1,6 @@
 "use client";
 
 import { readBio, tidyBio } from "@repo/backend/confect/users/bio";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
   CardDescription,
@@ -16,11 +15,11 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   CardSection,
-  CardSectionActions,
   CardSectionFooter,
   CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateBioMutation } from "@/components/user/mutation.client";
+import { SettingsSave } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
@@ -100,11 +99,7 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
               {t("bio-too-long")}
             </CardSectionHint>
           )}
-          <CardSectionActions>
-            <Button disabled={!canSave} size="sm" type="submit">
-              {t("save")}
-            </Button>
-          </CardSectionActions>
+          <SettingsSave disabled={!canSave} />
         </CardSectionFooter>
       </CardSection>
     </form>

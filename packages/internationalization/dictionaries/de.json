@@ -1,7 +1,7 @@
 {
   "School": {
     "account-settings": "Kontoeinstellungen",
-    "back-to-learning": "Zu Nakafa Lernen wechseln",
+    "back-to-learning": "Zurück zu Nakafa",
     "for-you": "Für dich",
     "home": "Startseite",
     "language": "Sprache",
@@ -358,7 +358,7 @@
     "invite-dialog-title": "Person einladen",
     "invite-dialog-description": "Die Person erhält die Einladung an diese E-Mail-Adresse und meldet sich mit ihr an.",
     "invite-person": "Person",
-    "invite-person-placeholder": "Person ohne Konto wählen",
+    "invite-person-placeholder": "Person wählen",
     "invite-none-left": "Alle aktiven Personen dieser Schule haben bereits ein Konto.",
     "invite-locale": "Sprache der E-Mail",
     "invite-submit": "Einladen",
@@ -395,9 +395,11 @@
     "grant-revoke-confirm": "Widerrufen",
     "roles-role-placeholder": "Rolle wählen",
     "roles-assign": "Rolle geben",
+    "roles-assign-title": "Schulweite Rolle",
     "roles-assign-footer": "Eine Rolle gilt für die gesamte Schule.",
     "students-description": "Wählen Sie eine Person, um ihre Anmeldekarte auszustellen oder neu auszustellen.",
     "card-issue": "Karte ausstellen",
+    "card-issue-title": "Anmeldekarte",
     "card-issue-description": "Eine Anmeldekarte erlaubt einem Schüler die Anmeldung mit Anmeldename und Code.",
     "card-login-name": "Anmeldename",
     "card-login-name-placeholder": "Anmeldename",
@@ -503,6 +505,7 @@
     "navigate": "Navigieren",
     "close": "Schließen",
     "community": "Community",
+    "your-schools": "Deine Schulen",
     "report": "Melden",
     "copy-content": "Inhalt kopieren",
     "content-actions": "Aktionen zum Inhalt",
@@ -618,7 +621,7 @@
   },
   "Notifications": {
     "title": "Benachrichtigungen",
-    "mark-all-read": "Alle als gelesen markieren",
+    "mark-all-read": "Alle gelesen",
     "empty": "Du hast noch keine Benachrichtigungen.",
     "person-invited": "Du wurdest eingeladen, dieser Schule beizutreten."
   },

@@ -12,11 +12,13 @@ import {
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Schema } from "effect";
 
+const siteUrl = new URL(SITE_ORIGIN);
+
 const inviteEmailPreviewInput = {
   locale: "en",
   organisation: "Harapan Bangsa Foundation",
   privacyPolicyUrl: new URL("/en/privacy-policy", SITE_ORIGIN).href,
-  signInUrl: new URL("/en/auth", SITE_ORIGIN).href,
+  signInUrl: new URL(`${siteUrl.protocol}//harapan.${siteUrl.host}/`).href,
   termsOfServiceUrl: new URL("/en/terms-of-service", SITE_ORIGIN).href,
 } satisfies InviteEmailInput;
 

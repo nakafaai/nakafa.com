@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
   CardDescription,
@@ -14,13 +13,9 @@ import { useForm } from "@tanstack/react-form";
 import { Effect, Schema, String as Str } from "effect";
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-  CardSectionHint,
-} from "@/components/shared/card/section";
+import { CardSection } from "@/components/shared/card/section";
 import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
+import { SettingsFormFooter } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 
@@ -127,26 +122,7 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
             }}
           </form.Field>
         </CardContent>
-        <CardSectionFooter>
-          <form.Subscribe
-            selector={(state) => [state.isDirty, state.isValid] as const}
-          >
-            {([isDirty, isValid]) => (
-              <>
-                <CardSectionHint>{t("name-footer")}</CardSectionHint>
-                <CardSectionActions>
-                  <Button
-                    disabled={!(isDirty && isValid)}
-                    size="sm"
-                    type="submit"
-                  >
-                    {t("save")}
-                  </Button>
-                </CardSectionActions>
-              </>
-            )}
-          </form.Subscribe>
-        </CardSectionFooter>
+        <SettingsFormFooter form={form} hint={t("name-footer")} />
       </CardSection>
     </form>
   );

@@ -135,8 +135,10 @@ function SchoolProfileCard({
       <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
         <div className="grid min-w-0 flex-1 gap-1">
-          <p className="truncate font-medium">{tenant.name}</p>
-          <p className="truncate text-muted-foreground text-sm">{address}</p>
+          <p className="wrap-anywhere font-medium">{tenant.name}</p>
+          <p className="wrap-anywhere text-muted-foreground text-sm">
+            {address}
+          </p>
         </div>
         <Button onClick={copyAddress} size="sm" type="button" variant="outline">
           {t("address-copy")}

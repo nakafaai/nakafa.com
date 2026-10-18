@@ -4,6 +4,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
 import { AppProviders } from "@/components/providers/app";
+import { LayoutContent } from "@/components/shared/content/layout";
 import { SchoolSettingsHeader } from "@/components/tenant/settings/header";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
@@ -50,7 +51,9 @@ export default async function SchoolSettingsLayout({
   return (
     <AppProviders pageNavigation={null}>
       <SchoolSettingsHeader />
-      <div className="flex flex-col gap-6 px-4 py-6">{children}</div>
+      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+        {children}
+      </LayoutContent>
     </AppProviders>
   );
 }
