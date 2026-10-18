@@ -47,8 +47,8 @@ interface Props {
   dayLabels: Record<ChartDay, string>;
   description: ReactNode;
   seriesLabels: {
-    laboratory: ReactNode;
-    library: ReactNode;
+    laboratory: string;
+    library: string;
   };
   title: ReactNode;
   yAxisLabel: string;

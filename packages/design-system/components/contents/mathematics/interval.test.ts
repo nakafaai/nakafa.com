@@ -13,10 +13,10 @@ describe("intervals", () => {
     expect(intervalOf([5])).toEqual({ max: 5, min: 5 });
   });
 
-  it("separates the bounds with a comma, or a semicolon in Indonesian", () => {
+  it("separates the bounds with a semicolon in German and Indonesian, and a comma elsewhere", () => {
     expect(intervalSeparator("id")).toBe("; ");
     expect(intervalSeparator("en")).toBe(", ");
-    expect(intervalSeparator("de")).toBe(", ");
+    expect(intervalSeparator("de")).toBe("; ");
   });
 
   it("writes an interval in brackets with its bounds as math", () => {

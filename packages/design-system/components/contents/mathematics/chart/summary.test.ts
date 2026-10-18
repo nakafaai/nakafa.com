@@ -15,13 +15,13 @@ describe("chart totals", () => {
 });
 
 describe("chart series readings", () => {
-  it("finds the highest and the lowest category, with the total and the mean", () => {
+  it("finds the highest and the lowest category, with the mean and the range", () => {
     expect(summarizeSeries(["Jan", "Feb", "Mar"], [27, 31.5, 26.5])).toEqual(
       Option.some({
         highest: { category: "Feb", value: 31.5 },
         lowest: { category: "Mar", value: 26.5 },
         mean: 85 / 3,
-        total: 85,
+        range: 5,
       })
     );
   });
@@ -32,7 +32,7 @@ describe("chart series readings", () => {
         highest: { category: "b", value: -1 },
         lowest: { category: "a", value: -4 },
         mean: -2.5,
-        total: -5,
+        range: 3,
       })
     );
   });

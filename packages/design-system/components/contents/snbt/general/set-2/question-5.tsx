@@ -35,9 +35,9 @@ const chartData = [
 interface Props {
   description: ReactNode;
   seriesLabels: {
-    pants: ReactNode;
-    shirts: ReactNode;
-    suits: ReactNode;
+    pants: string;
+    shirts: string;
+    suits: string;
   };
   title: ReactNode;
   yAxisLabel: string;

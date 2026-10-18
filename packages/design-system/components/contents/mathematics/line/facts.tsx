@@ -13,7 +13,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 
 /**
  * The readouts of a line scene in its footer: the interval that each axis spans,
- * and, when the lines reach into depth, the z axis and the number of curves. It
+ * and, when the lines reach into depth, the z axis and the number of lines. It
  * holds no client state, so a server card draws it and its math stays on the server.
  */
 export function LineFacts({ lines }: { lines: readonly ResolvedLine[] }) {
@@ -49,7 +49,7 @@ export function LineFacts({ lines }: { lines: readonly ResolvedLine[] }) {
             }
           />
           <VisualFact
-            label={t("curves")}
+            label={t("lines")}
             value={format.number(count, MATH_NUMBER_OPTIONS)}
           />
         </>

@@ -33,10 +33,10 @@ const chartData = [
 interface Props {
   description: ReactNode;
   seriesLabels: {
-    A: ReactNode;
-    B: ReactNode;
-    C: ReactNode;
-    D: ReactNode;
+    A: string;
+    B: string;
+    C: string;
+    D: string;
   };
   title: ReactNode;
   yAxisLabel: string;

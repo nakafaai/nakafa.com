@@ -38,9 +38,9 @@ interface Props {
   description: ReactNode;
   monthLabels: Record<ChartMonth, string>;
   seriesLabels: {
-    chili: ReactNode;
-    garlic: ReactNode;
-    shallot: ReactNode;
+    chili: string;
+    garlic: string;
+    shallot: string;
   };
   title: ReactNode;
   yAxisLabel: string;

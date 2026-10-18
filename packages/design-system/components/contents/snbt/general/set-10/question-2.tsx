@@ -38,10 +38,10 @@ const RECRUITMENT_CUES = {
 };
 
 interface Props {
-  acceptedLabel: ReactNode;
+  acceptedLabel: string;
   description: ReactNode;
   divisionLabel: string;
-  rejectedLabel: ReactNode;
+  rejectedLabel: string;
   title: ReactNode;
 }
 

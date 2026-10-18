@@ -1,10 +1,7 @@
 "use client";
 
 import { useChartData } from "@repo/design-system/components/contents/mathematics/chart/context";
-import {
-  summarizeSeries,
-  totalOf,
-} from "@repo/design-system/components/contents/mathematics/chart/summary";
+import { summarizeSeries } from "@repo/design-system/components/contents/mathematics/chart/summary";
 import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
 import { VisualCardFacts } from "@repo/design-system/components/visual/card";
 import {
@@ -16,7 +13,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 /**
  * The four readings of a chart with one series, in its footer: the category of
- * its highest value and of its lowest, its total, and its mean.
+ * its highest value and of its lowest, the range between them, and its mean.
  */
 export function ChartSummaryFacts() {
   const t = useTranslations("Common");
@@ -29,7 +26,7 @@ export function ChartSummaryFacts() {
     return null;
   }
 
-  const { highest, lowest, mean, total } = summary.value;
+  const { highest, lowest, mean, range } = summary.value;
   const formatNumber = (value: number) =>
     format.number(value, MATH_NUMBER_OPTIONS);
 
@@ -43,30 +40,35 @@ export function ChartSummaryFacts() {
         label={t("lowest")}
         value={`${lowest.category}: ${formatNumber(lowest.value)}`}
       />
-      <VisualFact label={t("total")} value={formatNumber(total)} />
+      <VisualFact label={t("range")} value={formatNumber(range)} />
       <VisualFact label={t("mean")} value={formatNumber(mean)} />
     </VisualCardFacts>
   );
 }
 
 /**
- * One reading for each series of a chart, in its footer: the total of the series
- * over every category, labelled with the series and marked with its color.
+ * One reading for each series of a chart, in its footer: the mean of the series
+ * over its categories, labelled with the series and marked with its color.
  */
 export function ChartSeriesFacts() {
+  const t = useTranslations("Common");
   const format = useFormatter();
-  const { series } = useChartData();
+  const { categories, series } = useChartData();
 
   return (
     <VisualCardFacts>
-      {Arr.map(series, (item) => (
-        <VisualFactIndicator
-          indicatorColor={item.color}
-          key={item.key}
-          label={item.label}
-          value={format.number(totalOf(item.values), MATH_NUMBER_OPTIONS)}
-        />
-      ))}
+      {Arr.flatMap(series, (item) =>
+        Option.toArray(
+          Option.map(summarizeSeries(categories, item.values), ({ mean }) => (
+            <VisualFactIndicator
+              indicatorColor={item.color}
+              key={item.key}
+              label={t("series-mean", { series: item.label })}
+              value={format.number(mean, MATH_NUMBER_OPTIONS)}
+            />
+          ))
+        )
+      )}
     </VisualCardFacts>
   );
 }

@@ -46,8 +46,8 @@ interface Props {
   description: ReactNode;
   monthLabels: Record<ChartMonth, string>;
   seriesLabels: {
-    governmentPrice: ReactNode;
-    grainPrice: ReactNode;
+    governmentPrice: string;
+    grainPrice: string;
   };
   title: ReactNode;
   yAxisLabel: string;

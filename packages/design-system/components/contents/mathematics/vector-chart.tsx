@@ -58,11 +58,16 @@ function vectorColor(vector: Props["vectors"][number], index: number) {
   return vector.color ?? VECTOR_COLORS[index % VECTOR_COLORS.length];
 }
 
+type VectorGeometry = Effect.Success<ReturnType<typeof resolveVectorGeometry>>;
+
 /**
  * One reading for each vector in the footer: its name, marked with its color,
  * and its components, which run from its tail to its tip.
  */
-function VectorFacts({ vectors }: Pick<Props, "vectors">) {
+function VectorFacts({
+  geometries,
+  vectors,
+}: Pick<Props, "vectors"> & { geometries: readonly VectorGeometry[] }) {
   const format = useFormatter();
   const formatNumber = (value: number) =>
     mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
@@ -70,7 +75,7 @@ function VectorFacts({ vectors }: Pick<Props, "vectors">) {
   return (
     <VisualCardFacts>
       {Arr.map(vectors, (vector, index) => {
-        const { tail, tip } = Effect.runSync(resolveVectorGeometry(vector));
+        const { tail, tip } = geometries[index];
         const components = `(${formatNumber(tip.x - tail.x)}, ${formatNumber(tip.y - tail.y)})`;
         return (
           <VisualFactIndicator
@@ -87,6 +92,9 @@ function VectorFacts({ vectors }: Pick<Props, "vectors">) {
 
 /** Preserves authored point order and arrow direction in the shared plane scene. */
 export function VectorChart({ title, description, vectors }: Props) {
+  const geometries = Arr.map(vectors, (vector) =>
+    Effect.runSync(resolveVectorGeometry(vector))
+  );
   return (
     <CoordinateProvider>
       <VisualCard>
@@ -99,7 +107,7 @@ export function VectorChart({ title, description, vectors }: Props) {
           showZAxis={false}
         >
           {Arr.map(vectors, (vector, index) => {
-            const geometry = Effect.runSync(resolveVectorGeometry(vector));
+            const geometry = geometries[index];
             const arrow = VECTOR_ARROWS[geometry.direction];
             const color = vectorColor(vector, index);
             const { tail, tip } = geometry;
@@ -150,7 +158,7 @@ export function VectorChart({ title, description, vectors }: Props) {
         </div>
         <CoordinateControls />
         <VisualCardFooter>
-          <VectorFacts vectors={vectors} />
+          <VectorFacts geometries={geometries} vectors={vectors} />
         </VisualCardFooter>
       </VisualCard>
     </CoordinateProvider>

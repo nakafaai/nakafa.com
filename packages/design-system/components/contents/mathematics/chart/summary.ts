@@ -6,12 +6,12 @@ const CategoryValueSchema = Schema.Struct({
   value: Schema.Finite,
 });
 
-/** The readings of one series: its highest and lowest category, its total, and its mean. */
+/** The readings of one series: its highest and lowest category, its mean, and its range. */
 const SeriesSummarySchema = Schema.Struct({
   highest: CategoryValueSchema,
   lowest: CategoryValueSchema,
   mean: Schema.Finite,
-  total: Schema.Finite,
+  range: Schema.Finite,
 });
 
 /** The readings of one series. */
@@ -24,7 +24,8 @@ export function totalOf(values: readonly number[]) {
 
 /**
  * Reads one series of a chart: the category of its highest and of its lowest
- * value, its total, and its mean. A series without categories has no reading.
+ * value, the range between those two values, and its mean. A series without
+ * categories has no reading.
  */
 export function summarizeSeries(
   categories: readonly string[],
@@ -40,11 +41,13 @@ export function summarizeSeries(
     Order.Number,
     (point: typeof CategoryValueSchema.Type) => point.value
   );
+  const highest = Arr.max(points, byValue);
+  const lowest = Arr.min(points, byValue);
   const total = totalOf(Arr.map(points, (point) => point.value));
   return Option.some({
-    highest: Arr.max(points, byValue),
-    lowest: Arr.min(points, byValue),
+    highest,
+    lowest,
     mean: total / points.length,
-    total,
+    range: highest.value - lowest.value,
   });
 }

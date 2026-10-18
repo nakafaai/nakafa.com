@@ -40,8 +40,8 @@ const GRADUATION_CUES = {
 interface Props {
   classLabel: string;
   description: ReactNode;
-  failedLabel: ReactNode;
-  passedLabel: ReactNode;
+  failedLabel: string;
+  passedLabel: string;
   title: ReactNode;
 }
 

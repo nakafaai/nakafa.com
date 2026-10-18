@@ -20,9 +20,12 @@ export function intervalOf(
   };
 }
 
-/** The separator between the bounds of an interval: a semicolon in Indonesian, a comma elsewhere. */
+/**
+ * The separator between the bounds of an interval: a semicolon in German and
+ * Indonesian, where the decimal mark is a comma, and a comma elsewhere.
+ */
 export function intervalSeparator(locale: string) {
-  return locale === "id" ? "; " : ", ";
+  return locale === "de" || locale === "id" ? "; " : ", ";
 }
 
 /**

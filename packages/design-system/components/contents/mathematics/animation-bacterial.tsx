@@ -249,10 +249,11 @@ export function BacterialGrowth({
             <VisualFact
               label={t("bacteria")}
               value={
-                // One text node: a count that grows a digit would otherwise move
-                // the label beside it, a layout shift no learner caused.
-                <span aria-live="polite">
+                // aria-atomic makes a screen reader announce the count with its
+                // subject, which is visually hidden because the label already shows it.
+                <span aria-atomic="true" aria-live="polite">
                   {format.number(frame.bacteriaCount, MATH_NUMBER_OPTIONS)}
+                  <span className="sr-only"> {t("bacteria")}</span>
                 </span>
               }
             />

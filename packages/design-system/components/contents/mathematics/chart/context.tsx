@@ -1,22 +1,27 @@
 "use client";
 
+import { Schema } from "effect";
 import { createContext, type ReactNode, use } from "react";
 
-/** One series of a chart, with the label and the color its legend shows. */
-interface ChartSeries {
+/** One series of a chart, with the name and the color its legend shows. */
+const ChartSeriesSchema = Schema.Struct({
   /** The color that the series has in the chart, when the chart gives it one. */
-  color?: string | undefined;
-  key: string;
-  label: ReactNode;
+  color: Schema.optional(Schema.String),
+  key: Schema.String,
+  /** The name of the series, which its legend and its footer show. */
+  label: Schema.String,
   /** The value of the series in each category, in the order of the categories. */
-  values: readonly number[];
-}
+  values: Schema.Array(Schema.Finite),
+});
 
 /** The categories and the series that one chart card draws, which its footer reads. */
-export interface ChartData {
-  categories: readonly string[];
-  series: readonly ChartSeries[];
-}
+const ChartDataSchema = Schema.Struct({
+  categories: Schema.Array(Schema.String),
+  series: Schema.Array(ChartSeriesSchema),
+});
+
+/** The data of one chart card: its categories and its series. */
+export type ChartData = typeof ChartDataSchema.Type;
 
 const ChartDataContext = createContext<ChartData | null>(null);
 

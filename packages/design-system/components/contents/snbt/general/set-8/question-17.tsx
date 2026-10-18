@@ -41,9 +41,9 @@ const PROFIT_CUES = {
 };
 
 interface Props {
-  capitalLabel: ReactNode;
+  capitalLabel: string;
   description: ReactNode;
-  revenueLabel: ReactNode;
+  revenueLabel: string;
   title: ReactNode;
   yearLabel: string;
 }
