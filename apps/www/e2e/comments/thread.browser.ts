@@ -52,7 +52,7 @@ const openComments = Effect.fn("NakafaE2E.openComments")(function* (
   });
 });
 
-test("a comment, a reply and a reply to that reply make one thread, and a like and a delete show at once", async ({
+test("a comment, a reply and a reply to that reply make one thread, a closed reply keeps its words, and a like and a delete show at once", async ({
   baseURL,
   browser,
 }) => {
@@ -108,6 +108,23 @@ test("a comment, a reply and a reply to that reply make one thread, and a like a
               await replyComposer(replier)
                 .getByRole("textbox", { name: PLACEHOLDER })
                 .fill(reply);
+              // Escape closes the reply composer, and its words wait for it.
+              await replyComposer(replier)
+                .getByRole("textbox", { name: PLACEHOLDER })
+                .press("Escape");
+              await expect(
+                replier.locator("form").filter({
+                  has: replier.getByRole("textbox", { name: PLACEHOLDER }),
+                })
+              ).toHaveCount(1);
+              await rowOf(replier, top)
+                .getByRole("button", { name: app.Common.reply, exact: true })
+                .click();
+              await expect(
+                replyComposer(replier).getByRole("textbox", {
+                  name: PLACEHOLDER,
+                })
+              ).toHaveValue(reply);
               await replyComposer(replier)
                 .getByRole("button", { name: app.Posts.post, exact: true })
                 .click();

@@ -9,21 +9,20 @@ import { InputGroupTextarea } from "@repo/design-system/components/ui/input-grou
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { Effect, Option, Result, String as Str } from "effect";
+import { Effect, Option, Result } from "effect";
 import { useTranslations } from "next-intl";
-import {
-  type FocusEvent,
-  type FormEvent,
-  type KeyboardEvent,
-  useState,
-} from "react";
+import type { FocusEvent, FormEvent, KeyboardEvent } from "react";
+import { type ComposerKey, textOf } from "@/components/comments/draft";
+import { useCommentDraft } from "@/components/comments/provider";
 import { FeedAvatar, FeedForm } from "@/components/user/feed";
 import { remainingToShow } from "@/components/user/posts/remaining";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { useViewer } from "@/lib/identity/client";
 
-/** Props of the composer: how it posts, and how it closes when it is a reply. */
+/** Props of the composer: whose words it holds, how it posts, and how it closes when it is a reply. */
 interface Props {
+  /** The comment a reply composer answers; the list's own composer has none. */
+  readonly answers?: ComposerKey;
   /** Whether the text field takes the focus when the composer appears. */
   readonly autoFocus?: boolean;
   /** Closes a reply composer on Escape, and when the learner leaves it empty. */
@@ -39,15 +38,23 @@ function focusOnMount(node: HTMLTextAreaElement | null) {
 
 /**
  * Writes a comment or a reply in the composer of the posts. The text clears on
- * Post and stays usable while the server saves, so nothing waits. A refused post
- * gives its text back to the field, ahead of any next text written meanwhile and
- * a blank line apart, and the list says why.
+ * Post and stays usable while the server saves, so nothing waits. The words live
+ * in the list's draft, so a reply composer that closes keeps them for when it
+ * opens again, and a refused post gives its text back there, ahead of any next
+ * text written meanwhile, while the list says why.
  */
-export function CommentComposer({ autoFocus = false, onClose, onPost }: Props) {
+export function CommentComposer({
+  answers = "",
+  autoFocus = false,
+  onClose,
+  onPost,
+}: Props) {
   const t = useTranslations("Comments");
   const tPosts = useTranslations("Posts");
   const user = useViewer((state) => state.account);
-  const [text, setText] = useState("");
+  const text = useCommentDraft((draft) => textOf(draft, answers));
+  const write = useCommentDraft((draft) => draft.write);
+  const restore = useCommentDraft((draft) => draft.restore);
   const body = readLearnerText(text);
   const remaining = remainingToShow(text);
 
@@ -58,17 +65,13 @@ export function CommentComposer({ autoFocus = false, onClose, onPost }: Props) {
       return;
     }
     const posted = body.success;
-    setText("");
+    write(answers, "");
     Effect.runPromise(
       Effect.promise(() => onPost(posted)).pipe(
         Effect.flatMap((saved) =>
           Effect.sync(() => {
             if (!saved) {
-              setText((previous) =>
-                Str.isEmpty(Str.trim(previous))
-                  ? posted
-                  : `${posted}\n\n${previous}`
-              );
+              restore(answers, posted);
             }
           })
         )
@@ -86,7 +89,7 @@ export function CommentComposer({ autoFocus = false, onClose, onPost }: Props) {
     }
   }
 
-  /** Closes a reply composer on Escape. */
+  /** Closes a reply composer on Escape; its words wait in the draft for when it opens again. */
   function closeOnEscape(event: KeyboardEvent<HTMLFormElement>) {
     if (event.key === "Escape") {
       onClose?.();
@@ -109,7 +112,7 @@ export function CommentComposer({ autoFocus = false, onClose, onPost }: Props) {
         aria-label={t("add-comment-placeholder")}
         className="min-h-10 min-w-0 flex-1 px-0 py-2"
         name="text"
-        onChange={(event) => setText(event.target.value)}
+        onChange={(event) => write(answers, event.target.value)}
         placeholder={t("add-comment-placeholder")}
         ref={autoFocus ? focusOnMount : undefined}
         value={text}

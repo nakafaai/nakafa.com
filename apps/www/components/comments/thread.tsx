@@ -71,6 +71,7 @@ function ThreadReplies({ threadId }: { threadId: CommentRowData["_id"] }) {
       ) : null}
       {target !== null && threadOf(target) === threadId ? (
         <CommentComposer
+          answers={target._id}
           autoFocus
           onClose={close}
           onPost={(text) =>

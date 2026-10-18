@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { HashSet, Schema } from "effect";
-import { createCommentDraft } from "@/components/comments/draft";
+import { createCommentDraft, textOf } from "@/components/comments/draft";
 import type { CommentRow } from "@/components/comments/state";
 
 const commentId = Schema.decodeUnknownSync(Id("comments"));
@@ -54,5 +54,31 @@ describe("the draft of a list of comments", () => {
 
     expect(HashSet.has(draft.getState().saving, root._id)).toBe(false);
     expect(HashSet.has(draft.getState().saving, other._id)).toBe(true);
+  });
+
+  it("keeps the words of each composer, so a reply composer that closes or gives way keeps them", () => {
+    const draft = createCommentDraft();
+    draft.getState().open(root);
+    draft.getState().write(root._id, "Balasan untuk root");
+    draft.getState().open(other);
+    draft.getState().write(other._id, "Balasan lain");
+    draft.getState().close();
+
+    expect(textOf(draft.getState(), root._id)).toBe("Balasan untuk root");
+    expect(textOf(draft.getState(), other._id)).toBe("Balasan lain");
+    expect(textOf(draft.getState(), "")).toBe("");
+  });
+
+  it("gives refused words back ahead of the words written since, and alone to an empty composer", () => {
+    const draft = createCommentDraft();
+    draft.getState().write("", "  ");
+    draft.getState().restore("", "Ditolak");
+    expect(textOf(draft.getState(), "")).toBe("Ditolak");
+
+    draft.getState().write(root._id, "Tulisan baru");
+    draft.getState().restore(root._id, "Ditolak lagi");
+    expect(textOf(draft.getState(), root._id)).toBe(
+      "Ditolak lagi\n\nTulisan baru"
+    );
   });
 });
