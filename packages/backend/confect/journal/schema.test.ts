@@ -65,4 +65,21 @@ describe("journal/schema", () => {
       })
     ).toBe(false);
   });
+
+  it("accepts a grade's release under the grade it releases", () => {
+    expect(
+      Schema.is(JournalEntry)({
+        actor: { id: "teacher", kind: "person" },
+        change: {
+          classId: "class",
+          periodId: "period",
+          personId: "student",
+          state: "released",
+          type: "grade.released",
+        },
+        owner: { kind: "tenant", tenantId: "tenant" },
+        subject: { id: "grade", kind: "grade" },
+      })
+    ).toBe(true);
+  });
 });

@@ -65,7 +65,7 @@ scope below is a read scope except `drive.file`, which Google also lets change
 the files that the user opened with the app. So the Drive adapter has no write
 operation. Data that leaves Nakafa (webhooks, exports, grades sent to a learning
 system) is not a connector, and ADR 0029 owns it. The one exception is the
-Dapodik XLSX export, which stays with the adapter that owns the format (see
+Dapodik XLSX export, which Records owns (ADR 0033, see
 below).
 
 | Source | What it brings | Who connects | Status |
@@ -82,12 +82,13 @@ below).
   requests to the Ministry, one to become a partner for sign-in and one for the
   official data API. Until the Ministry signs and opens the API, the uploaded
   XLSX is the only path. When the API runs, the XLSX path is replaced in the same
-  release. `confect/connectors` owns both directions of the format, so it also
-  writes the XLSX export of report data for Dapodik and e-Ijazah.
+  release. `confect/connectors` owns the import of the format, and Records owns
+  the XLSX export of report data for Dapodik and e-Ijazah (ADR 0033).
 - The Dapodik import reads a student's name, NISN, level, and class group name,
-  and the date of birth only as a mark of age, which is not stored. It reads no
-  NIK, no address, and no other column. The columns of each Dapodik version are
-  recorded from a pilot school's export.
+  and the date of birth only to set the student's under-age flag on the roster.
+  The date is not kept (ADR 0034). It reads no NIK, no address, and no other
+  column. The columns of each Dapodik version are recorded from a pilot school's
+  export.
 - A file import (the Dapodik XLSX, and the OneRoster CSV of ADR 0029) reads in an
   action, checks the file, shows a preview before it applies anything, and
   deletes the file once the import is applied or cancelled. For an XLSX file the

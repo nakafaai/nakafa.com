@@ -74,8 +74,8 @@ written against it.
 The public addresses stay keyless and never accept a school path (ADR 0006,
 ADR 0026). An export is made by a reader behind `decide`, so it holds exactly
 what its caller may read. The XLSX library is the one chosen with the Dapodik
-import, and the Dapodik export itself stays with `confect/connectors`
-(ADR 0015).
+import, and the Dapodik export itself belongs to Records (ADR 0033), and the import
+stays with the connectors (ADR 0015).
 
 ### REST: one `HttpApi`
 
