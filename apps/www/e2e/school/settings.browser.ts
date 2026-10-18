@@ -20,7 +20,17 @@ test("an admin opens the profile and the periods of a school", async ({
 
   await page.goto(address("/settings"));
   await expect(page).toHaveURL(address("/settings/profile"));
-  await expect(page.getByText(`${school.slug}.nakafa.com`)).toBeVisible();
+  // The profile shows two cards: the school logo, and the address with its copy action.
+  await expect(page.getByText("School logo", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "School address" })
+  ).toHaveValue(`${school.slug}.nakafa.com`);
+  const addressCard = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText("School address", { exact: true }) });
+  await expect(
+    addressCard.getByRole("button", { name: "Copy address" })
+  ).toBeVisible();
 
   await page.getByRole("link", { name: "Periods" }).click();
   await expect(page).toHaveURL(address("/settings/periods"));

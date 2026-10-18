@@ -14,7 +14,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Label } from "@repo/design-system/components/ui/label";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
 import { Switch } from "@repo/design-system/components/ui/switch";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, Option, Schema } from "effect";
@@ -89,21 +95,23 @@ function SchoolStudentsPolicy({
         <CardTitle>{t("policy-students")}</CardTitle>
         <CardDescription>{t("policy-students-description")}</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
-        <SchoolSwitchPolicy
-          buildPolicy={(value) => ({ key: "nina", value })}
-          checked={policies.nina}
-          description="policy-nina-description"
-          slug={slug}
-          title="policy-nina"
-        />
-        <SchoolSwitchPolicy
-          buildPolicy={(value) => ({ key: "studentThreads", value })}
-          checked={policies.studentThreads}
-          description="policy-threads-description"
-          slug={slug}
-          title="policy-threads"
-        />
+      <CardContent>
+        <FieldGroup>
+          <SchoolSwitchPolicy
+            buildPolicy={(value) => ({ key: "nina", value })}
+            checked={policies.nina}
+            description="policy-nina-description"
+            slug={slug}
+            title="policy-nina"
+          />
+          <SchoolSwitchPolicy
+            buildPolicy={(value) => ({ key: "studentThreads", value })}
+            checked={policies.studentThreads}
+            description="policy-threads-description"
+            slug={slug}
+            title="policy-threads"
+          />
+        </FieldGroup>
       </CardContent>
       <CardSectionFooter>
         <CardSectionHint>{t("policy-students-footer")}</CardSectionHint>
@@ -139,11 +147,11 @@ function SchoolSwitchPolicy({
   const id = useId();
 
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="grid min-w-0 gap-1">
-        <Label htmlFor={id}>{t(title)}</Label>
-        <p className="text-muted-foreground text-sm">{t(description)}</p>
-      </div>
+    <Field orientation="horizontal">
+      <FieldContent>
+        <FieldLabel htmlFor={id}>{t(title)}</FieldLabel>
+        <FieldDescription>{t(description)}</FieldDescription>
+      </FieldContent>
       <Switch
         checked={checked}
         id={id}
@@ -156,7 +164,7 @@ function SchoolSwitchPolicy({
           );
         }}
       />
-    </div>
+    </Field>
   );
 }
 
@@ -179,7 +187,6 @@ function SchoolDomainsPolicy({
   const [draft, setDraft] = useState(() =>
     Arr.join(policies.emailDomains, "\n")
   );
-  const id = useId();
   const domains = parseDomains(draft);
   const isChanged =
     Arr.join(domains, "\n") !== Arr.join(policies.emailDomains, "\n");
@@ -191,19 +198,19 @@ function SchoolDomainsPolicy({
         <CardDescription>{t("policy-domains-description")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Label className="sr-only" htmlFor={id}>
-          {t("policy-domains")}
-        </Label>
-        <Textarea
-          className="w-full max-w-md"
-          id={id}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder={t("policy-domains-placeholder")}
-          value={draft}
-        />
+        <FieldGroup>
+          <Field>
+            <Textarea
+              aria-label={t("policy-domains")}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder={t("policy-domains-placeholder")}
+              value={draft}
+            />
+            <FieldDescription>{t("policy-domains-footer")}</FieldDescription>
+          </Field>
+        </FieldGroup>
       </CardContent>
       <CardSectionFooter>
-        <CardSectionHint>{t("policy-domains-footer")}</CardSectionHint>
         <CardSectionActions>
           <Button
             disabled={!isChanged || Option.isNone(parsedDomains(domains))}
