@@ -1,15 +1,13 @@
+import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
 import type { BrushBindingFactory } from "@repo/design-system/components/evilcharts/ui/evil-brush-drag";
 import { EvilBrushHandle } from "@repo/design-system/components/evilcharts/ui/evil-brush-handle";
 
 interface EvilBrushControlsProps {
   bind: BrushBindingFactory;
   data: Record<string, unknown>[];
-  formatLabel?: ((value: unknown, index: number) => string) | undefined;
   rangeEndIndex: number;
   rangeStartIndex: number;
-  showLabels: boolean;
   totalPoints: number;
-  xDataKey?: string | undefined;
 }
 
 function getBrushLabel(
@@ -34,13 +32,11 @@ function getBrushLabel(
 function EvilBrushControls({
   bind,
   data,
-  formatLabel,
   rangeEndIndex,
   rangeStartIndex,
-  showLabels,
   totalPoints,
-  xDataKey,
 }: EvilBrushControlsProps) {
+  const { formatLabel, xDataKey } = useChart((chart) => chart.brush);
   const leftPercent =
     totalPoints > 1 ? (rangeStartIndex / (totalPoints - 1)) * 100 : 0;
   const rightPercent =
@@ -50,12 +46,8 @@ function EvilBrushControls({
   const rightOverlayWidth = `${Math.max(0, 100 - rightPercent)}%`;
   const selectedWidth = `${Math.max(0, rightPercent - leftPercent)}%`;
 
-  const leftLabel = showLabels
-    ? getBrushLabel(data, rangeStartIndex, xDataKey, formatLabel)
-    : undefined;
-  const rightLabel = showLabels
-    ? getBrushLabel(data, rangeEndIndex, xDataKey, formatLabel)
-    : undefined;
+  const leftLabel = getBrushLabel(data, rangeStartIndex, xDataKey, formatLabel);
+  const rightLabel = getBrushLabel(data, rangeEndIndex, xDataKey, formatLabel);
 
   return (
     <>
