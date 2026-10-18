@@ -196,7 +196,10 @@ function ThreeCanvasComponent({
 
   return (
     // The overlay is placed over this frame, so the frame is positioned.
-    <div className="relative size-full rounded-[inherit]" ref={frameRef}>
+    <div
+      className="relative size-full min-w-0 overflow-hidden rounded-[inherit]"
+      ref={frameRef}
+    >
       <SceneOverlayProvider>
         <ErrorBoundary
           fallbackRender={({ error, resetErrorBoundary }) => (

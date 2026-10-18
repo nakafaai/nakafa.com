@@ -5,8 +5,7 @@ import type {
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { decodedSteps, foldedText } from "@repo/backend/confect/editor/result";
-import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
-import { snapshotOf, stepsAfter } from "@repo/backend/confect/editor/store";
+import { snapshotOf, stepsThrough } from "@repo/backend/confect/editor/store";
 import {
   boundAttempt,
   requireOpen,
@@ -16,10 +15,12 @@ import { Array as Arr, Clock, Effect } from "effect";
 
 /**
  * The prompt of one question of the caller's paper, as the document stands now: the editor's
- * snapshot with every step after it applied. The steps come from the editor's own reader, the
- * one its open uses, in one page. A backlog that the page does not hold is refused as
- * `FoldPending`, so a student never reads text older than the last edit (ADR 0028). Only the
- * bound device of an open attempt reads a prompt, and only a question of the sitting's exam.
+ * snapshot with every step after it applied. The steps come as the editor's open reads them,
+ * with `take` up to the head, which a fold keeps within one read and one batch; a page would
+ * replay its first end in the student's subscription and fail once a fold moves the snapshot.
+ * Steps that do not reach the head are refused as `FoldPending`, so a student never reads
+ * text older than the last edit (ADR 0028). Only the bound device of an open attempt reads a
+ * prompt, and only a question of the sitting's exam.
  */
 export const prompt = Effect.fn("exams.sittings.prompt")(function* (args: {
   deviceId: string;
@@ -44,10 +45,10 @@ export const prompt = Effect.fn("exams.sittings.prompt")(function* (args: {
     .get(question.prompt)
     .pipe(Effect.orDie);
   const snapshot = yield* snapshotOf(question.prompt);
-  const rows = yield* stepsAfter(
+  const rows = yield* stepsThrough(
     question.prompt,
     snapshot.version,
-    STEP_PAGE_STEPS
+    promptDocument.head
   );
   if (rows.length < promptDocument.head - snapshot.version) {
     return yield* new FoldPending();

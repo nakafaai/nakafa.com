@@ -16,10 +16,6 @@ const SchoolSettingsSectionSchema = Schema.Struct({
   ]),
 });
 
-/** The message key of one school settings section. */
-export type SchoolSettingsLabelKey =
-  (typeof SchoolSettingsSectionSchema.Type)["labelKey"];
-
 /** One labelled group of addressable sections of the school settings surface. */
 const SchoolSettingsGroupSchema = Schema.Struct({
   /** Message key owned by the `SchoolSettings` dictionary, which labels the group. */

@@ -141,12 +141,16 @@ async function PageContent({ params }: Pick<PublicPageProps, "params">) {
   const preview = await readPagePreviewContent(input);
   if (Option.isSome(preview)) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-20">{preview.value.body}</main>
+      <main className="mx-auto w-full max-w-3xl px-6 py-20">
+        {preview.value.body}
+      </main>
     );
   }
   const page = await renderCurrentPublishedPage(input);
   if (!page) {
     notFound();
   }
-  return <main className="mx-auto max-w-3xl px-6 py-20">{page.body}</main>;
+  return (
+    <main className="mx-auto w-full max-w-3xl px-6 py-20">{page.body}</main>
+  );
 }

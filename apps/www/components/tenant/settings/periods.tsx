@@ -9,19 +9,27 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodName } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -36,16 +44,11 @@ import {
   TableCell,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { isComposingKey } from "@repo/utilities/composition";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useState } from "react";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-  CardSectionHint,
-} from "@/components/shared/card/section";
+import { startTransition, useId, useState } from "react";
+import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import {
   archivePeriodChange,
   createPeriodChange,
@@ -68,18 +71,16 @@ type UnitId = Ref.Returns<typeof tenancy.viewer.get>["units"][number]["id"];
 type PeriodItem = PaginatedQueryItem<typeof tenancy.periods.list>;
 
 /**
- * Renders the periods of one unit: the choice of the unit when the school has
- * more than one, the list of its periods, and the form that adds a period.
+ * Renders the periods of the school's unit: Add period in the header once a unit is
+ * known, the unit choice above the table when the school has more than one unit, and
+ * the periods in a data table with their row menus.
  */
 export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
+  const t = useTranslations("SchoolSettings");
   const viewer = useQuery(tenancy.viewer.get, { slug });
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
-
-  if (!QueryResult.isSuccess(viewer)) {
-    return null;
-  }
-
-  const units = viewer.value.units;
+  const [isAdding, setIsAdding] = useState(false);
+  const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
   const unit = Option.getOrUndefined(
     Arr.findFirst(units, (candidate) =>
       chosenUnit === undefined
@@ -88,22 +89,39 @@ export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
     )
   );
 
-  if (unit === undefined) {
-    return null;
-  }
-
   return (
-    <>
-      {units.length > 1 ? (
-        <UnitChoice onChoose={setChosenUnit} unitId={unit.id} units={units} />
-      ) : null}
-      <SchoolPeriodList slug={slug} unitId={unit.id} />
-      <SchoolPeriodForm slug={slug} unitId={unit.id} />
-    </>
+    <SettingsPage
+      actions={
+        unit === undefined ? undefined : (
+          <Button onClick={() => setIsAdding(true)} type="button">
+            {t("period-add")}
+          </Button>
+        )
+      }
+    >
+      {unit === undefined ? null : (
+        <>
+          {units.length > 1 ? (
+            <UnitChoice
+              onChoose={setChosenUnit}
+              unitId={unit.id}
+              units={units}
+            />
+          ) : null}
+          <SchoolPeriodTable slug={slug} unitId={unit.id} />
+          <SchoolPeriodAddDialog
+            open={isAdding}
+            setOpen={setIsAdding}
+            slug={slug}
+            unitId={unit.id}
+          />
+        </>
+      )}
+    </SettingsPage>
   );
 }
 
-/** Renders the choice of the unit whose periods show. */
+/** Renders the unit whose periods show, as a toolbar row above the periods table. */
 function UnitChoice({
   onChoose,
   unitId,
@@ -120,48 +138,43 @@ function UnitChoice({
   }));
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("unit-choice")}</CardTitle>
-        <CardDescription>{t("unit-choice-description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Select
-          items={items}
-          onValueChange={(value) => {
-            const chosen = Schema.decodeUnknownOption(Id("tenantUnits"))(value);
-            if (Option.isSome(chosen)) {
-              onChoose(chosen.value);
-            }
-          }}
-          value={unitId}
+    <div className="flex items-center gap-2">
+      <Select
+        items={items}
+        onValueChange={(value) => {
+          const chosen = Schema.decodeUnknownOption(Id("tenantUnits"))(value);
+          if (Option.isSome(chosen)) {
+            onChoose(chosen.value);
+          }
+        }}
+        value={unitId}
+      >
+        <SelectTrigger
+          aria-label={t("unit-choice")}
+          className="w-full max-w-xs"
         >
-          <SelectTrigger className="w-full max-w-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {Arr.map(items, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("unit-choice-footer")}</CardSectionHint>
-      </CardSectionFooter>
-    </CardSection>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {Arr.map(items, (item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
 /**
- * Renders the periods of one unit as a list that loads more rows as its end comes
- * into view. A planned period opens, and an active one archives.
+ * Renders the periods of one unit in a data table that loads more rows as its end comes
+ * into view, or the table's empty state while the unit has no period. The table waits
+ * for its first page, so no empty state shows before the rows arrive.
  */
-function SchoolPeriodList({
+function SchoolPeriodTable({
   slug,
   unitId,
 }: {
@@ -178,14 +191,22 @@ function SchoolPeriodList({
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
+  if (pagination._tag === "LoadingFirstPage") {
+    return null;
+  }
+  if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    return (
+      <TableEmpty
+        act="thinking"
+        description={t("periods-description")}
+        title={t("periods-empty")}
+      />
+    );
+  }
 
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("periods")}</CardTitle>
-        <CardDescription>{t("periods-description")}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <>
+      <TableFrame>
         <Table>
           <SchoolTableHeader
             columns={[
@@ -201,67 +222,20 @@ function SchoolPeriodList({
             ))}
           </TableBody>
         </Table>
-        {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-        ) : null}
-      </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("periods-footer")}</CardSectionHint>
-      </CardSectionFooter>
-    </CardSection>
+      </TableFrame>
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
+    </>
   );
 }
 
 /**
- * Renders the name of one period as an input in its row. The name saves when the
- * input loses focus or the Enter key is pressed, and the new name shows at once.
- * A name left empty, or one that the schema refuses, goes back to the stored name.
+ * Renders one period row: its name, its dates, and its status. The row menu renames the
+ * period, then opens a planned period or archives an active one. An archived period has
+ * no menu, because the server refuses every write to it. The rename dialog saves a name
+ * that changes the stored one and passes the name schema, then closes.
  */
-function SchoolPeriodName({
-  period,
-  slug,
-}: {
-  period: PeriodItem;
-  slug: TenantSlug;
-}) {
-  const t = useTranslations("SchoolSettings");
-  const rename = useMutation(tenancy.periods.rename).withOptimisticUpdate(
-    renamePeriodChange
-  );
-  const [name, setName] = useState(period.name);
-
-  const save = () => {
-    const next = name.trim();
-    if (next === period.name || !Schema.is(PeriodName)(next)) {
-      setName(period.name);
-      return;
-    }
-    startTransition(() =>
-      saveSchool(
-        () => rename({ name: next, periodId: period.id, slug }),
-        SOURCE
-      )
-    );
-  };
-
-  return (
-    <Input
-      aria-label={t("period-name")}
-      disabled={period.status === "archived"}
-      inert={isDraft(period.id)}
-      onBlur={save}
-      onChange={(event) => setName(event.target.value)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
-          event.currentTarget.blur();
-        }
-      }}
-      value={name}
-    />
-  );
-}
-
-/** Renders one period row, with the one action that its status allows. */
 function SchoolPeriodRow({
   period,
   slug,
@@ -270,64 +244,153 @@ function SchoolPeriodRow({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
+  const id = useId();
   const open = useMutation(tenancy.periods.open).withOptimisticUpdate(
     openPeriodChange
   );
   const archive = useMutation(tenancy.periods.archive).withOptimisticUpdate(
     archivePeriodChange
   );
+  const rename = useMutation(tenancy.periods.rename).withOptimisticUpdate(
+    renamePeriodChange
+  );
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [name, setName] = useState(period.name);
+  const next = name.trim();
+  const canSave = next !== period.name && Schema.is(PeriodName)(next);
 
   return (
     <TableRow>
-      <TableCell>
-        <SchoolPeriodName key={period.name} period={period} slug={slug} />
-      </TableCell>
+      <TableCell className="font-medium">{period.name}</TableCell>
       <TableCell>{`${period.start} - ${period.end}`}</TableCell>
       <TableCell>{t(`period-${period.status}`)}</TableCell>
       <TableCell className="text-right">
-        {period.status === "planned" ? (
-          <Button
-            inert={isDraft(period.id)}
-            onClick={() =>
-              startTransition(() =>
-                saveSchool(() => open({ periodId: period.id, slug }), SOURCE)
-              )
-            }
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {t("period-open")}
-          </Button>
-        ) : null}
-        {period.status === "active" ? (
-          <Button
-            onClick={() =>
-              startTransition(() =>
-                saveSchool(() => archive({ periodId: period.id, slug }), SOURCE)
-              )
-            }
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {t("period-archive")}
-          </Button>
-        ) : null}
+        {period.status === "archived" ? null : (
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    aria-label={common("more-actions")}
+                    inert={isDraft(period.id)}
+                    size="icon-sm"
+                    variant="ghost"
+                  >
+                    <HugeIcons icon={MoreHorizontalIcon} />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setName(period.name);
+                    setIsRenaming(true);
+                  }}
+                >
+                  {t("period-rename")}
+                </DropdownMenuItem>
+                {period.status === "planned" ? (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      startTransition(() =>
+                        saveSchool(
+                          () => open({ periodId: period.id, slug }),
+                          SOURCE
+                        )
+                      )
+                    }
+                  >
+                    {t("period-open")}
+                  </DropdownMenuItem>
+                ) : null}
+                {period.status === "active" ? (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      startTransition(() =>
+                        saveSchool(
+                          () => archive({ periodId: period.id, slug }),
+                          SOURCE
+                        )
+                      )
+                    }
+                  >
+                    {t("period-archive")}
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <ResponsiveDialog
+              footer={
+                <>
+                  <Button
+                    onClick={() => setIsRenaming(false)}
+                    type="button"
+                    variant="outline"
+                  >
+                    {common("cancel")}
+                  </Button>
+                  <Button
+                    disabled={!canSave}
+                    onClick={() => {
+                      setIsRenaming(false);
+                      startTransition(() =>
+                        saveSchool(
+                          () =>
+                            rename({ name: next, periodId: period.id, slug }),
+                          SOURCE
+                        )
+                      );
+                    }}
+                    type="button"
+                  >
+                    {t("period-rename-save")}
+                  </Button>
+                </>
+              }
+              open={isRenaming}
+              setOpen={setIsRenaming}
+              title={t("period-rename")}
+            >
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor={`${id}-name`}>
+                    {t("period-name")}
+                  </FieldLabel>
+                  <Input
+                    id={`${id}-name`}
+                    onChange={(event) => setName(event.target.value)}
+                    value={name}
+                  />
+                </Field>
+              </FieldGroup>
+            </ResponsiveDialog>
+          </>
+        )}
       </TableCell>
     </TableRow>
   );
 }
 
-/** Renders the form that adds a period to the unit: its name, and its first and last days. */
-function SchoolPeriodForm({
+/**
+ * Renders the dialog that adds a planned period to the unit: its name, and its first and
+ * last days. The dialog closes as the add is sent, and its values clear once the server
+ * accepts the period.
+ */
+function SchoolPeriodAddDialog({
+  open,
+  setOpen,
   slug,
   unitId,
 }: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
   slug: TenantSlug;
   unitId: UnitId;
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
+  const id = useId();
   const create = useMutation(tenancy.periods.create).withOptimisticUpdate(
     createPeriodChange
   );
@@ -336,59 +399,80 @@ function SchoolPeriodForm({
   const [end, setEnd] = useState("");
   const isComplete = name.trim() !== "" && start !== "" && end !== "";
 
+  const submit = () => {
+    setOpen(false);
+    startTransition(() =>
+      saveSchool(
+        () =>
+          create({
+            end,
+            name: name.trim(),
+            slug,
+            start,
+            unitId,
+          }),
+        SOURCE,
+        () => {
+          setName("");
+          setStart("");
+          setEnd("");
+        }
+      )
+    );
+  };
+
   return (
-    <CardSection>
-      <CardHeader>
-        <CardTitle>{t("period-add")}</CardTitle>
-        <CardDescription>{t("period-add-description")}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-3">
-        <Input
-          aria-label={t("period-name")}
-          onChange={(event) => setName(event.target.value)}
-          placeholder={t("period-name-placeholder")}
-          value={name}
-        />
-        <Input
-          aria-label={t("period-start")}
-          onChange={(event) => setStart(event.target.value)}
-          type="date"
-          value={start}
-        />
-        <Input
-          aria-label={t("period-end")}
-          onChange={(event) => setEnd(event.target.value)}
-          type="date"
-          value={end}
-        />
-      </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("period-add-footer")}</CardSectionHint>
-        <CardSectionActions>
+    <ResponsiveDialog
+      description={t("period-add-footer")}
+      footer={
+        <>
           <Button
-            disabled={!isComplete}
-            onClick={() => {
-              startTransition(() =>
-                saveSchool(
-                  () =>
-                    create({
-                      end,
-                      name: name.trim(),
-                      slug,
-                      start,
-                      unitId,
-                    }),
-                  SOURCE
-                )
-              );
-            }}
-            size="sm"
+            onClick={() => setOpen(false)}
             type="button"
+            variant="outline"
           >
+            {common("cancel")}
+          </Button>
+          <Button disabled={!isComplete} onClick={submit} type="button">
             {t("period-add")}
           </Button>
-        </CardSectionActions>
-      </CardSectionFooter>
-    </CardSection>
+        </>
+      }
+      open={open}
+      setOpen={setOpen}
+      title={t("period-add")}
+    >
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor={`${id}-name`}>{t("period-name")}</FieldLabel>
+          <Input
+            id={`${id}-name`}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={t("period-name-placeholder")}
+            value={name}
+          />
+        </Field>
+        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
+          <Field>
+            <FieldLabel htmlFor={`${id}-start`}>{t("period-start")}</FieldLabel>
+            <Input
+              id={`${id}-start`}
+              onChange={(event) => setStart(event.target.value)}
+              type="date"
+              value={start}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-end`}>{t("period-end")}</FieldLabel>
+            <Input
+              id={`${id}-end`}
+              onChange={(event) => setEnd(event.target.value)}
+              type="date"
+              value={end}
+            />
+          </Field>
+        </div>
+      </FieldGroup>
+    </ResponsiveDialog>
   );
 }

@@ -16,6 +16,11 @@ const BORDER_OPACITY_MAX = 1;
 const BORDER_OPACITY_THRESHOLD_MIN = 0;
 const BORDER_OPACITY_THRESHOLD_MAX = 50;
 
+/**
+ * The app's bar on a phone, for a page that draws no header of its own. A page header
+ * holds the sidebar's trigger itself, so the bar hides while one is on the page and the
+ * phone shows one header row.
+ */
 export function HeaderContainer({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { scrollY } = useScroll();
@@ -31,7 +36,7 @@ export function HeaderContainer({ children }: { children: ReactNode }) {
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <m.header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background lg:hidden">
+      <m.header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background group-has-[[data-shell-title]]/sidebar-wrapper:hidden group-data-titled/sidebar-wrapper:hidden lg:hidden">
         <m.div
           className="absolute right-0 bottom-0 left-0 h-px bg-border"
           style={{ opacity: isChat ? 1 : (borderOpacity ?? 0) }}

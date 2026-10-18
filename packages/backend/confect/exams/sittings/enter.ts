@@ -111,20 +111,15 @@ const startAttempt = Effect.fn("exams.sittings.enter.start")(function* (
 });
 
 /**
- * Binds an attempt that no device holds to this device, once the token has matched. A
- * retired device and any other device are refused. The device that owns the attempt was
- * admitted before the token was checked, so it never reaches this function, and the
- * attempt left here is unbound.
+ * Binds an attempt that no device holds to this device, once the token has matched. Any
+ * other device is refused. The device that owns the attempt was admitted, and a retired
+ * device refused, before the token was checked, so neither reaches this function.
  */
 const bindAttempt = Effect.fn("exams.sittings.enter.bind")(function* (
   attempt: ExamAttemptsDoc,
   deviceId: string
 ) {
-  const binding = deviceBinding(attempt, deviceId);
-  if (binding === "retired") {
-    return yield* new DeviceRetired();
-  }
-  if (binding === "other") {
+  if (deviceBinding(attempt, deviceId) === "other") {
     return yield* new SecondDevice();
   }
   yield* (yield* DatabaseWriter)
@@ -159,11 +154,16 @@ export const enter = Effect.fn("exams.sittings.enter")(function* (args: {
   const attempt = yield* attemptOf(sitting._id, member.person._id);
   const now = yield* Clock.currentTimeMillis;
   yield* checkOpen(sitting, attempt, now);
-  if (
-    Option.isSome(attempt) &&
-    deviceBinding(attempt.value, args.deviceId) === "bound"
-  ) {
-    return admitted(attempt.value);
+  // The device that owns the attempt enters without the token, and a device a proctor
+  // retired is refused before the token is checked, so its resume counts no failed try.
+  if (Option.isSome(attempt)) {
+    const binding = deviceBinding(attempt.value, args.deviceId);
+    if (binding === "bound") {
+      return admitted(attempt.value);
+    }
+    if (binding === "retired") {
+      return yield* new DeviceRetired();
+    }
   }
   if (!(yield* deviceMayTry(args.deviceId))) {
     return refused("TooManyTries");
