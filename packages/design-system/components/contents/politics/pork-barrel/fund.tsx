@@ -14,10 +14,13 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 const FUND_CHART_MARGIN = { right: 16 } as const;
@@ -59,6 +62,7 @@ export function FundChart({
   footnote,
   labels,
 }: FundChartProps) {
+  const t = useTranslations("Common");
   const chartConfig = {
     fund: {
       label: labels.fund,
@@ -99,7 +103,9 @@ export function FundChart({
         <VisualCardFullscreen />
       </VisualCardActions>
       <VisualCardFooter>
-        <p className="text-sm">{footnote}</p>
+        <VisualCardFacts>
+          <VisualFact label={t("source")} value={footnote} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

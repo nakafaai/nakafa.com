@@ -22,6 +22,7 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -59,6 +60,7 @@ export function PeriodicPropertiesLab({
     ATOMIC_RADIUS_MODE_ID
   );
   const selectedLabels = labels.modes[selectedModeId];
+  const t = useTranslations("Common");
 
   /**
    * Keeps one trend selected when ToggleGroup emits an empty value.
@@ -108,10 +110,8 @@ export function PeriodicPropertiesLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
-          {selectedLabels.guidance}
-        </p>
         <VisualCardFacts>
+          <VisualFact label={t("note")} value={selectedLabels.guidance} />
           <VisualFact
             label={labels.factLabels.question}
             value={selectedLabels.question}

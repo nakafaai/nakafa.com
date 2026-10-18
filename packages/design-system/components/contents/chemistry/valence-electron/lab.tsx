@@ -21,9 +21,10 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { cn } from "cn";
 import { Array as Arr, Result } from "effect";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -59,6 +60,7 @@ export function ValenceElectronLab({
     useState<ValenceElectronSampleId>(CALCIUM_ID);
   const selectedSample = VALENCE_ELECTRON_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
+  const t = useTranslations("Common");
   const facts = Result.getOrThrow(
     getValenceElectronFacts(selectedSample.atomicNumber)
   );
@@ -115,47 +117,23 @@ export function ValenceElectronLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
-          {selectedLabels.note}
-        </p>
         <VisualCardFacts>
-          <ValenceFact
+          <VisualFact label={t("note")} value={selectedLabels.note} />
+          <VisualFact
             label={labels.valenceElectron}
             value={<InlineMath math={`${facts.valenceElectronCount}`} />}
           />
-          <ValenceFact
+          <VisualFact
             label={labels.outerShell}
             value={<InlineMath math={`\\mathrm{${facts.outerShell.key}}`} />}
           />
-          <ValenceFact
+          <VisualFact
             label={labels.configuration}
             value={<InlineMath math={facts.configurationMath} />}
           />
-          <ValenceFact
-            className="col-span-full"
-            label={labels.behavior}
-            value={selectedLabels.tendency}
-          />
+          <VisualFact label={labels.behavior} value={selectedLabels.tendency} />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/** Presents one compact fact about the selected atom. */
-function ValenceFact({
-  className,
-  label,
-  value,
-}: {
-  className?: string;
-  label: string;
-  value: ReactNode;
-}) {
-  return (
-    <div className={cn("flex min-w-0 flex-col gap-1", className)}>
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }
