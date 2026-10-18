@@ -135,17 +135,11 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
 
-  // On a phone the header folds its whole path into one menu, which holds the
-  // Quran index.
-  yield* Effect.promise(() =>
-    page
-      .getByRole("navigation", { name: "breadcrumb" })
-      .getByRole("button")
-      .click()
-  );
-  const quranIndexLink = page
-    .getByRole("menu")
-    .locator(`a[href="${appRoutes.quranId}"]`);
+  // On a phone the header folds its path into one menu, with the Quran index.
+  const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
+  yield* Effect.promise(() => breadcrumb.getByRole("button").click());
+  const menu = page.getByRole("menu");
+  const quranIndexLink = menu.locator(`a[href="${appRoutes.quranId}"]`);
   yield* Effect.promise(() => expect(quranIndexLink).toBeVisible());
   yield* Effect.promise(() => quranIndexLink.click());
   yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));
