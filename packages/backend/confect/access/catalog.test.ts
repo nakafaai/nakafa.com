@@ -202,6 +202,7 @@ describe("access/catalog", () => {
           "sitting.addMinutes",
           "sitting.changeToken",
           "sitting.allowDevice",
+          "sitting.finish",
           "sitting.close",
         ],
         Order.String

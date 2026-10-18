@@ -3,10 +3,11 @@ import type {
   ExamSittingsDoc,
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+  attemptOf,
+  sittingOf,
+} from "@repo/backend/confect/exams/sittings/attempt";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
 import { deviceBinding } from "@repo/backend/confect/exams/sittings/device";
 import {
@@ -52,36 +53,6 @@ const admitted = (
   deadline: attempt.deadline,
   outcome: "admitted",
   state: attempt.state,
-});
-
-/** The sitting of the entry. A missing sitting and another school's sitting are both `NotInSitting`. */
-const sittingOf = Effect.fn("exams.sittings.enter.sitting")(function* (
-  sittingId: ExamSittingsDoc["_id"],
-  tenantId: ExamSittingsDoc["tenantId"]
-) {
-  const found = yield* (yield* DatabaseReader)
-    .table("examSittings")
-    .get(sittingId)
-    .pipe(Effect.catchTag("DocumentDecodeError", Effect.die), Effect.option);
-  const row = Option.filter(found, (sitting) => sitting.tenantId === tenantId);
-  if (Option.isNone(row)) {
-    return yield* new NotInSitting();
-  }
-  return row.value;
-});
-
-/** The attempt that this Person holds in the sitting, if any. */
-const attemptOf = Effect.fn("exams.sittings.enter.attempt")(function* (
-  sittingId: ExamSittingsDoc["_id"],
-  personId: TenantPeopleDoc["_id"]
-) {
-  return yield* (yield* DatabaseReader)
-    .table("examAttempts")
-    .index("by_sittingId_and_personId", (query) =>
-      query.eq("sitting", sittingId).eq("person", personId)
-    )
-    .first()
-    .pipe(Effect.orDie);
 });
 
 /**

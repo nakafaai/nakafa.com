@@ -44,6 +44,7 @@ const mocks = vi.hoisted(() => {
     teacher: vi.fn(),
     profile: vi.fn(),
     rows: vi.fn(),
+    sitting: vi.fn(),
     getEntry: () => entry,
     runMain: vi.fn((program: Effect.Effect<void, EntryError>) => {
       entry = program;
@@ -71,6 +72,9 @@ vi.mock("@repo/backend/scripts/content/acceptance/owner", () => ({
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/invite", () => ({
   createAcceptanceInvite: mocks.invite,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/sitting", () => ({
+  createAcceptanceSitting: mocks.sitting,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/teacher", () => ({
   createAcceptanceTeacher: mocks.teacher,
@@ -115,6 +119,7 @@ describe("isolated acceptance CLI", () => {
       mocks.teacher,
       mocks.profile,
       mocks.rows,
+      mocks.sitting,
     ]) {
       mock.mockReturnValue(Effect.void);
     }
@@ -144,7 +149,7 @@ describe("isolated acceptance CLI", () => {
           stderrPath: outputPath,
         }).pipe(Effect.flip);
         expect(yield* fs.readFileString(outputPath)).toContain(
-          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
         );
       }).pipe(Effect.provide(nodeServicesLayer))
   );
@@ -320,6 +325,7 @@ finally:
               mocks.school.mock.calls.length +
               mocks.owner.mock.calls.length +
               mocks.invite.mock.calls.length +
+              mocks.sitting.mock.calls.length +
               mocks.profile.mock.calls.length +
               mocks.rows.mock.calls.length
           ).toBe(1);
@@ -363,6 +369,26 @@ finally:
           expect.any(String),
           "acc-1a2b3c4d",
           "/out/owner.json"
+        );
+        expect(mocks.school).not.toHaveBeenCalled();
+      })
+  );
+
+  it.live(
+    "seeds the sitting of the school and learner it names, into the file it names",
+    () =>
+      Effect.gen(function* () {
+        yield* execute("sitting", [
+          "acc-1a2b3c4d",
+          "learner@acceptance.example.test",
+          "/out/sitting.json",
+        ]);
+
+        expect(mocks.sitting).toHaveBeenCalledExactlyOnceWith(
+          expect.any(String),
+          "acc-1a2b3c4d",
+          "learner@acceptance.example.test",
+          "/out/sitting.json"
         );
         expect(mocks.school).not.toHaveBeenCalled();
       })
@@ -427,6 +453,7 @@ finally:
     ["invite", ["acc-1a2b3c4d"]],
     ["invite", ["acc-1a2b3c4d", "learner@acceptance.example.test"]],
     ["teacher", ["acc-1a2b3c4d"]],
+    ["sitting", ["acc-1a2b3c4d", "learner@acceptance.example.test"]],
     ["import", []],
     ["import", ["chats"]],
     ["profile", []],
