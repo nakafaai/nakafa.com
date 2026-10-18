@@ -22,7 +22,6 @@ import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import { logoRefusalOf } from "@/components/tenant/logo.client";
 import { SchoolMark } from "@/components/tenant/mark";
@@ -147,8 +146,7 @@ function SchoolProfileCard({
         <CardContent>
           <SchoolMark logo={tenant.logo} mascot={tenant.mascot} size="lg" />
         </CardContent>
-        <CardSectionFooter>
-          <CardSectionHint>{t("logo-footer")}</CardSectionHint>
+        <CardSectionFooter hint={t("logo-footer")}>
           <CardSectionActions>
             <input
               accept="image/png,image/svg+xml"
@@ -211,7 +209,7 @@ function SchoolProfileCard({
         <CardContent>
           <Input aria-label={t("address-title")} readOnly value={address} />
         </CardContent>
-        <CardSectionFooter>
+        <CardSectionFooter hint={t("address-footer")}>
           <CardSectionActions>
             <Button onClick={copyAddress} size="sm" type="button">
               {t("address-copy")}

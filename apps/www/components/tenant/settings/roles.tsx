@@ -9,6 +9,7 @@ import {
   useQuery,
 } from "@confect/react";
 import {
+  BookOpen01Icon,
   MoreHorizontalIcon,
   UserShield01Icon,
 } from "@hugeicons/core-free-icons";
@@ -101,12 +102,14 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
     <SettingsPage
       actions={
         <>
+          {/* On a phone the guide keeps its icon, so the page's name keeps its room. */}
           <Button
             onClick={() => setIsGuiding(true)}
             type="button"
             variant="outline"
           >
-            {t("roles-guide")}
+            <HugeIcons icon={BookOpen01Icon} />
+            <span className="max-sm:sr-only">{t("roles-guide")}</span>
           </Button>
           <Button onClick={() => setIsGiving(true)} type="button">
             {t("roles-assign")}

@@ -14,7 +14,6 @@ import {
 } from "@repo/design-system/components/ui/card";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -36,7 +35,6 @@ import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import {
   archiveUnitChange,
@@ -117,22 +115,17 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
         <CardTitle>{t("unit-npsn")}</CardTitle>
       </CardHeader>
       <CardContent>
-        <FieldGroup>
-          <Field>
-            <Input
-              aria-label={t("unit-npsn")}
-              disabled={isArchived}
-              inputMode="numeric"
-              maxLength={8}
-              onChange={(event) => setValue(event.target.value)}
-              placeholder={t("unit-npsn-placeholder")}
-              value={npsn}
-            />
-            <FieldDescription>{t("unit-npsn-footer")}</FieldDescription>
-          </Field>
-        </FieldGroup>
+        <Input
+          aria-label={t("unit-npsn")}
+          disabled={isArchived}
+          inputMode="numeric"
+          maxLength={8}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={t("unit-npsn-placeholder")}
+          value={npsn}
+        />
       </CardContent>
-      <CardSectionFooter>
+      <CardSectionFooter hint={t("unit-npsn-footer")}>
         <CardSectionActions>
           <Button
             disabled={!canSave}
@@ -288,10 +281,9 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
           </div>
         </FieldGroup>
       </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>
-          {isArchived ? t("unit-restore-footer") : t("unit-archive-footer")}
-        </CardSectionHint>
+      <CardSectionFooter
+        hint={isArchived ? t("unit-restore-footer") : t("unit-archive-footer")}
+      >
         <CardSectionActions>
           {isArchived ? (
             <Button onClick={restoreUnit} size="sm" type="button">

@@ -33,7 +33,6 @@ import { useState } from "react";
 import {
   CardSection,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateUsernameMutation } from "@/components/user/mutation.client";
 import { SettingsSave } from "@/components/user/settings/save";
@@ -142,8 +141,7 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
             )}
           </Field>
         </CardContent>
-        <CardSectionFooter>
-          <CardSectionHint>{t("username-footer")}</CardSectionHint>
+        <CardSectionFooter hint={t("username-footer")}>
           <SettingsSave disabled={!reply.canSave} />
         </CardSectionFooter>
       </CardSection>

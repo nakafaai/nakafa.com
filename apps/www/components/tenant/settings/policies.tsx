@@ -30,7 +30,6 @@ import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import { setPolicyChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
@@ -113,8 +112,7 @@ function SchoolStudentsPolicy({
           />
         </FieldGroup>
       </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("policy-students-footer")}</CardSectionHint>
+      <CardSectionFooter hint={t("policy-students-footer")}>
         <CardSectionActions>
           <SchoolTrailAction />
         </CardSectionActions>
@@ -198,19 +196,14 @@ function SchoolDomainsPolicy({
         <CardDescription>{t("policy-domains-description")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <FieldGroup>
-          <Field>
-            <Textarea
-              aria-label={t("policy-domains")}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder={t("policy-domains-placeholder")}
-              value={draft}
-            />
-            <FieldDescription>{t("policy-domains-footer")}</FieldDescription>
-          </Field>
-        </FieldGroup>
+        <Textarea
+          aria-label={t("policy-domains")}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder={t("policy-domains-placeholder")}
+          value={draft}
+        />
       </CardContent>
-      <CardSectionFooter>
+      <CardSectionFooter hint={t("policy-domains-footer")}>
         <CardSectionActions>
           <Button
             disabled={!isChanged || Option.isNone(parsedDomains(domains))}
