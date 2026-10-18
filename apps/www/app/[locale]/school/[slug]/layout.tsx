@@ -80,10 +80,12 @@ export default async function SchoolLayout({
     onNone: () => null,
     onSome: (grant) => grant.role.key,
   });
+  const canManage = Arr.contains(viewer.value.can, "tenant.manage");
 
   return (
     <TenantShell
       account={viewer.value.account}
+      canManage={canManage}
       personName={viewer.value.person.name}
       profile={profile.value}
       role={role}

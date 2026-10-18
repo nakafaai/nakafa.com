@@ -1,16 +1,99 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
-import type { UnitStatus } from "@repo/backend/confect/tenancy/schema";
+import { NpsnInvalid, NpsnTaken } from "@repo/backend/confect/tenancy/errors";
+import {
+  Npsn,
+  UNIT_LIMIT,
+  type UnitStatus,
+} from "@repo/backend/confect/tenancy/schema";
 import spec from "@repo/backend/confect/tenancy/units.spec";
-import { Effect, Layer, Struct } from "effect";
+import { Array as Arr, Effect, Layer, Schema, Struct } from "effect";
+
+/**
+ * Lists every unit of the member's school with its national school number. A
+ * school holds at most `UNIT_LIMIT` units, so one indexed read holds them all.
+ */
+const list = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "list",
+  Effect.fn("tenancy.units.list")(function* () {
+    const { tenant } = yield* Member;
+    const units = yield* (yield* DatabaseReader)
+      .table("tenantUnits")
+      .index("by_tenantId_and_status", (query) =>
+        query.eq("tenantId", tenant._id)
+      )
+      .take(UNIT_LIMIT)
+      .pipe(Effect.orDie);
+    return Arr.map(units, (unit) => ({
+      contentLanguage: unit.contentLanguage,
+      id: unit._id,
+      level: unit.level,
+      name: unit.name,
+      npsn: unit.npsn ?? null,
+      status: unit.status,
+      timeZone: unit.timeZone,
+    }));
+  })
+);
+
+/**
+ * Sets the national school number (NPSN) of one unit. The number is eight
+ * digits, and no other unit of the school holds it. The school's Admin may set
+ * it (`tenant.manage`) and the unit must allow its changes (`unit.manage`). A
+ * value that is already stored writes and records nothing.
+ */
+const setNpsn = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "setNpsn",
+  Effect.fn("tenancy.units.setNpsn")(function* ({ npsn, unitId }) {
+    const { person, tenant } = yield* Member;
+    if (!Schema.is(Npsn)(npsn)) {
+      return yield* new NpsnInvalid();
+    }
+    const unit = yield* unitAuthority.authorize("unit.manage", unitId);
+    if (unit.npsn === npsn) {
+      return npsn;
+    }
+    const units = yield* (yield* DatabaseReader)
+      .table("tenantUnits")
+      .index("by_tenantId_and_status", (query) =>
+        query.eq("tenantId", tenant._id)
+      )
+      .take(UNIT_LIMIT)
+      .pipe(Effect.orDie);
+    if (
+      Arr.some(units, (other) => other._id !== unit._id && other.npsn === npsn)
+    ) {
+      return yield* new NpsnTaken();
+    }
+    yield* (yield* DatabaseWriter)
+      .table("tenantUnits")
+      .replace(
+        unit._id,
+        Struct.assign(Struct.omit(unit, ["_creationTime", "_id"]), { npsn })
+      )
+      .pipe(Effect.orDie);
+    yield* unitAuthority.record(personActor(person), unit, {
+      npsn,
+      type: "unit.npsn.set",
+    });
+    return npsn;
+  })
+);
 
 /**
  * Sets the time zone and the content language of one school. The school must
@@ -105,6 +188,8 @@ const unarchive = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(list),
+  Layer.provide(setNpsn),
   Layer.provide(setLocale),
   Layer.provide(archive),
   Layer.provide(unarchive),

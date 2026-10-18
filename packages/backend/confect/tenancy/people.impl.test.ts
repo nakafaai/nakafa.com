@@ -3,6 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import {
+  claimedMembers,
   grantRole,
   journal,
   slugOf,
@@ -53,6 +54,28 @@ describe("tenancy/people list and create", () => {
         const ids = Arr.map(active.page, (person) => person.id);
         expect(ids).toContain(fixture.invited);
         expect(ids).not.toContain(fixture.people.suspended.personId);
+      })
+  );
+
+  it.effect(
+    "lists only the unclaimed Persons, including one created after the hundredth active Person",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.run(claimedMembers(fixture.tenants.nf, 100));
+        const made = yield* fixture
+          .as("admin")
+          .mutation(create, { name: "Guru Baru", slug: nf });
+        const unclaimed = yield* fixture.as("admin").query(list, {
+          ...firstPage,
+          account: "unclaimed",
+          slug: nf,
+          status: "active",
+        });
+        expect(Arr.map(unclaimed.page, (person) => person.id)).toEqual([
+          fixture.invited,
+          made.id,
+        ]);
       })
   );
 

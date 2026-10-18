@@ -2,15 +2,16 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Grant } from "@repo/backend/confect/access/access";
-import { grantAccess } from "@repo/backend/confect/access/authority";
+import {
+  grantAccess,
+  tenantAccess,
+} from "@repo/backend/confect/access/authority";
 import {
   assignRole,
   authorizeOwnerRole,
-  grantView,
   revokeGrant,
 } from "@repo/backend/confect/access/grant";
 import spec from "@repo/backend/confect/access/grants.spec";
-import { activeGrants } from "@repo/backend/confect/access/policy";
 import {
   type BuiltinRole,
   GrantScope,
@@ -24,7 +25,7 @@ import {
   tenantAuthority,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import { Array as Arr, Effect, Layer } from "effect";
+import { Effect, Layer, Number as Num, Struct } from "effect";
 
 /**
  * Giving a role needs `grant.manage` on the scope the new grant covers, so a
@@ -44,12 +45,50 @@ const authorizeAssign = Effect.fn("access.grants.authorizeAssign")(function* (
   yield* authorizeOwnerRole(role);
 });
 
+/** The largest page one request reads. */
+const PAGE_LIMIT = 100;
+
+/**
+ * The active grants of the member's school, one page at a time. The index holds
+ * active grants only, so a revoked or expired grant is never read. Each row reads
+ * the Person who holds the grant once, by ID.
+ */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("access.grants.list")(function* () {
-    return Arr.map(yield* activeGrants((yield* Person)._id), grantView);
+  Effect.fn("access.grants.list")(function* ({ paginationOpts }) {
+    const { tenant } = yield* Member;
+    const reader = yield* DatabaseReader;
+    const grants = yield* reader
+      .table("tenantGrants")
+      .index("by_tenantId_and_status", (query) =>
+        query.eq("tenantId", tenant._id).eq("status", "active")
+      )
+      .paginate(
+        Struct.assign(paginationOpts, {
+          numItems: Num.min(paginationOpts.numItems, PAGE_LIMIT),
+        })
+      )
+      .pipe(Effect.orDie);
+    const page = yield* Effect.forEach(
+      grants.page,
+      (grant) =>
+        reader
+          .table("tenantPeople")
+          .get(grant.personId)
+          .pipe(
+            Effect.orDie,
+            Effect.map((person) => ({
+              id: grant._id,
+              person: { id: person._id, name: person.name },
+              role: grant.role,
+              scope: grant.scope,
+            }))
+          ),
+      { concurrency: "unbounded" }
+    );
+    return Struct.assign(grants, { page });
   })
 );
 
@@ -102,5 +141,6 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(member),
   Layer.provide(personAccess),
   Layer.provide(grantAccess),
+  Layer.provide(tenantAccess),
   GroupImpl.finalize
 );
