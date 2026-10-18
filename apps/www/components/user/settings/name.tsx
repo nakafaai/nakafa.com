@@ -11,8 +11,9 @@ import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, String as Str } from "effect";
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 import {
   CardSection,
   CardSectionActions,
@@ -33,10 +34,18 @@ const formSchema = Schema.toStandardSchemaV1(
     ),
   })
 );
-/** Render the validated optimistic user-name settings form. */
+/**
+ * Render the validated user-name settings form. A save does not wait: the new
+ * name is the form's saved one at once and the optimistic update shows it
+ * everywhere, so Save has nothing left to save. A refused save brings the
+ * stored name back as the saved one and keeps the newest typed name in the
+ * field, so Save offers it again beside the error toast. A refusal that a later
+ * save overtook leaves the form to that save.
+ */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const updateUserName = useUpdateUserNameMutation();
+  const latestSave = useRef(0);
   const form = useForm({
     defaultValues: {
       name: user.authUser.name,
@@ -44,21 +53,17 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) =>
+    onSubmit: ({ value, formApi }) => {
+      const stored = formApi.options.defaultValues?.name ?? value.name;
+      const save = latestSave.current + 1;
+      latestSave.current = save;
+      // The new name is the saved one at once, so Save has nothing to save.
+      formApi.reset(value);
       Effect.runPromise(
         Effect.tryPromise(() =>
-          updateUserName({
-            name: value.name,
-          })
+          updateUserName({ name: Str.trim(value.name) })
         ).pipe(
           Effect.flatMap(Effect.fromResult),
-          Effect.tap(() =>
-            Effect.sync(() => {
-              if (form.getFieldValue("name") === value.name) {
-                form.reset(value);
-              }
-            })
-          ),
           Effect.matchEffect({
             onSuccess: () => Effect.void,
             onFailure: (error) =>
@@ -71,12 +76,23 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
                       description: "action-error.description",
                       title: "action-error.title",
                     });
+                    if (save !== latestSave.current) {
+                      return;
+                    }
+                    // The stored name comes back as the saved one, and the
+                    // newest typed name stays in the field, so Save offers it.
+                    const typed = formApi.getFieldMeta("name")?.isTouched
+                      ? formApi.getFieldValue("name")
+                      : value.name;
+                    formApi.reset({ name: stored });
+                    formApi.setFieldValue("name", typed);
                   })
                 )
               ),
           })
         )
-      ),
+      );
+    },
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-name-form">
@@ -113,26 +129,22 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
         </CardContent>
         <CardSectionFooter>
           <form.Subscribe
-            selector={(state) => [
-              state.isDirty,
-              state.isValid,
-              state.isSubmitting,
-            ]}
+            selector={(state) => [state.isDirty, state.isValid] as const}
           >
-            {([isDirty, isValid, isSubmitting]) => {
-              const canSubmit = Boolean(isDirty) && Boolean(isValid);
-              const isDisabled = !canSubmit || Boolean(isSubmitting);
-              return (
-                <>
-                  <CardSectionHint>{t("name-footer")}</CardSectionHint>
-                  <CardSectionActions>
-                    <Button disabled={isDisabled} size="sm" type="submit">
-                      {t("save")}
-                    </Button>
-                  </CardSectionActions>
-                </>
-              );
-            }}
+            {([isDirty, isValid]) => (
+              <>
+                <CardSectionHint>{t("name-footer")}</CardSectionHint>
+                <CardSectionActions>
+                  <Button
+                    disabled={!(isDirty && isValid)}
+                    size="sm"
+                    type="submit"
+                  >
+                    {t("save")}
+                  </Button>
+                </CardSectionActions>
+              </>
+            )}
           </form.Subscribe>
         </CardSectionFooter>
       </CardSection>
