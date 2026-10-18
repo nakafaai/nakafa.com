@@ -10,11 +10,15 @@ import type { ReactNode } from "react";
 /**
  * A data table as shadcn draws one: a rounded border around the table, with every row
  * and its border running the full width inside it. A list of records lives here, never
- * inside a card, so no row is cut short by a card's padding.
+ * inside a card, so no row is cut short by a card's padding. Each cell keeps its words
+ * on one line, and a table wider than the frame scrolls inside it, so a narrow screen
+ * never breaks a name in the middle of a word.
  */
 export function TableFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">{children}</div>
+    <div className="overflow-hidden rounded-xl border bg-card [&_[data-slot=table-cell]]:whitespace-nowrap">
+      {children}
+    </div>
   );
 }
 
