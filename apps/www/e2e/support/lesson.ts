@@ -20,13 +20,6 @@ export function lessonPanel(page: Page) {
   return lessonSection(page).locator('[data-slot="lesson-panel"]:not([inert])');
 }
 
-/** The lesson window's buttons, one per subject, in the window's order. */
-export function lessonButtons(page: Page) {
-  return lessonSection(page)
-    .locator('[data-slot="button-group"]')
-    .getByRole("button");
-}
-
 /**
  * The whole lesson window: its buttons and its panels. Its height is the one of
  * its tallest panel, and its lab mounts once at least half of it is on the screen.

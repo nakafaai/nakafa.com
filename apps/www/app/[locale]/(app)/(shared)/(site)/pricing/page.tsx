@@ -14,6 +14,7 @@ import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import { StaticPrice } from "@/components/marketing/about/pricing/price";
 import { Schools } from "@/components/marketing/about/schools";
 import { PRICING_CLASS_HERD } from "@/components/marketing/about/toys/herd";
+import { PageField } from "@/components/marketing/shared/field.client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -104,6 +105,7 @@ export default async function Page() {
         }))}
         url={url}
       />
+      <PageField />
       <div className="relative grid">
         <PricingPagePlans />
         <DeferredPricingToys />

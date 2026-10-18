@@ -1340,8 +1340,6 @@
     "hero-tryout": "Coba try out",
     "lesson-title": "Materi yang enak dibaca",
     "lesson-lead": "Pendek, runtut, langsung ke contoh.",
-    "lesson-ask": "Gerak parabola itu gimana sih?",
-    "lesson-answer": "Baca ini dulu.",
     "lesson-tabs": "Pelajaran",
     "lab": {
       "circle": {
@@ -1379,10 +1377,6 @@
     },
     "tryout-title": "Skor try out langsung keluar",
     "tryout-lead": "Mau ulang? Tinggal ulang.",
-    "tryout-ask": "Aku udah paham belum, ya?",
-    "tryout-answer": "Coba jawab yang ini.",
-    "tryout-right": "Benar, itu jawabannya.",
-    "tryout-wrong": "Belum. Coba lihat sekali lagi.",
     "nina-title": "Nina tahu bagian mana yang kamu maksud",
     "nina-lead": "Tanya dari soal atau materi yang sedang kamu buka.",
     "nina-chat-ask": "Kenapa jawabanku 13 salah?",
@@ -1450,8 +1444,7 @@
     "closing-topic-3": "konsep mol",
     "closing-topic-4": "sel"
   },
-  "Features": {
-  },
+  "Features": {},
   "About": {
     "company": "Perusahaan",
     "community": "Komunitas",
