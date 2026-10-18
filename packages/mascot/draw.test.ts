@@ -35,21 +35,30 @@ function mascotOf(code: string) {
   return Schema.decodeSync(MascotCode)(code);
 }
 
-/** The shapes of a picture that carry a mark, also those inside a group. */
+/** The shapes of a picture that carry a mark, also those inside a group. A marked group counts once. */
 function marked(shapes: readonly Layer[]): readonly Layer[] {
   return Arr.flatMap(shapes, (shape) => {
-    if (shape._tag === "g") {
-      return marked(shape.children);
+    if (shape.mark !== undefined) {
+      return [shape];
     }
-    return shape.mark === undefined ? [] : [shape];
+    return shape._tag === "g" ? marked(shape.children) : [];
   });
+}
+
+/** The horizontal centre of a marked eye: of its pupil, the first shape of an eye with a shine. */
+function centreOf(shape: Layer): number {
+  if (shape._tag === "g") {
+    return Option.match(Arr.head(shape.children), {
+      onNone: () => Number.NaN,
+      onSome: centreOf,
+    });
+  }
+  return "cx" in shape ? shape.cx : Number.NaN;
 }
 
 /** The horizontal centres of the marked eyes of a picture. */
 function eyesOf(mascot: ReturnType<typeof mascotOf>) {
-  return Arr.map(marked([draw(mascot)]), (shape) =>
-    "cx" in shape ? shape.cx : Number.NaN
-  );
+  return Arr.map(marked([draw(mascot)]), centreOf);
 }
 
 /** The colours that a picture fills its shapes with, also inside a group. */

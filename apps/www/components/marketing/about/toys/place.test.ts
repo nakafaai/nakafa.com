@@ -48,4 +48,13 @@ describe("toy places beside a part", () => {
 
     expect(Option.isNone(place(1024, box))).toBe(true);
   });
+
+  it("leaves a toy out while its part is not drawn, as a part hidden on a phone", () => {
+    const remove = part("place-hidden");
+    const place = within("place-hidden", { x: 0, y: 0 });
+    const noBox = () => ({ ...box(), height: 0, width: 0 });
+
+    expect(Option.isNone(place(390, noBox))).toBe(true);
+    remove();
+  });
 });

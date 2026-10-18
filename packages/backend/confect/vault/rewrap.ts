@@ -4,6 +4,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { seal } from "@repo/backend/confect/vault/cipher";
 import {
+  connectorWrapBinding,
   tenantWrapBinding,
   unwrap,
   wrapBinding,
@@ -108,6 +109,38 @@ const rewrapSchoolPage = Effect.fn("vault.rewrap.schoolPage")(function* (
 });
 
 /**
+ * Moves the connector key from the first retired root key that wraps it. It returns
+ * one when it moved the key, and zero when the key already uses the current root key
+ * or does not exist yet.
+ */
+const rewrapConnectorKey = Effect.fn("vault.rewrap.connectorKey")(function* (
+  ring: Ring
+) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  for (const retired of ring.retired) {
+    const rows = yield* reader
+      .table("connectorKeys")
+      .index("by_root", (query) => query.eq("root", retired))
+      .take(1)
+      .pipe(Effect.orDie);
+    for (const row of rows) {
+      yield* writer
+        .table("connectorKeys")
+        .patch(
+          row._id,
+          yield* rewrapping(ring, row.root, row.wrapped, connectorWrapBinding())
+        )
+        .pipe(Effect.orDie);
+    }
+    if (rows.length > 0) {
+      return rows.length;
+    }
+  }
+  return 0;
+});
+
+/**
  * Fails while a stored key names a root key that the environment does not hold.
  * Such a key cannot be moved, so reporting zero would hide it.
  */
@@ -116,30 +149,46 @@ const refuseUnknownRoots = Effect.fn("vault.rewrap.unknownRoots")(function* (
 ) {
   const reader = yield* DatabaseReader;
   const current = ring.current.id;
-  const [learnersBelow, learnersAbove, schoolsBelow, schoolsAbove] =
-    yield* Effect.all([
-      reader
-        .table("vaultKeys")
-        .index("by_root", (query) => query.lt("root", current))
-        .first(),
-      reader
-        .table("vaultKeys")
-        .index("by_root", (query) => query.gt("root", current))
-        .first(),
-      reader
-        .table("tenantKeys")
-        .index("by_root", (query) => query.lt("root", current))
-        .first(),
-      reader
-        .table("tenantKeys")
-        .index("by_root", (query) => query.gt("root", current))
-        .first(),
-    ]).pipe(Effect.orDie);
+  const [
+    learnersBelow,
+    learnersAbove,
+    schoolsBelow,
+    schoolsAbove,
+    connectorsBelow,
+    connectorsAbove,
+  ] = yield* Effect.all([
+    reader
+      .table("vaultKeys")
+      .index("by_root", (query) => query.lt("root", current))
+      .first(),
+    reader
+      .table("vaultKeys")
+      .index("by_root", (query) => query.gt("root", current))
+      .first(),
+    reader
+      .table("tenantKeys")
+      .index("by_root", (query) => query.lt("root", current))
+      .first(),
+    reader
+      .table("tenantKeys")
+      .index("by_root", (query) => query.gt("root", current))
+      .first(),
+    reader
+      .table("connectorKeys")
+      .index("by_root", (query) => query.lt("root", current))
+      .first(),
+    reader
+      .table("connectorKeys")
+      .index("by_root", (query) => query.gt("root", current))
+      .first(),
+  ]).pipe(Effect.orDie);
   if (
     Option.isSome(learnersBelow) ||
     Option.isSome(learnersAbove) ||
     Option.isSome(schoolsBelow) ||
-    Option.isSome(schoolsAbove)
+    Option.isSome(schoolsAbove) ||
+    Option.isSome(connectorsBelow) ||
+    Option.isSome(connectorsAbove)
   ) {
     return yield* new VaultError({ reason: "configuration" });
   }
@@ -147,12 +196,12 @@ const refuseUnknownRoots = Effect.fn("vault.rewrap.unknownRoots")(function* (
 
 /**
  * Moves one page of keys from a retired root key to the current one: learner keys
- * first, then school keys. Sealed values do not change, only the wrapping of each
- * key does. It returns how many keys it moved. Zero means that every learner key
- * and every school key is wrapped by the current root key, so the retired root
- * keys can leave `VAULT_ROOT_KEYS` and be destroyed. It fails with reason
- * `configuration`, instead of returning zero, while a stored key names a root key
- * that is not in the environment.
+ * first, then school keys, then the connector key. Sealed values do not change,
+ * only the wrapping of each key does. It returns how many keys it moved. Zero means
+ * that every learner key, school key, and the connector key is wrapped by the
+ * current root key, so the retired root keys can leave `VAULT_ROOT_KEYS` and be
+ * destroyed. It fails with reason `configuration`, instead of returning zero, while
+ * a stored key names a root key that is not in the environment.
  */
 export const rewrapKeys = Effect.fn("vault.rewrap.keys")(function* (
   limit: number
@@ -165,6 +214,10 @@ export const rewrapKeys = Effect.fn("vault.rewrap.keys")(function* (
   const schools = yield* rewrapSchoolPage(ring, limit);
   if (schools > 0) {
     return schools;
+  }
+  const connectors = yield* rewrapConnectorKey(ring);
+  if (connectors > 0) {
+    return connectors;
   }
   yield* refuseUnknownRoots(ring);
   return 0;
