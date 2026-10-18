@@ -27,22 +27,12 @@ function getLegendItemKey(item: LegendPayloadItem, nameKey?: string) {
 
 function ChartLegendContent({
   className,
-  hideIcon = false,
   nameKey,
   payload,
   verticalAlign,
   align = "right",
-  selected,
-  onSelectChange,
-  isClickable,
-  variant = "rounded-square",
 }: React.ComponentProps<"div"> & {
-  hideIcon?: boolean;
   nameKey?: string;
-  selected?: string | null;
-  isClickable?: boolean;
-  onSelectChange?: (selected: string | null) => void;
-  variant?: ChartLegendVariant | undefined;
 } & DefaultLegendContentProps) {
   const config = useChart((chart) => chart.config);
 
@@ -76,14 +66,9 @@ function ChartLegendContent({
       {Array.from(items, ([itemKey, item]) => (
         <LegendItem
           config={config}
-          hideIcon={hideIcon}
-          isClickable={isClickable}
           item={item}
           itemKey={itemKey}
           key={itemKey}
-          onSelectChange={onSelectChange}
-          selected={selected}
-          variant={variant}
         />
       ))}
     </div>

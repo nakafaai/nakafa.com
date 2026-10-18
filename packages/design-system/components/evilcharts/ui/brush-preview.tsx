@@ -1,11 +1,14 @@
 import { BrushDefinitions } from "@repo/design-system/components/evilcharts/ui/brush-paint";
 import {
+  type ChartBrushOptions,
+  useChart,
+} from "@repo/design-system/components/evilcharts/ui/chart";
+import {
   type ChartConfig,
   getChartSeriesId,
   getChartSeriesPaint,
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts/ui/evil-brush";
 import { Array as Arr } from "effect";
 import { type ComponentProps, lazy } from "react";
 
@@ -16,18 +19,21 @@ type EvilBrushCurveType = NonNullable<
   ComponentProps<RechartsModule["Area"]>["type"]
 >;
 
+/** The props that EvilBrush hands to its preview. */
 interface EvilBrushPreviewProps {
-  barRadius?: number | undefined;
   chartConfig: ChartConfig;
   chartId: string;
-  connectNulls: boolean;
-  curveType: EvilBrushCurveType;
   data: Record<string, unknown>[];
   keys: string[];
-  stacked: boolean;
   strokeVariant?: "solid" | "dashed" | "animated-dashed";
-  variant: EvilBrushVariant;
 }
+
+/** The look of the preview: the chart's brush options with the brush defaults applied. */
+type EvilBrushLook = {
+  [Key in "curveType" | "stacked" | "variant"]-?: NonNullable<
+    ChartBrushOptions[Key]
+  >;
+} & Pick<ChartBrushOptions, "barRadius">;
 
 /** Builds the preview after every Recharts primitive loads as one module. */
 function renderEvilBrushPreview(
@@ -40,9 +46,8 @@ function renderEvilBrushPreview(
     chartId,
     stacked,
     strokeVariant = "solid",
-    connectNulls,
     barRadius,
-  }: EvilBrushPreviewProps,
+  }: EvilBrushPreviewProps & EvilBrushLook,
   {
     Area,
     AreaChart,
@@ -76,7 +81,6 @@ function renderEvilBrushPreview(
           {Arr.map(keys, (dataKey) => (
             <Line
               activeDot={false}
-              connectNulls={connectNulls}
               dataKey={dataKey}
               dot={false}
               isAnimationActive={false}
@@ -149,7 +153,6 @@ function renderEvilBrushPreview(
         {Arr.map(keys, (dataKey) => (
           <Area
             activeDot={false}
-            connectNulls={connectNulls}
             dataKey={dataKey}
             dot={false}
             fill={`url(#${getChartSeriesId(chartId, "zm-fill", dataKey)})`}
@@ -174,12 +177,25 @@ function renderEvilBrushPreview(
   );
 }
 
-/** Renders the complete dataset behind the brush selection controls. */
+/** Renders the complete dataset behind the brush selection controls, styled by the chart's brush options. */
 const EvilBrushPreview = lazy(() =>
-  import("recharts").then((recharts) => ({
-    default: (props: EvilBrushPreviewProps) =>
-      renderEvilBrushPreview(props, recharts),
-  }))
+  import("recharts").then((recharts) => {
+    const EvilBrushPreviewWithLook = (props: EvilBrushPreviewProps) => {
+      const {
+        barRadius,
+        curveType = "monotone",
+        stacked = false,
+        variant = "area",
+      } = useChart((chart) => chart.brush);
+
+      return renderEvilBrushPreview(
+        { ...props, barRadius, curveType, stacked, variant },
+        recharts
+      );
+    };
+
+    return { default: EvilBrushPreviewWithLook };
+  })
 );
 
 export { type EvilBrushCurveType, EvilBrushPreview };

@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  type EvilBrushCurveType,
-  EvilBrushPreview,
-} from "@repo/design-system/components/evilcharts/ui/brush-preview";
+import { EvilBrushPreview } from "@repo/design-system/components/evilcharts/ui/brush-preview";
+import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import { EvilBrushControls } from "@repo/design-system/components/evilcharts/ui/evil-brush-controls";
@@ -37,16 +35,10 @@ type EvilBrushRange = typeof EvilBrushRangeSchema.Type;
  * the component's local range.
  */
 interface EvilBrushProps {
-  /** Radius for bar corners in the bar variant */
-  barRadius?: number;
   /** Chart config with colour definitions */
   chartConfig: ChartConfig;
   /** Extra className */
   className?: string;
-  /** Whether to connect null data points in line / area variants */
-  connectNulls?: boolean;
-  /** Curve type for line / area variants */
-  curveType?: EvilBrushCurveType;
   /** Full dataset – always rendered in the miniature chart */
   data: Record<string, unknown>[];
   /** Data keys to plot (default: all keys from chartConfig) */
@@ -59,31 +51,19 @@ interface EvilBrushProps {
   defaultStartIndex?: number;
   /** Controlled end index */
   endIndex?: number;
-  /** Format the handle label from the xDataKey value */
-  formatLabel?: ((value: unknown, index: number) => string) | undefined;
-  /** Pixel height of the brush */
-  height?: number | undefined;
   /** Minimum number of data points that must remain selected */
   minSpan?: number;
 
   /** Fired whenever the visible range changes */
   onChange?: (range: EvilBrushRange) => void;
-  /** Whether to render labels on the handles */
-  showLabels?: boolean;
   /** Skip rendering own ChartStyle (when inside a ChartContainer that already provides CSS vars) */
   skipStyle?: boolean;
-  /** Whether areas/bars should be stacked in the mini chart */
-  stacked?: boolean;
 
   // ── Controlled mode ──────────────────────────────────────────────────
   /** Controlled start index */
   startIndex?: number;
   /** Stroke variant for line / area strokes in the mini chart */
   strokeVariant?: "solid" | "dashed" | "animated-dashed";
-  /** Visual variant of the mini chart */
-  variant?: EvilBrushVariant;
-  /** X-axis data key – used for handle labels */
-  xDataKey?: string | undefined;
 }
 
 /** Restricts a stored range to the indexes available in the current dataset. */
@@ -105,26 +85,18 @@ function EvilBrush({
   data,
   chartConfig,
   dataKeys,
-  xDataKey,
-  variant = "area",
-  height = 56,
   className,
-  stacked = false,
   strokeVariant = "solid",
-  connectNulls = false,
-  barRadius,
   startIndex: controlledStart,
   endIndex: controlledEnd,
   defaultStartIndex = 0,
   defaultEndIndex,
   onChange,
-  formatLabel,
-  curveType = "monotone",
   minSpan = 2,
-  showLabels = true,
   skipStyle = false,
 }: EvilBrushProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { height = 56 } = useChart((chart) => chart.brush);
   const keys = useMemo(
     () => dataKeys ?? Rec.keys(chartConfig),
     [dataKeys, chartConfig]
@@ -162,18 +134,13 @@ function EvilBrush({
       <div className="absolute inset-0 overflow-hidden rounded-md">
         <Suspense fallback={null}>
           <EvilBrushPreview
-            barRadius={barRadius}
             chartConfig={chartConfig}
             chartId={chartId}
-            connectNulls={connectNulls}
-            curveType={curveType}
             data={data}
             keys={keys}
-            stacked={stacked}
             strokeVariant={
               strokeVariant === "animated-dashed" ? "dashed" : strokeVariant
             }
-            variant={variant}
           />
         </Suspense>
       </div>
@@ -181,12 +148,9 @@ function EvilBrush({
       <EvilBrushControls
         bind={bind}
         data={data}
-        formatLabel={formatLabel}
         rangeEndIndex={rangeEndIndex}
         rangeStartIndex={rangeStartIndex}
-        showLabels={showLabels}
         totalPoints={totalPoints}
-        xDataKey={xDataKey}
       />
     </div>
   );
