@@ -13,7 +13,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { cn } from "cn";
+import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useEffect, useId, useState } from "react";
 import {
@@ -62,6 +62,23 @@ const NEXT_LESSON = {
   projectile: "circle",
 } as const satisfies Record<Lesson, Lesson>;
 
+/**
+ * A lesson's panel, open or not. The open one comes in a little from below as
+ * it fades in, and the one it replaces fades out where it is, so a lesson change
+ * reads as one card turning into the next.
+ */
+const panelVariants = cva(
+  "col-start-1 row-start-1 grid content-start transition-[opacity,translate,visibility] duration-300 ease-out motion-reduce:transition-none [&_.content-auto-card]:[content-visibility:visible]!",
+  {
+    variants: {
+      open: {
+        false: "invisible translate-y-2 opacity-0",
+        true: "visible translate-y-0 opacity-100",
+      },
+    },
+  }
+);
+
 interface LessonPanelProps {
   readonly decimalSeparator: DecimalSeparator;
   readonly id: string;
@@ -96,16 +113,12 @@ function LessonPanel({
   const Lab = LESSON_LABS[lesson];
 
   return (
-    <div
+    <section
       aria-labelledby={labelledBy}
-      className={cn(
-        "col-start-1 row-start-1 grid content-start transition-[opacity,translate,visibility] duration-300 ease-out motion-reduce:transition-none [&_.content-auto-card]:[content-visibility:visible]!",
-        open ? "translate-y-0 opacity-100" : "invisible translate-y-2 opacity-0"
-      )}
+      className={panelVariants({ open })}
       data-slot="lesson-panel"
       id={id}
       inert={!open}
-      role="region"
     >
       {live ? (
         <Suspense fallback={placeholder}>
@@ -114,7 +127,7 @@ function LessonPanel({
       ) : (
         placeholder
       )}
-    </div>
+    </section>
   );
 }
 

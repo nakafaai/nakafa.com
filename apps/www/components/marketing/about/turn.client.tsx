@@ -177,8 +177,3 @@ export function TurnAnswer({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
-/** Whether the turn's answer has come in, for a part that changes once it has. */
-export function useTurnAnswered() {
-  return useTurn((state) => state.phase === "answered");
-}

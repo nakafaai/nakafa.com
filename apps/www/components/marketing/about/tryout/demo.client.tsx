@@ -2,11 +2,8 @@
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
-import { MarkdownFrame } from "@repo/design-system/components/markdown/frame";
-import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { MoodSchema } from "@repo/mascot/nina/face";
-import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
@@ -178,46 +175,3 @@ export function TryoutDemoNina() {
     />
   );
 }
-
-/**
- * Nina's answer beside the question, as her chat renders a sentence: an
- * invitation while it waits, then what the chosen answer is. Every sentence
- * holds the same place, so the answer keeps its height, and the new one fades
- * in sharp as the old one blurs away.
- */
-export function TryoutDemoReply({
-  words,
-}: {
-  /** What Nina says at each moment of the demo. */
-  words: Record<Outcome, string>;
-}) {
-  const outcome = useTryoutDemo((state) => state.outcome);
-
-  return (
-    <MarkdownFrame variant="chat">
-      <div className="grid">
-        {Arr.map(OutcomeSchema.literals, (moment) => (
-          <Paragraph
-            aria-hidden={moment === outcome ? undefined : true}
-            className={replyVariants({ shown: moment === outcome })}
-            key={moment}
-          >
-            {words[moment]}
-          </Paragraph>
-        ))}
-      </div>
-    </MarkdownFrame>
-  );
-}
-
-const replyVariants = cva(
-  "col-start-1 row-start-1 my-0 transition-[opacity,filter] duration-300 ease-out motion-reduce:transition-none",
-  {
-    variants: {
-      shown: {
-        false: "opacity-0 blur-xs",
-        true: "opacity-100 blur-none",
-      },
-    },
-  }
-);

@@ -1375,8 +1375,6 @@
     "hero-tryout": "Probetest starten",
     "lesson-title": "Stoff, der sich gut liest",
     "lesson-lead": "Kurz, der Reihe nach, direkt mit Beispiel.",
-    "lesson-ask": "Wie geht der schiefe Wurf?",
-    "lesson-answer": "Lies erst das hier.",
     "lesson-tabs": "Lektionen",
     "lab": {
       "circle": {
@@ -1414,10 +1412,6 @@
     },
     "tryout-title": "Probetests mit sofortigem Ergebnis",
     "tryout-lead": "Jederzeit wiederholbar.",
-    "tryout-ask": "Hab ich es schon verstanden?",
-    "tryout-answer": "Probier erst eine Aufgabe.",
-    "tryout-right": "Richtig, das ist die Antwort.",
-    "tryout-wrong": "Noch nicht. Schau noch einmal hin.",
     "nina-title": "Nina weiß, welche Stelle du meinst",
     "nina-lead": "Frag direkt aus der Aufgabe oder Lektion, die du offen hast.",
     "nina-chat-ask": "Warum ist 13 falsch?",
@@ -1485,8 +1479,7 @@
     "closing-topic-3": "das Mol",
     "closing-topic-4": "die Zelle"
   },
-  "Features": {
-  },
+  "Features": {},
   "About": {
     "company": "Unternehmen",
     "community": "Community",
