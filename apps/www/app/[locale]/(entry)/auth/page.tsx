@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Auth } from "@/components/auth";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellHeader } from "@/components/entry/shell";
 import { BackButton } from "@/components/shared/back";
@@ -14,7 +15,7 @@ export default async function Page() {
 
         <ThemePicker variant="ghost" />
       </EntryShellHeader>
-      <SignInScreen>
+      <SignInScreen action={<Auth />}>
         <h1 className="font-semibold text-2xl">{t("sign-in-title")}</h1>
       </SignInScreen>
     </>

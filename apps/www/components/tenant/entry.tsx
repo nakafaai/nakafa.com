@@ -1,4 +1,5 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { AuthGoogle } from "@/components/auth/google";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellArtwork } from "@/components/entry/artwork.client";
 import {
@@ -24,7 +25,7 @@ export function TenantEntry({ title }: { title: string }) {
             </div>
           </EntryShellHeader>
 
-          <SignInScreen returnPath="/">
+          <SignInScreen action={<AuthGoogle returnPath="/" />}>
             <h1 className="font-semibold text-2xl">{title}</h1>
           </SignInScreen>
         </NuqsAdapter>

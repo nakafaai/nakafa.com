@@ -1,23 +1,22 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
-import { AuthGoogle } from "@/components/auth/google";
 import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody } from "@/components/entry/shell";
 
 /**
  * The sign-in body of the main site and of a school host. The page passes its
- * title as `children`. The body adds Nina, the sentence that says why signing in
- * keeps progress saved, the Google button, and the privacy and terms sentence.
- * `returnPath` is the path on the host the visitor signs in from, as `AuthGoogle`
- * describes it.
+ * title as `children` and its sign-in control as `action`: the main site's
+ * control also signs out a visitor who is already signed in, and a school's
+ * returns the visitor to the school root. The body adds Nina, the sentence that
+ * says why signing in keeps progress saved, and the privacy and terms sentence.
  */
 export async function SignInScreen({
+  action,
   children,
-  returnPath,
 }: {
+  action: ReactNode;
   children: ReactNode;
-  returnPath?: string;
 }) {
   const t = await getTranslations("Auth");
 
@@ -37,7 +36,7 @@ export async function SignInScreen({
         <p className="text-muted-foreground">{t("sign-in-description")}</p>
       </div>
 
-      <AuthGoogle returnPath={returnPath} />
+      {action}
 
       <AuthLegal />
     </EntryShellBody>
