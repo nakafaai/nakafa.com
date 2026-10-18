@@ -28,12 +28,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -130,7 +131,7 @@ export function ParabolicMovementAnalysisLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseScenario}
           gridColumns="3"
@@ -145,64 +146,65 @@ export function ParabolicMovementAnalysisLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.62} />
-              <hemisphereLight
-                color={getColor("SKY", 400)}
-                groundColor={getColor("TEAL", 700)}
-                intensity={0.68}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[-3.4, 5.8, 4.7]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <pointLight
-                color={FLASH_COLOR}
-                intensity={0.45}
-                position={PROJECTILE_SCENE.launchOffset}
-              />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={PROJECTILE_SCENE.cameraPosition}
-                cameraTarget={PROJECTILE_SCENE.cameraTarget}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={PROJECTILE_SCENE.cameraFov}
-                framing="content"
-                maxPolarAngle={PROJECTILE_SCENE.maxPolarAngle}
-              />
-              <PirateProjectileScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            {Arr.map(facts, (fact) => (
-              <VisualFactTabular
-                key={fact.id}
-                label={fact.label}
-                value={<InlineMath math={fact.math} />}
-              />
-            ))}
-          </dl>
-        </VisualCardControls>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.62} />
+            <hemisphereLight
+              color={getColor("SKY", 400)}
+              groundColor={getColor("TEAL", 700)}
+              intensity={0.68}
+            />
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[-3.4, 5.8, 4.7]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
+            />
+            <pointLight
+              color={FLASH_COLOR}
+              intensity={0.45}
+              position={PROJECTILE_SCENE.launchOffset}
+            />
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={PROJECTILE_SCENE.cameraPosition}
+              cameraTarget={PROJECTILE_SCENE.cameraTarget}
+              enablePan
+              enableRotate
+              enableZoom
+              fov={PROJECTILE_SCENE.cameraFov}
+              framing="content"
+              maxPolarAngle={PROJECTILE_SCENE.maxPolarAngle}
+            />
+            <PirateProjectileScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(facts, (fact) => (
+            <VisualFactTabular
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

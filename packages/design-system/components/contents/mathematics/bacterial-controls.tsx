@@ -18,7 +18,7 @@ const SPEED_VALUES = Array.from(
   (_, index) => SPEED_STEP * (index + 1)
 );
 
-/** Renders the reset, playback, and full screen actions on the right of the footer. */
+/** Renders the reset, playback, and full screen actions in the card's actions band. */
 export function BacterialPlayback({
   isPlaying,
   onReset,

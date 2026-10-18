@@ -22,6 +22,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 import {
   CardSection,
   CardSectionActions,
@@ -39,7 +40,14 @@ const formSchema = Schema.toStandardSchemaV1(
     role: roleSchema,
   })
 );
-/** Renders the settings form that validates and saves the user's app role. */
+/**
+ * Renders the settings form that validates and saves the user's app role. A
+ * save does not wait: the new role is the form's saved one at once and the
+ * optimistic update shows it everywhere, so Save has nothing left to save. A
+ * refused save brings the stored role back as the saved one and keeps the
+ * newest chosen role, so Save offers it again beside the error toast. A refusal
+ * that a later save overtook leaves the form to that save.
+ */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const roleItems = Arr.map(roles, (role) => ({
@@ -52,6 +60,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     value: role.value,
   }));
   const updateUserRole = useUpdateUserRoleMutation();
+  const latestSave = useRef(0);
   const initialRole = Option.getOrUndefined(
     Option.map(
       Arr.findFirst(roles, (role) => role.value === user.appUser.role),
@@ -65,20 +74,18 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value }) =>
+    onSubmit: ({ value, formApi }) => {
+      const stored = formApi.options.defaultValues?.role;
+      const save = latestSave.current + 1;
+      latestSave.current = save;
+      // The new role is the saved one at once, so Save has nothing to save.
+      formApi.reset(value);
       Effect.runPromise(
         Schema.decodeUnknownEffect(roleSchema)(value.role).pipe(
           Effect.flatMap((role) =>
             Effect.tryPromise(() => updateUserRole({ role }))
           ),
           Effect.flatMap(Effect.fromResult),
-          Effect.tap(() =>
-            Effect.sync(() => {
-              if (form.getFieldValue("role") === value.role) {
-                form.reset(value);
-              }
-            })
-          ),
           Effect.matchEffect({
             onSuccess: () => Effect.void,
             onFailure: (error) =>
@@ -91,12 +98,23 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                       description: "action-error.description",
                       title: "action-error.title",
                     });
+                    if (save !== latestSave.current) {
+                      return;
+                    }
+                    // The stored role comes back as the saved one, and the
+                    // newest chosen role stays, so Save offers it again.
+                    const chosen = formApi.getFieldMeta("role")?.isTouched
+                      ? formApi.getFieldValue("role")
+                      : value.role;
+                    formApi.reset({ role: stored });
+                    formApi.setFieldValue("role", chosen);
                   })
                 )
               ),
           })
         )
-      ),
+      );
+    },
   });
   return (
     <form action={() => form.handleSubmit()} id="user-settings-role-form">
@@ -146,18 +164,12 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
           </form.Field>
         </CardContent>
         <CardSectionFooter>
-          <form.Subscribe
-            selector={(state) => [state.isDirty, state.isSubmitting]}
-          >
-            {([isDirty, isSubmitting]) => (
+          <form.Subscribe selector={(state) => state.isDirty}>
+            {(isDirty) => (
               <>
                 <CardSectionHint>{t("role-footer")}</CardSectionHint>
                 <CardSectionActions>
-                  <Button
-                    disabled={!isDirty || isSubmitting}
-                    size="sm"
-                    type="submit"
-                  >
+                  <Button disabled={!isDirty} size="sm" type="submit">
                     {t("save")}
                   </Button>
                 </CardSectionActions>

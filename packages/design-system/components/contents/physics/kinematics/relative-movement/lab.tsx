@@ -26,12 +26,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -87,7 +88,7 @@ export function RelativeMovementLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseCase}
           gridColumns="2"
@@ -102,78 +103,79 @@ export function RelativeMovementLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.7} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE")}
-                intensity={0.6}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.25}
-                position={[3.4, 5.4, 4.2]}
-                shadow-bias={-0.0006}
-                shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
-                shadow-camera-left={-SHADOW_CAMERA_RADIUS}
-                shadow-camera-right={SHADOW_CAMERA_RADIUS}
-                shadow-camera-top={SHADOW_CAMERA_RADIUS}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <RelativeMovementCamera />
-              <RelativeMovementScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <VisualFactIndicator
-              indicatorColor={OBSERVER_COLOR}
-              label={labels.factLabels.observer}
-              value={
-                <InlineMath
-                  math={formatSignedRoundedSpeedMath(motion.observerSpeed)}
-                />
-              }
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.7} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("SLATE")}
+              intensity={0.6}
             />
-            <VisualFactIndicator
-              indicatorColor={TARGET_COLOR}
-              label={labels.factLabels.target}
-              value={
-                <InlineMath
-                  math={formatSignedRoundedSpeedMath(motion.targetSpeed)}
-                />
-              }
+            <directionalLight
+              castShadow
+              intensity={1.25}
+              position={[3.4, 5.4, 4.2]}
+              shadow-bias={-0.0006}
+              shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
+              shadow-camera-left={-SHADOW_CAMERA_RADIUS}
+              shadow-camera-right={SHADOW_CAMERA_RADIUS}
+              shadow-camera-top={SHADOW_CAMERA_RADIUS}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
             />
-            <VisualFactIndicator
-              label={labels.factLabels.relativeVelocity}
-              value={
-                <InlineMath
-                  math={`v_{B/A}=${formatSignedRoundedSpeedMath(
-                    motion.relativeVelocity
-                  )}`}
-                />
-              }
-            />
-            <VisualFactIndicator
-              label={labels.factLabels.visibleDirection}
-              value={labels.directionLabels[motion.relativeDirection]}
-            />
-          </dl>
-        </VisualCardControls>
+            <RelativeMovementCamera />
+            <RelativeMovementScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFactIndicator
+            indicatorColor={OBSERVER_COLOR}
+            label={labels.factLabels.observer}
+            value={
+              <InlineMath
+                math={formatSignedRoundedSpeedMath(motion.observerSpeed)}
+              />
+            }
+          />
+          <VisualFactIndicator
+            indicatorColor={TARGET_COLOR}
+            label={labels.factLabels.target}
+            value={
+              <InlineMath
+                math={formatSignedRoundedSpeedMath(motion.targetSpeed)}
+              />
+            }
+          />
+          <VisualFactIndicator
+            label={labels.factLabels.relativeVelocity}
+            value={
+              <InlineMath
+                math={`v_{B/A}=${formatSignedRoundedSpeedMath(
+                  motion.relativeVelocity
+                )}`}
+              />
+            }
+          />
+          <VisualFactIndicator
+            label={labels.factLabels.visibleDirection}
+            value={labels.directionLabels[motion.relativeDirection]}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

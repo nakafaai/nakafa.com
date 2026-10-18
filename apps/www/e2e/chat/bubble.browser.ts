@@ -58,7 +58,8 @@ const foldsPastTwelveLines = async (page: Page) => {
       clipped: box.scrollHeight > box.clientHeight,
       height: box.getBoundingClientRect().height,
       line: Number.parseFloat(getComputedStyle(box).lineHeight),
-      text: box.textContent,
+      // Each line break is drawn as one, so the text a reader sees holds them.
+      text: box.innerText,
     };
   });
   expect.soft(folded?.height).toBeCloseTo((folded?.line ?? 0) * 12, 1);

@@ -9,7 +9,7 @@ import { PeriodicPropertiesScene } from "@repo/design-system/components/contents
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { VisualCardScene } from "@repo/design-system/components/visual/card";
+import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { useTheme } from "next-themes";
 import { Suspense, useEffect } from "react";
 
@@ -29,7 +29,7 @@ export function PeriodicPropertiesCanvas({
   const colors = getPeriodicPropertiesSceneColors(resolvedTheme);
 
   return (
-    <VisualCardScene
+    <VisualCardBody
       aria-label={ariaLabel}
       className={threeSceneFrameVariants()}
       render={<section />}
@@ -62,7 +62,7 @@ export function PeriodicPropertiesCanvas({
           <PeriodicPropertiesScene colors={colors} modeId={modeId} />
         </Suspense>
       </ThreeCanvas>
-    </VisualCardScene>
+    </VisualCardBody>
   );
 }
 

@@ -13,6 +13,7 @@ export type ChatSharesDoc = Document.Document<typeof schemaDefinition, "chatShar
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
 export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "classTeachers">;
 export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
+export type CommentLikesDoc = Document.Document<typeof schemaDefinition, "commentLikes">;
 export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
 export type ContentAnalyticsPartitionsDoc = Document.Document<typeof schemaDefinition, "contentAnalyticsPartitions">;
@@ -119,6 +120,7 @@ export interface Docs {
   chats: ChatsDoc;
   classTeachers: ClassTeachersDoc;
   classes: ClassesDoc;
+  commentLikes: CommentLikesDoc;
   commentVotes: CommentVotesDoc;
   comments: CommentsDoc;
   contentAnalyticsPartitions: ContentAnalyticsPartitionsDoc;

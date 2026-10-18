@@ -16,11 +16,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
@@ -66,7 +68,8 @@ export function DaltonEvidenceLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="flex flex-col gap-5">
+
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseMode}
           gridColumns="3"
@@ -81,7 +84,9 @@ export function DaltonEvidenceLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
+      <VisualCardBody className="p-(--card-spacing)">
         <DaltonEvidenceScene
           afterMolecules={selectedLayout.after}
           afterTitle={selectedLabels.afterTitle}
@@ -89,21 +94,22 @@ export function DaltonEvidenceLab({
           beforeTitle={selectedLabels.beforeTitle}
           expression={selectedLabels.expression}
         />
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            {Arr.map(selectedLabels.facts, (fact) => (
-              <VisualFact
-                key={fact.label}
-                label={fact.label}
-                value={<InlineMath math={fact.value} />}
-              />
-            ))}
-          </dl>
-        </VisualCardControls>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(selectedLabels.facts, (fact) => (
+            <VisualFact
+              key={fact.label}
+              label={fact.label}
+              value={<InlineMath math={fact.value} />}
+            />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
