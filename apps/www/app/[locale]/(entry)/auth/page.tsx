@@ -1,3 +1,4 @@
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { getTranslations } from "next-intl/server";
 import { Auth } from "@/components/auth";
 import { SignInScreen } from "@/components/auth/screen";
@@ -15,7 +16,19 @@ export default async function Page() {
 
         <ThemePicker variant="ghost" />
       </EntryShellHeader>
-      <SignInScreen action={<Auth />}>
+      <SignInScreen
+        action={<Auth />}
+        figure={
+          <Nina
+            act="relaxed"
+            fidget={["waving"]}
+            label=""
+            mood="hello"
+            size={190}
+            whole
+          />
+        }
+      >
         <h1 className="font-semibold text-2xl">{t("sign-in-title")}</h1>
       </SignInScreen>
     </>

@@ -20,6 +20,10 @@ test("a signed-out visitor sees the sign-in surface of an existing school", asyn
   await expect(
     page.getByRole("button", { name: "Continue with Google" })
   ).toBeVisible();
+  // The school's own mark stands above the title: its animal, since it has no logo yet.
+  await expect(
+    page.locator('main [data-slot="avatar-fallback"]').first()
+  ).toBeVisible();
   await Effect.runPromise(expectSignInParts(page));
 });
 

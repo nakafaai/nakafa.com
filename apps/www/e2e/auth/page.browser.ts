@@ -194,6 +194,7 @@ const openSignIn = Effect.fn("NakafaE2E.openSignIn")(function* (page: Page) {
   yield* seedAnalyticsConsent(page, "denied");
   yield* Effect.promise(() => page.goto(SIGN_IN));
   yield* expectSignInParts(page);
+  yield* Effect.promise(() => expect(page.locator(NINA)).toBeVisible());
 });
 
 /**

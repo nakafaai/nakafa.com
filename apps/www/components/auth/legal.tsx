@@ -1,4 +1,3 @@
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -44,17 +43,14 @@ export async function AuthLegal() {
 }
 
 /**
- * Opens one policy page in a new tab, with the look of a text link. It is a
- * plain anchor, so assistive technology names it a link, not a button.
+ * Opens one policy page in a new tab, as a text link inside the sentence, so the words
+ * around it keep their own spacing. It is a plain anchor, so assistive technology names
+ * it a link.
  */
 function LegalLink({ children, href }: { children: ReactNode; href: string }) {
   return (
     <a
-      className={buttonVariants({
-        className: "h-auto p-0",
-        size: "sm",
-        variant: "link",
-      })}
+      className="font-medium text-foreground underline-offset-4 hover:underline"
       href={href}
       rel="noopener noreferrer"
       target="_blank"

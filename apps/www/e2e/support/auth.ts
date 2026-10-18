@@ -24,12 +24,12 @@ const expectPolicyLink = Effect.fn("NakafaE2E.expectPolicyLink")(function* (
 });
 
 /**
- * Expects the parts that every sign-in page shows: Nina, the theme button, and
- * the two policy links of the sentence.
+ * Expects the parts that every sign-in page shows: the theme button and the two
+ * policy links of the sentence. The figure above the title differs: Nina on the
+ * main site, the school's mark on a school host.
  */
 export const expectSignInParts = Effect.fn("NakafaE2E.expectSignInParts")(
   function* (page: Page) {
-    yield* Effect.promise(() => expect(page.locator(NINA)).toBeVisible());
     yield* Effect.promise(() =>
       expect(
         page.getByRole("button", { exact: true, name: THEME })
