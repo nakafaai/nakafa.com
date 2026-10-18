@@ -45,9 +45,11 @@ const deleteVoteBatch = Effect.fn("comments.migration.deleteVoteBatch")(
       .index("by_creation_time")
       .take(MIGRATION_BATCH)
       .pipe(Effect.orDie);
-    for (const vote of votes) {
-      yield* writer.table("commentVotes").delete(vote._id);
-    }
+    yield* Effect.forEach(
+      votes,
+      (vote) => writer.table("commentVotes").delete(vote._id),
+      { discard: true }
+    );
     return votes.length;
   }
 );

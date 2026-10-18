@@ -26,14 +26,17 @@ function row(id: string, change: Partial<CommentRow> = {}): CommentRow {
   return {
     _creationTime: 1,
     _id: commentId(id),
+    downvoteCount: 0,
     likeCount: 0,
     liked: false,
     replyCount: 0,
     replyToUser: null,
     slug: SLUG,
     text: id,
+    upvoteCount: 0,
     user: { _id: AUTHOR, mascot: MASCOT, name: "Author" },
     userId: AUTHOR,
+    viewerVote: null,
     ...change,
   };
 }
@@ -258,7 +261,9 @@ describe("the optimistic changes of the comment lists", () => {
 
   it("takes a like off the comment in every loaded list", () => {
     const fake = fakeStore([
-      slugList(null, [row("root", { liked: true, likeCount: 2 })]),
+      slugList(null, [
+        row("root", { liked: true, likeCount: 2, viewerVote: 1 }),
+      ]),
     ]);
 
     unlikeInLists(fake.store, { commentId: ROOT });

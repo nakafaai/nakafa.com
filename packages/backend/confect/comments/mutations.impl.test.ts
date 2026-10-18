@@ -114,6 +114,7 @@ describe("comment write and read contracts", () => {
       user: {
         _id: author.userId,
       },
+      viewerVote: 1,
     });
     const thread = decodeReplies(
       await reader.session.query(getCommentReplies, {
@@ -132,6 +133,7 @@ describe("comment write and read contracts", () => {
         user: {
           _id: reader.userId,
         },
+        viewerVote: null,
       },
     ]);
     expect(
@@ -143,6 +145,7 @@ describe("comment write and read contracts", () => {
       page: [
         {
           liked: true,
+          viewerVote: 1,
         },
       ],
     });
@@ -155,6 +158,7 @@ describe("comment write and read contracts", () => {
       page: [
         {
           liked: false,
+          viewerVote: null,
         },
       ],
     });
