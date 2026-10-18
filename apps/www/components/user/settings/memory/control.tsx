@@ -16,7 +16,6 @@ import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
 import { MEMORY_ADD_ID } from "@/components/user/settings/memory/focus";
@@ -59,8 +58,7 @@ export function MemoryControl() {
           />
         </div>
       </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t("footer")}</CardSectionHint>
+      <CardSectionFooter hint={t("footer")}>
         <CardSectionActions>
           <Button
             disabled={empty}
