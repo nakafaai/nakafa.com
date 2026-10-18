@@ -9,29 +9,28 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { useTranslations } from "next-intl";
-import { AiMenuItem } from "@/components/ai/sheet/menu";
+import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
-import { OpenContent } from "@/components/shared/content/actions";
-import { QuranSurahName } from "@/components/shared/quran/name";
 
-/** Keeps surah navigation, name, and outline actions in one stable page row. */
+/**
+ * Keeps surah navigation, name, and outline actions in one stable page row. The
+ * page composes the name and the actions, and the row places them.
+ */
 export function QuranSurahHeader({
-  arabic,
-  copySourceUrl,
+  actions,
   meaning,
   meaningLanguage,
+  name,
   quranLabel,
-  slug,
   title,
 }: {
-  arabic: string;
-  copySourceUrl: string;
+  actions: ReactNode;
   meaning: string;
   /** BCP 47 language of the meaning when it differs from the page. */
   meaningLanguage?: string;
+  name: ReactNode;
   quranLabel: string;
-  slug: string;
   title: string;
 }) {
   const tCommon = useTranslations("Common");
@@ -59,16 +58,14 @@ export function QuranSurahHeader({
         >
           {meaning}
         </span>
-        <QuranSurahName arabic={arabic} title={title} />
+        {name}
       </h1>
       <div
         className="col-start-2 row-start-1 flex min-w-0 justify-end md:col-start-3"
         data-slot="surah-header-actions"
       >
         <ButtonGroup aria-label={tCommon("content-actions")}>
-          <OpenContent copySourceUrl={copySourceUrl} slug={slug}>
-            <AiMenuItem contextTitle={title} />
-          </OpenContent>
+          {actions}
           <Tooltip>
             <TooltipTrigger
               render={

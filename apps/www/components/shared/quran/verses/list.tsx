@@ -12,6 +12,10 @@ import {
   QuranVerse,
   QuranVerseHeading,
 } from "@/components/shared/quran/verses/item";
+import {
+  QuranVerseRowContext,
+  useQuranVerseRow,
+} from "@/components/shared/quran/verses/row.client";
 import { QuranTranslation } from "@/components/shared/quran/verses/translation";
 
 interface QuranVerseListProps {
@@ -58,27 +62,23 @@ function QuranSurahVerse({
   const { id, label, verse } = item;
 
   return (
-    <QuranVerse isLast={isLast} number={verse.number.inSurah}>
-      <QuranVerseHeading id={id} label={label} number={verse.number.inSurah}>
-        <QuranVerseInterpretation
-          verseLabel={label}
-          verseNumber={verse.number.inSurah}
-        />
-      </QuranVerseHeading>
-      <QuranText data-quran-arabic>{verse.arabic}</QuranText>
-      <QuranVerseTranslation item={item} />
-    </QuranVerse>
+    <QuranVerseRowContext
+      value={{ isLast, label, number: verse.number.inSurah }}
+    >
+      <QuranVerse number={verse.number.inSurah}>
+        <QuranVerseHeading id={id} label={label} number={verse.number.inSurah}>
+          <QuranVerseInterpretation />
+        </QuranVerseHeading>
+        <QuranText data-quran-arabic>{verse.arabic}</QuranText>
+        <QuranVerseTranslation item={item} />
+      </QuranVerse>
+    </QuranVerseRowContext>
   );
 }
 
 /** The interpretation control the surah's Tafsir edition supports. */
-function QuranVerseInterpretation({
-  verseLabel,
-  verseNumber,
-}: {
-  verseLabel: string;
-  verseNumber: number;
-}) {
+function QuranVerseInterpretation() {
+  const { label: verseLabel, number: verseNumber } = useQuranVerseRow();
   const interpretationLabel = useQuranVerses(
     (value) => value.interpretationLabel
   );

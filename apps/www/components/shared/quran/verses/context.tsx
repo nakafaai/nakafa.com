@@ -7,27 +7,37 @@ import { createContext, type ReactNode, use } from "react";
 interface QuranVersesProviderProps {
   readonly children: ReactNode;
   readonly interpretationLabel: string;
+  readonly surahTitle: string;
   readonly tafsirAccess: QuranViewTafsirAccess;
   readonly translationNotesLabel: string;
 }
 
 type QuranVersesValue = Pick<
   QuranVersesProviderProps,
-  "interpretationLabel" | "tafsirAccess" | "translationNotesLabel"
+  | "interpretationLabel"
+  | "surahTitle"
+  | "tafsirAccess"
+  | "translationNotesLabel"
 >;
 
 const QuranVersesContext = createContext<QuranVersesValue | null>(null);
 
-/** Shares a surah's Tafsir access and verse labels with every verse. */
+/** Shares a surah's Tafsir access, title and verse labels with every verse. */
 export function QuranVersesProvider({
   children,
   interpretationLabel,
+  surahTitle,
   tafsirAccess,
   translationNotesLabel,
 }: QuranVersesProviderProps) {
   return (
     <QuranVersesContext
-      value={{ interpretationLabel, tafsirAccess, translationNotesLabel }}
+      value={{
+        interpretationLabel,
+        surahTitle,
+        tafsirAccess,
+        translationNotesLabel,
+      }}
     >
       {children}
     </QuranVersesContext>

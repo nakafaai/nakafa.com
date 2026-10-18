@@ -1,16 +1,17 @@
 import { cn } from "cn";
 import type { ReactNode } from "react";
+import { useQuranVerseRow } from "@/components/shared/quran/verses/row.client";
 
 /** Frames one Quran verse, so every verse keeps the same spacing and rule. */
 export function QuranVerse({
   children,
-  isLast,
   number,
 }: {
   children: ReactNode;
-  isLast: boolean;
   number: number;
 }) {
+  const { isLast } = useQuranVerseRow();
+
   return (
     <div
       className={cn(
