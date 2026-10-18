@@ -2,36 +2,26 @@
 
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { BreadcrumbHost } from "@/components/shared/breadcrumb/anchor";
-import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import { SchoolHeader } from "@/components/tenant/header";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 
 /**
- * Renders the sticky breadcrumb header for the school settings section that owns
- * the current pathname, under the group that holds it. Its links are the school
- * host's: no locale in front of a path, and home is the school's root.
+ * The header of the school settings: the path to the section that owns the current
+ * pathname, under the group that holds it, in the school's one header row.
  */
 export function SchoolSettingsHeader() {
   const pathname = usePathname();
   const t = useTranslations("SchoolSettings");
-  const tCommon = useTranslations("Common");
   const section = getSchoolSettingsSection(pathname);
   const label = t(section.labelKey);
 
   return (
-    <BreadcrumbHost host="school">
-      <BreadcrumbHeader
-        value={{
-          homeHref: "/",
-          homeLabel: tCommon("home"),
-          items: [
-            { href: section.group.href, label: t(section.group.key) },
-            { label },
-          ],
-          menuLabel: tCommon("more"),
-          title: label,
-        }}
-      />
-    </BreadcrumbHost>
+    <SchoolHeader
+      items={[
+        { href: section.group.href, label: t(section.group.key) },
+        { label },
+      ]}
+      title={label}
+    />
   );
 }

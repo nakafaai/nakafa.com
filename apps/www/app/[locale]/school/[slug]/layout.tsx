@@ -61,7 +61,11 @@ export default async function SchoolLayout({
   if (token === undefined) {
     const t = await getTranslations({ locale, namespace: "School" });
     return (
-      <TenantEntry title={t("sign-in-title", { school: profile.value.name })} />
+      <TenantEntry
+        logo={profile.value.logo}
+        mascot={profile.value.mascot}
+        title={t("sign-in-title", { school: profile.value.name })}
+      />
     );
   }
 
