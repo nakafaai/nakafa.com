@@ -158,6 +158,7 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
 /** Renders one unit: its level, its time zone and content language, and its archive action. */
 function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const setLocale = useMutation(tenancy.units.setLocale).withOptimisticUpdate(
     setUnitLocaleChange
   );
@@ -311,9 +312,18 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
       <ResponsiveDialog
         description={t("unit-archive-description")}
         footer={
-          <Button onClick={archiveUnit} type="button" variant="destructive">
-            {t("unit-archive-confirm")}
-          </Button>
+          <>
+            <Button
+              onClick={() => setIsArchiving(false)}
+              type="button"
+              variant="outline"
+            >
+              {common("cancel")}
+            </Button>
+            <Button onClick={archiveUnit} type="button" variant="destructive">
+              {t("unit-archive-confirm")}
+            </Button>
+          </>
         }
         open={isArchiving}
         setOpen={setIsArchiving}

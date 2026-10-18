@@ -83,6 +83,7 @@ function SchoolProfileCard({
   };
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const fileInput = useRef<HTMLInputElement>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   const requestUrl = useMutation(tenancy.logo.uploadUrl);
@@ -184,9 +185,18 @@ function SchoolProfileCard({
         <ResponsiveDialog
           description={t("logo-remove-description")}
           footer={
-            <Button onClick={takeLogoOff} type="button" variant="destructive">
-              {t("logo-remove-confirm")}
-            </Button>
+            <>
+              <Button
+                onClick={() => setIsRemoving(false)}
+                type="button"
+                variant="outline"
+              >
+                {common("cancel")}
+              </Button>
+              <Button onClick={takeLogoOff} type="button" variant="destructive">
+                {t("logo-remove-confirm")}
+              </Button>
+            </>
           }
           open={isRemoving}
           setOpen={setIsRemoving}
