@@ -153,7 +153,7 @@ function SheetBody() {
       <Activity mode={activeChatId ? "visible" : "hidden"}>
         <ChatBoundary key={activeChatId} read={read}>
           <Authenticated>
-            <SheetConversation />
+            {!!activeChatId && <SheetConversation chatId={activeChatId} />}
           </Authenticated>
           <Unauthenticated>
             <SheetNew />
