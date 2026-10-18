@@ -14,19 +14,24 @@ import {
 } from "@repo/design-system/components/three/controls";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardFacts,
   VisualCardFooter,
-  VisualCardGroup,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { COLORS } from "@repo/design-system/lib/color";
-import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
+import {
+  getCos,
+  getQuadrant,
+  getRadians,
+  getSin,
+  getTan,
+} from "@repo/math/angles";
+import { Option } from "effect";
 import dynamic from "next/dynamic";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useState } from "react";
@@ -40,6 +45,9 @@ import {
 } from "react-aria-components";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
+/** The numeral of each quadrant, as mathematics writes it in every language. */
+const QUADRANT_NUMERALS = ["I", "II", "III", "IV"];
+
 const UnitCircleStage = dynamic(
   () =>
     import("@repo/design-system/components/three/unit-circle").then(
@@ -248,41 +256,51 @@ function Content() {
       </VisualCardBody>
       <CoordinateControls />
       <VisualCardFooter>
-        <VisualCardGroup>
-          <Badge variant="outline">
-            <InlineMath
-              math={`\\sin\\theta ${formatRatio(getSin(angleValue), exactValues?.sin)}`}
-            />
-          </Badge>
-          <Badge variant="outline">
-            <InlineMath
-              math={`\\cos\\theta ${formatRatio(getCos(angleValue), exactValues?.cos)}`}
-            />
-          </Badge>
-          <Badge variant="outline">
-            {Number.isFinite(getTan(angleValue)) ? (
+        <VisualCardFacts>
+          <VisualFact
+            label={<InlineMath math="\theta" />}
+            value={<InlineMath math={`${angleValue}^\\circ`} />}
+          />
+          <VisualFact
+            label={t("radian")}
+            value={format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}
+          />
+          <VisualFact
+            label={<InlineMath math="\sin\theta" />}
+            value={
               <InlineMath
-                math={`\\tan\\theta ${formatRatio(getTan(angleValue), exactValues?.tan)}`}
+                math={formatRatio(getSin(angleValue), exactValues?.sin)}
               />
-            ) : (
-              <>
-                <InlineMath math="\tan\theta" />: {t("undefined")}
-              </>
-            )}
-          </Badge>
-        </VisualCardGroup>
-
-        <Separator />
-
-        <div className="mx-auto flex w-full max-w-md items-center gap-2">
-          <Badge style={{ color: COLORS.VIOLET }} variant="outline">
-            <InlineMath math={`\\theta = ${angleValue}^\\circ`} />
-          </Badge>
-          <Badge className="font-mono" variant="outline">
-            {format.number(getRadians(angleValue), TRIG_NUMBER_OPTIONS)}{" "}
-            {t("radian")}
-          </Badge>
-        </div>
+            }
+          />
+          <VisualFact
+            label={<InlineMath math="\cos\theta" />}
+            value={
+              <InlineMath
+                math={formatRatio(getCos(angleValue), exactValues?.cos)}
+              />
+            }
+          />
+          <VisualFact
+            label={<InlineMath math="\tan\theta" />}
+            value={
+              Number.isFinite(getTan(angleValue)) ? (
+                <InlineMath
+                  math={formatRatio(getTan(angleValue), exactValues?.tan)}
+                />
+              ) : (
+                t("undefined")
+              )
+            }
+          />
+          <VisualFact
+            label={t("quadrant")}
+            value={Option.match(getQuadrant(angleValue), {
+              onNone: () => t("on-axis"),
+              onSome: (quadrant) => QUADRANT_NUMERALS[quadrant - 1],
+            })}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </>
   );

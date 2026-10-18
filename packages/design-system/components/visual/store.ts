@@ -224,8 +224,7 @@ export function createVisualStore() {
         /** Takes the scene back to its first view. */
         resetView: () => set((current) => ({ view: current.view + 1 })),
         /** Starts the scene moving by itself, or stops it. */
-        togglePlaying: () =>
-          set((current) => ({ playing: !current.playing })),
+        togglePlaying: () => set((current) => ({ playing: !current.playing })),
         /** Registers the card element; the card passes it as its ref. */
         bind: (element: HTMLElement | null) => {
           card = element;

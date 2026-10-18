@@ -25,8 +25,8 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
 import dynamic from "next/dynamic";
 import { type ReactNode, useMemo, useState } from "react";

@@ -48,12 +48,7 @@ function VisualCardReset({ inert = false }: { inert?: boolean }) {
   const resetView = useVisual((state) => state.resetView);
 
   return (
-    <Button
-      inert={inert}
-      onClick={resetView}
-      size="icon"
-      variant="secondary"
-    >
+    <Button inert={inert} onClick={resetView} size="icon" variant="secondary">
       <HugeIcons icon={CenterFocusIcon} />
       <span className="sr-only">{t("reset")}</span>
     </Button>

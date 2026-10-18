@@ -22,8 +22,8 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Result } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";

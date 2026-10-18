@@ -193,7 +193,7 @@ export function BacterialGrowth({
           data-visible-bacteria-count={frame.bacteriaIds.length}
           role="img"
         >
-          <div className="relative aspect-square h-full w-full overflow-hidden rounded-lg border bg-card sm:aspect-video">
+          <div className="relative aspect-square h-full w-full overflow-hidden sm:aspect-video">
             <div
               className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
               style={{
