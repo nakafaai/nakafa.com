@@ -36,7 +36,7 @@ export function HeaderContainer({ children }: { children: ReactNode }) {
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <m.header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background group-has-[[data-slot=page-header]]/sidebar-wrapper:hidden lg:hidden">
+      <m.header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background group-has-[[data-shell-title]]/sidebar-wrapper:hidden group-data-titled/sidebar-wrapper:hidden lg:hidden">
         <m.div
           className="absolute right-0 bottom-0 left-0 h-px bg-border"
           style={{ opacity: isChat ? 1 : (borderOpacity ?? 0) }}

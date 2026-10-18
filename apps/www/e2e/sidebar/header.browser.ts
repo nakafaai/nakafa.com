@@ -52,3 +52,39 @@ test("a phone shows one header row: the page's own, with the app sidebar's trigg
     )
   );
 });
+
+test("a phone shows the app's bar again on a page without a header of its own, after one that had it", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedAnalyticsConsent(page, "denied");
+        yield* Effect.promise(() =>
+          page.setViewportSize({ height: 844, width: 390 })
+        );
+        yield* Effect.promise(() => page.goto("/en/try-out"));
+        const header = page.locator(PAGE_HEADER);
+        yield* Effect.promise(() =>
+          expect(header).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+        );
+
+        // Home draws no page header, while Next.js keeps the try-out page in the
+        // document, hidden: its header must not hide the app's bar.
+        yield* Effect.promise(() =>
+          header.getByRole("link", { exact: true, name: "Home" }).click()
+        );
+        yield* Effect.promise(() => page.waitForURL("**/en/home"));
+        yield* Effect.promise(() =>
+          expect(
+            page.getByRole("button", { name: "Search content..." })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+        );
+        yield* Effect.promise(() =>
+          expect(page.locator(VISIBLE_SIDEBAR_TRIGGER)).toHaveCount(1)
+        );
+      })
+    )
+  );
+});
