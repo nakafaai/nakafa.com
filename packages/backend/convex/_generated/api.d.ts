@@ -4038,6 +4038,29 @@ export declare const api: {
         },
         null
       >;
+      answer: FunctionReference<
+        "mutation",
+        "public",
+        {
+          deviceId: string;
+          questionId: Id<"examQuestions">;
+          response: Array<string>;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        null
+      >;
+      attempt: FunctionReference<
+        "query",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        {
+          deadline: number;
+          id: Id<"examAttempts">;
+          startedAt: number;
+          state: "inProgress" | "locked" | "closing" | "submitted";
+        } | null
+      >;
       changeToken: FunctionReference<
         "mutation",
         "public",
@@ -4090,16 +4113,20 @@ export declare const api: {
               state: "inProgress" | "locked" | "closing" | "submitted";
             }>;
           };
+          can: Array<"sitting.proctor" | "sitting.view">;
           sitting: {
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
             examId: Id<"exams">;
+            examTitle: string;
             id: Id<"examSittings">;
             opensAt: number;
             room: string;
             state: "scheduled" | "open" | "closed";
+            timeZone: string;
             unitId: Id<"tenantUnits">;
           };
+          token: string | null;
         }
       >;
       enter: FunctionReference<
@@ -4118,6 +4145,12 @@ export declare const api: {
             state: "inProgress" | "locked" | "closing" | "submitted";
           }
         | { outcome: "refused"; reason: "TokenRefused" | "TooManyTries" }
+      >;
+      finish: FunctionReference<
+        "mutation",
+        "public",
+        { deviceId: string; sittingId: Id<"examSittings">; slug: string },
+        null
       >;
       lock: FunctionReference<
         "mutation",
@@ -4144,12 +4177,214 @@ export declare const api: {
           closesAt: number;
           cohortId: Id<"tenantCohorts"> | null;
           examId: Id<"exams">;
+          examTitle: string;
           id: Id<"examSittings">;
           opensAt: number;
           room: string;
           state: "scheduled" | "open" | "closed";
+          timeZone: string;
           unitId: Id<"tenantUnits">;
         }>
+      >;
+      paper: FunctionReference<
+        "query",
+        "public",
+        { deviceId: string; sittingId: Id<"examSittings">; slug: string },
+        {
+          questions: Array<{
+            id: Id<"examQuestions">;
+            interactions: Array<
+              | {
+                  id: string;
+                  kind: "choice";
+                  label: string;
+                  maxChoices: number;
+                  minChoices: number;
+                  options: Array<{ id: string; label: any }>;
+                  shuffle: boolean;
+                }
+              | {
+                  columns: Array<{ id: string; label: any }>;
+                  id: string;
+                  kind: "matrix";
+                  label: string;
+                  shuffle: boolean;
+                  statements: Array<{ id: string; label: any }>;
+                }
+              | {
+                  id: string;
+                  kind: "match";
+                  label: string;
+                  shuffle: boolean;
+                  sources: Array<{
+                    id: string;
+                    label: any;
+                    maxMatches: number;
+                  }>;
+                  targets: Array<{
+                    id: string;
+                    label: any;
+                    maxMatches: number;
+                  }>;
+                }
+              | {
+                  id: string;
+                  items: Array<{ id: string; label: any }>;
+                  kind: "order";
+                  label: string;
+                  maxChoices: number;
+                  minChoices: number;
+                  shuffle: boolean;
+                }
+              | {
+                  id: string;
+                  kind: "inlineChoice";
+                  label: string;
+                  options: Array<{
+                    id: string;
+                    label: Array<
+                      | {
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          text: string;
+                          type: "text";
+                        }
+                      | { attrs: { latex: string }; type: "mathInline" }
+                    >;
+                  }>;
+                  shuffle: boolean;
+                }
+              | {
+                  expectedLength?: number;
+                  id: string;
+                  kind: "textEntry";
+                  label: string;
+                }
+              | {
+                  acceptsFractions: boolean;
+                  id: string;
+                  kind: "numericEntry";
+                  label: string;
+                  unit?: string;
+                }
+              | { id: string; kind: "mathEntry"; label: string }
+              | {
+                  areas: Array<
+                    | {
+                        coords: Array<number | number | number | number>;
+                        id: string;
+                        label: string;
+                        shape: "rect";
+                      }
+                    | {
+                        coords: Array<number | number | number>;
+                        id: string;
+                        label: string;
+                        shape: "circle";
+                      }
+                    | {
+                        coords: Array<number | number | number | number>;
+                        id: string;
+                        label: string;
+                        shape: "ellipse";
+                      }
+                    | {
+                        coords: Array<
+                          number | number | number | number | number | number
+                        >;
+                        id: string;
+                        label: string;
+                        shape: "poly";
+                      }
+                    | { id: string; label: string; shape: "default" }
+                  >;
+                  id: string;
+                  image: {
+                    alt: string;
+                    asset: string;
+                    height: number;
+                    width: number;
+                  };
+                  kind: "hotspot";
+                  label: string;
+                  maxChoices: number;
+                  minChoices: number;
+                }
+              | {
+                  choices: Array<{
+                    id: string;
+                    label: Array<
+                      | {
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          text: string;
+                          type: "text";
+                        }
+                      | { attrs: { latex: string }; type: "mathInline" }
+                    >;
+                    maxMatches: number;
+                  }>;
+                  gaps: Array<{ id: string }>;
+                  id: string;
+                  kind: "gapMatch";
+                  label: string;
+                  shuffle: boolean;
+                }
+              | {
+                  count: number;
+                  frame: {
+                    kind: "cartesian";
+                    x: { max: number; min: number };
+                    y: { max: number; min: number };
+                  };
+                  id: string;
+                  kind: "graphPoint";
+                  label: string;
+                  placing: "points" | "lines";
+                  snap?: number;
+                }
+              | {
+                  expectedLines?: number;
+                  id: string;
+                  kind: "extendedText";
+                  label: string;
+                }
+            >;
+            number: number;
+            response: Array<string> | null;
+          }>;
+        }
+      >;
+      prompt: FunctionReference<
+        "query",
+        "public",
+        {
+          deviceId: string;
+          questionId: Id<"examQuestions">;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        { prompt: string }
       >;
       signal: FunctionReference<
         "mutation",
@@ -4169,6 +4404,39 @@ export declare const api: {
           slug: string;
         },
         null
+      >;
+      signals: FunctionReference<
+        "query",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            at: number;
+            kind:
+              | "exit"
+              | "blur"
+              | "fullscreenExit"
+              | "copy"
+              | "paste"
+              | "secondTab"
+              | "disconnect"
+              | "return";
+          }>;
+        }
       >;
       unlock: FunctionReference<
         "mutation",
@@ -4584,6 +4852,7 @@ export declare const api: {
                 }
               | { type: "sitting.changeToken" }
               | { attempt: Id<"examAttempts">; type: "sitting.allowDevice" }
+              | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
               | {
                   contract: {
@@ -11534,6 +11803,14 @@ export declare const internal: {
     };
   };
   exams: {
+    seed: {
+      sitting: FunctionReference<
+        "mutation",
+        "internal",
+        { email: string; slug: string },
+        { examId: Id<"exams">; sittingId: Id<"examSittings">; token: string }
+      >;
+    };
     sittings: {
       timers: {
         closeAttempt: FunctionReference<

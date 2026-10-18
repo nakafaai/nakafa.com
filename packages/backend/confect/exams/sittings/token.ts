@@ -1,6 +1,10 @@
 import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
 import type { readTenantKeys } from "@repo/backend/confect/vault/keys";
-import { blindText } from "@repo/backend/confect/vault/text";
+import {
+  blindText,
+  openText,
+  sealText,
+} from "@repo/backend/confect/vault/text";
 import { Array as Arr, Crypto, Effect, Random } from "effect";
 import { Base64Url } from "effect/encoding";
 
@@ -67,4 +71,35 @@ export const tokenHash = Effect.fn("exams.sittings.tokenHash")(function* (
     { field: "token", row: [sittingId], table: "examSittings" },
     token
   );
+});
+
+/**
+ * The field of a sitting's sealed token. It is bound to the sitting's row, so a sealed
+ * token copied to another sitting never opens (ADR 0030).
+ */
+const sealedTokenField = (sittingId: string) => ({
+  field: "tokenSealed",
+  row: [sittingId],
+  table: "examSittings",
+});
+
+/**
+ * Seals a sitting's token under the school key, so a proctor can read it again. The
+ * student never gets it from a read: only the proctor's dashboard opens it (ADR 0013).
+ */
+export const sealToken = Effect.fn("exams.sittings.token.seal")(function* (
+  keys: SchoolKeys,
+  sittingId: string,
+  token: string
+) {
+  return yield* sealText(keys, sealedTokenField(sittingId), token);
+});
+
+/** Opens the sealed token of a sitting for a proctor, with the school keys that sealed it. */
+export const openToken = Effect.fn("exams.sittings.token.open")(function* (
+  keys: SchoolKeys,
+  sittingId: string,
+  sealed: ArrayBuffer
+) {
+  return yield* openText(keys, sealedTokenField(sittingId), sealed);
 });

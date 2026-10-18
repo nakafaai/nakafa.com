@@ -1,46 +1,20 @@
-import type {
-  ExamAttemptsDoc,
-  TenantPeopleDoc,
-} from "@repo/backend/confect/_generated/docs";
+import type { ExamAttemptsDoc } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { ownAttempt } from "@repo/backend/confect/exams/sittings/attempt";
 import { deviceBinding } from "@repo/backend/confect/exams/sittings/device";
 import { sittingLocked } from "@repo/backend/confect/exams/sittings/eligibility";
 import {
   AttemptClosed,
   DeviceRetired,
-  NotInSitting,
   SecondDevice,
   SittingLocked,
 } from "@repo/backend/confect/exams/sittings/errors";
 import type { SignalKind } from "@repo/backend/confect/exams/sittings/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { Array as Arr, Clock, Effect, Option } from "effect";
-
-/**
- * The attempt of the signal, when the caller holds it. Another student's attempt and an
- * attempt of another school are both `NotInSitting`, so the reply names no attempt.
- */
-const ownAttempt = Effect.fn("exams.sittings.signal.attempt")(function* (
-  attemptId: ExamAttemptsDoc["_id"],
-  tenantId: ExamAttemptsDoc["tenantId"],
-  personId: TenantPeopleDoc["_id"]
-) {
-  const found = yield* (yield* DatabaseReader)
-    .table("examAttempts")
-    .get(attemptId)
-    .pipe(Effect.catchTag("DocumentDecodeError", Effect.die), Effect.option);
-  const row = Option.filter(
-    found,
-    (attempt) => attempt.tenantId === tenantId && attempt.person === personId
-  );
-  if (Option.isNone(row)) {
-    return yield* new NotInSitting();
-  }
-  return row.value;
-});
+import { Array as Arr, Clock, Effect } from "effect";
 
 /**
  * Records one integrity signal of the caller's attempt as an event (ADR 0013). A signal

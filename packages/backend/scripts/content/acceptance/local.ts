@@ -64,9 +64,11 @@ const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 /**
  * One inert backend environment for signed reads in local production builds.
  * Google sign-in stays disabled; each runtime adds its own session signing key
- * as `JWKS`, so synthetic learners can sign in locally.
+ * as `JWKS`, so synthetic learners can sign in locally. The acceptance seeds run
+ * only where `ACCEPTANCE_SEED` is set, and only this runtime sets it.
  */
 const localEnvironment = {
+  ACCEPTANCE_SEED: "true",
   AUTH_GOOGLE_ID: "build-disabled",
   AUTH_GOOGLE_SECRET: "build-disabled",
   BETTER_AUTH_SECRET: LOCAL_AUTH_SECRET,
