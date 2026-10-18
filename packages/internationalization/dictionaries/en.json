@@ -316,7 +316,8 @@
     "card-issue-footer": "The code is shown once.",
     "card-reissue": "Reissue card",
     "card-code-title": "Login card code",
-    "card-code-description": "Give the code to the student, because it will not be shown again."
+    "card-code-description": "Give the code to the student, because it will not be shown again.",
+    "invites-empty": "No invite is waiting."
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",

@@ -316,7 +316,8 @@
     "card-issue-footer": "Der Code wird nur einmal angezeigt.",
     "card-reissue": "Karte neu ausstellen",
     "card-code-title": "Code der Anmeldekarte",
-    "card-code-description": "Geben Sie den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt."
+    "card-code-description": "Geben Sie den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt.",
+    "invites-empty": "Keine Einladung wartet."
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",

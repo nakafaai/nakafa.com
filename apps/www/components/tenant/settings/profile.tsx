@@ -26,6 +26,7 @@ import {
 import { logoRefusalOf } from "@/components/tenant/logo.client";
 import { SchoolMark } from "@/components/tenant/mark";
 import { removeLogoChange } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { storeSchoolLogo } from "@/components/tenant/settings/upload.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -45,12 +46,21 @@ const ADDRESS_COPIED: ToastCopy = {
   title: "school-address-copied.title",
 };
 
+/** The section in the settings page frame, whose header shows while its body loads. */
+export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolProfileBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
 /**
  * Renders the profile of the school: its mark, its name, and its address with a
  * copy action. The settings pages read the school on the client, so a logo that
  * changes shows at once.
  */
-export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
+function SchoolProfileBody({ slug }: { slug: TenantSlug }) {
   const viewer = useQuery(tenancy.viewer.get, { slug });
 
   if (!QueryResult.isSuccess(viewer)) {

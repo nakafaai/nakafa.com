@@ -316,7 +316,8 @@
     "card-issue-footer": "Kode hanya ditampilkan sekali.",
     "card-reissue": "Terbitkan ulang kartu",
     "card-code-title": "Kode kartu masuk",
-    "card-code-description": "Berikan kode kepada siswa, karena kode ini tidak akan ditampilkan lagi."
+    "card-code-description": "Berikan kode kepada siswa, karena kode ini tidak akan ditampilkan lagi.",
+    "invites-empty": "Belum ada undangan yang menunggu."
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",

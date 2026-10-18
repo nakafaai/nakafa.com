@@ -33,6 +33,7 @@ import {
   CardSectionFooter,
   CardSectionHint,
 } from "@/components/shared/card/section";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import type { PersonId } from "@/components/tenant/settings/people";
 import { SchoolPersonCard } from "@/components/tenant/settings/person";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -51,12 +52,21 @@ type IssuedCard = Ref.Returns<typeof identity.cards.issue>;
 /** One school login as the logins list shows it. */
 type LoginItem = PaginatedQueryItem<typeof identity.logins.list>;
 
+/** The section in the settings page frame, whose header shows while its body loads. */
+export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolStudentsBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
 /**
  * Renders the login cards of the school's people: the login names already given, the
  * person whose card is issued, the form that issues the first card with a login name,
  * and the action that reissues a card. A card's code shows once, when the server answers.
  */
-export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
+function SchoolStudentsBody({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
 

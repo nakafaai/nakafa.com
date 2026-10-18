@@ -27,6 +27,7 @@ import {
   CardSectionHint,
 } from "@/components/shared/card/section";
 import { setPolicyChange } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolTrailAction } from "@/components/tenant/settings/trail";
 
@@ -35,11 +36,20 @@ const SOURCE = "components/tenant/settings/policies";
 /** The policies of the school as the settings page reads them. */
 type SchoolPolicies = typeof TenantPolicies.Type;
 
+/** The section in the settings page frame, whose header shows while its body loads. */
+export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolPoliciesBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
 /**
  * Renders the policies of the school: the students' card with the Nina and thread
  * switches, and the allowed email domains.
  */
-export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
+function SchoolPoliciesBody({ slug }: { slug: TenantSlug }) {
   const viewer = useQuery(tenancy.viewer.get, { slug });
 
   if (!QueryResult.isSuccess(viewer)) {

@@ -37,6 +37,7 @@ import {
 } from "@/components/shared/card/section";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
@@ -50,12 +51,21 @@ const PAGE_SIZE = 25;
 /** One integration client as the clients list shows it. */
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
 
+/** The section in the settings page frame, whose header shows while its body loads. */
+export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolClientsBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
 /**
  * Renders the integration clients of the school, each with the part of the school it
  * covers. A client is created, rotated (which issues a new secret that is shown once),
  * or revoked.
  */
-export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
+function SchoolClientsBody({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
     undefined

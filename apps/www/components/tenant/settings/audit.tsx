@@ -27,6 +27,7 @@ import {
   CardSectionFooter,
   CardSectionHint,
 } from "@/components/shared/card/section";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
@@ -36,12 +37,21 @@ const PAGE_SIZE = 25;
 /** One journal entry as the audit list shows it. */
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
 
+/** The section in the settings page frame, whose header shows while its body loads. */
+export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolAuditBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
 /**
  * Renders the audit log of the school, newest first: who made each change, the
  * label of the change, and when it was made. The rows hold no policy value and no
  * secret, so the page shows none.
  */
-export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
+function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const pagination = usePaginatedQuery(
     journal.audit.list,

@@ -39,6 +39,7 @@ import {
   setUnitLocaleChange,
   unarchiveUnitChange,
 } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import type { Unit } from "@/components/tenant/settings/state";
 
@@ -56,8 +57,17 @@ const languageItems = Arr.map(languages, (language) => ({
   value: language.value,
 }));
 
-/** Renders one card per unit of the school, with its time zone and content language, and its NPSN card. */
+/** The section in the settings page frame, whose header shows while its body loads. */
 export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolUnitsBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
+/** Renders one card per unit of the school, with its time zone and content language, and its NPSN card. */
+function SchoolUnitsBody({ slug }: { slug: TenantSlug }) {
   const units = useQuery(tenancy.units.list, { slug });
 
   if (!QueryResult.isSuccess(units)) {
@@ -128,7 +138,6 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
             }
             size="sm"
             type="button"
-            variant="secondary"
           >
             {t("unit-npsn-save")}
           </Button>
@@ -274,12 +283,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
         </CardSectionHint>
         <CardSectionActions>
           {isArchived ? (
-            <Button
-              onClick={restoreUnit}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
+            <Button onClick={restoreUnit} size="sm" type="button">
               {t("unit-restore")}
             </Button>
           ) : (

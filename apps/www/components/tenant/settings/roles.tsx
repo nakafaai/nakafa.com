@@ -48,6 +48,7 @@ import {
   assignGrantChange,
   revokeGrantChange,
 } from "@/components/tenant/settings/mutation.client";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import type { PersonId } from "@/components/tenant/settings/people";
 import { SchoolPersonCard } from "@/components/tenant/settings/person";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -64,12 +65,21 @@ const PAGE_SIZE = 25;
 /** One active grant of the school as the grants list shows it. */
 type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
 
+/** The section in the settings page frame, whose header shows while its body loads. */
+export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolRolesBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
 /**
  * Renders the roles of the school: what each role may do, every role the school
  * holds with its person, and the form that gives a role of the whole school to a
  * chosen person.
  */
-export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
+function SchoolRolesBody({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
 

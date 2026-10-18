@@ -46,6 +46,7 @@ import {
   CardSectionFooter,
   CardSectionHint,
 } from "@/components/shared/card/section";
+import { SettingsPage } from "@/components/tenant/settings/page";
 import {
   archivePeriodChange,
   createPeriodChange,
@@ -67,11 +68,20 @@ type UnitId = Ref.Returns<typeof tenancy.viewer.get>["units"][number]["id"];
 /** One period as the periods list shows it. */
 type PeriodItem = PaginatedQueryItem<typeof tenancy.periods.list>;
 
+/** The section in the settings page frame, whose header shows while its body loads. */
+export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <SchoolPeriodsBody slug={slug} />
+    </SettingsPage>
+  );
+}
+
 /**
  * Renders the periods of one unit: the choice of the unit when the school has
  * more than one, the list of its periods, and the form that adds a period.
  */
-export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
+function SchoolPeriodsBody({ slug }: { slug: TenantSlug }) {
   const viewer = useQuery(tenancy.viewer.get, { slug });
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
 
