@@ -20,6 +20,7 @@ import {
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardTable,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Effect } from "effect";
 import { getFormatter } from "next-intl/server";
@@ -63,7 +64,7 @@ export async function FunctionChart({
       <VisualCardActions>
         <VisualCardFullscreen />
       </VisualCardActions>
-      <VisualCardFooter>
+      <VisualCardTable>
         {/* At its own width, so a narrow card scrolls the values instead of cutting them. */}
         <Table className="w-max min-w-full">
           <TableCaption className="sr-only">
@@ -94,6 +95,8 @@ export async function FunctionChart({
             </TableRow>
           </TableBody>
         </Table>
+      </VisualCardTable>
+      <VisualCardFooter>
         <div className="flex justify-center">
           <InlineMath math={formula} />
         </div>

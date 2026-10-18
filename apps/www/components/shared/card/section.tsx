@@ -27,7 +27,7 @@ const cardSectionFooterVariants = cva(
   }
 );
 
-const cardSectionHintVariants = cva("max-w-xl flex-1 text-sm", {
+const cardSectionHintVariants = cva("me-auto max-w-xl flex-1 text-sm", {
   defaultVariants: {
     tone: "muted",
   },
@@ -106,7 +106,9 @@ export function CardSectionFooter({
 /**
  * The one sentence that says what a section's actions do, or what stops them.
  * It takes the free width on the left of its footer, and its words wrap within
- * it. Its tone is the only styling a caller chooses.
+ * it. It starts at the footer's left edge even when no action sits beside it,
+ * because the footer packs its actions to the right. Its tone is the only
+ * styling a caller chooses.
  */
 export function CardSectionHint({
   tone,
