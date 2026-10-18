@@ -163,24 +163,28 @@ export function SchoolClientCreateDialog({
         </Field>
         <FieldSet>
           <FieldLegend variant="label">{t("client-actions")}</FieldLegend>
-          {Arr.map(IntegrationAction.literals, (action) => {
-            const checked = Arr.contains(actions, action);
-            return (
-              <Field key={action} orientation="horizontal">
-                <Checkbox
-                  checked={checked}
-                  disabled={checked && actions.length === 1}
-                  id={`${id}-action-${action}`}
-                  onCheckedChange={(next) =>
-                    setActions((current) => toggleAction(current, action, next))
-                  }
-                />
-                <FieldLabel htmlFor={`${id}-action-${action}`}>
-                  {t(`client-action.${action}`)}
-                </FieldLabel>
-              </Field>
-            );
-          })}
+          <FieldGroup data-slot="checkbox-group">
+            {Arr.map(IntegrationAction.literals, (action) => {
+              const checked = Arr.contains(actions, action);
+              return (
+                <Field key={action} orientation="horizontal">
+                  <Checkbox
+                    checked={checked}
+                    disabled={checked && actions.length === 1}
+                    id={`${id}-action-${action}`}
+                    onCheckedChange={(next) =>
+                      setActions((current) =>
+                        toggleAction(current, action, next)
+                      )
+                    }
+                  />
+                  <FieldLabel htmlFor={`${id}-action-${action}`}>
+                    {t(`client-action.${action}`)}
+                  </FieldLabel>
+                </Field>
+              );
+            })}
+          </FieldGroup>
           <FieldDescription>{t("client-actions-footer")}</FieldDescription>
         </FieldSet>
       </FieldGroup>

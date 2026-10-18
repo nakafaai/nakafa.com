@@ -26,7 +26,6 @@ import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import {
   useUpdateMascotMutation,
@@ -139,24 +138,20 @@ export function UserSettingsPicture({ user }: { user: CurrentUser }) {
           </Field>
         ) : null}
       </CardContent>
-      <CardSectionFooter>
+      <CardSectionFooter
+        hint={
+          photo === undefined
+            ? t("picture-footer-animal")
+            : t("picture-footer-photo")
+        }
+      >
         {photo === undefined ? (
-          <>
-            <CardSectionHint>{t("picture-footer-animal")}</CardSectionHint>
-            <CardSectionActions>
-              <Button
-                onClick={shuffle}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                {t("animal-shuffle")}
-              </Button>
-            </CardSectionActions>
-          </>
-        ) : (
-          <CardSectionHint>{t("picture-footer-photo")}</CardSectionHint>
-        )}
+          <CardSectionActions>
+            <Button onClick={shuffle} size="sm" type="button" variant="outline">
+              {t("animal-shuffle")}
+            </Button>
+          </CardSectionActions>
+        ) : null}
       </CardSectionFooter>
     </CardSection>
   );
