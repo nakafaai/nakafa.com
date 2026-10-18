@@ -20,6 +20,7 @@ export default {
 ["attempt"]: RegisteredConvexFunction.register({ ...definitions["attempt"], handler: forward(definitions["attempt"].handler) }),
 ["signals"]: RegisteredConvexFunction.register({ ...definitions["signals"], handler: forward(definitions["signals"].handler) }),
 ["paper"]: RegisteredConvexFunction.register({ ...definitions["paper"], handler: forward(definitions["paper"].handler) }),
+["prompt"]: RegisteredConvexFunction.register({ ...definitions["prompt"], handler: forward(definitions["prompt"].handler) }),
 ["answer"]: RegisteredConvexFunction.register({ ...definitions["answer"], handler: forward(definitions["answer"].handler) }),
 ["finish"]: RegisteredConvexFunction.register({ ...definitions["finish"], handler: forward(definitions["finish"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../exams/sittings.spec")["default"]>;

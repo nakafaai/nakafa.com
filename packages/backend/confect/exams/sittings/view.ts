@@ -1,4 +1,7 @@
-import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  ExamSittingsDoc,
+  ExamsDoc,
+} from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Array as Arr, Effect, HashMap } from "effect";
 
@@ -19,15 +22,14 @@ const ownFields = (row: ExamSittingsDoc) => ({
 });
 
 /**
- * One stored sitting as `SittingView` declares it: its own fields, the title of its exam,
- * and the IANA time zone of its unit.
+ * One stored sitting as `SittingView` declares it: its own fields, the title of its exam, which
+ * the caller passes in because it has read the exam already, and the IANA time zone of its unit.
  */
 export const sittingView = Effect.fn("exams.sittings.view")(function* (
-  row: ExamSittingsDoc
+  row: ExamSittingsDoc,
+  exam: Pick<ExamsDoc, "title">
 ) {
-  const reader = yield* DatabaseReader;
-  const exam = yield* reader.table("exams").get(row.examId).pipe(Effect.orDie);
-  const unit = yield* reader
+  const unit = yield* (yield* DatabaseReader)
     .table("tenantUnits")
     .get(row.unitId)
     .pipe(Effect.orDie);

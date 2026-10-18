@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   DatabaseReader,
@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { nf } from "@repo/backend/test/editor";
-import { archiveUnit } from "@repo/backend/test/exams";
+import { archiveUnit, examRows } from "@repo/backend/test/exams";
 import { keyedSchool, sittingRow } from "@repo/backend/test/sittings";
 import {
   defectOf,
@@ -26,7 +26,34 @@ describe("exams seed sitting", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
+    vi.stubEnv("ACCEPTANCE_SEED", "true");
   });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.effect(
+    "refuses the seed outside the acceptance runtime, and writes no exam",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const before = yield* fixture.run(examRows);
+        vi.stubEnv("ACCEPTANCE_SEED", "false");
+        const refusal = yield* fixture.internal
+          .mutation(seed, {
+            email: addressOf("student@acceptance.example.test"),
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(refusal).toMatchObject({
+          _tag: "SeedRefused",
+          code: "SEED_REFUSED",
+        });
+        expect(yield* fixture.run(examRows)).toHaveLength(before.length);
+      })
+  );
 
   it.effect(
     "gives the learner a student grant in the first active unit, and opens a sitting of two keyed questions",

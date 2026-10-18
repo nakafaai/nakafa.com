@@ -192,4 +192,23 @@ describe("exams/sittings dashboard", () => {
         expect(page.token).not.toBe(made.token);
       })
   );
+
+  it.effect(
+    "refuses the dashboard of a sitting that no longer exists, as a missing object",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("examSittings").delete(made.id).pipe(Effect.orDie)
+          )
+        );
+        const failure = yield* dashboardOf(fixture, made.id).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "AccessDenied",
+          reason: "resource",
+        });
+      })
+  );
 });

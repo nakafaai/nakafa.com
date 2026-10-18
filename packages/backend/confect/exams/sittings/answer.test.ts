@@ -137,7 +137,11 @@ describe("exams/sittings answer", () => {
           )
         );
         expect(rows).toHaveLength(1);
-        expect(rows[0]).toMatchObject({ question, response: ["option-3"] });
+        expect(rows[0]).toMatchObject({
+          question,
+          response: ["option-3"],
+          tenantId: fixture.tenants.nf,
+        });
       })
   );
 

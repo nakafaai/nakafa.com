@@ -12,6 +12,7 @@ export const finish = registeredFunctions.finish;
 export const lock = registeredFunctions.lock;
 export const mine = registeredFunctions.mine;
 export const paper = registeredFunctions.paper;
+export const prompt = registeredFunctions.prompt;
 export const signal = registeredFunctions.signal;
 export const signals = registeredFunctions.signals;
 export const unlock = registeredFunctions.unlock;

@@ -3,12 +3,14 @@ import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/Pagi
 import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { SittingAccess } from "@repo/backend/confect/exams/sittings/access";
 import {
   DashboardView,
   EnterOutcome,
   HeldAttempt,
   PaperView,
+  PromptView,
   SignalsPage,
   SittingView,
   TokenResult,
@@ -230,6 +232,28 @@ export default GroupSpec.make()
           AttemptClosed,
           SecondDevice,
           DeviceRetired,
+        ]),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "prompt",
+      args: () => ({
+        deviceId: DeviceId,
+        questionId: Id("examQuestions"),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => PromptView,
+      error: () =>
+        Schema.Union([
+          NotInSitting,
+          SittingLocked,
+          AttemptClosed,
+          SecondDevice,
+          DeviceRetired,
+          QuestionNotInExam,
+          FoldPending,
         ]),
     })
   )

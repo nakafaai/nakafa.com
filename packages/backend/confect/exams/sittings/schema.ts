@@ -100,6 +100,7 @@ export const examAnswerValidator = Schema.Struct({
   attempt: Id("examAttempts"),
   question: Id("examQuestions"),
   response: Schema.Array(LocalIdSchema),
+  tenantId: Id("tenants"),
 });
 
 /**

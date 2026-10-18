@@ -188,6 +188,7 @@
         "addMinutes": "Waktu percobaan ujian ditambah",
         "changeToken": "Token sesi ujian diganti",
         "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
+        "finish": "Percobaan ujian diselesaikan",
         "close": "Sesi ujian ditutup"
       },
       "tenant": {

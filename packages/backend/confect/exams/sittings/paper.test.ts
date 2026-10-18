@@ -2,8 +2,6 @@ import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { storedDocument } from "@repo/backend/confect/editor/document";
-import { EMPTY_PROMPT_TEXT } from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { fillExam } from "@repo/backend/test/exams";
 import {
@@ -41,7 +39,7 @@ describe("exams/sittings paper", () => {
   });
 
   it.effect(
-    "gives the bound student the question with its stored prompt, its interactions, and no answer key",
+    "gives the bound student each question with its interactions and no answer key, and no prompt",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -53,12 +51,10 @@ describe("exams/sittings paper", () => {
         });
         const { questions } = yield* paperOf(fixture, made.id, deviceOf(1));
         const [question] = questions;
-        const prompt = yield* storedDocument(EMPTY_PROMPT_TEXT).pipe(
-          Effect.orDie
-        );
-        expect(question).toMatchObject({ number: 1, prompt, response: null });
+        expect(question).toMatchObject({ number: 1, response: null });
         expect(question.interactions).toHaveLength(1);
         expect(Record.keys(question)).not.toContain("key");
+        expect(Record.keys(question)).not.toContain("prompt");
       })
   );
 

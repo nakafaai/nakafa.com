@@ -188,6 +188,7 @@
         "addMinutes": "Minutes added to an exam attempt",
         "changeToken": "Exam sitting token changed",
         "allowDevice": "Second device allowed for an exam attempt",
+        "finish": "Exam attempt finished",
         "close": "Exam sitting closed"
       },
       "tenant": {

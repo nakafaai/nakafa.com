@@ -3,7 +3,6 @@ import type {
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { snapshotOf } from "@repo/backend/confect/editor/store";
 import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import { questionAnswers } from "@repo/backend/confect/exams/question";
 import {
@@ -16,9 +15,9 @@ import { Array as Arr, Clock, Effect, HashMap, Option, Tuple } from "effect";
 type Responses = HashMap.HashMap<ExamQuestionsDoc["_id"], readonly string[]>;
 
 /**
- * One question of the paper: its prompt as the editor stores it, which is the snapshot's
- * JSON text, and its interactions decoded from the question row. The question's answer key
- * is never read, so it never reaches the paper.
+ * One question of the paper: its interactions decoded from the question row, and the response
+ * that the student saved. The question's answer key is never read, so it never reaches the
+ * paper. The prompt is read by `prompt`, one question at a time, so the paper stays small.
  */
 const paperQuestion = Effect.fn("exams.sittings.paper.question")(function* (
   questionId: ExamQuestionsDoc["_id"],
@@ -30,21 +29,19 @@ const paperQuestion = Effect.fn("exams.sittings.paper.question")(function* (
     .get(questionId)
     .pipe(Effect.orDie);
   const interactions = yield* questionAnswers(row.answers);
-  const snapshot = yield* snapshotOf(row.prompt);
   return {
     id: row._id,
     interactions,
     number,
-    prompt: snapshot.content,
     response: Option.getOrNull(HashMap.get(responses, questionId)),
   };
 });
 
 /**
  * The paper of the caller's attempt: the questions of the sitting's exam in order, each with
- * its prompt, its interactions, and the response that the student saved. Only the bound
- * device reads it, and only while the attempt is open to it, so a locked, closing, or
- * submitted attempt gets `AttemptClosed`. The answer keys stay on the server (ADR 0013).
+ * its interactions and the response that the student saved. Only the bound device reads it,
+ * and only while the attempt is open to it, so a locked, closing, or submitted attempt gets
+ * `AttemptClosed`. The answer keys stay on the server, and no prompt is read here (ADR 0013).
  */
 export const paper = Effect.fn("exams.sittings.paper")(function* (args: {
   deviceId: string;
@@ -56,10 +53,6 @@ export const paper = Effect.fn("exams.sittings.paper")(function* (args: {
   );
   yield* requireOpen(attempt, yield* Clock.currentTimeMillis);
   const reader = yield* DatabaseReader;
-  const exam = yield* reader
-    .table("exams")
-    .get(sitting.examId)
-    .pipe(Effect.orDie);
   const saved = yield* reader
     .table("examAnswers")
     .index("by_attemptId_and_questionId", (query) =>
@@ -70,8 +63,9 @@ export const paper = Effect.fn("exams.sittings.paper")(function* (args: {
   const responses: Responses = HashMap.fromIterable(
     Arr.map(saved, (answer) => Tuple.make(answer.question, answer.response))
   );
-  const questions = yield* Effect.forEach(exam.questions, (questionId, index) =>
-    paperQuestion(questionId, index + 1, responses)
+  const questions = yield* Effect.forEach(
+    sitting.exam.questions,
+    (questionId, index) => paperQuestion(questionId, index + 1, responses)
   );
   return { questions };
 });

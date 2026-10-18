@@ -16,6 +16,7 @@ import {
   lock,
   unlock,
 } from "@repo/backend/confect/exams/sittings/proctor";
+import { prompt } from "@repo/backend/confect/exams/sittings/prompt";
 import { signal } from "@repo/backend/confect/exams/sittings/signal";
 import { signals } from "@repo/backend/confect/exams/sittings/signals";
 import spec from "@repo/backend/confect/exams/sittings.spec";
@@ -140,6 +141,15 @@ const paperFunction = FunctionImpl.make(
   })
 );
 
+const promptFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "prompt",
+  Effect.fn("exams.sittings.prompt.function")(function* (args) {
+    return yield* prompt(args);
+  })
+);
+
 const answerFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -176,6 +186,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(attemptFunction),
   Layer.provide(signalsFunction),
   Layer.provide(paperFunction),
+  Layer.provide(promptFunction),
   Layer.provide(answerFunction),
   Layer.provide(finishFunction),
   Layer.provide(session),

@@ -152,9 +152,11 @@ export const createSitting = Effect.fn("exams.sittings.create")(
       .table("examSittings")
       .get(id)
       .pipe(Effect.orDie);
-    yield* sittingAuthority.record(args.actor, row, {
-      type: "sitting.schedule",
-    });
+    yield* sittingAuthority.record(
+      args.actor,
+      { ...row, exam: args.exam },
+      { type: "sitting.schedule" }
+    );
     return { id, token };
   }
 );

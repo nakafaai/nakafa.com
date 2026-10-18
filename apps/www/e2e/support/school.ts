@@ -3,7 +3,6 @@ import type { BrowserContext } from "@playwright/test";
 import {
   SchoolFixture,
   SessionCookie,
-  SittingFixture,
 } from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect, FileSystem, Schema } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
@@ -81,28 +80,6 @@ export const signInTeacher = Effect.fn("NakafaE2E.signInTeacher")(function* (
   const cookie = yield* createMemberCookie("teacher", slug);
   yield* addSessionCookie(context, cookie, address);
 });
-
-/**
- * Seeds one proctored sitting of a keyed exam for the school, which opens now and closes an hour
- * later. The learner with the address gets a student grant in the school's first active unit, so
- * the sitting shows in the learner's list, and the returned token admits the learner. Each run
- * seeds a new exam and sitting, so the command runs once. The school's Owner must have signed in.
- */
-export const scheduleSitting = Effect.fn("NakafaE2E.scheduleSitting")(
-  function* (slug: string, email: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const directory = yield* fs.makeTempDirectoryScoped({
-      prefix: "nakafa-sitting-",
-    });
-    const output = `${directory}/sitting.json`;
-    yield* runAcceptanceCommand("sitting", slug, email, output);
-    return yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(Schema.decodeEffect(SittingFixture)));
-  },
-  Effect.scoped,
-  Effect.provide(nodeServicesLayer)
-);
 
 /** The address of a path on a host under the same server as the test's base address. */
 export function hostAddress(

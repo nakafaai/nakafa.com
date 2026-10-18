@@ -66,14 +66,10 @@ export const answer = Effect.fn("exams.sittings.answer")(function* (args: {
   );
   const now = yield* Clock.currentTimeMillis;
   yield* requireOpen(attempt, now);
-  const reader = yield* DatabaseReader;
-  const exam = yield* reader
-    .table("exams")
-    .get(sitting.examId)
-    .pipe(Effect.orDie);
-  if (!Arr.contains(exam.questions, args.questionId)) {
+  if (!Arr.contains(sitting.exam.questions, args.questionId)) {
     return yield* new QuestionNotInExam();
   }
+  const reader = yield* DatabaseReader;
   const question = yield* reader
     .table("examQuestions")
     .get(args.questionId)
@@ -107,6 +103,7 @@ export const answer = Effect.fn("exams.sittings.answer")(function* (args: {
       attempt: attempt._id,
       question: args.questionId,
       response: args.response,
+      tenantId: attempt.tenantId,
     })
     .pipe(Effect.orDie);
   return null;

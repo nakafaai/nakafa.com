@@ -118,19 +118,26 @@ export const SignalsPage = Schema.Struct({
 });
 
 /**
- * One question of a student's paper: its number in the exam, its prompt as the editor stores
- * it, its interactions without any answer key, and the response that the student saved, or
- * `null` when none is saved yet.
+ * One question of a student's paper: its number in the exam, its interactions without any answer
+ * key, and the response that the student saved, or `null` when none is saved yet. Its prompt is
+ * read on its own, by `PromptView`, so the paper stays small.
  */
 const PaperQuestion = Schema.Struct({
   id: Id("examQuestions"),
   interactions: Schema.NonEmptyArray(InteractionSchema),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
-  prompt: Schema.String,
   response: Schema.NullOr(Schema.Array(LocalIdSchema)),
 });
 
 /** The questions of a student's paper, in the order of the exam. */
 export const PaperView = Schema.Struct({
   questions: Schema.Array(PaperQuestion),
+});
+
+/**
+ * One question's prompt as the document stands now, which is the editor's stored text with every
+ * edit after its snapshot applied (ADR 0028).
+ */
+export const PromptView = Schema.Struct({
+  prompt: Schema.String,
 });

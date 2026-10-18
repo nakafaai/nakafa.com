@@ -5,6 +5,7 @@ import type {
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { withExam } from "@repo/backend/confect/exams/sittings/authority";
 import { deviceBinding } from "@repo/backend/confect/exams/sittings/device";
 import { sittingLocked } from "@repo/backend/confect/exams/sittings/eligibility";
 import {
@@ -100,7 +101,8 @@ export const ownAttempt = Effect.fn("exams.sittings.attempt.own")(function* (
  * The caller's attempt in one sitting, after the checks that every student write and read
  * shares, in this order: the sitting is the caller's, its school and unit are not locked,
  * and the device owns the attempt. A retired device and any other device are refused, so
- * only the bound device reads its paper or writes an answer (ADR 0013).
+ * only the bound device reads its paper or writes an answer (ADR 0013). The sitting it returns
+ * carries its exam, which these reads use, so the exam is read once.
  */
 export const boundAttempt = Effect.fn("exams.sittings.attempt.bound")(
   function* (sittingId: ExamSittingsDoc["_id"], deviceId: string) {
@@ -120,7 +122,7 @@ export const boundAttempt = Effect.fn("exams.sittings.attempt.bound")(
     if (binding !== "bound") {
       return yield* new SecondDevice();
     }
-    return { attempt: held.value, sitting };
+    return { attempt: held.value, sitting: yield* withExam(sitting) };
   }
 );
 

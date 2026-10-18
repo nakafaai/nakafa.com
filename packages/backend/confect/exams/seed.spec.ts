@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { SeedRefused } from "@repo/backend/confect/acceptance/seed";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
@@ -20,5 +21,6 @@ export default GroupSpec.make().addFunction(
     name: "sitting",
     args: () => ({ email: Email, slug: TenantSlug }),
     returns: () => SittingSeed,
+    error: () => SeedRefused,
   })
 );

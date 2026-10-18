@@ -95,7 +95,8 @@ const tokenFor = Effect.fn("exams.sittings.dashboard.token")(function* (
  * The proctor's dashboard of a sitting: the sitting, the actions the caller may take on it,
  * its token for a proctor, and one page of its attempts in the order the index holds them.
  * A page asks for at most `DASHBOARD_PAGE_SIZE` attempts, and a larger request is clamped to
- * that size, so every read is bounded (ADR 0013).
+ * that size, so every read is bounded (ADR 0013). The sitting's exam is read once, with the
+ * sitting, and the actions and the view of the sitting both use that read.
  */
 export const dashboard = Effect.fn("exams.sittings.dashboard")(
   function* (args: { paginationOpts: PaginationOptions }) {
@@ -123,7 +124,7 @@ export const dashboard = Effect.fn("exams.sittings.dashboard")(
         page: rows,
       },
       can: Arr.filter(actions, Schema.is(SittingAction)),
-      sitting: yield* sittingView(sitting),
+      sitting: yield* sittingView(sitting, sitting.exam),
       token: yield* tokenFor(sitting, actions),
     };
   }

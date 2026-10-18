@@ -8,6 +8,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import { activeOwners, assignRole } from "@repo/backend/confect/access/grant";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { createDocument } from "@repo/backend/confect/editor/create";
@@ -124,6 +125,7 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   readonly email: string;
   readonly slug: string;
 }) {
+  yield* requireAcceptanceSeed();
   const reader = yield* DatabaseReader;
   const tenant = yield* tenantOf(args.slug);
   const unit = yield* firstActiveUnit(tenant._id);
