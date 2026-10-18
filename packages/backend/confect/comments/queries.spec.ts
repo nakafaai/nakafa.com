@@ -2,7 +2,6 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import commentsTable from "@repo/backend/confect/_generated/tables/comments";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { commentVoteValidator } from "@repo/backend/confect/comments/schema";
 import { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Schema, Struct } from "effect";
@@ -17,14 +16,17 @@ const publicCommentUserValidator = Schema.Struct({
 
 /**
  * One comment as a list shows it: its stored fields, its count of likes (zero before
- * the count was kept), whether the viewer liked it, and the viewer's vote, which is a
- * like for the open web builds.
+ * the count was kept), and whether the viewer liked it.
  */
 const commentRowValidator = Schema.Struct({
-  ...Struct.omit(commentsTable.Doc.fields, ["likeCount"]),
+  ...Struct.omit(commentsTable.Doc.fields, [
+    "likeCount",
+    "upvoteCount",
+    "downvoteCount",
+    "replyToText",
+  ]),
   likeCount: Schema.Finite,
   liked: Schema.Boolean,
-  viewerVote: Schema.NullOr(commentVoteValidator),
 });
 const commentWithUserValidator = Schema.Struct({
   ...commentRowValidator.fields,

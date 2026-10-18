@@ -177,7 +177,6 @@ describe("auth/cleanup", () => {
               text: "Reply without retained personal preview",
               parentId: deletedCommentId,
               replyToUserId: userId,
-              replyToText: "Deleted personal comment",
               upvoteCount: 0,
               downvoteCount: 0,
               replyCount: 0,
@@ -256,7 +255,6 @@ describe("auth/cleanup", () => {
         expect(result.user).not.toHaveProperty("image");
         expect(result.user).not.toHaveProperty("role");
         expect(result.referencedComment).not.toHaveProperty("parentId");
-        expect(result.referencedComment).not.toHaveProperty("replyToText");
         expect(result.referencedComment).not.toHaveProperty("replyToUserId");
       })
   );

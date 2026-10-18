@@ -245,10 +245,10 @@ describe("comments/queries", () => {
     });
 
     expect(signedIn.page).toMatchObject([
-      { _id: root, liked: true, likeCount: 1, replyCount: 1, viewerVote: 1 },
+      { _id: root, liked: true, likeCount: 1, replyCount: 1 },
     ]);
     expect(signedOut.page).toMatchObject([
-      { _id: root, liked: false, likeCount: 1, viewerVote: null },
+      { _id: root, liked: false, likeCount: 1 },
     ]);
   });
 
@@ -274,8 +274,6 @@ describe("comments/queries", () => {
       paginationOpts,
     });
 
-    expect(page.page).toMatchObject([
-      { likeCount: 0, liked: false, viewerVote: null },
-    ]);
+    expect(page.page).toMatchObject([{ likeCount: 0, liked: false }]);
   });
 });

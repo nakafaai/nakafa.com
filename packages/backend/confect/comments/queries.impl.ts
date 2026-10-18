@@ -9,7 +9,6 @@ import {
   isCommentLikedBy,
   likeCountOf,
 } from "@repo/backend/confect/comments/rows";
-import type { commentVoteValidator } from "@repo/backend/confect/comments/schema";
 import type { userDataValidator } from "@repo/backend/confect/lib/validators/user";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { getUserMap } from "@repo/backend/confect/users/directory";
@@ -29,19 +28,15 @@ function publicAuthor(user: typeof userDataValidator.Type) {
   };
 }
 
-/** The vote that an open web build reads for a liked comment: a like counts as an upvote. */
-const LIKED_VOTE: typeof commentVoteValidator.Type = 1;
-
 /**
- * A comment as the lists show it. Its count is zero before the count was kept, and
- * its viewer vote is a like for the open web builds.
+ * A comment as the lists show it. The legacy vote counts and reply preview are left
+ * out, so they never reach the client. Its count is zero before the count was kept.
  */
 function likedRow(comment: CommentDoc, liked: boolean) {
   return {
-    ...comment,
+    ...Struct.omit(comment, ["upvoteCount", "downvoteCount", "replyToText"]),
     likeCount: likeCountOf(comment),
     liked,
-    viewerVote: liked ? LIKED_VOTE : null,
   };
 }
 

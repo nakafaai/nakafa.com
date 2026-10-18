@@ -10,17 +10,14 @@ const commentId = Schema.decodeUnknownSync(Id("comments"));
 const root = {
   _creationTime: 1,
   _id: commentId("root"),
-  downvoteCount: 0,
   likeCount: 0,
   liked: false,
   replyCount: 0,
   replyToUser: null,
   slug: "lesson",
   text: "Root",
-  upvoteCount: 0,
   user: null,
   userId: Schema.decodeUnknownSync(Id("users"))("author"),
-  viewerVote: null,
 } satisfies CommentRow;
 
 const other = { ...root, _id: commentId("other"), text: "Other" };
