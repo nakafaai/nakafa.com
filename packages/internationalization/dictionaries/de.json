@@ -23,6 +23,286 @@
     "signed-in": "Du bist angemeldet.",
     "signed-in-as": "Du bist als {role} angemeldet."
   },
+  "SchoolSettings": {
+    "school": "Schule",
+    "people": "Personen",
+    "integrations": "Integrationen",
+    "security": "Sicherheit",
+    "profile": "Profil",
+    "periods": "Perioden",
+    "units": "Einheiten",
+    "roles": "Rollen und Zugriff",
+    "invites": "Einladungen",
+    "students": "Schülerkonten",
+    "clients": "API-Clients",
+    "policies": "Richtlinien",
+    "audit": "Prüfprotokoll",
+    "manage-group": "Verwaltung",
+    "manage-settings": "Einstellungen",
+    "profile-description": "Logo, Name und Adresse dieser Schule.",
+    "address-copy": "Adresse kopieren",
+    "logo-footer": "Ein PNG- oder SVG-Bild mit höchstens 1 MB.",
+    "logo-upload": "Logo hochladen",
+    "logo-remove": "Logo entfernen",
+    "logo-remove-title": "Logo entfernen?",
+    "logo-remove-description": "Die Schule zeigt wieder ihr Tier, bis ein neues Logo hochgeladen wird.",
+    "logo-remove-confirm": "Logo entfernen",
+    "policy-nina": "Nina für Schüler",
+    "policy-nina-description": "Schüler dürfen Nina in dieser Schule um Hilfe bitten.",
+    "policy-threads": "Threads von Schülern",
+    "policy-threads-description": "Schüler dürfen in dieser Schule Threads eröffnen.",
+    "policy-domains": "E-Mail-Domains",
+    "policy-domains-description": "Nur Adressen dieser Domains dürfen dieser Schule beitreten.",
+    "policy-domains-placeholder": "schule.example.de",
+    "policy-domains-footer": "Eine leere Liste lässt jede Adresse zu.",
+    "save": "Speichern",
+    "level-other": "Sonstige",
+    "unit-level": "Stufe",
+    "unit-description": "Stufe, Zeitzone und Inhaltssprache dieser Schule.",
+    "unit-archived-description": "Diese Schule ist archiviert und nimmt Änderungen erst wieder an, wenn sie wiederhergestellt wird.",
+    "unit-time-zone": "Zeitzone",
+    "unit-content-language": "Inhaltssprache",
+    "unit-archive-footer": "Eine archivierte Schule bleibt lesbar.",
+    "unit-restore-footer": "Wiederherstellen macht die Schule wieder bearbeitbar.",
+    "unit-restore": "Wiederherstellen",
+    "unit-archive": "Archivieren",
+    "unit-archive-title": "Diese Schule archivieren?",
+    "unit-archive-description": "Die Schule nimmt keine Änderungen an, bis sie wiederhergestellt wird.",
+    "unit-archive-confirm": "Archivieren",
+    "unit-choice": "Schule",
+    "unit-choice-description": "Wählen Sie die Schule, deren Perioden Sie verwalten.",
+    "periods-description": "Die Schuljahre und Halbjahre dieser Schule.",
+    "period-name": "Name",
+    "period-dates": "Daten",
+    "period-status": "Status",
+    "period-planned": "Geplant",
+    "period-active": "Aktiv",
+    "period-archived": "Archiviert",
+    "period-open": "Öffnen",
+    "period-archive": "Archivieren",
+    "period-add": "Periode hinzufügen",
+    "period-add-description": "Eine Periode hat einen Namen, einen ersten Tag und einen letzten Tag.",
+    "period-name-placeholder": "Halbjahr 1",
+    "period-start": "Erster Tag",
+    "period-end": "Letzter Tag",
+    "period-add-footer": "Eine neue Periode beginnt als geplant.",
+    "invites-description": "Die Einladungen, die noch angenommen werden müssen, und ihr Ablauf.",
+    "invite-name": "Name",
+    "invite-email": "E-Mail",
+    "invite-expires": "Läuft ab",
+    "invite-resend": "Erneut senden",
+    "invite-revoke": "Widerrufen",
+    "invite-revoke-title": "Diese Einladung widerrufen?",
+    "invite-revoke-description": "Die Adresse kann diese Einladung nicht mehr annehmen.",
+    "invite-revoke-confirm": "Widerrufen",
+    "clients-description": "Apps, die über die API auf die Daten dieser Schule zugreifen.",
+    "client-name": "Name",
+    "client-actions": "Aktionen",
+    "client-status": "Status",
+    "client-active": "Aktiv",
+    "client-revoked": "Widerrufen",
+    "client-rotate": "Geheimnis erneuern",
+    "client-revoke": "Widerrufen",
+    "client-revoke-title": "Diesen Client widerrufen?",
+    "client-revoke-description": "Die App funktioniert mit dieser Schule sofort nicht mehr.",
+    "client-revoke-confirm": "Widerrufen",
+    "client-secret-title": "Neues Geheimnis",
+    "client-secret-description": "Kopieren Sie es jetzt, denn es wird nicht noch einmal angezeigt.",
+    "audit-description": "Wer in dieser Schule was geändert hat, und wann.",
+    "audit-when": "Wann",
+    "audit-who": "Wer",
+    "audit-change": "Änderung",
+    "audit-operator": "Nakafa-Team",
+    "audit-system": "System",
+    "audit-label": {
+      "assignment": {
+        "created": "Klassenlehrer zugewiesen",
+        "removed": "Klassenlehrer entfernt"
+      },
+      "card": {
+        "issued": "Anmeldekarte ausgestellt",
+        "reissued": "Anmeldekarte neu ausgestellt",
+        "redeemed": "Anmeldekarte eingelöst"
+      },
+      "class": {
+        "created": "Lerngruppe angelegt",
+        "renamed": "Lerngruppe umbenannt",
+        "archived": "Lerngruppe archiviert",
+        "teacherAssigned": "Lehrkraft der Lerngruppe zugewiesen",
+        "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt"
+      },
+      "cohort": {
+        "created": "Klasse angelegt",
+        "renamed": "Klasse umbenannt",
+        "archived": "Klasse archiviert"
+      },
+      "grant": {
+        "created": "Rolle vergeben",
+        "ended": "Rolle beendet"
+      },
+      "integration": {
+        "created": "Client angelegt",
+        "rotated": "Geheimnis erneuert",
+        "revoked": "Client gesperrt"
+      },
+      "invite": {
+        "expired": "Einladung abgelaufen",
+        "resent": "Einladung erneut gesendet",
+        "revoked": "Einladung zurückgezogen"
+      },
+      "period": {
+        "created": "Zeitraum angelegt",
+        "opened": "Zeitraum geöffnet",
+        "archived": "Zeitraum archiviert",
+        "rename": "Zeitraum umbenannt"
+      },
+      "person": {
+        "claimed": "Konto übernommen",
+        "created": "Person angelegt",
+        "graduated": "Schüler abgeschlossen",
+        "invited": "Einladung gesendet",
+        "moved": "Schüler in andere Klasse verschoben",
+        "placed": "Schüler einer Klasse zugeordnet",
+        "released": "Konto freigegeben",
+        "removed": "Person entfernt",
+        "renamed": "Name geändert",
+        "reactivated": "Person reaktiviert",
+        "suspended": "Person gesperrt"
+      },
+      "promotion": {
+        "applied": "Versetzung angewendet",
+        "approved": "Versetzung genehmigt",
+        "cancelled": "Versetzung abgebrochen",
+        "created": "Versetzung begonnen",
+        "opened": "Versetzung geöffnet",
+        "planned": "Versetzung geplant",
+        "studentPlanned": "Versetzung eines Schülers geplant",
+        "submitted": "Versetzung eingereicht",
+        "returned": "Versetzung zurückgegeben",
+        "undone": "Versetzungsschritt zurückgenommen"
+      },
+      "sitting": {
+        "schedule": "Prüfungstermin geplant",
+        "lock": "Prüfungsversuch gesperrt",
+        "unlock": "Prüfungsversuch entsperrt",
+        "addMinutes": "Minuten zu einem Prüfungsversuch hinzugefügt",
+        "changeToken": "Token des Prüfungstermins geändert",
+        "allowDevice": "Zweites Gerät für einen Prüfungsversuch erlaubt",
+        "close": "Prüfungstermin geschlossen"
+      },
+      "tenant": {
+        "provisioned": "Schule eröffnet",
+        "locale": {
+          "set": "Land und Währung geändert"
+        },
+        "logo": {
+          "removed": "Logo entfernt",
+          "set": "Logo geändert"
+        },
+        "policy": {
+          "set": "Einstellung geändert"
+        },
+        "suspended": "Schule gesperrt",
+        "reactivated": "Schule reaktiviert"
+      },
+      "unit": {
+        "created": "Einheit angelegt",
+        "archived": "Einheit archiviert",
+        "unarchived": "Einheit wiederhergestellt",
+        "locale": {
+          "set": "Zeitzone oder Sprache geändert"
+        },
+        "npsn": {
+          "set": "NPSN geändert"
+        }
+      },
+      "visit": {
+        "requested": "Besuch angefragt",
+        "approved": "Besuch genehmigt",
+        "declined": "Besuch abgelehnt",
+        "ended": "Besuch beendet"
+      },
+      "unknown": "Andere Änderung"
+    },
+    "role-description": {
+      "owner": "Kann alles in dieser Schule tun.",
+      "admin": "Verwaltet die Einstellungen, Personen, Einheiten, Zeiträume, Einladungen und Zugriffe der Schule.",
+      "principal": "Sieht die Pläne und Unterlagen der Schule und genehmigt Versetzungen.",
+      "deputy": "Sieht die Pläne, Personen und Versetzungen der Schule.",
+      "teacher": "Bearbeitet die Prüfungen und Dokumente der Schule.",
+      "counselor": "Sieht die Personen der Schule.",
+      "staff": "Sieht die Pläne, Personen und Versetzungen der Schule.",
+      "student": "Lernt in der Schule und beantwortet die eigenen Prüfungen.",
+      "guardian": "Folgt dem verknüpften Schüler und erfasst Einwilligungen für ihn.",
+      "proctor": "Beaufsichtigt die Prüfungssitzungen der Schule.",
+      "auditor": "Sieht die Unterlagen und das Prüfprotokoll der Schule, ohne sie zu ändern.",
+      "integration": "Liest die Daten der Schule über die Aktionen seines Clients."
+    },
+    "roles-overview": "Was jede Rolle darf",
+    "roles-overview-description": "Jede Rolle dieser Schule und was sie darf.",
+    "secret-copy": "Kopieren",
+    "unit-npsn": "NPSN",
+    "unit-npsn-placeholder": "Acht Ziffern",
+    "unit-npsn-footer": "Die staatliche Schulnummer hat acht Ziffern und gehört zu genau einer Einheit.",
+    "unit-npsn-save": "Speichern",
+    "logins": "Anmeldenamen",
+    "logins-description": "Die Anmeldenamen der Personen der Schule, mit dem Zeitpunkt ihrer Ausstellung.",
+    "login-name": "Anmeldename",
+    "login-person": "Person",
+    "login-issued": "Ausgestellt",
+    "invite-action": "Einladen",
+    "invites-footer": "Eine Person ohne Konto einladen.",
+    "invite-dialog-title": "Person einladen",
+    "invite-dialog-description": "Die Person erhält die Einladung an diese E-Mail-Adresse und meldet sich mit ihr an.",
+    "invite-person": "Person",
+    "invite-person-placeholder": "Person ohne Konto wählen",
+    "invite-none-left": "Alle aktiven Personen dieser Schule haben bereits ein Konto.",
+    "invite-locale": "Sprache der E-Mail",
+    "invite-submit": "Einladen",
+    "grant-person": "Person",
+    "client-add": "Client erstellen",
+    "client-add-footer": "Das Geheimnis wird einmal angezeigt, wenn der Client erstellt wird.",
+    "client-add-description": "Ein Client verbindet ein anderes System mit dieser Schule.",
+    "client-create": "Erstellen",
+    "client-scope": "Gilt für",
+    "client-name-placeholder": "Name des Systems",
+    "client-actions-footer": "Ein Client behält mindestens eine Aktion.",
+    "client-action": {
+      "cohort": {
+        "view": "Klassen ansehen"
+      },
+      "period": {
+        "view": "Zeiträume ansehen"
+      },
+      "person": {
+        "view": "Personen ansehen"
+      }
+    },
+    "person-placeholder": "Person wählen",
+    "roles-description": "Wählen Sie eine Person, um die Rollen zu sehen und zu ändern.",
+    "roles-grants": "Vergebene Rollen",
+    "roles-grants-description": "Jede Rolle, die eine Person dieser Schule hat, und wofür sie gilt.",
+    "grant-role": "Rolle",
+    "grant-scope": "Gilt für",
+    "grant-scope-school": "Gesamte Schule",
+    "grant-scope-unit": "Eine Einheit",
+    "grant-revoke": "Widerrufen",
+    "grant-revoke-title": "Diese Rolle widerrufen?",
+    "grant-revoke-description": "Die Person verliert sofort, was diese Rolle erlaubt.",
+    "grant-revoke-confirm": "Widerrufen",
+    "roles-role-placeholder": "Rolle wählen",
+    "roles-assign": "Rolle geben",
+    "roles-assign-footer": "Eine Rolle gilt für die gesamte Schule.",
+    "students-description": "Wählen Sie eine Person, um ihre Anmeldekarte auszustellen oder neu auszustellen.",
+    "card-issue": "Karte ausstellen",
+    "card-issue-description": "Eine Anmeldekarte erlaubt einem Schüler die Anmeldung mit Anmeldename und Code.",
+    "card-login-name": "Anmeldename",
+    "card-login-name-placeholder": "Anmeldename",
+    "card-issue-footer": "Der Code wird nur einmal angezeigt.",
+    "card-reissue": "Karte neu ausstellen",
+    "card-code-title": "Code der Anmeldekarte",
+    "card-code-description": "Geben Sie den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt."
+  },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
     "description": "Lerne auf Nakafa Mathematik, Naturwissenschaften, Informatik, KI und bereite dich auf Prüfungen vor. Kostenlose Lerninhalte von der Grundschule bis zur Universität mit Übungsaufgaben und Erklärungen.",
@@ -597,6 +877,12 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "school-logo-size": {
+      "description": "Wählen Sie ein Logo mit höchstens 1 MB."
+    },
+    "school-logo-type": { "description": "Wählen Sie ein PNG- oder SVG-Bild." },
+    "school-logo-refused": { "title": "Das Logo wurde nicht gespeichert." },
+    "school-address-copied": { "title": "Die Adresse wurde kopiert." },
     "action-error": {
       "title": "Aktion nicht abgeschlossen.",
       "description": "Bitte versuche es erneut."

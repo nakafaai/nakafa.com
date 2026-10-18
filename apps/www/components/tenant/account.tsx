@@ -12,10 +12,12 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect } from "effect";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition } from "react";
 import { SidebarThemeSubmenu } from "@/components/sidebar/menu/preference";
+import { useTenant } from "@/components/tenant/context";
 import { changeSchoolLanguage } from "@/components/tenant/language.client";
 import { profileHref } from "@/lib/profile/href";
 
@@ -66,6 +68,7 @@ export function TenantAccountItems({
 }: {
   username: string | undefined;
 }) {
+  const { canManage } = useTenant();
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
@@ -73,6 +76,15 @@ export function TenantAccountItems({
   return (
     <>
       <DropdownMenuGroup>
+        {canManage ? (
+          <DropdownMenuItem
+            render={
+              <Link href="/settings/profile">
+                {t("SchoolSettings.manage-settings")}
+              </Link>
+            }
+          />
+        ) : null}
         {username === undefined ? null : (
           <DropdownMenuItem
             render={

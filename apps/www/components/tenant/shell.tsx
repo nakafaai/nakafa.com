@@ -7,9 +7,6 @@ import type {
 import {
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
 } from "@repo/design-system/components/ui/sidebar-content";
 import {
@@ -32,6 +29,7 @@ import { TenantAccountItems } from "@/components/tenant/account";
 import { signOutSchoolAccount } from "@/components/tenant/account.client";
 import { TenantContext, type TenantValue } from "@/components/tenant/context";
 import { SchoolMark } from "@/components/tenant/mark";
+import { TenantNavigation } from "@/components/tenant/navigation";
 
 /**
  * Signs out of the school, then returns to the school address, which shows the
@@ -93,6 +91,7 @@ function TenantAccount({
  */
 export function TenantShell({
   account,
+  canManage,
   canOpenExams,
   children,
   personName,
@@ -100,17 +99,17 @@ export function TenantShell({
   role,
 }: {
   account: typeof ViewerAccount.Type;
+  canManage: boolean;
   canOpenExams: boolean;
   children: ReactNode;
   personName: string;
   profile: typeof TenantProfile.Type;
   role: TenantValue["role"];
 }) {
-  const t = useTranslations("School");
-  const tExams = useTranslations("Exams");
-
   return (
-    <TenantContext value={{ name: profile.name, role }}>
+    <TenantContext
+      value={{ canManage, canOpenExams, name: profile.name, role }}
+    >
       <SidebarProvider>
         <Sidebar side="left">
           <SidebarHeader className="border-b">
@@ -126,25 +125,7 @@ export function TenantShell({
             </SidebarMenu>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>{t("for-you")}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton isActive render={<Link href="/" />}>
-                      {t("home")}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  {canOpenExams ? (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton render={<Link href="/exams" />}>
-                        {tExams("title")}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ) : null}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <TenantNavigation />
           </SidebarContent>
           <TenantAccount account={account} name={personName} role={role} />
         </Sidebar>
