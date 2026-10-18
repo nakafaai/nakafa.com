@@ -241,6 +241,9 @@
         "teacherAssigned": "Teacher assigned to classroom",
         "teacherRemoved": "Teacher removed from classroom"
       },
+      "grade": {
+        "released": "Grade released"
+      },
       "cohort": {
         "created": "Class added",
         "renamed": "Class renamed",

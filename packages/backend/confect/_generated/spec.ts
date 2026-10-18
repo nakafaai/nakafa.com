@@ -136,6 +136,7 @@ import posts_cleanup from "../posts/cleanup.spec";
 import posts_mutations from "../posts/mutations.spec";
 import posts_queries from "../posts/queries.spec";
 import privacy_recovery from "../privacy/recovery.spec";
+import records_grades from "../records/grades.spec";
 import routes_agent_quota from "../routes/agent/quota.spec";
 import storage from "../storage.spec";
 import subscriptions_mutations from "../subscriptions/mutations.spec";
@@ -208,6 +209,7 @@ const spec: Spec.Spec<{
   readonly operators: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "operators", never, GroupSpec.NamedAt<typeof operators_expiry, "expiry"> | GroupSpec.NamedAt<typeof operators_staff, "staff"> | GroupSpec.NamedAt<typeof operators_tenants, "tenants"> | GroupSpec.NamedAt<typeof operators_visits, "visits">>, "operators">;
   readonly posts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "posts", never, GroupSpec.NamedAt<typeof posts_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof posts_mutations, "mutations"> | GroupSpec.NamedAt<typeof posts_queries, "queries">>, "posts">;
   readonly privacy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "privacy", never, GroupSpec.NamedAt<typeof privacy_recovery, "recovery">>, "privacy">;
+  readonly records: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "records", never, GroupSpec.NamedAt<typeof records_grades, "grades">>, "records">;
   readonly routes: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "routes", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "agent", never, GroupSpec.NamedAt<typeof routes_agent_quota, "quota">>, "agent">>, "routes">;
   readonly storage: GroupSpec.NamedAt<typeof storage, "storage">;
   readonly subscriptions: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "subscriptions", never, GroupSpec.NamedAt<typeof subscriptions_mutations, "mutations"> | GroupSpec.NamedAt<typeof subscriptions_queries, "queries">>, "subscriptions">;
@@ -444,6 +446,9 @@ const spec: Spec.Spec<{
   }),
   ["privacy"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["recovery"]: privacy_recovery,
+  }),
+  ["records"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["grades"]: records_grades,
   }),
   ["routes"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["agent"]: GroupSpec.addGroupsAt(GroupSpec.make(), {

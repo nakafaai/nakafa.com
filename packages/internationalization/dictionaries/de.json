@@ -241,6 +241,9 @@
         "teacherAssigned": "Lehrkraft der Lerngruppe zugewiesen",
         "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt"
       },
+      "grade": {
+        "released": "Note freigegeben"
+      },
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",

@@ -11,6 +11,7 @@ import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
+import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import commentLikes from "./tables/commentLikes";
@@ -48,6 +49,7 @@ import examQuestions from "./tables/examQuestions";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
+import gradingSchemes from "./tables/gradingSchemes";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
@@ -122,6 +124,7 @@ export default $defineSchema({
   articleCategories: $Table.tableDefinition(articleCategories),
   chatShares: $Table.tableDefinition(chatShares),
   chats: $Table.tableDefinition(chats),
+  classGrades: $Table.tableDefinition(classGrades),
   classTeachers: $Table.tableDefinition(classTeachers),
   classes: $Table.tableDefinition(classes),
   commentLikes: $Table.tableDefinition(commentLikes),
@@ -159,6 +162,7 @@ export default $defineSchema({
   examSignals: $Table.tableDefinition(examSignals),
   examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),
+  gradingSchemes: $Table.tableDefinition(gradingSchemes),
   integrationClients: $Table.tableDefinition(integrationClients),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),

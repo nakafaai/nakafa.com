@@ -241,6 +241,9 @@
         "teacherAssigned": "Guru ditetapkan ke ruang kelas",
         "teacherRemoved": "Guru dilepas dari ruang kelas"
       },
+      "grade": {
+        "released": "Nilai dirilis"
+      },
       "cohort": {
         "created": "Kelas ditambahkan",
         "renamed": "Kelas diganti nama",

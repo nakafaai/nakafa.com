@@ -96,6 +96,10 @@ The `grade` kind covers `classGrades`. Its relations and actions are these:
 | `grade.view` | Subject teacher of the class | Reads every grade of the class, drafts included |
 | `grade.view` | Self, on the student's own row | Reads that row once it is released |
 
+`grade.enter` and `grade.list` are declared on the class, the subject that exists
+before its first grade does, so the class's own refusals apply to them. The
+`grade.view` rule is read one row at a time, by the student's own `mine` read.
+
 The class member relation (ADR 0012, Relations) grants a student the grades of
 the class, and in this ADR that means the student's own released grade only. A
 student never reads a classmate's grade. The relation is not granted on other
@@ -238,6 +242,8 @@ Only the release and the lock are journaled.
 
 ## What Stays Open
 
+- The KKTP of the built-in scheme. `records/scheme.ts` holds 75 as a placeholder,
+  because the blueprint sets the scale and not the value, so the owner sets it.
 - The final retention numbers for each data type (K10, owner).
 - Counsel's review of the legal basis of report cards and the verification page
   (K20).
@@ -255,7 +261,7 @@ Only the release and the lock are journaled.
 | Part | Status |
 | --- | --- |
 | The decision and the libraries in this ADR | Recorded by S0 |
-| `confect/records`, `gradingSchemes`, and `classGrades` (grade entry and release, `grade.released`) | Planned, S1 |
+| `confect/records`, `gradingSchemes`, and `classGrades` (grade entry and release, `grade.released`) | Built, S1 |
 | The gradebook screen for a class | Planned, S2 |
 | Attendance and homeroom notes | Planned, S3 |
 | Report cards, approval, and lock | Planned, S4 |
