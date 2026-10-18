@@ -38,8 +38,10 @@ import {
 } from "@repo/design-system/components/ui/select";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
@@ -291,8 +293,8 @@ function SchoolGrantMenu({
 }
 
 /**
- * The sheet that says what each built-in role may do, with the name of each role
- * above its description.
+ * The sheet that says what each built-in role may do: a header, each role's badge above
+ * its description, and a footer with its one sentence and Close, each set off by a line.
  */
 function SchoolRoleGuide({
   open,
@@ -302,7 +304,7 @@ function SchoolRoleGuide({
   setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("SchoolSettings");
-  const tSchool = useTranslations("School");
+  const common = useTranslations("Common");
 
   return (
     <Sheet onOpenChange={setOpen} open={open}>
@@ -311,19 +313,28 @@ function SchoolRoleGuide({
           <SheetTitle>{t("roles-overview")}</SheetTitle>
           <SheetDescription>{t("roles-overview-description")}</SheetDescription>
         </SheetHeader>
-        <div className="flex flex-col gap-4 p-4">
+        <ul className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
           {Arr.map(BuiltinRole.literals, (role) => (
-            <div className="grid gap-1" key={role}>
-              <p className="font-medium text-sm">{tSchool(`role.${role}`)}</p>
+            <li className="flex flex-col items-start gap-1.5" key={role}>
+              <RoleBadge role={role} />
               <p className="text-muted-foreground text-sm">
                 {t(`role-description.${role}`)}
               </p>
-            </div>
+            </li>
           ))}
+        </ul>
+        <SheetFooter className="flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
             {t("roles-overview-footer")}
           </p>
-        </div>
+          <SheetClose
+            render={
+              <Button className="shrink-0" type="button" variant="outline">
+                {common("close")}
+              </Button>
+            }
+          />
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
