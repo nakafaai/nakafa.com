@@ -71,7 +71,7 @@ export function QuestionPreview({
   const read = QueryResult.isSuccess(reply)
     ? Effect.runSync(
         foldedDocument(assessmentSchema, reply.value).pipe(
-          Effect.map(Option.some),
+          Effect.asSome,
           Effect.catchTag("SyncFailed", () => Effect.succeedNone)
         )
       )
