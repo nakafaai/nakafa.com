@@ -24,12 +24,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -97,7 +98,7 @@ export function AccelerationLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseCase}
           gridColumns="3"
@@ -112,61 +113,62 @@ export function AccelerationLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.42} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("ZINC", 950)}
-                intensity={0.55}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[-2.6, 4.6, 3.8]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={ACCELERATION_LAB_SCENE.cameraPosition}
-                cameraTarget={ACCELERATION_LAB_SCENE.cameraTarget}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={ACCELERATION_LAB_SCENE.cameraFov}
-                framing="content"
-              />
-              <SpaceFlightScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            {Arr.map(facts, (fact) => (
-              <VisualFactIndicator
-                indicatorColor={
-                  "indicatorColor" in fact ? fact.indicatorColor : undefined
-                }
-                key={fact.id}
-                label={fact.label}
-                value={<InlineMath math={fact.math} />}
-              />
-            ))}
-          </dl>
-        </VisualCardControls>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.42} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("ZINC", 950)}
+              intensity={0.55}
+            />
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[-2.6, 4.6, 3.8]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
+            />
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={ACCELERATION_LAB_SCENE.cameraPosition}
+              cameraTarget={ACCELERATION_LAB_SCENE.cameraTarget}
+              enablePan
+              enableRotate
+              enableZoom
+              fov={ACCELERATION_LAB_SCENE.cameraFov}
+              framing="content"
+            />
+            <SpaceFlightScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(facts, (fact) => (
+            <VisualFactIndicator
+              indicatorColor={
+                "indicatorColor" in fact ? fact.indicatorColor : undefined
+              }
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

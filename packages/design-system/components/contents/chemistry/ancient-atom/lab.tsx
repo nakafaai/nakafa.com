@@ -12,13 +12,15 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Option } from "effect";
 import {
   AnimatePresence,
@@ -103,7 +105,7 @@ export function AncientAtomLab({
         <VisualCard>
           <VisualCardHeader description={description} title={title} />
 
-          <VisualCardBody className="flex flex-col gap-5">
+          <VisualCardToolbar>
             <ToggleGroup
               aria-label={labels.chooseLevel}
               gridColumns="4"
@@ -118,64 +120,53 @@ export function AncientAtomLab({
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
+          </VisualCardToolbar>
 
-            <VisualCardScene className="aspect-video">
-              <div
-                className="grid h-full items-stretch gap-2"
-                style={{
-                  gridTemplateColumns: `repeat(${visibleColumns}, minmax(0, 1fr))`,
-                  gridTemplateRows: `repeat(${visibleRows}, minmax(0, 1fr))`,
-                }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {Arr.map(pieces, (pieceIndex) => (
-                    <m.div
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="relative rounded-md shadow-sm"
-                      exit={{ opacity: 0, scale: 0.88 }}
-                      initial={{ opacity: 0, scale: 0.88 }}
-                      key={`${selectedLevelId}-${pieceIndex}`}
-                      layout
-                      style={{
-                        backgroundColor: `var(--chart-${(pieceIndex % 5) + 1})`,
-                      }}
-                      transition={{ ease: "easeOut" }}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-            </VisualCardScene>
-            <VisualCardControls>
-              <dl className="flex w-full flex-col gap-4 text-sm sm:flex-row">
-                <Perspective
-                  label={labels.aristotleLabel}
-                  value={labels.aristotleBody}
-                />
-                <Perspective
-                  label={labels.democritusLabel}
-                  value={labels.democritusBody}
-                />
-              </dl>
-            </VisualCardControls>
+          <VisualCardBody className="aspect-video p-(--card-spacing)">
+            <div
+              className="grid h-full items-stretch gap-2"
+              style={{
+                gridTemplateColumns: `repeat(${visibleColumns}, minmax(0, 1fr))`,
+                gridTemplateRows: `repeat(${visibleRows}, minmax(0, 1fr))`,
+              }}
+            >
+              <AnimatePresence mode="popLayout">
+                {Arr.map(pieces, (pieceIndex) => (
+                  <m.div
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="relative rounded-md shadow-sm"
+                    exit={{ opacity: 0, scale: 0.88 }}
+                    initial={{ opacity: 0, scale: 0.88 }}
+                    key={`${selectedLevelId}-${pieceIndex}`}
+                    layout
+                    style={{
+                      backgroundColor: `var(--chart-${(pieceIndex % 5) + 1})`,
+                    }}
+                    transition={{ ease: "easeOut" }}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
           </VisualCardBody>
 
-          <VisualCardFooter>
+          <VisualCardActions>
             <VisualCardFullscreen />
+          </VisualCardActions>
+
+          <VisualCardFooter>
+            <VisualCardFacts>
+              <VisualFact
+                label={labels.aristotleLabel}
+                value={labels.aristotleBody}
+              />
+              <VisualFact
+                label={labels.democritusLabel}
+                value={labels.democritusBody}
+              />
+            </VisualCardFacts>
           </VisualCardFooter>
         </VisualCard>
       </LazyMotion>
     </MotionConfig>
-  );
-}
-
-/**
- * Displays one compact perspective in the lab footer.
- */
-function Perspective({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1 sm:flex-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="wrap-break-word text-foreground">{value}</dd>
-    </div>
   );
 }

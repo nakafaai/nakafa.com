@@ -17,7 +17,11 @@ export interface ProjectileSceneProps {
   shouldReduceMotion: boolean;
 }
 
-/** Renders the lesson's WebGL scene after its semantic frame nears view. */
+/**
+ * Renders the lesson's WebGL scene after its semantic frame nears view. A
+ * reader turns and moves the scene by dragging; the wheel scrolls the page, so
+ * the scene never holds the reader in place.
+ */
 export function ProjectileScene({
   motion,
   shouldReduceMotion,
@@ -51,7 +55,7 @@ export function ProjectileScene({
           cameraTarget={PROJECTILE_SCENE.cameraTarget}
           enablePan
           enableRotate
-          enableZoom
+          enableZoom={false}
           fov={PROJECTILE_SCENE.cameraFov}
           maxPolarAngle={PROJECTILE_SCENE.maxPolarAngle}
         />

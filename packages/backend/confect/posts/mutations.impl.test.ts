@@ -3,11 +3,11 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { POST_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/posts/cleanup";
-import { POST_TEXT_MAX_LENGTH } from "@repo/backend/confect/posts/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
+import { LEARNER_TEXT_MAX_LENGTH } from "@repo/backend/confect/writing/text";
 
 const create = Ref.getFunctionReference(refs.public.posts.mutations.create);
 const remove = Ref.getFunctionReference(refs.public.posts.mutations.remove);
@@ -67,22 +67,22 @@ describe("posts write contracts", () => {
       data: { code: "POST_TEXT_EMPTY" },
     });
     await expect(
-      writePost(author, "a".repeat(POST_TEXT_MAX_LENGTH + 1))
+      writePost(author, "a".repeat(LEARNER_TEXT_MAX_LENGTH + 1))
     ).rejects.toMatchObject({
       data: {
         code: "POST_TEXT_TOO_LONG",
-        message: `The post must hold 1 to ${POST_TEXT_MAX_LENGTH} characters.`,
+        message: `The post must hold 1 to ${LEARNER_TEXT_MAX_LENGTH} characters.`,
       },
     });
-    const longest = "a".repeat(POST_TEXT_MAX_LENGTH);
+    const longest = "a".repeat(LEARNER_TEXT_MAX_LENGTH);
     expect(await writePost(author, longest)).toBeDefined();
   });
 
   it("lets only the author delete a post, and answers another learner as it answers a post that is gone", async () => {
     const { author, stranger, t } = await createPeople();
     const postId = await writePost(author);
-    // The stranger gets the same answer for a post they may not read as for a
-    // missing one, so the answer never shows that the post exists.
+    // The stranger gets the same answer for another learner's post as for a
+    // missing one.
     await expect(stranger.mutation(remove, { postId })).rejects.toMatchObject({
       data: { code: "POST_NOT_FOUND", message: "Post not found." },
     });
@@ -168,22 +168,25 @@ describe("posts write contracts", () => {
     );
   });
 
-  it("refuses a like or an unlike by a learner who may not read the post, and a missing post", async () => {
+  it("lets any signed-in learner like and unlike a post, and refuses a like or an unlike on a post that is gone", async () => {
     const { author, stranger, t } = await createPeople();
     const postId: Id<"posts"> = await writePost(author);
-    await expect(stranger.mutation(like, { postId })).rejects.toMatchObject({
-      data: { code: "POST_NOT_FOUND" },
-    });
-    await expect(stranger.mutation(unlike, { postId })).rejects.toMatchObject({
-      data: { code: "POST_NOT_FOUND" },
-    });
+    const likeCount = () =>
+      t
+        .query((ctx) => ctx.db.get("posts", postId))
+        .then((post) => post?.likeCount);
+    await stranger.mutation(like, { postId });
+    expect(await likeCount()).toBe(1);
+    await stranger.mutation(unlike, { postId });
+    expect(await likeCount()).toBe(0);
     expect(await t.query((ctx) => ctx.db.query("postLikes").collect())).toEqual(
       []
     );
     await author.session.mutation(remove, { postId });
-    await expect(
-      author.session.mutation(like, { postId })
-    ).rejects.toMatchObject({
+    await expect(stranger.mutation(like, { postId })).rejects.toMatchObject({
+      data: { code: "POST_NOT_FOUND" },
+    });
+    await expect(stranger.mutation(unlike, { postId })).rejects.toMatchObject({
       data: { code: "POST_NOT_FOUND" },
     });
   });

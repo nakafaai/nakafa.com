@@ -26,10 +26,10 @@ function Comparison({
   return (
     <div className="grid content-start justify-items-center gap-2 text-center">
       <span className="flex h-12 items-center justify-center">{picture}</span>
-      <p className="mt-2 font-medium text-xl tabular-nums tracking-tight">
+      <p className="mt-2 text-balance font-medium text-xl tabular-nums tracking-tight">
         {title}
       </p>
-      <p className="max-w-60 text-pretty text-base text-muted-foreground">
+      <p className="max-w-72 text-pretty text-base text-muted-foreground">
         {note}
       </p>
     </div>
@@ -37,6 +37,11 @@ function Comparison({
 }
 
 /** The coin of a price: its currency symbol in a round yellow badge as tall as the other pictures. */
+/** One name for each cup the comparison draws, in order: its place in the row. */
+function cupsOf(count: number) {
+  return Arr.makeBy(count, (place) => `cup-${place + 1}`);
+}
+
 function PriceCoin({ symbol }: { symbol: string }) {
   return (
     <span
@@ -71,13 +76,13 @@ function ResolvedComparison() {
       >
         {t("comparison-title", { price: formatter.format(price.amount) })}
       </h2>
-      <div className="mx-auto grid w-full max-w-4xl gap-10 md:grid-cols-3">
+      <div className="mx-auto grid w-full max-w-5xl gap-10 md:grid-cols-3">
         <Comparison
           note={t("drink-note")}
           picture={
             <span className="flex gap-1">
-              {Arr.makeBy(sums.drinks, (index) => (
-                <Thing key={index} name="coffee" size={40} />
+              {Arr.map(cupsOf(sums.drinks), (cup) => (
+                <Thing key={cup} name="coffee" size={40} />
               ))}
             </span>
           }

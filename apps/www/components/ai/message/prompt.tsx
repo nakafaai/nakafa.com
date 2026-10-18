@@ -15,9 +15,10 @@ import { NinaWords } from "@/components/ai/message/words.client";
 
 /**
  * The same prompt geometry before admission, during navigation and in history,
- * on streamed surfaces and static pages alike. The learner's `text` is shown
- * as they wrote it, whichever surface asks: this is the one place that decides
- * how.
+ * on streamed surfaces and static pages alike. Its children are the learner's
+ * words as Markdown: `LearnerText` from a server component, which sends no
+ * JavaScript, or `DeferredLearnerText` from a client component, which loads
+ * the Markdown pipeline only once a prompt is drawn.
  *
  * Its files sit in a row that starts at the first file and scrolls to the
  * rest. The row is as wide as its files and as far to the end as the message
@@ -27,12 +28,12 @@ import { NinaWords } from "@/components/ai/message/words.client";
  */
 export function NinaPrompt({
   actions,
+  children,
   files = [],
-  text,
 }: {
   actions?: ReactNode;
+  children: ReactNode;
   files?: readonly FileUIPart[];
-  text: string;
 }) {
   return (
     <MessageContent>
@@ -45,7 +46,7 @@ export function NinaPrompt({
       ) : null}
       <Bubble variant="muted">
         <BubbleContent>
-          <NinaWords>{text}</NinaWords>
+          <NinaWords>{children}</NinaWords>
         </BubbleContent>
       </Bubble>
       <MessageFooter className="h-9">{actions}</MessageFooter>

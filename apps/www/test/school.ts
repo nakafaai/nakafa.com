@@ -133,6 +133,7 @@ const ABSENT: Record<ReadName, Route> = {
 /** A profile that a visitor reads for a school that exists. */
 export const PROFILE_VALUE = {
   kind: "school",
+  mascot: "cat.0.243e66.right.open",
   name: "Harapan",
   slug: "harapan",
   status: "active",
@@ -140,6 +141,7 @@ export const PROFILE_VALUE = {
 
 /** The viewer of a member of the school, with no class, no grant, and no unit. */
 export const VIEWER_VALUE = {
+  account: { mascot: "cat.0.243e66.right.open", name: "Ayu" },
   can: [],
   grants: [],
   person: { id: "person-1", kind: "member", name: "Ayu" },
@@ -148,6 +150,7 @@ export const VIEWER_VALUE = {
     currency: "IDR",
     id: "tenant-1",
     kind: "school",
+    mascot: "cat.0.243e66.right.open",
     name: "Harapan",
     policies: { emailDomains: [], nina: false, studentThreads: false },
     slug: "harapan",

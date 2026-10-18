@@ -406,6 +406,18 @@ export declare const api: {
         { commentId: Id<"comments"> },
         null
       >;
+      likeComment: FunctionReference<
+        "mutation",
+        "public",
+        { commentId: Id<"comments"> },
+        null
+      >;
+      unlikeComment: FunctionReference<
+        "mutation",
+        "public",
+        { commentId: Id<"comments"> },
+        null
+      >;
       voteOnComment: FunctionReference<
         "mutation",
         "public",
@@ -414,6 +426,58 @@ export declare const api: {
       >;
     };
     queries: {
+      getCommentReplies: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          threadId: Id<"comments">;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: Id<"comments">;
+            downvoteCount: number;
+            likeCount: number;
+            liked: boolean;
+            parentId?: Id<"comments">;
+            replyCount: number;
+            replyToText?: string;
+            replyToUser: {
+              _id: Id<"users">;
+              image?: string | null;
+              mascot: string;
+              name: string;
+              picture?: "animal" | "photo";
+            } | null;
+            replyToUserId?: Id<"users">;
+            slug: string;
+            text: string;
+            threadId?: Id<"comments">;
+            upvoteCount: number;
+            user: {
+              _id: Id<"users">;
+              image?: string | null;
+              mascot: string;
+              name: string;
+              picture?: "animal" | "photo";
+            } | null;
+            userId: Id<"users">;
+            viewerVote: -1 | 1 | null;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
       getCommentsBySlug: FunctionReference<
         "query",
         "public",
@@ -435,6 +499,8 @@ export declare const api: {
             _creationTime: number;
             _id: Id<"comments">;
             downvoteCount: number;
+            likeCount: number;
+            liked: boolean;
             parentId?: Id<"comments">;
             replyCount: number;
             replyToText?: string;
@@ -448,6 +514,7 @@ export declare const api: {
             replyToUserId?: Id<"users">;
             slug: string;
             text: string;
+            threadId?: Id<"comments">;
             upvoteCount: number;
             user: {
               _id: Id<"users">;
@@ -484,12 +551,15 @@ export declare const api: {
             _creationTime: number;
             _id: Id<"comments">;
             downvoteCount: number;
+            likeCount: number;
+            liked: boolean;
             parentId?: Id<"comments">;
             replyCount: number;
             replyToText?: string;
             replyToUserId?: Id<"users">;
             slug: string;
             text: string;
+            threadId?: Id<"comments">;
             upvoteCount: number;
             userId: Id<"users">;
             viewerVote: -1 | 1 | null;
@@ -4592,122 +4662,6 @@ export declare const api: {
       >;
     };
     messages: {
-      list: FunctionReference<
-        "query",
-        "public",
-        {
-          chatId: Id<"chats">;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          shareToken?: string;
-          streamArgs?:
-            | { kind: "list"; startOrder?: number }
-            | {
-                cursors: Array<{ cursor: number; streamId: string }>;
-                kind: "deltas";
-              };
-          threadId: string;
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            _creationTime: number;
-            agentName?: string;
-            id: string;
-            key: string;
-            metadata?: {
-              credits?: number;
-              order: number;
-              promptMessageId: string;
-              promptedAt?: number;
-              remembered?: number;
-              state:
-                | { status: "queued" }
-                | { startedAt: number; status: "running" }
-                | { finishedAt: number; status: "complete" }
-                | {
-                    finishedAt: number;
-                    reason?:
-                      | "provider-busy"
-                      | "provider-unavailable"
-                      | "service-configuration"
-                      | "request-rejected"
-                      | "input-too-large"
-                      | "response-timeout"
-                      | "content-blocked"
-                      | "response-limit"
-                      | "interrupted"
-                      | "unknown";
-                    status: "failed";
-                  }
-                | { finishedAt: number; status: "cancelled" };
-              suggestions?: Array<string>;
-              tokens?: { input?: number; output?: number; total?: number };
-              usage: Array<{
-                agent:
-                  | "nina"
-                  | "nakafa"
-                  | "research"
-                  | "math"
-                  | "math-repair"
-                  | "suggestions"
-                  | "title"
-                  | "nina-repair"
-                  | "memory";
-                cached?: number;
-                calls: number;
-                cost?: number;
-                input: number;
-                model: string;
-                output: number;
-                provider: string;
-                reasoning?: number;
-              }>;
-            };
-            order: number;
-            parts: Array<any>;
-            role: "user" | "assistant" | "system";
-            status: "streaming" | "pending" | "success" | "failed";
-            stepOrder: number;
-            text: string;
-            userId?: string;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-          streams:
-            | {
-                kind: "list";
-                messages: Array<{
-                  agentName?: string;
-                  format?: "UIMessageChunk" | "TextStreamPart";
-                  model?: string;
-                  order: number;
-                  provider?: string;
-                  providerOptions?: Record<string, Record<string, any>>;
-                  status: "streaming" | "finished" | "aborted";
-                  stepOrder: number;
-                  streamId: string;
-                  userId?: string;
-                }>;
-              }
-            | {
-                deltas: Array<{
-                  end: number;
-                  parts: Array<any>;
-                  start: number;
-                  streamId: string;
-                }>;
-                kind: "deltas";
-              };
-        }
-      >;
       page: FunctionReference<
         "query",
         "public",
@@ -8552,6 +8506,19 @@ export declare const api: {
         | "notAllowed"
         | "taken"
       >;
+      getProfileByUsername: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          _id: Id<"users">;
+          bio?: string;
+          image?: string;
+          mascot: string;
+          name: string;
+          username: string;
+        } | null
+      >;
     };
   };
 };
@@ -8749,6 +8716,24 @@ export declare const internal: {
         "internal",
         { model: string; newDoc: any; oldDoc: any },
         any
+      >;
+    };
+  };
+  comments: {
+    migration: {
+      run: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor?: string; recount?: boolean },
+        {
+          done: boolean;
+          likesAdded: number;
+          linked: number;
+          orphaned: number;
+          recounted: number;
+          scanned: number;
+          votesRemoved: number;
+        }
       >;
     };
   };
@@ -11272,6 +11257,14 @@ export declare const internal: {
           summary: { text: string; throughOrder: number } | null;
           uncovered: Array<{ order: number; retryOf?: number }>;
         }
+      >;
+    };
+    documents: {
+      run: FunctionReference<
+        "action",
+        "internal",
+        { turnId: Id<"ninaTurns"> },
+        null
       >;
     };
     focus: {

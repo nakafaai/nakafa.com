@@ -13,11 +13,11 @@ import {
 } from "@repo/design-system/components/three/scene-frame";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -152,27 +152,28 @@ export function MethaneCombustionEquationLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
-        <VisualCardScene
-          aria-label={labels.moleculeView}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <CombustionCamera />
-              <ambientLight intensity={0.72} />
-              <hemisphereLight color={colors.text} groundColor={colors.bond} />
-              <directionalLight intensity={1.28} position={[4.2, 5.4, 4.8]} />
-              <CombustionScene colors={colors} labels={labels} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-
-        <p className="text-muted-foreground text-sm">{labels.equation}</p>
+      <VisualCardBody
+        aria-label={labels.moleculeView}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <CombustionCamera />
+            <ambientLight intensity={0.72} />
+            <hemisphereLight color={colors.text} groundColor={colors.bond} />
+            <directionalLight intensity={1.28} position={[4.2, 5.4, 4.8]} />
+            <CombustionScene colors={colors} labels={labels} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
-      <VisualCardFooter>
+
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <p className="text-muted-foreground text-sm">{labels.equation}</p>
       </VisualCardFooter>
     </VisualCard>
   );

@@ -65,7 +65,7 @@ export function VelocityTimeGraph({
   return (
     <EvilAreaChart
       chartProps={{ margin: CHART_MARGIN }}
-      className="aspect-[1.45] sm:aspect-video"
+      className="aspect-[1.45] p-(--card-spacing) sm:aspect-video"
       config={chartConfig}
       data={chartData}
     >

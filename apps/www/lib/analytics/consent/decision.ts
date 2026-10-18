@@ -24,7 +24,6 @@ interface ConsentSaveActionOptions {
   >[3];
   readonly granted: boolean;
   readonly isAuthenticated: boolean;
-  readonly isSaving: boolean;
   readonly previousSave: AnalyticsConsentSave | null;
   readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
   readonly saveDecision: ReturnType<typeof createAnonymousConsentSave>;
@@ -60,7 +59,6 @@ export function createConsentSaveAction({
   currentBrowserPrivacySignal,
   granted,
   isAuthenticated,
-  isSaving,
   previousSave,
   promptIdentity,
   saveDecision,
@@ -70,7 +68,7 @@ export function createConsentSaveAction({
   user,
 }: ConsentSaveActionOptions): ConsentSaveAction {
   const isAllowed = granted ? canGrant : canDecline;
-  if (!(isAllowed && !isSaving && promptIdentity)) {
+  if (!(isAllowed && promptIdentity)) {
     return { kind: "ignore" };
   }
   const expectedUserId = isAuthenticated ? (user?.appUser._id ?? null) : null;

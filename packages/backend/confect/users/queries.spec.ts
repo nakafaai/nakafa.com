@@ -4,7 +4,19 @@ import usersTable from "@repo/backend/confect/_generated/tables/users";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { UsernameCheck } from "@repo/backend/confect/users/username";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
+
+/**
+ * The public face of a profile, which anyone may read at its address. It holds
+ * only what every profile shows: never the email, the auth id, the plan, or the
+ * settings of the account.
+ */
+const publicProfileValidator = Schema.Struct({
+  ...Struct.pick(usersTable.Doc.fields, ["_id", "bio", "mascot", "name"]),
+  username: Schema.String,
+  image: Schema.optionalKey(Schema.String),
+});
+
 export default GroupSpec.make()
   .addFunction(
     FunctionSpec.internalQuery({
@@ -33,4 +45,13 @@ export default GroupSpec.make()
       returns: () => UsernameCheck,
       error: () => AuthFailure,
     }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "getProfileByUsername",
+      args: () => ({
+        username: Schema.String,
+      }),
+      returns: () => Schema.NullOr(publicProfileValidator),
+    })
   );

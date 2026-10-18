@@ -9,7 +9,6 @@ import { CoordinateSystem } from "@repo/design-system/components/three/coordinat
 import { Inequality as Inequality3D } from "@repo/design-system/components/three/inequality";
 import {
   VisualCard,
-  VisualCardBody,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
@@ -45,22 +44,20 @@ export function Inequality({
     <CoordinateProvider>
       <VisualCard>
         <VisualCardHeader description={description} title={title} />
-        <VisualCardBody>
-          <CoordinateSystem
-            cameraPosition={position}
-            cameraProjection={
-              isFrontalPlane ? { kind: "orthographic" } : undefined
-            }
-            cameraTarget={cameraTarget}
-          >
-            {Arr.map(data, (item, index) => (
-              <Inequality3D
-                key={`inequality-${(item.boundaryLine2D ? Arr.join(Arr.map(item.boundaryLine2D, String), "_") : undefined) || index}`}
-                {...item}
-              />
-            ))}
-          </CoordinateSystem>
-        </VisualCardBody>
+        <CoordinateSystem
+          cameraPosition={position}
+          cameraProjection={
+            isFrontalPlane ? { kind: "orthographic" } : undefined
+          }
+          cameraTarget={cameraTarget}
+        >
+          {Arr.map(data, (item, index) => (
+            <Inequality3D
+              key={`inequality-${(item.boundaryLine2D ? Arr.join(Arr.map(item.boundaryLine2D, String), "_") : undefined) || index}`}
+              {...item}
+            />
+          ))}
+        </CoordinateSystem>
         <CoordinateControls />
       </VisualCard>
     </CoordinateProvider>

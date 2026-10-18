@@ -1,10 +1,13 @@
 "use client";
 
 import { useNetwork } from "@mantine/hooks";
+import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
 import { Effect } from "effect";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useState } from "react";
 import { useStore } from "zustand";
+import { markAnalyticsConsentRoot } from "@/lib/analytics/consent/bootstrap";
 import {
+  readNavigatorPrivacySignal,
   useAnonymousDenialPersistence,
   useBrowserConsentSync,
 } from "@/lib/analytics/consent/browser";
@@ -67,7 +70,8 @@ function AnalyticsConsentController({
     (state) => state.setHasStorageError
   );
   const { online: isOnline } = useNetwork();
-  const { durableStatus, interruptDepartedSave, promptIdentity } = consent;
+  const { durableStatus, hasLoadError, interruptDepartedSave, promptIdentity } =
+    consent;
 
   useBrowserConsentSync({
     isPreviewChild: consent.isPreviewChild,
@@ -81,6 +85,30 @@ function AnalyticsConsentController({
     setBrowserConsent,
     setHasStorageError,
   });
+
+  // The inline script marks a page the server rendered. A page that mounts here
+  // without it, such as the first app page a soft navigation opens, takes the same
+  // mark before paint, so the prompt cannot paint before the store knows the visitor.
+  useLayoutEffect(() => {
+    Effect.runSync(
+      markAnalyticsConsentRoot(
+        document.documentElement,
+        readNavigatorPrivacySignal()
+      )
+    );
+  }, []);
+
+  // The mark holds the prompt until the store knows the choice, or knows that it
+  // cannot load it. Then only the prompt's own state decides, and the mark goes, so
+  // a later sign-out or a soft navigation shows the prompt. A load error must not
+  // stay hidden, because the prompt is where it shows. This keeps the DOM in step
+  // with the store, so it is an effect.
+  useEffect(() => {
+    if (durableStatus === "pending" && !hasLoadError) {
+      return;
+    }
+    document.documentElement.removeAttribute(ANALYTICS_CONSENT_ROOT_ATTRIBUTE);
+  }, [durableStatus, hasLoadError]);
 
   // The content-view identifier exists only under a durable grant; reading the
   // durable status keeps it while a repeated choice is still saving.

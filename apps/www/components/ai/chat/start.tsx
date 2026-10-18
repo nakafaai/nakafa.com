@@ -1,5 +1,6 @@
 "use client";
 
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Message } from "@repo/design-system/components/ui/message";
 import {
   MessageScroller,
@@ -59,7 +60,9 @@ export function StartPrompt({
               <>
                 <MessageScrollerItem messageId={prompt.id} scrollAnchor>
                   <Message align="end">
-                    <NinaPrompt files={prompt.files} text={prompt.text} />
+                    <NinaPrompt files={prompt.files}>
+                      <DeferredLearnerText>{prompt.text}</DeferredLearnerText>
+                    </NinaPrompt>
                   </Message>
                 </MessageScrollerItem>
                 <MessageScrollerItem messageId="pending">

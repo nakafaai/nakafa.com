@@ -5,8 +5,8 @@ import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
@@ -194,8 +194,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   }
   return (
     <>
-      <Button disabled={busy} onClick={onStart}>
-        <Spinner icon={Rocket01Icon} isLoading={isPending || resolvingAccess} />
+      <Button inert={busy} onClick={onStart}>
+        <HugeIcons icon={Rocket01Icon} />
         {buttonLabel}
       </Button>
       <TryoutStartDialog
@@ -226,8 +226,8 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
 export function PendingTryoutAction() {
   const t = useTranslations("Tryouts");
   return (
-    <Button aria-label={t("action-loading")} disabled>
-      <Spinner icon={Rocket01Icon} isLoading />
+    <Button aria-label={t("action-loading")} inert>
+      <HugeIcons icon={Rocket01Icon} />
     </Button>
   );
 }
@@ -241,7 +241,7 @@ function ResumeTryoutLink({
   const t = useTranslations("Tryouts");
   return (
     <IntentLink className={buttonVariants()} href={request.destinationHref}>
-      <Spinner icon={Rocket01Icon} isLoading={false} />
+      <HugeIcons icon={Rocket01Icon} />
       {t("continue-cta")}
     </IntentLink>
   );

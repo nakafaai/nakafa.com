@@ -16,11 +16,12 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardBody,
-  VisualCardControls,
+  VisualCardActions,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
@@ -94,7 +95,7 @@ export function AtomShellLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseAtom}
           gridColumns="6"
@@ -117,48 +118,48 @@ export function AtomShellLab({
             );
           })}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <ShellModelCanvas
-          aria-label={`${selectedLabels.name ?? selectedSample.symbol}, ${labels.electronTotal} ${selectedSample.atomicNumber}`}
-          live={live}
-          outerShellKey={outerShell.key}
-          sample={selectedSample}
-          shells={shellConfiguration}
-        />
+      <ShellModelCanvas
+        aria-label={`${selectedLabels.name ?? selectedSample.symbol}, ${labels.electronTotal} ${selectedSample.atomicNumber}`}
+        live={live}
+        outerShellKey={outerShell.key}
+        sample={selectedSample}
+        shells={shellConfiguration}
+      />
 
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
         {selectedLabels.note === undefined ? null : (
           <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
             {selectedLabels.note}
           </p>
         )}
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            <VisualFact
-              label={labels.atomicNumber}
-              value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
-            />
-            <VisualFact
-              label={labels.configuration}
-              value={<InlineMath math={`${configurationMath}`} />}
-            />
-            <VisualFact
-              label={labels.outerShell}
-              value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
-            />
-            <VisualFact
-              label={labels.maximumCapacity}
-              value={
-                <InlineMath
-                  math={`2(${outerShell.principalQuantumNumber})^2 = ${outerShell.maximumElectrons}`}
-                />
-              }
-            />
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.atomicNumber}
+            value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}
+          />
+          <VisualFact
+            label={labels.configuration}
+            value={<InlineMath math={`${configurationMath}`} />}
+          />
+          <VisualFact
+            label={labels.outerShell}
+            value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
+          />
+          <VisualFact
+            label={labels.maximumCapacity}
+            value={
+              <InlineMath
+                math={`2(${outerShell.principalQuantumNumber})^2 = ${outerShell.maximumElectrons}`}
+              />
+            }
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

@@ -1,3 +1,4 @@
+import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { DateTime } from "effect";
@@ -80,15 +81,6 @@ export function FeedEnd({ children }: { children: ReactNode }) {
   );
 }
 
-/** Text a learner wrote, kept as written and broken anywhere a word does not fit. */
-export function FeedText({ children }: { children: string }) {
-  return (
-    <p className="wrap-anywhere whitespace-pre-wrap text-pretty" dir="auto">
-      {children}
-    </p>
-  );
-}
-
 /**
  * The actions of a row, side by side at their own widths. The row moves in by
  * the first button's padding, so the first icon starts on the content's edge,
@@ -106,6 +98,24 @@ export function FeedActions({
     <div className="-ms-2.5 -mb-2 flex items-center" inert={inert}>
       {children}
     </div>
+  );
+}
+
+/**
+ * The count beside an action of a row, in the compact form, shown once it is above
+ * zero. An action takes its own width, so a zero leaves no empty slot.
+ */
+export function FeedCount({ value }: { value: number }) {
+  if (value === 0) {
+    return null;
+  }
+  return (
+    <NumberFormat
+      className="text-xs tabular-nums"
+      format={{ notation: "compact", maximumFractionDigits: 1 }}
+      isolate={true}
+      value={value}
+    />
   );
 }
 

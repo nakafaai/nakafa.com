@@ -1,5 +1,7 @@
 import type { Ref } from "@confect/core";
 import {
+  ANALYTICS_CONSENT_DENIED,
+  ANALYTICS_CONSENT_GRANTED,
   ANALYTICS_CONSENT_NOTICE_VERSION,
   type AnalyticsConsentState,
   type AnonymousAnalyticsConsentRecord,
@@ -77,7 +79,7 @@ export function shouldPersistAnonymousAnalyticsDenial({
   return Option.match(browserConsent.anonymousConsent, {
     onNone: () => true,
     onSome: (consent) =>
-      consent.decision !== "denied" ||
+      consent.decision !== ANALYTICS_CONSENT_DENIED ||
       consent.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION,
   });
 }
@@ -143,7 +145,7 @@ export function createBrowserAnalyticsIdentity({
       onNone: () => null,
       onSome: (consent): BrowserAnalyticsIdentity | null => {
         if (
-          consent.decision !== "granted" ||
+          consent.decision !== ANALYTICS_CONSENT_GRANTED ||
           consent.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION
         ) {
           return null;

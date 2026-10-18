@@ -3,6 +3,7 @@ import {
   ReasoningTrigger,
 } from "@repo/design-system/components/ai/reasoning";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import {
   Message,
   MessageContent,
@@ -11,6 +12,7 @@ import { useTranslations } from "next-intl";
 import { NinaPrompt } from "@/components/ai/message/prompt";
 import { NinaComposer } from "@/components/marketing/about/nina/client";
 import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
+import { MarketingSection } from "@/components/marketing/shared/section";
 
 /**
  * The Nina row: the learner says which question still confuses them, Nina
@@ -23,14 +25,9 @@ export function NinaSection() {
   const t = useTranslations("Landing");
 
   return (
-    <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="nina">
+    <MarketingSection id="nina">
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div className="grid min-w-0 content-center gap-8">
-          <Talk ask={t("nina-ask")}>
-            <TalkReply act="drumming" mood="happy">
-              {t("nina-answer")}
-            </TalkReply>
-          </Talk>
           <div className="grid gap-2">
             <h2 className="text-balance text-2xl tracking-tight">
               {t("nina-title")}
@@ -39,10 +36,17 @@ export function NinaSection() {
               {t("nina-lead")}
             </p>
           </div>
+          <Talk ask={t("nina-ask")}>
+            <TalkReply act="drumming" mood="happy">
+              {t("nina-answer")}
+            </TalkReply>
+          </Talk>
         </div>
         <div className="grid min-w-0 gap-6">
           <Message align="end">
-            <NinaPrompt text={t("nina-chat-ask")} />
+            <NinaPrompt>
+              <LearnerText>{t("nina-chat-ask")}</LearnerText>
+            </NinaPrompt>
           </Message>
           <Message>
             <MessageContent>
@@ -61,6 +65,6 @@ export function NinaSection() {
           <NinaComposer />
         </div>
       </div>
-    </section>
+    </MarketingSection>
   );
 }

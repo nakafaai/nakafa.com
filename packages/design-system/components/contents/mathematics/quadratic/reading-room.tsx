@@ -11,7 +11,6 @@ import { LineEquation } from "@repo/design-system/components/three/line-equation
 import { Polygon } from "@repo/design-system/components/three/polygon";
 import {
   VisualCard,
-  VisualCardBody,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
@@ -55,78 +54,76 @@ export function ReadingRoomProblem({
             </>
           }
         />
-        <VisualCardBody>
-          <CoordinateSystem cameraPosition={[0, 0, 15]}>
-            <LineEquation
-              color={COLORS.SLATE}
-              points={[...ROOM, ROOM[0]]}
-              showPoints={false}
-              smooth={false}
-            />
-            <ThreeLabel
-              anchorX="left"
-              anchorY="top"
-              color={COLORS.SLATE}
-              fontSize="diagram"
-              gap={0.2}
-              position={[0, -2, 0]}
-            >
-              {widthLabel}
-            </ThreeLabel>
-            <ThreeLabel
-              anchorX="left"
-              anchorY="bottom"
-              color={COLORS.SLATE}
-              fontSize="diagram"
-              gap={0.2}
-              position={[3, 0, 0]}
-            >
-              {heightLabel}
-            </ThreeLabel>
-            {Arr.map(CORNERS, ({ id, x, y, dx, dy, color }) => {
-              const insideX = x + dx * CORNER_SIDE;
-              const insideY = y + dy * CORNER_SIDE;
-              const vertices = [
-                { x, y, z: 0 },
-                { x: insideX, y, z: 0 },
-                { x: insideX, y: insideY, z: 0 },
-                { x, y: insideY, z: 0 },
-              ];
-              return (
-                <group key={id}>
-                  <Polygon color={color} opacity={0.5} vertices={vertices} />
-                  <LineEquation
-                    color={color}
-                    points={[...vertices, vertices[0]]}
-                    showPoints={false}
-                    smooth={false}
-                  />
-                  <ThreeLabel
-                    anchorX={dx > 0 ? "right" : "left"}
-                    color={color}
-                    fontSize="diagram"
-                    gap={0.15}
-                    position={[x, (y + insideY) / 2, 0]}
-                  >
-                    <InlineMath math="x" />
-                  </ThreeLabel>
-                  <ThreeLabel
-                    anchorY={dy > 0 ? "top" : "bottom"}
-                    color={color}
-                    fontSize="diagram"
-                    gap={0.15}
-                    position={[(x + insideX) / 2, y, 0]}
-                  >
-                    <InlineMath math="x" />
-                  </ThreeLabel>
-                </group>
-              );
-            })}
-          </CoordinateSystem>
-          <p className="sr-only">
-            {widthLabel} × {heightLabel}; <InlineMath math="4x^2" />.
-          </p>
-        </VisualCardBody>
+        <CoordinateSystem cameraPosition={[0, 0, 15]}>
+          <LineEquation
+            color={COLORS.SLATE}
+            points={[...ROOM, ROOM[0]]}
+            showPoints={false}
+            smooth={false}
+          />
+          <ThreeLabel
+            anchorX="left"
+            anchorY="top"
+            color={COLORS.SLATE}
+            fontSize="diagram"
+            gap={0.2}
+            position={[0, -2, 0]}
+          >
+            {widthLabel}
+          </ThreeLabel>
+          <ThreeLabel
+            anchorX="left"
+            anchorY="bottom"
+            color={COLORS.SLATE}
+            fontSize="diagram"
+            gap={0.2}
+            position={[3, 0, 0]}
+          >
+            {heightLabel}
+          </ThreeLabel>
+          {Arr.map(CORNERS, ({ id, x, y, dx, dy, color }) => {
+            const insideX = x + dx * CORNER_SIDE;
+            const insideY = y + dy * CORNER_SIDE;
+            const vertices = [
+              { x, y, z: 0 },
+              { x: insideX, y, z: 0 },
+              { x: insideX, y: insideY, z: 0 },
+              { x, y: insideY, z: 0 },
+            ];
+            return (
+              <group key={id}>
+                <Polygon color={color} opacity={0.5} vertices={vertices} />
+                <LineEquation
+                  color={color}
+                  points={[...vertices, vertices[0]]}
+                  showPoints={false}
+                  smooth={false}
+                />
+                <ThreeLabel
+                  anchorX={dx > 0 ? "right" : "left"}
+                  color={color}
+                  fontSize="diagram"
+                  gap={0.15}
+                  position={[x, (y + insideY) / 2, 0]}
+                >
+                  <InlineMath math="x" />
+                </ThreeLabel>
+                <ThreeLabel
+                  anchorY={dy > 0 ? "top" : "bottom"}
+                  color={color}
+                  fontSize="diagram"
+                  gap={0.15}
+                  position={[(x + insideX) / 2, y, 0]}
+                >
+                  <InlineMath math="x" />
+                </ThreeLabel>
+              </group>
+            );
+          })}
+        </CoordinateSystem>
+        <p className="sr-only">
+          {widthLabel} × {heightLabel}; <InlineMath math="4x^2" />.
+        </p>
         <CoordinateControls />
       </VisualCard>
     </CoordinateProvider>

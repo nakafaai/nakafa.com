@@ -5,7 +5,7 @@ import {
   type Route,
 } from "@playwright/test";
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
-import { Effect, MutableList } from "effect";
+import { Deferred, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -107,6 +107,30 @@ export function holdChunkHolding(
     )
   );
 }
+
+/**
+ * Holds every JavaScript chunk of the app that the page asks for, until the
+ * `release` it returns runs. A step holds the editor's code this way, so the
+ * page shows what it draws while the code is on its way. Call it once the page
+ * has loaded: a chunk that the page loads with it would wait for the release.
+ * With `containing`, only a chunk whose code holds that text waits, and every
+ * other chunk loads at once.
+ */
+export const holdChunks = Effect.fn("NakafaE2E.holdChunks")(function* (
+  page: Page,
+  options: { readonly containing?: string } = {}
+) {
+  const gate = yield* Deferred.make<void>();
+  const services = yield* Effect.context<never>();
+  yield* routeChunkHolding(page, options.containing ?? "", (route, response) =>
+    Effect.andThen(
+      Deferred.await(gate),
+      Effect.promise(() => route.fulfill({ response }))
+    )
+  );
+  return () =>
+    Effect.runPromiseWith(services)(Deferred.succeed(gate, undefined));
+});
 
 /**
  * Seeds one consent decision before the first navigation, then opens `href`

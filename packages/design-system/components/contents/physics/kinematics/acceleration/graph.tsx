@@ -67,7 +67,7 @@ export function AccelerationGraph({
   return (
     <EvilLineChart
       chartProps={{ margin: CHART_MARGIN }}
-      className="aspect-[1.45] sm:aspect-video"
+      className="aspect-[1.45] p-(--card-spacing) sm:aspect-video"
       config={chartConfig}
       data={motionData}
     >
