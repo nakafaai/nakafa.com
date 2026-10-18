@@ -557,7 +557,16 @@
     "move-down": "Pindah ke bawah",
     "remove": "Hapus soal",
     "remove-title": "Hapus soal ini?",
-    "remove-description": "Soal dan jawabannya keluar dari ujian ini."
+    "remove-description": "Soal dan jawabannya keluar dari ujian ini.",
+    "create": "Buat ujian",
+    "create-description": "Ujian dimulai dengan satu soal.",
+    "unit": "Unit",
+    "whole-school": "Seluruh sekolah",
+    "language": "Bahasa",
+    "add-question": "Tambah soal",
+    "copy": "Salin soal",
+    "prompt-label": "Teks soal",
+    "prompt-placeholder": "Tulis soal di sini."
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",

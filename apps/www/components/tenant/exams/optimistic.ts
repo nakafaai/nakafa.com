@@ -4,11 +4,14 @@ import type {
   OptimisticUpdate,
 } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { placeAt } from "@repo/backend/confect/exams/order";
+import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
 import { Array as Arr, Option } from "effect";
 
 /** One exam with its questions in order, as the editor reads it. */
 export type ExamView = Ref.Returns<typeof exams.exams.open>;
+
+/** One exam as the list shows it: its ID, its title, and its language. */
+export type ExamSummary = Ref.Returns<typeof exams.exams.list>["page"][number];
 
 /** One question of an exam, as the editor reads it. */
 export type Question = ExamView["questions"][number];
@@ -141,3 +144,87 @@ export const answerUpdate: OptimisticUpdate<typeof exams.questions.answer> = (
   changeExam(localStore, examQuery(args), (view) =>
     answeredQuestion(view, args.questionId, args)
   );
+
+/**
+ * A question that the server has not saved yet, with the answers, the key, and the prompt
+ * it shows at once. Its revision is zero, as the server starts every new question.
+ */
+export const placeholderQuestion = (
+  input: Pick<Question, "answers" | "id" | "key" | "prompt">
+): Question => ({ ...input, revision: 0, template: "choice" });
+
+/** The exam with a question added at its end, as the server adds a new question. */
+export const appendedQuestion = (
+  view: ExamView,
+  question: Question
+): ExamView => ({
+  ...view,
+  questions: Arr.append(view.questions, question),
+});
+
+/**
+ * The exam with a question inserted right after another one. A question that the exam
+ * does not hold leaves it as it is, as the server refuses such a copy.
+ */
+export const insertedAfter = (
+  view: ExamView,
+  afterId: QuestionId,
+  question: Question
+): ExamView =>
+  Option.match(
+    insertIndex(
+      Arr.map(view.questions, (item) => item.id),
+      afterId
+    ),
+    {
+      onNone: () => view,
+      onSome: (index) => ({
+        ...view,
+        questions: [
+          ...Arr.take(view.questions, index),
+          question,
+          ...Arr.drop(view.questions, index),
+        ],
+      }),
+    }
+  );
+
+/** Shows a new question at the end of the exam while the server adds it. */
+export const addQuestionUpdate =
+  (question: Question): OptimisticUpdate<typeof exams.questions.add> =>
+  (localStore, args) =>
+    changeExam(localStore, examQuery(args), (view) =>
+      appendedQuestion(view, question)
+    );
+
+/** Shows a copy right after its source while the server copies it. */
+export const copyQuestionUpdate =
+  (question: Question): OptimisticUpdate<typeof exams.questions.copy> =>
+  (localStore, args) =>
+    changeExam(localStore, examQuery(args), (view) =>
+      insertedAfter(view, args.questionId, question)
+    );
+
+/**
+ * Shows a new exam at the top of the first page of each open list while the server
+ * saves it. A list past its first page keeps its pages, as the server's answer shows.
+ */
+export const insertDraftExam =
+  (draft: ExamSummary): OptimisticUpdate<typeof exams.exams.create> =>
+  (localStore) => {
+    for (const query of localStore.getAllQueries(exams.exams.list)) {
+      if (
+        Option.isSome(query.value) &&
+        query.args.paginationOpts.cursor === null
+      ) {
+        localStore.setQuery(
+          exams.exams.list,
+          query.args,
+          Option.some({
+            ...query.value.value,
+            page: [draft, ...query.value.value.page],
+          })
+        );
+      }
+    }
+  };

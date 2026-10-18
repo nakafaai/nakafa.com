@@ -1,21 +1,34 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import { useIntersection } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Array as Arr } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useStore } from "zustand";
+import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
+import { CreateExam } from "@/components/tenant/exams/dialog";
+import { createExamDrafts } from "@/components/tenant/exams/drafts";
+import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 
 /** How many exams the list asks for each time its end comes into view. */
 const EXAM_PAGE_SIZE = 20;
 
 /**
- * The exams of the school, newest first, each with its title and its language. The next
- * page loads when the end of the list comes into view, so the list has no button.
+ * The exams of the school, newest first, each with its title and its language. An exam that
+ * the server has not saved yet is inert until it answers. The next page loads when the end of
+ * the list comes into view, so the list has no button. The create action shows when the viewer
+ * can create an exam in at least one place.
  */
 export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
@@ -25,6 +38,9 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
     { slug },
     { initialNumItems: EXAM_PAGE_SIZE }
   );
+  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const [drafts] = useState(createExamDrafts);
+  const saving = useStore(drafts, (state) => state.ids);
   const { entry, ref } = useIntersection<HTMLDivElement>();
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? pagination.loadMore
@@ -41,12 +57,31 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
     () => new Intl.DisplayNames([locale], { type: "language" }),
     [locale]
   );
+  const choices = QueryResult.isSuccess(viewer)
+    ? scopeChoices(
+        viewer.value.units,
+        Arr.contains(viewer.value.can, "exam.edit")
+      )
+    : [];
+  const languages = QueryResult.isSuccess(viewer)
+    ? unitLanguages(viewer.value.units)
+    : [];
   const empty =
     pagination._tag === "Exhausted" && pagination.results.length === 0;
 
   return (
     <main className="flex flex-col gap-4 p-4">
-      <h1 className="font-semibold text-xl">{t("title")}</h1>
+      <header className="flex items-center justify-between gap-2">
+        <h1 className="font-semibold text-xl">{t("title")}</h1>
+        {choices.length > 0 ? (
+          <CreateExam
+            choices={choices}
+            drafts={drafts}
+            languages={languages}
+            slug={slug}
+          />
+        ) : null}
+      </header>
       {empty ? (
         <p className="text-muted-foreground text-sm">{t("empty")}</p>
       ) : null}
@@ -54,23 +89,60 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
         <ul className="flex flex-col gap-2">
           {Arr.map(pagination.results, (exam) => (
             <li key={exam.id}>
-              <Button
-                className="h-auto w-full justify-between py-2 text-start"
-                render={<Link href={`/school/${slug}/exams/${exam.id}/edit`} />}
-                variant="outline"
-              >
-                <span className="min-w-0 truncate font-medium">
-                  {exam.title}
-                </span>
-                <span className="shrink-0 text-muted-foreground text-sm">
-                  {names.of(exam.language)}
-                </span>
-              </Button>
+              <ExamRow
+                exam={exam}
+                names={names}
+                saving={Arr.contains(saving, exam.id)}
+              />
             </li>
           ))}
         </ul>
       )}
       <div aria-hidden ref={ref} />
     </main>
+  );
+}
+
+/**
+ * One exam of the list: its title and its language. A saved exam links to its editor. An
+ * exam that the server is still saving shows the same row without a link, so it is inert.
+ */
+function ExamRow({
+  exam,
+  names,
+  saving,
+}: {
+  exam: ExamSummary;
+  names: Intl.DisplayNames;
+  saving: boolean;
+}) {
+  const content = (
+    <>
+      <span className="min-w-0 truncate font-medium">{exam.title}</span>
+      <span className="shrink-0 text-muted-foreground text-sm">
+        {names.of(exam.language)}
+      </span>
+    </>
+  );
+
+  if (saving) {
+    return (
+      <Button
+        className="h-auto w-full justify-between py-2 text-start"
+        variant="outline"
+      >
+        {content}
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      className="h-auto w-full justify-between py-2 text-start"
+      render={<Link href={`/exams/${exam.id}/edit`} />}
+      variant="outline"
+    >
+      {content}
+    </Button>
   );
 }

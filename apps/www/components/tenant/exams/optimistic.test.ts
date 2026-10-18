@@ -7,11 +7,18 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
+  addQuestionUpdate,
   answeredQuestion,
   answerUpdate,
+  appendedQuestion,
+  copyQuestionUpdate,
+  type ExamSummary,
   type ExamView,
+  insertDraftExam,
+  insertedAfter,
   movedQuestion,
   moveUpdate,
+  placeholderQuestion,
   type Question,
   removedQuestion,
   removeUpdate,
@@ -204,5 +211,144 @@ describe("the optimistic updates", () => {
     renameUpdate(localStore, { examId, slug, title: "Biologi" });
 
     expect(setQuery).not.toHaveBeenCalled();
+  });
+});
+
+/** A new question with the same answers as the others, under its own placeholder IDs. */
+const placeholder = (id: string) => question(id);
+
+describe("placeholderQuestion", () => {
+  it("starts a question at revision zero with the answers and key it is given", () => {
+    const draft = placeholderQuestion({
+      answers,
+      id: questionId("draft"),
+      key: null,
+      prompt: promptId("draft-prompt"),
+    });
+
+    expect(draft).toEqual({
+      ...placeholder("draft"),
+      prompt: promptId("draft-prompt"),
+    });
+    expect(draft.revision).toBe(0);
+  });
+});
+
+describe("appendedQuestion", () => {
+  it("adds a question at the end of the exam", () => {
+    const added = appendedQuestion(viewOf([first, second]), third);
+
+    expect(added.questions).toEqual([first, second, third]);
+  });
+});
+
+describe("insertedAfter", () => {
+  it("inserts a copy right after its source", () => {
+    const copy = placeholder("copy");
+
+    expect(
+      insertedAfter(viewOf([first, second]), first.id, copy).questions
+    ).toEqual([first, copy, second]);
+  });
+
+  it("inserts after the last question when the source is the last", () => {
+    const copy = placeholder("copy");
+
+    expect(
+      insertedAfter(viewOf([first, second]), second.id, copy).questions
+    ).toEqual([first, second, copy]);
+  });
+
+  it("leaves the exam as it is when the source is not in it", () => {
+    const view = viewOf([first, second]);
+
+    expect(insertedAfter(view, third.id, placeholder("copy"))).toEqual(view);
+  });
+});
+
+/** A store that holds the given list pages, each with its arguments, and records what is written. */
+const listStore = (pages: unknown[]) => {
+  const getAllQueries = vi.fn();
+  getAllQueries.mockReturnValue(pages);
+  const setQuery = vi.fn();
+  return {
+    localStore: { getAllQueries, getQuery: vi.fn(), setQuery },
+    setQuery,
+  };
+};
+
+describe("the optimistic updates of the new questions", () => {
+  it("add a question to the end of the exam the store holds", () => {
+    const view = viewOf([first]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+    const added = placeholder("added");
+
+    addQuestionUpdate(added)(localStore, {
+      examId,
+      slug,
+      after: null,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some(appendedQuestion(view, added))
+    );
+  });
+
+  it("show a copy right after its source in the exam the store holds", () => {
+    const view = viewOf([first, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+    const copy = placeholder("copy");
+
+    copyQuestionUpdate(copy)(localStore, {
+      examId,
+      questionId: first.id,
+      slug,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some({ ...view, questions: [first, copy, second] })
+    );
+  });
+
+  it("show a new exam first in the first page of each list the store holds", () => {
+    const examIdOf = Schema.decodeUnknownSync(Id("exams"));
+    const draft: ExamSummary = {
+      id: examIdOf("draft-exam"),
+      language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
+      title: "Draf",
+    };
+    const existing: ExamSummary = {
+      id: examIdOf("exam-old"),
+      language: Schema.decodeSync(DeliveryLanguageSchema)("en"),
+      title: "Lama",
+    };
+    const firstArgs = { paginationOpts: { cursor: null, numItems: 20 }, slug };
+    const nextArgs = { paginationOpts: { cursor: "next", numItems: 20 }, slug };
+    const { localStore, setQuery } = listStore([
+      {
+        args: firstArgs,
+        value: Option.some({ isDone: false, page: [existing] }),
+      },
+      { args: nextArgs, value: Option.some({ isDone: true, page: [] }) },
+      { args: firstArgs, value: Option.none() },
+    ]);
+
+    insertDraftExam(draft)(localStore, {
+      language: draft.language,
+      scope: { kind: "tenant" },
+      slug,
+      title: draft.title,
+    });
+
+    expect(setQuery).toHaveBeenCalledTimes(1);
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.list,
+      firstArgs,
+      Option.some({ isDone: false, page: [draft, existing] })
+    );
   });
 });

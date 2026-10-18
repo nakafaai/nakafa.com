@@ -557,7 +557,16 @@
     "move-down": "Move down",
     "remove": "Remove question",
     "remove-title": "Remove this question?",
-    "remove-description": "The question and its answers leave this exam."
+    "remove-description": "The question and its answers leave this exam.",
+    "create": "Create exam",
+    "create-description": "The exam starts with one question.",
+    "unit": "Unit",
+    "whole-school": "Whole school",
+    "language": "Language",
+    "add-question": "Add question",
+    "copy": "Copy question",
+    "prompt-label": "Question text",
+    "prompt-placeholder": "Write the question here."
   },
   "Memory": {
     "remember": "Let Nina save and use memories",

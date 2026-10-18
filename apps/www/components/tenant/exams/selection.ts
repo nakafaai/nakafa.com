@@ -7,18 +7,27 @@ import type {
   QuestionId,
 } from "@/components/tenant/exams/optimistic";
 
-/** The data of one editor's selection: the question the teacher chose, or none before a choice. */
+/**
+ * The data of one editor's selection: the question the teacher chose, or none before a
+ * choice, and the questions that the server has not saved yet. A pending question is a
+ * placeholder, so its actions wait for the server's answer.
+ */
 const SelectionState = Schema.Struct({
+  pending: Schema.Array(Id("examQuestions")),
   selected: Schema.NullOr(Id("examQuestions")),
 });
 
-/** The action that chooses a question. */
+/** The actions of one editor's selection. */
 interface SelectionActions {
+  /** Ends the pending state of a question, once the server answered or refused it. */
+  readonly endPending: (id: QuestionId) => void;
   /** Makes a question the one that the canvas shows. */
   readonly select: (id: QuestionId) => void;
+  /** Marks a question as a placeholder that the server has not saved yet. */
+  readonly startPending: (id: QuestionId) => void;
 }
 
-/** The state of one editor's selection, with its action, as its store holds it. */
+/** The state of one editor's selection, with its actions, as its store holds it. */
 export type ExamSelection = typeof SelectionState.Type & SelectionActions;
 
 /** The question the canvas shows, with its place among the questions. */
@@ -48,10 +57,18 @@ export const activeQuestion = (
 
 /**
  * Creates the selection of one editor: the question the teacher chose, which is none
- * before a choice, and the action that chooses one. Each provider creates its own, once.
+ * before a choice, the questions still being saved, and the actions that change them.
+ * Each provider creates its own, once.
  */
 export const createExamSelection = () =>
   createStore<ExamSelection>()((set) => ({
+    endPending: (id) =>
+      set((state) => ({
+        pending: Arr.filter(state.pending, (current) => current !== id),
+      })),
+    pending: [],
     select: (id) => set({ selected: id }),
     selected: null,
+    startPending: (id) =>
+      set((state) => ({ pending: Arr.append(state.pending, id) })),
   }));

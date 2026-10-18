@@ -93,18 +93,21 @@ function TenantAccount({
  */
 export function TenantShell({
   account,
+  canOpenExams,
   children,
   personName,
   profile,
   role,
 }: {
   account: typeof ViewerAccount.Type;
+  canOpenExams: boolean;
   children: ReactNode;
   personName: string;
   profile: typeof TenantProfile.Type;
   role: TenantValue["role"];
 }) {
   const t = useTranslations("School");
+  const tExams = useTranslations("Exams");
 
   return (
     <TenantContext value={{ name: profile.name, role }}>
@@ -132,6 +135,13 @@ export function TenantShell({
                       {t("home")}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  {canOpenExams ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton render={<Link href="/exams" />}>
+                        {tExams("title")}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

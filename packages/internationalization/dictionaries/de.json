@@ -557,7 +557,16 @@
     "move-down": "Nach unten verschieben",
     "remove": "Frage entfernen",
     "remove-title": "Diese Frage entfernen?",
-    "remove-description": "Die Frage und ihre Antworten werden aus dieser Prüfung entfernt."
+    "remove-description": "Die Frage und ihre Antworten werden aus dieser Prüfung entfernt.",
+    "create": "Prüfung erstellen",
+    "create-description": "Die Prüfung beginnt mit einer Frage.",
+    "unit": "Einheit",
+    "whole-school": "Ganze Schule",
+    "language": "Sprache",
+    "add-question": "Frage hinzufügen",
+    "copy": "Frage kopieren",
+    "prompt-label": "Fragetext",
+    "prompt-placeholder": "Frage hier schreiben."
   },
   "Memory": {
     "remember": "Nina darf Erinnerungen speichern und nutzen",

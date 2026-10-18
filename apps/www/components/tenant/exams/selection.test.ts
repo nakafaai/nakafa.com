@@ -79,4 +79,14 @@ describe("createExamSelection", () => {
 
     expect(selection.getState().selected).toBe(second.id);
   });
+
+  it("lists the questions still being saved until each one ends", () => {
+    const selection = createExamSelection();
+
+    selection.getState().startPending(first.id);
+    selection.getState().startPending(second.id);
+    selection.getState().endPending(first.id);
+
+    expect(selection.getState().pending).toEqual([second.id]);
+  });
 });
