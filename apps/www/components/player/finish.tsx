@@ -2,8 +2,8 @@
 
 import { StopIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { usePlayer } from "@/components/player/provider";
@@ -44,12 +44,13 @@ export function PlayerFinish({
   const open = usePlayer((state) => state.open);
   const close = usePlayer((state) => state.close);
   const settle = usePlayer((state) => state.settle);
-  const busy = pending || locked;
 
   return (
     <>
+      {/* Time running out closes the finish; a finish on its way only holds it still. */}
       <Button
-        disabled={busy}
+        disabled={locked}
+        inert={pending}
         onClick={() => {
           onIntent();
           open("finish");
@@ -60,7 +61,7 @@ export function PlayerFinish({
         type="button"
         variant="destructive"
       >
-        <Spinner icon={StopIcon} isLoading={pending} />
+        <HugeIcons icon={StopIcon} />
         {label}
       </Button>
       <ResponsiveDialog
@@ -72,12 +73,13 @@ export function PlayerFinish({
               {tCommon("cancel")}
             </Button>
             <Button
-              disabled={busy}
+              disabled={locked}
+              inert={pending}
               onClick={onFinish}
               type="button"
               variant="destructive"
             >
-              <Spinner icon={StopIcon} isLoading={pending} />
+              <HugeIcons icon={StopIcon} />
               {label}
             </Button>
           </>
