@@ -14,7 +14,6 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import {
   VisualCard,
-  VisualCardBody,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
@@ -52,66 +51,64 @@ export function VectorChart({ title, description, vectors }: Props) {
     <CoordinateProvider>
       <VisualCard>
         <VisualCardHeader description={description} title={title} />
-        <VisualCardBody>
-          <CoordinateSystem
-            cameraFraming="content"
-            cameraPosition={[0, 0, 15]}
-            cameraProjection={{ kind: "orthographic" }}
-            showOrigin={false}
-            showZAxis={false}
-          >
-            {Arr.map(vectors, (vector, index) => {
-              const geometry = Effect.runSync(resolveVectorGeometry(vector));
-              const arrow = VECTOR_ARROWS[geometry.direction];
-              const color =
-                vector.color ?? VECTOR_COLORS[index % VECTOR_COLORS.length];
-              const { tail, tip } = geometry;
-              const horizontal = tip.x - tail.x;
-              const horizontalAnchor = horizontal > 0 ? "left" : "right";
-              const verticalAnchor = tip.y >= 0 ? "bottom" : "top";
-              return (
-                <group key={vector.id}>
-                  <LineEquation
-                    color={color}
-                    cone={arrow ? { position: arrow } : undefined}
-                    points={Arr.map(geometry.points, (point) => ({
-                      ...point,
-                      z: 0,
-                    }))}
-                    showPoints={Arr.every(
-                      geometry.points,
-                      (point) => point.x === tip.x && point.y === tip.y
-                    )}
-                    smooth={false}
-                  />
-                  <ThreeLabel
-                    anchorX={horizontal === 0 ? "center" : horizontalAnchor}
-                    anchorY={verticalAnchor}
-                    color={color}
-                    fontSize="diagram"
-                    gap={0.75}
-                    position={[tip.x, tip.y, 0]}
-                  >
-                    {vector.name}
-                  </ThreeLabel>
-                </group>
-              );
-            })}
-          </CoordinateSystem>
-          <div className="sr-only">
-            {Arr.map(vectors, (vector) => (
-              <p key={vector.id}>
-                {vector.name}:{" "}
-                <InlineMath
-                  math={Arr.join(
-                    Arr.map(vector.points, ({ x, y }) => `(${x}, ${y})`),
-                    ` ${VECTOR_NOTATION[vector.direction ?? "forward"]} `
+        <CoordinateSystem
+          cameraFraming="content"
+          cameraPosition={[0, 0, 15]}
+          cameraProjection={{ kind: "orthographic" }}
+          showOrigin={false}
+          showZAxis={false}
+        >
+          {Arr.map(vectors, (vector, index) => {
+            const geometry = Effect.runSync(resolveVectorGeometry(vector));
+            const arrow = VECTOR_ARROWS[geometry.direction];
+            const color =
+              vector.color ?? VECTOR_COLORS[index % VECTOR_COLORS.length];
+            const { tail, tip } = geometry;
+            const horizontal = tip.x - tail.x;
+            const horizontalAnchor = horizontal > 0 ? "left" : "right";
+            const verticalAnchor = tip.y >= 0 ? "bottom" : "top";
+            return (
+              <group key={vector.id}>
+                <LineEquation
+                  color={color}
+                  cone={arrow ? { position: arrow } : undefined}
+                  points={Arr.map(geometry.points, (point) => ({
+                    ...point,
+                    z: 0,
+                  }))}
+                  showPoints={Arr.every(
+                    geometry.points,
+                    (point) => point.x === tip.x && point.y === tip.y
                   )}
+                  smooth={false}
                 />
-              </p>
-            ))}
-          </div>
-        </VisualCardBody>
+                <ThreeLabel
+                  anchorX={horizontal === 0 ? "center" : horizontalAnchor}
+                  anchorY={verticalAnchor}
+                  color={color}
+                  fontSize="diagram"
+                  gap={0.75}
+                  position={[tip.x, tip.y, 0]}
+                >
+                  {vector.name}
+                </ThreeLabel>
+              </group>
+            );
+          })}
+        </CoordinateSystem>
+        <div className="sr-only">
+          {Arr.map(vectors, (vector) => (
+            <p key={vector.id}>
+              {vector.name}:{" "}
+              <InlineMath
+                math={Arr.join(
+                  Arr.map(vector.points, ({ x, y }) => `(${x}, ${y})`),
+                  ` ${VECTOR_NOTATION[vector.direction ?? "forward"]} `
+                )}
+              />
+            </p>
+          ))}
+        </div>
         <CoordinateControls />
       </VisualCard>
     </CoordinateProvider>

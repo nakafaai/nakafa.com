@@ -14,11 +14,12 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardBody,
-  VisualCardControls,
+  VisualCardActions,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
@@ -79,7 +80,7 @@ export function PeriodicPropertiesLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseTrend}
           gridColumns="4-lg"
@@ -98,39 +99,39 @@ export function PeriodicPropertiesLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <PeriodicPropertiesCanvas
-          aria-label={labels.sceneLabel}
-          modeId={selectedModeId}
-        />
+      <PeriodicPropertiesCanvas
+        aria-label={labels.sceneLabel}
+        modeId={selectedModeId}
+      />
 
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.guidance}
         </p>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <VisualFact
-              label={labels.factLabels.question}
-              value={selectedLabels.question}
-            />
-            <VisualFact
-              label={labels.factLabels.period}
-              value={selectedLabels.periodTrend}
-            />
-            <VisualFact
-              label={labels.factLabels.group}
-              value={selectedLabels.groupTrend}
-            />
-            <VisualFact
-              label={labels.factLabels.cause}
-              value={selectedLabels.cause}
-            />
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.factLabels.question}
+            value={selectedLabels.question}
+          />
+          <VisualFact
+            label={labels.factLabels.period}
+            value={selectedLabels.periodTrend}
+          />
+          <VisualFact
+            label={labels.factLabels.group}
+            value={selectedLabels.groupTrend}
+          />
+          <VisualFact
+            label={labels.factLabels.cause}
+            value={selectedLabels.cause}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

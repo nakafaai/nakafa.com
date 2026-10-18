@@ -12,7 +12,6 @@ import {
 } from "@repo/design-system/components/three/controls";
 import {
   VisualCard,
-  VisualCardBody,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
@@ -57,14 +56,12 @@ export function LineEquation({
     <CoordinateProvider>
       <VisualCard>
         <VisualCardHeader description={description} title={title} />
-        <VisualCardBody>
-          <DeferredLineScene
-            cameraPosition={cameraPosition}
-            {...(cameraTarget === undefined ? {} : { cameraTarget })}
-            lines={lines}
-            showZAxis={showZAxis}
-          />
-        </VisualCardBody>
+        <DeferredLineScene
+          cameraPosition={cameraPosition}
+          {...(cameraTarget === undefined ? {} : { cameraTarget })}
+          lines={lines}
+          showZAxis={showZAxis}
+        />
         <CoordinateControls />
       </VisualCard>
     </CoordinateProvider>

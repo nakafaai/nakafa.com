@@ -15,11 +15,11 @@ import {
 } from "@repo/design-system/components/ui/table";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Effect } from "effect";
 import { getFormatter } from "next-intl/server";
@@ -57,11 +57,15 @@ export async function FunctionChart({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="space-y-6">
-        <VisualCardScene>
-          <ExponentialPlot {...plot} />
-        </VisualCardScene>
-        <Table>
+      <VisualCardBody className="p-(--card-spacing)">
+        <ExponentialPlot {...plot} />
+      </VisualCardBody>
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+      <VisualCardFooter>
+        {/* At its own width, so a narrow card scrolls the values instead of cutting them. */}
+        <Table className="w-max min-w-full">
           <TableCaption className="sr-only">
             <InlineMath math={formula} />
           </TableCaption>
@@ -90,12 +94,9 @@ export async function FunctionChart({
             </TableRow>
           </TableBody>
         </Table>
-      </VisualCardBody>
-      <VisualCardFooter>
-        <div className="flex flex-1 justify-center self-center">
+        <div className="flex justify-center">
           <InlineMath math={formula} />
         </div>
-        <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
   );

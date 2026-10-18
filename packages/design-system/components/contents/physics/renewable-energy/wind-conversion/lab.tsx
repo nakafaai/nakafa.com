@@ -9,12 +9,13 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -73,41 +74,8 @@ export function WindEnergyConversionLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="flex flex-col gap-4">
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={[2.65, 2, 4.7]}
-                cameraTarget={[0.03, 0.94, 0.14]}
-                fov={34}
-              />
-              <ambientLight intensity={0.68} />
-              <hemisphereLight
-                color={colors.skyLight}
-                groundColor={colors.groundLight}
-                intensity={0.62}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[4, 6, 4]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <WindConversionScene colors={colors} windSpeed={windSpeed} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-
-        <div className="flex flex-col gap-3 pt-2">
+      <VisualCardToolbar>
+        <div className="flex w-full flex-col gap-3">
           <div className="flex items-center justify-between gap-4 text-sm">
             <span>{labels.speedControl}</span>
             <span className="shrink-0 tabular-nums">
@@ -123,16 +91,50 @@ export function WindEnergyConversionLab({
             value={windSpeed}
           />
         </div>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <VisualFact label={labels.flowLabel} value={labels.flow} />
-            <VisualFact label={labels.meaningLabel} value={labels.meaning} />
-          </dl>
-        </VisualCardControls>
+      </VisualCardToolbar>
+
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={[2.65, 2, 4.7]}
+              cameraTarget={[0.03, 0.94, 0.14]}
+              fov={34}
+            />
+            <ambientLight intensity={0.68} />
+            <hemisphereLight
+              color={colors.skyLight}
+              groundColor={colors.groundLight}
+              intensity={0.62}
+            />
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[4, 6, 4]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
+            />
+            <WindConversionScene colors={colors} windSpeed={windSpeed} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact label={labels.flowLabel} value={labels.flow} />
+          <VisualFact label={labels.meaningLabel} value={labels.meaning} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

@@ -16,7 +16,6 @@ import {
   VisualCard,
   VisualCardBody,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { COLORS } from "@repo/design-system/lib/color";
 import { Array as Arr, Effect } from "effect";
@@ -34,7 +33,7 @@ export function Diagram({ title, description, children }: DiagramProps) {
     <CoordinateProvider>
       <VisualCard>
         <VisualCardHeader description={description} title={title} />
-        <VisualCardBody>{children}</VisualCardBody>
+        {children}
         <CoordinateControls />
       </VisualCard>
     </CoordinateProvider>
@@ -92,7 +91,7 @@ export function RelationVisualizer({
     },
   ];
   return (
-    <VisualCardScene aria-label={accessibilityLabel} render={<figure />}>
+    <VisualCardBody aria-label={accessibilityLabel} render={<figure />}>
       <CoordinateSystem
         cameraPosition={[0, 3, 11]}
         cameraProjection={{ kind: "orthographic" }}
@@ -153,6 +152,6 @@ export function RelationVisualizer({
           </li>
         ))}
       </ul>
-    </VisualCardScene>
+    </VisualCardBody>
   );
 }

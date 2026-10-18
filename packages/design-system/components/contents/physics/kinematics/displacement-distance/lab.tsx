@@ -28,12 +28,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -87,7 +88,7 @@ export function DisplacementDistanceLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseCase}
           gridColumns="3"
@@ -102,74 +103,73 @@ export function DisplacementDistanceLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.72} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE")}
-                intensity={0.62}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.26}
-                position={[3.4, 5.4, 4.2]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <DisplacementDistanceCamera view={view} />
-              <DisplacementDistanceScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <VisualFactIndicator
-              indicatorColor={ROUTE_COLOR}
-              label={labels.factLabels.distance}
-              value={
-                <InlineMath
-                  math={`s=${formatKeptZeroMeterMath(motion.distance)}`}
-                />
-              }
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.72} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("SLATE")}
+              intensity={0.62}
             />
-            <VisualFactIndicator
-              indicatorColor={DISPLACEMENT_COLOR}
-              label={labels.factLabels.displacement}
-              value={
-                <InlineMath
-                  math={`|\\Delta\\vec{r}|=${formatKeptZeroMeterMath(
-                    motion.displacement
-                  )}`}
-                />
-              }
+            <directionalLight
+              castShadow
+              intensity={1.26}
+              position={[3.4, 5.4, 4.2]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
             />
-            <VisualFactIndicator
-              label={labels.factLabels.vector}
-              value={
-                <InlineMath
-                  math={formatVectorMath(motion.displacementVector)}
-                />
-              }
-            />
-            <VisualFactIndicator
-              label={labels.factLabels.meaning}
-              value={labels.meanings[motion.caseId]}
-            />
-          </dl>
-        </VisualCardControls>
+            <DisplacementDistanceCamera view={view} />
+            <DisplacementDistanceScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFactIndicator
+            indicatorColor={ROUTE_COLOR}
+            label={labels.factLabels.distance}
+            value={
+              <InlineMath
+                math={`s=${formatKeptZeroMeterMath(motion.distance)}`}
+              />
+            }
+          />
+          <VisualFactIndicator
+            indicatorColor={DISPLACEMENT_COLOR}
+            label={labels.factLabels.displacement}
+            value={
+              <InlineMath
+                math={`|\\Delta\\vec{r}|=${formatKeptZeroMeterMath(
+                  motion.displacement
+                )}`}
+              />
+            }
+          />
+          <VisualFactIndicator
+            label={labels.factLabels.vector}
+            value={
+              <InlineMath math={formatVectorMath(motion.displacementVector)} />
+            }
+          />
+          <VisualFactIndicator
+            label={labels.factLabels.meaning}
+            value={labels.meanings[motion.caseId]}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

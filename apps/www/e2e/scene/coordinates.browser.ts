@@ -16,7 +16,7 @@ import {
   CARD,
   COORDINATE_CONTROLS,
   LINE_SCENE,
-  VISUAL_CARD_CONTROLS,
+  VISUAL_CARD_FOOTER,
 } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -28,7 +28,7 @@ const TRIANGLE_ROUTE =
 const UNIT_CIRCLE_ROUTE =
   "/en/subjects/mathematics/trigonometry/trigonometry-concept";
 const HYPOTENUSE_LABEL = /^c$/;
-const TRIANGLE_SCENE = '[data-slot="triangle-scene"]';
+const TRIANGLE_SCENE = '[data-scene="triangle"]';
 /** How long one edit may take to show in the field before it is tried again. */
 const EDIT_PROBE_TIMEOUT_MILLISECONDS = 1000;
 
@@ -75,7 +75,7 @@ const expectReadableLabel = Effect.fn("NakafaE2E.expectReadableLabel")(
         let scale = 1;
         for (
           let node: Element | null = element;
-          node && node.getAttribute("data-slot") !== "coordinate-system";
+          node && node.getAttribute("data-scene") !== "coordinate-system";
           node = node.parentElement
         ) {
           const style = getComputedStyle(node);
@@ -120,7 +120,7 @@ const expectBoundedTriangleZoom = Effect.fn(
   );
   yield* Effect.promise(() => expect(label).toBeVisible());
   yield* Effect.promise(() =>
-    expect(card.locator(VISUAL_CARD_CONTROLS)).toContainText("Hypotenuse")
+    expect(card.locator(VISUAL_CARD_FOOTER)).toContainText("Hypotenuse")
   );
   yield* waitForStableCanvas(canvas);
   yield* expectReadableLabel(label);
@@ -268,7 +268,7 @@ const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
       useGrouping: false,
     });
     const annotations = card.locator(
-      `${VISUAL_CARD_CONTROLS} annotation[encoding="application/x-tex"]`
+      `${VISUAL_CARD_FOOTER} annotation[encoding="application/x-tex"]`
     );
     for (const value of [31.5, -30.5, 390.5]) {
       const formatted = formatter.format(value);

@@ -29,12 +29,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -114,7 +115,7 @@ export function VelocitySpeedLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseCase}
           gridColumns="3"
@@ -129,65 +130,66 @@ export function VelocitySpeedLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.9} />
-              <hemisphereLight
-                color={getColor("WHITE")}
-                groundColor={getColor("SLATE", 400)}
-                intensity={0.9}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.58}
-                position={[3.2, 6.2, 4.8]}
-                shadow-bias={-0.0006}
-                shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
-                shadow-camera-left={-SHADOW_CAMERA_RADIUS}
-                shadow-camera-right={SHADOW_CAMERA_RADIUS}
-                shadow-camera-top={SHADOW_CAMERA_RADIUS}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <directionalLight intensity={0.48} position={[-4.2, 3.5, -3]} />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={VELOCITY_SPEED_CAMERA.cameraPosition}
-                cameraTarget={VELOCITY_SPEED_CAMERA.cameraTarget}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={VELOCITY_SPEED_CAMERA.fov}
-              />
-              <VelocitySpeedScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            {Arr.map(facts, (fact) => (
-              <VisualFactIndicator
-                indicatorColor={
-                  "markerColor" in fact ? fact.markerColor : undefined
-                }
-                key={fact.id}
-                label={fact.label}
-                value={<InlineMath math={fact.math} />}
-              />
-            ))}
-          </dl>
-        </VisualCardControls>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.9} />
+            <hemisphereLight
+              color={getColor("WHITE")}
+              groundColor={getColor("SLATE", 400)}
+              intensity={0.9}
+            />
+            <directionalLight
+              castShadow
+              intensity={1.58}
+              position={[3.2, 6.2, 4.8]}
+              shadow-bias={-0.0006}
+              shadow-camera-bottom={-SHADOW_CAMERA_RADIUS}
+              shadow-camera-left={-SHADOW_CAMERA_RADIUS}
+              shadow-camera-right={SHADOW_CAMERA_RADIUS}
+              shadow-camera-top={SHADOW_CAMERA_RADIUS}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
+            />
+            <directionalLight intensity={0.48} position={[-4.2, 3.5, -3]} />
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={VELOCITY_SPEED_CAMERA.cameraPosition}
+              cameraTarget={VELOCITY_SPEED_CAMERA.cameraTarget}
+              enablePan
+              enableRotate
+              enableZoom
+              fov={VELOCITY_SPEED_CAMERA.fov}
+            />
+            <VelocitySpeedScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(facts, (fact) => (
+            <VisualFactIndicator
+              indicatorColor={
+                "markerColor" in fact ? fact.markerColor : undefined
+              }
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
