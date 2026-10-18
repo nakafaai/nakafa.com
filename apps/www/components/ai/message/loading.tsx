@@ -2,12 +2,13 @@
 
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 
-import { useMessage } from "@/components/ai/message/context";
+import { useLastMessage, useMessage } from "@/components/ai/message/context";
 import { isAnswerWaiting } from "@/components/ai/message/waiting";
 
 /** Shows Nina typing in an answer that has begun but has nothing to show yet. */
 export function AiChatMessageLoading() {
-  const waiting = useMessage(({ last, message, turn }) =>
+  const last = useLastMessage();
+  const waiting = useMessage(({ message, turn }) =>
     isAnswerWaiting({ last, message, status: turn?.state.status })
   );
 

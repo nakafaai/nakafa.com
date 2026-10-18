@@ -12,7 +12,7 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { readChatFailureKind } from "@/components/ai/chat/access";
+import type { ChatFailureKind } from "@/components/ai/chat/access";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
 
@@ -24,17 +24,17 @@ import { AuthGoogle } from "@/components/auth/google";
  * retry button is disabled.
  */
 export function ChatFailure({
-  error,
   isPending = false,
+  kind,
   onRetry,
 }: {
-  error: unknown;
   isPending?: boolean;
+  kind: ChatFailureKind;
   onRetry: () => void;
 }) {
   const t = useTranslations("Ai");
 
-  if (readChatFailureKind(error) === "access") {
+  if (kind === "access") {
     return (
       <Empty>
         <EmptyHeader>

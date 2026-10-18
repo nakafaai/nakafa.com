@@ -259,9 +259,11 @@ type ChatContextValue = ReturnType<typeof useChatState>;
  * One reactive conversation shared by the route, sheet and message controls.
  * Each chat gets its own state and its own subtree, so choosing another chat
  * starts with none of the previous chat's error, stop, send or pending prompt,
- * whichever surface renders the provider. The text the learner is typing is
- * not part of it: that draft is one for every chat. `shareToken` is the one a
- * shared link carries, for a reader who is not the owner.
+ * whichever surface renders the provider. The caller gives the provider a key
+ * of the chat's id: the state of one chat lives and ends with that key. The text
+ * the learner is typing is not part of it: that draft is one for every chat.
+ * `shareToken` is the one a shared link carries, for a reader who is not the
+ * owner.
  */
 export function ChatProvider({
   chatId,
@@ -270,25 +272,6 @@ export function ChatProvider({
 }: PropsWithChildren<{
   chatId: Id<"chats">;
   shareToken?: string | undefined;
-}>) {
-  return (
-    <ChatConversation chatId={chatId} key={chatId} shareToken={shareToken}>
-      {children}
-    </ChatConversation>
-  );
-}
-
-/**
- * The state of one chat, which lives and ends with its key: the context its
- * readers use, and the store of what its own actions write.
- */
-function ChatConversation({
-  chatId,
-  children,
-  shareToken,
-}: PropsWithChildren<{
-  chatId: Id<"chats">;
-  shareToken: string | undefined;
 }>) {
   const [store] = useState(createChatStore);
   const value = useChatState(chatId, shareToken, store);
