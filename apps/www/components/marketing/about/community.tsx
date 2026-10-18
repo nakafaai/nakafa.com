@@ -10,6 +10,7 @@ import {
   CROWD_HERD,
   CROWD_TYPING_EVERY,
 } from "@/components/marketing/about/toys/herd";
+import { MarketingSection } from "@/components/marketing/shared/section";
 
 /**
  * The community part, in the middle of the page: a line about learning
@@ -21,10 +22,7 @@ export function Community() {
   const t = useTranslations("Landing");
 
   return (
-    <section
-      className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32"
-      id="community"
-    >
+    <MarketingSection id="community">
       <div className="mx-auto grid w-full max-w-7xl justify-items-center gap-12">
         <div className="grid justify-items-center gap-6 text-center">
           <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
@@ -70,6 +68,6 @@ export function Community() {
           ))}
         </div>
       </div>
-    </section>
+    </MarketingSection>
   );
 }
