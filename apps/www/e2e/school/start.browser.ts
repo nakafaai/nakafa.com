@@ -62,5 +62,7 @@ test("a new account opens its own school in five questions and lands in it as it
   );
   await page.reload();
   await expect(page.getByText("You are signed in as Owner.")).toBeVisible();
+  // The tab names the school.
+  await expect(page).toHaveTitle(new RegExp(name));
   await context.close();
 });
