@@ -2,6 +2,7 @@
 
 import { useCallbackRef } from "@mantine/hooks";
 import { editableState } from "@repo/design-system/components/editor/editable";
+import { editorPlaceholder } from "@repo/design-system/components/editor/frame";
 import type { AnyExtension, Editor } from "@tiptap/core";
 import { Placeholder } from "@tiptap/extensions";
 import type { Transaction } from "@tiptap/pm/state";
@@ -42,7 +43,11 @@ export function DocumentEditor({
   const editor = useEditor({
     editable: false,
     editorProps: {
-      attributes: { "aria-label": label, "aria-multiline": "true" },
+      attributes: {
+        "aria-label": label,
+        "aria-multiline": "true",
+        class: editorPlaceholder(),
+      },
     },
     extensions: [
       ...extensions,
