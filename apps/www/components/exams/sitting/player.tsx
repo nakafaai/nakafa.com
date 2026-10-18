@@ -21,6 +21,7 @@ import { SittingQuestion } from "@/components/exams/sitting/question";
 import { useSittingSignals } from "@/components/exams/sitting/signals.client";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerHeader, PlayerTitle } from "@/components/player/header";
+import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
 import { PlayerTimer } from "@/components/player/timer";
 
@@ -130,17 +131,24 @@ function StudentBody({
     return null;
   }
 
+  // The shared list follows the question in view through the player's store, so the paper
+  // gives it one, in the paper's order, and always as one list.
   return (
-    <PlayerQuestions>
-      {Arr.map(paper.value.questions, (question) => (
-        <SittingQuestion
-          deviceId={deviceId}
-          key={question.id}
-          question={question}
-          sittingId={sittingId}
-          slug={slug}
-        />
-      ))}
-    </PlayerQuestions>
+    <PlayerProvider
+      keys={Arr.map(paper.value.questions, (question) => question.id)}
+      mode="list"
+    >
+      <PlayerQuestions>
+        {Arr.map(paper.value.questions, (question) => (
+          <SittingQuestion
+            deviceId={deviceId}
+            key={question.id}
+            question={question}
+            sittingId={sittingId}
+            slug={slug}
+          />
+        ))}
+      </PlayerQuestions>
+    </PlayerProvider>
   );
 }
