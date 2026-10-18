@@ -244,6 +244,9 @@
       "grade": {
         "released": "Note freigegeben"
       },
+      "scheme": {
+        "stored": "Notenschema-Version hinzugefügt"
+      },
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",

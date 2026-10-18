@@ -244,6 +244,9 @@
       "grade": {
         "released": "Nilai dirilis"
       },
+      "scheme": {
+        "stored": "Versi skema nilai ditambahkan"
+      },
       "cohort": {
         "created": "Kelas ditambahkan",
         "renamed": "Kelas diganti nama",

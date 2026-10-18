@@ -1,6 +1,9 @@
 import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   type Band,
   DEFAULT_GRADING_SCHEME,
@@ -27,15 +30,41 @@ const store = Effect.fn("test.records.version.store")(function* (
   });
 });
 
+/** Every stored version of a school, in the order of their effective time. */
+const versionsOf = Effect.fn("test.records.version.versionsOf")(function* (
+  tenantId: GenericId.GenericId<"tenants">
+) {
+  return yield* Effect.flatMap(DatabaseReader, (reader) =>
+    reader
+      .table("gradingSchemes")
+      .index("by_tenantId_and_effectiveFrom", (query) =>
+        query.eq("tenantId", tenantId)
+      )
+      .take(10)
+  );
+});
+
 describe("records/version in force", () => {
-  it.effect("takes the built-in scheme when the school stores none", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      expect(yield* fixture.run(schemeInForce(fixture.tenants.nf))).toEqual({
-        id: undefined,
-        scheme: DEFAULT_GRADING_SCHEME,
-      });
-    })
+  it.effect(
+    "stores the built-in scheme as the school's first version, and names it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const first = yield* fixture.run(schemeInForce(fixture.tenants.nf));
+        expect(first.scheme).toEqual(DEFAULT_GRADING_SCHEME);
+        expect(yield* fixture.run(versionsOf(fixture.tenants.nf))).toEqual([
+          expect.objectContaining({
+            _id: first.id,
+            bands: [],
+            effectiveFrom: 0,
+            kktp: 75,
+            tenantId: fixture.tenants.nf,
+          }),
+        ]);
+        expect(yield* fixture.run(schemeInForce(fixture.tenants.nf))).toEqual(
+          first
+        );
+      })
   );
 
   it.effect(
@@ -75,26 +104,35 @@ describe("records/version in force", () => {
   );
 
   it.effect(
-    "reads a stored version by its ID with its bands in order, and the built-in scheme for no ID",
+    "stores the built-in scheme beside a later version, which then waits for its date",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const stored = yield* fixture.run(
-          store(fixture.tenants.nf, 1, 65, [
-            { label: "Baik", minimum: 80 },
-            { label: "Cukup", minimum: 60 },
-          ])
-        );
-        expect(yield* fixture.run(schemeOf(stored))).toEqual({
-          bands: [
-            { label: "Cukup", minimum: 60 },
-            { label: "Baik", minimum: 80 },
-          ],
-          kktp: 65,
-        });
-        expect(yield* fixture.run(schemeOf(undefined))).toEqual(
-          DEFAULT_GRADING_SCHEME
+        yield* fixture.run(store(fixture.tenants.nf, FAR_FUTURE, 90));
+        const inForce = yield* fixture.run(schemeInForce(fixture.tenants.nf));
+        expect(inForce.scheme).toEqual(DEFAULT_GRADING_SCHEME);
+        expect(yield* fixture.run(versionsOf(fixture.tenants.nf))).toHaveLength(
+          2
         );
       })
+  );
+
+  it.effect("reads a stored version by its ID with its bands in order", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const stored = yield* fixture.run(
+        store(fixture.tenants.nf, 1, 65, [
+          { label: "Baik", minimum: 80 },
+          { label: "Cukup", minimum: 60 },
+        ])
+      );
+      expect(yield* fixture.run(schemeOf(stored))).toEqual({
+        bands: [
+          { label: "Cukup", minimum: 60 },
+          { label: "Baik", minimum: 80 },
+        ],
+        kktp: 65,
+      });
+    })
   );
 });

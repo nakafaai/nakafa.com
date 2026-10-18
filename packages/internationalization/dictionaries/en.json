@@ -244,6 +244,9 @@
       "grade": {
         "released": "Grade released"
       },
+      "scheme": {
+        "stored": "Grading scheme version added"
+      },
       "cohort": {
         "created": "Class added",
         "renamed": "Class renamed",

@@ -1,6 +1,7 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { classKind } from "@repo/backend/confect/classroom/kinds";
+import { tenant } from "@repo/backend/confect/tenancy/kinds";
 import { Schema } from "effect";
 
 /**
@@ -57,8 +58,31 @@ const classGrades = Kind.extend(classKind, {
   published: [],
 });
 
-/** The records module's kinds for the access catalog: the grade, and its extension on the class. */
+/**
+ * An Admin stores a dated version of the school's grading scheme. The store is
+ * journaled on the school with the version's ID alone, because the values of a
+ * scheme never reach the journal (ADR 0016).
+ */
+const tenantSchemes = Kind.extend(tenant, {
+  actions: {
+    "scheme.manage": {
+      access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: ["admin"],
+    },
+  },
+  changes: [
+    Schema.Struct({
+      scheme: Id("gradingSchemes"),
+      type: Schema.Literal("scheme.stored"),
+    }),
+  ],
+  published: [],
+});
+
+/** The records module's kinds for the access catalog: the grade, and its extensions on the class and the school. */
 export const records = {
-  extensions: [classGrades],
+  extensions: [classGrades, tenantSchemes],
   kinds: [gradeKind],
 };

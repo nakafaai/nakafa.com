@@ -201,6 +201,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Guardian consent**: One row in the guardian consent ledger, a `granted` or `withdrawn` decision for one student, with its time, method, policy version, and checker. Signing in is not consent.
 - **Verified guardian**: A guardian linked to a student through a verified parent relation, with a granted consent that has not been withdrawn. The Guardian role alone grants nothing.
 - **Under-age flag**: A roster flag that a student is under the country's age limit. The Dapodik import sets it from the birth date and keeps no date. A roster row with no flag counts as under the limit.
+- **Active grading**: Grading that Nakafa makes of a student's work, such as the automatic scoring of an attempt or a grade suggestion. A grade that a teacher enters and releases is the teacher's judgment, not active grading, and the KKTP status and band that its scheme gives it are arithmetic on that value (ADR 0033). A student under the age limit needs a verified guardian consent before any active grading (ADR 0034).
 
 ## School Insight
 

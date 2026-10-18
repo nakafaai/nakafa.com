@@ -11,6 +11,11 @@ live and which are planned.
 Amended on 18 October 2026: the module that releases a grade is Records, so
 `grade.released` belongs to it (ADR 0027 and ADR 0031).
 
+Amended on 18 October 2026 after the S1 review: the Admin stores a scheme version
+(`schemes.store`), a school's first entry stores the built-in version, a grade
+always names the version that judged it, and a subject grade is not active
+grading (GLOSSARY, Active grading).
+
 ## Context
 
 The blueprint's Rapor section makes a report card from subject grades through
@@ -63,9 +68,17 @@ import is a source and an export is a product of Records.
 - The country profile (ADR 0032, K17) will supply the national schemes and
   their labels. Until it is signed and live, the default is one constant in
   `records/scheme.ts`, and it is the only scheme in code.
-- S1 stores and reads the versions and computes the KKTP status of a value. The
-  screens that edit a scheme belong to a later slice, so no scheme is written by
-  a user yet.
+- S1 stores and reads the versions and computes the KKTP status of a value. An
+  Admin stores a version through `schemes.store`, which takes effect on its date.
+  The date must come after the school's newest version, or the version would
+  never be in force, and a later date is refused with `SCHEME_NOT_LATER`. The store
+  is journaled as `scheme.stored` with the version's ID alone. The screens that
+  edit a scheme belong to a later slice.
+- The built-in scheme is stored as the school's first version at its first entry,
+  in the same transaction as that entry, with an effective time before every date.
+  Every grade names the version that judged it, so a later change to the built-in
+  constant reaches only a school that has not entered a grade. No person chose the
+  built-in version, so no journal entry records it.
 
 ### Subject grades
 
@@ -84,6 +97,13 @@ import is a source and an export is a product of Records.
   period, and the state. It never holds the value, a name, or text (ADR 0016).
   A consumer reads the value from the grade row when it loads the subject, and
   it checks permission then (ADR 0027).
+- A subject grade is the teacher's judgment, not active grading (GLOSSARY, Active
+  grading). The consent gate of ADR 0034 therefore does not check it, and S1
+  refuses no student for being under the age limit. Nakafa makes no judgment of the
+  student's work in S1: the KKTP status and band are the school's scheme applied
+  to the teacher's value. Active grading that Nakafa makes waits for the gate in
+  its own slice. Counsel reviews this reading (K20) before the gradebook screen
+  (S2) reaches a school.
 
 ### Access
 
@@ -99,6 +119,8 @@ The `grade` kind covers `classGrades`. Its relations and actions are these:
 `grade.enter` and `grade.list` are declared on the class, the subject that exists
 before its first grade does, so the class's own refusals apply to them. The
 `grade.view` rule is read one row at a time, by the student's own `mine` read.
+The Admin of the school holds `scheme.manage` on the school, which stores a
+version of its grading scheme (the roles rule of ADR 0012).
 
 The class member relation (ADR 0012, Relations) grants a student the grades of
 the class, and in this ADR that means the student's own released grade only. A
@@ -211,6 +233,7 @@ Only the release and the lock are journaled.
 | Change | Subject | Holds | Published |
 | --- | --- | --- | --- |
 | `grade.released` | `grade` | IDs and the state `released` | Yes, to the notifications consumer and to webhooks |
+| `scheme.stored` | `tenant` | The ID of the stored version | No |
 | `report.locked` | `report` | IDs and the PDF hash | No, until the exports consumer exists |
 
 ## Consequences
@@ -244,6 +267,10 @@ Only the release and the lock are journaled.
 
 - The KKTP of the built-in scheme. `records/scheme.ts` holds 75 as a placeholder,
   because the blueprint sets the scale and not the value, so the owner sets it.
+  A school keeps the value it stored at its first entry, so the owner's choice
+  reaches a school through an Admin's stored version, not a rewrite.
+- Whether counsel reads K2 to cover a teacher's subject grade. S1 reads it as the
+  teacher's judgment (GLOSSARY, Active grading).
 - The final retention numbers for each data type (K10, owner).
 - Counsel's review of the legal basis of report cards and the verification page
   (K20).
@@ -262,6 +289,7 @@ Only the release and the lock are journaled.
 | --- | --- |
 | The decision and the libraries in this ADR | Recorded by S0 |
 | `confect/records`, `gradingSchemes`, and `classGrades` (grade entry and release, `grade.released`) | Built, S1 |
+| The Admin's scheme store (`schemes.store`, `scheme.stored`) and the built-in first version | Built, S1 |
 | The gradebook screen for a class | Planned, S2 |
 | Attendance and homeroom notes | Planned, S3 |
 | Report cards, approval, and lock | Planned, S4 |

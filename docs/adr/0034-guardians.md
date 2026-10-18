@@ -120,8 +120,9 @@ withdrawal is done (blueprint, Orang tua, requests).
   from them.
 - The gate refuses a student under the limit who has no active `granted` row, with
   the typed refusal `ConsentRequired`. It applies to Nina, the class forum, and
-  active grading. S8 implements it, and the grading slices check it when the policy
-  names grading.
+  active grading (GLOSSARY). S8 implements it. The slices that make active grading
+  check it when they land. A subject grade that a teacher enters is the teacher's
+  judgment, not active grading, so ADR 0033 does not check it.
 - Quiet hours follow the same flag. They are on for a student under the limit and
   for a student with no flag, and only the school's DPIA can relax them (ADR 0027).
 

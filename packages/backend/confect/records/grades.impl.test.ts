@@ -18,6 +18,7 @@ import { Array as Arr, Effect, Option } from "effect";
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
 const { enter, list, mine, release } = refs.public.records.grades;
+const schemes = refs.public.records.schemes;
 const placements = refs.public.tenancy.placements;
 
 /** Places a Person in a cohort as the school's Admin. */
@@ -59,24 +60,16 @@ const classmate = Effect.fn("test.records.classmate")(function* (
   return fixture.invited;
 });
 
-/** Stores one version of the school's grading scheme, from its effective time on. */
-const storeScheme = Effect.fn("test.records.storeScheme")(function* (
+/** The school's Admin stores one version of the grading scheme, from its effective time on. */
+const storeScheme = (
   fixture: Fixture,
   effectiveFrom: number,
   kktp: number,
   bands: readonly (typeof Band.Type)[]
-) {
-  return yield* fixture.run(
-    Effect.flatMap(DatabaseWriter, (writer) =>
-      writer.table("gradingSchemes").insert({
-        bands,
-        effectiveFrom,
-        kktp,
-        tenantId: fixture.tenants.nf,
-      })
-    )
-  );
-});
+) =>
+  fixture
+    .as("admin")
+    .mutation(schemes.store, { bands, effectiveFrom, kktp, slug: nf });
 
 /** The subject teacher enters a draft for one student of the class. */
 const draft = (
@@ -367,11 +360,18 @@ describe("records/grades tenant isolation", () => {
             unitId: fixture.units.sd,
             updatedAt: 0,
           });
+          const schemeId = yield* writer.table("gradingSchemes").insert({
+            bands: [],
+            effectiveFrom: 0,
+            kktp: 75,
+            tenantId: fixture.tenants.other,
+          });
           const gradeId = yield* writer.table("classGrades").insert({
             classId,
             createdAt: 0,
             periodId,
             personId: fixture.people.otherOwner.personId,
+            schemeId,
             state: "draft",
             tenantId: fixture.tenants.other,
             updatedAt: 0,
@@ -438,6 +438,28 @@ describe("records/grades version rules", () => {
         expect(second).not.toHaveProperty("band");
         const released = yield* releaseBy(fixture, first.id);
         expect(released).toMatchObject({ band: "Cukup", kktp: "reached" });
+      })
+  );
+
+  it.effect(
+    "judges a grade by the built-in version it names, which a version stored later leaves alone",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { classId, cohortId } = yield* setup(fixture);
+        const mate = yield* classmate(fixture, cohortId);
+        const first = yield* draft(
+          fixture,
+          classId,
+          fixture.people.student.personId,
+          80
+        );
+        expect(first).toMatchObject({ kktp: "reached" });
+        yield* storeScheme(fixture, 1, 90, []);
+        const second = yield* draft(fixture, classId, mate, 80);
+        expect(second).toMatchObject({ kktp: "notReached" });
+        const released = yield* releaseBy(fixture, first.id);
+        expect(released).toMatchObject({ kktp: "reached" });
       })
   );
 });

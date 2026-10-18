@@ -56,11 +56,11 @@ export const enter = FunctionImpl.make(
       }),
       periodId: row.periodId,
       personId,
+      schemeId,
       state: "draft",
       tenantId: row.tenantId,
       updatedAt: now,
       value,
-      ...(schemeId === undefined ? {} : { schemeId }),
     };
     const writer = yield* DatabaseWriter;
     const gradeId = yield* Option.match(existing, {

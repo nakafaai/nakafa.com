@@ -17,9 +17,10 @@ const KktpStatus = Schema.Literals(["reached", "notReached"]);
 /**
  * One student's final grade in one class and period. `classId`, `periodId`, and
  * `tenantId` are copied from the class at entry, for indexing and for the locks of
- * its containers. `schemeId` names the stored scheme version that judged the
- * grade, and it is left out when the built-in scheme judged it. `releasedAt` is
- * set by the release, and both times are epoch milliseconds read from the clock.
+ * its containers. `schemeId` names the stored scheme version that judged the grade,
+ * so every grade names one, the built-in version included (records/version.ts).
+ * `releasedAt` is set by the release, and both times are epoch milliseconds read
+ * from the clock.
  */
 export const gradeValidator = Schema.Struct({
   classId: Id("classes"),
@@ -27,7 +28,7 @@ export const gradeValidator = Schema.Struct({
   periodId: Id("tenantPeriods"),
   personId: Id("tenantPeople"),
   releasedAt: Schema.optionalKey(Schema.Finite),
-  schemeId: Schema.optionalKey(Id("gradingSchemes")),
+  schemeId: Id("gradingSchemes"),
   state: GradeState,
   tenantId: Id("tenants"),
   updatedAt: Schema.Finite,

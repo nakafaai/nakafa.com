@@ -34,10 +34,12 @@ export const GradingScheme = Schema.Struct({
 export type GradingScheme = typeof GradingScheme.Type;
 
 /**
- * The built-in scheme that judges a grade when a school stores no version of
- * its own: KKTP on the 0 to 100 scale, with no bands. The blueprint sets the
- * scale and not the KKTP value, so 75 is a placeholder until the owner sets the
- * default (ADR 0033, What Stays Open).
+ * The built-in scheme that judges a school's grades until the school stores a
+ * version of its own: KKTP on the 0 to 100 scale, with no bands. A school's first
+ * entry stores it as its first version (records/version.ts), so a later change to
+ * this constant reaches only a school that has not entered a grade yet. The
+ * blueprint sets the scale and not the KKTP value, so 75 is a placeholder until the
+ * owner sets the default (ADR 0033, What Stays Open).
  */
 export const DEFAULT_GRADING_SCHEME: GradingScheme = { bands: [], kktp: 75 };
 
@@ -51,6 +53,14 @@ export const gradingSchemeValidator = Schema.Struct({
   effectiveFrom: Schema.Finite,
   kktp: GradeValue,
   tenantId: Id("tenants"),
+});
+
+/** One stored version as the wire shows it, with its bands in order. */
+export const SchemeView = Schema.Struct({
+  bands: Schema.Array(Band),
+  effectiveFrom: Schema.Finite,
+  id: Id("gradingSchemes"),
+  kktp: GradeValue,
 });
 
 /** The bands in ascending order of their minimum, the order a school reads them in. */
