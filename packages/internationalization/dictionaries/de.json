@@ -498,6 +498,12 @@
       "school-curriculum": "Lehrplan"
     }
   },
+  "Notifications": {
+    "title": "Benachrichtigungen",
+    "mark-all-read": "Alle als gelesen markieren",
+    "empty": "Du hast noch keine Benachrichtigungen.",
+    "person-invited": "Du wurdest eingeladen, dieser Schule beizutreten."
+  },
   "Posts": {
     "placeholder": "Was gibt es Neues?",
     "post": "Posten",
@@ -852,9 +858,13 @@
   },
   "Toast": {
     "school-logo-size": {
+      "title": "Das Logo wurde nicht gespeichert.",
       "description": "Wählen Sie ein Logo mit höchstens 1 MB."
     },
-    "school-logo-type": { "description": "Wählen Sie ein PNG- oder SVG-Bild." },
+    "school-logo-type": {
+      "title": "Das Logo wurde nicht gespeichert.",
+      "description": "Wählen Sie ein PNG- oder SVG-Bild."
+    },
     "school-logo-refused": { "title": "Das Logo wurde nicht gespeichert." },
     "school-address-copied": { "title": "Die Adresse wurde kopiert." },
     "action-error": {

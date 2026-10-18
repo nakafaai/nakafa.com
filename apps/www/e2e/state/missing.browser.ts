@@ -273,6 +273,50 @@ test.describe("the state of a missing page in German at the narrowest width", ()
   });
 });
 
+/**
+ * Opens an address as a visitor types it, with no locale added, so the proxy
+ * answers it and negotiates the language of the page that it rewrites to.
+ */
+const openAddress = Effect.fn("NakafaE2E.openAddress")(function* (
+  page: Page,
+  address: string
+) {
+  yield* seedAnalyticsConsent(page, "denied");
+  yield* holdWebFont(page);
+  return yield* Effect.promise(() =>
+    page.goto(address, { waitUntil: "domcontentloaded" })
+  );
+});
+
+/**
+ * The addresses that the proxy answers with 404 before any page renders: a school
+ * tree address on the main host, a removed route, and an unsupported system
+ * resource. The proxy rewrites each to the app's not-found page,
+ * which `proxy.test.ts` checks; a local production build draws the framework's
+ * page for a rewrite, as `STANDALONE_ADDRESS` explains, so here only the status
+ * is checked, and the tests above check the page that the rewrite reaches.
+ */
+const PROXY_ANSWERS = [
+  "/school",
+  "/school/anything",
+  "/en/events",
+  "/missing-machine-document.xml",
+];
+
+for (const address of PROXY_ANSWERS) {
+  test(`${address} answers 404`, async ({ page }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.gen(function* () {
+          const response = yield* openAddress(page, address);
+          yield* Effect.sync(() => expect(response?.status()).toBe(404));
+        })
+      )
+    );
+  });
+}
+
 test.describe("the things beside Nina on the state of a missing page", () => {
   test.use({
     hasTouch: touchViewport.hasTouch,

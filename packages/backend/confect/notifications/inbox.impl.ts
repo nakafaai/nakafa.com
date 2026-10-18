@@ -27,7 +27,7 @@ import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
  * The most rows one list page returns. The journal audit holds its pages to the
  * same number (ADR 0016).
  */
-const LIST_PAGE_LIMIT = 100;
+export const LIST_PAGE_LIMIT = 100;
 
 /** Marks one row read. A row of an unheld Person is refused like a missing row. */
 const read = FunctionImpl.make(
