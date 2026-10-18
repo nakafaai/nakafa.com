@@ -4,6 +4,7 @@ import { useMutation } from "@confect/react";
 import { useCallbackRef } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { Card } from "@repo/design-system/components/ui/card";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
   Radio,
@@ -61,25 +62,27 @@ export function ExamCanvas() {
     onSome: ({ index, question }) => {
       const saved = !Arr.contains(pending, question.id);
       return (
-        <section className="flex min-w-0 flex-1 flex-col gap-4 p-4">
-          <h2 className="font-semibold text-lg">
-            {t("question", { number: index + 1 })}
-          </h2>
-          {saved ? (
-            <section className="my-6">
-              <ExamPrompt
-                key={question.prompt}
-                prompt={question.prompt}
-                slug={slug}
-              />
-            </section>
-          ) : null}
-          <QuestionOptions
-            examId={exam.id}
-            key={question.id}
-            pending={!saved}
-            question={question}
-          />
+        <section className="flex min-w-0 flex-1 flex-col bg-muted/40 p-4">
+          <Card className="mx-auto w-full max-w-3xl gap-4 p-8">
+            <h2 className="font-semibold text-lg">
+              {t("question", { number: index + 1 })}
+            </h2>
+            {saved ? (
+              <section className="my-6">
+                <ExamPrompt
+                  key={question.prompt}
+                  prompt={question.prompt}
+                  slug={slug}
+                />
+              </section>
+            ) : null}
+            <QuestionOptions
+              examId={exam.id}
+              key={question.id}
+              pending={!saved}
+              question={question}
+            />
+          </Card>
         </section>
       );
     },

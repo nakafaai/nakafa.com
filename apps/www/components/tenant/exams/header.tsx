@@ -45,7 +45,7 @@ export function ExamHeader() {
     <header className="flex items-center gap-2 border-b p-4">
       <Input
         aria-label={t("title-label")}
-        className="font-semibold"
+        className="border-0 font-semibold text-lg shadow-none md:text-lg"
         onBlur={save}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {
